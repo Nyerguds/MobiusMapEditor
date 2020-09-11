@@ -36,6 +36,36 @@ namespace MobiusEditor
                 Thread.CurrentThread.CurrentCulture = CultureInfo.CreateSpecificCulture("en-US");
             }
 
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+
+            // Do a test for CONFIG.MEG
+            if (!FileTest())
+            {
+                // If it does not exist, then try to use the directory from settings
+                bool validSavedDirectory = false;
+                if (!string.IsNullOrWhiteSpace(Properties.Settings.Default.GameDirectoryPath) &&
+                    Directory.Exists(Properties.Settings.Default.GameDirectoryPath))
+                {
+                    Environment.CurrentDirectory = Properties.Settings.Default.GameDirectoryPath;
+                    if (FileTest())
+                    {
+                        validSavedDirectory = true;
+                    }
+                }
+
+                // If the directory in settings is wrong too, then we need to ask the user for the installation dir
+                if (!validSavedDirectory)
+                {
+                    var gameInstallationPathForm = new GameInstallationPathForm();
+                    if (gameInstallationPathForm.ShowDialog() == DialogResult.No)
+                        return;
+                    Environment.CurrentDirectory = Path.GetDirectoryName(gameInstallationPathForm.SelectedPath);
+                    Properties.Settings.Default.GameDirectoryPath = Environment.CurrentDirectory;
+                    Properties.Settings.Default.Save();
+                }
+            }
+
             // Initialize megafiles
             var runPath = Environment.CurrentDirectory;
             Globals.TheMegafileManager = new MegafileManager(runPath);
@@ -80,9 +110,6 @@ namespace MobiusEditor
                 }
             }
 
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-
             if (Properties.Settings.Default.ShowInviteWarning)
             {
                 var inviteMessageBox = new InviteMessageBox();
@@ -100,6 +127,11 @@ namespace MobiusEditor
             }
 
             Globals.TheMegafileManager.Dispose();
+        }
+
+        static bool FileTest()
+        {
+            return File.Exists(Path.Combine(Environment.CurrentDirectory, "DATA", "CONFIG.MEG"));
         }
     }
 }

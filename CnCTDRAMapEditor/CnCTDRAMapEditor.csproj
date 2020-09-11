@@ -177,6 +177,12 @@
     </Compile>
     <Compile Include="Event\RenderEventArgs.cs" />
     <Compile Include="Event\UndoRedoEventArgs.cs" />
+    <Compile Include="GameInstallationPathForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="GameInstallationPathForm.Designer.cs">
+      <DependentUpon>GameInstallationPathForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Globals.cs" />
     <Compile Include="Interface\IBrowsableType.cs" />
     <Compile Include="Interface\ICellOccupier.cs" />
@@ -468,6 +474,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Dialogs\TeamTypesDialog.resx">
       <DependentUpon>TeamTypesDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GameInstallationPathForm.resx">
+      <DependentUpon>GameInstallationPathForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
