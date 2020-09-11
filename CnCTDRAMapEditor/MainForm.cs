@@ -858,7 +858,8 @@ namespace MobiusEditor
                 return false;
             }
 
-            if (new FileInfo(saveFilename).Length > Globals.MaxMapSize)
+            var fileInfo = new FileInfo(saveFilename);
+            if (fileInfo.Exists && fileInfo.Length > Globals.MaxMapSize)
             {
                 MessageBox.Show(string.Format("Map file exceeds the maximum size of {0} bytes.", Globals.MaxMapSize), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
