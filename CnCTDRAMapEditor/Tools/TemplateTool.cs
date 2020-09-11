@@ -30,6 +30,9 @@ namespace MobiusEditor.Tools
 {
     public class TemplateTool : ViewTool
     {
+        private const int DesignResWidth = 3840;
+        private const int DesignTextureWidth = 256;
+
         private static readonly Regex CategoryRegex = new Regex(@"^([a-z]*)", RegexOptions.Compiled);
 
         private readonly ListView templateTypeListView;
@@ -153,8 +156,16 @@ namespace MobiusEditor.Tools
                 .GroupBy(t => templateCategory(t)).OrderBy(g => g.Key);
             var templateTypeImages = templateTypes.SelectMany(g => g).Select(t => t.Thumbnail);
 
-            var maxWidth = templateTypeImages.Max(t => t.Width);
-            var maxHeight = templateTypeImages.Max(t => t.Height);
+            Screen screen = Screen.FromHandle(mapPanel.Handle) ?? Screen.PrimaryScreen;
+            int maxSize = Properties.Settings.Default.MaxMapTileTextureSize;
+            if (maxSize == 0)
+            {
+                double ratio = DesignResWidth / (double)screen.Bounds.Width;
+                maxSize = (int)((DesignTextureWidth / ratio) * Properties.Settings.Default.TemplateToolTextureSizeMultiplier);
+            }
+
+            var maxWidth = Math.Min(templateTypeImages.Max(t => t.Width), maxSize);
+            var maxHeight = Math.Min(templateTypeImages.Max(t => t.Height), maxSize);
 
             var imageList = new ImageList();
             imageList.Images.AddRange(templateTypeImages.ToArray());

@@ -67,5 +67,29 @@ namespace MobiusEditor.Properties {
                 this["GameDirectoryPath"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int MaxMapTileTextureSize {
+            get {
+                return ((int)(this["MaxMapTileTextureSize"]));
+            }
+            set {
+                this["MaxMapTileTextureSize"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0.5")]
+        public double TemplateToolTextureSizeMultiplier {
+            get {
+                return ((double)(this["TemplateToolTextureSizeMultiplier"]));
+            }
+            set {
+                this["TemplateToolTextureSizeMultiplier"] = value;
+            }
+        }
     }
 }
