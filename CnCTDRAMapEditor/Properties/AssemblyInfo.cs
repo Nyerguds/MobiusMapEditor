@@ -22,7 +22,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("CnC TDRA Map Editor")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Electronic Arts Inc.")]
+[assembly: AssemblyCompany("Electronic Arts Inc. & Rampastring")]
 [assembly: AssemblyProduct("CnC TDRA Map Editor")]
 [assembly: AssemblyCopyright("© 2020 Electronic Arts Inc. All rights reserved.")]
 [assembly: AssemblyTrademark("")]

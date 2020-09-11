@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="15.0">
   <Import Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" />
   <PropertyGroup>
@@ -409,9 +409,11 @@
     <Compile Include="Tools\WallsTool.cs" />
     <Compile Include="Tools\CellTriggersTool.cs" />
     <Compile Include="Tools\WaypointsTool.cs" />
+    <Compile Include="Utility\BooleanStringStyle.cs" />
     <Compile Include="Utility\CRC.cs" />
     <Compile Include="Utility\ExtensionMethods.cs" />
     <Compile Include="Utility\GameTextManager.cs" />
+    <Compile Include="Utility\GenericBooleanTypeConverter.cs" />
     <Compile Include="Utility\INI.cs" />
     <Compile Include="Utility\Megafile.cs" />
     <Compile Include="Utility\MegafileBuilder.cs" />
@@ -533,4 +535,4 @@
     </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  </Project>
+</Project>

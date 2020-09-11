@@ -21,40 +21,6 @@ using System.Runtime.CompilerServices;
 
 namespace MobiusEditor.Model
 {
-    public class BooleanTypeConverter : TypeConverter
-    {
-        public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
-        {
-            return (context is MapContext) && (sourceType == typeof(string));
-        }
-
-        public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType)
-        {
-            return (context is MapContext) && (destinationType == typeof(string));
-        }
-
-        public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
-        {
-            if (!(value is bool boolean) || !CanConvertTo(context, destinationType))
-            {
-                return null;
-            }
-
-            return boolean ? "1" : "0";
-        }
-
-        public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
-        {
-            if (!(value is string str) || !CanConvertFrom(context, value?.GetType()))
-            {
-                return null;
-            }
-
-            var first = (str.Length > 0) ? str.ToUpper()[0] : 0;
-            return (first == 'T') || (first == 'Y') || (first == '1');
-        }
-    }
-
     public class PercentageTypeConverter : TypeConverter
     {
         public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
