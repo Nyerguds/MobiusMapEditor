@@ -91,5 +91,17 @@ namespace MobiusEditor.Properties {
                 this["TemplateToolTextureSizeMultiplier"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0.3")]
+        public double ObjectToolItemSizeMultiplier {
+            get {
+                return ((double)(this["ObjectToolItemSizeMultiplier"]));
+            }
+            set {
+                this["ObjectToolItemSizeMultiplier"] = value;
+            }
+        }
     }
 }

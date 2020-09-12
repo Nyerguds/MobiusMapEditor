@@ -57,7 +57,8 @@ namespace MobiusEditor.Controls
             var typeItem = Items[e.Index] as TypeItem<IBrowsableType>;
             if (typeItem?.Type != null)
             {
-                e.ItemHeight = typeItem.Type.Thumbnail?.Height ?? MissingThumbnail.Height;
+                e.ItemHeight = (int)((typeItem.Type.Thumbnail?.Height ?? MissingThumbnail.Height) * 
+                    Properties.Settings.Default.ObjectToolItemSizeMultiplier);
             }
         }
 
@@ -66,6 +67,7 @@ namespace MobiusEditor.Controls
             base.OnDrawItem(e);
 
             e.DrawBackground();
+            e.DrawFocusRectangle();
 
             if ((e.Index >= 0) && (e.Index < Items.Count))
             {
@@ -84,15 +86,27 @@ namespace MobiusEditor.Controls
                     if ((e.State & DrawItemState.ComboBoxEdit) == DrawItemState.None)
                     {
                         var thumbnail = typeItem.Type.Thumbnail ?? MissingThumbnail;
-                        var thumbnailWidth = (int)Math.Min(e.Bounds.Width - textSize.Width, thumbnail.Width);
-                        var thumbnailSize = new Size(thumbnailWidth, thumbnailWidth * thumbnail.Height / thumbnail.Width);
+                        var thumbnailWidth = (int)Math.Min((e.Bounds.Width - textSize.Width),
+                            thumbnail.Width);
+                        int thumbnailHeight = (int)Math.Min(e.Bounds.Height, thumbnail.Height);
+
+                        double widthRatio = (e.Bounds.Width - textSize.Width) / (double)thumbnail.Width;
+                        double heightRatio = e.Bounds.Height / (double)thumbnail.Height;
+                        if (heightRatio < widthRatio)
+                        {
+                            thumbnailWidth = (int)(thumbnail.Width * heightRatio);
+                        }
+                        else
+                        {
+                            thumbnailHeight = (int)(thumbnail.Height * widthRatio);
+                        }
+
+                        var thumbnailSize = new Size(thumbnailWidth, thumbnailHeight);
                         var thumbnailBounds = new Rectangle(new Point(e.Bounds.Right - thumbnailSize.Width, e.Bounds.Top), thumbnailSize);
                         e.Graphics.DrawImage(thumbnail, thumbnailBounds);
                     }
                 }
             }
-
-            e.DrawFocusRectangle();
         }
     }
 }

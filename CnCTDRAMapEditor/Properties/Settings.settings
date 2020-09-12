@@ -20,5 +20,8 @@
     <Setting Name="TemplateToolTextureSizeMultiplier" Type="System.Double" Scope="User">
       <Value Profile="(Default)">0.5</Value>
     </Setting>
+    <Setting Name="ObjectToolItemSizeMultiplier" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">0.3</Value>
+    </Setting>
   </Settings>
 </SettingsFile>
