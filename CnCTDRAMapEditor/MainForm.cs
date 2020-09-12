@@ -1087,11 +1087,11 @@ namespace MobiusEditor
             {
                 case GameType.TiberianDawn:
                     mapPanel.MaxZoom = 8;
-                    mapPanel.ZoomStep = 1;
+                    mapPanel.ZoomStep = 0.15;
                     break;
                 case GameType.RedAlert:
                     mapPanel.MaxZoom = 16;
-                    mapPanel.ZoomStep = 2;
+                    mapPanel.ZoomStep = 0.2;
                     break;
             }
 

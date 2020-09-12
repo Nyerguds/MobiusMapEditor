@@ -58,8 +58,8 @@ namespace MobiusEditor.Controls
             }
         }
 
-        private int minZoom = 1;
-        public int MinZoom
+        private double minZoom = 1.0;
+        public double MinZoom
         {
             get => minZoom;
             set
@@ -72,8 +72,8 @@ namespace MobiusEditor.Controls
             }
         }
 
-        private int maxZoom = 8;
-        public int MaxZoom
+        private double maxZoom = 8.0;
+        public double MaxZoom
         {
             get => maxZoom;
             set
@@ -86,8 +86,8 @@ namespace MobiusEditor.Controls
             }
         }
 
-        private int zoomStep = 1;
-        public int ZoomStep
+        private double zoomStep = 1;
+        public double ZoomStep
         {
             get => zoomStep;
             set
@@ -100,8 +100,8 @@ namespace MobiusEditor.Controls
             }
         }
 
-        private int zoom = 1;
-        public int Zoom
+        private double zoom = 1;
+        public double Zoom
         {
             get => zoom;
             set
@@ -308,7 +308,7 @@ namespace MobiusEditor.Controls
 
         protected override void OnMouseWheel(MouseEventArgs e)
         {
-            Zoom += ZoomStep * Math.Sign(e.Delta);
+            Zoom += (Zoom * ZoomStep * Math.Sign(e.Delta));
         }
 
         protected override void OnClientSizeChanged(EventArgs e)
@@ -399,12 +399,12 @@ namespace MobiusEditor.Controls
             var size = Size.Empty;
             if (panelAspect > mapAspect)
             {
-                size.Height = mapImage.Height / zoom;
+                size.Height = (int)(mapImage.Height / zoom);
                 size.Width = (int)(size.Height * panelAspect);
             }
             else
             {
-                size.Width = mapImage.Width / zoom;
+                size.Width = (int)(mapImage.Width / zoom);
                 size.Height = (int)(size.Width / panelAspect);
             }
 
