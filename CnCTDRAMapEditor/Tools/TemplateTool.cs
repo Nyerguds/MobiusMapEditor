@@ -513,6 +513,7 @@ namespace MobiusEditor.Tools
                 templateTypeNavigationWidget = new NavigationWidget(templateTypeMapPanel, templateTypeMetrics,
                     new Size(Globals.OriginalTileWidth / 4, Globals.OriginalTileHeight / 4));
                 templateTypeNavigationWidget.MouseoverSize = Size.Empty;
+                templateTypeNavigationWidget.Activate();
             }
             else
             {
@@ -980,6 +981,7 @@ namespace MobiusEditor.Tools
             (this.mapPanel as Control).KeyDown += TemplateTool_KeyDown;
             (this.mapPanel as Control).KeyUp += TemplateTool_KeyUp;
             navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
+            templateTypeNavigationWidget?.Activate();
             url.Undone += Url_Undone;
             url.Redone += Url_Redone;
         }
@@ -993,7 +995,7 @@ namespace MobiusEditor.Tools
             (mapPanel as Control).KeyDown -= TemplateTool_KeyDown;
             (mapPanel as Control).KeyUp -= TemplateTool_KeyUp;
             navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;
-
+            templateTypeNavigationWidget?.Deactivate();
             url.Undone -= Url_Undone;
             url.Redone -= Url_Redone;
         }
@@ -1010,6 +1012,7 @@ namespace MobiusEditor.Tools
                     Deactivate();
 
                     templateTypeListView.SelectedIndexChanged -= TemplateTypeListView_SelectedIndexChanged;
+                    templateTypeNavigationWidget?.Dispose();
 
                     templateTypeMapPanel.MouseDown -= TemplateTypeMapPanel_MouseDown;
                     templateTypeMapPanel.PostRender -= TemplateTypeMapPanel_PostRender;
