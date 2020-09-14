@@ -15,6 +15,16 @@ Once the project has proceeded far enough and I am pleased with the state of the
 
 This list will be kept up-to-date as more features are added.
 
+### Installation and usage
+
+To install, simply download a compiled build from the [Releases section of this repository](https://github.com/Rampastring/CnCTDRAMapEditor/releases)
+and unzip the build into a new directory.
+**Do not overwrite the original map editor that comes with the C&C Remastered Collection**. The map editor will ask for your game
+directory on first launch and then load all assets from the specified directory.
+
+If you wish to compile and run the map editor from source code, simply clone this repository and open it
+with Visual Studio 2017 or later with support for .NET desktop development installed.
+
 ### Contributing
 
 Contributions are welcome in the scope of the project. If there's a bug that you'd like to fix or functionality that you'd like to enhance, feel free to make an issue for discussing it or a pull request if you'd want to push code.
