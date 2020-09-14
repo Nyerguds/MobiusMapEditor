@@ -34,18 +34,6 @@ namespace MobiusEditor.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0, 0")]
-        public global::System.Drawing.Point ToolDialogPosition {
-            get {
-                return ((global::System.Drawing.Point)(this["ToolDialogPosition"]));
-            }
-            set {
-                this["ToolDialogPosition"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool ShowInviteWarning {
             get {
@@ -101,6 +89,90 @@ namespace MobiusEditor.Properties {
             }
             set {
                 this["ObjectToolItemSizeMultiplier"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0, 0")]
+        public global::System.Drawing.Point CellTriggersToolDialogDefaultPosition {
+            get {
+                return ((global::System.Drawing.Point)(this["CellTriggersToolDialogDefaultPosition"]));
+            }
+            set {
+                this["CellTriggersToolDialogDefaultPosition"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0, 0")]
+        public global::System.Drawing.Point GenericToolDialogDefaultPosition {
+            get {
+                return ((global::System.Drawing.Point)(this["GenericToolDialogDefaultPosition"]));
+            }
+            set {
+                this["GenericToolDialogDefaultPosition"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0, 0")]
+        public global::System.Drawing.Point ObjectToolDialogDefaultPosition {
+            get {
+                return ((global::System.Drawing.Point)(this["ObjectToolDialogDefaultPosition"]));
+            }
+            set {
+                this["ObjectToolDialogDefaultPosition"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0, 0")]
+        public global::System.Drawing.Point ResourcesToolDialogDefaultPosition {
+            get {
+                return ((global::System.Drawing.Point)(this["ResourcesToolDialogDefaultPosition"]));
+            }
+            set {
+                this["ResourcesToolDialogDefaultPosition"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0, 0")]
+        public global::System.Drawing.Point TemplateToolDialogDefaultPosition {
+            get {
+                return ((global::System.Drawing.Point)(this["TemplateToolDialogDefaultPosition"]));
+            }
+            set {
+                this["TemplateToolDialogDefaultPosition"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0, 0")]
+        public global::System.Drawing.Point TerrainToolDialogDefaultPosition {
+            get {
+                return ((global::System.Drawing.Point)(this["TerrainToolDialogDefaultPosition"]));
+            }
+            set {
+                this["TerrainToolDialogDefaultPosition"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0, 0")]
+        public global::System.Drawing.Point WaypointsToolDialogDefaultPosition {
+            get {
+                return ((global::System.Drawing.Point)(this["WaypointsToolDialogDefaultPosition"]));
+            }
+            set {
+                this["WaypointsToolDialogDefaultPosition"] = value;
             }
         }
     }

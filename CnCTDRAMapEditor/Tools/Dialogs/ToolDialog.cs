@@ -5,6 +5,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Drawing;
+using System.Reflection;
 
 namespace MobiusEditor.Tools.Dialogs
 {
@@ -13,6 +15,29 @@ namespace MobiusEditor.Tools.Dialogs
         public T Tool { get; set; }
         public ITool GetTool() => Tool;
         public void SetTool(ITool value) => Tool = (T)value;
+
+        private PropertyInfo defaultPositionPropertySettingInfo;
+
+        public ToolDialog()
+        {
+            // TODO this current reflection approach does not work with tool windows that have a type parameter
+            defaultPositionPropertySettingInfo = Properties.Settings.Default.GetType().GetProperty(GetType().Name + "DefaultPosition");
+            if (defaultPositionPropertySettingInfo != null)
+            {
+                Location = (Point)defaultPositionPropertySettingInfo.GetValue(Properties.Settings.Default);
+            }
+        }
+
+        protected override void OnMove(EventArgs e)
+        {
+            base.OnMove(e);
+
+            if (defaultPositionPropertySettingInfo != null)
+            {
+                defaultPositionPropertySettingInfo.SetValue(Properties.Settings.Default, Location);
+                Properties.Settings.Default.Save();
+            }
+        }
 
         protected override void OnClick(EventArgs e)
         {

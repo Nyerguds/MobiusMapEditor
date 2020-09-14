@@ -37,22 +37,12 @@ namespace MobiusEditor.Tools.Dialogs
         public TerrainToolDialog()
         {
             InitializeComponent();
-
-            Location = Properties.Settings.Default.ToolDialogPosition;
         }
 
         public TerrainToolDialog(IGamePlugin plugin)
             : this()
         {
             terrainProperties.Initialize(plugin, true);
-        }
-
-        protected override void OnMove(EventArgs e)
-        {
-            base.OnMove(e);
-
-            Properties.Settings.Default.ToolDialogPosition = Location;
-            Properties.Settings.Default.Save();
         }
     }
 }

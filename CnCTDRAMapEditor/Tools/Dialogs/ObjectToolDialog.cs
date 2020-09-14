@@ -37,22 +37,12 @@ namespace MobiusEditor.Tools.Dialogs
         public ObjectToolDialog()
         {
             InitializeComponent();
-
-            Location = Properties.Settings.Default.ToolDialogPosition;
         }
 
         public ObjectToolDialog(IGamePlugin plugin)
             : this()
         {
             objectProperties.Initialize(plugin, true);
-        }
-
-        protected override void OnMove(EventArgs e)
-        {
-            base.OnMove(e);
-
-            Properties.Settings.Default.ToolDialogPosition = Location;
-            Properties.Settings.Default.Save();
         }
     }
 }

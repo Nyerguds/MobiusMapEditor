@@ -28,16 +28,6 @@ namespace MobiusEditor.Tools.Dialogs
         public ResourcesToolDialog()
         {
             InitializeComponent();
-
-            Location = Properties.Settings.Default.ToolDialogPosition;
-        }
-
-        protected override void OnMove(EventArgs e)
-        {
-            base.OnMove(e);
-
-            Properties.Settings.Default.ToolDialogPosition = Location;
-            Properties.Settings.Default.Save();
         }
     }
 }
