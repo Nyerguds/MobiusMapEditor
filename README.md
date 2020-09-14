@@ -20,4 +20,4 @@ Contributions are welcome in the scope of the project. If there's a bug that you
 
 ### Contact
 
-You can find me and discuss features on the Assembly Armada's [Discord server](https://discord.gg/UnWK2Tw). Note that this project is not officially affiliated with [The Assembly Armada](https://github.com/TheAssemblyArmada), but their server has become a general hub for discussing the released C&C source code so and C&C reverse-engineering efforts, which is a fitting context for this map editor.
+You can find me and discuss features on the Assembly Armada's [Discord server](https://discord.gg/UnWK2Tw). Note that this project is not officially affiliated with [The Assembly Armada](https://github.com/TheAssemblyArmada), but their server has become a general hub for discussing the released C&C source code and C&C reverse-engineering efforts, which provides a fitting context for this map editor.
