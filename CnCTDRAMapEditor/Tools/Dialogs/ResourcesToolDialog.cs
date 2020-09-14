@@ -17,7 +17,7 @@ using System.Windows.Forms;
 
 namespace MobiusEditor.Tools.Dialogs
 {
-    public partial class ResourcesToolDialog : Form
+    public partial class ResourcesToolDialog : ToolDialog<ResourcesTool>
     {
         public Label TotalResourcesLbl => totalResourcesLbl;
 

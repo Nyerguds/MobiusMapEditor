@@ -66,11 +66,6 @@ namespace MobiusEditor.Tools
         {
             previewMap = map;
 
-            this.mapPanel.MouseDown += MapPanel_MouseDown;
-            this.mapPanel.MouseMove += MapPanel_MouseMove;
-            (this.mapPanel as Control).KeyDown += SmudgeTool_KeyDown;
-            (this.mapPanel as Control).KeyUp += SmudgeTool_KeyUp;
-
             this.smudgeTypeComboBox = smudgeTypeComboBox;
             this.smudgeTypeComboBox.SelectedIndexChanged += SmudgeTypeComboBox_SelectedIndexChanged;
 
@@ -81,8 +76,6 @@ namespace MobiusEditor.Tools
             navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
 
             SelectedSmudgeType = smudgeTypeComboBox.Types.First() as SmudgeType;
-
-            UpdateStatus();
         }
 
         private void SmudgeTypeComboBox_SelectedIndexChanged(object sender, EventArgs e)
@@ -309,6 +302,25 @@ namespace MobiusEditor.Tools
             }
         }
 
+        public override void Activate()
+        {
+            base.Activate();
+            this.mapPanel.MouseDown += MapPanel_MouseDown;
+            this.mapPanel.MouseMove += MapPanel_MouseMove;
+            (this.mapPanel as Control).KeyDown += SmudgeTool_KeyDown;
+            (this.mapPanel as Control).KeyUp += SmudgeTool_KeyUp;
+            UpdateStatus();
+        }
+
+        public override void Deactivate()
+        {
+            base.Deactivate();
+            mapPanel.MouseDown -= MapPanel_MouseDown;
+            mapPanel.MouseMove -= MapPanel_MouseMove;
+            (mapPanel as Control).KeyDown -= SmudgeTool_KeyDown;
+            (mapPanel as Control).KeyUp -= SmudgeTool_KeyUp;
+        }
+
         #region IDisposable Support
         private bool disposedValue = false;
 
@@ -318,13 +330,8 @@ namespace MobiusEditor.Tools
             {
                 if (disposing)
                 {
+                    Deactivate();
                     smudgeTypeComboBox.SelectedIndexChanged -= SmudgeTypeComboBox_SelectedIndexChanged;
-
-                    mapPanel.MouseDown -= MapPanel_MouseDown;
-                    mapPanel.MouseMove -= MapPanel_MouseMove;
-                    (mapPanel as Control).KeyDown -= SmudgeTool_KeyDown;
-                    (mapPanel as Control).KeyUp -= SmudgeTool_KeyUp;
-
                     navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;
                 }
                 disposedValue = true;

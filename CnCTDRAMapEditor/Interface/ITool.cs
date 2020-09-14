@@ -25,5 +25,7 @@ namespace MobiusEditor.Interface
     public interface ITool : IDisposable
     {
         MapLayerFlag Layers { get; set; }
+        void Activate();
+        void Deactivate();
     }
 }

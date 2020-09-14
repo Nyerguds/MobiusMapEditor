@@ -13,6 +13,7 @@
 // GNU General Public License along with permitted additional restrictions 
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using MobiusEditor.Controls;
+using MobiusEditor.Interface;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -25,7 +26,7 @@ using System.Windows.Forms;
 
 namespace MobiusEditor.Tools.Dialogs
 {
-    public partial class GenericToolDialog : Form
+    public partial class GenericToolDialog<T> : ToolDialog<T> where T : ITool
     {
         public TypeComboBox GenericTypeComboBox => genericTypeComboBox;
 

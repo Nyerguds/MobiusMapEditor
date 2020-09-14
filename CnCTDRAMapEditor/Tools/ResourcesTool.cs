@@ -41,25 +41,15 @@ namespace MobiusEditor.Tools
         public ResourcesTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, Label totalResourcesLbl, NumericUpDown brushSizeNud, CheckBox gemsCheckBox, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> url)
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
-            this.mapPanel.MouseDown += MapPanel_MouseDown;
-            this.mapPanel.MouseUp += MapPanel_MouseUp;
-            (this.mapPanel as Control).KeyDown += ResourceTool_KeyDown;
-
             this.totalResourcesLbl = totalResourcesLbl;
             this.brushSizeNud = brushSizeNud;
             this.gemsCheckBox = gemsCheckBox;
 
             this.brushSizeNud.ValueChanged += BrushSizeNud_ValueChanged;
 
-            navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
             navigationWidget.MouseoverSize = new Size((int)brushSizeNud.Value, (int)brushSizeNud.Value);
 
-            url.Undone += Url_UndoRedo;
-            url.Redone += Url_UndoRedo;
-
             Update();
-
-            UpdateStatus();
         }
 
         private void Url_UndoRedo(object sender, EventArgs e)
@@ -334,6 +324,29 @@ namespace MobiusEditor.Tools
             }
         }
 
+        public override void Activate()
+        {
+            base.Activate();
+            this.mapPanel.MouseDown += MapPanel_MouseDown;
+            this.mapPanel.MouseUp += MapPanel_MouseUp;
+            (this.mapPanel as Control).KeyDown += ResourceTool_KeyDown;
+            navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
+            url.Undone += Url_UndoRedo;
+            url.Redone += Url_UndoRedo;
+            UpdateStatus();
+        }
+
+        public override void Deactivate()
+        {
+            base.Deactivate();
+            mapPanel.MouseDown -= MapPanel_MouseDown;
+            mapPanel.MouseUp -= MapPanel_MouseUp;
+            (mapPanel as Control).KeyDown -= ResourceTool_KeyDown;
+            navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;
+            url.Undone -= Url_UndoRedo;
+            url.Redone -= Url_UndoRedo;
+        }
+
         #region IDisposable Support
         private bool disposedValue = false;
 
@@ -343,16 +356,8 @@ namespace MobiusEditor.Tools
             {
                 if (disposing)
                 {
-                    mapPanel.MouseDown -= MapPanel_MouseDown;
-                    mapPanel.MouseUp -= MapPanel_MouseUp;
-                    (mapPanel as Control).KeyDown -= ResourceTool_KeyDown;
-
+                    Deactivate();
                     brushSizeNud.ValueChanged -= BrushSizeNud_ValueChanged;
-
-                    navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;
-
-                    url.Undone -= Url_UndoRedo;
-                    url.Redone -= Url_UndoRedo;
                 }
                 disposedValue = true;
             }

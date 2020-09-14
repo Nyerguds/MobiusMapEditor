@@ -80,13 +80,6 @@ namespace MobiusEditor.Tools
             mockTerrain = new Terrain();
             mockTerrain.PropertyChanged += MockTerrain_PropertyChanged;
 
-            this.mapPanel.MouseDown += MapPanel_MouseDown;
-            this.mapPanel.MouseMove += MapPanel_MouseMove;
-            this.mapPanel.MouseUp += MapPanel_MouseUp;
-            this.mapPanel.MouseDoubleClick += MapPanel_MouseDoubleClick;
-            (this.mapPanel as Control).KeyDown += TerrainTool_KeyDown;
-            (this.mapPanel as Control).KeyUp += TerrainTool_KeyUp;
-
             this.terrainTypeComboBox = terrainTypeComboBox;
             this.terrainTypeComboBox.SelectedIndexChanged += TerrainTypeCombo_SelectedIndexChanged;
 
@@ -101,8 +94,6 @@ namespace MobiusEditor.Tools
             navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
 
             SelectedTerrainType = terrainTypeComboBox.Types.First() as TerrainType;
-
-            UpdateStatus();
         }
 
         private void MapPanel_MouseDoubleClick(object sender, MouseEventArgs e)
@@ -423,6 +414,29 @@ namespace MobiusEditor.Tools
             }
         }
 
+        public override void Activate()
+        {
+            base.Activate();
+            this.mapPanel.MouseDown += MapPanel_MouseDown;
+            this.mapPanel.MouseMove += MapPanel_MouseMove;
+            this.mapPanel.MouseUp += MapPanel_MouseUp;
+            this.mapPanel.MouseDoubleClick += MapPanel_MouseDoubleClick;
+            (this.mapPanel as Control).KeyDown += TerrainTool_KeyDown;
+            (this.mapPanel as Control).KeyUp += TerrainTool_KeyUp;
+            UpdateStatus();
+        }
+
+        public override void Deactivate()
+        {
+            base.Deactivate();
+            mapPanel.MouseDown -= MapPanel_MouseDown;
+            mapPanel.MouseMove -= MapPanel_MouseMove;
+            mapPanel.MouseUp -= MapPanel_MouseUp;
+            mapPanel.MouseDoubleClick -= MapPanel_MouseDoubleClick;
+            (mapPanel as Control).KeyDown -= TerrainTool_KeyDown;
+            (mapPanel as Control).KeyUp -= TerrainTool_KeyUp;
+        }
+
         #region IDisposable Support
         private bool disposedValue = false;
 
@@ -432,17 +446,9 @@ namespace MobiusEditor.Tools
             {
                 if (disposing)
                 {
+                    Deactivate();
                     selectedTerrainProperties?.Close();
-
-                    mapPanel.MouseDown -= MapPanel_MouseDown;
-                    mapPanel.MouseMove -= MapPanel_MouseMove;
-                    mapPanel.MouseUp -= MapPanel_MouseUp;
-                    mapPanel.MouseDoubleClick -= MapPanel_MouseDoubleClick;
-                    (mapPanel as Control).KeyDown -= TerrainTool_KeyDown;
-                    (mapPanel as Control).KeyUp -= TerrainTool_KeyUp;
-
                     terrainTypeComboBox.SelectedIndexChanged -= TerrainTypeCombo_SelectedIndexChanged;
-
                     navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;
                 }
                 disposedValue = true;

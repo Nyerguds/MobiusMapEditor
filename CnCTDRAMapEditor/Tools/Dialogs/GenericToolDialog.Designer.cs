@@ -12,9 +12,11 @@
 // distributed with this program. You should have received a copy of the 
 // GNU General Public License along with permitted additional restrictions 
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
+using MobiusEditor.Interface;
+
 namespace MobiusEditor.Tools.Dialogs
 {
-    partial class GenericToolDialog
+    partial class GenericToolDialog<T> : ToolDialog<T> where T : ITool
     {
         /// <summary>
         /// Required designer variable.

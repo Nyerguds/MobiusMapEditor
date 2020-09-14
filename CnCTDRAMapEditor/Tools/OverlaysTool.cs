@@ -61,11 +61,6 @@ namespace MobiusEditor.Tools
         {
             previewMap = map;
 
-            this.mapPanel.MouseDown += MapPanel_MouseDown;
-            this.mapPanel.MouseMove += MapPanel_MouseMove;
-            (this.mapPanel as Control).KeyDown += OverlaysTool_KeyDown;
-            (this.mapPanel as Control).KeyUp += OverlaysTool_KeyUp;
-
             this.overlayTypeComboBox = overlayTypeComboBox;
             this.overlayTypeComboBox.SelectedIndexChanged += OverlayTypeComboBox_SelectedIndexChanged;
 
@@ -73,11 +68,7 @@ namespace MobiusEditor.Tools
             this.overlayTypeMapPanel.BackColor = Color.White;
             this.overlayTypeMapPanel.MaxZoom = 1;
 
-            navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
-
             SelectedOverlayType = this.overlayTypeComboBox.Types.First() as OverlayType;
-
-            UpdateStatus();
         }
 
         private void OverlayTypeComboBox_SelectedIndexChanged(object sender, EventArgs e)
@@ -313,6 +304,28 @@ namespace MobiusEditor.Tools
             }
         }
 
+        public override void Activate()
+        {
+            base.Activate();
+            this.mapPanel.MouseDown += MapPanel_MouseDown;
+            this.mapPanel.MouseMove += MapPanel_MouseMove;
+            (this.mapPanel as Control).KeyDown += OverlaysTool_KeyDown;
+            (this.mapPanel as Control).KeyUp += OverlaysTool_KeyUp;
+            navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
+            UpdateStatus();
+        }
+
+        public override void Deactivate()
+        {
+            base.Deactivate();
+            mapPanel.MouseDown -= MapPanel_MouseDown;
+            mapPanel.MouseMove -= MapPanel_MouseMove;
+            (mapPanel as Control).KeyDown -= OverlaysTool_KeyDown;
+            (mapPanel as Control).KeyUp -= OverlaysTool_KeyUp;
+
+            navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;
+        }
+
         #region IDisposable Support
         private bool disposedValue = false;
 
@@ -322,14 +335,8 @@ namespace MobiusEditor.Tools
             {
                 if (disposing)
                 {
+                    Deactivate();
                     overlayTypeComboBox.SelectedIndexChanged -= OverlayTypeComboBox_SelectedIndexChanged;
-
-                    mapPanel.MouseDown -= MapPanel_MouseDown;
-                    mapPanel.MouseMove -= MapPanel_MouseMove;
-                    (mapPanel as Control).KeyDown -= OverlaysTool_KeyDown;
-                    (mapPanel as Control).KeyUp -= OverlaysTool_KeyUp;
-
-                    navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;
                 }
                 disposedValue = true;
             }

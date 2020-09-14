@@ -86,13 +86,6 @@ namespace MobiusEditor.Tools
             };
             mockUnit.PropertyChanged += MockUnit_PropertyChanged;
 
-            this.mapPanel.MouseDown += MapPanel_MouseDown;
-            this.mapPanel.MouseUp += MapPanel_MouseUp;
-            this.mapPanel.MouseDoubleClick += MapPanel_MouseDoubleClick;
-            this.mapPanel.MouseMove += MapPanel_MouseMove;
-            (this.mapPanel as Control).KeyDown += UnitTool_KeyDown;
-            (this.mapPanel as Control).KeyUp += UnitTool_KeyUp;
-
             this.unitTypeComboBox = unitTypeComboBox;
             this.unitTypeComboBox.SelectedIndexChanged += UnitTypeComboBox_SelectedIndexChanged;
 
@@ -106,8 +99,6 @@ namespace MobiusEditor.Tools
             navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
 
             SelectedUnitType = mockUnit.Type;
-
-            UpdateStatus();
         }
 
         private void MapPanel_MouseDoubleClick(object sender, MouseEventArgs e)
@@ -394,6 +385,29 @@ namespace MobiusEditor.Tools
             }
         }
 
+        public override void Activate()
+        {
+            base.Activate();
+            this.mapPanel.MouseDown += MapPanel_MouseDown;
+            this.mapPanel.MouseUp += MapPanel_MouseUp;
+            this.mapPanel.MouseDoubleClick += MapPanel_MouseDoubleClick;
+            this.mapPanel.MouseMove += MapPanel_MouseMove;
+            (this.mapPanel as Control).KeyDown += UnitTool_KeyDown;
+            (this.mapPanel as Control).KeyUp += UnitTool_KeyUp;
+            UpdateStatus();
+        }
+
+        public override void Deactivate()
+        {
+            base.Deactivate();
+            mapPanel.MouseDown -= MapPanel_MouseDown;
+            mapPanel.MouseUp -= MapPanel_MouseUp;
+            mapPanel.MouseDoubleClick -= MapPanel_MouseDoubleClick;
+            mapPanel.MouseMove -= MapPanel_MouseMove;
+            (mapPanel as Control).KeyDown -= UnitTool_KeyDown;
+            (mapPanel as Control).KeyUp -= UnitTool_KeyUp;
+        }
+
         #region IDisposable Support
         private bool disposedValue = false;
 
@@ -403,17 +417,9 @@ namespace MobiusEditor.Tools
             {
                 if (disposing)
                 {
+                    Deactivate();
                     selectedObjectProperties?.Close();
-
-                    mapPanel.MouseDown -= MapPanel_MouseDown;
-                    mapPanel.MouseUp -= MapPanel_MouseUp;
-                    mapPanel.MouseDoubleClick -= MapPanel_MouseDoubleClick;
-                    mapPanel.MouseMove -= MapPanel_MouseMove;
-                    (mapPanel as Control).KeyDown -= UnitTool_KeyDown;
-                    (mapPanel as Control).KeyUp -= UnitTool_KeyUp;
-
                     unitTypeComboBox.SelectedIndexChanged -= UnitTypeComboBox_SelectedIndexChanged;
-
                     navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;
                 }
                 disposedValue = true;

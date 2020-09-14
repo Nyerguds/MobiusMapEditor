@@ -36,17 +36,7 @@ namespace MobiusEditor.Tools
         public CellTriggersTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, ComboBox triggerCombo, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> url)
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
-            this.mapPanel.MouseDown += MapPanel_MouseDown;
-            this.mapPanel.MouseUp += MapPanel_MouseUp;
-            this.mapPanel.MouseMove += MapPanel_MouseMove;
-            (this.mapPanel as Control).KeyDown += WaypointsTool_KeyDown;
-            (this.mapPanel as Control).KeyUp += WaypointsTool_KeyUp;
-
             this.triggerCombo = triggerCombo;
-
-            navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
-
-            UpdateStatus();
         }
 
         private void MapPanel_MouseDown(object sender, MouseEventArgs e)
@@ -76,7 +66,7 @@ namespace MobiusEditor.Tools
             }
         }
 
-        private void WaypointsTool_KeyDown(object sender, KeyEventArgs e)
+        private void CellTriggersTool_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.ShiftKey)
             {
@@ -84,7 +74,7 @@ namespace MobiusEditor.Tools
             }
         }
 
-        private void WaypointsTool_KeyUp(object sender, KeyEventArgs e)
+        private void CellTriggersTool_KeyUp(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.ShiftKey)
             {
@@ -102,8 +92,6 @@ namespace MobiusEditor.Tools
             {
                 ExitPlacementMode();
             }
-
-            
         }
 
         private void MouseoverWidget_MouseCellChanged(object sender, MouseCellChangedEventArgs e)
@@ -241,6 +229,31 @@ namespace MobiusEditor.Tools
             }
         }
 
+        public override void Activate()
+        {
+            base.Activate();
+            this.mapPanel.MouseDown += MapPanel_MouseDown;
+            this.mapPanel.MouseUp += MapPanel_MouseUp;
+            this.mapPanel.MouseMove += MapPanel_MouseMove;
+            (this.mapPanel as Control).KeyDown += CellTriggersTool_KeyDown;
+            (this.mapPanel as Control).KeyUp += CellTriggersTool_KeyUp;
+
+            navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
+            UpdateStatus();
+        }
+
+        public override void Deactivate()
+        {
+            base.Deactivate();
+            mapPanel.MouseDown -= MapPanel_MouseDown;
+            mapPanel.MouseUp -= MapPanel_MouseUp;
+            mapPanel.MouseMove -= MapPanel_MouseMove;
+            (mapPanel as Control).KeyDown -= CellTriggersTool_KeyDown;
+            (mapPanel as Control).KeyUp -= CellTriggersTool_KeyUp;
+
+            navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;
+        }
+
         #region IDisposable Support
         private bool disposedValue = false;
 
@@ -250,13 +263,7 @@ namespace MobiusEditor.Tools
             {
                 if (disposing)
                 {
-                    mapPanel.MouseDown -= MapPanel_MouseDown;
-                    mapPanel.MouseUp -= MapPanel_MouseUp;
-                    mapPanel.MouseMove -= MapPanel_MouseMove;
-                    (mapPanel as Control).KeyDown -= WaypointsTool_KeyDown;
-                    (mapPanel as Control).KeyUp -= WaypointsTool_KeyUp;
-
-                    navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;
+                    Deactivate();
                 }
                 disposedValue = true;
             }

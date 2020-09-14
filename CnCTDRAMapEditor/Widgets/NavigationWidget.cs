@@ -61,8 +61,6 @@ namespace MobiusEditor.Widgets
         public NavigationWidget(MapPanel mapPanel, CellMetrics metrics, Size cellSize)
         {
             this.mapPanel = mapPanel;
-            this.mapPanel.MouseDown += MapPanel_MouseDown;
-            this.mapPanel.MouseMove += MapPanel_MouseMove;
             Metrics = metrics;
             this.cellSize = cellSize;
         }
@@ -141,6 +139,18 @@ namespace MobiusEditor.Widgets
             }
         }
 
+        public void Activate()
+        {
+            this.mapPanel.MouseDown += MapPanel_MouseDown;
+            this.mapPanel.MouseMove += MapPanel_MouseMove;
+        }
+
+        public void Deactivate()
+        {
+            mapPanel.MouseDown -= MapPanel_MouseDown;
+            mapPanel.MouseMove -= MapPanel_MouseMove;
+        }
+
         #region IDisposable Support
         private bool disposedValue = false;
 
@@ -150,8 +160,7 @@ namespace MobiusEditor.Widgets
             {
                 if (disposing)
                 {
-                    mapPanel.MouseDown -= MapPanel_MouseDown;
-                    mapPanel.MouseMove -= MapPanel_MouseMove;
+                    Deactivate();
                 }
                 disposedValue = true;
             }

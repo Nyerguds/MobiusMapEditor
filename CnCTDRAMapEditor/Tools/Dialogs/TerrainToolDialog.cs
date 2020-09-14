@@ -26,7 +26,7 @@ using System.Windows.Forms;
 
 namespace MobiusEditor.Tools.Dialogs
 {
-    public partial class TerrainToolDialog : Form
+    public partial class TerrainToolDialog : ToolDialog<TerrainTool>
     {
         public TypeComboBox TerrainTypeComboBox => terrainTypeComboBox;
 

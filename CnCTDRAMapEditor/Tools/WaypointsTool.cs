@@ -37,11 +37,6 @@ namespace MobiusEditor.Tools
         public WaypointsTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, ComboBox waypointCombo, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> url)
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
-            this.mapPanel.MouseDown += MapPanel_MouseDown;
-            this.mapPanel.MouseMove += MapPanel_MouseMove;
-            (this.mapPanel as Control).KeyDown += WaypointsTool_KeyDown;
-            (this.mapPanel as Control).KeyUp += WaypointsTool_KeyUp;
-
             this.waypointCombo = waypointCombo;
 
             UpdateStatus();
@@ -219,6 +214,24 @@ namespace MobiusEditor.Tools
             }
         }
 
+        public override void Activate()
+        {
+            base.Activate();
+            this.mapPanel.MouseDown += MapPanel_MouseDown;
+            this.mapPanel.MouseMove += MapPanel_MouseMove;
+            (this.mapPanel as Control).KeyDown += WaypointsTool_KeyDown;
+            (this.mapPanel as Control).KeyUp += WaypointsTool_KeyUp;
+        }
+
+        public override void Deactivate()
+        {
+            base.Deactivate();
+            mapPanel.MouseDown -= MapPanel_MouseDown;
+            mapPanel.MouseMove -= MapPanel_MouseMove;
+            (mapPanel as Control).KeyDown -= WaypointsTool_KeyDown;
+            (mapPanel as Control).KeyUp -= WaypointsTool_KeyUp;
+        }
+
         #region IDisposable Support
         private bool disposedValue = false;
 
@@ -228,10 +241,7 @@ namespace MobiusEditor.Tools
             {
                 if (disposing)
                 {
-                    mapPanel.MouseDown -= MapPanel_MouseDown;
-                    mapPanel.MouseMove -= MapPanel_MouseMove;
-                    (mapPanel as Control).KeyDown -= WaypointsTool_KeyDown;
-                    (mapPanel as Control).KeyUp -= WaypointsTool_KeyUp;
+                    Deactivate();
                 }
                 disposedValue = true;
             }

@@ -86,13 +86,6 @@ namespace MobiusEditor.Tools
             };
             mockInfantry.PropertyChanged += MockInfantry_PropertyChanged;
 
-            this.mapPanel.MouseDown += MapPanel_MouseDown;
-            this.mapPanel.MouseUp += MapPanel_MouseUp;
-            this.mapPanel.MouseDoubleClick += MapPanel_MouseDoubleClick;
-            this.mapPanel.MouseMove += MapPanel_MouseMove;
-            (this.mapPanel as Control).KeyDown += InfantryTool_KeyDown;
-            (this.mapPanel as Control).KeyUp += InfantryTool_KeyUp;
-
             this.infantryTypeComboBox = infantryTypeComboBox;
             this.infantryTypeComboBox.SelectedIndexChanged += InfantryTypeComboBox_SelectedIndexChanged;
 
@@ -103,11 +96,7 @@ namespace MobiusEditor.Tools
             this.objectProperties = objectProperties;
             this.objectProperties.Object = mockInfantry;
 
-            navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
-
             SelectedInfantryType = this.infantryTypeComboBox.Types.First() as InfantryType;
-
-            UpdateStatus();
         }
 
         private void MapPanel_MouseDoubleClick(object sender, MouseEventArgs e)
@@ -509,6 +498,33 @@ namespace MobiusEditor.Tools
             }
         }
 
+        public override void Activate()
+        {
+            base.Activate();
+            this.mapPanel.MouseDown += MapPanel_MouseDown;
+            this.mapPanel.MouseUp += MapPanel_MouseUp;
+            this.mapPanel.MouseDoubleClick += MapPanel_MouseDoubleClick;
+            this.mapPanel.MouseMove += MapPanel_MouseMove;
+            (this.mapPanel as Control).KeyDown += InfantryTool_KeyDown;
+            (this.mapPanel as Control).KeyUp += InfantryTool_KeyUp;
+
+            navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
+            UpdateStatus();
+        }
+
+        public override void Deactivate()
+        {
+            base.Deactivate();
+            mapPanel.MouseDown -= MapPanel_MouseDown;
+            mapPanel.MouseUp -= MapPanel_MouseUp;
+            mapPanel.MouseDoubleClick -= MapPanel_MouseDoubleClick;
+            mapPanel.MouseMove -= MapPanel_MouseMove;
+            (mapPanel as Control).KeyDown -= InfantryTool_KeyDown;
+            (mapPanel as Control).KeyUp -= InfantryTool_KeyUp;
+
+            navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;
+        }
+
         #region IDisposable Support
         private bool disposedValue = false;
 
@@ -518,16 +534,7 @@ namespace MobiusEditor.Tools
             {
                 if (disposing)
                 {
-                    mapPanel.MouseDown -= MapPanel_MouseDown;
-                    mapPanel.MouseUp -= MapPanel_MouseUp;
-                    mapPanel.MouseDoubleClick -= MapPanel_MouseDoubleClick;
-                    mapPanel.MouseMove -= MapPanel_MouseMove;
-                    (mapPanel as Control).KeyDown -= InfantryTool_KeyDown;
-                    (mapPanel as Control).KeyUp -= InfantryTool_KeyUp;
-
                     infantryTypeComboBox.SelectedIndexChanged -= InfantryTypeComboBox_SelectedIndexChanged;
-
-                    navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;
                 }
                 disposedValue = true;
             }

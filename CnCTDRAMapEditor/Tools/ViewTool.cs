@@ -286,6 +286,27 @@ namespace MobiusEditor.Tools
             }
         }
 
+        /// <summary>
+        /// Called when the tool is made the active tool.
+        /// Remember to call this base method when overriding
+        /// in derived classes.
+        /// </summary>
+        public virtual void Activate()
+        {
+            navigationWidget.Activate();
+        }
+
+        /// <summary>
+        /// Called when the tool is made inactive
+        /// (for example, the user selects a different tool).
+        /// Remember to call this base method when overriding
+        /// in derived classes.
+        /// </summary>
+        public virtual void Deactivate()
+        {
+            navigationWidget.Deactivate();
+        }
+
         #region IDisposable Support
         private bool disposedValue = false;
 

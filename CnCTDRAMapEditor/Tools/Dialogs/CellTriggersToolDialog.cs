@@ -17,7 +17,7 @@ using System.Windows.Forms;
 
 namespace MobiusEditor.Tools.Dialogs
 {
-    public partial class CellTriggersToolDialog : Form
+    public partial class CellTriggersToolDialog : ToolDialog<CellTriggersTool>
     {
         public ComboBox TriggerCombo => triggerCombo;
 

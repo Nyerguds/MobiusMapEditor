@@ -17,7 +17,7 @@ using System.Windows.Forms;
 
 namespace MobiusEditor.Tools.Dialogs
 {
-    public partial class WaypointsToolDialog : Form
+    public partial class WaypointsToolDialog : ToolDialog<WaypointsTool>
     {
         public ComboBox WaypointCombo => waypointCombo;
 

@@ -97,6 +97,9 @@ namespace MobiusEditor
         private ITool activeTool;
         private Form activeToolForm;
 
+        // Save and re-use tool instances
+        private Dictionary<ToolType, IToolDialog> toolForms;
+
         private IGamePlugin plugin;
         private string filename;
 
@@ -114,6 +117,8 @@ namespace MobiusEditor
         public MainForm()
         {
             InitializeComponent();
+
+            toolForms = new Dictionary<ToolType, IToolDialog>();
 
             mru = new MRU("Software\\Petroglyph\\CnCRemasteredEditor", 10, fileRecentFilesMenuItem);
             mru.FileSelected += Mru_FileSelected;
@@ -302,7 +307,7 @@ namespace MobiusEditor
                 Text = "CnC TDRA Map Editor";
                 url.Clear();
 
-                ClearActiveTool();
+                ClearAllTools();
                 RefreshAvailableTools();
                 RefreshActiveTool();
             }
@@ -822,7 +827,7 @@ namespace MobiusEditor
 
             url.Clear();
 
-            ClearActiveTool();
+            ClearAllTools();
             RefreshAvailableTools();
             RefreshActiveTool();
 
@@ -905,15 +910,25 @@ namespace MobiusEditor
             ActiveToolType = activeToolType;
         }
 
+        private void ClearAllTools()
+        {
+            ClearActiveTool();
+            foreach (var kvp in toolForms)
+            {
+                kvp.Value.Dispose();
+            }
+            toolForms.Clear();
+        }
+
         private void ClearActiveTool()
         {
-            activeTool?.Dispose();
+            activeTool?.Deactivate();
             activeTool = null;
 
             if (activeToolForm != null)
             {
                 activeToolForm.ResizeEnd -= ActiveToolForm_ResizeEnd;
-                activeToolForm.Close();
+                activeToolForm.Hide();
                 activeToolForm = null;
             }
 
@@ -934,151 +949,132 @@ namespace MobiusEditor
 
             ClearActiveTool();
 
-            switch (ActiveToolType)
+            bool found = toolForms.TryGetValue(ActiveToolType, out IToolDialog toolDialog);
+
+            if (!found)
             {
-                case ToolType.Map:
-                    {
-                        TemplateToolDialog toolDialog = new TemplateToolDialog();
-
-                        activeTool = new TemplateTool(mapPanel, ActiveLayers, toolStatusLabel, toolDialog.TemplateTypeListView, toolDialog.TemplateTypeMapPanel, mouseToolTip, plugin, url);
-                        activeToolForm = toolDialog;
-                        activeToolForm.Show(this);
-                    } break;
-                case ToolType.Smudge:
-                    {
-                        GenericToolDialog toolDialog = new GenericToolDialog
+                switch (ActiveToolType)
+                {
+                    case ToolType.Map:
                         {
-                            Text = "Smudge"
-                        };
-
-                        toolDialog.GenericTypeComboBox.Types = plugin.Map.SmudgeTypes.Where(t => (t.Flag & SmudgeTypeFlag.Bib) == SmudgeTypeFlag.None).OrderBy(t => t.Name);
-
-                        activeTool = new SmudgeTool(mapPanel, ActiveLayers, toolStatusLabel, toolDialog.GenericTypeComboBox, toolDialog.GenericTypeMapPanel, plugin, url);
-                        activeToolForm = toolDialog;
-                        activeToolForm.Show(this);
-                    }
-                    break;
-                case ToolType.Overlay:
-                    {
-                        GenericToolDialog toolDialog = new GenericToolDialog
+                            var templateToolDialog = new TemplateToolDialog();
+                            templateToolDialog.Tool = new TemplateTool(mapPanel, ActiveLayers, toolStatusLabel,
+                                templateToolDialog.TemplateTypeListView, templateToolDialog.TemplateTypeMapPanel, mouseToolTip, plugin, url);
+                            toolDialog = templateToolDialog;
+                        }
+                        break;
+                    case ToolType.Smudge:
                         {
-                            Text = "Overlay"
-                        };
+                            var smudgeToolDialog = new GenericToolDialog<SmudgeTool>
+                            {
+                                Text = "Smudge"
+                            };
 
-                        toolDialog.GenericTypeComboBox.Types = plugin.Map.OverlayTypes.Where(t => t.IsPlaceable && ((t.Theaters == null) || t.Theaters.Contains(plugin.Map.Theater))).OrderBy(t => t.Name);
-
-                        activeTool = new OverlaysTool(mapPanel, ActiveLayers, toolStatusLabel, toolDialog.GenericTypeComboBox, toolDialog.GenericTypeMapPanel, plugin, url);
-                        activeToolForm = toolDialog;
-                        activeToolForm.Show(this);
-                    }
-                    break;
-                case ToolType.Resources:
-                    {
-                        ResourcesToolDialog toolDialog = new ResourcesToolDialog();
-
-                        activeTool = new ResourcesTool(mapPanel, ActiveLayers, toolStatusLabel, toolDialog.TotalResourcesLbl, toolDialog.ResourceBrushSizeNud, toolDialog.GemsCheckBox, plugin, url);
-                        activeToolForm = toolDialog;
-                        activeToolForm.Show(this);
-                    }
-                    break;
-                case ToolType.Terrain:
-                    {
-                        TerrainToolDialog toolDialog = new TerrainToolDialog(plugin);
-
-                        toolDialog.TerrainTypeComboBox.Types = plugin.Map.TerrainTypes.Where(t => t.Theaters.Contains(plugin.Map.Theater)).OrderBy(t => t.Name);
-
-                        activeTool = new TerrainTool(mapPanel, ActiveLayers, toolStatusLabel, toolDialog.TerrainTypeComboBox, toolDialog.TerrainTypeMapPanel, toolDialog.TerrainProperties, plugin, url);
-                        activeToolForm = toolDialog;
-                        activeToolForm.Show(this);
-                    }
-                    break;
-                case ToolType.Infantry:
-                    {
-                        ObjectToolDialog toolDialog = new ObjectToolDialog(plugin)
+                            smudgeToolDialog.GenericTypeComboBox.Types = plugin.Map.SmudgeTypes.Where(t => (t.Flag & SmudgeTypeFlag.Bib) == SmudgeTypeFlag.None).OrderBy(t => t.Name);
+                            smudgeToolDialog.Tool = new SmudgeTool(mapPanel, ActiveLayers, toolStatusLabel, smudgeToolDialog.GenericTypeComboBox, smudgeToolDialog.GenericTypeMapPanel, plugin, url);
+                            toolDialog = smudgeToolDialog;
+                        }
+                        break;
+                    case ToolType.Overlay:
                         {
-                            Text = "Infantry"
-                        };
-
-                        toolDialog.ObjectTypeComboBox.Types = plugin.Map.InfantryTypes.OrderBy(t => t.Name);
-
-                        activeTool = new InfantryTool(mapPanel, ActiveLayers, toolStatusLabel, toolDialog.ObjectTypeComboBox, toolDialog.ObjectTypeMapPanel, toolDialog.ObjectProperties, plugin, url);
-                        activeToolForm = toolDialog;
-                        activeToolForm.Show(this);
-                    }
-                    break;
-                case ToolType.Unit:
-                    {
-                        ObjectToolDialog toolDialog = new ObjectToolDialog(plugin)
+                                var overlayToolDialog = new GenericToolDialog<OverlaysTool>
+                                {
+                                    Text = "Overlay"
+                                };
+                                overlayToolDialog.GenericTypeComboBox.Types = plugin.Map.OverlayTypes.
+                                    Where(t => t.IsPlaceable && ((t.Theaters == null) || t.Theaters.Contains(plugin.Map.Theater))).
+                                    OrderBy(t => t.Name);
+                                overlayToolDialog.Tool = new OverlaysTool(mapPanel, ActiveLayers, toolStatusLabel,
+                                    overlayToolDialog.GenericTypeComboBox, overlayToolDialog.GenericTypeMapPanel, plugin, url);
+                                toolDialog = overlayToolDialog;
+                        }
+                        break;
+                    case ToolType.Resources:
                         {
-                            Text = "Units"
-                        };
-
-                        toolDialog.ObjectTypeComboBox.Types = plugin.Map.UnitTypes
-                            .Where(t => !t.IsFixedWing)
-                            .OrderBy(t => t.Name);
-
-                        activeTool = new UnitTool(mapPanel, ActiveLayers, toolStatusLabel, toolDialog.ObjectTypeComboBox, toolDialog.ObjectTypeMapPanel, toolDialog.ObjectProperties, plugin, url);
-                        activeToolForm = toolDialog;
-                        activeToolForm.Show(this);
-                    }
-                    break;
-                case ToolType.Building:
-                    {
-                        ObjectToolDialog toolDialog = new ObjectToolDialog(plugin)
+                                var resourcesToolDialog = new ResourcesToolDialog();
+                                resourcesToolDialog.Tool = new ResourcesTool(mapPanel, ActiveLayers, toolStatusLabel, resourcesToolDialog.TotalResourcesLbl,
+                                    resourcesToolDialog.ResourceBrushSizeNud, resourcesToolDialog.GemsCheckBox, plugin, url);
+                                toolDialog = resourcesToolDialog;
+                        }
+                        break;
+                    case ToolType.Terrain:
                         {
-                            Text = "Structures"
-                        };
-
-                        toolDialog.ObjectTypeComboBox.Types = plugin.Map.BuildingTypes
-                            .Where(t => (t.Theaters == null) || t.Theaters.Contains(plugin.Map.Theater))
-                            .OrderBy(t => t.IsFake)
-                            .ThenBy(t => t.Name);
-
-                        activeTool = new BuildingTool(mapPanel, ActiveLayers, toolStatusLabel, toolDialog.ObjectTypeComboBox, toolDialog.ObjectTypeMapPanel, toolDialog.ObjectProperties, plugin, url);
-                        activeToolForm = toolDialog;
-                        activeToolForm.Show(this);
-                    }
-                    break;
-                case ToolType.Wall:
-                    {
-                        GenericToolDialog toolDialog = new GenericToolDialog
+                                var terrainToolDialog = new TerrainToolDialog(plugin);
+                                terrainToolDialog.TerrainTypeComboBox.Types = plugin.Map.TerrainTypes.Where(t => t.Theaters.Contains(plugin.Map.Theater)).OrderBy(t => t.Name);
+                                terrainToolDialog.Tool = new TerrainTool(mapPanel, ActiveLayers, toolStatusLabel, terrainToolDialog.TerrainTypeComboBox,
+                                    terrainToolDialog.TerrainTypeMapPanel, terrainToolDialog.TerrainProperties, plugin, url);
+                                toolDialog = terrainToolDialog;
+                        }
+                        break;
+                    case ToolType.Infantry:
                         {
-                            Text = "Walls"
-                        };
+                                var infantryToolDialog = new ObjectToolDialog<InfantryTool>(plugin) { Text = "Infantry" };
+                                infantryToolDialog.ObjectTypeComboBox.Types = plugin.Map.InfantryTypes.OrderBy(t => t.Name);
+                                infantryToolDialog.Tool = new InfantryTool(mapPanel, ActiveLayers, toolStatusLabel, infantryToolDialog.ObjectTypeComboBox,
+                                    infantryToolDialog.ObjectTypeMapPanel, infantryToolDialog.ObjectProperties, plugin, url);
+                                toolDialog = infantryToolDialog;
+                        }
+                        break;
+                    case ToolType.Unit:
+                        {
+                                var unitToolDialog = new ObjectToolDialog<UnitTool>(plugin) { Text = "Units" };
+                                unitToolDialog.ObjectTypeComboBox.Types = plugin.Map.UnitTypes.Where(t => !t.IsFixedWing).OrderBy(t => t.Name);
+                                unitToolDialog.Tool = new UnitTool(mapPanel, ActiveLayers, toolStatusLabel, unitToolDialog.ObjectTypeComboBox, unitToolDialog.ObjectTypeMapPanel, unitToolDialog.ObjectProperties, plugin, url);
+                                toolDialog = unitToolDialog;
+                        }
+                        break;
+                    case ToolType.Building:
+                        {
+                                var buildingToolDialog = new ObjectToolDialog<BuildingTool>(plugin) { Text = "Structures" };
+                                buildingToolDialog.ObjectTypeComboBox.Types = plugin.Map.BuildingTypes
+                                    .Where(t => (t.Theaters == null) || t.Theaters.Contains(plugin.Map.Theater))
+                                    .OrderBy(t => t.IsFake)
+                                    .ThenBy(t => t.Name);
+                                buildingToolDialog.Tool = new BuildingTool(mapPanel, ActiveLayers, toolStatusLabel, buildingToolDialog.ObjectTypeComboBox,
+                                    buildingToolDialog.ObjectTypeMapPanel, buildingToolDialog.ObjectProperties, plugin, url);
+                                toolDialog = buildingToolDialog;
+                        }
+                        break;
+                    case ToolType.Wall:
+                        {
+                                var wallsToolDialog = new GenericToolDialog<WallsTool>() { Text = "Walls" };
+                                wallsToolDialog.GenericTypeComboBox.Types = plugin.Map.OverlayTypes.Where(t => t.IsWall).OrderBy(t => t.Name);
+                                wallsToolDialog.Tool = new WallsTool(mapPanel, ActiveLayers, toolStatusLabel,
+                                    wallsToolDialog.GenericTypeComboBox, wallsToolDialog.GenericTypeMapPanel, plugin, url);
+                                toolDialog = wallsToolDialog;
+                        }
+                        break;
+                    case ToolType.Waypoint:
+                        {
+                            var waypointsToolDialog = new WaypointsToolDialog();
+                            waypointsToolDialog.WaypointCombo.DataSource = plugin.Map.Waypoints.Select(w => w.Name).ToArray();
+                            waypointsToolDialog.Tool = new WaypointsTool(mapPanel, ActiveLayers, toolStatusLabel, waypointsToolDialog.WaypointCombo, plugin, url);
+                            toolDialog = waypointsToolDialog;
+                        }
+                        break;
+                    case ToolType.CellTrigger:
+                        {
+                            var cellTriggersToolDialog = new CellTriggersToolDialog();
+                            cellTriggersToolDialog.TriggerCombo.DataSource = plugin.Map.Triggers.Select(t => t.Name).ToArray();
+                            cellTriggersToolDialog.Tool = new CellTriggersTool(mapPanel, ActiveLayers, toolStatusLabel, cellTriggersToolDialog.TriggerCombo, plugin, url);
+                            toolDialog = cellTriggersToolDialog;
+                        }
+                        break;
+                }
 
-                        toolDialog.GenericTypeComboBox.Types = plugin.Map.OverlayTypes.Where(t => t.IsWall).OrderBy(t => t.Name);
-
-                        activeTool = new WallsTool(mapPanel, ActiveLayers, toolStatusLabel, toolDialog.GenericTypeComboBox, toolDialog.GenericTypeMapPanel, plugin, url);
-                        activeToolForm = toolDialog;
-                        activeToolForm.Show(this);
-                    }
-                    break;
-                case ToolType.Waypoint:
-                    {
-                        WaypointsToolDialog toolDialog = new WaypointsToolDialog();
-
-                        toolDialog.WaypointCombo.DataSource = plugin.Map.Waypoints.Select(w => w.Name).ToArray();
-
-                        activeTool = new WaypointsTool(mapPanel, ActiveLayers, toolStatusLabel, toolDialog.WaypointCombo, plugin, url);
-                        activeToolForm = toolDialog;
-                        activeToolForm.Show(this);
-                    }
-                    break;
-                case ToolType.CellTrigger:
-                    {
-                        CellTriggersToolDialog toolDialog = new CellTriggersToolDialog();
-
-                        toolDialog.TriggerCombo.DataSource = plugin.Map.Triggers.Select(t => t.Name).ToArray();
-
-                        activeTool = new CellTriggersTool(mapPanel, ActiveLayers, toolStatusLabel, toolDialog.TriggerCombo, plugin, url);
-                        activeToolForm = toolDialog;
-                        activeToolForm.Show(this);
-                    }
-                    break;
+                if (toolDialog != null)
+                {
+                    toolForms.Add(ActiveToolType, toolDialog);
+                }
             }
 
-            if (activeToolForm != null)
+            if (toolDialog != null)
             {
+                activeToolForm = (Form)toolDialog;
+                activeTool = toolDialog.GetTool();
+                activeToolForm.Show(this);
+                activeTool.Activate();
+
                 activeToolForm.ResizeEnd += ActiveToolForm_ResizeEnd;
                 clampActiveToolForm();
             }

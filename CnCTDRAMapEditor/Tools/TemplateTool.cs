@@ -133,12 +133,6 @@ namespace MobiusEditor.Tools
         {
             previewMap = map;
 
-            this.mapPanel.MouseDown += MapPanel_MouseDown;
-            this.mapPanel.MouseUp += MapPanel_MouseUp;
-            this.mapPanel.MouseMove += MapPanel_MouseMove;
-            (this.mapPanel as Control).KeyDown += TemplateTool_KeyDown;
-            (this.mapPanel as Control).KeyUp += TemplateTool_KeyUp;
-
             this.templateTypeListView = templateTypeListView;
             this.templateTypeListView.SelectedIndexChanged += TemplateTypeListView_SelectedIndexChanged;
 
@@ -200,14 +194,7 @@ namespace MobiusEditor.Tools
 
             this.mouseTooltip = mouseTooltip;
 
-            navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
-
-            url.Undone += Url_Undone;
-            url.Redone += Url_Redone;
-
             SelectedTemplateType = templateTypes.First().First();
-
-            UpdateStatus();
         }
 
         private void Url_Redone(object sender, EventArgs e)
@@ -984,6 +971,33 @@ namespace MobiusEditor.Tools
             }
         }
 
+        public override void Activate()
+        {
+            base.Activate();
+            this.mapPanel.MouseDown += MapPanel_MouseDown;
+            this.mapPanel.MouseUp += MapPanel_MouseUp;
+            this.mapPanel.MouseMove += MapPanel_MouseMove;
+            (this.mapPanel as Control).KeyDown += TemplateTool_KeyDown;
+            (this.mapPanel as Control).KeyUp += TemplateTool_KeyUp;
+            navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
+            url.Undone += Url_Undone;
+            url.Redone += Url_Redone;
+        }
+
+        public override void Deactivate()
+        {
+            base.Deactivate();
+            mapPanel.MouseDown -= MapPanel_MouseDown;
+            mapPanel.MouseUp -= MapPanel_MouseUp;
+            mapPanel.MouseMove -= MapPanel_MouseMove;
+            (mapPanel as Control).KeyDown -= TemplateTool_KeyDown;
+            (mapPanel as Control).KeyUp -= TemplateTool_KeyUp;
+            navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;
+
+            url.Undone -= Url_Undone;
+            url.Redone -= Url_Redone;
+        }
+
         #region IDisposable Support
         private bool disposedValue = false;
 
@@ -993,21 +1007,12 @@ namespace MobiusEditor.Tools
             {
                 if (disposing)
                 {
-                    mapPanel.MouseDown -= MapPanel_MouseDown;
-                    mapPanel.MouseUp -= MapPanel_MouseUp;
-                    mapPanel.MouseMove -= MapPanel_MouseMove;
-                    (mapPanel as Control).KeyDown -= TemplateTool_KeyDown;
-                    (mapPanel as Control).KeyUp -= TemplateTool_KeyUp;
+                    Deactivate();
 
                     templateTypeListView.SelectedIndexChanged -= TemplateTypeListView_SelectedIndexChanged;
 
                     templateTypeMapPanel.MouseDown -= TemplateTypeMapPanel_MouseDown;
                     templateTypeMapPanel.PostRender -= TemplateTypeMapPanel_PostRender;
-
-                    navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;
-
-                    url.Undone -= Url_Undone;
-                    url.Redone -= Url_Redone;
                 }
                 disposedValue = true;
             }
