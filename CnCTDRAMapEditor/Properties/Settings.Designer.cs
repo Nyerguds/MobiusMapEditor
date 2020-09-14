@@ -175,5 +175,41 @@ namespace MobiusEditor.Properties {
                 this["WaypointsToolDialogDefaultPosition"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0, 0")]
+        public global::System.Drawing.Point SmudgeToolDialogDefaultPosition {
+            get {
+                return ((global::System.Drawing.Point)(this["SmudgeToolDialogDefaultPosition"]));
+            }
+            set {
+                this["SmudgeToolDialogDefaultPosition"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0, 0")]
+        public global::System.Drawing.Point InfantryToolDialogDefaultPosition {
+            get {
+                return ((global::System.Drawing.Point)(this["InfantryToolDialogDefaultPosition"]));
+            }
+            set {
+                this["InfantryToolDialogDefaultPosition"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0, 0")]
+        public global::System.Drawing.Point UnitToolDialogDefaultPosition {
+            get {
+                return ((global::System.Drawing.Point)(this["UnitToolDialogDefaultPosition"]));
+            }
+            set {
+                this["UnitToolDialogDefaultPosition"] = value;
+            }
+        }
     }
 }

@@ -26,7 +26,7 @@ using System.Windows.Forms;
 
 namespace MobiusEditor.Tools.Dialogs
 {
-    public partial class ObjectToolDialog<T> : ToolDialog<T> where T : ITool
+    public abstract partial class ObjectToolDialog<T> : ToolDialog<T> where T : ITool
     {
         public TypeListBox ObjectTypeListBox => objectTypeListBox;
 

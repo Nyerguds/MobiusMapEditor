@@ -12,6 +12,7 @@
 // distributed with this program. You should have received a copy of the 
 // GNU General Public License along with permitted additional restrictions 
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
+using MobiusEditor.Controls;
 using MobiusEditor.Dialogs;
 using MobiusEditor.Event;
 using MobiusEditor.Interface;
@@ -35,23 +36,6 @@ namespace MobiusEditor
 {
     public partial class MainForm : Form
     {
-        [Flags]
-        private enum ToolType
-        {
-            None        = 0,
-            Map         = 1 << 0,
-            Smudge      = 1 << 1,
-            Overlay     = 1 << 2,
-            Terrain     = 1 << 3,
-            Infantry    = 1 << 4,
-            Unit        = 1 << 5,
-            Building    = 1 << 6,
-            Resources   = 1 << 7,
-            Wall        = 1 << 8,
-            Waypoint    = 1 << 9,
-            CellTrigger = 1 << 10
-        }
-
         private static readonly ToolType[] toolTypes;
 
         private ToolType availableToolTypes = ToolType.None;
@@ -99,6 +83,7 @@ namespace MobiusEditor
 
         // Save and re-use tool instances
         private Dictionary<ToolType, IToolDialog> toolForms;
+        private ViewToolStripButton[] viewToolStripButtons;
 
         private IGamePlugin plugin;
         private string filename;
@@ -119,6 +104,20 @@ namespace MobiusEditor
             InitializeComponent();
 
             toolForms = new Dictionary<ToolType, IToolDialog>();
+            viewToolStripButtons = new ViewToolStripButton[]
+            {
+                mapToolStripButton,
+                smudgeToolStripButton,
+                overlayToolStripButton,
+                terrainToolStripButton,
+                infantryToolStripButton,
+                unitToolStripButton,
+                buildingToolStripButton,
+                resourcesToolStripButton,
+                wallsToolStripButton,
+                waypointsToolStripButton,
+                cellTriggersToolStripButton
+            };
 
             mru = new MRU("Software\\Petroglyph\\CnCRemasteredEditor", 10, fileRecentFilesMenuItem);
             mru.FileSelected += Mru_FileSelected;
@@ -895,17 +894,10 @@ namespace MobiusEditor
                 if (plugin.Map.Triggers.Any()) availableToolTypes |= ToolType.CellTrigger;
             }
 
-            mapToolStripButton.Enabled = (availableToolTypes & ToolType.Map) != ToolType.None;
-            smudgeToolStripButton.Enabled = (availableToolTypes & ToolType.Smudge) != ToolType.None;
-            overlayToolStripButton.Enabled = (availableToolTypes & ToolType.Overlay) != ToolType.None;
-            terrainToolStripButton.Enabled = (availableToolTypes & ToolType.Terrain) != ToolType.None;
-            infantryToolStripButton.Enabled = (availableToolTypes & ToolType.Infantry) != ToolType.None;
-            unitToolStripButton.Enabled = (availableToolTypes & ToolType.Unit) != ToolType.None;
-            buildingToolStripButton.Enabled = (availableToolTypes & ToolType.Building) != ToolType.None;
-            resourcesToolStripButton.Enabled = (availableToolTypes & ToolType.Resources) != ToolType.None;
-            wallsToolStripButton.Enabled = (availableToolTypes & ToolType.Wall) != ToolType.None;
-            waypointsToolStripButton.Enabled = (availableToolTypes & ToolType.Waypoint) != ToolType.None;
-            cellTriggersToolStripButton.Enabled = (availableToolTypes & ToolType.CellTrigger) != ToolType.None;
+            foreach (var toolStripButton in viewToolStripButtons)
+            {
+                toolStripButton.Enabled = (availableToolTypes & toolStripButton.ToolType) != ToolType.None;
+            }
 
             ActiveToolType = activeToolType;
         }
@@ -957,107 +949,57 @@ namespace MobiusEditor
                 {
                     case ToolType.Map:
                         {
-                            var templateToolDialog = new TemplateToolDialog();
-                            templateToolDialog.Tool = new TemplateTool(mapPanel, ActiveLayers, toolStatusLabel,
-                                templateToolDialog.TemplateTypeListView, templateToolDialog.TemplateTypeMapPanel, mouseToolTip, plugin, url);
-                            toolDialog = templateToolDialog;
+                            toolDialog = new TemplateToolDialog();
                         }
                         break;
                     case ToolType.Smudge:
                         {
-                            var smudgeToolDialog = new GenericToolDialog<SmudgeTool>
-                            {
-                                Text = "Smudge"
-                            };
-
-                            smudgeToolDialog.GenericTypeListBox.Types = plugin.Map.SmudgeTypes.Where(t => (t.Flag & SmudgeTypeFlag.Bib) == SmudgeTypeFlag.None).OrderBy(t => t.Name);
-                            smudgeToolDialog.Tool = new SmudgeTool(mapPanel, ActiveLayers, toolStatusLabel, smudgeToolDialog.GenericTypeListBox, smudgeToolDialog.GenericTypeMapPanel, plugin, url);
-                            toolDialog = smudgeToolDialog;
+                            toolDialog = new SmudgeToolDialog();
                         }
                         break;
                     case ToolType.Overlay:
                         {
-                                var overlayToolDialog = new GenericToolDialog<OverlaysTool>
-                                {
-                                    Text = "Overlay"
-                                };
-                                overlayToolDialog.GenericTypeListBox.Types = plugin.Map.OverlayTypes.
-                                    Where(t => t.IsPlaceable && ((t.Theaters == null) || t.Theaters.Contains(plugin.Map.Theater))).
-                                    OrderBy(t => t.Name);
-                                overlayToolDialog.Tool = new OverlaysTool(mapPanel, ActiveLayers, toolStatusLabel,
-                                    overlayToolDialog.GenericTypeListBox, overlayToolDialog.GenericTypeMapPanel, plugin, url);
-                                toolDialog = overlayToolDialog;
+                            toolDialog = new OverlayToolDialog();
                         }
                         break;
                     case ToolType.Resources:
                         {
-                                var resourcesToolDialog = new ResourcesToolDialog();
-                                resourcesToolDialog.Tool = new ResourcesTool(mapPanel, ActiveLayers, toolStatusLabel, resourcesToolDialog.TotalResourcesLbl,
-                                    resourcesToolDialog.ResourceBrushSizeNud, resourcesToolDialog.GemsCheckBox, plugin, url);
-                                toolDialog = resourcesToolDialog;
+                            toolDialog = new ResourcesToolDialog();
                         }
                         break;
                     case ToolType.Terrain:
                         {
-                                var terrainToolDialog = new TerrainToolDialog(plugin);
-                                terrainToolDialog.TerrainTypeComboBox.Types = plugin.Map.TerrainTypes.Where(t => t.Theaters.Contains(plugin.Map.Theater)).OrderBy(t => t.Name);
-                                terrainToolDialog.Tool = new TerrainTool(mapPanel, ActiveLayers, toolStatusLabel, terrainToolDialog.TerrainTypeComboBox,
-                                    terrainToolDialog.TerrainTypeMapPanel, terrainToolDialog.TerrainProperties, plugin, url);
-                                toolDialog = terrainToolDialog;
+                            toolDialog = new TerrainToolDialog(plugin);
                         }
                         break;
                     case ToolType.Infantry:
                         {
-                                var infantryToolDialog = new ObjectToolDialog<InfantryTool>(plugin) { Text = "Infantry" };
-                                infantryToolDialog.ObjectTypeListBox.Types = plugin.Map.InfantryTypes.OrderBy(t => t.Name);
-                                infantryToolDialog.Tool = new InfantryTool(mapPanel, ActiveLayers, toolStatusLabel, infantryToolDialog.ObjectTypeListBox,
-                                    infantryToolDialog.ObjectTypeMapPanel, infantryToolDialog.ObjectProperties, plugin, url);
-                                toolDialog = infantryToolDialog;
+                            toolDialog = new InfantryToolDialog(plugin);
                         }
                         break;
                     case ToolType.Unit:
                         {
-                                var unitToolDialog = new ObjectToolDialog<UnitTool>(plugin) { Text = "Units" };
-                                unitToolDialog.ObjectTypeListBox.Types = plugin.Map.UnitTypes.Where(t => !t.IsFixedWing).OrderBy(t => t.Name);
-                                unitToolDialog.Tool = new UnitTool(mapPanel, ActiveLayers, toolStatusLabel, unitToolDialog.ObjectTypeListBox, unitToolDialog.ObjectTypeMapPanel, unitToolDialog.ObjectProperties, plugin, url);
-                                toolDialog = unitToolDialog;
+                            toolDialog = new UnitToolDialog(plugin);
                         }
                         break;
                     case ToolType.Building:
                         {
-                                var buildingToolDialog = new ObjectToolDialog<BuildingTool>(plugin) { Text = "Structures" };
-                                buildingToolDialog.ObjectTypeListBox.Types = plugin.Map.BuildingTypes
-                                    .Where(t => (t.Theaters == null) || t.Theaters.Contains(plugin.Map.Theater))
-                                    .OrderBy(t => t.IsFake)
-                                    .ThenBy(t => t.Name);
-                                buildingToolDialog.Tool = new BuildingTool(mapPanel, ActiveLayers, toolStatusLabel, buildingToolDialog.ObjectTypeListBox,
-                                    buildingToolDialog.ObjectTypeMapPanel, buildingToolDialog.ObjectProperties, plugin, url);
-                                toolDialog = buildingToolDialog;
+                            toolDialog = new BuildingToolDialog(plugin);
                         }
                         break;
                     case ToolType.Wall:
                         {
-                                var wallsToolDialog = new GenericToolDialog<WallsTool>() { Text = "Walls" };
-                                wallsToolDialog.GenericTypeListBox.Types = plugin.Map.OverlayTypes.Where(t => t.IsWall).OrderBy(t => t.Name);
-                                wallsToolDialog.Tool = new WallsTool(mapPanel, ActiveLayers, toolStatusLabel,
-                                    wallsToolDialog.GenericTypeListBox, wallsToolDialog.GenericTypeMapPanel, plugin, url);
-                                toolDialog = wallsToolDialog;
+                            toolDialog = new WallsToolDialog();
                         }
                         break;
                     case ToolType.Waypoint:
                         {
-                            var waypointsToolDialog = new WaypointsToolDialog();
-                            waypointsToolDialog.WaypointCombo.DataSource = plugin.Map.Waypoints.Select(w => w.Name).ToArray();
-                            waypointsToolDialog.Tool = new WaypointsTool(mapPanel, ActiveLayers, toolStatusLabel, waypointsToolDialog.WaypointCombo, plugin, url);
-                            toolDialog = waypointsToolDialog;
+                            toolDialog = new WaypointsToolDialog();
                         }
                         break;
                     case ToolType.CellTrigger:
                         {
-                            var cellTriggersToolDialog = new CellTriggersToolDialog();
-                            cellTriggersToolDialog.TriggerCombo.DataSource = plugin.Map.Triggers.Select(t => t.Name).ToArray();
-                            cellTriggersToolDialog.Tool = new CellTriggersTool(mapPanel, ActiveLayers, toolStatusLabel, cellTriggersToolDialog.TriggerCombo, plugin, url);
-                            toolDialog = cellTriggersToolDialog;
+                            toolDialog = new CellTriggersToolDialog();
                         }
                         break;
                 }
@@ -1071,6 +1013,7 @@ namespace MobiusEditor
             if (toolDialog != null)
             {
                 activeToolForm = (Form)toolDialog;
+                toolDialog.Initialize(mapPanel, ActiveLayers, toolStatusLabel, mouseToolTip, plugin, url);
                 activeTool = toolDialog.GetTool();
                 activeToolForm.Show(this);
                 activeTool.Activate();
@@ -1091,17 +1034,11 @@ namespace MobiusEditor
                     break;
             }
 
-            mapToolStripButton.Checked = ActiveToolType == ToolType.Map;
-            smudgeToolStripButton.Checked = ActiveToolType == ToolType.Smudge;
-            overlayToolStripButton.Checked = ActiveToolType == ToolType.Overlay;
-            terrainToolStripButton.Checked = ActiveToolType == ToolType.Terrain;
-            infantryToolStripButton.Checked = ActiveToolType == ToolType.Infantry;
-            unitToolStripButton.Checked = ActiveToolType == ToolType.Unit;
-            buildingToolStripButton.Checked = ActiveToolType == ToolType.Building;
-            resourcesToolStripButton.Checked = ActiveToolType == ToolType.Resources;
-            wallsToolStripButton.Checked = ActiveToolType == ToolType.Wall;
-            waypointsToolStripButton.Checked = ActiveToolType == ToolType.Waypoint;
-            cellTriggersToolStripButton.Checked = ActiveToolType == ToolType.CellTrigger;
+            // Refresh toolstrip button checked states
+            foreach (var toolStripButton in viewToolStripButtons)
+            {
+                toolStripButton.Checked = ActiveToolType == toolStripButton.ToolType;
+            }
 
             Focus();
 
@@ -1154,50 +1091,7 @@ namespace MobiusEditor
                 return;
             }
 
-            if (sender == mapToolStripButton)
-            {
-                ActiveToolType = ToolType.Map;
-            }
-            else if (sender == smudgeToolStripButton)
-            {
-                ActiveToolType = ToolType.Smudge;
-            }
-            else if (sender == overlayToolStripButton)
-            {
-                ActiveToolType = ToolType.Overlay;
-            }
-            else if (sender == terrainToolStripButton)
-            {
-                ActiveToolType = ToolType.Terrain;
-            }
-            else if (sender == infantryToolStripButton)
-            {
-                ActiveToolType = ToolType.Infantry;
-            }
-            else if (sender == unitToolStripButton)
-            {
-                ActiveToolType = ToolType.Unit;
-            }
-            else if (sender == buildingToolStripButton)
-            {
-                ActiveToolType = ToolType.Building;
-            }
-            else if (sender == resourcesToolStripButton)
-            {
-                ActiveToolType = ToolType.Resources;
-            }
-            else if (sender == wallsToolStripButton)
-            {
-                ActiveToolType = ToolType.Wall;
-            }
-            else if (sender == waypointsToolStripButton)
-            {
-                ActiveToolType = ToolType.Waypoint;
-            }
-            else if (sender == cellTriggersToolStripButton)
-            {
-                ActiveToolType = ToolType.CellTrigger;
-            }
+            ActiveToolType = ((ViewToolStripButton)sender).ToolType;
         }
 
         private void UpdateVisibleLayers()

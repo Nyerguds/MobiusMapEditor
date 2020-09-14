@@ -13,7 +13,10 @@
 // GNU General Public License along with permitted additional restrictions 
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using MobiusEditor.Controls;
+using MobiusEditor.Event;
 using MobiusEditor.Interface;
+using MobiusEditor.Model;
+using MobiusEditor.Utility;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -43,6 +46,13 @@ namespace MobiusEditor.Tools.Dialogs
             : this()
         {
             terrainProperties.Initialize(plugin, true);
+        }
+
+        public override void Initialize(MapPanel mapPanel, MapLayerFlag activeLayers, ToolStripStatusLabel toolStatusLabel, ToolTip mouseToolTip, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> undoRedoList)
+        {
+            TerrainTypeComboBox.Types = plugin.Map.TerrainTypes.Where(t => t.Theaters.Contains(plugin.Map.Theater)).OrderBy(t => t.Name);
+            Tool = new TerrainTool(mapPanel, activeLayers, toolStatusLabel, TerrainTypeComboBox,
+                TerrainTypeMapPanel, TerrainProperties, plugin, undoRedoList);
         }
     }
 }

@@ -7,6 +7,10 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Reflection;
+using MobiusEditor.Utility;
+using MobiusEditor.Event;
+using MobiusEditor.Model;
+using MobiusEditor.Controls;
 
 namespace MobiusEditor.Tools.Dialogs
 {
@@ -27,6 +31,8 @@ namespace MobiusEditor.Tools.Dialogs
                 Location = (Point)defaultPositionPropertySettingInfo.GetValue(Properties.Settings.Default);
             }
         }
+
+        public abstract void Initialize(MapPanel mapPanel, MapLayerFlag activeLayers, ToolStripStatusLabel toolStatusLabel, ToolTip mouseToolTip, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> undoRedoList);
 
         protected override void OnMove(EventArgs e)
         {

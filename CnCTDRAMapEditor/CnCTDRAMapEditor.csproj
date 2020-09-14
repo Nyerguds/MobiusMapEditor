@@ -136,6 +136,9 @@
     <Compile Include="Controls\TypeListBox.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Controls\ViewToolStripButton.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Dialogs\ErrorMessageBox.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -195,6 +198,7 @@
     <Compile Include="Interface\ITechnoType.cs" />
     <Compile Include="Interface\ITool.cs" />
     <Compile Include="Interface\IWidget.cs" />
+    <Compile Include="Interface\ToolType.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -370,7 +374,16 @@
     <Compile Include="TiberianDawn\InfantryTypes.cs" />
     <Compile Include="TiberianDawn\UnitTypes.cs" />
     <Compile Include="Tools\BuildingTool.cs" />
+    <Compile Include="Tools\Dialogs\BuildingToolDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Tools\Dialogs\InfantryToolDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Tools\Dialogs\IToolDialog.cs" />
+    <Compile Include="Tools\Dialogs\OverlayToolDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Tools\Dialogs\ResourcesToolDialog.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -388,6 +401,9 @@
     </Compile>
     <Compile Include="Tools\Dialogs\GenericToolDialog.Designer.cs">
       <DependentUpon>GenericToolDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Tools\Dialogs\SmudgeToolDialog.cs">
+      <SubType>Form</SubType>
     </Compile>
     <Compile Include="Tools\Dialogs\TerrainToolDialog.cs">
       <SubType>Form</SubType>
@@ -408,6 +424,12 @@
       <DependentUpon>CellTriggersToolDialog.cs</DependentUpon>
     </Compile>
     <Compile Include="Tools\Dialogs\ToolDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Tools\Dialogs\UnitToolDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Tools\Dialogs\WallsToolDialog.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Tools\Dialogs\WaypointsToolDialog.cs">

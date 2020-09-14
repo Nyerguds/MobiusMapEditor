@@ -13,7 +13,10 @@
 // GNU General Public License along with permitted additional restrictions 
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using MobiusEditor.Controls;
+using MobiusEditor.Event;
 using MobiusEditor.Interface;
+using MobiusEditor.Model;
+using MobiusEditor.Utility;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -35,6 +38,13 @@ namespace MobiusEditor.Tools.Dialogs
         public TemplateToolDialog()
         {
             InitializeComponent();
+        }
+
+        public override void Initialize(MapPanel mapPanel, MapLayerFlag activeLayers,
+            ToolStripStatusLabel toolStatusLabel, ToolTip mouseToolTip, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> undoRedoList)
+        {
+            Tool = new TemplateTool(mapPanel, activeLayers, toolStatusLabel,
+                TemplateTypeListView, TemplateTypeMapPanel, mouseToolTip, plugin, undoRedoList);
         }
     }
 }

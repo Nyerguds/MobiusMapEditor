@@ -41,5 +41,14 @@
     <Setting Name="WaypointsToolDialogDefaultPosition" Type="System.Drawing.Point" Scope="User">
       <Value Profile="(Default)">0, 0</Value>
     </Setting>
+    <Setting Name="SmudgeToolDialogDefaultPosition" Type="System.Drawing.Point" Scope="User">
+      <Value Profile="(Default)">0, 0</Value>
+    </Setting>
+    <Setting Name="InfantryToolDialogDefaultPosition" Type="System.Drawing.Point" Scope="User">
+      <Value Profile="(Default)">0, 0</Value>
+    </Setting>
+    <Setting Name="UnitToolDialogDefaultPosition" Type="System.Drawing.Point" Scope="User">
+      <Value Profile="(Default)">0, 0</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

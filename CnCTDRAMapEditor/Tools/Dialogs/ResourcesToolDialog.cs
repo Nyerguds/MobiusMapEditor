@@ -14,6 +14,11 @@
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using System;
 using System.Windows.Forms;
+using MobiusEditor.Controls;
+using MobiusEditor.Event;
+using MobiusEditor.Interface;
+using MobiusEditor.Model;
+using MobiusEditor.Utility;
 
 namespace MobiusEditor.Tools.Dialogs
 {
@@ -28,6 +33,13 @@ namespace MobiusEditor.Tools.Dialogs
         public ResourcesToolDialog()
         {
             InitializeComponent();
+        }
+
+        public override void Initialize(MapPanel mapPanel, MapLayerFlag activeLayers, ToolStripStatusLabel toolStatusLabel,
+            ToolTip mouseToolTip, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> undoRedoList)
+        {
+            Tool = new ResourcesTool(mapPanel, activeLayers, toolStatusLabel, TotalResourcesLbl, 
+                ResourceBrushSizeNud, GemsCheckBox, plugin, undoRedoList);
         }
     }
 }

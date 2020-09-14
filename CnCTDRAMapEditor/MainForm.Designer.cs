@@ -85,17 +85,17 @@ namespace MobiusEditor
             this.cellStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.mouseToolTip = new System.Windows.Forms.ToolTip(this.components);
             this.mainToolStrip = new System.Windows.Forms.ToolStrip();
-            this.mapToolStripButton = new System.Windows.Forms.ToolStripButton();
-            this.smudgeToolStripButton = new System.Windows.Forms.ToolStripButton();
-            this.overlayToolStripButton = new System.Windows.Forms.ToolStripButton();
-            this.terrainToolStripButton = new System.Windows.Forms.ToolStripButton();
-            this.infantryToolStripButton = new System.Windows.Forms.ToolStripButton();
-            this.unitToolStripButton = new System.Windows.Forms.ToolStripButton();
-            this.buildingToolStripButton = new System.Windows.Forms.ToolStripButton();
-            this.resourcesToolStripButton = new System.Windows.Forms.ToolStripButton();
-            this.wallsToolStripButton = new System.Windows.Forms.ToolStripButton();
-            this.waypointsToolStripButton = new System.Windows.Forms.ToolStripButton();
-            this.cellTriggersToolStripButton = new System.Windows.Forms.ToolStripButton();
+            this.mapToolStripButton = new MobiusEditor.Controls.ViewToolStripButton();
+            this.smudgeToolStripButton = new MobiusEditor.Controls.ViewToolStripButton();
+            this.overlayToolStripButton = new MobiusEditor.Controls.ViewToolStripButton();
+            this.terrainToolStripButton = new MobiusEditor.Controls.ViewToolStripButton();
+            this.infantryToolStripButton = new MobiusEditor.Controls.ViewToolStripButton();
+            this.unitToolStripButton = new MobiusEditor.Controls.ViewToolStripButton();
+            this.buildingToolStripButton = new MobiusEditor.Controls.ViewToolStripButton();
+            this.resourcesToolStripButton = new MobiusEditor.Controls.ViewToolStripButton();
+            this.wallsToolStripButton = new MobiusEditor.Controls.ViewToolStripButton();
+            this.waypointsToolStripButton = new MobiusEditor.Controls.ViewToolStripButton();
+            this.cellTriggersToolStripButton = new MobiusEditor.Controls.ViewToolStripButton();
             this.mapPanel = new MobiusEditor.Controls.MapPanel();
             this.copyrightStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.mainMenuStrip.SuspendLayout();
@@ -455,6 +455,7 @@ namespace MobiusEditor
             this.mapToolStripButton.Name = "mapToolStripButton";
             this.mapToolStripButton.Size = new System.Drawing.Size(67, 28);
             this.mapToolStripButton.Text = "Map";
+            this.mapToolStripButton.ToolType = Interface.ToolType.Map;
             this.mapToolStripButton.Click += new System.EventHandler(this.mainToolStripButton_Click);
             // 
             // smudgeToolStripButton
@@ -464,6 +465,7 @@ namespace MobiusEditor
             this.smudgeToolStripButton.Name = "smudgeToolStripButton";
             this.smudgeToolStripButton.Size = new System.Drawing.Size(92, 28);
             this.smudgeToolStripButton.Text = "Smudge";
+            this.smudgeToolStripButton.ToolType = Interface.ToolType.Smudge;
             this.smudgeToolStripButton.Click += new System.EventHandler(this.mainToolStripButton_Click);
             // 
             // overlayToolStripButton
@@ -473,6 +475,7 @@ namespace MobiusEditor
             this.overlayToolStripButton.Name = "overlayToolStripButton";
             this.overlayToolStripButton.Size = new System.Drawing.Size(87, 28);
             this.overlayToolStripButton.Text = "Overlay";
+            this.overlayToolStripButton.ToolType = Interface.ToolType.Overlay;
             this.overlayToolStripButton.Click += new System.EventHandler(this.mainToolStripButton_Click);
             // 
             // terrainToolStripButton
@@ -482,6 +485,7 @@ namespace MobiusEditor
             this.terrainToolStripButton.Name = "terrainToolStripButton";
             this.terrainToolStripButton.Size = new System.Drawing.Size(82, 28);
             this.terrainToolStripButton.Text = "Terrain";
+            this.terrainToolStripButton.ToolType = Interface.ToolType.Terrain;
             this.terrainToolStripButton.Click += new System.EventHandler(this.mainToolStripButton_Click);
             // 
             // infantryToolStripButton
@@ -491,6 +495,7 @@ namespace MobiusEditor
             this.infantryToolStripButton.Name = "infantryToolStripButton";
             this.infantryToolStripButton.Size = new System.Drawing.Size(87, 28);
             this.infantryToolStripButton.Text = "Infantry";
+            this.infantryToolStripButton.ToolType = Interface.ToolType.Infantry;
             this.infantryToolStripButton.Click += new System.EventHandler(this.mainToolStripButton_Click);
             // 
             // unitToolStripButton
@@ -500,6 +505,7 @@ namespace MobiusEditor
             this.unitToolStripButton.Name = "unitToolStripButton";
             this.unitToolStripButton.Size = new System.Drawing.Size(70, 28);
             this.unitToolStripButton.Text = "Units";
+            this.unitToolStripButton.ToolType = Interface.ToolType.Unit;
             this.unitToolStripButton.Click += new System.EventHandler(this.mainToolStripButton_Click);
             // 
             // buildingToolStripButton
@@ -509,6 +515,7 @@ namespace MobiusEditor
             this.buildingToolStripButton.Name = "buildingToolStripButton";
             this.buildingToolStripButton.Size = new System.Drawing.Size(102, 28);
             this.buildingToolStripButton.Text = "Structures";
+            this.buildingToolStripButton.ToolType = Interface.ToolType.Building;
             this.buildingToolStripButton.Click += new System.EventHandler(this.mainToolStripButton_Click);
             // 
             // resourcesToolStripButton
@@ -518,6 +525,7 @@ namespace MobiusEditor
             this.resourcesToolStripButton.Name = "resourcesToolStripButton";
             this.resourcesToolStripButton.Size = new System.Drawing.Size(103, 28);
             this.resourcesToolStripButton.Text = "Resources";
+            this.resourcesToolStripButton.ToolType = Interface.ToolType.Resources;
             this.resourcesToolStripButton.Click += new System.EventHandler(this.mainToolStripButton_Click);
             // 
             // wallsToolStripButton
@@ -527,6 +535,7 @@ namespace MobiusEditor
             this.wallsToolStripButton.Name = "wallsToolStripButton";
             this.wallsToolStripButton.Size = new System.Drawing.Size(72, 28);
             this.wallsToolStripButton.Text = "Walls";
+            this.wallsToolStripButton.ToolType = Interface.ToolType.Wall;
             this.wallsToolStripButton.Click += new System.EventHandler(this.mainToolStripButton_Click);
             // 
             // waypointsToolStripButton
@@ -536,6 +545,7 @@ namespace MobiusEditor
             this.waypointsToolStripButton.Name = "waypointsToolStripButton";
             this.waypointsToolStripButton.Size = new System.Drawing.Size(106, 28);
             this.waypointsToolStripButton.Text = "Waypoints";
+            this.waypointsToolStripButton.ToolType = Interface.ToolType.Waypoint;
             this.waypointsToolStripButton.Click += new System.EventHandler(this.mainToolStripButton_Click);
             // 
             // cellTriggersToolStripButton
@@ -545,6 +555,7 @@ namespace MobiusEditor
             this.cellTriggersToolStripButton.Name = "cellTriggersToolStripButton";
             this.cellTriggersToolStripButton.Size = new System.Drawing.Size(119, 28);
             this.cellTriggersToolStripButton.Text = "Cell Triggers";
+            this.cellTriggersToolStripButton.ToolType = Interface.ToolType.CellTrigger;
             this.cellTriggersToolStripButton.Click += new System.EventHandler(this.mainToolStripButton_Click);
             // 
             // mapPanel
@@ -627,23 +638,23 @@ namespace MobiusEditor
         private System.Windows.Forms.ToolStripMenuItem filePublishMenuItem;
         private System.Windows.Forms.ToolTip mouseToolTip;
         private System.Windows.Forms.ToolStrip mainToolStrip;
-        private System.Windows.Forms.ToolStripButton mapToolStripButton;
-        private System.Windows.Forms.ToolStripButton smudgeToolStripButton;
-        private System.Windows.Forms.ToolStripButton overlayToolStripButton;
-        private System.Windows.Forms.ToolStripButton terrainToolStripButton;
-        private System.Windows.Forms.ToolStripButton infantryToolStripButton;
-        private System.Windows.Forms.ToolStripButton unitToolStripButton;
-        private System.Windows.Forms.ToolStripButton buildingToolStripButton;
-        private System.Windows.Forms.ToolStripButton resourcesToolStripButton;
-        private System.Windows.Forms.ToolStripButton wallsToolStripButton;
-        private System.Windows.Forms.ToolStripButton waypointsToolStripButton;
+        private MobiusEditor.Controls.ViewToolStripButton mapToolStripButton;
+        private MobiusEditor.Controls.ViewToolStripButton smudgeToolStripButton;
+        private MobiusEditor.Controls.ViewToolStripButton overlayToolStripButton;
+        private MobiusEditor.Controls.ViewToolStripButton terrainToolStripButton;
+        private MobiusEditor.Controls.ViewToolStripButton infantryToolStripButton;
+        private MobiusEditor.Controls.ViewToolStripButton unitToolStripButton;
+        private MobiusEditor.Controls.ViewToolStripButton buildingToolStripButton;
+        private MobiusEditor.Controls.ViewToolStripButton resourcesToolStripButton;
+        private MobiusEditor.Controls.ViewToolStripButton wallsToolStripButton;
+        private MobiusEditor.Controls.ViewToolStripButton waypointsToolStripButton;
         private Controls.MapPanel mapPanel;
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem3;
         private System.Windows.Forms.ToolStripMenuItem fileRecentFilesMenuItem;
         private System.Windows.Forms.ToolStripMenuItem fileSaveMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem4;
         private System.Windows.Forms.ToolStripMenuItem developerGoToINIMenuItem;
-        private System.Windows.Forms.ToolStripButton cellTriggersToolStripButton;
+        private MobiusEditor.Controls.ViewToolStripButton cellTriggersToolStripButton;
         private System.Windows.Forms.ToolStripMenuItem settingsTeamTypesMenuItem;
         private System.Windows.Forms.ToolStripMenuItem settingsTriggersMenuItem;
         private System.Windows.Forms.ToolStripMenuItem layersToolStripMenuItem;
