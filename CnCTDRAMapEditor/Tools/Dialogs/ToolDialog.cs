@@ -25,5 +25,11 @@ namespace MobiusEditor.Tools.Dialogs
             base.OnClosed(e);
             Tool.Deactivate();
         }
+
+        protected override void Dispose(bool disposing)
+        {
+            Tool?.Dispose();
+            base.Dispose(disposing);
+        }
     }
 }

@@ -62,8 +62,6 @@ namespace MobiusEditor.Tools
             this.url = url;
 
             this.mapPanel = mapPanel;
-            this.mapPanel.PreRender += MapPanel_PreRender;
-            this.mapPanel.PostRender += MapPanel_PostRender;
 
             this.statusLbl = statusLbl;
 
@@ -294,6 +292,8 @@ namespace MobiusEditor.Tools
         public virtual void Activate()
         {
             navigationWidget.Activate();
+            this.mapPanel.PreRender += MapPanel_PreRender;
+            this.mapPanel.PostRender += MapPanel_PostRender;
         }
 
         /// <summary>
@@ -305,6 +305,8 @@ namespace MobiusEditor.Tools
         public virtual void Deactivate()
         {
             navigationWidget.Deactivate();
+            mapPanel.PreRender -= MapPanel_PreRender;
+            mapPanel.PostRender -= MapPanel_PostRender;
         }
 
         #region IDisposable Support
@@ -316,11 +318,8 @@ namespace MobiusEditor.Tools
             {
                 if (disposing)
                 {
+                    Deactivate();
                     navigationWidget.Dispose();
-
-                    mapPanel.PreRender -= MapPanel_PreRender;
-                    mapPanel.PostRender -= MapPanel_PostRender;
-
                     map.BasicSection.PropertyChanged -= BasicSection_PropertyChanged;
                 }
                 disposedValue = true;
