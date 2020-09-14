@@ -29,7 +29,7 @@ namespace MobiusEditor.Tools
 {
     public class BuildingTool : ViewTool
     {
-        private readonly TypeComboBox buildingTypeComboBox;
+        private readonly TypeListBox buildingTypeComboBox;
         private readonly MapPanel buildingTypeMapPanel;
         private readonly ObjectProperties objectProperties;
 
@@ -72,7 +72,7 @@ namespace MobiusEditor.Tools
             }
         }
 
-        public BuildingTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, TypeComboBox buildingTypeComboBox, MapPanel buildingTypeMapPanel, ObjectProperties objectProperties, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> url)
+        public BuildingTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, TypeListBox buildingTypeComboBox, MapPanel buildingTypeMapPanel, ObjectProperties objectProperties, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> url)
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
             previewMap = map;

@@ -29,7 +29,7 @@ namespace MobiusEditor.Tools
 {
     public class InfantryTool : ViewTool
     {
-        private readonly TypeComboBox infantryTypeComboBox;
+        private readonly TypeListBox infantryTypeComboBox;
         private readonly MapPanel infantryTypeMapPanel;
         private readonly ObjectProperties objectProperties;
 
@@ -71,7 +71,7 @@ namespace MobiusEditor.Tools
             }
         }
 
-        public InfantryTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, TypeComboBox infantryTypeComboBox, MapPanel infantryTypeMapPanel, ObjectProperties objectProperties, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> url)
+        public InfantryTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, TypeListBox infantryTypeComboBox, MapPanel infantryTypeMapPanel, ObjectProperties objectProperties, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> url)
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
             previewMap = map;

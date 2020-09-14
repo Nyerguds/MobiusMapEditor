@@ -1009,8 +1009,8 @@ namespace MobiusEditor
                     case ToolType.Infantry:
                         {
                                 var infantryToolDialog = new ObjectToolDialog<InfantryTool>(plugin) { Text = "Infantry" };
-                                infantryToolDialog.ObjectTypeComboBox.Types = plugin.Map.InfantryTypes.OrderBy(t => t.Name);
-                                infantryToolDialog.Tool = new InfantryTool(mapPanel, ActiveLayers, toolStatusLabel, infantryToolDialog.ObjectTypeComboBox,
+                                infantryToolDialog.ObjectTypeListBox.Types = plugin.Map.InfantryTypes.OrderBy(t => t.Name);
+                                infantryToolDialog.Tool = new InfantryTool(mapPanel, ActiveLayers, toolStatusLabel, infantryToolDialog.ObjectTypeListBox,
                                     infantryToolDialog.ObjectTypeMapPanel, infantryToolDialog.ObjectProperties, plugin, url);
                                 toolDialog = infantryToolDialog;
                         }
@@ -1018,19 +1018,19 @@ namespace MobiusEditor
                     case ToolType.Unit:
                         {
                                 var unitToolDialog = new ObjectToolDialog<UnitTool>(plugin) { Text = "Units" };
-                                unitToolDialog.ObjectTypeComboBox.Types = plugin.Map.UnitTypes.Where(t => !t.IsFixedWing).OrderBy(t => t.Name);
-                                unitToolDialog.Tool = new UnitTool(mapPanel, ActiveLayers, toolStatusLabel, unitToolDialog.ObjectTypeComboBox, unitToolDialog.ObjectTypeMapPanel, unitToolDialog.ObjectProperties, plugin, url);
+                                unitToolDialog.ObjectTypeListBox.Types = plugin.Map.UnitTypes.Where(t => !t.IsFixedWing).OrderBy(t => t.Name);
+                                unitToolDialog.Tool = new UnitTool(mapPanel, ActiveLayers, toolStatusLabel, unitToolDialog.ObjectTypeListBox, unitToolDialog.ObjectTypeMapPanel, unitToolDialog.ObjectProperties, plugin, url);
                                 toolDialog = unitToolDialog;
                         }
                         break;
                     case ToolType.Building:
                         {
                                 var buildingToolDialog = new ObjectToolDialog<BuildingTool>(plugin) { Text = "Structures" };
-                                buildingToolDialog.ObjectTypeComboBox.Types = plugin.Map.BuildingTypes
+                                buildingToolDialog.ObjectTypeListBox.Types = plugin.Map.BuildingTypes
                                     .Where(t => (t.Theaters == null) || t.Theaters.Contains(plugin.Map.Theater))
                                     .OrderBy(t => t.IsFake)
                                     .ThenBy(t => t.Name);
-                                buildingToolDialog.Tool = new BuildingTool(mapPanel, ActiveLayers, toolStatusLabel, buildingToolDialog.ObjectTypeComboBox,
+                                buildingToolDialog.Tool = new BuildingTool(mapPanel, ActiveLayers, toolStatusLabel, buildingToolDialog.ObjectTypeListBox,
                                     buildingToolDialog.ObjectTypeMapPanel, buildingToolDialog.ObjectProperties, plugin, url);
                                 toolDialog = buildingToolDialog;
                         }

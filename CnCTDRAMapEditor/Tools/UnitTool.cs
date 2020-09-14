@@ -29,7 +29,7 @@ namespace MobiusEditor.Tools
 {
     public class UnitTool : ViewTool
     {
-        private readonly TypeComboBox unitTypeComboBox;
+        private readonly TypeListBox unitTypeComboBox;
         private readonly MapPanel unitTypeMapPanel;
         private readonly ObjectProperties objectProperties;
 
@@ -71,7 +71,7 @@ namespace MobiusEditor.Tools
             }
         }
 
-        public UnitTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, TypeComboBox unitTypeComboBox, MapPanel unitTypeMapPanel, ObjectProperties objectProperties, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> url)
+        public UnitTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, TypeListBox unitTypeComboBox, MapPanel unitTypeMapPanel, ObjectProperties objectProperties, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> url)
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
             previewMap = map;
