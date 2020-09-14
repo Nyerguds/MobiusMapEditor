@@ -6,16 +6,15 @@
 // Changes to this file will be reverted when you update Steamworks.NET
 
 #if UNITY_ANDROID || UNITY_IOS || UNITY_TIZEN || UNITY_TVOS || UNITY_WEBGL || UNITY_WSA || UNITY_PS4 || UNITY_WII || UNITY_XBOXONE || UNITY_SWITCH
-	#define DISABLESTEAMWORKS
+#define DISABLESTEAMWORKS
 #endif
 
 #if !DISABLESTEAMWORKS
 
-using System.Runtime.InteropServices;
-using IntPtr = System.IntPtr;
 
-namespace Steamworks {
-	public static class SteamNetworking {
+namespace Steamworks
+{
+    public static class SteamNetworking {
 		/// <summary>
 		/// <para>//////////////////////////////////////////////////////////////////////////////////////////</para>
 		/// <para> UDP-style (connectionless) networking interface.  These functions send messages using</para>

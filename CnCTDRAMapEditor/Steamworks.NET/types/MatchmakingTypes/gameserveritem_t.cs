@@ -6,21 +6,21 @@
 // Changes to this file will be reverted when you update Steamworks.NET
 
 #if UNITY_ANDROID || UNITY_IOS || UNITY_TIZEN || UNITY_TVOS || UNITY_WEBGL || UNITY_WSA || UNITY_PS4 || UNITY_WII || UNITY_XBOXONE || UNITY_SWITCH
-	#define DISABLESTEAMWORKS
+#define DISABLESTEAMWORKS
 #endif
 
 #if !DISABLESTEAMWORKS
 
 using System.Runtime.InteropServices;
-using IntPtr = System.IntPtr;
 
 using System.Text;
 
-namespace Steamworks {
-	//-----------------------------------------------------------------------------
-	// Purpose: Data describing a single server
-	//-----------------------------------------------------------------------------
-	[StructLayout(LayoutKind.Sequential, Size = 372, Pack = 4)]
+namespace Steamworks
+{
+    //-----------------------------------------------------------------------------
+    // Purpose: Data describing a single server
+    //-----------------------------------------------------------------------------
+    [StructLayout(LayoutKind.Sequential, Size = 372, Pack = 4)]
 	[System.Serializable]
 	public class gameserveritem_t {
 		public string GetGameDir() {

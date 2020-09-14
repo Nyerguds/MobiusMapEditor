@@ -17,8 +17,6 @@ using MobiusEditor.Event;
 using MobiusEditor.Interface;
 using MobiusEditor.Model;
 using MobiusEditor.Utility;
-using MobiusEditor.Widgets;
-using System;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;

@@ -14,9 +14,6 @@
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MobiusEditor.Utility
 {

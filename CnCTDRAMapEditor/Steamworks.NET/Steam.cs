@@ -11,11 +11,11 @@
 
 #if !DISABLESTEAMWORKS
 
-using System.Runtime.InteropServices;
 using IntPtr = System.IntPtr;
 
-namespace Steamworks {
-	public static class Version {
+namespace Steamworks
+{
+    public static class Version {
 		public const string SteamworksNETVersion = "13.0.0";
 		public const string SteamworksSDKVersion = "1.46";
 		public const string SteamAPIDLLVersion = "05.25.65.21";

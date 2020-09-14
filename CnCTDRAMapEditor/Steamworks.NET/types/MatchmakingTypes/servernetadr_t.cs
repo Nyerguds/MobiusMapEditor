@@ -6,18 +6,17 @@
 // Changes to this file will be reverted when you update Steamworks.NET
 
 #if UNITY_ANDROID || UNITY_IOS || UNITY_TIZEN || UNITY_TVOS || UNITY_WEBGL || UNITY_WSA || UNITY_PS4 || UNITY_WII || UNITY_XBOXONE || UNITY_SWITCH
-	#define DISABLESTEAMWORKS
+#define DISABLESTEAMWORKS
 #endif
 
 #if !DISABLESTEAMWORKS
 
-using System.Runtime.InteropServices;
-using IntPtr = System.IntPtr;
 
-namespace Steamworks {
-	// servernetadr_t is all the addressing info the serverbrowser needs to know about a game server,
-	// namely: its IP, its connection port, and its query port.
-	[System.Serializable]
+namespace Steamworks
+{
+    // servernetadr_t is all the addressing info the serverbrowser needs to know about a game server,
+    // namely: its IP, its connection port, and its query port.
+    [System.Serializable]
 	public struct servernetadr_t {
 		private ushort m_usConnectionPort;	// (in HOST byte order)
 		private ushort m_usQueryPort;

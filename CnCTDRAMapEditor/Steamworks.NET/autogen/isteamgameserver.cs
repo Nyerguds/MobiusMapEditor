@@ -6,16 +6,15 @@
 // Changes to this file will be reverted when you update Steamworks.NET
 
 #if UNITY_ANDROID || UNITY_IOS || UNITY_TIZEN || UNITY_TVOS || UNITY_WEBGL || UNITY_WSA || UNITY_PS4 || UNITY_WII || UNITY_XBOXONE || UNITY_SWITCH
-	#define DISABLESTEAMWORKS
+#define DISABLESTEAMWORKS
 #endif
 
 #if !DISABLESTEAMWORKS
 
-using System.Runtime.InteropServices;
-using IntPtr = System.IntPtr;
 
-namespace Steamworks {
-	public static class SteamGameServer {
+namespace Steamworks
+{
+    public static class SteamGameServer {
 		/// <summary>
 		/// <para> Basic server data.  These properties, if set, must be set before before calling LogOn.  They</para>
 		/// <para> may not be changed after logged in.</para>

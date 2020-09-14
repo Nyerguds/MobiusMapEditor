@@ -18,7 +18,6 @@ using MobiusEditor.Utility;
 using Steamworks;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;

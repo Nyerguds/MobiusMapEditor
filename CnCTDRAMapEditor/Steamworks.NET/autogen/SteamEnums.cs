@@ -6,21 +6,20 @@
 // Changes to this file will be reverted when you update Steamworks.NET
 
 #if UNITY_ANDROID || UNITY_IOS || UNITY_TIZEN || UNITY_TVOS || UNITY_WEBGL || UNITY_WSA || UNITY_PS4 || UNITY_WII || UNITY_XBOXONE || UNITY_SWITCH
-	#define DISABLESTEAMWORKS
+#define DISABLESTEAMWORKS
 #endif
 
 #if !DISABLESTEAMWORKS
 
-using System.Runtime.InteropServices;
-using IntPtr = System.IntPtr;
 
 using Flags = System.FlagsAttribute;
 
-namespace Steamworks {
-	//-----------------------------------------------------------------------------
-	// Purpose: possible results when registering an activation code
-	//-----------------------------------------------------------------------------
-	public enum ERegisterActivationCodeResult : int {
+namespace Steamworks
+{
+    //-----------------------------------------------------------------------------
+    // Purpose: possible results when registering an activation code
+    //-----------------------------------------------------------------------------
+    public enum ERegisterActivationCodeResult : int {
 		k_ERegisterActivationCodeResultOK = 0,
 		k_ERegisterActivationCodeResultFail = 1,
 		k_ERegisterActivationCodeResultAlreadyRegistered = 2,

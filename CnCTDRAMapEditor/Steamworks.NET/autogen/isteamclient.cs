@@ -6,16 +6,16 @@
 // Changes to this file will be reverted when you update Steamworks.NET
 
 #if UNITY_ANDROID || UNITY_IOS || UNITY_TIZEN || UNITY_TVOS || UNITY_WEBGL || UNITY_WSA || UNITY_PS4 || UNITY_WII || UNITY_XBOXONE || UNITY_SWITCH
-	#define DISABLESTEAMWORKS
+#define DISABLESTEAMWORKS
 #endif
 
 #if !DISABLESTEAMWORKS
 
-using System.Runtime.InteropServices;
 using IntPtr = System.IntPtr;
 
-namespace Steamworks {
-	public static class SteamClient {
+namespace Steamworks
+{
+    public static class SteamClient {
 		/// <summary>
 		/// <para> Creates a communication pipe to the Steam client.</para>
 		/// <para> NOT THREADSAFE - ensure that no other threads are accessing Steamworks API when calling</para>

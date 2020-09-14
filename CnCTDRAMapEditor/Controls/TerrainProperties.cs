@@ -16,7 +16,6 @@ using MobiusEditor.Interface;
 using MobiusEditor.Model;
 using MobiusEditor.Utility;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Linq;

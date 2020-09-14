@@ -6,16 +6,15 @@
 // Changes to this file will be reverted when you update Steamworks.NET
 
 #if UNITY_ANDROID || UNITY_IOS || UNITY_TIZEN || UNITY_TVOS || UNITY_WEBGL || UNITY_WSA || UNITY_PS4 || UNITY_WII || UNITY_XBOXONE || UNITY_SWITCH
-	#define DISABLESTEAMWORKS
+#define DISABLESTEAMWORKS
 #endif
 
 #if !DISABLESTEAMWORKS
 
-using System.Runtime.InteropServices;
-using IntPtr = System.IntPtr;
 
-namespace Steamworks {
-	public static class SteamHTTP {
+namespace Steamworks
+{
+    public static class SteamHTTP {
 		/// <summary>
 		/// <para> Initializes a new HTTP request, returning a handle to use in further operations on it.  Requires</para>
 		/// <para> the method (GET or POST) and the absolute URL for the request.  Both http and https are supported,</para>

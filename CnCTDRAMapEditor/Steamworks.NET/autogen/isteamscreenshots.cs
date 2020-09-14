@@ -6,16 +6,15 @@
 // Changes to this file will be reverted when you update Steamworks.NET
 
 #if UNITY_ANDROID || UNITY_IOS || UNITY_TIZEN || UNITY_TVOS || UNITY_WEBGL || UNITY_WSA || UNITY_PS4 || UNITY_WII || UNITY_XBOXONE || UNITY_SWITCH
-	#define DISABLESTEAMWORKS
+#define DISABLESTEAMWORKS
 #endif
 
 #if !DISABLESTEAMWORKS
 
-using System.Runtime.InteropServices;
-using IntPtr = System.IntPtr;
 
-namespace Steamworks {
-	public static class SteamScreenshots {
+namespace Steamworks
+{
+    public static class SteamScreenshots {
 		/// <summary>
 		/// <para> Writes a screenshot to the user's screenshot library given the raw image data, which must be in RGB format.</para>
 		/// <para> The return value is a handle that is valid for the duration of the game process and can be used to apply tags.</para>
