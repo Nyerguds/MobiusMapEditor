@@ -689,7 +689,7 @@ namespace MobiusEditor
                 }
                 else
                 {
-                    cellStatusLabel.Text = string.Empty;
+                    cellStatusLabel.Text = "No cell";
                 }
             }
         }
