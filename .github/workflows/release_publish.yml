@@ -1,0 +1,29 @@
+name: Publish compiled binaries in release
+
+on: 
+  release:
+    types: [published]
+ 
+jobs:
+  release:
+    name: Release
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup MSBuild.exe
+      uses: microsoft/setup-msbuild@v1.0.1
+    - name: Restore packages
+      run: msbuild  CnCTDRAMapEditor -t:restore -p:Configuration=Release
+    - name: Build with MSBuild
+      run: msbuild  CnCTDRAMapEditor -p:Configuration=Release
+    - name: Pack compiled binaries
+      run: 7z a -tzip CnCTDRAMapEditor.zip "D:\a\CnCTDRAMapEditor\CnCTDRAMapEditor\CnCTDRAMapEditor\bin\Release\*.*"
+    - name: Upload compiled binaries
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: 'CnCTDRAMapEditor.zip'
+        asset_name: CnCTDRAMapEditor.zip
+        asset_content_type: application/zip
