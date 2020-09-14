@@ -27,7 +27,7 @@ namespace MobiusEditor.Tools
 {
     public class SmudgeTool : ViewTool
     {
-        private readonly TypeComboBox smudgeTypeComboBox;
+        private readonly TypeListBox smudgeTypeListBox;
         private readonly MapPanel smudgeTypeMapPanel;
 
         private Map previewMap;
@@ -49,7 +49,7 @@ namespace MobiusEditor.Tools
                     }
 
                     selectedSmudgeType = value;
-                    smudgeTypeComboBox.SelectedValue = selectedSmudgeType;
+                    smudgeTypeListBox.SelectedValue = selectedSmudgeType;
 
                     if (placementMode && (selectedSmudgeType != null))
                     {
@@ -61,13 +61,13 @@ namespace MobiusEditor.Tools
             }
         }
 
-        public SmudgeTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, TypeComboBox smudgeTypeComboBox, MapPanel smudgeTypeMapPanel, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> url)
+        public SmudgeTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, TypeListBox smudgeTypeListBox, MapPanel smudgeTypeMapPanel, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> url)
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
             previewMap = map;
 
-            this.smudgeTypeComboBox = smudgeTypeComboBox;
-            this.smudgeTypeComboBox.SelectedIndexChanged += SmudgeTypeComboBox_SelectedIndexChanged;
+            this.smudgeTypeListBox = smudgeTypeListBox;
+            this.smudgeTypeListBox.SelectedIndexChanged += SmudgeTypeComboBox_SelectedIndexChanged;
 
             this.smudgeTypeMapPanel = smudgeTypeMapPanel;
             this.smudgeTypeMapPanel.BackColor = Color.White;
@@ -75,12 +75,12 @@ namespace MobiusEditor.Tools
 
             navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
 
-            SelectedSmudgeType = smudgeTypeComboBox.Types.First() as SmudgeType;
+            SelectedSmudgeType = smudgeTypeListBox.Types.First() as SmudgeType;
         }
 
         private void SmudgeTypeComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            SelectedSmudgeType = smudgeTypeComboBox.SelectedValue as SmudgeType;
+            SelectedSmudgeType = smudgeTypeListBox.SelectedValue as SmudgeType;
         }
 
         private void SmudgeTool_KeyDown(object sender, KeyEventArgs e)
@@ -331,7 +331,7 @@ namespace MobiusEditor.Tools
                 if (disposing)
                 {
                     Deactivate();
-                    smudgeTypeComboBox.SelectedIndexChanged -= SmudgeTypeComboBox_SelectedIndexChanged;
+                    smudgeTypeListBox.SelectedIndexChanged -= SmudgeTypeComboBox_SelectedIndexChanged;
                     navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;
                 }
                 disposedValue = true;

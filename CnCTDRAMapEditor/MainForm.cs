@@ -970,8 +970,8 @@ namespace MobiusEditor
                                 Text = "Smudge"
                             };
 
-                            smudgeToolDialog.GenericTypeComboBox.Types = plugin.Map.SmudgeTypes.Where(t => (t.Flag & SmudgeTypeFlag.Bib) == SmudgeTypeFlag.None).OrderBy(t => t.Name);
-                            smudgeToolDialog.Tool = new SmudgeTool(mapPanel, ActiveLayers, toolStatusLabel, smudgeToolDialog.GenericTypeComboBox, smudgeToolDialog.GenericTypeMapPanel, plugin, url);
+                            smudgeToolDialog.GenericTypeListBox.Types = plugin.Map.SmudgeTypes.Where(t => (t.Flag & SmudgeTypeFlag.Bib) == SmudgeTypeFlag.None).OrderBy(t => t.Name);
+                            smudgeToolDialog.Tool = new SmudgeTool(mapPanel, ActiveLayers, toolStatusLabel, smudgeToolDialog.GenericTypeListBox, smudgeToolDialog.GenericTypeMapPanel, plugin, url);
                             toolDialog = smudgeToolDialog;
                         }
                         break;
@@ -981,11 +981,11 @@ namespace MobiusEditor
                                 {
                                     Text = "Overlay"
                                 };
-                                overlayToolDialog.GenericTypeComboBox.Types = plugin.Map.OverlayTypes.
+                                overlayToolDialog.GenericTypeListBox.Types = plugin.Map.OverlayTypes.
                                     Where(t => t.IsPlaceable && ((t.Theaters == null) || t.Theaters.Contains(plugin.Map.Theater))).
                                     OrderBy(t => t.Name);
                                 overlayToolDialog.Tool = new OverlaysTool(mapPanel, ActiveLayers, toolStatusLabel,
-                                    overlayToolDialog.GenericTypeComboBox, overlayToolDialog.GenericTypeMapPanel, plugin, url);
+                                    overlayToolDialog.GenericTypeListBox, overlayToolDialog.GenericTypeMapPanel, plugin, url);
                                 toolDialog = overlayToolDialog;
                         }
                         break;
@@ -1038,9 +1038,9 @@ namespace MobiusEditor
                     case ToolType.Wall:
                         {
                                 var wallsToolDialog = new GenericToolDialog<WallsTool>() { Text = "Walls" };
-                                wallsToolDialog.GenericTypeComboBox.Types = plugin.Map.OverlayTypes.Where(t => t.IsWall).OrderBy(t => t.Name);
+                                wallsToolDialog.GenericTypeListBox.Types = plugin.Map.OverlayTypes.Where(t => t.IsWall).OrderBy(t => t.Name);
                                 wallsToolDialog.Tool = new WallsTool(mapPanel, ActiveLayers, toolStatusLabel,
-                                    wallsToolDialog.GenericTypeComboBox, wallsToolDialog.GenericTypeMapPanel, plugin, url);
+                                    wallsToolDialog.GenericTypeListBox, wallsToolDialog.GenericTypeMapPanel, plugin, url);
                                 toolDialog = wallsToolDialog;
                         }
                         break;

@@ -28,7 +28,7 @@ namespace MobiusEditor.Tools.Dialogs
 {
     public partial class GenericToolDialog<T> : ToolDialog<T> where T : ITool
     {
-        public TypeComboBox GenericTypeComboBox => genericTypeComboBox;
+        public TypeListBox GenericTypeListBox => genericTypeListBox;
 
         public MapPanel GenericTypeMapPanel => genericTypeMapPanel;
 

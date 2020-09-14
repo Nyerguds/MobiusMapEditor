@@ -27,7 +27,7 @@ namespace MobiusEditor.Tools
 {
     public class OverlaysTool : ViewTool
     {
-        private readonly TypeComboBox overlayTypeComboBox;
+        private readonly TypeListBox overlayTypeComboBox;
         private readonly MapPanel overlayTypeMapPanel;
 
         private Map previewMap;
@@ -56,7 +56,7 @@ namespace MobiusEditor.Tools
             }
         }
 
-        public OverlaysTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, TypeComboBox overlayTypeComboBox, MapPanel overlayTypeMapPanel, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> url)
+        public OverlaysTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, TypeListBox overlayTypeComboBox, MapPanel overlayTypeMapPanel, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> url)
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
             previewMap = map;

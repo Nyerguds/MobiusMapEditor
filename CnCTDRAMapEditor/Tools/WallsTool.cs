@@ -28,7 +28,7 @@ namespace MobiusEditor.Tools
 {
     public class WallsTool : ViewTool
     {
-        private readonly TypeComboBox wallTypeComboBox;
+        private readonly TypeListBox wallTypeComboBox;
         private readonly MapPanel wallTypeMapPanel;
 
         private readonly Dictionary<int, Overlay> undoOverlays = new Dictionary<int, Overlay>();
@@ -60,7 +60,7 @@ namespace MobiusEditor.Tools
             }
         }
 
-        public WallsTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, TypeComboBox wallTypeComboBox, MapPanel wallTypeMapPanel, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> url)
+        public WallsTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, TypeListBox wallTypeComboBox, MapPanel wallTypeMapPanel, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> url)
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
             previewMap = map;

@@ -133,6 +133,9 @@
     <Compile Include="Controls\TypeComboBox.Designer.cs">
       <DependentUpon>TypeComboBox.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\TypeListBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Dialogs\ErrorMessageBox.cs">
       <SubType>Form</SubType>
     </Compile>
