@@ -12,6 +12,7 @@ Once the project has proceeded far enough and I am pleased with the state of the
 * Improved zoom levels
 * Fixed a couple of crashes
 * Made tool windows remember their previous position, size and other settings upon closing and re-opening them
+* Replaced drop-downs with list boxes in object type selection dialogs to allow switching between objects with fewer clicks 
 
 This list will be kept up-to-date as more features are added.
 
