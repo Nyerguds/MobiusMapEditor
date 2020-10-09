@@ -11,6 +11,8 @@ namespace MobiusEditor.Controls
 {
     public class TypeListBox : ListBox
     {
+        private const int MaxListBoxItemHeight = 255;
+
         [Category("Behavior")]
         public Image MissingThumbnail { get; set; } = SystemIcons.Error.ToBitmap();
 
@@ -40,8 +42,8 @@ namespace MobiusEditor.Controls
             var typeItem = Items[e.Index] as TypeItem<IBrowsableType>;
             if (typeItem?.Type != null)
             {
-                e.ItemHeight = (int)((typeItem.Type.Thumbnail?.Height ?? MissingThumbnail.Height) *
-                    Properties.Settings.Default.ObjectToolItemSizeMultiplier);
+                e.ItemHeight = Math.Min((int)((typeItem.Type.Thumbnail?.Height ?? MissingThumbnail.Height) *
+                    Properties.Settings.Default.ObjectToolItemSizeMultiplier), MaxListBoxItemHeight);
             }
         }
 
