@@ -1,3 +1,7 @@
+## Note: I am no longer working on this project. This repository still exists for archival purposes and so that people can fork it and continue the project if they wish. 
+
+### Old readme follows:
+
 ## C&C Tiberian Dawn and Red Alert Map Editor
 
 An enhanced version of the C&C Tiberian Dawn and Red Alert Map Editor based on the source code released by Electronic Arts.
