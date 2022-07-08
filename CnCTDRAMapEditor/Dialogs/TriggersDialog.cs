@@ -72,7 +72,7 @@ namespace MobiusEditor.Dialogs
             }
             triggersListView.EndUpdate();
 
-            string[] existenceNames = Enum.GetNames(typeof(TriggerPersistantType));
+            string[] existenceNames = Enum.GetNames(typeof(TriggerPersistentType));
             switch (plugin.GameType)
             {
                 case GameType.TiberianDawn:
@@ -92,8 +92,8 @@ namespace MobiusEditor.Dialogs
             };
 
             houseComboBox.DataSource = "None".Yield().Concat(plugin.Map.Houses.Select(t => t.Type.Name)).ToArray();
-            existenceComboBox.DataSource = Enum.GetValues(typeof(TriggerPersistantType)).Cast<int>()
-                .Select(v => new { Name = existenceNames[v], Value = (TriggerPersistantType)v })
+            existenceComboBox.DataSource = Enum.GetValues(typeof(TriggerPersistentType)).Cast<int>()
+                .Select(v => new { Name = existenceNames[v], Value = (TriggerPersistentType)v })
                 .ToArray();
             typeComboBox.DataSource = Enum.GetValues(typeof(TriggerMultiStyleType)).Cast<int>()
                 .Select(v => new { Name = typeNames[v], Value = (TriggerMultiStyleType)v })
@@ -121,7 +121,7 @@ namespace MobiusEditor.Dialogs
             if (SelectedTrigger != null)
             {
                 houseComboBox.DataBindings.Add("SelectedItem", SelectedTrigger, "House");
-                existenceComboBox.DataBindings.Add("SelectedValue", SelectedTrigger, "PersistantType");
+                existenceComboBox.DataBindings.Add("SelectedValue", SelectedTrigger, "PersistentType");
                 event1ComboBox.DataBindings.Add("SelectedItem", SelectedTrigger.Event1, "EventType");
                 action1ComboBox.DataBindings.Add("SelectedItem", SelectedTrigger.Action1, "ActionType");
 
@@ -182,6 +182,16 @@ namespace MobiusEditor.Dialogs
 
         private void addTriggerToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            AddTrigger();
+        }
+
+        private void btnAdd_Click(object sender, EventArgs e)
+        {
+            AddTrigger();
+        }
+
+        private void AddTrigger()
+        {
             var nameChars = Enumerable.Range(97, 26).Concat(Enumerable.Range(48, 10));
 
             string name = string.Empty;
@@ -240,7 +250,7 @@ namespace MobiusEditor.Dialogs
             else if (triggers.Where(t => (t != SelectedTrigger) && t.Equals(e.Label)).Any())
             {
                 e.CancelEdit = true;
-                MessageBox.Show(string.Format("Trigger with name '{0]' already exists", e.Label), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(string.Format("Trigger with name '{0}' already exists", e.Label), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             else
             {
@@ -322,6 +332,7 @@ namespace MobiusEditor.Dialogs
                             case RedAlert.EventTypes.TEVENT_CROSS_VERTICAL:
                             case RedAlert.EventTypes.TEVENT_ENTERS_ZONE:
                             case RedAlert.EventTypes.TEVENT_LOW_POWER:
+                            case RedAlert.EventTypes.TEVENT_SPIED:
                             case RedAlert.EventTypes.TEVENT_THIEVED:
                             case RedAlert.EventTypes.TEVENT_HOUSE_DISCOVERED:
                             case RedAlert.EventTypes.TEVENT_BUILDINGS_DESTROYED:

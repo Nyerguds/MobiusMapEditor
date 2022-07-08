@@ -23,10 +23,11 @@ namespace MobiusEditor.Model
     public enum SmudgeTypeFlag
     {
         None = 0,
-        Bib = 1,
-        Bib1 = 3,
-        Bib2 = 5,
-        Bib3 = 9,
+        // Only used for the bibs automatically added under buildings.
+        Bib = 1 << 3,
+        Bib1 = 0 | Bib,
+        Bib2 = 1 | Bib,
+        Bib3 = 2 | Bib,
     }
 
     public class SmudgeType : IBrowsableType
@@ -38,6 +39,7 @@ namespace MobiusEditor.Model
         public string DisplayName => Name;
 
         public Size Size { get; set; }
+        public int Icons{ get; set; }
 
         public SmudgeTypeFlag Flag { get; private set; }
 
@@ -45,23 +47,40 @@ namespace MobiusEditor.Model
 
         public Image Thumbnail { get; set; }
 
-        public SmudgeType(sbyte id, string name, Size size, SmudgeTypeFlag flag)
+        public SmudgeType(sbyte id, string name)
+            :this(id, name, new Size(1, 1), 1, SmudgeTypeFlag.None)
         {
-            ID = id;
-            Name = name;
-            Size = size;
-            Flag = flag;
+        }
+        public SmudgeType(sbyte id, string name, int icons)
+            :this(id, name, new Size(1, 1), icons, SmudgeTypeFlag.None)
+        {
         }
 
+
+        public SmudgeType(sbyte id, string name, Size size, SmudgeTypeFlag flag)
+            : this(id, name, size, 1, flag)
+        {
+        }
+        
         public SmudgeType(sbyte id, string name, Size size)
             : this(id, name, size, SmudgeTypeFlag.None)
         {
         }
 
-        public SmudgeType(sbyte id, string name)
-            : this(id, name, new Size(1, 1), SmudgeTypeFlag.None)
+        public SmudgeType(sbyte id, string name, SmudgeTypeFlag type)
+            : this(id, name, new Size(1, 1), type)
         {
         }
+
+        public SmudgeType(sbyte id, string name, Size size, int icons, SmudgeTypeFlag flag)
+        {
+            ID = id;
+            Name = name;
+            Size = size;
+            Icons = icons;
+            Flag = flag;
+        }
+
 
         public override bool Equals(object obj)
         {
@@ -93,6 +112,7 @@ namespace MobiusEditor.Model
 
         public void Init(TheaterType theater)
         {
+            var oldImage = Thumbnail;
             if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, Name, 0, out Tile tile))
             {
                 if ((tile.Image.Width * Globals.TileHeight) > (tile.Image.Height * Globals.TileWidth))
@@ -110,6 +130,15 @@ namespace MobiusEditor.Model
                     );
                 }
                 Thumbnail = new Bitmap(tile.Image, tile.Image.Width, tile.Image.Height);
+            }
+            else
+            {
+                Thumbnail = null;
+            }
+            if (oldImage != null)
+            {
+                try { oldImage.Dispose(); }
+                catch { /* ignore */ }
             }
         }
     }

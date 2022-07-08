@@ -390,19 +390,19 @@ namespace MobiusEditor.Tools
         {
             base.PostRenderMap(graphics);
 
-            var terrainPen = new Pen(Color.Green, 4.0f);
-            var occupyPen = new Pen(Color.Red, 2.0f);
-            foreach (var (topLeft, terrain) in previewMap.Technos.OfType<Terrain>())
+            using (var terrainPen = new Pen(Color.Green, 4.0f))
+            using (var occupyPen = new Pen(Color.Red, 2.0f))
             {
-                var bounds = new Rectangle(new Point(topLeft.X * Globals.TileWidth, topLeft.Y * Globals.TileHeight), terrain.Type.RenderSize);
-                graphics.DrawRectangle(terrainPen, bounds);
-
-                for (var y = 0; y < terrain.Type.OccupyMask.GetLength(0); ++y)
+                foreach (var (topLeft, terrain) in previewMap.Technos.OfType<Terrain>())
                 {
-                    for (var x = 0; x < terrain.Type.OccupyMask.GetLength(1); ++x)
+                    var bounds = new Rectangle(new Point(topLeft.X * Globals.TileWidth, topLeft.Y * Globals.TileHeight), terrain.Type.RenderSize);
+                    graphics.DrawRectangle(terrainPen, bounds);
+                    for (var y = 0; y < terrain.Type.OccupyMask.GetLength(0); ++y)
                     {
-                        if (terrain.Type.OccupyMask[y, x])
+                        for (var x = 0; x < terrain.Type.OccupyMask.GetLength(1); ++x)
                         {
+                            if (!terrain.Type.OccupyMask[y, x])
+                                continue;
                             var occupyBounds = new Rectangle(
                                 new Point((topLeft.X + x) * Globals.TileWidth, (topLeft.Y + y) * Globals.TileHeight),
                                 Globals.TileSize

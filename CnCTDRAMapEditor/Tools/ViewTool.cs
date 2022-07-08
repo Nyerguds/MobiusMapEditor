@@ -124,119 +124,121 @@ namespace MobiusEditor.Tools
         {
             if ((Layers & MapLayerFlag.Waypoints) != MapLayerFlag.None)
             {
-                var waypointBackgroundBrush = new SolidBrush(Color.FromArgb(96, Color.Black));
-                var waypointBrush = new SolidBrush(Color.FromArgb(128, Color.DarkOrange));
-                var waypointPen = new Pen(Color.DarkOrange);
-
-                foreach (var waypoint in map.Waypoints)
+                using (var waypointBackgroundBrush = new SolidBrush(Color.FromArgb(96, Color.Black)))
+                using (var waypointBrush = new SolidBrush(Color.FromArgb(128, Color.DarkOrange)))
+                using (var waypointPen = new Pen(Color.DarkOrange))
                 {
-                    if (waypoint.Cell.HasValue)
+                    foreach (var waypoint in map.Waypoints)
                     {
-                        var x = waypoint.Cell.Value % map.Metrics.Width;
-                        var y = waypoint.Cell.Value / map.Metrics.Width;
-
-                        var location = new Point(x * Globals.TileWidth, y * Globals.TileHeight);
-                        var textBounds = new Rectangle(location, Globals.TileSize);
-
-                        graphics.FillRectangle(waypointBackgroundBrush, textBounds);
-                        graphics.DrawRectangle(waypointPen, textBounds);
-
-                        StringFormat stringFormat = new StringFormat
+                        if (waypoint.Cell.HasValue)
                         {
-                            Alignment = StringAlignment.Center,
-                            LineAlignment = StringAlignment.Center
-                        };
+                            var x = waypoint.Cell.Value % map.Metrics.Width;
+                            var y = waypoint.Cell.Value / map.Metrics.Width;
 
-                        var text = waypoint.Name.ToString();
-                        var font = graphics.GetAdjustedFont(text, SystemFonts.DefaultFont, textBounds.Width, 24 / Globals.TileScale, 48 / Globals.TileScale, true);
-                        graphics.DrawString(text.ToString(), font, waypointBrush, textBounds, stringFormat);
+                            var location = new Point(x * Globals.TileWidth, y * Globals.TileHeight);
+                            var textBounds = new Rectangle(location, Globals.TileSize);
+
+                            graphics.FillRectangle(waypointBackgroundBrush, textBounds);
+                            graphics.DrawRectangle(waypointPen, textBounds);
+
+                            StringFormat stringFormat = new StringFormat
+                            {
+                                Alignment = StringAlignment.Center,
+                                LineAlignment = StringAlignment.Center
+                            };
+
+                            var text = waypoint.Name.ToString();
+                            var font = graphics.GetAdjustedFont(text, SystemFonts.DefaultFont, textBounds.Width, 24 / Globals.TileScale, 48 / Globals.TileScale, true);
+                            graphics.DrawString(text.ToString(), font, waypointBrush, textBounds, stringFormat);
+                        }
                     }
                 }
             }
 
             if ((Layers & MapLayerFlag.TechnoTriggers) != MapLayerFlag.None)
             {
-                var technoTriggerBackgroundBrush = new SolidBrush(Color.FromArgb(96, Color.Black));
-                var technoTriggerBrush = new SolidBrush(Color.LimeGreen);
-                var technoTriggerPen = new Pen(Color.LimeGreen);
-
-                foreach (var (cell, techno) in map.Technos)
+                using (var technoTriggerBackgroundBrush = new SolidBrush(Color.FromArgb(96, Color.Black)))
+                using (var technoTriggerBrush = new SolidBrush(Color.LimeGreen))
+                using (var technoTriggerPen = new Pen(Color.LimeGreen))
                 {
-                    var location = new Point(cell.X * Globals.TileWidth, cell.Y * Globals.TileHeight);
+                    foreach (var (cell, techno) in map.Technos)
+                    {
+                        var location = new Point(cell.X * Globals.TileWidth, cell.Y * Globals.TileHeight);
 
-                    (string trigger, Rectangle bounds)[] triggers = null;
-                    if (techno is Terrain terrain)
-                    {
-                        triggers = new (string, Rectangle)[] { (terrain.Trigger, new Rectangle(location, terrain.Type.RenderSize)) };
-                    }
-                    else if (techno is Building building)
-                    {
-                        var size = new Size(building.Type.Size.Width * Globals.TileWidth, building.Type.Size.Height * Globals.TileHeight);
-                        triggers = new (string, Rectangle)[] { (building.Trigger, new Rectangle(location, size)) };
-                    }
-                    else if (techno is Unit unit)
-                    {
-                        triggers = new (string, Rectangle)[] { (unit.Trigger, new Rectangle(location, Globals.TileSize)) };
-                    }
-                    else if (techno is InfantryGroup infantryGroup)
-                    {
-                        List<(string, Rectangle)> infantryTriggers = new List<(string, Rectangle)>();
-                        for (var i = 0; i < infantryGroup.Infantry.Length; ++i)
+                        (string trigger, Rectangle bounds)[] triggers = null;
+                        if (techno is Terrain terrain)
                         {
-                            var infantry = infantryGroup.Infantry[i];
-                            if (infantry == null)
+                            triggers = new (string, Rectangle)[] { (terrain.Trigger, new Rectangle(location, terrain.Type.RenderSize)) };
+                        }
+                        else if (techno is Building building)
+                        {
+                            var size = new Size(building.Type.Size.Width * Globals.TileWidth, building.Type.Size.Height * Globals.TileHeight);
+                            triggers = new (string, Rectangle)[] { (building.Trigger, new Rectangle(location, size)) };
+                        }
+                        else if (techno is Unit unit)
+                        {
+                            triggers = new (string, Rectangle)[] { (unit.Trigger, new Rectangle(location, Globals.TileSize)) };
+                        }
+                        else if (techno is InfantryGroup infantryGroup)
+                        {
+                            List<(string, Rectangle)> infantryTriggers = new List<(string, Rectangle)>();
+                            for (var i = 0; i < infantryGroup.Infantry.Length; ++i)
                             {
-                                continue;
+                                var infantry = infantryGroup.Infantry[i];
+                                if (infantry == null)
+                                {
+                                    continue;
+                                }
+
+                                var size = Globals.TileSize;
+                                var offset = Size.Empty;
+                                switch ((InfantryStoppingType)i)
+                                {
+                                    case InfantryStoppingType.UpperLeft:
+                                        offset.Width = -size.Width / 4;
+                                        offset.Height = -size.Height / 4;
+                                        break;
+                                    case InfantryStoppingType.UpperRight:
+                                        offset.Width = size.Width / 4;
+                                        offset.Height = -size.Height / 4;
+                                        break;
+                                    case InfantryStoppingType.LowerLeft:
+                                        offset.Width = -size.Width / 4;
+                                        offset.Height = size.Height / 4;
+                                        break;
+                                    case InfantryStoppingType.LowerRight:
+                                        offset.Width = size.Width / 4;
+                                        offset.Height = size.Height / 4;
+                                        break;
+                                }
+
+                                var bounds = new Rectangle(location + offset, size);
+                                infantryTriggers.Add((infantry.Trigger, bounds));
                             }
 
-                            var size = Globals.TileSize;
-                            var offset = Size.Empty;
-                            switch ((InfantryStoppingType)i)
-                            {
-                                case InfantryStoppingType.UpperLeft:
-                                    offset.Width = -size.Width / 4;
-                                    offset.Height = -size.Height / 4;
-                                    break;
-                                case InfantryStoppingType.UpperRight:
-                                    offset.Width = size.Width / 4;
-                                    offset.Height = -size.Height / 4;
-                                    break;
-                                case InfantryStoppingType.LowerLeft:
-                                    offset.Width = -size.Width / 4;
-                                    offset.Height = size.Height / 4;
-                                    break;
-                                case InfantryStoppingType.LowerRight:
-                                    offset.Width = size.Width / 4;
-                                    offset.Height = size.Height / 4;
-                                    break;
-                            }
-
-                            var bounds = new Rectangle(location + offset, size);
-                            infantryTriggers.Add((infantry.Trigger, bounds));
+                            triggers = infantryTriggers.ToArray();
                         }
 
-                        triggers = infantryTriggers.ToArray();
-                    }
-
-                    if (triggers != null)
-                    {
-                        StringFormat stringFormat = new StringFormat
+                        if (triggers != null)
                         {
-                            Alignment = StringAlignment.Center,
-                            LineAlignment = StringAlignment.Center
-                        };
+                            StringFormat stringFormat = new StringFormat
+                            {
+                                Alignment = StringAlignment.Center,
+                                LineAlignment = StringAlignment.Center
+                            };
 
-                        foreach (var (trigger, bounds) in triggers.Where(x => !x.trigger.Equals("None", StringComparison.OrdinalIgnoreCase)))
-                        {
-                            var font = graphics.GetAdjustedFont(trigger, SystemFonts.DefaultFont, bounds.Width, 12 / Globals.TileScale, 24 / Globals.TileScale, true);
-                            var textBounds = graphics.MeasureString(trigger, font, bounds.Width, stringFormat);
+                            foreach (var (trigger, bounds) in triggers.Where(x => !x.trigger.Equals("None", StringComparison.OrdinalIgnoreCase)))
+                            {
+                                var font = graphics.GetAdjustedFont(trigger, SystemFonts.DefaultFont, bounds.Width, 12 / Globals.TileScale, 24 / Globals.TileScale, true);
+                                var textBounds = graphics.MeasureString(trigger, font, bounds.Width, stringFormat);
 
-                            var backgroundBounds = new RectangleF(bounds.Location, textBounds);
-                            backgroundBounds.Offset((bounds.Width - textBounds.Width) / 2.0f, (bounds.Height - textBounds.Height) / 2.0f);
-                            graphics.FillRectangle(technoTriggerBackgroundBrush, backgroundBounds);
-                            graphics.DrawRectangle(technoTriggerPen, Rectangle.Round(backgroundBounds));
+                                var backgroundBounds = new RectangleF(bounds.Location, textBounds);
+                                backgroundBounds.Offset((bounds.Width - textBounds.Width) / 2.0f, (bounds.Height - textBounds.Height) / 2.0f);
+                                graphics.FillRectangle(technoTriggerBackgroundBrush, backgroundBounds);
+                                graphics.DrawRectangle(technoTriggerPen, Rectangle.Round(backgroundBounds));
 
-                            graphics.DrawString(trigger, font, technoTriggerBrush, bounds, stringFormat);
+                                graphics.DrawString(trigger, font, technoTriggerBrush, bounds, stringFormat);
+                            }
                         }
                     }
                 }
@@ -244,43 +246,44 @@ namespace MobiusEditor.Tools
 
             if ((Layers & MapLayerFlag.CellTriggers) != MapLayerFlag.None)
             {
-                var cellTriggersBackgroundBrush = new SolidBrush(Color.FromArgb(96, Color.Black));
-                var cellTriggersBrush = new SolidBrush(Color.FromArgb(128, Color.White));
-                var cellTriggerPen = new Pen(Color.White);
-
-                foreach (var (cell, cellTrigger) in map.CellTriggers)
+                using (var cellTriggersBackgroundBrush = new SolidBrush(Color.FromArgb(96, Color.Black)))
+                using (var cellTriggersBrush = new SolidBrush(Color.FromArgb(128, Color.White)))
+                using (var cellTriggerPen = new Pen(Color.White))
                 {
-                    var x = cell % map.Metrics.Width;
-                    var y = cell / map.Metrics.Width;
-
-                    var location = new Point(x * Globals.TileWidth, y * Globals.TileHeight);
-                    var textBounds = new Rectangle(location, Globals.TileSize);
-
-                    graphics.FillRectangle(cellTriggersBackgroundBrush, textBounds);
-                    graphics.DrawRectangle(cellTriggerPen, textBounds);
-
-                    StringFormat stringFormat = new StringFormat
+                    foreach (var (cell, cellTrigger) in map.CellTriggers)
                     {
-                        Alignment = StringAlignment.Center,
-                        LineAlignment = StringAlignment.Center
-                    };
+                        var x = cell % map.Metrics.Width;
+                        var y = cell / map.Metrics.Width;
 
-                    var text = cellTrigger.Trigger;
-                    var font = graphics.GetAdjustedFont(text, SystemFonts.DefaultFont, textBounds.Width, 24 / Globals.TileScale, 48 / Globals.TileScale, true);
-                    graphics.DrawString(text.ToString(), font, cellTriggersBrush, textBounds, stringFormat);
+                        var location = new Point(x * Globals.TileWidth, y * Globals.TileHeight);
+                        var textBounds = new Rectangle(location, Globals.TileSize);
+
+                        graphics.FillRectangle(cellTriggersBackgroundBrush, textBounds);
+                        graphics.DrawRectangle(cellTriggerPen, textBounds);
+
+                        StringFormat stringFormat = new StringFormat
+                        {
+                            Alignment = StringAlignment.Center,
+                            LineAlignment = StringAlignment.Center
+                        };
+
+                        var text = cellTrigger.Trigger;
+                        var font = graphics.GetAdjustedFont(text, SystemFonts.DefaultFont, textBounds.Width, 24 / Globals.TileScale, 48 / Globals.TileScale, true);
+                        graphics.DrawString(text.ToString(), font, cellTriggersBrush, textBounds, stringFormat);
+                    }
                 }
             }
 
             if ((Layers & MapLayerFlag.Boundaries) != MapLayerFlag.None)
             {
-                var boundsPen = new Pen(Color.Cyan, 8.0f);
                 var bounds = Rectangle.FromLTRB(
                     map.Bounds.Left * Globals.TileWidth,
                     map.Bounds.Top * Globals.TileHeight,
                     map.Bounds.Right * Globals.TileWidth,
                     map.Bounds.Bottom * Globals.TileHeight
                 );
-                graphics.DrawRectangle(boundsPen, bounds);
+                using (var boundsPen = new Pen(Color.Cyan, 8.0f))
+                    graphics.DrawRectangle(boundsPen, bounds);
             }
         }
 

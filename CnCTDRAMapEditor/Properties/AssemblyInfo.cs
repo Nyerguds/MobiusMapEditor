@@ -21,7 +21,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("C&C Tiberian Dawn and Red Alert Map Editor")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Rampastring")]
+[assembly: AssemblyCompany("Nyerguds")]
 [assembly: AssemblyProduct("CnC TDRA Map Editor")]
 [assembly: AssemblyCopyright("Command & Conquer and the original map editor © 2020 Electronic Arts Inc. All rights reserved.")]
 [assembly: AssemblyTrademark("")]

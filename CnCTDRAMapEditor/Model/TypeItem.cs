@@ -12,9 +12,11 @@
 // distributed with this program. You should have received a copy of the 
 // GNU General Public License along with permitted additional restrictions 
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
+using System;
+
 namespace MobiusEditor.Model
 {
-    public class TypeItem<T>
+    public class TypeItem<T>: System.IEquatable<TypeItem<T>>, IComparable<TypeItem<T>>
     {
         public string Name { get; private set; }
 
@@ -24,6 +26,20 @@ namespace MobiusEditor.Model
         {
             Name = name;
             Type = type;
+        }
+
+        public bool Equals(TypeItem<T> other)
+        {
+            return other != null
+                && ((this.Type == null && other.Type == null) || this.Type.Equals(other.Type))
+                && String.Equals(this.Name, other.Name, StringComparison.InvariantCultureIgnoreCase);
+        }
+
+        public int CompareTo(TypeItem<T> other)
+        {
+            if (this.Equals(other))
+                return 0;
+            return String.Compare(this.Name ?? String.Empty, other.Name ?? String.Empty);
         }
     }
 }

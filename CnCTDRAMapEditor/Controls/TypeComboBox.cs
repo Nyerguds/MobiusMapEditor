@@ -54,7 +54,7 @@ namespace MobiusEditor.Controls
         {
             base.OnMeasureItem(e);
 
-            var typeItem = Items[e.Index] as TypeItem<IBrowsableType>;
+            var typeItem = this.Items[e.Index] as TypeItem<IBrowsableType>;
             if (typeItem?.Type != null)
             {
                 e.ItemHeight = (int)((typeItem.Type.Thumbnail?.Height ?? MissingThumbnail.Height) * 
@@ -88,7 +88,7 @@ namespace MobiusEditor.Controls
                         var thumbnail = typeItem.Type.Thumbnail ?? MissingThumbnail;
                         var thumbnailWidth = (int)Math.Min((e.Bounds.Width - textSize.Width),
                             thumbnail.Width);
-                        int thumbnailHeight = (int)Math.Min(e.Bounds.Height, thumbnail.Height);
+                        int thumbnailHeight = (int)Math.Min(e.Bounds.Height, Math.Max(textSize.Height, thumbnail.Height));
 
                         double widthRatio = (e.Bounds.Width - textSize.Width) / (double)thumbnail.Width;
                         double heightRatio = e.Bounds.Height / (double)thumbnail.Height;

@@ -386,63 +386,58 @@ namespace MobiusEditor.Render
                 Alignment = StringAlignment.Center,
                 LineAlignment = StringAlignment.Center
             };
-            var fakeBackgroundBrush = new SolidBrush(Color.FromArgb(building.Tint.A / 2, Color.Black));
-            var fakeTextBrush = new SolidBrush(Color.FromArgb(building.Tint.A, Color.White));
-            var baseBackgroundBrush = new SolidBrush(Color.FromArgb(building.Tint.A / 2, Color.Black));
-            var baseTextBrush = new SolidBrush(Color.FromArgb(building.Tint.A, Color.Red));
-
-            var icon = 0;
-            if (building.Type.HasTurret)
-            {
-                icon = BodyShape[Facing32[building.Direction.ID]];
-                if (building.Strength < 128)
+                var icon = 0;
+                if (building.Type.HasTurret)
                 {
-                    switch (gameType)
+                    icon = BodyShape[Facing32[building.Direction.ID]];
+                    if (building.Strength < 128)
                     {
-                        case GameType.TiberianDawn:
-                            icon += 64;
-                            break;
-                        case GameType.RedAlert:
-                            icon += building.Type.Equals("sam") ? 35 : 64;
-                            break;
+                        switch (gameType)
+                        {
+                            case GameType.TiberianDawn:
+                                icon += 64;
+                                break;
+                            case GameType.RedAlert:
+                                icon += building.Type.Equals("sam") ? 35 : 64;
+                                break;
+                        }
                     }
                 }
-            }
-            else
-            {
-                if (building.Strength <= 1)
+                else
                 {
-                    icon = -1;
+                    if (building.Strength <= 1)
+                    {
+                        icon = -1;
+                    }
+                    else if (building.Strength < 128)
+                    {
+                        icon = -2;
+                        if (building.Type.Equals("weap") || building.Type.Equals("weaf"))
+                        {
+                            icon = 1;
+                        }
+                        else if ((gameType == GameType.TiberianDawn) && building.Type.Equals("proc"))
+                        {
+                            icon = 30;
+                        }
+                        else if (building.Type.Equals("eye"))
+                        {
+                            icon = 16;
+                        }
+                        else if (building.Type.Equals("silo"))
+                        {
+                            icon = 5;
+                        }
+                        else if (building.Type.Equals("fix"))
+                        {
+                            icon = 7;
+                        }
+                        else if (building.Type.Equals("v19"))
+                        {
+                            icon = 14;
+                        }
+                    }
                 }
-                else if (building.Strength < 128)
-                {
-                    icon = -2;
-                    if (building.Type.Equals("weap") || building.Type.Equals("weaf"))
-                    {
-                        icon = 1;
-                    }
-                    else if ((gameType == GameType.TiberianDawn) && building.Type.Equals("proc"))
-                    {
-                        icon = 30;
-                    }
-                    else if (building.Type.Equals("eye"))
-                    {
-                        icon = 16;
-                    }
-                    else if (building.Type.Equals("silo"))
-                    {
-                        icon = 5;
-                    }
-                    else if (building.Type.Equals("fix"))
-                    {
-                        icon = 7;
-                    }
-                    else if (building.Type.Equals("v19"))
-                    {
-                        icon = 14;
-                    }
-                }
-            }
 
             if (Globals.TheTilesetManager.GetTeamColorTileData(theater.Tilesets, building.Type.Tilename, icon, Globals.TheTeamColorManager[building.House.BuildingTeamColor], out Tile tile))
             {
@@ -513,8 +508,12 @@ namespace MobiusEditor.Render
                         var text = Globals.TheGameTextManager["TEXT_UI_FAKE"];
                         var textSize = g.MeasureString(text, SystemFonts.CaptionFont) + new SizeF(6.0f, 6.0f);
                         var textBounds = new RectangleF(buildingBounds.Location, textSize);
-                        g.FillRectangle(fakeBackgroundBrush, textBounds);
-                        g.DrawString(text, SystemFonts.CaptionFont, fakeTextBrush, textBounds, stringFormat);
+                        using (var fakeBackgroundBrush = new SolidBrush(Color.FromArgb(building.Tint.A / 2, Color.Black)))
+                        using (var fakeTextBrush = new SolidBrush(Color.FromArgb(building.Tint.A, Color.White)))
+                        {
+                            g.FillRectangle(fakeBackgroundBrush, textBounds);
+                            g.DrawString(text, SystemFonts.CaptionFont, fakeTextBrush, textBounds, stringFormat);
+                        }
                     }
 
                     if (building.BasePriority >= 0)
@@ -525,8 +524,12 @@ namespace MobiusEditor.Render
                             new Size((int)((buildingBounds.Width - textSize.Width) / 2.0f), (int)(buildingBounds.Height - textSize.Height)),
                             textSize
                         );
-                        g.FillRectangle(baseBackgroundBrush, textBounds);
-                        g.DrawString(text, SystemFonts.CaptionFont, baseTextBrush, textBounds, stringFormat);
+                        using (var baseBackgroundBrush = new SolidBrush(Color.FromArgb(building.Tint.A / 2, Color.Black)))
+                        using (var baseTextBrush = new SolidBrush(Color.FromArgb(building.Tint.A, Color.Red)))
+                        {
+                            g.FillRectangle(baseBackgroundBrush, textBounds);
+                            g.DrawString(text, SystemFonts.CaptionFont, baseTextBrush, textBounds, stringFormat);
+                        }
                     }
                 }
 
@@ -536,7 +539,7 @@ namespace MobiusEditor.Render
             {
                 Debug.Print(string.Format("Building {0} (0) not found", building.Type.Name));
                 return (Rectangle.Empty, (g) => { });
-            }
+            }            
         }
 
         public static (Rectangle, Action<Graphics>) Render(TheaterType theater, Point topLeft, Size tileSize, Infantry infantry, InfantryStoppingType infantryStoppingType)
@@ -801,13 +804,14 @@ namespace MobiusEditor.Render
                         }
                         else if (gameType == GameType.TiberianDawn)
                         {
-                            if ((unit.Type == TiberianDawn.UnitTypes.Jeep) ||
-                                (unit.Type == TiberianDawn.UnitTypes.Buggy))
+                            if (unit.Type == TiberianDawn.UnitTypes.Jeep ||
+                                unit.Type == TiberianDawn.UnitTypes.Buggy ||
+                                unit.Type == TiberianDawn.UnitTypes.MHQ)
                             {
                                 turretAdjust.Y = -4;
                             }
-                            else if ((unit.Type == TiberianDawn.UnitTypes.SAM) ||
-                                     (unit.Type == TiberianDawn.UnitTypes.MLRS))
+                            else if (unit.Type == TiberianDawn.UnitTypes.SSM ||
+                                     unit.Type == TiberianDawn.UnitTypes.MLRS)
                             {
                                 turretAdjust = TurretAdjust[Facing32[unit.Direction.ID]];
                             }

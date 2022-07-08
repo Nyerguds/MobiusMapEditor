@@ -17,7 +17,7 @@ namespace MobiusEditor.Tools.Dialogs
 
         public override void Initialize(MapPanel mapPanel, MapLayerFlag activeLayers, ToolStripStatusLabel toolStatusLabel, ToolTip mouseToolTip, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> undoRedoList)
         {
-            ObjectTypeListBox.Types = plugin.Map.UnitTypes.Where(t => !t.IsFixedWing).OrderBy(t => t.Name);
+            ObjectTypeListBox.Types = plugin.Map.UnitTypes.Where(t => !t.IsFixedWing).OrderBy(t => t.ID);
             Tool = new UnitTool(mapPanel, activeLayers, toolStatusLabel, ObjectTypeListBox,
                 ObjectTypeMapPanel, ObjectProperties, plugin, undoRedoList);
         }

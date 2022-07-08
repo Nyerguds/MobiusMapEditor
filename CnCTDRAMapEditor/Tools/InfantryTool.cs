@@ -412,6 +412,7 @@ namespace MobiusEditor.Tools
 
         private void RefreshMapPanel()
         {
+            var oldImage = infantryTypeMapPanel.MapImage;
             if (mockInfantry.Type != null)
             {
                 var infantryPreview = new Bitmap(Globals.TileWidth, Globals.TileHeight);
@@ -424,6 +425,11 @@ namespace MobiusEditor.Tools
             else
             {
                 infantryTypeMapPanel.MapImage = null;
+            }
+            if (oldImage != null)
+            {
+                try { oldImage.Dispose(); }
+                catch { /* ignore */ }
             }
         }
 
@@ -439,7 +445,7 @@ namespace MobiusEditor.Tools
             }
             else
             {
-                statusLbl.Text = "Shift to enter placement mode, Left-Click drag to move infantry, Double-Click update infantry properties, Right-Click to pick infantry";
+                statusLbl.Text = "Shift to enter placement mode, Left-Click drag to move infantry, Double-Click to update infantry properties, Right-Click to pick infantry";
             }
         }
 
@@ -490,11 +496,13 @@ namespace MobiusEditor.Tools
         {
             base.PostRenderMap(graphics);
 
-            var infantryPen = new Pen(Color.Green, 4.0f);
-            foreach (var (topLeft, _) in map.Technos.OfType<InfantryGroup>())
+            using (var infantryPen = new Pen(Color.Green, 4.0f))
             {
-                var bounds = new Rectangle(new Point(topLeft.X * Globals.TileWidth, topLeft.Y * Globals.TileHeight), Globals.TileSize);
-                graphics.DrawRectangle(infantryPen, bounds);
+                foreach (var (topLeft, _) in map.Technos.OfType<InfantryGroup>())
+                {
+                    var bounds = new Rectangle(new Point(topLeft.X * Globals.TileWidth, topLeft.Y * Globals.TileHeight), Globals.TileSize);
+                    graphics.DrawRectangle(infantryPen, bounds);
+                }
             }
         }
 

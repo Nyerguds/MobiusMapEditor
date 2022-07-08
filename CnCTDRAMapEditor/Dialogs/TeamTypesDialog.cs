@@ -40,12 +40,14 @@ namespace MobiusEditor.Dialogs
         private TeamTypeMission mockMission;
         private int classEditRow = -1;
         private int missionEditRow = -1;
+        private Dictionary<string, string> teamMissionTypes;
+        private String defaultMission;
 
         public TeamTypesDialog(IGamePlugin plugin, int maxTeams)
         {
             this.plugin = plugin;
             this.maxTeams = maxTeams;
-            technoTypes = plugin.Map.InfantryTypes.Cast<ITechnoType>().Concat(plugin.Map.UnitTypes.Cast<ITechnoType>());
+            technoTypes = plugin.Map.TeamTechnoTypes;
 
             InitializeComponent();
 
@@ -83,8 +85,12 @@ namespace MobiusEditor.Dialogs
             teamsTypeColumn.DisplayMember = "Name";
             teamsTypeColumn.ValueMember = "Type";
             teamsTypeColumn.DataSource = technoTypes.Select(t => new TypeItem<ITechnoType>(t.Name, t)).ToArray();
-
-            missionsMissionColumn.DataSource = plugin.Map.TeamMissionTypes;
+            // Fix for case sensitivity issue in teamtype missions
+            String[] missions = plugin.Map.TeamMissionTypes;
+            teamMissionTypes = Enumerable.ToDictionary(missions, t => t, StringComparer.OrdinalIgnoreCase);
+            if (!teamMissionTypes.TryGetValue("Guard", out defaultMission))
+                defaultMission = missions[0];
+            missionsMissionColumn.DataSource = missions;
 
             teamTypeTableLayoutPanel.Visible = false;
         }
@@ -173,6 +179,16 @@ namespace MobiusEditor.Dialogs
 
         private void addTeamTypeToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            AddTeamType();
+        }
+
+        private void btnAdd_Click(object sender, EventArgs e)
+        {
+            AddTeamType();
+        }
+
+        private void AddTeamType()
+        {
             var nameChars = Enumerable.Range(97, 26).Concat(Enumerable.Range(48, 10));
 
             string name = string.Empty;
@@ -231,7 +247,7 @@ namespace MobiusEditor.Dialogs
             else if (teamTypes.Where(t => (t != SelectedTeamType) && t.Equals(e.Label)).Any())
             {
                 e.CancelEdit = true;
-                MessageBox.Show(string.Format("Team with name '{0]' already exists", e.Label), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(string.Format("Team with name '{0}' already exists", e.Label), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             else
             {
@@ -367,6 +383,13 @@ namespace MobiusEditor.Dialogs
         {
             updateDataGridViewAddRows(teamsDataGridView, Globals.MaxTeamClasses);
         }
+        private void DataGridView_DataError(object sender, DataGridViewDataErrorEventArgs e)
+        {
+            String owner = (sender as DataGridView)?.Name;
+            Exception ex = e.Exception;
+            String message = ex.Message;
+            String stackTrace = ex.StackTrace;
+        }
 
         private void missionsDataGridView_CellValueNeeded(object sender, DataGridViewCellValueEventArgs e)
         {
@@ -384,16 +407,18 @@ namespace MobiusEditor.Dialogs
             {
                 teamMissionType = SelectedTeamType.Missions[e.RowIndex];
             }
-
             if (teamMissionType == null)
             {
                 return;
             }
-
+            // Fix for case sensitivity issue in teamtype missions
+            String mission;
+            if (!teamMissionTypes.TryGetValue(teamMissionType.Mission, out mission))
+                mission = defaultMission;
             switch (e.ColumnIndex)
             {
                 case 0:
-                    e.Value = teamMissionType.Mission;
+                    e.Value = mission;
                     break;
                 case 1:
                     e.Value = teamMissionType.Argument;

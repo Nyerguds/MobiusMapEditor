@@ -322,6 +322,7 @@ namespace MobiusEditor.Tools
 
         private void RefreshMapPanel()
         {
+            var oldImage = unitTypeMapPanel.MapImage;
             if (mockUnit.Type != null)
             {
                 var unitPreview = new Bitmap(Globals.TileWidth * 3, Globals.TileHeight * 3);
@@ -334,6 +335,11 @@ namespace MobiusEditor.Tools
             else
             {
                 unitTypeMapPanel.MapImage = null;
+            }
+            if (oldImage != null)
+            {
+                try { oldImage.Dispose(); }
+                catch { /* ignore */ }
             }
         }
 
@@ -376,12 +382,13 @@ namespace MobiusEditor.Tools
         protected override void PostRenderMap(Graphics graphics)
         {
             base.PostRenderMap(graphics);
-
-            var unitPen = new Pen(Color.Green, 4.0f);
-            foreach (var (topLeft, _) in map.Technos.OfType<Unit>())
+            using (var unitPen = new Pen(Color.Green, 4.0f))
             {
-                var bounds = new Rectangle(new Point(topLeft.X * Globals.TileWidth, topLeft.Y * Globals.TileHeight), Globals.TileSize);
-                graphics.DrawRectangle(unitPen, bounds);
+                foreach (var (topLeft, _) in map.Technos.OfType<Unit>())
+                {
+                    var bounds = new Rectangle(new Point(topLeft.X * Globals.TileWidth, topLeft.Y * Globals.TileHeight), Globals.TileSize);
+                    graphics.DrawRectangle(unitPen, bounds);
+                }
             }
         }
 

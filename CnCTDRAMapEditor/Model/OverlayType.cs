@@ -22,12 +22,14 @@ namespace MobiusEditor.Model
     [Flags]
     public enum OverlayTypeFlag
     {
+        // Nyerguds upgrade: Added decoration type.
         None            = 0,
         TiberiumOrGold  = (1 << 0),
         Gems            = (1 << 1),
         Wall            = (1 << 2),
         Crate           = (1 << 3),
         Flag            = (1 << 4),
+        Decoration      = (1 << 5),
     }
 
     public class OverlayType : ICellOccupier, IBrowsableType
@@ -58,7 +60,8 @@ namespace MobiusEditor.Model
 
         public bool IsFlag => (Flag & OverlayTypeFlag.Flag) != OverlayTypeFlag.None;
 
-        public bool IsPlaceable => (Flag & ~OverlayTypeFlag.Crate) == OverlayTypeFlag.None;
+         // No reason not to allow placing decorations and flag pedestal.
+        public bool IsPlaceable => (Flag & (OverlayTypeFlag.Crate | OverlayTypeFlag.Decoration | OverlayTypeFlag.Flag)) != OverlayTypeFlag.None;
 
         public OverlayType(sbyte id, string name, string textId, TheaterType[] theaters, OverlayTypeFlag flag)
         {
@@ -75,7 +78,7 @@ namespace MobiusEditor.Model
         }
 
         public OverlayType(sbyte id, string name, string textId, TheaterType[] theaters)
-            : this(id, name, textId, theaters, OverlayTypeFlag.None)
+            : this(id, name, textId, theaters, OverlayTypeFlag.Decoration)
         {
         }
 
@@ -119,9 +122,19 @@ namespace MobiusEditor.Model
 
         public void Init(TheaterType theater)
         {
+            var oldImage = Thumbnail;
             if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, Name, 0, out Tile tile))
             {
-                Thumbnail = new Bitmap(tile.Image, tile.Image.Width, tile.Image.Height);
+                Thumbnail = new Bitmap(tile.Image);
+            }
+            else
+            {
+                Thumbnail = SystemIcons.Error.ToBitmap();
+            }
+            if (oldImage != null)
+            {
+                try { oldImage.Dispose(); }
+                catch { /* ignore */ }
             }
         }
     }

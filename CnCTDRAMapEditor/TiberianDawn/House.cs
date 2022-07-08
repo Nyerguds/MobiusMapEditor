@@ -16,6 +16,8 @@ namespace MobiusEditor.TiberianDawn
 {
     public class House : Model.House
     {
+        public static readonly string None = "None";
+
         public House(Model.HouseType type)
             : base(type)
         {

@@ -85,6 +85,9 @@
     <Compile Include="Controls\BriefingSettings.Designer.cs">
       <DependentUpon>BriefingSettings.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\EnhNumericUpDown.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Controls\ImageTooltip.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -108,6 +111,12 @@
     </Compile>
     <Compile Include="Controls\PropertiesComboBox.Designer.cs">
       <DependentUpon>PropertiesComboBox.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\SmudgeProperties.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\SmudgeProperties.Designer.cs">
+      <DependentUpon>SmudgeProperties.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\TerrainProperties.cs">
       <SubType>UserControl</SubType>
@@ -479,6 +488,10 @@
     <EmbeddedResource Include="Controls\MapPanel.resx">
       <DependentUpon>MapPanel.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\SmudgeProperties.resx">
+      <DependentUpon>SmudgeProperties.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\TerrainProperties.resx">
       <DependentUpon>TerrainProperties.cs</DependentUpon>
     </EmbeddedResource>
@@ -563,10 +576,10 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json">
-      <Version>12.0.3</Version>
+      <Version>13.0.1</Version>
     </PackageReference>
     <PackageReference Include="Pfim">
-      <Version>0.9.1</Version>
+      <Version>0.10.1</Version>
     </PackageReference>
     <PackageReference Include="System.ValueTuple">
       <Version>4.5.0</Version>

@@ -102,6 +102,20 @@ namespace MobiusEditor.Model
             OnCleared();
         }
 
+        public int CellNumberOf(T obj)
+        {
+            for (int y = 0; y < metrics.Height; ++y)
+            {
+                for (int x = 0; x < metrics.Width; ++x)
+                {
+                    if (cells[y, x].Equals(obj))
+                        return y * metrics.Width + x;
+                }
+            }
+            return -1;
+        }
+
+
         public T Adjacent(Point location, FacingType facing)
         {
             return metrics.Adjacent(location, facing, out Point adjacent) ? this[adjacent] : default;

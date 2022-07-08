@@ -241,7 +241,8 @@ namespace MobiusEditor.Tools
             if (map.Metrics.GetCell(location, out int cell))
             {
                 var overlay = map.Overlay[cell];
-                if ((overlay != null) && !overlay.Type.IsWall)
+                // Nyerguds fix: this should use the same filter as the list fill! Crashed on resources.
+                if ((overlay != null) && overlay.Type.IsPlaceable)
                 {
                     SelectedOverlayType = overlay.Type;
                 }
@@ -294,13 +295,14 @@ namespace MobiusEditor.Tools
         protected override void PostRenderMap(Graphics graphics)
         {
             base.PostRenderMap(graphics);
-
-            var overlayPen = new Pen(Color.Green, 4.0f);
-            foreach (var (cell, overlay) in previewMap.Overlay.Where(x => x.Value.Type.IsPlaceable))
+            using (var overlayPen = new Pen(Color.Green, 4.0f))
             {
-                previewMap.Metrics.GetLocation(cell, out Point topLeft);
-                var bounds = new Rectangle(new Point(topLeft.X * Globals.TileWidth, topLeft.Y * Globals.TileHeight), Globals.TileSize);
-                graphics.DrawRectangle(overlayPen, bounds);
+                foreach (var (cell, overlay) in previewMap.Overlay.Where(x => x.Value.Type.IsPlaceable))
+                {
+                    previewMap.Metrics.GetLocation(cell, out Point topLeft);
+                    var bounds = new Rectangle(new Point(topLeft.X * Globals.TileWidth, topLeft.Y * Globals.TileHeight), Globals.TileSize);
+                    graphics.DrawRectangle(overlayPen, bounds);
+                }
             }
         }
 

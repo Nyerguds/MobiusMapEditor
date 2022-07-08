@@ -312,14 +312,16 @@ namespace MobiusEditor.Tools
         {
             base.PostRenderMap(graphics);
 
-            var resourcePen = new Pen(Color.Green, 4.0f);
-            foreach (var (cell, overlay) in map.Overlay)
+            using (var resourcePen = new Pen(Color.Green, 4.0f))
             {
-                if (overlay.Type.IsResource)
+                foreach (var (cell, overlay) in map.Overlay)
                 {
-                    map.Metrics.GetLocation(cell, out Point topLeft);
-                    var bounds = new Rectangle(new Point(topLeft.X * Globals.TileWidth, topLeft.Y * Globals.TileHeight), Globals.TileSize);
-                    graphics.DrawRectangle(resourcePen, bounds);
+                    if (overlay.Type.IsResource)
+                    {
+                        map.Metrics.GetLocation(cell, out Point topLeft);
+                        var bounds = new Rectangle(new Point(topLeft.X * Globals.TileWidth, topLeft.Y * Globals.TileHeight), Globals.TileSize);
+                        graphics.DrawRectangle(resourcePen, bounds);
+                    }
                 }
             }
         }

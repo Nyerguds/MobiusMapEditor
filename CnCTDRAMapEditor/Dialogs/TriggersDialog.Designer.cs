@@ -44,6 +44,8 @@ namespace MobiusEditor.Dialogs
         {
             this.components = new System.ComponentModel.Container();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this.flowLayoutPanel2 = new System.Windows.Forms.FlowLayoutPanel();
+            this.btnAdd = new System.Windows.Forms.Button();
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOK = new System.Windows.Forms.Button();
@@ -83,6 +85,7 @@ namespace MobiusEditor.Dialogs
             this.addTriggerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removeTriggerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tableLayoutPanel1.SuspendLayout();
+            this.flowLayoutPanel2.SuspendLayout();
             this.flowLayoutPanel1.SuspendLayout();
             this.settingsPanel.SuspendLayout();
             this.triggersTableLayoutPanel.SuspendLayout();
@@ -102,6 +105,7 @@ namespace MobiusEditor.Dialogs
             this.tableLayoutPanel1.ColumnCount = 2;
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel1.Controls.Add(this.flowLayoutPanel2, 0, 1);
             this.tableLayoutPanel1.Controls.Add(this.flowLayoutPanel1, 0, 1);
             this.tableLayoutPanel1.Controls.Add(this.settingsPanel, 1, 0);
             this.tableLayoutPanel1.Controls.Add(this.triggersListView, 0, 0);
@@ -112,31 +116,54 @@ namespace MobiusEditor.Dialogs
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.Size = new System.Drawing.Size(562, 499);
-            this.tableLayoutPanel1.TabIndex = 1;
+            this.tableLayoutPanel1.TabIndex = 2;
+            // 
+            // flowLayoutPanel2
+            // 
+            this.flowLayoutPanel2.AutoSize = true;
+            this.flowLayoutPanel2.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.flowLayoutPanel2.Controls.Add(this.btnAdd);
+            this.flowLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Left;
+            this.flowLayoutPanel2.FlowDirection = System.Windows.Forms.FlowDirection.RightToLeft;
+            this.flowLayoutPanel2.Location = new System.Drawing.Point(3, 462);
+            this.flowLayoutPanel2.Name = "flowLayoutPanel2";
+            this.flowLayoutPanel2.Size = new System.Drawing.Size(136, 34);
+            this.flowLayoutPanel2.TabIndex = 1;
+            // 
+            // btnAdd
+            // 
+            this.btnAdd.AutoSize = true;
+            this.btnAdd.Location = new System.Drawing.Point(2, 2);
+            this.btnAdd.Margin = new System.Windows.Forms.Padding(2);
+            this.btnAdd.Name = "btnAdd";
+            this.btnAdd.Size = new System.Drawing.Size(132, 30);
+            this.btnAdd.TabIndex = 1;
+            this.btnAdd.Text = "&Add Trigger";
+            this.btnAdd.UseVisualStyleBackColor = true;
+            this.btnAdd.Click += new System.EventHandler(this.btnAdd_Click);
             // 
             // flowLayoutPanel1
             // 
             this.flowLayoutPanel1.AutoSize = true;
             this.flowLayoutPanel1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.tableLayoutPanel1.SetColumnSpan(this.flowLayoutPanel1, 2);
             this.flowLayoutPanel1.Controls.Add(this.btnCancel);
             this.flowLayoutPanel1.Controls.Add(this.btnOK);
             this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.flowLayoutPanel1.FlowDirection = System.Windows.Forms.FlowDirection.RightToLeft;
-            this.flowLayoutPanel1.Location = new System.Drawing.Point(3, 462);
+            this.flowLayoutPanel1.Location = new System.Drawing.Point(145, 462);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(556, 34);
-            this.flowLayoutPanel1.TabIndex = 1;
+            this.flowLayoutPanel1.Size = new System.Drawing.Size(414, 34);
+            this.flowLayoutPanel1.TabIndex = 3;
             // 
             // btnCancel
             // 
             this.btnCancel.AutoSize = true;
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(486, 2);
+            this.btnCancel.Location = new System.Drawing.Point(344, 2);
             this.btnCancel.Margin = new System.Windows.Forms.Padding(2);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(68, 30);
-            this.btnCancel.TabIndex = 2;
+            this.btnCancel.TabIndex = 31;
             this.btnCancel.Text = "&Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
@@ -144,11 +171,11 @@ namespace MobiusEditor.Dialogs
             // 
             this.btnOK.AutoSize = true;
             this.btnOK.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.btnOK.Location = new System.Drawing.Point(432, 2);
+            this.btnOK.Location = new System.Drawing.Point(290, 2);
             this.btnOK.Margin = new System.Windows.Forms.Padding(2);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(50, 30);
-            this.btnOK.TabIndex = 3;
+            this.btnOK.TabIndex = 30;
             this.btnOK.Text = "&OK";
             this.btnOK.UseVisualStyleBackColor = true;
             // 
@@ -156,11 +183,11 @@ namespace MobiusEditor.Dialogs
             // 
             this.settingsPanel.Controls.Add(this.triggersTableLayoutPanel);
             this.settingsPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.settingsPanel.Location = new System.Drawing.Point(149, 10);
+            this.settingsPanel.Location = new System.Drawing.Point(152, 10);
             this.settingsPanel.Margin = new System.Windows.Forms.Padding(10);
             this.settingsPanel.Name = "settingsPanel";
-            this.settingsPanel.Size = new System.Drawing.Size(403, 439);
-            this.settingsPanel.TabIndex = 3;
+            this.settingsPanel.Size = new System.Drawing.Size(400, 439);
+            this.settingsPanel.TabIndex = 2;
             // 
             // triggersTableLayoutPanel
             // 
@@ -212,7 +239,7 @@ namespace MobiusEditor.Dialogs
             this.triggersTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.triggersTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.triggersTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.triggersTableLayoutPanel.Size = new System.Drawing.Size(403, 439);
+            this.triggersTableLayoutPanel.Size = new System.Drawing.Size(400, 439);
             this.triggersTableLayoutPanel.TabIndex = 1;
             // 
             // label1
@@ -236,7 +263,7 @@ namespace MobiusEditor.Dialogs
             this.houseComboBox.Margin = new System.Windows.Forms.Padding(2);
             this.houseComboBox.Name = "houseComboBox";
             this.houseComboBox.Size = new System.Drawing.Size(141, 21);
-            this.houseComboBox.TabIndex = 1;
+            this.houseComboBox.TabIndex = 10;
             // 
             // typeLabel
             // 
@@ -246,7 +273,7 @@ namespace MobiusEditor.Dialogs
             this.typeLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.typeLabel.Name = "typeLabel";
             this.typeLabel.Size = new System.Drawing.Size(67, 25);
-            this.typeLabel.TabIndex = 9;
+            this.typeLabel.TabIndex = 2;
             this.typeLabel.Text = "Type";
             this.typeLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
@@ -258,7 +285,7 @@ namespace MobiusEditor.Dialogs
             this.event1Label.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.event1Label.Name = "event1Label";
             this.event1Label.Size = new System.Drawing.Size(67, 57);
-            this.event1Label.TabIndex = 10;
+            this.event1Label.TabIndex = 3;
             this.event1Label.Text = "Event 1";
             this.event1Label.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
@@ -270,7 +297,7 @@ namespace MobiusEditor.Dialogs
             this.event2Label.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.event2Label.Name = "event2Label";
             this.event2Label.Size = new System.Drawing.Size(67, 57);
-            this.event2Label.TabIndex = 11;
+            this.event2Label.TabIndex = 4;
             this.event2Label.Text = "Event 2";
             this.event2Label.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
@@ -282,7 +309,7 @@ namespace MobiusEditor.Dialogs
             this.action1Label.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.action1Label.Name = "action1Label";
             this.action1Label.Size = new System.Drawing.Size(67, 57);
-            this.action1Label.TabIndex = 15;
+            this.action1Label.TabIndex = 5;
             this.action1Label.Text = "Action 1";
             this.action1Label.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
@@ -294,7 +321,7 @@ namespace MobiusEditor.Dialogs
             this.action2Label.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.action2Label.Name = "action2Label";
             this.action2Label.Size = new System.Drawing.Size(67, 57);
-            this.action2Label.TabIndex = 16;
+            this.action2Label.TabIndex = 6;
             this.action2Label.Text = "Action 2";
             this.action2Label.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
@@ -319,7 +346,7 @@ namespace MobiusEditor.Dialogs
             this.action2ComboBox.Margin = new System.Windows.Forms.Padding(2);
             this.action2ComboBox.Name = "action2ComboBox";
             this.action2ComboBox.Size = new System.Drawing.Size(141, 21);
-            this.action2ComboBox.TabIndex = 18;
+            this.action2ComboBox.TabIndex = 19;
             this.action2ComboBox.SelectedIndexChanged += new System.EventHandler(this.trigger2ComboBox_SelectedIndexChanged);
             // 
             // existenceLabel
@@ -329,7 +356,7 @@ namespace MobiusEditor.Dialogs
             this.existenceLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.existenceLabel.Name = "existenceLabel";
             this.existenceLabel.Size = new System.Drawing.Size(67, 25);
-            this.existenceLabel.TabIndex = 19;
+            this.existenceLabel.TabIndex = 1;
             this.existenceLabel.Text = "Existence";
             this.existenceLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
@@ -343,7 +370,7 @@ namespace MobiusEditor.Dialogs
             this.existenceComboBox.Margin = new System.Windows.Forms.Padding(2);
             this.existenceComboBox.Name = "existenceComboBox";
             this.existenceComboBox.Size = new System.Drawing.Size(141, 21);
-            this.existenceComboBox.TabIndex = 20;
+            this.existenceComboBox.TabIndex = 11;
             this.existenceComboBox.ValueMember = "Value";
             // 
             // typeComboBox
@@ -356,7 +383,7 @@ namespace MobiusEditor.Dialogs
             this.typeComboBox.Margin = new System.Windows.Forms.Padding(2);
             this.typeComboBox.Name = "typeComboBox";
             this.typeComboBox.Size = new System.Drawing.Size(141, 21);
-            this.typeComboBox.TabIndex = 21;
+            this.typeComboBox.TabIndex = 12;
             this.typeComboBox.ValueMember = "Value";
             this.typeComboBox.SelectedValueChanged += new System.EventHandler(this.typeComboBox_SelectedValueChanged);
             // 
@@ -369,7 +396,7 @@ namespace MobiusEditor.Dialogs
             this.event1ComboBox.Margin = new System.Windows.Forms.Padding(2);
             this.event1ComboBox.Name = "event1ComboBox";
             this.event1ComboBox.Size = new System.Drawing.Size(141, 21);
-            this.event1ComboBox.TabIndex = 22;
+            this.event1ComboBox.TabIndex = 13;
             this.event1ComboBox.SelectedIndexChanged += new System.EventHandler(this.trigger1ComboBox_SelectedIndexChanged);
             // 
             // event2ComboBox
@@ -381,7 +408,7 @@ namespace MobiusEditor.Dialogs
             this.event2ComboBox.Margin = new System.Windows.Forms.Padding(2);
             this.event2ComboBox.Name = "event2ComboBox";
             this.event2ComboBox.Size = new System.Drawing.Size(141, 21);
-            this.event2ComboBox.TabIndex = 23;
+            this.event2ComboBox.TabIndex = 15;
             this.event2ComboBox.SelectedIndexChanged += new System.EventHandler(this.trigger2ComboBox_SelectedIndexChanged);
             // 
             // teamLabel
@@ -391,7 +418,7 @@ namespace MobiusEditor.Dialogs
             this.teamLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.teamLabel.Name = "teamLabel";
             this.teamLabel.Size = new System.Drawing.Size(67, 25);
-            this.teamLabel.TabIndex = 32;
+            this.teamLabel.TabIndex = 7;
             this.teamLabel.Text = "Team";
             this.teamLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
@@ -404,7 +431,7 @@ namespace MobiusEditor.Dialogs
             this.teamComboBox.Margin = new System.Windows.Forms.Padding(2);
             this.teamComboBox.Name = "teamComboBox";
             this.teamComboBox.Size = new System.Drawing.Size(141, 21);
-            this.teamComboBox.TabIndex = 33;
+            this.teamComboBox.TabIndex = 21;
             // 
             // event1Flp
             // 
@@ -416,7 +443,7 @@ namespace MobiusEditor.Dialogs
             this.event1Flp.Location = new System.Drawing.Point(219, 78);
             this.event1Flp.Name = "event1Flp";
             this.event1Flp.Size = new System.Drawing.Size(172, 51);
-            this.event1Flp.TabIndex = 36;
+            this.event1Flp.TabIndex = 14;
             // 
             // event1Nud
             // 
@@ -434,7 +461,7 @@ namespace MobiusEditor.Dialogs
             -2147483648});
             this.event1Nud.Name = "event1Nud";
             this.event1Nud.Size = new System.Drawing.Size(70, 20);
-            this.event1Nud.TabIndex = 31;
+            this.event1Nud.TabIndex = 0;
             // 
             // event1ValueComboBox
             // 
@@ -443,7 +470,7 @@ namespace MobiusEditor.Dialogs
             this.event1ValueComboBox.Location = new System.Drawing.Point(3, 27);
             this.event1ValueComboBox.Name = "event1ValueComboBox";
             this.event1ValueComboBox.Size = new System.Drawing.Size(166, 21);
-            this.event1ValueComboBox.TabIndex = 32;
+            this.event1ValueComboBox.TabIndex = 1;
             // 
             // event2Flp
             // 
@@ -454,7 +481,7 @@ namespace MobiusEditor.Dialogs
             this.event2Flp.Location = new System.Drawing.Point(219, 135);
             this.event2Flp.Name = "event2Flp";
             this.event2Flp.Size = new System.Drawing.Size(172, 51);
-            this.event2Flp.TabIndex = 37;
+            this.event2Flp.TabIndex = 16;
             // 
             // event2Nud
             // 
@@ -472,7 +499,7 @@ namespace MobiusEditor.Dialogs
             -2147483648});
             this.event2Nud.Name = "event2Nud";
             this.event2Nud.Size = new System.Drawing.Size(70, 20);
-            this.event2Nud.TabIndex = 30;
+            this.event2Nud.TabIndex = 0;
             // 
             // event2ValueComboBox
             // 
@@ -481,7 +508,7 @@ namespace MobiusEditor.Dialogs
             this.event2ValueComboBox.Location = new System.Drawing.Point(3, 27);
             this.event2ValueComboBox.Name = "event2ValueComboBox";
             this.event2ValueComboBox.Size = new System.Drawing.Size(166, 21);
-            this.event2ValueComboBox.TabIndex = 33;
+            this.event2ValueComboBox.TabIndex = 1;
             // 
             // action1Flp
             // 
@@ -492,7 +519,7 @@ namespace MobiusEditor.Dialogs
             this.action1Flp.Location = new System.Drawing.Point(219, 192);
             this.action1Flp.Name = "action1Flp";
             this.action1Flp.Size = new System.Drawing.Size(172, 51);
-            this.action1Flp.TabIndex = 38;
+            this.action1Flp.TabIndex = 18;
             // 
             // action1Nud
             // 
@@ -510,7 +537,7 @@ namespace MobiusEditor.Dialogs
             -2147483648});
             this.action1Nud.Name = "action1Nud";
             this.action1Nud.Size = new System.Drawing.Size(70, 20);
-            this.action1Nud.TabIndex = 31;
+            this.action1Nud.TabIndex = 0;
             // 
             // action1ValueComboBox
             // 
@@ -519,7 +546,7 @@ namespace MobiusEditor.Dialogs
             this.action1ValueComboBox.Location = new System.Drawing.Point(3, 27);
             this.action1ValueComboBox.Name = "action1ValueComboBox";
             this.action1ValueComboBox.Size = new System.Drawing.Size(166, 21);
-            this.action1ValueComboBox.TabIndex = 33;
+            this.action1ValueComboBox.TabIndex = 1;
             // 
             // action2Flp
             // 
@@ -530,7 +557,7 @@ namespace MobiusEditor.Dialogs
             this.action2Flp.Location = new System.Drawing.Point(219, 249);
             this.action2Flp.Name = "action2Flp";
             this.action2Flp.Size = new System.Drawing.Size(172, 51);
-            this.action2Flp.TabIndex = 39;
+            this.action2Flp.TabIndex = 20;
             // 
             // action2Nud
             // 
@@ -548,7 +575,7 @@ namespace MobiusEditor.Dialogs
             -2147483648});
             this.action2Nud.Name = "action2Nud";
             this.action2Nud.Size = new System.Drawing.Size(70, 20);
-            this.action2Nud.TabIndex = 32;
+            this.action2Nud.TabIndex = 0;
             // 
             // action2ValueComboBox
             // 
@@ -557,7 +584,7 @@ namespace MobiusEditor.Dialogs
             this.action2ValueComboBox.Location = new System.Drawing.Point(3, 27);
             this.action2ValueComboBox.Name = "action2ValueComboBox";
             this.action2ValueComboBox.Size = new System.Drawing.Size(166, 21);
-            this.action2ValueComboBox.TabIndex = 33;
+            this.action2ValueComboBox.TabIndex = 1;
             // 
             // triggersListView
             // 
@@ -572,8 +599,8 @@ namespace MobiusEditor.Dialogs
             this.triggersListView.MultiSelect = false;
             this.triggersListView.Name = "triggersListView";
             this.triggersListView.ShowItemToolTips = true;
-            this.triggersListView.Size = new System.Drawing.Size(135, 455);
-            this.triggersListView.TabIndex = 4;
+            this.triggersListView.Size = new System.Drawing.Size(138, 455);
+            this.triggersListView.TabIndex = 0;
             this.triggersListView.UseCompatibleStateImageBehavior = false;
             this.triggersListView.View = System.Windows.Forms.View.Details;
             this.triggersListView.AfterLabelEdit += new System.Windows.Forms.LabelEditEventHandler(this.teamTypesListView_AfterLabelEdit);
@@ -588,25 +615,24 @@ namespace MobiusEditor.Dialogs
             this.addTriggerToolStripMenuItem,
             this.removeTriggerToolStripMenuItem});
             this.triggersContextMenuStrip.Name = "teamTypesContextMenuStrip";
-            this.triggersContextMenuStrip.Size = new System.Drawing.Size(157, 48);
+            this.triggersContextMenuStrip.Size = new System.Drawing.Size(159, 48);
             // 
             // addTriggerToolStripMenuItem
             // 
             this.addTriggerToolStripMenuItem.Name = "addTriggerToolStripMenuItem";
-            this.addTriggerToolStripMenuItem.Size = new System.Drawing.Size(156, 22);
+            this.addTriggerToolStripMenuItem.Size = new System.Drawing.Size(158, 22);
             this.addTriggerToolStripMenuItem.Text = "&Add Trigger";
             this.addTriggerToolStripMenuItem.Click += new System.EventHandler(this.addTriggerToolStripMenuItem_Click);
             // 
             // removeTriggerToolStripMenuItem
             // 
             this.removeTriggerToolStripMenuItem.Name = "removeTriggerToolStripMenuItem";
-            this.removeTriggerToolStripMenuItem.Size = new System.Drawing.Size(156, 22);
+            this.removeTriggerToolStripMenuItem.Size = new System.Drawing.Size(158, 22);
             this.removeTriggerToolStripMenuItem.Text = "&Remove Trigger";
             this.removeTriggerToolStripMenuItem.Click += new System.EventHandler(this.removeTriggerToolStripMenuItem_Click);
             // 
             // TriggersDialog
             // 
-            this.AcceptButton = this.btnOK;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
@@ -623,6 +649,8 @@ namespace MobiusEditor.Dialogs
             this.Text = "Triggers";
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
+            this.flowLayoutPanel2.ResumeLayout(false);
+            this.flowLayoutPanel2.PerformLayout();
             this.flowLayoutPanel1.ResumeLayout(false);
             this.flowLayoutPanel1.PerformLayout();
             this.settingsPanel.ResumeLayout(false);
@@ -683,5 +711,7 @@ namespace MobiusEditor.Dialogs
         private System.Windows.Forms.ComboBox event2ValueComboBox;
         private System.Windows.Forms.ComboBox action1ValueComboBox;
         private System.Windows.Forms.ComboBox action2ValueComboBox;
+        private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel2;
+        private System.Windows.Forms.Button btnAdd;
     }
 }
