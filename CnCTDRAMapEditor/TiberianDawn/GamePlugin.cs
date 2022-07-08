@@ -1167,7 +1167,7 @@ namespace MobiusEditor.TiberianDawn
             {
                 String overlayName = overlay.Type.Name;
                 if (tiberium.IsMatch(overlayName))
-                    overlayName = "TI" + rd.Next(1, 12);
+                    overlayName = "TI" + rd.Next(1, 13);
                 overlaySection[cell.ToString()] = overlayName.ToUpperInvariant();
             }
 

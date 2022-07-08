@@ -32,6 +32,7 @@ enhance compatibility with different kinds of systems and enhance the editor's s
 * Added "Add" buttons in triggers and teamtypes dialogs.
 * Fixed tab order in triggers and teamtypes dialogs.
 * Fixed crash in "already exists" messages for triggers and teams.
+* Randomised tiberium on save, like the original WW editor does.
 * [EXPERIMENTAL] Added ability to place bibs. They won't show their full size in the editor at the moment, though.
 
 ### Contributing
