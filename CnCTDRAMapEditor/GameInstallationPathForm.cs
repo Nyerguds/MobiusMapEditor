@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Security;
 using System.Windows.Forms;
 
 namespace MobiusEditor
@@ -31,7 +32,21 @@ namespace MobiusEditor
 
         private void btnContinue_Click(object sender, EventArgs e)
         {
-            if (!File.Exists(Path.Combine(Path.GetDirectoryName(textBox1.Text), "DATA", "CONFIG.MEG")))
+            String dir = textBox1.Text;
+            Boolean checkPassed = false;
+            try
+            {
+                if ((new FileInfo(dir).Attributes & FileAttributes.Directory) != 0)
+                    dir = dir.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+                String fileToCheck = Path.Combine(Path.GetDirectoryName(dir), "DATA", "CONFIG.MEG");
+                checkPassed = File.Exists(fileToCheck);
+            }
+            catch (SecurityException) { /* Check not passed */}
+            catch (ArgumentException) { /* Check not passed */}
+            catch (UnauthorizedAccessException) { /* Check not passed */}
+            catch (PathTooLongException) { /* Check not passed */}
+            catch (NotSupportedException) { /* Check not passed */}
+            if (!checkPassed)
             {
                 MessageBox.Show("Required data is missing, please enter the valid " +
                     "installation path for the C&C Remastered Collection. The " +
@@ -39,7 +54,7 @@ namespace MobiusEditor
                     "collection (ClientG.exe and ClientLauncherG.exe) reside.", "Invalid directory");
                 return;
             }
-
+            textBox1.Text = dir;
             DialogResult = DialogResult.OK;
             Close();
         }

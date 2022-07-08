@@ -46,7 +46,7 @@ namespace MobiusEditor.Tools.Dialogs
             this.label10 = new System.Windows.Forms.Label();
             this.totalResourcesLbl = new System.Windows.Forms.Label();
             this.gemsCheckBox = new System.Windows.Forms.CheckBox();
-            this.resourceBrushSizeNud = new System.Windows.Forms.NumericUpDown();
+            this.resourceBrushSizeNud = new MobiusEditor.Controls.EnhNumericUpDown();
             this.label1 = new System.Windows.Forms.Label();
             this.tableLayoutPanel6.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.resourceBrushSizeNud)).BeginInit();
@@ -113,6 +113,7 @@ namespace MobiusEditor.Tools.Dialogs
             0,
             0,
             0});
+            this.resourceBrushSizeNud.MouseWheelIncrement = 2;
             this.resourceBrushSizeNud.Location = new System.Drawing.Point(97, 16);
             this.resourceBrushSizeNud.Maximum = new decimal(new int[] {
             9,
@@ -173,7 +174,7 @@ namespace MobiusEditor.Tools.Dialogs
         private System.Windows.Forms.Label label10;
         private System.Windows.Forms.Label totalResourcesLbl;
         private System.Windows.Forms.CheckBox gemsCheckBox;
-        private System.Windows.Forms.NumericUpDown resourceBrushSizeNud;
+        private MobiusEditor.Controls.EnhNumericUpDown resourceBrushSizeNud;
         private System.Windows.Forms.Label label1;
     }
 }

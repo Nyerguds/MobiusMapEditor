@@ -140,6 +140,7 @@ namespace MobiusEditor
             // fileNewMenuItem
             // 
             this.fileNewMenuItem.Name = "fileNewMenuItem";
+            this.fileNewMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.N)));
             this.fileNewMenuItem.Size = new System.Drawing.Size(162, 26);
             this.fileNewMenuItem.Text = "&New...";
             this.fileNewMenuItem.Click += new System.EventHandler(this.fileNewMenuItem_Click);
@@ -147,6 +148,7 @@ namespace MobiusEditor
             // fileOpenMenuItem
             // 
             this.fileOpenMenuItem.Name = "fileOpenMenuItem";
+            this.fileOpenMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O)));
             this.fileOpenMenuItem.Size = new System.Drawing.Size(162, 26);
             this.fileOpenMenuItem.Text = "&Open...";
             this.fileOpenMenuItem.Click += new System.EventHandler(this.fileOpenMenuItem_Click);
@@ -154,6 +156,7 @@ namespace MobiusEditor
             // fileSaveMenuItem
             // 
             this.fileSaveMenuItem.Name = "fileSaveMenuItem";
+            this.fileSaveMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.S)));
             this.fileSaveMenuItem.Size = new System.Drawing.Size(162, 26);
             this.fileSaveMenuItem.Text = "&Save";
             this.fileSaveMenuItem.Click += new System.EventHandler(this.fileSaveMenuItem_Click);
@@ -161,6 +164,7 @@ namespace MobiusEditor
             // fileSaveAsMenuItem
             // 
             this.fileSaveAsMenuItem.Name = "fileSaveAsMenuItem";
+            this.fileSaveAsMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Shift | System.Windows.Forms.Keys.S)));
             this.fileSaveAsMenuItem.Size = new System.Drawing.Size(162, 26);
             this.fileSaveAsMenuItem.Text = "Save &As...";
             this.fileSaveAsMenuItem.Click += new System.EventHandler(this.fileSaveAsMenuItem_Click);
@@ -173,6 +177,7 @@ namespace MobiusEditor
             // fileExportMenuItem
             // 
             this.fileExportMenuItem.Name = "fileExportMenuItem";
+            this.fileExportMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.E)));
             this.fileExportMenuItem.Size = new System.Drawing.Size(162, 26);
             this.fileExportMenuItem.Text = "&Export...";
             this.fileExportMenuItem.Click += new System.EventHandler(this.fileExportMenuItem_Click);
@@ -180,6 +185,7 @@ namespace MobiusEditor
             // filePublishMenuItem
             // 
             this.filePublishMenuItem.Name = "filePublishMenuItem";
+            this.filePublishMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.P)));
             this.filePublishMenuItem.Size = new System.Drawing.Size(162, 26);
             this.filePublishMenuItem.Text = "&Publish...";
             this.filePublishMenuItem.Click += new System.EventHandler(this.filePublishMenuItem_Click);

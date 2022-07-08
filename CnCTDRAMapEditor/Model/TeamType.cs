@@ -126,6 +126,26 @@ namespace MobiusEditor.Model
             return teamType;
         }
 
+        public Boolean IsEmpty() {
+            // true if nothing is filled in besides a default selected house.
+            return
+                IsRoundAbout == false
+                && IsLearning == false
+                && IsSuicide == false
+                && IsAutocreate == false
+                && IsMercenary == false
+                && RecruitPriority == 0
+                && MaxAllowed == 0
+                && InitNum == 0
+                && Fear == 0
+                && IsReinforcable == false
+                && IsPrebuilt == false
+                && Origin == 0
+                && Trigger == null
+                && Classes.Count == 0
+                && Missions.Count == 0;
+        }
+
         public override bool Equals(object obj)
         {
             if (obj is TeamType)

@@ -20,28 +20,29 @@ namespace MobiusEditor.TiberianDawn
     {
         private static readonly string[] Types = new string[]
         {
+            // Nyerguds upgrade: Removed irrelevant types for preplaced units.
             "Sleep",
-            "Attack",
-            "Move",
-            "Retreat",
+            //"Attack",
+            //"Move",
+            //"Retreat",
             "Guard",
             "Sticky",
-            "Enter",
-            "Capture",
+            //"Enter",
+            //"Capture",
             "Harvest",
             "Area Guard",
             "Return",
             "Stop",
-            "Ambush",
+            //"Ambush",
             "Hunt",
-            "Timed Hunt",
-            "Unload",
-            "Sabotage",
-            "Construction",
-            "Selling",
-            "Repair",
-            "Rescue",
-            "Missile"
+            //"Timed Hunt",
+            //"Unload",
+            //"Sabotage",
+            //"Construction",
+            //"Selling",
+            //"Repair",
+            //"Rescue",
+            //"Missile"
         };
 
         public static IEnumerable<string> GetTypes()

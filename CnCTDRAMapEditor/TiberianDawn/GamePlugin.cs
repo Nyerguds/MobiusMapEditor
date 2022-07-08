@@ -48,13 +48,13 @@ namespace MobiusEditor.TiberianDawn
 
         static GamePlugin()
         {
-            technoTypes = InfantryTypes.GetTypes().Cast<ITechnoType>().Concat(UnitTypes.GetTypes().Cast<ITechnoType>());
+            technoTypes = InfantryTypes.GetTypes().Cast<ITechnoType>().Concat(UnitTypes.GetTypes(false).Cast<ITechnoType>());
         }
 
         public GamePlugin(bool mapImage)
         {
-            var playerWaypoints = Enumerable.Range(0, 8).Select(i => new Waypoint(string.Format("P{0}", i), WaypointFlag.PlayerStart));
-            var generalWaypoints = Enumerable.Range(8, 17).Select(i => new Waypoint(i.ToString()));
+            var playerWaypoints = Enumerable.Range(0, 6).Select(i => new Waypoint(string.Format("P{0}", i), WaypointFlag.PlayerStart));
+            var generalWaypoints = Enumerable.Range(6, 19).Select(i => new Waypoint(i.ToString()));
             var specialWaypoints = new Waypoint[] { new Waypoint("Flare"), new Waypoint("Home"), new Waypoint("Reinf.") };
             var waypoints = playerWaypoints.Concat(generalWaypoints).Concat(specialWaypoints);
 
@@ -81,8 +81,8 @@ namespace MobiusEditor.TiberianDawn
             Map = new Map(basicSection, null, Constants.MaxSize, typeof(House),
                 houseTypes, TheaterTypes.GetTypes(), TemplateTypes.GetTypes(), TerrainTypes.GetTypes(),
                 OverlayTypes.GetTypes(), SmudgeTypes.GetTypes(), EventTypes.GetTypes(), ActionTypes.GetTypes(),
-                MissionTypes.GetTypes(), DirectionTypes.GetTypes(), InfantryTypes.GetTypes(), UnitTypes.GetTypes(),
-                BuildingTypes.GetTypes(), TeamMissionTypes.GetTypes(), waypoints, movieTypes)
+                MissionTypes.GetTypes(), DirectionTypes.GetTypes(), InfantryTypes.GetTypes(), UnitTypes.GetTypes(true),
+                BuildingTypes.GetTypes(), TeamMissionTypes.GetTypes(), technoTypes, waypoints, movieTypes)
             {
                 TiberiumOrGoldValue = 25
             };
@@ -199,6 +199,8 @@ namespace MobiusEditor.TiberianDawn
             }
 
             var teamTypesSection = ini.Sections.Extract("TeamTypes");
+            // Make case insensitive dictionary of teamtype missions.
+            Dictionary<string, string> teamMissionTypes = Enumerable.ToDictionary(TeamMissionTypes.GetTypes(), t => t, StringComparer.OrdinalIgnoreCase);
             if (teamTypesSection != null)
             {
                 foreach (var (Key, Value) in teamTypesSection)
@@ -226,7 +228,9 @@ namespace MobiusEditor.TiberianDawn
                             if (classTokens.Length == 2)
                             {
                                 var type = technoTypes.Where(t => t.Equals(classTokens[0])).FirstOrDefault();
-                                var count = byte.Parse(classTokens[1]);
+                                byte count;
+                                if (!byte.TryParse(classTokens[1], out count))
+                                    count = 1;
                                 if (type != null)
                                 {
                                     teamType.Classes.Add(new TeamTypeClass { Type = type, Count = count });
@@ -248,7 +252,19 @@ namespace MobiusEditor.TiberianDawn
                             var missionTokens = tokens[0].Split(':'); tokens.RemoveAt(0);
                             if (missionTokens.Length == 2)
                             {
-                                teamType.Missions.Add(new TeamTypeMission { Mission = missionTokens[0], Argument = int.Parse(missionTokens[1]) });
+                                string mission;
+                                // fix mission case sensitivity issues.
+                                teamMissionTypes.TryGetValue(missionTokens[0], out mission);
+                                byte count;
+                                byte.TryParse(missionTokens[1], out count);
+                                if (mission != null)
+                                {
+                                    teamType.Missions.Add(new TeamTypeMission { Mission = mission, Argument = count });
+                                }
+                                else
+                                {
+                                    errors.Add(string.Format("Team '{0}' references unknown class '{1}'", Key, missionTokens[0]));
+                                }
                             }
                             else
                             {
@@ -286,12 +302,14 @@ namespace MobiusEditor.TiberianDawn
                         trigger.Event1.Data = long.Parse(tokens[2]);
                         trigger.Action1.ActionType = tokens[1];
                         trigger.House = Map.HouseTypes.Where(t => t.Equals(tokens[3])).FirstOrDefault()?.Name ?? "None";
+                        if (String.IsNullOrEmpty(tokens[4]))
+                            tokens[4] = TeamType.None;
                         trigger.Action1.Team = tokens[4];
-                        trigger.PersistantType = TriggerPersistantType.Volatile;
+                        trigger.PersistentType = TriggerPersistentType.Volatile;
 
                         if (tokens.Length >= 6)
                         {
-                            trigger.PersistantType = (TriggerPersistantType)int.Parse(tokens[5]);
+                            trigger.PersistentType = (TriggerPersistentType)int.Parse(tokens[5]);
                         }
 
                         Map.Triggers.Add(trigger);
@@ -388,22 +406,17 @@ namespace MobiusEditor.TiberianDawn
                     var tokens = Value.Split(',');
                     if (tokens.Length == 3)
                     {
-                        var smudgeType = Map.SmudgeTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault();
+                        var smudgeType = Map.SmudgeTypes.Where(t => t.Equals(tokens[0]) && (t.Flag & SmudgeTypeFlag.Bib) == 0).FirstOrDefault();
                         if (smudgeType != null)
                         {
-                            if (((smudgeType.Flag & SmudgeTypeFlag.Bib) == SmudgeTypeFlag.None))
+                            int icon = 0;
+                            if (smudgeType.Icons > 1 && int.TryParse(tokens[2], out icon))
+                                icon = Math.Max(0, Math.Min(smudgeType.Icons - 1, icon));
+                            Map.Smudge[cell] = new Smudge
                             {
-                                Map.Smudge[cell] = new Smudge
-                                {
-                                    Type = smudgeType,
-                                    Icon = 0,
-                                    Data = int.Parse(tokens[2])
-                                };
-                            }
-                            else
-                            {
-                                errors.Add(string.Format("Smudge '{0}' is a bib, skipped", tokens[0]));
-                            }
+                                Type = smudgeType,
+                                Icon = icon
+                            };
                         }
                         else
                         {
@@ -873,17 +886,26 @@ namespace MobiusEditor.TiberianDawn
                         var jsonPath = Path.ChangeExtension(path, ".json");
 
                         var ini = new INI();
+                        SaveINI(ini, fileType);
                         using (var iniWriter = new StreamWriter(iniPath))
+                        {
+                            iniWriter.Write(ini.ToString());
+                        }
+
                         using (var binStream = new FileStream(binPath, FileMode.Create))
                         using (var binWriter = new BinaryWriter(binStream))
+                        {
+                            SaveBinary(binWriter);
+                        }
+
                         using (var tgaStream = new FileStream(tgaPath, FileMode.Create))
+                        {
+                            SaveMapPreview(tgaStream);
+                        }
+
                         using (var jsonStream = new FileStream(jsonPath, FileMode.Create))
                         using (var jsonWriter = new JsonTextWriter(new StreamWriter(jsonStream)))
                         {
-                            SaveINI(ini, fileType);
-                            iniWriter.Write(ini.ToString());
-                            SaveBinary(binWriter);
-                            SaveMapPreview(tgaStream);
                             SaveJSON(jsonWriter);
                         }
                     }
@@ -891,6 +913,8 @@ namespace MobiusEditor.TiberianDawn
                 case FileType.MEG:
                 case FileType.PGM:
                     {
+                        var ini = new INI();
+                        SaveINI(ini, fileType);
                         using (var iniStream = new MemoryStream())
                         using (var binStream = new MemoryStream())
                         using (var tgaStream = new MemoryStream())
@@ -899,8 +923,6 @@ namespace MobiusEditor.TiberianDawn
                         using (var jsonWriter = new JsonTextWriter(new StreamWriter(jsonStream)))
                         using (var megafileBuilder = new MegafileBuilder(@"", path))
                         {
-                            var ini = new INI();
-                            SaveINI(ini, fileType);
                             var iniWriter = new StreamWriter(iniStream);
                             iniWriter.Write(ini.ToString());
                             iniWriter.Flush();
@@ -1011,9 +1033,9 @@ namespace MobiusEditor.TiberianDawn
                     trigger.Event1.EventType,
                     trigger.Action1.ActionType,
                     trigger.Event1.Data.ToString(),
-                    trigger.House,
-                    trigger.Action1.Team,
-                    ((int)trigger.PersistantType).ToString()
+                    String.IsNullOrEmpty(trigger.House) ? House.None : trigger.House,
+                    String.IsNullOrEmpty(trigger.Action1.Team) ? TeamType.None : trigger.Action1.Team,
+                    ((int)trigger.PersistentType).ToString()
                 };
 
                 triggersSection[trigger.Name] = string.Join(",", tokens);
@@ -1066,7 +1088,7 @@ namespace MobiusEditor.TiberianDawn
                         infantry.Strength,
                         cell,
                         i,
-                        infantry.Mission,
+                        String.IsNullOrEmpty(infantry.Mission) ? "Guard" : infantry.Mission,
                         infantry.Direction.ID,
                         infantry.Trigger
                     );
@@ -1105,11 +1127,11 @@ namespace MobiusEditor.TiberianDawn
                     unit.Strength,
                     cell,
                     unit.Direction.ID,
-                    unit.Mission,
+                    String.IsNullOrEmpty(unit.Mission) ? "Guard" : unit.Mission,
                     unit.Trigger
                 );
             }
-
+            // Game does not actually support reading this.
             var aircraftSection = ini.Sections.Add("Aircraft");
             var aircraftIndex = 0;
             foreach (var (location, aircraft) in Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsAircraft))
@@ -1124,7 +1146,7 @@ namespace MobiusEditor.TiberianDawn
                     aircraft.Strength,
                     cell,
                     aircraft.Direction.ID,
-                    aircraft.Mission
+                    String.IsNullOrEmpty(aircraft.Mission) ? "Guard" : aircraft.Mission
                 );
             }
 
@@ -1139,22 +1161,27 @@ namespace MobiusEditor.TiberianDawn
             }
 
             var overlaySection = ini.Sections.Add("Overlay");
+            Regex tiberium = new Regex("TI([0-9]|(1[0-2]))", RegexOptions.IgnoreCase);
+            Random rd = new Random();
             foreach (var (cell, overlay) in Map.Overlay)
             {
-                overlaySection[cell.ToString()] = overlay.Type.Name;
+                String overlayName = overlay.Type.Name;
+                if (tiberium.IsMatch(overlayName))
+                    overlayName = "TI" + rd.Next(1, 13);
+                overlaySection[cell.ToString()] = overlayName.ToUpperInvariant();
             }
 
             var smudgeSection = ini.Sections.Add("Smudge");
             foreach (var (cell, smudge) in Map.Smudge.Where(item => (item.Value.Type.Flag & SmudgeTypeFlag.Bib) == SmudgeTypeFlag.None))
             {
-                smudgeSection[cell.ToString()] = string.Format("{0},{1},{2}", smudge.Type.Name, cell, smudge.Data);
+                smudgeSection[cell.ToString()] = string.Format("{0},{1},{2}", smudge.Type.Name, cell, smudge.Icon);
             }
 
             var terrainSection = ini.Sections.Add("Terrain");
             foreach (var (location, terrain) in Map.Technos.OfType<Terrain>())
             {
                 Map.Metrics.GetCell(location, out int cell);
-                terrainSection[cell.ToString()] = string.Format("{0},None", terrain.Type.Name);
+                terrainSection[cell.ToString()] = string.Format("{0},{1}", terrain.Type.Name, terrain.Trigger);
             }
         }
 
@@ -1173,7 +1200,7 @@ namespace MobiusEditor.TiberianDawn
                     else
                     {
                         writer.Write(byte.MaxValue);
-                        writer.Write(byte.MaxValue);
+                        writer.Write(byte.MinValue);
                     }
                 }
             }

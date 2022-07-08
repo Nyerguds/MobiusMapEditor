@@ -131,9 +131,14 @@ namespace MobiusEditor.Widgets
 
         public void Render(Graphics graphics)
         {
+            RenderRect(graphics, MouseCell);
+        }
+
+        public void RenderRect(Graphics graphics, Point mouseCell)
+        {
             if (!MouseoverSize.IsEmpty)
             {
-                var rect = new Rectangle(new Point(MouseCell.X * cellSize.Width, MouseCell.Y * cellSize.Height), cellSize);
+                var rect = new Rectangle(new Point(mouseCell.X * cellSize.Width, mouseCell.Y * cellSize.Height), cellSize);
                 rect.Inflate(cellSize.Width * (MouseoverSize.Width / 2), cellSize.Height * (MouseoverSize.Height / 2));
                 graphics.DrawRectangle(defaultMouseoverPen, rect);
             }

@@ -101,6 +101,7 @@ namespace MobiusEditor.Model
 
         public void Init(TheaterType theater)
         {
+            var oldImage = Thumbnail;
             string tileName = Name;
             if ((TemplateType & TemplateTypeFlag.OreMine) != TemplateTypeFlag.None)
             {
@@ -111,6 +112,15 @@ namespace MobiusEditor.Model
             {
                 RenderSize = new Size(tile.Image.Width / Globals.TileScale, tile.Image.Height / Globals.TileScale);
                 Thumbnail = new Bitmap(tile.Image, tile.Image.Width / 2, tile.Image.Height / 2);
+            }
+            else
+            {
+                Thumbnail = null;
+            }
+            if (oldImage != null)
+            {
+                try { oldImage.Dispose(); }
+                catch { /* ignore */ }
             }
         }
     }

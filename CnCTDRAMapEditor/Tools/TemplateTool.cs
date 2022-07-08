@@ -168,6 +168,11 @@ namespace MobiusEditor.Tools
 
             this.templateTypeListView.BeginUpdate();
             this.templateTypeListView.LargeImageList = imageList;
+            // Fixed constantly growing items list.
+            if (this.templateTypeListView.Groups.Count > 0)
+                this.templateTypeListView.Groups.Clear();
+            if (this.templateTypeListView.Items.Count > 0)
+                this.templateTypeListView.Items.Clear();
 
             var imageIndex = 0;
             foreach (var templateTypeGroup in templateTypes)
@@ -252,12 +257,27 @@ namespace MobiusEditor.Tools
 
         private void TemplateTypeMapPanel_PostRender(object sender, RenderEventArgs e)
         {
+            e.Graphics.Transform = new Matrix();
             if (SelectedIcon.HasValue)
             {
-                var selectedIconPen = new Pen(Color.Yellow, 2);
-                var cellSize = new Size(Globals.OriginalTileWidth / 4, Globals.OriginalTileHeight / 4);
-                var rect = new Rectangle(new Point(SelectedIcon.Value.X * cellSize.Width, SelectedIcon.Value.Y * cellSize.Height), cellSize);
-                e.Graphics.DrawRectangle(selectedIconPen, rect);
+                int panelWidth = templateTypeMapPanel.ClientSize.Width;
+                int panelHeight = templateTypeMapPanel.ClientSize.Height;
+                int iconWidth = SelectedTemplateType.IconWidth;
+                int iconHeight = SelectedTemplateType.IconHeight;
+                int maxIconRect = Math.Max(iconWidth, iconHeight);
+                int scaleX = panelWidth / maxIconRect;
+                int scaleY = panelHeight / maxIconRect;
+                int scale = Math.Min(scaleX, scaleY);
+                int leftoverX = panelWidth - (scale * maxIconRect);
+                int leftoverY = panelHeight - (scale * maxIconRect);
+                int padX = leftoverX / 2;
+                int padY = leftoverY / 2;
+
+                using (var selectedIconPen = new Pen(Color.Yellow, Math.Max(1, scale/16))) {
+                    var cellSize = new Size(scale, scale);
+                    var rect = new Rectangle(new Point(padX + SelectedIcon.Value.X * cellSize.Width, padY + SelectedIcon.Value.Y * cellSize.Height), cellSize);
+                    e.Graphics.DrawRectangle(selectedIconPen, rect);
+                }
             }
 
             if (SelectedTemplateType != null)
@@ -267,15 +287,16 @@ namespace MobiusEditor.Tools
                     Alignment = StringAlignment.Center,
                     LineAlignment = StringAlignment.Center
                 };
-                var sizeBackgroundBrush = new SolidBrush(Color.FromArgb(128, Color.Black));
-                var sizeTextBrush = new SolidBrush(Color.White);
 
                 var text = string.Format("{0} ({1}x{2})", SelectedTemplateType.DisplayName, SelectedTemplateType.IconWidth, SelectedTemplateType.IconHeight);
                 var textSize = e.Graphics.MeasureString(text, SystemFonts.CaptionFont) + new SizeF(6.0f, 6.0f);
                 var textBounds = new RectangleF(new PointF(0, 0), textSize);
-                e.Graphics.Transform = new Matrix();
-                e.Graphics.FillRectangle(sizeBackgroundBrush, textBounds);
-                e.Graphics.DrawString(text, SystemFonts.CaptionFont, sizeTextBrush, textBounds, sizeStringFormat);
+                using (var sizeBackgroundBrush = new SolidBrush(Color.FromArgb(128, Color.Black)))
+                using (var sizeTextBrush = new SolidBrush(Color.White))
+                {
+                    e.Graphics.FillRectangle(sizeBackgroundBrush, textBounds);
+                    e.Graphics.DrawString(text, SystemFonts.CaptionFont, sizeTextBrush, textBounds, sizeStringFormat);
+                }
             }
         }
 
@@ -317,7 +338,10 @@ namespace MobiusEditor.Tools
             {
                 if (e.Button == MouseButtons.Left)
                 {
-                    SetTemplate(navigationWidget.MouseCell);
+                    if ((selectedTemplateType.Flag & TemplateTypeFlag.Clear) != 0)
+                        RemoveTemplate(navigationWidget.MouseCell);
+                    else
+                        SetTemplate(navigationWidget.MouseCell);
                 }
                 else if (e.Button == MouseButtons.Right)
                 {
@@ -951,23 +975,23 @@ namespace MobiusEditor.Tools
                     dragBounds.Right * Globals.TileWidth,
                     dragBounds.Bottom * Globals.TileHeight
                 );
-
-                var boundsPen = new Pen(Color.Red, 8.0f);
-                graphics.DrawRectangle(boundsPen, bounds);
+                using (var boundsPen = new Pen(Color.Red, 8.0f))
+                    graphics.DrawRectangle(boundsPen, bounds);
             }
             else if (placementMode)
             {
                 var location = navigationWidget.MouseCell;
                 if (SelectedTemplateType != null)
                 {
-                    var previewPen = new Pen(Color.Green, 4.0f);
+                    
                     var previewBounds = new Rectangle(
                         location.X * Globals.TileWidth,
                         location.Y * Globals.TileHeight,
                         (SelectedIcon.HasValue ? 1 : SelectedTemplateType.IconWidth) * Globals.TileWidth,
                         (SelectedIcon.HasValue ? 1 : SelectedTemplateType.IconHeight) * Globals.TileHeight
                     );
-                    graphics.DrawRectangle(previewPen, previewBounds);
+                    using (var previewPen = new Pen(Color.Green, 4.0f))
+                        graphics.DrawRectangle(previewPen, previewBounds);
                 }
             }
         }

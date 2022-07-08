@@ -34,5 +34,22 @@ namespace MobiusEditor.Dialogs
                 pictureBoxIcon.Image = infoIcon.ToBitmap();
             }
         }
+
+        /// <summary>
+        /// Clean up any resources being used.
+        /// </summary>
+        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && (components != null))
+            {
+                var img = pictureBoxIcon.Image;
+                pictureBoxIcon.Image = null;
+                try { img.Dispose(); }
+                catch { /* ignore */ }
+                components.Dispose();
+            }
+            base.Dispose(disposing);
+        }
     }
 }

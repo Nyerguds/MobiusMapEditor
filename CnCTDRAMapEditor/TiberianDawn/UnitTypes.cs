@@ -12,6 +12,7 @@
 // distributed with this program. You should have received a copy of the 
 // GNU General Public License along with permitted additional restrictions 
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
+using System;
 using MobiusEditor.Model;
 using System.Collections.Generic;
 using System.Linq;
@@ -33,9 +34,9 @@ namespace MobiusEditor.TiberianDawn
         public static readonly UnitType Buggy = new UnitType(9, "bggy", "TEXT_UNIT_TITLE_NOD_NOD_BUGGY", "Badguy", true);
         public static readonly UnitType Harvester = new UnitType(10, "harv", "TEXT_UNIT_TITLE_GDI_HARVESTER", "Goodguy");
         public static readonly UnitType Arty = new UnitType(11, "arty", "TEXT_UNIT_TITLE_NOD_ARTILLERY", "Badguy");
-        public static readonly UnitType SAM = new UnitType(12, "mlrs", "TEXT_UNIT_TITLE_GDI_MLRS", "Goodguy", true);
+        public static readonly UnitType SSM = new UnitType(12, "mlrs", "TEXT_UNIT_TITLE_GDI_MLRS", "Badguy", true);
         public static readonly UnitType Hover = new UnitType(13, "lst", "TEXT_UNIT_TITLE_LST", "Goodguy");
-        public static readonly UnitType MHQ = new UnitType(14, "mhq", "TEXT_UNIT_TITLE_MHQ", "Goodguy");
+        public static readonly UnitType MHQ = new UnitType(14, "mhq", "TEXT_UNIT_TITLE_MHQ", "Goodguy", true);
         public static readonly UnitType GunBoat = new UnitType(15, "boat", "TEXT_UNIT_TITLE_WAKE", "Goodguy", true);
         public static readonly UnitType MCV = new UnitType(16, "mcv", "TEXT_UNIT_TITLE_GDI_MCV", "Goodguy");
         public static readonly UnitType Bike = new UnitType(17, "bike", "TEXT_UNIT_TITLE_NOD_RECON_BIKE", "Badguy");
@@ -60,8 +61,11 @@ namespace MobiusEditor.TiberianDawn
                  select field.GetValue(null) as UnitType).ToArray();
         }
 
-        public static IEnumerable<UnitType> GetTypes()
+        public static IEnumerable<UnitType> GetTypes(Boolean placeable)
         {
+            // only return placeable units; you can't place down aircraft in C&C
+            if (placeable)
+                return Types.Where(t => (t.IsUnit));
             return Types;
         }
     }

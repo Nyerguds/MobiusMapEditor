@@ -141,6 +141,8 @@ namespace MobiusEditor.Model
 
         public readonly List<BuildingType> BuildingTypes;
 
+        public readonly List<ITechnoType> TeamTechnoTypes;
+
         public readonly string[] TeamMissionTypes;
 
         public readonly CellMetrics Metrics;
@@ -194,7 +196,8 @@ namespace MobiusEditor.Model
             IEnumerable<TerrainType> terrainTypes, IEnumerable<OverlayType> overlayTypes, IEnumerable<SmudgeType> smudgeTypes,
             IEnumerable<string> eventTypes, IEnumerable<string> actionTypes, IEnumerable<string> missionTypes,
             IEnumerable<DirectionType> directionTypes, IEnumerable<InfantryType> infantryTypes, IEnumerable<UnitType> unitTypes,
-            IEnumerable<BuildingType> buildingTypes, IEnumerable<string> teamMissionTypes, IEnumerable<Waypoint> waypoints,
+            IEnumerable<BuildingType> buildingTypes, IEnumerable<string> teamMissionTypes, IEnumerable<ITechnoType> teamTechnoTypes,
+            IEnumerable<Waypoint> waypoints,
             IEnumerable<string> movieTypes)
         {
             BasicSection = basicSection;
@@ -214,6 +217,7 @@ namespace MobiusEditor.Model
             UnitTypes = new List<UnitType>(unitTypes);
             BuildingTypes = new List<BuildingType>(buildingTypes);
             TeamMissionTypes = teamMissionTypes.ToArray();
+            TeamTechnoTypes = new List<ITechnoType>(teamTechnoTypes);
             MovieTypes = new List<string>(movieTypes);
 
             Metrics = new CellMetrics(cellSize);
@@ -432,7 +436,6 @@ namespace MobiusEditor.Model
                             {
                                 Type = bibType,
                                 Icon = icon,
-                                Data = 0,
                                 Tint = building.Tint
                             };
                             building.BibCells.Add(subCell);
@@ -447,7 +450,7 @@ namespace MobiusEditor.Model
             var map = new Map(BasicSection, Theater, Metrics.Size, HouseType,
                 HouseTypes, TheaterTypes, TemplateTypes, TerrainTypes, OverlayTypes, SmudgeTypes,
                 EventTypes, ActionTypes, MissionTypes, DirectionTypes, InfantryTypes, UnitTypes,
-                BuildingTypes, TeamMissionTypes, Waypoints, MovieTypes)
+                BuildingTypes, TeamMissionTypes, TeamTechnoTypes, Waypoints, MovieTypes)
             {
                 TopLeft = TopLeft,
                 Size = Size
@@ -526,13 +529,10 @@ namespace MobiusEditor.Model
                     g.DrawImage(fullBitmap, new Rectangle(0, 0, mapBounds.Width, mapBounds.Height), mapBounds, GraphicsUnit.Pixel);
                 }
 
-                fullBitmap.Dispose();
-
                 if (sharpen)
                 {
                     using (var sharpenedImage = croppedBitmap.Sharpen(1.0f))
                     {
-                        croppedBitmap.Dispose();
                         return TGA.FromBitmap(sharpenedImage);
                     }
                 }

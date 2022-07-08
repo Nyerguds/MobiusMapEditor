@@ -101,6 +101,7 @@ namespace MobiusEditor.Model
 
         public void Init(TheaterType theater)
         {
+            var oldImage = Thumbnail;
             var size = new Size(Globals.OriginalTileWidth / 4, Globals.OriginalTileWidth / 4);
             var iconSize = Math.Max(IconWidth, IconHeight);
             var thumbnail = new Bitmap(iconSize * size.Width, iconSize * size.Height);
@@ -125,9 +126,18 @@ namespace MobiusEditor.Model
                     }
                 }
             }
-
+            if (!found)
+            {
+                try { thumbnail.Dispose(); }
+                catch { /* ignore */ }
+            }
             Thumbnail = found ? thumbnail : null;
             IconMask = mask;
+            if (oldImage != null)
+            {
+                try { oldImage.Dispose(); }
+                catch { /* ignore */ }
+            }
         }
     }
 }

@@ -12,18 +12,49 @@
 // distributed with this program. You should have received a copy of the 
 // GNU General Public License along with permitted additional restrictions 
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
+using MobiusEditor.Interface;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
+using System.Runtime.CompilerServices;
 
 namespace MobiusEditor.Model
 {
-    public class Smudge
+    public class Smudge: ICellOverlapper, INotifyPropertyChanged, ICloneable
     {
-        public SmudgeType Type { get; set; }
+        public event PropertyChangedEventHandler PropertyChanged;
+        private SmudgeType type;
+        public SmudgeType Type { get => type; set => SetField(ref type, value); }
 
-        public int Icon { get; set; }
-
-        public int Data { get; set; }
+        private int icon;
+        public int Icon { get => icon; set => SetField(ref icon, value); }
 
         public Color Tint { get; set; } = Color.White;
+
+        public Rectangle OverlapBounds => new Rectangle(Point.Empty, Type.Size);
+
+        protected bool SetField<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
+        {
+            if (EqualityComparer<T>.Default.Equals(field, value))
+            {
+                return false;
+            }
+            field = value;
+            OnPropertyChanged(propertyName);
+            return true;
+        }
+
+        protected void OnPropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+
+        public object Clone()
+        {
+            return new Smudge()
+            {
+                Type = Type,
+                Icon = Icon,
+                Tint = Tint
+            };
+        }
     }
 }

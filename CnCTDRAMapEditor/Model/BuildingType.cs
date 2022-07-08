@@ -143,6 +143,7 @@ namespace MobiusEditor.Model
 
         public void Init(GameType gameType, TheaterType theater, HouseType house, DirectionType direction)
         {
+            var oldImage = Thumbnail;
             var mockBuilding = new Building()
             {
                 Type = this,
@@ -160,6 +161,15 @@ namespace MobiusEditor.Model
                     render.Item2(g);
                 }
                 Thumbnail = buildingPreview;
+            }
+            else
+            {
+                Thumbnail = null;
+            }
+            if (oldImage != null)
+            {
+                try { oldImage.Dispose(); }
+                catch { /* ignore */ }
             }
         }
     }

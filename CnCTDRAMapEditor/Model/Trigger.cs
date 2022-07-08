@@ -17,11 +17,11 @@ using System;
 
 namespace MobiusEditor.Model
 {
-    public enum TriggerPersistantType
+    public enum TriggerPersistentType
     {
         Volatile = 0,
-        SemiPersistant = 1,
-        Persistant = 2
+        SemiPersistent = 1,
+        Persistent = 2
     }
 
     public enum TriggerMultiStyleType
@@ -93,7 +93,7 @@ namespace MobiusEditor.Model
 
         public string Name { get; set; }
 
-        public TriggerPersistantType PersistantType { get; set; } = TriggerPersistantType.Volatile;
+        public TriggerPersistentType PersistentType { get; set; } = TriggerPersistentType.Volatile;
 
         public string House { get; set; }
 
@@ -112,7 +112,7 @@ namespace MobiusEditor.Model
             return new Trigger()
             {
                 Name = Name,
-                PersistantType = PersistantType,
+                PersistentType = PersistentType,
                 House = House,
                 EventControl = EventControl,
                 Event1 = Event1.Clone(),

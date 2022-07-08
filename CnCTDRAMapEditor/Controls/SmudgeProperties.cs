@@ -16,6 +16,7 @@ using MobiusEditor.Interface;
 using MobiusEditor.Model;
 using MobiusEditor.Utility;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Linq;
@@ -23,30 +24,30 @@ using System.Windows.Forms;
 
 namespace MobiusEditor.Controls
 {
-    public partial class TerrainProperties : UserControl
+    public partial class SmudgeProperties : UserControl
     {
         private bool isMockObject;
 
         public IGamePlugin Plugin { get; private set; }
 
-        private Terrain terrain;
-        public Terrain Terrain
+        private Smudge smudge;
+        public Smudge Smudge
         {
-            get => terrain;
+            get => smudge;
             set
             {
-                if (terrain == value)
-                    return;
-                if (terrain != null)
-                    terrain.PropertyChanged -= Obj_PropertyChanged;
-                terrain = value;
-                if (terrain != null)
-                    terrain.PropertyChanged += Obj_PropertyChanged;
+                if (smudge == value)
+                    return;                
+                if (smudge != null)
+                    smudge.PropertyChanged -= Obj_PropertyChanged;
+                smudge = value;
+                if (smudge != null)
+                    smudge.PropertyChanged += Obj_PropertyChanged;
                 Rebind();
             }
         }
 
-        public TerrainProperties()
+        public SmudgeProperties()
         {
             InitializeComponent();
         }
@@ -56,37 +57,37 @@ namespace MobiusEditor.Controls
             this.isMockObject = isMockObject;
 
             Plugin = plugin;
-            plugin.Map.Triggers.CollectionChanged += Triggers_CollectionChanged;
 
             UpdateDataSource();
 
             Disposed += (sender, e) =>
             {
-                Terrain = null;
-                plugin.Map.Triggers.CollectionChanged -= Triggers_CollectionChanged;
+                Smudge = null;
             };
-        }
-
-        private void Triggers_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
-        {
-            UpdateDataSource();
         }
 
         private void UpdateDataSource()
         {
-            triggerComboBox.DataSource = Trigger.None.Yield().Concat(Plugin.Map.Triggers.Select(t => t.Name).Distinct()).ToArray();
+            int[] data;
+
+            if (smudge != null && smudge.Type.Icons > 1)
+                data = Enumerable.Range(0, smudge.Type.Icons).ToArray();
+            else
+                data = new int[] { 0 };
+            stateComboBox.DataSource = data;
         }
 
         private void Rebind()
         {
-            triggerComboBox.DataBindings.Clear();
+            stateComboBox.DataBindings.Clear();
 
-            if (terrain == null)
+            if (smudge == null)
             {
                 return;
             }
-
-            triggerComboBox.DataBindings.Add("SelectedItem", terrain, "Trigger");
+            UpdateDataSource();
+            stateComboBox.DataBindings.Add("SelectedItem", smudge, "Icon");
+            stateComboBox.Enabled = stateComboBox.Items.Count > 1;
         }
 
         private void Obj_PropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -122,29 +123,29 @@ namespace MobiusEditor.Controls
         }
     }
 
-    public class TerrainPropertiesPopup : ToolStripDropDown
+    public class SmudgePropertiesPopup : ToolStripDropDown
     {
         private readonly ToolStripControlHost host;
 
-        public TerrainProperties TerrainProperties { get; private set; }
+        public SmudgeProperties SmudgeProperties { get; private set; }
 
-        public TerrainPropertiesPopup(IGamePlugin plugin, Terrain terrain)
+        public SmudgePropertiesPopup(IGamePlugin plugin, Smudge smudge)
         {
-            TerrainProperties = new TerrainProperties();
-            TerrainProperties.Initialize(plugin, false);
-            TerrainProperties.Terrain = terrain;
+            SmudgeProperties = new SmudgeProperties();
+            SmudgeProperties.Smudge = smudge;
+            SmudgeProperties.Initialize(plugin, false);
 
-            host = new ToolStripControlHost(TerrainProperties);
+            host = new ToolStripControlHost(SmudgeProperties);
             Padding = Margin = host.Padding = host.Margin = Padding.Empty;
-            MinimumSize = TerrainProperties.MinimumSize;
-            TerrainProperties.MinimumSize = TerrainProperties.Size;
-            MaximumSize = TerrainProperties.MaximumSize;
-            TerrainProperties.MaximumSize = TerrainProperties.Size;
-            Size = TerrainProperties.Size;
+            MinimumSize = SmudgeProperties.MinimumSize;
+            SmudgeProperties.MinimumSize = SmudgeProperties.Size;
+            MaximumSize = SmudgeProperties.MaximumSize;
+            SmudgeProperties.MaximumSize = SmudgeProperties.Size;
+            Size = SmudgeProperties.Size;
             Items.Add(host);
-            TerrainProperties.Disposed += (sender, e) =>
+            SmudgeProperties.Disposed += (sender, e) =>
             {
-                TerrainProperties = null;
+                SmudgeProperties = null;
                 Dispose(true);
             };
         }
@@ -153,7 +154,7 @@ namespace MobiusEditor.Controls
         {
             base.OnClosed(e);
 
-            TerrainProperties.Terrain = null;
+            SmudgeProperties.Smudge = null;
         }
     }
 }

@@ -192,7 +192,7 @@ namespace MobiusEditor.RedAlert
                 houseTypes, TheaterTypes.GetTypes(), TemplateTypes.GetTypes(), TerrainTypes.GetTypes(),
                 OverlayTypes.GetTypes(), SmudgeTypes.GetTypes(), EventTypes.GetTypes(), ActionTypes.GetTypes(),
                 MissionTypes.GetTypes(), DirectionTypes.GetTypes(), InfantryTypes.GetTypes(), UnitTypes.GetTypes(),
-                BuildingTypes.GetTypes(), TeamMissionTypes.GetTypes(), waypoints, movieTypes)
+                BuildingTypes.GetTypes(), TeamMissionTypes.GetTypes(), technoTypes, waypoints, movieTypes)
             {
                 TiberiumOrGoldValue = 35,
                 GemValue = 110
@@ -375,7 +375,7 @@ namespace MobiusEditor.RedAlert
                     {
                         var trigger = new Trigger { Name = Key };
 
-                        trigger.PersistantType = (TriggerPersistantType)int.Parse(tokens[0]);
+                        trigger.PersistentType = (TriggerPersistentType)int.Parse(tokens[0]);
                         trigger.House = Map.HouseTypes.Where(t => t.Equals(sbyte.Parse(tokens[1]))).FirstOrDefault()?.Name ?? "None";
                         trigger.EventControl = (TriggerMultiStyleType)int.Parse(tokens[2]);
 
@@ -606,22 +606,18 @@ namespace MobiusEditor.RedAlert
                     var tokens = Value.Split(',');
                     if (tokens.Length == 3)
                     {
-                        var smudgeType = Map.SmudgeTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault();
+                        var smudgeType = Map.SmudgeTypes.Where(t => t.Equals(tokens[0]) && (t.Flag & SmudgeTypeFlag.Bib) == 0).FirstOrDefault();
                         if (smudgeType != null)
                         {
-                            if ((smudgeType.Flag & SmudgeTypeFlag.Bib) == SmudgeTypeFlag.None)
+                            int icon = 0;
+                            if (smudgeType.Icons > 1 && int.TryParse(tokens[2], out icon))
+                                icon = Math.Max(0, Math.Min(smudgeType.Icons - 1, icon));
+
+                            Map.Smudge[cell] = new Smudge
                             {
-                                Map.Smudge[cell] = new Smudge
-                                {
-                                    Type = smudgeType,
-                                    Icon = 0,
-                                    Data = int.Parse(tokens[2])
-                                };
-                            }
-                            else
-                            {
-                                errors.Add(string.Format("Smudge '{0}' is a bib, skipped", tokens[0]));
-                            }
+                                Type = smudgeType,
+                                Icon = icon
+                            };
                         }
                         else
                         {
@@ -1166,14 +1162,18 @@ namespace MobiusEditor.RedAlert
                         var jsonPath = Path.ChangeExtension(path, ".json");
 
                         var ini = new INI();
+                        SaveINI(ini, fileType);
                         using (var mprWriter = new StreamWriter(mprPath))
+                        {
+                            mprWriter.Write(ini.ToString());
+                        }
                         using (var tgaStream = new FileStream(tgaPath, FileMode.Create))
+                        {
+                            SaveMapPreview(tgaStream);
+                        }
                         using (var jsonStream = new FileStream(jsonPath, FileMode.Create))
                         using (var jsonWriter = new JsonTextWriter(new StreamWriter(jsonStream)))
                         {
-                            SaveINI(ini, fileType);
-                            mprWriter.Write(ini.ToString());
-                            SaveMapPreview(tgaStream);
                             SaveJSON(jsonWriter);
                         }
                     }
@@ -1181,14 +1181,14 @@ namespace MobiusEditor.RedAlert
                 case FileType.MEG:
                 case FileType.PGM:
                     {
+                        var ini = new INI();
+                        SaveINI(ini, fileType);
                         using (var iniStream = new MemoryStream())
                         using (var tgaStream = new MemoryStream())
                         using (var jsonStream = new MemoryStream())
                         using (var jsonWriter = new JsonTextWriter(new StreamWriter(jsonStream)))
                         using (var megafileBuilder = new MegafileBuilder(@"", path))
                         {
-                            var ini = new INI();
-                            SaveINI(ini, fileType);
                             var iniWriter = new StreamWriter(iniStream);
                             iniWriter.Write(ini.ToString());
                             iniWriter.Flush();
@@ -1239,7 +1239,7 @@ namespace MobiusEditor.RedAlert
             var smudgeSection = ini.Sections.Add("SMUDGE");
             foreach (var (cell, smudge) in Map.Smudge.Where(item => (item.Value.Type.Flag & SmudgeTypeFlag.Bib) == SmudgeTypeFlag.None))
             {
-                smudgeSection[cell.ToString()] = string.Format("{0},{1},{2}", smudge.Type.Name.ToUpper(), cell, smudge.Data);
+                smudgeSection[cell.ToString()] = string.Format("{0},{1},{2}", smudge.Type.Name.ToUpper(), cell, smudge.Icon);
             }
 
             var terrainSection = ini.Sections.Add("TERRAIN");
@@ -1433,7 +1433,7 @@ namespace MobiusEditor.RedAlert
 
                 var tokens = new List<string>
                 {
-                    ((int)trigger.PersistantType).ToString(),
+                    ((int)trigger.PersistentType).ToString(),
                     !string.IsNullOrEmpty(trigger.House) ? (Map.HouseTypes.Where(h => h.Equals(trigger.House)).FirstOrDefault()?.ID.ToString() ?? "-1") : "-1",
                     ((int)trigger.EventControl).ToString(),
                     ((int)actionControl).ToString(),

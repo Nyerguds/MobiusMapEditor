@@ -22,7 +22,7 @@ namespace MobiusEditor.Controls
             set
             {
                 DataSource = value.Select(t => new TypeItem<IBrowsableType>(t.DisplayName, t)).ToArray();
-                ItemHeight = Math.Max(ItemHeight, value.Max(t => (t.Thumbnail?.Height ?? MissingThumbnail.Height)));
+                ItemHeight = Math.Min(255,Math.Max(ItemHeight, value.Max(t => (t.Thumbnail?.Height ?? MissingThumbnail.Height))));
                 Invalidate();
             }
         }
@@ -42,8 +42,13 @@ namespace MobiusEditor.Controls
             var typeItem = Items[e.Index] as TypeItem<IBrowsableType>;
             if (typeItem?.Type != null)
             {
-                e.ItemHeight = Math.Min((int)((typeItem.Type.Thumbnail?.Height ?? MissingThumbnail.Height) *
-                    Properties.Settings.Default.ObjectToolItemSizeMultiplier), MaxListBoxItemHeight);
+                StringFormat stringFormat = new StringFormat
+                {
+                    LineAlignment = StringAlignment.Center
+                };
+                var textSize = e.Graphics.MeasureString(typeItem.Name, Font, e.ItemWidth, stringFormat);
+                e.ItemHeight = Math.Max((int)textSize.Height, Math.Min((int)((typeItem.Type.Thumbnail?.Height ?? MissingThumbnail.Height) *
+                    Properties.Settings.Default.ObjectToolItemSizeMultiplier), MaxListBoxItemHeight));
             }
         }
 

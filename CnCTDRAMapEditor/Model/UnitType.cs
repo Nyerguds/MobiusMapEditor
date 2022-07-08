@@ -114,6 +114,7 @@ namespace MobiusEditor.Model
 
         public void Init(GameType gameType, TheaterType theater, HouseType house, DirectionType direction)
         {
+            var oldImage = Thumbnail;
             if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, Name, 0, out Tile tile))
             {
                 RenderSize = new Size(tile.Image.Width / Globals.TileScale, tile.Image.Height / Globals.TileScale);
@@ -132,6 +133,11 @@ namespace MobiusEditor.Model
                 MapRenderer.Render(gameType, theater, new Point(1, 1), Globals.TileSize, mockUnit).Item2(g);
             }
             Thumbnail = unitThumbnail;
+            if (oldImage != null)
+            {
+                try { oldImage.Dispose(); }
+                catch { /* ignore */ }
+            }
         }
     }
 }

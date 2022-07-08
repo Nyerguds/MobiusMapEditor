@@ -335,11 +335,11 @@ namespace MobiusEditor
                 switch (plugin.GameType)
                 {
                     case GameType.TiberianDawn:
-                        ofd.InitialDirectory = TiberianDawn.Constants.SaveDirectory;
+                        ofd.InitialDirectory = Path.GetDirectoryName(filename) ?? TiberianDawn.Constants.SaveDirectory;
                         ofd.FilterIndex = 1;
                         break;
                     case GameType.RedAlert:
-                        ofd.InitialDirectory = RedAlert.Constants.SaveDirectory;
+                        ofd.InitialDirectory = Path.GetDirectoryName(filename) ?? RedAlert.Constants.SaveDirectory;
                         ofd.FilterIndex = 2;
                         break;
                 }
@@ -674,7 +674,7 @@ namespace MobiusEditor
                         sb.AppendFormat(", Unit = {0}", unitType.DisplayName);
                     }
 
-                    var building = plugin.Map.Technos[location] as Building;
+                    var building = plugin.Map.Buildings[location] as Building;
                     var buildingType = building?.Type;
                     if (buildingType != null)
                     {

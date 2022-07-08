@@ -121,7 +121,10 @@ namespace MobiusEditor.Dialogs
             }
             else
             {
-                e.Graphics.DrawString(e.Node.Text, e.Node.TreeView.Font, new SolidBrush(settingsTreeView.ForeColor), e.Node.Bounds.X, e.Node.Bounds.Y);
+                using (var brush = new SolidBrush(settingsTreeView.ForeColor))
+                {
+                    e.Graphics.DrawString(e.Node.Text, e.Node.TreeView.Font, brush, e.Node.Bounds.X, e.Node.Bounds.Y);
+                }
             }
         }
 

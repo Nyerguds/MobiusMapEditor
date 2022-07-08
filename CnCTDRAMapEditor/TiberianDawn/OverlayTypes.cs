@@ -48,6 +48,9 @@ namespace MobiusEditor.TiberianDawn
         public static readonly OverlayType FlagSpot = new OverlayType(27, "fpls", OverlayTypeFlag.Flag);
         public static readonly OverlayType WoodCrate = new OverlayType(28, "wcrate", OverlayTypeFlag.Crate);
         public static readonly OverlayType SteelCrate = new OverlayType(29, "scrate", OverlayTypeFlag.Crate);
+        // Nyerguds upgrade: Added missing types CONC and ROAD.
+        public static readonly OverlayType Concrete = new OverlayType(30, "conc", OverlayTypeFlag.Decoration);
+        public static readonly OverlayType Road = new OverlayType(29, "road", OverlayTypeFlag.Decoration);
 
         private static OverlayType[] Types;
 

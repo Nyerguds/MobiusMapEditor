@@ -19,6 +19,8 @@ using MobiusEditor.Model;
 using MobiusEditor.Utility;
 using MobiusEditor.Widgets;
 using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -35,6 +37,10 @@ namespace MobiusEditor.Tools
 
         private bool placementMode;
 
+        private Smudge selectedSmudge;
+        private int selectedSmudgeCell;
+        private SmudgePropertiesPopup selectedSmudgeProperties;
+
         private SmudgeType selectedSmudgeType;
         private SmudgeType SelectedSmudgeType
         {
@@ -47,7 +53,6 @@ namespace MobiusEditor.Tools
                     {
                         mapPanel.Invalidate(map, navigationWidget.MouseCell);
                     }
-
                     selectedSmudgeType = value;
                     smudgeTypeListBox.SelectedValue = selectedSmudgeType;
 
@@ -76,6 +81,45 @@ namespace MobiusEditor.Tools
             navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
 
             SelectedSmudgeType = smudgeTypeListBox.Types.First() as SmudgeType;
+        }
+
+        private void MapPanel_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            if (Control.ModifierKeys != Keys.None)
+            {
+                return;
+            }
+
+            if (map.Metrics.GetCell(navigationWidget.MouseCell, out int cell))
+            {
+                if (map.Smudge[cell] is Smudge smudge && (smudge.Type.Flag & SmudgeTypeFlag.Bib) == 0)
+                {
+                    selectedSmudge = smudge;
+                    selectedSmudgeCell = cell;
+
+                    selectedSmudgeProperties?.Close();
+                    selectedSmudgeProperties = new SmudgePropertiesPopup(plugin, smudge);
+                    selectedSmudgeProperties.Closed += (cs, ce) =>
+                    {
+                        navigationWidget.Refresh();
+                    };
+
+                    smudge.PropertyChanged += SelectedSmudge_PropertyChanged;
+
+                    selectedSmudgeProperties.Show(mapPanel, mapPanel.PointToClient(Control.MousePosition));
+
+                    UpdateStatus();
+                }
+            }
+        }
+
+        private void SelectedSmudge_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            Smudge smudge = sender as Smudge;
+            if (smudge != null && ((smudge.Type.Flag & SmudgeTypeFlag.Bib) == SmudgeTypeFlag.None) && ReferenceEquals(smudge, selectedSmudge))
+            {
+                mapPanel.Invalidate(map, selectedSmudgeCell);
+            }
         }
 
         private void SmudgeTypeComboBox_SelectedIndexChanged(object sender, EventArgs e)
@@ -152,7 +196,6 @@ namespace MobiusEditor.Tools
                     {
                         Type = SelectedSmudgeType,
                         Icon = 0,
-                        Data = 0
                     };
                     map.Smudge[location] = smudge;
                     mapPanel.Invalidate(map, location);
@@ -246,7 +289,17 @@ namespace MobiusEditor.Tools
                 var smudge = map.Smudge[cell];
                 if (smudge != null)
                 {
-                    SelectedSmudgeType = smudge.Type;
+                    // convert building bib back to usable bib
+                    if ((smudge.Type.Flag & SmudgeTypeFlag.Bib) != 0)
+                    {
+                        SmudgeType sm = map.SmudgeTypes.FirstOrDefault(s => (s.Flag & SmudgeTypeFlag.Bib) == 0 && s.Name == smudge.Type.Name);
+                        if (sm != null)
+                            SelectedSmudgeType = sm;
+                    }
+                    else
+                    {
+                        SelectedSmudgeType = smudge.Type; 
+                    }
                 }
             }
         }
@@ -264,7 +317,7 @@ namespace MobiusEditor.Tools
             }
             else
             {
-                statusLbl.Text = "Shift to enter placement mode, Left-Click or Right-Click to pick smudge";
+                statusLbl.Text = "Shift to enter placement mode, Left-Click or Right-Click to pick smudge. Double-Click to update smudge properties.";
             }
         }
 
@@ -282,7 +335,7 @@ namespace MobiusEditor.Tools
                     {
                         if (previewMap.Smudge[cell] == null)
                         {
-                            previewMap.Smudge[cell] = new Smudge { Type = SelectedSmudgeType, Data = 0, Tint = Color.FromArgb(128, Color.White) };
+                            previewMap.Smudge[cell] = new Smudge { Type = SelectedSmudgeType, Icon = 0, Tint = Color.FromArgb(128, Color.White) };
                         }
                     }
                 }
@@ -293,12 +346,14 @@ namespace MobiusEditor.Tools
         {
             base.PostRenderMap(graphics);
 
-            var smudgePen = new Pen(Color.Green, 4.0f);
-            foreach (var (cell, smudge) in previewMap.Smudge.Where(x => (x.Value.Type.Flag & SmudgeTypeFlag.Bib) == SmudgeTypeFlag.None))
+            using (var smudgePen = new Pen(Color.Green, 4.0f))
             {
-                previewMap.Metrics.GetLocation(cell, out Point topLeft);
-                var bounds = new Rectangle(new Point(topLeft.X * Globals.TileWidth, topLeft.Y * Globals.TileHeight), Globals.TileSize);
-                graphics.DrawRectangle(smudgePen, bounds);
+                foreach (var (cell, smudge) in previewMap.Smudge.Where(x => (x.Value.Type.Flag & SmudgeTypeFlag.Bib) == SmudgeTypeFlag.None))
+                {
+                    previewMap.Metrics.GetLocation(cell, out Point topLeft);
+                    var bounds = new Rectangle(new Point(topLeft.X * Globals.TileWidth, topLeft.Y * Globals.TileHeight), Globals.TileSize);
+                    graphics.DrawRectangle(smudgePen, bounds);
+                }
             }
         }
 
@@ -307,6 +362,7 @@ namespace MobiusEditor.Tools
             base.Activate();
             this.mapPanel.MouseDown += MapPanel_MouseDown;
             this.mapPanel.MouseMove += MapPanel_MouseMove;
+            this.mapPanel.MouseDoubleClick += MapPanel_MouseDoubleClick;
             (this.mapPanel as Control).KeyDown += SmudgeTool_KeyDown;
             (this.mapPanel as Control).KeyUp += SmudgeTool_KeyUp;
             UpdateStatus();
@@ -317,6 +373,7 @@ namespace MobiusEditor.Tools
             base.Deactivate();
             mapPanel.MouseDown -= MapPanel_MouseDown;
             mapPanel.MouseMove -= MapPanel_MouseMove;
+            mapPanel.MouseDoubleClick -= MapPanel_MouseDoubleClick;
             (mapPanel as Control).KeyDown -= SmudgeTool_KeyDown;
             (mapPanel as Control).KeyUp -= SmudgeTool_KeyUp;
         }

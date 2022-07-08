@@ -278,7 +278,7 @@ namespace MobiusEditor.Tools
 
         private void RemoveBuilding(Point location)
         {
-            if (map.Technos[location] is Building building)
+            if (map.Buildings[location] is Building building)
             {
                 mapPanel.Invalidate(map, building);
                 map.Buildings.Remove(building);
@@ -343,7 +343,7 @@ namespace MobiusEditor.Tools
         {
             if (map.Metrics.GetCell(location, out int cell))
             {
-                if (map.Technos[cell] is Building building)
+                if (map.Buildings[cell] is Building building)
                 {
                     SelectedBuildingType = building.Type;
                     mockBuilding.House = building.House;
@@ -362,8 +362,8 @@ namespace MobiusEditor.Tools
         {
             if (map.Metrics.GetCell(location, out int cell))
             {
-                selectedBuilding = map.Technos[cell] as Building;
-                selectedBuildingPivot = (selectedBuilding != null) ? (location - (Size)map.Technos[selectedBuilding].Value) : Point.Empty;
+                selectedBuilding = map.Buildings[cell] as Building;
+                selectedBuildingPivot = (selectedBuilding != null) ? (location - (Size)map.Buildings[selectedBuilding].Value) : Point.Empty;
             }
 
             UpdateStatus();
@@ -371,6 +371,7 @@ namespace MobiusEditor.Tools
 
         private void RefreshMapPanel()
         {
+            var oldImage = buildingTypeMapPanel.MapImage;
             if (mockBuilding.Type != null)
             {
                 var render = MapRenderer.Render(plugin.GameType, map.Theater, new Point(0, 0), Globals.TileSize, Globals.TileScale, mockBuilding);
@@ -391,6 +392,11 @@ namespace MobiusEditor.Tools
             else
             {
                 buildingTypeMapPanel.MapImage = null;
+            }
+            if (oldImage != null)
+            {
+                try { oldImage.Dispose(); }
+                catch { /* ignore */ }
             }
         }
 
@@ -434,27 +440,29 @@ namespace MobiusEditor.Tools
         {
             base.PostRenderMap(graphics);
 
-            var buildingPen = new Pen(Color.Green, 4.0f);
-            var occupyPen = new Pen(Color.Red, 2.0f);
-            foreach (var (topLeft, building) in map.Buildings.OfType<Building>())
+            using (var buildingPen = new Pen(Color.Green, 4.0f))
+            using (var occupyPen = new Pen(Color.Red, 2.0f))
             {
-                var bounds = new Rectangle(
-                    new Point(topLeft.X * Globals.TileWidth, topLeft.Y * Globals.TileHeight),
-                    new Size(building.Type.Size.Width * Globals.TileWidth, building.Type.Size.Height * Globals.TileHeight)
-                );
-                graphics.DrawRectangle(buildingPen, bounds);
-
-                for (var y = 0; y < building.Type.BaseOccupyMask.GetLength(0); ++y)
+                foreach (var (topLeft, building) in map.Buildings.OfType<Building>())
                 {
-                    for (var x = 0; x < building.Type.BaseOccupyMask.GetLength(1); ++x)
+                    var bounds = new Rectangle(
+                        new Point(topLeft.X * Globals.TileWidth, topLeft.Y * Globals.TileHeight),
+                        new Size(building.Type.Size.Width * Globals.TileWidth, building.Type.Size.Height * Globals.TileHeight)
+                    );
+                    graphics.DrawRectangle(buildingPen, bounds);
+
+                    for (var y = 0; y < building.Type.BaseOccupyMask.GetLength(0); ++y)
                     {
-                        if (building.Type.BaseOccupyMask[y, x])
+                        for (var x = 0; x < building.Type.BaseOccupyMask.GetLength(1); ++x)
                         {
-                            var occupyBounds = new Rectangle(
-                                new Point((topLeft.X + x) * Globals.TileWidth, (topLeft.Y + y) * Globals.TileHeight),
-                                Globals.TileSize
-                            );
-                            graphics.DrawRectangle(occupyPen, occupyBounds);
+                            if (building.Type.BaseOccupyMask[y, x])
+                            {
+                                var occupyBounds = new Rectangle(
+                                    new Point((topLeft.X + x) * Globals.TileWidth, (topLeft.Y + y) * Globals.TileHeight),
+                                    Globals.TileSize
+                                );
+                                graphics.DrawRectangle(occupyPen, occupyBounds);
+                            }
                         }
                     }
                 }

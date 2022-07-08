@@ -19,8 +19,7 @@ namespace MobiusEditor.Tools.Dialogs
         {
             ObjectTypeListBox.Types = plugin.Map.BuildingTypes
                 .Where(t => (t.Theaters == null) || t.Theaters.Contains(plugin.Map.Theater))
-                .OrderBy(t => t.IsFake)
-                .ThenBy(t => t.Name);
+                .OrderBy(t => t.ID);
             Tool = new BuildingTool(mapPanel, activeLayers, toolStatusLabel, ObjectTypeListBox,
                 ObjectTypeMapPanel, ObjectProperties, plugin, undoRedoList);
         }
