@@ -19,7 +19,7 @@ using System.Linq;
 
 namespace MobiusEditor.Model
 {
-    public class TeamTypeClass : ICloneable
+    public class TeamTypeClass : ICloneable, IEquatable<TeamTypeClass>
     {
         public ITechnoType Type { get; set; }
 
@@ -34,13 +34,21 @@ namespace MobiusEditor.Model
             };
         }
 
+        public bool Equals(TeamTypeClass other)
+        {
+            return ReferenceEquals(this, other)
+                || (other != null
+                && this.Type == other.Type
+                && this.Count == other.Count);
+        }
+
         object ICloneable.Clone()
         {
             return Clone();
         }
     }
 
-    public class TeamTypeMission : ICloneable
+    public class TeamTypeMission : ICloneable, IEquatable<TeamTypeMission>
     {
         public string Mission { get; set; }
 
@@ -53,6 +61,14 @@ namespace MobiusEditor.Model
                 Mission = Mission,
                 Argument = Argument
             };
+        }
+
+        public bool Equals(TeamTypeMission other)
+        {
+            return ReferenceEquals(this, other)
+                || (other != null
+                && this.Mission == other.Mission
+                && this.Argument == other.Argument);
         }
 
         object ICloneable.Clone()
@@ -158,6 +174,47 @@ namespace MobiusEditor.Model
             }
 
             return base.Equals(obj);
+        }
+
+        public bool EqualsOther(TeamType other)
+        {
+            if (this.Name == other.Name
+                && this.House == other.House
+                && this.IsRoundAbout == other.IsRoundAbout
+                && this.IsLearning == other.IsLearning
+                && this.IsSuicide == other.IsSuicide
+                && this.IsAutocreate == other.IsAutocreate
+                && this.IsMercenary == other.IsMercenary
+                && this.RecruitPriority == other.RecruitPriority
+                && this.MaxAllowed == other.MaxAllowed
+                && this.InitNum == other.InitNum
+                && this.Fear == other.Fear
+                && this.IsReinforcable == other.IsReinforcable
+                && this.IsPrebuilt == other.IsPrebuilt
+                && this.Origin == other.Origin
+                && this.Trigger == other.Trigger
+                && ((this.Classes == null && other.Classes== null) || this.Classes.Count == other.Classes.Count)
+                && ((this.Missions == null && other.Missions == null) || this.Missions.Count == other.Missions.Count))
+            {
+                if (this.Classes != null)
+                {
+                    for (int i = 0; i < this.Classes.Count; ++i)
+                    {
+                        if (!this.Classes[i].Equals(other.Classes[i]))
+                            return false;
+                    }
+                }
+                if (this.Missions != null)
+                {
+                    for (int i = 0; i < this.Missions.Count; ++i)
+                    {
+                        if (!this.Missions[i].Equals(other.Missions[i]))
+                            return false;
+                    }
+                }
+                return true;
+            }
+            return false;
         }
 
         public override int GetHashCode()

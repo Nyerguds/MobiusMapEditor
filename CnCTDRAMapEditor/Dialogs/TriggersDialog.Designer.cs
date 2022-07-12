@@ -83,6 +83,7 @@ namespace MobiusEditor.Dialogs
             this.nameColumnHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.triggersContextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.addTriggerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.renameTriggerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removeTriggerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tableLayoutPanel1.SuspendLayout();
             this.flowLayoutPanel2.SuspendLayout();
@@ -603,19 +604,20 @@ namespace MobiusEditor.Dialogs
             this.triggersListView.TabIndex = 0;
             this.triggersListView.UseCompatibleStateImageBehavior = false;
             this.triggersListView.View = System.Windows.Forms.View.Details;
-            this.triggersListView.AfterLabelEdit += new System.Windows.Forms.LabelEditEventHandler(this.teamTypesListView_AfterLabelEdit);
+            this.triggersListView.AfterLabelEdit += new System.Windows.Forms.LabelEditEventHandler(this.triggersListView_AfterLabelEdit);
             this.triggersListView.SelectedIndexChanged += new System.EventHandler(this.triggersListView_SelectedIndexChanged);
-            this.triggersListView.KeyDown += new System.Windows.Forms.KeyEventHandler(this.teamTypesListView_KeyDown);
-            this.triggersListView.MouseDown += new System.Windows.Forms.MouseEventHandler(this.teamTypesListView_MouseDown);
+            this.triggersListView.KeyDown += new System.Windows.Forms.KeyEventHandler(this.triggersListView_KeyDown);
+            this.triggersListView.MouseDown += new System.Windows.Forms.MouseEventHandler(this.triggersListView_MouseDown);
             // 
             // triggersContextMenuStrip
             // 
             this.triggersContextMenuStrip.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.triggersContextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.addTriggerToolStripMenuItem,
+            this.renameTriggerToolStripMenuItem,
             this.removeTriggerToolStripMenuItem});
             this.triggersContextMenuStrip.Name = "teamTypesContextMenuStrip";
-            this.triggersContextMenuStrip.Size = new System.Drawing.Size(159, 48);
+            this.triggersContextMenuStrip.Size = new System.Drawing.Size(159, 70);
             // 
             // addTriggerToolStripMenuItem
             // 
@@ -623,6 +625,13 @@ namespace MobiusEditor.Dialogs
             this.addTriggerToolStripMenuItem.Size = new System.Drawing.Size(158, 22);
             this.addTriggerToolStripMenuItem.Text = "&Add Trigger";
             this.addTriggerToolStripMenuItem.Click += new System.EventHandler(this.addTriggerToolStripMenuItem_Click);
+            // 
+            // renameTriggerToolStripMenuItem
+            // 
+            this.renameTriggerToolStripMenuItem.Name = "renameTriggerToolStripMenuItem";
+            this.renameTriggerToolStripMenuItem.Size = new System.Drawing.Size(158, 22);
+            this.renameTriggerToolStripMenuItem.Text = "Re&name Trigger";
+            this.renameTriggerToolStripMenuItem.Click += new System.EventHandler(this.renameTriggerToolStripMenuItem_Click);
             // 
             // removeTriggerToolStripMenuItem
             // 
@@ -647,6 +656,7 @@ namespace MobiusEditor.Dialogs
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Triggers";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.TriggersDialog_FormClosing);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
             this.flowLayoutPanel2.ResumeLayout(false);
@@ -713,5 +723,6 @@ namespace MobiusEditor.Dialogs
         private System.Windows.Forms.ComboBox action2ValueComboBox;
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel2;
         private System.Windows.Forms.Button btnAdd;
+        private System.Windows.Forms.ToolStripMenuItem renameTriggerToolStripMenuItem;
     }
 }

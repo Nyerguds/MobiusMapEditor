@@ -39,7 +39,7 @@ namespace MobiusEditor.TiberianDawn
         public static readonly TemplateType Slope3 = new TemplateType(15, "s03", 2, 2, new TheaterType[] { TheaterTypes.Winter, TheaterTypes.Desert, TheaterTypes.Temperate });
         public static readonly TemplateType Slope4 = new TemplateType(16, "s04", 2, 2, new TheaterType[] { TheaterTypes.Winter, TheaterTypes.Desert, TheaterTypes.Temperate });
         public static readonly TemplateType Slope5 = new TemplateType(17, "s05", 2, 2, new TheaterType[] { TheaterTypes.Winter, TheaterTypes.Desert, TheaterTypes.Temperate });
-        public static readonly TemplateType Slope6 = new TemplateType(18, "s06", 2, 3, new TheaterType[] { TheaterTypes.Winter, TheaterTypes.Desert, TheaterTypes.Temperate });
+        public static readonly TemplateType Slope6 = new TemplateType(18, "s06", 2, 3, new TheaterType[] { TheaterTypes.Winter, TheaterTypes.Desert, TheaterTypes.Temperate }, "111110");
         public static readonly TemplateType Slope7 = new TemplateType(19, "s07", 2, 2, new TheaterType[] { TheaterTypes.Winter, TheaterTypes.Desert, TheaterTypes.Temperate });
         public static readonly TemplateType Slope8 = new TemplateType(20, "s08", 2, 2, new TheaterType[] { TheaterTypes.Winter, TheaterTypes.Desert, TheaterTypes.Temperate });
         public static readonly TemplateType Slope9 = new TemplateType(21, "s09", 3, 2, new TheaterType[] { TheaterTypes.Winter, TheaterTypes.Desert, TheaterTypes.Temperate });
@@ -93,7 +93,7 @@ namespace MobiusEditor.TiberianDawn
         public static readonly TemplateType Patch3 = new TemplateType(69, "p03", 1, 1, new TheaterType[] { TheaterTypes.Temperate, TheaterTypes.Desert });
         public static readonly TemplateType Patch4 = new TemplateType(70, "p04", 1, 1, new TheaterType[] { TheaterTypes.Temperate, TheaterTypes.Desert });
         public static readonly TemplateType Patch5 = new TemplateType(71, "p05", 2, 2, new TheaterType[] { TheaterTypes.Desert });
-        public static readonly TemplateType Patch6 = new TemplateType(72, "p06", 6, 4, new TheaterType[] { TheaterTypes.Desert });
+        public static readonly TemplateType Patch6 = new TemplateType(72, "p06", 6, 4, new TheaterType[] { TheaterTypes.Desert }, "111100011100001111001111");
         public static readonly TemplateType Patch7 = new TemplateType(73, "p07", 4, 2, new TheaterType[] { TheaterTypes.Winter, TheaterTypes.Temperate, TheaterTypes.Desert });
         public static readonly TemplateType Patch8 = new TemplateType(74, "p08", 3, 2, new TheaterType[] { TheaterTypes.Winter, TheaterTypes.Temperate, TheaterTypes.Desert });
         public static readonly TemplateType Shore16 = new TemplateType(75, "sh16", 3, 2, new TheaterType[] { TheaterTypes.Winter, TheaterTypes.Temperate });
@@ -119,7 +119,7 @@ namespace MobiusEditor.TiberianDawn
         public static readonly TemplateType Road3 = new TemplateType(95, "d03", 1, 2, new TheaterType[] { TheaterTypes.Winter, TheaterTypes.Desert, TheaterTypes.Temperate });
         public static readonly TemplateType Road4 = new TemplateType(96, "d04", 2, 2, new TheaterType[] { TheaterTypes.Winter, TheaterTypes.Desert, TheaterTypes.Temperate });
         public static readonly TemplateType Road5 = new TemplateType(97, "d05", 3, 4, new TheaterType[] { TheaterTypes.Winter, TheaterTypes.Desert, TheaterTypes.Temperate });
-        public static readonly TemplateType Road6 = new TemplateType(98, "d06", 2, 3, new TheaterType[] { TheaterTypes.Winter, TheaterTypes.Desert, TheaterTypes.Temperate });
+        public static readonly TemplateType Road6 = new TemplateType(98, "d06", 2, 3, new TheaterType[] { TheaterTypes.Winter, TheaterTypes.Desert, TheaterTypes.Temperate }, "101111");
         public static readonly TemplateType Road7 = new TemplateType(99, "d07", 3, 2, new TheaterType[] { TheaterTypes.Winter, TheaterTypes.Desert, TheaterTypes.Temperate });
         public static readonly TemplateType Road8 = new TemplateType(100, "d08", 3, 2, new TheaterType[] { TheaterTypes.Winter, TheaterTypes.Desert, TheaterTypes.Temperate });
         public static readonly TemplateType Road9 = new TemplateType(101, "d09", 4, 3, new TheaterType[] { TheaterTypes.Winter, TheaterTypes.Desert, TheaterTypes.Temperate });

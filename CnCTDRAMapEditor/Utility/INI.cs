@@ -47,7 +47,31 @@ namespace MobiusEditor.Utility
 
         public static bool IsValidKey(String iniKey)
         {
-            return iniKey.Any(c => c > ' ' && c < '~' && c != '=' && c != '[' && c != ']');
+            return iniKey.All(c => c > ' ' && c <= '~' && c != '=' && c != '[' && c != ']');
+        }
+
+        public static String MakeNew4CharName(IEnumerable<string> currentList, string fallback)
+        {
+            string name = string.Empty;
+            // generate names in a way that will never run out before some maximum is reached.
+            for (int i = 'A'; i <= 'Z'; ++i)
+            {
+                for (int j = 'A'; j <= 'Z'; ++j)
+                {
+                    for (int k = 'A'; k <= 'Z'; ++k)
+                    {
+                        for (int l = 'A'; l <= 'Z'; ++l)
+                        {
+                            name = String.Concat((char)i, (char)j, (char)k, (char)l);
+                            if (!currentList.Any(n => n.Equals(name, StringComparison.InvariantCultureIgnoreCase)))
+                            {
+                                return name;
+                            }
+                        }
+                    }
+                }
+            }
+            return fallback;
         }
     }
 

@@ -61,10 +61,10 @@ namespace MobiusEditor.TiberianDawn
                  select field.GetValue(null) as UnitType).ToArray();
         }
 
-        public static IEnumerable<UnitType> GetTypes(Boolean placeable)
+        public static IEnumerable<UnitType> GetTypes(Boolean placeableOnly)
         {
             // only return placeable units; you can't place down aircraft in C&C
-            if (placeable)
+            if (placeableOnly)
                 return Types.Where(t => (t.IsUnit));
             return Types;
         }

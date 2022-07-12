@@ -318,31 +318,31 @@ namespace MobiusEditor
                 return;
             }
 
-            var pgmFilter =
 #if DEVELOPER
-                "|PGM files (*.pgm)|*.pgm"
+            var pgmFilter = "|PGM files (*.pgm)|*.pgm";
+            string allSupported = "All supported types (*.ini;*.bin;*.mpr;*.pgm)|*.ini;*.bin;*.mpr;*.pmg";
 #else
-                string.Empty
+            var pgmFilter = string.Empty;
+            string allSupported = "All supported types (*.ini;*.bin;*.mpr)|*.ini;*.bin;*.mpr";
 #endif
-            ;
 
             OpenFileDialog ofd = new OpenFileDialog
             {
                 AutoUpgradeEnabled = false,
                 RestoreDirectory = true
             };
-            ofd.Filter = "Tiberian Dawn files (*.ini;*.bin)|*.ini;*.bin|Red Alert files (*.mpr)|*.mpr" + pgmFilter  + "|All files (*.*)|*.*";
+            ofd.Filter = allSupported + "|Tiberian Dawn files (*.ini;*.bin)|*.ini;*.bin|Red Alert files (*.mpr)|*.mpr" + pgmFilter  + "|All files (*.*)|*.*";
             if (plugin != null)
             {
                 switch (plugin.GameType)
                 {
                     case GameType.TiberianDawn:
                         ofd.InitialDirectory = Path.GetDirectoryName(filename) ?? TiberianDawn.Constants.SaveDirectory;
-                        ofd.FilterIndex = 1;
+                        ofd.FilterIndex = 2;
                         break;
                     case GameType.RedAlert:
                         ofd.InitialDirectory = Path.GetDirectoryName(filename) ?? RedAlert.Constants.SaveDirectory;
-                        ofd.FilterIndex = 2;
+                        ofd.FilterIndex = 3;
                         break;
                 }
             }

@@ -19,7 +19,7 @@ namespace MobiusEditor.TiberianDawn
     public class BasicSection : Model.BasicSection
     {
         private int buildLevel;
-        [DefaultValue(15)]
+        [DefaultValue(98)]
         public int BuildLevel { get => buildLevel; set => SetField(ref buildLevel, value); }
     }
 }

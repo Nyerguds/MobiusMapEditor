@@ -6,18 +6,18 @@ enhance compatibility with different kinds of systems and enhance the editor's s
 
 ### Features added by Rampastring:
 
-* Downsized menu graphics by an user-configurable factor so you can see more placeable object types at once on sub-4K monitors
-* Improved zoom levels
-* Fixed a couple of crashes
-* Made tool windows remember their previous position, size and other settings upon closing and re-opening them
-* Replaced drop-downs with list boxes in object type selection dialogs to allow switching between objects with fewer clicks 
+* Downsized menu graphics by a user-configurable factor so you can see more placeable object types at once on sub-4K monitors.
+* Improved zoom levels.
+* Fixed a couple of crashes.
+* Made tool windows remember their previous position, size and other settings upon closing and re-opening them.
+* Replaced drop-downs with list boxes in object type selection dialogs to allow switching between objects with fewer clicks.
 
 ### Features and fixes by Nyerguds (so far):
 
 v1.4.0.0:
 
 * Fixed Overlay height overflow bug in Rampa's new UI.
-* Fixed tiles list duplicating every time the "Map" tool window is opened.
+* Fixed tiles list duplicating every time the "Map" tool window is opened in Rampa's version.
 * Split off internal Overlay type "decoration", used for pavements and civilian buildings.
 * Added CONC and ROAD pavement. They have no graphics, but at least now they are accepted by the editor and not discarded as errors.
 * Sorted all items in the lists (except map tiles) by key, which is usually a lot more straightforward.
@@ -35,26 +35,44 @@ v1.4.0.0:
 * Added "Add" buttons in triggers and teamtypes dialogs.
 * Fixed tab order in triggers and teamtypes dialogs.
 * Fixed crash in "already exists" messages for triggers and teams.
-* Randomised tiberium on save, like the original WW editor does.
-* [EXPERIMENTAL] Added ability to place bibs. They won't show their full size in the editor at the moment, though.
+* Randomised tiberium on save, like the original WW editor does. (this is purely cosmetic; the game re-randomises it on map load.)
+* [EXPERIMENTAL] Added ability to place bibs as Smudge type. They won't show their full size in the editor at the moment, though.
 
 v1.4.0.1:
 
+* Added "All supported types (*.ini;*.bin;*.mpr)" as default filter when opening files.
 * Added Drag & Drop support for opening map files.
 * Added command line file argument support, which allows setting the editor as application for opening ini/mpr files.
 * House Edge reading now corrects values with case differences so they show up in the dropdown.
 * Centralised the House Edge array on the House class, and changed its order to a more logical North, East, South, West.
-* Fixed order of the Multi-House colours. Seems that the error is not in the editor but in bizarre mixed-up team color names in the remastered game itself.
-* Remapped Neutral (TD only) and Special as yellow, as they are  in the game.
+* Fixed order of the Multi-House colours. It seems the error is not in the editor, but in bizarre mixed-up team color names in the remastered game itself.
+* Remapped Neutral (TD only) and Special as yellow, as they are in the game.
 * All tool windows will now save their position.
 * Tool windows for which no position was previously set will center themselves on the right edge of the editor.
 * Some things, like crates, were missing names. This has been fixed.
-* Objects will now show a real name and their internal name.
+* All objects except map tilesets will now show a real name and their internal code.
 * Added ASCII restriction to trigger and teamtype names, since the map formats don't support UTF-8. (Except on the Briefing, apparently, since the GlyphX part handles that.)
-* Made "Already exists" check on trigger and teamtype names case insensitive.
-* Changed the default build level in TD maps from 99 to 15.
+* Made "Already exists" check on trigger and teamtype names case insensitive, since that is how the game handles them.
+* Triggers and teamtypes dialogs have a new logic for generating names for new entries that should never run out.
+* Triggers and teamtypes dialogs support the delete key for deleting an entry in the list.
+* Triggers and teamtypes dialogs have "Rename" added to the context menu when right-clicking an item.
+* Triggers and teamtypes dialogs now warn when cancelling if changes were made.
+* "Add" button in triggers and teamtypes dialogs gets disabled when the internal maximum amount of items for the type is reached.
+* Changed the default build level in TD maps from 99 to 98. Level 99 allows building illegal objects that can break the game.
 * The Briefing text area will now accept [Enter] for adding line breaks without this closing the window. Previously, [Ctrl]+[Enter] had to be used for this, which is pretty awkward.
 * The Briefing text area now has a scrollbar.
+* Fixed placement of illegal tiles caused by incorrect filtering on which tiles from a template should be included. This is the problem which caused tiles that showed as black blocks in classic graphics. It is also the problem that made Red Alert maps contain indestructible bridges.
+* Map tile placement can now be dragged, allowing easily filling an area with water or other tiles. This also works for removing tiles.
+* Removing tiles will now obey the actual occupied cells of the selected tile, rather than just clearing the bounding box, making it more intuitive.
+
+### Upgrading
+
+The settings of the program are apparently automatically saved under
+
+%localappdata%\Nyerguds\
+
+So if you install a new version, and your settings are gone, just go there and copy the settings file to the newest folder.
+
 
 ### Contributing
 

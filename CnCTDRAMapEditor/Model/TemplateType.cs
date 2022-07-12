@@ -52,7 +52,9 @@ namespace MobiusEditor.Model
 
         public TemplateTypeFlag Flag { get; private set; }
 
-        public TemplateType(ushort id, string name, int iconWidth, int iconHeight, TheaterType[] theaters, TemplateTypeFlag flag)
+        public bool[,] MaskOverride { get; set; }
+
+        public TemplateType(ushort id, string name, int iconWidth, int iconHeight, TheaterType[] theaters, TemplateTypeFlag flag, String maskOverride)
         {
             ID = id;
             Name = name;
@@ -60,10 +62,33 @@ namespace MobiusEditor.Model
             IconHeight = iconHeight;
             Theaters = theaters;
             Flag = flag;
+            // Mask override for tiles that contain too many graphics in the Remaster. Indices with '0' are removed from the tiles.
+            if (!String.IsNullOrEmpty(maskOverride))
+            {
+                MaskOverride = new bool[iconWidth, iconHeight];
+                int icon = 0;
+                for (var y = 0; y < IconHeight; ++y)
+                {
+                    for (var x = 0; x < IconWidth; ++x, ++icon)
+                    {
+                        MaskOverride[x, y] = icon < maskOverride.Length && maskOverride[icon] != '0';
+                    }
+                }
+            }
+        }
+
+        public TemplateType(ushort id, string name, int iconWidth, int iconHeight, TheaterType[] theaters, TemplateTypeFlag flag)
+            : this(id, name, iconWidth, iconHeight, theaters, flag, null)
+        {
+        }
+
+        public TemplateType(ushort id, string name, int iconWidth, int iconHeight, TheaterType[] theaters, String maskOverride)
+            : this(id, name, iconWidth, iconHeight, theaters, TemplateTypeFlag.None, maskOverride)
+        {
         }
 
         public TemplateType(ushort id, string name, int iconWidth, int iconHeight, TheaterType[] theaters)
-            : this(id, name, iconWidth, iconHeight, theaters, TemplateTypeFlag.None)
+            : this(id, name, iconWidth, iconHeight, theaters, TemplateTypeFlag.None, null)
         {
         }
 
@@ -120,8 +145,11 @@ namespace MobiusEditor.Model
                     {
                         if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, Name, icon, out Tile tile))
                         {
-                            g.DrawImage(tile.Image, x * size.Width, y * size.Height, size.Width, size.Height);
-                            found = mask[x, y] = true;
+                            if (MaskOverride == null || MaskOverride[x, y])
+                            {
+                                g.DrawImage(tile.Image, x * size.Width, y * size.Height, size.Width, size.Height);
+                                found = mask[x, y] = true;
+                            }
                         }
                     }
                 }

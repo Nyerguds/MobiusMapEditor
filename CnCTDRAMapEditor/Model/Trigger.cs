@@ -32,7 +32,7 @@ namespace MobiusEditor.Model
         Linked = 3
     }
 
-    public class TriggerEvent : ICloneable
+    public class TriggerEvent : ICloneable, IEquatable<TriggerEvent>
     {
         public static readonly string None = "None";
 
@@ -52,13 +52,20 @@ namespace MobiusEditor.Model
             };
         }
 
+        public bool Equals(TriggerEvent other)
+        {
+            return this.EventType == other.EventType
+                && this.Team == other.Team
+                && this.Data == other.Data;
+        }
+
         object ICloneable.Clone()
         {
             return Clone();
         }
     }
 
-    public class TriggerAction : ICloneable
+    public class TriggerAction : ICloneable, IEquatable<TriggerAction>
     {
         public static readonly string None = "None";
 
@@ -79,6 +86,14 @@ namespace MobiusEditor.Model
                 Team = Team,
                 Data = Data
             };
+        }
+
+        public bool Equals(TriggerAction other)
+        {
+            return this.ActionType == other.ActionType
+                && this.Trigger == other.Trigger
+                && this.Team == other.Team
+                && this.Data == other.Data;
         }
 
         object ICloneable.Clone()
@@ -132,8 +147,21 @@ namespace MobiusEditor.Model
             {
                 return string.Equals(Name, obj as string, StringComparison.OrdinalIgnoreCase);
             }
-
             return base.Equals(obj);
+        }
+
+        public bool EqualsOther(Trigger other)
+        {
+            return ReferenceEquals(this, other)
+                || (other != null
+                && this.Name == other.Name
+                && this.PersistentType == other.PersistentType
+                && this.House == other.House
+                && this.EventControl == other.EventControl
+                && this.Event1.Equals(other.Event1)
+                && this.Event2.Equals(other.Event2)
+                && this.Action1.Equals(other.Action1)
+                && this.Action2.Equals(other.Action2));
         }
 
         public override int GetHashCode()

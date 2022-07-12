@@ -30,6 +30,7 @@ namespace MobiusEditor.Dialogs
         private readonly IEnumerable<ITechnoType> technoTypes;
 
         private readonly List<TeamType> teamTypes;
+        private readonly List<TeamType> backupTeamTypes;
         public IEnumerable<TeamType> TeamTypes => teamTypes;
 
         private ListViewItem SelectedItem => (teamTypesListView.SelectedItems.Count > 0) ? teamTypesListView.SelectedItems[0] : null;
@@ -64,11 +65,14 @@ namespace MobiusEditor.Dialogs
             }
 
             teamTypes = new List<TeamType>(plugin.Map.TeamTypes.Select(t => t.Clone()));
-
+            backupTeamTypes = new List<TeamType>(plugin.Map.TeamTypes.Select(t => t.Clone()));
+            int nrOfTeams = Math.Min(maxTeams, teamTypes.Count);
+            btnAdd.Enabled = nrOfTeams < maxTeams;
             teamTypesListView.BeginUpdate();
             {
-                foreach (var teamType in this.teamTypes)
+                for (int i = 0; i < nrOfTeams; ++i)
                 {
+                    TeamType teamType = teamTypes[i];
                     var item = new ListViewItem(teamType.Name)
                     {
                         Tag = teamType
@@ -157,12 +161,13 @@ namespace MobiusEditor.Dialogs
             {
                 var hitTest = teamTypesListView.HitTest(e.Location);
 
-                bool canAdd = (hitTest.Item == null) && (teamTypesListView.Items.Count < maxTeams);
+                bool itemExists = (hitTest.Item == null) && (teamTypesListView.Items.Count < maxTeams);
                 bool canRemove = hitTest.Item != null;
-                addTeamTypeToolStripMenuItem.Visible = canAdd;
+                addTeamTypeToolStripMenuItem.Visible = itemExists;
+                renameTeamTypeToolStripMenuItem.Visible = itemExists;
                 removeTeamTypeToolStripMenuItem.Visible = canRemove;
 
-                if (canAdd || canRemove)
+                if (itemExists || canRemove)
                 {
                     teamTypesContextMenuStrip.Show(Cursor.Position);
                 }
@@ -171,9 +176,50 @@ namespace MobiusEditor.Dialogs
 
         private void teamTypesListView_KeyDown(object sender, KeyEventArgs e)
         {
-            if ((e.KeyData == Keys.F2) && (teamTypesListView.SelectedItems.Count > 0))
+            ListViewItem selected = SelectedItem;
+            if (e.KeyData == Keys.F2)
             {
-                teamTypesListView.SelectedItems[0].BeginEdit();
+                if (selected != null)
+                    selected.BeginEdit();
+            }
+            else if (e.KeyData == Keys.Delete)
+            {
+                RemoveTeamType();
+            }
+        }
+
+        private void btnAdd_Click(object sender, EventArgs e)
+        {
+            AddTeamType();
+        }
+        private void TeamTypesDialog_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            // If user pressed ok, nevermind,just go on.
+            if (this.DialogResult == DialogResult.OK)
+                return;
+            bool hasChanges = teamTypes.Count != backupTeamTypes.Count;
+            if (!hasChanges)
+            {
+                foreach (TeamType team in teamTypes)
+                {
+                    TeamType oldTeam = backupTeamTypes.Find(t => t.Name.Equals(team.Name));
+                    if (oldTeam == null)
+                    {
+                        hasChanges = true;
+                        break;
+                    }
+                    hasChanges = !team.EqualsOther(oldTeam);
+                    if (hasChanges)
+                        break;
+                }
+            }
+            if (hasChanges)
+            {
+                DialogResult dr = MessageBox.Show("Teams have been changed! Are you sure you want to cancel?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                if (dr == DialogResult.Yes)
+                    return;
+                this.DialogResult = DialogResult.None;
+                e.Cancel = true;
             }
         }
 
@@ -182,25 +228,20 @@ namespace MobiusEditor.Dialogs
             AddTeamType();
         }
 
-        private void btnAdd_Click(object sender, EventArgs e)
+        private void renameTeamTypeToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            AddTeamType();
+            if (SelectedItem != null)
+                SelectedItem.BeginEdit();
+        }
+
+        private void removeTeamTypeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            RemoveTeamType();
         }
 
         private void AddTeamType()
         {
-            var nameChars = Enumerable.Range(97, 26).Concat(Enumerable.Range(48, 10));
-
-            string name = string.Empty;
-            foreach (var nameChar in nameChars)
-            {
-                name = new string((char)nameChar, 4);
-                if (!teamTypes.Where(t => t.Equals(name)).Any())
-                {
-                    break;
-                }
-            }
-
+            string name = INIHelpers.MakeNew4CharName(teamTypes.Select(t => t.Name), "????");
             var teamType = new TeamType { Name = name, House = plugin.Map.HouseTypes.First() };
             var item = new ListViewItem(teamType.Name)
             {
@@ -208,18 +249,25 @@ namespace MobiusEditor.Dialogs
             };
             teamTypes.Add(teamType);
             teamTypesListView.Items.Add(item).ToolTipText = teamType.Name;
-
+            btnAdd.Enabled = teamTypes.Count < maxTeams;
             item.Selected = true;
             item.BeginEdit();
         }
 
-        private void removeTeamTypeToolStripMenuItem_Click(object sender, EventArgs e)
+        private void RemoveTeamType()
         {
-            if (SelectedItem != null)
+            ListViewItem selected = SelectedItem;
+            int index = teamTypesListView.SelectedIndices.Count == 0 ? -1 : teamTypesListView.SelectedIndices[0];
+            if (selected != null)
             {
-                teamTypes.Remove(SelectedTeamType);
-                teamTypesListView.Items.Remove(SelectedItem);
+                teamTypes.Remove(selected.Tag as TeamType);
+                teamTypesListView.Items.Remove(selected);
             }
+            if (teamTypesListView.Items.Count == index)
+                index--;
+            if (index >= 0 && teamTypesListView.Items.Count > index)
+                teamTypesListView.Items[index].Selected = true;
+            btnAdd.Enabled = teamTypes.Count < maxTeams;
         }
 
         private void teamTypesListView_AfterLabelEdit(object sender, LabelEditEventArgs e)
@@ -247,12 +295,12 @@ namespace MobiusEditor.Dialogs
             else if (!INIHelpers.IsValidKey(curName))
             {
                 e.CancelEdit = true;
-                MessageBox.Show(string.Format("Team name '{0}' contains illegal characters. This format only supports simple ASCII.", curName), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(string.Format("Team name '{0}' contains illegal characters. This format only supports simple ASCII, and cannot contain '=', '[' or ']'.", curName), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             else if (teamTypes.Where(t => (t != SelectedTeamType) && t.Name.Equals(curName, StringComparison.InvariantCultureIgnoreCase)).Any())
             {
                 e.CancelEdit = true;
-                MessageBox.Show(string.Format("Team with name '{0}' already exists", curName), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(string.Format("Team with name '{0}' already exists.", curName.ToUpperInvariant()), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             else
             {

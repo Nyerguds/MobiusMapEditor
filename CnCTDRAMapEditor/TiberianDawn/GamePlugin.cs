@@ -860,16 +860,15 @@ namespace MobiusEditor.TiberianDawn
                     var typeValue = reader.ReadByte();
                     var iconValue = reader.ReadByte();
                     var templateType = Map.TemplateTypes.Where(t => t.Equals(typeValue)).FirstOrDefault();
-                    if ((templateType != null) && !templateType.Theaters.Contains(Map.Theater))
-                    {
-                        templateType = null;
-                    }
-                    if (templateType != null && templateType == TemplateTypes.Clear || iconValue >= templateType.NumIcons)
+                    // Prevent loading of illegal tiles.
+                    if (templateType != null
+                        && (!templateType.Theaters.Contains(Map.Theater)
+                            || templateType == TemplateTypes.Clear || iconValue >= templateType.NumIcons
+                            || !templateType.IconMask[iconValue % templateType.IconWidth, iconValue / templateType.IconWidth]))
                     {
                         templateType = null;
                     }
                     Map.Templates[x, y] = (templateType != null) ? new Template { Type = templateType, Icon = iconValue } : null;
-                    }
                 }
             }
         }
@@ -1198,7 +1197,7 @@ namespace MobiusEditor.TiberianDawn
                 for (var x = 0; x < Map.Metrics.Width; ++x)
                 {
                     var template = Map.Templates[x, y];
-                    if (template != null && template.Type.ID != 0)
+                    if (template != null && (template.Type.Flag | TemplateTypeFlag.Clear) == 0)
                     {
                         writer.Write((byte)template.Type.ID);
                         writer.Write((byte)template.Icon);
@@ -1206,7 +1205,7 @@ namespace MobiusEditor.TiberianDawn
                     else
                     {
                         writer.Write(byte.MaxValue);
-                        writer.Write(0);
+                        writer.Write((byte)0);
                     }
                 }
             }

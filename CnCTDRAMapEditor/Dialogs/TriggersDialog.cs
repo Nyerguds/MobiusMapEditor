@@ -28,6 +28,7 @@ namespace MobiusEditor.Dialogs
         private readonly IGamePlugin plugin;
         private readonly int maxTriggers;
 
+        private readonly List<Trigger> backupTriggers;
         private readonly List<Trigger> triggers;
         public IEnumerable<Trigger> Triggers => triggers;
 
@@ -58,11 +59,14 @@ namespace MobiusEditor.Dialogs
             }
 
             triggers = new List<Trigger>(plugin.Map.Triggers.Select(t => t.Clone()));
-
+            backupTriggers = new List<Trigger>(plugin.Map.Triggers.Select(t => t.Clone()));
+            int nrOfTriggers = Math.Min(maxTriggers, triggers.Count);
+            btnAdd.Enabled = nrOfTriggers < maxTriggers;
             triggersListView.BeginUpdate();
             {
-                foreach (var trigger in triggers)
+                for (int i = 0; i < nrOfTriggers; ++i)
                 {
+                    Trigger trigger = triggers[i];
                     var item = new ListViewItem(trigger.Name)
                     {
                         Tag = trigger
@@ -154,29 +158,71 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        private void teamTypesListView_MouseDown(object sender, MouseEventArgs e)
+        private void triggersListView_MouseDown(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Right)
             {
                 var hitTest = triggersListView.HitTest(e.Location);
 
                 bool canAdd = (hitTest.Item == null) && (triggersListView.Items.Count < maxTriggers);
-                bool canRemove = hitTest.Item != null;
+                bool itemExists = hitTest.Item != null;
                 addTriggerToolStripMenuItem.Visible = canAdd;
-                removeTriggerToolStripMenuItem.Visible = canRemove;
+                renameTriggerToolStripMenuItem.Visible = itemExists;
+                removeTriggerToolStripMenuItem.Visible = itemExists;
 
-                if (canAdd || canRemove)
+                if (canAdd || itemExists)
                 {
                     triggersContextMenuStrip.Show(Cursor.Position);
                 }
             }
         }
 
-        private void teamTypesListView_KeyDown(object sender, KeyEventArgs e)
+        private void triggersListView_KeyDown(object sender, KeyEventArgs e)
         {
-            if ((e.KeyData == Keys.F2) && (triggersListView.SelectedItems.Count > 0))
+            ListViewItem selected = SelectedItem;
+            if (e.KeyData == Keys.F2)
             {
-                triggersListView.SelectedItems[0].BeginEdit();
+                if (selected != null)
+                    selected.BeginEdit();
+            }
+            else if (e.KeyData == Keys.Delete)
+            {
+                RemoveTrigger();
+            }
+        }
+        private void btnAdd_Click(object sender, EventArgs e)
+        {
+            AddTrigger();
+        }
+                
+        private void TriggersDialog_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            // If user pressed ok, nevermind,just go on.
+            if (this.DialogResult == DialogResult.OK)
+                return;
+            bool hasChanges = triggers.Count != backupTriggers.Count;
+            if (!hasChanges)
+            {
+                foreach (Trigger trig in triggers)
+                {
+                    Trigger oldTrig = backupTriggers.Find(t => t.Name.Equals(trig.Name));
+                    if (oldTrig == null)
+                    {
+                        hasChanges = true;
+                        break;
+                    }
+                    hasChanges = !trig.EqualsOther(oldTrig);
+                    if (hasChanges)
+                        break;
+                }
+            }
+            if (hasChanges)
+            {
+                DialogResult dr =  MessageBox.Show("Triggers have been changed! Are you sure you want to cancel?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                if (dr == DialogResult.Yes)
+                    return;
+                this.DialogResult = DialogResult.None;
+                e.Cancel = true;
             }
         }
 
@@ -185,25 +231,21 @@ namespace MobiusEditor.Dialogs
             AddTrigger();
         }
 
-        private void btnAdd_Click(object sender, EventArgs e)
+        
+        private void renameTriggerToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            AddTrigger();
+            if (SelectedItem != null)
+                SelectedItem.BeginEdit();
+        }
+
+        private void removeTriggerToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            RemoveTrigger();
         }
 
         private void AddTrigger()
         {
-            var nameChars = Enumerable.Range(97, 26).Concat(Enumerable.Range(48, 10));
-
-            string name = string.Empty;
-            foreach (var nameChar in nameChars)
-            {
-                name = new string((char)nameChar, 4);
-                if (!triggers.Where(t => t.Equals(name)).Any())
-                {
-                    break;
-                }
-            }
-
+            string name = INIHelpers.MakeNew4CharName(triggers.Select(t => t.Name), "????");
             var trigger = new Trigger { Name = name, House = plugin.Map.HouseTypes.First().Name };
             var item = new ListViewItem(trigger.Name)
             {
@@ -211,21 +253,28 @@ namespace MobiusEditor.Dialogs
             };
             triggers.Add(trigger);
             triggersListView.Items.Add(item).ToolTipText = trigger.Name;
-
+            btnAdd.Enabled = triggers.Count < maxTriggers;
             item.Selected = true;
             item.BeginEdit();
         }
 
-        private void removeTriggerToolStripMenuItem_Click(object sender, EventArgs e)
+        private void RemoveTrigger()
         {
-            if (SelectedItem != null)
+            ListViewItem selected = SelectedItem;
+            int index = triggersListView.SelectedIndices.Count == 0 ? -1 : triggersListView.SelectedIndices[0];
+            if (selected != null)
             {
-                triggers.Remove(SelectedTrigger);
-                triggersListView.Items.Remove(SelectedItem);
+                triggers.Remove(selected.Tag as Trigger);
+                triggersListView.Items.Remove(selected);
             }
+            if (triggersListView.Items.Count == index)
+                index--;
+            if (index >= 0 && triggersListView.Items.Count > index)
+                triggersListView.Items[index].Selected = true;
+            btnAdd.Enabled = triggers.Count < maxTriggers;
         }
 
-        private void teamTypesListView_AfterLabelEdit(object sender, LabelEditEventArgs e)
+        private void triggersListView_AfterLabelEdit(object sender, LabelEditEventArgs e)
         {
             int maxLength = int.MaxValue;
             switch (plugin.GameType)
@@ -250,12 +299,12 @@ namespace MobiusEditor.Dialogs
             else if (!INIHelpers.IsValidKey(curName))
             {
                 e.CancelEdit = true;
-                MessageBox.Show(string.Format("Trigger name '{0}' contains illegal characters. This format only supports simple ASCII.", curName), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(string.Format("Trigger name '{0}' contains illegal characters. This format only supports simple ASCII, and cannot contain '=', '[' or ']'.", curName), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             else if (triggers.Where(t => (t != SelectedTrigger) && t.Name.Equals(curName, StringComparison.InvariantCultureIgnoreCase)).Any())
             {
                 e.CancelEdit = true;
-                MessageBox.Show(string.Format("Trigger with name '{0}' already exists", curName), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(string.Format("Trigger with name '{0}' already exists.", curName.ToUpperInvariant()), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             else
             {

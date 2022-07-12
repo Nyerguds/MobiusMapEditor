@@ -505,7 +505,9 @@ namespace MobiusEditor.RedAlert
                             var template = Map.Templates[x, y];
                             if (template != null)
                             {
-                                if (template.Type == TemplateTypes.Clear || iconValue >= template.Type.NumIcons)
+                                // Prevent loading of illegal tiles.
+                                TemplateType type = template.Type;
+                                if (type == TemplateTypes.Clear || iconValue >= type.NumIcons || !type.IconMask[iconValue % type.IconWidth, iconValue / type.IconWidth])
                                 {
                                     Map.Templates[x, y] = null;
                                 }
@@ -1492,7 +1494,7 @@ namespace MobiusEditor.RedAlert
                         for (var x = 0; x < Map.Metrics.Width; ++x)
                         {
                             var template = Map.Templates[x, y];
-                            if (template != null && template.Type.ID != 0)
+                            if (template != null && (template.Type.Flag | TemplateTypeFlag.Clear) == 0)
                             {
                                 writer.Write(template.Type.ID);
                             }
@@ -1508,13 +1510,13 @@ namespace MobiusEditor.RedAlert
                         for (var x = 0; x < Map.Metrics.Width; ++x)
                         {
                             var template = Map.Templates[x, y];
-                            if (template != null && template.Type.ID != 0)
+                            if (template != null && (template.Type.Flag | TemplateTypeFlag.Clear) == 0)
                             {
                                 writer.Write((byte)template.Icon);
                             }
                             else
                             {
-                                writer.Write(0);
+                                writer.Write((byte)0);
                             }
                         }
                     }
@@ -1537,7 +1539,7 @@ namespace MobiusEditor.RedAlert
                         }
                         else
                         {
-                            writer.Write((sbyte)-1);
+                            writer.Write(byte.MaxValue);
                         }
                     }
                 }
