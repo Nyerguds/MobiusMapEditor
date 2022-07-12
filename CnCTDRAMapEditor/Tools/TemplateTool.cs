@@ -528,12 +528,12 @@ namespace MobiusEditor.Tools
                 templateTypeNavigationWidget.Dispose();
                 templateTypeNavigationWidget = null;
             }
-
-            if (SelectedTemplateType != null)
+            TemplateType selected = SelectedTemplateType;
+            if (selected != null)
             {
-                templateTypeMapPanel.MapImage = SelectedTemplateType.Thumbnail;
+                templateTypeMapPanel.MapImage = selected.Thumbnail;
 
-                var templateTypeMetrics = new CellMetrics(SelectedTemplateType.IconWidth, SelectedTemplateType.IconHeight);
+                var templateTypeMetrics = new CellMetrics(selected.IconWidth, selected.IconHeight);
                 templateTypeNavigationWidget = new NavigationWidget(templateTypeMapPanel, templateTypeMetrics,
                     new Size(Globals.OriginalTileWidth / 4, Globals.OriginalTileHeight / 4));
                 templateTypeNavigationWidget.MouseoverSize = Size.Empty;

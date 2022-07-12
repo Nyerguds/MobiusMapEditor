@@ -26,7 +26,8 @@ namespace MobiusEditor.Tools.Dialogs
     {
         public ComboBox TriggerCombo => triggerCombo;
 
-        public CellTriggersToolDialog()
+        public CellTriggersToolDialog(Form parentForm)
+            : base(parentForm)
         {
             InitializeComponent();
         }

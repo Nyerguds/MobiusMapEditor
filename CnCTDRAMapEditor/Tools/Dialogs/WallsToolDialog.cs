@@ -10,7 +10,8 @@ namespace MobiusEditor.Tools.Dialogs
 {
     class WallsToolDialog : GenericToolDialog<WallsTool>
     {
-        public WallsToolDialog()
+        public WallsToolDialog(Form parentForm)
+            : base(parentForm)
         {
             Text = "Walls";
         }

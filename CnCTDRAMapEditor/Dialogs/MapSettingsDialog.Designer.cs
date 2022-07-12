@@ -88,7 +88,7 @@ namespace MobiusEditor.Dialogs
             this.btnCancel.AutoSize = true;
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.btnCancel.Location = new System.Drawing.Point(708, 2);
-            this.btnCancel.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.btnCancel.Margin = new System.Windows.Forms.Padding(2);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(68, 30);
             this.btnCancel.TabIndex = 2;
@@ -100,7 +100,7 @@ namespace MobiusEditor.Dialogs
             this.btnOK.AutoSize = true;
             this.btnOK.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.btnOK.Location = new System.Drawing.Point(654, 2);
-            this.btnOK.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.btnOK.Margin = new System.Windows.Forms.Padding(2);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(50, 30);
             this.btnOK.TabIndex = 3;
@@ -125,14 +125,13 @@ namespace MobiusEditor.Dialogs
             // 
             this.settingsPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.settingsPanel.Location = new System.Drawing.Point(166, 10);
-            this.settingsPanel.Margin = new System.Windows.Forms.Padding(10, 10, 10, 10);
+            this.settingsPanel.Margin = new System.Windows.Forms.Padding(10);
             this.settingsPanel.Name = "settingsPanel";
             this.settingsPanel.Size = new System.Drawing.Size(608, 501);
             this.settingsPanel.TabIndex = 3;
             // 
             // MapSettingsDialog
             // 
-            this.AcceptButton = this.btnOK;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;

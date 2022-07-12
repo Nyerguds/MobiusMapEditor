@@ -32,14 +32,14 @@ namespace MobiusEditor.RedAlert
         public static readonly HouseType Good = new HouseType(8, "GoodGuy", "GOOD");
         public static readonly HouseType Bad = new HouseType(9, "BadGuy", "BAD");
         public static readonly HouseType Neutral = new HouseType(10, "Neutral");
-        public static readonly HouseType Special = new HouseType(11, "Special");
+        public static readonly HouseType Special = new HouseType(11, "Special", "GOOD");
         public static readonly HouseType Multi1 = new HouseType(12, "Multi1", "MULTI1");
         public static readonly HouseType Multi2 = new HouseType(13, "Multi2", "MULTI2");
         public static readonly HouseType Multi3 = new HouseType(14, "Multi3", "MULTI3");
         public static readonly HouseType Multi4 = new HouseType(15, "Multi4", "MULTI4");
         public static readonly HouseType Multi5 = new HouseType(16, "Multi5", "MULTI5");
-        public static readonly HouseType Multi6 = new HouseType(17, "Multi6", "MULTI6");
-        public static readonly HouseType Multi7 = new HouseType(18, "Multi7", "MULTI7");
+        public static readonly HouseType Multi6 = new HouseType(17, "Multi6", "MULTI7"); // fixed to match actual game. 
+        public static readonly HouseType Multi7 = new HouseType(18, "Multi7", "MULTI6"); // fixed to match actual game. 
         public static readonly HouseType Multi8 = new HouseType(19, "Multi8", "MULTI8");
 
         private static readonly HouseType[] Types;

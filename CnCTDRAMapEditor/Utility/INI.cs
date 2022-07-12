@@ -44,6 +44,11 @@ namespace MobiusEditor.Utility
             }
             return string.Empty;
         };
+
+        public static bool IsValidKey(String iniKey)
+        {
+            return iniKey.Any(c => c > ' ' && c < '~' && c != '=' && c != '[' && c != ']');
+        }
     }
 
     public class INIKeyValueCollection : IEnumerable<(string Key, string Value)>, IEnumerable

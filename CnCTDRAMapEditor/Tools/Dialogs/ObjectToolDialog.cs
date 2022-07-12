@@ -14,6 +14,7 @@
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using MobiusEditor.Controls;
 using MobiusEditor.Interface;
+using System.Windows.Forms;
 
 namespace MobiusEditor.Tools.Dialogs
 {
@@ -25,13 +26,14 @@ namespace MobiusEditor.Tools.Dialogs
 
         public ObjectProperties ObjectProperties => objectProperties;
 
-        public ObjectToolDialog()
+        public ObjectToolDialog(Form parentForm)
+            :base(parentForm)
         {
             InitializeComponent();
         }
 
-        public ObjectToolDialog(IGamePlugin plugin)
-            : this()
+        public ObjectToolDialog(Form parentForm, IGamePlugin plugin)
+            : this(parentForm)
         {
             objectProperties.Initialize(plugin, true);
         }

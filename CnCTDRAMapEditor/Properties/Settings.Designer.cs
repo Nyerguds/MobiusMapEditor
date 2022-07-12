@@ -34,6 +34,18 @@ namespace MobiusEditor.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool ShowInviteWarning {
+            get {
+                return ((bool)(this["ShowInviteWarning"]));
+            }
+            set {
+                this["ShowInviteWarning"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
         public string GameDirectoryPath {
             get {
@@ -89,30 +101,6 @@ namespace MobiusEditor.Properties {
             }
             set {
                 this["CellTriggersToolDialogDefaultPosition"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0, 0")]
-        public global::System.Drawing.Point GenericToolDialogDefaultPosition {
-            get {
-                return ((global::System.Drawing.Point)(this["GenericToolDialogDefaultPosition"]));
-            }
-            set {
-                this["GenericToolDialogDefaultPosition"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0, 0")]
-        public global::System.Drawing.Point ObjectToolDialogDefaultPosition {
-            get {
-                return ((global::System.Drawing.Point)(this["ObjectToolDialogDefaultPosition"]));
-            }
-            set {
-                this["ObjectToolDialogDefaultPosition"] = value;
             }
         }
         
@@ -202,13 +190,37 @@ namespace MobiusEditor.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool ShowInviteWarning {
+        [global::System.Configuration.DefaultSettingValueAttribute("0, 0")]
+        public global::System.Drawing.Point OverlayToolDialogDefaultPosition {
             get {
-                return ((bool)(this["ShowInviteWarning"]));
+                return ((global::System.Drawing.Point)(this["OverlayToolDialogDefaultPosition"]));
             }
             set {
-                this["ShowInviteWarning"] = value;
+                this["OverlayToolDialogDefaultPosition"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0, 0")]
+        public global::System.Drawing.Point BuildingToolDialogDefaultPosition {
+            get {
+                return ((global::System.Drawing.Point)(this["BuildingToolDialogDefaultPosition"]));
+            }
+            set {
+                this["BuildingToolDialogDefaultPosition"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0, 0")]
+        public global::System.Drawing.Point WallsToolDialogDefaultPosition {
+            get {
+                return ((global::System.Drawing.Point)(this["WallsToolDialogDefaultPosition"]));
+            }
+            set {
+                this["WallsToolDialogDefaultPosition"] = value;
             }
         }
     }

@@ -29,7 +29,8 @@ namespace MobiusEditor.Tools.Dialogs
 
         public CheckBox GemsCheckBox => gemsCheckBox;
 
-        public ResourcesToolDialog()
+        public ResourcesToolDialog(Form parentForm)
+            : base(parentForm)
         {
             InitializeComponent();
         }

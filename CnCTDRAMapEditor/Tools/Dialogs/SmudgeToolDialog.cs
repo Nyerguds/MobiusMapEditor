@@ -10,7 +10,8 @@ namespace MobiusEditor.Tools.Dialogs
 {
     public class SmudgeToolDialog : GenericToolDialog<SmudgeTool>
     {
-        public SmudgeToolDialog()
+        public SmudgeToolDialog(Form parentForm)
+            : base(parentForm)
         {
             Text = "Smudge";
         }

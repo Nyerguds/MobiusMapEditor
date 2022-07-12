@@ -31,13 +31,14 @@ namespace MobiusEditor.Tools.Dialogs
 
         public TerrainProperties TerrainProperties => terrainProperties;
 
-        public TerrainToolDialog()
+        public TerrainToolDialog(Form parentForm)
+            :base(parentForm)
         {
             InitializeComponent();
         }
 
-        public TerrainToolDialog(IGamePlugin plugin)
-            : this()
+        public TerrainToolDialog(Form parentForm, IGamePlugin plugin)
+            : this(parentForm)
         {
             terrainProperties.Initialize(plugin, true);
         }

@@ -237,24 +237,29 @@ namespace MobiusEditor.Dialogs
                     maxLength = 23;
                     break;
             }
-
-            if (string.IsNullOrEmpty(e.Label))
+            String curName = e.Label;
+            if (string.IsNullOrEmpty(curName))
             {
                 e.CancelEdit = true;
             }
-            else if (e.Label.Length > maxLength)
+            else if (curName.Length > maxLength)
             {
                 e.CancelEdit = true;
                 MessageBox.Show(string.Format("Trigger name is longer than {0} characters.", maxLength), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            else if (triggers.Where(t => (t != SelectedTrigger) && t.Equals(e.Label)).Any())
+            else if (!INIHelpers.IsValidKey(curName))
             {
                 e.CancelEdit = true;
-                MessageBox.Show(string.Format("Trigger with name '{0}' already exists", e.Label), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(string.Format("Trigger name '{0}' contains illegal characters. This format only supports simple ASCII.", curName), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            else if (triggers.Where(t => (t != SelectedTrigger) && t.Name.Equals(curName, StringComparison.InvariantCultureIgnoreCase)).Any())
+            {
+                e.CancelEdit = true;
+                MessageBox.Show(string.Format("Trigger with name '{0}' already exists", curName), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             else
             {
-                SelectedTrigger.Name = e.Label;
+                SelectedTrigger.Name = curName;
                 triggersListView.Items[e.Item].ToolTipText = SelectedTrigger.Name;
             }
         }

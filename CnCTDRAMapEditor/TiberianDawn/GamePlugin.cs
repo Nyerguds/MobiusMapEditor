@@ -813,6 +813,10 @@ namespace MobiusEditor.TiberianDawn
                 }
             }
 
+            Dictionary<string, string> correctedEdges = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var edge in House.GetEdges())
+                correctedEdges.Add(edge, edge);
+            String defaultEdge = House.GetEdges().FirstOrDefault() ?? String.Empty;
             foreach (var house in Map.Houses)
             {
                 if (house.Type.ID < 0)
@@ -825,6 +829,10 @@ namespace MobiusEditor.TiberianDawn
                 {
                     INI.ParseSection(new MapContext(Map, false), houseSection, house);
                     house.Enabled = true;
+                    string correctedEdge;
+                    if (!correctedEdges.TryGetValue(house.Edge, out correctedEdge))
+                        correctedEdge = defaultEdge;
+                    house.Edge = correctedEdge;
                 }
                 else
                 {
@@ -856,14 +864,12 @@ namespace MobiusEditor.TiberianDawn
                     {
                         templateType = null;
                     }
-                    if ((templateType ?? TemplateTypes.Clear) != TemplateTypes.Clear)
+                    if (templateType != null && templateType == TemplateTypes.Clear || iconValue >= templateType.NumIcons)
                     {
-                        if (iconValue >= templateType.NumIcons)
-                        {
-                            templateType = null;
-                        }
+                        templateType = null;
                     }
                     Map.Templates[x, y] = (templateType != null) ? new Template { Type = templateType, Icon = iconValue } : null;
+                    }
                 }
             }
         }
@@ -1192,7 +1198,7 @@ namespace MobiusEditor.TiberianDawn
                 for (var x = 0; x < Map.Metrics.Width; ++x)
                 {
                     var template = Map.Templates[x, y];
-                    if (template != null)
+                    if (template != null && template.Type.ID != 0)
                     {
                         writer.Write((byte)template.Type.ID);
                         writer.Write((byte)template.Icon);
@@ -1200,7 +1206,7 @@ namespace MobiusEditor.TiberianDawn
                     else
                     {
                         writer.Write(byte.MaxValue);
-                        writer.Write(byte.MinValue);
+                        writer.Write(0);
                     }
                 }
             }

@@ -27,7 +27,8 @@ namespace MobiusEditor.Tools.Dialogs
 
         public MapPanel TemplateTypeMapPanel => templateTypeMapPanel;
 
-        public TemplateToolDialog()
+        public TemplateToolDialog(Form parentForm)
+            :base(parentForm)
         {
             InitializeComponent();
         }

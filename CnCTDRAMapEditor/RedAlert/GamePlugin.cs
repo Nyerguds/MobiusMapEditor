@@ -505,7 +505,7 @@ namespace MobiusEditor.RedAlert
                             var template = Map.Templates[x, y];
                             if (template != null)
                             {
-                                if ((template.Type != TemplateTypes.Clear) && (iconValue >= template.Type.NumIcons))
+                                if (template.Type == TemplateTypes.Clear || iconValue >= template.Type.NumIcons)
                                 {
                                     Map.Templates[x, y] = null;
                                 }
@@ -1492,7 +1492,7 @@ namespace MobiusEditor.RedAlert
                         for (var x = 0; x < Map.Metrics.Width; ++x)
                         {
                             var template = Map.Templates[x, y];
-                            if (template != null)
+                            if (template != null && template.Type.ID != 0)
                             {
                                 writer.Write(template.Type.ID);
                             }
@@ -1508,13 +1508,13 @@ namespace MobiusEditor.RedAlert
                         for (var x = 0; x < Map.Metrics.Width; ++x)
                         {
                             var template = Map.Templates[x, y];
-                            if (template != null)
+                            if (template != null && template.Type.ID != 0)
                             {
                                 writer.Write((byte)template.Icon);
                             }
                             else
                             {
-                                writer.Write(byte.MaxValue);
+                                writer.Write(0);
                             }
                         }
                     }

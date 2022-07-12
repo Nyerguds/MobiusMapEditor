@@ -67,7 +67,7 @@ namespace MobiusEditor.Model
         {
             ID = id;
             Name = name;
-            DisplayName = Globals.TheGameTextManager[textId];
+            DisplayName = Globals.TheGameTextManager[textId] + " (" + Name.ToUpperInvariant() + ")";
             Theaters = theaters;
             Flag = flag;
         }

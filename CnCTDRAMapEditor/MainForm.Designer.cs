@@ -566,8 +566,11 @@ namespace MobiusEditor
             // 
             // mapPanel
             // 
+            this.mapPanel.AllowDrop = true;
             this.mapPanel.BackColor = System.Drawing.Color.Black;
             this.mapPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.mapPanel.DragEnter += new System.Windows.Forms.DragEventHandler(this.MapPanel_DragEnter);
+            this.mapPanel.DragDrop += new System.Windows.Forms.DragEventHandler(this.MapPanel_DragDrop);
             this.mapPanel.FocusOnMouseEnter = true;
             this.mapPanel.Location = new System.Drawing.Point(0, 59);
             this.mapPanel.MapImage = null;
@@ -604,6 +607,7 @@ namespace MobiusEditor
             this.MainMenuStrip = this.mainMenuStrip;
             this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.Name = "MainForm";
+            this.Shown += new System.EventHandler(this.MainForm_Shown);
             this.Text = "CnC TDRA Map Editor";
             this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);

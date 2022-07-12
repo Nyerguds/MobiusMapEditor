@@ -10,7 +10,8 @@ namespace MobiusEditor.Tools.Dialogs
 {
     public class BuildingToolDialog : ObjectToolDialog<BuildingTool>
     {
-        public BuildingToolDialog(IGamePlugin plugin) : base(plugin)
+        public BuildingToolDialog(Form parentForm, IGamePlugin plugin)
+            : base(parentForm, plugin)
         {
             Text = "Structures";
         }

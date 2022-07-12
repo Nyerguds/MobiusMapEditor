@@ -23,12 +23,6 @@
     <Setting Name="CellTriggersToolDialogDefaultPosition" Type="System.Drawing.Point" Scope="User">
       <Value Profile="(Default)">0, 0</Value>
     </Setting>
-    <Setting Name="GenericToolDialogDefaultPosition" Type="System.Drawing.Point" Scope="User">
-      <Value Profile="(Default)">0, 0</Value>
-    </Setting>
-    <Setting Name="ObjectToolDialogDefaultPosition" Type="System.Drawing.Point" Scope="User">
-      <Value Profile="(Default)">0, 0</Value>
-    </Setting>
     <Setting Name="ResourcesToolDialogDefaultPosition" Type="System.Drawing.Point" Scope="User">
       <Value Profile="(Default)">0, 0</Value>
     </Setting>
@@ -48,6 +42,15 @@
       <Value Profile="(Default)">0, 0</Value>
     </Setting>
     <Setting Name="UnitToolDialogDefaultPosition" Type="System.Drawing.Point" Scope="User">
+      <Value Profile="(Default)">0, 0</Value>
+    </Setting>
+    <Setting Name="OverlayToolDialogDefaultPosition" Type="System.Drawing.Point" Scope="User">
+      <Value Profile="(Default)">0, 0</Value>
+    </Setting>
+    <Setting Name="BuildingToolDialogDefaultPosition" Type="System.Drawing.Point" Scope="User">
+      <Value Profile="(Default)">0, 0</Value>
+    </Setting>
+    <Setting Name="WallsToolDialogDefaultPosition" Type="System.Drawing.Point" Scope="User">
       <Value Profile="(Default)">0, 0</Value>
     </Setting>
   </Settings>

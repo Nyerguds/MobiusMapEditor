@@ -96,8 +96,10 @@ namespace MobiusEditor
             toolTypes = ((IEnumerable<ToolType>)Enum.GetValues(typeof(ToolType))).Where(t => t != ToolType.None).ToArray();
         }
 
-        public MainForm()
+        public MainForm(String fileToOpen)
         {
+            this.filename = fileToOpen;
+
             InitializeComponent();
 
             toolForms = new Dictionary<ToolType, IToolDialog>();
@@ -350,16 +352,7 @@ namespace MobiusEditor
             }
             if (ofd.ShowDialog() == DialogResult.OK)
             {
-                var fileInfo = new FileInfo(ofd.FileName);
-                if (LoadFile(fileInfo.FullName))
-                {
-                    mru.Add(fileInfo);
-                }
-                else
-                {
-                    mru.Remove(fileInfo);
-                    MessageBox.Show(string.Format("Error loading {0}.", ofd.FileName), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
+                OpenFile(ofd.FileName, false);
             }
         }
 
@@ -598,20 +591,7 @@ namespace MobiusEditor
 
         private void Mru_FileSelected(object sender, FileInfo e)
         {
-            if (!PromptSaveMap())
-            {
-                return;
-            }
-
-            if (LoadFile(e.FullName))
-            {
-                mru.Add(e);
-            }
-            else
-            {
-                mru.Remove(e);
-                MessageBox.Show(string.Format("Error loading {0}.", e.FullName), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+            OpenFile(e.FullName, true);
         }
 
         private void mapPanel_MouseMove(object sender, MouseEventArgs e)
@@ -687,6 +667,24 @@ namespace MobiusEditor
                 {
                     cellStatusLabel.Text = "No cell";
                 }
+            }
+        }
+
+        private void OpenFile(String fileName, bool askSave)
+        {
+            if (askSave && !PromptSaveMap())
+            {
+                return;
+            }
+            var fileInfo = new FileInfo(fileName);
+            if (LoadFile(fileInfo.FullName))
+            {
+                mru.Add(fileInfo);
+            }
+            else
+            {
+                mru.Remove(fileInfo);
+                MessageBox.Show(string.Format("Error loading {0}.", fileName), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -946,57 +944,57 @@ namespace MobiusEditor
                 {
                     case ToolType.Map:
                         {
-                            toolDialog = new TemplateToolDialog();
+                            toolDialog = new TemplateToolDialog(this);
                         }
                         break;
                     case ToolType.Smudge:
                         {
-                            toolDialog = new SmudgeToolDialog();
+                            toolDialog = new SmudgeToolDialog(this);
                         }
                         break;
                     case ToolType.Overlay:
                         {
-                            toolDialog = new OverlayToolDialog();
+                            toolDialog = new OverlayToolDialog(this);
                         }
                         break;
                     case ToolType.Resources:
                         {
-                            toolDialog = new ResourcesToolDialog();
+                            toolDialog = new ResourcesToolDialog(this);
                         }
                         break;
                     case ToolType.Terrain:
                         {
-                            toolDialog = new TerrainToolDialog(plugin);
+                            toolDialog = new TerrainToolDialog(this, plugin);
                         }
                         break;
                     case ToolType.Infantry:
                         {
-                            toolDialog = new InfantryToolDialog(plugin);
+                            toolDialog = new InfantryToolDialog(this, plugin);
                         }
                         break;
                     case ToolType.Unit:
                         {
-                            toolDialog = new UnitToolDialog(plugin);
+                            toolDialog = new UnitToolDialog(this, plugin);
                         }
                         break;
                     case ToolType.Building:
                         {
-                            toolDialog = new BuildingToolDialog(plugin);
+                            toolDialog = new BuildingToolDialog(this, plugin);
                         }
                         break;
                     case ToolType.Wall:
                         {
-                            toolDialog = new WallsToolDialog();
+                            toolDialog = new WallsToolDialog(this);
                         }
                         break;
                     case ToolType.Waypoint:
                         {
-                            toolDialog = new WaypointsToolDialog();
+                            toolDialog = new WaypointsToolDialog(this);
                         }
                         break;
                     case ToolType.CellTrigger:
                         {
-                            toolDialog = new CellTriggersToolDialog();
+                            toolDialog = new CellTriggersToolDialog(this);
                         }
                         break;
                 }
@@ -1089,6 +1087,24 @@ namespace MobiusEditor
             }
 
             ActiveToolType = ((ViewToolStripButton)sender).ToolType;
+        }
+
+        private void MapPanel_DragEnter(object sender, System.Windows.Forms.DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                String[] files = (String[])e.Data.GetData(DataFormats.FileDrop);
+                if (files.Length == 1)
+                    e.Effect = DragDropEffects.Copy;
+            }
+        }
+        
+        private void MapPanel_DragDrop(object sender, System.Windows.Forms.DragEventArgs e)
+        {
+            String[] files = (String[])e.Data.GetData(DataFormats.FileDrop);
+            if (files.Length != 1)
+                return;
+            OpenFile(files[0], true);
         }
 
         private void UpdateVisibleLayers()
@@ -1262,6 +1278,12 @@ namespace MobiusEditor
         private void mainToolStrip_MouseMove(object sender, MouseEventArgs e)
         {
             mainToolStrip.Focus();
+        }
+        
+        private void MainForm_Shown(object sender, System.EventArgs e)
+        {
+            if (filename != null)
+                this.OpenFile(filename, false);
         }
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)

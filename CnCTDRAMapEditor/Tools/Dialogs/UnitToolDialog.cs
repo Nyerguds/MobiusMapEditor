@@ -10,7 +10,8 @@ namespace MobiusEditor.Tools.Dialogs
 {
     public class UnitToolDialog : ObjectToolDialog<UnitTool>
     {
-        public UnitToolDialog(IGamePlugin plugin) : base(plugin)
+        public UnitToolDialog(Form parentForm, IGamePlugin plugin)
+            : base(parentForm, plugin)
         {
             Text = "Units";
         }

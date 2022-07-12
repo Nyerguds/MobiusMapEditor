@@ -45,12 +45,12 @@ namespace MobiusEditor.TiberianDawn
         public static readonly OverlayType V16 = new OverlayType(24, "v16", "TEXT_STRUCTURE_TITLE_CIV15", new TheaterType[] { TheaterTypes.Temperate, TheaterTypes.Winter });
         public static readonly OverlayType V17 = new OverlayType(25, "v17", "TEXT_STRUCTURE_TITLE_CIV16", new TheaterType[] { TheaterTypes.Temperate, TheaterTypes.Winter });
         public static readonly OverlayType V18 = new OverlayType(26, "v18", "TEXT_STRUCTURE_TITLE_CIV17", new TheaterType[] { TheaterTypes.Temperate, TheaterTypes.Winter });
-        public static readonly OverlayType FlagSpot = new OverlayType(27, "fpls", OverlayTypeFlag.Flag);
-        public static readonly OverlayType WoodCrate = new OverlayType(28, "wcrate", OverlayTypeFlag.Crate);
-        public static readonly OverlayType SteelCrate = new OverlayType(29, "scrate", OverlayTypeFlag.Crate);
+        public static readonly OverlayType FlagSpot = new OverlayType(27, "fpls", "TEXT_CF_ONHOVER_SPOT", OverlayTypeFlag.Flag);
+        public static readonly OverlayType WoodCrate = new OverlayType(28, "wcrate", "Wooden Crate", OverlayTypeFlag.Crate);
+        public static readonly OverlayType SteelCrate = new OverlayType(29, "scrate", "Steel Crate", OverlayTypeFlag.Crate);
         // Nyerguds upgrade: Added missing types CONC and ROAD.
-        public static readonly OverlayType Concrete = new OverlayType(30, "conc", OverlayTypeFlag.Decoration);
-        public static readonly OverlayType Road = new OverlayType(29, "road", OverlayTypeFlag.Decoration);
+        public static readonly OverlayType Concrete = new OverlayType(30, "conc", "Concrete Pavement", OverlayTypeFlag.Decoration);
+        public static readonly OverlayType Road = new OverlayType(29, "road", "Concrete Road", OverlayTypeFlag.Decoration);
 
         private static OverlayType[] Types;
 

@@ -23,14 +23,17 @@ namespace MobiusEditor.TiberianDawn
     {
         public static readonly HouseType Good = new HouseType(0, "GoodGuy", "GOOD");
         public static readonly HouseType Bad = new HouseType(1, "BadGuy", "BAD_UNIT", "BAD_STRUCTURE", ("harv", "BAD_STRUCTURE"), ("mcv", "BAD_STRUCTURE"));
-        public static readonly HouseType Neutral = new HouseType(2, "Neutral");
-        public static readonly HouseType Special = new HouseType(3, "Special");
-        public static readonly HouseType Multi1 = new HouseType(4, "Multi1", "MULTI1");
-        public static readonly HouseType Multi2 = new HouseType(5, "Multi2", "MULTI2");
-        public static readonly HouseType Multi3 = new HouseType(6, "Multi3", "MULTI3");
-        public static readonly HouseType Multi4 = new HouseType(7, "Multi4", "MULTI4");
-        public static readonly HouseType Multi5 = new HouseType(8, "Multi5", "MULTI5");
-        public static readonly HouseType Multi6 = new HouseType(9, "Multi6", "MULTI6");
+        // Added actual recoloring
+        public static readonly HouseType Neutral = new HouseType(2, "Neutral", "GOOD");
+        public static readonly HouseType Special = new HouseType(3, "Special", "GOOD");
+        // fixed to match actual game. Seems they messed up the naming of these in the xml files, and then applied that bizarre mixup to the Houses correctly
+        // in the Remastered game, leaving the editor, which requested the obviously-correct name for each Multi-House color, to show it all wrong.
+        public static readonly HouseType Multi1 = new HouseType(4, "Multi1", "MULTI2");
+        public static readonly HouseType Multi2 = new HouseType(5, "Multi2", "MULTI5");
+        public static readonly HouseType Multi3 = new HouseType(6, "Multi3", "MULTI4");
+        public static readonly HouseType Multi4 = new HouseType(7, "Multi4", "MULTI6");
+        public static readonly HouseType Multi5 = new HouseType(8, "Multi5", "MULTI1");
+        public static readonly HouseType Multi6 = new HouseType(9, "Multi6", "MULTI3");
 
         private static readonly HouseType[] Types;
 
@@ -39,7 +42,7 @@ namespace MobiusEditor.TiberianDawn
             Types =
                 (from field in typeof(HouseTypes).GetFields(BindingFlags.Static | BindingFlags.Public)
                  where field.IsInitOnly && typeof(HouseType).IsAssignableFrom(field.FieldType)
-                 select field.GetValue(null) as HouseType).ToArray();
+                 select field.GetValue(null) as HouseType).OrderBy(h => h.ID).ToArray();
         }
 
         public static IEnumerable<HouseType> GetTypes()

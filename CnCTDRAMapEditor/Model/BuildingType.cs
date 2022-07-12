@@ -55,7 +55,7 @@ namespace MobiusEditor.Model
         {
             ID = id;
             Name = isFake ? (name.Substring(0, name.Length - 1) + "f") : name;
-            DisplayName = Globals.TheGameTextManager[textId];
+            DisplayName = Globals.TheGameTextManager[textId] + " (" + Name.ToUpperInvariant() + ")";
             Tilename = name;
             BaseOccupyMask = occupyMask;
             Size = new Size(BaseOccupyMask.GetLength(1), BaseOccupyMask.GetLength(0));

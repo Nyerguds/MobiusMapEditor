@@ -26,7 +26,8 @@ namespace MobiusEditor.Tools.Dialogs
     {
         public ComboBox WaypointCombo => waypointCombo;
 
-        public WaypointsToolDialog()
+        public WaypointsToolDialog(Form parentForm)
+            : base(parentForm)
         {
             InitializeComponent();
         }

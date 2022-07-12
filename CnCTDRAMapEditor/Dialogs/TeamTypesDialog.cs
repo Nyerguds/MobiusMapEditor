@@ -234,24 +234,29 @@ namespace MobiusEditor.Dialogs
                     maxLength = 23;
                     break;
             }
-
-            if (string.IsNullOrEmpty(e.Label))
+            String curName = e.Label;
+            if (string.IsNullOrEmpty(curName))
             {
                 e.CancelEdit = true;
             }
-            else if (e.Label.Length > maxLength)
+            else if (curName.Length > maxLength)
             {
                 e.CancelEdit = true;
                 MessageBox.Show(string.Format("Team name is longer than {0} characters.", maxLength), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            else if (teamTypes.Where(t => (t != SelectedTeamType) && t.Equals(e.Label)).Any())
+            else if (!INIHelpers.IsValidKey(curName))
             {
                 e.CancelEdit = true;
-                MessageBox.Show(string.Format("Team with name '{0}' already exists", e.Label), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(string.Format("Team name '{0}' contains illegal characters. This format only supports simple ASCII.", curName), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            else if (teamTypes.Where(t => (t != SelectedTeamType) && t.Name.Equals(curName, StringComparison.InvariantCultureIgnoreCase)).Any())
+            {
+                e.CancelEdit = true;
+                MessageBox.Show(string.Format("Team with name '{0}' already exists", curName), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             else
             {
-                SelectedTeamType.Name = e.Label;
+                SelectedTeamType.Name = curName;
                 teamTypesListView.Items[e.Item].ToolTipText = SelectedTeamType.Name;
             }
         }

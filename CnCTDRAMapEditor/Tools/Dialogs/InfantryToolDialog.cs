@@ -10,7 +10,8 @@ namespace MobiusEditor.Tools.Dialogs
 {
     public class InfantryToolDialog : ObjectToolDialog<InfantryTool>
     {
-        public InfantryToolDialog(IGamePlugin plugin) : base(plugin)
+        public InfantryToolDialog(Form parentForm, IGamePlugin plugin)
+            : base(parentForm, plugin)
         {
             Text = "Infantry";
         }

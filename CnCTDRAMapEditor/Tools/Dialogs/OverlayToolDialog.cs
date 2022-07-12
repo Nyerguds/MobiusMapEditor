@@ -10,7 +10,8 @@ namespace MobiusEditor.Tools.Dialogs
 {
     public class OverlayToolDialog : GenericToolDialog<OverlaysTool>
     {
-        public OverlayToolDialog()
+        public OverlayToolDialog(Form parentForm)
+            : base(parentForm)
         {
             Text = "Overlay";
         }

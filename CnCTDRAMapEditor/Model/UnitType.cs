@@ -58,7 +58,7 @@ namespace MobiusEditor.Model
         {
             ID = id;
             Name = name;
-            DisplayName = Globals.TheGameTextManager[textId];
+            DisplayName = Globals.TheGameTextManager[textId] + " (" + Name.ToUpperInvariant() + ")";
             OwnerHouse = ownerHouse;
             HasTurret = hasTurret;
             IsFixedWing = isFixedWing;

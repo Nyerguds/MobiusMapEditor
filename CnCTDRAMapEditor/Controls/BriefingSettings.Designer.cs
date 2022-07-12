@@ -49,9 +49,10 @@ namespace MobiusEditor.Controls
             // 
             this.briefingTxt.Dock = System.Windows.Forms.DockStyle.Fill;
             this.briefingTxt.Location = new System.Drawing.Point(0, 0);
-            this.briefingTxt.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.briefingTxt.Margin = new System.Windows.Forms.Padding(2);
             this.briefingTxt.Multiline = true;
             this.briefingTxt.Name = "briefingTxt";
+            this.briefingTxt.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.briefingTxt.Size = new System.Drawing.Size(600, 400);
             this.briefingTxt.TabIndex = 0;
             // 
@@ -60,7 +61,7 @@ namespace MobiusEditor.Controls
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.briefingTxt);
-            this.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "BriefingSettings";
             this.Size = new System.Drawing.Size(600, 400);
             this.ResumeLayout(false);

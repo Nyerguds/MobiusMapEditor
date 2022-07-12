@@ -28,7 +28,7 @@ namespace MobiusEditor
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
-        static void Main()
+        static void Main(string[] args)
         {
             // Change current culture to en-US
             if (Thread.CurrentThread.CurrentCulture.Name != "en-US")
@@ -118,8 +118,18 @@ namespace MobiusEditor
                 Properties.Settings.Default.ShowInviteWarning = !inviteMessageBox.DontShowAgain;
                 Properties.Settings.Default.Save();
             }
+            String arg = null;
+            try
+            {
+                if (args.Length > 0 && File.Exists(args[0]))
+                    arg = args[0];
+            }
+            catch
+            {
+                arg = null;
+            }
 
-            Application.Run(new MainForm());
+            Application.Run(new MainForm(arg));
 
             if (SteamworksUGC.IsSteamBuild)
             {
