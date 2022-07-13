@@ -64,6 +64,8 @@ v1.4.0.1:
 * Fixed placement of illegal tiles caused by incorrect filtering on which tiles from a template should be included. This is the problem which caused tiles that showed as black blocks in classic graphics. It is also the problem that made Red Alert maps contain indestructible bridges.
 * Map tile placement can now be dragged, allowing easily filling an area with water or other tiles. This also works for removing tiles.
 * Removing tiles will now obey the actual occupied cells of the selected tile, rather than just clearing the bounding box, making it more intuitive.
+* Creating an RA trigger with Action "Text Trigger" will no longer cause an error to be shown.
+* Trigger controls no longer jump around slightly when selecting different options.
 
 ### Upgrading
 

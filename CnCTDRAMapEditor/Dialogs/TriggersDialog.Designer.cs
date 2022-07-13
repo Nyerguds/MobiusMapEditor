@@ -250,10 +250,10 @@ namespace MobiusEditor.Dialogs
             this.label1.Location = new System.Drawing.Point(2, 0);
             this.label1.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label1.Name = "label1";
+            this.label1.Padding = new System.Windows.Forms.Padding(0, 6, 0, 0);
             this.label1.Size = new System.Drawing.Size(67, 25);
             this.label1.TabIndex = 0;
             this.label1.Text = "House";
-            this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // houseComboBox
             // 
@@ -264,7 +264,7 @@ namespace MobiusEditor.Dialogs
             this.houseComboBox.Margin = new System.Windows.Forms.Padding(2);
             this.houseComboBox.Name = "houseComboBox";
             this.houseComboBox.Size = new System.Drawing.Size(141, 21);
-            this.houseComboBox.TabIndex = 10;
+            this.houseComboBox.TabIndex = 1;
             // 
             // typeLabel
             // 
@@ -273,10 +273,10 @@ namespace MobiusEditor.Dialogs
             this.typeLabel.Location = new System.Drawing.Point(2, 50);
             this.typeLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.typeLabel.Name = "typeLabel";
+            this.typeLabel.Padding = new System.Windows.Forms.Padding(0, 6, 0, 0);
             this.typeLabel.Size = new System.Drawing.Size(67, 25);
-            this.typeLabel.TabIndex = 2;
+            this.typeLabel.TabIndex = 6;
             this.typeLabel.Text = "Type";
-            this.typeLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // event1Label
             // 
@@ -285,57 +285,57 @@ namespace MobiusEditor.Dialogs
             this.event1Label.Location = new System.Drawing.Point(2, 75);
             this.event1Label.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.event1Label.Name = "event1Label";
-            this.event1Label.Size = new System.Drawing.Size(67, 57);
-            this.event1Label.TabIndex = 3;
+            this.event1Label.Padding = new System.Windows.Forms.Padding(0, 6, 0, 0);
+            this.event1Label.Size = new System.Drawing.Size(67, 50);
+            this.event1Label.TabIndex = 9;
             this.event1Label.Text = "Event 1";
-            this.event1Label.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // event2Label
             // 
             this.event2Label.AutoSize = true;
             this.event2Label.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.event2Label.Location = new System.Drawing.Point(2, 132);
+            this.event2Label.Location = new System.Drawing.Point(2, 125);
             this.event2Label.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.event2Label.Name = "event2Label";
-            this.event2Label.Size = new System.Drawing.Size(67, 57);
-            this.event2Label.TabIndex = 4;
+            this.event2Label.Padding = new System.Windows.Forms.Padding(0, 6, 0, 0);
+            this.event2Label.Size = new System.Drawing.Size(67, 50);
+            this.event2Label.TabIndex = 12;
             this.event2Label.Text = "Event 2";
-            this.event2Label.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // action1Label
             // 
             this.action1Label.AutoSize = true;
             this.action1Label.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.action1Label.Location = new System.Drawing.Point(2, 189);
+            this.action1Label.Location = new System.Drawing.Point(2, 175);
             this.action1Label.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.action1Label.Name = "action1Label";
-            this.action1Label.Size = new System.Drawing.Size(67, 57);
-            this.action1Label.TabIndex = 5;
+            this.action1Label.Padding = new System.Windows.Forms.Padding(0, 6, 0, 0);
+            this.action1Label.Size = new System.Drawing.Size(67, 50);
+            this.action1Label.TabIndex = 15;
             this.action1Label.Text = "Action 1";
-            this.action1Label.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // action2Label
             // 
             this.action2Label.AutoSize = true;
             this.action2Label.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.action2Label.Location = new System.Drawing.Point(2, 246);
+            this.action2Label.Location = new System.Drawing.Point(2, 225);
             this.action2Label.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.action2Label.Name = "action2Label";
-            this.action2Label.Size = new System.Drawing.Size(67, 57);
-            this.action2Label.TabIndex = 6;
+            this.action2Label.Padding = new System.Windows.Forms.Padding(0, 6, 0, 0);
+            this.action2Label.Size = new System.Drawing.Size(67, 50);
+            this.action2Label.TabIndex = 18;
             this.action2Label.Text = "Action 2";
-            this.action2Label.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // action1ComboBox
             // 
             this.action1ComboBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.action1ComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.action1ComboBox.FormattingEnabled = true;
-            this.action1ComboBox.Location = new System.Drawing.Point(73, 191);
+            this.action1ComboBox.Location = new System.Drawing.Point(73, 177);
             this.action1ComboBox.Margin = new System.Windows.Forms.Padding(2);
             this.action1ComboBox.Name = "action1ComboBox";
             this.action1ComboBox.Size = new System.Drawing.Size(141, 21);
-            this.action1ComboBox.TabIndex = 17;
+            this.action1ComboBox.TabIndex = 16;
             this.action1ComboBox.SelectedIndexChanged += new System.EventHandler(this.trigger1ComboBox_SelectedIndexChanged);
             // 
             // action2ComboBox
@@ -343,7 +343,7 @@ namespace MobiusEditor.Dialogs
             this.action2ComboBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.action2ComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.action2ComboBox.FormattingEnabled = true;
-            this.action2ComboBox.Location = new System.Drawing.Point(73, 248);
+            this.action2ComboBox.Location = new System.Drawing.Point(73, 227);
             this.action2ComboBox.Margin = new System.Windows.Forms.Padding(2);
             this.action2ComboBox.Name = "action2ComboBox";
             this.action2ComboBox.Size = new System.Drawing.Size(141, 21);
@@ -356,10 +356,10 @@ namespace MobiusEditor.Dialogs
             this.existenceLabel.Location = new System.Drawing.Point(2, 25);
             this.existenceLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.existenceLabel.Name = "existenceLabel";
+            this.existenceLabel.Padding = new System.Windows.Forms.Padding(0, 6, 0, 0);
             this.existenceLabel.Size = new System.Drawing.Size(67, 25);
-            this.existenceLabel.TabIndex = 1;
+            this.existenceLabel.TabIndex = 3;
             this.existenceLabel.Text = "Existence";
-            this.existenceLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // existenceComboBox
             // 
@@ -371,7 +371,7 @@ namespace MobiusEditor.Dialogs
             this.existenceComboBox.Margin = new System.Windows.Forms.Padding(2);
             this.existenceComboBox.Name = "existenceComboBox";
             this.existenceComboBox.Size = new System.Drawing.Size(141, 21);
-            this.existenceComboBox.TabIndex = 11;
+            this.existenceComboBox.TabIndex = 4;
             this.existenceComboBox.ValueMember = "Value";
             // 
             // typeComboBox
@@ -384,7 +384,7 @@ namespace MobiusEditor.Dialogs
             this.typeComboBox.Margin = new System.Windows.Forms.Padding(2);
             this.typeComboBox.Name = "typeComboBox";
             this.typeComboBox.Size = new System.Drawing.Size(141, 21);
-            this.typeComboBox.TabIndex = 12;
+            this.typeComboBox.TabIndex = 7;
             this.typeComboBox.ValueMember = "Value";
             this.typeComboBox.SelectedValueChanged += new System.EventHandler(this.typeComboBox_SelectedValueChanged);
             // 
@@ -397,7 +397,7 @@ namespace MobiusEditor.Dialogs
             this.event1ComboBox.Margin = new System.Windows.Forms.Padding(2);
             this.event1ComboBox.Name = "event1ComboBox";
             this.event1ComboBox.Size = new System.Drawing.Size(141, 21);
-            this.event1ComboBox.TabIndex = 13;
+            this.event1ComboBox.TabIndex = 10;
             this.event1ComboBox.SelectedIndexChanged += new System.EventHandler(this.trigger1ComboBox_SelectedIndexChanged);
             // 
             // event2ComboBox
@@ -405,34 +405,34 @@ namespace MobiusEditor.Dialogs
             this.event2ComboBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.event2ComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.event2ComboBox.FormattingEnabled = true;
-            this.event2ComboBox.Location = new System.Drawing.Point(73, 134);
+            this.event2ComboBox.Location = new System.Drawing.Point(73, 127);
             this.event2ComboBox.Margin = new System.Windows.Forms.Padding(2);
             this.event2ComboBox.Name = "event2ComboBox";
             this.event2ComboBox.Size = new System.Drawing.Size(141, 21);
-            this.event2ComboBox.TabIndex = 15;
+            this.event2ComboBox.TabIndex = 13;
             this.event2ComboBox.SelectedIndexChanged += new System.EventHandler(this.trigger2ComboBox_SelectedIndexChanged);
             // 
             // teamLabel
             // 
             this.teamLabel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.teamLabel.Location = new System.Drawing.Point(2, 303);
+            this.teamLabel.Location = new System.Drawing.Point(2, 275);
             this.teamLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.teamLabel.Name = "teamLabel";
+            this.teamLabel.Padding = new System.Windows.Forms.Padding(0, 6, 0, 0);
             this.teamLabel.Size = new System.Drawing.Size(67, 25);
-            this.teamLabel.TabIndex = 7;
+            this.teamLabel.TabIndex = 21;
             this.teamLabel.Text = "Team";
-            this.teamLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // teamComboBox
             // 
             this.teamComboBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.teamComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.teamComboBox.FormattingEnabled = true;
-            this.teamComboBox.Location = new System.Drawing.Point(73, 305);
+            this.teamComboBox.Location = new System.Drawing.Point(73, 277);
             this.teamComboBox.Margin = new System.Windows.Forms.Padding(2);
             this.teamComboBox.Name = "teamComboBox";
             this.teamComboBox.Size = new System.Drawing.Size(141, 21);
-            this.teamComboBox.TabIndex = 21;
+            this.teamComboBox.TabIndex = 22;
             // 
             // event1Flp
             // 
@@ -441,15 +441,16 @@ namespace MobiusEditor.Dialogs
             this.event1Flp.Controls.Add(this.event1Nud);
             this.event1Flp.Controls.Add(this.event1ValueComboBox);
             this.event1Flp.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.event1Flp.Location = new System.Drawing.Point(219, 78);
+            this.event1Flp.Location = new System.Drawing.Point(216, 75);
+            this.event1Flp.Margin = new System.Windows.Forms.Padding(0);
             this.event1Flp.Name = "event1Flp";
-            this.event1Flp.Size = new System.Drawing.Size(172, 51);
-            this.event1Flp.TabIndex = 14;
+            this.event1Flp.Size = new System.Drawing.Size(170, 50);
+            this.event1Flp.TabIndex = 11;
             // 
             // event1Nud
             // 
             this.event1Nud.Location = new System.Drawing.Point(2, 2);
-            this.event1Nud.Margin = new System.Windows.Forms.Padding(2);
+            this.event1Nud.Margin = new System.Windows.Forms.Padding(2, 2, 2, 3);
             this.event1Nud.Maximum = new decimal(new int[] {
             2147483647,
             0,
@@ -468,7 +469,8 @@ namespace MobiusEditor.Dialogs
             // 
             this.event1ValueComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.event1ValueComboBox.FormattingEnabled = true;
-            this.event1ValueComboBox.Location = new System.Drawing.Point(3, 27);
+            this.event1ValueComboBox.Location = new System.Drawing.Point(2, 27);
+            this.event1ValueComboBox.Margin = new System.Windows.Forms.Padding(2);
             this.event1ValueComboBox.Name = "event1ValueComboBox";
             this.event1ValueComboBox.Size = new System.Drawing.Size(166, 21);
             this.event1ValueComboBox.TabIndex = 1;
@@ -479,15 +481,16 @@ namespace MobiusEditor.Dialogs
             this.event2Flp.Controls.Add(this.event2Nud);
             this.event2Flp.Controls.Add(this.event2ValueComboBox);
             this.event2Flp.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.event2Flp.Location = new System.Drawing.Point(219, 135);
+            this.event2Flp.Location = new System.Drawing.Point(216, 125);
+            this.event2Flp.Margin = new System.Windows.Forms.Padding(0);
             this.event2Flp.Name = "event2Flp";
-            this.event2Flp.Size = new System.Drawing.Size(172, 51);
-            this.event2Flp.TabIndex = 16;
+            this.event2Flp.Size = new System.Drawing.Size(170, 50);
+            this.event2Flp.TabIndex = 14;
             // 
             // event2Nud
             // 
             this.event2Nud.Location = new System.Drawing.Point(2, 2);
-            this.event2Nud.Margin = new System.Windows.Forms.Padding(2);
+            this.event2Nud.Margin = new System.Windows.Forms.Padding(2, 2, 2, 3);
             this.event2Nud.Maximum = new decimal(new int[] {
             2147483647,
             0,
@@ -506,7 +509,8 @@ namespace MobiusEditor.Dialogs
             // 
             this.event2ValueComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.event2ValueComboBox.FormattingEnabled = true;
-            this.event2ValueComboBox.Location = new System.Drawing.Point(3, 27);
+            this.event2ValueComboBox.Location = new System.Drawing.Point(2, 27);
+            this.event2ValueComboBox.Margin = new System.Windows.Forms.Padding(2);
             this.event2ValueComboBox.Name = "event2ValueComboBox";
             this.event2ValueComboBox.Size = new System.Drawing.Size(166, 21);
             this.event2ValueComboBox.TabIndex = 1;
@@ -517,15 +521,16 @@ namespace MobiusEditor.Dialogs
             this.action1Flp.Controls.Add(this.action1Nud);
             this.action1Flp.Controls.Add(this.action1ValueComboBox);
             this.action1Flp.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.action1Flp.Location = new System.Drawing.Point(219, 192);
+            this.action1Flp.Location = new System.Drawing.Point(216, 175);
+            this.action1Flp.Margin = new System.Windows.Forms.Padding(0);
             this.action1Flp.Name = "action1Flp";
-            this.action1Flp.Size = new System.Drawing.Size(172, 51);
-            this.action1Flp.TabIndex = 18;
+            this.action1Flp.Size = new System.Drawing.Size(170, 50);
+            this.action1Flp.TabIndex = 17;
             // 
             // action1Nud
             // 
             this.action1Nud.Location = new System.Drawing.Point(2, 2);
-            this.action1Nud.Margin = new System.Windows.Forms.Padding(2);
+            this.action1Nud.Margin = new System.Windows.Forms.Padding(2, 2, 2, 3);
             this.action1Nud.Maximum = new decimal(new int[] {
             2147483647,
             0,
@@ -544,7 +549,8 @@ namespace MobiusEditor.Dialogs
             // 
             this.action1ValueComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.action1ValueComboBox.FormattingEnabled = true;
-            this.action1ValueComboBox.Location = new System.Drawing.Point(3, 27);
+            this.action1ValueComboBox.Location = new System.Drawing.Point(2, 27);
+            this.action1ValueComboBox.Margin = new System.Windows.Forms.Padding(2);
             this.action1ValueComboBox.Name = "action1ValueComboBox";
             this.action1ValueComboBox.Size = new System.Drawing.Size(166, 21);
             this.action1ValueComboBox.TabIndex = 1;
@@ -555,15 +561,16 @@ namespace MobiusEditor.Dialogs
             this.action2Flp.Controls.Add(this.action2Nud);
             this.action2Flp.Controls.Add(this.action2ValueComboBox);
             this.action2Flp.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.action2Flp.Location = new System.Drawing.Point(219, 249);
+            this.action2Flp.Location = new System.Drawing.Point(216, 225);
+            this.action2Flp.Margin = new System.Windows.Forms.Padding(0);
             this.action2Flp.Name = "action2Flp";
-            this.action2Flp.Size = new System.Drawing.Size(172, 51);
+            this.action2Flp.Size = new System.Drawing.Size(170, 50);
             this.action2Flp.TabIndex = 20;
             // 
             // action2Nud
             // 
             this.action2Nud.Location = new System.Drawing.Point(2, 2);
-            this.action2Nud.Margin = new System.Windows.Forms.Padding(2);
+            this.action2Nud.Margin = new System.Windows.Forms.Padding(2, 2, 2, 3);
             this.action2Nud.Maximum = new decimal(new int[] {
             2147483647,
             0,
@@ -582,7 +589,8 @@ namespace MobiusEditor.Dialogs
             // 
             this.action2ValueComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.action2ValueComboBox.FormattingEnabled = true;
-            this.action2ValueComboBox.Location = new System.Drawing.Point(3, 27);
+            this.action2ValueComboBox.Location = new System.Drawing.Point(2, 27);
+            this.action2ValueComboBox.Margin = new System.Windows.Forms.Padding(2);
             this.action2ValueComboBox.Name = "action2ValueComboBox";
             this.action2ValueComboBox.Size = new System.Drawing.Size(166, 21);
             this.action2ValueComboBox.TabIndex = 1;

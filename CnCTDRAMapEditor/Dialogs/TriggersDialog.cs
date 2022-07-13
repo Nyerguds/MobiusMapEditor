@@ -553,6 +553,8 @@ namespace MobiusEditor.Dialogs
                                 actionNud.Visible = true;
                                 actionNud.Minimum = 1;
                                 actionNud.Maximum = 209;
+                                if (triggerAction.Data > 209 || triggerAction.Data < 1)
+                                    triggerAction.Data = 1;
                                 actionNud.DataBindings.Add("Value", triggerAction, "Data");
                                 break;
                             case RedAlert.ActionTypes.TACTION_ADD_TIMER:
