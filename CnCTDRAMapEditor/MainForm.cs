@@ -1043,6 +1043,11 @@ namespace MobiusEditor
 
         private void clampActiveToolForm()
         {
+            if (!Properties.Settings.Default.clampActiveToolForm)
+            {
+                return;
+            }
+
             if (activeToolForm == null)
             {
                 return;
