@@ -54,13 +54,13 @@ namespace MobiusEditor.Utility
         {
             string name = string.Empty;
             // generate names in a way that will never run out before some maximum is reached.
-            for (int i = 'A'; i <= 'Z'; ++i)
+            for (int i = 'a'; i <= 'z'; ++i)
             {
-                for (int j = 'A'; j <= 'Z'; ++j)
+                for (int j = 'a'; j <= 'z'; ++j)
                 {
-                    for (int k = 'A'; k <= 'Z'; ++k)
+                    for (int k = 'a'; k <= 'z'; ++k)
                     {
-                        for (int l = 'A'; l <= 'Z'; ++l)
+                        for (int l = 'a'; l <= 'z'; ++l)
                         {
                             name = String.Concat((char)i, (char)j, (char)k, (char)l);
                             if (!currentList.Any(n => n.Equals(name, StringComparison.InvariantCultureIgnoreCase)))
