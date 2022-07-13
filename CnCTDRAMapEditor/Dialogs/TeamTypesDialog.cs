@@ -161,13 +161,14 @@ namespace MobiusEditor.Dialogs
             {
                 var hitTest = teamTypesListView.HitTest(e.Location);
 
-                bool itemExists = (hitTest.Item == null) && (teamTypesListView.Items.Count < maxTeams);
-                bool canRemove = hitTest.Item != null;
-                addTeamTypeToolStripMenuItem.Visible = itemExists;
-                renameTeamTypeToolStripMenuItem.Visible = itemExists;
-                removeTeamTypeToolStripMenuItem.Visible = canRemove;
+                bool canAdd = (hitTest.Item == null) && (teamTypesListView.Items.Count < maxTeams);
+                bool itemExists = hitTest.Item != null;
 
-                if (itemExists || canRemove)
+                addTeamTypeToolStripMenuItem.Visible = canAdd;
+                renameTeamTypeToolStripMenuItem.Visible = itemExists;
+                removeTeamTypeToolStripMenuItem.Visible = itemExists;
+
+                if (canAdd || itemExists)
                 {
                     teamTypesContextMenuStrip.Show(Cursor.Position);
                 }
