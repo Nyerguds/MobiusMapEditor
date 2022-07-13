@@ -40,7 +40,7 @@ v1.4.0.0:
 
 v1.4.0.1:
 
-* Added "All supported types (*.ini;*.bin;*.mpr)" as default filter when opening files.
+* Added "All supported types (\*.ini;\*.bin;\*.mpr)" as default filter when opening files.
 * Added Drag & Drop support for opening map files.
 * Added command line file argument support, which allows setting the editor as application for opening ini/mpr files.
 * House Edge reading now corrects values with case differences so they show up in the dropdown.
