@@ -102,6 +102,7 @@ namespace MobiusEditor.Tools
 
             using (var g = Graphics.FromImage(mapPanel.MapImage))
             {
+                // Actually a scaling factor
                 if (Properties.Settings.Default.Quality > 1)
                 {
                     g.InterpolationMode = InterpolationMode.NearestNeighbor;

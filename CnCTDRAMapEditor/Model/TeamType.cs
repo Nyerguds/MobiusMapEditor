@@ -178,6 +178,8 @@ namespace MobiusEditor.Model
 
         public bool EqualsOther(TeamType other)
         {
+            if (ReferenceEquals(this, other))
+                return true;
             if (this.Name == other.Name
                 && this.House == other.House
                 && this.IsRoundAbout == other.IsRoundAbout

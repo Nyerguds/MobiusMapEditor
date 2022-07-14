@@ -33,7 +33,7 @@ namespace MobiusEditor.RedAlert
         [DefaultValue(99)]
         public int TechLevel { get; set; }
 
-        [DefaultValue(5)]
+        [DefaultValue(0)]
         public int IQ { get; set; }
 
         [DefaultValue(false)]

@@ -66,6 +66,27 @@ v1.4.0.1:
 * Removing tiles will now obey the actual occupied cells of the selected tile, rather than just clearing the bounding box, making it more intuitive.
 * Creating an RA trigger with Action "Text Trigger" will no longer cause an error to be shown.
 * Trigger controls no longer jump around slightly when selecting different options.
+* Using the mouse wheel will now change the tiberium field size per 2, like a normal arrow click would.
+
+v1.4.0.2:
+
+* Fixed the bug that cleared all map templates on save in v1.4.0.1 (whoops).
+* Fixed the bug in the Teamtypes list that showed the wrong context menu options on right click.
+* Fixed the bug that the status bar did not show the map placement shortcuts hints on initial load.
+* The editor no longer exits if it cannot connect to Steam. Instead, workshop publishing will simply be disabled if the Steamworks interface can't be initialised.
+* The texture manager will now properly dispose all loaded image objects when a different map is loaded.
+* Added \*.ini tot he list of possible extensions for opening RA maps, to support opening pre-Remaster missions.
+* Red Alert buildings now properly show their damaged state.
+* If a building has no direction to set and shows no dropdown for it, the "Direction" label is now also now removed.
+* Structure graphics are now correctly centered on their full building size.
+* Damaged state is now correctly shown at strength 128/256, and not below it.
+* Damaged states now work correctly on all buildings.
+* Using the mouse wheel will now change the strength of objects in increments of 4.
+* IQ of all Houses in Red Alert now defaults to 0.
+* Fixed gunboat facing and damage states logic.
+* Fixed bug causing bad refresh when previewing the placement of a single cell selected from a template with an empty top right corner cell.
+* The "clear1" tile is now explicitly shown in the tiles list.
+* Teamtype "Priority" value (recruit priority) is now capped at 15.
 
 ### Upgrading
 

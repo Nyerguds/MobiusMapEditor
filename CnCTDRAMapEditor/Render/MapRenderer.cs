@@ -129,7 +129,6 @@ namespace MobiusEditor.Render
                         }
                     }
                 }
-
                 renderLocations = allCells;
             }
 
@@ -140,7 +139,8 @@ namespace MobiusEditor.Render
                     map.Metrics.GetCell(topLeft, out int cell);
 
                     var template = map.Templates[topLeft];
-                    var name = template?.Type.Name ?? map.TemplateTypes.Where(t => t.Equals("clear1")).FirstOrDefault().Name;
+                    TemplateType ttype = template?.Type ?? map.TemplateTypes.Where(t => t.Flag == TemplateTypeFlag.Clear).FirstOrDefault();
+                    var name = ttype.Name;
                     var icon = template?.Icon ?? ((cell & 0x03) | ((cell >> 4) & 0x0C));
 
                     if (Globals.TheTilesetManager.GetTileData(map.Theater.Tilesets, name, icon, out Tile tile))
@@ -386,66 +386,48 @@ namespace MobiusEditor.Render
                 Alignment = StringAlignment.Center,
                 LineAlignment = StringAlignment.Center
             };
-                var icon = 0;
-                if (building.Type.HasTurret)
+            var icon = 0;
+            int maxIcon = 0;
+            int damageIcon = 0;
+            int collapseIcon = 0;
+            bool hasCollapseFrame = false;
+            // Only fetch if damaged. BuildingType.IsSingleFrame is an override for the RA mines. Everything else works with one simple logic.
+            if (building.Strength <= 128 && !building.Type.IsSingleFrame)
+            {
+                maxIcon = Globals.TheTilesetManager.GetTileDataLength(theater.Tilesets, building.Type.Tilename);
+                hasCollapseFrame = gameType == GameType.TiberianDawn && maxIcon % 2 == 1;
+                damageIcon = maxIcon / 2;
+                collapseIcon = hasCollapseFrame ? maxIcon - 1 : damageIcon;
+            }
+            if (building.Type.HasTurret)
+            {
+                icon = BodyShape[Facing32[building.Direction.ID]];
+                if (building.Strength <= 128)
                 {
-                    icon = BodyShape[Facing32[building.Direction.ID]];
-                    if (building.Strength < 128)
-                    {
-                        switch (gameType)
-                        {
-                            case GameType.TiberianDawn:
-                                icon += 64;
-                                break;
-                            case GameType.RedAlert:
-                                icon += building.Type.Equals("sam") ? 35 : 64;
-                                break;
-                        }
-                    }
+                    icon += damageIcon;
                 }
-                else
+            }
+            else
+            {
+                if (building.Strength <= 1)
                 {
-                    if (building.Strength <= 1)
-                    {
-                        icon = -1;
-                    }
-                    else if (building.Strength < 128)
-                    {
-                        icon = -2;
-                        if (building.Type.Equals("weap") || building.Type.Equals("weaf"))
-                        {
-                            icon = 1;
-                        }
-                        else if ((gameType == GameType.TiberianDawn) && building.Type.Equals("proc"))
-                        {
-                            icon = 30;
-                        }
-                        else if (building.Type.Equals("eye"))
-                        {
-                            icon = 16;
-                        }
-                        else if (building.Type.Equals("silo"))
-                        {
-                            icon = 5;
-                        }
-                        else if (building.Type.Equals("fix"))
-                        {
-                            icon = 7;
-                        }
-                        else if (building.Type.Equals("v19"))
-                        {
-                            icon = 14;
-                        }
-                    }
+                    icon = collapseIcon;
                 }
+                else if (building.Strength <= 128)
+                {
+                    icon = damageIcon;
+                }
+            }
 
             if (Globals.TheTilesetManager.GetTeamColorTileData(theater.Tilesets, building.Type.Tilename, icon, Globals.TheTeamColorManager[building.House.BuildingTeamColor], out Tile tile))
             {
                 var location = new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height);
                 var size = new Size(tile.Image.Width / tileScale, tile.Image.Height / tileScale);
                 var maxSize = new Size(building.Type.Size.Width * tileSize.Width, building.Type.Size.Height * tileSize.Height);
+                // Graphics are too large. Scale them down using the largest dimension.
                 if ((size.Width >= size.Height) && (size.Width > maxSize.Width))
                 {
+
                     size.Height = size.Height * maxSize.Width / size.Width;
                     size.Width = maxSize.Width;
                 }
@@ -454,25 +436,22 @@ namespace MobiusEditor.Render
                     size.Width = size.Width * maxSize.Height / size.Height;
                     size.Height = maxSize.Height;
                 }
-                var buildingBounds = new Rectangle(location, size);
+                // Center graphics inside bounding box
+                int locX = (maxSize.Width - size.Width) / 2 + location.X;
+                int locY = (maxSize.Height - size.Height) / 2 + location.Y;
+                var paintBounds = new Rectangle(locX, locY, size.Width, size.Height);
+                var buildingBounds = new Rectangle(location, maxSize);
 
                 Tile factoryOverlayTile = null;
-                if (building.Type.FactoryOverlay != null)
+                // Draw no factory overlay over the collapse frame.
+                if (building.Type.FactoryOverlay != null && (building.Strength > 1 || !hasCollapseFrame))
                 {
                     int overlayIcon = 0;
-                    if (building.Strength < 128)
+                    if (building.Strength <= 128)
                     {
-                        switch (gameType)
-                        {
-                            case GameType.TiberianDawn:
-                                overlayIcon = 10;
-                                break;
-                            case GameType.RedAlert:
-                                overlayIcon = 4;
-                                break;
-                        }
+                        int maxOverlayIcon = Globals.TheTilesetManager.GetTileDataLength(theater.Tilesets, building.Type.FactoryOverlay);
+                        overlayIcon = maxOverlayIcon / 2;
                     }
-
                     Globals.TheTilesetManager.GetTeamColorTileData(theater.Tilesets, building.Type.FactoryOverlay, overlayIcon, Globals.TheTeamColorManager[building.House.BuildingTeamColor], out factoryOverlayTile);
                 }
 
@@ -492,17 +471,11 @@ namespace MobiusEditor.Render
                         );
                         imageAttributes.SetColorMatrix(colorMatrix);
                     }
-
+                    g.DrawImage(tile.Image, paintBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes);
                     if (factoryOverlayTile != null)
                     {
-                        g.DrawImage(tile.Image, buildingBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes);
-                        g.DrawImage(factoryOverlayTile.Image, buildingBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes);
+                        g.DrawImage(factoryOverlayTile.Image, paintBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes);
                     }
-                    else
-                    {
-                        g.DrawImage(tile.Image, buildingBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes);
-                    }
-
                     if (building.Type.IsFake)
                     {
                         var text = Globals.TheGameTextManager["TEXT_UI_FAKE"];
@@ -617,21 +590,7 @@ namespace MobiusEditor.Render
             int icon = 0;
             if (gameType == GameType.TiberianDawn)
             {
-                if (unit.Type == TiberianDawn.UnitTypes.GunBoat)
-                {
-                    switch (unit.Direction.Facing)
-                    {
-                        case FacingType.NorthEast:
-                        case FacingType.East:
-                        case FacingType.SouthEast:
-                            icon = 96;
-                            break;
-                        default:
-                            icon = 0;
-                            break;
-                    }
-                }
-                else if ((unit.Type == TiberianDawn.UnitTypes.Tric) ||
+                if ((unit.Type == TiberianDawn.UnitTypes.Tric) ||
                          (unit.Type == TiberianDawn.UnitTypes.Trex) ||
                          (unit.Type == TiberianDawn.UnitTypes.Rapt) ||
                          (unit.Type == TiberianDawn.UnitTypes.Steg))
@@ -647,6 +606,14 @@ namespace MobiusEditor.Render
                 else
                 {
                     icon = BodyShape[Facing32[unit.Direction.ID]];
+                    if (unit.Type == TiberianDawn.UnitTypes.GunBoat)
+                    {
+                        // East facing is not actually possible to set in missions. This is just the turret facing.
+                        if (unit.Strength <= 128)
+                            icon += 32;
+                        if (unit.Strength <= 64)
+                            icon += 32;
+                    }
                 }
             }
             else if (gameType == GameType.RedAlert)
@@ -727,25 +694,28 @@ namespace MobiusEditor.Render
                     {
                         turretIcon += 6;
                     }
-#if TODO
-                    else if (unit.Type == RedAlert.UnitTypes.Cruiser)
+                    if (unit.Type.IsVessel)
                     {
-                        turretName = "TURR";
-                        turretIcon = BodyShape[Facing32[unit.Direction.ID]];
-                    }
-                    else if (unit.Type == RedAlert.UnitTypes.Destroyer)
-                    {
-                        turretName = "SSAM";
-                        turretIcon = BodyShape[Facing32[unit.Direction.ID]];
-                    }
-                    else if (unit.Type == RedAlert.UnitTypes.PTBoat)
-                    {
-                        turretName = "MGUN";
-                        turretIcon = BodyShape[Facing32[unit.Direction.ID]];
-                    }
+                        // Might implement this properly later.
+                        turretName = null;
+#if false && TODO
+                        if (unit.Type == RedAlert.UnitTypes.Cruiser)
+                        {
+                            turretName = "TURR";
+                        }
+                        else if (unit.Type == RedAlert.UnitTypes.Destroyer)
+                        {
+                            turretName = "SSAM";
+                        }
+                        else if (unit.Type == RedAlert.UnitTypes.PTBoat)
+                        {
+                            turretName = "MGUN";
+                        }
 #endif
-
-                    Globals.TheTilesetManager.GetTeamColorTileData(theater.Tilesets, turretName, turretIcon, Globals.TheTeamColorManager[teamColor], out turretTile);
+                        turretIcon = BodyShape[Facing32[unit.Direction.ID]];
+                    }
+                    if(turretName != null)
+                        Globals.TheTilesetManager.GetTeamColorTileData(theater.Tilesets, turretName, turretIcon, Globals.TheTeamColorManager[teamColor], out turretTile);
                 }
 
                 var tint = unit.Tint;
@@ -765,9 +735,7 @@ namespace MobiusEditor.Render
                         );
                         imageAttributes.SetColorMatrix(colorMatrix);
                     }
-
                     g.DrawImage(tile.Image, renderBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes);
-
                     if (radarTile != null)
                     {
                         Point turretAdjust = Point.Empty;
@@ -779,13 +747,11 @@ namespace MobiusEditor.Render
                         {
                             turretAdjust.Y = -5;
                         }
-
                         var radarBounds = renderBounds;
                         radarBounds.Offset(
                             turretAdjust.X * tileSize.Width / Globals.PixelWidth,
                             turretAdjust.Y * tileSize.Height / Globals.PixelHeight
                         );
-
                         g.DrawImage(radarTile.Image, radarBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes);
                     }
                     if (turretTile != null)

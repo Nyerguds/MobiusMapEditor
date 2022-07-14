@@ -51,7 +51,9 @@ namespace MobiusEditor.Model
 
         public Image Thumbnail { get; set; }
 
-        public BuildingType(sbyte id, string name, string textId, bool[,] occupyMask, bool hasBib, string ownerHouse, TheaterType[] theaters, bool isFake, bool hasTurret, string factoryOverlay)
+        public bool IsSingleFrame { get; set; }
+
+        public BuildingType(sbyte id, string name, string textId, bool[,] occupyMask, bool hasBib, string ownerHouse, TheaterType[] theaters, bool isFake, bool hasTurret, bool isSingleFrame, string factoryOverlay)
         {
             ID = id;
             Name = isFake ? (name.Substring(0, name.Length - 1) + "f") : name;
@@ -65,6 +67,7 @@ namespace MobiusEditor.Model
             IsFake = isFake;
             HasTurret = hasTurret;
             FactoryOverlay = factoryOverlay;
+            IsSingleFrame = isSingleFrame;
 
             if (HasBib)
             {
@@ -89,27 +92,31 @@ namespace MobiusEditor.Model
         }
 
         public BuildingType(sbyte id, string name, string textId, bool[,] occupyMask, bool hasBib, string ownerHouse, bool isFake, bool hasTurret, string factoryOverlay)
-            : this(id, name, textId, occupyMask, hasBib, ownerHouse, null, isFake, hasTurret, factoryOverlay)
+            : this(id, name, textId, occupyMask, hasBib, ownerHouse, null, isFake, hasTurret, false, factoryOverlay)
         {
         }
 
         public BuildingType(sbyte id, string name, string textId, bool[,] occupyMask, bool hasBib, string ownerHouse)
-            : this(id, name, textId, occupyMask, hasBib, ownerHouse, null, false, false, null)
+            : this(id, name, textId, occupyMask, hasBib, ownerHouse, null, false, false, false, null)
+        {
+        }
+        public BuildingType(sbyte id, string name, string textId, bool[,] occupyMask, bool hasBib, string ownerHouse, bool isFake, bool hasTurret, bool isSingleFrame)
+            : this(id, name, textId, occupyMask, hasBib, ownerHouse, null, isFake, hasTurret, isSingleFrame, null)
         {
         }
 
         public BuildingType(sbyte id, string name, string textId, bool[,] occupyMask, bool hasBib, string ownerHouse, TheaterType[] theaters)
-            : this(id, name, textId, occupyMask, hasBib, ownerHouse, theaters, false, false, null)
+            : this(id, name, textId, occupyMask, hasBib, ownerHouse, theaters, false, false, false, null)
         {
         }
 
         public BuildingType(sbyte id, string name, string textId, bool[,] occupyMask, bool hasBib, string ownerHouse, bool isFake)
-            : this(id, name, textId, occupyMask, hasBib, ownerHouse, null, isFake, false, null)
+            : this(id, name, textId, occupyMask, hasBib, ownerHouse, null, isFake, false, false, null)
         {
         }
 
         public BuildingType(sbyte id, string name, string textId, bool[,] occupyMask, bool hasBib, string ownerHouse, bool isFake, bool hasTurret)
-            : this(id, name, textId, occupyMask, hasBib, ownerHouse, null, isFake, hasTurret, null)
+            : this(id, name, textId, occupyMask, hasBib, ownerHouse, null, isFake, hasTurret, false, null)
         {
         }
 

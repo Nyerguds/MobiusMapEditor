@@ -625,27 +625,27 @@ namespace MobiusEditor.Dialogs
             this.renameTriggerToolStripMenuItem,
             this.removeTriggerToolStripMenuItem});
             this.triggersContextMenuStrip.Name = "teamTypesContextMenuStrip";
-            this.triggersContextMenuStrip.Size = new System.Drawing.Size(159, 70);
+            this.triggersContextMenuStrip.Size = new System.Drawing.Size(185, 70);
             // 
             // addTriggerToolStripMenuItem
             // 
             this.addTriggerToolStripMenuItem.Name = "addTriggerToolStripMenuItem";
-            this.addTriggerToolStripMenuItem.Size = new System.Drawing.Size(158, 22);
-            this.addTriggerToolStripMenuItem.Text = "&Add Trigger";
+            this.addTriggerToolStripMenuItem.Size = new System.Drawing.Size(184, 22);
+            this.addTriggerToolStripMenuItem.Text = "&Add Trigger (Ctrl+A)";
             this.addTriggerToolStripMenuItem.Click += new System.EventHandler(this.addTriggerToolStripMenuItem_Click);
             // 
             // renameTriggerToolStripMenuItem
             // 
             this.renameTriggerToolStripMenuItem.Name = "renameTriggerToolStripMenuItem";
-            this.renameTriggerToolStripMenuItem.Size = new System.Drawing.Size(158, 22);
-            this.renameTriggerToolStripMenuItem.Text = "Re&name Trigger";
+            this.renameTriggerToolStripMenuItem.Size = new System.Drawing.Size(184, 22);
+            this.renameTriggerToolStripMenuItem.Text = "Re&name Trigger (F2)";
             this.renameTriggerToolStripMenuItem.Click += new System.EventHandler(this.renameTriggerToolStripMenuItem_Click);
             // 
             // removeTriggerToolStripMenuItem
             // 
             this.removeTriggerToolStripMenuItem.Name = "removeTriggerToolStripMenuItem";
-            this.removeTriggerToolStripMenuItem.Size = new System.Drawing.Size(158, 22);
-            this.removeTriggerToolStripMenuItem.Text = "&Remove Trigger";
+            this.removeTriggerToolStripMenuItem.Size = new System.Drawing.Size(184, 22);
+            this.removeTriggerToolStripMenuItem.Text = "&Remove Trigger (Del)";
             this.removeTriggerToolStripMenuItem.Click += new System.EventHandler(this.removeTriggerToolStripMenuItem_Click);
             // 
             // TriggersDialog
@@ -656,6 +656,7 @@ namespace MobiusEditor.Dialogs
             this.ClientSize = new System.Drawing.Size(562, 499);
             this.ControlBox = false;
             this.Controls.Add(this.tableLayoutPanel1);
+            this.KeyPreview = true;
             this.Margin = new System.Windows.Forms.Padding(2);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
@@ -665,6 +666,7 @@ namespace MobiusEditor.Dialogs
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Triggers";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.TriggersDialog_FormClosing);
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.TriggersDialog_KeyDown);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
             this.flowLayoutPanel2.ResumeLayout(false);

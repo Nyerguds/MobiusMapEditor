@@ -1494,7 +1494,7 @@ namespace MobiusEditor.RedAlert
                         for (var x = 0; x < Map.Metrics.Width; ++x)
                         {
                             var template = Map.Templates[x, y];
-                            if (template != null && (template.Type.Flag | TemplateTypeFlag.Clear) == 0)
+                            if (template != null && (template.Type.Flag & TemplateTypeFlag.Clear) == 0)
                             {
                                 writer.Write(template.Type.ID);
                             }
@@ -1510,7 +1510,7 @@ namespace MobiusEditor.RedAlert
                         for (var x = 0; x < Map.Metrics.Width; ++x)
                         {
                             var template = Map.Templates[x, y];
-                            if (template != null && (template.Type.Flag | TemplateTypeFlag.Clear) == 0)
+                            if (template != null && (template.Type.Flag & TemplateTypeFlag.Clear) == 0)
                             {
                                 writer.Write((byte)template.Icon);
                             }

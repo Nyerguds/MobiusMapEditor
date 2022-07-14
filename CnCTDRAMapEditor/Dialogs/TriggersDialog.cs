@@ -163,25 +163,20 @@ namespace MobiusEditor.Dialogs
             if (e.Button == MouseButtons.Right)
             {
                 var hitTest = triggersListView.HitTest(e.Location);
-
-                bool canAdd = (hitTest.Item == null) && (triggersListView.Items.Count < maxTriggers);
                 bool itemExists = hitTest.Item != null;
-                addTriggerToolStripMenuItem.Visible = canAdd;
+                addTriggerToolStripMenuItem.Visible = true;
+                addTriggerToolStripMenuItem.Enabled = triggersListView.Items.Count < maxTriggers;
                 renameTriggerToolStripMenuItem.Visible = itemExists;
                 removeTriggerToolStripMenuItem.Visible = itemExists;
-
-                if (canAdd || itemExists)
-                {
-                    triggersContextMenuStrip.Show(Cursor.Position);
-                }
+                triggersContextMenuStrip.Show(Cursor.Position);
             }
         }
 
         private void triggersListView_KeyDown(object sender, KeyEventArgs e)
         {
-            ListViewItem selected = SelectedItem;
             if (e.KeyData == Keys.F2)
             {
+                ListViewItem selected = SelectedItem;
                 if (selected != null)
                     selected.BeginEdit();
             }
@@ -190,6 +185,15 @@ namespace MobiusEditor.Dialogs
                 RemoveTrigger();
             }
         }
+
+        private void TriggersDialog_KeyDown(Object sender, KeyEventArgs e)
+        {
+            if (e.KeyData == (Keys.A | Keys.Control))
+            {
+                AddTrigger();
+            }
+        }
+
         private void btnAdd_Click(object sender, EventArgs e)
         {
             AddTrigger();
@@ -245,6 +249,8 @@ namespace MobiusEditor.Dialogs
 
         private void AddTrigger()
         {
+            if (triggersListView.Items.Count >= maxTriggers)
+                return;
             string name = INIHelpers.MakeNew4CharName(triggers.Select(t => t.Name), "????");
             var trigger = new Trigger { Name = name, House = plugin.Map.HouseTypes.First().Name };
             var item = new ListViewItem(trigger.Name)

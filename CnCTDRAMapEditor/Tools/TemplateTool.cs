@@ -149,6 +149,7 @@ namespace MobiusEditor.Tools
                     ((t.Flag & TemplateTypeFlag.Clear) == TemplateTypeFlag.None))
                 .GroupBy(t => templateCategory(t)).OrderBy(g => g.Key);
             var templateTypeImages = templateTypes.SelectMany(g => g).Select(t => t.Thumbnail);
+            var clear = plugin.Map.TemplateTypes.Where(t => (t.Flag & TemplateTypeFlag.Clear) == TemplateTypeFlag.Clear).FirstOrDefault();
 
             Screen screen = Screen.FromHandle(mapPanel.Handle) ?? Screen.PrimaryScreen;
             int maxSize = Properties.Settings.Default.MaxMapTileTextureSize;
@@ -162,6 +163,7 @@ namespace MobiusEditor.Tools
             var maxHeight = Math.Min(templateTypeImages.Max(t => t.Height), maxSize);
 
             var imageList = new ImageList();
+            imageList.Images.Add(clear.Thumbnail);
             imageList.Images.AddRange(templateTypeImages.ToArray());
             imageList.ImageSize = new Size(maxWidth, maxHeight);
             imageList.ColorDepth = ColorDepth.Depth24Bit;
@@ -175,13 +177,22 @@ namespace MobiusEditor.Tools
                 this.templateTypeListView.Items.Clear();
 
             var imageIndex = 0;
+            var group = new ListViewGroup(clear.DisplayName);
+            this.templateTypeListView.Groups.Add(group);
+            var item = new ListViewItem(clear.DisplayName, imageIndex++)
+            {
+                Group = group,
+                Tag = clear
+            };
+            this.templateTypeListView.Items.Add(item);
+
             foreach (var templateTypeGroup in templateTypes)
             {
-                var group = new ListViewGroup(templateTypeGroup.Key);
+                group = new ListViewGroup(templateTypeGroup.Key);
                 this.templateTypeListView.Groups.Add(group);
                 foreach (var templateType in templateTypeGroup)
                 {
-                    var item = new ListViewItem(templateType.DisplayName, imageIndex++)
+                    item = new ListViewItem(templateType.DisplayName, imageIndex++)
                     {
                         Group = group,
                         Tag = templateType
@@ -305,11 +316,21 @@ namespace MobiusEditor.Tools
         {
             if (e.KeyCode == Keys.ShiftKey)
             {
-                EnterPlacementMode();
+                if (boundsMode)
+                    ExitAllModes();
+                else
+                    EnterPlacementMode();
             }
             else if (e.KeyCode == Keys.ControlKey)
             {
-                EnterBoundsMode();
+                if (placementMode)
+                    ExitAllModes();
+                else
+                    EnterBoundsMode();
+            }
+            else
+            {
+                ExitAllModes();
             }
         }
 
@@ -485,7 +506,6 @@ namespace MobiusEditor.Tools
                         }
                         break;
                 }
-
                 switch (dragEdge)
                 {
                     case 1:
@@ -497,28 +517,34 @@ namespace MobiusEditor.Tools
                         }
                         break;
                 }
-
-                mapPanel.Invalidate();
+                mapPanel.Invalidate(map);
             }
             else if (placementMode)
             {
                 HandlePlace(Control.MouseButtons);
                 if (SelectedTemplateType != null)
                 {
-                    // clear preview
                     foreach (var location in new Point[] { e.OldCell, e.NewCell })
                     {
-                        for (var y = 0; y < SelectedTemplateType.IconHeight; ++y)
+                        if (SelectedIcon.HasValue)
                         {
-                            for (var x = 0; x < SelectedTemplateType.IconWidth; ++x)
+                            mapPanel.Invalidate(map, new Point(location.X, location.Y));
+                        }
+                        else
+                        {
+                            for (var y = 0; y < SelectedTemplateType.IconHeight; ++y)
                             {
-                                if (!SelectedTemplateType.IconMask[x, y])
+                                for (var x = 0; x < SelectedTemplateType.IconWidth; ++x)
                                 {
-                                    continue;
+                                    if (!SelectedTemplateType.IconMask[x, y])
+                                    {
+                                        continue;
+                                    }
+                                    mapPanel.Invalidate(map, new Point(location.X + x, location.Y + y));
                                 }
-                                mapPanel.Invalidate(map, new Point(location.X + x, location.Y + y));
                             }
                         }
+
                     }
                 }
             }
@@ -564,7 +590,6 @@ namespace MobiusEditor.Tools
                         {
                             undoTemplates[cell] = map.Templates[location];
                         }
-
                         var icon = (SelectedIcon.Value.Y * SelectedTemplateType.IconWidth) + SelectedIcon.Value.X;
                         var template = new Template { Type = SelectedTemplateType, Icon = icon };
                         map.Templates[cell] = template;
@@ -898,7 +923,6 @@ namespace MobiusEditor.Tools
                 }
                 e.MapPanel.Invalidate(e.Map, undoTemplates2.Keys);
             }
-
             var redoTemplates2 = new Dictionary<int, Template>(redoTemplates);
             void redoAction(UndoRedoEventArgs e)
             {
@@ -908,10 +932,8 @@ namespace MobiusEditor.Tools
                 }
                 e.MapPanel.Invalidate(e.Map, redoTemplates2.Keys);
             }
-
             undoTemplates.Clear();
             redoTemplates.Clear();
-
             url.Track(undoAction, redoAction);
         }
 
@@ -1024,6 +1046,7 @@ namespace MobiusEditor.Tools
             templateTypeNavigationWidget?.Activate();
             url.Undone += Url_Undone;
             url.Redone += Url_Redone;
+            UpdateStatus();
         }
 
         public override void Deactivate()

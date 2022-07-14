@@ -15,6 +15,7 @@
 using Newtonsoft.Json.Linq;
 using Pfim;
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -47,8 +48,34 @@ namespace MobiusEditor.Utility
 
         public void Reset()
         {
+            Bitmap[] cachedImages = cachedTextures.Values.ToArray();
             cachedTextures.Clear();
+            // Bitmaps need to be specifically disposed.
+            for (int i = 0; i < cachedImages.Length; ++i)
+            {
+                try
+                {
+                    cachedImages[i].Dispose();
+                }
+                catch
+                {
+                    // Ignore.
+                }
+            }
+            (Bitmap, Rectangle)[] cachedTeamImages = teamColorTextures.Values.ToArray();
             teamColorTextures.Clear();
+            for (int i = 0; i < cachedTeamImages.Length; ++i)
+            {
+                try
+                {
+                    (Bitmap bitmap, Rectangle opaqueBounds) = cachedTeamImages[i];
+                    bitmap.Dispose();
+                }
+                catch
+                {
+                    // Ignore.
+                }
+            }
         }
 
         public (Bitmap, Rectangle) GetTexture(string filename, TeamColor teamColor)
@@ -277,7 +304,6 @@ namespace MobiusEditor.Utility
             }
 
             result.bitmap = new Bitmap(result.bitmap);
-            result.opaqueBounds = new Rectangle(0, 0, result.bitmap.Width, result.bitmap.Height);
             if (teamColor != null)
             {
                 float frac(float x) => x - (int)x;
@@ -371,8 +397,6 @@ namespace MobiusEditor.Utility
             {
                 result.opaqueBounds = CalculateOpaqueBounds(result.bitmap);
             }
-
-            teamColorTextures[(filename, teamColor)] = result;
             return result;
         }
 

@@ -126,9 +126,13 @@ namespace MobiusEditor.Dialogs
                 mercernaryCheckBox.DataBindings.Add("Checked", SelectedTeamType, "IsMercenary");
                 reinforcableCheckBox.DataBindings.Add("Checked", SelectedTeamType, "IsReinforcable");
                 prebuiltCheckBox.DataBindings.Add("Checked", SelectedTeamType, "IsPrebuilt");
+                SelectedTeamType.RecruitPriority = CheckBounds(SelectedTeamType.RecruitPriority, recruitPriorityNud);
                 recruitPriorityNud.DataBindings.Add("Value", SelectedTeamType, "RecruitPriority");
+                SelectedTeamType.InitNum = CheckBounds(SelectedTeamType.InitNum, initNumNud);
                 initNumNud.DataBindings.Add("Value", SelectedTeamType, "InitNum");
+                SelectedTeamType.MaxAllowed = CheckBounds(SelectedTeamType.MaxAllowed, maxAllowedNud);
                 maxAllowedNud.DataBindings.Add("Value", SelectedTeamType, "MaxAllowed");
+                SelectedTeamType.Fear = CheckBounds(SelectedTeamType.Fear, fearNud);
                 fearNud.DataBindings.Add("Value", SelectedTeamType, "Fear");
                 waypointComboBox.DataBindings.Add("SelectedIndex", SelectedTeamType, "Origin");
                 triggerComboBox.DataBindings.Add("SelectedItem", SelectedTeamType, "Trigger");
@@ -155,27 +159,31 @@ namespace MobiusEditor.Dialogs
             }
         }
 
+        private byte CheckBounds(byte value, NumericUpDown nud)
+        {
+            return (byte)Math.Min(Byte.MaxValue, Math.Max(0, CheckBounds((int)value, nud)));
+        }
+
+        private int CheckBounds(int value, NumericUpDown nud)
+        {
+            return Math.Min((int)nud.Maximum, Math.Max((int)nud.Minimum, value));
+        }
+
         private void teamTypesListView_MouseDown(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Right)
             {
                 var hitTest = teamTypesListView.HitTest(e.Location);
-
-                bool canAdd = (hitTest.Item == null) && (teamTypesListView.Items.Count < maxTeams);
                 bool itemExists = hitTest.Item != null;
-
-                addTeamTypeToolStripMenuItem.Visible = canAdd;
+                addTeamTypeToolStripMenuItem.Visible = true;
+                addTeamTypeToolStripMenuItem.Enabled = teamTypesListView.Items.Count < maxTeams;
                 renameTeamTypeToolStripMenuItem.Visible = itemExists;
                 removeTeamTypeToolStripMenuItem.Visible = itemExists;
-
-                if (canAdd || itemExists)
-                {
-                    teamTypesContextMenuStrip.Show(Cursor.Position);
-                }
+                teamTypesContextMenuStrip.Show(Cursor.Position);
             }
         }
 
-        private void teamTypesListView_KeyDown(object sender, KeyEventArgs e)
+        private void teamTypesListView_KeyDown(Object sender, KeyEventArgs e)
         {
             ListViewItem selected = SelectedItem;
             if (e.KeyData == Keys.F2)
@@ -186,6 +194,14 @@ namespace MobiusEditor.Dialogs
             else if (e.KeyData == Keys.Delete)
             {
                 RemoveTeamType();
+            }
+        }
+
+        private void TeamTypesDialog_KeyDown(Object sender, KeyEventArgs e)
+        {
+            if (e.KeyData == (Keys.A | Keys.Control))
+            {
+                AddTeamType();
             }
         }
 
@@ -242,6 +258,8 @@ namespace MobiusEditor.Dialogs
 
         private void AddTeamType()
         {
+            if (teamTypesListView.Items.Count >= maxTeams)
+                return;
             string name = INIHelpers.MakeNew4CharName(teamTypes.Select(t => t.Name), "????");
             var teamType = new TeamType { Name = name, House = plugin.Map.HouseTypes.First() };
             var item = new ListViewItem(teamType.Name)

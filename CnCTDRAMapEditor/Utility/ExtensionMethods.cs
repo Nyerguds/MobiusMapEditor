@@ -160,15 +160,15 @@ namespace MobiusEditor.Utility
 
                 int rgb;
                 // Fill the color array with the new sharpened color values.
-                for (int x = s; x < width - s; x++)
+                for (int x = s; x < width - s; ++x)
                 {
-                    for (int y = s; y < height - s; y++)
+                    for (int y = s; y < height - s; ++y)
                     {
                         double red = 0.0, green = 0.0, blue = 0.0;
 
-                        for (int filterX = 0; filterX < filterSize; filterX++)
+                        for (int filterX = 0; filterX < filterSize; ++filterX)
                         {
-                            for (int filterY = 0; filterY < filterSize; filterY++)
+                            for (int filterY = 0; filterY < filterSize; ++filterY)
                             {
                                 int imageX = (x - s + filterX + width) % width;
                                 int imageY = (y - s + filterY + height) % height;
@@ -192,9 +192,9 @@ namespace MobiusEditor.Utility
                 }
 
                 // Update the image with the sharpened pixels.
-                for (int x = s; x < width - s; x++)
+                for (int x = s; x < width - s; ++x)
                 {
-                    for (int y = s; y < height - s; y++)
+                    for (int y = s; y < height - s; ++y)
                     {
                         rgb = y * pbits.Stride + 3 * x;
 

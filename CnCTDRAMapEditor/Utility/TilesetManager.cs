@@ -112,5 +112,18 @@ namespace MobiusEditor.Utility
         {
             return GetTeamColorTileData(searchTilesets, name, shape, null, out tile);
         }
+
+        public int GetTileDataLength(IEnumerable<string> searchTilesets, string name)
+        {
+            foreach (var tileset in tilesets.Join(searchTilesets, x => x.Key, y => y, (x, y) => x.Value))
+            {
+                int frames = tileset.GetTileDataLength(name);
+                if (frames != -1)
+                {
+                    return frames;
+                }
+            }
+            return -1;
+        }
     }
 }

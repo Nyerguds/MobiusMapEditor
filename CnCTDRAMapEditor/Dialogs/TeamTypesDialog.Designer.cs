@@ -513,15 +513,10 @@ namespace MobiusEditor.Dialogs
             this.recruitPriorityNud.Location = new System.Drawing.Point(73, 174);
             this.recruitPriorityNud.Margin = new System.Windows.Forms.Padding(2);
             this.recruitPriorityNud.Maximum = new decimal(new int[] {
-            2147483647,
+            15,
             0,
             0,
             0});
-            this.recruitPriorityNud.Minimum = new decimal(new int[] {
-            -2147483648,
-            0,
-            0,
-            -2147483648});
             this.recruitPriorityNud.Name = "recruitPriorityNud";
             this.recruitPriorityNud.Size = new System.Drawing.Size(131, 20);
             this.recruitPriorityNud.TabIndex = 18;
@@ -673,27 +668,27 @@ namespace MobiusEditor.Dialogs
             this.renameTeamTypeToolStripMenuItem,
             this.removeTeamTypeToolStripMenuItem});
             this.teamTypesContextMenuStrip.Name = "teamTypesContextMenuStrip";
-            this.teamTypesContextMenuStrip.Size = new System.Drawing.Size(180, 70);
+            this.teamTypesContextMenuStrip.Size = new System.Drawing.Size(204, 70);
             // 
             // addTeamTypeToolStripMenuItem
             // 
             this.addTeamTypeToolStripMenuItem.Name = "addTeamTypeToolStripMenuItem";
-            this.addTeamTypeToolStripMenuItem.Size = new System.Drawing.Size(179, 22);
-            this.addTeamTypeToolStripMenuItem.Text = "&Add Team Type";
+            this.addTeamTypeToolStripMenuItem.Size = new System.Drawing.Size(203, 22);
+            this.addTeamTypeToolStripMenuItem.Text = "&Add Team Type (Ctrl+A)";
             this.addTeamTypeToolStripMenuItem.Click += new System.EventHandler(this.addTeamTypeToolStripMenuItem_Click);
             // 
             // renameTeamTypeToolStripMenuItem
             // 
             this.renameTeamTypeToolStripMenuItem.Name = "renameTeamTypeToolStripMenuItem";
-            this.renameTeamTypeToolStripMenuItem.Size = new System.Drawing.Size(179, 22);
-            this.renameTeamTypeToolStripMenuItem.Text = "Re&name Team type";
+            this.renameTeamTypeToolStripMenuItem.Size = new System.Drawing.Size(203, 22);
+            this.renameTeamTypeToolStripMenuItem.Text = "Re&name Team Type (F2)";
             this.renameTeamTypeToolStripMenuItem.Click += new System.EventHandler(this.renameTeamTypeToolStripMenuItem_Click);
             // 
             // removeTeamTypeToolStripMenuItem
             // 
             this.removeTeamTypeToolStripMenuItem.Name = "removeTeamTypeToolStripMenuItem";
-            this.removeTeamTypeToolStripMenuItem.Size = new System.Drawing.Size(179, 22);
-            this.removeTeamTypeToolStripMenuItem.Text = "&Remove Team Type";
+            this.removeTeamTypeToolStripMenuItem.Size = new System.Drawing.Size(203, 22);
+            this.removeTeamTypeToolStripMenuItem.Text = "&Remove Team Type (Del)";
             this.removeTeamTypeToolStripMenuItem.Click += new System.EventHandler(this.removeTeamTypeToolStripMenuItem_Click);
             // 
             // TeamTypesDialog
@@ -704,6 +699,7 @@ namespace MobiusEditor.Dialogs
             this.ClientSize = new System.Drawing.Size(875, 416);
             this.ControlBox = false;
             this.Controls.Add(this.tableLayoutPanel1);
+            this.KeyPreview = true;
             this.Margin = new System.Windows.Forms.Padding(2);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
@@ -713,6 +709,7 @@ namespace MobiusEditor.Dialogs
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Team Types";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.TeamTypesDialog_FormClosing);
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.TeamTypesDialog_KeyDown);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
             this.flowLayoutPanel2.ResumeLayout(false);

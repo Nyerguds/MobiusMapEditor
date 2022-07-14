@@ -49,7 +49,7 @@ namespace MobiusEditor.Controls
             this.missionLabel = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
             this.houseComboBox = new MobiusEditor.Controls.PropertiesComboBox();
-            this.strengthNud = new System.Windows.Forms.NumericUpDown();
+            this.strengthNud = new MobiusEditor.Controls.EnhNumericUpDown();
             this.directionComboBox = new MobiusEditor.Controls.PropertiesComboBox();
             this.missionComboBox = new MobiusEditor.Controls.PropertiesComboBox();
             this.triggerComboBox = new MobiusEditor.Controls.PropertiesComboBox();
@@ -191,6 +191,7 @@ namespace MobiusEditor.Controls
             0,
             0,
             0});
+            this.strengthNud.MouseWheelIncrement = 4;
             this.strengthNud.Name = "strengthNud";
             this.strengthNud.Size = new System.Drawing.Size(198, 22);
             this.strengthNud.TabIndex = 6;
@@ -332,7 +333,7 @@ namespace MobiusEditor.Controls
         private System.Windows.Forms.Label missionLabel;
         private System.Windows.Forms.Label label5;
         private MobiusEditor.Controls.PropertiesComboBox houseComboBox;
-        private System.Windows.Forms.NumericUpDown strengthNud;
+        private MobiusEditor.Controls.EnhNumericUpDown strengthNud;
         private MobiusEditor.Controls.PropertiesComboBox directionComboBox;
         private MobiusEditor.Controls.PropertiesComboBox missionComboBox;
         private MobiusEditor.Controls.PropertiesComboBox triggerComboBox;

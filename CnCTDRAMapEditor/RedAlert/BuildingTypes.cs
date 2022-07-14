@@ -36,7 +36,7 @@ namespace MobiusEditor.RedAlert
         public static readonly BuildingType Refinery = new BuildingType(12, "proc", "TEXT_STRUCTURE_RA_PROC", new bool[3, 3] { { false, true, false }, { true, true, true }, { true, false, false } }, true, "Greece");
         public static readonly BuildingType Storage = new BuildingType(13, "silo", "TEXT_STRUCTURE_RA_SILO", new bool[1, 1] { { true } }, false, "Greece");
         public static readonly BuildingType Helipad = new BuildingType(14, "hpad", "TEXT_STRUCTURE_RA_HPAD", new bool[2, 2] { { true, true }, { true, true } }, true, "Greece");
-        public static readonly BuildingType SAM = new BuildingType(15, "sam", "TEXT_STRUCTURE_RA_SAM", new bool[1, 2] { { true, true } }, false, "USSR");
+        public static readonly BuildingType SAM = new BuildingType(15, "sam", "TEXT_STRUCTURE_RA_SAM", new bool[1, 2] { { true, true } }, false, "USSR", false, true);
         public static readonly BuildingType AirStrip = new BuildingType(16, "afld", "TEXT_STRUCTURE_RA_AFLD", new bool[2, 3] { { true, true, true }, { true, true, true } }, false, "USSR");
         public static readonly BuildingType Power = new BuildingType(17, "powr", "TEXT_STRUCTURE_RA_POWR", new bool[2, 2] { { true, true }, { true, true } }, true, "Greece");
         public static readonly BuildingType AdvancedPower = new BuildingType(18, "apwr", "TEXT_STRUCTURE_RA_APWR", new bool[3, 3] { { false, false, false }, { true, true, true }, { true, true, true } }, true, "Greece");
@@ -58,8 +58,8 @@ namespace MobiusEditor.RedAlert
         public static readonly BuildingType FakeShipYard = new BuildingType(34, "syrd", "TEXT_STRUCTURE_RA_SYRF", new bool[3, 3] { { true, true, true }, { true, true, true }, { true, true, true } }, false, "Greece", true);
         public static readonly BuildingType FakeSubPen = new BuildingType(35, "spen", "TEXT_STRUCTURE_RA_SPEF", new bool[3, 3] { { true, true, true }, { true, true, true }, { true, true, true } }, false, "USSR", true);
         public static readonly BuildingType FakeCommand = new BuildingType(36, "dome", "TEXT_STRUCTURE_RA_DOMF", new bool[2, 2] { { true, true }, { true, true } }, true, "Greece", true);
-        public static readonly BuildingType AVMine = new BuildingType(43, "minv", "TEXT_STRUCTURE_RA_MINV", new bool[1, 1] { { true } }, false, "Greece");
-        public static readonly BuildingType APMine = new BuildingType(44, "minp", "TEXT_STRUCTURE_RA_MINP", new bool[1, 1] { { true } }, false, "Greece");
+        public static readonly BuildingType AVMine = new BuildingType(43, "minv", "TEXT_STRUCTURE_RA_MINV", new bool[1, 1] { { true } }, false, "Greece", false, false, true);
+        public static readonly BuildingType APMine = new BuildingType(44, "minp", "TEXT_STRUCTURE_RA_MINP", new bool[1, 1] { { true } }, false, "Greece", false, false, true);
         public static readonly BuildingType V01 = new BuildingType(45, "v01", "TEXT_STRUCTURE_TITLE_CIV1", new bool[2, 2] { { false, false }, { true, true } }, false, "Neutral", new TheaterType[] { TheaterTypes.Temperate, TheaterTypes.Snow });
         public static readonly BuildingType V02 = new BuildingType(46, "v02", "TEXT_STRUCTURE_TITLE_CIV2", new bool[2, 2] { { false, false }, { true, true } }, false, "Neutral", new TheaterType[] { TheaterTypes.Temperate, TheaterTypes.Snow });
         public static readonly BuildingType V03 = new BuildingType(47, "v03", "TEXT_STRUCTURE_TITLE_CIV3", new bool[2, 2] { { false, true }, { true, true } }, false, "Neutral", new TheaterType[] { TheaterTypes.Temperate, TheaterTypes.Snow });

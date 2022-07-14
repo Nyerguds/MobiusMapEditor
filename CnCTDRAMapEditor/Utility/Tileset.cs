@@ -91,14 +91,8 @@ namespace MobiusEditor.Utility
                 var shape = int.Parse(tileNode.SelectSingleNode("Key/Shape").InnerText);
                 var fpsNode = tileNode.SelectSingleNode("Value/AnimationData/FPS");
                 tileData.FPS = (fpsNode != null) ? int.Parse(fpsNode.InnerText) : 0;
-
                 var frameNodes = tileNode.SelectNodes("Value/Frames/Frame");
-#if false
-                tileData.Frames = new string[frameNodes.Count];
-#else
                 tileData.Frames = new string[Math.Min(1, frameNodes.Count)];
-#endif
-
                 for (var i = 0; i < tileData.Frames.Length; ++i)
                 {
                     string filename = null;
@@ -106,16 +100,13 @@ namespace MobiusEditor.Utility
                     {
                         filename = Path.Combine(rootPath, frameNodes[i].InnerText);
                     }
-
                     tileData.Frames[i] = filename;
                 }
-
                 if (!tiles.TryGetValue(name, out Dictionary<int, TileData> shapes))
                 {
                     shapes = new Dictionary<int, TileData>();
                     tiles[name] = shapes;
                 }
-
                 shapes[shape] = tileData;
             }
         }
@@ -124,7 +115,10 @@ namespace MobiusEditor.Utility
         {
             fps = 0;
             tiles = null;
-
+            if (name == null)
+            {
+                return false;
+            }
             if (!this.tiles.TryGetValue(name, out Dictionary<int, TileData> shapes))
             {
                 return false;
@@ -165,5 +159,19 @@ namespace MobiusEditor.Utility
 
             return true;
         }
+
+        public int GetTileDataLength(string name)
+        {
+            if (name == null)
+            {
+                return -1;
+            }
+            if (!this.tiles.TryGetValue(name, out Dictionary<int, TileData> shapes))
+            {
+                return -1;
+            }
+            return shapes.Max(kv => kv.Key) + 1;
+        }
+
     }
 }

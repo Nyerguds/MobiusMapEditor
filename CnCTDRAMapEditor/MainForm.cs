@@ -155,7 +155,7 @@ namespace MobiusEditor
             RefreshAvailableTools();
             UpdateVisibleLayers();
 
-            filePublishMenuItem.Visible = SteamworksUGC.IsInit;
+            //filePublishMenuItem.Enabled = SteamworksUGC.IsInit;
 
             steamUpdateTimer.Start();
         }
@@ -401,7 +401,7 @@ namespace MobiusEditor
                     sfd.InitialDirectory = TiberianDawn.Constants.SaveDirectory;
                     break;
                 case GameType.RedAlert:
-                    filters.Add("Red Alert files (*.mpr)|*.mpr");
+                    filters.Add("Red Alert files (*.mpr;*.ini)|*.mpr;*.ini");
                     sfd.InitialDirectory = RedAlert.Constants.SaveDirectory;
                     break;
             }
@@ -1157,7 +1157,6 @@ namespace MobiusEditor
             {
                 return;
             }
-
             plugin.Map.GenerateMapPreview().Save(Path.ChangeExtension(filename, ".tga"));
 #endif
         }
@@ -1169,7 +1168,6 @@ namespace MobiusEditor
             {
                 return;
             }
-
             var path = Path.ChangeExtension(filename, ".mpr");
             if (!File.Exists(path))
             {
@@ -1178,11 +1176,11 @@ namespace MobiusEditor
 
             try
             {
-                Process.Start(path);
+                System.Diagnostics.Process.Start(path);
             }
-            catch (Win32Exception)
+            catch (System.ComponentModel.Win32Exception)
             {
-                Process.Start("notepad.exe", path);
+                System.Diagnostics.Process.Start("notepad.exe", path);
             }
             catch (Exception) { }
 #endif
@@ -1250,28 +1248,27 @@ namespace MobiusEditor
             {
                 return;
             }
-
+            if (!SteamworksUGC.IsInit)
+            {
+                MessageBox.Show("Steam interface is not initialized. To enable Workshop publishing, log into Steam and restart the editor.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
             if (!PromptSaveMap())
             {
                 return;
             }
-
             if (plugin.Dirty)
             {
                 MessageBox.Show("Map must be saved before publishing.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-
             if (new FileInfo(filename).Length > Globals.MaxMapSize)
             {
                 return;
             }
-
             using (var sd = new SteamDialog(plugin))
             {
                 sd.ShowDialog();
             }
-
             fileSaveMenuItem.PerformClick();
         }
 

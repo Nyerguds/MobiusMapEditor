@@ -138,8 +138,10 @@ namespace MobiusEditor.Controls
                 case Building building:
                     {
                         houseComboBox.Enabled = building.IsPrebuilt;
+                        bool directionVisible = (building.Type != null) && building.Type.HasTurret;
                         directionComboBox.DataSource = Plugin.Map.DirectionTypes.Select(t => new TypeItem<DirectionType>(t.Name, t)).ToArray();
-                        directionComboBox.Visible = (building.Type != null) && building.Type.HasTurret;
+                        directionLabel.Visible = directionVisible;
+                        directionComboBox.Visible = directionVisible;
                         missionLabel.Visible = missionComboBox.Visible = false;
                         basePriorityLabel.Visible = basePriorityNud.Visible = true;
                         prebuiltCheckBox.Visible = true;

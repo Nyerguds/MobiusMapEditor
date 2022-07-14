@@ -104,8 +104,8 @@ namespace MobiusEditor
                 if (!SteamworksUGC.Init())
                 {
 #if !DEVELOPER
-                    MessageBox.Show("Unable to initialize Steam interface.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
+                    //MessageBox.Show("Unable to initialize Steam interface.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    //return;
 #endif
                 }
             }
