@@ -75,7 +75,7 @@ v1.4.0.2:
 * Fixed the bug that the status bar did not show the map placement shortcuts hints on initial load.
 * The editor no longer exits if it cannot connect to Steam. Instead, workshop publishing will simply be disabled if the Steamworks interface can't be initialised.
 * The texture manager will now properly dispose all loaded image objects when a different map is loaded.
-* Added \*.ini tot he list of possible extensions for opening RA maps, to support opening pre-Remaster missions.
+* Added \*.ini to the list of possible extensions for opening RA maps, to support opening pre-Remaster missions.
 * If a building has no direction to set and shows no dropdown for it, the "Direction" label is now also now removed.
 * Structure graphics are now correctly centered on their full building size.
 * Damaged state is now correctly shown at strength 128/256, and not below it.
