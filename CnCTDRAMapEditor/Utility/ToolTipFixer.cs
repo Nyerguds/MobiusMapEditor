@@ -43,6 +43,7 @@ namespace MobiusEditor.Utility
                         continue;
                     ctrl.Tag = tooltip;
                     ctrl.MouseHover += ShowToolTip;
+                    ctrl.MouseLeave += HideToolTip;
                 }
                 this.attachedControls = tooltipOwners;
             }
@@ -62,6 +63,13 @@ namespace MobiusEditor.Utility
             this.tooltip.Show(tooltipText, target, offset, 0, showDuration);
         }
 
+        private void HideToolTip(Object sender, EventArgs e)
+        {
+            Control target = sender as Control;
+            if (target != null)
+                this.tooltip.Hide(target);
+        }
+
         public void Dispose()
         {
             if (this.attachedControls != null)
@@ -73,6 +81,7 @@ namespace MobiusEditor.Utility
                     try
                     {
                         control.MouseHover -= ShowToolTip;
+                        control.MouseLeave -= HideToolTip;
                     }
                     catch
                     {
