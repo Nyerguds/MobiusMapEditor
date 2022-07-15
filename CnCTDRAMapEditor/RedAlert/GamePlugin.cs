@@ -23,139 +23,67 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
 namespace MobiusEditor.RedAlert
 {
     class GamePlugin : IGamePlugin
     {
-        private static readonly IEnumerable<string> movieTypes = new string[]
+        private static readonly Regex MovieRegex = new Regex(@"^(.*?\\)*(.*?)\.BK2$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+        private readonly IEnumerable<string> movieTypes;
+
+        private static readonly IEnumerable<string> movieTypesAdditional = new string[]
         {
-            "x",
-            "AAGUN",
-            "AFTRMATH",
-            "AIRFIELD",
-            "ALLIEND",
-            "ALLY1",
-            "ALLY10",
-            "ALLY10B",
-            "ALLY11",
-            "ALLY12",
-            "ALLY14",
-            "ALLY2",
-            "ALLY4",
-            "ALLY5",
-            "ALLY6",
-            "ALLY8",
-            "ALLY9",
-            "ALLYMORF",
-            "ANTEND",
-            "ANTINTRO",
-            "APCESCPE",
-            "ASSESS",
-            "AVERTED",
-            "BATTLE",
-            "BEACHEAD",
-            "BINOC",
-            "BMAP",
-            "BOMBRUN",
-            "BRDGTILT",
-            "COUNTDWN",
-            "CRONFAIL",
-            "CRONTEST",
-            "DESTROYR",
-            "DOUBLE",
-            "DPTHCHRG",
-            "DUD",
-            "ELEVATOR",
-            "ENGLISH",
-            "EXECUTE",
-            "FLARE",
-            "FROZEN",
-            "GRVESTNE",
-            "LANDING",
-            "MASASSLT",
-            "MCV",
-            "MCVBRDGE",
-            "MCV_LAND",
-            "MIG",
-            "MONTPASS",
-            "MOVINGIN",
-            "MTNKFACT",
-            "NUKESTOK",
-            "OILDRUM",
-            "ONTHPRWL",
-            "OVERRUN",
-            "PERISCOP",
-            "PROLOG",
-            "RADRRAID",
-            "REDINTRO",
-            "RETALIATION_ALLIED1",
-            "RETALIATION_ALLIED10",
-            "RETALIATION_ALLIED2",
-            "RETALIATION_ALLIED3",
-            "RETALIATION_ALLIED4",
-            "RETALIATION_ALLIED5",
-            "RETALIATION_ALLIED6",
-            "RETALIATION_ALLIED7",
-            "RETALIATION_ALLIED8",
-            "RETALIATION_ALLIED9",
-            "RETALIATION_ANTS",
-            "RETALIATION_SOVIET1",
-            "RETALIATION_SOVIET10",
-            "RETALIATION_SOVIET2",
-            "RETALIATION_SOVIET3",
-            "RETALIATION_SOVIET4",
-            "RETALIATION_SOVIET5",
-            "RETALIATION_SOVIET6",
-            "RETALIATION_SOVIET7",
-            "RETALIATION_SOVIET8",
-            "RETALIATION_SOVIET9",
-            "RETALIATION_WINA",
-            "RETALIATION_WINS",
+            "ENGLISH (Classic only)",
+            "SHIPYARD (Classic only)",
+            "SIZZLE (Classic only)",
+            "SIZZLE2 (Classic only)",
+        };
+
+        private static readonly IEnumerable<string> themeTypes = new string[]
+        {
+            "No Theme",
+            "BIGF226M",
+            "CRUS226M",
+            "FAC1226M",
+            "FAC2226M",
+            "HELL226M",
+            "RUN1226M",
+            "SMSH226M",
+            "TREN226M",
+            "WORK226M",
+            "AWAIT",
+            "DENSE_R",
+            "FOGGER1A",
+            "MUD1A",
+            "RADIO2",
+            "ROLLOUT",
+            "SNAKE",
+            "TERMINAT",
+            "TWIN",
+            "VECTOR1A",
+            "MAP",
+            "SCORE",
+            "INTRO",
+            "CREDITS",
+            "2ND_HAND",
+            "ARAZOID",
+            "BACKSTAB",
+            "CHAOS2",
+            "SHUT_IT",
+            "TWINMIX1",
+            "UNDER3",
+            "VR2",
+            "BOG",
+            "FLOAT_V2",
+            "GLOOM",
+            "GRNDWIRE",
+            "RPT",
             "SEARCH",
-            "SFROZEN",
-            "SHIPSINK",
-            "SHIPYARD", // MISSING
-            "SHORBOM1",
-            "SHORBOM2",
-            "SHORBOMB",
-            "SITDUCK",
-            "SIZZLE",   //MISSING
-            "SIZZLE2",  //MISSING
-            "SLNTSRVC",
-            "SNOWBASE",
-            "SNOWBOMB",
-            "SNSTRAFE",
-            "SOVBATL",
-            "SOVCEMET",
-            "SOVFINAL",
-            "SOVIET1",
-            "SOVIET10",
-            "SOVIET11",
-            "SOVIET12",
-            "SOVIET13",
-            "SOVIET14",
-            "SOVIET2",
-            "SOVIET3",
-            "SOVIET4",
-            "SOVIET5",
-            "SOVIET6",
-            "SOVIET7",
-            "SOVIET8",
-            "SOVIET9",
-            "SOVMCV",
-            "SOVTSTAR",
-            "SPOTTER",
-            "SPY",
-            "STRAFE",
-            "TAKE_OFF",
-            "TANYA1",
-            "TANYA2",
-            "TESLA",
-            "TOOFAR",
-            "TRINITY",
-            "V2ROCKET",
+            "TRACTION",
+            "WASTELND"
         };
 
         private static readonly IEnumerable<ITechnoType> technoTypes;
@@ -182,6 +110,24 @@ namespace MobiusEditor.RedAlert
             var specialWaypoints = new Waypoint[] { new Waypoint("Home"), new Waypoint("Reinf."), new Waypoint("Special") };
             var waypoints = playerWaypoints.Concat(generalWaypoints).Concat(specialWaypoints);
 
+            var movies = new List<string>();
+            using (var megafile = new Megafile(Path.Combine(Globals.MegafilePath, "MOVIES_RA.MEG")))
+            {
+                foreach (var filename in megafile)
+                {
+                    var m = MovieRegex.Match(filename);
+                    if (m.Success)
+                    {
+                        movies.Add(m.Groups[m.Groups.Count - 1].ToString());
+                    }
+                }
+            }
+            movies.AddRange(movieTypesAdditional);
+            movies.Sort();
+            movies = movies.Distinct().ToList();
+            movies.Insert(0, "x");
+            movieTypes = movies.ToArray();
+
             var basicSection = new BasicSection();
             basicSection.SetDefault();
 
@@ -192,7 +138,7 @@ namespace MobiusEditor.RedAlert
                 houseTypes, TheaterTypes.GetTypes(), TemplateTypes.GetTypes(), TerrainTypes.GetTypes(),
                 OverlayTypes.GetTypes(), SmudgeTypes.GetTypes(), EventTypes.GetTypes(), ActionTypes.GetTypes(),
                 MissionTypes.GetTypes(), DirectionTypes.GetTypes(), InfantryTypes.GetTypes(), UnitTypes.GetTypes(),
-                BuildingTypes.GetTypes(), TeamMissionTypes.GetTypes(), technoTypes, waypoints, movieTypes)
+                BuildingTypes.GetTypes(), TeamMissionTypes.GetTypes(), technoTypes, waypoints, movieTypes, themeTypes)
             {
                 TiberiumOrGoldValue = 35,
                 GemValue = 110
@@ -1226,6 +1172,20 @@ namespace MobiusEditor.RedAlert
             if (extraSections != null)
             {
                 ini.Sections.AddRange(extraSections);
+            }
+
+            BasicSection basic = Map.BasicSection as BasicSection;
+            if (basic != null)
+            {
+                char[] cutfrom = { ';', '(' };
+                basic.Intro = INIHelpers.TrimRemarks(basic.Intro, true, cutfrom);
+                basic.Brief = INIHelpers.TrimRemarks(basic.Brief, true, cutfrom);
+                basic.Action = INIHelpers.TrimRemarks(basic.Action, true, cutfrom);
+                basic.Win = INIHelpers.TrimRemarks(basic.Win, true, cutfrom);
+                basic.Win2 = INIHelpers.TrimRemarks(basic.Win2, true, cutfrom);
+                basic.Win3 = INIHelpers.TrimRemarks(basic.Win3, true, cutfrom);
+                basic.Win4 =INIHelpers.TrimRemarks(basic.Win4, true, cutfrom);
+                basic.Lose = INIHelpers.TrimRemarks(basic.Lose, true, cutfrom);
             }
 
             INI.WriteSection(new MapContext(Map, false), ini.Sections.Add("Basic"), Map.BasicSection);

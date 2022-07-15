@@ -26,8 +26,9 @@ namespace MobiusEditor.TiberianDawn
         // Added actual recoloring
         public static readonly HouseType Neutral = new HouseType(2, "Neutral", "GOOD");
         public static readonly HouseType Special = new HouseType(3, "Special", "GOOD");
-        // fixed to match actual game. Seems they messed up the naming of these in the xml files, and then applied that bizarre mixup to the Houses correctly
-        // in the Remastered game, leaving the editor, which requested the obviously-correct name for each Multi-House color, to show it all wrong.
+        // Fixed to match actual game. Seems they messed up the naming of the colors in the xml files by taking the color definitions from the C&C
+        // game code in order, arbitrarily naming those "Multi1" to "Multi6", and then correctly applying those obviously wrongly named colors to
+        // the multi-Houses in the Remastered game. The editor code logically assumed they were named after their House, and thus got it all wrong.
         public static readonly HouseType Multi1 = new HouseType(4, "Multi1", "MULTI2");
         public static readonly HouseType Multi2 = new HouseType(5, "Multi2", "MULTI5");
         public static readonly HouseType Multi3 = new HouseType(6, "Multi3", "MULTI4");

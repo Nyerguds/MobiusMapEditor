@@ -73,6 +73,19 @@ namespace MobiusEditor.Utility
             }
             return fallback;
         }
+
+        public static String TrimRemarks(String value, Boolean trimResult, params char[] cutFrom)
+        {
+            if (String.IsNullOrEmpty(value))
+                return value;
+            int index = value.IndexOfAny(cutFrom);
+            if (index == -1)
+                return value;
+            value = value.Substring(0, index);
+            if (trimResult)
+                value = value.TrimEnd();
+            return value;
+        }
     }
 
     public class INIKeyValueCollection : IEnumerable<(string Key, string Value)>, IEnumerable

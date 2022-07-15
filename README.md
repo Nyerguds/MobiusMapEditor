@@ -107,4 +107,8 @@ v1.4.0.3: [WIP]
 
 * Removed limitation on placing resources on the top and bottom row of the map.
 * The 'clamping' logic that prevented tool windows from being dragged outside usable screen bounds had a bug that this prevented it from being dragged onto a different monitor. This is now fixed.
-
+* "Theme" has been added to the map settings. Do note this has no effect on the Remaster.
+* All videos available in the Remaster are now shown in the video lists in the "Map settings" dialog.
+* Added missing entries (videos not included in the Remaster) to the RA and TD video lists, with a 'Classic only' indicator.
+* Added tooltips for the team type options.
+* Fixed tab order of the Temtype options.

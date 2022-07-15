@@ -36,6 +36,62 @@ namespace MobiusEditor.TiberianDawn
 
         private readonly IEnumerable<string> movieTypes;
 
+        private static readonly IEnumerable<string> movieTypesAdditional = new string[]
+        {
+            "BODYBAGS (Classic only)",
+            "REFINT (Classic only)",
+            "REFINERY (Classic only)",
+            "SIZZLE (Classic only)",
+            "SIZZLE2 (Classic only)",
+            "TRAILER (Classic only)",
+            "TRTKIL_D (Classic only)",
+        };
+
+        private static readonly IEnumerable<string> themeTypes = new string[]
+        {
+            "No Theme",
+            "AIRSTRIK",
+            "80MX226M",
+            "CHRG226M",
+            "CREP226M",
+            "DRIL226M",
+            "DRON226M",
+            "FIST226M",
+            "RECN226M",
+            "VOIC226M",
+            "HEAVYG",
+            "J1",
+            "JDI_V2",
+            "RADIO",
+            "RAIN",
+            "AOI",
+            "CCTHANG",
+            "DIE",
+            "FWP",
+            "IND",
+            "IND2",
+            "JUSTDOIT",
+            "LINEFIRE",
+            "MARCH",
+            "TARGET",
+            "NOMERCY",
+            "OTP",
+            "PRP",
+            "ROUT",
+            "HEART",
+            "STOPTHEM",
+            "TROUBLE",
+            "WARFARE",
+            "BEFEARED",
+            "I_AM",
+            "WIN1",
+            "MAP1",
+            "VALKYRIE",
+            "NOD_WIN1",
+            "NOD_MAP1",
+            "OUTTAKES"
+        };
+
         public GameType GameType => GameType.TiberianDawn;
 
         public Map Map { get; }
@@ -58,7 +114,7 @@ namespace MobiusEditor.TiberianDawn
             var specialWaypoints = new Waypoint[] { new Waypoint("Flare"), new Waypoint("Home"), new Waypoint("Reinf.") };
             var waypoints = playerWaypoints.Concat(generalWaypoints).Concat(specialWaypoints);
 
-            var movies = new List<string>(new string[] { "x" });
+            var movies = new List<string>();
             using (var megafile = new Megafile(Path.Combine(Globals.MegafilePath, "MOVIES_TD.MEG")))
             {
                 foreach (var filename in megafile)
@@ -70,6 +126,10 @@ namespace MobiusEditor.TiberianDawn
                     }
                 }
             }
+            movies.AddRange(movieTypesAdditional);
+            movies.Sort();
+            movies = movies.Distinct().ToList();
+            movies.Insert(0, "x");
             movieTypes = movies.ToArray();
 
             var basicSection = new BasicSection();
@@ -82,7 +142,7 @@ namespace MobiusEditor.TiberianDawn
                 houseTypes, TheaterTypes.GetTypes(), TemplateTypes.GetTypes(), TerrainTypes.GetTypes(),
                 OverlayTypes.GetTypes(), SmudgeTypes.GetTypes(), EventTypes.GetTypes(), ActionTypes.GetTypes(),
                 MissionTypes.GetTypes(), DirectionTypes.GetTypes(), InfantryTypes.GetTypes(), UnitTypes.GetTypes(true),
-                BuildingTypes.GetTypes(), TeamMissionTypes.GetTypes(), technoTypes, waypoints, movieTypes)
+                BuildingTypes.GetTypes(), TeamMissionTypes.GetTypes(), technoTypes, waypoints, movieTypes, themeTypes )
             {
                 TiberiumOrGoldValue = 25
             };
@@ -969,6 +1029,19 @@ namespace MobiusEditor.TiberianDawn
             if (extraSections != null)
             {
                 ini.Sections.AddRange(extraSections);
+            }
+            BasicSection basic = Map.BasicSection as BasicSection;
+            if (basic != null)
+            {
+                char[] cutfrom = { ';', '(' };
+                basic.Intro = INIHelpers.TrimRemarks(basic.Intro, true, cutfrom);
+                basic.Brief = INIHelpers.TrimRemarks(basic.Brief, true, cutfrom);
+                basic.Action = INIHelpers.TrimRemarks(basic.Action, true, cutfrom);
+                basic.Win = INIHelpers.TrimRemarks(basic.Win, true, cutfrom);
+                //basic.Win2 = INIHelpers.TrimRemarks(basic.Win2, true, cutfrom);
+                //basic.Win3 = INIHelpers.TrimRemarks(basic.Win3, true, cutfrom);
+                //basic.Win4 =INIHelpers.TrimRemarks(basic.Win4, true, cutfrom);
+                basic.Lose = INIHelpers.TrimRemarks(basic.Lose, true, cutfrom);
             }
 
             INI.WriteSection(new MapContext(Map, false), ini.Sections.Add("Basic"), Map.BasicSection);

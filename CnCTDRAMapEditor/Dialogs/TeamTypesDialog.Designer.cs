@@ -24,19 +24,6 @@ namespace MobiusEditor.Dialogs
         /// </summary>
         private System.ComponentModel.IContainer components = null;
 
-        /// <summary>
-        /// Clean up any resources being used.
-        /// </summary>
-        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing && (components != null))
-            {
-                components.Dispose();
-            }
-            base.Dispose(disposing);
-        }
-
         #region Windows Form Designer generated code
 
         /// <summary>
@@ -67,15 +54,15 @@ namespace MobiusEditor.Dialogs
             this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
-            this.initNumNud = new System.Windows.Forms.NumericUpDown();
-            this.maxAllowedNud = new System.Windows.Forms.NumericUpDown();
-            this.fearNud = new System.Windows.Forms.NumericUpDown();
+            this.initNumNud = new MobiusEditor.Controls.EnhNumericUpDown();
+            this.maxAllowedNud = new MobiusEditor.Controls.EnhNumericUpDown();
+            this.fearNud = new MobiusEditor.Controls.EnhNumericUpDown();
             this.waypointLabel = new System.Windows.Forms.Label();
             this.triggerLabel = new System.Windows.Forms.Label();
             this.waypointComboBox = new System.Windows.Forms.ComboBox();
             this.triggerComboBox = new System.Windows.Forms.ComboBox();
             this.label9 = new System.Windows.Forms.Label();
-            this.recruitPriorityNud = new System.Windows.Forms.NumericUpDown();
+            this.recruitPriorityNud = new MobiusEditor.Controls.EnhNumericUpDown();
             this.tableLayoutPanel3 = new System.Windows.Forms.TableLayoutPanel();
             this.label7 = new System.Windows.Forms.Label();
             this.label8 = new System.Windows.Forms.Label();
@@ -91,6 +78,7 @@ namespace MobiusEditor.Dialogs
             this.addTeamTypeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.renameTeamTypeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removeTeamTypeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.tableLayoutPanel1.SuspendLayout();
             this.flowLayoutPanel2.SuspendLayout();
             this.flowLayoutPanel1.SuspendLayout();
@@ -274,6 +262,7 @@ namespace MobiusEditor.Dialogs
             this.label1.TabIndex = 0;
             this.label1.Text = "House";
             this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.toolTip1.SetToolTip(this.label1, "Owner of this team.");
             // 
             // houseComboBox
             // 
@@ -298,6 +287,7 @@ namespace MobiusEditor.Dialogs
             this.roundaboutCheckBox.Size = new System.Drawing.Size(131, 17);
             this.roundaboutCheckBox.TabIndex = 11;
             this.roundaboutCheckBox.Text = "Roundabout";
+            this.toolTip1.SetToolTip(this.roundaboutCheckBox, "Avoid high-threat areas.");
             this.roundaboutCheckBox.UseVisualStyleBackColor = true;
             // 
             // learningCheckBox
@@ -310,6 +300,7 @@ namespace MobiusEditor.Dialogs
             this.learningCheckBox.Size = new System.Drawing.Size(131, 17);
             this.learningCheckBox.TabIndex = 12;
             this.learningCheckBox.Text = "Learning";
+            this.toolTip1.SetToolTip(this.learningCheckBox, "The team learns from mistakes.");
             this.learningCheckBox.UseVisualStyleBackColor = true;
             // 
             // suicideCheckBox
@@ -322,6 +313,7 @@ namespace MobiusEditor.Dialogs
             this.suicideCheckBox.Size = new System.Drawing.Size(131, 17);
             this.suicideCheckBox.TabIndex = 13;
             this.suicideCheckBox.Text = "Suicide";
+            this.toolTip1.SetToolTip(this.suicideCheckBox, "The team won\'t stop until it achieves its mission or it\'s dead.");
             this.suicideCheckBox.UseVisualStyleBackColor = true;
             // 
             // autocreateCheckBox
@@ -334,6 +326,8 @@ namespace MobiusEditor.Dialogs
             this.autocreateCheckBox.Size = new System.Drawing.Size(131, 17);
             this.autocreateCheckBox.TabIndex = 14;
             this.autocreateCheckBox.Text = "Auto-create";
+            this.toolTip1.SetToolTip(this.autocreateCheckBox, "Make this part of the pool of teams to be produced\r\nwhen enabling Autocreate for " +
+        "this House.");
             this.autocreateCheckBox.UseVisualStyleBackColor = true;
             // 
             // mercernaryCheckBox
@@ -346,6 +340,7 @@ namespace MobiusEditor.Dialogs
             this.mercernaryCheckBox.Size = new System.Drawing.Size(131, 17);
             this.mercernaryCheckBox.TabIndex = 15;
             this.mercernaryCheckBox.Text = "Mercernary";
+            this.toolTip1.SetToolTip(this.mercernaryCheckBox, "Will change sides if they start to lose.");
             this.mercernaryCheckBox.UseVisualStyleBackColor = true;
             // 
             // reinforcableCheckBox
@@ -358,6 +353,8 @@ namespace MobiusEditor.Dialogs
             this.reinforcableCheckBox.Size = new System.Drawing.Size(131, 17);
             this.reinforcableCheckBox.TabIndex = 16;
             this.reinforcableCheckBox.Text = "Reinforcable";
+            this.toolTip1.SetToolTip(this.reinforcableCheckBox, "Allow recruitment of new members if some die.\r\nIf false, acts similar to Suicide," +
+        " but they will defend themselves.");
             this.reinforcableCheckBox.UseVisualStyleBackColor = true;
             // 
             // prebuiltCheckBox
@@ -370,6 +367,8 @@ namespace MobiusEditor.Dialogs
             this.prebuiltCheckBox.Size = new System.Drawing.Size(131, 17);
             this.prebuiltCheckBox.TabIndex = 17;
             this.prebuiltCheckBox.Text = "Prebuilt";
+            this.toolTip1.SetToolTip(this.prebuiltCheckBox, "Computer should build members to fill a team of this type\r\nregardless of whether " +
+        "there is a team of this type active.");
             this.prebuiltCheckBox.UseVisualStyleBackColor = true;
             // 
             // label2
@@ -383,6 +382,7 @@ namespace MobiusEditor.Dialogs
             this.label2.TabIndex = 9;
             this.label2.Text = "Init Num";
             this.label2.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.toolTip1.SetToolTip(this.label2, "Initial amount of this type of team.");
             // 
             // label3
             // 
@@ -395,6 +395,7 @@ namespace MobiusEditor.Dialogs
             this.label3.TabIndex = 10;
             this.label3.Text = "Max Allowed";
             this.label3.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.toolTip1.SetToolTip(this.label3, "Maximum amount of this type of team allowed at one time.");
             // 
             // label4
             // 
@@ -407,10 +408,16 @@ namespace MobiusEditor.Dialogs
             this.label4.TabIndex = 11;
             this.label4.Text = "Fear";
             this.label4.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.toolTip1.SetToolTip(this.label4, "Fear level of this team. No known effect.");
             // 
             // initNumNud
             // 
             this.initNumNud.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.initNumNud.EnteredValue = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
             this.initNumNud.Location = new System.Drawing.Point(73, 198);
             this.initNumNud.Margin = new System.Windows.Forms.Padding(2);
             this.initNumNud.Maximum = new decimal(new int[] {
@@ -419,12 +426,20 @@ namespace MobiusEditor.Dialogs
             0,
             0});
             this.initNumNud.Name = "initNumNud";
+            this.initNumNud.SelectedText = "";
+            this.initNumNud.SelectionLength = 0;
+            this.initNumNud.SelectionStart = 0;
             this.initNumNud.Size = new System.Drawing.Size(131, 20);
             this.initNumNud.TabIndex = 19;
             // 
             // maxAllowedNud
             // 
             this.maxAllowedNud.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.maxAllowedNud.EnteredValue = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
             this.maxAllowedNud.Location = new System.Drawing.Point(73, 222);
             this.maxAllowedNud.Margin = new System.Windows.Forms.Padding(2);
             this.maxAllowedNud.Maximum = new decimal(new int[] {
@@ -433,12 +448,20 @@ namespace MobiusEditor.Dialogs
             0,
             0});
             this.maxAllowedNud.Name = "maxAllowedNud";
+            this.maxAllowedNud.SelectedText = "";
+            this.maxAllowedNud.SelectionLength = 0;
+            this.maxAllowedNud.SelectionStart = 0;
             this.maxAllowedNud.Size = new System.Drawing.Size(131, 20);
             this.maxAllowedNud.TabIndex = 20;
             // 
             // fearNud
             // 
             this.fearNud.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.fearNud.EnteredValue = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
             this.fearNud.Location = new System.Drawing.Point(73, 246);
             this.fearNud.Margin = new System.Windows.Forms.Padding(2);
             this.fearNud.Maximum = new decimal(new int[] {
@@ -447,6 +470,9 @@ namespace MobiusEditor.Dialogs
             0,
             0});
             this.fearNud.Name = "fearNud";
+            this.fearNud.SelectedText = "";
+            this.fearNud.SelectionLength = 0;
+            this.fearNud.SelectionStart = 0;
             this.fearNud.Size = new System.Drawing.Size(131, 20);
             this.fearNud.TabIndex = 21;
             // 
@@ -506,18 +532,33 @@ namespace MobiusEditor.Dialogs
             this.label9.TabIndex = 19;
             this.label9.Text = "Priority";
             this.label9.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.toolTip1.SetToolTip(this.label9, "Priority given the team for recruiting purposes; higher\r\npriority means it can st" +
+        "eal members from other teams.");
             // 
             // recruitPriorityNud
             // 
             this.recruitPriorityNud.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.recruitPriorityNud.Location = new System.Drawing.Point(73, 174);
-            this.recruitPriorityNud.Margin = new System.Windows.Forms.Padding(2);
-            this.recruitPriorityNud.Maximum = new decimal(new int[] {
-            15,
+            this.recruitPriorityNud.EnteredValue = new decimal(new int[] {
+            0,
             0,
             0,
             0});
+            this.recruitPriorityNud.Location = new System.Drawing.Point(73, 174);
+            this.recruitPriorityNud.Margin = new System.Windows.Forms.Padding(2);
+            this.recruitPriorityNud.Maximum = new decimal(new int[] {
+            2147483647,
+            0,
+            0,
+            0});
+            this.recruitPriorityNud.Minimum = new decimal(new int[] {
+            -2147483648,
+            0,
+            0,
+            -2147483648});
             this.recruitPriorityNud.Name = "recruitPriorityNud";
+            this.recruitPriorityNud.SelectedText = "";
+            this.recruitPriorityNud.SelectionLength = 0;
+            this.recruitPriorityNud.SelectionStart = 0;
             this.recruitPriorityNud.Size = new System.Drawing.Size(131, 20);
             this.recruitPriorityNud.TabIndex = 18;
             // 
@@ -760,9 +801,9 @@ namespace MobiusEditor.Dialogs
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.NumericUpDown initNumNud;
-        private System.Windows.Forms.NumericUpDown maxAllowedNud;
-        private System.Windows.Forms.NumericUpDown fearNud;
+        private MobiusEditor.Controls.EnhNumericUpDown initNumNud;
+        private MobiusEditor.Controls.EnhNumericUpDown maxAllowedNud;
+        private MobiusEditor.Controls.EnhNumericUpDown fearNud;
         private System.Windows.Forms.Label waypointLabel;
         private System.Windows.Forms.Label triggerLabel;
         private System.Windows.Forms.ComboBox waypointComboBox;
@@ -773,7 +814,7 @@ namespace MobiusEditor.Dialogs
         private System.Windows.Forms.DataGridView teamsDataGridView;
         private System.Windows.Forms.DataGridView missionsDataGridView;
         private System.Windows.Forms.Label label9;
-        private System.Windows.Forms.NumericUpDown recruitPriorityNud;
+        private MobiusEditor.Controls.EnhNumericUpDown recruitPriorityNud;
         private System.Windows.Forms.DataGridViewComboBoxColumn teamsTypeColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn teamsCountColumn;
         private System.Windows.Forms.DataGridViewComboBoxColumn missionsMissionColumn;
@@ -781,5 +822,6 @@ namespace MobiusEditor.Dialogs
         private FlowLayoutPanel flowLayoutPanel2;
         private Button btnAdd;
         private ToolStripMenuItem renameTeamTypeToolStripMenuItem;
+        private ToolTip toolTip1;
     }
 }

@@ -43,7 +43,8 @@ namespace MobiusEditor.Controls
         private void InitializeComponent()
         {
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            this.label10 = new System.Windows.Forms.Label();
+            this.themeLabel = new System.Windows.Forms.Label();
+            this.loseLabel = new System.Windows.Forms.Label();
             this.loseComboBox = new System.Windows.Forms.ComboBox();
             this.isSinglePlayerCheckBox = new System.Windows.Forms.CheckBox();
             this.win4ComboBox = new System.Windows.Forms.ComboBox();
@@ -56,26 +57,27 @@ namespace MobiusEditor.Controls
             this.win4Label = new System.Windows.Forms.Label();
             this.win3Label = new System.Windows.Forms.Label();
             this.win2Label = new System.Windows.Forms.Label();
-            this.label9 = new System.Windows.Forms.Label();
-            this.label8 = new System.Windows.Forms.Label();
-            this.label7 = new System.Windows.Forms.Label();
-            this.label1 = new System.Windows.Forms.Label();
+            this.winLabel = new System.Windows.Forms.Label();
+            this.actionLabel = new System.Windows.Forms.Label();
+            this.briefLabel = new System.Windows.Forms.Label();
+            this.introLabel = new System.Windows.Forms.Label();
             this.buildLevelLabel = new System.Windows.Forms.Label();
-            this.label2 = new System.Windows.Forms.Label();
-            this.label3 = new System.Windows.Forms.Label();
-            this.label4 = new System.Windows.Forms.Label();
-            this.label5 = new System.Windows.Forms.Label();
+            this.carryOverMoneyLabel = new System.Windows.Forms.Label();
+            this.nameLabel = new System.Windows.Forms.Label();
+            this.percentLabel = new System.Windows.Forms.Label();
+            this.playerLabel = new System.Windows.Forms.Label();
             this.nameTxt = new System.Windows.Forms.TextBox();
             this.playerComboBox = new System.Windows.Forms.ComboBox();
-            this.buidLevelNud = new System.Windows.Forms.NumericUpDown();
+            this.buildLevelNud = new System.Windows.Forms.NumericUpDown();
             this.percentNud = new System.Windows.Forms.NumericUpDown();
             this.carryOverMoneyNud = new System.Windows.Forms.NumericUpDown();
-            this.label6 = new System.Windows.Forms.Label();
+            this.authorLabel = new System.Windows.Forms.Label();
             this.authorTxt = new System.Windows.Forms.TextBox();
             this.baseLabel = new System.Windows.Forms.Label();
             this.baseComboBox = new System.Windows.Forms.ComboBox();
+            this.themeComboBox = new System.Windows.Forms.ComboBox();
             this.tableLayoutPanel1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.buidLevelNud)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.buildLevelNud)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.percentNud)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.carryOverMoneyNud)).BeginInit();
             this.SuspendLayout();
@@ -86,41 +88,44 @@ namespace MobiusEditor.Controls
             this.tableLayoutPanel1.ColumnCount = 2;
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.Controls.Add(this.label10, 0, 15);
-            this.tableLayoutPanel1.Controls.Add(this.loseComboBox, 1, 15);
-            this.tableLayoutPanel1.Controls.Add(this.isSinglePlayerCheckBox, 1, 16);
-            this.tableLayoutPanel1.Controls.Add(this.win4ComboBox, 1, 14);
-            this.tableLayoutPanel1.Controls.Add(this.win3ComboBox, 1, 13);
-            this.tableLayoutPanel1.Controls.Add(this.win2ComboBox, 1, 12);
-            this.tableLayoutPanel1.Controls.Add(this.winComboBox, 1, 11);
-            this.tableLayoutPanel1.Controls.Add(this.actionComboBox, 1, 10);
-            this.tableLayoutPanel1.Controls.Add(this.briefComboBox, 1, 9);
-            this.tableLayoutPanel1.Controls.Add(this.introComboBox, 1, 8);
-            this.tableLayoutPanel1.Controls.Add(this.win4Label, 0, 14);
-            this.tableLayoutPanel1.Controls.Add(this.win3Label, 0, 13);
-            this.tableLayoutPanel1.Controls.Add(this.win2Label, 0, 12);
-            this.tableLayoutPanel1.Controls.Add(this.label9, 0, 11);
-            this.tableLayoutPanel1.Controls.Add(this.label8, 0, 10);
-            this.tableLayoutPanel1.Controls.Add(this.label7, 0, 9);
-            this.tableLayoutPanel1.Controls.Add(this.label1, 0, 8);
+            this.tableLayoutPanel1.Controls.Add(this.themeLabel, 0, 8);
+            this.tableLayoutPanel1.Controls.Add(this.loseLabel, 0, 16);
+            this.tableLayoutPanel1.Controls.Add(this.loseComboBox, 1, 16);
+            this.tableLayoutPanel1.Controls.Add(this.isSinglePlayerCheckBox, 1, 17);
+            this.tableLayoutPanel1.Controls.Add(this.win4ComboBox, 1, 15);
+            this.tableLayoutPanel1.Controls.Add(this.win3ComboBox, 1, 14);
+            this.tableLayoutPanel1.Controls.Add(this.win2ComboBox, 1, 13);
+            this.tableLayoutPanel1.Controls.Add(this.winComboBox, 1, 12);
+            this.tableLayoutPanel1.Controls.Add(this.actionComboBox, 1, 11);
+            this.tableLayoutPanel1.Controls.Add(this.briefComboBox, 1, 10);
+            this.tableLayoutPanel1.Controls.Add(this.introComboBox, 1, 9);
+            this.tableLayoutPanel1.Controls.Add(this.win4Label, 0, 15);
+            this.tableLayoutPanel1.Controls.Add(this.win3Label, 0, 14);
+            this.tableLayoutPanel1.Controls.Add(this.win2Label, 0, 13);
+            this.tableLayoutPanel1.Controls.Add(this.winLabel, 0, 12);
+            this.tableLayoutPanel1.Controls.Add(this.actionLabel, 0, 11);
+            this.tableLayoutPanel1.Controls.Add(this.briefLabel, 0, 10);
+            this.tableLayoutPanel1.Controls.Add(this.introLabel, 0, 9);
             this.tableLayoutPanel1.Controls.Add(this.buildLevelLabel, 0, 0);
-            this.tableLayoutPanel1.Controls.Add(this.label2, 0, 1);
-            this.tableLayoutPanel1.Controls.Add(this.label3, 0, 2);
-            this.tableLayoutPanel1.Controls.Add(this.label4, 0, 3);
-            this.tableLayoutPanel1.Controls.Add(this.label5, 0, 4);
+            this.tableLayoutPanel1.Controls.Add(this.carryOverMoneyLabel, 0, 1);
+            this.tableLayoutPanel1.Controls.Add(this.nameLabel, 0, 2);
+            this.tableLayoutPanel1.Controls.Add(this.percentLabel, 0, 3);
+            this.tableLayoutPanel1.Controls.Add(this.playerLabel, 0, 4);
             this.tableLayoutPanel1.Controls.Add(this.nameTxt, 1, 2);
             this.tableLayoutPanel1.Controls.Add(this.playerComboBox, 1, 4);
-            this.tableLayoutPanel1.Controls.Add(this.buidLevelNud, 1, 0);
+            this.tableLayoutPanel1.Controls.Add(this.buildLevelNud, 1, 0);
             this.tableLayoutPanel1.Controls.Add(this.percentNud, 1, 3);
             this.tableLayoutPanel1.Controls.Add(this.carryOverMoneyNud, 1, 1);
-            this.tableLayoutPanel1.Controls.Add(this.label6, 0, 5);
+            this.tableLayoutPanel1.Controls.Add(this.authorLabel, 0, 5);
             this.tableLayoutPanel1.Controls.Add(this.authorTxt, 1, 5);
             this.tableLayoutPanel1.Controls.Add(this.baseLabel, 0, 6);
             this.tableLayoutPanel1.Controls.Add(this.baseComboBox, 1, 6);
+            this.tableLayoutPanel1.Controls.Add(this.themeComboBox, 1, 8);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.RowCount = 17;
+            this.tableLayoutPanel1.RowCount = 18;
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
@@ -138,35 +143,46 @@ namespace MobiusEditor.Controls
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(300, 403);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(300, 428);
             this.tableLayoutPanel1.TabIndex = 1;
             // 
-            // label10
+            // themeLabel
             // 
-            this.label10.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label10.Location = new System.Drawing.Point(2, 355);
-            this.label10.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(87, 25);
-            this.label10.TabIndex = 35;
-            this.label10.Text = "Lose";
-            this.label10.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.themeLabel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.themeLabel.Location = new System.Drawing.Point(2, 180);
+            this.themeLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.themeLabel.Name = "themeLabel";
+            this.themeLabel.Size = new System.Drawing.Size(87, 25);
+            this.themeLabel.TabIndex = 14;
+            this.themeLabel.Text = "Theme";
+            this.themeLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // loseLabel
+            // 
+            this.loseLabel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.loseLabel.Location = new System.Drawing.Point(2, 380);
+            this.loseLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.loseLabel.Name = "loseLabel";
+            this.loseLabel.Size = new System.Drawing.Size(87, 25);
+            this.loseLabel.TabIndex = 30;
+            this.loseLabel.Text = "Lose";
+            this.loseLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // loseComboBox
             // 
             this.loseComboBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.loseComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.loseComboBox.FormattingEnabled = true;
-            this.loseComboBox.Location = new System.Drawing.Point(93, 357);
+            this.loseComboBox.Location = new System.Drawing.Point(93, 382);
             this.loseComboBox.Margin = new System.Windows.Forms.Padding(2);
             this.loseComboBox.Name = "loseComboBox";
             this.loseComboBox.Size = new System.Drawing.Size(205, 21);
-            this.loseComboBox.TabIndex = 34;
+            this.loseComboBox.TabIndex = 31;
             // 
             // isSinglePlayerCheckBox
             // 
             this.isSinglePlayerCheckBox.AutoSize = true;
-            this.isSinglePlayerCheckBox.Location = new System.Drawing.Point(93, 382);
+            this.isSinglePlayerCheckBox.Location = new System.Drawing.Point(93, 407);
             this.isSinglePlayerCheckBox.Margin = new System.Windows.Forms.Padding(2);
             this.isSinglePlayerCheckBox.Name = "isSinglePlayerCheckBox";
             this.isSinglePlayerCheckBox.Size = new System.Drawing.Size(87, 17);
@@ -180,154 +196,154 @@ namespace MobiusEditor.Controls
             this.win4ComboBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.win4ComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.win4ComboBox.FormattingEnabled = true;
-            this.win4ComboBox.Location = new System.Drawing.Point(93, 332);
+            this.win4ComboBox.Location = new System.Drawing.Point(93, 357);
             this.win4ComboBox.Margin = new System.Windows.Forms.Padding(2);
             this.win4ComboBox.Name = "win4ComboBox";
             this.win4ComboBox.Size = new System.Drawing.Size(205, 21);
-            this.win4ComboBox.TabIndex = 31;
+            this.win4ComboBox.TabIndex = 29;
             // 
             // win3ComboBox
             // 
             this.win3ComboBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.win3ComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.win3ComboBox.FormattingEnabled = true;
-            this.win3ComboBox.Location = new System.Drawing.Point(93, 307);
+            this.win3ComboBox.Location = new System.Drawing.Point(93, 332);
             this.win3ComboBox.Margin = new System.Windows.Forms.Padding(2);
             this.win3ComboBox.Name = "win3ComboBox";
             this.win3ComboBox.Size = new System.Drawing.Size(205, 21);
-            this.win3ComboBox.TabIndex = 30;
+            this.win3ComboBox.TabIndex = 27;
             // 
             // win2ComboBox
             // 
             this.win2ComboBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.win2ComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.win2ComboBox.FormattingEnabled = true;
-            this.win2ComboBox.Location = new System.Drawing.Point(93, 282);
+            this.win2ComboBox.Location = new System.Drawing.Point(93, 307);
             this.win2ComboBox.Margin = new System.Windows.Forms.Padding(2);
             this.win2ComboBox.Name = "win2ComboBox";
             this.win2ComboBox.Size = new System.Drawing.Size(205, 21);
-            this.win2ComboBox.TabIndex = 29;
+            this.win2ComboBox.TabIndex = 25;
             // 
             // winComboBox
             // 
             this.winComboBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.winComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.winComboBox.FormattingEnabled = true;
-            this.winComboBox.Location = new System.Drawing.Point(93, 257);
+            this.winComboBox.Location = new System.Drawing.Point(93, 282);
             this.winComboBox.Margin = new System.Windows.Forms.Padding(2);
             this.winComboBox.Name = "winComboBox";
             this.winComboBox.Size = new System.Drawing.Size(205, 21);
-            this.winComboBox.TabIndex = 28;
+            this.winComboBox.TabIndex = 23;
             // 
             // actionComboBox
             // 
             this.actionComboBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.actionComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.actionComboBox.FormattingEnabled = true;
-            this.actionComboBox.Location = new System.Drawing.Point(93, 232);
+            this.actionComboBox.Location = new System.Drawing.Point(93, 257);
             this.actionComboBox.Margin = new System.Windows.Forms.Padding(2);
             this.actionComboBox.Name = "actionComboBox";
             this.actionComboBox.Size = new System.Drawing.Size(205, 21);
-            this.actionComboBox.TabIndex = 27;
+            this.actionComboBox.TabIndex = 21;
             // 
             // briefComboBox
             // 
             this.briefComboBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.briefComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.briefComboBox.FormattingEnabled = true;
-            this.briefComboBox.Location = new System.Drawing.Point(93, 207);
+            this.briefComboBox.Location = new System.Drawing.Point(93, 232);
             this.briefComboBox.Margin = new System.Windows.Forms.Padding(2);
             this.briefComboBox.Name = "briefComboBox";
             this.briefComboBox.Size = new System.Drawing.Size(205, 21);
-            this.briefComboBox.TabIndex = 26;
+            this.briefComboBox.TabIndex = 19;
             // 
             // introComboBox
             // 
             this.introComboBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.introComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.introComboBox.FormattingEnabled = true;
-            this.introComboBox.Location = new System.Drawing.Point(93, 182);
+            this.introComboBox.Location = new System.Drawing.Point(93, 207);
             this.introComboBox.Margin = new System.Windows.Forms.Padding(2);
             this.introComboBox.Name = "introComboBox";
             this.introComboBox.Size = new System.Drawing.Size(205, 21);
-            this.introComboBox.TabIndex = 25;
+            this.introComboBox.TabIndex = 17;
             // 
             // win4Label
             // 
             this.win4Label.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.win4Label.Location = new System.Drawing.Point(2, 330);
+            this.win4Label.Location = new System.Drawing.Point(2, 355);
             this.win4Label.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.win4Label.Name = "win4Label";
             this.win4Label.Size = new System.Drawing.Size(87, 25);
-            this.win4Label.TabIndex = 24;
+            this.win4Label.TabIndex = 28;
             this.win4Label.Text = "Win4";
             this.win4Label.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // win3Label
             // 
             this.win3Label.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.win3Label.Location = new System.Drawing.Point(2, 305);
+            this.win3Label.Location = new System.Drawing.Point(2, 330);
             this.win3Label.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.win3Label.Name = "win3Label";
             this.win3Label.Size = new System.Drawing.Size(87, 25);
-            this.win3Label.TabIndex = 23;
+            this.win3Label.TabIndex = 26;
             this.win3Label.Text = "Win3";
             this.win3Label.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // win2Label
             // 
             this.win2Label.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.win2Label.Location = new System.Drawing.Point(2, 280);
+            this.win2Label.Location = new System.Drawing.Point(2, 305);
             this.win2Label.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.win2Label.Name = "win2Label";
             this.win2Label.Size = new System.Drawing.Size(87, 25);
-            this.win2Label.TabIndex = 22;
+            this.win2Label.TabIndex = 24;
             this.win2Label.Text = "Win2";
             this.win2Label.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
-            // label9
+            // winLabel
             // 
-            this.label9.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label9.Location = new System.Drawing.Point(2, 255);
-            this.label9.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(87, 25);
-            this.label9.TabIndex = 21;
-            this.label9.Text = "Win";
-            this.label9.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.winLabel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.winLabel.Location = new System.Drawing.Point(2, 280);
+            this.winLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.winLabel.Name = "winLabel";
+            this.winLabel.Size = new System.Drawing.Size(87, 25);
+            this.winLabel.TabIndex = 22;
+            this.winLabel.Text = "Win";
+            this.winLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
-            // label8
+            // actionLabel
             // 
-            this.label8.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label8.Location = new System.Drawing.Point(2, 230);
-            this.label8.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(87, 25);
-            this.label8.TabIndex = 20;
-            this.label8.Text = "Action";
-            this.label8.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.actionLabel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.actionLabel.Location = new System.Drawing.Point(2, 255);
+            this.actionLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.actionLabel.Name = "actionLabel";
+            this.actionLabel.Size = new System.Drawing.Size(87, 25);
+            this.actionLabel.TabIndex = 20;
+            this.actionLabel.Text = "Action";
+            this.actionLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
-            // label7
+            // briefLabel
             // 
-            this.label7.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label7.Location = new System.Drawing.Point(2, 205);
-            this.label7.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(87, 25);
-            this.label7.TabIndex = 19;
-            this.label7.Text = "Brief";
-            this.label7.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.briefLabel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.briefLabel.Location = new System.Drawing.Point(2, 230);
+            this.briefLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.briefLabel.Name = "briefLabel";
+            this.briefLabel.Size = new System.Drawing.Size(87, 25);
+            this.briefLabel.TabIndex = 18;
+            this.briefLabel.Text = "Brief";
+            this.briefLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
-            // label1
+            // introLabel
             // 
-            this.label1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label1.Location = new System.Drawing.Point(2, 180);
-            this.label1.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(87, 25);
-            this.label1.TabIndex = 18;
-            this.label1.Text = "Intro";
-            this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.introLabel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.introLabel.Location = new System.Drawing.Point(2, 205);
+            this.introLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.introLabel.Name = "introLabel";
+            this.introLabel.Size = new System.Drawing.Size(87, 25);
+            this.introLabel.TabIndex = 16;
+            this.introLabel.Text = "Intro";
+            this.introLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // buildLevelLabel
             // 
@@ -339,45 +355,45 @@ namespace MobiusEditor.Controls
             this.buildLevelLabel.Text = "Build Level";
             this.buildLevelLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
-            // label2
+            // carryOverMoneyLabel
             // 
-            this.label2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label2.Location = new System.Drawing.Point(3, 26);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(85, 26);
-            this.label2.TabIndex = 2;
-            this.label2.Text = "Carryover Money";
-            this.label2.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.carryOverMoneyLabel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.carryOverMoneyLabel.Location = new System.Drawing.Point(3, 26);
+            this.carryOverMoneyLabel.Name = "carryOverMoneyLabel";
+            this.carryOverMoneyLabel.Size = new System.Drawing.Size(85, 26);
+            this.carryOverMoneyLabel.TabIndex = 2;
+            this.carryOverMoneyLabel.Text = "Carryover Money";
+            this.carryOverMoneyLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
-            // label3
+            // nameLabel
             // 
-            this.label3.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label3.Location = new System.Drawing.Point(3, 52);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(85, 26);
-            this.label3.TabIndex = 3;
-            this.label3.Text = "Name";
-            this.label3.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.nameLabel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.nameLabel.Location = new System.Drawing.Point(3, 52);
+            this.nameLabel.Name = "nameLabel";
+            this.nameLabel.Size = new System.Drawing.Size(85, 26);
+            this.nameLabel.TabIndex = 4;
+            this.nameLabel.Text = "Name";
+            this.nameLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
-            // label4
+            // percentLabel
             // 
-            this.label4.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label4.Location = new System.Drawing.Point(3, 78);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(85, 26);
-            this.label4.TabIndex = 4;
-            this.label4.Text = "Percent";
-            this.label4.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.percentLabel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.percentLabel.Location = new System.Drawing.Point(3, 78);
+            this.percentLabel.Name = "percentLabel";
+            this.percentLabel.Size = new System.Drawing.Size(85, 26);
+            this.percentLabel.TabIndex = 6;
+            this.percentLabel.Text = "Percent";
+            this.percentLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
-            // label5
+            // playerLabel
             // 
-            this.label5.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label5.Location = new System.Drawing.Point(3, 104);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(85, 27);
-            this.label5.TabIndex = 5;
-            this.label5.Text = "Player";
-            this.label5.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.playerLabel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.playerLabel.Location = new System.Drawing.Point(3, 104);
+            this.playerLabel.Name = "playerLabel";
+            this.playerLabel.Size = new System.Drawing.Size(85, 27);
+            this.playerLabel.TabIndex = 8;
+            this.playerLabel.Text = "Player";
+            this.playerLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // nameTxt
             // 
@@ -385,7 +401,7 @@ namespace MobiusEditor.Controls
             this.nameTxt.Location = new System.Drawing.Point(94, 55);
             this.nameTxt.Name = "nameTxt";
             this.nameTxt.Size = new System.Drawing.Size(203, 20);
-            this.nameTxt.TabIndex = 7;
+            this.nameTxt.TabIndex = 5;
             // 
             // playerComboBox
             // 
@@ -397,13 +413,13 @@ namespace MobiusEditor.Controls
             this.playerComboBox.Size = new System.Drawing.Size(203, 21);
             this.playerComboBox.TabIndex = 9;
             // 
-            // buidLevelNud
+            // buildLevelNud
             // 
-            this.buidLevelNud.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.buidLevelNud.Location = new System.Drawing.Point(94, 3);
-            this.buidLevelNud.Name = "buidLevelNud";
-            this.buidLevelNud.Size = new System.Drawing.Size(203, 20);
-            this.buidLevelNud.TabIndex = 10;
+            this.buildLevelNud.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.buildLevelNud.Location = new System.Drawing.Point(94, 3);
+            this.buildLevelNud.Name = "buildLevelNud";
+            this.buildLevelNud.Size = new System.Drawing.Size(203, 20);
+            this.buildLevelNud.TabIndex = 1;
             // 
             // percentNud
             // 
@@ -411,7 +427,7 @@ namespace MobiusEditor.Controls
             this.percentNud.Location = new System.Drawing.Point(94, 81);
             this.percentNud.Name = "percentNud";
             this.percentNud.Size = new System.Drawing.Size(203, 20);
-            this.percentNud.TabIndex = 11;
+            this.percentNud.TabIndex = 7;
             // 
             // carryOverMoneyNud
             // 
@@ -419,18 +435,18 @@ namespace MobiusEditor.Controls
             this.carryOverMoneyNud.Location = new System.Drawing.Point(94, 29);
             this.carryOverMoneyNud.Name = "carryOverMoneyNud";
             this.carryOverMoneyNud.Size = new System.Drawing.Size(203, 20);
-            this.carryOverMoneyNud.TabIndex = 12;
+            this.carryOverMoneyNud.TabIndex = 3;
             // 
-            // label6
+            // authorLabel
             // 
-            this.label6.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label6.Location = new System.Drawing.Point(2, 131);
-            this.label6.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(87, 24);
-            this.label6.TabIndex = 13;
-            this.label6.Text = "Author";
-            this.label6.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.authorLabel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.authorLabel.Location = new System.Drawing.Point(2, 131);
+            this.authorLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.authorLabel.Name = "authorLabel";
+            this.authorLabel.Size = new System.Drawing.Size(87, 24);
+            this.authorLabel.TabIndex = 10;
+            this.authorLabel.Text = "Author";
+            this.authorLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // authorTxt
             // 
@@ -439,7 +455,7 @@ namespace MobiusEditor.Controls
             this.authorTxt.Margin = new System.Windows.Forms.Padding(2);
             this.authorTxt.Name = "authorTxt";
             this.authorTxt.Size = new System.Drawing.Size(205, 20);
-            this.authorTxt.TabIndex = 14;
+            this.authorTxt.TabIndex = 11;
             // 
             // baseLabel
             // 
@@ -448,7 +464,7 @@ namespace MobiusEditor.Controls
             this.baseLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.baseLabel.Name = "baseLabel";
             this.baseLabel.Size = new System.Drawing.Size(87, 25);
-            this.baseLabel.TabIndex = 15;
+            this.baseLabel.TabIndex = 12;
             this.baseLabel.Text = "Base";
             this.baseLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
@@ -461,7 +477,18 @@ namespace MobiusEditor.Controls
             this.baseComboBox.Margin = new System.Windows.Forms.Padding(2);
             this.baseComboBox.Name = "baseComboBox";
             this.baseComboBox.Size = new System.Drawing.Size(205, 21);
-            this.baseComboBox.TabIndex = 16;
+            this.baseComboBox.TabIndex = 13;
+            // 
+            // themeComboBox
+            // 
+            this.themeComboBox.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.themeComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.themeComboBox.FormattingEnabled = true;
+            this.themeComboBox.Location = new System.Drawing.Point(93, 182);
+            this.themeComboBox.Margin = new System.Windows.Forms.Padding(2);
+            this.themeComboBox.Name = "themeComboBox";
+            this.themeComboBox.Size = new System.Drawing.Size(205, 21);
+            this.themeComboBox.TabIndex = 15;
             // 
             // BasicSettings
             // 
@@ -469,10 +496,10 @@ namespace MobiusEditor.Controls
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.tableLayoutPanel1);
             this.Name = "BasicSettings";
-            this.Size = new System.Drawing.Size(300, 403);
+            this.Size = new System.Drawing.Size(300, 428);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.buidLevelNud)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.buildLevelNud)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.percentNud)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.carryOverMoneyNud)).EndInit();
             this.ResumeLayout(false);
@@ -484,26 +511,26 @@ namespace MobiusEditor.Controls
 
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.Label buildLevelLabel;
-        private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.Label carryOverMoneyLabel;
+        private System.Windows.Forms.Label nameLabel;
+        private System.Windows.Forms.Label percentLabel;
+        private System.Windows.Forms.Label playerLabel;
         private System.Windows.Forms.TextBox nameTxt;
         private System.Windows.Forms.ComboBox playerComboBox;
-        private System.Windows.Forms.NumericUpDown buidLevelNud;
+        private System.Windows.Forms.NumericUpDown buildLevelNud;
         private System.Windows.Forms.NumericUpDown percentNud;
         private System.Windows.Forms.NumericUpDown carryOverMoneyNud;
-        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.Label authorLabel;
         private System.Windows.Forms.TextBox authorTxt;
         private System.Windows.Forms.Label baseLabel;
         private System.Windows.Forms.ComboBox baseComboBox;
         private System.Windows.Forms.Label win4Label;
         private System.Windows.Forms.Label win3Label;
         private System.Windows.Forms.Label win2Label;
-        private System.Windows.Forms.Label label9;
-        private System.Windows.Forms.Label label8;
-        private System.Windows.Forms.Label label7;
-        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label winLabel;
+        private System.Windows.Forms.Label actionLabel;
+        private System.Windows.Forms.Label briefLabel;
+        private System.Windows.Forms.Label introLabel;
         private System.Windows.Forms.CheckBox isSinglePlayerCheckBox;
         private System.Windows.Forms.ComboBox win4ComboBox;
         private System.Windows.Forms.ComboBox win3ComboBox;
@@ -513,6 +540,8 @@ namespace MobiusEditor.Controls
         private System.Windows.Forms.ComboBox briefComboBox;
         private System.Windows.Forms.ComboBox introComboBox;
         private System.Windows.Forms.ComboBox loseComboBox;
-        private System.Windows.Forms.Label label10;
+        private System.Windows.Forms.Label loseLabel;
+        private System.Windows.Forms.Label themeLabel;
+        private System.Windows.Forms.ComboBox themeComboBox;
     }
 }

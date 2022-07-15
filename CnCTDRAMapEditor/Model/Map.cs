@@ -171,6 +171,8 @@ namespace MobiusEditor.Model
 
         public readonly List<string> MovieTypes;
 
+        public readonly List<string> ThemeTypes;
+
         public int TiberiumOrGoldValue { get; set; }
 
         public int GemValue { get; set; }
@@ -197,8 +199,7 @@ namespace MobiusEditor.Model
             IEnumerable<string> eventTypes, IEnumerable<string> actionTypes, IEnumerable<string> missionTypes,
             IEnumerable<DirectionType> directionTypes, IEnumerable<InfantryType> infantryTypes, IEnumerable<UnitType> unitTypes,
             IEnumerable<BuildingType> buildingTypes, IEnumerable<string> teamMissionTypes, IEnumerable<ITechnoType> teamTechnoTypes,
-            IEnumerable<Waypoint> waypoints,
-            IEnumerable<string> movieTypes)
+            IEnumerable<Waypoint> waypoints, IEnumerable<string> movieTypes, IEnumerable<string> themeTypes)
         {
             BasicSection = basicSection;
 
@@ -219,6 +220,7 @@ namespace MobiusEditor.Model
             TeamMissionTypes = teamMissionTypes.ToArray();
             TeamTechnoTypes = new List<ITechnoType>(teamTechnoTypes);
             MovieTypes = new List<string>(movieTypes);
+            ThemeTypes = new List<string>(themeTypes);
 
             Metrics = new CellMetrics(cellSize);
             Templates = new CellGrid<Template>(Metrics);
@@ -450,7 +452,7 @@ namespace MobiusEditor.Model
             var map = new Map(BasicSection, Theater, Metrics.Size, HouseType,
                 HouseTypes, TheaterTypes, TemplateTypes, TerrainTypes, OverlayTypes, SmudgeTypes,
                 EventTypes, ActionTypes, MissionTypes, DirectionTypes, InfantryTypes, UnitTypes,
-                BuildingTypes, TeamMissionTypes, TeamTechnoTypes, Waypoints, MovieTypes)
+                BuildingTypes, TeamMissionTypes, TeamTechnoTypes, Waypoints, MovieTypes, ThemeTypes)
             {
                 TopLeft = TopLeft,
                 Size = Size

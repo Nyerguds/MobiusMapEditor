@@ -28,6 +28,7 @@ namespace MobiusEditor.Controls
 
             playerComboBox.DataSource = plugin.Map.Houses.Select(h => h.Type.Name).ToArray();
             baseComboBox.DataSource = plugin.Map.Houses.Select(h => h.Type.Name).ToArray();
+            themeComboBox.DataSource = plugin.Map.ThemeTypes.ToArray();
             introComboBox.DataSource = plugin.Map.MovieTypes.ToArray();
             briefComboBox.DataSource = plugin.Map.MovieTypes.ToArray();
             actionComboBox.DataSource = plugin.Map.MovieTypes.ToArray();
@@ -43,6 +44,7 @@ namespace MobiusEditor.Controls
             playerComboBox.DataBindings.Add("SelectedItem", basicSection, "Player");
             authorTxt.DataBindings.Add("Text", basicSection, "Author");
             isSinglePlayerCheckBox.DataBindings.Add("Checked", basicSection, "SoloMission");
+            themeComboBox.DataBindings.Add("SelectedItem", basicSection, "Theme");
             introComboBox.DataBindings.Add("SelectedItem", basicSection, "Intro");
             briefComboBox.DataBindings.Add("SelectedItem", basicSection, "Brief");
             actionComboBox.DataBindings.Add("SelectedItem", basicSection, "Action");
@@ -52,14 +54,14 @@ namespace MobiusEditor.Controls
             switch (plugin.GameType)
             {
                 case GameType.TiberianDawn:
-                    buidLevelNud.DataBindings.Add("Value", basicSection, "BuildLevel");
+                    buildLevelNud.DataBindings.Add("Value", basicSection, "BuildLevel");
                     baseLabel.Visible = baseComboBox.Visible = false;
                     win2Label.Visible = win2ComboBox.Visible = false;
                     win3Label.Visible = win3ComboBox.Visible = false;
                     win4Label.Visible = win4ComboBox.Visible = false;
                     break;
                 case GameType.RedAlert:
-                    buidLevelNud.Visible = buildLevelLabel.Visible = false;
+                    buildLevelNud.Visible = buildLevelLabel.Visible = false;
                     baseComboBox.DataBindings.Add("SelectedItem", basicSection, "BasePlayer");
                     win2ComboBox.DataBindings.Add("SelectedItem", basicSection, "Win2");
                     win3ComboBox.DataBindings.Add("SelectedItem", basicSection, "Win3");
@@ -67,14 +69,20 @@ namespace MobiusEditor.Controls
                     break;
             }
 
-            introComboBox.Enabled = briefComboBox.Enabled = actionComboBox.Enabled = loseComboBox.Enabled = isSinglePlayerCheckBox.Checked;
-            winComboBox.Enabled = win2ComboBox.Enabled = win3ComboBox.Enabled = win4ComboBox.Enabled = isSinglePlayerCheckBox.Checked;
+            CheckSinglePlayerOptions();
         }
 
         private void isSinglePlayerCheckBox_CheckedChanged(object sender, EventArgs e)
         {
-            introComboBox.Enabled = briefComboBox.Enabled = actionComboBox.Enabled = loseComboBox.Enabled = isSinglePlayerCheckBox.Checked;
-            winComboBox.Enabled = win2ComboBox.Enabled = win3ComboBox.Enabled = win4ComboBox.Enabled = isSinglePlayerCheckBox.Checked;
+            CheckSinglePlayerOptions();
+        }
+
+        private void CheckSinglePlayerOptions()
+        {
+            Boolean sp = isSinglePlayerCheckBox.Checked;
+            introComboBox.Enabled = briefComboBox.Enabled = actionComboBox.Enabled = loseComboBox.Enabled = sp;
+            winComboBox.Enabled = win2ComboBox.Enabled = win3ComboBox.Enabled = win4ComboBox.Enabled = sp;
+
         }
     }
 }

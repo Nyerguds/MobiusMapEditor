@@ -476,6 +476,7 @@
     <Compile Include="Utility\TGASharpLib.cs" />
     <Compile Include="Utility\Tileset.cs" />
     <Compile Include="Utility\TilesetManager.cs" />
+    <Compile Include="Utility\ToolTipFixer.cs" />
     <Compile Include="Utility\UndoRedoList.cs" />
     <Compile Include="Utility\WWCompression.cs" />
     <Compile Include="Widgets\NavigationWidget.cs" />

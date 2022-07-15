@@ -18,6 +18,7 @@ using MobiusEditor.Utility;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -43,6 +44,7 @@ namespace MobiusEditor.Dialogs
         private int missionEditRow = -1;
         private Dictionary<string, string> teamMissionTypes;
         private String defaultMission;
+        private ToolTipFixer ttf;
 
         public TeamTypesDialog(IGamePlugin plugin, int maxTeams)
         {
@@ -51,6 +53,8 @@ namespace MobiusEditor.Dialogs
             technoTypes = plugin.Map.TeamTechnoTypes;
 
             InitializeComponent();
+            int extraWidth = recruitPriorityNud.Width + recruitPriorityNud.Margin.Left + recruitPriorityNud.Margin.Right;
+            ttf = new ToolTipFixer(this, toolTip1, 10000, new Dictionary<Type, int> { { typeof(Label), extraWidth } });
 
             switch (plugin.GameType)
             {
@@ -63,7 +67,6 @@ namespace MobiusEditor.Dialogs
                     mercernaryCheckBox.Visible = false;
                     break;
             }
-
             teamTypes = new List<TeamType>(plugin.Map.TeamTypes.Select(t => t.Clone()));
             backupTeamTypes = new List<TeamType>(plugin.Map.TeamTypes.Select(t => t.Clone()));
             int nrOfTeams = Math.Min(maxTeams, teamTypes.Count);
@@ -596,6 +599,21 @@ namespace MobiusEditor.Dialogs
         private void updateDataGridViewAddRows(DataGridView dataGridView, int maxItems)
         {
             dataGridView.AllowUserToAddRows = dataGridView.Rows.Count <= maxItems;
+        }
+
+
+        /// <summary>
+        /// Clean up any resources being used.
+        /// </summary>
+        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        protected override void Dispose(bool disposing)
+        {
+            ttf.Dispose();
+            if (disposing && (components != null))
+            {
+                components.Dispose();
+            }
+            base.Dispose(disposing);
         }
     }
 }
