@@ -41,7 +41,7 @@ v1.4.0.0:
 * Removed the Aircraft from the placeable units in TD.
 * Removed irrelevant orders from the unit missions list (Selling, Missile, etc.)
 * Fixed case sensitivity related crashes in TD teamtypes.
-* TD Triggers without a Teamtype will now automatically get "None" filled in as Teamtype, fixing the malfunctioning of their repeat status.
+* TD triggers without a teamtype will now automatically get "None" filled in as teamtype, fixing the malfunctioning of their repeat status.
 * Added Ctrl-N, Ctrl+O, Ctrl+S etc shortcuts for the File menu.
 * Fixed double indicator on map tile selection window.
 * Fixed smudge reading in TD to allow 5 crater stages.
@@ -50,7 +50,7 @@ v1.4.0.0:
 * RA "Spied by..." trigger event now shows the House to select.
 * Added "Add" buttons in triggers and teamtypes dialogs.
 * Fixed tab order in triggers and teamtypes dialogs.
-* Fixed crash in "already exists" messages for triggers and teams.
+* Fixed crash in "already exists" messages for triggers and teamtypes.
 * Randomised tiberium on save, like the original WW editor does. (this is purely cosmetic; the game re-randomises it on map load.)
 * [EXPERIMENTAL] Added ability to place bibs as Smudge type. They won't show their full size in the editor at the moment, though.
 
@@ -87,12 +87,12 @@ v1.4.0.1:
 v1.4.0.2:
 
 * Fixed the bug that cleared all map templates on save in v1.4.0.1 (whoops).
-* Fixed the bug in the Teamtypes list that showed the wrong context menu options on right click.
+* Fixed the bug in the teamtypes list that showed the wrong context menu options on right click.
 * Fixed the bug that the status bar did not show the map placement shortcuts hints on initial load.
 * The editor no longer exits if it cannot connect to Steam. Instead, workshop publishing will simply be disabled if the Steamworks interface can't be initialised.
 * The texture manager will now properly dispose all loaded image objects when a different map is loaded.
 * Added \*.ini to the list of possible extensions for opening RA maps, to support opening pre-Remaster missions.
-* If a building has no direction to set and shows no dropdown for it, the "Direction" label is now also now removed.
+* If a building has no direction to set and shows no dropdown for it, the "Direction" label is now also removed.
 * Structure graphics are now correctly centered on their full building size.
 * Damaged state is now correctly shown at strength 128/256, and not below it.
 * Damaged states now work correctly on all buildings.
@@ -110,5 +110,6 @@ v1.4.0.3: [WIP]
 * "Theme" has been added to the map settings. Do note this has no effect on the Remaster.
 * All videos available in the Remaster are now shown in the video lists in the "Map settings" dialog.
 * Added missing entries (videos not included in the Remaster) to the RA and TD video lists, with a 'Classic only' indicator.
-* Added tooltips for the team type options.
-* Fixed tab order of the Temtype options.
+* Added tooltips for the teamtype options.
+* Fixed tab order of the teamtype options.
+* Removed teamtype "Priority" value capping after feedback from users and checking the source code.
