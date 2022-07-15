@@ -145,11 +145,13 @@ namespace MobiusEditor.Tools
             rectangle.Inflate(navigationWidget.MouseoverSize.Width / 2, navigationWidget.MouseoverSize.Height / 2);
             foreach (var subLocation in rectangle.Points())
             {
-                if ((subLocation.Y == 0) || (subLocation.Y == (map.Metrics.Height - 1)))
+                /*/
+                if ((subLocation.Y == 0) || (subLocation.Y == (map.Metrics.Height - 1))
+                    || (subLocation.X == 0) || (subLocation.X == (map.Metrics.Width - 1)))
                 {
                     continue;
                 }
-
+                //*/
                 if (map.Metrics.GetCell(subLocation, out int cell))
                 {
                     if (map.Overlay[cell] == null)

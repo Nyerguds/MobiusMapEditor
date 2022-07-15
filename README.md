@@ -4,6 +4,22 @@ An enhanced version of the C&C Tiberian Dawn and Red Alert Map Editor based on t
 The goal of the project is simply to improve the usability and convenience of the map editor, fix bugs, improve and clean its code-base,
 enhance compatibility with different kinds of systems and enhance the editor's support for mods.
 
+### Contributing
+
+Right now, I'm not really looking into making this a joint project. Specific bug reports and suggestions are always welcome though, but post them as issues.
+
+### Upgrading
+
+The settings of the program are apparently automatically saved under
+
+%localappdata%\Nyerguds\
+
+So if you install a new version, and your settings are gone, just go there and copy the settings file to the newest folder.
+
+---
+
+## Change log
+
 ### Features added by Rampastring:
 
 * Downsized menu graphics by a user-configurable factor so you can see more placeable object types at once on sub-4K monitors.
@@ -87,15 +103,8 @@ v1.4.0.2:
 * The "clear1" tile is now explicitly shown in the tiles list.
 * Teamtype "Priority" value (recruit priority) is now capped at 15.
 
-### Upgrading
+v1.4.0.3: [WIP]
 
-The settings of the program are apparently automatically saved under
+* Removed limitation on placing resources on the top and bottom row of the map.
+* The 'clamping' logic that prevented tool windows from being dragged outside usable screen bounds had a bug that this prevented it from being dragged onto a different monitor. This is now fixed.
 
-%localappdata%\Nyerguds\
-
-So if you install a new version, and your settings are gone, just go there and copy the settings file to the newest folder.
-
-
-### Contributing
-
-Right now, I'm not really looking into making this a joint project. Specific bug reports and suggestions are always welcome though.

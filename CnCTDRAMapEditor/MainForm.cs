@@ -1049,7 +1049,7 @@ namespace MobiusEditor
             }
 
             Rectangle bounds = activeToolForm.DesktopBounds;
-            Rectangle workingArea = Screen.FromControl(this).WorkingArea;
+            Rectangle workingArea = Screen.FromControl(activeToolForm).WorkingArea;
             if (bounds.Right > workingArea.Right)
             {
                 bounds.X = workingArea.Right - bounds.Width;
