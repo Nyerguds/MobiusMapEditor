@@ -56,26 +56,33 @@ namespace MobiusEditor.Utility
             }
         }
 
-        public bool GetTeamColorTileData(IEnumerable<string> searchTilesets, string name, int shape, TeamColor teamColor, out int fps, out Tile[] tiles)
+        public bool GetTeamColorTileData(IEnumerable<string> searchTilesets, string name, int shape, TeamColor teamColor, out int fps, out Tile[] tiles, bool generateFallback)
         {
             fps = 0;
             tiles = null;
-
+            Tileset first = null;
             foreach (var tileset in tilesets.Join(searchTilesets, x => x.Key, y => y, (x, y) => x.Value))
             {
-                if (tileset.GetTileData(name, shape, teamColor, out fps, out tiles))
+                if (generateFallback && first == null)
+                {
+                    first = tileset;
+                }
+                if (tileset.GetTileData(name, shape, teamColor, out fps, out tiles, false))
                 {
                     return true;
                 }
             }
-
+            if (generateFallback && first != null && first.GetTileData(name, shape, teamColor, out fps, out tiles, generateFallback))
+            {
+                return true;
+            }
             return false;
         }
 
-        public bool GetTeamColorTileData(IEnumerable<string> searchTilesets, string name, int shape, TeamColor teamColor, out int fps, out Tile tile)
+        public bool GetTeamColorTileData(IEnumerable<string> searchTilesets, string name, int shape, TeamColor teamColor, out int fps, out Tile tile, bool generateFallback)
         {
             tile = null;
-            if (!GetTeamColorTileData(searchTilesets, name, shape, teamColor, out fps, out Tile[] tiles))
+            if (!GetTeamColorTileData(searchTilesets, name, shape, teamColor, out fps, out Tile[] tiles, generateFallback))
             {
                 return false;
             }
@@ -83,34 +90,64 @@ namespace MobiusEditor.Utility
             return true;
         }
 
+        public bool GetTeamColorTileData(IEnumerable<string> searchTilesets, string name, int shape, TeamColor teamColor, out Tile[] tiles, bool generateFallback)
+        {
+            return GetTeamColorTileData(searchTilesets, name, shape, teamColor, out int fps, out tiles, generateFallback);
+        }
+
         public bool GetTeamColorTileData(IEnumerable<string> searchTilesets, string name, int shape, TeamColor teamColor, out Tile[] tiles)
         {
-            return GetTeamColorTileData(searchTilesets, name, shape, teamColor, out int fps, out tiles);
+            return GetTeamColorTileData(searchTilesets, name, shape, teamColor, out int fps, out tiles, false);
+        }
+
+        public bool GetTeamColorTileData(IEnumerable<string> searchTilesets, string name, int shape, TeamColor teamColor, out Tile tile, bool generateFallback)
+        {
+            return GetTeamColorTileData(searchTilesets, name, shape, teamColor, out int fps, out tile, generateFallback);
         }
 
         public bool GetTeamColorTileData(IEnumerable<string> searchTilesets, string name, int shape, TeamColor teamColor, out Tile tile)
         {
-            return GetTeamColorTileData(searchTilesets, name, shape, teamColor, out int fps, out tile);
+            return GetTeamColorTileData(searchTilesets, name, shape, teamColor, out int fps, out tile, false);
+        }
+
+        public bool GetTileData(IEnumerable<string> searchTilesets, string name, int shape, out int fps, out Tile[] tiles, bool generateFallback)
+        {
+            return GetTeamColorTileData(searchTilesets, name, shape, null, out fps, out tiles, generateFallback);
         }
 
         public bool GetTileData(IEnumerable<string> searchTilesets, string name, int shape, out int fps, out Tile[] tiles)
         {
-            return GetTeamColorTileData(searchTilesets, name, shape, null, out fps, out tiles);
+            return GetTeamColorTileData(searchTilesets, name, shape, null, out fps, out tiles, false);
+        }
+
+        public bool GetTileData(IEnumerable<string> searchTilesets, string name, int shape, out int fps, out Tile tile, bool generateFallback)
+        {
+            return GetTeamColorTileData(searchTilesets, name, shape, null, out fps, out tile, generateFallback);
         }
 
         public bool GetTileData(IEnumerable<string> searchTilesets, string name, int shape, out int fps, out Tile tile)
         {
-            return GetTeamColorTileData(searchTilesets, name, shape, null, out fps, out tile);
+            return GetTeamColorTileData(searchTilesets, name, shape, null, out fps, out tile, false);
+        }
+
+        public bool GetTileData(IEnumerable<string> searchTilesets, string name, int shape, out Tile[] tiles, bool generateFallback)
+        {
+            return GetTeamColorTileData(searchTilesets, name, shape, null, out tiles, generateFallback);
         }
 
         public bool GetTileData(IEnumerable<string> searchTilesets, string name, int shape, out Tile[] tiles)
         {
-            return GetTeamColorTileData(searchTilesets, name, shape, null, out tiles);
+            return GetTeamColorTileData(searchTilesets, name, shape, null, out tiles, false);
+        }
+
+        public bool GetTileData(IEnumerable<string> searchTilesets, string name, int shape, out Tile tile, bool generateFallback)
+        {
+            return GetTeamColorTileData(searchTilesets, name, shape, null, out tile, generateFallback);
         }
 
         public bool GetTileData(IEnumerable<string> searchTilesets, string name, int shape, out Tile tile)
         {
-            return GetTeamColorTileData(searchTilesets, name, shape, null, out tile);
+            return GetTeamColorTileData(searchTilesets, name, shape, null, out tile, false);
         }
 
         public int GetTileDataLength(IEnumerable<string> searchTilesets, string name)

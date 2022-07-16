@@ -99,5 +99,10 @@ namespace MobiusEditor.Controls
 
             e.DrawFocusRectangle();
         }
+
+        protected override void OnResize(EventArgs e)
+        {
+            Invalidate();
+        }
     }
 }

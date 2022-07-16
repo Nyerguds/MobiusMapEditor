@@ -221,8 +221,24 @@ namespace MobiusEditor.Render
 
                         var location = new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height);
                         var size = new Size(tile.Image.Width / tileScale, tile.Image.Height / tileScale);
-                        var terrainBounds = new Rectangle(location, size);
-                        overlappingRenderList.Add((terrainBounds, g => g.DrawImage(tile.Image, terrainBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes)));
+                        var maxSize = new Size(terrain.Type.Size.Width * tileSize.Width, terrain.Type.Size.Height * tileSize.Height);
+                        // Graphics are too large. Scale them down using the largest dimension.
+                        if ((size.Width >= size.Height) && (size.Width > maxSize.Width))
+                        {
+                            size.Height = size.Height * maxSize.Width / size.Width;
+                            size.Width = maxSize.Width;
+                        }
+                        else if ((size.Height >= size.Width) && (size.Height > maxSize.Height))
+                        {
+                            size.Width = size.Width * maxSize.Height / size.Height;
+                            size.Height = maxSize.Height;
+                        }
+                        // Center graphics inside bounding box
+                        int locX = (maxSize.Width - size.Width) / 2 + location.X;
+                        int locY = (maxSize.Height - size.Height) / 2 + location.Y;
+                        var paintBounds = new Rectangle(locX, locY, size.Width, size.Height);
+                        var terrainBounds = new Rectangle(location, maxSize);
+                        overlappingRenderList.Add((terrainBounds, g => g.DrawImage(tile.Image, paintBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes)));
                     }
                     else
                     {
@@ -338,8 +354,8 @@ namespace MobiusEditor.Render
             {
                 name = tiberiumOrGoldTypes[new Random(randomSeed ^ topLeft.GetHashCode()).Next(tiberiumOrGoldTypes.Length)].Name;
             }
-
-            if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, name, overlay.Icon, out Tile tile))
+            // For Decoration types, generate dummy if not found.
+            if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, name, overlay.Icon, out Tile tile, (overlay.Type.Flag & OverlayTypeFlag.Decoration) != 0))
             {
                 var size = (overlay.Type.IsCrate || overlay.Type.IsFlag) ? new Size(tile.Image.Width / tileScale, tile.Image.Height / tileScale) : tileSize;
                 var location = new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height)

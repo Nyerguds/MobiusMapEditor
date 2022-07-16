@@ -70,7 +70,6 @@ namespace MobiusEditor.Tools.Dialogs
 
         protected override void OnShown(EventArgs e)
         {
-            base.OnShown(e);
             if (!startLocation.HasValue)
             {
                 Rectangle screen = Screen.FromControl(this).WorkingArea;
@@ -82,6 +81,8 @@ namespace MobiusEditor.Tools.Dialogs
                 Location = loc;
             }
             Location = startLocation.Value;
+            // execute any further Shown event handlers
+            base.OnShown(e);
         }
 
         protected override void OnClick(EventArgs e)

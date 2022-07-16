@@ -78,7 +78,7 @@ namespace MobiusEditor.Utility
             }
         }
 
-        public (Bitmap, Rectangle) GetTexture(string filename, TeamColor teamColor)
+        public (Bitmap, Rectangle) GetTexture(string filename, TeamColor teamColor, bool generateFallback)
         {
             if (teamColorTextures.TryGetValue((filename, teamColor), out (Bitmap bitmap, Rectangle opaqueBounds) result))
             {
@@ -296,6 +296,36 @@ namespace MobiusEditor.Utility
                         }
                     }
                 }
+            }
+
+            if (!cachedTextures.TryGetValue(filename, out result.bitmap) && generateFallback)
+            {
+                int width = Globals.OriginalTileWidth * 10;
+                int height = Globals.OriginalTileHeight * 10;
+                Bitmap bm = new Bitmap(Globals.OriginalTileWidth, Globals.OriginalTileHeight);
+                // Generate at 10x the size, then scale down to get smooth edges. The big version gets disposed right away anyway.
+                using (Bitmap big = new Bitmap(width, height))
+                {
+                    using (Graphics graphics = Graphics.FromImage(big))
+                    {
+                        int outer = width / 10;
+                        int inner = width * 2 / 13; // divided by 6.5
+                        using (SolidBrush outside = new SolidBrush(Color.FromArgb(85, 128, 128, 128))) // 33% opacity 50%-gray
+                        using (SolidBrush ring = new SolidBrush(Color.FromArgb(128, 0, 0, 0))) // 50% opacity black
+                        using (SolidBrush center = new SolidBrush(Color.FromArgb(128, 255, 255, 255))) // 50% opacity white
+                        {
+                            graphics.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceCopy;
+                            graphics.FillRectangle(outside, new Rectangle(0, 0, width, height));
+                            graphics.FillRectangle(ring, new Rectangle(outer, outer, width - outer * 2, height - outer * 2));
+                            graphics.FillRectangle(center, new Rectangle(inner, inner, width - inner * 2, height - inner * 2));
+                        }
+                    }
+                    using (Graphics graphics = Graphics.FromImage(bm))
+                    {
+                        graphics.DrawImage(big, 0, 0, bm.Width, bm.Height);
+                    }
+                }
+                cachedTextures[filename] = bm;
             }
 
             if (!cachedTextures.TryGetValue(filename, out result.bitmap))

@@ -1010,11 +1010,13 @@ namespace MobiusEditor
                 activeToolForm = (Form)toolDialog;
                 toolDialog.Initialize(mapPanel, ActiveLayers, toolStatusLabel, mouseToolTip, plugin, url);
                 activeTool = toolDialog.GetTool();
+                activeToolForm.ResizeEnd -= ActiveToolForm_ResizeEnd;
+                activeToolForm.Shown -= this.ActiveToolForm_Shown;
+                activeToolForm.Shown += this.ActiveToolForm_Shown;
                 activeToolForm.Show(this);
                 activeTool.Activate();
 
                 activeToolForm.ResizeEnd += ActiveToolForm_ResizeEnd;
-                clampActiveToolForm();
             }
 
             switch (plugin.GameType)
@@ -1041,15 +1043,20 @@ namespace MobiusEditor
             mapPanel.Invalidate();
         }
 
-        private void clampActiveToolForm()
+        private void ClampActiveToolForm()
         {
-            if (activeToolForm == null)
+            ClampForm(activeToolForm);
+        }
+
+        public static void ClampForm(Form toolform)
+        {
+            if (toolform == null)
             {
                 return;
             }
 
-            Rectangle bounds = activeToolForm.DesktopBounds;
-            Rectangle workingArea = Screen.FromControl(activeToolForm).WorkingArea;
+            Rectangle bounds = toolform.DesktopBounds;
+            Rectangle workingArea = Screen.FromControl(toolform).WorkingArea;
             if (bounds.Right > workingArea.Right)
             {
                 bounds.X = workingArea.Right - bounds.Width;
@@ -1066,12 +1073,21 @@ namespace MobiusEditor
             {
                 bounds.Y = workingArea.Top;
             }
-            activeToolForm.DesktopBounds = bounds;
+            toolform.DesktopBounds = bounds;
         }
 
         private void ActiveToolForm_ResizeEnd(object sender, EventArgs e)
         {
-            clampActiveToolForm();
+            ClampActiveToolForm();
+        }
+
+        private void ActiveToolForm_Shown(object sender, EventArgs e)
+        {
+            Form tool = sender as Form;
+            if (tool != null)
+            {
+                ClampForm(tool);
+            }
         }
 
         private void Triggers_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)

@@ -111,7 +111,7 @@ namespace MobiusEditor.Utility
             }
         }
 
-        public bool GetTileData(string name, int shape, TeamColor teamColor, out int fps, out Tile[] tiles)
+        public bool GetTileData(string name, int shape, TeamColor teamColor, out int fps, out Tile[] tiles, bool generateFallback)
         {
             fps = 0;
             tiles = null;
@@ -119,9 +119,16 @@ namespace MobiusEditor.Utility
             {
                 return false;
             }
-            if (!this.tiles.TryGetValue(name, out Dictionary<int, TileData> shapes))
+            if (!this.tiles.TryGetValue(name, out Dictionary<int, TileData> shapes) && !generateFallback)
             {
                 return false;
+            }
+            if (shapes == null && generateFallback)
+            {
+                shapes = new Dictionary<int, TileData>();
+                TileData dummyData = new TileData();
+                dummyData.Frames = new string[] { "DATA\\ART\\TEXTURES\\SRGB\\FALLBACK_DUMMY\\" + name + "_" + shape.ToString("D4") + ".tga" };
+                shapes.Add(0, dummyData);
             }
 
             if (shape < 0)
@@ -144,7 +151,7 @@ namespace MobiusEditor.Utility
                     var filename = tileData.Frames[i];
                     if (!string.IsNullOrEmpty(filename))
                     {
-                        (Bitmap bitmap, Rectangle opaqueBounds) = textureManager.GetTexture(filename, teamColor);
+                        (Bitmap bitmap, Rectangle opaqueBounds) = textureManager.GetTexture(filename, teamColor, generateFallback);
                         tileDataTiles[i] = new Tile(bitmap, opaqueBounds);
                     }
                     else

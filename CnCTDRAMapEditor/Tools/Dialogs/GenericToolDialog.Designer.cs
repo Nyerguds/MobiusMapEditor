@@ -101,7 +101,8 @@ namespace MobiusEditor.Tools.Dialogs
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.MinimumSize = new System.Drawing.Size(490, 293);
+            this.MinimumSize = new System.Drawing.Size(500, 293);
+            this.Size = new System.Drawing.Size(560, 293);
             this.Name = "TemplateToolDialog";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;

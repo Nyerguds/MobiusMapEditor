@@ -94,8 +94,8 @@ v1.4.0.2:
 * Added \*.ini to the list of possible extensions for opening RA maps, to support opening pre-Remaster missions.
 * If a building has no direction to set and shows no dropdown for it, the "Direction" label is now also removed.
 * Structure graphics are now correctly centered on their full building size.
-* Damaged state is now correctly shown at strength 128/256, and not below it.
-* Damaged states now work correctly on all buildings.
+* The damaged state of buildings is now shown at strength values of 128 and below, rather than only below that value.
+* Damaged states now work correctly on all buildings, with a vastly simpler and more general internal logic.
 * Using the mouse wheel will now change the strength of objects in increments of 4.
 * IQ of all Houses in Red Alert now defaults to 0.
 * Fixed gunboat facing and damage states logic.
@@ -113,3 +113,6 @@ v1.4.0.3: [WIP]
 * Added tooltips for the teamtype options.
 * Fixed tab order of the teamtype options.
 * Removed teamtype "Priority" value capping after feedback from users and checking the source code.
+* The CONC and ROAD overlay types now show the same graphics as in-game. This is technically just a dummy graphic the game uses when not finding object graphics. The version in the editor is a reconstruction.
+* All overlay items will now show a preview icon of the same size.
+* Fixed errors in tree sizes.

@@ -110,8 +110,23 @@ namespace MobiusEditor.Model
 
             if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, tileName, IsTransformable ? 22 : 0, out Tile tile))
             {
-                RenderSize = new Size(tile.Image.Width / Globals.TileScale, tile.Image.Height / Globals.TileScale);
-                Thumbnail = new Bitmap(tile.Image, tile.Image.Width / 2, tile.Image.Height / 2);
+                int renderWidth = Size.Width * Globals.TileWidth;
+                int renderHeight = Size.Height * Globals.TileHeight;
+                if ((tile.Image.Width * renderHeight) > (tile.Image.Height * renderWidth))
+                {
+                    RenderSize = new Size(
+                        tile.Image.Width * renderWidth / tile.Image.Width,
+                        tile.Image.Height * renderWidth / tile.Image.Width
+                    );
+                }
+                else
+                {
+                    RenderSize = new Size(
+                        tile.Image.Width * renderHeight / tile.Image.Height,
+                        tile.Image.Height * renderHeight / tile.Image.Height
+                    );
+                }
+                Thumbnail = new Bitmap(tile.Image, RenderSize.Width, RenderSize.Height);
             }
             else
             {
