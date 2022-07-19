@@ -74,12 +74,9 @@ namespace MobiusEditor.Utility
             using (StreamReader sr = new StreamReader(libraryInfo))
             {
                 String currentLine;
-                while (!foundLibFolders)
+                while (!foundLibFolders && (currentLine = sr.ReadLine()) != null)
                 {
-                    currentLine = sr.ReadLine();
-                    if (currentLine == null)
-                        break;
-                    foundLibFolders = currentLine == "\"libraryfolders\"";
+                    foundLibFolders = "libraryfolders".Equals(currentLine.Trim().Trim('"'));
                 }
                 if (!foundLibFolders)
                     return null;
