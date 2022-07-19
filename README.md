@@ -105,6 +105,7 @@ v1.4.0.2:
 
 v1.4.0.3: [WIP]
 
+* The editor now tries to automatically detect the game installation folder in Steam.
 * Removed limitation on placing resources on the top and bottom row of the map.
 * The 'clamping' logic that prevented tool windows from being dragged outside usable screen bounds had a bug that this prevented it from being dragged onto a different monitor. This is now fixed.
 * "Theme" has been added to the map settings. Do note this has no effect on the Remaster.
