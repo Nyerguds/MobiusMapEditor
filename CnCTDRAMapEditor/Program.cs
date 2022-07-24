@@ -42,33 +42,33 @@ namespace MobiusEditor
             // Do a test for CONFIG.MEG
             if (!FileTest())
             {
-                // If it does not exist, then try to use the directory from settings
+                // If it does not exist, try to use the directory from the settings.
                 bool validSavedDirectory = false;
-                if (!string.IsNullOrWhiteSpace(Properties.Settings.Default.GameDirectoryPath) &&
+                if (!String.IsNullOrWhiteSpace(Properties.Settings.Default.GameDirectoryPath) &&
                     Directory.Exists(Properties.Settings.Default.GameDirectoryPath))
                 {
-                    Environment.CurrentDirectory = Properties.Settings.Default.GameDirectoryPath;
-                    if (FileTest())
+                    if (FileTest(Properties.Settings.Default.GameDirectoryPath))
                     {
+                        Environment.CurrentDirectory = Properties.Settings.Default.GameDirectoryPath;
                         validSavedDirectory = true;
                     }
                 }
-                // Before showing dialog to ask, try to autodetect the Steam path.
+                // Before showing a dialog to ask, try to autodetect the Steam path.
                 if (!validSavedDirectory)
                 {
-                    String gameFolder = SteamAssist.TryGetSteamGameFolder("1213210", "TiberianDawn.dll", "RedAlert.dll");
+                    string gameFolder = SteamAssist.TryGetSteamGameFolder("1213210", "TiberianDawn.dll", "RedAlert.dll");
                     if (gameFolder != null)
                     {
-                        Environment.CurrentDirectory = gameFolder;
-                        if (FileTest())
+                        if (FileTest(gameFolder))
                         {
+                            Environment.CurrentDirectory = gameFolder;
                             validSavedDirectory = true;
-                            Properties.Settings.Default.GameDirectoryPath = Environment.CurrentDirectory;
+                            Properties.Settings.Default.GameDirectoryPath = gameFolder;
                             Properties.Settings.Default.Save();
                         }
                     }
                 }
-                // If the directory in settings is wrong too, then we need to ask the user for the installation dir
+                // If the directory in the settings is wrong, and it can not be autodetected, we need to ask the user for the installation dir.
                 if (!validSavedDirectory)
                 {
                     var gameInstallationPathForm = new GameInstallationPathForm();
