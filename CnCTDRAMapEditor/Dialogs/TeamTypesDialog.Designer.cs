@@ -597,9 +597,9 @@ namespace MobiusEditor.Dialogs
             this.label8.Location = new System.Drawing.Point(235, 0);
             this.label8.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(47, 13);
+            this.label8.Size = new System.Drawing.Size(38, 13);
             this.label8.TabIndex = 1;
-            this.label8.Text = "Missions";
+            this.label8.Text = "Orders";
             // 
             // teamsDataGridView
             // 
@@ -618,8 +618,11 @@ namespace MobiusEditor.Dialogs
             this.teamsDataGridView.TabIndex = 30;
             this.teamsDataGridView.VirtualMode = true;
             this.teamsDataGridView.CancelRowEdit += new System.Windows.Forms.QuestionEventHandler(this.teamsDataGridView_CancelRowEdit);
+            this.teamsDataGridView.CellEnter += new System.Windows.Forms.DataGridViewCellEventHandler(this.teamsDataGridView_CellEnter);
+            this.teamsDataGridView.CellMouseDown += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.teamsDataGridView_CellMouseDown);
             this.teamsDataGridView.CellValueNeeded += new System.Windows.Forms.DataGridViewCellValueEventHandler(this.teamsDataGridView_CellValueNeeded);
             this.teamsDataGridView.CellValuePushed += new System.Windows.Forms.DataGridViewCellValueEventHandler(this.teamsDataGridView_CellValuePushed);
+            this.teamsDataGridView.CurrentCellDirtyStateChanged += new System.EventHandler(this.teamsDataGridView_CurrentCellDirtyStateChanged);
             this.teamsDataGridView.DataError += new System.Windows.Forms.DataGridViewDataErrorEventHandler(this.DataGridView_DataError);
             this.teamsDataGridView.NewRowNeeded += new System.Windows.Forms.DataGridViewRowEventHandler(this.teamsDataGridView_NewRowNeeded);
             this.teamsDataGridView.RowDirtyStateNeeded += new System.Windows.Forms.QuestionEventHandler(this.teamsDataGridView_RowDirtyStateNeeded);
@@ -627,6 +630,7 @@ namespace MobiusEditor.Dialogs
             this.teamsDataGridView.UserAddedRow += new System.Windows.Forms.DataGridViewRowEventHandler(this.teamsDataGridView_UserAddedRow);
             this.teamsDataGridView.UserDeletedRow += new System.Windows.Forms.DataGridViewRowEventHandler(this.teamsDataGridView_UserDeletedRow);
             this.teamsDataGridView.UserDeletingRow += new System.Windows.Forms.DataGridViewRowCancelEventHandler(this.teamsDataGridView_UserDeletingRow);
+            this.teamsDataGridView.Leave += new System.EventHandler(this.teamsDataGridView_Leave);
             // 
             // teamsTypeColumn
             // 
@@ -657,8 +661,12 @@ namespace MobiusEditor.Dialogs
             this.missionsDataGridView.TabIndex = 31;
             this.missionsDataGridView.VirtualMode = true;
             this.missionsDataGridView.CancelRowEdit += new System.Windows.Forms.QuestionEventHandler(this.missionsDataGridView_CancelRowEdit);
+            this.missionsDataGridView.CellEnter += new System.Windows.Forms.DataGridViewCellEventHandler(this.missionsDataGridView_CellEnter);
+            this.missionsDataGridView.CellMouseDown += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.missionsDataGridView_CellMouseDown);
+            this.missionsDataGridView.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.missionsDataGridView_CellValueChanged);
             this.missionsDataGridView.CellValueNeeded += new System.Windows.Forms.DataGridViewCellValueEventHandler(this.missionsDataGridView_CellValueNeeded);
             this.missionsDataGridView.CellValuePushed += new System.Windows.Forms.DataGridViewCellValueEventHandler(this.missionsDataGridView_CellValuePushed);
+            this.missionsDataGridView.CurrentCellDirtyStateChanged += new System.EventHandler(this.missionsDataGridView_CurrentCellDirtyStateChanged);
             this.missionsDataGridView.DataError += new System.Windows.Forms.DataGridViewDataErrorEventHandler(this.DataGridView_DataError);
             this.missionsDataGridView.NewRowNeeded += new System.Windows.Forms.DataGridViewRowEventHandler(this.missionsDataGridView_NewRowNeeded);
             this.missionsDataGridView.RowDirtyStateNeeded += new System.Windows.Forms.QuestionEventHandler(this.missionsDataGridView_RowDirtyStateNeeded);
@@ -666,12 +674,13 @@ namespace MobiusEditor.Dialogs
             this.missionsDataGridView.UserAddedRow += new System.Windows.Forms.DataGridViewRowEventHandler(this.missionsDataGridView_UserAddedRow);
             this.missionsDataGridView.UserDeletedRow += new System.Windows.Forms.DataGridViewRowEventHandler(this.missionsDataGridView_UserDeletedRow);
             this.missionsDataGridView.UserDeletingRow += new System.Windows.Forms.DataGridViewRowCancelEventHandler(this.missionsDataGridView_UserDeletingRow);
+            this.missionsDataGridView.Leave += new System.EventHandler(this.missionsDataGridView_Leave);
             // 
             // missionsMissionColumn
             // 
-            this.missionsMissionColumn.HeaderText = "Mission";
+            this.missionsMissionColumn.HeaderText = "Order";
             this.missionsMissionColumn.Name = "missionsMissionColumn";
-            this.missionsMissionColumn.Width = 48;
+            this.missionsMissionColumn.Width = 39;
             // 
             // missionsArgumentColumn
             // 
@@ -744,6 +753,7 @@ namespace MobiusEditor.Dialogs
             this.Margin = new System.Windows.Forms.Padding(2);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
+            this.MinimumSize = new System.Drawing.Size(650, 370);
             this.Name = "TeamTypesDialog";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;

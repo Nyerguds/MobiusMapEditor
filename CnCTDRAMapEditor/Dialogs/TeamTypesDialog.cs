@@ -42,7 +42,13 @@ namespace MobiusEditor.Dialogs
         private TeamTypeMission mockMission;
         private int classEditRow = -1;
         private int missionEditRow = -1;
+        // Used to block detection of state change.
+        private bool blockStateChange;
+        // Remembers which dropdown was last selected, to avoid the auto-opening mechanism from triggering after making a selection in a dropdown.
+        private int lastEditedMissionRow = -1;
+        private int lastEditedTeamRow = -1;
         private Dictionary<string, string> teamMissionTypes;
+        private Dictionary<string, string> teamMissionTooltips;
         private String defaultMission;
         private ToolTipFixer ttf;
 
@@ -96,8 +102,15 @@ namespace MobiusEditor.Dialogs
             String[] missions = plugin.Map.TeamMissionTypes;
             teamMissionTypes = Enumerable.ToDictionary(missions, t => t, StringComparer.OrdinalIgnoreCase);
             if (!teamMissionTypes.TryGetValue("Guard", out defaultMission))
-                defaultMission = missions[0];
+                defaultMission = missions.FirstOrDefault() ?? String.Empty;
             missionsMissionColumn.DataSource = missions;
+            teamMissionTooltips = new Dictionary<string, string>();
+            for (int i = 0; i < missions.Length; i++)
+            {
+                string missionInfo;
+                if (plugin.Map.TeamMissionTypesInfo.TryGetValue(missions[i], out missionInfo))
+                    teamMissionTooltips.Add(missions[i], missionInfo);
+            }
 
             teamTypeTableLayoutPanel.Visible = false;
         }
@@ -337,7 +350,6 @@ namespace MobiusEditor.Dialogs
             {
                 return;
             }
-
             TeamTypeClass teamTypeClass = null;
             if (e.RowIndex == classEditRow)
             {
@@ -347,12 +359,10 @@ namespace MobiusEditor.Dialogs
             {
                 teamTypeClass = SelectedTeamType.Classes[e.RowIndex];
             }
-
             if (teamTypeClass == null)
             {
                 return;
             }
-
             switch (e.ColumnIndex)
             {
                 case 0:
@@ -447,6 +457,9 @@ namespace MobiusEditor.Dialogs
                 mockClass = null;
                 classEditRow = -1;
             }
+            // Prevent dropdown from popping up.
+            lastEditedTeamRow = e.Row.Index - 1;
+            lastEditedMissionRow = -1;
         }
 
         private void teamsDataGridView_UserAddedRow(object sender, DataGridViewRowEventArgs e)
@@ -487,8 +500,8 @@ namespace MobiusEditor.Dialogs
                 return;
             }
             // Fix for case sensitivity issue in teamtype missions
-            String mission;
-            if (!teamMissionTypes.TryGetValue(teamMissionType.Mission, out mission))
+            String mission = null;
+            if (teamMissionType.Mission != null && !teamMissionTypes.TryGetValue(teamMissionType.Mission, out mission))
                 mission = defaultMission;
             switch (e.ColumnIndex)
             {
@@ -552,6 +565,7 @@ namespace MobiusEditor.Dialogs
                 mockMission = null;
                 missionEditRow = -1;
             }
+            SetToolTip(sender as DataGridView, e.RowIndex, teamMissionTooltips);
         }
 
         private void missionsDataGridView_RowDirtyStateNeeded(object sender, QuestionEventArgs e)
@@ -584,6 +598,10 @@ namespace MobiusEditor.Dialogs
                 mockMission = null;
                 missionEditRow = -1;
             }
+            // Prevent dropdown from popping up.
+            lastEditedMissionRow = e.Row.Index - 1;
+            lastEditedTeamRow = -1;
+
         }
 
         private void missionsDataGridView_UserAddedRow(object sender, DataGridViewRowEventArgs e)
@@ -614,6 +632,206 @@ namespace MobiusEditor.Dialogs
                 components.Dispose();
             }
             base.Dispose(disposing);
+        }
+
+        private void missionsDataGridView_CellValueChanged(Object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0 || e.ColumnIndex != 0)
+            {
+                return;
+            }
+            SetToolTip(sender as DataGridView, e.RowIndex, teamMissionTooltips);
+        }
+
+        private void missionsDataGridView_CurrentCellDirtyStateChanged(Object sender, EventArgs e)
+        {
+            if (blockStateChange)
+            {
+                return;
+            }
+            DataGridView src = sender as DataGridView;
+            if (src == null)
+            {
+                return;
+            }
+            if (src.IsCurrentCellDirty)
+                ConfirmDropDown(src, true, true);
+        }
+
+        private void teamsDataGridView_CurrentCellDirtyStateChanged(Object sender, EventArgs e)
+        {
+            if (blockStateChange)
+            {
+                return;
+            }
+            DataGridView src = sender as DataGridView;
+            if (src == null)
+            {
+                return;
+            }
+            ConfirmDropDown(src, true, false);
+        }
+
+        private void missionsDataGridView_CellEnter(Object sender, DataGridViewCellEventArgs e)
+        {
+            DataGridView src;
+            if (e.RowIndex < 0 || (src = sender as DataGridView) == null || e.RowIndex == lastEditedMissionRow)
+            {
+                return;
+            }
+            DataGridViewCell missCell = src.Rows[e.RowIndex].Cells[0];
+            string mission = missCell.Value as String;
+            if (SelectedTeamType.Missions.Count == e.RowIndex)
+            {
+                // Refresh so the width adapts correctly.
+                missCell.Value = null;
+                missCell.Value = mission;
+            }
+            SetToolTip(src, e.RowIndex, teamMissionTooltips);
+            CellEnter(sender, e, true);
+        }
+
+        private void teamsDataGridView_CellEnter(Object sender, DataGridViewCellEventArgs e)
+        {
+            DataGridView src;
+            if (e.RowIndex < 0 || (src = sender as DataGridView) == null || e.RowIndex == lastEditedMissionRow)
+            {
+                return;
+            }
+            DataGridViewCell unitCell = src.Rows[e.RowIndex].Cells[0];
+            string unit = unitCell.Value as String;
+            if (SelectedTeamType.Classes.Count == e.RowIndex)
+            {
+                // Refresh so the width adapts correctly.
+                unitCell.Value = null;
+                unitCell.Value = unit;
+            }
+            CellEnter(sender, e, false);
+        }
+
+        private void CellEnter(Object sender, DataGridViewCellEventArgs e, Boolean forMission)
+        {
+            int lastEdited = forMission ? lastEditedMissionRow : lastEditedTeamRow;
+            DataGridView src;
+            if (e.RowIndex < 0 || (src = sender as DataGridView) == null || e.RowIndex == lastEdited)
+            {
+                return;
+            }
+            if (e.ColumnIndex == 0)
+            {
+                ConfirmDropDown(src, false, forMission);
+                src.BeginEdit(true);
+                if (src.Columns[e.ColumnIndex] is DataGridViewComboBoxColumn)
+                {
+                    ComboBox combo = (ComboBox)src.EditingControl;
+                    combo.DropDownClosed -= ConfirmEdit;
+                    combo.DropDownClosed += ConfirmEdit;
+                    String val = combo.SelectedValue as String;
+                    try
+                    {
+                        blockStateChange = true;
+                        // Removes the jumping around of values caused by it recycling the same dropdown control
+                        combo.Text = null;
+                        combo.DroppedDown = true;
+                        combo.Text = val;
+                    }
+                    finally
+                    {
+                        blockStateChange = false;
+                    }
+                }
+            }
+        }
+
+        private void ConfirmEdit(Object sender, EventArgs e)
+        {
+            ComboBox combo = sender as ComboBox;
+            Control ctrl = combo.Parent;
+            DataGridView parent = null;
+            while (ctrl != null && (parent = ctrl as DataGridView) == null)
+                ctrl = ctrl.Parent;
+            if (parent != null)
+                ConfirmDropDown(parent, true, parent == missionsDataGridView);
+        }
+
+        private void SetToolTip(DataGridView sender, int row, Dictionary<string, string> tooltips)
+        {
+            if (sender == null || row < 0)
+            {
+                return;
+            }
+            string mission = sender.Rows[row].Cells[0].Value as string;
+            if (mission == null)
+            {
+                return;
+            }
+            DataGridViewCell argCell = sender.Rows[row].Cells[1];
+            if (tooltips.TryGetValue(mission, out string tooltip))
+            {
+                argCell.ToolTipText = tooltip;
+            }
+        }
+
+        private void ConfirmDropDown(DataGridView src, bool removeEditor, bool forMission)
+        {
+            if (src.IsCurrentCellDirty)
+            {
+                // check if it's the dropdown
+                if (src.CurrentCell != null && src.CurrentCell.ColumnIndex == 1)
+                {
+                    // This fires the cell value changed handler.
+                    src.CommitEdit(DataGridViewDataErrorContexts.Commit);
+                }
+            }
+            if (removeEditor)
+            {
+                // Gets rid of the editor control. Only do this when ending an
+                // edit, never when starting one; it'll crash because it changes
+                // the selected cell in the function to handle selecting a cell.
+                DataGridViewCell cur = src.CurrentCell;
+                src.CurrentCell = null;
+                src.CurrentCell = cur;
+            }
+            if (forMission)
+            {
+                lastEditedMissionRow = src.CurrentCell.RowIndex;
+                lastEditedTeamRow = -1;
+            }
+            else
+            {
+                lastEditedTeamRow = src.CurrentCell.RowIndex;
+                lastEditedMissionRow = -1;
+            }
+        }
+
+        private void teamsDataGridView_Leave(Object sender, EventArgs e)
+        {
+            lastEditedTeamRow = -1;
+        }
+
+        private void missionsDataGridView_Leave(Object sender, EventArgs e)
+        {
+            lastEditedMissionRow = -1;
+        }
+
+        private void missionsDataGridView_CellMouseDown(Object sender, DataGridViewCellMouseEventArgs e)
+        {
+            // Prevent dropdown from popping up when clicking row header column.
+            if (e.ColumnIndex == -1 && e.RowIndex >= 0)
+            {
+                lastEditedMissionRow = e.RowIndex;
+                lastEditedTeamRow = -1;
+            }
+        }
+
+        private void teamsDataGridView_CellMouseDown(Object sender, DataGridViewCellMouseEventArgs e)
+        {
+            // Prevent dropdown from popping up when clicking row header column.
+            if (e.ColumnIndex == -1 && e.RowIndex >= 0)
+            {
+                lastEditedTeamRow = e.RowIndex;
+                lastEditedMissionRow = -1;
+            }
         }
     }
 }

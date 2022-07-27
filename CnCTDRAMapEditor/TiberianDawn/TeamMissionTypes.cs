@@ -38,5 +38,26 @@ namespace MobiusEditor.TiberianDawn
         {
             return Types;
         }
+
+        private static readonly string[] TypesInfo = new string[]
+        {
+            "Time in 1/10th min",
+            "Time in 1/10th min",
+            "Time in 1/10th min",
+            "Time in 1/10th min",
+            "Time in 1/10th min",
+            "Waypoint number",
+            "Cell number",
+            "",
+            "Time in 1/10th min",
+            "Amount of actions to trim off the Missions loop",
+            "Tarcom identifier",
+            "Waypoint at which to unload."
+        };
+
+        public static IEnumerable<string> GetTypesInfo()
+        {
+            return TypesInfo;
+        }
     }
 }

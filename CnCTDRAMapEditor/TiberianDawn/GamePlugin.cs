@@ -142,7 +142,8 @@ namespace MobiusEditor.TiberianDawn
                 houseTypes, TheaterTypes.GetTypes(), TemplateTypes.GetTypes(), TerrainTypes.GetTypes(),
                 OverlayTypes.GetTypes(), SmudgeTypes.GetTypes(), EventTypes.GetTypes(), ActionTypes.GetTypes(),
                 MissionTypes.GetTypes(), DirectionTypes.GetTypes(), InfantryTypes.GetTypes(), UnitTypes.GetTypes(true),
-                BuildingTypes.GetTypes(), TeamMissionTypes.GetTypes(), technoTypes, waypoints, movieTypes, themeTypes )
+                BuildingTypes.GetTypes(), TeamMissionTypes.GetTypes(), TeamMissionTypes.GetTypesInfo(), technoTypes,
+                waypoints, movieTypes, themeTypes )
             {
                 TiberiumOrGoldValue = 25
             };

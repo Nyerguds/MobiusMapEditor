@@ -145,6 +145,8 @@ namespace MobiusEditor.Model
 
         public readonly string[] TeamMissionTypes;
 
+        public readonly Dictionary<string, string> TeamMissionTypesInfo;
+
         public readonly CellMetrics Metrics;
 
         public readonly CellGrid<Template> Templates;
@@ -198,8 +200,8 @@ namespace MobiusEditor.Model
             IEnumerable<TerrainType> terrainTypes, IEnumerable<OverlayType> overlayTypes, IEnumerable<SmudgeType> smudgeTypes,
             IEnumerable<string> eventTypes, IEnumerable<string> actionTypes, IEnumerable<string> missionTypes,
             IEnumerable<DirectionType> directionTypes, IEnumerable<InfantryType> infantryTypes, IEnumerable<UnitType> unitTypes,
-            IEnumerable<BuildingType> buildingTypes, IEnumerable<string> teamMissionTypes, IEnumerable<ITechnoType> teamTechnoTypes,
-            IEnumerable<Waypoint> waypoints, IEnumerable<string> movieTypes, IEnumerable<string> themeTypes)
+            IEnumerable<BuildingType> buildingTypes, IEnumerable<string> teamMissionTypes, IEnumerable<string> teamMissionTypesInfo,
+            IEnumerable<ITechnoType> teamTechnoTypes, IEnumerable<Waypoint> waypoints, IEnumerable<string> movieTypes, IEnumerable<string> themeTypes)
         {
             BasicSection = basicSection;
 
@@ -218,6 +220,13 @@ namespace MobiusEditor.Model
             UnitTypes = new List<UnitType>(unitTypes);
             BuildingTypes = new List<BuildingType>(buildingTypes);
             TeamMissionTypes = teamMissionTypes.ToArray();
+            TeamMissionTypesInfo = new Dictionary<string, string>();
+            string[] missionInfo = teamMissionTypesInfo.ToArray();
+            int maxTeams = Math.Min(TeamMissionTypes.Length, missionInfo.Length);
+            for (int i = 0; i < maxTeams; ++i)
+            {
+                TeamMissionTypesInfo[TeamMissionTypes[i]] = missionInfo[i];
+            }
             TeamTechnoTypes = new List<ITechnoType>(teamTechnoTypes);
             MovieTypes = new List<string>(movieTypes);
             ThemeTypes = new List<string>(themeTypes);
@@ -276,32 +285,26 @@ namespace MobiusEditor.Model
             {
                 templateType.Init(Theater);
             }
-
             foreach (var smudgeType in SmudgeTypes)
             {
                 smudgeType.Init(Theater);
             }
-
             foreach (var overlayType in OverlayTypes)
             {
                 overlayType.Init(Theater);
             }
-
             foreach (var terrainType in TerrainTypes)
             {
                 terrainType.Init(Theater);
             }
-
             foreach (var infantryType in InfantryTypes)
             {
                 infantryType.Init(gameType, Theater, HouseTypes.Where(h => h.Equals(infantryType.OwnerHouse)).FirstOrDefault(), DirectionTypes.Where(d => d.Facing == FacingType.South).First());
             }
-
             foreach (var unitType in UnitTypes)
             {
                 unitType.Init(gameType, Theater, HouseTypes.Where(h => h.Equals(unitType.OwnerHouse)).FirstOrDefault(), DirectionTypes.Where(d => d.Facing == FacingType.North).First());
             }
-
             foreach (var buildingType in BuildingTypes)
             {
                 buildingType.Init(gameType, Theater, HouseTypes.Where(h => h.Equals(buildingType.OwnerHouse)).FirstOrDefault(), DirectionTypes.Where(d => d.Facing == FacingType.North).First());
@@ -311,17 +314,14 @@ namespace MobiusEditor.Model
         private void Update()
         {
             updating = true;
-
             if (invalidateLayers.TryGetValue(MapLayerFlag.Resources, out ISet<Point> locations))
             {
                 UpdateResourceOverlays(locations);
             }
-
             if (invalidateLayers.TryGetValue(MapLayerFlag.Walls, out locations))
             {
                 UpdateWallOverlays(locations);
             }
-
             if (invalidateOverlappers)
             {
                 Overlappers.Clear();
@@ -333,7 +333,6 @@ namespace MobiusEditor.Model
                     }
                 }
             }
-
             invalidateLayers.Clear();
             invalidateOverlappers = false;
             updating = false;
@@ -343,7 +342,6 @@ namespace MobiusEditor.Model
         {
             var tiberiumCounts = new int[] { 0, 1, 3, 4, 6, 7, 8, 10, 11 };
             var gemCounts = new int[] { 0, 0, 0, 1, 1, 1, 2, 2, 2 };
-
             foreach (var (cell, overlay) in Overlay.IntersectsWith(locations).Where(o => o.Value.Type.IsResource))
             {
                 int count = 0;
@@ -355,7 +353,6 @@ namespace MobiusEditor.Model
                         count++;
                     }
                 }
-
                 overlay.Icon = overlay.Type.IsGem ? gemCounts[count] : tiberiumCounts[count];
             }
         }
@@ -368,7 +365,6 @@ namespace MobiusEditor.Model
                 var eastWall = Overlay.Adjacent(cell, FacingType.East);
                 var southWall = Overlay.Adjacent(cell, FacingType.South);
                 var westWall = Overlay.Adjacent(cell, FacingType.West);
-
                 int icon = 0;
                 if (northWall?.Type == overlay.Type)
                 {
@@ -386,7 +382,6 @@ namespace MobiusEditor.Model
                 {
                     icon |= 8;
                 }
-
                 overlay.Icon = icon;
             }
         }
@@ -407,7 +402,6 @@ namespace MobiusEditor.Model
             {
                 return;
             }
-
             var bib1Type = SmudgeTypes.Where(t => t.Flag == SmudgeTypeFlag.Bib1).FirstOrDefault();
             var bib2Type = SmudgeTypes.Where(t => t.Flag == SmudgeTypeFlag.Bib2).FirstOrDefault();
             var bib3Type = SmudgeTypes.Where(t => t.Flag == SmudgeTypeFlag.Bib3).FirstOrDefault();
@@ -449,17 +443,21 @@ namespace MobiusEditor.Model
 
         public Map Clone()
         {
+            string[] teamMissionTypesInfo = new string[TeamMissionTypes.Length];
+            for (int i = 0; i < TeamMissionTypes.Length; ++i)
+            {
+                teamMissionTypesInfo[i] = TeamMissionTypesInfo.TryGetValue(TeamMissionTypes[i], out string info) ?
+                    info : String.Empty;
+            }
             var map = new Map(BasicSection, Theater, Metrics.Size, HouseType,
                 HouseTypes, TheaterTypes, TemplateTypes, TerrainTypes, OverlayTypes, SmudgeTypes,
                 EventTypes, ActionTypes, MissionTypes, DirectionTypes, InfantryTypes, UnitTypes,
-                BuildingTypes, TeamMissionTypes, TeamTechnoTypes, Waypoints, MovieTypes, ThemeTypes)
+                BuildingTypes, TeamMissionTypes, teamMissionTypesInfo, TeamTechnoTypes, Waypoints, MovieTypes, ThemeTypes)
             {
                 TopLeft = TopLeft,
                 Size = Size
             };
-
             map.BeginUpdate();
-
             MapSection.CopyTo(map.MapSection);
             BriefingSection.CopyTo(map.BriefingSection);
             SteamSection.CopyTo(map.SteamSection);
@@ -468,12 +466,10 @@ namespace MobiusEditor.Model
             Smudge.CopyTo(map.Smudge);
             CellTriggers.CopyTo(map.CellTriggers);
             Array.Copy(Houses, map.Houses, map.Houses.Length);
-
             foreach (var trigger in Triggers)
             {
                 map.Triggers.Add(trigger);
             }
-
             foreach (var (location, occupier) in Technos)
             {
                 if (occupier is InfantryGroup infantryGroup)
@@ -487,16 +483,12 @@ namespace MobiusEditor.Model
                     map.Technos.Add(location, occupier);
                 }
             }
-
             foreach (var (location, building) in Buildings)
             {
                 map.Buildings.Add(location, building);
             }
-
             map.TeamTypes.AddRange(TeamTypes);
-
             map.EndUpdate();
-
             return map;
         }
 
@@ -519,7 +511,6 @@ namespace MobiusEditor.Model
                 {
                     MapRenderer.Render(GameType.None, this, g, locations, MapLayerFlag.Template | MapLayerFlag.Resources, 1);
                 }
-
                 using (var g = Graphics.FromImage(croppedBitmap))
                 {
                     Matrix transform = new Matrix();
@@ -530,7 +521,6 @@ namespace MobiusEditor.Model
                     g.Clear(Color.Black);
                     g.DrawImage(fullBitmap, new Rectangle(0, 0, mapBounds.Width, mapBounds.Height), mapBounds, GraphicsUnit.Pixel);
                 }
-
                 if (sharpen)
                 {
                     using (var sharpenedImage = croppedBitmap.Sharpen(1.0f))
@@ -566,24 +556,20 @@ namespace MobiusEditor.Model
             {
                 Buildings.Remove(e.OldValue);
             }
-
             if (e.Value?.Type.IsWall ?? false)
             {
                 Buildings.Add(e.Location, e.Value);
             }
-
             if (updating)
             {
                 return;
             }
-
             foreach (var overlay in new Overlay[] { e.OldValue, e.Value })
             {
                 if (overlay == null)
                 {
                     continue;
                 }
-
                 MapLayerFlag layer = MapLayerFlag.None;
                 if (overlay.Type.IsResource)
                 {
@@ -597,13 +583,11 @@ namespace MobiusEditor.Model
                 {
                     continue;
                 }
-
                 if (!invalidateLayers.TryGetValue(layer, out ISet<Point> locations))
                 {
                     locations = new HashSet<Point>();
                     invalidateLayers[layer] = locations;
                 }
-
                 locations.UnionWith(Rectangle.Inflate(new Rectangle(e.Location, new Size(1, 1)), 1, 1).Points());
             }
 
@@ -662,7 +646,6 @@ namespace MobiusEditor.Model
             {
                 RemoveBibs(building);
             }
-
             Technos.Remove(e.Occupier);
         }
 

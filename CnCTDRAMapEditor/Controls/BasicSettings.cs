@@ -41,6 +41,8 @@ namespace MobiusEditor.Controls
             carryOverMoneyNud.DataBindings.Add("Value", basicSection, "CarryOverMoney");
             nameTxt.DataBindings.Add("Text", basicSection, "Name");
             percentNud.DataBindings.Add("Value", basicSection, "Percent");
+            percentNud.Visible = false;
+            percentLabel.Visible = false;
             playerComboBox.DataBindings.Add("SelectedItem", basicSection, "Player");
             authorTxt.DataBindings.Add("Text", basicSection, "Author");
             isSinglePlayerCheckBox.DataBindings.Add("Checked", basicSection, "SoloMission");

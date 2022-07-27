@@ -91,7 +91,7 @@ v1.4.0.2:
 * Fixed the bug that the status bar did not show the map placement shortcuts hints on initial load.
 * The editor no longer exits if it cannot connect to Steam. Instead, workshop publishing will simply be disabled if the Steamworks interface can't be initialised.
 * The texture manager will now properly dispose all loaded image objects when a different map is loaded.
-* Added \*.ini to the list of possible extensions for opening RA maps, to support opening pre-Remaster missions.
+* Added \*.ini to the list of possible extensions for saving RA maps, to support opening pre-Remaster missions.
 * If a building has no direction to set and shows no dropdown for it, the "Direction" label is now also removed.
 * Structure graphics are now correctly centered on their full building size.
 * The damaged state of buildings is now shown at strength values of 128 and below, rather than only below that value.
@@ -103,17 +103,24 @@ v1.4.0.2:
 * The "clear1" tile is now explicitly shown in the tiles list.
 * Teamtype "Priority" value (recruit priority) is now capped at 15.
 
-v1.4.0.3: [WIP]
+v1.4.0.3:
 
 * The editor now tries to automatically detect the game installation folder in Steam.
-* Removed limitation on placing resources on the top and bottom row of the map.
-* The 'clamping' logic that prevented tool windows from being dragged outside usable screen bounds had a bug that this prevented it from being dragged onto a different monitor. This is now fixed.
-* "Theme" has been added to the map settings. Do note this has no effect on the Remaster.
-* All videos available in the Remaster are now shown in the video lists in the "Map settings" dialog.
-* Added missing entries (videos not included in the Remaster) to the RA and TD video lists, with a 'Classic only' indicator.
-* Added tooltips for the teamtype options.
-* Fixed tab order of the teamtype options.
-* Removed teamtype "Priority" value capping after feedback from users and checking the source code.
-* The CONC and ROAD overlay types now show the same graphics as in-game. This is technically just a dummy graphic the game uses when not finding object graphics. The version in the editor is a reconstruction.
+* Fixed refresh errors in preview images when resizing tool windows.
 * All overlay items will now show a preview icon of the same size.
 * Fixed errors in tree sizes.
+* The 'clamping' logic that prevented tool windows from being dragged outside usable screen bounds had a bug that this prevented it from being dragged onto a different monitor. This is now fixed.
+* Added "Theme" to the map settings.
+* Removed "Percent" from the map settings. It is an unused Dune II leftover.
+* Added "Classic only" labels to "Carryover Money" and "Theme" to indicate these options will only work when playing the missions in the original game.
+* All videos available in the Remaster are now shown in the video lists in the "Map settings" dialog.
+* Added missing entries (videos not included in the Remaster) to the RA and TD video lists, with a 'Classic only' indicator.
+* In the teamtypes dialog, the rather confusing use of the internal name "Missions" was changed to a more intuitive "Orders".
+* Added tooltips for all teamtype options.
+* Teamtype orders now show a tooltip on the Argument field indicating the meaning of the value to give, and, if needed, the possible values to choose from.
+* Fixed tab order of the teamtype options.
+* The dropdowns in the grids in the teamtypes dialog now respond without having to click multiple times.
+* Removed the previously-added cap on the teamtype "Priority" value after feedback from users and checking the source code.
+* The CONC and ROAD overlay types now show the same graphics as in-game. This is technically just a dummy graphic the game uses when not finding object graphics. The version in the editor is a reconstruction.
+* Added \*.ini to the list of possible extensions for opening RA maps. Apparently before I only added it for saving.
+* Removed limitation on placing resources on the top and bottom row of the map.
