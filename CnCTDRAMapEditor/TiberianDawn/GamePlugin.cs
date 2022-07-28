@@ -30,7 +30,7 @@ namespace MobiusEditor.TiberianDawn
 {
     public class GamePlugin : IGamePlugin
     {
-        private static readonly Regex MovieRegex = new Regex(@"^(.*?\\)*(.*?)\.BK2$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex MovieRegex = new Regex(@"^(?:.*?\\)*(.*?)\.BK2$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         private static readonly IEnumerable<ITechnoType> technoTypes;
 
@@ -109,8 +109,9 @@ namespace MobiusEditor.TiberianDawn
 
         public GamePlugin(bool mapImage)
         {
-            var playerWaypoints = Enumerable.Range(0, 6).Select(i => new Waypoint(string.Format("P{0}", i), WaypointFlag.PlayerStart));
-            var generalWaypoints = Enumerable.Range(6, 19).Select(i => new Waypoint(i.ToString()));
+            const int mplayers = 6;
+            var playerWaypoints = Enumerable.Range(0, mplayers).Select(i => new Waypoint(string.Format("P{0}", i), WaypointFlag.PlayerStart));
+            var generalWaypoints = Enumerable.Range(mplayers, 25 - mplayers).Select(i => new Waypoint(i.ToString()));
             var specialWaypoints = new Waypoint[] { new Waypoint("Flare"), new Waypoint("Home"), new Waypoint("Reinf.") };
             var waypoints = playerWaypoints.Concat(generalWaypoints).Concat(specialWaypoints);
 
@@ -122,7 +123,7 @@ namespace MobiusEditor.TiberianDawn
                     var m = MovieRegex.Match(filename);
                     if (m.Success)
                     {
-                        movies.Add(m.Groups[m.Groups.Count - 1].ToString());
+                        movies.Add(m.Groups[1].ToString());
                     }
                 }
             }
@@ -135,7 +136,7 @@ namespace MobiusEditor.TiberianDawn
             var basicSection = new BasicSection();
             basicSection.SetDefault();
 
-            var houseTypes = HouseTypes.GetTypes();
+            var houseTypes = HouseTypes.GetTypes(mplayers);
             basicSection.Player = houseTypes.First().Name;
 
             Map = new Map(basicSection, null, Constants.MaxSize, typeof(House),
@@ -875,9 +876,9 @@ namespace MobiusEditor.TiberianDawn
             }
 
             Dictionary<string, string> correctedEdges = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            foreach (var edge in House.GetEdges())
+            foreach (var edge in Globals.Edges)
                 correctedEdges.Add(edge, edge);
-            String defaultEdge = House.GetEdges().FirstOrDefault() ?? String.Empty;
+            String defaultEdge = Globals.Edges.FirstOrDefault() ?? String.Empty;
             foreach (var house in Map.Houses)
             {
                 if (house.Type.ID < 0)

@@ -30,7 +30,7 @@ namespace MobiusEditor.RedAlert
 {
     class GamePlugin : IGamePlugin
     {
-        private static readonly Regex MovieRegex = new Regex(@"^(.*?\\)*(.*?)\.BK2$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex MovieRegex = new Regex(@"^(?:.*?\\)*(.*?)\.BK2$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         private readonly IEnumerable<string> movieTypes;
 
@@ -118,7 +118,7 @@ namespace MobiusEditor.RedAlert
                     var m = MovieRegex.Match(filename);
                     if (m.Success)
                     {
-                        movies.Add(m.Groups[m.Groups.Count - 1].ToString());
+                        movies.Add(m.Groups[1].ToString());
                     }
                 }
             }

@@ -124,3 +124,8 @@ v1.4.0.3:
 * The CONC and ROAD overlay types now show the same graphics as in-game. This is technically just a dummy graphic the game uses when not finding object graphics. The version in the editor is a reconstruction.
 * Added \*.ini to the list of possible extensions for opening RA maps. Apparently before I only added it for saving.
 * Removed limitation on placing resources on the top and bottom row of the map.
+
+v1.4.0.4: [WIP]
+
+* Fixed dimensions of Red Alert's ore mine, Snow theater ice floes and Interior theater boxes.
+* [WIP: Fix errors in dropdown boxes in Teamtypes dialog.]

@@ -42,20 +42,20 @@ namespace MobiusEditor.RedAlert
         public static readonly TerrainType Clump4Class = new TerrainType(18, "tc04", new TheaterType[] { TheaterTypes.Temperate, TheaterTypes.Snow }, new bool[3, 4] { { false, false, false, false }, { true, true, true, false }, { true, false, false, false } });
         public static readonly TerrainType Clump5Class = new TerrainType(19, "tc05", new TheaterType[] { TheaterTypes.Temperate, TheaterTypes.Snow }, new bool[3, 4] { { false, false, true, false }, { true, true, true, false }, { false, true, true, false } });
         public static readonly TerrainType Ice01 = new TerrainType(20, "ice01", new TheaterType[] { TheaterTypes.Snow }, new bool[2, 2] { { true, true }, { true, true } }, TemplateTypeFlag.Water);
-        public static readonly TerrainType Ice02 = new TerrainType(21, "ice02", new TheaterType[] { TheaterTypes.Snow }, new bool[2, 2] { { true, false }, { true, false } }, TemplateTypeFlag.Water);
+        public static readonly TerrainType Ice02 = new TerrainType(21, "ice02", new TheaterType[] { TheaterTypes.Snow }, new bool[2, 1] { { true }, { true } }, TemplateTypeFlag.Water);
         public static readonly TerrainType Ice03 = new TerrainType(22, "ice03", new TheaterType[] { TheaterTypes.Snow }, new bool[1, 2] { { true, true } }, TemplateTypeFlag.Water);
-        public static readonly TerrainType Ice04 = new TerrainType(23, "ice04", new TheaterType[] { TheaterTypes.Snow }, new bool[1, 2] { { true, false } }, TemplateTypeFlag.Water);
-        public static readonly TerrainType Ice05 = new TerrainType(24, "ice05", new TheaterType[] { TheaterTypes.Snow }, new bool[1, 2] { { true, false } }, TemplateTypeFlag.Water);
-        public static readonly TerrainType Boxes01 = new TerrainType(25, "boxes01", new TheaterType[] { TheaterTypes.Interior }, new bool[1, 2] { { true, false } });
-        public static readonly TerrainType Boxes02 = new TerrainType(26, "boxes02", new TheaterType[] { TheaterTypes.Interior }, new bool[1, 2] { { true, false } });
-        public static readonly TerrainType Boxes03 = new TerrainType(27, "boxes03", new TheaterType[] { TheaterTypes.Interior }, new bool[1, 2] { { true, false } });
-        public static readonly TerrainType Boxes04 = new TerrainType(28, "boxes04", new TheaterType[] { TheaterTypes.Interior }, new bool[1, 2] { { true, false } });
-        public static readonly TerrainType Boxes05 = new TerrainType(29, "boxes05", new TheaterType[] { TheaterTypes.Interior }, new bool[1, 2] { { true, false } });
-        public static readonly TerrainType Boxes06 = new TerrainType(30, "boxes06", new TheaterType[] { TheaterTypes.Interior }, new bool[1, 2] { { true, false } });
-        public static readonly TerrainType Boxes07 = new TerrainType(31, "boxes07", new TheaterType[] { TheaterTypes.Interior }, new bool[1, 2] { { true, false } });
-        public static readonly TerrainType Boxes08 = new TerrainType(32, "boxes08", new TheaterType[] { TheaterTypes.Interior }, new bool[1, 2] { { true, false } });
-        public static readonly TerrainType Boxes09 = new TerrainType(33, "boxes09", new TheaterType[] { TheaterTypes.Interior }, new bool[1, 2] { { true, false } });
-        public static readonly TerrainType Mine = new TerrainType(34, "mine", new TheaterType[] { TheaterTypes.Temperate, TheaterTypes.Snow }, new bool[1, 2] { { true, false } }, TemplateTypeFlag.OreMine);
+        public static readonly TerrainType Ice04 = new TerrainType(23, "ice04", new TheaterType[] { TheaterTypes.Snow }, new bool[1, 1] { { true } }, TemplateTypeFlag.Water);
+        public static readonly TerrainType Ice05 = new TerrainType(24, "ice05", new TheaterType[] { TheaterTypes.Snow }, new bool[1, 1] { { true } }, TemplateTypeFlag.Water);
+        public static readonly TerrainType Boxes01 = new TerrainType(25, "boxes01", new TheaterType[] { TheaterTypes.Interior }, new bool[1, 1] { { true } });
+        public static readonly TerrainType Boxes02 = new TerrainType(26, "boxes02", new TheaterType[] { TheaterTypes.Interior }, new bool[1, 1] { { true } });
+        public static readonly TerrainType Boxes03 = new TerrainType(27, "boxes03", new TheaterType[] { TheaterTypes.Interior }, new bool[1, 1] { { true } });
+        public static readonly TerrainType Boxes04 = new TerrainType(28, "boxes04", new TheaterType[] { TheaterTypes.Interior }, new bool[1, 1] { { true } });
+        public static readonly TerrainType Boxes05 = new TerrainType(29, "boxes05", new TheaterType[] { TheaterTypes.Interior }, new bool[1, 1] { { true } });
+        public static readonly TerrainType Boxes06 = new TerrainType(30, "boxes06", new TheaterType[] { TheaterTypes.Interior }, new bool[1, 1] { { true } });
+        public static readonly TerrainType Boxes07 = new TerrainType(31, "boxes07", new TheaterType[] { TheaterTypes.Interior }, new bool[1, 1] { { true } });
+        public static readonly TerrainType Boxes08 = new TerrainType(32, "boxes08", new TheaterType[] { TheaterTypes.Interior }, new bool[1, 1] { { true } });
+        public static readonly TerrainType Boxes09 = new TerrainType(33, "boxes09", new TheaterType[] { TheaterTypes.Interior }, new bool[1, 1] { { true } });
+        public static readonly TerrainType Mine = new TerrainType(34, "mine", new TheaterType[] { TheaterTypes.Temperate, TheaterTypes.Snow }, new bool[1, 1] { { true } }, TemplateTypeFlag.OreMine);
 
 
         private static TerrainType[] Types;

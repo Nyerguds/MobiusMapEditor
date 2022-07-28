@@ -143,13 +143,6 @@ namespace MobiusEditor.Model
     public class House
     {
 
-        private static readonly string[] Edges = new string[] { "North", "East", "South", "West" };
-
-        public static IEnumerable<string> GetEdges()
-        {
-            return Edges;
-        }
-
         public readonly HouseType Type;
 
         [NonSerializedINIKey]

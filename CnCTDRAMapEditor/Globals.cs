@@ -46,7 +46,7 @@ namespace MobiusEditor
         public static readonly Size MapPreviewSize = new Size(512, 512);
         public static readonly Size WorkshopPreviewSize = new Size(512, 512);
 
-        public static readonly string[] Edges = new string[] { "North", "South", "West", "East" };
+        public static readonly string[] Edges = new string[] { "North", "East", "South", "West" };
         public const int NumInfantryStops = 5;
 
         public const int MaxTeamClasses = 5;

@@ -49,6 +49,7 @@ namespace MobiusEditor.Dialogs
         private int lastEditedTeamRow = -1;
         private Dictionary<string, string> teamMissionTypes;
         private Dictionary<string, string> teamMissionTooltips;
+        private ITechnoType defaultTeam;
         private String defaultMission;
         private ToolTipFixer ttf;
 
@@ -98,6 +99,7 @@ namespace MobiusEditor.Dialogs
             teamsTypeColumn.DisplayMember = "Name";
             teamsTypeColumn.ValueMember = "Type";
             teamsTypeColumn.DataSource = technoTypes.Select(t => new TypeItem<ITechnoType>(t.Name, t)).ToArray();
+            defaultTeam = technoTypes.FirstOrDefault();
             // Fix for case sensitivity issue in teamtype missions
             String[] missions = plugin.Map.TeamMissionTypes;
             teamMissionTypes = Enumerable.ToDictionary(missions, t => t, StringComparer.OrdinalIgnoreCase);
@@ -366,7 +368,7 @@ namespace MobiusEditor.Dialogs
             switch (e.ColumnIndex)
             {
                 case 0:
-                    e.Value = teamTypeClass.Type;
+                    e.Value = teamTypeClass.Type ?? defaultTeam;
                     break;
                 case 1:
                     e.Value = teamTypeClass.Count;
@@ -376,11 +378,10 @@ namespace MobiusEditor.Dialogs
 
         private void teamsDataGridView_CellValuePushed(object sender, DataGridViewCellValueEventArgs e)
         {
-            if (SelectedTeamType == null)
+            if (SelectedTeamType == null || e.Value == null)
             {
                 return;
             }
-
             if (mockClass == null)
             {
                 mockClass = (e.RowIndex < SelectedTeamType.Classes.Count) ?
@@ -388,11 +389,10 @@ namespace MobiusEditor.Dialogs
                     new TeamTypeClass { Type = technoTypes.First(), Count = 0 };
             }
             classEditRow = e.RowIndex;
-
             switch (e.ColumnIndex)
             {
                 case 0:
-                    mockClass.Type = e.Value as ITechnoType;
+                    mockClass.Type = e.Value as ITechnoType ?? technoTypes.First();
                     break;
                 case 1:
                     mockClass.Count = int.TryParse(e.Value as string, out int value) ? (byte)Math.Max(0, Math.Min(255, value)) : (byte)0;
@@ -451,14 +451,13 @@ namespace MobiusEditor.Dialogs
             {
                 SelectedTeamType.Classes.RemoveAt(e.Row.Index);
             }
-
             if (e.Row.Index == classEditRow)
             {
                 mockClass = null;
                 classEditRow = -1;
             }
             // Prevent dropdown from popping up.
-            lastEditedTeamRow = e.Row.Index - 1;
+            lastEditedTeamRow = e.Row.Index;
             lastEditedMissionRow = -1;
         }
 
@@ -471,6 +470,65 @@ namespace MobiusEditor.Dialogs
         {
             updateDataGridViewAddRows(teamsDataGridView, Globals.MaxTeamClasses);
         }
+
+        private void teamsDataGridView_CellValueChanged(Object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0 || e.ColumnIndex != 0)
+            {
+                return;
+            }
+            SetToolTip(sender as DataGridView, e.RowIndex, null);
+        }
+
+        private void teamsDataGridView_CurrentCellDirtyStateChanged(Object sender, EventArgs e)
+        {
+            if (blockStateChange)
+            {
+                return;
+            }
+            DataGridView src = sender as DataGridView;
+            if (src == null)
+            {
+                return;
+            }
+            if (src.IsCurrentCellDirty)
+                ConfirmDropDown(src, true, false);
+        }
+
+        private void teamsDataGridView_CellEnter(Object sender, DataGridViewCellEventArgs e)
+        {
+            DataGridView src;
+            if (e.RowIndex < 0 || (src = sender as DataGridView) == null || e.RowIndex == lastEditedMissionRow)
+            {
+                return;
+            }
+            DataGridViewCell unitCell = src.Rows[e.RowIndex].Cells[0];
+            ITechnoType unit = unitCell.Value as ITechnoType;
+            if (SelectedTeamType.Classes.Count == e.RowIndex)
+            {
+                // Refresh so the width adapts correctly.
+                unitCell.Value = null;
+                unitCell.Value = unit;
+            }
+            SetToolTip(src, e.RowIndex, null);
+            CellEnter(sender, e, false);
+        }
+
+        private void teamsDataGridView_Leave(Object sender, EventArgs e)
+        {
+            lastEditedTeamRow = -1;
+        }
+
+        private void teamsDataGridView_CellMouseDown(Object sender, DataGridViewCellMouseEventArgs e)
+        {
+            // Prevent dropdown from popping up when clicking row header column.
+            if (e.ColumnIndex == -1 && e.RowIndex >= 0)
+            {
+                lastEditedTeamRow = e.RowIndex;
+                lastEditedMissionRow = -1;
+            }
+        }
+
         private void DataGridView_DataError(object sender, DataGridViewDataErrorEventArgs e)
         {
             String owner = (sender as DataGridView)?.Name;
@@ -485,23 +543,22 @@ namespace MobiusEditor.Dialogs
             {
                 return;
             }
-
-            TeamTypeMission teamMissionType = null;
+            TeamTypeMission teamTypeMission = null;
             if (e.RowIndex == missionEditRow)
             {
-                teamMissionType = mockMission;
+                teamTypeMission = mockMission;
             }
             else if (e.RowIndex < SelectedTeamType.Missions.Count)
             {
-                teamMissionType = SelectedTeamType.Missions[e.RowIndex];
+                teamTypeMission = SelectedTeamType.Missions[e.RowIndex];
             }
-            if (teamMissionType == null)
+            if (teamTypeMission == null)
             {
                 return;
             }
             // Fix for case sensitivity issue in teamtype missions
-            String mission = null;
-            if (teamMissionType.Mission != null && !teamMissionTypes.TryGetValue(teamMissionType.Mission, out mission))
+            String mission;
+            if (teamTypeMission.Mission == null || !teamMissionTypes.TryGetValue(teamTypeMission.Mission, out mission))
                 mission = defaultMission;
             switch (e.ColumnIndex)
             {
@@ -509,18 +566,17 @@ namespace MobiusEditor.Dialogs
                     e.Value = mission;
                     break;
                 case 1:
-                    e.Value = teamMissionType.Argument;
+                    e.Value = teamTypeMission.Argument;
                     break;
             }
         }
 
         private void missionsDataGridView_CellValuePushed(object sender, DataGridViewCellValueEventArgs e)
         {
-            if (SelectedTeamType == null)
+            if (SelectedTeamType == null || e.Value == null)
             {
                 return;
             }
-
             if (mockMission == null)
             {
                 mockMission = (e.RowIndex < SelectedTeamType.Missions.Count) ?
@@ -528,7 +584,6 @@ namespace MobiusEditor.Dialogs
                     new TeamTypeMission { Mission = plugin.Map.TeamMissionTypes.First(), Argument = 0 };
             }
             missionEditRow = e.RowIndex;
-
             switch (e.ColumnIndex)
             {
                 case 0:
@@ -592,16 +647,14 @@ namespace MobiusEditor.Dialogs
             {
                 SelectedTeamType.Missions.RemoveAt(e.Row.Index);
             }
-
             if (e.Row.Index == missionEditRow)
             {
                 mockMission = null;
                 missionEditRow = -1;
             }
             // Prevent dropdown from popping up.
-            lastEditedMissionRow = e.Row.Index - 1;
+            lastEditedMissionRow = e.Row.Index;
             lastEditedTeamRow = -1;
-
         }
 
         private void missionsDataGridView_UserAddedRow(object sender, DataGridViewRowEventArgs e)
@@ -612,26 +665,6 @@ namespace MobiusEditor.Dialogs
         private void missionsDataGridView_UserDeletedRow(object sender, DataGridViewRowEventArgs e)
         {
             updateDataGridViewAddRows(missionsDataGridView, Globals.MaxTeamMissions);
-        }
-
-        private void updateDataGridViewAddRows(DataGridView dataGridView, int maxItems)
-        {
-            dataGridView.AllowUserToAddRows = dataGridView.Rows.Count <= maxItems;
-        }
-
-
-        /// <summary>
-        /// Clean up any resources being used.
-        /// </summary>
-        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
-        protected override void Dispose(bool disposing)
-        {
-            ttf.Dispose();
-            if (disposing && (components != null))
-            {
-                components.Dispose();
-            }
-            base.Dispose(disposing);
         }
 
         private void missionsDataGridView_CellValueChanged(Object sender, DataGridViewCellEventArgs e)
@@ -658,20 +691,6 @@ namespace MobiusEditor.Dialogs
                 ConfirmDropDown(src, true, true);
         }
 
-        private void teamsDataGridView_CurrentCellDirtyStateChanged(Object sender, EventArgs e)
-        {
-            if (blockStateChange)
-            {
-                return;
-            }
-            DataGridView src = sender as DataGridView;
-            if (src == null)
-            {
-                return;
-            }
-            ConfirmDropDown(src, true, false);
-        }
-
         private void missionsDataGridView_CellEnter(Object sender, DataGridViewCellEventArgs e)
         {
             DataGridView src;
@@ -691,22 +710,24 @@ namespace MobiusEditor.Dialogs
             CellEnter(sender, e, true);
         }
 
-        private void teamsDataGridView_CellEnter(Object sender, DataGridViewCellEventArgs e)
+        private void missionsDataGridView_Leave(Object sender, EventArgs e)
         {
-            DataGridView src;
-            if (e.RowIndex < 0 || (src = sender as DataGridView) == null || e.RowIndex == lastEditedMissionRow)
+            lastEditedMissionRow = -1;
+        }
+
+        private void missionsDataGridView_CellMouseDown(Object sender, DataGridViewCellMouseEventArgs e)
+        {
+            // Prevent dropdown from popping up when clicking row header column.
+            if (e.ColumnIndex == -1 && e.RowIndex >= 0)
             {
-                return;
+                lastEditedMissionRow = e.RowIndex;
+                lastEditedTeamRow = -1;
             }
-            DataGridViewCell unitCell = src.Rows[e.RowIndex].Cells[0];
-            string unit = unitCell.Value as String;
-            if (SelectedTeamType.Classes.Count == e.RowIndex)
-            {
-                // Refresh so the width adapts correctly.
-                unitCell.Value = null;
-                unitCell.Value = unit;
-            }
-            CellEnter(sender, e, false);
+        }
+
+        private void updateDataGridViewAddRows(DataGridView dataGridView, int maxItems)
+        {
+            dataGridView.AllowUserToAddRows = dataGridView.Rows.Count <= maxItems;
         }
 
         private void CellEnter(Object sender, DataGridViewCellEventArgs e, Boolean forMission)
@@ -717,28 +738,32 @@ namespace MobiusEditor.Dialogs
             {
                 return;
             }
-            if (e.ColumnIndex == 0)
-            {
+            if (e.ColumnIndex != 0 || !src.Visible || !(src.Columns[e.ColumnIndex] is DataGridViewComboBoxColumn)) {
+                return;
+            }
+            ComboBox combo = (ComboBox)src.EditingControl;
+            if (combo != null)
+                combo.DropDownClosed -= ConfirmEdit;
+            if (combo == null || !combo.DroppedDown)
                 ConfirmDropDown(src, false, forMission);
-                src.BeginEdit(true);
-                if (src.Columns[e.ColumnIndex] is DataGridViewComboBoxColumn)
+            src.BeginEdit(true);
+            combo = (ComboBox)src.EditingControl;
+            if (combo != null)
+            {
+                combo.DropDownClosed -= ConfirmEdit;
+                combo.DropDownClosed += ConfirmEdit;
+                String val = combo.SelectedValue == null ? String.Empty  : combo.SelectedValue.ToString();
+                try
                 {
-                    ComboBox combo = (ComboBox)src.EditingControl;
-                    combo.DropDownClosed -= ConfirmEdit;
-                    combo.DropDownClosed += ConfirmEdit;
-                    String val = combo.SelectedValue as String;
-                    try
-                    {
-                        blockStateChange = true;
-                        // Removes the jumping around of values caused by it recycling the same dropdown control
-                        combo.Text = null;
-                        combo.DroppedDown = true;
-                        combo.Text = val;
-                    }
-                    finally
-                    {
-                        blockStateChange = false;
-                    }
+                    blockStateChange = true;
+                    // Removes the jumping around of values caused by it recycling the same dropdown control
+                    combo.Text = null;
+                    combo.DroppedDown = true;
+                    combo.Text = val;
+                }
+                finally
+                {
+                    blockStateChange = false;
                 }
             }
         }
@@ -760,13 +785,14 @@ namespace MobiusEditor.Dialogs
             {
                 return;
             }
-            string mission = sender.Rows[row].Cells[0].Value as string;
-            if (mission == null)
+            Object val = sender.Rows[row].Cells[0].Value;
+            string toMatch = val == null ? null : val.ToString();
+            if (toMatch == null)
             {
                 return;
             }
             DataGridViewCell argCell = sender.Rows[row].Cells[1];
-            if (tooltips.TryGetValue(mission, out string tooltip))
+            if (tooltips != null && tooltips.TryGetValue(toMatch, out string tooltip))
             {
                 argCell.ToolTipText = tooltip;
             }
@@ -777,7 +803,7 @@ namespace MobiusEditor.Dialogs
             if (src.IsCurrentCellDirty)
             {
                 // check if it's the dropdown
-                if (src.CurrentCell != null && src.CurrentCell.ColumnIndex == 1)
+                if (src.CurrentCell != null && src.CurrentCell.ColumnIndex == 0)
                 {
                     // This fires the cell value changed handler.
                     src.CommitEdit(DataGridViewDataErrorContexts.Commit);
@@ -804,34 +830,19 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        private void teamsDataGridView_Leave(Object sender, EventArgs e)
+        /// <summary>
+        /// Clean up any resources being used.
+        /// </summary>
+        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        protected override void Dispose(bool disposing)
         {
-            lastEditedTeamRow = -1;
-        }
-
-        private void missionsDataGridView_Leave(Object sender, EventArgs e)
-        {
-            lastEditedMissionRow = -1;
-        }
-
-        private void missionsDataGridView_CellMouseDown(Object sender, DataGridViewCellMouseEventArgs e)
-        {
-            // Prevent dropdown from popping up when clicking row header column.
-            if (e.ColumnIndex == -1 && e.RowIndex >= 0)
+            ttf.Dispose();
+            if (disposing && (components != null))
             {
-                lastEditedMissionRow = e.RowIndex;
-                lastEditedTeamRow = -1;
+                components.Dispose();
             }
+            base.Dispose(disposing);
         }
 
-        private void teamsDataGridView_CellMouseDown(Object sender, DataGridViewCellMouseEventArgs e)
-        {
-            // Prevent dropdown from popping up when clicking row header column.
-            if (e.ColumnIndex == -1 && e.RowIndex >= 0)
-            {
-                lastEditedTeamRow = e.RowIndex;
-                lastEditedMissionRow = -1;
-            }
-        }
     }
 }

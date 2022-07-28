@@ -620,6 +620,7 @@ namespace MobiusEditor.Dialogs
             this.teamsDataGridView.CancelRowEdit += new System.Windows.Forms.QuestionEventHandler(this.teamsDataGridView_CancelRowEdit);
             this.teamsDataGridView.CellEnter += new System.Windows.Forms.DataGridViewCellEventHandler(this.teamsDataGridView_CellEnter);
             this.teamsDataGridView.CellMouseDown += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.teamsDataGridView_CellMouseDown);
+            this.teamsDataGridView.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(teamsDataGridView_CellValueChanged);
             this.teamsDataGridView.CellValueNeeded += new System.Windows.Forms.DataGridViewCellValueEventHandler(this.teamsDataGridView_CellValueNeeded);
             this.teamsDataGridView.CellValuePushed += new System.Windows.Forms.DataGridViewCellValueEventHandler(this.teamsDataGridView_CellValuePushed);
             this.teamsDataGridView.CurrentCellDirtyStateChanged += new System.EventHandler(this.teamsDataGridView_CurrentCellDirtyStateChanged);
