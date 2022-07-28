@@ -136,7 +136,7 @@ namespace MobiusEditor.TiberianDawn
             var basicSection = new BasicSection();
             basicSection.SetDefault();
 
-            var houseTypes = HouseTypes.GetTypes(mplayers);
+            var houseTypes = HouseTypes.GetTypes();
             basicSection.Player = houseTypes.First().Name;
 
             Map = new Map(basicSection, null, Constants.MaxSize, typeof(House),
