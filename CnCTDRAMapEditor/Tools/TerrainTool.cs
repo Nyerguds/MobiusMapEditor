@@ -110,14 +110,16 @@ namespace MobiusEditor.Tools
                     selectedTerrain = null;
 
                     selectedTerrainProperties?.Close();
-                    selectedTerrainProperties = new TerrainPropertiesPopup(terrainProperties.Plugin, terrain);
-                    selectedTerrainProperties.Closed += (cs, ce) =>
+                    // only TD supports triggers ("Attacked" type) on terrain types.
+                    if (plugin.GameType == GameType.TiberianDawn)
                     {
-                        navigationWidget.Refresh();
-                    };
-
-                    selectedTerrainProperties.Show(mapPanel, mapPanel.PointToClient(Control.MousePosition));
-
+                        selectedTerrainProperties = new TerrainPropertiesPopup(terrainProperties.Plugin, terrain);
+                        selectedTerrainProperties.Closed += (cs, ce) =>
+                        {
+                            navigationWidget.Refresh();
+                        };
+                        selectedTerrainProperties.Show(mapPanel, mapPanel.PointToClient(Control.MousePosition));
+                    }
                     UpdateStatus();
                 }
             }

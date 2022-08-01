@@ -122,10 +122,11 @@ v1.4.0.3:
 * The dropdowns in the grids in the teamtypes dialog now respond without having to click multiple times.
 * Removed the previously-added cap on the teamtype "Priority" value after feedback from users and checking the source code.
 * The CONC and ROAD overlay types now show the same graphics as in-game. This is technically just a dummy graphic the game uses when not finding object graphics. The version in the editor is a reconstruction.
-* Added \*.ini to the list of possible extensions for opening RA maps. Apparently before I only added it for saving.
 * Removed limitation on placing resources on the top and bottom row of the map.
 
 v1.4.0.4: [WIP]
 
 * Fixed dimensions of Red Alert's ore mine, Snow theater ice floes and Interior theater boxes.
+* Added \*.ini to the list of possible extensions for opening RA maps. Apparently before I only added it for saving.
+* Terrain objects will now only pop up a poperties box for setting a trigger in Tiberian Dawn mode.
 * [WIP: Fix errors in dropdown boxes in Teamtypes dialog.]

@@ -331,7 +331,7 @@ namespace MobiusEditor
                 AutoUpgradeEnabled = false,
                 RestoreDirectory = true
             };
-            ofd.Filter = allSupported + "|Tiberian Dawn files (*.ini;*.bin)|*.ini;*.bin|Red Alert files (*.mpr)|*.mpr" + pgmFilter  + "|All files (*.*)|*.*";
+            ofd.Filter = allSupported + "|Tiberian Dawn files (*.ini;*.bin)|*.ini;*.bin|Red Alert files (*.mpr;*.ini)|*.mpr;*.ini" + pgmFilter  + "|All files (*.*)|*.*";
             if (plugin != null)
             {
                 switch (plugin.GameType)
