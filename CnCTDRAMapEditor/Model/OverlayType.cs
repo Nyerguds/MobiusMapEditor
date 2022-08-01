@@ -47,6 +47,10 @@ namespace MobiusEditor.Model
 
         public Image Thumbnail { get; set; }
 
+        public String GraphicsSource { get; private set; }
+
+        public int ForceTileNr { get; private set; }
+
         public bool[,] OccupyMask => new bool[1, 1] { { true } };
 
         public bool IsResource => (Flag & (OverlayTypeFlag.TiberiumOrGold | OverlayTypeFlag.Gems)) != OverlayTypeFlag.None;
@@ -64,13 +68,20 @@ namespace MobiusEditor.Model
          // No reason not to allow placing decorations and flag pedestal.
         public bool IsPlaceable => (Flag & (OverlayTypeFlag.Crate | OverlayTypeFlag.Decoration | OverlayTypeFlag.Flag)) != OverlayTypeFlag.None;
 
-        public OverlayType(sbyte id, string name, string textId, TheaterType[] theaters, OverlayTypeFlag flag)
+        public OverlayType(sbyte id, string name, string textId, TheaterType[] theaters, OverlayTypeFlag flag, String graphicsLoadOverride, int forceTileNr)
         {
             ID = id;
             Name = name;
-            DisplayName = Globals.TheGameTextManager[textId] + " (" + Name.ToUpperInvariant() + ")";
+            GraphicsSource = graphicsLoadOverride == null ? name : graphicsLoadOverride;
+            ForceTileNr = forceTileNr;
+            DisplayName = Globals.TheGameTextManager[textId] + " (" + GraphicsSource.ToUpperInvariant() + ")";
             Theaters = theaters;
             Flag = flag;
+        }
+
+        public OverlayType(sbyte id, string name, string textId, TheaterType[] theaters, OverlayTypeFlag flag)
+            :this(id, name, textId, theaters, flag, null, -1)
+        {
         }
 
         public OverlayType(sbyte id, string name, string textId, OverlayTypeFlag flag)
@@ -124,7 +135,8 @@ namespace MobiusEditor.Model
         public void Init(TheaterType theater)
         {
             var oldImage = Thumbnail;
-            if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, Name, 0, out Tile tile, (Flag & OverlayTypeFlag.Decoration) != 0))
+            int tilenr = ForceTileNr == -1 ? 0 : ForceTileNr;
+            if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, GraphicsSource, tilenr, out Tile tile, (Flag & OverlayTypeFlag.Decoration) != 0))
             {
                 var size = tile.Image.Size;
                 var maxSize = new Size(Globals.OriginalTileWidth, Globals.OriginalTileWidth);

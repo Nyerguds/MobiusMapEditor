@@ -188,7 +188,8 @@ namespace MobiusEditor.TiberianDawn
                         using (var iniReader = new StreamReader(iniPath))
                         using (var binReader = new BinaryReader(new FileStream(binPath, FileMode.Open, FileAccess.Read)))
                         {
-                            ini.Parse(iniReader);
+                            string iniText = FixRoad2Load(iniReader);
+                            ini.Parse(iniText);
                             errors.AddRange(LoadINI(ini));
                             LoadBinary(binReader);
                         }
@@ -219,6 +220,78 @@ namespace MobiusEditor.TiberianDawn
                     throw new NotSupportedException();
             }
             return errors;
+        }
+
+        private string FixRoad2Load(StreamReader iniReader)
+        {
+            string iniText = iniReader.ReadToEnd();
+            string[] iniTextArr = iniText.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n');
+            Dictionary<int, int> dupeRoadDetect = new Dictionary<int, int>();
+            Regex roadRegex = new Regex("^\\s*(\\d+)\\s*=\\s*" + OverlayTypes.Road.Name + "\\s*$", RegexOptions.IgnoreCase);
+            string road2dummy = "=" + OverlayTypes.Road2.Name.ToUpper();
+            bool inOverlay = false;
+            for (int i = 0; i < iniTextArr.Length; ++i)
+            {
+                string currLine = iniTextArr[i].Trim();
+                if (currLine.StartsWith("["))
+                {
+                    inOverlay = "[Overlay]".Equals(currLine, StringComparison.InvariantCultureIgnoreCase);
+                    continue;
+                }
+                if (inOverlay)
+                {
+                    Match match = roadRegex.Match(currLine);
+                    if (match.Success)
+                    {
+                        int cellNumber = Int32.Parse(match.Groups[1].Value);
+                        int cur = dupeRoadDetect.TryGetValue(cellNumber, out int curVal) ? curVal : 0;
+                        dupeRoadDetect[cellNumber] = cur + 1;
+                    }
+                }
+            }
+            if (dupeRoadDetect.Any(k => k.Value > 1))
+            {
+                inOverlay = false;
+                List<string> newIniText = new List<string>();
+                for (int i = 0; i < iniTextArr.Length; ++i)
+                {
+                    string currLine = iniTextArr[i].Trim();
+                    if (currLine.StartsWith("["))
+                    {
+                        inOverlay = "[Overlay]".Equals(currLine, StringComparison.InvariantCultureIgnoreCase);
+                    }
+                    Match match;
+                    if (!inOverlay || !(match = roadRegex.Match(iniTextArr[i])).Success)
+                    {
+                        newIniText.Add(currLine);
+                    }
+                    else
+                    {
+                        int cellNumber = Int32.Parse(match.Groups[1].Value);
+                        int roadAmount;
+                        if (dupeRoadDetect.TryGetValue(cellNumber, out roadAmount))
+                        {
+                            if (roadAmount == 1)
+                            {
+                                newIniText.Add(currLine);
+                            }
+                            else if (roadAmount > 1)
+                            {
+                                newIniText.Add(cellNumber + road2dummy);
+                                // Ensures TryGetValue succeeds, but nothing is written for any following matches.
+                                dupeRoadDetect[cellNumber] = -1;
+                            }
+                        }
+                    }
+                }
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < newIniText.Count; ++i)
+                {
+                    sb.Append(newIniText[i]).Append("\r\n");
+                }
+                iniText = sb.ToString();
+            }
+            return iniText;
         }
 
         private IEnumerable<string> LoadINI(INI ini)
@@ -878,7 +951,7 @@ namespace MobiusEditor.TiberianDawn
             Dictionary<string, string> correctedEdges = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             foreach (var edge in Globals.Edges)
                 correctedEdges.Add(edge, edge);
-            String defaultEdge = Globals.Edges.FirstOrDefault() ?? String.Empty;
+            string defaultEdge = Globals.Edges.FirstOrDefault() ?? string.Empty;
             foreach (var house in Map.Houses)
             {
                 if (house.Type.ID < 0)
@@ -956,7 +1029,8 @@ namespace MobiusEditor.TiberianDawn
                         SaveINI(ini, fileType);
                         using (var iniWriter = new StreamWriter(iniPath))
                         {
-                            iniWriter.Write(ini.ToString());
+                            //iniWriter.Write(ini.ToString());
+                            FixRoad2Save(ini, iniWriter);
                         }
 
                         using (var binStream = new FileStream(binPath, FileMode.Create))
@@ -1024,6 +1098,36 @@ namespace MobiusEditor.TiberianDawn
             }
 
             return true;
+        }
+
+        private void FixRoad2Save(INI ini, StreamWriter iniWriter)
+        {
+            // Special code to make the second state of ROAD cells work.
+            string roadLine = "=" + OverlayTypes.Road.Name.ToUpperInvariant() + "\r\n";
+            Regex roadDetect = new Regex("^\\s*(\\d+)\\s*=\\s*" + OverlayTypes.Road2.Name + "\\s*$", RegexOptions.IgnoreCase);
+            string[] iniString = ini.ToString().Replace("\r\n", "\n").Replace('\r', '\n').Split('\n');
+            bool inOverlay = false;
+            for (int i = 0; i < iniString.Length; i++)
+            {
+                string currLine = iniString[i].Trim();
+                if (currLine.StartsWith("["))
+                {
+                    inOverlay = "[Overlay]".Equals(currLine, StringComparison.InvariantCultureIgnoreCase);
+                }
+                Match match;
+                if (inOverlay && (match = roadDetect.Match(currLine)).Success)
+                {
+                    string newRoad = match.Groups[1].Value + roadLine;
+                    // Write twice to achieve second state.
+                    iniWriter.Write(newRoad);
+                    iniWriter.Write(newRoad);
+                }
+                else
+                {
+                    iniWriter.Write(currLine);
+                    iniWriter.Write("\r\n");
+                }
+            }
         }
 
         private void SaveINI(INI ini, FileType fileType)
@@ -1245,7 +1349,7 @@ namespace MobiusEditor.TiberianDawn
             Random rd = new Random();
             foreach (var (cell, overlay) in Map.Overlay)
             {
-                String overlayName = overlay.Type.Name;
+                string overlayName = overlay.Type.Name;
                 if (tiberium.IsMatch(overlayName))
                     overlayName = "TI" + rd.Next(1, 13);
                 overlaySection[cell.ToString()] = overlayName.ToUpperInvariant();

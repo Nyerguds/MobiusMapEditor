@@ -41,6 +41,7 @@ namespace MobiusEditor.TiberianDawn
         public static readonly OverlayType Tiberium11 = new OverlayType(16, "ti11", OverlayTypeFlag.TiberiumOrGold);
         public static readonly OverlayType Tiberium12 = new OverlayType(17, "ti12", OverlayTypeFlag.TiberiumOrGold);
         public static readonly OverlayType Road = new OverlayType(18, "road", "Concrete Road", OverlayTypeFlag.Decoration);
+        public static readonly OverlayType Road2 = new OverlayType(19, "road2", "Concrete Road (full)", null, OverlayTypeFlag.Decoration, "road", 1);
         // Not available to place down sadly.
         //public static readonly OverlayType Squishy = new OverlayType(19, "SQUISH", OverlayTypeFlag.Decoration);
         public static readonly OverlayType V12 = new OverlayType(20, "v12", "TEXT_STRUCTURE_TITLE_CIV12", new TheaterType[] { TheaterTypes.Temperate });

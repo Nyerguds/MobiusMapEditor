@@ -109,9 +109,7 @@ namespace MobiusEditor.Render
             var tileSize = new Size(Globals.OriginalTileWidth / tileScale, Globals.OriginalTileHeight / tileScale);
             var tiberiumOrGoldTypes = map.OverlayTypes.Where(t => t.IsTiberiumOrGold).Select(t => t).ToArray();
             var gemTypes = map.OverlayTypes.Where(t => t.IsGem).ToArray();
-
             var overlappingRenderList = new List<(Rectangle, Action<Graphics>)>();
-
             Func<IEnumerable<Point>> renderLocations = null;
             if (locations != null)
             {
@@ -131,18 +129,15 @@ namespace MobiusEditor.Render
                 }
                 renderLocations = allCells;
             }
-
             if ((layers & MapLayerFlag.Template) != MapLayerFlag.None)
             {
                 foreach (var topLeft in renderLocations())
                 {
                     map.Metrics.GetCell(topLeft, out int cell);
-
                     var template = map.Templates[topLeft];
                     TemplateType ttype = template?.Type ?? map.TemplateTypes.Where(t => t.Flag == TemplateTypeFlag.Clear).FirstOrDefault();
                     var name = ttype.Name;
                     var icon = template?.Icon ?? ((cell & 0x03) | ((cell >> 4) & 0x0C));
-
                     if (Globals.TheTilesetManager.GetTileData(map.Theater.Tilesets, name, icon, out Tile tile))
                     {
                         var renderBounds = new Rectangle(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height, tileSize.Width, tileSize.Height);
@@ -176,7 +171,6 @@ namespace MobiusEditor.Render
                     {
                         continue;
                     }
-
                     if ((overlay.Type.IsResource && ((layers & MapLayerFlag.Resources) != MapLayerFlag.None)) ||
                         (overlay.Type.IsWall && ((layers & MapLayerFlag.Walls) != MapLayerFlag.None)) ||
                         ((layers & MapLayerFlag.Overlay) != MapLayerFlag.None))
@@ -194,13 +188,11 @@ namespace MobiusEditor.Render
                     {
                         continue;
                     }
-
                     string tileName = terrain.Type.Name;
                     if ((terrain.Type.TemplateType & TemplateTypeFlag.OreMine) != TemplateTypeFlag.None)
                     {
                         tileName = "OREMINE";
                     }
-
                     if (Globals.TheTilesetManager.GetTileData(map.Theater.Tilesets, tileName, terrain.Icon, out Tile tile))
                     {
                         var tint = terrain.Tint;
@@ -218,7 +210,6 @@ namespace MobiusEditor.Render
                             );
                             imageAttributes.SetColorMatrix(colorMatrix);
                         }
-
                         var location = new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height);
                         var size = new Size(tile.Image.Width / tileScale, tile.Image.Height / tileScale);
                         var maxSize = new Size(terrain.Type.Size.Width * tileSize.Width, terrain.Type.Size.Height * tileSize.Height);
@@ -246,7 +237,6 @@ namespace MobiusEditor.Render
                     }
                 }
             }
-
             if ((layers & MapLayerFlag.Buildings) != MapLayerFlag.None)
             {
                 foreach (var (topLeft, building) in map.Buildings.OfType<Building>())
@@ -255,11 +245,9 @@ namespace MobiusEditor.Render
                     {
                         continue;
                     }
-
                     overlappingRenderList.Add(Render(gameType, map.Theater, topLeft, tileSize, tileScale, building));
                 }
             }
-
             if ((layers & MapLayerFlag.Infantry) != MapLayerFlag.None)
             {
                 foreach (var (topLeft, infantryGroup) in map.Technos.OfType<InfantryGroup>())
@@ -268,7 +256,6 @@ namespace MobiusEditor.Render
                     {
                         continue;
                     }
-
                     for (int i = 0; i < infantryGroup.Infantry.Length; ++i)
                     {
                         var infantry = infantryGroup.Infantry[i];
@@ -276,12 +263,10 @@ namespace MobiusEditor.Render
                         {
                             continue;
                         }
-
                         overlappingRenderList.Add(Render(map.Theater, topLeft, tileSize, infantry, (InfantryStoppingType)i));
                     }
                 }
             }
-
             if ((layers & MapLayerFlag.Units) != MapLayerFlag.None)
             {
                 foreach (var (topLeft, unit) in map.Technos.OfType<Unit>())
@@ -290,11 +275,9 @@ namespace MobiusEditor.Render
                     {
                         continue;
                     }
-
                     overlappingRenderList.Add(Render(gameType, map.Theater, topLeft, tileSize, unit));
                 }
             }
-
             foreach (var (location, renderer) in overlappingRenderList.Where(x => !x.Item1.IsEmpty).OrderBy(x => x.Item1.Bottom))
             {
                 renderer(graphics);
@@ -323,17 +306,14 @@ namespace MobiusEditor.Render
                 );
                 imageAttributes.SetColorMatrix(colorMatrix);
             }
-
             if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, smudge.Type.Name, smudge.Icon, out Tile tile))
             {
                 var location = new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height);
                 var smudgeBounds = new Rectangle(location, smudge.Type.RenderSize);
-
                 void render(Graphics g)
                 {
                     g.DrawImage(tile.Image, smudgeBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes);
                 }
-
                 return (smudgeBounds, render);
             }
             else
@@ -345,7 +325,7 @@ namespace MobiusEditor.Render
 
         public static (Rectangle, Action<Graphics>) Render(TheaterType theater, OverlayType[] tiberiumOrGoldTypes, OverlayType[] gemTypes, Point topLeft, Size tileSize, int tileScale, Overlay overlay)
         {
-            var name = overlay.Type.Name;
+            string name;
             if (overlay.Type.IsGem)
             {
                 name = gemTypes[new Random(randomSeed ^ topLeft.GetHashCode()).Next(tiberiumOrGoldTypes.Length)].Name;
@@ -354,15 +334,19 @@ namespace MobiusEditor.Render
             {
                 name = tiberiumOrGoldTypes[new Random(randomSeed ^ topLeft.GetHashCode()).Next(tiberiumOrGoldTypes.Length)].Name;
             }
+            else
+            {
+                name = overlay.Type.GraphicsSource;
+            }
             // For Decoration types, generate dummy if not found.
-            if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, name, overlay.Icon, out Tile tile, (overlay.Type.Flag & OverlayTypeFlag.Decoration) != 0))
+            int icon = overlay.Type.ForceTileNr == -1 ? overlay.Icon : overlay.Type.ForceTileNr;
+            if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, name, icon, out Tile tile, (overlay.Type.Flag & OverlayTypeFlag.Decoration) != 0))
             {
                 var size = (overlay.Type.IsCrate || overlay.Type.IsFlag) ? new Size(tile.Image.Width / tileScale, tile.Image.Height / tileScale) : tileSize;
                 var location = new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height)
                     + new Size(tileSize.Width / 2, tileSize.Height / 2)
                     - new Size(size.Width / 2, size.Height / 2);
                 var overlayBounds = new Rectangle(location, size);
-
                 var tint = overlay.Tint;
                 void render(Graphics g)
                 {
@@ -380,15 +364,13 @@ namespace MobiusEditor.Render
                         );
                         imageAttributes.SetColorMatrix(colorMatrix);
                     }
-
                     g.DrawImage(tile.Image, overlayBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes);
                 }
-
                 return (overlayBounds, render);
             }
             else
             {
-                Debug.Print(string.Format("Overlay {0} ({1}) not found", overlay.Type.Name, overlay.Icon));
+                Debug.Print(string.Format("Overlay {0} ({1}) not found", name, icon));
                 return (Rectangle.Empty, (g) => { });
             }
         }
@@ -396,7 +378,6 @@ namespace MobiusEditor.Render
         public static (Rectangle, Action<Graphics>) Render(GameType gameType, TheaterType theater, Point topLeft, Size tileSize, int tileScale, Building building)
         {
             var tint = building.Tint;
-
             var stringFormat = new StringFormat
             {
                 Alignment = StringAlignment.Center,
@@ -434,7 +415,6 @@ namespace MobiusEditor.Render
                     icon = damageIcon;
                 }
             }
-
             if (Globals.TheTilesetManager.GetTeamColorTileData(theater.Tilesets, building.Type.Tilename, icon, Globals.TheTeamColorManager[building.House.BuildingTeamColor], out Tile tile))
             {
                 var location = new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height);
@@ -443,7 +423,6 @@ namespace MobiusEditor.Render
                 // Graphics are too large. Scale them down using the largest dimension.
                 if ((size.Width >= size.Height) && (size.Width > maxSize.Width))
                 {
-
                     size.Height = size.Height * maxSize.Width / size.Width;
                     size.Width = maxSize.Width;
                 }
@@ -457,7 +436,6 @@ namespace MobiusEditor.Render
                 int locY = (maxSize.Height - size.Height) / 2 + location.Y;
                 var paintBounds = new Rectangle(locX, locY, size.Width, size.Height);
                 var buildingBounds = new Rectangle(location, maxSize);
-
                 Tile factoryOverlayTile = null;
                 // Draw no factory overlay over the collapse frame.
                 if (building.Type.FactoryOverlay != null && (building.Strength > 1 || !hasCollapseFrame))
@@ -470,7 +448,6 @@ namespace MobiusEditor.Render
                     }
                     Globals.TheTilesetManager.GetTeamColorTileData(theater.Tilesets, building.Type.FactoryOverlay, overlayIcon, Globals.TheTeamColorManager[building.House.BuildingTeamColor], out factoryOverlayTile);
                 }
-
                 void render(Graphics g)
                 {
                     var imageAttributes = new ImageAttributes();
@@ -504,7 +481,6 @@ namespace MobiusEditor.Render
                             g.DrawString(text, SystemFonts.CaptionFont, fakeTextBrush, textBounds, stringFormat);
                         }
                     }
-
                     if (building.BasePriority >= 0)
                     {
                         var text = building.BasePriority.ToString();
@@ -521,26 +497,23 @@ namespace MobiusEditor.Render
                         }
                     }
                 }
-
                 return (buildingBounds, render);
             }
             else
             {
                 Debug.Print(string.Format("Building {0} (0) not found", building.Type.Name));
                 return (Rectangle.Empty, (g) => { });
-            }            
+            }
         }
 
         public static (Rectangle, Action<Graphics>) Render(TheaterType theater, Point topLeft, Size tileSize, Infantry infantry, InfantryStoppingType infantryStoppingType)
         {
             var icon = HumanShape[Facing32[infantry.Direction.ID]];
-
             string teamColor = infantry.House?.UnitTeamColor;
             if (Globals.TheTilesetManager.GetTeamColorTileData(theater.Tilesets, infantry.Type.Name, icon, Globals.TheTeamColorManager[teamColor], out Tile tile))
             {
                 var baseLocation = new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height)
                     + new Size(tileSize.Width / 2, tileSize.Height / 2);
-
                 var offset = Point.Empty;
                 switch (infantryStoppingType)
                 {
@@ -562,7 +535,6 @@ namespace MobiusEditor.Render
                         break;
                 }
                 baseLocation.Offset(offset);
-
                 var virtualBounds = new Rectangle(
                     new Point(baseLocation.X - (tile.OpaqueBounds.Width / 2), baseLocation.Y - tile.OpaqueBounds.Height),
                     tile.OpaqueBounds.Size
@@ -571,7 +543,6 @@ namespace MobiusEditor.Render
                     baseLocation - new Size(infantry.Type.RenderSize.Width / 2, infantry.Type.RenderSize.Height / 2),
                     infantry.Type.RenderSize
                 );
-
                 var tint = infantry.Tint;
                 void render(Graphics g)
                 {
@@ -591,7 +562,6 @@ namespace MobiusEditor.Render
                     }
                     g.DrawImage(tile.Image, renderBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes);
                 }
-
                 return (virtualBounds, render);
             }
             else
@@ -692,7 +662,6 @@ namespace MobiusEditor.Render
                     location - new Size(unit.Type.RenderSize.Width / 2, unit.Type.RenderSize.Height / 2),
                     unit.Type.RenderSize
                 );
-
                 Tile radarTile = null;
                 if ((unit.Type == RedAlert.UnitTypes.MGG) ||
                     (unit.Type == RedAlert.UnitTypes.MRJammer) ||
@@ -700,7 +669,6 @@ namespace MobiusEditor.Render
                 {
                     Globals.TheTilesetManager.GetTeamColorTileData(theater.Tilesets, unit.Type.Name, 32, Globals.TheTeamColorManager[teamColor], out radarTile);
                 }
-
                 Tile turretTile = null;
                 if (unit.Type.HasTurret)
                 {
@@ -777,7 +745,7 @@ namespace MobiusEditor.Render
                         {
                             if (unit.Type.IsVessel)
                             {
-
+                                // TODO
                             }
                             else if (unit.Type == RedAlert.UnitTypes.Jeep)
                             {
@@ -798,17 +766,14 @@ namespace MobiusEditor.Render
                                 turretAdjust = TurretAdjust[Facing32[unit.Direction.ID]];
                             }
                         }
-
                         var turretBounds = renderBounds;
                         turretBounds.Offset(
                             turretAdjust.X * tileSize.Width / Globals.PixelWidth,
                             turretAdjust.Y * tileSize.Height / Globals.PixelHeight
                         );
-
                         g.DrawImage(turretTile.Image, turretBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes);
                     }
                 }
-
                 return (renderBounds, render);
             }
             else

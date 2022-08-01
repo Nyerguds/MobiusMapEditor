@@ -41,6 +41,8 @@ namespace MobiusEditor.Utility
 
     public class Tileset
     {
+        private static string DummyFormatTga = "DATA\\ART\\TEXTURES\\SRGB\\FALLBACK_DUMMY\\{0}_{1:D4}.tga";
+
         private class TileData
         {
             public int FPS { get; set; }
@@ -119,27 +121,45 @@ namespace MobiusEditor.Utility
             {
                 return false;
             }
-            if (!this.tiles.TryGetValue(name, out Dictionary<int, TileData> shapes) && !generateFallback)
+            Dictionary<int, TileData> shapes;
+            if (!this.tiles.TryGetValue(name, out shapes) && !generateFallback)
             {
                 return false;
             }
+            name = name.ToUpperInvariant();
             if (shapes == null && generateFallback)
             {
+                if (shape < 0)
+                {
+                    shape = 0;
+                }
+                string dummy = String.Format(DummyFormatTga, name, shape);
                 shapes = new Dictionary<int, TileData>();
                 TileData dummyData = new TileData();
-                dummyData.Frames = new string[] { "DATA\\ART\\TEXTURES\\SRGB\\FALLBACK_DUMMY\\" + name + "_" + shape.ToString("D4") + ".tga" };
-                shapes.Add(0, dummyData);
+                dummyData.Frames = new string[] { dummy };
+                shapes.Add(shape, dummyData);
+                // Add it, so it's present for the next lookup.
+                this.tiles[name] = shapes;
             }
-
             if (shape < 0)
             {
                 shape = Math.Max(0, shapes.Max(kv => kv.Key) + shape + 1);
             }
             if (!shapes.TryGetValue(shape, out TileData tileData))
             {
-                return false;
+                if (generateFallback)
+                {
+                    // Shape was found, but specific frame was not. Add it.
+                    string dummy = String.Format(DummyFormatTga, name, shape);
+                    tileData = new TileData();
+                    tileData.Frames = new string[] { dummy };
+                    shapes.Add(shape, tileData);
+                }
+                else
+                {
+                    return false;
+                }
             }
-
             var key = teamColor?.Name ?? string.Empty;
             if (!tileData.TeamColorTiles.TryGetValue(key, out Tile[] tileDataTiles))
             {
