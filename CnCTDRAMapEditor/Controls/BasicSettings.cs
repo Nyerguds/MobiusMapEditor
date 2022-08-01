@@ -51,6 +51,9 @@ namespace MobiusEditor.Controls
             briefComboBox.DataBindings.Add("SelectedItem", basicSection, "Brief");
             actionComboBox.DataBindings.Add("SelectedItem", basicSection, "Action");
             winComboBox.DataBindings.Add("SelectedItem", basicSection, "Win");
+            win2ComboBox.DataBindings.Add("SelectedItem", basicSection, "Win2");
+            win3ComboBox.DataBindings.Add("SelectedItem", basicSection, "Win3");
+            win4ComboBox.DataBindings.Add("SelectedItem", basicSection, "Win4");
             loseComboBox.DataBindings.Add("SelectedItem", basicSection, "Lose");
 
             switch (plugin.GameType)
@@ -58,16 +61,10 @@ namespace MobiusEditor.Controls
                 case GameType.TiberianDawn:
                     buildLevelNud.DataBindings.Add("Value", basicSection, "BuildLevel");
                     baseLabel.Visible = baseComboBox.Visible = false;
-                    win2Label.Visible = win2ComboBox.Visible = false;
-                    win3Label.Visible = win3ComboBox.Visible = false;
-                    win4Label.Visible = win4ComboBox.Visible = false;
                     break;
                 case GameType.RedAlert:
                     buildLevelNud.Visible = buildLevelLabel.Visible = false;
                     baseComboBox.DataBindings.Add("SelectedItem", basicSection, "BasePlayer");
-                    win2ComboBox.DataBindings.Add("SelectedItem", basicSection, "Win2");
-                    win3ComboBox.DataBindings.Add("SelectedItem", basicSection, "Win3");
-                    win4ComboBox.DataBindings.Add("SelectedItem", basicSection, "Win4");
                     break;
             }
 

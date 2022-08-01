@@ -43,6 +43,7 @@ namespace MobiusEditor.Controls
         private void InitializeComponent()
         {
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this.lblCarryoverClassic = new System.Windows.Forms.Label();
             this.themeLabel = new System.Windows.Forms.Label();
             this.loseLabel = new System.Windows.Forms.Label();
             this.loseComboBox = new System.Windows.Forms.ComboBox();
@@ -77,7 +78,9 @@ namespace MobiusEditor.Controls
             this.baseComboBox = new System.Windows.Forms.ComboBox();
             this.themeComboBox = new System.Windows.Forms.ComboBox();
             this.lblThemeClassic = new System.Windows.Forms.Label();
-            this.lblCarryoverClassic = new System.Windows.Forms.Label();
+            this.lblWin2Remaster = new System.Windows.Forms.Label();
+            this.lblWin3Remaster = new System.Windows.Forms.Label();
+            this.lblWin4Remaster = new System.Windows.Forms.Label();
             this.tableLayoutPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.buildLevelNud)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.percentNud)).BeginInit();
@@ -91,6 +94,9 @@ namespace MobiusEditor.Controls
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 25F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 25F));
+            this.tableLayoutPanel1.Controls.Add(this.lblWin4Remaster, 2, 14);
+            this.tableLayoutPanel1.Controls.Add(this.lblWin3Remaster, 2, 13);
+            this.tableLayoutPanel1.Controls.Add(this.lblWin2Remaster, 2, 12);
             this.tableLayoutPanel1.Controls.Add(this.lblCarryoverClassic, 2, 1);
             this.tableLayoutPanel1.Controls.Add(this.themeLabel, 0, 7);
             this.tableLayoutPanel1.Controls.Add(this.loseLabel, 0, 15);
@@ -150,6 +156,17 @@ namespace MobiusEditor.Controls
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.Size = new System.Drawing.Size(400, 428);
             this.tableLayoutPanel1.TabIndex = 1;
+            // 
+            // lblCarryoverClassic
+            // 
+            this.lblCarryoverClassic.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblCarryoverClassic.Location = new System.Drawing.Point(302, 26);
+            this.lblCarryoverClassic.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.lblCarryoverClassic.Name = "lblCarryoverClassic";
+            this.lblCarryoverClassic.Size = new System.Drawing.Size(96, 26);
+            this.lblCarryoverClassic.TabIndex = 34;
+            this.lblCarryoverClassic.Text = "(Classic only)";
+            this.lblCarryoverClassic.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // themeLabel
             // 
@@ -506,16 +523,38 @@ namespace MobiusEditor.Controls
             this.lblThemeClassic.Text = "(Classic only)";
             this.lblThemeClassic.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
-            // lblCarryoverClassic
+            // lblWin2Remaster
             // 
-            this.lblCarryoverClassic.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lblCarryoverClassic.Location = new System.Drawing.Point(302, 26);
-            this.lblCarryoverClassic.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.lblCarryoverClassic.Name = "lblCarryoverClassic";
-            this.lblCarryoverClassic.Size = new System.Drawing.Size(96, 26);
-            this.lblCarryoverClassic.TabIndex = 34;
-            this.lblCarryoverClassic.Text = "(Classic only)";
-            this.lblCarryoverClassic.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.lblWin2Remaster.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblWin2Remaster.Location = new System.Drawing.Point(302, 305);
+            this.lblWin2Remaster.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.lblWin2Remaster.Name = "lblWin2Remaster";
+            this.lblWin2Remaster.Size = new System.Drawing.Size(96, 25);
+            this.lblWin2Remaster.TabIndex = 35;
+            this.lblWin2Remaster.Text = "(Remaster only)";
+            this.lblWin2Remaster.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // lblWin3Remaster
+            // 
+            this.lblWin3Remaster.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblWin3Remaster.Location = new System.Drawing.Point(302, 330);
+            this.lblWin3Remaster.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.lblWin3Remaster.Name = "lblWin3Remaster";
+            this.lblWin3Remaster.Size = new System.Drawing.Size(96, 25);
+            this.lblWin3Remaster.TabIndex = 36;
+            this.lblWin3Remaster.Text = "(Remaster only)";
+            this.lblWin3Remaster.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // lblWin4Remaster
+            // 
+            this.lblWin4Remaster.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblWin4Remaster.Location = new System.Drawing.Point(302, 355);
+            this.lblWin4Remaster.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.lblWin4Remaster.Name = "lblWin4Remaster";
+            this.lblWin4Remaster.Size = new System.Drawing.Size(96, 25);
+            this.lblWin4Remaster.TabIndex = 37;
+            this.lblWin4Remaster.Text = "(Remaster only)";
+            this.lblWin4Remaster.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // BasicSettings
             // 
@@ -572,5 +611,8 @@ namespace MobiusEditor.Controls
         private System.Windows.Forms.ComboBox themeComboBox;
         private System.Windows.Forms.Label lblThemeClassic;
         private System.Windows.Forms.Label lblCarryoverClassic;
+        private System.Windows.Forms.Label lblWin4Remaster;
+        private System.Windows.Forms.Label lblWin3Remaster;
+        private System.Windows.Forms.Label lblWin2Remaster;
     }
 }
