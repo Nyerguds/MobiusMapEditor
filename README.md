@@ -129,4 +129,12 @@ v1.4.0.4: [WIP]
 * Fixed dimensions of Red Alert's ore mine, Snow theater ice floes and Interior theater boxes.
 * Added \*.ini to the list of possible extensions for opening RA maps. Apparently before I only added it for saving.
 * Terrain objects will now only pop up a poperties box for setting a trigger in Tiberian Dawn mode.
+* Optimised loading so the editor will skip loading objects from different theaters.
+* Added internal support to allow loading xml and graphics from mod folders.
+* Added limited support for the unique pattern of TD's CONC pavement.
+* Fixed videos loading and saving, so no more errors occur when opening the map options dialog.
+* Made video names freely editable for Tiberian Dawn missions. Any mod-added video in TD is playable from missions.
+* Settings will now be ported from previous version. It's a hacky system, but it works.
+* The preview selection in the Steam publish dialog will now open in the correct folder.
+* The preview rendered for singleplayer maps for the Steam publish (which is not used by default) will show all map contents.
 * [WIP: Fix errors in dropdown boxes in Teamtypes dialog.]

@@ -283,7 +283,8 @@ namespace MobiusEditor.Model
         {
             foreach (var templateType in TemplateTypes)
             {
-                templateType.Init(Theater);
+                if ((templateType.Theaters == null) || templateType.Theaters.Contains(Theater))
+                    templateType.Init(Theater);
             }
             foreach (var smudgeType in SmudgeTypes)
             {
@@ -291,11 +292,13 @@ namespace MobiusEditor.Model
             }
             foreach (var overlayType in OverlayTypes)
             {
-                overlayType.Init(Theater);
+                if ((overlayType.Theaters == null) || overlayType.Theaters.Contains(Theater))
+                    overlayType.Init(Theater);
             }
             foreach (var terrainType in TerrainTypes)
             {
-                terrainType.Init(Theater);
+                if ((terrainType.Theaters == null) || terrainType.Theaters.Contains(Theater))
+                    terrainType.Init(Theater);
             }
             foreach (var infantryType in InfantryTypes)
             {
@@ -307,7 +310,8 @@ namespace MobiusEditor.Model
             }
             foreach (var buildingType in BuildingTypes)
             {
-                buildingType.Init(gameType, Theater, HouseTypes.Where(h => h.Equals(buildingType.OwnerHouse)).FirstOrDefault(), DirectionTypes.Where(d => d.Facing == FacingType.North).First());
+                if ((buildingType.Theaters == null) || buildingType.Theaters.Contains(Theater))
+                    buildingType.Init(gameType, Theater, HouseTypes.Where(h => h.Equals(buildingType.OwnerHouse)).FirstOrDefault(), DirectionTypes.Where(d => d.Facing == FacingType.North).First());
             }
         }
 
@@ -321,6 +325,10 @@ namespace MobiusEditor.Model
             if (invalidateLayers.TryGetValue(MapLayerFlag.Walls, out locations))
             {
                 UpdateWallOverlays(locations);
+            }
+            if (invalidateLayers.TryGetValue(MapLayerFlag.Overlay, out locations))
+            {
+                UpdateConcreteOverlays(locations);
             }
             if (invalidateOverlappers)
             {
@@ -386,7 +394,162 @@ namespace MobiusEditor.Model
             }
         }
 
-        private void RemoveBibs(Building building)
+        private enum ConcreteEnum
+        {
+            C_NONE = -1,
+            C_LEFT = 0,
+            C_RIGHT = 1,
+            C_RIGHT_UPDOWN = 2,
+            C_LEFT_UPDOWN = 3,
+            C_UP_RIGHT = 4,
+            C_UP_LEFT = 5,
+            C_DOWN_RIGHT = 6,
+            C_DOWN_LEFT = 7,
+            C_RIGHT_DOWN = 8,
+            C_LEFT_DOWN = 9,
+            C_RIGHT_UP = 10,
+            C_LEFT_UP = 11,
+            C_UPDOWN_RIGHT = 12,
+            C_UPDOWN_LEFT = 13
+        }
+
+        private enum ConcreteEnum2
+        {
+            C_NONE = -1,
+            C_HOR = 0,
+            C_FULL = 1,
+            C_UP = 2,
+            C_DOWN = 3,
+            C_FILL_DOWN = 4,
+            C_FILL_UP = 5,
+            C_UPDOWN = 6,
+        }
+
+        private enum ConcreteFacings
+        {
+            OF_N = 0x01,
+            OF_NE = 0x02,
+            OF_E = 0x04,
+            OF_SE = 0x08,
+            OF_S = 0x10,
+            EF_N = 0x01,
+            EF_S = 0x02,
+            EF_SW = 0x04,
+            EF_W = 0x08,
+            EF_NW = 0x10,
+        }
+
+        private void UpdateConcreteOverlays(ISet<Point> locations)
+        {
+            foreach (var (cell, overlay) in Overlay.IntersectsWith(locations).Where(o => o.Value.Type.IsConcrete))
+            {
+                FacingType[] _even = { FacingType.North, FacingType.South, FacingType.SouthWest, FacingType.West, FacingType.NorthWest };
+                FacingType[] _odd = { FacingType.North, FacingType.NorthEast, FacingType.East, FacingType.SouthEast, FacingType.South };
+                int isodd = (cell & 0x01);
+                FacingType[] cellsToCheck = isodd == 1 ? _odd : _even;
+                int index = 0;
+                for (int i = 0; i < cellsToCheck.Length; i++)
+                {
+                    var neighbor = Overlay.Adjacent(cell, cellsToCheck[i]);
+                    if (neighbor != null && neighbor.Type == overlay.Type)
+                    {
+                        index |= 1 << i;
+                    }
+                }
+                int icon = -1;
+
+                if (isodd == 1)
+                {
+                    switch (index)
+                    {
+                        case (int)(ConcreteFacings.OF_NE):
+                        case (int)(ConcreteFacings.OF_N | ConcreteFacings.OF_NE):
+                        case (int)(ConcreteFacings.OF_E | ConcreteFacings.OF_N):
+                        case (int)(ConcreteFacings.OF_E | ConcreteFacings.OF_NE):
+                        case (int)(ConcreteFacings.OF_N | ConcreteFacings.OF_NE | ConcreteFacings.OF_E):
+                        case (int)(ConcreteFacings.OF_S | ConcreteFacings.OF_N | ConcreteFacings.OF_NE):
+                            icon = (int)ConcreteEnum2.C_FILL_UP;      // right - up
+                            break;
+
+                        case (int)(ConcreteFacings.OF_SE):
+                        case (int)(ConcreteFacings.OF_E | ConcreteFacings.OF_SE):
+                        case (int)(ConcreteFacings.OF_S | ConcreteFacings.OF_SE):
+                        case (int)(ConcreteFacings.OF_S | ConcreteFacings.OF_E):
+                        case (int)(ConcreteFacings.OF_S | ConcreteFacings.OF_SE | ConcreteFacings.OF_E):
+                        case (int)(ConcreteFacings.OF_S | ConcreteFacings.OF_SE | ConcreteFacings.OF_N):
+                            icon = (int)ConcreteEnum2.C_FILL_DOWN;        // right - down
+                            break;
+
+                        case (int)(ConcreteFacings.OF_SE | ConcreteFacings.OF_NE):
+                        case (int)(ConcreteFacings.OF_SE | ConcreteFacings.OF_NE | ConcreteFacings.OF_N):
+                        case (int)(ConcreteFacings.OF_SE | ConcreteFacings.OF_NE | ConcreteFacings.OF_S):
+                        case (int)(ConcreteFacings.OF_SE | ConcreteFacings.OF_NE | ConcreteFacings.OF_S | ConcreteFacings.OF_N):
+                        case (int)(ConcreteFacings.OF_SE | ConcreteFacings.OF_E | ConcreteFacings.OF_N):
+                        case (int)(ConcreteFacings.OF_SE | ConcreteFacings.OF_E | ConcreteFacings.OF_NE | ConcreteFacings.OF_N):
+                        case (int)(ConcreteFacings.OF_S | ConcreteFacings.OF_E | ConcreteFacings.OF_N):
+                        case (int)(ConcreteFacings.OF_S | ConcreteFacings.OF_E | ConcreteFacings.OF_NE):
+                        case (int)(ConcreteFacings.OF_S | ConcreteFacings.OF_E | ConcreteFacings.OF_NE | ConcreteFacings.OF_N):
+                        case (int)(ConcreteFacings.OF_S | ConcreteFacings.OF_SE | ConcreteFacings.OF_E | ConcreteFacings.OF_N):
+                        case (int)(ConcreteFacings.OF_S | ConcreteFacings.OF_SE | ConcreteFacings.OF_E | ConcreteFacings.OF_NE | ConcreteFacings.OF_N):
+                        case (int)(ConcreteFacings.OF_S | ConcreteFacings.OF_SE | ConcreteFacings.OF_E | ConcreteFacings.OF_NE):
+                            icon = (int)ConcreteEnum2.C_FULL;      // right - up - down
+                            break;
+
+                        default:
+                            icon = (int)ConcreteEnum2.C_HOR;     // right
+                            break;
+                    }
+                }
+                else
+                {
+                    switch (index)
+                    {
+                        case (int)(ConcreteFacings.EF_NW):
+                        case (int)(ConcreteFacings.EF_NW | ConcreteFacings.EF_N):
+                        case (int)(ConcreteFacings.EF_W | ConcreteFacings.EF_N):
+                        case (int)(ConcreteFacings.EF_NW | ConcreteFacings.EF_W | ConcreteFacings.EF_N):
+                        case (int)(ConcreteFacings.EF_NW | ConcreteFacings.EF_W):
+                        case (int)(ConcreteFacings.EF_NW | ConcreteFacings.EF_S | ConcreteFacings.EF_N):
+                            icon = (int)ConcreteEnum2.C_FILL_UP;       // left - up
+                            break;
+
+                        case (int)(ConcreteFacings.EF_SW):
+                        case (int)(ConcreteFacings.EF_SW | ConcreteFacings.EF_S):
+                        case (int)(ConcreteFacings.EF_W | ConcreteFacings.EF_S):
+                        case (int)(ConcreteFacings.EF_W | ConcreteFacings.EF_SW | ConcreteFacings.EF_S):
+                        case (int)(ConcreteFacings.EF_W | ConcreteFacings.EF_SW):
+                        case (int)(ConcreteFacings.EF_SW | ConcreteFacings.EF_S | ConcreteFacings.EF_N):
+                            icon = (int)ConcreteEnum2.C_FILL_DOWN;     // left - down
+                            break;
+
+                        case (int)(ConcreteFacings.EF_NW | ConcreteFacings.EF_SW):
+                        case (int)(ConcreteFacings.EF_NW | ConcreteFacings.EF_SW | ConcreteFacings.EF_N):
+                        case (int)(ConcreteFacings.EF_NW | ConcreteFacings.EF_SW | ConcreteFacings.EF_S):
+                        case (int)(ConcreteFacings.EF_NW | ConcreteFacings.EF_SW | ConcreteFacings.EF_S | ConcreteFacings.EF_N):
+                        case (int)(ConcreteFacings.EF_W | ConcreteFacings.EF_S | ConcreteFacings.EF_N):
+                        case (int)(ConcreteFacings.EF_W | ConcreteFacings.EF_SW | ConcreteFacings.EF_N):
+                        case (int)(ConcreteFacings.EF_W | ConcreteFacings.EF_SW | ConcreteFacings.EF_S | ConcreteFacings.EF_N):
+                        case (int)(ConcreteFacings.EF_NW | ConcreteFacings.EF_W | ConcreteFacings.EF_S):
+                        case (int)(ConcreteFacings.EF_NW | ConcreteFacings.EF_W | ConcreteFacings.EF_S | ConcreteFacings.EF_N):
+                        case (int)(ConcreteFacings.EF_NW | ConcreteFacings.EF_W | ConcreteFacings.EF_SW | ConcreteFacings.EF_S | ConcreteFacings.EF_N):
+                        case (int)(ConcreteFacings.EF_NW | ConcreteFacings.EF_W | ConcreteFacings.EF_SW | ConcreteFacings.EF_N):
+                        case (int)(ConcreteFacings.EF_NW | ConcreteFacings.EF_W | ConcreteFacings.EF_SW | ConcreteFacings.EF_S):
+                            icon = (int)ConcreteEnum2.C_FULL;       // left - up - down
+                            break;
+
+                        default:
+                            icon = (int)ConcreteEnum2.C_HOR;      // left
+                            break;
+                    }
+                }
+                icon = icon * 2;
+                // For some bizarre reason, the first 2 cells don't follow the same even-odd order.
+                icon = icon == 0 ? isodd : icon + 1 - isodd;
+                overlay.Icon = icon;
+            }
+        }
+
+            private void RemoveBibs(Building building)
         {
             var bibCells = Smudge.IntersectsWith(building.BibCells).Where(x => (x.Value.Type.Flag & SmudgeTypeFlag.Bib) != SmudgeTypeFlag.None).Select(x => x.Cell).ToArray();
             foreach (var cell in bibCells)
@@ -492,7 +655,7 @@ namespace MobiusEditor.Model
             return map;
         }
 
-        public TGA GeneratePreview(Size previewSize, bool sharpen)
+        public TGA GeneratePreview(Size previewSize, GameType gameType, bool renderAll, bool sharpen)
         {
             var mapBounds = new Rectangle(
                 Bounds.Left * Globals.OriginalTileWidth,
@@ -509,7 +672,8 @@ namespace MobiusEditor.Model
                 var locations = Bounds.Points().ToHashSet();
                 using (var g = Graphics.FromImage(fullBitmap))
                 {
-                    MapRenderer.Render(GameType.None, this, g, locations, MapLayerFlag.Template | MapLayerFlag.Resources, 1);
+                    MapLayerFlag toRender = MapLayerFlag.Template | (renderAll ? MapLayerFlag.OverlayAll | MapLayerFlag.Technos : MapLayerFlag.Resources);
+                    MapRenderer.Render(gameType, this, g, locations, toRender, 1);
                 }
                 using (var g = Graphics.FromImage(croppedBitmap))
                 {
@@ -535,14 +699,14 @@ namespace MobiusEditor.Model
             }
         }
 
-        public TGA GenerateMapPreview()
+        public TGA GenerateMapPreview(GameType gameType, bool renderAll)
         {
-            return GeneratePreview(Globals.MapPreviewSize, false);
+            return GeneratePreview(Globals.MapPreviewSize, gameType, renderAll, false);
         }
 
-        public TGA GenerateWorkshopPreview()
+        public TGA GenerateWorkshopPreview(GameType gameType, bool renderAll)
         {
-            return GeneratePreview(Globals.WorkshopPreviewSize, true);
+            return GeneratePreview(Globals.WorkshopPreviewSize, gameType, renderAll, true);
         }
 
         object ICloneable.Clone()
@@ -578,6 +742,10 @@ namespace MobiusEditor.Model
                 else if (overlay.Type.IsWall)
                 {
                     layer = MapLayerFlag.Walls;
+                }
+                else if (overlay.Type.IsConcrete)
+                {
+                    layer = MapLayerFlag.Overlay;
                 }
                 else
                 {

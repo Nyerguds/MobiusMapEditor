@@ -44,6 +44,32 @@ namespace MobiusEditor.Utility
         }
 
         /// <summary>
+        /// Attempts to retrieve the folder that a Steam game is installed in by scanning the Steam library information.
+        /// </summary>
+        /// <param name="steamId">Steam game ID</param>
+        /// <returns>The first found folder that matches the criteria and that exists.</returns>
+        public static String TryGetSteamModFolder(string steamId, string modId, String modFolderName)
+        {
+            if (steamId == null)
+            {
+                throw new ArgumentNullException("steamId");
+            }
+            String steamFolder = GetSteamFolder();
+            if (steamFolder == null)
+            {
+                return null;
+            }
+            // Some versions of the registry keys seem to use slashes. Probably not a problem, but whatever.
+            steamFolder = steamFolder.Replace('/', '\\');
+            List<string> foundLibraryFolders = GetLibraryFoldersForAppId(steamFolder, steamId);
+            if (foundLibraryFolders == null)
+            {
+                return null;
+            }
+            return GetModFolder(foundLibraryFolders, steamId, modId, modFolderName);
+        }
+
+        /// <summary>
         /// Retrieves the Steam install folder from the registry.
         /// </summary>
         /// <returns>The Steam install folder, or null if nothing was found.</returns>
@@ -243,7 +269,7 @@ namespace MobiusEditor.Utility
                     continue;
                 }
                 string commonAppsPath = Path.Combine(appsPath, "common");
-                if (!Directory.Exists(appsPath))
+                if (!Directory.Exists(commonAppsPath))
                 {
                     continue;
                 }
@@ -282,6 +308,54 @@ namespace MobiusEditor.Utility
                         }
                     }
                 }
+            }
+            return null;
+        }
+        /// <summary>
+        /// Scans the given Steam library folders for a mod under the given Steam game ID.
+        /// </summary>
+        /// <param name="libraryFolders">A list of Steam library folders.</param>
+        /// <param name="steamId">Steam game ID.</param>
+        /// <returns>The first matching game folder for that id that is found, or null if no existing match was found.<</returns>
+        private static string GetModFolder(List<string> libraryFolders, string steamId, string modId, string modFolderName)
+        {
+            const string workshopExt = ".workshop.json";
+            if (steamId == null)
+            {
+                throw new ArgumentNullException("steamId");
+            }
+            if (libraryFolders == null)
+            {
+                return null;
+            }
+            foreach (string path in libraryFolders)
+            {
+                string appsPath = Path.Combine(path, "steamapps");
+                if (!Directory.Exists(appsPath))
+                {
+                    continue;
+                }
+                string modPath = Path.Combine(appsPath, "workshop", "content", steamId, modId);
+                if (!Directory.Exists(modPath))
+                {
+                    continue;
+                }
+                // If given, it needs to match.
+                if (modFolderName != null)
+                {
+                    string folderPath = Path.Combine(modPath, modFolderName);
+                    return Directory.Exists(folderPath) ? folderPath : null;
+                }
+                string[] workshopFiles = Directory.GetFiles(modPath, "*" + workshopExt);
+                for (Int32 i = 0; i < workshopFiles.Length; ++i)
+                {
+                    string workshopFile = Path.GetFileName(workshopFiles[i]);
+                    string folderName = workshopFile.Substring(0, workshopFile.Length - workshopExt.Length);
+                    string folderPath = Path.Combine(modPath, folderName);
+                    if (Directory.Exists(folderPath))
+                        return folderPath;
+                }
+
             }
             return null;
         }

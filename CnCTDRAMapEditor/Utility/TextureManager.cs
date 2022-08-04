@@ -28,6 +28,11 @@ namespace MobiusEditor.Utility
 {
     public class TextureManager
     {
+
+        private static string MissingTexture = "DATA\\ART\\TEXTURES\\SRGB\\COMMON\\MISC\\MISSING.TGA";
+        private Boolean processedMissingTexture = false;
+
+        private String expandModPath = null;
 #if false
         private class ImageData
         {
@@ -41,9 +46,10 @@ namespace MobiusEditor.Utility
         private Dictionary<string, Bitmap> cachedTextures = new Dictionary<string, Bitmap>();
         private Dictionary<(string, TeamColor), (Bitmap, Rectangle)> teamColorTextures = new Dictionary<(string, TeamColor), (Bitmap, Rectangle)>();
 
-        public TextureManager(MegafileManager megafileManager)
+        public TextureManager(MegafileManager megafileManager, String expandModPath)
         {
             this.megafileManager = megafileManager;
+            this.expandModPath = expandModPath;
         }
 
         public void Reset()
@@ -78,11 +84,24 @@ namespace MobiusEditor.Utility
             }
         }
 
-        public (Bitmap, Rectangle) GetTexture(string filename, TeamColor teamColor, bool generateFallback)
+        public (Bitmap, Rectangle) GetTexture(string filename, TeamColor teamColor, Boolean generateFallback)
         {
+            if (!cachedTextures.ContainsKey(filename) && generateFallback)
+            {
+                (Bitmap bm, Rectangle bounds) = GetDummyImage();
+                if (bm != null)
+                {
+                    if (!cachedTextures.ContainsKey(filename))
+                    {
+                        cachedTextures.Add(filename, new Bitmap(bm));
+                    }
+                    return (new Bitmap(bm), bounds);
+                }
+            }
+
             if (teamColorTextures.TryGetValue((filename, teamColor), out (Bitmap bitmap, Rectangle opaqueBounds) result))
             {
-                return result;
+                return (new Bitmap(result.bitmap), result.opaqueBounds);
             }
 
             if (!cachedTextures.TryGetValue(filename, out result.bitmap))
@@ -96,44 +115,21 @@ namespace MobiusEditor.Utility
                     var name = Path.GetFileNameWithoutExtension(filename);
                     var archiveDir = Path.GetDirectoryName(filename);
                     var archivePath = archiveDir + ".ZIP";
-                    using (var fileStream = megafileManager.Open(archivePath))
+                    var modFile = expandModPath == null ? null : Path.Combine(expandModPath, archivePath);
+                    if (modFile != null && File.Exists(modFile))
                     {
-                        if (fileStream != null)
+                        using (FileStream fs = new FileStream(modFile, FileMode.Open))
                         {
-                            using (var archive = new ZipArchive(fileStream, ZipArchiveMode.Read))
-                            {
-                                foreach (var entry in archive.Entries)
-                                {
-                                    if (name == Path.GetFileNameWithoutExtension(entry.Name))
-                                    {
-                                        if ((tga == null) && (Path.GetExtension(entry.Name).ToLower() == ".tga"))
-                                        {
-                                            using (var stream = entry.Open())
-                                            using (var memStream = new MemoryStream())
-                                            {
-                                                stream.CopyTo(memStream);
-                                                tga = new TGA(memStream);
-                                            }
-                                        }
-                                        else if ((metadata == null) && (Path.GetExtension(entry.Name).ToLower() == ".meta"))
-                                        {
-                                            using (var stream = entry.Open())
-                                            using (var reader = new StreamReader(stream))
-                                            {
-                                                metadata = JObject.Parse(reader.ReadToEnd());
-                                            }
-                                        }
-
-                                        if ((tga != null) && (metadata != null))
-                                        {
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
+                            LoadTgaFromFileStream(fs, name, ref tga, ref metadata);
                         }
                     }
-
+                    if (tga == null)
+                    {
+                        using (var fileStream = megafileManager.Open(archivePath))
+                        {
+                            LoadTgaFromFileStream(fileStream, name, ref tga, ref metadata);
+                        }
+                    }
                     // Next attempt to load a standalone file
                     if (tga == null)
                     {
@@ -246,93 +242,36 @@ namespace MobiusEditor.Utility
                 {
                     // Try loading as a DDS
                     var ddsFilename = Path.ChangeExtension(filename, ".DDS");
-                    using (var fileStream = megafileManager.Open(ddsFilename))
+                    Bitmap bitmap = null;
+                    var modFile = expandModPath == null ? null : Path.Combine(expandModPath, ddsFilename);
+                    if (modFile != null && File.Exists(modFile))
                     {
-                        if (fileStream != null)
+                        using (FileStream fs = new FileStream(modFile, FileMode.Open))
                         {
-                            var bytes = new byte[fileStream.Length];
-                            fileStream.Read(bytes, 0, bytes.Length);
-
-                            using (var image = Dds.Create(bytes, new PfimConfig()))
+                            bitmap = LoadDDSFromFileStream(fs);
+                        }
+                    }
+                    if (bitmap == null)
+                    {
+                        using (var fileStream = megafileManager.Open(ddsFilename))
+                        {
+                            if (fileStream != null)
                             {
-                                PixelFormat format;
-                                switch (image.Format)
-                                {
-                                    case Pfim.ImageFormat.Rgb24:
-                                        format = PixelFormat.Format24bppRgb;
-                                        break;
-
-                                    case Pfim.ImageFormat.Rgba32:
-                                        format = PixelFormat.Format32bppArgb;
-                                        break;
-
-                                    case Pfim.ImageFormat.R5g5b5:
-                                        format = PixelFormat.Format16bppRgb555;
-                                        break;
-
-                                    case Pfim.ImageFormat.R5g6b5:
-                                        format = PixelFormat.Format16bppRgb565;
-                                        break;
-
-                                    case Pfim.ImageFormat.R5g5b5a1:
-                                        format = PixelFormat.Format16bppArgb1555;
-                                        break;
-
-                                    case Pfim.ImageFormat.Rgb8:
-                                        format = PixelFormat.Format8bppIndexed;
-                                        break;
-
-                                    default:
-                                        format = PixelFormat.DontCare;
-                                        break;
-                                }
-
-                                var bitmap = new Bitmap(image.Width, image.Height, format);
-                                var bitmapData = bitmap.LockBits(new Rectangle(0, 0, image.Width, image.Height), ImageLockMode.WriteOnly, bitmap.PixelFormat);
-                                Marshal.Copy(image.Data, 0, bitmapData.Scan0, image.Stride * image.Height);
-                                bitmap.UnlockBits(bitmapData);
-                                cachedTextures[filename] = bitmap;
+                                bitmap = LoadDDSFromFileStream(fileStream);
                             }
                         }
                     }
-                }
-            }
-
-            if (!cachedTextures.TryGetValue(filename, out result.bitmap) && generateFallback)
-            {
-                int width = Globals.OriginalTileWidth * 10;
-                int height = Globals.OriginalTileHeight * 10;
-                Bitmap bm = new Bitmap(Globals.OriginalTileWidth, Globals.OriginalTileHeight);
-                // Generate at 10x the size, then scale down to get smooth edges. The big version gets disposed right away anyway.
-                using (Bitmap big = new Bitmap(width, height))
-                {
-                    using (Graphics graphics = Graphics.FromImage(big))
+                    if (bitmap != null)
                     {
-                        int outer = width / 10;
-                        int inner = width * 2 / 13; // divided by 6.5
-                        using (SolidBrush outside = new SolidBrush(Color.FromArgb(85, 128, 128, 128))) // 33% opacity 50%-gray
-                        using (SolidBrush ring = new SolidBrush(Color.FromArgb(128, 0, 0, 0))) // 50% opacity black
-                        using (SolidBrush center = new SolidBrush(Color.FromArgb(128, 255, 255, 255))) // 50% opacity white
-                        {
-                            graphics.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceCopy;
-                            graphics.FillRectangle(outside, new Rectangle(0, 0, width, height));
-                            graphics.FillRectangle(ring, new Rectangle(outer, outer, width - outer * 2, height - outer * 2));
-                            graphics.FillRectangle(center, new Rectangle(inner, inner, width - inner * 2, height - inner * 2));
-                        }
-                    }
-                    using (Graphics graphics = Graphics.FromImage(bm))
-                    {
-                        graphics.DrawImage(big, 0, 0, bm.Width, bm.Height);
+                        cachedTextures[filename] = bitmap;
                     }
                 }
-                cachedTextures[filename] = bm;
             }
 
             if (!cachedTextures.TryGetValue(filename, out result.bitmap))
             {
                 return result;
             }
-
             result.bitmap = new Bitmap(result.bitmap);
             if (teamColor != null)
             {
@@ -422,12 +361,153 @@ namespace MobiusEditor.Utility
                         result.bitmap.UnlockBits(data);
                     }
                 }
+                // EXPERIMENTAL: might be better not to cache this.
+                teamColorTextures[(filename, teamColor)] = (new Bitmap(result.bitmap), result.opaqueBounds);
             }
             else
             {
                 result.opaqueBounds = CalculateOpaqueBounds(result.bitmap);
             }
             return result;
+        }
+
+        private void LoadTgaFromFileStream(Stream fileStream, String name, ref TGA tga, ref JObject metadata)
+        {
+            if (fileStream != null)
+            {
+                using (var archive = new ZipArchive(fileStream, ZipArchiveMode.Read))
+                {
+                    foreach (var entry in archive.Entries)
+                    {
+                        if (name == Path.GetFileNameWithoutExtension(entry.Name))
+                        {
+                            if ((tga == null) && (Path.GetExtension(entry.Name).ToLower() == ".tga"))
+                            {
+                                using (var stream = entry.Open())
+                                using (var memStream = new MemoryStream())
+                                {
+                                    stream.CopyTo(memStream);
+                                    tga = new TGA(memStream);
+                                }
+                            }
+                            else if ((metadata == null) && (Path.GetExtension(entry.Name).ToLower() == ".meta"))
+                            {
+                                using (var stream = entry.Open())
+                                using (var reader = new StreamReader(stream))
+                                {
+                                    metadata = JObject.Parse(reader.ReadToEnd());
+                                }
+                            }
+
+                            if ((tga != null) && (metadata != null))
+                            {
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+
+        private Bitmap LoadDDSFromFileStream(Stream fileStream)
+        {
+            var bytes = new byte[fileStream.Length];
+            fileStream.Read(bytes, 0, bytes.Length);
+            using (var image = Dds.Create(bytes, new PfimConfig()))
+            {
+                PixelFormat format;
+                switch (image.Format)
+                {
+                    case Pfim.ImageFormat.Rgb24:
+                        format = PixelFormat.Format24bppRgb;
+                        break;
+
+                    case Pfim.ImageFormat.Rgba32:
+                        format = PixelFormat.Format32bppArgb;
+                        break;
+
+                    case Pfim.ImageFormat.R5g5b5:
+                        format = PixelFormat.Format16bppRgb555;
+                        break;
+
+                    case Pfim.ImageFormat.R5g6b5:
+                        format = PixelFormat.Format16bppRgb565;
+                        break;
+
+                    case Pfim.ImageFormat.R5g5b5a1:
+                        format = PixelFormat.Format16bppArgb1555;
+                        break;
+
+                    case Pfim.ImageFormat.Rgb8:
+                        format = PixelFormat.Format8bppIndexed;
+                        break;
+
+                    default:
+                        format = PixelFormat.DontCare;
+                        break;
+                }
+
+                var bitmap = new Bitmap(image.Width, image.Height, format);
+                var bitmapData = bitmap.LockBits(new Rectangle(0, 0, image.Width, image.Height), ImageLockMode.WriteOnly, bitmap.PixelFormat);
+                Marshal.Copy(image.Data, 0, bitmapData.Scan0, image.Stride * image.Height);
+                bitmap.UnlockBits(bitmapData);
+                return bitmap;
+            }            
+        }
+
+        private (Bitmap, Rectangle) GetDummyImage()
+        {
+            (Bitmap bm, _) = GetTexture(MissingTexture, null, false);
+            Rectangle r = new Rectangle(0, 0, Globals.OriginalTileWidth, Globals.OriginalTileHeight);
+            if (!processedMissingTexture || bm == null)
+            {
+                if (bm == null)
+                {
+                    // Generate.
+                    bm = new Bitmap(48, 48);
+                    using (Graphics graphics = Graphics.FromImage(bm))
+                    {
+                        using (SolidBrush outside = new SolidBrush(Color.FromArgb(128, 107, 107, 107)))
+                        using (SolidBrush ring = new SolidBrush(Color.FromArgb(128, 0, 0, 0)))
+                        using (SolidBrush center = new SolidBrush(Color.FromArgb(128, 250, 250, 250)))
+                        {
+                            graphics.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceCopy;
+                            graphics.FillRectangle(outside, new Rectangle(0, 0, 48, 48));
+                            graphics.FillRectangle(ring, new Rectangle(5, 5, 38, 38));
+                            graphics.FillRectangle(center, new Rectangle(7, 7, 34, 34));
+                        }
+                    }
+                }
+                // Post-process dummy image.
+                Bitmap newBm = new Bitmap(Globals.OriginalTileWidth, Globals.OriginalTileHeight);
+                ColorMatrix colorMatrix = new ColorMatrix();
+                colorMatrix.Matrix33 = 0.5f;
+                var imageAttributes = new ImageAttributes();
+                imageAttributes.SetColorMatrix(
+                    colorMatrix,
+                    ColorMatrixFlag.Default,
+                    ColorAdjustType.Bitmap);
+                using (Graphics g = Graphics.FromImage(newBm))
+                {
+                    g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                    g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                    g.DrawImage(bm, r, 0, 0, bm.Width, bm.Height, GraphicsUnit.Pixel, imageAttributes);
+                }
+                Bitmap oldBm = bm;
+                bm = newBm;
+                try
+                {
+                    oldBm.Dispose();
+                }
+                catch
+                {
+                    // Ignore.
+                }
+                cachedTextures[MissingTexture] = bm;
+                processedMissingTexture = true;
+            }
+            return (bm, r);
         }
 
         private static Rectangle CalculateOpaqueBounds(byte[] data, int width, int height, int bpp, int stride)

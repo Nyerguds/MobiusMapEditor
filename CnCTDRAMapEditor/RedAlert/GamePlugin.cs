@@ -221,6 +221,19 @@ namespace MobiusEditor.RedAlert
             if (basicSection != null)
             {
                 INI.ParseSection(new MapContext(Map, true), basicSection, Map.BasicSection);
+
+                char[] cutfrom = { ';', '(' };
+                string[] toAddRem = movieTypesAdditional.Select(vid => INIHelpers.TrimRemarks(vid, true, cutfrom)).ToArray();
+                Model.BasicSection basic = Map.BasicSection;
+                const string remark = " (Classic only)";
+                basic.Intro = INIHelpers.AddRemarks(basic.Intro, "x", true, toAddRem, remark);
+                basic.Brief = INIHelpers.AddRemarks(basic.Brief, "x", true, toAddRem, remark);
+                basic.Action = INIHelpers.AddRemarks(basic.Action, "x", true, toAddRem, remark);
+                basic.Win = INIHelpers.AddRemarks(basic.Win, "x", true, toAddRem, remark);
+                basic.Win2 = INIHelpers.AddRemarks(basic.Win2, "x", true, toAddRem, remark);
+                basic.Win3 = INIHelpers.AddRemarks(basic.Win3, "x", true, toAddRem, remark);
+                basic.Win4 = INIHelpers.AddRemarks(basic.Win4, "x", true, toAddRem, remark);
+                basic.Lose = INIHelpers.AddRemarks(basic.Lose, "x", true, toAddRem, remark);
             }
 
             Map.BasicSection.Player = Map.HouseTypes.Where(t => t.Equals(Map.BasicSection.Player)).FirstOrDefault()?.Name ?? Map.HouseTypes.First().Name;
@@ -1117,7 +1130,7 @@ namespace MobiusEditor.RedAlert
                         }
                         using (var tgaStream = new FileStream(tgaPath, FileMode.Create))
                         {
-                            SaveMapPreview(tgaStream);
+                            SaveMapPreview(tgaStream, Map.BasicSection.SoloMission);
                         }
                         using (var jsonStream = new FileStream(jsonPath, FileMode.Create))
                         using (var jsonWriter = new JsonTextWriter(new StreamWriter(jsonStream)))
@@ -1134,15 +1147,15 @@ namespace MobiusEditor.RedAlert
                         using (var iniStream = new MemoryStream())
                         using (var tgaStream = new MemoryStream())
                         using (var jsonStream = new MemoryStream())
+                        using (var iniWriter = new StreamWriter(iniStream))
                         using (var jsonWriter = new JsonTextWriter(new StreamWriter(jsonStream)))
                         using (var megafileBuilder = new MegafileBuilder(@"", path))
                         {
-                            var iniWriter = new StreamWriter(iniStream);
                             iniWriter.Write(ini.ToString());
                             iniWriter.Flush();
                             iniStream.Position = 0;
 
-                            SaveMapPreview(tgaStream);
+                            SaveMapPreview(tgaStream, Map.BasicSection.SoloMission);
                             tgaStream.Position = 0;
 
                             SaveJSON(jsonWriter);
@@ -1174,20 +1187,17 @@ namespace MobiusEditor.RedAlert
                 ini.Sections.AddRange(extraSections);
             }
 
-            BasicSection basic = Map.BasicSection as BasicSection;
-            if (basic != null)
-            {
-                char[] cutfrom = { ';', '(' };
-                basic.Intro = INIHelpers.TrimRemarks(basic.Intro, true, cutfrom);
-                basic.Brief = INIHelpers.TrimRemarks(basic.Brief, true, cutfrom);
-                basic.Action = INIHelpers.TrimRemarks(basic.Action, true, cutfrom);
-                basic.Win = INIHelpers.TrimRemarks(basic.Win, true, cutfrom);
-                basic.Win2 = INIHelpers.TrimRemarks(basic.Win2, true, cutfrom);
-                basic.Win3 = INIHelpers.TrimRemarks(basic.Win3, true, cutfrom);
-                basic.Win4 =INIHelpers.TrimRemarks(basic.Win4, true, cutfrom);
-                basic.Lose = INIHelpers.TrimRemarks(basic.Lose, true, cutfrom);
-            }
-
+            Model.BasicSection basic = Map.BasicSection;
+            char[] cutfrom = { ';', '(' };
+            basic.Intro = INIHelpers.TrimRemarks(basic.Intro, true, cutfrom);
+            basic.Brief = INIHelpers.TrimRemarks(basic.Brief, true, cutfrom);
+            basic.Action = INIHelpers.TrimRemarks(basic.Action, true, cutfrom);
+            basic.Win = INIHelpers.TrimRemarks(basic.Win, true, cutfrom);
+            basic.Win2 = INIHelpers.TrimRemarks(basic.Win2, true, cutfrom);
+            basic.Win3 = INIHelpers.TrimRemarks(basic.Win3, true, cutfrom);
+            basic.Win4 =INIHelpers.TrimRemarks(basic.Win4, true, cutfrom);
+            basic.Lose = INIHelpers.TrimRemarks(basic.Lose, true, cutfrom);
+            
             INI.WriteSection(new MapContext(Map, false), ini.Sections.Add("Basic"), Map.BasicSection);
             INI.WriteSection(new MapContext(Map, false), ini.Sections.Add("Map"), Map.MapSection);
 
@@ -1509,9 +1519,9 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        private void SaveMapPreview(Stream stream)
+        private void SaveMapPreview(Stream stream, Boolean renderAll)
         {
-            Map.GenerateMapPreview().Save(stream);
+            Map.GenerateMapPreview(renderAll ? this.GameType : GameType.None, renderAll).Save(stream);
         }
 
         private void SaveJSON(JsonTextWriter writer)

@@ -118,6 +118,18 @@ namespace MobiusEditor.Model
         [DefaultValue("x")]
         public string Win { get => win; set => SetField(ref win, value); }
 
+        private string win2;
+        [DefaultValue("x")]
+        public string Win2 { get => win2; set => SetField(ref win2, value); }
+
+        private string win3;
+        [DefaultValue("x")]
+        public string Win3 { get => win3; set => SetField(ref win3, value); }
+
+        private string win4;
+        [DefaultValue("x")]
+        public string Win4 { get => win4; set => SetField(ref win4, value); }
+
         private string brief;
         [DefaultValue("x")]
         public string Brief { get => brief; set => SetField(ref brief, value); }

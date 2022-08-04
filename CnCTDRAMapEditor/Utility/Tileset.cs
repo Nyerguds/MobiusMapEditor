@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Xml;
@@ -42,6 +43,7 @@ namespace MobiusEditor.Utility
     public class Tileset
     {
         private static string DummyFormatTga = "DATA\\ART\\TEXTURES\\SRGB\\FALLBACK_DUMMY\\{0}_{1:D4}.tga";
+        private static string MissingTexture = "DATA\\ART\\TEXTURES\\SRGB\\COMMON\\MISC\\MISSING.TGA";
 
         private class TileData
         {
@@ -117,6 +119,7 @@ namespace MobiusEditor.Utility
         {
             fps = 0;
             tiles = null;
+            Boolean isDummy = false;
             if (name == null)
             {
                 return false;
@@ -140,6 +143,7 @@ namespace MobiusEditor.Utility
                 shapes.Add(shape, dummyData);
                 // Add it, so it's present for the next lookup.
                 this.tiles[name] = shapes;
+                isDummy = true;
             }
             if (shape < 0)
             {
@@ -154,6 +158,7 @@ namespace MobiusEditor.Utility
                     tileData = new TileData();
                     tileData.Frames = new string[] { dummy };
                     shapes.Add(shape, tileData);
+                    isDummy = true;
                 }
                 else
                 {
@@ -171,7 +176,7 @@ namespace MobiusEditor.Utility
                     var filename = tileData.Frames[i];
                     if (!string.IsNullOrEmpty(filename))
                     {
-                        (Bitmap bitmap, Rectangle opaqueBounds) = textureManager.GetTexture(filename, teamColor, generateFallback);
+                        (Bitmap bitmap, Rectangle opaqueBounds) = textureManager.GetTexture(filename, teamColor, isDummy);
                         tileDataTiles[i] = new Tile(bitmap, opaqueBounds);
                     }
                     else

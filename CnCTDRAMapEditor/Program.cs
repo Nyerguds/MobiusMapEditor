@@ -15,8 +15,11 @@
 using MobiusEditor.Dialogs;
 using MobiusEditor.Utility;
 using System;
+using System.Configuration;
 using System.Globalization;
 using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -30,11 +33,13 @@ namespace MobiusEditor
         [STAThread]
         static void Main(string[] args)
         {
+            const string gameId = "1213210";
             // Change current culture to en-US
             if (Thread.CurrentThread.CurrentCulture.Name != "en-US")
             {
                 Thread.CurrentThread.CurrentCulture = CultureInfo.CreateSpecificCulture("en-US");
             }
+            CopyLastUserConfig(Properties.Settings.Default.ApplicationVersion, v => Properties.Settings.Default.ApplicationVersion = v);
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
@@ -56,7 +61,7 @@ namespace MobiusEditor
                 // Before showing a dialog to ask, try to autodetect the Steam path.
                 if (!validSavedDirectory)
                 {
-                    string gameFolder = SteamAssist.TryGetSteamGameFolder("1213210", "TiberianDawn.dll", "RedAlert.dll");
+                    string gameFolder = SteamAssist.TryGetSteamGameFolder(gameId, "TiberianDawn.dll", "RedAlert.dll");
                     if (gameFolder != null)
                     {
                         if (FileTest(gameFolder))
@@ -98,10 +103,18 @@ namespace MobiusEditor
                 return;
             }
 #endif
-
+            // Hardcoded for now. Might make this a setting or something later.
+            const string addonModName = "ConcretePavement";
+            const string addonModId = "2238803122"; // TODO change this to the actual ID.
+            string docsFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            string addonModPath = Path.Combine(docsFolder, "CnCRemastered", "Mods", "Tiberian_Dawn", addonModName);
+            if (!File.Exists(Path.Combine(addonModPath, "ccmod.json")))
+            {
+                addonModPath = SteamAssist.TryGetSteamModFolder(gameId, addonModId, null); // addonModName);
+            }
             // Initialize texture, tileset, team color, and game text managers
-            Globals.TheTextureManager = new TextureManager(Globals.TheMegafileManager);
-            Globals.TheTilesetManager = new TilesetManager(Globals.TheMegafileManager, Globals.TheTextureManager, Globals.TilesetsXMLPath, Globals.TexturesPath);
+            Globals.TheTextureManager = new TextureManager(Globals.TheMegafileManager, addonModPath);
+            Globals.TheTilesetManager = new TilesetManager(Globals.TheMegafileManager, Globals.TheTextureManager, Globals.TilesetsXMLPath, Globals.TexturesPath, addonModPath);
             Globals.TheTeamColorManager = new TeamColorManager(Globals.TheMegafileManager);
 
             var cultureName = CultureInfo.CurrentUICulture.Name;
@@ -153,6 +166,140 @@ namespace MobiusEditor
             }
 
             Globals.TheMegafileManager.Dispose();
+        }
+
+
+        /// <summary>
+        /// Ports settings over from older versions, and ensures only one settings folder remains.
+        /// Taken from https://stackoverflow.com/a/14845448 and adapted to scan deeper.
+        /// </summary>
+        /// <param name="currentSettingsVer">Curent version fetched from the settings.</param>
+        /// <param name="versionSetter">Delegate to set the version into the settings after the process is complete.</param>
+        private static void CopyLastUserConfig(String currentSettingsVer, Action<String> versionSetter)
+        {
+            AssemblyName assn = Assembly.GetExecutingAssembly().GetName();
+            Version currentVersion = assn.Version;
+            if (currentVersion.ToString() == currentSettingsVer)
+            {
+                return;
+            }
+            string userConfigFileName = "user.config";
+            // Expected location of the current user config
+            DirectoryInfo currentVersionConfigFileDir = new FileInfo(ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath).Directory;
+            if (currentVersionConfigFileDir == null)
+            {
+                return;
+            }
+            DirectoryInfo currentParent = currentVersionConfigFileDir.Parent;
+            DirectoryInfo previousSettingsDir = null;
+            if (currentVersionConfigFileDir.Exists && currentParent != null && currentParent.Exists)
+            {
+                try
+                {
+                    // Location of the previous user config
+                    // grab the most recent folder from the list of user's settings folders, prior to the current version
+                    previousSettingsDir = (from dir in currentParent.GetDirectories()
+                                           let dirVer = new { Dir = dir, Ver = new Version(dir.Name) }
+                                           where dirVer.Ver < currentVersion
+                                           orderby dirVer.Ver descending
+                                           select dir).FirstOrDefault();
+                }
+                catch
+                {
+                    // Ignore.
+                }
+            }
+            // Find any other folders for this application.
+            DirectoryInfo[] otherSettingsFolders = null;
+            string dirNameProgPart = currentParent?.Name;
+            const string dirnameCutoff = "_Url_";
+            int dirNameProgPartLen = dirNameProgPart == null ? -1 : dirNameProgPart.LastIndexOf(dirnameCutoff, StringComparison.OrdinalIgnoreCase);
+            if (dirNameProgPartLen == -1)
+            {
+                // Fallback: reproduce what's done to the exe string to get a folder. Just to be sure. From observation, actual exe cutoff length is 25.
+                dirNameProgPart = Path.GetFileName(assn.CodeBase).Replace(' ', '_');
+                dirNameProgPart = dirNameProgPart.Substring(0, Math.Min(20, dirNameProgPart.Length));
+            }
+            else
+            {
+                dirNameProgPart = dirNameProgPart.Substring(0, dirNameProgPartLen + dirnameCutoff.Length);
+            }
+            if (currentParent != null && currentParent.Parent != null && currentParent.Parent.Exists)
+            {
+                otherSettingsFolders = currentParent.Parent.GetDirectories(dirNameProgPart + "*");
+            }
+            if (otherSettingsFolders != null && otherSettingsFolders.Length > 0 && previousSettingsDir == null)
+            {
+                foreach (DirectoryInfo parDir in otherSettingsFolders)
+                {
+                    if (parDir.Name == currentParent.Name)
+                        continue;
+                    try
+                    {
+                        // see if there's a same-version folder in other parent folder
+                        previousSettingsDir = (from dir in parDir.GetDirectories()
+                                                let dirVer = new { Dir = dir, Ver = new Version(dir.Name) }
+                                                where dirVer.Ver == currentVersion
+                                                orderby dirVer.Ver descending
+                                                select dir).FirstOrDefault();
+                    }
+                    catch
+                    {
+                        // Ignore.
+                    }
+                    if (previousSettingsDir != null)
+                        break;
+                    try
+                    {
+                        // see if there's an older version folder in other parent folder
+                        previousSettingsDir = (from dir in parDir.GetDirectories()
+                                                let dirVer = new { Dir = dir, Ver = new Version(dir.Name) }
+                                                where dirVer.Ver < currentVersion
+                                                orderby dirVer.Ver descending
+                                                select dir).FirstOrDefault();
+                    }
+                    catch
+                    {
+                        // Ignore.
+                    }
+                    if (previousSettingsDir != null)
+                        break;
+                }
+            }
+            
+            string previousVersionConfigFile = previousSettingsDir == null ? null : string.Concat(previousSettingsDir.FullName, @"\", userConfigFileName);
+            string currentVersionConfigFile = string.Concat(currentVersionConfigFileDir.FullName, @"\", userConfigFileName);
+            if (!currentVersionConfigFileDir.Exists)
+            {
+                Directory.CreateDirectory(currentVersionConfigFileDir.FullName);
+            }
+            if (previousVersionConfigFile != null)
+            {
+                File.Copy(previousVersionConfigFile, currentVersionConfigFile, true);
+            }
+            if (File.Exists(currentVersionConfigFile))
+            {
+                Properties.Settings.Default.Reload();
+            }
+            versionSetter(currentVersion.ToString());
+            Properties.Settings.Default.Save();
+            if (otherSettingsFolders != null && otherSettingsFolders.Length > 0)
+            {
+                foreach (DirectoryInfo parDir in otherSettingsFolders)
+                {
+                    if (parDir.Name == currentParent.Name)
+                        continue;
+                    // Wipe them out. All of them.
+                    try
+                    {
+                        parDir.Delete(true);
+                    }
+                    catch
+                    {
+                        // Ignore
+                    }
+                }
+            }
         }
 
         static bool FileTest()

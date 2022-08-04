@@ -46,21 +46,29 @@ namespace MobiusEditor.Controls
             playerComboBox.DataBindings.Add("SelectedItem", basicSection, "Player");
             authorTxt.DataBindings.Add("Text", basicSection, "Author");
             isSinglePlayerCheckBox.DataBindings.Add("Checked", basicSection, "SoloMission");
-            themeComboBox.DataBindings.Add("SelectedItem", basicSection, "Theme");
-            introComboBox.DataBindings.Add("SelectedItem", basicSection, "Intro");
-            briefComboBox.DataBindings.Add("SelectedItem", basicSection, "Brief");
-            actionComboBox.DataBindings.Add("SelectedItem", basicSection, "Action");
-            winComboBox.DataBindings.Add("SelectedItem", basicSection, "Win");
-            win2ComboBox.DataBindings.Add("SelectedItem", basicSection, "Win2");
-            win3ComboBox.DataBindings.Add("SelectedItem", basicSection, "Win3");
-            win4ComboBox.DataBindings.Add("SelectedItem", basicSection, "Win4");
-            loseComboBox.DataBindings.Add("SelectedItem", basicSection, "Lose");
+            themeComboBox.DataBindings.Add("Text", basicSection, "Theme");
+            introComboBox.DataBindings.Add("Text", basicSection, "Intro");
+            briefComboBox.DataBindings.Add("Text", basicSection, "Brief");
+            actionComboBox.DataBindings.Add("Text", basicSection, "Action");
+            winComboBox.DataBindings.Add("Text", basicSection, "Win");
+            win2ComboBox.DataBindings.Add("Text", basicSection, "Win2");
+            win3ComboBox.DataBindings.Add("Text", basicSection, "Win3");
+            win4ComboBox.DataBindings.Add("Text", basicSection, "Win4");
+            loseComboBox.DataBindings.Add("Text", basicSection, "Lose");
 
             switch (plugin.GameType)
             {
                 case GameType.TiberianDawn:
                     buildLevelNud.DataBindings.Add("Value", basicSection, "BuildLevel");
                     baseLabel.Visible = baseComboBox.Visible = false;
+                    introComboBox.DropDownStyle = ComboBoxStyle.DropDown;
+                    briefComboBox.DropDownStyle = ComboBoxStyle.DropDown;
+                    actionComboBox.DropDownStyle = ComboBoxStyle.DropDown;
+                    winComboBox.DropDownStyle = ComboBoxStyle.DropDown;
+                    win2ComboBox.DropDownStyle = ComboBoxStyle.DropDown;
+                    win3ComboBox.DropDownStyle = ComboBoxStyle.DropDown;
+                    win4ComboBox.DropDownStyle = ComboBoxStyle.DropDown;
+                    loseComboBox.DropDownStyle = ComboBoxStyle.DropDown;
                     break;
                 case GameType.RedAlert:
                     buildLevelNud.Visible = buildLevelLabel.Visible = false;

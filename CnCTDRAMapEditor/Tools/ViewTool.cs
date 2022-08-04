@@ -108,7 +108,6 @@ namespace MobiusEditor.Tools
                     g.InterpolationMode = InterpolationMode.NearestNeighbor;
                     g.PixelOffsetMode = PixelOffsetMode.HighSpeed;
                 }
-
                 MapRenderer.Render(plugin.GameType, RenderMap, g, e.Cells?.Where(p => map.Metrics.Contains(p)).ToHashSet(), Layers);
             }
         }

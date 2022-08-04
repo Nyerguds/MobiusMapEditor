@@ -65,7 +65,7 @@ namespace MobiusEditor.Dialogs
 
             Directory.CreateDirectory(PreviewDirectory);
             var previewPath = Path.Combine(PreviewDirectory, "Minimap.png");
-            plugin.Map.GenerateWorkshopPreview().ToBitmap().Save(previewPath, ImageFormat.Png);
+            plugin.Map.GenerateWorkshopPreview(plugin.GameType, plugin.Map.BasicSection.SoloMission).ToBitmap().Save(previewPath, ImageFormat.Png);
 
             if (plugin.Map.BasicSection.SoloMission)
             {
@@ -193,12 +193,11 @@ namespace MobiusEditor.Dialogs
                 RestoreDirectory = true,
                 Filter = "Preview Files (*.png)|*.png",
                 CheckFileExists = true,
-                InitialDirectory = Path.GetDirectoryName(previewTxt.Text),
-                FileName = Path.GetFileName(previewTxt.Text)
             };
-            if (!string.IsNullOrEmpty(previewTxt.Text))
+            if (!string.IsNullOrEmpty(previewTxt.Text) && File.Exists(previewTxt.Text))
             {
-                ofd.FileName = previewTxt.Text;
+                ofd.InitialDirectory = Path.GetDirectoryName(previewTxt.Text);
+                ofd.FileName = Path.GetFileName(previewTxt.Text);
             }
             if (ofd.ShowDialog() == DialogResult.OK)
             {

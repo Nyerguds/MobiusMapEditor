@@ -226,9 +226,12 @@ namespace MobiusEditor.TiberianDawn
         {
             string iniText = iniReader.ReadToEnd();
             string[] iniTextArr = iniText.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n');
-            Dictionary<int, int> dupeRoadDetect = new Dictionary<int, int>();
-            Regex roadRegex = new Regex("^\\s*(\\d+)\\s*=\\s*" + OverlayTypes.Road.Name + "\\s*$", RegexOptions.IgnoreCase);
-            string road2dummy = "=" + OverlayTypes.Road2.Name.ToUpper();
+            Dictionary<int, int> dupeDetect = new Dictionary<int, int>();
+            Dictionary<int, string> cellTypes = new Dictionary<int, string>();
+            string roadname = OverlayTypes.Road.Name;
+            Regex overlayRegex = new Regex("^\\s*(\\d+)\\s*=\\s*([a-zA-Z0-9]+)\\s*$", RegexOptions.IgnoreCase);
+            string road2name = OverlayTypes.Road2.Name.ToUpper();
+            string road2dummy = "=" + road2name;
             bool inOverlay = false;
             for (int i = 0; i < iniTextArr.Length; ++i)
             {
@@ -240,16 +243,21 @@ namespace MobiusEditor.TiberianDawn
                 }
                 if (inOverlay)
                 {
-                    Match match = roadRegex.Match(currLine);
+                    Match match = overlayRegex.Match(currLine);
                     if (match.Success)
                     {
                         int cellNumber = Int32.Parse(match.Groups[1].Value);
-                        int cur = dupeRoadDetect.TryGetValue(cellNumber, out int curVal) ? curVal : 0;
-                        dupeRoadDetect[cellNumber] = cur + 1;
+                        int cur = dupeDetect.TryGetValue(cellNumber, out int curVal) ? curVal : 0;
+                        dupeDetect[cellNumber] = cur + 1;
+                        // Only add first detected type, just like the game would.
+                        if (cur == 0)
+                            cellTypes[cellNumber] = match.Groups[2].Value;
                     }
                 }
             }
-            if (dupeRoadDetect.Any(k => k.Value > 1))
+            // If any of the detected lines have a count of more than one, process the ini.
+            // If references to literal ROAD2 are found, also remove them. We do not want it to be accepted as valid type by the editor.
+            if (dupeDetect.Any(k => k.Value > 1) || cellTypes.Values.Contains(OverlayTypes.Road2.Name, StringComparer.InvariantCultureIgnoreCase))
             {
                 inOverlay = false;
                 List<string> newIniText = new List<string>();
@@ -259,28 +267,45 @@ namespace MobiusEditor.TiberianDawn
                     if (currLine.StartsWith("["))
                     {
                         inOverlay = "[Overlay]".Equals(currLine, StringComparison.InvariantCultureIgnoreCase);
+                        // No point in detecting anything else off this line, so immediately store and continue.
+                        newIniText.Add(currLine);
+                        continue;
                     }
                     Match match;
-                    if (!inOverlay || !(match = roadRegex.Match(iniTextArr[i])).Success)
+                    if (!inOverlay || !(match = overlayRegex.Match(iniTextArr[i])).Success)
                     {
+                        // stuff outside Overlay, and empty lines / comment lines
                         newIniText.Add(currLine);
                     }
                     else
                     {
                         int cellNumber = Int32.Parse(match.Groups[1].Value);
-                        int roadAmount;
-                        if (dupeRoadDetect.TryGetValue(cellNumber, out roadAmount))
+                        string type = cellTypes.TryGetValue(cellNumber, out type) ? type : null;
+                        int amount;
+                        // Do not allow actual road2 type cells in the ini.
+                        if (type != null && !type.Equals(road2name, StringComparison.InvariantCultureIgnoreCase)
+                            && dupeDetect.TryGetValue(cellNumber, out amount))
                         {
-                            if (roadAmount == 1)
+                            if (amount == 1)
                             {
                                 newIniText.Add(currLine);
                             }
-                            else if (roadAmount > 1)
+                            else if (amount > 1)
                             {
-                                newIniText.Add(cellNumber + road2dummy);
+                                if (type.Equals(roadname, StringComparison.InvariantCultureIgnoreCase))
+                                {
+                                    // Add road2
+                                    newIniText.Add(cellNumber + road2dummy);
+                                }
+                                else
+                                {
+                                    // Some other cell with duped overlay? Just put it in once as it should be.
+                                    newIniText.Add(currLine);
+                                }
                                 // Ensures TryGetValue succeeds, but nothing is written for any following matches.
-                                dupeRoadDetect[cellNumber] = -1;
+                                dupeDetect[cellNumber] = -1;
                             }
+                            // Else, write nothing. This will happen to the entries put to -1.
                         }
                     }
                 }
@@ -304,6 +329,18 @@ namespace MobiusEditor.TiberianDawn
             if (basicSection != null)
             {
                 INI.ParseSection(new MapContext(Map, false), basicSection, Map.BasicSection);
+                char[] cutfrom = { ';', '(' };
+                string[] toAddRem = movieTypesAdditional.Select(vid => INIHelpers.TrimRemarks(vid, true, cutfrom)).ToArray();
+                Model.BasicSection basic = Map.BasicSection;
+                const string remark = " (Classic only)";
+                basic.Intro = INIHelpers.AddRemarks(basic.Intro, "x", true, toAddRem, remark);
+                basic.Brief = INIHelpers.AddRemarks(basic.Brief, "x", true, toAddRem, remark);
+                basic.Action = INIHelpers.AddRemarks(basic.Action, "x", true, toAddRem, remark);
+                basic.Win = INIHelpers.AddRemarks(basic.Win, "x", true, toAddRem, remark);
+                basic.Win2 = INIHelpers.AddRemarks(basic.Win2, "x", true, toAddRem, remark);
+                basic.Win3 = INIHelpers.AddRemarks(basic.Win3, "x", true, toAddRem, remark);
+                basic.Win4 = INIHelpers.AddRemarks(basic.Win4, "x", true, toAddRem, remark);
+                basic.Lose = INIHelpers.AddRemarks(basic.Lose, "x", true, toAddRem, remark);
             }
 
             Map.BasicSection.Player = Map.HouseTypes.Where(t => t.Equals(Map.BasicSection.Player)).FirstOrDefault()?.Name ?? Map.HouseTypes.First().Name;
@@ -1041,7 +1078,7 @@ namespace MobiusEditor.TiberianDawn
 
                         using (var tgaStream = new FileStream(tgaPath, FileMode.Create))
                         {
-                            SaveMapPreview(tgaStream);
+                            SaveMapPreview(tgaStream, Map.BasicSection.SoloMission);
                         }
 
                         using (var jsonStream = new FileStream(jsonPath, FileMode.Create))
@@ -1060,12 +1097,14 @@ namespace MobiusEditor.TiberianDawn
                         using (var binStream = new MemoryStream())
                         using (var tgaStream = new MemoryStream())
                         using (var jsonStream = new MemoryStream())
+                        using (var iniWriter = new StreamWriter(iniStream))
                         using (var binWriter = new BinaryWriter(binStream))
                         using (var jsonWriter = new JsonTextWriter(new StreamWriter(jsonStream)))
                         using (var megafileBuilder = new MegafileBuilder(@"", path))
                         {
-                            var iniWriter = new StreamWriter(iniStream);
-                            iniWriter.Write(ini.ToString());
+
+                            //iniWriter.Write(ini.ToString());
+                            FixRoad2Save(ini, iniWriter);
                             iniWriter.Flush();
                             iniStream.Position = 0;
 
@@ -1073,7 +1112,7 @@ namespace MobiusEditor.TiberianDawn
                             binWriter.Flush();
                             binStream.Position = 0;
 
-                            SaveMapPreview(tgaStream);
+                            SaveMapPreview(tgaStream, Map.BasicSection.SoloMission);
                             tgaStream.Position = 0;
 
                             SaveJSON(jsonWriter);
@@ -1136,19 +1175,16 @@ namespace MobiusEditor.TiberianDawn
             {
                 ini.Sections.AddRange(extraSections);
             }
-            BasicSection basic = Map.BasicSection as BasicSection;
-            if (basic != null)
-            {
-                char[] cutfrom = { ';', '(' };
-                basic.Intro = INIHelpers.TrimRemarks(basic.Intro, true, cutfrom);
-                basic.Brief = INIHelpers.TrimRemarks(basic.Brief, true, cutfrom);
-                basic.Action = INIHelpers.TrimRemarks(basic.Action, true, cutfrom);
-                basic.Win = INIHelpers.TrimRemarks(basic.Win, true, cutfrom);
-                //basic.Win2 = INIHelpers.TrimRemarks(basic.Win2, true, cutfrom);
-                //basic.Win3 = INIHelpers.TrimRemarks(basic.Win3, true, cutfrom);
-                //basic.Win4 =INIHelpers.TrimRemarks(basic.Win4, true, cutfrom);
-                basic.Lose = INIHelpers.TrimRemarks(basic.Lose, true, cutfrom);
-            }
+            Model.BasicSection basic = Map.BasicSection;
+            char[] cutfrom = { ';', '(' };
+            basic.Intro = INIHelpers.TrimRemarks(basic.Intro, true, cutfrom);
+            basic.Brief = INIHelpers.TrimRemarks(basic.Brief, true, cutfrom);
+            basic.Action = INIHelpers.TrimRemarks(basic.Action, true, cutfrom);
+            basic.Win = INIHelpers.TrimRemarks(basic.Win, true, cutfrom);
+            basic.Win2 = INIHelpers.TrimRemarks(basic.Win2, true, cutfrom);
+            basic.Win3 = INIHelpers.TrimRemarks(basic.Win3, true, cutfrom);
+            basic.Win4 =INIHelpers.TrimRemarks(basic.Win4, true, cutfrom);
+            basic.Lose = INIHelpers.TrimRemarks(basic.Lose, true, cutfrom);
 
             INI.WriteSection(new MapContext(Map, false), ini.Sections.Add("Basic"), Map.BasicSection);
             INI.WriteSection(new MapContext(Map, false), ini.Sections.Add("Map"), Map.MapSection);
@@ -1390,9 +1426,9 @@ namespace MobiusEditor.TiberianDawn
             }
         }
 
-        private void SaveMapPreview(Stream stream)
+        private void SaveMapPreview(Stream stream, Boolean renderAll)
         {
-            Map.GenerateMapPreview().Save(stream);
+            Map.GenerateMapPreview(renderAll ? this.GameType : GameType.None, renderAll).Save(stream);
         }
 
         private void SaveJSON(JsonTextWriter writer)

@@ -19,18 +19,6 @@ namespace MobiusEditor.RedAlert
 {
     public class BasicSection : Model.BasicSection
     {
-        private string win2;
-        [DefaultValue("x")]
-        public string Win2 { get => win2; set => SetField(ref win2, value); }
-
-        private string win3;
-        [DefaultValue("x")]
-        public string Win3 { get => win3; set => SetField(ref win3, value); }
-
-        private string win4;
-        [DefaultValue("x")]
-        public string Win4 { get => win4; set => SetField(ref win4, value); }
-
         private bool toCarryOver;
         [TypeConverter(typeof(OneZeroBooleanTypeConverter))]
         [DefaultValue(false)]

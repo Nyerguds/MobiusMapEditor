@@ -45,12 +45,10 @@ namespace MobiusEditor.Tools
                 {
                     if (placementMode && (selectedOverlayType != null))
                     {
-                        mapPanel.Invalidate(map, navigationWidget.MouseCell);
+                        mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(navigationWidget.MouseCell, new Size(1, 1)), 1, 1));
                     }
-
                     selectedOverlayType = value;
                     overlayTypeComboBox.SelectedValue = selectedOverlayType;
-
                     RefreshMapPanel();
                 }
             }
@@ -129,8 +127,9 @@ namespace MobiusEditor.Tools
             {
                 if (SelectedOverlayType != null)
                 {
-                    mapPanel.Invalidate(map, new Rectangle(e.OldCell, new Size(1, 1)));
-                    mapPanel.Invalidate(map, new Rectangle(e.NewCell, new Size(1, 1)));
+                    // For Concrete
+                    mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(e.OldCell, new Size(1, 1)), 1, 1));
+                    mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(e.NewCell, new Size(1, 1)), 1, 1));
                 }
             }
         }
@@ -152,22 +151,18 @@ namespace MobiusEditor.Tools
                         Icon = 0
                     };
                     map.Overlay[location] = overlay;
-                    mapPanel.Invalidate(map, location);
-
+                    mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1));
                     void undoAction(UndoRedoEventArgs e)
                     {
-                        e.MapPanel.Invalidate(e.Map, location);
+                        e.MapPanel.Invalidate(e.Map, Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1));
                         e.Map.Overlay[location] = null;
                     }
-
                     void redoAction(UndoRedoEventArgs e)
                     {
                         e.Map.Overlay[location] = overlay;
-                        e.MapPanel.Invalidate(e.Map, location);
+                        e.MapPanel.Invalidate(e.Map, Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1));
                     }
-
                     url.Track(undoAction, redoAction);
-
                     plugin.Dirty = true;
                 }
             }
@@ -178,17 +173,16 @@ namespace MobiusEditor.Tools
             if ((map.Overlay[location] is Overlay overlay) && overlay.Type.IsPlaceable)
             {
                 map.Overlay[location] = null;
-                mapPanel.Invalidate(map, location);
-
+                mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1));
                 void undoAction(UndoRedoEventArgs e)
                 {
                     e.Map.Overlay[location] = overlay;
-                    e.MapPanel.Invalidate(e.Map, location);
+                    e.MapPanel.Invalidate(e.Map, Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1));
                 }
 
                 void redoAction(UndoRedoEventArgs e)
                 {
-                    e.MapPanel.Invalidate(e.Map, location);
+                    e.MapPanel.Invalidate(e.Map, Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1));
                     e.Map.Overlay[location] = null;
                 }
 
@@ -211,7 +205,7 @@ namespace MobiusEditor.Tools
 
             if (SelectedOverlayType != null)
             {
-                mapPanel.Invalidate(map, navigationWidget.MouseCell);
+                mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(navigationWidget.MouseCell, new Size(1, 1)), 1, 1));
             }
 
             UpdateStatus();
@@ -230,7 +224,7 @@ namespace MobiusEditor.Tools
 
             if (SelectedOverlayType != null)
             {
-                mapPanel.Invalidate(map, navigationWidget.MouseCell);
+                mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(navigationWidget.MouseCell, new Size(1, 1)), 1, 1));
             }
 
             UpdateStatus();

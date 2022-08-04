@@ -24,20 +24,30 @@ namespace MobiusEditor.Utility
         private readonly Dictionary<string, Tileset> tilesets = new Dictionary<string, Tileset>();
 
         private readonly MegafileManager megafileManager;
+        private string expandModPath = null;
 
-        public TilesetManager(MegafileManager megafileManager, TextureManager textureManager, string xmlPath, string texturesPath)
+        public TilesetManager(MegafileManager megafileManager, TextureManager textureManager, string xmlPath, string texturesPath, string expandModPath)
         {
             this.megafileManager = megafileManager;
+            this.expandModPath = expandModPath;
 
             XmlDocument xmlDoc = new XmlDocument();
             xmlDoc.Load(megafileManager.Open(xmlPath));
 
             foreach (XmlNode fileNode in xmlDoc.SelectNodes("TilesetFiles/File"))
             {
-                var xmlFile = Path.Combine(Path.GetDirectoryName(xmlPath), fileNode.InnerText);
-                XmlDocument fileXmlDoc = new XmlDocument();
-                fileXmlDoc.Load(megafileManager.Open(xmlFile));
 
+                string xmlFile = Path.Combine(Path.GetDirectoryName(xmlPath), fileNode.InnerText);
+                XmlDocument fileXmlDoc = new XmlDocument();
+                string modXmlPath = expandModPath == null ? null : Path.Combine(expandModPath, xmlFile);
+                if (modXmlPath != null && File.Exists(modXmlPath))
+                {
+                    fileXmlDoc.Load(modXmlPath);
+                }
+                else
+                {
+                    fileXmlDoc.Load(megafileManager.Open(xmlFile));
+                }
                 foreach (XmlNode tilesetNode in fileXmlDoc.SelectNodes("Tilesets/TilesetTypeClass"))
                 {
                     var tileset = new Tileset(textureManager);

@@ -86,6 +86,23 @@ namespace MobiusEditor.Utility
                 value = value.TrimEnd();
             return value;
         }
+
+        public static String AddRemarks(String value, String defaultVal, Boolean trimSource, IEnumerable<String> valuesToDetect, String remarkToAdd)
+        {
+            if (String.IsNullOrEmpty(value))
+                return defaultVal;
+            string valTrimmed = value;
+            if (trimSource)
+                valTrimmed = valTrimmed.Trim();
+            foreach (String val in valuesToDetect)
+            {
+                if ((val ?? String.Empty).Trim().Equals(value, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    return valTrimmed + remarkToAdd;
+                }
+            }
+            return value;
+        }
     }
 
     public class INIKeyValueCollection : IEnumerable<(string Key, string Value)>, IEnumerable

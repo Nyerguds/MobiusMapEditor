@@ -175,7 +175,7 @@ namespace MobiusEditor.Render
                         (overlay.Type.IsWall && ((layers & MapLayerFlag.Walls) != MapLayerFlag.None)) ||
                         ((layers & MapLayerFlag.Overlay) != MapLayerFlag.None))
                     {
-                        Render(map.Theater, tiberiumOrGoldTypes, gemTypes, topLeft, tileSize, tileScale, overlay).Item2(graphics);
+                        Render(gameType, map.Theater, tiberiumOrGoldTypes, gemTypes, topLeft, tileSize, tileScale, overlay).Item2(graphics);
                     }
                 }
             }
@@ -323,7 +323,7 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static (Rectangle, Action<Graphics>) Render(TheaterType theater, OverlayType[] tiberiumOrGoldTypes, OverlayType[] gemTypes, Point topLeft, Size tileSize, int tileScale, Overlay overlay)
+        public static (Rectangle, Action<Graphics>) Render(GameType gameType, TheaterType theater, OverlayType[] tiberiumOrGoldTypes, OverlayType[] gemTypes, Point topLeft, Size tileSize, int tileScale, Overlay overlay)
         {
             string name;
             if (overlay.Type.IsGem)
@@ -339,7 +339,17 @@ namespace MobiusEditor.Render
                 name = overlay.Type.GraphicsSource;
             }
             // For Decoration types, generate dummy if not found.
-            int icon = overlay.Type.ForceTileNr == -1 ? overlay.Icon : overlay.Type.ForceTileNr;
+
+            int icon;
+            if (gameType == GameType.TiberianDawn && overlay.Type == TiberianDawn.OverlayTypes.Concrete)
+            {
+                //icon = topLeft.X % 2 == 0 ? 3 : 2;
+                icon = overlay.Icon;
+            }
+            else
+            {
+                icon = overlay.Type.ForceTileNr == -1 ? overlay.Icon : overlay.Type.ForceTileNr;
+            }
             if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, name, icon, out Tile tile, (overlay.Type.Flag & OverlayTypeFlag.Decoration) != 0))
             {
                 var size = (overlay.Type.IsCrate || overlay.Type.IsFlag) ? new Size(tile.Image.Width / tileScale, tile.Image.Height / tileScale) : tileSize;

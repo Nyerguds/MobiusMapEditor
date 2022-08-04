@@ -22,7 +22,7 @@ namespace MobiusEditor.TiberianDawn
     public static class OverlayTypes
     {
         // Nyerguds upgrade: Added missing types CONC and ROAD.
-        public static readonly OverlayType Concrete = new OverlayType(0, "conc", "Concrete Pavement", OverlayTypeFlag.Decoration);
+        public static readonly OverlayType Concrete = new OverlayType(0, "conc", "Concrete Pavement", null, OverlayTypeFlag.Decoration | OverlayTypeFlag.Concrete, null, 2);
         public static readonly OverlayType Sandbag = new OverlayType(1, "sbag", "TEXT_STRUCTURE_TITLE_GDI_SANDBAGS", OverlayTypeFlag.Wall);
         public static readonly OverlayType Cyclone = new OverlayType(2, "cycl", "TEXT_STRUCTURE_TITLE_GDI_CHAIN_LINK", OverlayTypeFlag.Wall);
         public static readonly OverlayType Brick = new OverlayType(3, "brik", "TEXT_STRUCTURE_TITLE_GDI_CONCRETE", OverlayTypeFlag.Wall);
@@ -41,8 +41,9 @@ namespace MobiusEditor.TiberianDawn
         public static readonly OverlayType Tiberium11 = new OverlayType(16, "ti11", OverlayTypeFlag.TiberiumOrGold);
         public static readonly OverlayType Tiberium12 = new OverlayType(17, "ti12", OverlayTypeFlag.TiberiumOrGold);
         public static readonly OverlayType Road = new OverlayType(18, "road", "Concrete Road", OverlayTypeFlag.Decoration);
-        public static readonly OverlayType Road2 = new OverlayType(19, "road2", "Concrete Road (full)", null, OverlayTypeFlag.Decoration, "road", 1);
-        // Not available to place down sadly.
+        // Dummy type to be transformed to two ROAD-lines in the ini.
+        public static readonly OverlayType Road2 = new OverlayType(19, "roadfullslab", "Concrete Road (full)", null, OverlayTypeFlag.Decoration, "road", 1);
+        // Not available to place down sadly: even the ini read for it in the game code only succeeds if 'IsGross' is enabled.
         //public static readonly OverlayType Squishy = new OverlayType(19, "SQUISH", OverlayTypeFlag.Decoration);
         public static readonly OverlayType V12 = new OverlayType(20, "v12", "TEXT_STRUCTURE_TITLE_CIV12", new TheaterType[] { TheaterTypes.Temperate });
         public static readonly OverlayType V13 = new OverlayType(21, "v13", "TEXT_STRUCTURE_TITLE_CIV12", new TheaterType[] { TheaterTypes.Temperate });

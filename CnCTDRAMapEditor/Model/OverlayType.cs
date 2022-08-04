@@ -30,6 +30,7 @@ namespace MobiusEditor.Model
         Crate           = (1 << 3),
         Flag            = (1 << 4),
         Decoration      = (1 << 5),
+        Concrete        = (1 << 6),
     }
 
     public class OverlayType : ICellOccupier, IBrowsableType
@@ -60,6 +61,8 @@ namespace MobiusEditor.Model
         public bool IsGem => (Flag & OverlayTypeFlag.Gems) != OverlayTypeFlag.None;
 
         public bool IsWall => (Flag & OverlayTypeFlag.Wall) != OverlayTypeFlag.None;
+
+        public bool IsConcrete => (Flag & OverlayTypeFlag.Concrete) != OverlayTypeFlag.None;
 
         public bool IsCrate => (Flag & OverlayTypeFlag.Crate) != OverlayTypeFlag.None;
 
