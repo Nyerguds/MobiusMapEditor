@@ -69,7 +69,7 @@ namespace MobiusEditor.Model
         public bool IsFlag => (Flag & OverlayTypeFlag.Flag) != OverlayTypeFlag.None;
 
          // No reason not to allow placing decorations and flag pedestal.
-        public bool IsPlaceable => (Flag & (OverlayTypeFlag.Crate | OverlayTypeFlag.Decoration | OverlayTypeFlag.Flag)) != OverlayTypeFlag.None;
+        public bool IsPlaceable => (Flag & (OverlayTypeFlag.Crate | OverlayTypeFlag.Decoration | OverlayTypeFlag.Flag | OverlayTypeFlag.Concrete)) != OverlayTypeFlag.None;
 
         public OverlayType(sbyte id, string name, string textId, TheaterType[] theaters, OverlayTypeFlag flag, String graphicsLoadOverride, int forceTileNr)
         {

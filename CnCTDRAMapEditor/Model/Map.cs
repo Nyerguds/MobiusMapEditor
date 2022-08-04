@@ -329,6 +329,7 @@ namespace MobiusEditor.Model
             if (invalidateLayers.TryGetValue(MapLayerFlag.Overlay, out locations))
             {
                 UpdateConcreteOverlays(locations);
+                //UpdateConcreteOverlays_ORIG(locations);
             }
             if (invalidateOverlappers)
             {
@@ -394,6 +395,54 @@ namespace MobiusEditor.Model
             }
         }
 
+        private void UpdateConcreteOverlays(ISet<Point> locations)
+        {
+            foreach (var (cell, overlay) in Overlay.IntersectsWith(locations).Where(o => o.Value.Type.IsConcrete))
+            {
+                // in order: top, topnext, next, bottomnext, bottom
+                FacingType[] even = { FacingType.North, FacingType.NorthWest, FacingType.West, FacingType.SouthWest, FacingType.South };
+                FacingType[] odd = { FacingType.North, FacingType.NorthEast, FacingType.East, FacingType.SouthEast, FacingType.South };
+                int isodd = cell & 1;
+                FacingType[] cells = isodd != 0 ? odd : even;
+                Boolean[] conc = new bool[cells.Length];
+                for (int i = 0; i < cells.Length; i++)
+                {
+                    var neighbor = Overlay.Adjacent(cell, cells[i]);
+                    if (neighbor != null && neighbor.Type == overlay.Type)
+                    {
+                        int ic = overlay.Icon;
+                        if (ic < 4 || (ic > 7 && ic < 12))
+                        {
+                            conc[i] = true;
+                        }
+                    }
+                }
+                // Unified logic so the operation becomes identical for the even and odd cells.
+                // This still isn't a 100% match with the game, but that's because the version in-game is a buggy mess.
+                bool top = conc[0];
+                bool topnext = conc[1];
+                bool next = conc[2];
+                bool bottomnext = conc[3];
+                bool bottom = conc[4];
+
+                int icon = 0;
+                if (top && next || topnext && next)
+                {
+                    icon = bottom ? 1 : 5;
+                }
+                else if (bottom && next || bottom && bottomnext)
+                {
+                    icon = topnext ? 1 : 4;
+                }
+                else if (top && topnext)
+                {
+                    icon = 5;
+                }
+                icon = icon == 0 ? isodd : (icon * 2) + 1 - isodd;
+                overlay.Icon = icon;
+            }
+        }
+
         private enum ConcreteEnum
         {
             C_NONE = -1,
@@ -413,90 +462,75 @@ namespace MobiusEditor.Model
             C_UPDOWN_LEFT = 13
         }
 
-        private enum ConcreteEnum2
-        {
-            C_NONE = -1,
-            C_HOR = 0,
-            C_FULL = 1,
-            C_UP = 2,
-            C_DOWN = 3,
-            C_FILL_DOWN = 4,
-            C_FILL_UP = 5,
-            C_UPDOWN = 6,
-        }
-
-        private enum ConcreteFacings
-        {
-            OF_N = 0x01,
-            OF_NE = 0x02,
-            OF_E = 0x04,
-            OF_SE = 0x08,
-            OF_S = 0x10,
-            EF_N = 0x01,
-            EF_S = 0x02,
-            EF_SW = 0x04,
-            EF_W = 0x08,
-            EF_NW = 0x10,
-        }
-
-        private void UpdateConcreteOverlays(ISet<Point> locations)
+        private void UpdateConcreteOverlays_ORIG(ISet<Point> locations)
         {
             foreach (var (cell, overlay) in Overlay.IntersectsWith(locations).Where(o => o.Value.Type.IsConcrete))
             {
-                FacingType[] _even = { FacingType.North, FacingType.South, FacingType.SouthWest, FacingType.West, FacingType.NorthWest };
-                FacingType[] _odd = { FacingType.North, FacingType.NorthEast, FacingType.East, FacingType.SouthEast, FacingType.South };
-                int isodd = (cell & 0x01);
-                FacingType[] cellsToCheck = isodd == 1 ? _odd : _even;
+                // Original logic as it is in the game code. Still doesn't match reality, probably due to bugs in the logic to add side cells.
+                FacingType[] odd = { FacingType.North, FacingType.NorthEast, FacingType.East, FacingType.SouthEast, FacingType.South };
+                FacingType[] even = { FacingType.North, FacingType.South, FacingType.SouthWest, FacingType.West, FacingType.NorthWest };
+                int isodd = cell & 1;
+                FacingType[] cells = isodd != 0 ? odd : even;
                 int index = 0;
-                for (int i = 0; i < cellsToCheck.Length; i++)
+                for (int i = 0; i < cells.Length; i++)
                 {
-                    var neighbor = Overlay.Adjacent(cell, cellsToCheck[i]);
+                    var neighbor = Overlay.Adjacent(cell, cells[i]);
                     if (neighbor != null && neighbor.Type == overlay.Type)
                     {
-                        index |= 1 << i;
+                        int ic = overlay.Icon;
+                        if (ic < 4 || (ic > 7 && ic < 12))
+                        {
+                            index |= (1 << i);
+                        }
                     }
                 }
-                int icon = -1;
-
-                if (isodd == 1)
+                const int OF_N = 0x01;
+                const int OF_NE	= 0x02;
+                const int OF_E	= 0x04;
+                const int OF_SE	= 0x08;
+                const int OF_S	= 0x10;
+                const int EF_N	= 0x01;
+                const int EF_NW	= 0x10;
+                const int EF_W	= 0x08;
+                const int EF_SW	= 0x04;
+                const int EF_S	= 0x02;
+                ConcreteEnum icon = 0;
+                if (isodd != 0)
                 {
                     switch (index)
                     {
-                        case (int)(ConcreteFacings.OF_NE):
-                        case (int)(ConcreteFacings.OF_N | ConcreteFacings.OF_NE):
-                        case (int)(ConcreteFacings.OF_E | ConcreteFacings.OF_N):
-                        case (int)(ConcreteFacings.OF_E | ConcreteFacings.OF_NE):
-                        case (int)(ConcreteFacings.OF_N | ConcreteFacings.OF_NE | ConcreteFacings.OF_E):
-                        case (int)(ConcreteFacings.OF_S | ConcreteFacings.OF_N | ConcreteFacings.OF_NE):
-                            icon = (int)ConcreteEnum2.C_FILL_UP;      // right - up
+                        case OF_NE:
+                        case OF_N | OF_NE:
+                        case OF_E | OF_N:
+                        case OF_E | OF_NE:
+                        case OF_N | OF_NE | OF_E:
+                        case OF_S | OF_N | OF_NE:
+                            icon = ConcreteEnum.C_RIGHT_UP;      // right - up
                             break;
-
-                        case (int)(ConcreteFacings.OF_SE):
-                        case (int)(ConcreteFacings.OF_E | ConcreteFacings.OF_SE):
-                        case (int)(ConcreteFacings.OF_S | ConcreteFacings.OF_SE):
-                        case (int)(ConcreteFacings.OF_S | ConcreteFacings.OF_E):
-                        case (int)(ConcreteFacings.OF_S | ConcreteFacings.OF_SE | ConcreteFacings.OF_E):
-                        case (int)(ConcreteFacings.OF_S | ConcreteFacings.OF_SE | ConcreteFacings.OF_N):
-                            icon = (int)ConcreteEnum2.C_FILL_DOWN;        // right - down
+                        case OF_SE:
+                        case OF_E | OF_SE:
+                        case OF_S | OF_SE:
+                        case OF_S | OF_E:
+                        case OF_S | OF_SE | OF_E:
+                        case OF_S | OF_SE | OF_N:
+                            icon = ConcreteEnum.C_RIGHT_DOWN;        // right - down
                             break;
-
-                        case (int)(ConcreteFacings.OF_SE | ConcreteFacings.OF_NE):
-                        case (int)(ConcreteFacings.OF_SE | ConcreteFacings.OF_NE | ConcreteFacings.OF_N):
-                        case (int)(ConcreteFacings.OF_SE | ConcreteFacings.OF_NE | ConcreteFacings.OF_S):
-                        case (int)(ConcreteFacings.OF_SE | ConcreteFacings.OF_NE | ConcreteFacings.OF_S | ConcreteFacings.OF_N):
-                        case (int)(ConcreteFacings.OF_SE | ConcreteFacings.OF_E | ConcreteFacings.OF_N):
-                        case (int)(ConcreteFacings.OF_SE | ConcreteFacings.OF_E | ConcreteFacings.OF_NE | ConcreteFacings.OF_N):
-                        case (int)(ConcreteFacings.OF_S | ConcreteFacings.OF_E | ConcreteFacings.OF_N):
-                        case (int)(ConcreteFacings.OF_S | ConcreteFacings.OF_E | ConcreteFacings.OF_NE):
-                        case (int)(ConcreteFacings.OF_S | ConcreteFacings.OF_E | ConcreteFacings.OF_NE | ConcreteFacings.OF_N):
-                        case (int)(ConcreteFacings.OF_S | ConcreteFacings.OF_SE | ConcreteFacings.OF_E | ConcreteFacings.OF_N):
-                        case (int)(ConcreteFacings.OF_S | ConcreteFacings.OF_SE | ConcreteFacings.OF_E | ConcreteFacings.OF_NE | ConcreteFacings.OF_N):
-                        case (int)(ConcreteFacings.OF_S | ConcreteFacings.OF_SE | ConcreteFacings.OF_E | ConcreteFacings.OF_NE):
-                            icon = (int)ConcreteEnum2.C_FULL;      // right - up - down
+                        case OF_SE | OF_NE:
+                        case OF_SE | OF_NE | OF_N:
+                        case OF_SE | OF_NE | OF_S:
+                        case OF_SE | OF_NE | OF_S | OF_N:
+                        case OF_SE | OF_E | OF_N:
+                        case OF_SE | OF_E | OF_NE | OF_N:
+                        case OF_S | OF_E | OF_N:
+                        case OF_S | OF_E | OF_NE:
+                        case OF_S | OF_E | OF_NE | OF_N:
+                        case OF_S | OF_SE | OF_E | OF_N:
+                        case OF_S | OF_SE | OF_E | OF_NE | OF_N:
+                        case OF_S | OF_SE | OF_E | OF_NE:
+                            icon = ConcreteEnum.C_RIGHT_UPDOWN;      // right - up - down
                             break;
-
                         default:
-                            icon = (int)ConcreteEnum2.C_HOR;     // right
+                            icon = ConcreteEnum.C_RIGHT;     // right
                             break;
                     }
                 }
@@ -504,52 +538,46 @@ namespace MobiusEditor.Model
                 {
                     switch (index)
                     {
-                        case (int)(ConcreteFacings.EF_NW):
-                        case (int)(ConcreteFacings.EF_NW | ConcreteFacings.EF_N):
-                        case (int)(ConcreteFacings.EF_W | ConcreteFacings.EF_N):
-                        case (int)(ConcreteFacings.EF_NW | ConcreteFacings.EF_W | ConcreteFacings.EF_N):
-                        case (int)(ConcreteFacings.EF_NW | ConcreteFacings.EF_W):
-                        case (int)(ConcreteFacings.EF_NW | ConcreteFacings.EF_S | ConcreteFacings.EF_N):
-                            icon = (int)ConcreteEnum2.C_FILL_UP;       // left - up
+                        case EF_NW:
+                        case EF_NW | EF_N:
+                        case EF_W | EF_N:
+                        case EF_NW | EF_W | EF_N:
+                        case EF_NW | EF_W:
+                        case EF_NW | EF_S | EF_N:
+                            icon = ConcreteEnum.C_LEFT_UP;       // left - up
                             break;
-
-                        case (int)(ConcreteFacings.EF_SW):
-                        case (int)(ConcreteFacings.EF_SW | ConcreteFacings.EF_S):
-                        case (int)(ConcreteFacings.EF_W | ConcreteFacings.EF_S):
-                        case (int)(ConcreteFacings.EF_W | ConcreteFacings.EF_SW | ConcreteFacings.EF_S):
-                        case (int)(ConcreteFacings.EF_W | ConcreteFacings.EF_SW):
-                        case (int)(ConcreteFacings.EF_SW | ConcreteFacings.EF_S | ConcreteFacings.EF_N):
-                            icon = (int)ConcreteEnum2.C_FILL_DOWN;     // left - down
+                        case EF_SW:
+                        case EF_SW | EF_S:
+                        case EF_W | EF_S:
+                        case EF_W | EF_SW | EF_S:
+                        case EF_W | EF_SW:
+                        case EF_SW | EF_S | EF_N:
+                            icon = ConcreteEnum.C_LEFT_DOWN;     // left - down
                             break;
-
-                        case (int)(ConcreteFacings.EF_NW | ConcreteFacings.EF_SW):
-                        case (int)(ConcreteFacings.EF_NW | ConcreteFacings.EF_SW | ConcreteFacings.EF_N):
-                        case (int)(ConcreteFacings.EF_NW | ConcreteFacings.EF_SW | ConcreteFacings.EF_S):
-                        case (int)(ConcreteFacings.EF_NW | ConcreteFacings.EF_SW | ConcreteFacings.EF_S | ConcreteFacings.EF_N):
-                        case (int)(ConcreteFacings.EF_W | ConcreteFacings.EF_S | ConcreteFacings.EF_N):
-                        case (int)(ConcreteFacings.EF_W | ConcreteFacings.EF_SW | ConcreteFacings.EF_N):
-                        case (int)(ConcreteFacings.EF_W | ConcreteFacings.EF_SW | ConcreteFacings.EF_S | ConcreteFacings.EF_N):
-                        case (int)(ConcreteFacings.EF_NW | ConcreteFacings.EF_W | ConcreteFacings.EF_S):
-                        case (int)(ConcreteFacings.EF_NW | ConcreteFacings.EF_W | ConcreteFacings.EF_S | ConcreteFacings.EF_N):
-                        case (int)(ConcreteFacings.EF_NW | ConcreteFacings.EF_W | ConcreteFacings.EF_SW | ConcreteFacings.EF_S | ConcreteFacings.EF_N):
-                        case (int)(ConcreteFacings.EF_NW | ConcreteFacings.EF_W | ConcreteFacings.EF_SW | ConcreteFacings.EF_N):
-                        case (int)(ConcreteFacings.EF_NW | ConcreteFacings.EF_W | ConcreteFacings.EF_SW | ConcreteFacings.EF_S):
-                            icon = (int)ConcreteEnum2.C_FULL;       // left - up - down
+                        case EF_NW | EF_SW:
+                        case EF_NW | EF_SW | EF_N:
+                        case EF_NW | EF_SW | EF_S:
+                        case EF_NW | EF_SW | EF_S | EF_N:
+                        case EF_W | EF_S | EF_N:
+                        case EF_W | EF_SW | EF_N:
+                        case EF_W | EF_SW | EF_S | EF_N:
+                        case EF_NW | EF_W | EF_S:
+                        case EF_NW | EF_W | EF_S | EF_N:
+                        case EF_NW | EF_W | EF_SW | EF_S | EF_N:
+                        case EF_NW | EF_W | EF_SW | EF_N:
+                        case EF_NW | EF_W | EF_SW | EF_S:
+                            icon = ConcreteEnum.C_LEFT_UPDOWN;       // left - up - down
                             break;
-
                         default:
-                            icon = (int)ConcreteEnum2.C_HOR;      // left
+                            icon = ConcreteEnum.C_LEFT;      // left
                             break;
                     }
                 }
-                icon = icon * 2;
-                // For some bizarre reason, the first 2 cells don't follow the same even-odd order.
-                icon = icon == 0 ? isodd : icon + 1 - isodd;
-                overlay.Icon = icon;
+                overlay.Icon = (int)icon;
             }
         }
 
-            private void RemoveBibs(Building building)
+        private void RemoveBibs(Building building)
         {
             var bibCells = Smudge.IntersectsWith(building.BibCells).Where(x => (x.Value.Type.Flag & SmudgeTypeFlag.Bib) != SmudgeTypeFlag.None).Select(x => x.Cell).ToArray();
             foreach (var cell in bibCells)

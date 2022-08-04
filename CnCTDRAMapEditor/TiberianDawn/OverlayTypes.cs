@@ -22,7 +22,7 @@ namespace MobiusEditor.TiberianDawn
     public static class OverlayTypes
     {
         // Nyerguds upgrade: Added missing types CONC and ROAD.
-        public static readonly OverlayType Concrete = new OverlayType(0, "conc", "Concrete Pavement", null, OverlayTypeFlag.Decoration | OverlayTypeFlag.Concrete, null, 2);
+        public static readonly OverlayType Concrete = new OverlayType(0, "conc", "Concrete Pavement", null, OverlayTypeFlag.Concrete);
         public static readonly OverlayType Sandbag = new OverlayType(1, "sbag", "TEXT_STRUCTURE_TITLE_GDI_SANDBAGS", OverlayTypeFlag.Wall);
         public static readonly OverlayType Cyclone = new OverlayType(2, "cycl", "TEXT_STRUCTURE_TITLE_GDI_CHAIN_LINK", OverlayTypeFlag.Wall);
         public static readonly OverlayType Brick = new OverlayType(3, "brik", "TEXT_STRUCTURE_TITLE_GDI_CONCRETE", OverlayTypeFlag.Wall);
