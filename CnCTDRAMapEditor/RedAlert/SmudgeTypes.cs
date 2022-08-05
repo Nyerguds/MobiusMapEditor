@@ -23,11 +23,12 @@ namespace MobiusEditor.RedAlert
     public static class SmudgeTypes
     {
         public static readonly SmudgeType Crater1 = new SmudgeType(0, "cr1", 5);
-        public static readonly SmudgeType Crater2 = new SmudgeType(1, "cr2", 5);
-        public static readonly SmudgeType Crater3 = new SmudgeType(2, "cr3", 5);
-        public static readonly SmudgeType Crater4 = new SmudgeType(3, "cr4", 5);
-        public static readonly SmudgeType Crater5 = new SmudgeType(4, "cr5", 5);
-        public static readonly SmudgeType Crater6 = new SmudgeType(5, "cr6", 5);
+        // Seems RA has issues reading these from missions.
+        //public static readonly SmudgeType Crater2 = new SmudgeType(1, "cr2", 5);
+        //public static readonly SmudgeType Crater3 = new SmudgeType(2, "cr3", 5);
+        //public static readonly SmudgeType Crater4 = new SmudgeType(3, "cr4", 5);
+        //public static readonly SmudgeType Crater5 = new SmudgeType(4, "cr5", 5);
+        //public static readonly SmudgeType Crater6 = new SmudgeType(5, "cr6", 5);
         public static readonly SmudgeType Scorch1 = new SmudgeType(6, "sc1");
         public static readonly SmudgeType Scorch2 = new SmudgeType(7, "sc2");
         public static readonly SmudgeType Scorch3 = new SmudgeType(8, "sc3");

@@ -1394,7 +1394,7 @@ namespace MobiusEditor.TiberianDawn
             var smudgeSection = ini.Sections.Add("Smudge");
             foreach (var (cell, smudge) in Map.Smudge.Where(item => (item.Value.Type.Flag & SmudgeTypeFlag.Bib) == SmudgeTypeFlag.None))
             {
-                smudgeSection[cell.ToString()] = string.Format("{0},{1},{2}", smudge.Type.Name, cell, smudge.Icon);
+                smudgeSection[cell.ToString()] = string.Format("{0},{1},{2}", smudge.Type.Name.ToUpper(), cell, smudge.Icon);
             }
 
             var terrainSection = ini.Sections.Add("Terrain");
