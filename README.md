@@ -137,5 +137,5 @@ v1.4.0.4: [WIP]
 * Made video names freely editable for Tiberian Dawn missions. Any mod-added video in TD is playable from missions.
 * The preview selection in the Steam publish dialog will now open in the correct folder.
 * The preview rendered for singleplayer maps for the Steam publish (which is not used by default) will show all map contents.
-* Removed crater types CR2 to CR6 for Red Alert; they don't work correctly in-game and will just show the smallest size of CR1. Any craters of other types encountered on mission load will now be converted to the smallest CR1.
+* Removed crater types CR2 to CR6; they don't work correctly in either game and will just show the smallest size of CR1. Any craters of other types encountered on map load will now be converted to CR1.
 * [WIP: Fix errors in dropdown boxes in Teamtypes dialog.]

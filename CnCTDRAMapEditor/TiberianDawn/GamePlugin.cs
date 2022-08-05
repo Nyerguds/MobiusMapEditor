@@ -570,6 +570,8 @@ namespace MobiusEditor.TiberianDawn
             }
 
             var smudgeSection = ini.Sections.Extract("Smudge");
+            // Craters other than cr1 don't work right in the game. Replace them by stage-0 cr1.
+            Regex craterRegex = new Regex("^CR[2-6]$");
             if (smudgeSection != null)
             {
                 foreach (var (Key, Value) in smudgeSection)
@@ -578,7 +580,8 @@ namespace MobiusEditor.TiberianDawn
                     var tokens = Value.Split(',');
                     if (tokens.Length == 3)
                     {
-                        var smudgeType = Map.SmudgeTypes.Where(t => t.Equals(tokens[0]) && (t.Flag & SmudgeTypeFlag.Bib) == 0).FirstOrDefault();
+                        bool badCrater = craterRegex.IsMatch(tokens[0]);
+                        var smudgeType = badCrater ? SmudgeTypes.Crater1 : Map.SmudgeTypes.Where(t => t.Equals(tokens[0]) && (t.Flag & SmudgeTypeFlag.Bib) == 0).FirstOrDefault();
                         if (smudgeType != null)
                         {
                             int icon = 0;

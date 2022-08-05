@@ -574,9 +574,8 @@ namespace MobiusEditor.RedAlert
                         if (smudgeType != null)
                         {
                             int icon = 0;
-                            if (!badCrater && smudgeType.Icons > 1 && int.TryParse(tokens[2], out icon))
+                            if (smudgeType.Icons > 1 && int.TryParse(tokens[2], out icon))
                                 icon = Math.Max(0, Math.Min(smudgeType.Icons - 1, icon));
-
                             Map.Smudge[cell] = new Smudge
                             {
                                 Type = smudgeType,
