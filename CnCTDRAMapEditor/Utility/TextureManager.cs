@@ -30,9 +30,9 @@ namespace MobiusEditor.Utility
     {
 
         private static string MissingTexture = "DATA\\ART\\TEXTURES\\SRGB\\COMMON\\MISC\\MISSING.TGA";
-        private Boolean processedMissingTexture = false;
+        private bool processedMissingTexture = false;
 
-        private String expandModPath = null;
+        private string[] expandModPaths = null;
 #if false
         private class ImageData
         {
@@ -46,10 +46,10 @@ namespace MobiusEditor.Utility
         private Dictionary<string, Bitmap> cachedTextures = new Dictionary<string, Bitmap>();
         private Dictionary<(string, TeamColor), (Bitmap, Rectangle)> teamColorTextures = new Dictionary<(string, TeamColor), (Bitmap, Rectangle)>();
 
-        public TextureManager(MegafileManager megafileManager, String expandModPath)
+        public TextureManager(MegafileManager megafileManager, String[] expandModPaths)
         {
             this.megafileManager = megafileManager;
-            this.expandModPath = expandModPath;
+            this.expandModPaths = expandModPaths;
         }
 
         public void Reset()
@@ -111,18 +111,38 @@ namespace MobiusEditor.Utility
                     TGA tga = null;
                     JObject metadata = null;
 
-                    // First attempt to find the texture in an archive
                     var name = Path.GetFileNameWithoutExtension(filename);
                     var archiveDir = Path.GetDirectoryName(filename);
                     var archivePath = archiveDir + ".ZIP";
-                    var modFile = expandModPath == null ? null : Path.Combine(expandModPath, archivePath);
-                    if (modFile != null && File.Exists(modFile))
+                    // First attempt to find the texture in mod folders.
+                    if (expandModPaths != null && expandModPaths.Length > 0)
                     {
-                        using (FileStream fs = new FileStream(modFile, FileMode.Open))
+                        for (int i = 0; i < expandModPaths.Length; ++i)
                         {
-                            LoadTgaFromFileStream(fs, name, ref tga, ref metadata);
+                            // First attempt to find the texture in an archive
+                            var modArch = Path.Combine(expandModPaths[i], archivePath);
+                            if (File.Exists(modArch))
+                            {
+                                using (FileStream fs = new FileStream(modArch, FileMode.Open))
+                                {
+                                    LoadTgaFromFileStream(fs, name, ref tga, ref metadata);
+                                }
+                            }
+                            // Next attempt to load a standalone file
+                            if (tga == null)
+                            {
+                                var modFile = Path.Combine(expandModPaths[i], filename);
+                                if (File.Exists(modFile))
+                                {
+                                    using (var fileStream = new FileStream(modFile, FileMode.Open))
+                                    {
+                                        tga = new TGA(fileStream);
+                                    }
+                                }
+                            }
                         }
                     }
+                    // First attempt to find the texture in an archive
                     if (tga == null)
                     {
                         using (var fileStream = megafileManager.Open(archivePath))
@@ -135,13 +155,14 @@ namespace MobiusEditor.Utility
                     {
                         using (var fileStream = megafileManager.Open(filename))
                         {
+                            // megafileManager.Open might return null if not found, so always check on this.
+                            // The Load???FromFileStream functions do this check internally.
                             if (fileStream != null)
                             {
                                 tga = new TGA(fileStream);
                             }
                         }
                     }
-
                     if (tga != null)
                     {
                         var bitmap = tga.ToBitmap(true);
@@ -243,22 +264,26 @@ namespace MobiusEditor.Utility
                     // Try loading as a DDS
                     var ddsFilename = Path.ChangeExtension(filename, ".DDS");
                     Bitmap bitmap = null;
-                    var modFile = expandModPath == null ? null : Path.Combine(expandModPath, ddsFilename);
-                    if (modFile != null && File.Exists(modFile))
+
+                    if (expandModPaths != null && expandModPaths.Length > 0)
                     {
-                        using (FileStream fs = new FileStream(modFile, FileMode.Open))
+                        for (int i = 0; i < expandModPaths.Length; ++i)
                         {
-                            bitmap = LoadDDSFromFileStream(fs);
+                            var modFile = Path.Combine(expandModPaths[i], ddsFilename);
+                            if (File.Exists(modFile))
+                            {
+                                using (FileStream fs = new FileStream(modFile, FileMode.Open))
+                                {
+                                    bitmap = LoadDDSFromFileStream(fs);
+                                }
+                            }
                         }
                     }
                     if (bitmap == null)
                     {
                         using (var fileStream = megafileManager.Open(ddsFilename))
                         {
-                            if (fileStream != null)
-                            {
-                                bitmap = LoadDDSFromFileStream(fileStream);
-                            }
+                            bitmap = LoadDDSFromFileStream(fileStream);
                         }
                     }
                     if (bitmap != null)
@@ -373,45 +398,49 @@ namespace MobiusEditor.Utility
 
         private void LoadTgaFromFileStream(Stream fileStream, String name, ref TGA tga, ref JObject metadata)
         {
-            if (fileStream != null)
+            if (fileStream == null)
             {
-                using (var archive = new ZipArchive(fileStream, ZipArchiveMode.Read))
+                return;
+            }
+            using (var archive = new ZipArchive(fileStream, ZipArchiveMode.Read))
+            {
+                foreach (var entry in archive.Entries)
                 {
-                    foreach (var entry in archive.Entries)
+                    if (name != Path.GetFileNameWithoutExtension(entry.Name))
                     {
-                        if (name == Path.GetFileNameWithoutExtension(entry.Name))
+                        continue;
+                    }
+                    if ((tga == null) && (Path.GetExtension(entry.Name).ToLower() == ".tga"))
+                    {
+                        using (var stream = entry.Open())
+                        using (var memStream = new MemoryStream())
                         {
-                            if ((tga == null) && (Path.GetExtension(entry.Name).ToLower() == ".tga"))
-                            {
-                                using (var stream = entry.Open())
-                                using (var memStream = new MemoryStream())
-                                {
-                                    stream.CopyTo(memStream);
-                                    tga = new TGA(memStream);
-                                }
-                            }
-                            else if ((metadata == null) && (Path.GetExtension(entry.Name).ToLower() == ".meta"))
-                            {
-                                using (var stream = entry.Open())
-                                using (var reader = new StreamReader(stream))
-                                {
-                                    metadata = JObject.Parse(reader.ReadToEnd());
-                                }
-                            }
-
-                            if ((tga != null) && (metadata != null))
-                            {
-                                break;
-                            }
+                            stream.CopyTo(memStream);
+                            tga = new TGA(memStream);
                         }
+                    }
+                    else if ((metadata == null) && (Path.GetExtension(entry.Name).ToLower() == ".meta"))
+                    {
+                        using (var stream = entry.Open())
+                        using (var reader = new StreamReader(stream))
+                        {
+                            metadata = JObject.Parse(reader.ReadToEnd());
+                        }
+                    }
+                    if (tga != null && metadata != null)
+                    {
+                        break;
                     }
                 }
             }
         }
 
-
         private Bitmap LoadDDSFromFileStream(Stream fileStream)
         {
+            if (fileStream == null)
+            {
+                return null;
+            }
             var bytes = new byte[fileStream.Length];
             fileStream.Read(bytes, 0, bytes.Length);
             using (var image = Dds.Create(bytes, new PfimConfig()))

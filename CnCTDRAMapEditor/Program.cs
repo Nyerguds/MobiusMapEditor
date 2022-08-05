@@ -15,11 +15,13 @@
 using MobiusEditor.Dialogs;
 using MobiusEditor.Utility;
 using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -103,20 +105,13 @@ namespace MobiusEditor
                 return;
             }
 #endif
-            // Hardcoded for now. Might make this a setting or something later.
-            const string addonModName = "ConcretePavement";
-            const string addonModId = "2238803122"; // TODO change this to the actual ID.
-            string docsFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            string addonModPath = Path.Combine(docsFolder, "CnCRemastered", "Mods", "Tiberian_Dawn", addonModName);
-            if (!File.Exists(Path.Combine(addonModPath, "ccmod.json")))
-            {
-                addonModPath = SteamAssist.TryGetSteamModFolder(gameId, addonModId, null); // addonModName);
-            }
+            // Check if any mods are allowed to override the default stuff to load.
+            string[] modPaths = GetModPaths(gameId, Properties.Settings.Default.ModsToLoad);
             // Initialize texture, tileset, team color, and game text managers
-            Globals.TheTextureManager = new TextureManager(Globals.TheMegafileManager, addonModPath);
-            Globals.TheTilesetManager = new TilesetManager(Globals.TheMegafileManager, Globals.TheTextureManager, Globals.TilesetsXMLPath, Globals.TexturesPath, addonModPath);
-            Globals.TheTeamColorManager = new TeamColorManager(Globals.TheMegafileManager);
-
+            Globals.TheTextureManager = new TextureManager(Globals.TheMegafileManager, modPaths);
+            Globals.TheTilesetManager = new TilesetManager(Globals.TheMegafileManager, Globals.TheTextureManager, Globals.TilesetsXMLPath, Globals.TexturesPath, modPaths);
+            Globals.TheTeamColorManager = new TeamColorManager(Globals.TheMegafileManager, modPaths);
+            // Not adapted to mods for now...
             var cultureName = CultureInfo.CurrentUICulture.Name;
             var gameTextFilename = string.Format(Globals.GameTextFilenameFormat, cultureName.ToUpper());
             if (!Globals.TheMegafileManager.Exists(gameTextFilename))
@@ -124,7 +119,6 @@ namespace MobiusEditor
                 gameTextFilename = string.Format(Globals.GameTextFilenameFormat, "EN-US");
             }
             Globals.TheGameTextManager = new GameTextManager(Globals.TheMegafileManager, gameTextFilename);
-
             // Initialize Steam if this is a Steam build
             if (SteamworksUGC.IsSteamBuild)
             {
@@ -157,17 +151,109 @@ namespace MobiusEditor
             {
                 arg = null;
             }
-
             Application.Run(new MainForm(arg));
-
             if (SteamworksUGC.IsSteamBuild)
             {
                 SteamworksUGC.Shutdown();
             }
-
             Globals.TheMegafileManager.Dispose();
         }
 
+        private static string[] GetModPaths(string gameId, string modstoLoad)
+        {
+            Regex numbersOnly = new Regex("^\\d+$");
+            Regex modregex = new Regex("\"game_type\"\\s*:\\s*\"((RA)|(TD))\"");
+            const string tdModFolder = "Tiberian_Dawn";
+            const string raModFolder = "Red_Alert";
+            const string contentFile = "ccmod.json";
+            string modsFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "CnCRemastered", "Mods");
+            string[] steamLibraryFolders = SteamAssist.GetLibraryFoldersForAppId(gameId);
+            string[] mods = (modstoLoad ?? String.Empty).Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+            List<string> modPaths = new List<string>();
+            for (int i = 0; i < mods.Length; ++i)
+            {
+                string modDef = mods[i].Trim();
+                if (String.IsNullOrEmpty(modDef))
+                {
+                    continue;
+                }
+                string addonModPath;
+                // Lookup by Steam ID
+                if (numbersOnly.IsMatch(modDef))
+                {
+                    addonModPath = SteamAssist.TryGetSteamModFolder(gameId, modDef, null, contentFile); // addonModName);
+                    if (addonModPath != null && CheckAddonPathModType(addonModPath, contentFile, modregex, 1) != null)
+                    {
+                        modPaths.Add(addonModPath);
+                    }
+                    // don't bother checking more on a numbers-only entry.
+                    continue;
+                }
+                // Lookup by folder name
+                bool isTDMod = modDef.StartsWith(tdModFolder, StringComparison.OrdinalIgnoreCase);
+                bool isRAMod = modDef.StartsWith(raModFolder, StringComparison.OrdinalIgnoreCase);
+                if (!isTDMod && !isRAMod)
+                {
+                    continue;
+                }
+                String expectedModType = isTDMod ? "TD" : "RA";
+                string actualModFolder = modDef.Substring(isTDMod ? tdModFolder.Length : raModFolder.Length);
+                // check if the trimmed-off part was indeed the whole folder name.
+                if (!actualModFolder.StartsWith("\\") && !actualModFolder.StartsWith("/"))
+                {
+                    continue;
+                }
+                actualModFolder = actualModFolder.Trim('\\', '/');
+                // C&C Remastered mods can only be one path deep.
+                if (actualModFolder.Contains('\\') || actualModFolder.Contains('/'))
+                {
+                    continue;
+                }
+                addonModPath = Path.Combine(modsFolder, modDef);
+                if (CheckAddonPathModType(addonModPath, contentFile, modregex, 1) == expectedModType)
+                {
+                    modPaths.Add(addonModPath);
+                }
+                // try to find mod in steam library.
+                foreach (string libFolder in steamLibraryFolders)
+                {
+                    string modPath = Path.Combine(libFolder, "steamapps", "workshop", "content", gameId);
+                    if (!Directory.Exists(modPath))
+                    {
+                        continue;
+                    }
+                    foreach (string modFolder in Directory.GetDirectories(modPath))
+                    {
+                        addonModPath = Path.Combine(modFolder, actualModFolder);
+                        if (CheckAddonPathModType(addonModPath, contentFile, modregex, 1) == expectedModType)
+                        {
+                            modPaths.Add(addonModPath);
+                            break;
+                        }
+                    }
+                }
+            }
+            return modPaths.Distinct(StringComparer.CurrentCultureIgnoreCase).ToArray();
+        }
+
+        private static string CheckAddonPathModType(string addonModPath, string contentFile, Regex modregex, int group)
+        {
+            try
+            {
+                string checkPath = Path.Combine(addonModPath, contentFile);
+                if (!File.Exists(checkPath))
+                {
+                    return null;
+                }
+                string ccModDefContents = File.ReadAllText(checkPath);
+                MatchCollection mc = modregex.Matches(ccModDefContents);
+                return mc.Count == 0 ? null : mc[0].Groups[group].Value;
+            }
+            catch
+            {
+                return null;
+            }
+        }
 
         /// <summary>
         /// Ports settings over from older versions, and ensures only one settings folder remains.

@@ -130,11 +130,11 @@ v1.4.0.4: [WIP]
 * Added \*.ini to the list of possible extensions for opening RA maps. Apparently before I only added it for saving.
 * Terrain objects will now only pop up a poperties box for setting a trigger in Tiberian Dawn mode.
 * Optimised loading so the editor will skip loading objects from different theaters.
-* Added internal support to allow loading xml and graphics from mod folders.
-* Added limited support for the unique pattern of TD's CONC pavement.
-* Fixed videos loading and saving, so no more errors occur when opening the map options dialog.
+* Fixed user settings loading, so can port over the settings (game folder, invite warning, and the dialog locations) from previous versions. (It's a hacky system, but it works.)
+* Added support for loading mod xml info and graphics through the "ModsToLoad" setting in "CnCTDRAMapEditorD.exe.config". The syntax is a semicolon-separated list, with each entry either a Steam workshop ID, or a folder under "Documents\CnCRemastered\Mods\". As folder, the path must contain the "Tiberian_Dawn" or "Red_Alert" part at the start. That prefix folder will also be used as consistency check for the mod type as defined inside "ccmod.json". Mods given by folder name will also be looked up in the Steam workshop folders, with the prefix folder used only for the consistency check. Mods do NOT have to be enabled in the game to work in the editor.
+* Added support for the unique pattern of TD's CONC pavement. You will need the "ConcretePavement" mod to actually see that, though.
+* Fixed loading and saving of the videos set in the map options dialog, so no more errors pop up there.
 * Made video names freely editable for Tiberian Dawn missions. Any mod-added video in TD is playable from missions.
-* Settings will now be ported from previous version. It's a hacky system, but it works.
 * The preview selection in the Steam publish dialog will now open in the correct folder.
 * The preview rendered for singleplayer maps for the Steam publish (which is not used by default) will show all map contents.
 * [WIP: Fix errors in dropdown boxes in Teamtypes dialog.]

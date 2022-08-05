@@ -33,9 +33,7 @@ namespace MobiusEditor.Utility
             {
                 return null;
             }
-            // Some versions of the registry keys seem to use slashes. Probably not a problem, but whatever.
-            steamFolder = steamFolder.Replace('/', '\\');
-            List<string> foundLibraryFolders = GetLibraryFoldersForAppId(steamFolder, steamId);
+            string[] foundLibraryFolders = GetLibraryFoldersForAppId(steamFolder, steamId);
             if (foundLibraryFolders == null)
             {
                 return null;
@@ -48,7 +46,7 @@ namespace MobiusEditor.Utility
         /// </summary>
         /// <param name="steamId">Steam game ID</param>
         /// <returns>The first found folder that matches the criteria and that exists.</returns>
-        public static String TryGetSteamModFolder(string steamId, string modId, String modFolderName)
+        public static String TryGetSteamModFolder(string steamId, string modId, string modFolderName, string contentFile)
         {
             if (steamId == null)
             {
@@ -59,21 +57,30 @@ namespace MobiusEditor.Utility
             {
                 return null;
             }
-            // Some versions of the registry keys seem to use slashes. Probably not a problem, but whatever.
-            steamFolder = steamFolder.Replace('/', '\\');
-            List<string> foundLibraryFolders = GetLibraryFoldersForAppId(steamFolder, steamId);
+            string[] foundLibraryFolders = GetLibraryFoldersForAppId(steamFolder, steamId);
             if (foundLibraryFolders == null)
             {
                 return null;
             }
-            return GetModFolder(foundLibraryFolders, steamId, modId, modFolderName);
+            return GetModFolder(foundLibraryFolders, steamId, modId, modFolderName, contentFile);
         }
 
         /// <summary>
         /// Retrieves the Steam install folder from the registry.
         /// </summary>
         /// <returns>The Steam install folder, or null if nothing was found.</returns>
-        private static string GetSteamFolder()
+        public static string GetSteamFolder()
+        {
+            string steamFolder = GetSteamFolderInternal();
+            // Some versions of the registry keys seem to use slashes. Probably not a problem, but whatever.
+            return steamFolder == null ? null : steamFolder.Replace('/', '\\');
+        }
+
+        /// <summary>
+        /// Retrieves the Steam install folder from the registry.
+        /// </summary>
+        /// <returns>The Steam install folder, or null if nothing was found.</returns>
+        private static string GetSteamFolderInternal()
         {
             object path;
             // First try 64-bit registry...
@@ -124,13 +131,27 @@ namespace MobiusEditor.Utility
             return null;
         }
 
+        public static string[] GetLibraryFoldersForAppId(string steamId)
+        {
+            if (steamId == null)
+            {
+                throw new ArgumentNullException("steamId");
+            }
+            String steamFolder = GetSteamFolder();
+            if (steamFolder == null)
+            {
+                return null;
+            }
+            return GetLibraryFoldersForAppId(steamFolder, steamId);
+        }
+
         /// <summary>
         /// Looks up all library folders in which the given app ID can be found.
         /// </summary>
         /// <param name="steamFolder">Folder of the steam installation.</param>
         /// <param name="steamId">Steam game ID.</param>
         /// <returns>A list of all library folder paths in which the given app ID was found.</returns>
-        private static List<string> GetLibraryFoldersForAppId(string steamFolder, string steamId)
+        private static string[] GetLibraryFoldersForAppId(string steamFolder, string steamId)
         {
             if (steamFolder == null)
             {
@@ -241,7 +262,7 @@ namespace MobiusEditor.Utility
                     }
                 }
             }
-            return foundFolders;
+            return foundFolders.ToArray();
         }
 
         /// <summary>
@@ -251,7 +272,7 @@ namespace MobiusEditor.Utility
         /// <param name="steamId">Steam game ID.</param>
         /// <param name="identifyingFiles">Optional list of files that need to be present inside the found game folder.</param>
         /// <returns>The first matching game folder for that id that is found, or null if no existing match was found.<</returns>
-        private static string GetGameFolder(List<string> libraryFolders, string steamId, params string[] identifyingFiles)
+        private static string GetGameFolder(IEnumerable<string> libraryFolders, string steamId, params string[] identifyingFiles)
         {
             if (steamId == null)
             {
@@ -317,12 +338,15 @@ namespace MobiusEditor.Utility
         /// <param name="libraryFolders">A list of Steam library folders.</param>
         /// <param name="steamId">Steam game ID.</param>
         /// <returns>The first matching game folder for that id that is found, or null if no existing match was found.<</returns>
-        private static string GetModFolder(List<string> libraryFolders, string steamId, string modId, string modFolderName)
+        private static string GetModFolder(IEnumerable<string> libraryFolders, string steamId, string modId, string modFolderName, string contentFile)
         {
-            const string workshopExt = ".workshop.json";
             if (steamId == null)
             {
                 throw new ArgumentNullException("steamId");
+            }
+            if (contentFile == null)
+            {
+                throw new ArgumentNullException("contentFile");
             }
             if (libraryFolders == null)
             {
@@ -330,32 +354,24 @@ namespace MobiusEditor.Utility
             }
             foreach (string path in libraryFolders)
             {
-                string appsPath = Path.Combine(path, "steamapps");
-                if (!Directory.Exists(appsPath))
-                {
-                    continue;
-                }
-                string modPath = Path.Combine(appsPath, "workshop", "content", steamId, modId);
+                string modPath = Path.Combine(path, "steamapps", "workshop", "content", steamId, modId);
                 if (!Directory.Exists(modPath))
                 {
                     continue;
                 }
                 // If given, it needs to match.
-                if (modFolderName != null)
+                if (!String.IsNullOrEmpty(modFolderName))
                 {
                     string folderPath = Path.Combine(modPath, modFolderName);
-                    return Directory.Exists(folderPath) ? folderPath : null;
+                    return File.Exists(Path.Combine(folderPath, contentFile)) ? folderPath : null;
                 }
-                string[] workshopFiles = Directory.GetFiles(modPath, "*" + workshopExt);
-                for (Int32 i = 0; i < workshopFiles.Length; ++i)
+                string[] workshopFiles = Directory.GetFiles(modPath, contentFile, SearchOption.AllDirectories);
+                for (int i = 0; i < workshopFiles.Length; ++i)
                 {
-                    string workshopFile = Path.GetFileName(workshopFiles[i]);
-                    string folderName = workshopFile.Substring(0, workshopFile.Length - workshopExt.Length);
-                    string folderPath = Path.Combine(modPath, folderName);
-                    if (Directory.Exists(folderPath))
-                        return folderPath;
+                    string foundFile = workshopFiles[i];
+                    if (contentFile.Equals(Path.GetFileName(foundFile), StringComparison.OrdinalIgnoreCase))
+                        return Path.GetDirectoryName(foundFile);
                 }
-
             }
             return null;
         }

@@ -24,28 +24,51 @@ namespace MobiusEditor.Utility
         private readonly Dictionary<string, Tileset> tilesets = new Dictionary<string, Tileset>();
 
         private readonly MegafileManager megafileManager;
-        private string expandModPath = null;
+        private string[] expandModPaths = null;
 
-        public TilesetManager(MegafileManager megafileManager, TextureManager textureManager, string xmlPath, string texturesPath, string expandModPath)
+        public TilesetManager(MegafileManager megafileManager, TextureManager textureManager, string xmlPath, string texturesPath, string[] expandModPaths)
         {
             this.megafileManager = megafileManager;
-            this.expandModPath = expandModPath;
-
-            XmlDocument xmlDoc = new XmlDocument();
-            xmlDoc.Load(megafileManager.Open(xmlPath));
-
+            this.expandModPaths = expandModPaths;
+            XmlDocument xmlDoc = null;
+            if (expandModPaths != null && expandModPaths.Length > 0)
+            {
+                for (int i = 0; i < expandModPaths.Length; ++i)
+                {
+                    string modXmlPath = Path.Combine(expandModPaths[i], xmlPath);
+                    if (modXmlPath != null && File.Exists(modXmlPath))
+                    {
+                        xmlDoc = new XmlDocument();
+                        xmlDoc.Load(modXmlPath);
+                        break;
+                    }
+                }
+            }
+            if (xmlDoc == null)
+            {
+                xmlDoc = new XmlDocument();
+                xmlDoc.Load(megafileManager.Open(xmlPath));
+            }
             foreach (XmlNode fileNode in xmlDoc.SelectNodes("TilesetFiles/File"))
             {
-
                 string xmlFile = Path.Combine(Path.GetDirectoryName(xmlPath), fileNode.InnerText);
-                XmlDocument fileXmlDoc = new XmlDocument();
-                string modXmlPath = expandModPath == null ? null : Path.Combine(expandModPath, xmlFile);
-                if (modXmlPath != null && File.Exists(modXmlPath))
+                XmlDocument fileXmlDoc = null;
+                if (expandModPaths != null && expandModPaths.Length > 0)
                 {
-                    fileXmlDoc.Load(modXmlPath);
+                    for (int i = 0; i < expandModPaths.Length; ++i)
+                    {
+                        string modXmlPath = Path.Combine(expandModPaths[i], xmlFile);
+                        if (modXmlPath != null && File.Exists(modXmlPath))
+                        {
+                            fileXmlDoc = new XmlDocument();
+                            fileXmlDoc.Load(modXmlPath);
+                            break;
+                        }
+                    }
                 }
-                else
+                if (fileXmlDoc == null)
                 {
+                    fileXmlDoc = new XmlDocument();
                     fileXmlDoc.Load(megafileManager.Open(xmlFile));
                 }
                 foreach (XmlNode tilesetNode in fileXmlDoc.SelectNodes("Tilesets/TilesetTypeClass"))

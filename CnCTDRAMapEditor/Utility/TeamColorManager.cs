@@ -13,6 +13,7 @@
 // GNU General Public License along with permitted additional restrictions 
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Xml;
 
@@ -23,12 +24,14 @@ namespace MobiusEditor.Utility
         private readonly Dictionary<string, TeamColor> teamColors = new Dictionary<string, TeamColor>();
 
         private readonly MegafileManager megafileManager;
+        private string[] expandModPaths = null;
 
         public TeamColor this[string key] => !string.IsNullOrEmpty(key) ? teamColors[key] : null;
 
-        public TeamColorManager(MegafileManager megafileManager)
+        public TeamColorManager(MegafileManager megafileManager, string[] expandModPaths)
         {
             this.megafileManager = megafileManager;
+            this.expandModPaths = expandModPaths;
         }
 
         public void Reset()
@@ -38,9 +41,25 @@ namespace MobiusEditor.Utility
 
         public void Load(string xmlPath)
         {
-            XmlDocument xmlDoc = new XmlDocument();
-            xmlDoc.Load(megafileManager.Open(xmlPath));
-
+            XmlDocument xmlDoc = null;
+            if (expandModPaths != null && expandModPaths.Length > 0)
+            {
+                for (int i = 0; i < expandModPaths.Length; ++i)
+                {
+                    string modXmlPath = Path.Combine(expandModPaths[i], xmlPath);
+                    if (modXmlPath != null && File.Exists(modXmlPath))
+                    {
+                        xmlDoc = new XmlDocument();
+                        xmlDoc.Load(modXmlPath);
+                        break;
+                    }
+                }
+            }
+            if (xmlDoc == null)
+            {
+                xmlDoc = new XmlDocument();
+                xmlDoc.Load(megafileManager.Open(xmlPath));
+            }
             foreach (XmlNode teamColorNode in xmlDoc.SelectNodes("/*/TeamColorTypeClass"))
             {
                 var teamColor = new TeamColor(this, megafileManager);
@@ -48,7 +67,6 @@ namespace MobiusEditor.Utility
 
                 teamColors[teamColorNode.Attributes["Name"].Value] = teamColor;
             }
-
             foreach (var teamColor in TopologicalSortTeamColors())
             {
                 teamColor.Flatten();
