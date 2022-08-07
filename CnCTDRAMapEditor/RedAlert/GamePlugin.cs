@@ -251,7 +251,7 @@ namespace MobiusEditor.RedAlert
                 INI.ParseSection(new MapContext(Map, true), steamSection, Map.SteamSection);
             }
 
-            string indexToType(IList<string> list, string index)
+            T indexToType<T>(IList<T> list, string index)
             {
                 return (int.TryParse(index, out int result) && (result >= 0) && (result < list.Count)) ? list[result] : list.First();
             }
@@ -1238,13 +1238,14 @@ namespace MobiusEditor.RedAlert
             string nameToIndexString<T>(IList<T> list, string name) => nameToIndex(list, name).ToString();
 
             var teamTypesSection = ini.Sections.Add("TeamTypes");
+            List<string> teamtypeMissions = Map.TeamMissionTypes.Select(ttm => ttm.Mission).ToList();
             foreach (var teamType in Map.TeamTypes)
             {
                 var classes = teamType.Classes
                     .Select(c => string.Format("{0}:{1}", c.Type.Name.ToUpper(), c.Count))
                     .ToArray();
                 var missions = teamType.Missions
-                    .Select(m => string.Format("{0}:{1}", nameToIndexString(Map.TeamMissionTypes, m.Mission), m.Argument))
+                    .Select(m => string.Format("{0}:{1}", nameToIndexString(teamtypeMissions, m.Mission.Mission), m.Argument))
                     .ToArray();
 
                 int flags = 0;

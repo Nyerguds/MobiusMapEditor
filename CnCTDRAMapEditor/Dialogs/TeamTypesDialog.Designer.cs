@@ -35,43 +35,47 @@ namespace MobiusEditor.Dialogs
             this.components = new System.ComponentModel.Container();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.flowLayoutPanel2 = new System.Windows.Forms.FlowLayoutPanel();
-            this.btnAdd = new System.Windows.Forms.Button();
+            this.btnAddTeamType = new System.Windows.Forms.Button();
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOK = new System.Windows.Forms.Button();
             this.settingsPanel = new System.Windows.Forms.Panel();
             this.teamTypeTableLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
-            this.label1 = new System.Windows.Forms.Label();
-            this.houseComboBox = new System.Windows.Forms.ComboBox();
-            this.roundaboutCheckBox = new System.Windows.Forms.CheckBox();
-            this.learningCheckBox = new System.Windows.Forms.CheckBox();
-            this.suicideCheckBox = new System.Windows.Forms.CheckBox();
-            this.autocreateCheckBox = new System.Windows.Forms.CheckBox();
-            this.mercernaryCheckBox = new System.Windows.Forms.CheckBox();
-            this.reinforcableCheckBox = new System.Windows.Forms.CheckBox();
-            this.prebuiltCheckBox = new System.Windows.Forms.CheckBox();
-            this.label2 = new System.Windows.Forms.Label();
-            this.label3 = new System.Windows.Forms.Label();
-            this.label4 = new System.Windows.Forms.Label();
-            this.initNumNud = new MobiusEditor.Controls.EnhNumericUpDown();
+            this.lblHouse = new System.Windows.Forms.Label();
+            this.cmbHouse = new System.Windows.Forms.ComboBox();
+            this.chbRoundabout = new System.Windows.Forms.CheckBox();
+            this.chbLearning = new System.Windows.Forms.CheckBox();
+            this.chbSuicide = new System.Windows.Forms.CheckBox();
+            this.chbAutocreate = new System.Windows.Forms.CheckBox();
+            this.chbMercernary = new System.Windows.Forms.CheckBox();
+            this.chbReinforcable = new System.Windows.Forms.CheckBox();
+            this.chbPrebuilt = new System.Windows.Forms.CheckBox();
+            this.lblInitNum = new System.Windows.Forms.Label();
+            this.lblMaxAllowed = new System.Windows.Forms.Label();
+            this.lblFear = new System.Windows.Forms.Label();
+            this.nudInitNum = new MobiusEditor.Controls.EnhNumericUpDown();
             this.maxAllowedNud = new MobiusEditor.Controls.EnhNumericUpDown();
-            this.fearNud = new MobiusEditor.Controls.EnhNumericUpDown();
-            this.waypointLabel = new System.Windows.Forms.Label();
-            this.triggerLabel = new System.Windows.Forms.Label();
-            this.waypointComboBox = new System.Windows.Forms.ComboBox();
-            this.triggerComboBox = new System.Windows.Forms.ComboBox();
-            this.label9 = new System.Windows.Forms.Label();
-            this.recruitPriorityNud = new MobiusEditor.Controls.EnhNumericUpDown();
+            this.nudFear = new MobiusEditor.Controls.EnhNumericUpDown();
+            this.lblWaypoint = new System.Windows.Forms.Label();
+            this.lblTrigger = new System.Windows.Forms.Label();
+            this.cmbWaypoint = new System.Windows.Forms.ComboBox();
+            this.cmbTrigger = new System.Windows.Forms.ComboBox();
+            this.lblPriority = new System.Windows.Forms.Label();
+            this.nudRecruitPriority = new MobiusEditor.Controls.EnhNumericUpDown();
             this.tableLayoutPanel3 = new System.Windows.Forms.TableLayoutPanel();
-            this.label7 = new System.Windows.Forms.Label();
-            this.label8 = new System.Windows.Forms.Label();
-            this.teamsDataGridView = new System.Windows.Forms.DataGridView();
-            this.teamsTypeColumn = new System.Windows.Forms.DataGridViewComboBoxColumn();
-            this.teamsCountColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.missionsDataGridView = new System.Windows.Forms.DataGridView();
-            this.missionsMissionColumn = new System.Windows.Forms.DataGridViewComboBoxColumn();
-            this.missionsArgumentColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.panel1 = new System.Windows.Forms.Panel();
+            this.lblLine1 = new System.Windows.Forms.Label();
+            this.lblTeams = new System.Windows.Forms.Label();
+            this.btnAddTeam = new System.Windows.Forms.Button();
+            this.pnlTeamsScroll = new System.Windows.Forms.Panel();
+            this.tilTeams = new MobiusEditor.Controls.TeamItemsList();
+            this.panel2 = new System.Windows.Forms.Panel();
+            this.lblLine2 = new System.Windows.Forms.Label();
+            this.lblOrders = new System.Windows.Forms.Label();
+            this.btnAddMission = new System.Windows.Forms.Button();
+            this.pnlMissionsScroll = new System.Windows.Forms.Panel();
+            this.milMissions = new MobiusEditor.Controls.MissionItemsList();
             this.teamTypesListView = new System.Windows.Forms.ListView();
             this.nameColumnHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.teamTypesContextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
@@ -85,13 +89,15 @@ namespace MobiusEditor.Dialogs
             this.settingsPanel.SuspendLayout();
             this.teamTypeTableLayoutPanel.SuspendLayout();
             this.tableLayoutPanel2.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.initNumNud)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudInitNum)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.maxAllowedNud)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.fearNud)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.recruitPriorityNud)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudFear)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudRecruitPriority)).BeginInit();
             this.tableLayoutPanel3.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.teamsDataGridView)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.missionsDataGridView)).BeginInit();
+            this.panel1.SuspendLayout();
+            this.pnlTeamsScroll.SuspendLayout();
+            this.panel2.SuspendLayout();
+            this.pnlMissionsScroll.SuspendLayout();
             this.teamTypesContextMenuStrip.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -117,24 +123,24 @@ namespace MobiusEditor.Dialogs
             // 
             this.flowLayoutPanel2.AutoSize = true;
             this.flowLayoutPanel2.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.flowLayoutPanel2.Controls.Add(this.btnAdd);
+            this.flowLayoutPanel2.Controls.Add(this.btnAddTeamType);
             this.flowLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.flowLayoutPanel2.Location = new System.Drawing.Point(3, 379);
             this.flowLayoutPanel2.Name = "flowLayoutPanel2";
             this.flowLayoutPanel2.Size = new System.Drawing.Size(169, 34);
             this.flowLayoutPanel2.TabIndex = 1;
             // 
-            // btnAdd
+            // btnAddTeamType
             // 
-            this.btnAdd.AutoSize = true;
-            this.btnAdd.Location = new System.Drawing.Point(2, 2);
-            this.btnAdd.Margin = new System.Windows.Forms.Padding(2);
-            this.btnAdd.Name = "btnAdd";
-            this.btnAdd.Size = new System.Drawing.Size(168, 30);
-            this.btnAdd.TabIndex = 1;
-            this.btnAdd.Text = "&Add Teamtype";
-            this.btnAdd.UseVisualStyleBackColor = true;
-            this.btnAdd.Click += new System.EventHandler(this.btnAdd_Click);
+            this.btnAddTeamType.AutoSize = true;
+            this.btnAddTeamType.Location = new System.Drawing.Point(2, 2);
+            this.btnAddTeamType.Margin = new System.Windows.Forms.Padding(2);
+            this.btnAddTeamType.Name = "btnAddTeamType";
+            this.btnAddTeamType.Size = new System.Drawing.Size(168, 30);
+            this.btnAddTeamType.TabIndex = 1;
+            this.btnAddTeamType.Text = "&Add Teamtype";
+            this.btnAddTeamType.UseVisualStyleBackColor = true;
+            this.btnAddTeamType.Click += new System.EventHandler(this.BtnAddTeamType_Click);
             // 
             // flowLayoutPanel1
             // 
@@ -207,27 +213,27 @@ namespace MobiusEditor.Dialogs
             this.tableLayoutPanel2.ColumnCount = 2;
             this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
-            this.tableLayoutPanel2.Controls.Add(this.label1, 0, 0);
-            this.tableLayoutPanel2.Controls.Add(this.houseComboBox, 1, 0);
-            this.tableLayoutPanel2.Controls.Add(this.roundaboutCheckBox, 1, 1);
-            this.tableLayoutPanel2.Controls.Add(this.learningCheckBox, 1, 2);
-            this.tableLayoutPanel2.Controls.Add(this.suicideCheckBox, 1, 3);
-            this.tableLayoutPanel2.Controls.Add(this.autocreateCheckBox, 1, 4);
-            this.tableLayoutPanel2.Controls.Add(this.mercernaryCheckBox, 1, 5);
-            this.tableLayoutPanel2.Controls.Add(this.reinforcableCheckBox, 1, 6);
-            this.tableLayoutPanel2.Controls.Add(this.prebuiltCheckBox, 1, 7);
-            this.tableLayoutPanel2.Controls.Add(this.label2, 0, 9);
-            this.tableLayoutPanel2.Controls.Add(this.label3, 0, 10);
-            this.tableLayoutPanel2.Controls.Add(this.label4, 0, 11);
-            this.tableLayoutPanel2.Controls.Add(this.initNumNud, 1, 9);
+            this.tableLayoutPanel2.Controls.Add(this.lblHouse, 0, 0);
+            this.tableLayoutPanel2.Controls.Add(this.cmbHouse, 1, 0);
+            this.tableLayoutPanel2.Controls.Add(this.chbRoundabout, 1, 1);
+            this.tableLayoutPanel2.Controls.Add(this.chbLearning, 1, 2);
+            this.tableLayoutPanel2.Controls.Add(this.chbSuicide, 1, 3);
+            this.tableLayoutPanel2.Controls.Add(this.chbAutocreate, 1, 4);
+            this.tableLayoutPanel2.Controls.Add(this.chbMercernary, 1, 5);
+            this.tableLayoutPanel2.Controls.Add(this.chbReinforcable, 1, 6);
+            this.tableLayoutPanel2.Controls.Add(this.chbPrebuilt, 1, 7);
+            this.tableLayoutPanel2.Controls.Add(this.lblInitNum, 0, 9);
+            this.tableLayoutPanel2.Controls.Add(this.lblMaxAllowed, 0, 10);
+            this.tableLayoutPanel2.Controls.Add(this.lblFear, 0, 11);
+            this.tableLayoutPanel2.Controls.Add(this.nudInitNum, 1, 9);
             this.tableLayoutPanel2.Controls.Add(this.maxAllowedNud, 1, 10);
-            this.tableLayoutPanel2.Controls.Add(this.fearNud, 1, 11);
-            this.tableLayoutPanel2.Controls.Add(this.waypointLabel, 0, 12);
-            this.tableLayoutPanel2.Controls.Add(this.triggerLabel, 0, 13);
-            this.tableLayoutPanel2.Controls.Add(this.waypointComboBox, 1, 12);
-            this.tableLayoutPanel2.Controls.Add(this.triggerComboBox, 1, 13);
-            this.tableLayoutPanel2.Controls.Add(this.label9, 0, 8);
-            this.tableLayoutPanel2.Controls.Add(this.recruitPriorityNud, 1, 8);
+            this.tableLayoutPanel2.Controls.Add(this.nudFear, 1, 11);
+            this.tableLayoutPanel2.Controls.Add(this.lblWaypoint, 0, 12);
+            this.tableLayoutPanel2.Controls.Add(this.lblTrigger, 0, 13);
+            this.tableLayoutPanel2.Controls.Add(this.cmbWaypoint, 1, 12);
+            this.tableLayoutPanel2.Controls.Add(this.cmbTrigger, 1, 13);
+            this.tableLayoutPanel2.Controls.Add(this.lblPriority, 0, 8);
+            this.tableLayoutPanel2.Controls.Add(this.nudRecruitPriority, 1, 8);
             this.tableLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel2.Location = new System.Drawing.Point(2, 2);
             this.tableLayoutPanel2.Margin = new System.Windows.Forms.Padding(2);
@@ -251,186 +257,186 @@ namespace MobiusEditor.Dialogs
             this.tableLayoutPanel2.Size = new System.Drawing.Size(206, 352);
             this.tableLayoutPanel2.TabIndex = 0;
             // 
-            // label1
+            // lblHouse
             // 
-            this.label1.AutoSize = true;
-            this.label1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label1.Location = new System.Drawing.Point(2, 0);
-            this.label1.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(67, 25);
-            this.label1.TabIndex = 0;
-            this.label1.Text = "House";
-            this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.toolTip1.SetToolTip(this.label1, "Owner of this team.");
+            this.lblHouse.AutoSize = true;
+            this.lblHouse.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblHouse.Location = new System.Drawing.Point(2, 0);
+            this.lblHouse.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.lblHouse.Name = "lblHouse";
+            this.lblHouse.Size = new System.Drawing.Size(67, 25);
+            this.lblHouse.TabIndex = 0;
+            this.lblHouse.Text = "House";
+            this.lblHouse.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.toolTip1.SetToolTip(this.lblHouse, "Owner of this team.");
             // 
-            // houseComboBox
+            // cmbHouse
             // 
-            this.houseComboBox.DisplayMember = "Name";
-            this.houseComboBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.houseComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.houseComboBox.FormattingEnabled = true;
-            this.houseComboBox.Location = new System.Drawing.Point(73, 2);
-            this.houseComboBox.Margin = new System.Windows.Forms.Padding(2);
-            this.houseComboBox.Name = "houseComboBox";
-            this.houseComboBox.Size = new System.Drawing.Size(131, 21);
-            this.houseComboBox.TabIndex = 10;
-            this.houseComboBox.ValueMember = "Type";
+            this.cmbHouse.DisplayMember = "Name";
+            this.cmbHouse.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.cmbHouse.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbHouse.FormattingEnabled = true;
+            this.cmbHouse.Location = new System.Drawing.Point(73, 2);
+            this.cmbHouse.Margin = new System.Windows.Forms.Padding(2);
+            this.cmbHouse.Name = "cmbHouse";
+            this.cmbHouse.Size = new System.Drawing.Size(131, 21);
+            this.cmbHouse.TabIndex = 10;
+            this.cmbHouse.ValueMember = "Type";
             // 
-            // roundaboutCheckBox
+            // chbRoundabout
             // 
-            this.roundaboutCheckBox.AutoSize = true;
-            this.roundaboutCheckBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.roundaboutCheckBox.Location = new System.Drawing.Point(73, 27);
-            this.roundaboutCheckBox.Margin = new System.Windows.Forms.Padding(2);
-            this.roundaboutCheckBox.Name = "roundaboutCheckBox";
-            this.roundaboutCheckBox.Size = new System.Drawing.Size(131, 17);
-            this.roundaboutCheckBox.TabIndex = 11;
-            this.roundaboutCheckBox.Text = "Roundabout";
-            this.toolTip1.SetToolTip(this.roundaboutCheckBox, "Avoid high-threat areas.");
-            this.roundaboutCheckBox.UseVisualStyleBackColor = true;
+            this.chbRoundabout.AutoSize = true;
+            this.chbRoundabout.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.chbRoundabout.Location = new System.Drawing.Point(73, 27);
+            this.chbRoundabout.Margin = new System.Windows.Forms.Padding(2);
+            this.chbRoundabout.Name = "chbRoundabout";
+            this.chbRoundabout.Size = new System.Drawing.Size(131, 17);
+            this.chbRoundabout.TabIndex = 11;
+            this.chbRoundabout.Text = "Roundabout";
+            this.toolTip1.SetToolTip(this.chbRoundabout, "Avoid high-threat areas.");
+            this.chbRoundabout.UseVisualStyleBackColor = true;
             // 
-            // learningCheckBox
+            // chbLearning
             // 
-            this.learningCheckBox.AutoSize = true;
-            this.learningCheckBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.learningCheckBox.Location = new System.Drawing.Point(73, 48);
-            this.learningCheckBox.Margin = new System.Windows.Forms.Padding(2);
-            this.learningCheckBox.Name = "learningCheckBox";
-            this.learningCheckBox.Size = new System.Drawing.Size(131, 17);
-            this.learningCheckBox.TabIndex = 12;
-            this.learningCheckBox.Text = "Learning";
-            this.toolTip1.SetToolTip(this.learningCheckBox, "The team learns from mistakes.");
-            this.learningCheckBox.UseVisualStyleBackColor = true;
+            this.chbLearning.AutoSize = true;
+            this.chbLearning.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.chbLearning.Location = new System.Drawing.Point(73, 48);
+            this.chbLearning.Margin = new System.Windows.Forms.Padding(2);
+            this.chbLearning.Name = "chbLearning";
+            this.chbLearning.Size = new System.Drawing.Size(131, 17);
+            this.chbLearning.TabIndex = 12;
+            this.chbLearning.Text = "Learning";
+            this.toolTip1.SetToolTip(this.chbLearning, "The team learns from mistakes.");
+            this.chbLearning.UseVisualStyleBackColor = true;
             // 
-            // suicideCheckBox
+            // chbSuicide
             // 
-            this.suicideCheckBox.AutoSize = true;
-            this.suicideCheckBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.suicideCheckBox.Location = new System.Drawing.Point(73, 69);
-            this.suicideCheckBox.Margin = new System.Windows.Forms.Padding(2);
-            this.suicideCheckBox.Name = "suicideCheckBox";
-            this.suicideCheckBox.Size = new System.Drawing.Size(131, 17);
-            this.suicideCheckBox.TabIndex = 13;
-            this.suicideCheckBox.Text = "Suicide";
-            this.toolTip1.SetToolTip(this.suicideCheckBox, "The team won\'t stop until it achieves its mission or it\'s dead.");
-            this.suicideCheckBox.UseVisualStyleBackColor = true;
+            this.chbSuicide.AutoSize = true;
+            this.chbSuicide.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.chbSuicide.Location = new System.Drawing.Point(73, 69);
+            this.chbSuicide.Margin = new System.Windows.Forms.Padding(2);
+            this.chbSuicide.Name = "chbSuicide";
+            this.chbSuicide.Size = new System.Drawing.Size(131, 17);
+            this.chbSuicide.TabIndex = 13;
+            this.chbSuicide.Text = "Suicide";
+            this.toolTip1.SetToolTip(this.chbSuicide, "The team won\'t stop until it achieves its mission or it\'s dead.");
+            this.chbSuicide.UseVisualStyleBackColor = true;
             // 
-            // autocreateCheckBox
+            // chbAutocreate
             // 
-            this.autocreateCheckBox.AutoSize = true;
-            this.autocreateCheckBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.autocreateCheckBox.Location = new System.Drawing.Point(73, 90);
-            this.autocreateCheckBox.Margin = new System.Windows.Forms.Padding(2);
-            this.autocreateCheckBox.Name = "autocreateCheckBox";
-            this.autocreateCheckBox.Size = new System.Drawing.Size(131, 17);
-            this.autocreateCheckBox.TabIndex = 14;
-            this.autocreateCheckBox.Text = "Auto-create";
-            this.toolTip1.SetToolTip(this.autocreateCheckBox, "Make this part of the pool of teams to be produced\r\nwhen enabling Autocreate for " +
+            this.chbAutocreate.AutoSize = true;
+            this.chbAutocreate.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.chbAutocreate.Location = new System.Drawing.Point(73, 90);
+            this.chbAutocreate.Margin = new System.Windows.Forms.Padding(2);
+            this.chbAutocreate.Name = "chbAutocreate";
+            this.chbAutocreate.Size = new System.Drawing.Size(131, 17);
+            this.chbAutocreate.TabIndex = 14;
+            this.chbAutocreate.Text = "Auto-create";
+            this.toolTip1.SetToolTip(this.chbAutocreate, "Make this part of the pool of teams to be produced\r\nwhen enabling Autocreate for " +
         "this House.");
-            this.autocreateCheckBox.UseVisualStyleBackColor = true;
+            this.chbAutocreate.UseVisualStyleBackColor = true;
             // 
-            // mercernaryCheckBox
+            // chbMercernary
             // 
-            this.mercernaryCheckBox.AutoSize = true;
-            this.mercernaryCheckBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.mercernaryCheckBox.Location = new System.Drawing.Point(73, 111);
-            this.mercernaryCheckBox.Margin = new System.Windows.Forms.Padding(2);
-            this.mercernaryCheckBox.Name = "mercernaryCheckBox";
-            this.mercernaryCheckBox.Size = new System.Drawing.Size(131, 17);
-            this.mercernaryCheckBox.TabIndex = 15;
-            this.mercernaryCheckBox.Text = "Mercernary";
-            this.toolTip1.SetToolTip(this.mercernaryCheckBox, "Will change sides if they start to lose.");
-            this.mercernaryCheckBox.UseVisualStyleBackColor = true;
+            this.chbMercernary.AutoSize = true;
+            this.chbMercernary.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.chbMercernary.Location = new System.Drawing.Point(73, 111);
+            this.chbMercernary.Margin = new System.Windows.Forms.Padding(2);
+            this.chbMercernary.Name = "chbMercernary";
+            this.chbMercernary.Size = new System.Drawing.Size(131, 17);
+            this.chbMercernary.TabIndex = 15;
+            this.chbMercernary.Text = "Mercernary";
+            this.toolTip1.SetToolTip(this.chbMercernary, "Will change sides if they start to lose.");
+            this.chbMercernary.UseVisualStyleBackColor = true;
             // 
-            // reinforcableCheckBox
+            // chbReinforcable
             // 
-            this.reinforcableCheckBox.AutoSize = true;
-            this.reinforcableCheckBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.reinforcableCheckBox.Location = new System.Drawing.Point(73, 132);
-            this.reinforcableCheckBox.Margin = new System.Windows.Forms.Padding(2);
-            this.reinforcableCheckBox.Name = "reinforcableCheckBox";
-            this.reinforcableCheckBox.Size = new System.Drawing.Size(131, 17);
-            this.reinforcableCheckBox.TabIndex = 16;
-            this.reinforcableCheckBox.Text = "Reinforcable";
-            this.toolTip1.SetToolTip(this.reinforcableCheckBox, "Allow recruitment of new members if some die.\r\nIf false, acts similar to Suicide," +
+            this.chbReinforcable.AutoSize = true;
+            this.chbReinforcable.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.chbReinforcable.Location = new System.Drawing.Point(73, 132);
+            this.chbReinforcable.Margin = new System.Windows.Forms.Padding(2);
+            this.chbReinforcable.Name = "chbReinforcable";
+            this.chbReinforcable.Size = new System.Drawing.Size(131, 17);
+            this.chbReinforcable.TabIndex = 16;
+            this.chbReinforcable.Text = "Reinforcable";
+            this.toolTip1.SetToolTip(this.chbReinforcable, "Allow recruitment of new members if some die.\r\nIf false, acts similar to Suicide," +
         " but they will defend themselves.");
-            this.reinforcableCheckBox.UseVisualStyleBackColor = true;
+            this.chbReinforcable.UseVisualStyleBackColor = true;
             // 
-            // prebuiltCheckBox
+            // chbPrebuilt
             // 
-            this.prebuiltCheckBox.AutoSize = true;
-            this.prebuiltCheckBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.prebuiltCheckBox.Location = new System.Drawing.Point(73, 153);
-            this.prebuiltCheckBox.Margin = new System.Windows.Forms.Padding(2);
-            this.prebuiltCheckBox.Name = "prebuiltCheckBox";
-            this.prebuiltCheckBox.Size = new System.Drawing.Size(131, 17);
-            this.prebuiltCheckBox.TabIndex = 17;
-            this.prebuiltCheckBox.Text = "Prebuilt";
-            this.toolTip1.SetToolTip(this.prebuiltCheckBox, "Computer should build members to fill a team of this type\r\nregardless of whether " +
+            this.chbPrebuilt.AutoSize = true;
+            this.chbPrebuilt.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.chbPrebuilt.Location = new System.Drawing.Point(73, 153);
+            this.chbPrebuilt.Margin = new System.Windows.Forms.Padding(2);
+            this.chbPrebuilt.Name = "chbPrebuilt";
+            this.chbPrebuilt.Size = new System.Drawing.Size(131, 17);
+            this.chbPrebuilt.TabIndex = 17;
+            this.chbPrebuilt.Text = "Prebuilt";
+            this.toolTip1.SetToolTip(this.chbPrebuilt, "Computer should build members to fill a team of this type\r\nregardless of whether " +
         "there is a team of this type active.");
-            this.prebuiltCheckBox.UseVisualStyleBackColor = true;
+            this.chbPrebuilt.UseVisualStyleBackColor = true;
             // 
-            // label2
+            // lblInitNum
             // 
-            this.label2.AutoSize = true;
-            this.label2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label2.Location = new System.Drawing.Point(2, 196);
-            this.label2.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(67, 24);
-            this.label2.TabIndex = 9;
-            this.label2.Text = "Init Num";
-            this.label2.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.toolTip1.SetToolTip(this.label2, "Initial amount of this type of team.");
+            this.lblInitNum.AutoSize = true;
+            this.lblInitNum.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblInitNum.Location = new System.Drawing.Point(2, 196);
+            this.lblInitNum.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.lblInitNum.Name = "lblInitNum";
+            this.lblInitNum.Size = new System.Drawing.Size(67, 24);
+            this.lblInitNum.TabIndex = 9;
+            this.lblInitNum.Text = "Init Num";
+            this.lblInitNum.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.toolTip1.SetToolTip(this.lblInitNum, "Initial amount of this type of team.");
             // 
-            // label3
+            // lblMaxAllowed
             // 
-            this.label3.AutoSize = true;
-            this.label3.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label3.Location = new System.Drawing.Point(2, 220);
-            this.label3.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(67, 24);
-            this.label3.TabIndex = 10;
-            this.label3.Text = "Max Allowed";
-            this.label3.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.toolTip1.SetToolTip(this.label3, "Maximum amount of this type of team allowed at one time.");
+            this.lblMaxAllowed.AutoSize = true;
+            this.lblMaxAllowed.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblMaxAllowed.Location = new System.Drawing.Point(2, 220);
+            this.lblMaxAllowed.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.lblMaxAllowed.Name = "lblMaxAllowed";
+            this.lblMaxAllowed.Size = new System.Drawing.Size(67, 24);
+            this.lblMaxAllowed.TabIndex = 10;
+            this.lblMaxAllowed.Text = "Max Allowed";
+            this.lblMaxAllowed.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.toolTip1.SetToolTip(this.lblMaxAllowed, "Maximum amount of this type of team allowed at one time.");
             // 
-            // label4
+            // lblFear
             // 
-            this.label4.AutoSize = true;
-            this.label4.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label4.Location = new System.Drawing.Point(2, 244);
-            this.label4.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(67, 24);
-            this.label4.TabIndex = 11;
-            this.label4.Text = "Fear";
-            this.label4.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.toolTip1.SetToolTip(this.label4, "Fear level of this team. No known effect.");
+            this.lblFear.AutoSize = true;
+            this.lblFear.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblFear.Location = new System.Drawing.Point(2, 244);
+            this.lblFear.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.lblFear.Name = "lblFear";
+            this.lblFear.Size = new System.Drawing.Size(67, 24);
+            this.lblFear.TabIndex = 11;
+            this.lblFear.Text = "Fear";
+            this.lblFear.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.toolTip1.SetToolTip(this.lblFear, "Fear level of this team. No known effect.");
             // 
-            // initNumNud
+            // nudInitNum
             // 
-            this.initNumNud.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.initNumNud.EnteredValue = new decimal(new int[] {
+            this.nudInitNum.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.nudInitNum.EnteredValue = new decimal(new int[] {
             0,
             0,
             0,
             0});
-            this.initNumNud.Location = new System.Drawing.Point(73, 198);
-            this.initNumNud.Margin = new System.Windows.Forms.Padding(2);
-            this.initNumNud.Maximum = new decimal(new int[] {
+            this.nudInitNum.Location = new System.Drawing.Point(73, 198);
+            this.nudInitNum.Margin = new System.Windows.Forms.Padding(2);
+            this.nudInitNum.Maximum = new decimal(new int[] {
             255,
             0,
             0,
             0});
-            this.initNumNud.Name = "initNumNud";
-            this.initNumNud.SelectedText = "";
-            this.initNumNud.SelectionLength = 0;
-            this.initNumNud.SelectionStart = 0;
-            this.initNumNud.Size = new System.Drawing.Size(131, 20);
-            this.initNumNud.TabIndex = 19;
+            this.nudInitNum.Name = "nudInitNum";
+            this.nudInitNum.SelectedText = "";
+            this.nudInitNum.SelectionLength = 0;
+            this.nudInitNum.SelectionStart = 0;
+            this.nudInitNum.Size = new System.Drawing.Size(131, 20);
+            this.nudInitNum.TabIndex = 19;
             // 
             // maxAllowedNud
             // 
@@ -454,240 +460,265 @@ namespace MobiusEditor.Dialogs
             this.maxAllowedNud.Size = new System.Drawing.Size(131, 20);
             this.maxAllowedNud.TabIndex = 20;
             // 
-            // fearNud
+            // nudFear
             // 
-            this.fearNud.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.fearNud.EnteredValue = new decimal(new int[] {
+            this.nudFear.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.nudFear.EnteredValue = new decimal(new int[] {
             0,
             0,
             0,
             0});
-            this.fearNud.Location = new System.Drawing.Point(73, 246);
-            this.fearNud.Margin = new System.Windows.Forms.Padding(2);
-            this.fearNud.Maximum = new decimal(new int[] {
+            this.nudFear.Location = new System.Drawing.Point(73, 246);
+            this.nudFear.Margin = new System.Windows.Forms.Padding(2);
+            this.nudFear.Maximum = new decimal(new int[] {
             255,
             0,
             0,
             0});
-            this.fearNud.Name = "fearNud";
-            this.fearNud.SelectedText = "";
-            this.fearNud.SelectionLength = 0;
-            this.fearNud.SelectionStart = 0;
-            this.fearNud.Size = new System.Drawing.Size(131, 20);
-            this.fearNud.TabIndex = 21;
+            this.nudFear.Name = "nudFear";
+            this.nudFear.SelectedText = "";
+            this.nudFear.SelectionLength = 0;
+            this.nudFear.SelectionStart = 0;
+            this.nudFear.Size = new System.Drawing.Size(131, 20);
+            this.nudFear.TabIndex = 21;
             // 
-            // waypointLabel
+            // lblWaypoint
             // 
-            this.waypointLabel.AutoSize = true;
-            this.waypointLabel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.waypointLabel.Location = new System.Drawing.Point(2, 268);
-            this.waypointLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.waypointLabel.Name = "waypointLabel";
-            this.waypointLabel.Size = new System.Drawing.Size(67, 25);
-            this.waypointLabel.TabIndex = 15;
-            this.waypointLabel.Text = "Waypoint";
-            this.waypointLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.lblWaypoint.AutoSize = true;
+            this.lblWaypoint.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblWaypoint.Location = new System.Drawing.Point(2, 268);
+            this.lblWaypoint.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.lblWaypoint.Name = "lblWaypoint";
+            this.lblWaypoint.Size = new System.Drawing.Size(67, 25);
+            this.lblWaypoint.TabIndex = 15;
+            this.lblWaypoint.Text = "Waypoint";
+            this.lblWaypoint.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
-            // triggerLabel
+            // lblTrigger
             // 
-            this.triggerLabel.AutoSize = true;
-            this.triggerLabel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.triggerLabel.Location = new System.Drawing.Point(2, 293);
-            this.triggerLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.triggerLabel.Name = "triggerLabel";
-            this.triggerLabel.Size = new System.Drawing.Size(67, 25);
-            this.triggerLabel.TabIndex = 16;
-            this.triggerLabel.Text = "Trigger";
-            this.triggerLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.lblTrigger.AutoSize = true;
+            this.lblTrigger.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblTrigger.Location = new System.Drawing.Point(2, 293);
+            this.lblTrigger.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.lblTrigger.Name = "lblTrigger";
+            this.lblTrigger.Size = new System.Drawing.Size(67, 25);
+            this.lblTrigger.TabIndex = 16;
+            this.lblTrigger.Text = "Trigger";
+            this.lblTrigger.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
-            // waypointComboBox
+            // cmbWaypoint
             // 
-            this.waypointComboBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.waypointComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.waypointComboBox.FormattingEnabled = true;
-            this.waypointComboBox.Location = new System.Drawing.Point(73, 270);
-            this.waypointComboBox.Margin = new System.Windows.Forms.Padding(2);
-            this.waypointComboBox.Name = "waypointComboBox";
-            this.waypointComboBox.Size = new System.Drawing.Size(131, 21);
-            this.waypointComboBox.TabIndex = 22;
+            this.cmbWaypoint.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.cmbWaypoint.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbWaypoint.FormattingEnabled = true;
+            this.cmbWaypoint.Location = new System.Drawing.Point(73, 270);
+            this.cmbWaypoint.Margin = new System.Windows.Forms.Padding(2);
+            this.cmbWaypoint.Name = "cmbWaypoint";
+            this.cmbWaypoint.Size = new System.Drawing.Size(131, 21);
+            this.cmbWaypoint.TabIndex = 22;
             // 
-            // triggerComboBox
+            // cmbTrigger
             // 
-            this.triggerComboBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.triggerComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.triggerComboBox.FormattingEnabled = true;
-            this.triggerComboBox.Location = new System.Drawing.Point(73, 295);
-            this.triggerComboBox.Margin = new System.Windows.Forms.Padding(2);
-            this.triggerComboBox.Name = "triggerComboBox";
-            this.triggerComboBox.Size = new System.Drawing.Size(131, 21);
-            this.triggerComboBox.TabIndex = 23;
+            this.cmbTrigger.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.cmbTrigger.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbTrigger.FormattingEnabled = true;
+            this.cmbTrigger.Location = new System.Drawing.Point(73, 295);
+            this.cmbTrigger.Margin = new System.Windows.Forms.Padding(2);
+            this.cmbTrigger.Name = "cmbTrigger";
+            this.cmbTrigger.Size = new System.Drawing.Size(131, 21);
+            this.cmbTrigger.TabIndex = 23;
             // 
-            // label9
+            // lblPriority
             // 
-            this.label9.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label9.Location = new System.Drawing.Point(2, 172);
-            this.label9.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(67, 24);
-            this.label9.TabIndex = 19;
-            this.label9.Text = "Priority";
-            this.label9.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.toolTip1.SetToolTip(this.label9, "Priority given the team for recruiting purposes; higher\r\npriority means it can st" +
+            this.lblPriority.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblPriority.Location = new System.Drawing.Point(2, 172);
+            this.lblPriority.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.lblPriority.Name = "lblPriority";
+            this.lblPriority.Size = new System.Drawing.Size(67, 24);
+            this.lblPriority.TabIndex = 19;
+            this.lblPriority.Text = "Priority";
+            this.lblPriority.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.toolTip1.SetToolTip(this.lblPriority, "Priority given the team for recruiting purposes; higher\r\npriority means it can st" +
         "eal members from other teams.");
             // 
-            // recruitPriorityNud
+            // nudRecruitPriority
             // 
-            this.recruitPriorityNud.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.recruitPriorityNud.EnteredValue = new decimal(new int[] {
+            this.nudRecruitPriority.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.nudRecruitPriority.EnteredValue = new decimal(new int[] {
             0,
             0,
             0,
             0});
-            this.recruitPriorityNud.Location = new System.Drawing.Point(73, 174);
-            this.recruitPriorityNud.Margin = new System.Windows.Forms.Padding(2);
-            this.recruitPriorityNud.Maximum = new decimal(new int[] {
+            this.nudRecruitPriority.Location = new System.Drawing.Point(73, 174);
+            this.nudRecruitPriority.Margin = new System.Windows.Forms.Padding(2);
+            this.nudRecruitPriority.Maximum = new decimal(new int[] {
             2147483647,
             0,
             0,
             0});
-            this.recruitPriorityNud.Minimum = new decimal(new int[] {
+            this.nudRecruitPriority.Minimum = new decimal(new int[] {
             -2147483648,
             0,
             0,
             -2147483648});
-            this.recruitPriorityNud.Name = "recruitPriorityNud";
-            this.recruitPriorityNud.SelectedText = "";
-            this.recruitPriorityNud.SelectionLength = 0;
-            this.recruitPriorityNud.SelectionStart = 0;
-            this.recruitPriorityNud.Size = new System.Drawing.Size(131, 20);
-            this.recruitPriorityNud.TabIndex = 18;
+            this.nudRecruitPriority.Name = "nudRecruitPriority";
+            this.nudRecruitPriority.SelectedText = "";
+            this.nudRecruitPriority.SelectionLength = 0;
+            this.nudRecruitPriority.SelectionStart = 0;
+            this.nudRecruitPriority.Size = new System.Drawing.Size(131, 20);
+            this.nudRecruitPriority.TabIndex = 18;
             // 
             // tableLayoutPanel3
             // 
             this.tableLayoutPanel3.ColumnCount = 2;
-            this.tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel3.Controls.Add(this.label7, 0, 0);
-            this.tableLayoutPanel3.Controls.Add(this.label8, 1, 0);
-            this.tableLayoutPanel3.Controls.Add(this.teamsDataGridView, 0, 1);
-            this.tableLayoutPanel3.Controls.Add(this.missionsDataGridView, 1, 1);
+            this.tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 45F));
+            this.tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 55F));
+            this.tableLayoutPanel3.Controls.Add(this.panel1, 0, 0);
+            this.tableLayoutPanel3.Controls.Add(this.panel2, 1, 0);
             this.tableLayoutPanel3.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel3.Location = new System.Drawing.Point(212, 2);
             this.tableLayoutPanel3.Margin = new System.Windows.Forms.Padding(2);
             this.tableLayoutPanel3.Name = "tableLayoutPanel3";
-            this.tableLayoutPanel3.RowCount = 2;
+            this.tableLayoutPanel3.RowCount = 1;
             this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel3.Size = new System.Drawing.Size(466, 352);
             this.tableLayoutPanel3.TabIndex = 24;
             // 
-            // label7
+            // panel1
             // 
-            this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(2, 0);
-            this.label7.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(39, 13);
-            this.label7.TabIndex = 0;
-            this.label7.Text = "Teams";
+            this.panel1.Controls.Add(this.lblLine1);
+            this.panel1.Controls.Add(this.lblTeams);
+            this.panel1.Controls.Add(this.btnAddTeam);
+            this.panel1.Controls.Add(this.pnlTeamsScroll);
+            this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panel1.Location = new System.Drawing.Point(0, 0);
+            this.panel1.Margin = new System.Windows.Forms.Padding(0);
+            this.panel1.Name = "panel1";
+            this.panel1.Size = new System.Drawing.Size(209, 352);
+            this.panel1.TabIndex = 32;
             // 
-            // label8
+            // lblLine1
             // 
-            this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(235, 0);
-            this.label8.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(38, 13);
-            this.label8.TabIndex = 1;
-            this.label8.Text = "Orders";
+            this.lblLine1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
+            this.lblLine1.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.lblLine1.Location = new System.Drawing.Point(2, 0);
+            this.lblLine1.Name = "lblLine1";
+            this.lblLine1.Size = new System.Drawing.Size(2, 352);
+            this.lblLine1.TabIndex = 4;
             // 
-            // teamsDataGridView
+            // lblTeams
             // 
-            this.teamsDataGridView.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells;
-            this.teamsDataGridView.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.AllCells;
-            this.teamsDataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.teamsDataGridView.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.teamsTypeColumn,
-            this.teamsCountColumn});
-            this.teamsDataGridView.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.teamsDataGridView.Location = new System.Drawing.Point(2, 15);
-            this.teamsDataGridView.Margin = new System.Windows.Forms.Padding(2);
-            this.teamsDataGridView.Name = "teamsDataGridView";
-            this.teamsDataGridView.RowTemplate.Height = 28;
-            this.teamsDataGridView.Size = new System.Drawing.Size(229, 335);
-            this.teamsDataGridView.TabIndex = 30;
-            this.teamsDataGridView.VirtualMode = true;
-            this.teamsDataGridView.CancelRowEdit += new System.Windows.Forms.QuestionEventHandler(this.teamsDataGridView_CancelRowEdit);
-            this.teamsDataGridView.CellEnter += new System.Windows.Forms.DataGridViewCellEventHandler(this.teamsDataGridView_CellEnter);
-            this.teamsDataGridView.CellMouseDown += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.teamsDataGridView_CellMouseDown);
-            this.teamsDataGridView.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(teamsDataGridView_CellValueChanged);
-            this.teamsDataGridView.CellValueNeeded += new System.Windows.Forms.DataGridViewCellValueEventHandler(this.teamsDataGridView_CellValueNeeded);
-            this.teamsDataGridView.CellValuePushed += new System.Windows.Forms.DataGridViewCellValueEventHandler(this.teamsDataGridView_CellValuePushed);
-            this.teamsDataGridView.CurrentCellDirtyStateChanged += new System.EventHandler(this.teamsDataGridView_CurrentCellDirtyStateChanged);
-            this.teamsDataGridView.DataError += new System.Windows.Forms.DataGridViewDataErrorEventHandler(this.DataGridView_DataError);
-            this.teamsDataGridView.NewRowNeeded += new System.Windows.Forms.DataGridViewRowEventHandler(this.teamsDataGridView_NewRowNeeded);
-            this.teamsDataGridView.RowDirtyStateNeeded += new System.Windows.Forms.QuestionEventHandler(this.teamsDataGridView_RowDirtyStateNeeded);
-            this.teamsDataGridView.RowValidated += new System.Windows.Forms.DataGridViewCellEventHandler(this.teamsDataGridView_RowValidated);
-            this.teamsDataGridView.UserAddedRow += new System.Windows.Forms.DataGridViewRowEventHandler(this.teamsDataGridView_UserAddedRow);
-            this.teamsDataGridView.UserDeletedRow += new System.Windows.Forms.DataGridViewRowEventHandler(this.teamsDataGridView_UserDeletedRow);
-            this.teamsDataGridView.UserDeletingRow += new System.Windows.Forms.DataGridViewRowCancelEventHandler(this.teamsDataGridView_UserDeletingRow);
-            this.teamsDataGridView.Leave += new System.EventHandler(this.teamsDataGridView_Leave);
+            this.lblTeams.AutoSize = true;
+            this.lblTeams.Location = new System.Drawing.Point(8, 8);
+            this.lblTeams.Name = "lblTeams";
+            this.lblTeams.Size = new System.Drawing.Size(39, 13);
+            this.lblTeams.TabIndex = 3;
+            this.lblTeams.Text = "Teams";
             // 
-            // teamsTypeColumn
+            // btnAddTeam
             // 
-            this.teamsTypeColumn.HeaderText = "Type";
-            this.teamsTypeColumn.Name = "teamsTypeColumn";
-            this.teamsTypeColumn.Width = 39;
+            this.btnAddTeam.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnAddTeam.AutoSize = true;
+            this.btnAddTeam.Location = new System.Drawing.Point(144, 3);
+            this.btnAddTeam.Name = "btnAddTeam";
+            this.btnAddTeam.Size = new System.Drawing.Size(62, 23);
+            this.btnAddTeam.TabIndex = 0;
+            this.btnAddTeam.Text = "Add team";
+            this.btnAddTeam.UseVisualStyleBackColor = true;
+            this.btnAddTeam.Click += new System.EventHandler(this.BtnAddTeam_Click);
             // 
-            // teamsCountColumn
+            // pnlTeamsScroll
             // 
-            this.teamsCountColumn.HeaderText = "Count";
-            this.teamsCountColumn.Name = "teamsCountColumn";
-            this.teamsCountColumn.Width = 60;
+            this.pnlTeamsScroll.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.pnlTeamsScroll.AutoScroll = true;
+            this.pnlTeamsScroll.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.pnlTeamsScroll.Controls.Add(this.tilTeams);
+            this.pnlTeamsScroll.Location = new System.Drawing.Point(11, 33);
+            this.pnlTeamsScroll.Margin = new System.Windows.Forms.Padding(0);
+            this.pnlTeamsScroll.Name = "pnlTeamsScroll";
+            this.pnlTeamsScroll.Size = new System.Drawing.Size(198, 321);
+            this.pnlTeamsScroll.TabIndex = 1;
             // 
-            // missionsDataGridView
+            // tilTeams
             // 
-            this.missionsDataGridView.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells;
-            this.missionsDataGridView.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.AllCells;
-            this.missionsDataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.missionsDataGridView.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.missionsMissionColumn,
-            this.missionsArgumentColumn});
-            this.missionsDataGridView.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.missionsDataGridView.Location = new System.Drawing.Point(235, 15);
-            this.missionsDataGridView.Margin = new System.Windows.Forms.Padding(2);
-            this.missionsDataGridView.Name = "missionsDataGridView";
-            this.missionsDataGridView.RowTemplate.Height = 28;
-            this.missionsDataGridView.Size = new System.Drawing.Size(229, 335);
-            this.missionsDataGridView.TabIndex = 31;
-            this.missionsDataGridView.VirtualMode = true;
-            this.missionsDataGridView.CancelRowEdit += new System.Windows.Forms.QuestionEventHandler(this.missionsDataGridView_CancelRowEdit);
-            this.missionsDataGridView.CellEnter += new System.Windows.Forms.DataGridViewCellEventHandler(this.missionsDataGridView_CellEnter);
-            this.missionsDataGridView.CellMouseDown += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.missionsDataGridView_CellMouseDown);
-            this.missionsDataGridView.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.missionsDataGridView_CellValueChanged);
-            this.missionsDataGridView.CellValueNeeded += new System.Windows.Forms.DataGridViewCellValueEventHandler(this.missionsDataGridView_CellValueNeeded);
-            this.missionsDataGridView.CellValuePushed += new System.Windows.Forms.DataGridViewCellValueEventHandler(this.missionsDataGridView_CellValuePushed);
-            this.missionsDataGridView.CurrentCellDirtyStateChanged += new System.EventHandler(this.missionsDataGridView_CurrentCellDirtyStateChanged);
-            this.missionsDataGridView.DataError += new System.Windows.Forms.DataGridViewDataErrorEventHandler(this.DataGridView_DataError);
-            this.missionsDataGridView.NewRowNeeded += new System.Windows.Forms.DataGridViewRowEventHandler(this.missionsDataGridView_NewRowNeeded);
-            this.missionsDataGridView.RowDirtyStateNeeded += new System.Windows.Forms.QuestionEventHandler(this.missionsDataGridView_RowDirtyStateNeeded);
-            this.missionsDataGridView.RowValidated += new System.Windows.Forms.DataGridViewCellEventHandler(this.missionsDataGridView_RowValidated);
-            this.missionsDataGridView.UserAddedRow += new System.Windows.Forms.DataGridViewRowEventHandler(this.missionsDataGridView_UserAddedRow);
-            this.missionsDataGridView.UserDeletedRow += new System.Windows.Forms.DataGridViewRowEventHandler(this.missionsDataGridView_UserDeletedRow);
-            this.missionsDataGridView.UserDeletingRow += new System.Windows.Forms.DataGridViewRowCancelEventHandler(this.missionsDataGridView_UserDeletingRow);
-            this.missionsDataGridView.Leave += new System.EventHandler(this.missionsDataGridView_Leave);
+            this.tilTeams.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.tilTeams.Location = new System.Drawing.Point(0, 0);
+            this.tilTeams.Margin = new System.Windows.Forms.Padding(0);
+            this.tilTeams.Name = "tilTeams";
+            this.tilTeams.Size = new System.Drawing.Size(198, 150);
+            this.tilTeams.TabIndex = 1;
             // 
-            // missionsMissionColumn
+            // panel2
             // 
-            this.missionsMissionColumn.HeaderText = "Order";
-            this.missionsMissionColumn.Name = "missionsMissionColumn";
-            this.missionsMissionColumn.Width = 39;
+            this.panel2.Controls.Add(this.lblLine2);
+            this.panel2.Controls.Add(this.lblOrders);
+            this.panel2.Controls.Add(this.btnAddMission);
+            this.panel2.Controls.Add(this.pnlMissionsScroll);
+            this.panel2.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panel2.Location = new System.Drawing.Point(209, 0);
+            this.panel2.Margin = new System.Windows.Forms.Padding(0);
+            this.panel2.Name = "panel2";
+            this.panel2.Size = new System.Drawing.Size(257, 352);
+            this.panel2.TabIndex = 33;
             // 
-            // missionsArgumentColumn
+            // lblLine2
             // 
-            this.missionsArgumentColumn.HeaderText = "Argument";
-            this.missionsArgumentColumn.Name = "missionsArgumentColumn";
-            this.missionsArgumentColumn.Width = 77;
+            this.lblLine2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
+            this.lblLine2.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.lblLine2.Location = new System.Drawing.Point(0, 0);
+            this.lblLine2.Name = "lblLine2";
+            this.lblLine2.Size = new System.Drawing.Size(2, 352);
+            this.lblLine2.TabIndex = 5;
+            // 
+            // lblOrders
+            // 
+            this.lblOrders.AutoSize = true;
+            this.lblOrders.Location = new System.Drawing.Point(8, 8);
+            this.lblOrders.Name = "lblOrders";
+            this.lblOrders.Size = new System.Drawing.Size(38, 13);
+            this.lblOrders.TabIndex = 3;
+            this.lblOrders.Text = "Orders";
+            // 
+            // btnAddMission
+            // 
+            this.btnAddMission.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnAddMission.AutoSize = true;
+            this.btnAddMission.Location = new System.Drawing.Point(193, 2);
+            this.btnAddMission.Name = "btnAddMission";
+            this.btnAddMission.Size = new System.Drawing.Size(63, 23);
+            this.btnAddMission.TabIndex = 0;
+            this.btnAddMission.Text = "Add order";
+            this.btnAddMission.UseVisualStyleBackColor = true;
+            this.btnAddMission.Click += new System.EventHandler(this.BtnAddMission_Click);
+            // 
+            // pnlMissionsScroll
+            // 
+            this.pnlMissionsScroll.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.pnlMissionsScroll.AutoScroll = true;
+            this.pnlMissionsScroll.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.pnlMissionsScroll.Controls.Add(this.milMissions);
+            this.pnlMissionsScroll.Location = new System.Drawing.Point(11, 33);
+            this.pnlMissionsScroll.Margin = new System.Windows.Forms.Padding(0);
+            this.pnlMissionsScroll.Name = "pnlMissionsScroll";
+            this.pnlMissionsScroll.Size = new System.Drawing.Size(248, 321);
+            this.pnlMissionsScroll.TabIndex = 0;
+            // 
+            // milMissions
+            // 
+            this.milMissions.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.milMissions.Location = new System.Drawing.Point(0, 0);
+            this.milMissions.Margin = new System.Windows.Forms.Padding(0);
+            this.milMissions.Name = "milMissions";
+            this.milMissions.Size = new System.Drawing.Size(248, 150);
+            this.milMissions.TabIndex = 1;
             // 
             // teamTypesListView
             // 
@@ -706,10 +737,10 @@ namespace MobiusEditor.Dialogs
             this.teamTypesListView.TabIndex = 0;
             this.teamTypesListView.UseCompatibleStateImageBehavior = false;
             this.teamTypesListView.View = System.Windows.Forms.View.Details;
-            this.teamTypesListView.AfterLabelEdit += new System.Windows.Forms.LabelEditEventHandler(this.teamTypesListView_AfterLabelEdit);
-            this.teamTypesListView.SelectedIndexChanged += new System.EventHandler(this.teamTypesListView_SelectedIndexChanged);
-            this.teamTypesListView.KeyDown += new System.Windows.Forms.KeyEventHandler(this.teamTypesListView_KeyDown);
-            this.teamTypesListView.MouseDown += new System.Windows.Forms.MouseEventHandler(this.teamTypesListView_MouseDown);
+            this.teamTypesListView.AfterLabelEdit += new System.Windows.Forms.LabelEditEventHandler(this.TeamTypesListView_AfterLabelEdit);
+            this.teamTypesListView.SelectedIndexChanged += new System.EventHandler(this.TeamTypesListView_SelectedIndexChanged);
+            this.teamTypesListView.KeyDown += new System.Windows.Forms.KeyEventHandler(this.TeamTypesListView_KeyDown);
+            this.teamTypesListView.MouseDown += new System.Windows.Forms.MouseEventHandler(this.TeamTypesListView_MouseDown);
             // 
             // teamTypesContextMenuStrip
             // 
@@ -726,7 +757,7 @@ namespace MobiusEditor.Dialogs
             this.addTeamTypeToolStripMenuItem.Name = "addTeamTypeToolStripMenuItem";
             this.addTeamTypeToolStripMenuItem.Size = new System.Drawing.Size(203, 22);
             this.addTeamTypeToolStripMenuItem.Text = "&Add Team Type (Ctrl+A)";
-            this.addTeamTypeToolStripMenuItem.Click += new System.EventHandler(this.addTeamTypeToolStripMenuItem_Click);
+            this.addTeamTypeToolStripMenuItem.Click += new System.EventHandler(this.AddTeamTypeToolStripMenuItem_Click);
             // 
             // renameTeamTypeToolStripMenuItem
             // 
@@ -740,7 +771,7 @@ namespace MobiusEditor.Dialogs
             this.removeTeamTypeToolStripMenuItem.Name = "removeTeamTypeToolStripMenuItem";
             this.removeTeamTypeToolStripMenuItem.Size = new System.Drawing.Size(203, 22);
             this.removeTeamTypeToolStripMenuItem.Text = "&Remove Team Type (Del)";
-            this.removeTeamTypeToolStripMenuItem.Click += new System.EventHandler(this.removeTeamTypeToolStripMenuItem_Click);
+            this.removeTeamTypeToolStripMenuItem.Click += new System.EventHandler(this.RemoveTeamTypeToolStripMenuItem_Click);
             // 
             // TeamTypesDialog
             // 
@@ -773,14 +804,17 @@ namespace MobiusEditor.Dialogs
             this.teamTypeTableLayoutPanel.PerformLayout();
             this.tableLayoutPanel2.ResumeLayout(false);
             this.tableLayoutPanel2.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.initNumNud)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudInitNum)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.maxAllowedNud)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.fearNud)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.recruitPriorityNud)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudFear)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudRecruitPriority)).EndInit();
             this.tableLayoutPanel3.ResumeLayout(false);
-            this.tableLayoutPanel3.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.teamsDataGridView)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.missionsDataGridView)).EndInit();
+            this.panel1.ResumeLayout(false);
+            this.panel1.PerformLayout();
+            this.pnlTeamsScroll.ResumeLayout(false);
+            this.panel2.ResumeLayout(false);
+            this.panel2.PerformLayout();
+            this.pnlMissionsScroll.ResumeLayout(false);
             this.teamTypesContextMenuStrip.ResumeLayout(false);
             this.ResumeLayout(false);
 
@@ -800,39 +834,43 @@ namespace MobiusEditor.Dialogs
         private System.Windows.Forms.ToolStripMenuItem removeTeamTypeToolStripMenuItem;
         private System.Windows.Forms.TableLayoutPanel teamTypeTableLayoutPanel;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel2;
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.ComboBox houseComboBox;
-        private System.Windows.Forms.CheckBox roundaboutCheckBox;
-        private System.Windows.Forms.CheckBox learningCheckBox;
-        private System.Windows.Forms.CheckBox suicideCheckBox;
-        private System.Windows.Forms.CheckBox autocreateCheckBox;
-        private System.Windows.Forms.CheckBox mercernaryCheckBox;
-        private System.Windows.Forms.CheckBox reinforcableCheckBox;
-        private System.Windows.Forms.CheckBox prebuiltCheckBox;
-        private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.Label label4;
-        private MobiusEditor.Controls.EnhNumericUpDown initNumNud;
+        private System.Windows.Forms.Label lblHouse;
+        private System.Windows.Forms.ComboBox cmbHouse;
+        private System.Windows.Forms.CheckBox chbRoundabout;
+        private System.Windows.Forms.CheckBox chbLearning;
+        private System.Windows.Forms.CheckBox chbSuicide;
+        private System.Windows.Forms.CheckBox chbAutocreate;
+        private System.Windows.Forms.CheckBox chbMercernary;
+        private System.Windows.Forms.CheckBox chbReinforcable;
+        private System.Windows.Forms.CheckBox chbPrebuilt;
+        private System.Windows.Forms.Label lblInitNum;
+        private System.Windows.Forms.Label lblMaxAllowed;
+        private System.Windows.Forms.Label lblFear;
+        private MobiusEditor.Controls.EnhNumericUpDown nudInitNum;
         private MobiusEditor.Controls.EnhNumericUpDown maxAllowedNud;
-        private MobiusEditor.Controls.EnhNumericUpDown fearNud;
-        private System.Windows.Forms.Label waypointLabel;
-        private System.Windows.Forms.Label triggerLabel;
-        private System.Windows.Forms.ComboBox waypointComboBox;
-        private System.Windows.Forms.ComboBox triggerComboBox;
+        private MobiusEditor.Controls.EnhNumericUpDown nudFear;
+        private System.Windows.Forms.Label lblWaypoint;
+        private System.Windows.Forms.Label lblTrigger;
+        private System.Windows.Forms.ComboBox cmbWaypoint;
+        private System.Windows.Forms.ComboBox cmbTrigger;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel3;
-        private System.Windows.Forms.Label label7;
-        private System.Windows.Forms.Label label8;
-        private System.Windows.Forms.DataGridView teamsDataGridView;
-        private System.Windows.Forms.DataGridView missionsDataGridView;
-        private System.Windows.Forms.Label label9;
-        private MobiusEditor.Controls.EnhNumericUpDown recruitPriorityNud;
-        private System.Windows.Forms.DataGridViewComboBoxColumn teamsTypeColumn;
-        private System.Windows.Forms.DataGridViewTextBoxColumn teamsCountColumn;
-        private System.Windows.Forms.DataGridViewComboBoxColumn missionsMissionColumn;
-        private System.Windows.Forms.DataGridViewTextBoxColumn missionsArgumentColumn;
+        private System.Windows.Forms.Label lblPriority;
+        private MobiusEditor.Controls.EnhNumericUpDown nudRecruitPriority;
         private FlowLayoutPanel flowLayoutPanel2;
-        private Button btnAdd;
+        private Button btnAddTeamType;
         private ToolStripMenuItem renameTeamTypeToolStripMenuItem;
         private ToolTip toolTip1;
+        private Panel panel1;
+        private Button btnAddTeam;
+        private Panel pnlTeamsScroll;
+        private Controls.TeamItemsList tilTeams;
+        private Panel panel2;
+        private Button btnAddMission;
+        private Panel pnlMissionsScroll;
+        private Controls.MissionItemsList milMissions;
+        private Label lblTeams;
+        private Label lblOrders;
+        private Label lblLine1;
+        private Label lblLine2;
     }
 }

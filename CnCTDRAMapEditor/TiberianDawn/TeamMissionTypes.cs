@@ -12,29 +12,30 @@
 // distributed with this program. You should have received a copy of the 
 // GNU General Public License along with permitted additional restrictions 
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
+using MobiusEditor.Model;
 using System.Collections.Generic;
 
 namespace MobiusEditor.TiberianDawn
 {
     public static class TeamMissionTypes
     {
-        private static readonly string[] Types = new string[]
+        private static readonly TeamMission[] Types = new TeamMission[]
         {
-            "Attack Base",
-            "Attack Units",
-            "Attack Civil.",
-            "Rampage",
-            "Defend Base",
-            "Move",
-            "Move to Cell",
-            "Retreat",
-            "Guard",
-            "Loop",
-            "Attack Tarcom",
-            "Unload"
+            new TeamMission("Attack Base", TeamMissionArgType.Time),
+            new TeamMission("Attack Units", TeamMissionArgType.Time),
+            new TeamMission("Attack Civil.", TeamMissionArgType.Time),
+            new TeamMission("Rampage", TeamMissionArgType.Time),
+            new TeamMission("Defend Base", TeamMissionArgType.Time),
+            new TeamMission("Move", TeamMissionArgType.Waypoint),
+            new TeamMission("Move to Cell", TeamMissionArgType.Number),
+            new TeamMission("Retreat", TeamMissionArgType.Time),
+            new TeamMission("Guard", TeamMissionArgType.Time),
+            new TeamMission("Loop", TeamMissionArgType.Number),
+            new TeamMission("Attack Tarcom", TeamMissionArgType.Tarcom),
+            new TeamMission("Unload", TeamMissionArgType.Waypoint),
         };
 
-        public static IEnumerable<string> GetTypes()
+        public static IEnumerable<TeamMission> GetTypes()
         {
             return Types;
         }

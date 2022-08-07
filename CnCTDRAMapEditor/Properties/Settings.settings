@@ -57,7 +57,7 @@
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="ModsToLoad" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">2123912706;Tiberian_Dawn\UFOTile;Tiberian_Dawn\ConcretePavement</Value>
+      <Value Profile="(Default)">2844969675;Tiberian_Dawn\ConcretePavementTD</Value>
     </Setting>
   </Settings>
 </SettingsFile>

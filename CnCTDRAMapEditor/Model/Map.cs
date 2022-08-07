@@ -143,7 +143,7 @@ namespace MobiusEditor.Model
 
         public readonly List<ITechnoType> TeamTechnoTypes;
 
-        public readonly string[] TeamMissionTypes;
+        public readonly TeamMission[] TeamMissionTypes;
 
         public readonly Dictionary<string, string> TeamMissionTypesInfo;
 
@@ -200,7 +200,7 @@ namespace MobiusEditor.Model
             IEnumerable<TerrainType> terrainTypes, IEnumerable<OverlayType> overlayTypes, IEnumerable<SmudgeType> smudgeTypes,
             IEnumerable<string> eventTypes, IEnumerable<string> actionTypes, IEnumerable<string> missionTypes,
             IEnumerable<DirectionType> directionTypes, IEnumerable<InfantryType> infantryTypes, IEnumerable<UnitType> unitTypes,
-            IEnumerable<BuildingType> buildingTypes, IEnumerable<string> teamMissionTypes, IEnumerable<string> teamMissionTypesInfo,
+            IEnumerable<BuildingType> buildingTypes, IEnumerable<TeamMission> teamMissionTypes, IEnumerable<string> teamMissionTypesInfo,
             IEnumerable<ITechnoType> teamTechnoTypes, IEnumerable<Waypoint> waypoints, IEnumerable<string> movieTypes, IEnumerable<string> themeTypes)
         {
             BasicSection = basicSection;
@@ -220,12 +220,12 @@ namespace MobiusEditor.Model
             UnitTypes = new List<UnitType>(unitTypes);
             BuildingTypes = new List<BuildingType>(buildingTypes);
             TeamMissionTypes = teamMissionTypes.ToArray();
-            TeamMissionTypesInfo = new Dictionary<string, string>();
+            TeamMissionTypesInfo = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
             string[] missionInfo = teamMissionTypesInfo.ToArray();
             int maxTeams = Math.Min(TeamMissionTypes.Length, missionInfo.Length);
             for (int i = 0; i < maxTeams; ++i)
             {
-                TeamMissionTypesInfo[TeamMissionTypes[i]] = missionInfo[i];
+                TeamMissionTypesInfo[TeamMissionTypes[i].Mission] = missionInfo[i];
             }
             TeamTechnoTypes = new List<ITechnoType>(teamTechnoTypes);
             MovieTypes = new List<string>(movieTypes);
@@ -637,7 +637,7 @@ namespace MobiusEditor.Model
             string[] teamMissionTypesInfo = new string[TeamMissionTypes.Length];
             for (int i = 0; i < TeamMissionTypes.Length; ++i)
             {
-                teamMissionTypesInfo[i] = TeamMissionTypesInfo.TryGetValue(TeamMissionTypes[i], out string info) ?
+                teamMissionTypesInfo[i] = TeamMissionTypesInfo.TryGetValue(TeamMissionTypes[i].Mission, out string info) ?
                     info : String.Empty;
             }
             var map = new Map(BasicSection, Theater, Metrics.Size, HouseType,

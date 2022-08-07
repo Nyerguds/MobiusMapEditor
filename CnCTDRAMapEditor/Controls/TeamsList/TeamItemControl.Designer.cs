@@ -47,28 +47,27 @@
             this.tableLayoutPanel1.ColumnCount = 3;
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 60F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 40F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 40F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 26F));
             this.tableLayoutPanel1.Controls.Add(this.panel2, 1, 0);
             this.tableLayoutPanel1.Controls.Add(this.panel1, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.panel3, 2, 0);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
+            this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 1;
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 32F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(300, 32);
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(300, 23);
             this.tableLayoutPanel1.TabIndex = 0;
             // 
             // panel2
             // 
             this.panel2.Controls.Add(this.numAmount);
             this.panel2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel2.Location = new System.Drawing.Point(156, 0);
+            this.panel2.Location = new System.Drawing.Point(164, 0);
             this.panel2.Margin = new System.Windows.Forms.Padding(0);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(104, 32);
+            this.panel2.Size = new System.Drawing.Size(109, 23);
             this.panel2.TabIndex = 2;
             // 
             // numAmount
@@ -79,13 +78,18 @@
             0,
             0,
             0});
-            this.numAmount.Location = new System.Drawing.Point(6, 7);
-            this.numAmount.Margin = new System.Windows.Forms.Padding(6);
+            this.numAmount.Location = new System.Drawing.Point(2, 1);
+            this.numAmount.Margin = new System.Windows.Forms.Padding(2);
+            this.numAmount.Maximum = new decimal(new int[] {
+            255,
+            0,
+            0,
+            0});
             this.numAmount.Name = "numAmount";
             this.numAmount.SelectedText = "";
             this.numAmount.SelectionLength = 0;
             this.numAmount.SelectionStart = 0;
-            this.numAmount.Size = new System.Drawing.Size(92, 20);
+            this.numAmount.Size = new System.Drawing.Size(107, 20);
             this.numAmount.TabIndex = 2;
             this.numAmount.ValueChanged += new System.EventHandler(this.numAmount_ValueChanged);
             // 
@@ -96,7 +100,7 @@
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Margin = new System.Windows.Forms.Padding(0);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(156, 32);
+            this.panel1.Size = new System.Drawing.Size(164, 23);
             this.panel1.TabIndex = 1;
             // 
             // cmbTechno
@@ -104,32 +108,34 @@
             this.cmbTechno.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.cmbTechno.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cmbTechno.FormattingEnabled = true;
-            this.cmbTechno.Location = new System.Drawing.Point(6, 7);
-            this.cmbTechno.Margin = new System.Windows.Forms.Padding(6);
+            this.cmbTechno.Location = new System.Drawing.Point(2, 1);
+            this.cmbTechno.Margin = new System.Windows.Forms.Padding(0);
             this.cmbTechno.Name = "cmbTechno";
-            this.cmbTechno.Size = new System.Drawing.Size(144, 21);
+            this.cmbTechno.Size = new System.Drawing.Size(162, 21);
             this.cmbTechno.TabIndex = 1;
+            this.cmbTechno.SelectedIndexChanged += new System.EventHandler(this.cmbTechno_SelectedIndexChanged);
             // 
             // panel3
             // 
             this.panel3.Controls.Add(this.btnRemove);
             this.panel3.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel3.Location = new System.Drawing.Point(260, 0);
+            this.panel3.Location = new System.Drawing.Point(273, 0);
             this.panel3.Margin = new System.Windows.Forms.Padding(0);
             this.panel3.Name = "panel3";
-            this.panel3.Size = new System.Drawing.Size(40, 32);
+            this.panel3.Size = new System.Drawing.Size(27, 23);
             this.panel3.TabIndex = 3;
             // 
             // btnRemove
             // 
-            this.btnRemove.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnRemove.Location = new System.Drawing.Point(6, 6);
-            this.btnRemove.Margin = new System.Windows.Forms.Padding(6);
+            this.btnRemove.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.btnRemove.Location = new System.Drawing.Point(2, 0);
+            this.btnRemove.Margin = new System.Windows.Forms.Padding(0);
             this.btnRemove.Name = "btnRemove";
-            this.btnRemove.Size = new System.Drawing.Size(28, 21);
+            this.btnRemove.Size = new System.Drawing.Size(21, 21);
             this.btnRemove.TabIndex = 0;
             this.btnRemove.Text = "x";
             this.btnRemove.UseVisualStyleBackColor = true;
+            this.btnRemove.Click += new System.EventHandler(this.btnRemove_Click);
             // 
             // TeamItemControl
             // 
@@ -137,7 +143,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.tableLayoutPanel1);
             this.Name = "TeamItemControl";
-            this.Size = new System.Drawing.Size(300, 32);
+            this.Size = new System.Drawing.Size(300, 23);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.numAmount)).EndInit();

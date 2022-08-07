@@ -12,43 +12,45 @@
 // distributed with this program. You should have received a copy of the 
 // GNU General Public License along with permitted additional restrictions 
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
+using MobiusEditor.Model;
+using System;
 using System.Collections.Generic;
 
 namespace MobiusEditor.RedAlert
 {
     public static class TeamMissionTypes
     {
-        private static readonly string[] Types = new string[]
+        private static readonly TeamMission[] Types = new TeamMission[]
         {
-            "Attack a Type...",
-            "Attack a Waypoint...",
-            "Change Formation...",
-            "Move to Waypoint...",
-            "Move to Cell...",
-            "Guard Area...",
-            "Jump to Order #...",
-            "Attack Tarcom...",
-            "Unload",
-            "Deploy",
-            "Follow Friendlies",
-            "Do This...",
-            "Set Global...",
-            "Invulnerable...",
-            "Load onto Transport",
-            "Spy on Building...",
-            "Patrol to..."
+            new TeamMission("Attack a Type...", TeamMissionArgType.OptionsList, (1, "Anything"), (2, "Buildings"), (3, "Harvesters"), (4, "Infantry"), (5, "Vehicles"), (6, "Ships"), (7, "Factories"), (8, "Base Defences"), (9, "Base Threats"), (10, "Power Facilities"), (11, "Fake Buildings")),
+            new TeamMission("Attack a Waypoint...", TeamMissionArgType.Waypoint),
+            new TeamMission("Change Formation...", TeamMissionArgType.OptionsList, (1, "Tight (surround weaker units)"), (2, "Spread Out"), (3, "Wedge North"), (4, "Wedge East"), (5, "Wedge South"), (6, "Wedge West"), (7, "Column N/S"), (8, "Line E/W")),
+            new TeamMission("Move to Waypoint...", TeamMissionArgType.Waypoint),
+            new TeamMission("Move to Cell...", TeamMissionArgType.Number),
+            new TeamMission("Guard Area...", TeamMissionArgType.Waypoint),
+            new TeamMission("Jump to Order #...", TeamMissionArgType.Number),
+            new TeamMission("Attack Tarcom...", TeamMissionArgType.Tarcom),
+            new TeamMission("Unload", TeamMissionArgType.None),
+            new TeamMission("Deploy", TeamMissionArgType.None),
+            new TeamMission("Follow Friendlies", TeamMissionArgType.None),
+            new TeamMission("Do This...", TeamMissionArgType.OptionsList, (0, "Sleep"), (1, "Attack"), (2, "Move"), (3, "Qmove"), (4, "Retreat"), (5, "Guard"), (6, "Sticky"), (7, "Enter"), (8, "Capture"), (9, "Harvest"), (10, "Area Guard"), (11, "Return"), (12, "Stop"), (13, "Ambush"), (14, "Hunt"), (15, "Unload"), (16, "Sabotage"), (20, "Rescue"), (22, "Harmless")),
+            new TeamMission("Set Global...", TeamMissionArgType.Number),
+            new TeamMission("Invulnerable...", TeamMissionArgType.Time),
+            new TeamMission("Load onto Transport", TeamMissionArgType.None),
+            new TeamMission("Spy on Building...", TeamMissionArgType.Waypoint),
+            new TeamMission("Patrol to...", TeamMissionArgType.Waypoint),
         };
 
-        public static IEnumerable<string> GetTypes()
+        public static IEnumerable<TeamMission> GetTypes()
         {
             return Types;
         }
 
         private static readonly string[] TypesInfo = new string[]
         {
-            " 1 = Anything\n 2 = Buildings\n 3 = Harvesters\n 4 = Infantry\n 5 = Vehicles\n 6 = Ships\n 7 = Factories\n 8 = Base Defences\n 9 = Base Threats\n10 = Power Facilities\n11 = Fake Buildings",
+            "Type to attack",
             "Waypoint number",
-            "1 = Tight (surround weaker units)\n2 = Spread Out\n3 = Wedge North\n4 = Wedge East\n5 = Wedge South\n6 = Wedge West\n7 = Column N/S\n8 = Line E/W",
+            "Formation",
             "Waypoint number",
             "Cell number",
             "Time in 1/10th min",
@@ -57,14 +59,14 @@ namespace MobiusEditor.RedAlert
             "",
             "",
             "",
-            " 0 = Sleep\n 1 = Attack\n 2 = Move\n 3 = Qmove\n 4 = Retreat\n 5 = Guard\n 6 = Sticky\n 7 = Enter\n 8 = Capture\n 9 = Harvest\n10 = Area Guard\n11 = Return\n12 = Stop\n13 = Ambush\n14 = Hunt\n15 = Unload\n16 = Sabotage\n17 = Construction (buildings only)\n18 = Selling (buildings only)\n19 = Repair (buildings only)\n20 = Rescue\n21 = Missile (buildings only)\n22 = Harmless",
+            "Action",
             "Global number to set.",
             "Time in 1/10th min",
             "",
             "Waypoint number",
             "Waypoint number",
         };
-        
+
         public static IEnumerable<string> GetTypesInfo()
         {
             return TypesInfo;

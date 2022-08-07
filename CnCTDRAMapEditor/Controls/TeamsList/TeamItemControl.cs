@@ -54,14 +54,39 @@ namespace MobiusEditor.Controls
             }
         }
 
-
         public void FocusValue()
         {
             this.cmbTechno.Select();
         }
 
+        private void cmbTechno_SelectedIndexChanged(Object sender, EventArgs e)
+        {
+            if (this.m_Loading || this.Info == null)
+            {
+                return;
+            }
+            this.Info.Type = this.cmbTechno.SelectedItem as ITechnoType;
+        }
+
         private void numAmount_ValueChanged(Object sender, EventArgs e)
         {
+            if (this.m_Loading || this.Info == null)
+            {
+                return;
+            }
+            this.Info.Count = (Byte)this.numAmount.Value;
+            if (this.m_Controller != null)
+                this.m_Controller.UpdateControlInfo(this.Info);
+        }
+
+        private void btnRemove_Click(Object sender, EventArgs e)
+        {
+            if (this.m_Loading || this.Info == null)
+            {
+                return;
+            }
+            // Setting type to null is the signal to delete.
+            this.Info.Type = null;
             if (this.m_Controller != null)
                 this.m_Controller.UpdateControlInfo(this.Info);
         }

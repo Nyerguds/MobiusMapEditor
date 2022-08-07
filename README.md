@@ -8,14 +8,6 @@ enhance compatibility with different kinds of systems and enhance the editor's s
 
 Right now, I'm not really looking into making this a joint project. Specific bug reports and suggestions are always welcome though, but post them as issues.
 
-### Upgrading
-
-The settings of the program are apparently automatically saved under
-
-%localappdata%\Nyerguds\
-
-So if you install a new version, and your settings are gone, just go there and copy the settings file to the newest folder.
-
 ---
 
 ## Change log
@@ -138,4 +130,6 @@ v1.4.0.4: [WIP]
 * The preview selection in the Steam publish dialog will now open in the correct folder.
 * The preview rendered for singleplayer maps for the Steam publish (which is not used by default) will show all map contents.
 * Removed crater types CR2 to CR6; they don't work correctly in either game and will just show the smallest size of CR1. Any craters of other types encountered on map load will now be converted to CR1.
-* [WIP: Fix errors in dropdown boxes in Teamtypes dialog.]
+* The Teamtypes dialog no longer uses data grids for its teams and orders.
+* The controls of the orders now correctly adapt to the types of each order, giving dropdowns for special choices lists and for waypoints.
+* The Waypoint that can be selected for a RA Teamtype now correctly starts from -1 as "(none)".

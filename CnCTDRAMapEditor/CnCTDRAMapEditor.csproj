@@ -132,6 +132,9 @@
     <Compile Include="Controls\BriefingSettings.Designer.cs">
       <DependentUpon>BriefingSettings.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\ComboBoxSmartWidth.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Controls\ControlsList\ControlsList.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -161,6 +164,16 @@
     <Compile Include="Controls\MenuButton.Designer.cs">
       <DependentUpon>MenuButton.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\MissionsList\MissionItemInfo.cs" />
+    <Compile Include="Controls\MissionsList\MissionItemsList.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\MissionsList\MissionItemControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\MissionsList\MissionItemControl.Designer.cs">
+      <DependentUpon>MissionItemControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="Controls\PropertiesComboBox.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -173,13 +186,14 @@
     <Compile Include="Controls\SmudgeProperties.Designer.cs">
       <DependentUpon>SmudgeProperties.cs</DependentUpon>
     </Compile>
-    <Compile Include="Controls\TeamItemControl.cs">
+    <Compile Include="Controls\TeamsList\TeamItemControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Controls\TeamItemControl.Designer.cs">
+    <Compile Include="Controls\TeamsList\TeamItemControl.Designer.cs">
       <DependentUpon>TeamItemControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="Controls\TeamItemsList.cs">
+    <Compile Include="Controls\TeamsList\TeamItemInfo.cs" />
+    <Compile Include="Controls\TeamsList\TeamItemsList.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Controls\TerrainProperties.cs">
@@ -512,6 +526,7 @@
     <Compile Include="Tools\Dialogs\WaypointsToolDialog.Designer.cs">
       <DependentUpon>WaypointsToolDialog.cs</DependentUpon>
     </Compile>
+    <Compile Include="Tools\DropDownItem.cs" />
     <Compile Include="Tools\InfantryTool.cs" />
     <Compile Include="Tools\OverlaysTool.cs" />
     <Compile Include="Tools\ResourcesTool.cs" />
@@ -558,11 +573,14 @@
     <EmbeddedResource Include="Controls\MapPanel.resx">
       <DependentUpon>MapPanel.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\MissionsList\MissionItemControl.resx">
+      <DependentUpon>MissionItemControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\SmudgeProperties.resx">
       <DependentUpon>SmudgeProperties.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Controls\TeamItemControl.resx">
+    <EmbeddedResource Include="Controls\TeamsList\TeamItemControl.resx">
       <DependentUpon>TeamItemControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\TerrainProperties.resx">

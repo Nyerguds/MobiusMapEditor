@@ -372,7 +372,7 @@ namespace MobiusEditor.TiberianDawn
 
             var teamTypesSection = ini.Sections.Extract("TeamTypes");
             // Make case insensitive dictionary of teamtype missions.
-            Dictionary<string, string> teamMissionTypes = Enumerable.ToDictionary(TeamMissionTypes.GetTypes(), t => t, StringComparer.OrdinalIgnoreCase);
+            Dictionary<string, TeamMission> teamMissionTypes = Enumerable.ToDictionary(TeamMissionTypes.GetTypes(), t => t.Mission, StringComparer.OrdinalIgnoreCase);
             if (teamTypesSection != null)
             {
                 foreach (var (Key, Value) in teamTypesSection)
@@ -399,7 +399,7 @@ namespace MobiusEditor.TiberianDawn
                             var classTokens = tokens[0].Split(':'); tokens.RemoveAt(0);
                             if (classTokens.Length == 2)
                             {
-                                var type = technoTypes.Where(t => t.Equals(classTokens[0])).FirstOrDefault();
+                                var type = technoTypes.Where(t => t.Name.Equals(classTokens[0], StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
                                 byte count;
                                 if (!byte.TryParse(classTokens[1], out count))
                                     count = 1;
@@ -424,7 +424,7 @@ namespace MobiusEditor.TiberianDawn
                             var missionTokens = tokens[0].Split(':'); tokens.RemoveAt(0);
                             if (missionTokens.Length == 2)
                             {
-                                string mission;
+                                TeamMission mission;
                                 // fix mission case sensitivity issues.
                                 teamMissionTypes.TryGetValue(missionTokens[0], out mission);
                                 byte count;
@@ -1214,10 +1214,10 @@ namespace MobiusEditor.TiberianDawn
             foreach(var teamType in Map.TeamTypes)
             {
                 var classes = teamType.Classes
-                    .Select(c => string.Format("{0}:{1}", c.Type.Name.ToLower(), c.Count))
+                    .Select(c => string.Format("{0}:{1}", c.Type.Name.ToUpperInvariant(), c.Count))
                     .ToArray();
                 var missions = teamType.Missions
-                    .Select(m => string.Format("{0}:{1}", m.Mission, m.Argument))
+                    .Select(m => string.Format("{0}:{1}", m.Mission.Mission, m.Argument))
                     .ToArray();
 
                 var tokens = new List<string>

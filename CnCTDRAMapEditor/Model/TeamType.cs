@@ -48,9 +48,55 @@ namespace MobiusEditor.Model
         }
     }
 
+    public enum TeamMissionArgType
+    {
+        None,
+        Number,
+        Time,
+        Waypoint,
+        OptionsList,
+        Tarcom,
+    }
+
+    public class TeamMission : ICloneable, IEquatable<TeamMission>
+    {
+        public string Mission { get; private set; }
+        public TeamMissionArgType ArgType { get; private set; }
+        public (int,string)[] DropdownOptions { get; private set; }
+
+        public TeamMission(String mission, TeamMissionArgType argType, params (int, string)[] dropdownOptions)
+        {
+            this.Mission = mission;
+            this.ArgType = argType;
+            if (dropdownOptions == null)
+            {
+                this.DropdownOptions = new (int, string)[0];
+            }
+            else
+            {
+                this.DropdownOptions = dropdownOptions.ToArray();
+            }
+        }
+
+        public Boolean Equals(TeamMission other)
+        {
+            return Mission == other.Mission;
+        }
+
+        public TeamMission Clone()
+        {
+            return new TeamMission(this.Mission, this.ArgType, this.DropdownOptions.Select( ddo => (ddo.Item1, ddo.Item2)).ToArray());
+        }
+
+        object ICloneable.Clone()
+        {
+            return Clone();
+        }
+    }
+
     public class TeamTypeMission : ICloneable, IEquatable<TeamTypeMission>
     {
-        public string Mission { get; set; }
+        public TeamMission Mission { get; set; }
 
         public int Argument { get; set; }
 
