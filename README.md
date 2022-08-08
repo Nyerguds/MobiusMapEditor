@@ -53,7 +53,7 @@ v1.4.0.1:
 * Added command line file argument support, which allows setting the editor as application for opening ini/mpr files.
 * House Edge reading now corrects values with case differences so they show up in the dropdown.
 * Centralised the House Edge array on the House class, and changed its order to a more logical North, East, South, West.
-* Fixed order of the Multi-House colours. It seems the error is not in the editor, but in bizarre mixed-up team color names in the remastered game itself.
+* Fixed order of the Multi-House colours. It seems the error is not in the editor, but in bizarre mixed-up team colour names in the remastered game itself.
 * Remapped Neutral (TD only) and Special as yellow, as they are in the game.
 * All tool windows will now save their position.
 * Tool windows for which no position was previously set will center themselves on the right edge of the editor.
@@ -133,3 +133,4 @@ v1.4.0.4: [WIP]
 * The Teamtypes dialog no longer uses data grids for its teams and orders.
 * The controls of the orders now correctly adapt to the types of each order, giving dropdowns for special choices lists and for waypoints.
 * The Waypoint that can be selected for a RA Teamtype now correctly starts from -1 as "(none)".
+* Fixed colour of "Special" in Red Alert to have the same colour as Spain.

@@ -153,7 +153,7 @@ namespace MobiusEditor.Model
 
         public bool IsPrebuilt { get; set; }
 
-        public int Origin { get; set; }
+        public int Origin { get; set; } = -1;
 
         public string Trigger { get; set; } = Model.Trigger.None;
 
@@ -202,7 +202,7 @@ namespace MobiusEditor.Model
                 && Fear == 0
                 && IsReinforcable == false
                 && IsPrebuilt == false
-                && Origin == 0
+                && Origin == -1
                 && Trigger == null
                 && Classes.Count == 0
                 && Missions.Count == 0;

@@ -80,7 +80,6 @@ namespace MobiusEditor.Tools.Dialogs
             // 
             // waypointCombo
             // 
-            this.waypointCombo.DisplayMember = "Name";
             this.waypointCombo.Dock = System.Windows.Forms.DockStyle.Fill;
             this.waypointCombo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.waypointCombo.FormattingEnabled = true;
@@ -89,7 +88,6 @@ namespace MobiusEditor.Tools.Dialogs
             this.waypointCombo.Name = "waypointCombo";
             this.waypointCombo.Size = new System.Drawing.Size(127, 28);
             this.waypointCombo.TabIndex = 1;
-            this.waypointCombo.ValueMember = "Type";
             // 
             // WaypointsToolDialog
             // 

@@ -63,7 +63,7 @@ namespace MobiusEditor.Model
 
         public override string ToString()
         {
-            return Name;
+            return String.Format("{0} [{1}]", Name, Cell.HasValue ? Cell.Value.ToString() : "-");
         }
     }
 }

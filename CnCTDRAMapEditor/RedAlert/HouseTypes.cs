@@ -32,7 +32,7 @@ namespace MobiusEditor.RedAlert
         public static readonly HouseType Good = new HouseType(8, "GoodGuy", "GOOD");
         public static readonly HouseType Bad = new HouseType(9, "BadGuy", "BAD");
         public static readonly HouseType Neutral = new HouseType(10, "Neutral");
-        public static readonly HouseType Special = new HouseType(11, "Special", "GOOD");
+        public static readonly HouseType Special = new HouseType(11, "Special", "SPAIN");
         public static readonly HouseType Multi1 = new HouseType(12, "Multi1", "MULTI1");
         public static readonly HouseType Multi2 = new HouseType(13, "Multi2", "MULTI2");
         public static readonly HouseType Multi3 = new HouseType(14, "Multi3", "MULTI3");

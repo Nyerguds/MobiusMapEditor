@@ -278,7 +278,7 @@ namespace MobiusEditor.RedAlert
                         teamType.RecruitPriority = int.Parse(tokens[0]); tokens.RemoveAt(0);
                         teamType.InitNum = byte.Parse(tokens[0]); tokens.RemoveAt(0);
                         teamType.MaxAllowed = byte.Parse(tokens[0]); tokens.RemoveAt(0);
-                        teamType.Origin = int.Parse(tokens[0]) + 1; tokens.RemoveAt(0);
+                        teamType.Origin = int.Parse(tokens[0]); tokens.RemoveAt(0);
                         teamType.Trigger = tokens[0]; tokens.RemoveAt(0);
 
                         var numClasses = int.Parse(tokens[0]); tokens.RemoveAt(0);
@@ -1262,7 +1262,7 @@ namespace MobiusEditor.RedAlert
                     teamType.RecruitPriority.ToString(),
                     teamType.InitNum.ToString(),
                     teamType.MaxAllowed.ToString(),
-                    (teamType.Origin - 1).ToString(),
+                    teamType.Origin.ToString(),
                     nameToIndexString(Map.Triggers, teamType.Trigger),
                     classes.Length.ToString(),
                     string.Join(",", classes),

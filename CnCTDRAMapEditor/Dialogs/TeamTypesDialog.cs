@@ -76,7 +76,7 @@ namespace MobiusEditor.Dialogs
             teamTypes = new List<TeamType>();
             backupTeamTypes = new List<TeamType>();
             Waypoint[] wps = plugin.Map.Waypoints;
-            this.wayPoints = Enumerable.Range(0, wps.Length).Select(wp => new DropDownItem<int>(wp, wps[wp].Name)).ToArray();
+            this.wayPoints = Enumerable.Range(0, wps.Length).Select(wp => new DropDownItem<int>(wp, wps[wp].Name + " [" + (wps[wp].Cell.HasValue ? wps[wp].Cell.Value.ToString() : "-") + "]")).ToArray();
             int nrOfTeams = Math.Min(maxTeams, plugin.Map.TeamTypes.Count);
             btnAddTeamType.Enabled = nrOfTeams < maxTeams;
             teamTypesListView.BeginUpdate();

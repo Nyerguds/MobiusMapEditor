@@ -12,6 +12,7 @@
 // distributed with this program. You should have received a copy of the 
 // GNU General Public License along with permitted additional restrictions 
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
+using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
 using MobiusEditor.Controls;
@@ -34,7 +35,6 @@ namespace MobiusEditor.Tools.Dialogs
 
         public override void Initialize(MapPanel mapPanel, MapLayerFlag activeLayers, ToolStripStatusLabel toolStatusLabel, ToolTip mouseToolTip, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> undoRedoList)
         {
-            WaypointCombo.DataSource = plugin.Map.Waypoints.Select(w => w.Name).ToArray();
             Tool = new WaypointsTool(mapPanel, activeLayers, toolStatusLabel, WaypointCombo, plugin, undoRedoList);
         }
     }

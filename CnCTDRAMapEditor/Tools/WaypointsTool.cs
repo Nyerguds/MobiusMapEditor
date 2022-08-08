@@ -17,6 +17,7 @@ using MobiusEditor.Event;
 using MobiusEditor.Interface;
 using MobiusEditor.Model;
 using MobiusEditor.Utility;
+using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -27,6 +28,7 @@ namespace MobiusEditor.Tools
     {
         private readonly ComboBox waypointCombo;
 
+
         private (Waypoint waypoint, int? cell)? undoWaypoint;
         private (Waypoint waypoint, int? cell)? redoWaypoint;
 
@@ -36,7 +38,7 @@ namespace MobiusEditor.Tools
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
             this.waypointCombo = waypointCombo;
-
+            this.waypointCombo.DataSource = plugin.Map.Waypoints.ToArray();
             UpdateStatus();
         }
 
@@ -91,7 +93,9 @@ namespace MobiusEditor.Tools
         {
             if (map.Metrics.GetCell(location, out int cell))
             {
-                var waypoint = map.Waypoints[waypointCombo.SelectedIndex];
+                int selected = waypointCombo.SelectedIndex;
+                Waypoint[] wp = map.Waypoints;
+                var waypoint = wp[selected];
                 if (waypoint.Cell != cell)
                 {
                     if (undoWaypoint == null)
@@ -105,10 +109,13 @@ namespace MobiusEditor.Tools
 
                     waypoint.Cell = cell;
                     redoWaypoint = (waypoint, waypoint.Cell);
-
                     CommitChange();
-
                     mapPanel.Invalidate();
+
+                    waypointCombo.DataSource = null;
+                    waypointCombo.Items.Clear();
+                    waypointCombo.DataSource = wp.ToArray();
+                    waypointCombo.SelectedIndex = selected;
 
                     plugin.Dirty = true;
                 }
@@ -119,7 +126,13 @@ namespace MobiusEditor.Tools
         {
             if (map.Metrics.GetCell(location, out int cell))
             {
-                var waypoint = map.Waypoints.Where(w => w.Cell == cell).FirstOrDefault();
+                Waypoint[] wp = map.Waypoints;
+                int waypointIndex = Enumerable.Range(0, wp.Length).Where(i => wp[i].Cell == cell).FirstOrDefault();
+                // why doesn't "FirstOrDefault" allow GIVING a default? Bah.
+                if (waypointIndex == 0 && wp[0].Cell != cell)
+                    waypointIndex = -1;
+                Waypoint waypoint = waypointIndex == -1 ? null : wp[waypointIndex];
+                //var waypoint = map.Waypoints.Where(w => w.Cell == cell).FirstOrDefault();
                 if (waypoint != null)
                 {
                     if (undoWaypoint == null)
@@ -129,11 +142,14 @@ namespace MobiusEditor.Tools
 
                     waypoint.Cell = null;
                     redoWaypoint = (waypoint, null);
-
                     CommitChange();
-
                     mapPanel.Invalidate();
 
+                    waypointCombo.DataSource = null;
+                    waypointCombo.Items.Clear();
+                    waypointCombo.DataSource = wp.ToArray();
+                    waypointCombo.SelectedIndex = waypointIndex;
+                    
                     plugin.Dirty = true;
                 }
             }
@@ -167,9 +183,10 @@ namespace MobiusEditor.Tools
         {
             if (map.Metrics.GetCell(location, out int cell))
             {
-                for (var i = 0; i < map.Waypoints.Length; ++i)
+                Waypoint[] wp = map.Waypoints;
+                for (var i = 0; i < wp.Length; ++i)
                 {
-                    if (map.Waypoints[i].Cell == cell)
+                    if (wp[i].Cell == cell)
                     {
                         waypointCombo.SelectedIndex = i;
                         break;

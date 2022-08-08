@@ -35,7 +35,7 @@ namespace MobiusEditor.RedAlert
             new TeamMission("Follow Friendlies", TeamMissionArgType.None),
             new TeamMission("Do This...", TeamMissionArgType.OptionsList, (0, "Sleep"), (1, "Attack"), (2, "Move"), (3, "Qmove"), (4, "Retreat"), (5, "Guard"), (6, "Sticky"), (7, "Enter"), (8, "Capture"), (9, "Harvest"), (10, "Area Guard"), (11, "Return"), (12, "Stop"), (13, "Ambush"), (14, "Hunt"), (15, "Unload"), (16, "Sabotage"), (20, "Rescue"), (22, "Harmless")),
             new TeamMission("Set Global...", TeamMissionArgType.Number),
-            new TeamMission("Invulnerable...", TeamMissionArgType.Time),
+            new TeamMission("Invulnerable", TeamMissionArgType.None),
             new TeamMission("Load onto Transport", TeamMissionArgType.None),
             new TeamMission("Spy on Building...", TeamMissionArgType.Waypoint),
             new TeamMission("Patrol to...", TeamMissionArgType.Waypoint),

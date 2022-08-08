@@ -43,7 +43,6 @@ namespace MobiusEditor.Utility
     public class Tileset
     {
         private static string DummyFormatTga = "DATA\\ART\\TEXTURES\\SRGB\\FALLBACK_DUMMY\\{0}_{1:D4}.tga";
-        private static string MissingTexture = "DATA\\ART\\TEXTURES\\SRGB\\COMMON\\MISC\\MISSING.TGA";
 
         private class TileData
         {

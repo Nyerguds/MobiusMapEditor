@@ -26,6 +26,7 @@ using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
 
@@ -101,6 +102,7 @@ namespace MobiusEditor
             this.filename = fileToOpen;
 
             InitializeComponent();
+            SetTitle();
 
             toolForms = new Dictionary<ToolType, IToolDialog>();
             viewToolStripButtons = new ViewToolStripButton[]
@@ -138,6 +140,20 @@ namespace MobiusEditor
 
             steamUpdateTimer.Interval = 500;
             steamUpdateTimer.Tick += SteamUpdateTimer_Tick;
+        }
+
+        private void SetTitle()
+        {
+            AssemblyName assn = Assembly.GetExecutingAssembly().GetName();
+            System.Version currentVersion = assn.Version;
+            if (filename != null)
+            {
+                this.Text = string.Format("CnC TDRA Map Editor v{0} - {1}", currentVersion, filename);
+            }
+            else
+            {
+                this.Text = string.Format("CnC TDRA Map Editor v{0}", currentVersion);
+            }
         }
 
         private void SteamUpdateTimer_Tick(object sender, EventArgs e)
@@ -302,7 +318,7 @@ namespace MobiusEditor
                 mapPanel.MapImage = plugin.MapImage;
 
                 filename = null;
-                Text = "CnC TDRA Map Editor";
+                SetTitle();
                 url.Clear();
 
                 ClearAllTools();
@@ -817,7 +833,7 @@ namespace MobiusEditor
 
             plugin.Dirty = false;
             filename = loadFilename;
-            Text = string.Format("CnC TDRA Map Editor - {0}", filename);
+            SetTitle();
 
             url.Clear();
 
@@ -862,10 +878,9 @@ namespace MobiusEditor
             {
                 MessageBox.Show(string.Format("Map file exceeds the maximum size of {0} bytes.", Globals.MaxMapSize), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-
             plugin.Dirty = false;
             filename = saveFilename;
-            Text = string.Format("CnC TDRA Map Editor - {0}", filename);
+            SetTitle();
 
             return true;
         }

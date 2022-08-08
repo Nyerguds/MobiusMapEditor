@@ -278,7 +278,7 @@ namespace MobiusEditor
             }
             DirectoryInfo currentParent = currentVersionConfigFileDir.Parent;
             DirectoryInfo previousSettingsDir = null;
-            if (currentVersionConfigFileDir.Exists && currentParent != null && currentParent.Exists)
+            if (currentParent != null && currentParent.Exists)
             {
                 try
                 {
