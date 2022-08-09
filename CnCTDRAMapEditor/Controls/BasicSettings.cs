@@ -29,12 +29,16 @@ namespace MobiusEditor.Controls
 
             playerComboBox.DataSource = plugin.Map.Houses.Select(h => h.Type.Name).ToArray();
             baseComboBox.DataSource = plugin.Map.Houses.Select(h => h.Type.Name).ToArray();
+            var themeData = plugin.Map.ThemeTypes.ToList();
+            themeData.Sort(new ExplorerComparer());
+            themeData.RemoveAll(v => "No Theme".Equals(v, StringComparison.InvariantCultureIgnoreCase));
+            themeData.Insert(0, "No Theme");           
+            themeComboBox.DataSource = themeData;
             // No need for matching to index here; [Basic] saves it by name, not index.
             var movData = plugin.Map.MovieTypes.ToList();
             movData.Sort(new ExplorerComparer());
             movData.RemoveAll(v => "x".Equals(v, StringComparison.InvariantCultureIgnoreCase));
             movData.Insert(0, "x");
-            themeComboBox.DataSource = movData.ToArray();
             introComboBox.DataSource = movData.ToArray();
             briefComboBox.DataSource = movData.ToArray();
             actionComboBox.DataSource = movData.ToArray();
@@ -90,8 +94,8 @@ namespace MobiusEditor.Controls
 
         private void CheckSinglePlayerOptions()
         {
-            Boolean sp = isSinglePlayerCheckBox.Checked;
-            introComboBox.Enabled = briefComboBox.Enabled = actionComboBox.Enabled = loseComboBox.Enabled = sp;
+            bool sp = isSinglePlayerCheckBox.Checked;
+            themeComboBox.Enabled = introComboBox.Enabled = briefComboBox.Enabled = actionComboBox.Enabled = loseComboBox.Enabled = sp;
             winComboBox.Enabled = win2ComboBox.Enabled = win3ComboBox.Enabled = win4ComboBox.Enabled = sp;
 
         }

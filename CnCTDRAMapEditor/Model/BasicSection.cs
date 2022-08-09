@@ -90,7 +90,7 @@ namespace MobiusEditor.Model
         public int CarryOverMoney { get => carryOverMoney; set => SetField(ref carryOverMoney, value); }
 
         private string intro;
-        [DefaultValue(null)]
+        [DefaultValue("x")]
         public string Intro { get => intro; set => SetField(ref intro, value); }
 
         private string theme;
