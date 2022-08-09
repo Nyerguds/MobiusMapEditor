@@ -3,12 +3,7 @@ using MobiusEditor.Interface;
 using MobiusEditor.Model;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace MobiusEditor.Controls
@@ -16,7 +11,7 @@ namespace MobiusEditor.Controls
     public partial class TeamItemControl : UserControl
     {
         public TeamTypeClass Info { get; set; }
-        private Boolean m_Loading;
+        private bool m_Loading;
         private ListedControlController<TeamTypeClass> m_Controller;
         private ITechnoType defaultType;
 
@@ -30,11 +25,28 @@ namespace MobiusEditor.Controls
         public TeamItemControl(TeamTypeClass info, ListedControlController<TeamTypeClass> controller, IEnumerable<ITechnoType> technos)
         {
             InitializeComponent();
-            this.m_Controller = controller;
-            ITechnoType[] technoTypes = technos.ToArray();
-            this.defaultType = technoTypes.FirstOrDefault();
-            this.cmbTechno.DataSource = technoTypes;
-            this.cmbTechno.DisplayMember = "Name";
+            SetInfo(info, controller, technos);
+        }
+
+        public void SetInfo(TeamTypeClass info, ListedControlController<TeamTypeClass> controller, IEnumerable<ITechnoType> technos)
+        {
+            try
+            {
+                this.m_Loading = true;
+                this.Info = null;
+                this.m_Controller = controller;
+                ITechnoType[] technoTypes = technos.ToArray();
+                this.defaultType = technoTypes.FirstOrDefault();
+                this.cmbTechno.DisplayMember = null;
+                this.cmbTechno.DataSource = null;
+                this.cmbTechno.Items.Clear();
+                this.cmbTechno.DataSource = technoTypes;
+                this.cmbTechno.DisplayMember = "Name";
+            }
+            finally
+            {
+                this.m_Loading = false;
+            }
             if (info != null)
                 UpdateInfo(info);
         }
@@ -43,14 +55,14 @@ namespace MobiusEditor.Controls
         {
             try
             {
-                m_Loading = true;
+                this.m_Loading = true;
                 this.Info = info;
                 this.cmbTechno.Text = info != null ? info.Type.Name : defaultType.Name;
                 this.numAmount.Value = info != null ? info.Count : 0;
             }
             finally
             {
-                m_Loading = false;
+                this.m_Loading = false;
             }
         }
 

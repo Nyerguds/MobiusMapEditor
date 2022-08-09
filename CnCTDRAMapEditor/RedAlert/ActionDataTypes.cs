@@ -67,32 +67,32 @@ namespace MobiusEditor.RedAlert
             VOC_NONE = -1,
             VOC_GIRL_OKAY,          // "okay"
             VOC_GIRL_YEAH,          // "yeah?"
-            VOC_GUY_OKAY,           //	"okay"
+            VOC_GUY_OKAY,           // "okay"
             VOC_GUY_YEAH,           // "yeah?"
             VOC_MINELAY1,           // mine layer sound
-            VOC_ACKNOWL,            //	"acknowledged"
-            VOC_AFFIRM,             //	"affirmative"
-            VOC_AWAIT,              //	"awaiting orders"
-            VOC_ENG_AFFIRM,     // Engineer: "affirmative"
+            VOC_ACKNOWL,            // "acknowledged"
+            VOC_AFFIRM,             // "affirmative"
+            VOC_AWAIT,              // "awaiting orders"
+            VOC_ENG_AFFIRM,         // Engineer: "affirmative"
             VOC_ENG_ENG,            // Engineer: "engineering"
-            VOC_NO_PROB,            //	"not a problem"
-            VOC_READY,              //	"ready and waiting"
-            VOC_REPORT,             //	"reporting"
-            VOC_RIGHT_AWAY,     //	"right away sir"
-            VOC_ROGER,              //	"roger"
-            VOC_UGOTIT,             //	"you got it"
-            VOC_VEHIC,              //	"vehicle reporting"
-            VOC_YESSIR,             //	"yes sir"
-            VOC_SCREAM1,            //	short infantry scream
-            VOC_SCREAM3,            //	short infantry scream
-            VOC_SCREAM4,            //	short infantry scream
-            VOC_SCREAM5,            //	short infantry scream
-            VOC_SCREAM6,            //	short infantry scream
-            VOC_SCREAM7,            //	short infantry scream
-            VOC_SCREAM10,           //	short infantry scream
-            VOC_SCREAM11,           //	short infantry scream
-            VOC_YELL1,              //	long infantry scream
-            VOC_CHRONO,             //	Chronosphere sound.
+            VOC_NO_PROB,            // "not a problem"
+            VOC_READY,              // "ready and waiting"
+            VOC_REPORT,             // "reporting"
+            VOC_RIGHT_AWAY,         // "right away sir"
+            VOC_ROGER,              // "roger"
+            VOC_UGOTIT,             // "you got it"
+            VOC_VEHIC,              // "vehicle reporting"
+            VOC_YESSIR,             // "yes sir"
+            VOC_SCREAM1,            // short infantry scream
+            VOC_SCREAM3,            // short infantry scream
+            VOC_SCREAM4,            // short infantry scream
+            VOC_SCREAM5,            // short infantry scream
+            VOC_SCREAM6,            // short infantry scream
+            VOC_SCREAM7,            // short infantry scream
+            VOC_SCREAM10,           // short infantry scream
+            VOC_SCREAM11,           // short infantry scream
+            VOC_YELL1,              // long infantry scream
+            VOC_CHRONO,             // Chronosphere sound.
             VOC_CANNON1,            // Cannon sound (medium).
             VOC_CANNON2,            // Cannon sound (short).
             VOC_IRON1,
@@ -103,7 +103,7 @@ namespace MobiusEditor.RedAlert
             VOC_CHUTE1,             // wind swoosh sound
             VOC_DOG_BARK,           // dog bark
             VOC_DOG_WHINE,          // dog whine
-            VOC_DOG_GROWL2,     // strong dog growl
+            VOC_DOG_GROWL2,         // strong dog growl
             VOC_FIRE_LAUNCH,        // fireball launch sound
             VOC_FIRE_EXPLODE,       // fireball explode sound
             VOC_GRENADE_TOSS,       // grenade toss
@@ -128,27 +128,27 @@ namespace MobiusEditor.RedAlert
             VOC_x6,
             VOC_GUN_5R,             // 5 round gun burst (rattles).
             VOC_BEEP,               // Generic beep sound.
-            VOC_CLICK,              //	Generic click sound.
+            VOC_CLICK,              // Generic click sound.
             VOC_SILENCER,           // Silencer.
             VOC_CANNON6,            // Long muffled cannon shot.
             VOC_CANNON7,            // Sharp mechanical cannon fire.
             VOC_TORPEDO,            // Torpedo launch.
             VOC_CANNON8,            // Sharp cannon fire.
-            VOC_TESLA_POWER_UP, // Hum charge up.
+            VOC_TESLA_POWER_UP,     // Hum charge up.
             VOC_TESLA_ZAP,          // Tesla zap effect.
             VOC_SQUISH,             // Squish effect.
             VOC_SCOLD,              // Scold bleep.
             VOC_RADAR_ON,           // Powering up electronics.
             VOC_RADAR_OFF,          // B movie power down effect.
-            VOC_PLACE_BUILDING_DOWN,    // Building slam down sound.
+            VOC_PLACE_BUILDING_DOWN,// Building slam down sound.
             VOC_KABOOM30,           // Short explosion (HE).
             VOC_KABOOM25,           // Short growling explosion.
             VOC_x7,
-            VOC_DOG_HURT,           //	Dog whine.
+            VOC_DOG_HURT,           // Dog whine.
             VOC_DOG_YES,            // Dog 'yes sir'.
             VOC_CRUMBLE,            // Building crumble.
             VOC_MONEY_UP,           // Rising money tick.
-            VOC_MONEY_DOWN,     // Falling money tick.
+            VOC_MONEY_DOWN,         // Falling money tick.
             VOC_CONSTRUCTION,       // Building construction sound.
             VOC_GAME_CLOSED,        // Long bleep.
             VOC_INCOMING_MESSAGE,   // Soft happy warble.
@@ -156,18 +156,18 @@ namespace MobiusEditor.RedAlert
             VOC_OPTIONS_CHANGED,    // Mid range soft warble.
             VOC_GAME_FORMING,       // Long warble.
             VOC_PLAYER_LEFT,        // Chirp sequence.
-            VOC_PLAYER_JOINED,  // Reverse chirp sequence.
+            VOC_PLAYER_JOINED,      // Reverse chirp sequence.
             VOC_DEPTH_CHARGE,       // Distant explosion sound.
             VOC_CASHTURN,           // Airbrake.
-            VOC_TANYA_CHEW,     // Tanya: "Chew on this"
-            VOC_TANYA_ROCK,     // Tanya: "Let's rock"
+            VOC_TANYA_CHEW,         // Tanya: "Chew on this"
+            VOC_TANYA_ROCK,         // Tanya: "Let's rock"
             VOC_TANYA_LAUGH,        // Tanya: "ha ha ha"
             VOC_TANYA_SHAKE,        // Tanya: "Shake it baby"
             VOC_TANYA_CHING,        // Tanya: "Cha Ching"
             VOC_TANYA_GOT,          // Tanya: "That's all you got"
-            VOC_TANYA_KISS,     // Tanya: "Kiss it bye bye"
+            VOC_TANYA_KISS,         // Tanya: "Kiss it bye bye"
             VOC_TANYA_THERE,        // Tanya: "I'm there"
-            VOC_TANYA_GIVE,     // Tanya: "Give it to me"
+            VOC_TANYA_GIVE,         // Tanya: "Give it to me"
             VOC_TANYA_YEA,          // Tanya: "Yea?"
             VOC_TANYA_YES,          // Tanya: "Yes sir?"
             VOC_TANYA_WHATS,        // Tanya: "What's up."
@@ -179,23 +179,23 @@ namespace MobiusEditor.RedAlert
             VOC_E_OK,               // Einstein "ok"
             VOC_E_YES,              // Einstein "yes"
             VOC_TRIP_MINE,          // mine explosion sound
-            VOC_SPY_COMMANDER,  // Spy: "commander?"
-            VOC_SPY_YESSIR,     // Spy: "yes sir"
-            VOC_SPY_INDEED,     // Spy: "indeed"
+            VOC_SPY_COMMANDER,      // Spy: "commander?"
+            VOC_SPY_YESSIR,         // Spy: "yes sir"
+            VOC_SPY_INDEED,         // Spy: "indeed"
             VOC_SPY_ONWAY,          // Spy: "on my way"
             VOC_SPY_KING,           // Spy: "for king and country"
-            VOC_MED_REPORTING,  // Medic: "reporting"
-            VOC_MED_YESSIR,     // Medic: "yes sir"
-            VOC_MED_AFFIRM,     // Medic: "affirmative"
+            VOC_MED_REPORTING,      // Medic: "reporting"
+            VOC_MED_YESSIR,         // Medic: "yes sir"
+            VOC_MED_AFFIRM,         // Medic: "affirmative"
             VOC_MED_MOVEOUT,        // Medic: "movin' out"
             VOC_BEEP_SELECT,        // map selection beep
             VOC_THIEF_YEA,          // Thief: "yea?"
             VOC_ANTDIE,
             VOC_ANTBITE,
-            VOC_THIEF_MOVEOUT,  // Thief: "movin' out"
-            VOC_THIEF_OKAY,     // Thief: "ok"
+            VOC_THIEF_MOVEOUT,      // Thief: "movin' out"
+            VOC_THIEF_OKAY,         // Thief: "ok"
             VOC_x11,
-            VOC_THIEF_WHAT,     // Thief: "what"
+            VOC_THIEF_WHAT,         // Thief: "what"
             VOC_THIEF_AFFIRM,       // Thief: "affirmative"
             VOC_STAVCMDR,
             VOC_STAVCRSE,
@@ -232,36 +232,206 @@ namespace MobiusEditor.RedAlert
             VOC_SHOCK_TROOP1,
         };
 
+        public static readonly string[] VocTypes = new []
+        {
+            "GIRLOKAY",
+            "GIRLYEAH",
+            "GUYOKAY1",
+            "GUYYEAH1",
+            "MINELAY1",
+            "ACKNO",
+            "AFFIRM1",
+            "AWAIT1",
+            "EAFFIRM1",
+            "EENGIN1",
+            "NOPROB",
+            "READY",
+            "REPORT1",
+            "RITAWAY",
+            "ROGER",
+            "UGOTIT",
+            "VEHIC1",
+            "YESSIR1",
+            "DEDMAN1",
+            "DEDMAN2",
+            "DEDMAN3",
+            "DEDMAN4",
+            "DEDMAN5",
+            "DEDMAN6",
+            "DEDMAN7",
+            "DEDMAN8",
+            "DEDMAN10",
+            "CHRONO2",
+            "CANNON1",
+            "CANNON2",
+            "IRONCUR9",
+            "EMOVOUT1",
+            "SONPULSE",
+            "SANDBAG2",
+            "MINEBLO1",
+            "CHUTE1",
+            "DOGY1",
+            "DOGW5",
+            "DOGG5P",
+            "FIREBL3",
+            "FIRETRT1",
+            "GRENADE1",
+            "GUN11",
+            "GUN13",
+            "EYESSIR1",
+            "GUN27",
+            "HEAL2",
+            "HYDROD1",
+            "INVUL2",
+            "KABOOM1",
+            "KABOOM12",
+            "KABOOM15",
+            "SPLASH9",
+            "KABOOM22",
+            "AACANON3",
+            "TANDETH1",
+            "MGUNINF1",
+            "MISSILE1",
+            "MISSILE6",
+            "MISSILE7",
+            "x",
+            "PILLBOX1",
+            "RABEEP1",
+            "RAMENU1",
+            "SILENCER",
+            "TANK5",
+            "TANK6",
+            "TORPEDO1",
+            "TURRET1",
+            "TSLACHG2",
+            "TESLA1",
+            "SQUISHY2",
+            "SCOLDY1",
+            "RADARON2",
+            "RADARDN1",
+            "PLACBLDG",
+            "KABOOM30",
+            "KABOOM25",
+            "x",
+            "DOGW7",
+            "DOGW3PX",
+            "CRMBLE2",
+            "CASHUP1",
+            "CASHDN1",
+            "BUILD5",
+            "BLEEP9",
+            "BLEEP6",
+            "BLEEP5",
+            "BLEEP17",
+            "BLEEP13",
+            "BLEEP12",
+            "BLEEP11",
+            "H2OBOMB2",
+            "CASHTURN",
+            "TUFFGUY1",
+            "ROKROLL1",
+            "LAUGH1",
+            "CMON1",
+            "BOMBIT1",
+            "GOTIT1",
+            "KEEPEM1",
+            "ONIT1",
+            "LEFTY1",
+            "YEAH1",
+            "YES1",
+            "YO1",
+            "WALLKIL2",
+            "x",
+            "GUN5",
+            "SUBSHOW1",
+            "EINAH1",
+            "EINOK1",
+            "EINYES1",
+            "MINE1",
+            "SCOMND1",
+            "SYESSIR1",
+            "SINDEED1",
+            "SONWAY1",
+            "SKING1",
+            "MRESPON1",
+            "MYESSIR1",
+            "MAFFIRM1",
+            "MMOVOUT1",
+            "BEEPSLCT",
+            "SYEAH1",
+            "ANTDIE",
+            "ANTBITE",
+            "SMOUT1",
+            "SOKAY1",
+            "x",
+            "SWHAT1",
+            "SAFFIRM1",
+            "STAVCMDR",
+            "STAVCRSE",
+            "STAVYES",
+            "STAVMOV",
+            "BUZZY1",
+            "RAMBO1",
+            "RAMBO2",
+            "RAMBO3",
+            "MYES1",
+            "MHOWDY1",
+            "MRISE1",
+            "MHUH1",
+            "MHEAR1",
+            "MLAFF1",
+            "MBOSS1",
+            "MYEEHAW1",
+            "MHOTDIG1",
+            "MWRENCH1",
+            "JBURN1",
+            "JCHRGE1",
+            "JCRISP1",
+            "JDANCE1",
+            "JJUICE1",
+            "JJUMP1",
+            "JLIGHT1",
+            "JPOWER1",
+            "JSHOCK1",
+            "JYES1",
+            "CHROTNK1",
+            "FIXIT1",
+            "MADCHRG2",
+            "MADEXPLO",
+            "SHKTROP1",
+            "BEACON",
+        };
+
         public enum VoxType
         {
             VOX_NONE = -1,
-            VOX_ACCOMPLISHED,                   //	mission accomplished
-            VOX_FAIL,                           //	your mission has failed
-            VOX_NO_FACTORY,                 //	unable to comply, building in progress
-            VOX_CONSTRUCTION,                   //	construction complete
-            VOX_UNIT_READY,                 // unit ready
-            VOX_NEW_CONSTRUCT,              //	new construction options
-            VOX_DEPLOY,                         //	cannot deploy here
-            VOX_STRUCTURE_DESTROYED,        // structure destroyed
-            VOX_INSUFFICIENT_POWER,         // insufficient power
-            VOX_NO_CASH,                        //	insufficient funds
-            VOX_CONTROL_EXIT,                   //	battle control terminated
-            VOX_REINFORCEMENTS,             //	reinforcements have arrived
-            VOX_CANCELED,                       //	canceled
-            VOX_BUILDING,                       //	building
-            VOX_LOW_POWER,                      //	low power
-            VOX_NEED_MO_MONEY,              //	need more funds
-            VOX_BASE_UNDER_ATTACK,          //	our base is under attack
-            VOX_UNABLE_TO_BUILD,                //	unable to build more
-            VOX_PRIMARY_SELECTED,           //	primary building selected
-            VOX_MADTANK_DEPLOYED,			// M.A.D. Tank Deployed
+            VOX_ACCOMPLISHED,        // mission accomplished
+            VOX_FAIL,                // your mission has failed
+            VOX_NO_FACTORY,          // unable to comply, building in progress
+            VOX_CONSTRUCTION,        // construction complete
+            VOX_UNIT_READY,          // unit ready
+            VOX_NEW_CONSTRUCT,       // new construction options
+            VOX_DEPLOY,              // cannot deploy here
+            VOX_STRUCTURE_DESTROYED, // structure destroyed
+            VOX_INSUFFICIENT_POWER,  // insufficient power
+            VOX_NO_CASH,             // insufficient funds
+            VOX_CONTROL_EXIT,        // battle control terminated
+            VOX_REINFORCEMENTS,      // reinforcements have arrived
+            VOX_CANCELED,            // canceled
+            VOX_BUILDING,            // building
+            VOX_LOW_POWER,           // low power
+            VOX_NEED_MO_MONEY,       // need more funds
+            VOX_BASE_UNDER_ATTACK,   // our base is under attack
+            VOX_UNABLE_TO_BUILD,     // unable to build more
+            VOX_PRIMARY_SELECTED,    // primary building selected
+            VOX_MADTANK_DEPLOYED,    // M.A.D. Tank Deployed
             VOX_none4,
-            VOX_UNIT_LOST,                      //	unit lost
-            VOX_SELECT_TARGET,              // select target
-            VOX_PREPARE,                        //	enemy approaching
-            VOX_NEED_MO_CAPACITY,           //	silos needed
-            VOX_SUSPENDED,                      //	on hold
-            VOX_REPAIRING,                      //	repairing
+            VOX_UNIT_LOST,           // unit lost
+            VOX_SELECT_TARGET,       // select target
+            VOX_PREPARE,             // enemy approaching
+            VOX_NEED_MO_CAPACITY,    // silos needed
+            VOX_SUSPENDED,           // on hold
+            VOX_REPAIRING,           // repairing
             VOX_none5,
             VOX_none6,
             VOX_AIRCRAFT_LOST,
@@ -353,33 +523,165 @@ namespace MobiusEditor.RedAlert
             VOX_LOAD1,
         };
 
+        public static readonly string[] VoxTypes = new[]
+        {
+            "MISNWON1",   // VOX_ACCOMPLISHED              // mission accomplished
+            "MISNLST1",  // VOX_FAIL                      // your mission has failed
+            "PROGRES1",  // VOX_NO_FACTORY                // unable to comply, building in progress
+            "CONSCMP1",  // VOX_CONSTRUCTION              // construction complete
+            "UNITRDY1",  // VOX_UNIT_READY                // unit ready
+            "NEWOPT1",   // VOX_NEW_CONSTRUCT             // new construction options
+            "NODEPLY1",  // VOX_DEPLOY                    // cannot deploy here
+            "STRCKIL1",  // VOX_STRUCTURE_DESTROYED       // structure destroyed
+            "NOPOWR1",   // VOX_INSUFFICIENT_POWER        // insufficient power
+            "NOFUNDS1",  // VOX_NO_CASH                   // insufficient funds
+            "BCT1",      // VOX_CONTROL_EXIT              // battle control terminated
+            "REINFOR1",  // VOX_REINFORCEMENTS            // reinforcements have arrived
+            "CANCLD1",   // VOX_CANCELED                  // canceled
+            "ABLDGIN1",  // VOX_BUILDING                  // building
+            "LOPOWER1",  // VOX_LOW_POWER                 // low power
+            "NOFUNDS1",  // VOX_NEED_MO_MONEY             // insufficent funds
+            "BASEATK1",  // VOX_BASE_UNDER_ATTACK         // our base is under attack
+            "NOBUILD1",  // VOX_UNABLE_TO_BUILD           // unable to build more
+            "PRIBLDG1",  // VOX_PRIMARY_SELECTED          // primary building selected
+            "TANK01",    // VOX_MADTANK_DEPLOYED          // M.A.D. Tank Deployed
+            "none",      // VOX_SOVIET_CAPTURED           // Allied building captured
+            "UNITLST1",  // VOX_UNIT_LOST                 // unit lost
+            "SLCTTGT1",  // VOX_SELECT_TARGET             // select target
+            "ENMYAPP1",  // VOX_PREPARE                   // enemy approaching
+            "SILOND1",   // VOX_NEED_MO_CAPACITY          // silos needed
+            "ONHOLD1",   // VOX_SUSPENDED                 // on hold
+            "REPAIR1",   // VOX_REPAIRING                 // repairing
+            "none",
+            "none",
+            "AUNITL1",   // VOX_AIRCRAFT_LOST             // airborne unit lost
+            "none",
+            "AAPPRO1",   // VOX_ALLIED_FORCES_APPROACHING // allied forces approaching
+            "AARRIVE1",  // VOX_ALLIED_APPROACHING        // allied reinforcements have arrived
+            "none",
+            "none",
+            "BLDGINF1",  // VOX_BUILDING_INFILTRATED      // building infiltrated
+            "CHROCHR1",  // VOX_CHRONO_CHARGING           // chronosphere charging
+            "CHRORDY1",  // VOX_CHRONO_READY              // chronosphere ready
+            "CHROYES1",  // VOX_CHRONO_TEST               // chronosphere test successful
+            "CMDCNTR1",  // VOX_HQ_UNDER_ATTACK           // command center under attack
+            "CNTLDED1",  // VOX_CENTER_DEACTIVATED        // control center deactivated
+            "CONVYAP1",  // VOX_CONVOY_APPROACHING        // convoy approaching
+            "CONVLST1",  // VOX_CONVOY_UNIT_LOST          // convoy unit lost
+            "XPLOPLC1",  // VOX_EXPLOSIVE_PLACED          // explosive charge placed
+            "CREDIT1",   // VOX_MONEY_STOLEN              // credits stolen
+            "NAVYLST1",  // VOX_SHIP_LOST                 // naval unit lost
+            "SATLNCH1",  // VOX_SATALITE_LAUNCHED         // satalite launched
+            "PULSE1",    // VOX_SONAR_AVAILABLE           // sonar pulse available
+            "none",
+            "SOVFAPP1",  // VOX_SOVIET_FORCES_APPROACHING // soviet forces approaching
+            "SOVREIN1",  // VOX_SOVIET_REINFROCEMENTS     // soviet reinforcements have arrived
+            "TRAIN1",    // VOX_TRAINING                  // training
+            "AREADY1",   // VOX_ABOMB_READY
+            "ALAUNCH1",  // VOX_ABOMB_LAUNCH
+            "AARRIVN1",  // VOX_ALLIES_N
+            "AARRIVS1",  // VOX_ALLIES_S
+            "AARIVE1",   // VOX_ALLIES_E
+            "AARRIVW1",  // VOX_ALLIES_W
+            "1OBJMET1",  // VOX_OBJECTIVE1
+            "2OBJMET1",  // VOX_OBJECTIVE2
+            "3OBJMET1",  // VOX_OBJECTIVE3
+            "IRONCHG1",  // VOX_IRON_CHARGING
+            "IRONRDY1",  // VOX_IRON_READY
+            "KOSYRES1",  // VOX_RESCUED
+            "OBJNMET1",  // VOX_OBJECTIVE_NOT
+            "FLAREN1",   // VOX_SIGNAL_N
+            "FLARES1",   // VOX_SIGNAL_S
+            "FLAREE1",   // VOX_SIGNAL_E
+            "FLAREW1",   // VOX_SIGNAL_W
+            "SPYPLN1",   // VOX_SPY_PLANE
+            "TANYAF1",   // VOX_FREED
+            "ARMORUP1",  // VOX_UPGRADE_ARMOR
+            "FIREPO1",   // VOX_UPGRADE_FIREPOWER
+            "UNITSPD1",  // VOX_UPGRADE_SPEED
+            "MTIMEIN1",  // VOX_MISSION_TIMER
+            "UNITFUL1",  // VOX_UNIT_FULL
+            "UNITREP1",  // VOX_UNIT_REPAIRED
+            "40MINR",    // VOX_TIME_40
+            "30MINR",    // VOX_TIME_30
+            "20MINR",    // VOX_TIME_20
+            "10MINR",    // VOX_TIME_10
+            "5MINR",     // VOX_TIME_5
+            "4MINR",     // VOX_TIME_4
+            "3MINR",     // VOX_TIME_3
+            "2MINR",     // VOX_TIME_2
+            "1MINR",     // VOX_TIME_1
+            "TIMERNO1",  // VOX_TIME_STOP
+            "UNITSLD1",  // VOX_UNIT_SOLD
+            "TIMERGO1",  // VOX_TIMER_STARTED
+            "TARGRES1",  // VOX_TARGET_RESCUED
+            "TARGFRE1",  // VOX_TARGET_FREED
+            "TANYAR1",   // VOX_TANYA_RESCUED
+            "STRUSLD1",  // VOX_STRUCTURE_SOLD
+            "SOVFORC1",  // VOX_SOVIET_FORCES_FALLEN
+            "SOVEMP1",   // VOX_SOVIET_SELECTED
+            "SOVEFAL1",  // VOX_SOVIET_EMPIRE_FALLEN
+            "OPTERM1",   // VOX_OPERATION_TERMINATED
+            "OBJRCH1",   // VOX_OBJECTIVE_REACHED
+            "OBJNRCH1",  // VOX_OBJECTIVE_NOT_REACHED
+            "OBJMET1",   // VOX_OBJECTIVE_MET
+            "MERCR1",    // VOX_MERCENARY_RESCUED
+            "MERCF1",    // VOX_MERCENARY_FREED
+            "KOSYFRE1",  // VOX_KOSOYGEN_FREED
+            "FLARE1",    // VOX_FLARE_DETECTED
+            "COMNDOR1",  // VOX_COMMANDO_RESCUED
+            "COMNDOF1",  // VOX_COMMANDO_FREED
+            "BLDGPRG1",  // VOX_BUILDING_IN_PROGRESS
+            "ATPREP1",   // VOX_ATOM_PREPPING
+            "ASELECT1",  // VOX_ALLIED_SELECTED
+            "APREP1",    // VOX_ABOMB_PREPPING
+            "ATLNCH1",   // VOX_ATOM_LAUNCHED
+            "AFALLEN1",  // VOX_ALLIED_FORCES_FALLEN
+            "AAVAIL1",   // VOX_ABOMB_AVAILABLE
+            "AARRIVE1",  // VOX_ALLIED_REINFORCEMENTS
+            "SAVE1",     // VOX_MISSION_SAVED
+            "LOAD1"      // VOX_MISSION_LOADED
+        };
+
+        public static readonly string[] SuperTypes = new[]
+        {
+            "Sonar Pulse",   // Momentarily reveals submarines.
+            "Nuclear Bomb",  // Tactical nuclear weapon.
+            "Chronosphere",  // Paradox device, for teleportation
+            "Parabombs",     // Parachute bomb delivery.
+            "Paratroopers",  // Parachute reinforcement delivery.
+            "Spy Plane",     // Spy plane to take photo recon mission.
+            "Iron Curtain",  // Bestow invulnerability on a unit/building
+            "GPS",           // give allies free unjammable radar.
+        };
+
         public enum SpecialWeaponType
         {
             SPC_NONE = -1,
-            SPC_SONAR_PULSE,            // Momentarily reveals submarines.
-            SPC_NUCLEAR_BOMB,           //	Tactical nuclear weapon.
-            SPC_CHRONOSPHERE,           // Paradox device, for teleportation
-            SPC_PARA_BOMB,              // Parachute bomb delivery.
-            SPC_PARA_INFANTRY,      // Parachute reinforcement delivery.
-            SPC_SPY_MISSION,            // Spy plane to take photo recon mission.
-            SPC_IRON_CURTAIN,           // Bestow invulnerability on a unit/building
-            SPC_GPS,						// give allies free unjammable radar.
+            SPC_SONAR_PULSE,   // Momentarily reveals submarines.
+            SPC_NUCLEAR_BOMB,  // Tactical nuclear weapon.
+            SPC_CHRONOSPHERE,  // Paradox device, for teleportation
+            SPC_PARA_BOMB,     // Parachute bomb delivery.
+            SPC_PARA_INFANTRY, // Parachute reinforcement delivery.
+            SPC_SPY_MISSION,   // Spy plane to take photo recon mission.
+            SPC_IRON_CURTAIN,  // Bestow invulnerability on a unit/building
+            SPC_GPS,           // give allies free unjammable radar.
         };
 
         public enum QuarryType
         {
             QUARRY_NONE,
-            QUARRY_ANYTHING,                    // Attack any enemy (same as "hunt").
-            QUARRY_BUILDINGS,                   // Attack buildings (in general).
-            QUARRY_HARVESTERS,              // Attack harvesters or refineries.
-            QUARRY_INFANTRY,                    // Attack infantry.
-            QUARRY_VEHICLES,                    // Attack combat vehicles.
-            QUARRY_VESSELS,                 // Attach ships.
-            QUARRY_FACTORIES,                   // Attack factories (all types).
-            QUARRY_DEFENSE,                 // Attack base defense buildings.
-            QUARRY_THREAT,                      // Attack enemies near friendly base.
-            QUARRY_POWER,                       // Attack power facilities.
-            QUARRY_FAKES,						// Prefer to attack fake buildings.
+            QUARRY_ANYTHING,      // Attack any enemy (same as "hunt").
+            QUARRY_BUILDINGS,     // Attack buildings (in general).
+            QUARRY_HARVESTERS,    // Attack harvesters or refineries.
+            QUARRY_INFANTRY,      // Attack infantry.
+            QUARRY_VEHICLES,      // Attack combat vehicles.
+            QUARRY_VESSELS,       // Attach ships.
+            QUARRY_FACTORIES,     // Attack factories (all types).
+            QUARRY_DEFENSE,       // Attack base defense buildings.
+            QUARRY_THREAT,        // Attack enemies near friendly base.
+            QUARRY_POWER,         // Attack power facilities.
+            QUARRY_FAKES,         // Prefer to attack fake buildings.
         };
 
         public enum VQType

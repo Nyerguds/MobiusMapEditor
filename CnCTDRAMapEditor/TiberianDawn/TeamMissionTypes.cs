@@ -14,51 +14,41 @@
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using MobiusEditor.Model;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 
 namespace MobiusEditor.TiberianDawn
 {
     public static class TeamMissionTypes
     {
-        private static readonly TeamMission[] Types = new TeamMission[]
+
+        public static readonly TeamMission AttackBase = new TeamMission(0, "Attack Base", TeamMissionArgType.Time);
+        public static readonly TeamMission AttackUnits = new TeamMission(1, "Attack Units", TeamMissionArgType.Time);
+        public static readonly TeamMission AttackCivilians = new TeamMission(2, "Attack Civil.", TeamMissionArgType.Time);
+        public static readonly TeamMission Rampage = new TeamMission(3, "Rampage", TeamMissionArgType.Time);
+        public static readonly TeamMission DefendBase = new TeamMission(4, "Defend Base", TeamMissionArgType.Time);
+        public static readonly TeamMission Move = new TeamMission(5, "Move", TeamMissionArgType.Waypoint);
+        public static readonly TeamMission MoveToCell = new TeamMission(6, "Move to Cell", TeamMissionArgType.MapCell);
+        public static readonly TeamMission Retreat = new TeamMission(7, "Retreat", TeamMissionArgType.Time);
+        public static readonly TeamMission Guard = new TeamMission(8, "Guard", TeamMissionArgType.Time);
+        public static readonly TeamMission Loop = new TeamMission(9, "Loop", TeamMissionArgType.OrderNumber);
+        public static readonly TeamMission AttackTarcom = new TeamMission(10, "Attack Tarcom", TeamMissionArgType.Tarcom);
+        public static readonly TeamMission Unload = new TeamMission(11, "Unload", TeamMissionArgType.Waypoint);
+
+        private static readonly TeamMission[] Types;
+
+        static TeamMissionTypes()
         {
-            new TeamMission("Attack Base", TeamMissionArgType.Time),
-            new TeamMission("Attack Units", TeamMissionArgType.Time),
-            new TeamMission("Attack Civil.", TeamMissionArgType.Time),
-            new TeamMission("Rampage", TeamMissionArgType.Time),
-            new TeamMission("Defend Base", TeamMissionArgType.Time),
-            new TeamMission("Move", TeamMissionArgType.Waypoint),
-            new TeamMission("Move to Cell", TeamMissionArgType.Number),
-            new TeamMission("Retreat", TeamMissionArgType.Time),
-            new TeamMission("Guard", TeamMissionArgType.Time),
-            new TeamMission("Loop", TeamMissionArgType.Number),
-            new TeamMission("Attack Tarcom", TeamMissionArgType.Tarcom),
-            new TeamMission("Unload", TeamMissionArgType.Waypoint),
-        };
+            Types =
+                (from field in typeof(TeamMissionTypes).GetFields(BindingFlags.Static | BindingFlags.Public)
+                 where field.IsInitOnly && typeof(TeamMission).IsAssignableFrom(field.FieldType)
+                 select field.GetValue(null) as TeamMission).ToArray();
+        }
 
         public static IEnumerable<TeamMission> GetTypes()
         {
             return Types;
         }
 
-        private static readonly string[] TypesInfo = new string[]
-        {
-            "Time in 1/10th min",
-            "Time in 1/10th min",
-            "Time in 1/10th min",
-            "Time in 1/10th min",
-            "Time in 1/10th min",
-            "Waypoint number",
-            "Cell number",
-            "",
-            "Time in 1/10th min",
-            "Amount of actions to trim off the Missions loop",
-            "Tarcom identifier",
-            "Waypoint at which to unload."
-        };
-
-        public static IEnumerable<string> GetTypesInfo()
-        {
-            return TypesInfo;
-        }
     }
 }

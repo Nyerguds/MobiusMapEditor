@@ -20,7 +20,7 @@ namespace MobiusEditor.Tools.Dialogs
         {
             GenericTypeListBox.Types = plugin.Map.OverlayTypes.
                 Where(t => t.IsPlaceable && ((t.Theaters == null) || t.Theaters.Contains(plugin.Map.Theater))).
-                OrderBy(t => t.Name);
+                OrderBy(t => t.ID);
 
             Tool = new OverlaysTool(mapPanel, activeLayers, toolStatusLabel,
                 GenericTypeListBox, GenericTypeMapPanel, plugin, undoRedoList);

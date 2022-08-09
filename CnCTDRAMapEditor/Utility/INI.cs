@@ -74,7 +74,7 @@ namespace MobiusEditor.Utility
             return fallback;
         }
 
-        public static String TrimRemarks(String value, Boolean trimResult, params char[] cutFrom)
+        public static string TrimRemarks(string value, bool trimResult, params char[] cutFrom)
         {
             if (String.IsNullOrEmpty(value))
                 return value;
@@ -87,14 +87,14 @@ namespace MobiusEditor.Utility
             return value;
         }
 
-        public static String AddRemarks(String value, String defaultVal, Boolean trimSource, IEnumerable<String> valuesToDetect, String remarkToAdd)
+        public static string AddRemarks(string value, string defaultVal, Boolean trimSource, IEnumerable<string> valuesToDetect, string remarkToAdd)
         {
             if (String.IsNullOrEmpty(value))
                 return defaultVal;
             string valTrimmed = value;
             if (trimSource)
                 valTrimmed = valTrimmed.Trim();
-            foreach (String val in valuesToDetect)
+            foreach (string val in valuesToDetect)
             {
                 if ((val ?? String.Empty).Trim().Equals(value, StringComparison.InvariantCultureIgnoreCase))
                 {
@@ -102,6 +102,22 @@ namespace MobiusEditor.Utility
                 }
             }
             return value;
+        }
+        public static string FilterToExisting(string value, string defaultVal, Boolean trimSource, IEnumerable<string> existing)
+        {
+            if (String.IsNullOrEmpty(value))
+                return defaultVal;
+            string valTrimmed = value;
+            if (trimSource)
+                valTrimmed = valTrimmed.Trim();
+            foreach (string val in existing)
+            {
+                if ((val ?? String.Empty).Trim().Equals(value, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    return value;
+                }
+            }
+            return defaultVal;
         }
     }
 

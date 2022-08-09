@@ -29,5 +29,10 @@ namespace MobiusEditor.Controls
         {
             return new TeamItemControl(property, controller, technos);
         }
+
+        public override void UpdateControl(TeamTypeClass property, ListedControlController<TeamTypeClass> controller, TeamItemControl control)
+        {
+            control.SetInfo(property, controller, technos);
+        }
     }
 }

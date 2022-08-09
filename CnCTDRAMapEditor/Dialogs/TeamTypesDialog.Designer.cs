@@ -48,7 +48,7 @@ namespace MobiusEditor.Dialogs
             this.chbLearning = new System.Windows.Forms.CheckBox();
             this.chbSuicide = new System.Windows.Forms.CheckBox();
             this.chbAutocreate = new System.Windows.Forms.CheckBox();
-            this.chbMercernary = new System.Windows.Forms.CheckBox();
+            this.chbMercenary = new System.Windows.Forms.CheckBox();
             this.chbReinforcable = new System.Windows.Forms.CheckBox();
             this.chbPrebuilt = new System.Windows.Forms.CheckBox();
             this.lblInitNum = new System.Windows.Forms.Label();
@@ -219,7 +219,7 @@ namespace MobiusEditor.Dialogs
             this.tableLayoutPanel2.Controls.Add(this.chbLearning, 1, 2);
             this.tableLayoutPanel2.Controls.Add(this.chbSuicide, 1, 3);
             this.tableLayoutPanel2.Controls.Add(this.chbAutocreate, 1, 4);
-            this.tableLayoutPanel2.Controls.Add(this.chbMercernary, 1, 5);
+            this.tableLayoutPanel2.Controls.Add(this.chbMercenary, 1, 5);
             this.tableLayoutPanel2.Controls.Add(this.chbReinforcable, 1, 6);
             this.tableLayoutPanel2.Controls.Add(this.chbPrebuilt, 1, 7);
             this.tableLayoutPanel2.Controls.Add(this.lblInitNum, 0, 9);
@@ -338,16 +338,16 @@ namespace MobiusEditor.Dialogs
             // 
             // chbMercernary
             // 
-            this.chbMercernary.AutoSize = true;
-            this.chbMercernary.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.chbMercernary.Location = new System.Drawing.Point(73, 111);
-            this.chbMercernary.Margin = new System.Windows.Forms.Padding(2);
-            this.chbMercernary.Name = "chbMercernary";
-            this.chbMercernary.Size = new System.Drawing.Size(131, 17);
-            this.chbMercernary.TabIndex = 15;
-            this.chbMercernary.Text = "Mercernary";
-            this.toolTip1.SetToolTip(this.chbMercernary, "Will change sides if they start to lose.");
-            this.chbMercernary.UseVisualStyleBackColor = true;
+            this.chbMercenary.AutoSize = true;
+            this.chbMercenary.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.chbMercenary.Location = new System.Drawing.Point(73, 111);
+            this.chbMercenary.Margin = new System.Windows.Forms.Padding(2);
+            this.chbMercenary.Name = "chbMercenary";
+            this.chbMercenary.Size = new System.Drawing.Size(131, 17);
+            this.chbMercenary.TabIndex = 15;
+            this.chbMercenary.Text = "Mercenary";
+            this.toolTip1.SetToolTip(this.chbMercenary, "Will change sides if they start to lose.");
+            this.chbMercenary.UseVisualStyleBackColor = true;
             // 
             // chbReinforcable
             // 
@@ -602,7 +602,7 @@ namespace MobiusEditor.Dialogs
             this.lblLine1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left)));
             this.lblLine1.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.lblLine1.Location = new System.Drawing.Point(2, 0);
+            this.lblLine1.Location = new System.Drawing.Point(3, 0);
             this.lblLine1.Name = "lblLine1";
             this.lblLine1.Size = new System.Drawing.Size(2, 352);
             this.lblLine1.TabIndex = 4;
@@ -670,7 +670,7 @@ namespace MobiusEditor.Dialogs
             this.lblLine2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left)));
             this.lblLine2.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.lblLine2.Location = new System.Drawing.Point(0, 0);
+            this.lblLine2.Location = new System.Drawing.Point(3, 0);
             this.lblLine2.Name = "lblLine2";
             this.lblLine2.Size = new System.Drawing.Size(2, 352);
             this.lblLine2.TabIndex = 5;
@@ -840,7 +840,7 @@ namespace MobiusEditor.Dialogs
         private System.Windows.Forms.CheckBox chbLearning;
         private System.Windows.Forms.CheckBox chbSuicide;
         private System.Windows.Forms.CheckBox chbAutocreate;
-        private System.Windows.Forms.CheckBox chbMercernary;
+        private System.Windows.Forms.CheckBox chbMercenary;
         private System.Windows.Forms.CheckBox chbReinforcable;
         private System.Windows.Forms.CheckBox chbPrebuilt;
         private System.Windows.Forms.Label lblInitNum;

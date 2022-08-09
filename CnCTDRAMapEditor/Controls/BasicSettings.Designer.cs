@@ -69,9 +69,9 @@ namespace MobiusEditor.Controls
             this.playerLabel = new System.Windows.Forms.Label();
             this.nameTxt = new System.Windows.Forms.TextBox();
             this.playerComboBox = new System.Windows.Forms.ComboBox();
-            this.buildLevelNud = new System.Windows.Forms.NumericUpDown();
-            this.percentNud = new System.Windows.Forms.NumericUpDown();
-            this.carryOverMoneyNud = new System.Windows.Forms.NumericUpDown();
+            this.buildLevelNud = new MobiusEditor.Controls.EnhNumericUpDown();
+            this.percentNud = new MobiusEditor.Controls.EnhNumericUpDown();
+            this.carryOverMoneyNud = new MobiusEditor.Controls.EnhNumericUpDown();
             this.authorLabel = new System.Windows.Forms.Label();
             this.authorTxt = new System.Windows.Forms.TextBox();
             this.baseLabel = new System.Windows.Forms.Label();
@@ -583,9 +583,9 @@ namespace MobiusEditor.Controls
         private System.Windows.Forms.Label playerLabel;
         private System.Windows.Forms.TextBox nameTxt;
         private System.Windows.Forms.ComboBox playerComboBox;
-        private System.Windows.Forms.NumericUpDown buildLevelNud;
-        private System.Windows.Forms.NumericUpDown percentNud;
-        private System.Windows.Forms.NumericUpDown carryOverMoneyNud;
+        private MobiusEditor.Controls.EnhNumericUpDown buildLevelNud;
+        private MobiusEditor.Controls.EnhNumericUpDown percentNud;
+        private MobiusEditor.Controls.EnhNumericUpDown carryOverMoneyNud;
         private System.Windows.Forms.Label authorLabel;
         private System.Windows.Forms.TextBox authorTxt;
         private System.Windows.Forms.Label baseLabel;

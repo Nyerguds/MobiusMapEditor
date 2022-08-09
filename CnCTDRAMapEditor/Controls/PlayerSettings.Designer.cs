@@ -43,10 +43,10 @@ namespace MobiusEditor.Controls
         private void InitializeComponent()
         {
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            this.iqNud = new System.Windows.Forms.NumericUpDown();
-            this.techLevelNud = new System.Windows.Forms.NumericUpDown();
-            this.maxVesselsNud = new System.Windows.Forms.NumericUpDown();
-            this.maxInfantryNud = new System.Windows.Forms.NumericUpDown();
+            this.iqNud = new MobiusEditor.Controls.EnhNumericUpDown();
+            this.techLevelNud = new MobiusEditor.Controls.EnhNumericUpDown();
+            this.maxVesselsNud = new MobiusEditor.Controls.EnhNumericUpDown();
+            this.maxInfantryNud = new MobiusEditor.Controls.EnhNumericUpDown();
             this.iqLbl = new System.Windows.Forms.Label();
             this.techLevelLbl = new System.Windows.Forms.Label();
             this.maxVesselsLbl = new System.Windows.Forms.Label();
@@ -54,11 +54,11 @@ namespace MobiusEditor.Controls
             this.label1 = new System.Windows.Forms.Label();
             this.edgeComboBox = new System.Windows.Forms.ComboBox();
             this.label2 = new System.Windows.Forms.Label();
-            this.creditsNud = new System.Windows.Forms.NumericUpDown();
+            this.creditsNud = new MobiusEditor.Controls.EnhNumericUpDown();
             this.label3 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
-            this.maxBuildingsNud = new System.Windows.Forms.NumericUpDown();
-            this.maxUnitsNud = new System.Windows.Forms.NumericUpDown();
+            this.maxBuildingsNud = new MobiusEditor.Controls.EnhNumericUpDown();
+            this.maxUnitsNud = new MobiusEditor.Controls.EnhNumericUpDown();
             this.label5 = new System.Windows.Forms.Label();
             this.playersListBox = new System.Windows.Forms.ListBox();
             this.playerControlLbl = new System.Windows.Forms.Label();
@@ -354,21 +354,21 @@ namespace MobiusEditor.Controls
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.ComboBox edgeComboBox;
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.NumericUpDown creditsNud;
+        private MobiusEditor.Controls.EnhNumericUpDown creditsNud;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.NumericUpDown maxBuildingsNud;
-        private System.Windows.Forms.NumericUpDown maxUnitsNud;
+        private MobiusEditor.Controls.EnhNumericUpDown maxBuildingsNud;
+        private MobiusEditor.Controls.EnhNumericUpDown maxUnitsNud;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.ListBox playersListBox;
         private System.Windows.Forms.Label techLevelLbl;
         private System.Windows.Forms.Label maxVesselsLbl;
         private System.Windows.Forms.Label maxInfantryLbl;
         private System.Windows.Forms.Label iqLbl;
-        private System.Windows.Forms.NumericUpDown maxVesselsNud;
-        private System.Windows.Forms.NumericUpDown maxInfantryNud;
-        private System.Windows.Forms.NumericUpDown iqNud;
-        private System.Windows.Forms.NumericUpDown techLevelNud;
+        private MobiusEditor.Controls.EnhNumericUpDown maxVesselsNud;
+        private MobiusEditor.Controls.EnhNumericUpDown maxInfantryNud;
+        private MobiusEditor.Controls.EnhNumericUpDown iqNud;
+        private MobiusEditor.Controls.EnhNumericUpDown techLevelNud;
         private System.Windows.Forms.Label playerControlLbl;
         private System.Windows.Forms.CheckBox playerControlCheckBox;
     }

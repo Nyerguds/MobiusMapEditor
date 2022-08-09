@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace MobiusEditor.Controls
 {
@@ -13,13 +14,17 @@ namespace MobiusEditor.Controls
     {
         TeamMission[] missions;
         DropDownItem<int>[] waypoints;
+        int mapSize;
+        ToolTip tooltip;
 
-        public MissionItemInfo(String name, IEnumerable<TeamTypeMission> properties, IEnumerable<TeamMission> missions, IEnumerable<DropDownItem<int>> waypoints)
+        public MissionItemInfo(String name, IEnumerable<TeamTypeMission> properties, IEnumerable<TeamMission> missions, IEnumerable<DropDownItem<int>> waypoints, int mapSize, ToolTip tooltip)
         {
             Name = name;
             Properties = properties.ToArray();
             this.missions = missions.ToArray();
             this.waypoints = waypoints.ToArray();
+            this.mapSize = mapSize;
+            this.tooltip = tooltip;
         }
 
         public override MissionItemControl GetControlByProperty(TeamTypeMission property, IEnumerable<MissionItemControl> controls)
@@ -29,7 +34,11 @@ namespace MobiusEditor.Controls
 
         public override MissionItemControl MakeControl(TeamTypeMission property, ListedControlController<TeamTypeMission> controller)
         {
-            return new MissionItemControl(property, controller, missions, waypoints);
+            return new MissionItemControl(property, controller, missions, waypoints, mapSize, tooltip);
+        }
+        public override void UpdateControl(TeamTypeMission property, ListedControlController<TeamTypeMission> controller, MissionItemControl control)
+        {
+            control.SetInfo(property, controller, missions, waypoints, mapSize, tooltip);
         }
     }
 }

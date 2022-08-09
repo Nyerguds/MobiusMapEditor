@@ -51,6 +51,11 @@ namespace MobiusEditor.Model
                 Data = Data
             };
         }
+        public void FillDataFrom(TriggerEvent other)
+        {
+            Team = other.Team;
+            Data = other.Data;
+        }
 
         public bool Equals(TriggerEvent other)
         {
@@ -86,6 +91,12 @@ namespace MobiusEditor.Model
                 Team = Team,
                 Data = Data
             };
+        }
+        public void FillDataFrom(TriggerAction other)
+        {
+            Trigger = Trigger;
+            Team = other.Team;
+            Data = other.Data;
         }
 
         public bool Equals(TriggerAction other)

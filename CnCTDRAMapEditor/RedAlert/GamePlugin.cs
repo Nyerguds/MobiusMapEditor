@@ -34,12 +34,168 @@ namespace MobiusEditor.RedAlert
 
         private readonly IEnumerable<string> movieTypes;
 
-        private static readonly IEnumerable<string> movieTypesAdditional = new string[]
+        private static readonly IEnumerable<string> movieTypesRemarksOld = new string[]
         {
-            "ENGLISH (Classic only)",
-            "SHIPYARD (Classic only)",
-            "SIZZLE (Classic only)",
-            "SIZZLE2 (Classic only)",
+            "SHIPYARD", // MISSING
+            "ENGLISH",		// High res. Intro
+            "SIZZLE",   //MISSING
+	        "SIZZLE2",  //MISSING
+        };
+
+        private static readonly IEnumerable<string> movieTypesRemarksNew = new string[]
+        {
+		    //2019/11/12 JAS - Added for Retaliation movies
+		    "RETALIATION_ALLIED1",
+            "RETALIATION_ALLIED2",
+            "RETALIATION_ALLIED3",
+            "RETALIATION_ALLIED4",
+            "RETALIATION_ALLIED5",
+            "RETALIATION_ALLIED6",
+            "RETALIATION_ALLIED7",
+            "RETALIATION_ALLIED8",
+            "RETALIATION_ALLIED9",
+            "RETALIATION_ALLIED10",
+            "RETALIATION_SOVIET1",
+            "RETALIATION_SOVIET2",
+            "RETALIATION_SOVIET3",
+            "RETALIATION_SOVIET4",
+            "RETALIATION_SOVIET5",
+            "RETALIATION_SOVIET6",
+            "RETALIATION_SOVIET7",
+            "RETALIATION_SOVIET8",
+            "RETALIATION_SOVIET9",
+            "RETALIATION_SOVIET10",
+            "RETALIATION_WINA",
+            "RETALIATION_WINS",
+            "RETALIATION_ANTS"
+        };
+        private static readonly IEnumerable<string> movieTypesRa = new string[]
+        {
+            "AAGUN",
+            "MIG",
+            "SFROZEN",
+            "AIRFIELD",
+            "BATTLE",
+            "BMAP",
+            "BOMBRUN",
+            "DPTHCHRG",
+            "GRVESTNE",
+            "MONTPASS",
+            "MTNKFACT",
+            "CRONTEST",
+            "OILDRUM",
+            "ALLIEND",
+            "RADRRAID",
+            "SHIPYARD (Classic only)", // MISSING
+	        "SHORBOMB",
+            "SITDUCK",
+            "SLNTSRVC",
+            "SNOWBASE",
+            "EXECUTE",
+            "REDINTRO",			// low res.
+	        "NUKESTOK",
+            "V2ROCKET",
+            "SEARCH",
+            "BINOC",
+            "ELEVATOR",
+            "FROZEN",
+            "MCV",
+            "SHIPSINK",
+            "SOVMCV",
+            "TRINITY",
+            "ALLYMORF",
+            "APCESCPE",
+            "BRDGTILT",
+            "CRONFAIL",
+            "STRAFE",
+            "DESTROYR",
+            "DOUBLE",
+            "FLARE",
+            "SNSTRAFE",
+            "LANDING",
+            "ONTHPRWL",
+            "OVERRUN",
+            "SNOWBOMB",
+            "SOVCEMET",
+            "TAKE_OFF",
+            "TESLA",
+            "SOVIET8",
+            "SPOTTER",
+            "ALLY1",
+            "ALLY2",
+            "ALLY4",
+            "SOVFINAL",
+            "ASSESS",
+            "SOVIET10",
+            "DUD",
+            "MCV_LAND",
+            "MCVBRDGE",
+            "PERISCOP",
+            "SHORBOM1",
+            "SHORBOM2",
+            "SOVBATL",
+            "SOVTSTAR",
+            "AFTRMATH",
+            "SOVIET11",
+            "MASASSLT",
+            "ENGLISH (Classic only)",		// High res. Intro
+	        "SOVIET1",
+            "SOVIET2",
+            "SOVIET3",
+            "SOVIET4",
+            "SOVIET5",
+            "SOVIET6",
+            "SOVIET7",
+            "PROLOG",
+            "AVERTED",
+            "COUNTDWN",
+            "MOVINGIN",
+            "ALLY10",
+            "ALLY12",
+            "ALLY5",
+            "ALLY6",
+            "ALLY8",
+            "TANYA1",
+            "TANYA2",
+            "ALLY10B",
+            "ALLY11",
+            "ALLY14",
+            "ALLY9",
+            "SPY",
+            "TOOFAR",
+            "SOVIET12",
+            "SOVIET13",
+            "SOVIET9",
+            "BEACHEAD",
+            "SOVIET14",
+            "SIZZLE (Classic only)",   //MISSING
+	        "SIZZLE2 (Classic only)",  //MISSING
+	        "ANTEND",
+            "ANTINTRO",
+		    //2019/11/12 JAS - Added for Retaliation movies
+		    "RETALIATION_ALLIED1 (Remaster only)",
+            "RETALIATION_ALLIED2 (Remaster only)",
+            "RETALIATION_ALLIED3 (Remaster only)",
+            "RETALIATION_ALLIED4 (Remaster only)",
+            "RETALIATION_ALLIED5 (Remaster only)",
+            "RETALIATION_ALLIED6 (Remaster only)",
+            "RETALIATION_ALLIED7 (Remaster only)",
+            "RETALIATION_ALLIED8 (Remaster only)",
+            "RETALIATION_ALLIED9 (Remaster only)",
+            "RETALIATION_ALLIED10 (Remaster only)",
+            "RETALIATION_SOVIET1 (Remaster only)",
+            "RETALIATION_SOVIET2 (Remaster only)",
+            "RETALIATION_SOVIET3 (Remaster only)",
+            "RETALIATION_SOVIET4 (Remaster only)",
+            "RETALIATION_SOVIET5 (Remaster only)",
+            "RETALIATION_SOVIET6 (Remaster only)",
+            "RETALIATION_SOVIET7 (Remaster only)",
+            "RETALIATION_SOVIET8 (Remaster only)",
+            "RETALIATION_SOVIET9 (Remaster only)",
+            "RETALIATION_SOVIET10 (Remaster only)",
+            "RETALIATION_WINA (Remaster only)",
+            "RETALIATION_WINS (Remaster only)",
+            "RETALIATION_ANTS (Remaster only)"
         };
 
         private static readonly IEnumerable<string> themeTypes = new string[]
@@ -111,6 +267,7 @@ namespace MobiusEditor.RedAlert
             var waypoints = playerWaypoints.Concat(generalWaypoints).Concat(specialWaypoints);
 
             var movies = new List<string>();
+            /*/
             using (var megafile = new Megafile(Path.Combine(Globals.MegafilePath, "MOVIES_RA.MEG")))
             {
                 foreach (var filename in megafile)
@@ -122,9 +279,9 @@ namespace MobiusEditor.RedAlert
                     }
                 }
             }
-            movies.AddRange(movieTypesAdditional);
-            movies.Sort();
-            movies = movies.Distinct().ToList();
+            //*/
+            movies.AddRange(movieTypesRa);
+            movies = movies.ToList();
             movies.Insert(0, "x");
             movieTypes = movies.ToArray();
 
@@ -138,7 +295,7 @@ namespace MobiusEditor.RedAlert
                 houseTypes, TheaterTypes.GetTypes(), TemplateTypes.GetTypes(), TerrainTypes.GetTypes(),
                 OverlayTypes.GetTypes(), SmudgeTypes.GetTypes(), EventTypes.GetTypes(), ActionTypes.GetTypes(),
                 MissionTypes.GetTypes(), DirectionTypes.GetTypes(), InfantryTypes.GetTypes(), UnitTypes.GetTypes(),
-                BuildingTypes.GetTypes(), TeamMissionTypes.GetTypes(), TeamMissionTypes.GetTypesInfo(), technoTypes, waypoints, movieTypes, themeTypes)
+                BuildingTypes.GetTypes(), TeamMissionTypes.GetTypes(), technoTypes, waypoints, movieTypes, themeTypes)
             {
                 TiberiumOrGoldValue = 35,
                 GemValue = 110
@@ -221,19 +378,25 @@ namespace MobiusEditor.RedAlert
             if (basicSection != null)
             {
                 INI.ParseSection(new MapContext(Map, true), basicSection, Map.BasicSection);
-
-                char[] cutfrom = { ';', '(' };
-                string[] toAddRem = movieTypesAdditional.Select(vid => INIHelpers.TrimRemarks(vid, true, cutfrom)).ToArray();
                 Model.BasicSection basic = Map.BasicSection;
-                const string remark = " (Classic only)";
-                basic.Intro = INIHelpers.AddRemarks(basic.Intro, "x", true, toAddRem, remark);
-                basic.Brief = INIHelpers.AddRemarks(basic.Brief, "x", true, toAddRem, remark);
-                basic.Action = INIHelpers.AddRemarks(basic.Action, "x", true, toAddRem, remark);
-                basic.Win = INIHelpers.AddRemarks(basic.Win, "x", true, toAddRem, remark);
-                basic.Win2 = INIHelpers.AddRemarks(basic.Win2, "x", true, toAddRem, remark);
-                basic.Win3 = INIHelpers.AddRemarks(basic.Win3, "x", true, toAddRem, remark);
-                basic.Win4 = INIHelpers.AddRemarks(basic.Win4, "x", true, toAddRem, remark);
-                basic.Lose = INIHelpers.AddRemarks(basic.Lose, "x", true, toAddRem, remark);
+                const string remarkOld = " (Classic only)";
+                const string remarkNew = " (Remaster only)";
+                basic.Intro = INIHelpers.AddRemarks(INIHelpers.AddRemarks(basic.Intro, "x", true, movieTypesRemarksOld, remarkOld), "x", true, movieTypesRemarksNew, remarkNew);
+                basic.Intro = INIHelpers.FilterToExisting(basic.Intro, "x", true, movieTypesRa);
+                basic.Brief = INIHelpers.AddRemarks(INIHelpers.AddRemarks(basic.Brief, "x", true, movieTypesRemarksOld, remarkOld), "x", true, movieTypesRemarksNew, remarkNew);
+                basic.Brief = INIHelpers.FilterToExisting(basic.Brief, "x", true, movieTypesRa);
+                basic.Action = INIHelpers.AddRemarks(INIHelpers.AddRemarks(basic.Action, "x", true, movieTypesRemarksOld, remarkOld), "x", true, movieTypesRemarksNew, remarkNew);
+                basic.Action = INIHelpers.FilterToExisting(basic.Action, "x", true, movieTypesRa);
+                basic.Win = INIHelpers.AddRemarks(INIHelpers.AddRemarks(basic.Win, "x", true, movieTypesRemarksOld, remarkOld), "x", true, movieTypesRemarksNew, remarkNew);
+                basic.Win = INIHelpers.FilterToExisting(basic.Win, "x", true, movieTypesRa);
+                basic.Win2 = INIHelpers.AddRemarks(INIHelpers.AddRemarks(basic.Win2, "x", true, movieTypesRemarksOld, remarkOld), "x", true, movieTypesRemarksNew, remarkNew);
+                basic.Win2 = INIHelpers.FilterToExisting(basic.Win2, "x", true, movieTypesRa);
+                basic.Win3 = INIHelpers.AddRemarks(INIHelpers.AddRemarks(basic.Win3, "x", true, movieTypesRemarksOld, remarkOld), "x", true, movieTypesRemarksNew, remarkNew);
+                basic.Win3 = INIHelpers.FilterToExisting(basic.Win3, "x", true, movieTypesRa);
+                basic.Win4 = INIHelpers.AddRemarks(INIHelpers.AddRemarks(basic.Win4, "x", true, movieTypesRemarksOld, remarkOld), "x", true, movieTypesRemarksNew, remarkNew);
+                basic.Win4 = INIHelpers.FilterToExisting(basic.Win4, "x", true, movieTypesRa);
+                basic.Lose = INIHelpers.AddRemarks(INIHelpers.AddRemarks(basic.Lose, "x", true, movieTypesRemarksOld, remarkOld), "x", true, movieTypesRemarksNew, remarkNew);
+                basic.Lose = INIHelpers.FilterToExisting(basic.Lose, "x", true, movieTypesRa);
             }
 
             Map.BasicSection.Player = Map.HouseTypes.Where(t => t.Equals(Map.BasicSection.Player)).FirstOrDefault()?.Name ?? Map.HouseTypes.First().Name;
@@ -560,7 +723,7 @@ namespace MobiusEditor.RedAlert
 
             var smudgeSection = ini.Sections.Extract("Smudge");
             // Craters other than cr1 don't work right in the game. Replace them by stage-0 cr1.
-            Regex craterRegex = new Regex("^CR[2-6]$");
+            Regex craterRegex = new Regex("^CR[2-6]$", RegexOptions.IgnoreCase);
             if (smudgeSection != null)
             {
                 foreach (var (Key, Value) in smudgeSection)
@@ -1114,71 +1277,70 @@ namespace MobiusEditor.RedAlert
             {
                 return false;
             }
-
             switch (fileType)
             {
                 case FileType.INI:
                 case FileType.BIN:
-                    {
-                        var mprPath = Path.ChangeExtension(path, ".mpr");
-                        var tgaPath = Path.ChangeExtension(path, ".tga");
-                        var jsonPath = Path.ChangeExtension(path, ".json");
+                {
+                    bool isIni = path.EndsWith(".ini", StringComparison.InvariantCultureIgnoreCase);
+                    var mprPath = Path.ChangeExtension(path, isIni ? ".ini" : ".mpr");
+                    var tgaPath = Path.ChangeExtension(path, ".tga");
+                    var jsonPath = Path.ChangeExtension(path, ".json");
 
-                        var ini = new INI();
-                        SaveINI(ini, fileType);
-                        using (var mprWriter = new StreamWriter(mprPath))
-                        {
-                            mprWriter.Write(ini.ToString());
-                        }
-                        using (var tgaStream = new FileStream(tgaPath, FileMode.Create))
-                        {
-                            SaveMapPreview(tgaStream, Map.BasicSection.SoloMission);
-                        }
-                        using (var jsonStream = new FileStream(jsonPath, FileMode.Create))
-                        using (var jsonWriter = new JsonTextWriter(new StreamWriter(jsonStream)))
-                        {
-                            SaveJSON(jsonWriter);
-                        }
+                    var ini = new INI();
+                    SaveINI(ini, fileType);
+                    using (var mprWriter = new StreamWriter(mprPath))
+                    {
+                        mprWriter.Write(ini.ToString());
+                    }
+                    using (var tgaStream = new FileStream(tgaPath, FileMode.Create))
+                    {
+                        SaveMapPreview(tgaStream, Map.BasicSection.SoloMission);
+                    }
+                    using (var jsonStream = new FileStream(jsonPath, FileMode.Create))
+                    using (var jsonWriter = new JsonTextWriter(new StreamWriter(jsonStream)))
+                    {
+                        SaveJSON(jsonWriter);
                     }
                     break;
+                }
                 case FileType.MEG:
                 case FileType.PGM:
+                {
+                    var ini = new INI();
+                    SaveINI(ini, fileType);
+                    using (var iniStream = new MemoryStream())
+                    using (var tgaStream = new MemoryStream())
+                    using (var jsonStream = new MemoryStream())
+                    using (var iniWriter = new StreamWriter(iniStream))
+                    using (var jsonWriter = new JsonTextWriter(new StreamWriter(jsonStream)))
+                    using (var megafileBuilder = new MegafileBuilder(@"", path))
                     {
-                        var ini = new INI();
-                        SaveINI(ini, fileType);
-                        using (var iniStream = new MemoryStream())
-                        using (var tgaStream = new MemoryStream())
-                        using (var jsonStream = new MemoryStream())
-                        using (var iniWriter = new StreamWriter(iniStream))
-                        using (var jsonWriter = new JsonTextWriter(new StreamWriter(jsonStream)))
-                        using (var megafileBuilder = new MegafileBuilder(@"", path))
-                        {
-                            iniWriter.Write(ini.ToString());
-                            iniWriter.Flush();
-                            iniStream.Position = 0;
+                        iniWriter.Write(ini.ToString());
+                        iniWriter.Flush();
+                        iniStream.Position = 0;
 
-                            SaveMapPreview(tgaStream, Map.BasicSection.SoloMission);
-                            tgaStream.Position = 0;
+                        SaveMapPreview(tgaStream, Map.BasicSection.SoloMission);
+                        tgaStream.Position = 0;
 
-                            SaveJSON(jsonWriter);
-                            jsonWriter.Flush();
-                            jsonStream.Position = 0;
+                        SaveJSON(jsonWriter);
+                        jsonWriter.Flush();
+                        jsonStream.Position = 0;
 
-                            var mprFile = Path.ChangeExtension(Path.GetFileName(path), ".mpr").ToUpper();
-                            var tgaFile = Path.ChangeExtension(Path.GetFileName(path), ".tga").ToUpper();
-                            var jsonFile = Path.ChangeExtension(Path.GetFileName(path), ".json").ToUpper();
+                        var mprFile = Path.ChangeExtension(Path.GetFileName(path), ".mpr").ToUpper();
+                        var tgaFile = Path.ChangeExtension(Path.GetFileName(path), ".tga").ToUpper();
+                        var jsonFile = Path.ChangeExtension(Path.GetFileName(path), ".json").ToUpper();
 
-                            megafileBuilder.AddFile(mprFile, iniStream);
-                            megafileBuilder.AddFile(tgaFile, tgaStream);
-                            megafileBuilder.AddFile(jsonFile, jsonStream);
-                            megafileBuilder.Write();
-                        }
+                        megafileBuilder.AddFile(mprFile, iniStream);
+                        megafileBuilder.AddFile(tgaFile, tgaStream);
+                        megafileBuilder.AddFile(jsonFile, jsonStream);
+                        megafileBuilder.Write();
                     }
                     break;
+                }
                 default:
                     throw new NotSupportedException();
             }
-
             return true;
         }
 
@@ -1188,7 +1350,6 @@ namespace MobiusEditor.RedAlert
             {
                 ini.Sections.AddRange(extraSections);
             }
-
             Model.BasicSection basic = Map.BasicSection;
             char[] cutfrom = { ';', '(' };
             basic.Intro = INIHelpers.TrimRemarks(basic.Intro, true, cutfrom);
@@ -1198,63 +1359,51 @@ namespace MobiusEditor.RedAlert
             basic.Win2 = INIHelpers.TrimRemarks(basic.Win2, true, cutfrom);
             basic.Win3 = INIHelpers.TrimRemarks(basic.Win3, true, cutfrom);
             basic.Win4 =INIHelpers.TrimRemarks(basic.Win4, true, cutfrom);
-            basic.Lose = INIHelpers.TrimRemarks(basic.Lose, true, cutfrom);
-            
+            basic.Lose = INIHelpers.TrimRemarks(basic.Lose, true, cutfrom);            
             INI.WriteSection(new MapContext(Map, false), ini.Sections.Add("Basic"), Map.BasicSection);
             INI.WriteSection(new MapContext(Map, false), ini.Sections.Add("Map"), Map.MapSection);
-
             if (fileType != FileType.PGM)
             {
                 INI.WriteSection(new MapContext(Map, false), ini.Sections.Add("Steam"), Map.SteamSection);
             }
-
             ini["Basic"]["NewINIFormat"] = "3";
-
             var smudgeSection = ini.Sections.Add("SMUDGE");
             foreach (var (cell, smudge) in Map.Smudge.Where(item => (item.Value.Type.Flag & SmudgeTypeFlag.Bib) == SmudgeTypeFlag.None))
             {
                 smudgeSection[cell.ToString()] = string.Format("{0},{1},{2}", smudge.Type.Name.ToUpper(), cell, smudge.Icon);
             }
-
             var terrainSection = ini.Sections.Add("TERRAIN");
             foreach (var (location, terrain) in Map.Technos.OfType<Terrain>())
             {
                 Map.Metrics.GetCell(location, out int cell);
                 terrainSection[cell.ToString()] = terrain.Type.Name.ToUpper();
             }
-
             var cellTriggersSection = ini.Sections.Add("CellTriggers");
             foreach (var (cell, cellTrigger) in Map.CellTriggers)
             {
                 cellTriggersSection[cell.ToString()] = cellTrigger.Trigger;
             }
-
             int nameToIndex<T>(IList<T> list, string name)
             {
                 var index = list.TakeWhile(x => !x.Equals(name)).Count();
                 return (index < list.Count) ? index : -1;
             }
-
             string nameToIndexString<T>(IList<T> list, string name) => nameToIndex(list, name).ToString();
-
             var teamTypesSection = ini.Sections.Add("TeamTypes");
-            List<string> teamtypeMissions = Map.TeamMissionTypes.Select(ttm => ttm.Mission).ToList();
             foreach (var teamType in Map.TeamTypes)
             {
                 var classes = teamType.Classes
                     .Select(c => string.Format("{0}:{1}", c.Type.Name.ToUpper(), c.Count))
                     .ToArray();
                 var missions = teamType.Missions
-                    .Select(m => string.Format("{0}:{1}", nameToIndexString(teamtypeMissions, m.Mission.Mission), m.Argument))
+                    .Select(m => string.Format("{0}:{1}", m.Mission.ID, m.Argument))
                     .ToArray();
-
                 int flags = 0;
                 if (teamType.IsRoundAbout) flags |= 0x01;
                 if (teamType.IsSuicide) flags |= 0x02;
                 if (teamType.IsAutocreate) flags |= 0x04;
                 if (teamType.IsPrebuilt) flags |= 0x08;
                 if (teamType.IsReinforcable) flags |= 0x10;
-
                 var tokens = new List<string>
                 {
                     teamType.House.ID.ToString(),
@@ -1269,10 +1418,8 @@ namespace MobiusEditor.RedAlert
                     missions.Length.ToString(),
                     string.Join(",", missions)
                 };
-
                 teamTypesSection[teamType.Name] = string.Join(",", tokens.Where(t => !string.IsNullOrEmpty(t)));
             }
-
             var infantrySection = ini.Sections.Add("INFANTRY");
             var infantryIndex = 0;
             foreach (var (location, infantryGroup) in Map.Technos.OfType<InfantryGroup>())
@@ -1284,7 +1431,6 @@ namespace MobiusEditor.RedAlert
                     {
                         continue;
                     }
-
                     var key = infantryIndex.ToString("D3");
                     infantryIndex++;
 
@@ -1301,7 +1447,6 @@ namespace MobiusEditor.RedAlert
                     );
                 }
             }
-
             var structuresSection = ini.Sections.Add("STRUCTURES");
             var structureIndex = 0;
             foreach (var (location, building) in Map.Buildings.OfType<Building>().Where(x => x.Occupier.IsPrebuilt))
@@ -1321,7 +1466,6 @@ namespace MobiusEditor.RedAlert
                     building.Rebuild ? 1 : 0
                 );
             }
-
             var baseSection = ini.Sections.Add("Base");
             var baseBuildings = Map.Buildings.OfType<Building>().Where(x => x.Occupier.BasePriority >= 0).OrderBy(x => x.Occupier.BasePriority).ToArray();
             baseSection["Player"] = Map.BasicSection.BasePlayer;
@@ -1338,7 +1482,6 @@ namespace MobiusEditor.RedAlert
                     cell
                 );
             }
-
             var unitsSection = ini.Sections.Add("UNITS");
             var unitIndex = 0;
             foreach (var (location, unit) in Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsUnit))
@@ -1357,7 +1500,6 @@ namespace MobiusEditor.RedAlert
                     unit.Trigger
                 );
             }
-
             var aircraftSection = ini.Sections.Add("AIRCRAFT");
             var aircraftIndex = 0;
             foreach (var (location, aircraft) in Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsAircraft))

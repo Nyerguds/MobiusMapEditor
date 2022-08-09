@@ -15,6 +15,7 @@ namespace MobiusEditor.Controls.ControlsList
         public TU[] Properties { get; set; }
 
         public abstract T MakeControl(TU property, ListedControlController<TU> controller);
+        public abstract void UpdateControl(TU property, ListedControlController<TU> controller, T control);
         public abstract T GetControlByProperty(TU property, IEnumerable<T> controls);
 
         public override String ToString()

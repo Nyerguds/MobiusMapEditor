@@ -12,6 +12,8 @@
 // distributed with this program. You should have received a copy of the 
 // GNU General Public License along with permitted additional restrictions 
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
+using MobiusEditor.Controls;
+
 namespace MobiusEditor.Dialogs
 {
     partial class TriggersDialog
@@ -52,33 +54,33 @@ namespace MobiusEditor.Dialogs
             this.settingsPanel = new System.Windows.Forms.Panel();
             this.triggersTableLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
             this.label1 = new System.Windows.Forms.Label();
-            this.houseComboBox = new System.Windows.Forms.ComboBox();
+            this.houseComboBox = new MobiusEditor.Controls.ComboBoxSmartWidth();
             this.typeLabel = new System.Windows.Forms.Label();
             this.event1Label = new System.Windows.Forms.Label();
             this.event2Label = new System.Windows.Forms.Label();
             this.action1Label = new System.Windows.Forms.Label();
             this.action2Label = new System.Windows.Forms.Label();
-            this.action1ComboBox = new System.Windows.Forms.ComboBox();
-            this.action2ComboBox = new System.Windows.Forms.ComboBox();
+            this.action1ComboBox = new MobiusEditor.Controls.ComboBoxSmartWidth();
+            this.action2ComboBox = new MobiusEditor.Controls.ComboBoxSmartWidth();
             this.existenceLabel = new System.Windows.Forms.Label();
-            this.existenceComboBox = new System.Windows.Forms.ComboBox();
-            this.typeComboBox = new System.Windows.Forms.ComboBox();
-            this.event1ComboBox = new System.Windows.Forms.ComboBox();
-            this.event2ComboBox = new System.Windows.Forms.ComboBox();
+            this.existenceComboBox = new MobiusEditor.Controls.ComboBoxSmartWidth();
+            this.typeComboBox = new MobiusEditor.Controls.ComboBoxSmartWidth();
+            this.event1ComboBox = new MobiusEditor.Controls.ComboBoxSmartWidth();
+            this.event2ComboBox = new MobiusEditor.Controls.ComboBoxSmartWidth();
             this.teamLabel = new System.Windows.Forms.Label();
-            this.teamComboBox = new System.Windows.Forms.ComboBox();
+            this.teamComboBox = new MobiusEditor.Controls.ComboBoxSmartWidth();
             this.event1Flp = new System.Windows.Forms.FlowLayoutPanel();
-            this.event1Nud = new System.Windows.Forms.NumericUpDown();
-            this.event1ValueComboBox = new System.Windows.Forms.ComboBox();
+            this.event1Nud = new MobiusEditor.Controls.EnhNumericUpDown();
+            this.event1ValueComboBox = new MobiusEditor.Controls.ComboBoxSmartWidth();
             this.event2Flp = new System.Windows.Forms.FlowLayoutPanel();
-            this.event2Nud = new System.Windows.Forms.NumericUpDown();
-            this.event2ValueComboBox = new System.Windows.Forms.ComboBox();
+            this.event2Nud = new MobiusEditor.Controls.EnhNumericUpDown();
+            this.event2ValueComboBox = new MobiusEditor.Controls.ComboBoxSmartWidth();
             this.action1Flp = new System.Windows.Forms.FlowLayoutPanel();
-            this.action1Nud = new System.Windows.Forms.NumericUpDown();
-            this.action1ValueComboBox = new System.Windows.Forms.ComboBox();
+            this.action1Nud = new MobiusEditor.Controls.EnhNumericUpDown();
+            this.action1ValueComboBox = new MobiusEditor.Controls.ComboBoxSmartWidth();
             this.action2Flp = new System.Windows.Forms.FlowLayoutPanel();
-            this.action2Nud = new System.Windows.Forms.NumericUpDown();
-            this.action2ValueComboBox = new System.Windows.Forms.ComboBox();
+            this.action2Nud = new MobiusEditor.Controls.EnhNumericUpDown();
+            this.action2ValueComboBox = new MobiusEditor.Controls.ComboBoxSmartWidth();
             this.triggersListView = new System.Windows.Forms.ListView();
             this.nameColumnHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.triggersContextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
@@ -336,7 +338,7 @@ namespace MobiusEditor.Dialogs
             this.action1ComboBox.Name = "action1ComboBox";
             this.action1ComboBox.Size = new System.Drawing.Size(141, 21);
             this.action1ComboBox.TabIndex = 16;
-            this.action1ComboBox.SelectedIndexChanged += new System.EventHandler(this.trigger1ComboBox_SelectedIndexChanged);
+            this.action1ComboBox.SelectedIndexChanged += new System.EventHandler(this.Action1ComboBox_SelectedIndexChanged);
             // 
             // action2ComboBox
             // 
@@ -348,7 +350,7 @@ namespace MobiusEditor.Dialogs
             this.action2ComboBox.Name = "action2ComboBox";
             this.action2ComboBox.Size = new System.Drawing.Size(141, 21);
             this.action2ComboBox.TabIndex = 19;
-            this.action2ComboBox.SelectedIndexChanged += new System.EventHandler(this.trigger2ComboBox_SelectedIndexChanged);
+            this.action2ComboBox.SelectedIndexChanged += new System.EventHandler(this.Action2ComboBox_SelectedIndexChanged);
             // 
             // existenceLabel
             // 
@@ -398,7 +400,7 @@ namespace MobiusEditor.Dialogs
             this.event1ComboBox.Name = "event1ComboBox";
             this.event1ComboBox.Size = new System.Drawing.Size(141, 21);
             this.event1ComboBox.TabIndex = 10;
-            this.event1ComboBox.SelectedIndexChanged += new System.EventHandler(this.trigger1ComboBox_SelectedIndexChanged);
+            this.event1ComboBox.SelectedIndexChanged += new System.EventHandler(this.Event1ComboBox_SelectedIndexChanged);
             // 
             // event2ComboBox
             // 
@@ -410,7 +412,7 @@ namespace MobiusEditor.Dialogs
             this.event2ComboBox.Name = "event2ComboBox";
             this.event2ComboBox.Size = new System.Drawing.Size(141, 21);
             this.event2ComboBox.TabIndex = 13;
-            this.event2ComboBox.SelectedIndexChanged += new System.EventHandler(this.trigger2ComboBox_SelectedIndexChanged);
+            this.event2ComboBox.SelectedIndexChanged += new System.EventHandler(this.Event2ComboBox_SelectedIndexChanged);
             // 
             // teamLabel
             // 
@@ -464,6 +466,8 @@ namespace MobiusEditor.Dialogs
             this.event1Nud.Name = "event1Nud";
             this.event1Nud.Size = new System.Drawing.Size(70, 20);
             this.event1Nud.TabIndex = 0;
+            this.event1Nud.ValueChanged += this.Event1Nud_ValueChanged;
+            this.event1Nud.ValueEntered += this.Event1Nud_ValueEntered;
             // 
             // event1ValueComboBox
             // 
@@ -504,6 +508,8 @@ namespace MobiusEditor.Dialogs
             this.event2Nud.Name = "event2Nud";
             this.event2Nud.Size = new System.Drawing.Size(70, 20);
             this.event2Nud.TabIndex = 0;
+            this.event2Nud.ValueChanged += this.Event2Nud_ValueChanged;
+            this.event2Nud.ValueEntered += this.Event2Nud_ValueEntered;
             // 
             // event2ValueComboBox
             // 
@@ -544,6 +550,7 @@ namespace MobiusEditor.Dialogs
             this.action1Nud.Name = "action1Nud";
             this.action1Nud.Size = new System.Drawing.Size(70, 20);
             this.action1Nud.TabIndex = 0;
+            this.action1Nud.ValueEntered += this.Action1Nud_ValueEntered;
             // 
             // action1ValueComboBox
             // 
@@ -584,6 +591,7 @@ namespace MobiusEditor.Dialogs
             this.action2Nud.Name = "action2Nud";
             this.action2Nud.Size = new System.Drawing.Size(70, 20);
             this.action2Nud.TabIndex = 0;
+            this.action2Nud.ValueEntered += this.Action2Nud_ValueEntered;
             // 
             // action2ValueComboBox
             // 
@@ -625,26 +633,26 @@ namespace MobiusEditor.Dialogs
             this.renameTriggerToolStripMenuItem,
             this.removeTriggerToolStripMenuItem});
             this.triggersContextMenuStrip.Name = "teamTypesContextMenuStrip";
-            this.triggersContextMenuStrip.Size = new System.Drawing.Size(185, 70);
+            this.triggersContextMenuStrip.Size = new System.Drawing.Size(187, 70);
             // 
             // addTriggerToolStripMenuItem
             // 
             this.addTriggerToolStripMenuItem.Name = "addTriggerToolStripMenuItem";
-            this.addTriggerToolStripMenuItem.Size = new System.Drawing.Size(184, 22);
+            this.addTriggerToolStripMenuItem.Size = new System.Drawing.Size(186, 22);
             this.addTriggerToolStripMenuItem.Text = "&Add Trigger (Ctrl+A)";
             this.addTriggerToolStripMenuItem.Click += new System.EventHandler(this.addTriggerToolStripMenuItem_Click);
             // 
             // renameTriggerToolStripMenuItem
             // 
             this.renameTriggerToolStripMenuItem.Name = "renameTriggerToolStripMenuItem";
-            this.renameTriggerToolStripMenuItem.Size = new System.Drawing.Size(184, 22);
+            this.renameTriggerToolStripMenuItem.Size = new System.Drawing.Size(186, 22);
             this.renameTriggerToolStripMenuItem.Text = "Re&name Trigger (F2)";
             this.renameTriggerToolStripMenuItem.Click += new System.EventHandler(this.renameTriggerToolStripMenuItem_Click);
             // 
             // removeTriggerToolStripMenuItem
             // 
             this.removeTriggerToolStripMenuItem.Name = "removeTriggerToolStripMenuItem";
-            this.removeTriggerToolStripMenuItem.Size = new System.Drawing.Size(184, 22);
+            this.removeTriggerToolStripMenuItem.Size = new System.Drawing.Size(186, 22);
             this.removeTriggerToolStripMenuItem.Text = "&Remove Trigger (Del)";
             this.removeTriggerToolStripMenuItem.Click += new System.EventHandler(this.removeTriggerToolStripMenuItem_Click);
             // 
@@ -704,33 +712,33 @@ namespace MobiusEditor.Dialogs
         private System.Windows.Forms.ToolStripMenuItem removeTriggerToolStripMenuItem;
         private System.Windows.Forms.TableLayoutPanel triggersTableLayoutPanel;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.ComboBox houseComboBox;
+        private MobiusEditor.Controls.ComboBoxSmartWidth houseComboBox;
         private System.Windows.Forms.Label typeLabel;
         private System.Windows.Forms.Label event1Label;
         private System.Windows.Forms.Label event2Label;
         private System.Windows.Forms.Label action2Label;
-        private System.Windows.Forms.ComboBox action2ComboBox;
+        private MobiusEditor.Controls.ComboBoxSmartWidth action2ComboBox;
         private System.Windows.Forms.Label existenceLabel;
-        private System.Windows.Forms.ComboBox existenceComboBox;
-        private System.Windows.Forms.ComboBox typeComboBox;
-        private System.Windows.Forms.ComboBox event1ComboBox;
-        private System.Windows.Forms.ComboBox event2ComboBox;
-        private System.Windows.Forms.ComboBox action1ComboBox;
+        private MobiusEditor.Controls.ComboBoxSmartWidth existenceComboBox;
+        private MobiusEditor.Controls.ComboBoxSmartWidth typeComboBox;
+        private MobiusEditor.Controls.ComboBoxSmartWidth event1ComboBox;
+        private MobiusEditor.Controls.ComboBoxSmartWidth event2ComboBox;
+        private MobiusEditor.Controls.ComboBoxSmartWidth action1ComboBox;
         private System.Windows.Forms.Label action1Label;
         private System.Windows.Forms.Label teamLabel;
-        private System.Windows.Forms.ComboBox teamComboBox;
+        private MobiusEditor.Controls.ComboBoxSmartWidth teamComboBox;
         private System.Windows.Forms.FlowLayoutPanel event1Flp;
-        private System.Windows.Forms.NumericUpDown event1Nud;
+        private MobiusEditor.Controls.EnhNumericUpDown event1Nud;
         private System.Windows.Forms.FlowLayoutPanel event2Flp;
-        private System.Windows.Forms.NumericUpDown event2Nud;
+        private MobiusEditor.Controls.EnhNumericUpDown event2Nud;
         private System.Windows.Forms.FlowLayoutPanel action1Flp;
-        private System.Windows.Forms.NumericUpDown action1Nud;
+        private MobiusEditor.Controls.EnhNumericUpDown action1Nud;
         private System.Windows.Forms.FlowLayoutPanel action2Flp;
-        private System.Windows.Forms.NumericUpDown action2Nud;
-        private System.Windows.Forms.ComboBox event1ValueComboBox;
-        private System.Windows.Forms.ComboBox event2ValueComboBox;
-        private System.Windows.Forms.ComboBox action1ValueComboBox;
-        private System.Windows.Forms.ComboBox action2ValueComboBox;
+        private MobiusEditor.Controls.EnhNumericUpDown action2Nud;
+        private MobiusEditor.Controls.ComboBoxSmartWidth event1ValueComboBox;
+        private MobiusEditor.Controls.ComboBoxSmartWidth event2ValueComboBox;
+        private MobiusEditor.Controls.ComboBoxSmartWidth action1ValueComboBox;
+        private MobiusEditor.Controls.ComboBoxSmartWidth action2ValueComboBox;
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel2;
         private System.Windows.Forms.Button btnAdd;
         private System.Windows.Forms.ToolStripMenuItem renameTriggerToolStripMenuItem;

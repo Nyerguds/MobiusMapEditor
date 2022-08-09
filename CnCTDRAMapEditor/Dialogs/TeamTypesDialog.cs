@@ -70,7 +70,7 @@ namespace MobiusEditor.Dialogs
                     break;
                 case GameType.RedAlert:
                     chbLearning.Visible = false;
-                    chbMercernary.Visible = false;
+                    chbMercenary.Visible = false;
                     break;
             }
             teamTypes = new List<TeamType>();
@@ -121,7 +121,7 @@ namespace MobiusEditor.Dialogs
             chbLearning.DataBindings.Clear();
             chbSuicide.DataBindings.Clear();
             chbAutocreate.DataBindings.Clear();
-            chbMercernary.DataBindings.Clear();
+            chbMercenary.DataBindings.Clear();
             chbReinforcable.DataBindings.Clear();
             chbPrebuilt.DataBindings.Clear();
             nudRecruitPriority.DataBindings.Clear();
@@ -142,7 +142,7 @@ namespace MobiusEditor.Dialogs
                 chbLearning.DataBindings.Add("Checked", selected, "IsLearning");
                 chbSuicide.DataBindings.Add("Checked", selected, "IsSuicide");
                 chbAutocreate.DataBindings.Add("Checked", selected, "IsAutocreate");
-                chbMercernary.DataBindings.Add("Checked", selected, "IsMercenary");
+                chbMercenary.DataBindings.Add("Checked", selected, "IsMercenary");
                 chbReinforcable.DataBindings.Add("Checked", selected, "IsReinforcable");
                 chbPrebuilt.DataBindings.Add("Checked", selected, "IsPrebuilt");
                 selected.RecruitPriority = CheckBounds(selected.RecruitPriority, nudRecruitPriority);
@@ -160,7 +160,7 @@ namespace MobiusEditor.Dialogs
                 teamItemInfo = new TeamItemInfo(null, selected.Classes, technoTypes);
                 tilTeams.Populate(teamItemInfo, this);
                 tilTeams.TabStop = selected.Classes.Count > 0;
-                missionItemInfo = new MissionItemInfo(null, selected.Missions, teamMissionTypes, this.wayPoints);
+                missionItemInfo = new MissionItemInfo(null, selected.Missions, teamMissionTypes, this.wayPoints, plugin.Map.Metrics.Length, toolTip1);
                 milMissions.Populate(missionItemInfo, this);
                 milMissions.TabStop = selected.Missions.Count > 0;
 
@@ -412,7 +412,7 @@ namespace MobiusEditor.Dialogs
                 int index = SelectedTeamType.Missions.IndexOf(updateInfo);
                 SelectedTeamType.Missions.Remove(updateInfo);
                 // Reset list controller with new list
-                missionItemInfo = new MissionItemInfo(null, SelectedTeamType.Missions, teamMissionTypes, this.wayPoints);
+                missionItemInfo = new MissionItemInfo(null, SelectedTeamType.Missions, teamMissionTypes, this.wayPoints, plugin.Map.Metrics.Length, toolTip1);
                 milMissions.Populate(missionItemInfo, this);
                 btnAddMission.Enabled = SelectedTeamType.Missions.Count < Globals.MaxTeamMissions;
                 int missions = SelectedTeamType.Missions.Count;
@@ -454,7 +454,7 @@ namespace MobiusEditor.Dialogs
                 {
                     TeamTypeMission newItem = new TeamTypeMission() { Mission = defaultMission, Argument = -1 };
                     SelectedTeamType.Missions.Add(newItem);
-                    missionItemInfo = new MissionItemInfo(null, SelectedTeamType.Missions, teamMissionTypes, this.wayPoints);
+                    missionItemInfo = new MissionItemInfo(null, SelectedTeamType.Missions, teamMissionTypes, this.wayPoints, plugin.Map.Metrics.Length, toolTip1);
                     milMissions.Populate(missionItemInfo, this);
                     MissionItemControl newCtrl = missionItemInfo.GetControlByProperty(newItem, milMissions.Contents);
                     pnlMissionsScroll.ScrollControlIntoView(newCtrl);

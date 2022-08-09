@@ -55,17 +55,22 @@ namespace MobiusEditor.Model
         Time,
         Waypoint,
         OptionsList,
+        MapCell,
+        OrderNumber,
+        GlobalNumber,
         Tarcom,
     }
 
     public class TeamMission : ICloneable, IEquatable<TeamMission>
     {
+        public int ID { get; private set; }
         public string Mission { get; private set; }
         public TeamMissionArgType ArgType { get; private set; }
         public (int,string)[] DropdownOptions { get; private set; }
 
-        public TeamMission(String mission, TeamMissionArgType argType, params (int, string)[] dropdownOptions)
+        public TeamMission(int id, String mission, TeamMissionArgType argType, params (int, string)[] dropdownOptions)
         {
+            this.ID = id;
             this.Mission = mission;
             this.ArgType = argType;
             if (dropdownOptions == null)
@@ -85,7 +90,7 @@ namespace MobiusEditor.Model
 
         public TeamMission Clone()
         {
-            return new TeamMission(this.Mission, this.ArgType, this.DropdownOptions.Select( ddo => (ddo.Item1, ddo.Item2)).ToArray());
+            return new TeamMission(this.ID, this.Mission, this.ArgType, this.DropdownOptions.Select( ddo => (ddo.Item1, ddo.Item2)).ToArray());
         }
 
         object ICloneable.Clone()
@@ -98,7 +103,7 @@ namespace MobiusEditor.Model
     {
         public TeamMission Mission { get; set; }
 
-        public int Argument { get; set; }
+        public long Argument { get; set; }
 
         public TeamTypeMission Clone()
         {

@@ -36,6 +36,10 @@ namespace MobiusEditor.Controls
         [DefaultValue(true)]
         [Description("True to make the up-down arrow keys or controls cause validation on EnteredValue.")]
         public Boolean UpDownValidatesEnter { get { return this._UpDownValidatesEnter; } set { this._UpDownValidatesEnter = value; } }
+        [Category("Data")]
+        [DefaultValue(true)]
+        [Description("True to make focus loss cause validation on EnteredValue.")]
+        public Boolean FocusLossValidatesEnter { get { return this._UpDownValidatesEnter; } set { this._UpDownValidatesEnter = value; } }
 
         /// <summary>
         /// Last validated entered value.
@@ -176,6 +180,15 @@ namespace MobiusEditor.Controls
                 this.ValidateValue();
             if (this.ValueUpDown != null)
                 this.ValueUpDown(this, new UpDownEventArgs(action, scroll, true));
+        }
+
+        protected override void OnLostFocus(EventArgs e)
+        {
+            if (this.FocusLossValidatesEnter)
+            {
+                this.Text = this.Text;
+                this.ValidateValue();
+            }
         }
 
         private void CheckKeyPress(Object sender, KeyEventArgs e)

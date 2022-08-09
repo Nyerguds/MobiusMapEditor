@@ -67,7 +67,15 @@ namespace MobiusEditor.Controls.ControlsList
             {
                 try
                 {
-                    T newControl = mutualControls.TryGetValue(props[i], out newControl) ? newControl : cci.MakeControl(props[i], ebc);
+                    T newControl;
+                    if (mutualControls.TryGetValue(props[i], out newControl))
+                    {
+                        cci.UpdateControl(props[i], ebc, newControl);
+                    }
+                    else
+                    {
+                        newControl = cci.MakeControl(props[i], ebc);
+                    }
                     finalHeight = this.AddControl(newControl, false);
                 }
                 catch (NotImplementedException)

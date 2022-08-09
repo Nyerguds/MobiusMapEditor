@@ -13,6 +13,7 @@
 // GNU General Public License along with permitted additional restrictions 
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using MobiusEditor.Model;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -63,7 +64,8 @@ namespace MobiusEditor.TiberianDawn
             Types =
                 (from field in typeof(OverlayTypes).GetFields(BindingFlags.Static | BindingFlags.Public)
                  where field.IsInitOnly && typeof(OverlayType).IsAssignableFrom(field.FieldType)
-                 select field.GetValue(null) as OverlayType).ToArray();
+                 select field.GetValue(null) as OverlayType).OrderBy(t => t.ID).ToArray();
+            
         }
 
         public static IEnumerable<OverlayType> GetTypes()

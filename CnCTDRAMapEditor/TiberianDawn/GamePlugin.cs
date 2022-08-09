@@ -114,7 +114,6 @@ namespace MobiusEditor.TiberianDawn
             var generalWaypoints = Enumerable.Range(mplayers, 25 - mplayers).Select(i => new Waypoint(i.ToString()));
             var specialWaypoints = new Waypoint[] { new Waypoint("Flare"), new Waypoint("Home"), new Waypoint("Reinf.") };
             var waypoints = playerWaypoints.Concat(generalWaypoints).Concat(specialWaypoints);
-
             var movies = new List<string>();
             using (var megafile = new Megafile(Path.Combine(Globals.MegafilePath, "MOVIES_TD.MEG")))
             {
@@ -132,26 +131,20 @@ namespace MobiusEditor.TiberianDawn
             movies = movies.Distinct().ToList();
             movies.Insert(0, "x");
             movieTypes = movies.ToArray();
-
             var basicSection = new BasicSection();
             basicSection.SetDefault();
-
             var houseTypes = HouseTypes.GetTypes();
             basicSection.Player = houseTypes.First().Name;
-
             Map = new Map(basicSection, null, Constants.MaxSize, typeof(House),
                 houseTypes, TheaterTypes.GetTypes(), TemplateTypes.GetTypes(), TerrainTypes.GetTypes(),
                 OverlayTypes.GetTypes(), SmudgeTypes.GetTypes(), EventTypes.GetTypes(), ActionTypes.GetTypes(),
                 MissionTypes.GetTypes(), DirectionTypes.GetTypes(), InfantryTypes.GetTypes(), UnitTypes.GetTypes(true),
-                BuildingTypes.GetTypes(), TeamMissionTypes.GetTypes(), TeamMissionTypes.GetTypesInfo(), technoTypes,
-                waypoints, movieTypes, themeTypes )
+                BuildingTypes.GetTypes(), TeamMissionTypes.GetTypes(), technoTypes, waypoints, movieTypes, themeTypes )
             {
                 TiberiumOrGoldValue = 25
             };
-
             Map.BasicSection.PropertyChanged += BasicSection_PropertyChanged;
             Map.MapSection.PropertyChanged += MapSection_PropertyChanged;
-
             if (mapImage)
             {
                 MapImage = new Bitmap(Map.Metrics.Width * Globals.TileWidth, Map.Metrics.Height * Globals.TileHeight);
@@ -168,9 +161,7 @@ namespace MobiusEditor.TiberianDawn
             Map.Theater = Map.TheaterTypes.Where(t => t.Equals(theater)).FirstOrDefault() ?? TheaterTypes.Temperate;
             Map.TopLeft = new Point(1, 1);
             Map.Size = Map.Metrics.Size - new Size(2, 2);
-
             UpdateBasePlayerHouse();
-
             Dirty = true;
         }
 
@@ -322,9 +313,7 @@ namespace MobiusEditor.TiberianDawn
         private IEnumerable<string> LoadINI(INI ini)
         {
             var errors = new List<string>();
-
             Map.BeginUpdate();
-
             var basicSection = ini.Sections.Extract("Basic");
             if (basicSection != null)
             {
@@ -342,15 +331,12 @@ namespace MobiusEditor.TiberianDawn
                 basic.Win4 = INIHelpers.AddRemarks(basic.Win4, "x", true, toAddRem, remark);
                 basic.Lose = INIHelpers.AddRemarks(basic.Lose, "x", true, toAddRem, remark);
             }
-
             Map.BasicSection.Player = Map.HouseTypes.Where(t => t.Equals(Map.BasicSection.Player)).FirstOrDefault()?.Name ?? Map.HouseTypes.First().Name;
-
             var mapSection = ini.Sections.Extract("Map");
             if (mapSection != null)
             {
                 INI.ParseSection(new MapContext(Map, false), mapSection, Map.MapSection);
             }
-
             var briefingSection = ini.Sections.Extract("Briefing");
             if (briefingSection != null)
             {
@@ -363,13 +349,11 @@ namespace MobiusEditor.TiberianDawn
                     Map.BriefingSection.Briefing = string.Join(" ", briefingSection.Keys.Select(k => k.Value)).Replace("@", Environment.NewLine);
                 }
             }
-
             var steamSection = ini.Sections.Extract("Steam");
             if (steamSection != null)
             {
                 INI.ParseSection(new MapContext(Map, false), steamSection, Map.SteamSection);
             }
-
             var teamTypesSection = ini.Sections.Extract("TeamTypes");
             // Make case insensitive dictionary of teamtype missions.
             Dictionary<string, TeamMission> teamMissionTypes = Enumerable.ToDictionary(TeamMissionTypes.GetTypes(), t => t.Mission, StringComparer.OrdinalIgnoreCase);
@@ -392,7 +376,6 @@ namespace MobiusEditor.TiberianDawn
                         teamType.MaxAllowed = byte.Parse(tokens[0]); tokens.RemoveAt(0);
                         teamType.InitNum = byte.Parse(tokens[0]); tokens.RemoveAt(0);
                         teamType.Fear = byte.Parse(tokens[0]); tokens.RemoveAt(0);
-
                         var numClasses = int.Parse(tokens[0]); tokens.RemoveAt(0);
                         for (int i = 0; i < Math.Min(Globals.MaxTeamClasses, numClasses); ++i)
                         {
@@ -417,7 +400,6 @@ namespace MobiusEditor.TiberianDawn
                                 errors.Add(string.Format("Team '{0}' has wrong number of tokens for class index {1} (expecting 2)", Key, i));
                             }
                         }
-
                         var numMissions = int.Parse(tokens[0]); tokens.RemoveAt(0);
                         for (int i = 0; i < Math.Min(Globals.MaxTeamMissions, numMissions); ++i)
                         {
@@ -443,17 +425,14 @@ namespace MobiusEditor.TiberianDawn
                                 errors.Add(string.Format("Team '{0}' has wrong number of tokens for mission index {1} (expecting 2)", Key, i));
                             }
                         }
-
                         if (tokens.Count > 0)
                         {
                             teamType.IsReinforcable = int.Parse(tokens[0]) != 0; tokens.RemoveAt(0);
                         }
-
                         if (tokens.Count > 0)
                         {
                             teamType.IsPrebuilt = int.Parse(tokens[0]) != 0; tokens.RemoveAt(0);
                         }
-
                         Map.TeamTypes.Add(teamType);
                     }
                     catch (ArgumentOutOfRangeException) { }
@@ -478,12 +457,10 @@ namespace MobiusEditor.TiberianDawn
                             tokens[4] = TeamType.None;
                         trigger.Action1.Team = tokens[4];
                         trigger.PersistentType = TriggerPersistentType.Volatile;
-
                         if (tokens.Length >= 6)
                         {
                             trigger.PersistentType = (TriggerPersistentType)int.Parse(tokens[5]);
                         }
-
                         Map.Triggers.Add(trigger);
                     }
                     else
@@ -492,7 +469,6 @@ namespace MobiusEditor.TiberianDawn
                     }
                 }
             }
-
             var terrainSection = ini.Sections.Extract("Terrain");
             if (terrainSection != null)
             {
@@ -550,7 +526,6 @@ namespace MobiusEditor.TiberianDawn
                     }
                 }
             }
-
             var overlaySection = ini.Sections.Extract("Overlay");
             if (overlaySection != null)
             {
@@ -568,10 +543,9 @@ namespace MobiusEditor.TiberianDawn
                     }
                 }
             }
-
             var smudgeSection = ini.Sections.Extract("Smudge");
             // Craters other than cr1 don't work right in the game. Replace them by stage-0 cr1.
-            Regex craterRegex = new Regex("^CR[2-6]$");
+            Regex craterRegex = new Regex("^CR[2-6]$", RegexOptions.IgnoreCase);
             if (smudgeSection != null)
             {
                 foreach (var (Key, Value) in smudgeSection)
@@ -600,7 +574,6 @@ namespace MobiusEditor.TiberianDawn
                     }
                 }
             }
-
             var infantrySections = ini.Sections.Extract("Infantry");
             if (infantrySections != null)
             {
@@ -619,14 +592,12 @@ namespace MobiusEditor.TiberianDawn
                                 infantryGroup = new InfantryGroup();
                                 Map.Technos.Add(cell, infantryGroup);
                             }
-
                             if (infantryGroup != null)
                             {
                                 var stoppingPos = int.Parse(tokens[4]);
                                 if (stoppingPos < Globals.NumInfantryStops)
                                 {
                                     var direction = (byte)((int.Parse(tokens[6]) + 0x08) & ~0x0F);
-
                                     if (infantryGroup.Infantry[stoppingPos] == null)
                                     {
                                         infantryGroup.Infantry[stoppingPos] = new Infantry(infantryGroup)
@@ -685,7 +656,6 @@ namespace MobiusEditor.TiberianDawn
                     }
                 }
             }
-
             var unitsSections = ini.Sections.Extract("Units");
             if (unitsSections != null)
             {
@@ -698,7 +668,6 @@ namespace MobiusEditor.TiberianDawn
                         if (unitType != null)
                         {
                             var direction = (byte)((int.Parse(tokens[4]) + 0x08) & ~0x0F);
-
                             var cell = int.Parse(tokens[3]);
                             if (!Map.Technos.Add(cell, new Unit()
                                 {
@@ -748,7 +717,8 @@ namespace MobiusEditor.TiberianDawn
                     }
                 }
             }
-
+            // Game does not actually support reading this.
+            /*/
             var aircraftSections = ini.Sections.Extract("Aircraft");
             if (aircraftSections != null)
             {
@@ -810,7 +780,7 @@ namespace MobiusEditor.TiberianDawn
                     }
                 }
             }
-
+            //*/
             var structuresSection = ini.Sections.Extract("Structures");
             if (structuresSection != null)
             {
@@ -872,7 +842,6 @@ namespace MobiusEditor.TiberianDawn
                     }
                 }
             }
-
             var baseSection = ini.Sections.Extract("Base");
             if (baseSection != null)
             {
@@ -920,7 +889,6 @@ namespace MobiusEditor.TiberianDawn
                     }
                 }
             }
-
             var waypointsSection = ini.Sections.Extract("Waypoints");
             if (waypointsSection != null)
             {
@@ -961,7 +929,6 @@ namespace MobiusEditor.TiberianDawn
                     }
                 }
             }
-
             var cellTriggersSection = ini.Sections.Extract("CellTriggers");
             if (cellTriggersSection != null)
             {
@@ -987,7 +954,6 @@ namespace MobiusEditor.TiberianDawn
                     }
                 }
             }
-
             Dictionary<string, string> correctedEdges = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             foreach (var edge in Globals.Edges)
                 correctedEdges.Add(edge, edge);
@@ -998,7 +964,6 @@ namespace MobiusEditor.TiberianDawn
                 {
                     continue;
                 }
-
                 var houseSection = ini.Sections.Extract(house.Type.Name);
                 if (houseSection != null)
                 {
@@ -1014,20 +979,15 @@ namespace MobiusEditor.TiberianDawn
                     house.Enabled = false;
                 }
             }
-
             UpdateBasePlayerHouse();
-
             extraSections = ini.Sections;
-
             Map.EndUpdate();
-
             return errors;
         }
 
         private void LoadBinary(BinaryReader reader)
         {
             Map.Templates.Clear();
-
             for (var y = 0; y < Map.Metrics.Height; ++y)
             {
                 for (var x = 0; x < Map.Metrics.Width; ++x)
@@ -1054,7 +1014,6 @@ namespace MobiusEditor.TiberianDawn
             {
                 return false;
             }
-
             switch (fileType)
             {
                 case FileType.INI:
@@ -1072,18 +1031,15 @@ namespace MobiusEditor.TiberianDawn
                             //iniWriter.Write(ini.ToString());
                             FixRoad2Save(ini, iniWriter);
                         }
-
                         using (var binStream = new FileStream(binPath, FileMode.Create))
                         using (var binWriter = new BinaryWriter(binStream))
                         {
                             SaveBinary(binWriter);
                         }
-
                         using (var tgaStream = new FileStream(tgaPath, FileMode.Create))
                         {
                             SaveMapPreview(tgaStream, Map.BasicSection.SoloMission);
                         }
-
                         using (var jsonStream = new FileStream(jsonPath, FileMode.Create))
                         using (var jsonWriter = new JsonTextWriter(new StreamWriter(jsonStream)))
                         {
@@ -1110,23 +1066,18 @@ namespace MobiusEditor.TiberianDawn
                             FixRoad2Save(ini, iniWriter);
                             iniWriter.Flush();
                             iniStream.Position = 0;
-
                             SaveBinary(binWriter);
                             binWriter.Flush();
                             binStream.Position = 0;
-
                             SaveMapPreview(tgaStream, Map.BasicSection.SoloMission);
                             tgaStream.Position = 0;
-
                             SaveJSON(jsonWriter);
                             jsonWriter.Flush();
                             jsonStream.Position = 0;
-
                             var iniFile = Path.ChangeExtension(Path.GetFileName(path), ".ini").ToUpper();
                             var binFile = Path.ChangeExtension(Path.GetFileName(path), ".bin").ToUpper();
                             var tgaFile = Path.ChangeExtension(Path.GetFileName(path), ".tga").ToUpper();
                             var jsonFile = Path.ChangeExtension(Path.GetFileName(path), ".json").ToUpper();
-
                             megafileBuilder.AddFile(iniFile, iniStream);
                             megafileBuilder.AddFile(binFile, binStream);
                             megafileBuilder.AddFile(tgaFile, tgaStream);
@@ -1138,7 +1089,6 @@ namespace MobiusEditor.TiberianDawn
                 default:
                     throw new NotSupportedException();
             }
-
             return true;
         }
 
@@ -1188,28 +1138,23 @@ namespace MobiusEditor.TiberianDawn
             basic.Win3 = INIHelpers.TrimRemarks(basic.Win3, true, cutfrom);
             basic.Win4 =INIHelpers.TrimRemarks(basic.Win4, true, cutfrom);
             basic.Lose = INIHelpers.TrimRemarks(basic.Lose, true, cutfrom);
-
             INI.WriteSection(new MapContext(Map, false), ini.Sections.Add("Basic"), Map.BasicSection);
             INI.WriteSection(new MapContext(Map, false), ini.Sections.Add("Map"), Map.MapSection);
-
             if (fileType != FileType.PGM)
             {
                 INI.WriteSection(new MapContext(Map, false), ini.Sections.Add("Steam"), Map.SteamSection);
             }
-
             ini.Sections.Remove("Briefing");
             if (!string.IsNullOrEmpty(Map.BriefingSection.Briefing))
             {
                 var briefingSection = ini.Sections.Add("Briefing");
                 briefingSection["Text"] = Map.BriefingSection.Briefing.Replace(Environment.NewLine, "@");
             }
-
             var cellTriggersSection = ini.Sections.Add("CellTriggers");
             foreach (var (cell, cellTrigger) in Map.CellTriggers)
             {
                 cellTriggersSection[cell.ToString()] = cellTrigger.Trigger;
             }
-
             var teamTypesSection = ini.Sections.Add("TeamTypes");
             foreach(var teamType in Map.TeamTypes)
             {
@@ -1219,7 +1164,6 @@ namespace MobiusEditor.TiberianDawn
                 var missions = teamType.Missions
                     .Select(m => string.Format("{0}:{1}", m.Mission.Mission, m.Argument))
                     .ToArray();
-
                 var tokens = new List<string>
                 {
                     teamType.House.Name,
@@ -1239,7 +1183,6 @@ namespace MobiusEditor.TiberianDawn
                     teamType.IsReinforcable ? "1" : "0",
                     teamType.IsPrebuilt ? "1" : "0"
                 };
-
                 teamTypesSection[teamType.Name] = string.Join(",", tokens.Where(t => !string.IsNullOrEmpty(t)));
             }
 
@@ -1250,7 +1193,6 @@ namespace MobiusEditor.TiberianDawn
                 {
                     continue;
                 }
-
                 var tokens = new List<string>
                 {
                     trigger.Event1.EventType,
@@ -1263,7 +1205,6 @@ namespace MobiusEditor.TiberianDawn
 
                 triggersSection[trigger.Name] = string.Join(",", tokens);
             }
-
             var waypointsSection = ini.Sections.Add("Waypoints");
             for (var i = 0; i < Map.Waypoints.Length; ++i)
             {
@@ -1273,7 +1214,6 @@ namespace MobiusEditor.TiberianDawn
                     waypointsSection[i.ToString()] = waypoint.Cell.Value.ToString();
                 }
             }
-
             var baseSection = ini.Sections.Add("Base");
             var baseBuildings = Map.Buildings.OfType<Building>().Where(x => x.Occupier.BasePriority >= 0).OrderByDescending(x => x.Occupier.BasePriority).ToArray();
             var baseIndex = baseBuildings.Length - 1;
@@ -1317,7 +1257,6 @@ namespace MobiusEditor.TiberianDawn
                     );
                 }
             }
-
             var structuresSection = ini.Sections.Add("Structures");
             var structureIndex = 0;
             foreach (var (location, building) in Map.Buildings.OfType<Building>().Where(x => x.Occupier.IsPrebuilt))
@@ -1335,7 +1274,6 @@ namespace MobiusEditor.TiberianDawn
                     building.Trigger
                 );
             }
-
             var unitsSection = ini.Sections.Add("Units");
             var unitIndex = 0;
             foreach (var (location, unit) in Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsUnit))
@@ -1355,6 +1293,7 @@ namespace MobiusEditor.TiberianDawn
                 );
             }
             // Game does not actually support reading this.
+            /*/
             var aircraftSection = ini.Sections.Add("Aircraft");
             var aircraftIndex = 0;
             foreach (var (location, aircraft) in Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsAircraft))
@@ -1372,7 +1311,7 @@ namespace MobiusEditor.TiberianDawn
                     String.IsNullOrEmpty(aircraft.Mission) ? "Guard" : aircraft.Mission
                 );
             }
-
+            //*/
             foreach (var house in Map.Houses)
             {
                 if ((house.Type.ID < 0) || !house.Enabled)
@@ -1382,7 +1321,6 @@ namespace MobiusEditor.TiberianDawn
 
                 INI.WriteSection(new MapContext(Map, false), ini.Sections.Add(house.Type.Name), house);
             }
-
             var overlaySection = ini.Sections.Add("Overlay");
             Regex tiberium = new Regex("TI([0-9]|(1[0-2]))", RegexOptions.IgnoreCase);
             Random rd = new Random();
@@ -1393,13 +1331,11 @@ namespace MobiusEditor.TiberianDawn
                     overlayName = "TI" + rd.Next(1, 13);
                 overlaySection[cell.ToString()] = overlayName.ToUpperInvariant();
             }
-
             var smudgeSection = ini.Sections.Add("Smudge");
             foreach (var (cell, smudge) in Map.Smudge.Where(item => (item.Value.Type.Flag & SmudgeTypeFlag.Bib) == SmudgeTypeFlag.None))
             {
                 smudgeSection[cell.ToString()] = string.Format("{0},{1},{2}", smudge.Type.Name.ToUpper(), cell, smudge.Icon);
             }
-
             var terrainSection = ini.Sections.Add("Terrain");
             foreach (var (location, terrain) in Map.Technos.OfType<Terrain>())
             {

@@ -53,7 +53,7 @@ namespace MobiusEditor.Controls
             this.directionComboBox = new MobiusEditor.Controls.PropertiesComboBox();
             this.missionComboBox = new MobiusEditor.Controls.PropertiesComboBox();
             this.triggerComboBox = new MobiusEditor.Controls.PropertiesComboBox();
-            this.basePriorityNud = new System.Windows.Forms.NumericUpDown();
+            this.basePriorityNud = new MobiusEditor.Controls.EnhNumericUpDown();
             this.prebuiltCheckBox = new System.Windows.Forms.CheckBox();
             this.basePriorityLabel = new System.Windows.Forms.Label();
             this.sellableCheckBox = new System.Windows.Forms.CheckBox();
@@ -337,7 +337,7 @@ namespace MobiusEditor.Controls
         private MobiusEditor.Controls.PropertiesComboBox directionComboBox;
         private MobiusEditor.Controls.PropertiesComboBox missionComboBox;
         private MobiusEditor.Controls.PropertiesComboBox triggerComboBox;
-        private System.Windows.Forms.NumericUpDown basePriorityNud;
+        private MobiusEditor.Controls.EnhNumericUpDown basePriorityNud;
         private System.Windows.Forms.CheckBox prebuiltCheckBox;
         private System.Windows.Forms.Label basePriorityLabel;
         private System.Windows.Forms.CheckBox sellableCheckBox;

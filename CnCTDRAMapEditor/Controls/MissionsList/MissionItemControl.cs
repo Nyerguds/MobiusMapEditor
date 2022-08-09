@@ -1,15 +1,10 @@
 ﻿using MobiusEditor.Controls.ControlsList;
-using MobiusEditor.Interface;
 using MobiusEditor.Model;
 using MobiusEditor.Tools;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
-using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace MobiusEditor.Controls
@@ -17,27 +12,48 @@ namespace MobiusEditor.Controls
     public partial class MissionItemControl : UserControl
     {
         public TeamTypeMission Info { get; set; }
-        private Boolean m_Loading;
+        private bool m_Loading;
         private ListedControlController<TeamTypeMission> m_Controller;
         private TeamMission defaultMission;
         private TeamMissionArgType currentType = TeamMissionArgType.None;
         private DropDownItem<int>[] waypoints;
+        private int mapSize;
+        private ToolTip tooltip;
 
         public MissionItemControl()
-            :this(null, null, null, null)
+            :this(null, null, null, null, 0, null)
         {
             
         }
 
-        public MissionItemControl(TeamTypeMission info, ListedControlController<TeamTypeMission> controller, IEnumerable<TeamMission> missions, IEnumerable<DropDownItem<int>> waypoints)
+        public MissionItemControl(TeamTypeMission info, ListedControlController<TeamTypeMission> controller, IEnumerable<TeamMission> missions, IEnumerable<DropDownItem<int>> waypoints, int mapSize, ToolTip tooltip)
         {
             InitializeComponent();
-            this.m_Controller = controller;
-            TeamMission[] missionsArr = missions.ToArray();
-            this.defaultMission = missionsArr.FirstOrDefault();
-            this.cmbMission.DataSource = missionsArr;
-            this.cmbMission.DisplayMember = "Mission";
-            this.waypoints = waypoints.ToArray();
+            SetInfo(info, controller, missions, waypoints, mapSize, tooltip);
+        }
+
+        public void SetInfo(TeamTypeMission info, ListedControlController<TeamTypeMission> controller, IEnumerable<TeamMission> missions, IEnumerable<DropDownItem<int>> waypoints, int mapSize, ToolTip tooltip) 
+        {
+            try
+            {
+                this.m_Loading = true;
+                this.Info = null;
+                this.m_Controller = controller;
+                TeamMission[] missionsArr = missions.ToArray();
+                this.defaultMission = missionsArr.FirstOrDefault();
+                this.cmbMission.DisplayMember = null;
+                this.cmbMission.DataSource = null;
+                this.cmbMission.Items.Clear();
+                this.cmbMission.DataSource = missionsArr;
+                this.cmbMission.DisplayMember = "Mission";
+                this.waypoints = waypoints.ToArray();
+                this.mapSize = mapSize;
+                this.tooltip = tooltip;
+            }
+            finally
+            {
+                this.m_Loading = false;
+            }
             if (info != null)
                 UpdateInfo(info);
         }
@@ -46,16 +62,16 @@ namespace MobiusEditor.Controls
         {
             try
             {
-                m_Loading = true;
+                this.m_Loading = true;
                 this.Info = info;
                 TeamMission mission = info != null ? info.Mission : defaultMission;
-                int value = info != null ? info.Argument : 0;
+                long value = info != null ? info.Argument : 0;
                 this.cmbMission.Text = mission.Mission;
                 UpdateValueControl(mission, value);
             }
             finally
             {
-                m_Loading = false;
+                this.m_Loading = false;
             }
         }
 
@@ -64,7 +80,7 @@ namespace MobiusEditor.Controls
             this.cmbMission.Select();
         }
 
-        private void UpdateValueControl(TeamMission mission, int value)
+        private void UpdateValueControl(TeamMission mission, long value)
         {
             int selectIndex;
             switch (mission.ArgType)
@@ -79,7 +95,8 @@ namespace MobiusEditor.Controls
                     this.numValue.Visible = false;
                     this.cmbValue.Visible = true;
                     this.cmbValue.DataSource = waypoints;
-                    selectIndex = DropDownItem<int>.GetIndexInList(value, waypoints);
+                    //this.cmbValue.Tool
+                    selectIndex = DropDownItem<int>.GetIndexInList((int)value, waypoints);
                     if (selectIndex == -1 && waypoints.Length > 0)
                     {
                         selectIndex = 0;
@@ -91,19 +108,64 @@ namespace MobiusEditor.Controls
                     this.cmbValue.Visible = true;
                     DropDownItem<int>[] items = mission.DropdownOptions.Select(tup => new DropDownItem<int>(tup.Item1, tup.Item2)).ToArray();
                     this.cmbValue.DataSource = items;
-                    selectIndex = DropDownItem<int>.GetIndexInList(value, items);
+                    selectIndex = DropDownItem<int>.GetIndexInList((int)value, items);
                     if (selectIndex == -1 && items.Length > 0)
                     {
                         selectIndex = 0;
                     }
                     cmbValue.SelectedIndex = selectIndex;
                     break;
-                default:
-                    // Number, time, tarcom
-                    // Might split this up for tooltips later.
+                case TeamMissionArgType.MapCell:
+                    this.numValue.Value = this.numValue.Minimum;
+                    this.numValue.Minimum = 0;
+                    this.numValue.Maximum = mapSize - 1;
                     this.numValue.Visible = true;
+                    this.numValue.Value = numValue.Constrain(value);
                     this.cmbValue.Visible = false;
                     break;
+                default:
+                    // Number, time, global, tarcom
+                    // Might split this up for tooltips later.
+                    this.numValue.Value = this.numValue.Minimum;
+                    this.numValue.Minimum = 0;
+                    this.numValue.Maximum = Int32.MaxValue;
+                    this.numValue.Visible = true;
+                    this.numValue.Value = numValue.Constrain(value);
+                    this.cmbValue.Visible = false;
+                    break;
+            }
+            if (tooltip != null)
+            {
+
+                tooltip.SetToolTip(cmbValue, null);
+                tooltip.SetToolTip(numValue, null);
+                switch (mission.ArgType)
+                {
+                    case TeamMissionArgType.None:
+                        break;
+                    case TeamMissionArgType.Number:
+                        tooltip.SetToolTip(numValue, "number");
+                        break;
+                    case TeamMissionArgType.Time:
+                        tooltip.SetToolTip(numValue, "Time in 1/10th min");
+                        break;
+                    case TeamMissionArgType.Waypoint:
+                        tooltip.SetToolTip(cmbValue, "Waypoint");
+                        break;
+                    case TeamMissionArgType.OptionsList:
+                        break;
+                    case TeamMissionArgType.MapCell:
+                        tooltip.SetToolTip(numValue, "Map cell");
+                        break;
+                    case TeamMissionArgType.OrderNumber:
+                        tooltip.SetToolTip(numValue, "0-based index in this orders list");
+                        break;
+                    case TeamMissionArgType.GlobalNumber:
+                        tooltip.SetToolTip(cmbValue, "Global to set"); break;
+                    case TeamMissionArgType.Tarcom:
+                        tooltip.SetToolTip(numValue, "Tarcom");
+                        break;
+                }
             }
             currentType = mission.ArgType;
         }
@@ -118,7 +180,7 @@ namespace MobiusEditor.Controls
             if (mission != null)
             {
                 this.Info.Mission = mission;
-                int value = -1;
+                long value = -1;
                 if (mission.ArgType == currentType && (currentType == TeamMissionArgType.Time || currentType == TeamMissionArgType.Waypoint))
                 {
                     value = Info.Argument;
@@ -133,7 +195,7 @@ namespace MobiusEditor.Controls
             {
                 return;
             }
-            this.Info.Argument = (Byte)this.numValue.Value;
+            this.Info.Argument = (Int64)this.numValue.Value;
             if (this.m_Controller != null)
                 this.m_Controller.UpdateControlInfo(this.Info);
         }
