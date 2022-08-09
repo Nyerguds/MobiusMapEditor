@@ -136,6 +136,6 @@ v1.4.0.4: [WIP]
 * Fixed colour of "Special" in Red Alert to have the same colour as Spain.
 * Trigger Events and Actions retained their argument data when changing their type, meaning the UI would pick the equivalent data on whatever list or control popped up for the new type. This has been fixed.
 * Red Alert triggers now show human-readable data for the Event and Action arguments.
-* The editor no longer locks up when the Triggers dialog shows an empty list of Teamtypes because none were made yet.
-* Saving an RA mission as .ini will now actually write the file with .ini extension.
+* The editor no longer locks up when the Triggers dialog shows an empty list of Teamtypes or Triggers because none were made yet.
+* Saving a Red Alert mission as .ini will now actually write the file with .ini extension.
 * Removed Aircraft section handling from TD.

@@ -539,6 +539,7 @@
     <Compile Include="Utility\CRC.cs" />
     <Compile Include="Utility\ExtensionMethods.cs" />
     <Compile Include="Utility\GameTextManager.cs" />
+    <Compile Include="Utility\GeneralUtils.cs" />
     <Compile Include="Utility\GenericBooleanTypeConverter.cs" />
     <Compile Include="Utility\INI.cs" />
     <Compile Include="Utility\Megafile.cs" />

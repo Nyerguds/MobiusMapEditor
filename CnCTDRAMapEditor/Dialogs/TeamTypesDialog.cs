@@ -312,7 +312,7 @@ namespace MobiusEditor.Dialogs
         {
             if (teamTypesListView.Items.Count >= maxTeams)
                 return;
-            string name = INIHelpers.MakeNew4CharName(teamTypes.Select(t => t.Name), "????");
+            string name = GeneralUtils.MakeNew4CharName(teamTypes.Select(t => t.Name), "????", "none");
             var teamType = new TeamType { Name = name, House = plugin.Map.HouseTypes.First() };
             var item = new ListViewItem(teamType.Name)
             {
@@ -362,6 +362,11 @@ namespace MobiusEditor.Dialogs
             {
                 e.CancelEdit = true;
                 MessageBox.Show(string.Format("Team name is longer than {0} characters.", maxLength), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            else if ("None".Equals(curName, StringComparison.InvariantCultureIgnoreCase))
+            {
+                e.CancelEdit = true;
+                MessageBox.Show(string.Format("Team name 'None' is reserved and cannot be used."), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             else if (!INIHelpers.IsValidKey(curName))
             {

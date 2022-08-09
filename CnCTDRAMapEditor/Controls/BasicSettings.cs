@@ -13,6 +13,7 @@
 // GNU General Public License along with permitted additional restrictions 
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using MobiusEditor.Interface;
+using MobiusEditor.Utility;
 using System;
 using System.Data;
 using System.Linq;
@@ -28,16 +29,20 @@ namespace MobiusEditor.Controls
 
             playerComboBox.DataSource = plugin.Map.Houses.Select(h => h.Type.Name).ToArray();
             baseComboBox.DataSource = plugin.Map.Houses.Select(h => h.Type.Name).ToArray();
-            themeComboBox.DataSource = plugin.Map.ThemeTypes.ToArray();
-            introComboBox.DataSource = plugin.Map.MovieTypes.ToArray();
-            briefComboBox.DataSource = plugin.Map.MovieTypes.ToArray();
-            actionComboBox.DataSource = plugin.Map.MovieTypes.ToArray();
-            winComboBox.DataSource = plugin.Map.MovieTypes.ToArray();
-            win2ComboBox.DataSource = plugin.Map.MovieTypes.ToArray();
-            win3ComboBox.DataSource = plugin.Map.MovieTypes.ToArray();
-            win4ComboBox.DataSource = plugin.Map.MovieTypes.ToArray();
-            loseComboBox.DataSource = plugin.Map.MovieTypes.ToArray();
-
+            // No need for matching to index here; [Basic] saves it by name, not index.
+            var movData = plugin.Map.MovieTypes.ToList();
+            movData.Sort(new ExplorerComparer());
+            movData.RemoveAll(v => "x".Equals(v, StringComparison.InvariantCultureIgnoreCase));
+            movData.Insert(0, "x");
+            themeComboBox.DataSource = movData.ToArray();
+            introComboBox.DataSource = movData.ToArray();
+            briefComboBox.DataSource = movData.ToArray();
+            actionComboBox.DataSource = movData.ToArray();
+            winComboBox.DataSource = movData.ToArray();
+            win2ComboBox.DataSource = movData.ToArray();
+            win3ComboBox.DataSource = movData.ToArray();
+            win4ComboBox.DataSource = movData.ToArray();
+            loseComboBox.DataSource = movData.ToArray();
             carryOverMoneyNud.DataBindings.Add("Value", basicSection, "CarryOverMoney");
             nameTxt.DataBindings.Add("Text", basicSection, "Name");
             percentNud.DataBindings.Add("Value", basicSection, "Percent");
@@ -55,7 +60,6 @@ namespace MobiusEditor.Controls
             win3ComboBox.DataBindings.Add("Text", basicSection, "Win3");
             win4ComboBox.DataBindings.Add("Text", basicSection, "Win4");
             loseComboBox.DataBindings.Add("Text", basicSection, "Lose");
-
             switch (plugin.GameType)
             {
                 case GameType.TiberianDawn:

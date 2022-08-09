@@ -127,8 +127,8 @@ namespace MobiusEditor.TiberianDawn
                 }
             }
             movies.AddRange(movieTypesAdditional);
-            movies.Sort();
             movies = movies.Distinct().ToList();
+            movies.Sort(new ExplorerComparer());
             movies.Insert(0, "x");
             movieTypes = movies.ToArray();
             var basicSection = new BasicSection();
@@ -319,17 +319,17 @@ namespace MobiusEditor.TiberianDawn
             {
                 INI.ParseSection(new MapContext(Map, false), basicSection, Map.BasicSection);
                 char[] cutfrom = { ';', '(' };
-                string[] toAddRem = movieTypesAdditional.Select(vid => INIHelpers.TrimRemarks(vid, true, cutfrom)).ToArray();
+                string[] toAddRem = movieTypesAdditional.Select(vid => GeneralUtils.TrimRemarks(vid, true, cutfrom)).ToArray();
                 Model.BasicSection basic = Map.BasicSection;
                 const string remark = " (Classic only)";
-                basic.Intro = INIHelpers.AddRemarks(basic.Intro, "x", true, toAddRem, remark);
-                basic.Brief = INIHelpers.AddRemarks(basic.Brief, "x", true, toAddRem, remark);
-                basic.Action = INIHelpers.AddRemarks(basic.Action, "x", true, toAddRem, remark);
-                basic.Win = INIHelpers.AddRemarks(basic.Win, "x", true, toAddRem, remark);
-                basic.Win2 = INIHelpers.AddRemarks(basic.Win2, "x", true, toAddRem, remark);
-                basic.Win3 = INIHelpers.AddRemarks(basic.Win3, "x", true, toAddRem, remark);
-                basic.Win4 = INIHelpers.AddRemarks(basic.Win4, "x", true, toAddRem, remark);
-                basic.Lose = INIHelpers.AddRemarks(basic.Lose, "x", true, toAddRem, remark);
+                basic.Intro = GeneralUtils.AddRemarks(basic.Intro, "x", true, toAddRem, remark);
+                basic.Brief = GeneralUtils.AddRemarks(basic.Brief, "x", true, toAddRem, remark);
+                basic.Action = GeneralUtils.AddRemarks(basic.Action, "x", true, toAddRem, remark);
+                basic.Win = GeneralUtils.AddRemarks(basic.Win, "x", true, toAddRem, remark);
+                basic.Win2 = GeneralUtils.AddRemarks(basic.Win2, "x", true, toAddRem, remark);
+                basic.Win3 = GeneralUtils.AddRemarks(basic.Win3, "x", true, toAddRem, remark);
+                basic.Win4 = GeneralUtils.AddRemarks(basic.Win4, "x", true, toAddRem, remark);
+                basic.Lose = GeneralUtils.AddRemarks(basic.Lose, "x", true, toAddRem, remark);
             }
             Map.BasicSection.Player = Map.HouseTypes.Where(t => t.Equals(Map.BasicSection.Player)).FirstOrDefault()?.Name ?? Map.HouseTypes.First().Name;
             var mapSection = ini.Sections.Extract("Map");
@@ -1130,14 +1130,14 @@ namespace MobiusEditor.TiberianDawn
             }
             Model.BasicSection basic = Map.BasicSection;
             char[] cutfrom = { ';', '(' };
-            basic.Intro = INIHelpers.TrimRemarks(basic.Intro, true, cutfrom);
-            basic.Brief = INIHelpers.TrimRemarks(basic.Brief, true, cutfrom);
-            basic.Action = INIHelpers.TrimRemarks(basic.Action, true, cutfrom);
-            basic.Win = INIHelpers.TrimRemarks(basic.Win, true, cutfrom);
-            basic.Win2 = INIHelpers.TrimRemarks(basic.Win2, true, cutfrom);
-            basic.Win3 = INIHelpers.TrimRemarks(basic.Win3, true, cutfrom);
-            basic.Win4 =INIHelpers.TrimRemarks(basic.Win4, true, cutfrom);
-            basic.Lose = INIHelpers.TrimRemarks(basic.Lose, true, cutfrom);
+            basic.Intro = GeneralUtils.TrimRemarks(basic.Intro, true, cutfrom);
+            basic.Brief = GeneralUtils.TrimRemarks(basic.Brief, true, cutfrom);
+            basic.Action = GeneralUtils.TrimRemarks(basic.Action, true, cutfrom);
+            basic.Win = GeneralUtils.TrimRemarks(basic.Win, true, cutfrom);
+            basic.Win2 = GeneralUtils.TrimRemarks(basic.Win2, true, cutfrom);
+            basic.Win3 = GeneralUtils.TrimRemarks(basic.Win3, true, cutfrom);
+            basic.Win4 = GeneralUtils.TrimRemarks(basic.Win4, true, cutfrom);
+            basic.Lose = GeneralUtils.TrimRemarks(basic.Lose, true, cutfrom);
             INI.WriteSection(new MapContext(Map, false), ini.Sections.Add("Basic"), Map.BasicSection);
             INI.WriteSection(new MapContext(Map, false), ini.Sections.Add("Map"), Map.MapSection);
             if (fileType != FileType.PGM)

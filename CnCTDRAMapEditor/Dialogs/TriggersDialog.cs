@@ -307,7 +307,7 @@ namespace MobiusEditor.Dialogs
         {
             if (triggersListView.Items.Count >= maxTriggers)
                 return;
-            string name = INIHelpers.MakeNew4CharName(triggers.Select(t => t.Name), "????");
+            string name = GeneralUtils.MakeNew4CharName(triggers.Select(t => t.Name), "????", "none");
             var trigger = new Trigger { Name = name, House = plugin.Map.HouseTypes.First().Name };
             var item = new ListViewItem(trigger.Name)
             {
@@ -357,6 +357,11 @@ namespace MobiusEditor.Dialogs
             {
                 e.CancelEdit = true;
                 MessageBox.Show(string.Format("Trigger name is longer than {0} characters.", maxLength), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            else if ("None".Equals(curName, StringComparison.InvariantCultureIgnoreCase))
+            {
+                e.CancelEdit = true;
+                MessageBox.Show(string.Format("Trigger name 'None' is reserved and cannot be used."), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             else if (!INIHelpers.IsValidKey(curName))
             {
@@ -668,7 +673,7 @@ namespace MobiusEditor.Dialogs
                             case RedAlert.ActionTypes.TACTION_FORCE_TRIGGER:
                             case RedAlert.ActionTypes.TACTION_DESTROY_TRIGGER:
                                 actionValueComboBox.Visible = true;
-                                actionValueComboBox.DataSource = plugin.Map.Triggers.Select(t => t.Name).ToArray();
+                                actionValueComboBox.DataSource = triggers.Select(t => t.Name).ToArray();
                                 actionValueComboBox.DataBindings.Add("SelectedItem", triggerAction, "Trigger");
                                 if (triggerActionData == null)
                                 {
@@ -725,7 +730,13 @@ namespace MobiusEditor.Dialogs
                                 actionValueComboBox.Visible = true;
                                 actionValueComboBox.DisplayMember = "Name";
                                 actionValueComboBox.ValueMember = "Value";
-                                var musData = plugin.Map.ThemeTypes.Select((t, i) => new { Name = t, Value = (long)i - 1 }).OrderBy(t => t.Name).ToArray();
+                                var musData = plugin.Map.ThemeTypes.Select((t, i) => new { Name = t, Value = (long)i - 1 }).OrderBy(t => t.Name).ToList();
+                                var musDefItem = musData.Where(t => t.Value == -1).FirstOrDefault();
+                                if (musDefItem != null)
+                                {
+                                    musData.Remove(musDefItem);
+                                    musData.Insert(0, musDefItem);
+                                }
                                 actionValueComboBox.DataSource = musData;
                                 actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
                                 if (triggerActionData == null)
@@ -746,12 +757,12 @@ namespace MobiusEditor.Dialogs
                                 actionValueComboBox.Visible = true;
                                 actionValueComboBox.DisplayMember = "Name";
                                 actionValueComboBox.ValueMember = "Value";
-                                var movData = plugin.Map.MovieTypes.Select((t, i) => new { Name = t, Value = (long)i - 1 }).OrderBy(t => t.Name).ToList();
-                                var xItem = movData.Where(t => t.Name == "x").FirstOrDefault();
-                                if (xItem != null)
+                                var movData = plugin.Map.MovieTypes.Select((t, i) => new { Name = t, Value = (long)i - 1 }).OrderBy(t => t.Name, new ExplorerComparer()).ToList();
+                                var movDefItem = movData.Where(t => t.Value == -1).FirstOrDefault();
+                                if (movDefItem != null)
                                 {
-                                    movData.Remove(xItem);
-                                    movData.Insert(0, xItem);
+                                    movData.Remove(movDefItem);
+                                    movData.Insert(0, movDefItem);
                                 }
                                 actionValueComboBox.DataSource = movData;
                                 actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
@@ -775,7 +786,7 @@ namespace MobiusEditor.Dialogs
                                 actionValueComboBox.ValueMember = "Value";
                                 var vocData = new { Name = "None", Value = (long)-1 }.Yield().Concat(
                                     RedAlert.ActionDataTypes.VocTypes.Select((t, i) => new { Name = t, Value = (long)i })
-                                    .Where(t => t.Name != "x").OrderBy(t => t.Name)).ToArray();
+                                    .Where(t => t.Name != "x").OrderBy(t => t.Name, new ExplorerComparer())).ToArray();
                                 actionValueComboBox.DataSource = vocData;
                                 actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
                                 if (triggerActionData == null)
@@ -798,7 +809,7 @@ namespace MobiusEditor.Dialogs
                                 actionValueComboBox.ValueMember = "Value";
                                 var voxData = new { Name = "None", Value = (long)-1 }.Yield().Concat(
                                     RedAlert.ActionDataTypes.VoxTypes.Select((t, i) => new { Name = t, Value = (long)i })
-                                    .Where(t => t.Name != "none").OrderBy(t => t.Name)).ToArray();
+                                    .Where(t => t.Name != "none").OrderBy(t => t.Name, new ExplorerComparer())).ToArray();
                                 actionValueComboBox.DataSource = voxData;
                                 actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
                                 if (triggerActionData == null)
@@ -836,12 +847,28 @@ namespace MobiusEditor.Dialogs
                                     .ToArray();
                                 //*/
                                 break;
+                            case RedAlert.ActionTypes.TACTION_BASE_BUILDING:
+                                actionValueComboBox.Visible = true;
+                                actionValueComboBox.DisplayMember = "Name";
+                                actionValueComboBox.ValueMember = "Value";
+                                var trueFalseData = new long[] { 0, 1 }.Select(b => new { Name = b == 0 ? "Stop" : "Start", Value = b }).ToArray();
+                                actionValueComboBox.DataSource = trueFalseData;
+                                actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
+                                if (triggerActionData == null)
+                                {
+                                    actionValueComboBox.SelectedIndex = 0;
+                                }
+                                else
+                                {
+                                    if (triggerActionData.Data > 1 || triggerActionData.Data < 0)
+                                        triggerActionData.Data = 0;
+                                    actionValueComboBox.SelectedValue = triggerActionData.Data;
+                                }
+                                break;
                             case RedAlert.ActionTypes.TACTION_TEXT_TRIGGER:
                                 actionNud.Visible = true;
                                 actionNud.Minimum = 1;
                                 actionNud.Maximum = 209;
-                                if (triggerAction.Data > 209 || triggerAction.Data < 1)
-                                    triggerAction.Data = 1;
                                 actionNud.DataBindings.Add("Value", triggerAction, "Data");
                                 if (triggerActionData == null)
                                 {
@@ -849,6 +876,8 @@ namespace MobiusEditor.Dialogs
                                 }
                                 else
                                 {
+                                    if (triggerActionData.Data > 209 || triggerActionData.Data < 1)
+                                        triggerActionData.Data = 1;
                                     actionNud.Value = triggerActionData.Data;
                                 }
                                 break;
@@ -857,7 +886,6 @@ namespace MobiusEditor.Dialogs
                             case RedAlert.ActionTypes.TACTION_SET_TIMER:
                             case RedAlert.ActionTypes.TACTION_SET_GLOBAL:
                             case RedAlert.ActionTypes.TACTION_CLEAR_GLOBAL:
-                            case RedAlert.ActionTypes.TACTION_BASE_BUILDING:
                                 actionNud.Visible = true;
                                 actionNud.DataBindings.Add("Value", triggerAction, "Data");
                                 if (triggerActionData == null)

@@ -34,6 +34,8 @@ namespace MobiusEditor.RedAlert
 
         private readonly IEnumerable<string> movieTypes;
 
+        private const string RemarkOld = " (Classic only)";
+
         private static readonly IEnumerable<string> movieTypesRemarksOld = new string[]
         {
             "SHIPYARD", // MISSING
@@ -41,6 +43,8 @@ namespace MobiusEditor.RedAlert
             "SIZZLE",   //MISSING
 	        "SIZZLE2",  //MISSING
         };
+
+        private const string RemarkNew = " (Remaster only)";
 
         private static readonly IEnumerable<string> movieTypesRemarksNew = new string[]
         {
@@ -86,7 +90,7 @@ namespace MobiusEditor.RedAlert
             "OILDRUM",
             "ALLIEND",
             "RADRRAID",
-            "SHIPYARD (Classic only)", // MISSING
+            "SHIPYARD", // MISSING
 	        "SHORBOMB",
             "SITDUCK",
             "SLNTSRVC",
@@ -138,7 +142,7 @@ namespace MobiusEditor.RedAlert
             "AFTRMATH",
             "SOVIET11",
             "MASASSLT",
-            "ENGLISH (Classic only)",		// High res. Intro
+            "ENGLISH",		// High res. Intro
 	        "SOVIET1",
             "SOVIET2",
             "SOVIET3",
@@ -168,34 +172,34 @@ namespace MobiusEditor.RedAlert
             "SOVIET9",
             "BEACHEAD",
             "SOVIET14",
-            "SIZZLE (Classic only)",   //MISSING
-	        "SIZZLE2 (Classic only)",  //MISSING
+            "SIZZLE",   //MISSING
+	        "SIZZLE2",  //MISSING
 	        "ANTEND",
             "ANTINTRO",
 		    //2019/11/12 JAS - Added for Retaliation movies
-		    "RETALIATION_ALLIED1 (Remaster only)",
-            "RETALIATION_ALLIED2 (Remaster only)",
-            "RETALIATION_ALLIED3 (Remaster only)",
-            "RETALIATION_ALLIED4 (Remaster only)",
-            "RETALIATION_ALLIED5 (Remaster only)",
-            "RETALIATION_ALLIED6 (Remaster only)",
-            "RETALIATION_ALLIED7 (Remaster only)",
-            "RETALIATION_ALLIED8 (Remaster only)",
-            "RETALIATION_ALLIED9 (Remaster only)",
-            "RETALIATION_ALLIED10 (Remaster only)",
-            "RETALIATION_SOVIET1 (Remaster only)",
-            "RETALIATION_SOVIET2 (Remaster only)",
-            "RETALIATION_SOVIET3 (Remaster only)",
-            "RETALIATION_SOVIET4 (Remaster only)",
-            "RETALIATION_SOVIET5 (Remaster only)",
-            "RETALIATION_SOVIET6 (Remaster only)",
-            "RETALIATION_SOVIET7 (Remaster only)",
-            "RETALIATION_SOVIET8 (Remaster only)",
-            "RETALIATION_SOVIET9 (Remaster only)",
-            "RETALIATION_SOVIET10 (Remaster only)",
-            "RETALIATION_WINA (Remaster only)",
-            "RETALIATION_WINS (Remaster only)",
-            "RETALIATION_ANTS (Remaster only)"
+		    "RETALIATION_ALLIED1",
+            "RETALIATION_ALLIED2",
+            "RETALIATION_ALLIED3",
+            "RETALIATION_ALLIED4",
+            "RETALIATION_ALLIED5",
+            "RETALIATION_ALLIED6",
+            "RETALIATION_ALLIED7",
+            "RETALIATION_ALLIED8",
+            "RETALIATION_ALLIED9",
+            "RETALIATION_ALLIED10",
+            "RETALIATION_SOVIET1",
+            "RETALIATION_SOVIET2",
+            "RETALIATION_SOVIET3",
+            "RETALIATION_SOVIET4",
+            "RETALIATION_SOVIET5",
+            "RETALIATION_SOVIET6",
+            "RETALIATION_SOVIET7",
+            "RETALIATION_SOVIET8",
+            "RETALIATION_SOVIET9",
+            "RETALIATION_SOVIET10",
+            "RETALIATION_WINA",
+            "RETALIATION_WINS",
+            "RETALIATION_ANTS"
         };
 
         private static readonly IEnumerable<string> themeTypes = new string[]
@@ -281,7 +285,11 @@ namespace MobiusEditor.RedAlert
             }
             //*/
             movies.AddRange(movieTypesRa);
-            movies = movies.ToList();
+            for (int i = 0; i < movies.Count; ++i)
+            {
+                string vidName = GeneralUtils.AddRemarks(movies[i], "x", true, movieTypesRemarksOld, RemarkOld);
+                movies[i] = GeneralUtils.AddRemarks(vidName, "x", true, movieTypesRemarksNew, RemarkNew);
+            }
             movies.Insert(0, "x");
             movieTypes = movies.ToArray();
 
@@ -379,24 +387,22 @@ namespace MobiusEditor.RedAlert
             {
                 INI.ParseSection(new MapContext(Map, true), basicSection, Map.BasicSection);
                 Model.BasicSection basic = Map.BasicSection;
-                const string remarkOld = " (Classic only)";
-                const string remarkNew = " (Remaster only)";
-                basic.Intro = INIHelpers.AddRemarks(INIHelpers.AddRemarks(basic.Intro, "x", true, movieTypesRemarksOld, remarkOld), "x", true, movieTypesRemarksNew, remarkNew);
-                basic.Intro = INIHelpers.FilterToExisting(basic.Intro, "x", true, movieTypesRa);
-                basic.Brief = INIHelpers.AddRemarks(INIHelpers.AddRemarks(basic.Brief, "x", true, movieTypesRemarksOld, remarkOld), "x", true, movieTypesRemarksNew, remarkNew);
-                basic.Brief = INIHelpers.FilterToExisting(basic.Brief, "x", true, movieTypesRa);
-                basic.Action = INIHelpers.AddRemarks(INIHelpers.AddRemarks(basic.Action, "x", true, movieTypesRemarksOld, remarkOld), "x", true, movieTypesRemarksNew, remarkNew);
-                basic.Action = INIHelpers.FilterToExisting(basic.Action, "x", true, movieTypesRa);
-                basic.Win = INIHelpers.AddRemarks(INIHelpers.AddRemarks(basic.Win, "x", true, movieTypesRemarksOld, remarkOld), "x", true, movieTypesRemarksNew, remarkNew);
-                basic.Win = INIHelpers.FilterToExisting(basic.Win, "x", true, movieTypesRa);
-                basic.Win2 = INIHelpers.AddRemarks(INIHelpers.AddRemarks(basic.Win2, "x", true, movieTypesRemarksOld, remarkOld), "x", true, movieTypesRemarksNew, remarkNew);
-                basic.Win2 = INIHelpers.FilterToExisting(basic.Win2, "x", true, movieTypesRa);
-                basic.Win3 = INIHelpers.AddRemarks(INIHelpers.AddRemarks(basic.Win3, "x", true, movieTypesRemarksOld, remarkOld), "x", true, movieTypesRemarksNew, remarkNew);
-                basic.Win3 = INIHelpers.FilterToExisting(basic.Win3, "x", true, movieTypesRa);
-                basic.Win4 = INIHelpers.AddRemarks(INIHelpers.AddRemarks(basic.Win4, "x", true, movieTypesRemarksOld, remarkOld), "x", true, movieTypesRemarksNew, remarkNew);
-                basic.Win4 = INIHelpers.FilterToExisting(basic.Win4, "x", true, movieTypesRa);
-                basic.Lose = INIHelpers.AddRemarks(INIHelpers.AddRemarks(basic.Lose, "x", true, movieTypesRemarksOld, remarkOld), "x", true, movieTypesRemarksNew, remarkNew);
-                basic.Lose = INIHelpers.FilterToExisting(basic.Lose, "x", true, movieTypesRa);
+                basic.Intro = GeneralUtils.AddRemarks(GeneralUtils.AddRemarks(basic.Intro, "x", true, movieTypesRemarksOld, RemarkOld), "x", true, movieTypesRemarksNew, RemarkNew);
+                basic.Intro = GeneralUtils.FilterToExisting(basic.Intro, "x", true, movieTypesRa);
+                basic.Brief = GeneralUtils.AddRemarks(GeneralUtils.AddRemarks(basic.Brief, "x", true, movieTypesRemarksOld, RemarkOld), "x", true, movieTypesRemarksNew, RemarkNew);
+                basic.Brief = GeneralUtils.FilterToExisting(basic.Brief, "x", true, movieTypesRa);
+                basic.Action = GeneralUtils.AddRemarks(GeneralUtils.AddRemarks(basic.Action, "x", true, movieTypesRemarksOld, RemarkOld), "x", true, movieTypesRemarksNew, RemarkNew);
+                basic.Action = GeneralUtils.FilterToExisting(basic.Action, "x", true, movieTypesRa);
+                basic.Win = GeneralUtils.AddRemarks(GeneralUtils.AddRemarks(basic.Win, "x", true, movieTypesRemarksOld, RemarkOld), "x", true, movieTypesRemarksNew, RemarkNew);
+                basic.Win = GeneralUtils.FilterToExisting(basic.Win, "x", true, movieTypesRa);
+                basic.Win2 = GeneralUtils.AddRemarks(GeneralUtils.AddRemarks(basic.Win2, "x", true, movieTypesRemarksOld, RemarkOld), "x", true, movieTypesRemarksNew, RemarkNew);
+                basic.Win2 = GeneralUtils.FilterToExisting(basic.Win2, "x", true, movieTypesRa);
+                basic.Win3 = GeneralUtils.AddRemarks(GeneralUtils.AddRemarks(basic.Win3, "x", true, movieTypesRemarksOld, RemarkOld), "x", true, movieTypesRemarksNew, RemarkNew);
+                basic.Win3 = GeneralUtils.FilterToExisting(basic.Win3, "x", true, movieTypesRa);
+                basic.Win4 = GeneralUtils.AddRemarks(GeneralUtils.AddRemarks(basic.Win4, "x", true, movieTypesRemarksOld, RemarkOld), "x", true, movieTypesRemarksNew, RemarkNew);
+                basic.Win4 = GeneralUtils.FilterToExisting(basic.Win4, "x", true, movieTypesRa);
+                basic.Lose = GeneralUtils.AddRemarks(GeneralUtils.AddRemarks(basic.Lose, "x", true, movieTypesRemarksOld, RemarkOld), "x", true, movieTypesRemarksNew, RemarkNew);
+                basic.Lose = GeneralUtils.FilterToExisting(basic.Lose, "x", true, movieTypesRa);
             }
 
             Map.BasicSection.Player = Map.HouseTypes.Where(t => t.Equals(Map.BasicSection.Player)).FirstOrDefault()?.Name ?? Map.HouseTypes.First().Name;
@@ -1352,14 +1358,14 @@ namespace MobiusEditor.RedAlert
             }
             Model.BasicSection basic = Map.BasicSection;
             char[] cutfrom = { ';', '(' };
-            basic.Intro = INIHelpers.TrimRemarks(basic.Intro, true, cutfrom);
-            basic.Brief = INIHelpers.TrimRemarks(basic.Brief, true, cutfrom);
-            basic.Action = INIHelpers.TrimRemarks(basic.Action, true, cutfrom);
-            basic.Win = INIHelpers.TrimRemarks(basic.Win, true, cutfrom);
-            basic.Win2 = INIHelpers.TrimRemarks(basic.Win2, true, cutfrom);
-            basic.Win3 = INIHelpers.TrimRemarks(basic.Win3, true, cutfrom);
-            basic.Win4 =INIHelpers.TrimRemarks(basic.Win4, true, cutfrom);
-            basic.Lose = INIHelpers.TrimRemarks(basic.Lose, true, cutfrom);            
+            basic.Intro = GeneralUtils.TrimRemarks(basic.Intro, true, cutfrom);
+            basic.Brief = GeneralUtils.TrimRemarks(basic.Brief, true, cutfrom);
+            basic.Action = GeneralUtils.TrimRemarks(basic.Action, true, cutfrom);
+            basic.Win = GeneralUtils.TrimRemarks(basic.Win, true, cutfrom);
+            basic.Win2 = GeneralUtils.TrimRemarks(basic.Win2, true, cutfrom);
+            basic.Win3 = GeneralUtils.TrimRemarks(basic.Win3, true, cutfrom);
+            basic.Win4 = GeneralUtils.TrimRemarks(basic.Win4, true, cutfrom);
+            basic.Lose = GeneralUtils.TrimRemarks(basic.Lose, true, cutfrom);            
             INI.WriteSection(new MapContext(Map, false), ini.Sections.Add("Basic"), Map.BasicSection);
             INI.WriteSection(new MapContext(Map, false), ini.Sections.Add("Map"), Map.MapSection);
             if (fileType != FileType.PGM)

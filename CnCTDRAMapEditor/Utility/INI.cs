@@ -45,79 +45,15 @@ namespace MobiusEditor.Utility
             return string.Empty;
         };
 
-        public static bool IsValidKey(String iniKey)
+        public static bool IsValidKey(String iniKey, params string[] reservedNames)
         {
+            foreach (string name in reservedNames) {
+                if (name.Equals(iniKey, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    return false;
+                }
+            }
             return iniKey.All(c => c > ' ' && c <= '~' && c != '=' && c != '[' && c != ']');
-        }
-
-        public static String MakeNew4CharName(IEnumerable<string> currentList, string fallback)
-        {
-            string name = string.Empty;
-            // generate names in a way that will never run out before some maximum is reached.
-            for (int i = 'a'; i <= 'z'; ++i)
-            {
-                for (int j = 'a'; j <= 'z'; ++j)
-                {
-                    for (int k = 'a'; k <= 'z'; ++k)
-                    {
-                        for (int l = 'a'; l <= 'z'; ++l)
-                        {
-                            name = String.Concat((char)i, (char)j, (char)k, (char)l);
-                            if (!currentList.Any(n => n.Equals(name, StringComparison.InvariantCultureIgnoreCase)))
-                            {
-                                return name;
-                            }
-                        }
-                    }
-                }
-            }
-            return fallback;
-        }
-
-        public static string TrimRemarks(string value, bool trimResult, params char[] cutFrom)
-        {
-            if (String.IsNullOrEmpty(value))
-                return value;
-            int index = value.IndexOfAny(cutFrom);
-            if (index == -1)
-                return value;
-            value = value.Substring(0, index);
-            if (trimResult)
-                value = value.TrimEnd();
-            return value;
-        }
-
-        public static string AddRemarks(string value, string defaultVal, Boolean trimSource, IEnumerable<string> valuesToDetect, string remarkToAdd)
-        {
-            if (String.IsNullOrEmpty(value))
-                return defaultVal;
-            string valTrimmed = value;
-            if (trimSource)
-                valTrimmed = valTrimmed.Trim();
-            foreach (string val in valuesToDetect)
-            {
-                if ((val ?? String.Empty).Trim().Equals(value, StringComparison.InvariantCultureIgnoreCase))
-                {
-                    return valTrimmed + remarkToAdd;
-                }
-            }
-            return value;
-        }
-        public static string FilterToExisting(string value, string defaultVal, Boolean trimSource, IEnumerable<string> existing)
-        {
-            if (String.IsNullOrEmpty(value))
-                return defaultVal;
-            string valTrimmed = value;
-            if (trimSource)
-                valTrimmed = valTrimmed.Trim();
-            foreach (string val in existing)
-            {
-                if ((val ?? String.Empty).Trim().Equals(value, StringComparison.InvariantCultureIgnoreCase))
-                {
-                    return value;
-                }
-            }
-            return defaultVal;
         }
     }
 
