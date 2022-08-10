@@ -19,6 +19,7 @@ using MobiusEditor.Model;
 using MobiusEditor.Utility;
 using MobiusEditor.Widgets;
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -29,6 +30,9 @@ namespace MobiusEditor.Tools
     {
         private readonly TypeListBox overlayTypeComboBox;
         private readonly MapPanel overlayTypeMapPanel;
+
+        private readonly Dictionary<int, Overlay> undoOverlays = new Dictionary<int, Overlay>();
+        private readonly Dictionary<int, Overlay> redoOverlays = new Dictionary<int, Overlay>();
 
         private Map previewMap;
         protected override Map RenderMap => previewMap;
@@ -58,14 +62,11 @@ namespace MobiusEditor.Tools
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
             previewMap = map;
-
             this.overlayTypeComboBox = overlayTypeComboBox;
             this.overlayTypeComboBox.SelectedIndexChanged += OverlayTypeComboBox_SelectedIndexChanged;
-
             this.overlayTypeMapPanel = overlayTypeMapPanel;
             this.overlayTypeMapPanel.BackColor = Color.White;
             this.overlayTypeMapPanel.MaxZoom = 1;
-
             SelectedOverlayType = this.overlayTypeComboBox.Types.First() as OverlayType;
         }
 
@@ -109,6 +110,14 @@ namespace MobiusEditor.Tools
             }
         }
 
+        private void MapPanel_MouseUp(object sender, MouseEventArgs e)
+        {
+            if ((undoOverlays.Count > 0) || (redoOverlays.Count > 0))
+            {
+                CommitChange();
+            }
+        }
+
         private void MapPanel_MouseMove(object sender, MouseEventArgs e)
         {
             if (!placementMode && (Control.ModifierKeys == Keys.Shift))
@@ -125,6 +134,14 @@ namespace MobiusEditor.Tools
         {
             if (placementMode)
             {
+                if (Control.MouseButtons == MouseButtons.Left)
+                {
+                    AddOverlay(e.NewCell);
+                }
+                else if (Control.MouseButtons == MouseButtons.Right)
+                {
+                    RemoveOverlay(e.NewCell);
+                }
                 if (SelectedOverlayType != null)
                 {
                     // For Concrete
@@ -136,60 +153,81 @@ namespace MobiusEditor.Tools
 
         private void AddOverlay(Point location)
         {
-            if ((location.Y == 0) || (location.Y == (map.Metrics.Height - 1)))
-            {
-                return;
-            }
-
-            if (map.Overlay[location] == null)
+            if (map.Metrics.GetCell(location, out int cell))
             {
                 if (SelectedOverlayType != null)
                 {
-                    var overlay = new Overlay
+                    var overlay = new Overlay { Type = SelectedOverlayType, Icon = 0 };
+                    if (map.Overlay[location] == null)
                     {
-                        Type = SelectedOverlayType,
-                        Icon = 0
-                    };
-                    map.Overlay[location] = overlay;
-                    mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1));
-                    void undoAction(UndoRedoEventArgs e)
-                    {
-                        e.MapPanel.Invalidate(e.Map, Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1));
-                        e.Map.Overlay[location] = null;
+                        if (!undoOverlays.ContainsKey(cell))
+                        {
+                            undoOverlays[cell] = map.Overlay[cell];
+                        }
+                        map.Overlay[cell] = overlay;
+                        redoOverlays[cell] = overlay;
+                        mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1));
+                        plugin.Dirty = true;
                     }
-                    void redoAction(UndoRedoEventArgs e)
-                    {
-                        e.Map.Overlay[location] = overlay;
-                        e.MapPanel.Invalidate(e.Map, Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1));
-                    }
-                    url.Track(undoAction, redoAction);
-                    plugin.Dirty = true;
                 }
             }
         }
 
         private void RemoveOverlay(Point location)
         {
-            if ((map.Overlay[location] is Overlay overlay) && overlay.Type.IsPlaceable)
+            if (map.Metrics.GetCell(location, out int cell))
             {
-                map.Overlay[location] = null;
-                mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1));
-                void undoAction(UndoRedoEventArgs e)
+                var overlay = map.Overlay[cell];
+                if (overlay?.Type.IsPlaceable ?? false)
                 {
-                    e.Map.Overlay[location] = overlay;
-                    e.MapPanel.Invalidate(e.Map, Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1));
+                    if (!undoOverlays.ContainsKey(cell))
+                    {
+                        undoOverlays[cell] = map.Overlay[cell];
+                    }
+
+                    map.Overlay[cell] = null;
+                    redoOverlays[cell] = null;
+
+                    mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1));
+
+                    plugin.Dirty = true;
                 }
-
-                void redoAction(UndoRedoEventArgs e)
-                {
-                    e.MapPanel.Invalidate(e.Map, Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1));
-                    e.Map.Overlay[location] = null;
-                }
-
-                url.Track(undoAction, redoAction);
-
-                plugin.Dirty = true;
             }
+        }
+        private void CommitChange()
+        {
+            var undoOverlays2 = new Dictionary<int, Overlay>(undoOverlays);
+            void undoAction(UndoRedoEventArgs e)
+            {
+                foreach (var kv in undoOverlays2)
+                {
+                    e.Map.Overlay[kv.Key] = kv.Value;
+                }
+                e.MapPanel.Invalidate(e.Map, undoOverlays2.Keys.Select(k =>
+                {
+                    e.Map.Metrics.GetLocation(k, out Point location);
+                    return Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1);
+                }));
+            }
+
+            var redoOverlays2 = new Dictionary<int, Overlay>(redoOverlays);
+            void redoAction(UndoRedoEventArgs e)
+            {
+                foreach (var kv in redoOverlays2)
+                {
+                    e.Map.Overlay[kv.Key] = kv.Value;
+                }
+                e.MapPanel.Invalidate(e.Map, redoOverlays2.Keys.Select(k =>
+                {
+                    e.Map.Metrics.GetLocation(k, out Point location);
+                    return Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1);
+                }));
+            }
+
+            undoOverlays.Clear();
+            redoOverlays.Clear();
+
+            url.Track(undoAction, redoAction);
         }
 
         private void EnterPlacementMode()
@@ -274,12 +312,8 @@ namespace MobiusEditor.Tools
                     {
                         if (previewMap.Overlay[cell] == null)
                         {
-                            previewMap.Overlay[cell] = new Overlay
-                            {
-                                Type = SelectedOverlayType,
-                                Icon = 0,
-                                Tint = Color.FromArgb(128, Color.White)
-                            };
+                            previewMap.Overlay[cell] = new Overlay { Type = SelectedOverlayType, Icon = 0, Tint = Color.FromArgb(128, Color.White) };
+                            mapPanel.Invalidate(previewMap, Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1));
                         }
                     }
                 }
@@ -304,6 +338,7 @@ namespace MobiusEditor.Tools
         {
             base.Activate();
             this.mapPanel.MouseDown += MapPanel_MouseDown;
+            this.mapPanel.MouseUp += MapPanel_MouseUp;
             this.mapPanel.MouseMove += MapPanel_MouseMove;
             (this.mapPanel as Control).KeyDown += OverlaysTool_KeyDown;
             (this.mapPanel as Control).KeyUp += OverlaysTool_KeyUp;
@@ -315,10 +350,10 @@ namespace MobiusEditor.Tools
         {
             base.Deactivate();
             mapPanel.MouseDown -= MapPanel_MouseDown;
+            this.mapPanel.MouseUp -= MapPanel_MouseUp;
             mapPanel.MouseMove -= MapPanel_MouseMove;
             (mapPanel as Control).KeyDown -= OverlaysTool_KeyDown;
             (mapPanel as Control).KeyUp -= OverlaysTool_KeyUp;
-
             navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;
         }
 

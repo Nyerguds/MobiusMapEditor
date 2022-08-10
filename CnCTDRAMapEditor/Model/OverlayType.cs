@@ -62,6 +62,8 @@ namespace MobiusEditor.Model
 
         public bool IsWall => (Flag & OverlayTypeFlag.Wall) != OverlayTypeFlag.None;
 
+        public bool IsDecoration => (Flag & OverlayTypeFlag.Decoration) != OverlayTypeFlag.None;
+
         public bool IsConcrete => (Flag & OverlayTypeFlag.Concrete) != OverlayTypeFlag.None;
 
         public bool IsCrate => (Flag & OverlayTypeFlag.Crate) != OverlayTypeFlag.None;

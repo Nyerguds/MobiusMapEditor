@@ -49,12 +49,10 @@ namespace MobiusEditor.Tools
                 {
                     if (placementMode && (selectedWallType != null))
                     {
-                        mapPanel.Invalidate(map, navigationWidget.MouseCell);
+                        mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(navigationWidget.MouseCell, new Size(1, 1)), 1, 1));
                     }
-
                     selectedWallType = value;
                     wallTypeComboBox.SelectedValue = selectedWallType;
-
                     RefreshMapPanel();
                 }
             }
@@ -64,16 +62,11 @@ namespace MobiusEditor.Tools
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
             previewMap = map;
-
             this.wallTypeComboBox = wallTypeComboBox;
             this.wallTypeComboBox.SelectedIndexChanged += WallTypeComboBox_SelectedIndexChanged;
-
             this.wallTypeMapPanel = wallTypeMapPanel;
             this.wallTypeMapPanel.BackColor = Color.White;
             this.wallTypeMapPanel.MaxZoom = 1;
-
-            navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
-
             SelectedWallType = this.wallTypeComboBox.Types.First() as OverlayType;
         }
 
@@ -149,7 +142,6 @@ namespace MobiusEditor.Tools
                 {
                     RemoveWall(e.NewCell);
                 }
-
                 if (SelectedWallType != null)
                 {
                     mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(e.OldCell, new Size(1, 1)), 1, 1));
@@ -334,17 +326,13 @@ namespace MobiusEditor.Tools
         protected override void PostRenderMap(Graphics graphics)
         {
             base.PostRenderMap(graphics);
-
             using (var wallPen = new Pen(Color.Green, 4.0f))
             {
-                foreach (var (cell, overlay) in previewMap.Overlay)
+                foreach (var (cell, overlay) in previewMap.Overlay.Where(x => x.Value.Type.IsWall))
                 {
-                    if (overlay.Type.IsWall)
-                    {
-                        previewMap.Metrics.GetLocation(cell, out Point topLeft);
-                        var bounds = new Rectangle(new Point(topLeft.X * Globals.TileWidth, topLeft.Y * Globals.TileHeight), Globals.TileSize);
-                        graphics.DrawRectangle(wallPen, bounds);
-                    }
+                    previewMap.Metrics.GetLocation(cell, out Point topLeft);
+                    var bounds = new Rectangle(new Point(topLeft.X * Globals.TileWidth, topLeft.Y * Globals.TileHeight), Globals.TileSize);
+                    graphics.DrawRectangle(wallPen, bounds);
                 }
             }
         }
@@ -357,6 +345,7 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseMove += MapPanel_MouseMove;
             (this.mapPanel as Control).KeyDown += WallTool_KeyDown;
             (this.mapPanel as Control).KeyUp += WallTool_KeyUp;
+            navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
             UpdateStatus();
         }
 
@@ -368,6 +357,7 @@ namespace MobiusEditor.Tools
             mapPanel.MouseMove -= MapPanel_MouseMove;
             (mapPanel as Control).KeyDown -= WallTool_KeyDown;
             (mapPanel as Control).KeyUp -= WallTool_KeyUp;
+            navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;
         }
 
         #region IDisposable Support
@@ -381,7 +371,6 @@ namespace MobiusEditor.Tools
                 {
                     Deactivate();
                     wallTypeComboBox.SelectedIndexChanged -= WallTypeComboBox_SelectedIndexChanged;
-                    navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;
                 }
                 disposedValue = true;
             }

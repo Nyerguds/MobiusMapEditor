@@ -851,7 +851,7 @@ namespace MobiusEditor.Dialogs
                                 actionValueComboBox.Visible = true;
                                 actionValueComboBox.DisplayMember = "Name";
                                 actionValueComboBox.ValueMember = "Value";
-                                var trueFalseData = new long[] { 0, 1 }.Select(b => new { Name = b == 0 ? "Stop" : "Start", Value = b }).ToArray();
+                                var trueFalseData = new long[] { 0, 1 }.Select(b => new { Name = b == 0 ? "On" : "Off", Value = b }).ToArray();
                                 actionValueComboBox.DataSource = trueFalseData;
                                 actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
                                 if (triggerActionData == null)
@@ -869,6 +869,7 @@ namespace MobiusEditor.Dialogs
                                 actionNud.Visible = true;
                                 actionNud.Minimum = 1;
                                 actionNud.Maximum = 209;
+                                triggerAction.Data = 1;
                                 actionNud.DataBindings.Add("Value", triggerAction, "Data");
                                 if (triggerActionData == null)
                                 {

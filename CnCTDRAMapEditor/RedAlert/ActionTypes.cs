@@ -34,7 +34,7 @@ namespace MobiusEditor.RedAlert
         public const string TACTION_TEXT_TRIGGER = "Text Trigger (ID num)...";
         public const string TACTION_DESTROY_TRIGGER = "Destroy Trigger...";
         public const string TACTION_AUTOCREATE = "Autocreate Begins...";
-        public const string TACTION_WINLOSE = "";
+        public const string TACTION_WINLOSE = ""; // The remains of TD's "Cap=Win/Des=Lose" trigger
         public const string TACTION_ALLOWWIN = "Allow Win";
         public const string TACTION_REVEAL_ALL = "Reveal all map";
         public const string TACTION_REVEAL_SOME = "Reveal around waypoint...";
