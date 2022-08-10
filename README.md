@@ -24,9 +24,9 @@ Right now, I'm not really looking into making this a joint project. Specific bug
 
 v1.4.0.0:
 
-* Fixed Overlay height overflow bug in Rampa's new UI.
+* Fixed overlay height overflow bug in Rampa's new UI.
 * Fixed tiles list duplicating every time the "Map" tool window is opened in Rampa's version.
-* Split off internal Overlay type "decoration", used for pavements and civilian buildings.
+* Split off internal overlay type "decoration", used for pavements and civilian buildings.
 * Added CONC and ROAD pavement. They have no graphics, but at least now they are accepted by the editor and not discarded as errors.
 * Sorted all items in the lists (except map tiles) by key, which is usually a lot more straightforward.
 * Split off specific separate list for techno types usable in teamtypes.
@@ -38,13 +38,13 @@ v1.4.0.0:
 * Fixed double indicator on map tile selection window.
 * Fixed smudge reading in TD to allow 5 crater stages.
 * Added tool window to adjust crater stage.
-* Fixed Terrain objects not saving their trigger. Note that only "Attacked" triggers work on them.
+* Fixed terrain objects not saving their trigger. Note that only "Attacked" triggers work on them.
 * RA "Spied by..." trigger event now shows the House to select.
 * Added "Add" buttons in triggers and teamtypes dialogs.
 * Fixed tab order in triggers and teamtypes dialogs.
 * Fixed crash in "already exists" messages for triggers and teamtypes.
 * Randomised tiberium on save, like the original WW editor does. (this is purely cosmetic; the game re-randomises it on map load.)
-* [EXPERIMENTAL] Added ability to place bibs as Smudge type. They won't show their full size in the editor at the moment, though.
+* [EXPERIMENTAL] Added ability to place bibs as smudge type. They won't show their full size in the editor at the moment, though.
 
 v1.4.0.1:
 
@@ -132,13 +132,13 @@ v1.4.0.4: [WIP]
 * The preview selection in the Steam publish dialog will now open in the correct folder.
 * The preview rendered for singleplayer maps for the Steam publish (which is not used by default) will show all map contents.
 * Removed crater types CR2 to CR6; they don't work correctly in either game and will just show the smallest size of CR1. Any craters of other types encountered on map load will now be converted to CR1.
-* The Teamtypes dialog no longer uses data grids for its teams and orders.
+* The teamtypes dialog no longer uses data grids for its teams and orders.
 * The controls of the orders now correctly adapt to the types of each order, giving dropdowns for special choices lists and for waypoints.
-* The waypoints that can be selected for an RA Teamtype now correctly start from -1 as "(none)".
+* The waypoints that can be selected for an RA teamtype now correctly start from -1 as "(none)".
 * Fixed colour of "Special" in RA to have the same colour as Spain.
 * Trigger Events and Actions retained their argument data when changing their type, meaning the UI would pick the equivalent data on whatever list or control popped up for the new type. This has been fixed.
 * RA triggers now show human-readable data for the Event and Action arguments.
-* The editor no longer locks up when the Triggers dialog shows an empty list of Teamtypes or Triggers because none were made yet.
+* The editor no longer locks up when the triggers dialog shows an empty list of teamtypes or triggers because none were made yet.
 * Removed Aircraft section handling from TD.
 * Like walls, overlay placement and removing can now be dragged to affect multiple cells.
 * All waypoint will now be shown with their coordinates.
@@ -148,4 +148,4 @@ v1.4.0.4: [WIP]
 * Map indicators will now be painted in this order: map boundaries, celltriggers, waypoints, object triggers. The later ones will be on top and thus most visible.
 * Map indicators for the type you are currently editing are now always drawn last, and thus the most visible. (e.g. overlapping celltriggers and waypoints)
 * Unit/building/infantry tools now give highest priority to the object trigger labels, so they don't get painted over by their own indicator lines.
-* TGA files loaded from mods that are not inside a .zip file can now also load their positioning metadata from accompanying .meta files.
+* TGA files that are not inside a .zip file that get loaded from mod data can now also load their positioning metadata from accompanying .meta files.
