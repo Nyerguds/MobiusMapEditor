@@ -69,7 +69,7 @@ v1.4.0.1:
 * Changed the default build level in TD maps from 99 to 98. Level 99 allows building illegal objects that can break the game.
 * The Briefing text area will now accept [Enter] for adding line breaks without this closing the window. Previously, [Ctrl]+[Enter] had to be used for this, which is pretty awkward.
 * The Briefing text area now has a scrollbar.
-* Fixed placement of illegal tiles caused by incorrect filtering on which tiles from a template should be included. This is the problem which caused tiles that showed as black blocks in classic graphics. It is also the problem that made Red Alert maps contain indestructible bridges.
+* Fixed placement of illegal tiles caused by incorrect filtering on which tiles from a template should be included. This is the problem which caused tiles that showed as black blocks in classic graphics. It is also the problem that made RA maps contain indestructible bridges.
 * Map tile placement can now be dragged, allowing easily filling an area with water or other tiles. This also works for removing tiles.
 * Removing tiles will now obey the actual occupied cells of the selected tile, rather than just clearing the bounding box, making it more intuitive.
 * Creating an RA trigger with Action "Text Trigger" will no longer cause an error to be shown.
@@ -89,7 +89,7 @@ v1.4.0.2:
 * The damaged state of buildings is now shown at strength values of 128 and below, rather than only below that value.
 * Damaged states now work correctly on all buildings, with a vastly simpler and more general internal logic.
 * Using the mouse wheel will now change the strength of objects in increments of 4.
-* IQ of all Houses in Red Alert now defaults to 0.
+* IQ of all Houses in RA now defaults to 0.
 * Fixed gunboat facing and damage states logic.
 * Fixed bug causing bad refresh when previewing the placement of a single cell selected from a template with an empty top right corner cell.
 * The "clear1" tile is now explicitly shown in the tiles list.
@@ -118,26 +118,34 @@ v1.4.0.3:
 
 v1.4.0.4: [WIP]
 
-* Fixed dimensions of Red Alert's ore mine, Snow theater ice floes and Interior theater boxes.
+* Fixed dimensions of RA's ore mine, Snow theater ice floes and Interior theater boxes.
 * Added \*.ini to the list of possible extensions for opening RA maps. Apparently before I only added it for saving.
-* Terrain objects will now only pop up a poperties box for setting a trigger in Tiberian Dawn mode.
+* The editor will now accept nonstandard extensions from drag & drop without any issues. For TD maps, it will need to find the accompanying bin or ini file with the correct extension.
+* An RA map opened from a .ini file will no longer change the extension to .mpr when saving it.
+* Terrain objects will now only pop up a poperties box for setting a trigger in TD mode.
 * Optimised loading so the editor will skip loading objects from different theaters.
-* Fixed user settings loading, so can port over the settings (game folder, invite warning, and the dialog locations) from previous versions. (It's a hacky system, but it works.)
+* Fixed user settings loading, so it can port over the settings (game folder, invite warning, and the dialog locations) from previous versions. (It's a hacky system, but it works.)
 * Added support for loading mod xml info and graphics through the "ModsToLoad" setting in "CnCTDRAMapEditorD.exe.config". The syntax is a semicolon-separated list, with each entry either a Steam workshop ID, or a folder under "Documents\CnCRemastered\Mods\". As folder, the path must contain the "Tiberian_Dawn" or "Red_Alert" part at the start. That prefix folder will also be used as consistency check for the mod type as defined inside "ccmod.json". Mods given by folder name will also be looked up in the Steam workshop folders, with the prefix folder used only for the consistency check. Mods do NOT have to be enabled in the game to work in the editor.
-* Added support for the unique pattern of TD's CONC pavement. You will need the "ConcretePavement" mod to actually see that, though.
+* Added support for the unique pattern of TD's CONC pavement. You will need the "ConcretePavementTD" mod to actually see that, though. This mod is enabled by default in the editor's settings.
 * Fixed loading and saving of the videos set in the map options dialog, so no more errors pop up there.
-* Made video names freely editable for Tiberian Dawn missions. Any mod-added video in TD is playable from missions.
+* Made video names freely editable for TD missions. Any mod-added video in TD is playable from missions.
 * The preview selection in the Steam publish dialog will now open in the correct folder.
 * The preview rendered for singleplayer maps for the Steam publish (which is not used by default) will show all map contents.
 * Removed crater types CR2 to CR6; they don't work correctly in either game and will just show the smallest size of CR1. Any craters of other types encountered on map load will now be converted to CR1.
 * The Teamtypes dialog no longer uses data grids for its teams and orders.
 * The controls of the orders now correctly adapt to the types of each order, giving dropdowns for special choices lists and for waypoints.
-* The Waypoint that can be selected for a RA Teamtype now correctly starts from -1 as "(none)".
-* Fixed colour of "Special" in Red Alert to have the same colour as Spain.
+* The waypoints that can be selected for an RA Teamtype now correctly start from -1 as "(none)".
+* Fixed colour of "Special" in RA to have the same colour as Spain.
 * Trigger Events and Actions retained their argument data when changing their type, meaning the UI would pick the equivalent data on whatever list or control popped up for the new type. This has been fixed.
-* Red Alert triggers now show human-readable data for the Event and Action arguments.
+* RA triggers now show human-readable data for the Event and Action arguments.
 * The editor no longer locks up when the Triggers dialog shows an empty list of Teamtypes or Triggers because none were made yet.
-* Saving a Red Alert mission as .ini will now actually write the file with .ini extension.
 * Removed Aircraft section handling from TD.
 * Like walls, overlay placement and removing can now be dragged to affect multiple cells.
-
+* All waypoint will now be shown with their coordinates.
+* Added "Jump to..." button on the waypoints tool. This will only have any effect when zoomed in.
+* Clicking overlapping waypoints multiple times will cycle to the next one in the list on each click. Right-clicking will cycle backwards.
+* When deleting overlapping waypoints, if the currently selected waypoint is one of them, that one will be deleted when clicking.
+* Map indicators drawing priority has been changed to the order (lowest to highest) map boundaries, then celltriggers, then waypoints, then object triggers.
+* Map indicators for the type you are currently editing are now always the most visible, by being drawn last. (e.g. overlapping celltriggers and waypoints)
+* Unit/building/infantry tools now give highest priority to the object trigger labels, so they don't get painted over by their own indicator lines.
+* TGA files loaded from mods that are not inside a .zip file can now also load their positioning metadata from accompanying .meta files.

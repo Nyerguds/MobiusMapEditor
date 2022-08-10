@@ -75,7 +75,7 @@ namespace MobiusEditor.Tools
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
             previewMap = map;
-
+            manuallyHandledLayers = MapLayerFlag.TechnoTriggers;
             mockInfantry = new Infantry(null)
             {
                 Type = infantryTypeComboBox.Types.First() as InfantryType,
@@ -85,17 +85,13 @@ namespace MobiusEditor.Tools
                 Mission = map.MissionTypes.Where(m => m.Equals("Guard")).FirstOrDefault() ?? map.MissionTypes.First()
             };
             mockInfantry.PropertyChanged += MockInfantry_PropertyChanged;
-
             this.infantryTypeComboBox = infantryTypeComboBox;
             this.infantryTypeComboBox.SelectedIndexChanged += InfantryTypeComboBox_SelectedIndexChanged;
-
             this.infantryTypeMapPanel = infantryTypeMapPanel;
             this.infantryTypeMapPanel.BackColor = Color.White;
             this.infantryTypeMapPanel.MaxZoom = 1;
-
             this.objectProperties = objectProperties;
             this.objectProperties.Object = mockInfantry;
-
             SelectedInfantryType = this.infantryTypeComboBox.Types.First() as InfantryType;
         }
 
@@ -105,7 +101,6 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-
             if (map.Metrics.GetCell(navigationWidget.MouseCell, out int cell))
             {
                 if (map.Technos[cell] is InfantryGroup infantryGroup)
@@ -114,18 +109,14 @@ namespace MobiusEditor.Tools
                     if (infantryGroup.Infantry[i] is Infantry infantry)
                     {
                         selectedInfantry = null;
-
                         selectedObjectProperties?.Close();
                         selectedObjectProperties = new ObjectPropertiesPopup(objectProperties.Plugin, infantry);
                         selectedObjectProperties.Closed += (cs, ce) =>
                         {
                             navigationWidget.Refresh();
                         };
-
                         infantry.PropertyChanged += SelectedInfantry_PropertyChanged;
-
                         selectedObjectProperties.Show(mapPanel, mapPanel.PointToClient(Control.MousePosition));
-
                         UpdateStatus();
                     }
                 }
@@ -173,7 +164,6 @@ namespace MobiusEditor.Tools
             {
                 ExitPlacementMode();
             }
-
             if (placementMode)
             {
                 mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(navigationWidget.MouseCell, new Size(1, 1)), 1, 1));
@@ -182,7 +172,6 @@ namespace MobiusEditor.Tools
             {
                 var oldLocation = map.Technos[selectedInfantry.InfantryGroup].Value;
                 var oldStop = Array.IndexOf(selectedInfantry.InfantryGroup.Infantry, selectedInfantry);
-
                 InfantryGroup infantryGroup = null;
                 var techno = map.Technos[navigationWidget.MouseCell];
                 if (techno == null)
@@ -194,7 +183,6 @@ namespace MobiusEditor.Tools
                 {
                     infantryGroup = techno as InfantryGroup;
                 }
-
                 if (infantryGroup != null)
                 {
                     foreach (var i in InfantryGroup.ClosestStoppingTypes(navigationWidget.MouseSubPixel).Cast<int>())
@@ -213,12 +201,9 @@ namespace MobiusEditor.Tools
                                 }
                             }
                             selectedInfantry.InfantryGroup = infantryGroup;
-
                             mapPanel.Invalidate(map, infantryGroup);
-
                             plugin.Dirty = true;
                         }
-
                         if (infantryGroup == selectedInfantry.InfantryGroup)
                         {
                             break;
@@ -279,7 +264,6 @@ namespace MobiusEditor.Tools
                 if (map.Metrics.GetCell(location, out int cell))
                 {
                     InfantryGroup infantryGroup = null;
-
                     var techno = map.Technos[cell];
                     if (techno == null)
                     {
@@ -290,7 +274,6 @@ namespace MobiusEditor.Tools
                     {
                         infantryGroup = techno as InfantryGroup;
                     }
-
                     if (infantryGroup != null)
                     {
                         foreach (var i in InfantryGroup.ClosestStoppingTypes(navigationWidget.MouseSubPixel).Cast<int>())
@@ -340,11 +323,8 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-
             placementMode = true;
-
             navigationWidget.MouseoverSize = Size.Empty;
-
             if (SelectedInfantryType != null)
             {
                 mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(navigationWidget.MouseCell, new Size(1, 1)), 1, 1));
@@ -359,11 +339,8 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-
             placementMode = false;
-
             navigationWidget.MouseoverSize = new Size(1, 1);
-
             if (SelectedInfantryType != null)
             {
                 mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(navigationWidget.MouseCell, new Size(1, 1)), 1, 1));
@@ -406,7 +383,6 @@ namespace MobiusEditor.Tools
                     }
                 }
             }
-
             UpdateStatus();
         }
 
@@ -462,7 +438,6 @@ namespace MobiusEditor.Tools
                     if (previewMap.Metrics.GetCell(location, out int cell))
                     {
                         InfantryGroup infantryGroup = null;
-
                         var techno = previewMap.Technos[cell];
                         if (techno == null)
                         {
@@ -473,7 +448,6 @@ namespace MobiusEditor.Tools
                         {
                             infantryGroup = techno as InfantryGroup;
                         }
-
                         if (infantryGroup != null)
                         {
                             foreach (var i in InfantryGroup.ClosestStoppingTypes(navigationWidget.MouseSubPixel).Cast<int>())
@@ -495,7 +469,6 @@ namespace MobiusEditor.Tools
         protected override void PostRenderMap(Graphics graphics)
         {
             base.PostRenderMap(graphics);
-
             using (var infantryPen = new Pen(Color.Green, 4.0f))
             {
                 foreach (var (topLeft, _) in map.Technos.OfType<InfantryGroup>())
@@ -504,6 +477,7 @@ namespace MobiusEditor.Tools
                     graphics.DrawRectangle(infantryPen, bounds);
                 }
             }
+            RenderTechnoTriggers(graphics);
         }
 
         public override void Activate()
@@ -515,7 +489,6 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseMove += MapPanel_MouseMove;
             (this.mapPanel as Control).KeyDown += InfantryTool_KeyDown;
             (this.mapPanel as Control).KeyUp += InfantryTool_KeyUp;
-
             navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
             UpdateStatus();
         }
@@ -546,7 +519,6 @@ namespace MobiusEditor.Tools
                 }
                 disposedValue = true;
             }
-
             base.Dispose(disposing);
         }
         #endregion

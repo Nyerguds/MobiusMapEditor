@@ -36,6 +36,7 @@ namespace MobiusEditor.Tools
         public CellTriggersTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, ComboBox triggerCombo, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> url)
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
+            this.priorityLayers = MapLayerFlag.CellTriggers;
             this.triggerCombo = triggerCombo;
         }
 
@@ -119,13 +120,10 @@ namespace MobiusEditor.Tools
                     {
                         undoCellTriggers[cell] = map.CellTriggers[cell];
                     }
-
                     var cellTrigger = new CellTrigger { Trigger = triggerCombo.SelectedItem as string };
                     map.CellTriggers[cell] = cellTrigger;
                     redoCellTriggers[cell] = cellTrigger;
-
                     mapPanel.Invalidate();
-
                     plugin.Dirty = true;
                 }
             }
@@ -142,12 +140,9 @@ namespace MobiusEditor.Tools
                     {
                         undoCellTriggers[cell] = map.CellTriggers[cell];
                     }
-
                     map.CellTriggers[cell] = null;
                     redoCellTriggers[cell] = null;
-
                     mapPanel.Invalidate();
-
                     plugin.Dirty = true;
                 }
             }
@@ -159,9 +154,7 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-
             placementMode = true;
-
             UpdateStatus();
         }
 
@@ -171,9 +164,7 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-
             placementMode = false;
-
             UpdateStatus();
         }
 
@@ -200,7 +191,6 @@ namespace MobiusEditor.Tools
                 }
                 e.MapPanel.Invalidate();
             }
-
             var redoCellTriggers2 = new Dictionary<int, CellTrigger>(redoCellTriggers);
             void redoAction(UndoRedoEventArgs e)
             {
@@ -210,10 +200,8 @@ namespace MobiusEditor.Tools
                 }
                 e.MapPanel.Invalidate();
             }
-
             undoCellTriggers.Clear();
             redoCellTriggers.Clear();
-
             url.Track(undoAction, redoAction);
         }
 
@@ -237,7 +225,6 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseMove += MapPanel_MouseMove;
             (this.mapPanel as Control).KeyDown += CellTriggersTool_KeyDown;
             (this.mapPanel as Control).KeyUp += CellTriggersTool_KeyUp;
-
             navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
             UpdateStatus();
         }
@@ -250,7 +237,6 @@ namespace MobiusEditor.Tools
             mapPanel.MouseMove -= MapPanel_MouseMove;
             (mapPanel as Control).KeyDown -= CellTriggersTool_KeyDown;
             (mapPanel as Control).KeyUp -= CellTriggersTool_KeyUp;
-
             navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;
         }
 
@@ -267,7 +253,6 @@ namespace MobiusEditor.Tools
                 }
                 disposedValue = true;
             }
-
             base.Dispose(disposing);
         }
         #endregion

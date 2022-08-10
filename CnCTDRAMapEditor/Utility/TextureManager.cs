@@ -98,19 +98,16 @@ namespace MobiusEditor.Utility
                     return (new Bitmap(bm), bounds);
                 }
             }
-
             if (teamColorTextures.TryGetValue((filename, teamColor), out (Bitmap bitmap, Rectangle opaqueBounds) result))
             {
                 return (new Bitmap(result.bitmap), result.opaqueBounds);
             }
-
             if (!cachedTextures.TryGetValue(filename, out result.bitmap))
             {
                 if (Path.GetExtension(filename).ToLower() == ".tga")
                 {
                     TGA tga = null;
                     JObject metadata = null;
-
                     var name = Path.GetFileNameWithoutExtension(filename);
                     var archiveDir = Path.GetDirectoryName(filename);
                     var archivePath = archiveDir + ".ZIP";
@@ -125,7 +122,7 @@ namespace MobiusEditor.Utility
                             {
                                 using (FileStream fs = new FileStream(modArch, FileMode.Open))
                                 {
-                                    LoadTgaFromFileStream(fs, name, ref tga, ref metadata);
+                                    LoadTgaFromZipFileStream(fs, name, ref tga, ref metadata);
                                 }
                             }
                             // Next attempt to load a standalone file
@@ -139,6 +136,18 @@ namespace MobiusEditor.Utility
                                         tga = new TGA(fileStream);
                                     }
                                 }
+                                if (tga != null)
+                                {
+                                    var modMeta = Path.ChangeExtension(modFile, ".meta");
+                                    if (File.Exists(modMeta))
+                                    {
+                                        using (var metaStream = new FileStream(modMeta, FileMode.Open))
+                                        using (var reader = new StreamReader(metaStream))
+                                        {
+                                            metadata = JObject.Parse(reader.ReadToEnd());
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -147,7 +156,7 @@ namespace MobiusEditor.Utility
                     {
                         using (var fileStream = megafileManager.Open(archivePath))
                         {
-                            LoadTgaFromFileStream(fileStream, name, ref tga, ref metadata);
+                            LoadTgaFromZipFileStream(fileStream, name, ref tga, ref metadata);
                         }
                     }
                     // Next attempt to load a standalone file
@@ -160,6 +169,20 @@ namespace MobiusEditor.Utility
                             if (fileStream != null)
                             {
                                 tga = new TGA(fileStream);
+                            }
+                        }
+                        if (tga != null)
+                        {
+                            var meta = Path.ChangeExtension(filename, ".meta");
+                            using (var metaStream = megafileManager.Open(meta))
+                            {
+                                if (metaStream != null)
+                                {
+                                    using (var reader = new StreamReader(metaStream))
+                                    {
+                                        metadata = JObject.Parse(reader.ReadToEnd());
+                                    }
+                                }
                             }
                         }
                     }
@@ -258,7 +281,6 @@ namespace MobiusEditor.Utility
                     }
 #endif
                 }
-
                 if (!cachedTextures.TryGetValue(filename, out result.bitmap))
                 {
                     // Try loading as a DDS
@@ -292,7 +314,6 @@ namespace MobiusEditor.Utility
                     }
                 }
             }
-
             if (!cachedTextures.TryGetValue(filename, out result.bitmap))
             {
                 return result;
@@ -396,7 +417,7 @@ namespace MobiusEditor.Utility
             return result;
         }
 
-        private void LoadTgaFromFileStream(Stream fileStream, String name, ref TGA tga, ref JObject metadata)
+        private void LoadTgaFromZipFileStream(Stream fileStream, String name, ref TGA tga, ref JObject metadata)
         {
             if (fileStream == null)
             {
@@ -451,32 +472,25 @@ namespace MobiusEditor.Utility
                     case Pfim.ImageFormat.Rgb24:
                         format = PixelFormat.Format24bppRgb;
                         break;
-
                     case Pfim.ImageFormat.Rgba32:
                         format = PixelFormat.Format32bppArgb;
                         break;
-
                     case Pfim.ImageFormat.R5g5b5:
                         format = PixelFormat.Format16bppRgb555;
                         break;
-
                     case Pfim.ImageFormat.R5g6b5:
                         format = PixelFormat.Format16bppRgb565;
                         break;
-
                     case Pfim.ImageFormat.R5g5b5a1:
                         format = PixelFormat.Format16bppArgb1555;
                         break;
-
                     case Pfim.ImageFormat.Rgb8:
                         format = PixelFormat.Format8bppIndexed;
                         break;
-
                     default:
                         format = PixelFormat.DontCare;
                         break;
                 }
-
                 var bitmap = new Bitmap(image.Width, image.Height, format);
                 var bitmapData = bitmap.LockBits(new Rectangle(0, 0, image.Width, image.Height), ImageLockMode.WriteOnly, bitmap.PixelFormat);
                 Marshal.Copy(image.Data, 0, bitmapData.Scan0, image.Stride * image.Height);

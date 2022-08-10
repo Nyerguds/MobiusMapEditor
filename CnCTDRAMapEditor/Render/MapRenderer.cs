@@ -338,21 +338,20 @@ namespace MobiusEditor.Render
             {
                 name = overlay.Type.GraphicsSource;
             }
-            // For Decoration types, generate dummy if not found.
-
             int icon;
             if (gameType == GameType.TiberianDawn && overlay.Type == TiberianDawn.OverlayTypes.Concrete)
             {
-                //icon = topLeft.X % 2 == 0 ? 3 : 2;
                 icon = overlay.Icon;
             }
             else
             {
                 icon = overlay.Type.ForceTileNr == -1 ? overlay.Icon : overlay.Type.ForceTileNr;
             }
+            // For Decoration types, generate dummy if not found.
             if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, name, icon, out Tile tile, (overlay.Type.Flag & OverlayTypeFlag.Decoration) != 0))
             {
-                var size = (overlay.Type.IsCrate || overlay.Type.IsFlag) ? new Size(tile.Image.Width / tileScale, tile.Image.Height / tileScale) : tileSize;
+                var size = tile.Image.Width < Globals.OriginalTileWidth && tile.Image.Height < Globals.OriginalTileHeight ?
+                    new Size(tile.Image.Width / tileScale, tile.Image.Height / tileScale) : tileSize;
                 var location = new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height)
                     + new Size(tileSize.Width / 2, tileSize.Height / 2)
                     - new Size(size.Width / 2, size.Height / 2);

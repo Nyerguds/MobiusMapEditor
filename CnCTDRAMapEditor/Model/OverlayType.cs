@@ -143,45 +143,17 @@ namespace MobiusEditor.Model
             int tilenr = ForceTileNr == -1 ? 0 : ForceTileNr;
             if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, GraphicsSource, tilenr, out Tile tile, (Flag & OverlayTypeFlag.Decoration) != 0))
             {
-                var size = tile.Image.Size;
-                var maxSize = new Size(Globals.OriginalTileWidth, Globals.OriginalTileHeight);
-                if ((size.Width >= size.Height) && (size.Width > maxSize.Width))
+                var tileSize = new Size(Globals.OriginalTileWidth, Globals.OriginalTileHeight);
+                var size = tile.Image.Width < Globals.OriginalTileWidth && tile.Image.Height < Globals.OriginalTileHeight ?
+                    new Size(tile.Image.Width, tile.Image.Height) : tileSize;
+                var location = new Point(tileSize.Width / 2 - size.Width / 2, tileSize.Height / 2 - size.Height / 2);
+                var overlayBounds = new Rectangle(location, size);
+                Bitmap th = new Bitmap(tileSize.Width, tileSize.Height);
+                using (Graphics graphics = Graphics.FromImage(th))
                 {
-
-                    size.Height = size.Height * maxSize.Width / size.Width;
-                    size.Width = maxSize.Width;
+                    graphics.DrawImage(tile.Image, overlayBounds);
                 }
-                else if ((size.Height >= size.Width) && (size.Height > maxSize.Height))
-                {
-                    size.Width = size.Width * maxSize.Height / size.Height;
-                    size.Height = maxSize.Height;
-                }
-                if (tile.Image.Size != size)
-                {
-                    int locX = (maxSize.Width - size.Width) / 2;
-                    int locY = (maxSize.Height - size.Height) / 2;
-                    Bitmap th = new Bitmap(maxSize.Width, maxSize.Height);
-                    using (Graphics graphics = Graphics.FromImage(th))
-                    {
-                        graphics.DrawImage(tile.Image, locX, locY, size.Width, size.Height);
-                    }
-                    Thumbnail = th;
-                }
-                else if (size.Width < maxSize.Width && size.Height < maxSize.Height)
-                {
-                    int locX = (maxSize.Width - size.Width) / 2;
-                    int locY = (maxSize.Height - size.Height) / 2;
-                    Bitmap th = new Bitmap(maxSize.Width, maxSize.Height);
-                    using (Graphics graphics = Graphics.FromImage(th))
-                    {
-                        graphics.DrawImage(tile.Image, locX, locY, size.Width, size.Height);
-                    }
-                    Thumbnail = th;
-                }
-                else
-                {
-                    Thumbnail = new Bitmap(tile.Image);
-                }
+                Thumbnail = th;
             }
             else
             {

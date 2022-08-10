@@ -14,6 +14,7 @@
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using MobiusEditor.Interface;
 using System;
+using System.Drawing;
 
 namespace MobiusEditor.Model
 {
@@ -25,20 +26,31 @@ namespace MobiusEditor.Model
 
     public class Waypoint : INamedType
     {
+        public CellMetrics Metrics { get; set; }
         public string Name { get; private set; }
 
         public WaypointFlag Flag { get; private set; }
 
         public int? Cell { get; set; }
+        public Point Point { get; set; }
 
-        public Waypoint(string name, WaypointFlag flag)
+        public Waypoint(string name, WaypointFlag flag, CellMetrics metrics)
         {
+            this.Metrics = metrics;
             Name = name;
             Flag = flag;
         }
 
+        public Waypoint(string name, CellMetrics metrics)
+            : this(name, WaypointFlag.None, metrics)
+        {
+        }
+        public Waypoint(string name, WaypointFlag flag)
+            : this(name, flag, null)
+        {
+        }
         public Waypoint(string name)
-            : this(name, WaypointFlag.None)
+            : this(name, WaypointFlag.None, null)
         {
         }
 
@@ -63,7 +75,18 @@ namespace MobiusEditor.Model
 
         public override string ToString()
         {
-            return String.Format("{0} [{1}]", Name, Cell.HasValue ? Cell.Value.ToString() : "-");
+            string location = "-";
+            if (Cell.HasValue) {
+                if (Metrics == null)
+                {
+                    location = Cell.Value.ToString();
+                }
+                else if (Metrics.GetLocation(Cell.Value, out Point loc))
+                {
+                    location = String.Format("{0},{1}", loc.X, loc.Y);
+                }
+            }
+            return String.Format("{0} [{1}]", Name, location);
         }
     }
 }

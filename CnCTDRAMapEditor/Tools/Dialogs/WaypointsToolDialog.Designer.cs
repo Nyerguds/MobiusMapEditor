@@ -44,7 +44,7 @@ namespace MobiusEditor.Tools.Dialogs
         {
             this.tableLayoutPanel4 = new System.Windows.Forms.TableLayoutPanel();
             this.lblWaypoint = new System.Windows.Forms.Label();
-            this.waypointCombo = new System.Windows.Forms.ComboBox();
+            this.waypointCombo = new MobiusEditor.Controls.ComboBoxSmartWidth();
             this.btnJumpTo = new System.Windows.Forms.Button();
             this.tableLayoutPanel4.SuspendLayout();
             this.SuspendLayout();
@@ -104,7 +104,7 @@ namespace MobiusEditor.Tools.Dialogs
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
-            this.ClientSize = new System.Drawing.Size(145, 77);
+            this.ClientSize = new System.Drawing.Size(200, 77);
             this.ControlBox = false;
             this.Controls.Add(this.tableLayoutPanel4);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
@@ -127,7 +127,7 @@ namespace MobiusEditor.Tools.Dialogs
 
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel4;
         private System.Windows.Forms.Label lblWaypoint;
-        private System.Windows.Forms.ComboBox waypointCombo;
+        private MobiusEditor.Controls.ComboBoxSmartWidth waypointCombo;
         private System.Windows.Forms.Button btnJumpTo;
     }
 }

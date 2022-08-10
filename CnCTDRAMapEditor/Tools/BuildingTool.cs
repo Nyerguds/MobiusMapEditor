@@ -56,17 +56,13 @@ namespace MobiusEditor.Tools
                     {
                         mapPanel.Invalidate(map, new Rectangle(navigationWidget.MouseCell, selectedBuildingType.OverlapBounds.Size));
                     }
-
                     selectedBuildingType = value;
                     buildingTypeComboBox.SelectedValue = selectedBuildingType;
-
                     if (placementMode && (selectedBuildingType != null))
                     {
                         mapPanel.Invalidate(map, new Rectangle(navigationWidget.MouseCell, selectedBuildingType.OverlapBounds.Size));
                     }
-
                     mockBuilding.Type = selectedBuildingType;
-
                     RefreshMapPanel();
                 }
             }
@@ -76,7 +72,7 @@ namespace MobiusEditor.Tools
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
             previewMap = map;
-
+            manuallyHandledLayers = MapLayerFlag.TechnoTriggers;
             mockBuilding = new Building()
             {
                 Type = buildingTypeComboBox.Types.First() as BuildingType,
@@ -85,17 +81,13 @@ namespace MobiusEditor.Tools
                 Direction = map.DirectionTypes.Where(d => d.Equals(FacingType.North)).First()
             };
             mockBuilding.PropertyChanged += MockBuilding_PropertyChanged;
-
             this.buildingTypeComboBox = buildingTypeComboBox;
             this.buildingTypeComboBox.SelectedIndexChanged += UnitTypeComboBox_SelectedIndexChanged;
-
             this.buildingTypeMapPanel = buildingTypeMapPanel;
             this.buildingTypeMapPanel.BackColor = Color.White;
             this.buildingTypeMapPanel.MaxZoom = 1;
-
             this.objectProperties = objectProperties;
             this.objectProperties.Object = mockBuilding;
-
             SelectedBuildingType = mockBuilding.Type;
         }
 
@@ -105,25 +97,20 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-
             if (map.Metrics.GetCell(navigationWidget.MouseCell, out int cell))
             {
                 if (map.Technos[cell] is Building building)
                 {
                     selectedBuilding = null;
                     selectedBuildingPivot = Point.Empty;
-
                     selectedObjectProperties?.Close();
                     selectedObjectProperties = new ObjectPropertiesPopup(objectProperties.Plugin, building);
                     selectedObjectProperties.Closed += (cs, ce) =>
                     {
                         navigationWidget.Refresh();
                     };
-
                     building.PropertyChanged += SelectedBuilding_PropertyChanged;
-
                     selectedObjectProperties.Show(mapPanel, mapPanel.PointToClient(Control.MousePosition));
-
                     UpdateStatus();
                 }
             }
@@ -135,7 +122,6 @@ namespace MobiusEditor.Tools
             {
                 mockBuilding.Direction = map.DirectionTypes.Where(d => d.Equals(FacingType.North)).First();
             }
-
             RefreshMapPanel();
         }
 
@@ -256,13 +242,11 @@ namespace MobiusEditor.Tools
                                 baseBuilding.BasePriority++;
                             }
                         }
-
                         var baseBuildings = map.Buildings.OfType<Building>().Select(x => x.Occupier).Where(x => x.BasePriority >= 0).OrderBy(x => x.BasePriority).ToArray();
                         for (var i = 0; i < baseBuildings.Length; ++i)
                         {
                             baseBuildings[i].BasePriority = i;
                         }
-
                         foreach (var baseBuilding in map.Buildings.OfType<Building>().Select(x => x.Occupier).Where(x => x.BasePriority >= 0))
                         {
                             mapPanel.Invalidate(map, baseBuilding);
@@ -282,7 +266,6 @@ namespace MobiusEditor.Tools
             {
                 mapPanel.Invalidate(map, building);
                 map.Buildings.Remove(building);
-
                 if (building.BasePriority >= 0)
                 {
                     var baseBuildings = map.Buildings.OfType<Building>().Select(x => x.Occupier).Where(x => x.BasePriority >= 0).OrderBy(x => x.BasePriority).ToArray();
@@ -290,13 +273,11 @@ namespace MobiusEditor.Tools
                     {
                         baseBuildings[i].BasePriority = i;
                     }
-
                     foreach (var baseBuilding in map.Buildings.OfType<Building>().Select(x => x.Occupier).Where(x => x.BasePriority >= 0))
                     {
                         mapPanel.Invalidate(map, baseBuilding);
                     }
                 }
-
                 plugin.Dirty = true;
             }
         }
@@ -307,16 +288,12 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-
             placementMode = true;
-
             navigationWidget.MouseoverSize = Size.Empty;
-
             if (SelectedBuildingType != null)
             {
                 mapPanel.Invalidate(map, new Rectangle(navigationWidget.MouseCell, SelectedBuildingType.OverlapBounds.Size));
             }
-
             UpdateStatus();
         }
 
@@ -326,16 +303,12 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-
             placementMode = false;
-
             navigationWidget.MouseoverSize = new Size(1, 1);
-
             if (SelectedBuildingType != null)
             {
                 mapPanel.Invalidate(map, new Rectangle(navigationWidget.MouseCell, SelectedBuildingType.OverlapBounds.Size));
             }
-
             UpdateStatus();
         }
 
@@ -365,7 +338,6 @@ namespace MobiusEditor.Tools
                 selectedBuilding = map.Buildings[cell] as Building;
                 selectedBuildingPivot = (selectedBuilding != null) ? (location - (Size)map.Buildings[selectedBuilding].Value) : Point.Empty;
             }
-
             UpdateStatus();
         }
 
@@ -419,7 +391,6 @@ namespace MobiusEditor.Tools
         protected override void PreRenderMap()
         {
             base.PreRenderMap();
-
             previewMap = map.Clone();
             if (placementMode)
             {
@@ -439,7 +410,6 @@ namespace MobiusEditor.Tools
         protected override void PostRenderMap(Graphics graphics)
         {
             base.PostRenderMap(graphics);
-
             using (var buildingPen = new Pen(Color.Green, 4.0f))
             using (var occupyPen = new Pen(Color.Red, 2.0f))
             {
@@ -450,7 +420,6 @@ namespace MobiusEditor.Tools
                         new Size(building.Type.Size.Width * Globals.TileWidth, building.Type.Size.Height * Globals.TileHeight)
                     );
                     graphics.DrawRectangle(buildingPen, bounds);
-
                     for (var y = 0; y < building.Type.BaseOccupyMask.GetLength(0); ++y)
                     {
                         for (var x = 0; x < building.Type.BaseOccupyMask.GetLength(1); ++x)
@@ -467,6 +436,7 @@ namespace MobiusEditor.Tools
                     }
                 }
             }
+            RenderTechnoTriggers(graphics);
         }
 
         public override void Activate()
@@ -478,9 +448,7 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseMove += MapPanel_MouseMove;
             (this.mapPanel as Control).KeyDown += UnitTool_KeyDown;
             (this.mapPanel as Control).KeyUp += UnitTool_KeyUp;
-
             navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
-
             UpdateStatus();
         }
 
@@ -493,7 +461,6 @@ namespace MobiusEditor.Tools
             mapPanel.MouseMove -= MapPanel_MouseMove;
             (mapPanel as Control).KeyDown -= UnitTool_KeyDown;
             (mapPanel as Control).KeyUp -= UnitTool_KeyUp;
-
             navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;
         }
 
@@ -511,7 +478,6 @@ namespace MobiusEditor.Tools
                 }
                 disposedValue = true;
             }
-
             base.Dispose(disposing);
         }
         #endregion

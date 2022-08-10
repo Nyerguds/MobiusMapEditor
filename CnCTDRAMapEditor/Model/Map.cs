@@ -233,6 +233,11 @@ namespace MobiusEditor.Model
             TeamTypes = new List<TeamType>();
             Houses = HouseTypes.Select(t => { var h = (House)Activator.CreateInstance(HouseType, t); h.SetDefault(); return h; }).ToArray();
             Waypoints = waypoints.ToArray();
+            foreach (Waypoint waypoint in Waypoints)
+            {
+                // allows showing waypoints as cell coordinates.
+                waypoint.Metrics = Metrics;
+            }
             CellTriggers = new CellGrid<CellTrigger>(Metrics);
 
             MapSection.SetDefault();

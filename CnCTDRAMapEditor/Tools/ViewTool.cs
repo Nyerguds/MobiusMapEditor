@@ -41,6 +41,11 @@ namespace MobiusEditor.Tools
 
         protected virtual Map RenderMap => map;
 
+        /// <summary> Layers that are important to this tool and need to be drawn last in the PostRenderMap process.</summary>
+        protected MapLayerFlag priorityLayers;
+        /// <summary>Layers that are not painted by the PostRenderMap function on ViewTool level because they are handled at a specific point by the specific tool.</summary>
+        protected MapLayerFlag manuallyHandledLayers;
+
         private MapLayerFlag layers;
         public MapLayerFlag Layers
         {
@@ -122,169 +127,210 @@ namespace MobiusEditor.Tools
 
         protected virtual void PostRenderMap(Graphics graphics)
         {
-            if ((Layers & MapLayerFlag.Waypoints) != MapLayerFlag.None)
+            // Only render these if they are not in the priority layers, and not handled manually.
+            // The functions themselves will take care of checking whether they are in the active layers to render.
+            if ((priorityLayers & MapLayerFlag.Boundaries) == MapLayerFlag.None
+                && (manuallyHandledLayers & MapLayerFlag.Boundaries) == MapLayerFlag.None)
             {
-                using (var waypointBackgroundBrush = new SolidBrush(Color.FromArgb(96, Color.Black)))
-                using (var waypointBrush = new SolidBrush(Color.FromArgb(128, Color.DarkOrange)))
-                using (var waypointPen = new Pen(Color.DarkOrange))
-                {
-                    foreach (var waypoint in map.Waypoints)
-                    {
-                        if (waypoint.Cell.HasValue)
-                        {
-                            var x = waypoint.Cell.Value % map.Metrics.Width;
-                            var y = waypoint.Cell.Value / map.Metrics.Width;
-
-                            var location = new Point(x * Globals.TileWidth, y * Globals.TileHeight);
-                            var textBounds = new Rectangle(location, Globals.TileSize);
-
-                            graphics.FillRectangle(waypointBackgroundBrush, textBounds);
-                            graphics.DrawRectangle(waypointPen, textBounds);
-
-                            StringFormat stringFormat = new StringFormat
-                            {
-                                Alignment = StringAlignment.Center,
-                                LineAlignment = StringAlignment.Center
-                            };
-
-                            var text = waypoint.Name.ToString();
-                            var font = graphics.GetAdjustedFont(text, SystemFonts.DefaultFont, textBounds.Width, 24 / Globals.TileScale, 48 / Globals.TileScale, true);
-                            graphics.DrawString(text.ToString(), font, waypointBrush, textBounds, stringFormat);
-                        }
-                    }
-                }
+                RenderMapBoundaries(graphics);
             }
-
-            if ((Layers & MapLayerFlag.TechnoTriggers) != MapLayerFlag.None)
+            if ((priorityLayers & MapLayerFlag.CellTriggers) == MapLayerFlag.None
+                && (manuallyHandledLayers & MapLayerFlag.CellTriggers) == MapLayerFlag.None)
             {
-                using (var technoTriggerBackgroundBrush = new SolidBrush(Color.FromArgb(96, Color.Black)))
-                using (var technoTriggerBrush = new SolidBrush(Color.LimeGreen))
-                using (var technoTriggerPen = new Pen(Color.LimeGreen))
-                {
-                    foreach (var (cell, techno) in map.Technos)
-                    {
-                        var location = new Point(cell.X * Globals.TileWidth, cell.Y * Globals.TileHeight);
-
-                        (string trigger, Rectangle bounds)[] triggers = null;
-                        if (techno is Terrain terrain)
-                        {
-                            triggers = new (string, Rectangle)[] { (terrain.Trigger, new Rectangle(location, terrain.Type.RenderSize)) };
-                        }
-                        else if (techno is Building building)
-                        {
-                            var size = new Size(building.Type.Size.Width * Globals.TileWidth, building.Type.Size.Height * Globals.TileHeight);
-                            triggers = new (string, Rectangle)[] { (building.Trigger, new Rectangle(location, size)) };
-                        }
-                        else if (techno is Unit unit)
-                        {
-                            triggers = new (string, Rectangle)[] { (unit.Trigger, new Rectangle(location, Globals.TileSize)) };
-                        }
-                        else if (techno is InfantryGroup infantryGroup)
-                        {
-                            List<(string, Rectangle)> infantryTriggers = new List<(string, Rectangle)>();
-                            for (var i = 0; i < infantryGroup.Infantry.Length; ++i)
-                            {
-                                var infantry = infantryGroup.Infantry[i];
-                                if (infantry == null)
-                                {
-                                    continue;
-                                }
-
-                                var size = Globals.TileSize;
-                                var offset = Size.Empty;
-                                switch ((InfantryStoppingType)i)
-                                {
-                                    case InfantryStoppingType.UpperLeft:
-                                        offset.Width = -size.Width / 4;
-                                        offset.Height = -size.Height / 4;
-                                        break;
-                                    case InfantryStoppingType.UpperRight:
-                                        offset.Width = size.Width / 4;
-                                        offset.Height = -size.Height / 4;
-                                        break;
-                                    case InfantryStoppingType.LowerLeft:
-                                        offset.Width = -size.Width / 4;
-                                        offset.Height = size.Height / 4;
-                                        break;
-                                    case InfantryStoppingType.LowerRight:
-                                        offset.Width = size.Width / 4;
-                                        offset.Height = size.Height / 4;
-                                        break;
-                                }
-
-                                var bounds = new Rectangle(location + offset, size);
-                                infantryTriggers.Add((infantry.Trigger, bounds));
-                            }
-
-                            triggers = infantryTriggers.ToArray();
-                        }
-
-                        if (triggers != null)
-                        {
-                            StringFormat stringFormat = new StringFormat
-                            {
-                                Alignment = StringAlignment.Center,
-                                LineAlignment = StringAlignment.Center
-                            };
-
-                            foreach (var (trigger, bounds) in triggers.Where(x => !x.trigger.Equals("None", StringComparison.OrdinalIgnoreCase)))
-                            {
-                                var font = graphics.GetAdjustedFont(trigger, SystemFonts.DefaultFont, bounds.Width, 12 / Globals.TileScale, 24 / Globals.TileScale, true);
-                                var textBounds = graphics.MeasureString(trigger, font, bounds.Width, stringFormat);
-
-                                var backgroundBounds = new RectangleF(bounds.Location, textBounds);
-                                backgroundBounds.Offset((bounds.Width - textBounds.Width) / 2.0f, (bounds.Height - textBounds.Height) / 2.0f);
-                                graphics.FillRectangle(technoTriggerBackgroundBrush, backgroundBounds);
-                                graphics.DrawRectangle(technoTriggerPen, Rectangle.Round(backgroundBounds));
-
-                                graphics.DrawString(trigger, font, technoTriggerBrush, bounds, stringFormat);
-                            }
-                        }
-                    }
-                }
+                RenderCellTriggers(graphics);
             }
-
-            if ((Layers & MapLayerFlag.CellTriggers) != MapLayerFlag.None)
+            if ((priorityLayers & MapLayerFlag.Waypoints) == MapLayerFlag.None
+                && (manuallyHandledLayers & MapLayerFlag.Waypoints) == MapLayerFlag.None)
             {
-                using (var cellTriggersBackgroundBrush = new SolidBrush(Color.FromArgb(96, Color.Black)))
-                using (var cellTriggersBrush = new SolidBrush(Color.FromArgb(128, Color.White)))
-                using (var cellTriggerPen = new Pen(Color.White))
-                {
-                    foreach (var (cell, cellTrigger) in map.CellTriggers)
-                    {
-                        var x = cell % map.Metrics.Width;
-                        var y = cell / map.Metrics.Width;
+                RenderWayPoints(graphics);
+            }
+            if ((priorityLayers & MapLayerFlag.TechnoTriggers) == MapLayerFlag.None
+                && (manuallyHandledLayers & MapLayerFlag.TechnoTriggers) == MapLayerFlag.None)
+            {
+                RenderTechnoTriggers(graphics);
+            }
+            // Priority layers are only drawn at the end, so they get painted over all others.
+            if ((priorityLayers & MapLayerFlag.Boundaries) != MapLayerFlag.None)
+            {
+                RenderMapBoundaries(graphics);
+            }
+            if ((priorityLayers & MapLayerFlag.CellTriggers) != MapLayerFlag.None)
+            {
+                RenderCellTriggers(graphics);
+            }
+            if ((priorityLayers & MapLayerFlag.Waypoints) != MapLayerFlag.None)
+            {
+                RenderWayPoints(graphics);
+            }
+            if ((priorityLayers & MapLayerFlag.TechnoTriggers) != MapLayerFlag.None)
+            {
+                RenderTechnoTriggers(graphics);
+            }
+        }
 
+        protected void RenderWayPoints(Graphics graphics)
+        {
+            if ((Layers & MapLayerFlag.Waypoints) == MapLayerFlag.None)
+            {
+                return;
+            }
+            using (var waypointBackgroundBrush = new SolidBrush(Color.FromArgb(96, Color.Black)))
+            using (var waypointBrush = new SolidBrush(Color.FromArgb(128, Color.DarkOrange)))
+            using (var waypointPen = new Pen(Color.DarkOrange))
+            {
+                foreach (var waypoint in map.Waypoints)
+                {
+                    if (waypoint.Cell.HasValue)
+                    {
+                        var x = waypoint.Cell.Value % map.Metrics.Width;
+                        var y = waypoint.Cell.Value / map.Metrics.Width;
                         var location = new Point(x * Globals.TileWidth, y * Globals.TileHeight);
                         var textBounds = new Rectangle(location, Globals.TileSize);
-
-                        graphics.FillRectangle(cellTriggersBackgroundBrush, textBounds);
-                        graphics.DrawRectangle(cellTriggerPen, textBounds);
-
+                        graphics.FillRectangle(waypointBackgroundBrush, textBounds);
+                        graphics.DrawRectangle(waypointPen, textBounds);
                         StringFormat stringFormat = new StringFormat
                         {
                             Alignment = StringAlignment.Center,
                             LineAlignment = StringAlignment.Center
                         };
-
-                        var text = cellTrigger.Trigger;
+                        var text = waypoint.Name.ToString();
                         var font = graphics.GetAdjustedFont(text, SystemFonts.DefaultFont, textBounds.Width, 24 / Globals.TileScale, 48 / Globals.TileScale, true);
-                        graphics.DrawString(text.ToString(), font, cellTriggersBrush, textBounds, stringFormat);
+                        graphics.DrawString(text.ToString(), font, waypointBrush, textBounds, stringFormat);
                     }
                 }
             }
+        }
 
-            if ((Layers & MapLayerFlag.Boundaries) != MapLayerFlag.None)
+        protected void RenderTechnoTriggers(Graphics graphics)
+        {
+            if ((Layers & MapLayerFlag.TechnoTriggers) == MapLayerFlag.None)
             {
-                var bounds = Rectangle.FromLTRB(
-                    map.Bounds.Left * Globals.TileWidth,
-                    map.Bounds.Top * Globals.TileHeight,
-                    map.Bounds.Right * Globals.TileWidth,
-                    map.Bounds.Bottom * Globals.TileHeight
-                );
-                using (var boundsPen = new Pen(Color.Cyan, 8.0f))
-                    graphics.DrawRectangle(boundsPen, bounds);
+                return;
             }
+            using (var technoTriggerBackgroundBrush = new SolidBrush(Color.FromArgb(96, Color.Black)))
+            using (var technoTriggerBrush = new SolidBrush(Color.LimeGreen))
+            using (var technoTriggerPen = new Pen(Color.LimeGreen))
+            {
+                foreach (var (cell, techno) in map.Technos)
+                {
+                    var location = new Point(cell.X * Globals.TileWidth, cell.Y * Globals.TileHeight);
+                    (string trigger, Rectangle bounds)[] triggers = null;
+                    if (techno is Terrain terrain)
+                    {
+                        triggers = new (string, Rectangle)[] { (terrain.Trigger, new Rectangle(location, terrain.Type.RenderSize)) };
+                    }
+                    else if (techno is Building building)
+                    {
+                        var size = new Size(building.Type.Size.Width * Globals.TileWidth, building.Type.Size.Height * Globals.TileHeight);
+                        triggers = new (string, Rectangle)[] { (building.Trigger, new Rectangle(location, size)) };
+                    }
+                    else if (techno is Unit unit)
+                    {
+                        triggers = new (string, Rectangle)[] { (unit.Trigger, new Rectangle(location, Globals.TileSize)) };
+                    }
+                    else if (techno is InfantryGroup infantryGroup)
+                    {
+                        List<(string, Rectangle)> infantryTriggers = new List<(string, Rectangle)>();
+                        for (var i = 0; i < infantryGroup.Infantry.Length; ++i)
+                        {
+                            var infantry = infantryGroup.Infantry[i];
+                            if (infantry == null)
+                            {
+                                continue;
+                            }
+                            var size = Globals.TileSize;
+                            var offset = Size.Empty;
+                            switch ((InfantryStoppingType)i)
+                            {
+                                case InfantryStoppingType.UpperLeft:
+                                    offset.Width = -size.Width / 4;
+                                    offset.Height = -size.Height / 4;
+                                    break;
+                                case InfantryStoppingType.UpperRight:
+                                    offset.Width = size.Width / 4;
+                                    offset.Height = -size.Height / 4;
+                                    break;
+                                case InfantryStoppingType.LowerLeft:
+                                    offset.Width = -size.Width / 4;
+                                    offset.Height = size.Height / 4;
+                                    break;
+                                case InfantryStoppingType.LowerRight:
+                                    offset.Width = size.Width / 4;
+                                    offset.Height = size.Height / 4;
+                                    break;
+                            }
+                            var bounds = new Rectangle(location + offset, size);
+                            infantryTriggers.Add((infantry.Trigger, bounds));
+                        }
+                        triggers = infantryTriggers.ToArray();
+                    }
+                    if (triggers != null)
+                    {
+                        StringFormat stringFormat = new StringFormat
+                        {
+                            Alignment = StringAlignment.Center,
+                            LineAlignment = StringAlignment.Center
+                        };
+                        foreach (var (trigger, bounds) in triggers.Where(x => !x.trigger.Equals("None", StringComparison.OrdinalIgnoreCase)))
+                        {
+                            var font = graphics.GetAdjustedFont(trigger, SystemFonts.DefaultFont, bounds.Width, 12 / Globals.TileScale, 24 / Globals.TileScale, true);
+                            var textBounds = graphics.MeasureString(trigger, font, bounds.Width, stringFormat);
+                            var backgroundBounds = new RectangleF(bounds.Location, textBounds);
+                            backgroundBounds.Offset((bounds.Width - textBounds.Width) / 2.0f, (bounds.Height - textBounds.Height) / 2.0f);
+                            graphics.FillRectangle(technoTriggerBackgroundBrush, backgroundBounds);
+                            graphics.DrawRectangle(technoTriggerPen, Rectangle.Round(backgroundBounds));
+
+                            graphics.DrawString(trigger, font, technoTriggerBrush, bounds, stringFormat);
+                        }
+                    }
+                }
+            }
+        }
+
+        protected void RenderCellTriggers(Graphics graphics)
+        {
+            if ((Layers & MapLayerFlag.CellTriggers) == MapLayerFlag.None)
+            {
+                return;
+            }
+            using (var cellTriggersBackgroundBrush = new SolidBrush(Color.FromArgb(96, Color.Black)))
+            using (var cellTriggersBrush = new SolidBrush(Color.FromArgb(128, Color.White)))
+            using (var cellTriggerPen = new Pen(Color.White))
+            {
+                foreach (var (cell, cellTrigger) in map.CellTriggers)
+                {
+                    var x = cell % map.Metrics.Width;
+                    var y = cell / map.Metrics.Width;
+                    var location = new Point(x * Globals.TileWidth, y * Globals.TileHeight);
+                    var textBounds = new Rectangle(location, Globals.TileSize);
+                    graphics.FillRectangle(cellTriggersBackgroundBrush, textBounds);
+                    graphics.DrawRectangle(cellTriggerPen, textBounds);
+                    StringFormat stringFormat = new StringFormat
+                    {
+                        Alignment = StringAlignment.Center,
+                        LineAlignment = StringAlignment.Center
+                    };
+                    var text = cellTrigger.Trigger;
+                    var font = graphics.GetAdjustedFont(text, SystemFonts.DefaultFont, textBounds.Width, 24 / Globals.TileScale, 48 / Globals.TileScale, true);
+                    graphics.DrawString(text.ToString(), font, cellTriggersBrush, textBounds, stringFormat);
+                }
+            }
+        }
+
+        protected void RenderMapBoundaries(Graphics graphics)
+        {
+            if ((Layers & MapLayerFlag.Boundaries) == MapLayerFlag.None)
+            {
+                return;
+            }
+            var bounds = Rectangle.FromLTRB(
+                map.Bounds.Left * Globals.TileWidth,
+                map.Bounds.Top * Globals.TileHeight,
+                map.Bounds.Right * Globals.TileWidth,
+                map.Bounds.Bottom * Globals.TileHeight
+            );
+            using (var boundsPen = new Pen(Color.Cyan, 8.0f))
+                graphics.DrawRectangle(boundsPen, bounds);
         }
 
         /// <summary>

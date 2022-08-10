@@ -84,6 +84,7 @@ namespace MobiusEditor
         private ViewToolStripButton[] viewToolStripButtons;
 
         private IGamePlugin plugin;
+        private FileType loadedFileType;
         private string filename;
 
         private readonly MRU mru;
@@ -386,7 +387,7 @@ namespace MobiusEditor
             else
             {
                 var fileInfo = new FileInfo(filename);
-                if (SaveFile(fileInfo.FullName))
+                if (SaveFile(fileInfo.FullName, loadedFileType))
                 {
                     mru.Add(fileInfo);
                 }
@@ -432,7 +433,8 @@ namespace MobiusEditor
             if (sfd.ShowDialog() == DialogResult.OK)
             {
                 var fileInfo = new FileInfo(sfd.FileName);
-                if (SaveFile(fileInfo.FullName))
+                // nonstandard extensions will be seen as ini
+                if (SaveFile(fileInfo.FullName, FileType.INI))
                 {
                     mru.Add(fileInfo);
                 }
@@ -706,6 +708,17 @@ namespace MobiusEditor
 
         private bool LoadFile(string loadFilename)
         {
+            try
+            {
+                if(!File.Exists(loadFilename))
+                {
+                    return false;
+                }
+            }
+            catch
+            {
+                return false;
+            }
             FileType fileType = FileType.None;
             switch (Path.GetExtension(loadFilename).ToLower())
             {
@@ -725,55 +738,68 @@ namespace MobiusEditor
 
             if (fileType == FileType.None)
             {
-                return false;
+                long filesize = 0;
+                try
+                {
+                    filesize = new FileInfo(loadFilename).Length;
+                    var bytes = File.ReadAllBytes(loadFilename);
+                    var enc = new UTF8Encoding(false, true);
+                    var inicontents = enc.GetString(bytes);
+                    var ini = new INI();
+                    ini.Parse(inicontents);
+                    // if it gets to this point, the file is a text document.
+                    fileType = FileType.INI;                    
+                }
+                catch
+                {
+                    Size tdMax = TiberianDawn.Constants.MaxSize;
+                    if (filesize == tdMax.Width * tdMax.Height * 2)
+                    {
+                        fileType = FileType.BIN;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
             }
 
             GameType gameType = GameType.None;
             switch (fileType)
             {
                 case FileType.INI:
-                    {
-                        var ini = new INI();
-                        try
-                        {
-                            using (var reader = new StreamReader(loadFilename))
-                            {
-                                ini.Parse(reader);
-                            }
-                        }
-                        catch (FileNotFoundException)
-                        {
-                            return false;
-                        }
-                        gameType = File.Exists(Path.ChangeExtension(loadFilename, ".bin")) ? GameType.TiberianDawn : GameType.RedAlert;
-                    }
+                {
+                    gameType = File.Exists(Path.ChangeExtension(loadFilename, ".bin")) ? GameType.TiberianDawn : GameType.RedAlert;
                     break;
+                }                   
                 case FileType.BIN:
+                {
                     gameType = GameType.TiberianDawn;
                     break;
+                }
 #if DEVELOPER
                 case FileType.PGM:
+                {
+                    try
                     {
-                        try
+                        using (var megafile = new Megafile(loadFilename))
                         {
-                            using (var megafile = new Megafile(loadFilename))
+                            if (megafile.Any(f => Path.GetExtension(f).ToLower() == ".mpr"))
                             {
-                                if (megafile.Any(f => Path.GetExtension(f).ToLower() == ".mpr"))
-                                {
-                                    gameType = GameType.RedAlert;
-                                }
-                                else
-                                {
-                                    gameType = GameType.TiberianDawn;
-                                }
+                                gameType = GameType.RedAlert;
+                            }
+                            else
+                            {
+                                gameType = GameType.TiberianDawn;
                             }
                         }
-                        catch (FileNotFoundException)
-                        {
-                            return false;
-                        }
+                    }
+                    catch (FileNotFoundException)
+                    {
+                        return false;
                     }
                     break;
+                }
 #endif
             }
 
@@ -809,7 +835,6 @@ namespace MobiusEditor
                     }
                     break;
             }
-
             try
             {
                 var errors = plugin.Load(loadFilename, fileType).ToArray();
@@ -833,6 +858,7 @@ namespace MobiusEditor
 
             plugin.Dirty = false;
             filename = loadFilename;
+            loadedFileType = fileType;
             SetTitle();
 
             url.Clear();
@@ -844,7 +870,7 @@ namespace MobiusEditor
             return true;
         }
 
-        private bool SaveFile(string saveFilename)
+        private bool SaveFile(string saveFilename, FileType inputNameType)
         {
             FileType fileType = FileType.None;
             switch (Path.GetExtension(saveFilename).ToLower())
@@ -860,7 +886,14 @@ namespace MobiusEditor
 
             if (fileType == FileType.None)
             {
-                return false;
+                if (inputNameType == FileType.None)
+                {
+                    return false;
+                }
+                else
+                {
+                    fileType = inputNameType;
+                }
             }
 
             if (string.IsNullOrEmpty(plugin.Map.SteamSection.Title))

@@ -75,7 +75,7 @@ namespace MobiusEditor.Tools
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
             previewMap = map;
-
+            manuallyHandledLayers = MapLayerFlag.TechnoTriggers;
             mockUnit = new Unit()
             {
                 Type = unitTypeComboBox.Types.First() as UnitType,
@@ -390,6 +390,7 @@ namespace MobiusEditor.Tools
                     graphics.DrawRectangle(unitPen, bounds);
                 }
             }
+            RenderTechnoTriggers(graphics);
         }
 
         public override void Activate()

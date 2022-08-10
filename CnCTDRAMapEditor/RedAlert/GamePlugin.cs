@@ -1288,14 +1288,12 @@ namespace MobiusEditor.RedAlert
                 case FileType.INI:
                 case FileType.BIN:
                 {
-                    bool isIni = path.EndsWith(".ini", StringComparison.InvariantCultureIgnoreCase);
-                    var mprPath = Path.ChangeExtension(path, isIni ? ".ini" : ".mpr");
                     var tgaPath = Path.ChangeExtension(path, ".tga");
                     var jsonPath = Path.ChangeExtension(path, ".json");
 
                     var ini = new INI();
                     SaveINI(ini, fileType);
-                    using (var mprWriter = new StreamWriter(mprPath))
+                    using (var mprWriter = new StreamWriter(path))
                     {
                         mprWriter.Write(ini.ToString());
                     }

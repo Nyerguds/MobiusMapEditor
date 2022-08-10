@@ -168,47 +168,49 @@ namespace MobiusEditor.TiberianDawn
         public IEnumerable<string> Load(string path, FileType fileType)
         {
             var errors = new List<string>();
+            var iniPath = fileType == FileType.INI ? path : Path.ChangeExtension(path, ".ini");
+            var binPath = fileType == FileType.BIN ? path : Path.ChangeExtension(path, ".bin");
             switch (fileType)
             {
                 case FileType.INI:
                 case FileType.BIN:
+                {
+                    var ini = new INI();
+                    using (var iniReader = new StreamReader(iniPath))
+                    using (var binReader = new BinaryReader(new FileStream(binPath, FileMode.Open, FileAccess.Read)))
                     {
-                        var iniPath = Path.ChangeExtension(path, ".ini");
-                        var binPath = Path.ChangeExtension(path, ".bin");
-                        var ini = new INI();
-                        using (var iniReader = new StreamReader(iniPath))
-                        using (var binReader = new BinaryReader(new FileStream(binPath, FileMode.Open, FileAccess.Read)))
-                        {
-                            string iniText = FixRoad2Load(iniReader);
-                            ini.Parse(iniText);
-                            errors.AddRange(LoadINI(ini));
-                            LoadBinary(binReader);
-                        }
+                        string iniText = FixRoad2Load(iniReader);
+                        ini.Parse(iniText);
+                        errors.AddRange(LoadINI(ini));
+                        LoadBinary(binReader);
                     }
                     break;
+                }
                 case FileType.MEG:
                 case FileType.PGM:
+                {
+                    using (var megafile = new Megafile(path))
                     {
-                        using (var megafile = new Megafile(path))
+                        var iniFile = megafile.Where(p => Path.GetExtension(p).ToLower() == ".ini").FirstOrDefault();
+                        var binFile = megafile.Where(p => Path.GetExtension(p).ToLower() == ".bin").FirstOrDefault();
+                        if ((iniFile != null) && (binFile != null))
                         {
-                            var iniFile = megafile.Where(p => Path.GetExtension(p).ToLower() == ".ini").FirstOrDefault();
-                            var binFile = megafile.Where(p => Path.GetExtension(p).ToLower() == ".bin").FirstOrDefault();
-                            if ((iniFile != null) && (binFile != null))
+                            var ini = new INI();
+                            using (var iniReader = new StreamReader(megafile.Open(iniFile)))
+                            using (var binReader = new BinaryReader(megafile.Open(binFile)))
                             {
-                                var ini = new INI();
-                                using (var iniReader = new StreamReader(megafile.Open(iniFile)))
-                                using (var binReader = new BinaryReader(megafile.Open(binFile)))
-                                {
-                                    ini.Parse(iniReader);
-                                    errors.AddRange(LoadINI(ini));
-                                    LoadBinary(binReader);
-                                }
+                                ini.Parse(iniReader);
+                                errors.AddRange(LoadINI(ini));
+                                LoadBinary(binReader);
                             }
                         }
                     }
                     break;
+                }
                 default:
+                {
                     throw new NotSupportedException();
+                }
             }
             return errors;
         }
@@ -1014,80 +1016,82 @@ namespace MobiusEditor.TiberianDawn
             {
                 return false;
             }
+            var iniPath = fileType == FileType.INI ? path : Path.ChangeExtension(path, ".ini");
+            var binPath = fileType == FileType.BIN ? path : Path.ChangeExtension(path, ".bin");
             switch (fileType)
             {
                 case FileType.INI:
                 case FileType.BIN:
-                    {
-                        var iniPath = Path.ChangeExtension(path, ".ini");
-                        var binPath = Path.ChangeExtension(path, ".bin");
-                        var tgaPath = Path.ChangeExtension(path, ".tga");
-                        var jsonPath = Path.ChangeExtension(path, ".json");
+                {
+                    var tgaPath = Path.ChangeExtension(path, ".tga");
+                    var jsonPath = Path.ChangeExtension(path, ".json");
 
-                        var ini = new INI();
-                        SaveINI(ini, fileType);
-                        using (var iniWriter = new StreamWriter(iniPath))
-                        {
-                            //iniWriter.Write(ini.ToString());
-                            FixRoad2Save(ini, iniWriter);
-                        }
-                        using (var binStream = new FileStream(binPath, FileMode.Create))
-                        using (var binWriter = new BinaryWriter(binStream))
-                        {
-                            SaveBinary(binWriter);
-                        }
-                        using (var tgaStream = new FileStream(tgaPath, FileMode.Create))
-                        {
-                            SaveMapPreview(tgaStream, Map.BasicSection.SoloMission);
-                        }
-                        using (var jsonStream = new FileStream(jsonPath, FileMode.Create))
-                        using (var jsonWriter = new JsonTextWriter(new StreamWriter(jsonStream)))
-                        {
-                            SaveJSON(jsonWriter);
-                        }
+                    var ini = new INI();
+                    SaveINI(ini, fileType);
+                    using (var iniWriter = new StreamWriter(iniPath))
+                    {
+                        //iniWriter.Write(ini.ToString());
+                        FixRoad2Save(ini, iniWriter);
+                    }
+                    using (var binStream = new FileStream(binPath, FileMode.Create))
+                    using (var binWriter = new BinaryWriter(binStream))
+                    {
+                        SaveBinary(binWriter);
+                    }
+                    using (var tgaStream = new FileStream(tgaPath, FileMode.Create))
+                    {
+                        SaveMapPreview(tgaStream, Map.BasicSection.SoloMission);
+                    }
+                    using (var jsonStream = new FileStream(jsonPath, FileMode.Create))
+                    using (var jsonWriter = new JsonTextWriter(new StreamWriter(jsonStream)))
+                    {
+                        SaveJSON(jsonWriter);
                     }
                     break;
+                }
                 case FileType.MEG:
                 case FileType.PGM:
+                {
+                    var ini = new INI();
+                    SaveINI(ini, fileType);
+                    using (var iniStream = new MemoryStream())
+                    using (var binStream = new MemoryStream())
+                    using (var tgaStream = new MemoryStream())
+                    using (var jsonStream = new MemoryStream())
+                    using (var iniWriter = new StreamWriter(iniStream))
+                    using (var binWriter = new BinaryWriter(binStream))
+                    using (var jsonWriter = new JsonTextWriter(new StreamWriter(jsonStream)))
+                    using (var megafileBuilder = new MegafileBuilder(@"", path))
                     {
-                        var ini = new INI();
-                        SaveINI(ini, fileType);
-                        using (var iniStream = new MemoryStream())
-                        using (var binStream = new MemoryStream())
-                        using (var tgaStream = new MemoryStream())
-                        using (var jsonStream = new MemoryStream())
-                        using (var iniWriter = new StreamWriter(iniStream))
-                        using (var binWriter = new BinaryWriter(binStream))
-                        using (var jsonWriter = new JsonTextWriter(new StreamWriter(jsonStream)))
-                        using (var megafileBuilder = new MegafileBuilder(@"", path))
-                        {
 
-                            //iniWriter.Write(ini.ToString());
-                            FixRoad2Save(ini, iniWriter);
-                            iniWriter.Flush();
-                            iniStream.Position = 0;
-                            SaveBinary(binWriter);
-                            binWriter.Flush();
-                            binStream.Position = 0;
-                            SaveMapPreview(tgaStream, Map.BasicSection.SoloMission);
-                            tgaStream.Position = 0;
-                            SaveJSON(jsonWriter);
-                            jsonWriter.Flush();
-                            jsonStream.Position = 0;
-                            var iniFile = Path.ChangeExtension(Path.GetFileName(path), ".ini").ToUpper();
-                            var binFile = Path.ChangeExtension(Path.GetFileName(path), ".bin").ToUpper();
-                            var tgaFile = Path.ChangeExtension(Path.GetFileName(path), ".tga").ToUpper();
-                            var jsonFile = Path.ChangeExtension(Path.GetFileName(path), ".json").ToUpper();
-                            megafileBuilder.AddFile(iniFile, iniStream);
-                            megafileBuilder.AddFile(binFile, binStream);
-                            megafileBuilder.AddFile(tgaFile, tgaStream);
-                            megafileBuilder.AddFile(jsonFile, jsonStream);
-                            megafileBuilder.Write();
-                        }
+                        //iniWriter.Write(ini.ToString());
+                        FixRoad2Save(ini, iniWriter);
+                        iniWriter.Flush();
+                        iniStream.Position = 0;
+                        SaveBinary(binWriter);
+                        binWriter.Flush();
+                        binStream.Position = 0;
+                        SaveMapPreview(tgaStream, Map.BasicSection.SoloMission);
+                        tgaStream.Position = 0;
+                        SaveJSON(jsonWriter);
+                        jsonWriter.Flush();
+                        jsonStream.Position = 0;
+                        var iniFile = Path.ChangeExtension(Path.GetFileName(path), ".ini").ToUpper();
+                        var binFile = Path.ChangeExtension(Path.GetFileName(path), ".bin").ToUpper();
+                        var tgaFile = Path.ChangeExtension(Path.GetFileName(path), ".tga").ToUpper();
+                        var jsonFile = Path.ChangeExtension(Path.GetFileName(path), ".json").ToUpper();
+                        megafileBuilder.AddFile(iniFile, iniStream);
+                        megafileBuilder.AddFile(binFile, binStream);
+                        megafileBuilder.AddFile(tgaFile, tgaStream);
+                        megafileBuilder.AddFile(jsonFile, jsonStream);
+                        megafileBuilder.Write();
                     }
                     break;
+                }
                 default:
+                {
                     throw new NotSupportedException();
+                }
             }
             return true;
         }

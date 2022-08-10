@@ -132,16 +132,14 @@ namespace MobiusEditor.Tools
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
             previewMap = map;
-
+            manuallyHandledLayers = MapLayerFlag.Boundaries;
             this.templateTypeListView = templateTypeListView;
             this.templateTypeListView.SelectedIndexChanged -= TemplateTypeListView_SelectedIndexChanged;
-
             string templateCategory(TemplateType template)
             {
                 var m = CategoryRegex.Match(template.Name);
                 return m.Success ? m.Groups[1].Value : string.Empty;
             }
-
             var templateTypes = plugin.Map.TemplateTypes
                 .Where(t =>
                     (t.Thumbnail != null) &&
@@ -150,7 +148,6 @@ namespace MobiusEditor.Tools
                 .GroupBy(t => templateCategory(t)).OrderBy(g => g.Key);
             var templateTypeImages = templateTypes.SelectMany(g => g).Select(t => t.Thumbnail);
             var clear = plugin.Map.TemplateTypes.Where(t => (t.Flag & TemplateTypeFlag.Clear) == TemplateTypeFlag.Clear).FirstOrDefault();
-
             Screen screen = Screen.FromHandle(mapPanel.Handle) ?? Screen.PrimaryScreen;
             int maxSize = Properties.Settings.Default.MaxMapTileTextureSize;
             if (maxSize == 0)
@@ -158,16 +155,13 @@ namespace MobiusEditor.Tools
                 double ratio = DesignResWidth / (double)screen.Bounds.Width;
                 maxSize = (int)((DesignTextureWidth / ratio) * Properties.Settings.Default.TemplateToolTextureSizeMultiplier);
             }
-
             var maxWidth = Math.Min(templateTypeImages.Max(t => t.Width), maxSize);
             var maxHeight = Math.Min(templateTypeImages.Max(t => t.Height), maxSize);
-
             var imageList = new ImageList();
             imageList.Images.Add(clear.Thumbnail);
             imageList.Images.AddRange(templateTypeImages.ToArray());
             imageList.ImageSize = new Size(maxWidth, maxHeight);
             imageList.ColorDepth = ColorDepth.Depth24Bit;
-
             this.templateTypeListView.BeginUpdate();
             this.templateTypeListView.LargeImageList = imageList;
             // Fixed constantly growing items list.
@@ -175,7 +169,6 @@ namespace MobiusEditor.Tools
                 this.templateTypeListView.Groups.Clear();
             if (this.templateTypeListView.Items.Count > 0)
                 this.templateTypeListView.Items.Clear();
-
             var imageIndex = 0;
             var group = new ListViewGroup(clear.DisplayName);
             this.templateTypeListView.Groups.Add(group);
@@ -185,7 +178,6 @@ namespace MobiusEditor.Tools
                 Tag = clear
             };
             this.templateTypeListView.Items.Add(item);
-
             foreach (var templateTypeGroup in templateTypes)
             {
                 group = new ListViewGroup(templateTypeGroup.Key);
@@ -202,15 +194,12 @@ namespace MobiusEditor.Tools
             }
             this.templateTypeListView.EndUpdate();
             this.templateTypeListView.SelectedIndexChanged += TemplateTypeListView_SelectedIndexChanged;
-
             this.templateTypeMapPanel = templateTypeMapPanel;
             this.templateTypeMapPanel.MouseDown += TemplateTypeMapPanel_MouseDown;
             this.templateTypeMapPanel.PostRender += TemplateTypeMapPanel_PostRender;
             this.templateTypeMapPanel.BackColor = Color.Black;
             this.templateTypeMapPanel.MaxZoom = 1;
-
             this.mouseTooltip = mouseTooltip;
-
             SelectedTemplateType = templateTypes.First().First();
         }
 
@@ -220,7 +209,6 @@ namespace MobiusEditor.Tools
             {
                 dragBounds = map.Bounds;
                 dragEdge = -1;
-
                 UpdateTooltip();
                 mapPanel.Invalidate();
             }
@@ -232,7 +220,6 @@ namespace MobiusEditor.Tools
             {
                 dragBounds = map.Bounds;
                 dragEdge = -1;
-
                 UpdateTooltip();
                 mapPanel.Invalidate();
             }
@@ -284,7 +271,6 @@ namespace MobiusEditor.Tools
                 int leftoverY = panelHeight - (scale * maxIconRect);
                 int padX = leftoverX / 2;
                 int padY = leftoverY / 2;
-
                 using (var selectedIconPen = new Pen(Color.Yellow, Math.Max(1, scale/16))) {
                     var cellSize = new Size(scale, scale);
                     var rect = new Rectangle(new Point(padX + SelectedIcon.Value.X * cellSize.Width, padY + SelectedIcon.Value.Y * cellSize.Height), cellSize);
@@ -299,7 +285,6 @@ namespace MobiusEditor.Tools
                     Alignment = StringAlignment.Center,
                     LineAlignment = StringAlignment.Center
                 };
-
                 var text = string.Format("{0} ({1}x{2})", SelectedTemplateType.DisplayName, SelectedTemplateType.IconWidth, SelectedTemplateType.IconHeight);
                 var textSize = e.Graphics.MeasureString(text, SystemFonts.CaptionFont) + new SizeF(6.0f, 6.0f);
                 var textBounds = new RectangleF(new PointF(0, 0), textSize);
@@ -393,21 +378,16 @@ namespace MobiusEditor.Tools
                         ure.Map.Bounds = oldBounds;
                         ure.MapPanel.Invalidate();
                     }
-
                     void redoAction(UndoRedoEventArgs ure)
                     {
                         ure.Map.Bounds = dragBounds;
                         ure.MapPanel.Invalidate();
                     }
-
                     map.Bounds = dragBounds;
-
                     url.Track(undoAction, redoAction);
                     mapPanel.Invalidate();
                 }
-
                 dragEdge = -1;
-
                 UpdateStatus();
             }
             else
@@ -433,7 +413,6 @@ namespace MobiusEditor.Tools
             {
                 ExitAllModes();
             }
-
             var cursor = Cursors.Default;
             if (boundsMode)
             {
@@ -458,7 +437,6 @@ namespace MobiusEditor.Tools
                 }
             }
             Cursor.Current = cursor;
-
             UpdateTooltip();
         }
 
@@ -468,7 +446,6 @@ namespace MobiusEditor.Tools
             {
                 var endDrag = navigationWidget.MouseCell;
                 map.Metrics.Clip(ref endDrag, new Size(1, 1), Size.Empty);
-
                 switch (dragEdge)
                 {
                     case 0:
@@ -481,7 +458,6 @@ namespace MobiusEditor.Tools
                         }
                         break;
                 }
-
                 switch (dragEdge)
                 {
                     case 5:
@@ -494,7 +470,6 @@ namespace MobiusEditor.Tools
                         }
                         break;
                 }
-
                 switch (dragEdge)
                 {
                     case 3:
@@ -544,7 +519,6 @@ namespace MobiusEditor.Tools
                                 }
                             }
                         }
-
                     }
                 }
             }
@@ -618,7 +592,6 @@ namespace MobiusEditor.Tools
                             }
                         }
                     }
-
                     for (int y = 0, icon = 0; y < SelectedTemplateType.IconHeight; ++y)
                     {
                         for (var x = 0; x < SelectedTemplateType.IconWidth; ++x, ++icon)
@@ -680,7 +653,6 @@ namespace MobiusEditor.Tools
                             }
                         }
                     }
-
                     for (int y = 0, icon = 0; y < SelectedTemplateType.IconHeight; ++y)
                     {
                         for (var x = 0; x < SelectedTemplateType.IconWidth; ++x, ++icon)
@@ -709,11 +681,8 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-
             placementMode = true;
-
             navigationWidget.MouseoverSize = Size.Empty;
-
             if (SelectedTemplateType != null)
             {
                 for (var y = 0; y < SelectedTemplateType.IconHeight; ++y)
@@ -724,7 +693,6 @@ namespace MobiusEditor.Tools
                     }
                 }
             }
-
             UpdateStatus();
         }
 
@@ -734,12 +702,9 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-
             boundsMode = true;
             dragBounds = map.Bounds;
-
             navigationWidget.MouseoverSize = Size.Empty;
-
             if (SelectedTemplateType != null)
             {
                 for (var y = 0; y < SelectedTemplateType.IconHeight; ++y)
@@ -750,7 +715,6 @@ namespace MobiusEditor.Tools
                     }
                 }
             }
-
             UpdateTooltip();
             UpdateStatus();
         }
@@ -761,14 +725,11 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-
             boundsMode = false;
             dragEdge = -1;
             dragBounds = Rectangle.Empty;
             placementMode = false;
-
             navigationWidget.MouseoverSize = new Size(1, 1);
-
             if (SelectedTemplateType != null)
             {
                 for (var y = 0; y < SelectedTemplateType.IconHeight; ++y)
@@ -779,7 +740,6 @@ namespace MobiusEditor.Tools
                     }
                 }
             }
-
             UpdateTooltip();
             UpdateStatus();
         }
@@ -811,13 +771,11 @@ namespace MobiusEditor.Tools
                         tooltipPosition.X -= tooltipSize.Width;
                         break;
                 }
-
                 var screenPosition = mapPanel.PointToScreen(tooltipPosition);
                 var screen = Screen.FromControl(mapPanel);
                 screenPosition.X = Math.Max(0, Math.Min(screen.WorkingArea.Width - tooltipSize.Width, screenPosition.X));
                 screenPosition.Y = Math.Max(0, Math.Min(screen.WorkingArea.Height - tooltipSize.Height, screenPosition.Y));
                 tooltipPosition = mapPanel.PointToClient(screenPosition);
-
                 mouseTooltip.Show(tooltip, mapPanel, tooltipPosition.X, tooltipPosition.Y);
             }
             else
@@ -839,7 +797,6 @@ namespace MobiusEditor.Tools
                 {
                     SelectedTemplateType = map.TemplateTypes.Where(t => t.Equals("clear1")).FirstOrDefault();
                 }
-
                 if (!wholeTemplate && ((SelectedTemplateType.IconWidth * SelectedTemplateType.IconHeight) > 1))
                 {
                     var icon = template?.Icon ?? 0;
@@ -963,7 +920,6 @@ namespace MobiusEditor.Tools
         protected override void PreRenderMap()
         {
             base.PreRenderMap();
-
             previewMap = map.Clone();
             if (placementMode)
             {
@@ -1004,7 +960,6 @@ namespace MobiusEditor.Tools
         protected override void PostRenderMap(Graphics graphics)
         {
             base.PostRenderMap(graphics);
-
             if (boundsMode)
             {
                 var bounds = Rectangle.FromLTRB(
@@ -1014,22 +969,29 @@ namespace MobiusEditor.Tools
                     dragBounds.Bottom * Globals.TileHeight
                 );
                 using (var boundsPen = new Pen(Color.Red, 8.0f))
-                    graphics.DrawRectangle(boundsPen, bounds);
-            }
-            else if (placementMode)
-            {
-                var location = navigationWidget.MouseCell;
-                if (SelectedTemplateType != null)
                 {
-                    
-                    var previewBounds = new Rectangle(
-                        location.X * Globals.TileWidth,
-                        location.Y * Globals.TileHeight,
-                        (SelectedIcon.HasValue ? 1 : SelectedTemplateType.IconWidth) * Globals.TileWidth,
-                        (SelectedIcon.HasValue ? 1 : SelectedTemplateType.IconHeight) * Globals.TileHeight
-                    );
-                    using (var previewPen = new Pen(Color.Green, 4.0f))
-                        graphics.DrawRectangle(previewPen, previewBounds);
+                    graphics.DrawRectangle(boundsPen, bounds);
+                }
+            }
+            else
+            {
+                RenderMapBoundaries(graphics);
+                if (placementMode)
+                {
+                    var location = navigationWidget.MouseCell;
+                    if (SelectedTemplateType != null)
+                    {
+                        var previewBounds = new Rectangle(
+                            location.X * Globals.TileWidth,
+                            location.Y * Globals.TileHeight,
+                            (SelectedIcon.HasValue ? 1 : SelectedTemplateType.IconWidth) * Globals.TileWidth,
+                            (SelectedIcon.HasValue ? 1 : SelectedTemplateType.IconHeight) * Globals.TileHeight
+                        );
+                        using (var previewPen = new Pen(Color.Green, 4.0f))
+                        {
+                            graphics.DrawRectangle(previewPen, previewBounds);
+                        }
+                    }
                 }
             }
         }
@@ -1073,18 +1035,16 @@ namespace MobiusEditor.Tools
                 if (disposing)
                 {
                     Deactivate();
-
                     templateTypeListView.SelectedIndexChanged -= TemplateTypeListView_SelectedIndexChanged;
                     templateTypeNavigationWidget?.Dispose();
-
                     templateTypeMapPanel.MouseDown -= TemplateTypeMapPanel_MouseDown;
                     templateTypeMapPanel.PostRender -= TemplateTypeMapPanel_PostRender;
                 }
                 disposedValue = true;
             }
-
             base.Dispose(disposing);
         }
         #endregion
     }
+
 }
