@@ -17,6 +17,7 @@ using MobiusEditor.Event;
 using MobiusEditor.Interface;
 using MobiusEditor.Model;
 using MobiusEditor.Utility;
+using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
@@ -27,6 +28,7 @@ namespace MobiusEditor.Tools
     public class WaypointsTool : ViewTool
     {
         private readonly ComboBox waypointCombo;
+        private readonly Button jumpToButton;
 
 
         private (Waypoint waypoint, int? cell)? undoWaypoint;
@@ -34,11 +36,15 @@ namespace MobiusEditor.Tools
 
         private bool placementMode;
 
-        public WaypointsTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, ComboBox waypointCombo, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> url)
+        public WaypointsTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, ComboBox waypointCombo, Button jumpToButton,
+            IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> url)
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
+            this.jumpToButton = jumpToButton;
+            this.jumpToButton.Click += JumpToButton_Click;
             this.waypointCombo = waypointCombo;
             this.waypointCombo.DataSource = plugin.Map.Waypoints.ToArray();
+            this.waypointCombo.SelectedIndexChanged += this.WaypointCombo_SelectedIndexChanged;
             UpdateStatus();
         }
 
@@ -217,6 +223,40 @@ namespace MobiusEditor.Tools
             url.Track(undoAction, redoAction);
         }
 
+        private void WaypointCombo_SelectedIndexChanged(Object sender, EventArgs e)
+        {
+            jumpToButton.Enabled = waypointCombo.SelectedItem is Waypoint wp && wp.Cell.HasValue;
+        }
+
+        private void JumpToButton_Click(System.Object sender, System.EventArgs e)
+        {
+            if (waypointCombo.SelectedItem is Waypoint wp)
+            {
+                int cell = wp.Cell.GetValueOrDefault(-1);
+                if (cell != -1)
+                {
+                    Point cellPoint;
+                    if (RenderMap.Metrics.GetLocation(cell, out cellPoint))
+                    {
+                        int scaleFull = Math.Min(mapPanel.ClientRectangle.Width, mapPanel.ClientRectangle.Height);
+                        bool isWidth = scaleFull == mapPanel.ClientRectangle.Width;
+                        double mapSize = isWidth ? map.Metrics.Width : map.Metrics.Height;
+                        // pixels per tile at zoom level 1.
+                        double basicTileSize = scaleFull / mapSize;
+
+                        // Convert cell position to actual position on image.
+                        int cellX = (int)Math.Round(basicTileSize * mapPanel.Zoom * cellPoint.X);
+                        int cellY = (int)Math.Round(basicTileSize * mapPanel.Zoom * cellPoint.Y);
+
+                        // Get location to use to center the waypoint on the screen.
+                        int x = cellX - mapPanel.ClientRectangle.Width / 2;
+                        int y = cellY - mapPanel.ClientRectangle.Height / 2;
+                        mapPanel.AutoScrollPosition = new Point(x,y);
+                    }
+                }
+            }
+        }
+
         private void UpdateStatus()
         {
             if (placementMode)
@@ -256,6 +296,8 @@ namespace MobiusEditor.Tools
             {
                 if (disposing)
                 {
+                    this.jumpToButton.Click -= JumpToButton_Click;
+                    this.waypointCombo.SelectedIndexChanged -= this.WaypointCombo_SelectedIndexChanged;
                     Deactivate();
                 }
                 disposedValue = true;

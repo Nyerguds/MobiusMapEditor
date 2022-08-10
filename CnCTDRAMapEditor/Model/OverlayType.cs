@@ -144,7 +144,7 @@ namespace MobiusEditor.Model
             if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, GraphicsSource, tilenr, out Tile tile, (Flag & OverlayTypeFlag.Decoration) != 0))
             {
                 var size = tile.Image.Size;
-                var maxSize = new Size(Globals.OriginalTileWidth, Globals.OriginalTileWidth);
+                var maxSize = new Size(Globals.OriginalTileWidth, Globals.OriginalTileHeight);
                 if ((size.Width >= size.Height) && (size.Width > maxSize.Width))
                 {
 

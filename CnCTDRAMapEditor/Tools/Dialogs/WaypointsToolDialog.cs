@@ -26,6 +26,7 @@ namespace MobiusEditor.Tools.Dialogs
     public partial class WaypointsToolDialog : ToolDialog<WaypointsTool>
     {
         public ComboBox WaypointCombo => waypointCombo;
+        public Button BtnJumpTo => btnJumpTo;
 
         public WaypointsToolDialog(Form parentForm)
             : base(parentForm)
@@ -35,7 +36,8 @@ namespace MobiusEditor.Tools.Dialogs
 
         public override void Initialize(MapPanel mapPanel, MapLayerFlag activeLayers, ToolStripStatusLabel toolStatusLabel, ToolTip mouseToolTip, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> undoRedoList)
         {
-            Tool = new WaypointsTool(mapPanel, activeLayers, toolStatusLabel, WaypointCombo, plugin, undoRedoList);
+            Tool = new WaypointsTool(mapPanel, activeLayers, toolStatusLabel, WaypointCombo, BtnJumpTo, plugin, undoRedoList);
         }
+
     }
 }
