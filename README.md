@@ -121,7 +121,7 @@ v1.4.0.4: [WIP]
 * Fixed dimensions of RA's ore mine, Snow theater ice floes and Interior theater boxes.
 * Added \*.ini to the list of possible extensions for opening RA maps. Apparently before I only added it for saving.
 * The editor will now accept nonstandard extensions from drag & drop without any issues. For TD maps, it will need to find the accompanying bin or ini file with the correct extension.
-* An RA map opened from a .ini file will no longer change the extension to .mpr when saving it.
+* Files opened from filenames with nonstandard extensions will not change these extensions when saving the file. This also means RA maps opened from a .ini file will no longer change the extension to .mpr when saving.
 * Terrain objects will now only pop up a poperties box for setting a trigger in TD mode.
 * Optimised loading so the editor will skip loading objects from different theaters.
 * Fixed user settings loading, so it can port over the settings (game folder, invite warning, and the dialog locations) from previous versions. (It's a hacky system, but it works.)
@@ -145,7 +145,7 @@ v1.4.0.4: [WIP]
 * Added "Jump to..." button on the waypoints tool. This will only have any effect when zoomed in.
 * Clicking overlapping waypoints multiple times will cycle to the next one in the list on each click. Right-clicking will cycle backwards.
 * When deleting overlapping waypoints, if the currently selected waypoint is one of them, that one will be deleted when clicking.
-* Map indicators drawing priority has been changed to the order (lowest to highest) map boundaries, then celltriggers, then waypoints, then object triggers.
-* Map indicators for the type you are currently editing are now always the most visible, by being drawn last. (e.g. overlapping celltriggers and waypoints)
+* Map indicators will now be painted in this order: map boundaries, celltriggers, waypoints, object triggers. The later ones will be on top and thus most visible.
+* Map indicators for the type you are currently editing are now always drawn last, and thus the most visible. (e.g. overlapping celltriggers and waypoints)
 * Unit/building/infantry tools now give highest priority to the object trigger labels, so they don't get painted over by their own indicator lines.
 * TGA files loaded from mods that are not inside a .zip file can now also load their positioning metadata from accompanying .meta files.
