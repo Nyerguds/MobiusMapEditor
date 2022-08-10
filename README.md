@@ -148,4 +148,4 @@ v1.4.0.4: [WIP]
 * Map indicators will now be painted in this order: map boundaries, celltriggers, waypoints, object triggers. The later ones will be on top and thus most visible.
 * Map indicators for the type you are currently editing are now always drawn last, and thus the most visible. (e.g. overlapping celltriggers and waypoints)
 * Unit/building/infantry tools now paint the object trigger labels last, so they no longer get painted over by the occupied cell indicators.
-* TGA files that are not inside a .zip file that get loaded from mod data can now also load their positioning metadata from accompanying .meta files.
+* TGA files that are not inside a .zip file can now also load their positioning metadata from accompanying .meta files.
