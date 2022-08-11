@@ -70,16 +70,17 @@ namespace MobiusEditor.Controls
 
                     var textColor = ((e.State & DrawItemState.Selected) == DrawItemState.Selected) ? SystemBrushes.HighlightText : SystemBrushes.WindowText;
                     var textSize = e.Graphics.MeasureString(typeItem.Name, Font, e.Bounds.Width, stringFormat);
+                    // To int, with leniency for rounding errors.
+                    var textSizeInt = (int)textSize.Width + (textSize.Width % 1 < 0.01 ? 0 : 1);
                     e.Graphics.DrawString(typeItem.Name, Font, textColor, e.Bounds, stringFormat);
 
                     if ((e.State & DrawItemState.ComboBoxEdit) == DrawItemState.None)
                     {
                         var thumbnail = typeItem.Type.Thumbnail ?? MissingThumbnail;
-                        var thumbnailWidth = (int)Math.Min((e.Bounds.Width - textSize.Width),
-                            thumbnail.Width);
-                        int thumbnailHeight = (int)Math.Min(e.Bounds.Height, thumbnail.Height);
+                        var thumbnailWidth = Math.Min(e.Bounds.Width - textSizeInt, thumbnail.Width);
+                        var thumbnailHeight = Math.Min(e.Bounds.Height, thumbnail.Height);
 
-                        double widthRatio = (e.Bounds.Width - textSize.Width) / (double)thumbnail.Width;
+                        double widthRatio = (e.Bounds.Width - textSizeInt) / (double)thumbnail.Width;
                         double heightRatio = e.Bounds.Height / (double)thumbnail.Height;
                         if (heightRatio < widthRatio)
                         {

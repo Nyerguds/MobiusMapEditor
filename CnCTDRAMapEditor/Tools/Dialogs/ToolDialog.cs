@@ -22,7 +22,6 @@ namespace MobiusEditor.Tools.Dialogs
 
         public ToolDialog(Form parentForm)
         {
-            // TODO this current reflection approach does not work with tool windows that have a type parameter
             defaultPositionPropertySettingInfo = Properties.Settings.Default.GetType().GetProperty(GetType().Name + "DefaultPosition");
             if (defaultPositionPropertySettingInfo != null)
             {

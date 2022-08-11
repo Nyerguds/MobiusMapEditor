@@ -29,7 +29,7 @@ namespace MobiusEditor.Tools
 {
     public class InfantryTool : ViewTool
     {
-        private readonly TypeListBox infantryTypeComboBox;
+        private readonly TypeListBox infantryTypesBox;
         private readonly MapPanel infantryTypeMapPanel;
         private readonly ObjectProperties objectProperties;
 
@@ -57,7 +57,7 @@ namespace MobiusEditor.Tools
                     }
 
                     selectedInfantryType = value;
-                    infantryTypeComboBox.SelectedValue = selectedInfantryType;
+                    infantryTypesBox.SelectedValue = selectedInfantryType;
 
                     if (placementMode && (selectedInfantryType != null))
                     {
@@ -71,28 +71,28 @@ namespace MobiusEditor.Tools
             }
         }
 
-        public InfantryTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, TypeListBox infantryTypeComboBox, MapPanel infantryTypeMapPanel, ObjectProperties objectProperties, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> url)
+        public InfantryTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, TypeListBox infantryTypesBox, MapPanel infantryTypeMapPanel, ObjectProperties objectProperties, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> url)
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
             previewMap = map;
             manuallyHandledLayers = MapLayerFlag.TechnoTriggers;
             mockInfantry = new Infantry(null)
             {
-                Type = infantryTypeComboBox.Types.First() as InfantryType,
+                Type = infantryTypesBox.Types.First() as InfantryType,
                 House = map.Houses.First().Type,
                 Strength = 256,
                 Direction = map.DirectionTypes.Where(d => d.Equals(FacingType.South)).First(),
                 Mission = map.MissionTypes.Where(m => m.Equals("Guard")).FirstOrDefault() ?? map.MissionTypes.First()
             };
             mockInfantry.PropertyChanged += MockInfantry_PropertyChanged;
-            this.infantryTypeComboBox = infantryTypeComboBox;
-            this.infantryTypeComboBox.SelectedIndexChanged += InfantryTypeComboBox_SelectedIndexChanged;
+            this.infantryTypesBox = infantryTypesBox;
+            this.infantryTypesBox.SelectedIndexChanged += InfantryTypeComboBox_SelectedIndexChanged;
             this.infantryTypeMapPanel = infantryTypeMapPanel;
             this.infantryTypeMapPanel.BackColor = Color.White;
             this.infantryTypeMapPanel.MaxZoom = 1;
             this.objectProperties = objectProperties;
             this.objectProperties.Object = mockInfantry;
-            SelectedInfantryType = this.infantryTypeComboBox.Types.First() as InfantryType;
+            SelectedInfantryType = this.infantryTypesBox.Types.First() as InfantryType;
         }
 
         private void MapPanel_MouseDoubleClick(object sender, MouseEventArgs e)
@@ -135,7 +135,7 @@ namespace MobiusEditor.Tools
 
         private void InfantryTypeComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            SelectedInfantryType = infantryTypeComboBox.SelectedValue as InfantryType;
+            SelectedInfantryType = infantryTypesBox.SelectedValue as InfantryType;
         }
 
         private void InfantryTool_KeyDown(object sender, KeyEventArgs e)
@@ -515,7 +515,7 @@ namespace MobiusEditor.Tools
             {
                 if (disposing)
                 {
-                    infantryTypeComboBox.SelectedIndexChanged -= InfantryTypeComboBox_SelectedIndexChanged;
+                    infantryTypesBox.SelectedIndexChanged -= InfantryTypeComboBox_SelectedIndexChanged;
                 }
                 disposedValue = true;
             }

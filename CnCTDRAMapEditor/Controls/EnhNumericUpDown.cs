@@ -82,8 +82,8 @@ namespace MobiusEditor.Controls
         {
             Boolean allowminus = this.Minimum < 0;
             Boolean allowHex = this.Hexadecimal;
-            String pattern = allowHex ? "(\\d|[A-F])*" : (allowminus ? "-?\\d*" : "\\d*");
-            if (Regex.IsMatch(this.Text, "^" + pattern + "$", RegexOptions.IgnoreCase))
+            String pattern = (allowminus ? "-?" : String.Empty) + (allowHex ? "[A-F0-9]*" : "\\d*");
+            if (Regex.IsMatch(this.Text, "^" + pattern + "$", RegexOptions.IgnoreCase) && !"-".Equals(this.Text))
                 return;
             // something snuck in, probably with ctrl+v. Remove it.
             System.Media.SystemSounds.Beep.Play();
@@ -96,7 +96,7 @@ namespace MobiusEditor.Controls
                 Char c = txt[i];
                 Boolean isNumRange = (c >= '0' && c <= '9');
                 Boolean isAllowedHexRange = allowHex && (c >= 'A' && c <= 'F');
-                Boolean isAllowedMinus = (i == 0 && c == '-' && !allowHex);
+                Boolean isAllowedMinus = (i == 0 && c == '-');
                 if (!isNumRange && !isAllowedHexRange && !isAllowedMinus)
                 {
                     if (firstIllegalChar == -1)
@@ -108,14 +108,16 @@ namespace MobiusEditor.Controls
             String filteredText = text.ToString();
             Decimal value;
             NumberStyles ns = allowHex ? NumberStyles.HexNumber : NumberStyles.Number;
+            // Setting "this.Text" will trigger this function again, but that's okay, it'll immediately succeed in the regex and abort.
             if (Decimal.TryParse(filteredText, ns, NumberFormatInfo.CurrentInfo, out value))
             {
                 value = Math.Max((Int32)this.Minimum, Math.Min(this.Maximum, value));
-                // will trigger this function again, but that's okay, it'll immediately fail the regex and abort.
                 this.Text = value.ToString(CultureInfo.InvariantCulture);
             }
             else
+            {
                 this.Text = filteredText;
+            }
             if (firstIllegalChar == -1)
                 firstIllegalChar = 0;
             this.Select(firstIllegalChar, 0);

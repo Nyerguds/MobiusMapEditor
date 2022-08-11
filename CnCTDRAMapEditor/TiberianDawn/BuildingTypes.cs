@@ -62,7 +62,7 @@ namespace MobiusEditor.TiberianDawn
         public static readonly BuildingType V16 = new BuildingType(38, "v16", "TEXT_STRUCTURE_TITLE_CIV15", new bool[1, 1] { { true } }, false, "Neutral", new TheaterType[] { TheaterTypes.Temperate, TheaterTypes.Winter });
         public static readonly BuildingType V17 = new BuildingType(39, "v17", "TEXT_STRUCTURE_TITLE_CIV16", new bool[1, 1] { { true } }, false, "Neutral", new TheaterType[] { TheaterTypes.Temperate, TheaterTypes.Winter });
         public static readonly BuildingType V18 = new BuildingType(40, "v18", "TEXT_STRUCTURE_TITLE_CIV17", new bool[1, 1] { { true } }, false, "Neutral", new TheaterType[] { TheaterTypes.Temperate, TheaterTypes.Winter });
-        public static readonly BuildingType V19 = new BuildingType(41, "v19", "TEXT_STRUCTURE_CIVILIAN_TITLE", new bool[1, 1] { { true } }, false, "Neutral");
+        public static readonly BuildingType V19 = new BuildingType(41, "v19", "Oil Pump", new bool[1, 1] { { true } }, false, "Neutral");
         public static readonly BuildingType V20 = new BuildingType(42, "v20", "TEXT_STRUCTURE_TITLE_CIV18", new bool[2, 2] { { false, false }, { true, true } }, false, "Neutral", new TheaterType[] { TheaterTypes.Desert });
         public static readonly BuildingType V21 = new BuildingType(43, "v21", "TEXT_STRUCTURE_TITLE_CIV19", new bool[2, 2] { { true, true }, { false, true } }, false, "Neutral", new TheaterType[] { TheaterTypes.Desert });
         public static readonly BuildingType V22 = new BuildingType(44, "v22", "TEXT_STRUCTURE_TITLE_CIV20", new bool[1, 2] { { true, true } }, false, "Neutral", new TheaterType[] { TheaterTypes.Desert });

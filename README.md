@@ -144,7 +144,7 @@ v1.4.0.4: [WIP]
 * All waypoint will now be shown with their coordinates.
 * Added "Jump to..." button on the waypoints tool. This will only have any effect when zoomed in.
 * Clicking overlapping waypoints multiple times will cycle to the next one in the list on each click. Right-clicking will cycle backwards.
-* When deleting overlapping waypoints, if the currently selected waypoint is one of them, that one will be deleted when clicking.
+* When deleting overlapping waypoints, if the currently selected waypoint is one of them, that one will be deleted first.
 * Map indicators will now be painted in this order: map boundaries, celltriggers, waypoints, object triggers. The later ones will be on top and thus most visible.
 * Map indicators for the type you are currently editing are now always drawn last, and thus the most visible. (e.g. overlapping celltriggers and waypoints)
 * Unit/building/infantry tools now paint the object trigger labels last, so they no longer get painted over by the occupied cell indicators.
