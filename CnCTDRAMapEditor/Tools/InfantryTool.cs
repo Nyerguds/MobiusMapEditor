@@ -90,6 +90,7 @@ namespace MobiusEditor.Tools
             this.infantryTypeMapPanel = infantryTypeMapPanel;
             this.infantryTypeMapPanel.BackColor = Color.White;
             this.infantryTypeMapPanel.MaxZoom = 1;
+            this.infantryTypeMapPanel.SmoothScale = Globals.PreviewSmoothScale;
             this.objectProperties = objectProperties;
             this.objectProperties.Object = mockInfantry;
             SelectedInfantryType = this.infantryTypesBox.Types.First() as InfantryType;
@@ -391,10 +392,11 @@ namespace MobiusEditor.Tools
             var oldImage = infantryTypeMapPanel.MapImage;
             if (mockInfantry.Type != null)
             {
-                var infantryPreview = new Bitmap(Globals.TileWidth, Globals.TileHeight);
+                var infantryPreview = new Bitmap(Globals.PreviewTileWidth, Globals.PreviewTileHeight);
                 using (var g = Graphics.FromImage(infantryPreview))
                 {
-                    MapRenderer.Render(map.Theater, Point.Empty, Globals.TileSize, mockInfantry, InfantryStoppingType.Center).Item2(g);
+                    MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
+                    MapRenderer.Render(map.Theater, Point.Empty, Globals.PreviewTileSize, mockInfantry, InfantryStoppingType.Center).Item2(g);
                 }
                 infantryTypeMapPanel.MapImage = infantryPreview;
             }
@@ -473,7 +475,7 @@ namespace MobiusEditor.Tools
             {
                 foreach (var (topLeft, _) in map.Technos.OfType<InfantryGroup>())
                 {
-                    var bounds = new Rectangle(new Point(topLeft.X * Globals.TileWidth, topLeft.Y * Globals.TileHeight), Globals.TileSize);
+                    var bounds = new Rectangle(new Point(topLeft.X * Globals.MapTileWidth, topLeft.Y * Globals.MapTileHeight), Globals.MapTileSize);
                     graphics.DrawRectangle(infantryPen, bounds);
                 }
             }

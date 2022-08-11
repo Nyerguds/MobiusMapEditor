@@ -13,6 +13,7 @@
 // GNU General Public License along with permitted additional restrictions 
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using MobiusEditor.Interface;
+using MobiusEditor.Render;
 using MobiusEditor.Utility;
 using System;
 using System.Drawing;
@@ -27,10 +28,7 @@ namespace MobiusEditor.Model
 
         public string DisplayName => Name;
 
-        public Rectangle OverlapBounds => new Rectangle(
-            Point.Empty,
-            new Size(((RenderSize.Width + Globals.TileWidth - 1) / Globals.TileWidth), ((RenderSize.Height + Globals.TileHeight - 1) / Globals.TileHeight))
-        );
+        public Rectangle OverlapBounds => new Rectangle(Point.Empty, Size);
 
         public bool[,] OccupyMask { get; private set; }
 
@@ -42,7 +40,10 @@ namespace MobiusEditor.Model
 
         public TemplateTypeFlag TemplateType { get; private set; }
 
-        public Size RenderSize { get; set; }
+        public Size GetRenderSize(Size cellSize)
+        {
+            return new Size(Size.Width * cellSize.Width, Size.Height * cellSize.Height);
+        }
 
         public Image Thumbnail { get; set; }
 
@@ -110,23 +111,16 @@ namespace MobiusEditor.Model
 
             if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, tileName, IsTransformable ? 22 : 0, out Tile tile))
             {
-                int renderWidth = Size.Width * Globals.TileWidth;
-                int renderHeight = Size.Height * Globals.TileHeight;
-                if ((tile.Image.Width * renderHeight) > (tile.Image.Height * renderWidth))
+                var tileSize = Globals.PreviewTileSize;
+                var renderSize = new Size(tileSize.Width * Size.Width, tileSize.Height * Size.Height);
+                Rectangle overlayBounds = MapRenderer.RenderBounds(tile.Image.Size, Size, tileSize);
+                Bitmap th = new Bitmap(renderSize.Width, renderSize.Height);
+                using (Graphics g = Graphics.FromImage(th))
                 {
-                    RenderSize = new Size(
-                        tile.Image.Width * renderWidth / tile.Image.Width,
-                        tile.Image.Height * renderWidth / tile.Image.Width
-                    );
+                    MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
+                    g.DrawImage(tile.Image, overlayBounds);
                 }
-                else
-                {
-                    RenderSize = new Size(
-                        tile.Image.Width * renderHeight / tile.Image.Height,
-                        tile.Image.Height * renderHeight / tile.Image.Height
-                    );
-                }
-                Thumbnail = new Bitmap(tile.Image, RenderSize.Width, RenderSize.Height);
+                Thumbnail = th;
             }
             else
             {

@@ -81,7 +81,7 @@ namespace MobiusEditor.Tools.Dialogs
             this.terrainTypeMapPanel.MaxZoom = 8;
             this.terrainTypeMapPanel.MinZoom = 1;
             this.terrainTypeMapPanel.Name = "terrainTypeMapPanel";
-            this.terrainTypeMapPanel.Quality = 1;
+            this.terrainTypeMapPanel.SmoothScale = false;
             this.terrainTypeMapPanel.Size = new System.Drawing.Size(403, 370);
             this.terrainTypeMapPanel.TabIndex = 3;
             this.terrainTypeMapPanel.Zoom = 1;

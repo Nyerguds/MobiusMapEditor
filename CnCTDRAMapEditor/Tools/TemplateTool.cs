@@ -69,9 +69,7 @@ namespace MobiusEditor.Tools
                             }
                         }
                     }
-
                     selectedTemplateType = value;
-
                     templateTypeListView.BeginUpdate();
                     templateTypeListView.SelectedIndexChanged -= TemplateTypeListView_SelectedIndexChanged;
                     foreach (ListViewItem item in templateTypeListView.Items)
@@ -95,7 +93,6 @@ namespace MobiusEditor.Tools
                             }
                         }
                     }
-
                     RefreshMapPanel();
                 }
             }
@@ -111,7 +108,6 @@ namespace MobiusEditor.Tools
                 {
                     selectedIcon = value;
                     templateTypeMapPanel.Invalidate();
-
                     if (placementMode && (SelectedTemplateType != null))
                     {
                         for (var y = 0; y < SelectedTemplateType.IconHeight; ++y)
@@ -199,6 +195,7 @@ namespace MobiusEditor.Tools
             this.templateTypeMapPanel.PostRender += TemplateTypeMapPanel_PostRender;
             this.templateTypeMapPanel.BackColor = Color.Black;
             this.templateTypeMapPanel.MaxZoom = 1;
+            this.templateTypeMapPanel.SmoothScale = Globals.PreviewSmoothScale;
             this.mouseTooltip = mouseTooltip;
             SelectedTemplateType = templateTypes.First().First();
         }
@@ -257,29 +254,28 @@ namespace MobiusEditor.Tools
         private void TemplateTypeMapPanel_PostRender(object sender, RenderEventArgs e)
         {
             e.Graphics.Transform = new Matrix();
-            if (SelectedIcon.HasValue)
-            {
-                int panelWidth = templateTypeMapPanel.ClientSize.Width;
-                int panelHeight = templateTypeMapPanel.ClientSize.Height;
-                int iconWidth = SelectedTemplateType.IconWidth;
-                int iconHeight = SelectedTemplateType.IconHeight;
-                int maxIconRect = Math.Max(iconWidth, iconHeight);
-                int scaleX = panelWidth / maxIconRect;
-                int scaleY = panelHeight / maxIconRect;
-                int scale = Math.Min(scaleX, scaleY);
-                int leftoverX = panelWidth - (scale * maxIconRect);
-                int leftoverY = panelHeight - (scale * maxIconRect);
-                int padX = leftoverX / 2;
-                int padY = leftoverY / 2;
-                using (var selectedIconPen = new Pen(Color.Yellow, Math.Max(1, scale/16))) {
-                    var cellSize = new Size(scale, scale);
-                    var rect = new Rectangle(new Point(padX + SelectedIcon.Value.X * cellSize.Width, padY + SelectedIcon.Value.Y * cellSize.Height), cellSize);
-                    e.Graphics.DrawRectangle(selectedIconPen, rect);
-                }
-            }
-
             if (SelectedTemplateType != null)
             {
+                if (SelectedIcon.HasValue)
+                {
+                    int panelWidth = templateTypeMapPanel.ClientSize.Width;
+                    int panelHeight = templateTypeMapPanel.ClientSize.Height;
+                    int iconWidth = SelectedTemplateType.IconWidth;
+                    int iconHeight = SelectedTemplateType.IconHeight;
+                    int maxIconRect = Math.Max(iconWidth, iconHeight);
+                    int scaleX = panelWidth / maxIconRect;
+                    int scaleY = panelHeight / maxIconRect;
+                    int scale = Math.Min(scaleX, scaleY);
+                    int leftoverX = panelWidth - (scale * maxIconRect);
+                    int leftoverY = panelHeight - (scale * maxIconRect);
+                    int padX = leftoverX / 2;
+                    int padY = leftoverY / 2;
+                    using (var selectedIconPen = new Pen(Color.Yellow, Math.Max(1, scale/16))) {
+                        var cellSize = new Size(scale, scale);
+                        var rect = new Rectangle(new Point(padX + SelectedIcon.Value.X * cellSize.Width, padY + SelectedIcon.Value.Y * cellSize.Height), cellSize);
+                        e.Graphics.DrawRectangle(selectedIconPen, rect);
+                    }
+                }
                 var sizeStringFormat = new StringFormat
                 {
                     Alignment = StringAlignment.Center,
@@ -539,10 +535,8 @@ namespace MobiusEditor.Tools
             if (selected != null)
             {
                 templateTypeMapPanel.MapImage = selected.Thumbnail;
-
                 var templateTypeMetrics = new CellMetrics(selected.IconWidth, selected.IconHeight);
-                templateTypeNavigationWidget = new NavigationWidget(templateTypeMapPanel, templateTypeMetrics,
-                    new Size(Globals.OriginalTileWidth / 4, Globals.OriginalTileHeight / 4));
+                templateTypeNavigationWidget = new NavigationWidget(templateTypeMapPanel, templateTypeMetrics, Globals.OriginalTileSize);
                 templateTypeNavigationWidget.MouseoverSize = Size.Empty;
                 templateTypeNavigationWidget.Activate();
             }
@@ -963,10 +957,10 @@ namespace MobiusEditor.Tools
             if (boundsMode)
             {
                 var bounds = Rectangle.FromLTRB(
-                    dragBounds.Left * Globals.TileWidth,
-                    dragBounds.Top * Globals.TileHeight,
-                    dragBounds.Right * Globals.TileWidth,
-                    dragBounds.Bottom * Globals.TileHeight
+                    dragBounds.Left * Globals.MapTileWidth,
+                    dragBounds.Top * Globals.MapTileHeight,
+                    dragBounds.Right * Globals.MapTileWidth,
+                    dragBounds.Bottom * Globals.MapTileHeight
                 );
                 using (var boundsPen = new Pen(Color.Red, 8.0f))
                 {
@@ -982,10 +976,10 @@ namespace MobiusEditor.Tools
                     if (SelectedTemplateType != null)
                     {
                         var previewBounds = new Rectangle(
-                            location.X * Globals.TileWidth,
-                            location.Y * Globals.TileHeight,
-                            (SelectedIcon.HasValue ? 1 : SelectedTemplateType.IconWidth) * Globals.TileWidth,
-                            (SelectedIcon.HasValue ? 1 : SelectedTemplateType.IconHeight) * Globals.TileHeight
+                            location.X * Globals.MapTileWidth,
+                            location.Y * Globals.MapTileHeight,
+                            (SelectedIcon.HasValue ? 1 : SelectedTemplateType.IconWidth) * Globals.MapTileWidth,
+                            (SelectedIcon.HasValue ? 1 : SelectedTemplateType.IconHeight) * Globals.MapTileHeight
                         );
                         using (var previewPen = new Pen(Color.Green, 4.0f))
                         {

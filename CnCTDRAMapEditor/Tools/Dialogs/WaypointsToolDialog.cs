@@ -34,7 +34,7 @@ namespace MobiusEditor.Tools.Dialogs
             InitializeComponent();
         }
 
-        public override void Initialize(MapPanel mapPanel, MapLayerFlag activeLayers, ToolStripStatusLabel toolStatusLabel, ToolTip mouseToolTip, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> undoRedoList)
+        protected override void InitializeInternal(MapPanel mapPanel, MapLayerFlag activeLayers, ToolStripStatusLabel toolStatusLabel, ToolTip mouseToolTip, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> undoRedoList)
         {
             Tool = new WaypointsTool(mapPanel, activeLayers, toolStatusLabel, WaypointCombo, BtnJumpTo, plugin, undoRedoList);
         }

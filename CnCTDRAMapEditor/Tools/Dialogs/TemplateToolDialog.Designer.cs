@@ -90,7 +90,7 @@ namespace MobiusEditor.Tools.Dialogs
             this.templateTypeMapPanel.MaxZoom = 8;
             this.templateTypeMapPanel.MinZoom = 1;
             this.templateTypeMapPanel.Name = "templateTypeMapPanel";
-            this.templateTypeMapPanel.Quality = 1;
+            this.templateTypeMapPanel.SmoothScale = false;
             this.templateTypeMapPanel.Size = new System.Drawing.Size(270, 266);
             this.templateTypeMapPanel.TabIndex = 6;
             this.templateTypeMapPanel.Zoom = 1;

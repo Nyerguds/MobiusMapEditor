@@ -86,6 +86,7 @@ namespace MobiusEditor.Tools
             this.buildingTypeMapPanel = buildingTypeMapPanel;
             this.buildingTypeMapPanel.BackColor = Color.White;
             this.buildingTypeMapPanel.MaxZoom = 1;
+            this.buildingTypeMapPanel.SmoothScale = Globals.PreviewSmoothScale;
             this.objectProperties = objectProperties;
             this.objectProperties.Object = mockBuilding;
             SelectedBuildingType = mockBuilding.Type;
@@ -346,12 +347,13 @@ namespace MobiusEditor.Tools
             var oldImage = buildingTypeMapPanel.MapImage;
             if (mockBuilding.Type != null)
             {
-                var render = MapRenderer.Render(plugin.GameType, map.Theater, new Point(0, 0), Globals.TileSize, Globals.TileScale, mockBuilding);
+                var render = MapRenderer.Render(plugin.GameType, map.Theater, new Point(0, 0), Globals.PreviewTileSize, Globals.PreviewTileScale, mockBuilding);
                 if (!render.Item1.IsEmpty)
                 {
                     var buildingPreview = new Bitmap(render.Item1.Width, render.Item1.Height);
                     using (var g = Graphics.FromImage(buildingPreview))
                     {
+                        MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
                         render.Item2(g);
                     }
                     buildingTypeMapPanel.MapImage = buildingPreview;
@@ -416,10 +418,13 @@ namespace MobiusEditor.Tools
                 foreach (var (topLeft, building) in map.Buildings.OfType<Building>())
                 {
                     var bounds = new Rectangle(
-                        new Point(topLeft.X * Globals.TileWidth, topLeft.Y * Globals.TileHeight),
-                        new Size(building.Type.Size.Width * Globals.TileWidth, building.Type.Size.Height * Globals.TileHeight)
+                        new Point(topLeft.X * Globals.MapTileWidth, topLeft.Y * Globals.MapTileHeight),
+                        new Size(building.Type.Size.Width * Globals.MapTileWidth, building.Type.Size.Height * Globals.MapTileHeight)
                     );
                     graphics.DrawRectangle(buildingPen, bounds);
+                }
+                foreach (var (topLeft, building) in map.Buildings.OfType<Building>())
+                {
                     for (var y = 0; y < building.Type.BaseOccupyMask.GetLength(0); ++y)
                     {
                         for (var x = 0; x < building.Type.BaseOccupyMask.GetLength(1); ++x)
@@ -427,8 +432,8 @@ namespace MobiusEditor.Tools
                             if (building.Type.BaseOccupyMask[y, x])
                             {
                                 var occupyBounds = new Rectangle(
-                                    new Point((topLeft.X + x) * Globals.TileWidth, (topLeft.Y + y) * Globals.TileHeight),
-                                    Globals.TileSize
+                                    new Point((topLeft.X + x) * Globals.MapTileWidth, (topLeft.Y + y) * Globals.MapTileHeight),
+                                    Globals.MapTileSize
                                 );
                                 graphics.DrawRectangle(occupyPen, occupyBounds);
                             }

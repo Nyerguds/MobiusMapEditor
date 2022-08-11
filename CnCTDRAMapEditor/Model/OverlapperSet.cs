@@ -50,7 +50,7 @@ namespace MobiusEditor.Model
 
         public bool Add(int x, int y, T occupier) => Add(new Point(x, y), occupier);
 
-        public bool Add(int cell, T overlapper) => metrics.GetLocation(cell, out Point location) ? Add(location, overlapper) : false;
+        public bool Add(int cell, T overlapper) => metrics.GetLocation(cell, out Point location) && Add(location, overlapper);
 
         public void Clear() => overlappers.Clear();
 

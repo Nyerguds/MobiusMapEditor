@@ -13,6 +13,7 @@
 // GNU General Public License along with permitted additional restrictions 
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using MobiusEditor.Interface;
+using MobiusEditor.Render;
 using MobiusEditor.Utility;
 using System;
 using System.Drawing;
@@ -143,15 +144,13 @@ namespace MobiusEditor.Model
             int tilenr = ForceTileNr == -1 ? 0 : ForceTileNr;
             if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, GraphicsSource, tilenr, out Tile tile, (Flag & OverlayTypeFlag.Decoration) != 0))
             {
-                var tileSize = new Size(Globals.OriginalTileWidth, Globals.OriginalTileHeight);
-                var size = tile.Image.Width < Globals.OriginalTileWidth && tile.Image.Height < Globals.OriginalTileHeight ?
-                    new Size(tile.Image.Width, tile.Image.Height) : tileSize;
-                var location = new Point(tileSize.Width / 2 - size.Width / 2, tileSize.Height / 2 - size.Height / 2);
-                var overlayBounds = new Rectangle(location, size);
+                var tileSize = Globals.PreviewTileSize;
+                Rectangle overlayBounds = MapRenderer.RenderBounds(tile.Image.Size, new Size(1,1), tileSize);
                 Bitmap th = new Bitmap(tileSize.Width, tileSize.Height);
-                using (Graphics graphics = Graphics.FromImage(th))
+                using (Graphics g = Graphics.FromImage(th))
                 {
-                    graphics.DrawImage(tile.Image, overlayBounds);
+                    MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
+                    g.DrawImage(tile.Image, overlayBounds);
                 }
                 Thumbnail = th;
             }

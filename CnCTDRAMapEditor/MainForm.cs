@@ -103,6 +103,8 @@ namespace MobiusEditor
             this.filename = fileToOpen;
 
             InitializeComponent();
+            // Obey the setting.
+            this.mapPanel.SmoothScale = Globals.MapSmoothScale;
             SetTitle();
 
             toolForms = new Dictionary<ToolType, IToolDialog>();
@@ -617,7 +619,7 @@ namespace MobiusEditor
             if (plugin != null)
             {
                 var mapPoint = mapPanel.ClientToMap(e.Location);
-                var location = new Point((int)Math.Floor((double)mapPoint.X / Globals.TileWidth), (int)Math.Floor((double)mapPoint.Y / Globals.TileHeight));
+                var location = new Point((int)Math.Floor((double)mapPoint.X / Globals.MapTileWidth), (int)Math.Floor((double)mapPoint.Y / Globals.MapTileHeight));
                 if (plugin.Map.Metrics.GetCell(location, out int cell))
                 {
                     var sb = new StringBuilder();
@@ -654,8 +656,8 @@ namespace MobiusEditor
                     if (plugin.Map.Technos[location] is InfantryGroup infantryGroup)
                     {
                         var subPixel = new Point(
-                            (mapPoint.X * Globals.PixelWidth / Globals.TileWidth) % Globals.PixelWidth,
-                            (mapPoint.Y * Globals.PixelHeight / Globals.TileHeight) % Globals.PixelHeight
+                            (mapPoint.X * Globals.PixelWidth / Globals.MapTileWidth) % Globals.PixelWidth,
+                            (mapPoint.Y * Globals.PixelHeight / Globals.MapTileHeight) % Globals.PixelHeight
                         );
 
                         var i = InfantryGroup.ClosestStoppingTypes(subPixel).Cast<int>().First();
@@ -1052,7 +1054,6 @@ namespace MobiusEditor
                     toolForms.Add(ActiveToolType, toolDialog);
                 }
             }
-
             if (toolDialog != null)
             {
                 activeToolForm = (Form)toolDialog;

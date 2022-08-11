@@ -16,7 +16,7 @@ namespace MobiusEditor.Tools.Dialogs
             Text = "Walls";
         }
 
-        public override void Initialize(MapPanel mapPanel, MapLayerFlag activeLayers, ToolStripStatusLabel toolStatusLabel, ToolTip mouseToolTip, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> undoRedoList)
+        protected override void InitializeInternal(MapPanel mapPanel, MapLayerFlag activeLayers, ToolStripStatusLabel toolStatusLabel, ToolTip mouseToolTip, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> undoRedoList)
         {
             GenericTypeListBox.Types = plugin.Map.OverlayTypes.Where(t => t.IsWall).OrderBy(t => t.ID);
             Tool = new WallsTool(mapPanel, activeLayers, toolStatusLabel,

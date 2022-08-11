@@ -77,6 +77,7 @@ namespace MobiusEditor.Tools
             this.smudgeTypeMapPanel = smudgeTypeMapPanel;
             this.smudgeTypeMapPanel.BackColor = Color.White;
             this.smudgeTypeMapPanel.MaxZoom = 1;
+            this.smudgeTypeMapPanel.SmoothScale = Globals.PreviewSmoothScale;
 
             navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
 
@@ -351,7 +352,7 @@ namespace MobiusEditor.Tools
                 foreach (var (cell, smudge) in previewMap.Smudge.Where(x => (x.Value.Type.Flag & SmudgeTypeFlag.Bib) == SmudgeTypeFlag.None))
                 {
                     previewMap.Metrics.GetLocation(cell, out Point topLeft);
-                    var bounds = new Rectangle(new Point(topLeft.X * Globals.TileWidth, topLeft.Y * Globals.TileHeight), Globals.TileSize);
+                    var bounds = new Rectangle(new Point(topLeft.X * Globals.MapTileWidth, topLeft.Y * Globals.MapTileHeight), Globals.MapTileSize);
                     graphics.DrawRectangle(smudgePen, bounds);
                 }
             }

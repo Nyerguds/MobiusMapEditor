@@ -16,7 +16,7 @@ namespace MobiusEditor.Tools.Dialogs
             Text = "Structures";
         }
 
-        public override void Initialize(MapPanel mapPanel, MapLayerFlag activeLayers, ToolStripStatusLabel toolStatusLabel, ToolTip mouseToolTip, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> undoRedoList)
+        protected override void InitializeInternal(MapPanel mapPanel, MapLayerFlag activeLayers, ToolStripStatusLabel toolStatusLabel, ToolTip mouseToolTip, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> undoRedoList)
         {
             ObjectTypeListBox.Types = plugin.Map.BuildingTypes
                 .Where(t => (t.Theaters == null) || t.Theaters.Contains(plugin.Map.Theater))

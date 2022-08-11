@@ -5155,152 +5155,150 @@ namespace TGASharpLib
                 throw new ArgumentNullException();
             if (!(stream.CanRead && stream.CanSeek))
                 throw new FileLoadException("Stream reading or seeking is not avaiable!");
-
             try
             {
                 stream.Seek(0, SeekOrigin.Begin);
-                BinaryReader Br = new BinaryReader(stream);
-
-                Header = new TgaHeader(Br.ReadBytes(TgaHeader.Size));
-
-                if (Header.IDLength > 0)
-                    ImageOrColorMapArea.ImageID = new TgaString(Br.ReadBytes(Header.IDLength));
-
-                if (Header.ColorMapSpec.ColorMapLength > 0)
+                using (BinaryReader Br = new BinaryReader(stream, new UTF8Encoding(), true))
                 {
-                    int CmBytesPerPixel = (int)Math.Ceiling((double)Header.ColorMapSpec.ColorMapEntrySize / 8.0);
-                    int LenBytes = Header.ColorMapSpec.ColorMapLength * CmBytesPerPixel;
-                    ImageOrColorMapArea.ColorMapData = Br.ReadBytes(LenBytes);
-                }
+                    Header = new TgaHeader(Br.ReadBytes(TgaHeader.Size));
 
-                #region Read Image Data
-                int BytesPerPixel = (int)Math.Ceiling((double)Header.ImageSpec.PixelDepth / 8.0);
-                if (Header.ImageType != TgaImageType.NoImageData)
-                {
-                    int ImageDataSize = Width * Height * BytesPerPixel;
-                    switch (Header.ImageType)
+                    if (Header.IDLength > 0)
+                        ImageOrColorMapArea.ImageID = new TgaString(Br.ReadBytes(Header.IDLength));
+
+                    if (Header.ColorMapSpec.ColorMapLength > 0)
                     {
-                        case TgaImageType.RLE_ColorMapped:
-                        case TgaImageType.RLE_TrueColor:
-                        case TgaImageType.RLE_BlackWhite:
+                        int CmBytesPerPixel = (int)Math.Ceiling((double)Header.ColorMapSpec.ColorMapEntrySize / 8.0);
+                        int LenBytes = Header.ColorMapSpec.ColorMapLength * CmBytesPerPixel;
+                        ImageOrColorMapArea.ColorMapData = Br.ReadBytes(LenBytes);
+                    }
 
-                            int DataOffset = 0;
-                            byte PacketInfo;
-                            int PacketCount;
-                            byte[] RLE_Bytes, RLE_Part;
-                            ImageOrColorMapArea.ImageData = new byte[ImageDataSize];
+                    #region Read Image Data
+                    int BytesPerPixel = (int)Math.Ceiling((double)Header.ImageSpec.PixelDepth / 8.0);
+                    if (Header.ImageType != TgaImageType.NoImageData)
+                    {
+                        int ImageDataSize = Width * Height * BytesPerPixel;
+                        switch (Header.ImageType)
+                        {
+                            case TgaImageType.RLE_ColorMapped:
+                            case TgaImageType.RLE_TrueColor:
+                            case TgaImageType.RLE_BlackWhite:
 
-                            do
-                            {
-                                PacketInfo = Br.ReadByte(); //1 type bit and 7 count bits. Len = Count + 1.
-                                PacketCount = (PacketInfo & 127) + 1;
+                                int DataOffset = 0;
+                                byte PacketInfo;
+                                int PacketCount;
+                                byte[] RLE_Bytes, RLE_Part;
+                                ImageOrColorMapArea.ImageData = new byte[ImageDataSize];
 
-                                if (PacketInfo >= 128) // bit7 = 1, RLE
+                                do
                                 {
-                                    RLE_Bytes = new byte[PacketCount * BytesPerPixel];
-                                    RLE_Part = Br.ReadBytes(BytesPerPixel);
-                                    for (int i = 0; i < RLE_Bytes.Length; i++)
-                                        RLE_Bytes[i] = RLE_Part[i % BytesPerPixel];
+                                    PacketInfo = Br.ReadByte(); //1 type bit and 7 count bits. Len = Count + 1.
+                                    PacketCount = (PacketInfo & 127) + 1;
+
+                                    if (PacketInfo >= 128) // bit7 = 1, RLE
+                                    {
+                                        RLE_Bytes = new byte[PacketCount * BytesPerPixel];
+                                        RLE_Part = Br.ReadBytes(BytesPerPixel);
+                                        for (int i = 0; i < RLE_Bytes.Length; i++)
+                                            RLE_Bytes[i] = RLE_Part[i % BytesPerPixel];
+                                    }
+                                    else // RAW format
+                                        RLE_Bytes = Br.ReadBytes(PacketCount * BytesPerPixel);
+
+                                    Buffer.BlockCopy(RLE_Bytes, 0, ImageOrColorMapArea.ImageData, DataOffset, RLE_Bytes.Length);
+                                    DataOffset += RLE_Bytes.Length;
                                 }
-                                else // RAW format
-                                    RLE_Bytes = Br.ReadBytes(PacketCount * BytesPerPixel);
+                                while (DataOffset < ImageDataSize);
+                                RLE_Bytes = null;
+                                break;
 
-                                Buffer.BlockCopy(RLE_Bytes, 0, ImageOrColorMapArea.ImageData, DataOffset, RLE_Bytes.Length);
-                                DataOffset += RLE_Bytes.Length;
+                            case TgaImageType.Uncompressed_ColorMapped:
+                            case TgaImageType.Uncompressed_TrueColor:
+                            case TgaImageType.Uncompressed_BlackWhite:
+                                ImageOrColorMapArea.ImageData = Br.ReadBytes(ImageDataSize);
+                                break;
+                        }
+                    }
+                    #endregion
+
+                    #region Try parse Footer
+                    stream.Seek(-TgaFooter.Size, SeekOrigin.End);
+                    uint FooterOffset = (uint)stream.Position;
+                    TgaFooter MbFooter = new TgaFooter(Br.ReadBytes(TgaFooter.Size));
+                    if (MbFooter.IsFooterCorrect)
+                    {
+                        Footer = MbFooter;
+                        uint DevDirOffset = Footer.DeveloperDirectoryOffset;
+                        uint ExtAreaOffset = Footer.ExtensionAreaOffset;
+
+                        #region If Dev Area exist, read it.
+                        if (DevDirOffset != 0)
+                        {
+                            stream.Seek(DevDirOffset, SeekOrigin.Begin);
+                            DevArea = new TgaDevArea();
+                            uint NumberOfTags = Br.ReadUInt16();
+
+                            ushort[] Tags = new ushort[NumberOfTags];
+                            uint[] TagOffsets = new uint[NumberOfTags];
+                            uint[] TagSizes = new uint[NumberOfTags];
+
+                            for (int i = 0; i < NumberOfTags; i++)
+                            {
+                                Tags[i] = Br.ReadUInt16();
+                                TagOffsets[i] = Br.ReadUInt32();
+                                TagSizes[i] = Br.ReadUInt32();
                             }
-                            while (DataOffset < ImageDataSize);
-                            RLE_Bytes = null;
-                            break;
 
-                        case TgaImageType.Uncompressed_ColorMapped:
-                        case TgaImageType.Uncompressed_TrueColor:
-                        case TgaImageType.Uncompressed_BlackWhite:
-                            ImageOrColorMapArea.ImageData = Br.ReadBytes(ImageDataSize);
-                            break;
-                    }
-                }
-                #endregion
+                            for (int i = 0; i < NumberOfTags; i++)
+                            {
+                                stream.Seek(TagOffsets[i], SeekOrigin.Begin);
+                                var Ent = new TgaDevEntry(Tags[i], TagOffsets[i], Br.ReadBytes((int)TagSizes[i]));
+                                DevArea.Entries.Add(Ent);
+                            }
 
-                #region Try parse Footer
-                stream.Seek(-TgaFooter.Size, SeekOrigin.End);
-                uint FooterOffset = (uint)stream.Position;
-                TgaFooter MbFooter = new TgaFooter(Br.ReadBytes(TgaFooter.Size));
-                if (MbFooter.IsFooterCorrect)
-                {
-                    Footer = MbFooter;
-                    uint DevDirOffset = Footer.DeveloperDirectoryOffset;
-                    uint ExtAreaOffset = Footer.ExtensionAreaOffset;
-
-                    #region If Dev Area exist, read it.
-                    if (DevDirOffset != 0)
-                    {
-                        stream.Seek(DevDirOffset, SeekOrigin.Begin);
-                        DevArea = new TgaDevArea();
-                        uint NumberOfTags = Br.ReadUInt16();
-
-                        ushort[] Tags = new ushort[NumberOfTags];
-                        uint[] TagOffsets = new uint[NumberOfTags];
-                        uint[] TagSizes = new uint[NumberOfTags];
-
-                        for (int i = 0; i < NumberOfTags; i++)
-                        {
-                            Tags[i] = Br.ReadUInt16();
-                            TagOffsets[i] = Br.ReadUInt32();
-                            TagSizes[i] = Br.ReadUInt32();
+                            Tags = null;
+                            TagOffsets = null;
+                            TagSizes = null;
                         }
+                        #endregion
 
-                        for (int i = 0; i < NumberOfTags; i++)
+                        #region If Ext Area exist, read it.
+                        if (ExtAreaOffset != 0)
                         {
-                            stream.Seek(TagOffsets[i], SeekOrigin.Begin);
-                            var Ent = new TgaDevEntry(Tags[i], TagOffsets[i], Br.ReadBytes((int)TagSizes[i]));
-                            DevArea.Entries.Add(Ent);
+                            stream.Seek(ExtAreaOffset, SeekOrigin.Begin);
+                            ushort ExtAreaSize = Math.Max((ushort)TgaExtArea.MinSize, Br.ReadUInt16());
+                            stream.Seek(ExtAreaOffset, SeekOrigin.Begin);
+                            ExtArea = new TgaExtArea(Br.ReadBytes(ExtAreaSize));
+
+                            if (ExtArea.ScanLineOffset > 0)
+                            {
+                                stream.Seek(ExtArea.ScanLineOffset, SeekOrigin.Begin);
+                                ExtArea.ScanLineTable = new uint[Height];
+                                for (int i = 0; i < ExtArea.ScanLineTable.Length; i++)
+                                    ExtArea.ScanLineTable[i] = Br.ReadUInt32();
+                            }
+
+                            if (ExtArea.PostageStampOffset > 0)
+                            {
+                                stream.Seek(ExtArea.PostageStampOffset, SeekOrigin.Begin);
+                                byte W = Br.ReadByte();
+                                byte H = Br.ReadByte();
+                                int ImgDataSize = W * H * BytesPerPixel;
+                                if (ImgDataSize > 0)
+                                    ExtArea.PostageStampImage = new TgaPostageStampImage(W, H, Br.ReadBytes(ImgDataSize));
+                            }
+
+                            if (ExtArea.ColorCorrectionTableOffset > 0)
+                            {
+                                stream.Seek(ExtArea.ColorCorrectionTableOffset, SeekOrigin.Begin);
+                                ExtArea.ColorCorrectionTable = new ushort[256 * 4];
+                                for (int i = 0; i < ExtArea.ColorCorrectionTable.Length; i++)
+                                    ExtArea.ColorCorrectionTable[i] = Br.ReadUInt16();
+                            }
                         }
-
-                        Tags = null;
-                        TagOffsets = null;
-                        TagSizes = null;
-                    }
-                    #endregion
-
-                    #region If Ext Area exist, read it.
-                    if (ExtAreaOffset != 0)
-                    {
-                        stream.Seek(ExtAreaOffset, SeekOrigin.Begin);
-                        ushort ExtAreaSize = Math.Max((ushort)TgaExtArea.MinSize, Br.ReadUInt16());
-                        stream.Seek(ExtAreaOffset, SeekOrigin.Begin);
-                        ExtArea = new TgaExtArea(Br.ReadBytes(ExtAreaSize));
-
-                        if (ExtArea.ScanLineOffset > 0)
-                        {
-                            stream.Seek(ExtArea.ScanLineOffset, SeekOrigin.Begin);
-                            ExtArea.ScanLineTable = new uint[Height];
-                            for (int i = 0; i < ExtArea.ScanLineTable.Length; i++)
-                                ExtArea.ScanLineTable[i] = Br.ReadUInt32();
-                        }
-
-                        if (ExtArea.PostageStampOffset > 0)
-                        {
-                            stream.Seek(ExtArea.PostageStampOffset, SeekOrigin.Begin);
-                            byte W = Br.ReadByte();
-                            byte H = Br.ReadByte();
-                            int ImgDataSize = W * H * BytesPerPixel;
-                            if (ImgDataSize > 0)
-                                ExtArea.PostageStampImage = new TgaPostageStampImage(W, H, Br.ReadBytes(ImgDataSize));
-                        }
-
-                        if (ExtArea.ColorCorrectionTableOffset > 0)
-                        {
-                            stream.Seek(ExtArea.ColorCorrectionTableOffset, SeekOrigin.Begin);
-                            ExtArea.ColorCorrectionTable = new ushort[256 * 4];
-                            for (int i = 0; i < ExtArea.ColorCorrectionTable.Length; i++)
-                                ExtArea.ColorCorrectionTable[i] = Br.ReadUInt16();
-                        }
+                        #endregion
                     }
                     #endregion
                 }
-                #endregion
-
-                Br.Close();
                 return true;
             }
             catch

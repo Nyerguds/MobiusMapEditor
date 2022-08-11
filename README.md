@@ -149,3 +149,10 @@ v1.4.0.4: [WIP]
 * Map indicators for the type you are currently editing are now always drawn last, and thus the most visible. (e.g. overlapping celltriggers and waypoints)
 * Unit/building/infantry tools now paint the object trigger labels last, so they no longer get painted over by the occupied cell indicators.
 * TGA files that are not inside a .zip file can now also load their positioning metadata from accompanying .meta files.
+* Factory doors will no longer be seen as semitransparent on the placement preview.
+* "Quality" factor in the config file (indicating a downscaling factor of the graphics) now accepts negative values to enable smooth scaling.
+* Object previews will now obey the "Quality" factor set in the config file. However, they will always be displayed using pixel scaling, because smooth scaling looks awful on the zoomed-in preview panels.
+* Fixed incorrect cleanup when switching between tools, which could cause odd bugs like two selected cells being visible on the tileset tool.
+* Terrain and structure editing mode will now always draw the full green bounds underneath the red occupied cells.
+* Fixed incorrect footprint for desert-theater terrain element "rock2".
+* Optimised all calculations related to centering objects in their bounding box and drawing them on the map.

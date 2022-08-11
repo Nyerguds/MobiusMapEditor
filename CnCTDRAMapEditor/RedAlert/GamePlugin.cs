@@ -314,7 +314,7 @@ namespace MobiusEditor.RedAlert
 
             if (mapImage)
             {
-                MapImage = new Bitmap(Map.Metrics.Width * Globals.TileWidth, Map.Metrics.Height * Globals.TileHeight);
+                MapImage = new Bitmap(Map.Metrics.Width * Globals.MapTileWidth, Map.Metrics.Height * Globals.MapTileHeight);
             }
         }
 

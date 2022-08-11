@@ -127,7 +127,7 @@ namespace MobiusEditor.Model
         public void Init(TheaterType theater)
         {
             var oldImage = Thumbnail;
-            var size = new Size(Globals.OriginalTileWidth / 4, Globals.OriginalTileWidth / 4);
+            var size = new Size(Globals.MapTileWidth, Globals.MapTileHeight);
             var iconSize = Math.Max(IconWidth, IconHeight);
             var thumbnail = new Bitmap(iconSize * size.Width, iconSize * size.Height);
             var mask = new bool[IconWidth, IconHeight];

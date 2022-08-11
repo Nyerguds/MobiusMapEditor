@@ -73,7 +73,7 @@ namespace MobiusEditor.Tools
             map = plugin.Map;
             map.BasicSection.PropertyChanged += BasicSection_PropertyChanged;
 
-            navigationWidget = new NavigationWidget(mapPanel, map.Metrics, Globals.TileSize);
+            navigationWidget = new NavigationWidget(mapPanel, map.Metrics, Globals.MapTileSize);
         }
 
         protected void Invalidate()
@@ -107,11 +107,19 @@ namespace MobiusEditor.Tools
 
             using (var g = Graphics.FromImage(mapPanel.MapImage))
             {
-                // Actually a scaling factor
-                if (Properties.Settings.Default.Quality > 1)
+                if (Globals.MapSmoothScale)
                 {
+                    g.CompositingQuality = CompositingQuality.HighQuality;
+                    g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                    g.SmoothingMode = SmoothingMode.HighQuality;
+                    g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+                }
+                else
+                {
+                    g.CompositingQuality = CompositingQuality.AssumeLinear;
                     g.InterpolationMode = InterpolationMode.NearestNeighbor;
-                    g.PixelOffsetMode = PixelOffsetMode.HighSpeed;
+                    g.SmoothingMode = SmoothingMode.None;
+                    g.PixelOffsetMode = PixelOffsetMode.Half;
                 }
                 MapRenderer.Render(plugin.GameType, RenderMap, g, e.Cells?.Where(p => map.Metrics.Contains(p)).ToHashSet(), Layers);
             }
@@ -184,8 +192,8 @@ namespace MobiusEditor.Tools
                     {
                         var x = waypoint.Cell.Value % map.Metrics.Width;
                         var y = waypoint.Cell.Value / map.Metrics.Width;
-                        var location = new Point(x * Globals.TileWidth, y * Globals.TileHeight);
-                        var textBounds = new Rectangle(location, Globals.TileSize);
+                        var location = new Point(x * Globals.MapTileWidth, y * Globals.MapTileHeight);
+                        var textBounds = new Rectangle(location, Globals.MapTileSize);
                         graphics.FillRectangle(waypointBackgroundBrush, textBounds);
                         graphics.DrawRectangle(waypointPen, textBounds);
                         StringFormat stringFormat = new StringFormat
@@ -194,7 +202,7 @@ namespace MobiusEditor.Tools
                             LineAlignment = StringAlignment.Center
                         };
                         var text = waypoint.Name.ToString();
-                        var font = graphics.GetAdjustedFont(text, SystemFonts.DefaultFont, textBounds.Width, 24 / Globals.TileScale, 48 / Globals.TileScale, true);
+                        var font = graphics.GetAdjustedFont(text, SystemFonts.DefaultFont, textBounds.Width, 24 / Globals.MapTileScale, 48 / Globals.MapTileScale, true);
                         graphics.DrawString(text.ToString(), font, waypointBrush, textBounds, stringFormat);
                     }
                 }
@@ -213,20 +221,20 @@ namespace MobiusEditor.Tools
             {
                 foreach (var (cell, techno) in map.Technos)
                 {
-                    var location = new Point(cell.X * Globals.TileWidth, cell.Y * Globals.TileHeight);
+                    var location = new Point(cell.X * Globals.MapTileWidth, cell.Y * Globals.MapTileHeight);
                     (string trigger, Rectangle bounds)[] triggers = null;
                     if (techno is Terrain terrain)
                     {
-                        triggers = new (string, Rectangle)[] { (terrain.Trigger, new Rectangle(location, terrain.Type.RenderSize)) };
+                        triggers = new (string, Rectangle)[] { (terrain.Trigger, new Rectangle(location, terrain.Type.GetRenderSize(Globals.MapTileSize))) };
                     }
                     else if (techno is Building building)
                     {
-                        var size = new Size(building.Type.Size.Width * Globals.TileWidth, building.Type.Size.Height * Globals.TileHeight);
+                        var size = new Size(building.Type.Size.Width * Globals.MapTileWidth, building.Type.Size.Height * Globals.MapTileHeight);
                         triggers = new (string, Rectangle)[] { (building.Trigger, new Rectangle(location, size)) };
                     }
                     else if (techno is Unit unit)
                     {
-                        triggers = new (string, Rectangle)[] { (unit.Trigger, new Rectangle(location, Globals.TileSize)) };
+                        triggers = new (string, Rectangle)[] { (unit.Trigger, new Rectangle(location, Globals.MapTileSize)) };
                     }
                     else if (techno is InfantryGroup infantryGroup)
                     {
@@ -238,7 +246,7 @@ namespace MobiusEditor.Tools
                             {
                                 continue;
                             }
-                            var size = Globals.TileSize;
+                            var size = Globals.MapTileSize;
                             var offset = Size.Empty;
                             switch ((InfantryStoppingType)i)
                             {
@@ -273,7 +281,7 @@ namespace MobiusEditor.Tools
                         };
                         foreach (var (trigger, bounds) in triggers.Where(x => !x.trigger.Equals("None", StringComparison.OrdinalIgnoreCase)))
                         {
-                            var font = graphics.GetAdjustedFont(trigger, SystemFonts.DefaultFont, bounds.Width, 12 / Globals.TileScale, 24 / Globals.TileScale, true);
+                            var font = graphics.GetAdjustedFont(trigger, SystemFonts.DefaultFont, bounds.Width, 12 / Globals.MapTileScale, 24 / Globals.MapTileScale, true);
                             var textBounds = graphics.MeasureString(trigger, font, bounds.Width, stringFormat);
                             var backgroundBounds = new RectangleF(bounds.Location, textBounds);
                             backgroundBounds.Offset((bounds.Width - textBounds.Width) / 2.0f, (bounds.Height - textBounds.Height) / 2.0f);
@@ -301,8 +309,8 @@ namespace MobiusEditor.Tools
                 {
                     var x = cell % map.Metrics.Width;
                     var y = cell / map.Metrics.Width;
-                    var location = new Point(x * Globals.TileWidth, y * Globals.TileHeight);
-                    var textBounds = new Rectangle(location, Globals.TileSize);
+                    var location = new Point(x * Globals.MapTileWidth, y * Globals.MapTileHeight);
+                    var textBounds = new Rectangle(location, Globals.MapTileSize);
                     graphics.FillRectangle(cellTriggersBackgroundBrush, textBounds);
                     graphics.DrawRectangle(cellTriggerPen, textBounds);
                     StringFormat stringFormat = new StringFormat
@@ -311,7 +319,7 @@ namespace MobiusEditor.Tools
                         LineAlignment = StringAlignment.Center
                     };
                     var text = cellTrigger.Trigger;
-                    var font = graphics.GetAdjustedFont(text, SystemFonts.DefaultFont, textBounds.Width, 24 / Globals.TileScale, 48 / Globals.TileScale, true);
+                    var font = graphics.GetAdjustedFont(text, SystemFonts.DefaultFont, textBounds.Width, 24 / Globals.MapTileScale, 48 / Globals.MapTileScale, true);
                     graphics.DrawString(text.ToString(), font, cellTriggersBrush, textBounds, stringFormat);
                 }
             }
@@ -324,10 +332,10 @@ namespace MobiusEditor.Tools
                 return;
             }
             var bounds = Rectangle.FromLTRB(
-                map.Bounds.Left * Globals.TileWidth,
-                map.Bounds.Top * Globals.TileHeight,
-                map.Bounds.Right * Globals.TileWidth,
-                map.Bounds.Bottom * Globals.TileHeight
+                map.Bounds.Left * Globals.MapTileWidth,
+                map.Bounds.Top * Globals.MapTileHeight,
+                map.Bounds.Right * Globals.MapTileWidth,
+                map.Bounds.Bottom * Globals.MapTileHeight
             );
             using (var boundsPen = new Pen(Color.Cyan, 8.0f))
                 graphics.DrawRectangle(boundsPen, bounds);

@@ -50,7 +50,13 @@ namespace MobiusEditor.Model
 
         public bool IsVessel => (ID & UnitTypeIDMask.Vessel) != 0;
 
-        public Size RenderSize { get; set; }
+        private Size _RenderSize;
+
+        public Size GetRenderSize(Size cellSize)
+        {
+            //RenderSize = new Size(tile.Image.Width / Globals.MapTileScale, tile.Image.Height / Globals.MapTileScale);
+            return new Size(_RenderSize.Width * cellSize.Width / Globals.OriginalTileWidth, _RenderSize.Height * cellSize.Height / Globals.OriginalTileHeight);
+        }
 
         public Image Thumbnail { get; set; }
 
@@ -117,9 +123,8 @@ namespace MobiusEditor.Model
             var oldImage = Thumbnail;
             if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, Name, 0, out Tile tile))
             {
-                RenderSize = new Size(tile.Image.Width / Globals.TileScale, tile.Image.Height / Globals.TileScale);
+                _RenderSize = tile.Image.Size;
             }
-
             var mockUnit = new Unit()
             {
                 Type = this,
@@ -127,10 +132,18 @@ namespace MobiusEditor.Model
                 Strength = 256,
                 Direction = direction
             };
-            var unitThumbnail = new Bitmap(Globals.TileWidth * 3, Globals.TileHeight * 3);
-            using (var g = Graphics.FromImage(unitThumbnail))
+            var unitThumbnail = new Bitmap(Globals.PreviewTileWidth * 2, Globals.PreviewTileHeight * 2);
+            using (Bitmap bigThumbnail = new Bitmap(Globals.PreviewTileWidth * 3, Globals.PreviewTileHeight * 3))
             {
-                MapRenderer.Render(gameType, theater, new Point(1, 1), Globals.TileSize, mockUnit).Item2(g);
+                using (var g = Graphics.FromImage(bigThumbnail))
+                {
+                    MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
+                    MapRenderer.Render(gameType, theater, new Point(1, 1), Globals.PreviewTileSize, mockUnit).Item2(g);
+                }
+                using (var g2 = Graphics.FromImage(unitThumbnail))
+                {
+                    g2.DrawImage(bigThumbnail, new Point(-Globals.PreviewTileWidth / 2, -Globals.PreviewTileHeight / 2));
+                }
             }
             Thumbnail = unitThumbnail;
             if (oldImage != null)

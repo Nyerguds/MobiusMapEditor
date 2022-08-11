@@ -67,6 +67,7 @@ namespace MobiusEditor.Tools
             this.overlayTypeMapPanel = overlayTypeMapPanel;
             this.overlayTypeMapPanel.BackColor = Color.White;
             this.overlayTypeMapPanel.MaxZoom = 1;
+            this.overlayTypeMapPanel.SmoothScale = Globals.PreviewSmoothScale;
             SelectedOverlayType = this.overlayTypeComboBox.Types.First() as OverlayType;
         }
 
@@ -328,7 +329,7 @@ namespace MobiusEditor.Tools
                 foreach (var (cell, overlay) in previewMap.Overlay.Where(x => x.Value.Type.IsPlaceable))
                 {
                     previewMap.Metrics.GetLocation(cell, out Point topLeft);
-                    var bounds = new Rectangle(new Point(topLeft.X * Globals.TileWidth, topLeft.Y * Globals.TileHeight), Globals.TileSize);
+                    var bounds = new Rectangle(new Point(topLeft.X * Globals.MapTileWidth, topLeft.Y * Globals.MapTileHeight), Globals.MapTileSize);
                     graphics.DrawRectangle(overlayPen, bounds);
                 }
             }

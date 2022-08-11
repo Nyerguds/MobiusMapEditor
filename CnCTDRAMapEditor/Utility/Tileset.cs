@@ -60,7 +60,7 @@ namespace MobiusEditor.Utility
 
         static Tileset()
         {
-            transparentTileImage = new Bitmap(Globals.TileWidth, Globals.TileHeight);
+            transparentTileImage = new Bitmap(Globals.MapTileWidth, Globals.MapTileHeight);
             transparentTileImage.MakeTransparent();
         }
 

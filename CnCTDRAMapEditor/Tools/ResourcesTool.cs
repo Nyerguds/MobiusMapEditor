@@ -321,7 +321,7 @@ namespace MobiusEditor.Tools
                     if (overlay.Type.IsResource)
                     {
                         map.Metrics.GetLocation(cell, out Point topLeft);
-                        var bounds = new Rectangle(new Point(topLeft.X * Globals.TileWidth, topLeft.Y * Globals.TileHeight), Globals.TileSize);
+                        var bounds = new Rectangle(new Point(topLeft.X * Globals.MapTileWidth, topLeft.Y * Globals.MapTileHeight), Globals.MapTileSize);
                         graphics.DrawRectangle(resourcePen, bounds);
                     }
                 }

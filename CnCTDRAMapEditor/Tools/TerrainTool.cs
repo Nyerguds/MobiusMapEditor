@@ -76,6 +76,7 @@ namespace MobiusEditor.Tools
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
             previewMap = map;
+            manuallyHandledLayers = MapLayerFlag.TechnoTriggers;
 
             mockTerrain = new Terrain();
             mockTerrain.PropertyChanged += MockTerrain_PropertyChanged;
@@ -86,6 +87,7 @@ namespace MobiusEditor.Tools
             this.terrainTypeMapPanel = terrainTypeMapPanel;
             this.terrainTypeMapPanel.BackColor = Color.White;
             this.terrainTypeMapPanel.MaxZoom = 1;
+            this.terrainTypeMapPanel.SmoothScale = Globals.PreviewSmoothScale;
 
             this.terrainProperties = terrainProperties;
             this.terrainProperties.Terrain = mockTerrain;
@@ -397,8 +399,11 @@ namespace MobiusEditor.Tools
             {
                 foreach (var (topLeft, terrain) in previewMap.Technos.OfType<Terrain>())
                 {
-                    var bounds = new Rectangle(new Point(topLeft.X * Globals.TileWidth, topLeft.Y * Globals.TileHeight), terrain.Type.RenderSize);
+                    var bounds = new Rectangle(new Point(topLeft.X * Globals.MapTileWidth, topLeft.Y * Globals.MapTileHeight), terrain.Type.GetRenderSize(Globals.MapTileSize));
                     graphics.DrawRectangle(terrainPen, bounds);
+                }
+                foreach (var (topLeft, terrain) in previewMap.Technos.OfType<Terrain>())
+                {
                     for (var y = 0; y < terrain.Type.OccupyMask.GetLength(0); ++y)
                     {
                         for (var x = 0; x < terrain.Type.OccupyMask.GetLength(1); ++x)
@@ -406,14 +411,15 @@ namespace MobiusEditor.Tools
                             if (!terrain.Type.OccupyMask[y, x])
                                 continue;
                             var occupyBounds = new Rectangle(
-                                new Point((topLeft.X + x) * Globals.TileWidth, (topLeft.Y + y) * Globals.TileHeight),
-                                Globals.TileSize
+                                new Point((topLeft.X + x) * Globals.MapTileWidth, (topLeft.Y + y) * Globals.MapTileHeight),
+                                Globals.MapTileSize
                             );
                             graphics.DrawRectangle(occupyPen, occupyBounds);
                         }
                     }
                 }
             }
+            RenderTechnoTriggers(graphics);
         }
 
         public override void Activate()

@@ -92,6 +92,7 @@ namespace MobiusEditor.Tools
             this.unitTypeMapPanel = unitTypeMapPanel;
             this.unitTypeMapPanel.BackColor = Color.White;
             this.unitTypeMapPanel.MaxZoom = 1;
+            this.unitTypeMapPanel.SmoothScale = Globals.PreviewSmoothScale;
 
             this.objectProperties = objectProperties;
             this.objectProperties.Object = mockUnit;
@@ -325,10 +326,11 @@ namespace MobiusEditor.Tools
             var oldImage = unitTypeMapPanel.MapImage;
             if (mockUnit.Type != null)
             {
-                var unitPreview = new Bitmap(Globals.TileWidth * 3, Globals.TileHeight * 3);
+                var unitPreview = new Bitmap(Globals.PreviewTileWidth * 3, Globals.PreviewTileWidth * 3);
                 using (var g = Graphics.FromImage(unitPreview))
                 {
-                    MapRenderer.Render(plugin.GameType, map.Theater, new Point(1, 1), Globals.TileSize, mockUnit).Item2(g);
+                    MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
+                    MapRenderer.Render(plugin.GameType, map.Theater, new Point(1, 1), Globals.PreviewTileSize, mockUnit).Item2(g);
                 }
                 unitTypeMapPanel.MapImage = unitPreview;
             }
@@ -386,7 +388,7 @@ namespace MobiusEditor.Tools
             {
                 foreach (var (topLeft, _) in map.Technos.OfType<Unit>())
                 {
-                    var bounds = new Rectangle(new Point(topLeft.X * Globals.TileWidth, topLeft.Y * Globals.TileHeight), Globals.TileSize);
+                    var bounds = new Rectangle(new Point(topLeft.X * Globals.MapTileWidth, topLeft.Y * Globals.MapTileHeight), Globals.MapTileSize);
                     graphics.DrawRectangle(unitPen, bounds);
                 }
             }

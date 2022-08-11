@@ -23,7 +23,10 @@ namespace MobiusEditor
     {
         static Globals()
         {
-            TileScale = Properties.Settings.Default.Quality;
+            MapTileScale = Math.Max(1, Math.Abs(Properties.Settings.Default.MapScaleFactor));
+            MapSmoothScale = Properties.Settings.Default.MapScaleFactor < 0;
+            PreviewTileScale = Math.Max(1, Math.Abs(Properties.Settings.Default.PreviewScaleFactor));
+            PreviewSmoothScale = Properties.Settings.Default.PreviewScaleFactor < 0;
         }
 
         public const string TilesetsXMLPath = @"DATA\XML\TILESETS.XML";
@@ -35,10 +38,16 @@ namespace MobiusEditor
         public const int OriginalTileHeight = 128;
         public static readonly Size OriginalTileSize = new Size(OriginalTileWidth, OriginalTileHeight);
 
-        public static int TileScale { get; set; }
-        public static int TileWidth => OriginalTileWidth / TileScale;
-        public static int TileHeight => OriginalTileHeight / TileScale;
-        public static Size TileSize => new Size(TileWidth, TileHeight);
+        public static int MapTileScale { get; set; }
+        public static bool MapSmoothScale { get; set; }
+        public static int MapTileWidth => OriginalTileWidth / MapTileScale;
+        public static int MapTileHeight => OriginalTileHeight / MapTileScale;
+        public static Size MapTileSize => new Size(MapTileWidth, MapTileHeight);
+        public static int PreviewTileScale { get; set; }
+        public static bool PreviewSmoothScale { get; set; }
+        public static int PreviewTileWidth => OriginalTileWidth / PreviewTileScale;
+        public static int PreviewTileHeight => OriginalTileHeight / PreviewTileScale;
+        public static Size PreviewTileSize => new Size(PreviewTileWidth, PreviewTileHeight);
 
         public const int PixelWidth = 24;
         public const int PixelHeight = 24;

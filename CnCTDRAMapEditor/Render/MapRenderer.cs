@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Linq;
 
@@ -131,11 +132,12 @@ namespace MobiusEditor.Render
             }
             if ((layers & MapLayerFlag.Template) != MapLayerFlag.None)
             {
+                TemplateType clear = map.TemplateTypes.Where(t => t.Flag == TemplateTypeFlag.Clear).FirstOrDefault();
                 foreach (var topLeft in renderLocations())
                 {
                     map.Metrics.GetCell(topLeft, out int cell);
                     var template = map.Templates[topLeft];
-                    TemplateType ttype = template?.Type ?? map.TemplateTypes.Where(t => t.Flag == TemplateTypeFlag.Clear).FirstOrDefault();
+                    TemplateType ttype = template?.Type ?? clear;
                     var name = ttype.Name;
                     var icon = template?.Icon ?? ((cell & 0x03) | ((cell >> 4) & 0x0C));
                     if (Globals.TheTilesetManager.GetTileData(map.Theater.Tilesets, name, icon, out Tile tile))
@@ -211,23 +213,10 @@ namespace MobiusEditor.Render
                             imageAttributes.SetColorMatrix(colorMatrix);
                         }
                         var location = new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height);
-                        var size = new Size(tile.Image.Width / tileScale, tile.Image.Height / tileScale);
                         var maxSize = new Size(terrain.Type.Size.Width * tileSize.Width, terrain.Type.Size.Height * tileSize.Height);
-                        // Graphics are too large. Scale them down using the largest dimension.
-                        if ((size.Width >= size.Height) && (size.Width > maxSize.Width))
-                        {
-                            size.Height = size.Height * maxSize.Width / size.Width;
-                            size.Width = maxSize.Width;
-                        }
-                        else if ((size.Height >= size.Width) && (size.Height > maxSize.Height))
-                        {
-                            size.Width = size.Width * maxSize.Height / size.Height;
-                            size.Height = maxSize.Height;
-                        }
-                        // Center graphics inside bounding box
-                        int locX = (maxSize.Width - size.Width) / 2 + location.X;
-                        int locY = (maxSize.Height - size.Height) / 2 + location.Y;
-                        var paintBounds = new Rectangle(locX, locY, size.Width, size.Height);
+                        Rectangle paintBounds = RenderBounds(tile.Image.Size, terrain.Type.Size, tileSize);
+                        paintBounds.X += location.X;
+                        paintBounds.Y += location.Y;
                         var terrainBounds = new Rectangle(location, maxSize);
                         overlappingRenderList.Add((terrainBounds, g => g.DrawImage(tile.Image, paintBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes)));
                     }
@@ -286,7 +275,7 @@ namespace MobiusEditor.Render
 
         public static void Render(GameType gameType, Map map, Graphics graphics, ISet<Point> locations, MapLayerFlag layers)
         {
-            Render(gameType, map, graphics, locations, layers, Globals.TileScale);
+            Render(gameType, map, graphics, locations, layers, Globals.MapTileScale);
         }
 
         public static (Rectangle, Action<Graphics>) Render(TheaterType theater, Point topLeft, Size tileSize, Smudge smudge)
@@ -308,8 +297,9 @@ namespace MobiusEditor.Render
             }
             if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, smudge.Type.Name, smudge.Icon, out Tile tile))
             {
-                var location = new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height);
-                var smudgeBounds = new Rectangle(location, smudge.Type.RenderSize);
+                Rectangle smudgeBounds = RenderBounds(tile.Image.Size, new Size(1, 1), tileSize);
+                smudgeBounds.X += topLeft.X * tileSize.Width;
+                smudgeBounds.Y += topLeft.Y * tileSize.Width;
                 void render(Graphics g)
                 {
                     g.DrawImage(tile.Image, smudgeBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes);
@@ -350,12 +340,9 @@ namespace MobiusEditor.Render
             // For Decoration types, generate dummy if not found.
             if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, name, icon, out Tile tile, (overlay.Type.Flag & OverlayTypeFlag.Decoration) != 0))
             {
-                var size = tile.Image.Width < Globals.OriginalTileWidth && tile.Image.Height < Globals.OriginalTileHeight ?
-                    new Size(tile.Image.Width / tileScale, tile.Image.Height / tileScale) : tileSize;
-                var location = new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height)
-                    + new Size(tileSize.Width / 2, tileSize.Height / 2)
-                    - new Size(size.Width / 2, size.Height / 2);
-                var overlayBounds = new Rectangle(location, size);
+                Rectangle overlayBounds = RenderBounds(tile.Image.Size, new Size(1, 1), tileSize);
+                overlayBounds.X += topLeft.X * tileSize.Width;
+                overlayBounds.Y += topLeft.Y * tileSize.Width;
                 var tint = overlay.Tint;
                 void render(Graphics g)
                 {
@@ -427,23 +414,8 @@ namespace MobiusEditor.Render
             if (Globals.TheTilesetManager.GetTeamColorTileData(theater.Tilesets, building.Type.Tilename, icon, Globals.TheTeamColorManager[building.House.BuildingTeamColor], out Tile tile))
             {
                 var location = new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height);
-                var size = new Size(tile.Image.Width / tileScale, tile.Image.Height / tileScale);
                 var maxSize = new Size(building.Type.Size.Width * tileSize.Width, building.Type.Size.Height * tileSize.Height);
-                // Graphics are too large. Scale them down using the largest dimension.
-                if ((size.Width >= size.Height) && (size.Width > maxSize.Width))
-                {
-                    size.Height = size.Height * maxSize.Width / size.Width;
-                    size.Width = maxSize.Width;
-                }
-                else if ((size.Height >= size.Width) && (size.Height > maxSize.Height))
-                {
-                    size.Width = size.Width * maxSize.Height / size.Height;
-                    size.Height = maxSize.Height;
-                }
-                // Center graphics inside bounding box
-                int locX = (maxSize.Width - size.Width) / 2 + location.X;
-                int locY = (maxSize.Height - size.Height) / 2 + location.Y;
-                var paintBounds = new Rectangle(locX, locY, size.Width, size.Height);
+                var paintBounds = RenderBounds(tile.Image.Size, building.Type.Size, tileScale);
                 var buildingBounds = new Rectangle(location, maxSize);
                 Tile factoryOverlayTile = null;
                 // Draw no factory overlay over the collapse frame.
@@ -473,10 +445,26 @@ namespace MobiusEditor.Render
                         );
                         imageAttributes.SetColorMatrix(colorMatrix);
                     }
-                    g.DrawImage(tile.Image, paintBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes);
                     if (factoryOverlayTile != null)
                     {
-                        g.DrawImage(factoryOverlayTile.Image, paintBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes);
+                        // Avoid overlay showing as semiitransparent.
+                        using (Bitmap factory = new Bitmap(maxSize.Width, maxSize.Height))
+                        {
+                            using (Graphics factoryG = Graphics.FromImage(factory))
+                            {
+                                var factBounds = RenderBounds(tile.Image.Size, building.Type.Size, tileScale);
+                                var ovrlBounds = RenderBounds(factoryOverlayTile.Image.Size, building.Type.Size, tileScale);
+                                factoryG.DrawImage(tile.Image, factBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel);
+                                factoryG.DrawImage(factoryOverlayTile.Image, ovrlBounds, 0, 0, factoryOverlayTile.Image.Width, factoryOverlayTile.Image.Height, GraphicsUnit.Pixel);
+                            }
+                            g.DrawImage(factory, buildingBounds, 0, 0, factory.Width, factory.Height, GraphicsUnit.Pixel, imageAttributes);
+                        }
+                    }
+                    else
+                    {
+                        paintBounds.X += location.X;
+                        paintBounds.Y += location.Y;
+                        g.DrawImage(tile.Image, paintBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes);
                     }
                     if (building.Type.IsFake)
                     {
@@ -510,7 +498,7 @@ namespace MobiusEditor.Render
             }
             else
             {
-                Debug.Print(string.Format("Building {0} (0) not found", building.Type.Name));
+                Debug.Print(string.Format("Building {0} ({1}) not found", building.Type.Name, icon));
                 return (Rectangle.Empty, (g) => { });
             }
         }
@@ -521,26 +509,32 @@ namespace MobiusEditor.Render
             string teamColor = infantry.House?.UnitTeamColor;
             if (Globals.TheTilesetManager.GetTeamColorTileData(theater.Tilesets, infantry.Type.Name, icon, Globals.TheTeamColorManager[teamColor], out Tile tile))
             {
+                int infantryCorrectX = tileSize.Width / -8;
+                int infantryCorrectY = tileSize.Height / 8;
                 var baseLocation = new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height)
                     + new Size(tileSize.Width / 2, tileSize.Height / 2);
                 var offset = Point.Empty;
                 switch (infantryStoppingType)
                 {
                     case InfantryStoppingType.UpperLeft:
-                        offset.X = -tileSize.Width / 4;
-                        offset.Y = -tileSize.Height / 4;
+                        offset.X = -tileSize.Width / 4 + infantryCorrectX;
+                        offset.Y = -tileSize.Height / 4 + infantryCorrectY;
                         break;
                     case InfantryStoppingType.UpperRight:
-                        offset.X = tileSize.Width / 4;
-                        offset.Y = -tileSize.Height / 4;
+                        offset.X = tileSize.Width / 4 + infantryCorrectX;
+                        offset.Y = -tileSize.Height / 4 + infantryCorrectY;
                         break;
                     case InfantryStoppingType.LowerLeft:
-                        offset.X = -tileSize.Width / 4;
-                        offset.Y = tileSize.Height / 4;
+                        offset.X = -tileSize.Width / 4 + infantryCorrectX;
+                        offset.Y = tileSize.Height / 4 + infantryCorrectY;
                         break;
                     case InfantryStoppingType.LowerRight:
-                        offset.X = tileSize.Width / 4;
-                        offset.Y = tileSize.Height / 4;
+                        offset.X = tileSize.Width / 4 + infantryCorrectX;
+                        offset.Y = tileSize.Height / 4 + infantryCorrectY;
+                        break;
+                    case InfantryStoppingType.Center:
+                        offset.X = infantryCorrectX;
+                        offset.Y = infantryCorrectY;
                         break;
                 }
                 baseLocation.Offset(offset);
@@ -548,10 +542,9 @@ namespace MobiusEditor.Render
                     new Point(baseLocation.X - (tile.OpaqueBounds.Width / 2), baseLocation.Y - tile.OpaqueBounds.Height),
                     tile.OpaqueBounds.Size
                 );
-                var renderBounds = new Rectangle(
-                    baseLocation - new Size(infantry.Type.RenderSize.Width / 2, infantry.Type.RenderSize.Height / 2),
-                    infantry.Type.RenderSize
-                );
+                var renderSize = infantry.Type.GetRenderSize(tileSize);
+                var renderBounds = new Rectangle(baseLocation - new Size(renderSize.Width / 2, renderSize.Height / 2), renderSize);
+
                 var tint = infantry.Tint;
                 void render(Graphics g)
                 {
@@ -667,10 +660,8 @@ namespace MobiusEditor.Render
                 var location =
                     new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height) +
                     new Size(tileSize.Width / 2, tileSize.Height / 2);
-                var renderBounds = new Rectangle(
-                    location - new Size(unit.Type.RenderSize.Width / 2, unit.Type.RenderSize.Height / 2),
-                    unit.Type.RenderSize
-                );
+                var renderSize = unit.Type.GetRenderSize(tileSize);
+                var renderBounds = new Rectangle(location - new Size(renderSize.Width / 2, renderSize.Height / 2), renderSize);
                 Tile radarTile = null;
                 if ((unit.Type == RedAlert.UnitTypes.MGG) ||
                     (unit.Type == RedAlert.UnitTypes.MRJammer) ||
@@ -790,6 +781,57 @@ namespace MobiusEditor.Render
                 Debug.Print(string.Format("Unit {0} ({1}) not found", unit.Type.Name, icon));
                 return (Rectangle.Empty, (g) => { });
             }
+        }
+
+        public static void SetRenderSettings(Graphics g, Boolean smooth)
+        {
+            if (smooth)
+            {
+                g.CompositingQuality = CompositingQuality.HighQuality;
+                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                g.SmoothingMode = SmoothingMode.HighQuality;
+                g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+            }
+            else
+            {
+                g.CompositingQuality = CompositingQuality.AssumeLinear;
+                g.InterpolationMode = InterpolationMode.NearestNeighbor;
+                g.SmoothingMode = SmoothingMode.None;
+                g.PixelOffsetMode = PixelOffsetMode.Half;
+            }
+        }
+
+        public static Rectangle RenderBounds(Size size, Size cellDimensions, Size cellSize)
+        {
+            int scaleFactorX = Globals.OriginalTileWidth / cellSize.Width;
+            int scaleFactorY = Globals.OriginalTileHeight / cellSize.Height;
+            return RenderBounds(size, cellDimensions, scaleFactorX, scaleFactorY);
+        }
+
+        public static Rectangle RenderBounds(Size size, Size cellDimensions, int scaleFactor)
+        {
+            return RenderBounds(size, cellDimensions, scaleFactor, scaleFactor);
+        }
+
+        public static Rectangle RenderBounds(Size size, Size cellDimensions, int scaleFactorX, int scaleFactorY)
+        {
+            Size maxSize = new Size(cellDimensions.Width * Globals.OriginalTileWidth, cellDimensions.Height * Globals.OriginalTileHeight);
+            // If graphics are too large, scale them down using the largest dimension
+            Size newSize = new Size(size.Width, size.Height);
+            if ((size.Width >= size.Height) && (size.Width > maxSize.Width))
+            {
+                newSize.Height = size.Height * maxSize.Width / size.Width;
+                newSize.Width = maxSize.Width;
+            }
+            else if ((size.Height >= size.Width) && (size.Height > maxSize.Height))
+            {
+                newSize.Width = size.Width * maxSize.Height / size.Height;
+                newSize.Height = maxSize.Height;
+            }
+            // center graphics inside bounding box
+            int locX = (maxSize.Width - newSize.Width) / 2;
+            int locY = (maxSize.Height - newSize.Height) / 2;
+            return new Rectangle(locX / scaleFactorX, locY / scaleFactorY, newSize.Width / scaleFactorX, newSize.Height / scaleFactorY);
         }
     }
 }

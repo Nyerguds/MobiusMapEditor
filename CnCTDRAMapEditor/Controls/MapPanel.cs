@@ -15,6 +15,7 @@
 using MobiusEditor.Event;
 using MobiusEditor.Interface;
 using MobiusEditor.Model;
+using MobiusEditor.Render;
 using MobiusEditor.Utility;
 using System;
 using System.Collections.Generic;
@@ -119,15 +120,15 @@ namespace MobiusEditor.Controls
             }
         }
 
-        private int quality = Properties.Settings.Default.Quality;
-        public int Quality
+        private bool smoothScale = Globals.MapSmoothScale;
+        public bool SmoothScale
         {
-            get => quality;
+            get => smoothScale;
             set
             {
-                if (quality != value)
+                if (smoothScale != value)
                 {
-                    quality = value;
+                    smoothScale = value;
                     Invalidate();
                 }
             }
@@ -347,18 +348,13 @@ namespace MobiusEditor.Controls
                 var oldCompositingMode = pe.Graphics.CompositingMode;
                 var oldCompositingQuality = pe.Graphics.CompositingQuality;
                 var oldInterpolationMode = pe.Graphics.InterpolationMode;
-                if (Quality > 1)
-                {
-                    pe.Graphics.CompositingMode = CompositingMode.SourceCopy;
-                    pe.Graphics.CompositingQuality = CompositingQuality.HighSpeed;
-                }
-
-                pe.Graphics.InterpolationMode = InterpolationMode.NearestNeighbor;
+                var oldPixelOffsetMode = pe.Graphics.PixelOffsetMode;
+                MapRenderer.SetRenderSettings(pe.Graphics, SmoothScale);
                 pe.Graphics.DrawImage(mapImage, 0, 0);
-
                 pe.Graphics.CompositingMode = oldCompositingMode;
                 pe.Graphics.CompositingQuality = oldCompositingQuality;
                 pe.Graphics.InterpolationMode = oldInterpolationMode;
+                pe.Graphics.PixelOffsetMode = oldPixelOffsetMode;
             }
 
             PostRender?.Invoke(this, new RenderEventArgs(pe.Graphics, fullInvalidation ? null : invalidateCells));

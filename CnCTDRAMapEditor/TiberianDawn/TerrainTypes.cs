@@ -47,7 +47,7 @@ namespace MobiusEditor.TiberianDawn
         public static readonly TerrainType Clump4 = new TerrainType(23, "tc04", new TheaterType[] { TheaterTypes.Winter, TheaterTypes.Temperate }, new bool[3, 4] { { false, false, false, false }, { true, true, true, false }, { true, false, false, false } });
         public static readonly TerrainType Clump5 = new TerrainType(24, "tc05", new TheaterType[] { TheaterTypes.Winter, TheaterTypes.Temperate }, new bool[3, 4] { { false, false, true, false }, { true, true, true, false }, { false, true, true, false } });
         public static readonly TerrainType Rock1 = new TerrainType(25, "rock1", new TheaterType[] { TheaterTypes.Desert }, new bool[2, 2] { { false, false }, { true, true } });
-        public static readonly TerrainType Rock2 = new TerrainType(26, "rock2", new TheaterType[] { TheaterTypes.Desert }, new bool[2, 2] { { true, true }, { false, false } });
+        public static readonly TerrainType Rock2 = new TerrainType(26, "rock2", new TheaterType[] { TheaterTypes.Desert }, new bool[1, 3] { { true, true, false } });
         public static readonly TerrainType Rock3 = new TerrainType(27, "rock3", new TheaterType[] { TheaterTypes.Desert }, new bool[2, 3] { { false, false, false }, { true, true, false } });
         public static readonly TerrainType Rock4 = new TerrainType(28, "rock4", new TheaterType[] { TheaterTypes.Desert }, new bool[1, 2] { { true, false } });
         public static readonly TerrainType Rock5 = new TerrainType(29, "rock5", new TheaterType[] { TheaterTypes.Desert }, new bool[1, 2] { { true, false } });

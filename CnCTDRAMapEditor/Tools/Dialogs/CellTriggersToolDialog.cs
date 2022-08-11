@@ -32,7 +32,7 @@ namespace MobiusEditor.Tools.Dialogs
             InitializeComponent();
         }
 
-        public override void Initialize(MapPanel mapPanel, MapLayerFlag activeLayers, ToolStripStatusLabel toolStatusLabel, ToolTip mouseToolTip, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> undoRedoList)
+        protected override void InitializeInternal(MapPanel mapPanel, MapLayerFlag activeLayers, ToolStripStatusLabel toolStatusLabel, ToolTip mouseToolTip, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> undoRedoList)
         {
             TriggerCombo.DataSource = plugin.Map.Triggers.Select(t => t.Name).ToArray();
             Tool = new CellTriggersTool(mapPanel, activeLayers, toolStatusLabel, TriggerCombo, plugin, undoRedoList);

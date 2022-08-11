@@ -25,10 +25,55 @@ namespace MobiusEditor.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("2")]
-        public int Quality {
+        [global::System.Configuration.DefaultSettingValueAttribute("2844969675;Tiberian_Dawn\\ConcretePavementTD")]
+        public string ModsToLoad {
             get {
-                return ((int)(this["Quality"]));
+                return ((string)(this["ModsToLoad"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("2")]
+        public int MapScaleFactor {
+            get {
+                return ((int)(this["MapScaleFactor"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1")]
+        public int PreviewScaleFactor {
+            get {
+                return ((int)(this["PreviewScaleFactor"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int MaxMapTileTextureSize {
+            get {
+                return ((int)(this["MaxMapTileTextureSize"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0.5")]
+        public double TemplateToolTextureSizeMultiplier {
+            get {
+                return ((double)(this["TemplateToolTextureSizeMultiplier"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0.3")]
+        public double ObjectToolItemSizeMultiplier {
+            get {
+                return ((double)(this["ObjectToolItemSizeMultiplier"]));
             }
         }
         
@@ -53,42 +98,6 @@ namespace MobiusEditor.Properties {
             }
             set {
                 this["GameDirectoryPath"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public int MaxMapTileTextureSize {
-            get {
-                return ((int)(this["MaxMapTileTextureSize"]));
-            }
-            set {
-                this["MaxMapTileTextureSize"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0.5")]
-        public double TemplateToolTextureSizeMultiplier {
-            get {
-                return ((double)(this["TemplateToolTextureSizeMultiplier"]));
-            }
-            set {
-                this["TemplateToolTextureSizeMultiplier"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0.3")]
-        public double ObjectToolItemSizeMultiplier {
-            get {
-                return ((double)(this["ObjectToolItemSizeMultiplier"]));
-            }
-            set {
-                this["ObjectToolItemSizeMultiplier"] = value;
             }
         }
         
@@ -233,15 +242,6 @@ namespace MobiusEditor.Properties {
             }
             set {
                 this["ApplicationVersion"] = value;
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("2844969675;Tiberian_Dawn\\ConcretePavementTD")]
-        public string ModsToLoad {
-            get {
-                return ((string)(this["ModsToLoad"]));
             }
         }
     }

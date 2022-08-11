@@ -578,7 +578,6 @@ namespace MobiusEditor
             this.mapPanel.MaxZoom = 8;
             this.mapPanel.MinZoom = 1;
             this.mapPanel.Name = "mapPanel";
-            this.mapPanel.Quality = 2;
             this.mapPanel.Size = new System.Drawing.Size(1369, 592);
             this.mapPanel.TabIndex = 4;
             this.mapPanel.Zoom = 1;

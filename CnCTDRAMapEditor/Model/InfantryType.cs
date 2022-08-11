@@ -30,8 +30,13 @@ namespace MobiusEditor.Model
 
         public string OwnerHouse { get; private set; }
 
-        public Size RenderSize { get; set; }
+        private Size _RenderSize;
 
+        public Size GetRenderSize(Size cellSize)
+        {
+            //RenderSize = new Size(tile.Image.Width / Globals.MapTileScale, tile.Image.Height / Globals.MapTileScale);
+            return new Size(_RenderSize.Width * cellSize.Width / Globals.OriginalTileWidth, _RenderSize.Height * cellSize.Height / Globals.OriginalTileHeight);
+        }
         public Image Thumbnail { get; set; }
 
         public InfantryType(sbyte id, string name, string textId, string ownerHouse)
@@ -80,7 +85,7 @@ namespace MobiusEditor.Model
             var oldImage = Thumbnail;
             if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, Name, 4, out Tile tile))
             {
-                RenderSize = new Size(tile.Image.Width / Globals.TileScale, tile.Image.Height / Globals.TileScale);
+                _RenderSize = tile.Image.Size;
             }
 
             var mockInfantry = new Infantry(null)
@@ -90,10 +95,11 @@ namespace MobiusEditor.Model
                 Strength = 256,
                 Direction = direction
             };
-            var infantryThumbnail = new Bitmap(Globals.TileWidth, Globals.TileHeight);
+            var infantryThumbnail = new Bitmap(Globals.PreviewTileWidth, Globals.PreviewTileHeight);
             using (var g = Graphics.FromImage(infantryThumbnail))
             {
-                MapRenderer.Render(theater, Point.Empty, Globals.TileSize, mockInfantry, InfantryStoppingType.Center).Item2(g);
+                MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
+                MapRenderer.Render(theater, Point.Empty, Globals.PreviewTileSize, mockInfantry, InfantryStoppingType.Center).Item2(g);
             }
             Thumbnail = infantryThumbnail;
             if (oldImage != null)

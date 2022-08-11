@@ -198,7 +198,6 @@ namespace MobiusEditor.Utility
                                 metadata["crop"][2].ToObject<int>(),
                                 metadata["crop"][3].ToObject<int>()
                             );
-
                             var uncroppedBitmap = new Bitmap(size.Width, size.Height, bitmap.PixelFormat);
                             using (var g = Graphics.FromImage(uncroppedBitmap))
                             {
@@ -211,7 +210,6 @@ namespace MobiusEditor.Utility
                             cachedTextures[filename] = bitmap;
                         }
                     }
-
 #if false
                     // Attempt to load parent directory as archive
                     var archiveDir = Path.GetDirectoryName(filename);
@@ -223,7 +221,6 @@ namespace MobiusEditor.Utility
                             using (var archive = new ZipArchive(fileStream, ZipArchiveMode.Read))
                             {
                                 var images = new Dictionary<string, ImageData>();
-
                                 foreach (var entry in archive.Entries)
                                 {
                                     var name = Path.GetFileNameWithoutExtension(entry.Name);
@@ -231,7 +228,6 @@ namespace MobiusEditor.Utility
                                     {
                                         imageData = images[name] = new ImageData { TGA = null, Metadata = null };
                                     }
-
                                     if ((imageData.TGA == null) && (Path.GetExtension(entry.Name).ToLower() == ".tga"))
                                     {
                                         using (var stream = entry.Open())
@@ -249,7 +245,6 @@ namespace MobiusEditor.Utility
                                             imageData.Metadata = JObject.Parse(reader.ReadToEnd());
                                         }
                                     }
-
                                     if ((imageData.TGA != null) && (imageData.Metadata != null))
                                     {
                                         var bitmap = imageData.TGA.ToBitmap(true);
@@ -260,18 +255,15 @@ namespace MobiusEditor.Utility
                                             imageData.Metadata["crop"][2].ToObject<int>(),
                                             imageData.Metadata["crop"][3].ToObject<int>()
                                         );
-
                                         var uncroppedBitmap = new Bitmap(size.Width, size.Height, bitmap.PixelFormat);
                                         using (var g = Graphics.FromImage(uncroppedBitmap))
                                         {
                                             g.DrawImage(bitmap, crop, new Rectangle(Point.Empty, bitmap.Size), GraphicsUnit.Pixel);
                                         }
                                         cachedTextures[Path.Combine(archiveDir, name) + ".tga"] = uncroppedBitmap;
-
                                         images.Remove(name);
                                     }
                                 }
-
                                 foreach (var item in images.Where(x => x.Value.TGA != null))
                                 {
                                     cachedTextures[Path.Combine(archiveDir, item.Key) + ".tga"] = item.Value.TGA.ToBitmap(true);
@@ -286,7 +278,6 @@ namespace MobiusEditor.Utility
                     // Try loading as a DDS
                     var ddsFilename = Path.ChangeExtension(filename, ".DDS");
                     Bitmap bitmap = null;
-
                     if (expandModPaths != null && expandModPaths.Length > 0)
                     {
                         for (int i = 0; i < expandModPaths.Length; ++i)
@@ -324,7 +315,6 @@ namespace MobiusEditor.Utility
                 float frac(float x) => x - (int)x;
                 float lerp(float x, float y, float t) => (x * (1.0f - t)) + (y * t);
                 float saturate(float x) => Math.Max(0.0f, Math.Min(1.0f, x));
-
                 BitmapData data = null;
                 try
                 {
@@ -332,20 +322,16 @@ namespace MobiusEditor.Utility
                     var bpp = Image.GetPixelFormatSize(data.PixelFormat) / 8;
                     var bytes = new byte[data.Stride * data.Height];
                     Marshal.Copy(data.Scan0, bytes, 0, bytes.Length);
-
                     result.opaqueBounds = CalculateOpaqueBounds(bytes, data.Width, data.Height, bpp, data.Stride);
-
                     for (int j = 0; j < bytes.Length; j += bpp)
                     {
                         var pixel = Color.FromArgb(bytes[j + 2], bytes[j + 1], bytes[j + 0]);
                         (float r, float g, float b) = (pixel.R.ToLinear(), pixel.G.ToLinear(), pixel.B.ToLinear());
-
                         (float x, float y, float z, float w) K = (0.0f, -1.0f / 3.0f, 2.0f / 3.0f, -1.0f);
                         (float x, float y, float z, float w) p = (g >= b) ? (g, b, K.x, K.y) : (b, g, K.w, K.z);
                         (float x, float y, float z, float w) q = (r >= p.x) ? (r, p.y, p.z, p.x) : (p.x, p.y, p.w, r);
                         (float d, float e) = (q.x - Math.Min(q.w, q.y), 1e-10f);
                         (float hue, float saturation, float value) = (Math.Abs(q.z + (q.w - q.y) / (6.0f * d + e)), d / (q.x + e), q.x);
-
                         var lowerHue = teamColor.LowerBounds.GetHue() / 360.0f;
                         var upperHue = teamColor.UpperBounds.GetHue() / 360.0f;
                         if ((hue >= lowerHue) && (upperHue >= hue))
@@ -354,18 +340,15 @@ namespace MobiusEditor.Utility
                             hue += teamColor.HSVShift.X;
                             saturation += teamColor.HSVShift.Y;
                             value += teamColor.HSVShift.Z;
-
                             (float x, float y, float z, float w) L = (1.0f, 2.0f / 3.0f, 1.0f / 3.0f, 3.0f);
                             (float x, float y, float z) m = (
                                 Math.Abs(frac(hue + L.x) * 6.0f - L.w),
                                 Math.Abs(frac(hue + L.y) * 6.0f - L.w),
                                 Math.Abs(frac(hue + L.z) * 6.0f - L.w)
                             );
-
                             r = value * lerp(L.x, saturate(m.x - L.x), saturation);
                             g = value * lerp(L.x, saturate(m.y - L.x), saturation);
                             b = value * lerp(L.x, saturate(m.z - L.x), saturation);
-
                             (float x, float y, float z) n = (
                                 Math.Min(1.0f, Math.Max(0.0f, r - teamColor.InputLevels.X) / (teamColor.InputLevels.Z - teamColor.InputLevels.X)),
                                 Math.Min(1.0f, Math.Max(0.0f, g - teamColor.InputLevels.X) / (teamColor.InputLevels.Z - teamColor.InputLevels.X)),
@@ -374,12 +357,10 @@ namespace MobiusEditor.Utility
                             n.x = (float)Math.Pow(n.x, teamColor.InputLevels.Y);
                             n.y = (float)Math.Pow(n.y, teamColor.InputLevels.Y);
                             n.z = (float)Math.Pow(n.z, teamColor.InputLevels.Y);
-
                             r = lerp(teamColor.OutputLevels.X, teamColor.OutputLevels.Y, n.x);
                             g = lerp(teamColor.OutputLevels.X, teamColor.OutputLevels.Y, n.y);
                             b = lerp(teamColor.OutputLevels.X, teamColor.OutputLevels.Y, n.z);
                         }
-
                         (float x, float y, float z) n2 = (
                             Math.Min(1.0f, Math.Max(0.0f, r - teamColor.OverallInputLevels.X) / (teamColor.OverallInputLevels.Z - teamColor.OverallInputLevels.X)),
                             Math.Min(1.0f, Math.Max(0.0f, g - teamColor.OverallInputLevels.X) / (teamColor.OverallInputLevels.Z - teamColor.OverallInputLevels.X)),
@@ -388,16 +369,13 @@ namespace MobiusEditor.Utility
                         n2.x = (float)Math.Pow(n2.x, teamColor.OverallInputLevels.Y);
                         n2.y = (float)Math.Pow(n2.y, teamColor.OverallInputLevels.Y);
                         n2.z = (float)Math.Pow(n2.z, teamColor.OverallInputLevels.Y);
-
                         r = lerp(teamColor.OverallOutputLevels.X, teamColor.OverallOutputLevels.Y, n2.x);
                         g = lerp(teamColor.OverallOutputLevels.X, teamColor.OverallOutputLevels.Y, n2.y);
                         b = lerp(teamColor.OverallOutputLevels.X, teamColor.OverallOutputLevels.Y, n2.z);
-
                         bytes[j + 2] = (byte)(r.ToSRGB() * 255.0f);
                         bytes[j + 1] = (byte)(g.ToSRGB() * 255.0f);
                         bytes[j + 0] = (byte)(b.ToSRGB() * 255.0f);
                     }
-
                     Marshal.Copy(bytes, 0, data.Scan0, bytes.Length);
                 }
                 finally
@@ -407,8 +385,8 @@ namespace MobiusEditor.Utility
                         result.bitmap.UnlockBits(data);
                     }
                 }
-                // EXPERIMENTAL: might be better not to cache this.
-                teamColorTextures[(filename, teamColor)] = (new Bitmap(result.bitmap), result.opaqueBounds);
+                // EXPERIMENTAL: might be better not to cache this?
+                //teamColorTextures[(filename, teamColor)] = (new Bitmap(result.bitmap), result.opaqueBounds);
             }
             else
             {
@@ -431,7 +409,7 @@ namespace MobiusEditor.Utility
                     {
                         continue;
                     }
-                    if ((tga == null) && (Path.GetExtension(entry.Name).ToLower() == ".tga"))
+                    if (tga == null && ".tga".Equals(Path.GetExtension(entry.Name), StringComparison.InvariantCultureIgnoreCase))
                     {
                         using (var stream = entry.Open())
                         using (var memStream = new MemoryStream())
@@ -440,7 +418,7 @@ namespace MobiusEditor.Utility
                             tga = new TGA(memStream);
                         }
                     }
-                    else if ((metadata == null) && (Path.GetExtension(entry.Name).ToLower() == ".meta"))
+                    else if (metadata == null && ".meta".Equals(Path.GetExtension(entry.Name), StringComparison.InvariantCultureIgnoreCase))
                     {
                         using (var stream = entry.Open())
                         using (var reader = new StreamReader(stream))

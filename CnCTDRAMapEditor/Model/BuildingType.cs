@@ -159,12 +159,13 @@ namespace MobiusEditor.Model
                 Direction = direction
             };
 
-            var render = MapRenderer.Render(gameType, theater, Point.Empty, Globals.TileSize, Globals.TileScale, mockBuilding);
+            var render = MapRenderer.Render(gameType, theater, Point.Empty, Globals.PreviewTileSize, Globals.PreviewTileScale, mockBuilding);
             if (!render.Item1.IsEmpty)
             {
                 var buildingPreview = new Bitmap(render.Item1.Width, render.Item1.Height);
                 using (var g = Graphics.FromImage(buildingPreview))
                 {
+                    MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
                     render.Item2(g);
                 }
                 Thumbnail = buildingPreview;

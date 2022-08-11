@@ -67,6 +67,7 @@ namespace MobiusEditor.Tools
             this.wallTypeMapPanel = wallTypeMapPanel;
             this.wallTypeMapPanel.BackColor = Color.White;
             this.wallTypeMapPanel.MaxZoom = 1;
+            this.wallTypeMapPanel.SmoothScale = Globals.PreviewSmoothScale;
             SelectedWallType = this.wallTypeComboBox.Types.First() as OverlayType;
         }
 
@@ -331,7 +332,7 @@ namespace MobiusEditor.Tools
                 foreach (var (cell, overlay) in previewMap.Overlay.Where(x => x.Value.Type.IsWall))
                 {
                     previewMap.Metrics.GetLocation(cell, out Point topLeft);
-                    var bounds = new Rectangle(new Point(topLeft.X * Globals.TileWidth, topLeft.Y * Globals.TileHeight), Globals.TileSize);
+                    var bounds = new Rectangle(new Point(topLeft.X * Globals.MapTileWidth, topLeft.Y * Globals.MapTileHeight), Globals.MapTileSize);
                     graphics.DrawRectangle(wallPen, bounds);
                 }
             }

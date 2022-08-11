@@ -13,6 +13,7 @@
 // GNU General Public License along with permitted additional restrictions 
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using MobiusEditor.Interface;
+using MobiusEditor.Render;
 using MobiusEditor.Utility;
 using System;
 using System.Drawing;
@@ -42,8 +43,6 @@ namespace MobiusEditor.Model
         public int Icons{ get; set; }
 
         public SmudgeTypeFlag Flag { get; private set; }
-
-        public Size RenderSize { get; set; }
 
         public Image Thumbnail { get; set; }
 
@@ -115,21 +114,15 @@ namespace MobiusEditor.Model
             var oldImage = Thumbnail;
             if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, Name, 0, out Tile tile))
             {
-                if ((tile.Image.Width * Globals.TileHeight) > (tile.Image.Height * Globals.TileWidth))
+                var tileSize = Globals.PreviewTileSize;
+                Rectangle overlayBounds = MapRenderer.RenderBounds(tile.Image.Size, new Size(1, 1), tileSize);
+                Bitmap th = new Bitmap(tileSize.Width, tileSize.Height);
+                using (Graphics g = Graphics.FromImage(th))
                 {
-                    RenderSize = new Size(
-                        tile.Image.Width * Globals.TileWidth / tile.Image.Width,
-                        tile.Image.Height * Globals.TileWidth / tile.Image.Width
-                    );
+                    MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
+                    g.DrawImage(tile.Image, overlayBounds);
                 }
-                else
-                {
-                    RenderSize = new Size(
-                        tile.Image.Width * Globals.TileHeight / tile.Image.Height,
-                        tile.Image.Height * Globals.TileHeight / tile.Image.Height
-                    );
-                }
-                Thumbnail = new Bitmap(tile.Image, tile.Image.Width, tile.Image.Height);
+                Thumbnail = th;
             }
             else
             {

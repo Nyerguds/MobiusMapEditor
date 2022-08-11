@@ -73,7 +73,7 @@ namespace MobiusEditor.Tools.Dialogs
             this.genericTypeMapPanel.MaxZoom = 8;
             this.genericTypeMapPanel.MinZoom = 1;
             this.genericTypeMapPanel.Name = "templateTypeMapPanel";
-            this.genericTypeMapPanel.Quality = 1;
+            this.genericTypeMapPanel.SmoothScale = false;
             this.genericTypeMapPanel.Size = new System.Drawing.Size(268, 221);
             this.genericTypeMapPanel.TabIndex = 3;
             this.genericTypeMapPanel.Zoom = 1;

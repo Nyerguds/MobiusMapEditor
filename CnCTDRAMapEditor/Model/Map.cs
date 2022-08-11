@@ -690,15 +690,16 @@ namespace MobiusEditor.Model
                 var locations = Bounds.Points().ToHashSet();
                 using (var g = Graphics.FromImage(fullBitmap))
                 {
+                    MapRenderer.SetRenderSettings(g, true);
                     MapLayerFlag toRender = MapLayerFlag.Template | (renderAll ? MapLayerFlag.OverlayAll | MapLayerFlag.Technos : MapLayerFlag.Resources);
                     MapRenderer.Render(gameType, this, g, locations, toRender, 1);
                 }
                 using (var g = Graphics.FromImage(croppedBitmap))
                 {
+                    MapRenderer.SetRenderSettings(g, true);
                     Matrix transform = new Matrix();
                     transform.Scale(previewScale, previewScale);
                     transform.Translate((scaledSize.Width - mapBounds.Width) / 2, (scaledSize.Height - mapBounds.Height) / 2);
-
                     g.Transform = transform;
                     g.Clear(Color.Black);
                     g.DrawImage(fullBitmap, new Rectangle(0, 0, mapBounds.Width, mapBounds.Height), mapBounds, GraphicsUnit.Pixel);

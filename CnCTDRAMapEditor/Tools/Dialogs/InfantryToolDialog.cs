@@ -16,7 +16,7 @@ namespace MobiusEditor.Tools.Dialogs
             Text = "Infantry";
         }
 
-        public override void Initialize(MapPanel mapPanel, MapLayerFlag activeLayers, ToolStripStatusLabel toolStatusLabel, ToolTip mouseToolTip, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> undoRedoList)
+        protected override void InitializeInternal(MapPanel mapPanel, MapLayerFlag activeLayers, ToolStripStatusLabel toolStatusLabel, ToolTip mouseToolTip, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> undoRedoList)
         {
             ObjectTypeListBox.Types = plugin.Map.InfantryTypes.OrderBy(t => t.ID);
             Tool = new InfantryTool(mapPanel, activeLayers, toolStatusLabel, ObjectTypeListBox,
