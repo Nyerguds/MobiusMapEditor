@@ -156,3 +156,5 @@ v1.4.0.4: [WIP]
 * Terrain and structure editing mode will now always draw the full green bounds underneath the red occupied cells.
 * Fixed incorrect footprint for desert-theater terrain element "rock2".
 * Optimised all calculations related to centering objects in their bounding box and drawing them on the map.
+* Infantry are now positioned more accurately.
+* Previews in tool windows will now use higher quality graphics than the map by default. This can be adjusted in the CnCTDRAMapEditor.exe.config file, by changing the "MapScaleFactor" and "PreviewScaleFactor".

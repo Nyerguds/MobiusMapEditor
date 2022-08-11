@@ -13,6 +13,7 @@
 // GNU General Public License along with permitted additional restrictions 
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using MobiusEditor.Interface;
+using MobiusEditor.Render;
 using MobiusEditor.Utility;
 using System;
 using System.Drawing;
@@ -127,7 +128,7 @@ namespace MobiusEditor.Model
         public void Init(TheaterType theater)
         {
             var oldImage = Thumbnail;
-            var size = new Size(Globals.MapTileWidth, Globals.MapTileHeight);
+            var size = new Size(Globals.PreviewTileWidth, Globals.PreviewTileHeight);
             var iconSize = Math.Max(IconWidth, IconHeight);
             var thumbnail = new Bitmap(iconSize * size.Width, iconSize * size.Height);
             var mask = new bool[IconWidth, IconHeight];
@@ -136,6 +137,7 @@ namespace MobiusEditor.Model
             bool found = false;
             using (var g = Graphics.FromImage(thumbnail))
             {
+                MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
                 g.Clear(Color.Transparent);
 
                 int icon = 0;
