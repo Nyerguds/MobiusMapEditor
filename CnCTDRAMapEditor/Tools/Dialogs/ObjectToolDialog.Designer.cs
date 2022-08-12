@@ -50,22 +50,25 @@ namespace MobiusEditor.Tools.Dialogs
             this.objectTypeListBox = new MobiusEditor.Controls.TypeListBox();
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
             this.objectProperties = new MobiusEditor.Controls.ObjectProperties();
+            this.tableLayoutPanel2.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // tableLayoutPanel1
             // 
-            this.tableLayoutPanel1.RowCount = 1;
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel1.AutoSize = true;
+            this.tableLayoutPanel1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.tableLayoutPanel1.ColumnCount = 2;
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel1.Controls.Add(this.objectTypeListBox, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.tableLayoutPanel2, 1, 0);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.ColumnCount = 2;
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel1.RowCount = 1;
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.Size = new System.Drawing.Size(565, 582);
             this.tableLayoutPanel1.TabIndex = 0;
             //
@@ -110,7 +113,7 @@ namespace MobiusEditor.Tools.Dialogs
             this.objectTypeListBox.FormattingEnabled = true;
             this.objectTypeListBox.Location = new System.Drawing.Point(4, 4);
             this.objectTypeListBox.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
-            this.objectTypeListBox.MissingThumbnail = ((System.Drawing.Image)(resources.GetObject("objectTypeComboBox.MissingThumbnail")));
+            this.objectTypeListBox.MissingThumbnail = ((System.Drawing.Image)(resources.GetObject("objectTypeListBox.MissingThumbnail")));
             this.objectTypeListBox.Name = "objectTypeListBox";
             this.objectTypeListBox.Size = new System.Drawing.Size(200, 582);
             this.objectTypeListBox.TabIndex = 2;
@@ -143,9 +146,10 @@ namespace MobiusEditor.Tools.Dialogs
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
             this.Text = "Map";
+            this.tableLayoutPanel2.ResumeLayout(false);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.ResumeLayout(false);
-
+            this.PerformLayout();
         }
 
         #endregion

@@ -55,17 +55,13 @@ namespace MobiusEditor.Tools
                     {
                         mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(navigationWidget.MouseCell, new Size(1, 1)), 1, 1));
                     }
-
                     selectedUnitType = value;
                     unitTypesBox.SelectedValue = selectedUnitType;
-
                     if (placementMode && (selectedUnitType != null))
                     {
                         mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(navigationWidget.MouseCell, new Size(1, 1)), 1, 1));
                     }
-
                     mockUnit.Type = selectedUnitType;
-
                     RefreshMapPanel();
                 }
             }

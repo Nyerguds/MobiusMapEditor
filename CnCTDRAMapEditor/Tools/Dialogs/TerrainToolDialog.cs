@@ -25,7 +25,7 @@ namespace MobiusEditor.Tools.Dialogs
 {
     public partial class TerrainToolDialog : ToolDialog<TerrainTool>
     {
-        public TypeComboBox TerrainTypeComboBox => terrainTypeComboBox;
+        public TypeListBox TerrainTypeComboBox => terrainTypeListBox;
 
         public MapPanel TerrainTypeMapPanel => terrainTypeMapPanel;
 

@@ -999,7 +999,7 @@ namespace MobiusEditor
                         break;
                     case ToolType.Smudge:
                         {
-                            toolDialog = new SmudgeToolDialog(this);
+                            toolDialog = new SmudgeToolDialog(this, plugin);
                         }
                         break;
                     case ToolType.Overlay:

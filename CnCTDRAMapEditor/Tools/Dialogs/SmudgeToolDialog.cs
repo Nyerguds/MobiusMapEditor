@@ -8,19 +8,25 @@ using MobiusEditor.Utility;
 
 namespace MobiusEditor.Tools.Dialogs
 {
-    public class SmudgeToolDialog : GenericToolDialog<SmudgeTool>
+    public partial class SmudgeToolDialog : ToolDialog<SmudgeTool>
     {
         public SmudgeToolDialog(Form parentForm)
             : base(parentForm)
         {
-            Text = "Smudge";
+            InitializeComponent();
+        }
+
+        public SmudgeToolDialog(Form parentForm, IGamePlugin plugin)
+            : this(parentForm)
+        {
+            smudgeProperties.Initialize(plugin, true);
         }
 
         protected override void InitializeInternal(MapPanel mapPanel, MapLayerFlag activeLayers, ToolStripStatusLabel toolStatusLabel,
             ToolTip mouseToolTip, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> undoRedoList)
         {
-            GenericTypeListBox.Types = plugin.Map.SmudgeTypes.Where(t => (t.Flag & SmudgeTypeFlag.Bib) == SmudgeTypeFlag.None).OrderBy(t => t.ID);
-            Tool = new SmudgeTool(mapPanel, activeLayers, toolStatusLabel, GenericTypeListBox, GenericTypeMapPanel, plugin, undoRedoList);
+            smudgeTypeListBox.Types = plugin.Map.SmudgeTypes.Where(t => (t.Flag & SmudgeTypeFlag.Bib) == SmudgeTypeFlag.None).OrderBy(t => t.ID);
+            Tool = new SmudgeTool(mapPanel, activeLayers, toolStatusLabel, smudgeTypeListBox, smudgeTypeMapPanel, smudgeProperties, plugin, undoRedoList);
         }
     }
 }

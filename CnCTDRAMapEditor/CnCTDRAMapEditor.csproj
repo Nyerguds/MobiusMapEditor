@@ -490,6 +490,9 @@
     <Compile Include="Tools\Dialogs\SmudgeToolDialog.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Tools\Dialogs\SmudgeToolDialog.Designer.cs">
+      <DependentUpon>SmudgeToolDialog.cs</DependentUpon>
+    </Compile>
     <Compile Include="Tools\Dialogs\TerrainToolDialog.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -635,6 +638,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Tools\Dialogs\GenericToolDialog.resx">
       <DependentUpon>GenericToolDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Tools\Dialogs\SmudgeToolDialog.resx">
+      <DependentUpon>SmudgeToolDialog.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Tools\Dialogs\TerrainToolDialog.resx">
       <DependentUpon>TerrainToolDialog.cs</DependentUpon>

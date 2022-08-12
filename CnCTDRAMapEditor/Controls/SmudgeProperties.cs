@@ -69,7 +69,6 @@ namespace MobiusEditor.Controls
         private void UpdateDataSource()
         {
             int[] data;
-
             if (smudge != null && smudge.Type.Icons > 1)
                 data = Enumerable.Range(0, smudge.Type.Icons).ToArray();
             else
@@ -109,14 +108,6 @@ namespace MobiusEditor.Controls
         private void comboBox_SelectedValueChanged(object sender, EventArgs e)
         {
             foreach (Binding binding in (sender as ComboBox).DataBindings)
-            {
-                binding.WriteValue();
-            }
-        }
-
-        private void nud_ValueChanged(object sender, EventArgs e)
-        {
-            foreach (Binding binding in (sender as NumericUpDown).DataBindings)
             {
                 binding.WriteValue();
             }

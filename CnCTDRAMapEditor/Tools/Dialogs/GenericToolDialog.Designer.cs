@@ -53,45 +53,45 @@ namespace MobiusEditor.Tools.Dialogs
             // 
             // tableLayoutPanel1
             // 
-            this.tableLayoutPanel1.ColumnCount = 1;
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel1.ColumnCount = 2;
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.tableLayoutPanel1.Controls.Add(this.genericTypeMapPanel, 1, 0);
             this.tableLayoutPanel1.Controls.Add(this.genericTypeListBox, 0, 0);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.ColumnCount = 2;
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel1.RowCount = 1;
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.Size = new System.Drawing.Size(474, 254);
             this.tableLayoutPanel1.TabIndex = 0;
             // 
-            // templateTypeMapPanel
+            // genericTypeMapPanel
             // 
             this.genericTypeMapPanel.Dock = System.Windows.Forms.DockStyle.Right;
             this.genericTypeMapPanel.Location = new System.Drawing.Point(3, 30);
             this.genericTypeMapPanel.MaxZoom = 8;
             this.genericTypeMapPanel.MinZoom = 1;
-            this.genericTypeMapPanel.Name = "templateTypeMapPanel";
+            this.genericTypeMapPanel.Name = "genericTypeMapPanel";
             this.genericTypeMapPanel.SmoothScale = false;
             this.genericTypeMapPanel.Size = new System.Drawing.Size(268, 221);
             this.genericTypeMapPanel.TabIndex = 3;
             this.genericTypeMapPanel.Zoom = 1;
             //
-            // templateTypeListBox
+            // genericTypeListBox
             //
             this.genericTypeListBox.DisplayMember = "Name";
             this.genericTypeListBox.Dock = System.Windows.Forms.DockStyle.Left;
             this.genericTypeListBox.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawVariable;
             this.genericTypeListBox.FormattingEnabled = true;
             this.genericTypeListBox.Location = new System.Drawing.Point(3, 3);
-            this.genericTypeListBox.MissingThumbnail = ((System.Drawing.Image)(resources.GetObject("templateTypeComboBox.MissingThumbnail")));
-            this.genericTypeListBox.Name = "templateTypeListBox";
+            this.genericTypeListBox.MissingThumbnail = ((System.Drawing.Image)(resources.GetObject("genericTypeListBox.MissingThumbnail")));
+            this.genericTypeListBox.Name = "genericTypeListBox";
             this.genericTypeListBox.Size = new System.Drawing.Size(268, 268);
             this.genericTypeListBox.TabIndex = 2;
             this.genericTypeListBox.ValueMember = "Type";
             // 
-            // TemplateToolDialog
+            // GenericToolDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -103,7 +103,7 @@ namespace MobiusEditor.Tools.Dialogs
             this.MinimizeBox = false;
             this.MinimumSize = new System.Drawing.Size(500, 293);
             this.Size = new System.Drawing.Size(560, 293);
-            this.Name = "TemplateToolDialog";
+            this.Name = "GenericToolDialog";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;

@@ -690,7 +690,7 @@ namespace MobiusEditor.Model
                 var locations = Bounds.Points().ToHashSet();
                 using (var g = Graphics.FromImage(fullBitmap))
                 {
-                    MapRenderer.SetRenderSettings(g, true);
+                    MapRenderer.SetRenderSettings(g, false);
                     MapLayerFlag toRender = MapLayerFlag.Template | (renderAll ? MapLayerFlag.OverlayAll | MapLayerFlag.Technos : MapLayerFlag.Resources);
                     MapRenderer.Render(gameType, this, g, locations, toRender, 1);
                 }

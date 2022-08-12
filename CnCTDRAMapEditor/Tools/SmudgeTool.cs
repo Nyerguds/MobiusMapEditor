@@ -16,10 +16,10 @@ using MobiusEditor.Controls;
 using MobiusEditor.Event;
 using MobiusEditor.Interface;
 using MobiusEditor.Model;
+using MobiusEditor.Render;
 using MobiusEditor.Utility;
 using MobiusEditor.Widgets;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
@@ -31,11 +31,14 @@ namespace MobiusEditor.Tools
     {
         private readonly TypeListBox smudgeTypeListBox;
         private readonly MapPanel smudgeTypeMapPanel;
+        private readonly SmudgeProperties smudgeProperties;
 
         private Map previewMap;
         protected override Map RenderMap => previewMap;
 
         private bool placementMode;
+
+        private readonly Smudge mockSmudge;
 
         private Smudge selectedSmudge;
         private int selectedSmudgeCell;
@@ -55,29 +58,36 @@ namespace MobiusEditor.Tools
                     }
                     selectedSmudgeType = value;
                     smudgeTypeListBox.SelectedValue = selectedSmudgeType;
-
                     if (placementMode && (selectedSmudgeType != null))
                     {
                         mapPanel.Invalidate(map, navigationWidget.MouseCell);
                     }
-
+                    mockSmudge.Icon = 0;
+                    mockSmudge.Type = selectedSmudgeType;
                     RefreshMapPanel();
                 }
             }
         }
 
-        public SmudgeTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, TypeListBox smudgeTypeListBox, MapPanel smudgeTypeMapPanel, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> url)
+        public SmudgeTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, TypeListBox smudgeTypeListBox, MapPanel smudgeTypeMapPanel, SmudgeProperties smudgeProperties, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> url)
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
             previewMap = map;
+            mockSmudge = new Smudge()
+            {
+                Type = smudgeTypeListBox.Types.First() as SmudgeType,
+                Icon = 0
+            };
+            mockSmudge.PropertyChanged += MockSmudge_PropertyChanged;
 
             this.smudgeTypeListBox = smudgeTypeListBox;
             this.smudgeTypeListBox.SelectedIndexChanged += SmudgeTypeComboBox_SelectedIndexChanged;
-
             this.smudgeTypeMapPanel = smudgeTypeMapPanel;
             this.smudgeTypeMapPanel.BackColor = Color.White;
             this.smudgeTypeMapPanel.MaxZoom = 1;
             this.smudgeTypeMapPanel.SmoothScale = Globals.PreviewSmoothScale;
+            this.smudgeProperties = smudgeProperties;
+            this.smudgeProperties.Smudge = mockSmudge;
 
             navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
 
@@ -112,6 +122,11 @@ namespace MobiusEditor.Tools
                     UpdateStatus();
                 }
             }
+        }
+
+        private void MockSmudge_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            RefreshMapPanel();
         }
 
         private void SelectedSmudge_PropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -193,11 +208,7 @@ namespace MobiusEditor.Tools
             {
                 if (SelectedSmudgeType != null)
                 {
-                    var smudge = new Smudge
-                    {
-                        Type = SelectedSmudgeType,
-                        Icon = 0,
-                    };
+                    var smudge = mockSmudge.Clone();
                     map.Smudge[location] = smudge;
                     mapPanel.Invalidate(map, location);
 
@@ -299,7 +310,8 @@ namespace MobiusEditor.Tools
                     }
                     else
                     {
-                        SelectedSmudgeType = smudge.Type; 
+                        SelectedSmudgeType = smudge.Type;
+                        mockSmudge.Icon = smudge.Icon;
                     }
                 }
             }
@@ -307,7 +319,27 @@ namespace MobiusEditor.Tools
 
         private void RefreshMapPanel()
         {
-            smudgeTypeMapPanel.MapImage = SelectedSmudgeType?.Thumbnail;
+
+            var oldImage = smudgeTypeMapPanel.MapImage;
+            if (mockSmudge.Type != null)
+            {
+                var smudgePreview = new Bitmap(Globals.PreviewTileWidth, Globals.PreviewTileWidth);
+                using (var g = Graphics.FromImage(smudgePreview))
+                {
+                    MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
+                    MapRenderer.Render(map.Theater, new Point(0, 0), Globals.PreviewTileSize, mockSmudge).Item2(g);
+                }
+                smudgeTypeMapPanel.MapImage = smudgePreview;
+            }
+            else
+            {
+                smudgeTypeMapPanel.MapImage = null;
+            }
+            if (oldImage != null)
+            {
+                try { oldImage.Dispose(); }
+                catch { /* ignore */ }
+            }
         }
 
         private void UpdateStatus()
@@ -336,7 +368,9 @@ namespace MobiusEditor.Tools
                     {
                         if (previewMap.Smudge[cell] == null)
                         {
-                            previewMap.Smudge[cell] = new Smudge { Type = SelectedSmudgeType, Icon = 0, Tint = Color.FromArgb(128, Color.White) };
+                            Smudge mock = mockSmudge.Clone();
+                            mock.Tint = Color.FromArgb(128, Color.White);
+                            previewMap.Smudge[cell] = mock;
                         }
                     }
                 }
