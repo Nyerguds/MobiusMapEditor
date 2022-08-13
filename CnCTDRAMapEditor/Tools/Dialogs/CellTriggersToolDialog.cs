@@ -12,7 +12,10 @@
 // distributed with this program. You should have received a copy of the 
 // GNU General Public License along with permitted additional restrictions 
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
+using System;
+using System.Drawing;
 using System.Linq;
+using System.Reflection;
 using System.Windows.Forms;
 using MobiusEditor.Controls;
 using MobiusEditor.Event;
@@ -24,7 +27,7 @@ namespace MobiusEditor.Tools.Dialogs
 {
     public partial class CellTriggersToolDialog : ToolDialog<CellTriggersTool>
     {
-        public ComboBox TriggerCombo => triggerCombo;
+        public ComboBox TriggerCombo => triggerComboBox;
 
         public CellTriggersToolDialog(Form parentForm)
             : base(parentForm)
@@ -34,8 +37,39 @@ namespace MobiusEditor.Tools.Dialogs
 
         protected override void InitializeInternal(MapPanel mapPanel, MapLayerFlag activeLayers, ToolStripStatusLabel toolStatusLabel, ToolTip mouseToolTip, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> undoRedoList)
         {
-            TriggerCombo.DataSource = plugin.Map.Triggers.Select(t => t.Name).ToArray();
             Tool = new CellTriggersTool(mapPanel, activeLayers, toolStatusLabel, TriggerCombo, plugin, undoRedoList);
+        }
+
+        private void LblTriggerInfo_Paint(Object sender, PaintEventArgs e)
+        {
+            Control lbl = sender as Control;
+            int iconDim = (int)Math.Round(Math.Min(lbl.ClientSize.Width, lbl.ClientSize.Height) * .8f);
+            int x = (lbl.ClientSize.Width - iconDim) / 2;
+            int y = (lbl.ClientSize.Height - iconDim) / 2;
+            e.Graphics.DrawIcon(SystemIcons.Information, new Rectangle(x, y, iconDim, iconDim));
+        }
+
+
+        private void LblTriggerInfo_MouseEnter(Object sender, EventArgs e)
+        {
+            Control target = sender as Control;
+            if (target == null || Tool == null || Tool.TriggerToolTip == null)
+            {
+                this.toolTip1.Hide(target);
+                return;
+            }
+            Point resPoint = target.PointToScreen(new Point(0, target.Height));
+            MethodInfo m = toolTip1.GetType().GetMethod("SetTool",
+                       BindingFlags.Instance | BindingFlags.NonPublic);
+            // private void SetTool(IWin32Window win, string text, TipInfo.Type type, Point position)
+            m.Invoke(toolTip1, new object[] { target, Tool.TriggerToolTip, 2, resPoint });
+            //this.toolTip1.Show(triggerToolTip, target, target.Width, 0, 10000);
+        }
+
+        private void LblTriggerInfo_MouseLeave(Object sender, EventArgs e)
+        {
+            Control target = sender as Control;
+            this.toolTip1.Hide(target);
         }
     }
 }

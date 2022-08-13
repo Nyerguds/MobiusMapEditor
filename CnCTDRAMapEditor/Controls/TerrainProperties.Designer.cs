@@ -42,61 +42,78 @@ namespace MobiusEditor.Controls
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            this.label5 = new System.Windows.Forms.Label();
+            this.label1 = new System.Windows.Forms.Label();
             this.triggerComboBox = new MobiusEditor.Controls.PropertiesComboBox();
+            this.lblTriggerInfo = new System.Windows.Forms.Label();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // tableLayoutPanel1
             // 
-            this.tableLayoutPanel1.ColumnCount = 2;
+            this.tableLayoutPanel1.AutoSize = true;
+            this.tableLayoutPanel1.ColumnCount = 3;
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 31.25F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 68.75F));
-            this.tableLayoutPanel1.Controls.Add(this.label5, 0, 0);
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 28F));
+            this.tableLayoutPanel1.Controls.Add(this.label1, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.triggerComboBox, 1, 0);
+            this.tableLayoutPanel1.Controls.Add(this.lblTriggerInfo, 2, 0);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
-            this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.RowCount = 1;
+            this.tableLayoutPanel1.RowCount = 3;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(336, 38);
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(230, 38);
             this.tableLayoutPanel1.TabIndex = 0;
             // 
-            // label5
+            // label1
             // 
-            this.label5.AutoSize = true;
-            this.label5.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label5.Location = new System.Drawing.Point(4, 0);
-            this.label5.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(97, 38);
-            this.label5.TabIndex = 4;
-            this.label5.Text = "Trigger";
-            this.label5.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.label1.AutoSize = true;
+            this.label1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.label1.Location = new System.Drawing.Point(3, 0);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(57, 28);
+            this.label1.TabIndex = 4;
+            this.label1.Text = "Trigger";
+            this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // triggerComboBox
             // 
             this.triggerComboBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.triggerComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.triggerComboBox.FormattingEnabled = true;
-            this.triggerComboBox.Location = new System.Drawing.Point(109, 5);
-            this.triggerComboBox.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.triggerComboBox.Location = new System.Drawing.Point(66, 3);
             this.triggerComboBox.Name = "triggerComboBox";
-            this.triggerComboBox.Size = new System.Drawing.Size(223, 28);
+            this.triggerComboBox.Size = new System.Drawing.Size(132, 28);
             this.triggerComboBox.TabIndex = 9;
             this.triggerComboBox.SelectedIndexChanged += new System.EventHandler(this.comboBox_SelectedValueChanged);
             // 
-            // TriggerProperties
+            // lblTriggerInfo
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
+            this.lblTriggerInfo.AutoSize = true;
+            this.lblTriggerInfo.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblTriggerInfo.Location = new System.Drawing.Point(201, 0);
+            this.lblTriggerInfo.Margin = new System.Windows.Forms.Padding(0);
+            this.lblTriggerInfo.Name = "lblTriggerInfo";
+            this.lblTriggerInfo.Size = new System.Drawing.Size(29, 27);
+            this.lblTriggerInfo.TabIndex = 10;
+            this.lblTriggerInfo.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.lblTriggerInfo.Paint += new System.Windows.Forms.PaintEventHandler(this.LblTriggerInfo_Paint);
+            this.lblTriggerInfo.MouseEnter += new System.EventHandler(this.LblTriggerInfo_MouseEnter);
+            this.lblTriggerInfo.MouseLeave += new System.EventHandler(this.LblTriggerInfo_MouseLeave);
+            // 
+            // TerrainProperties
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.tableLayoutPanel1);
-            this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.Name = "TriggerProperties";
-            this.Size = new System.Drawing.Size(336, 38);
+            this.Name = "TerrainProperties";
+            this.Size = new System.Drawing.Size(230, 38);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
             this.ResumeLayout(false);
@@ -106,7 +123,9 @@ namespace MobiusEditor.Controls
         #endregion
 
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
-        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.Label label1;
         private MobiusEditor.Controls.PropertiesComboBox triggerComboBox;
+        private System.Windows.Forms.ToolTip toolTip1;
+        private System.Windows.Forms.Label lblTriggerInfo;
     }
 }

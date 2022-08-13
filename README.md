@@ -118,7 +118,7 @@ v1.4.0.3:
 
 v1.4.0.4: [WIP]
 
-* Fixed dimensions of RA's ore mine, Snow theater ice floes and Interior theater boxes.
+* Fixed dimensions of RA's ore mine, Snow theater ice floes and Interior theater boxes, and one of the Desert theater rocks in TD.
 * Added \*.ini to the list of possible extensions for opening RA maps. Apparently before I only added it for saving.
 * The editor will now accept nonstandard extensions from drag & drop without any issues. For TD maps, it will need to find the accompanying bin or ini file with the correct extension.
 * Files opened from filenames with nonstandard extensions will not change these extensions when saving the file. This also means RA maps opened from a .ini file will no longer change the extension to .mpr when saving.
@@ -154,9 +154,14 @@ v1.4.0.4: [WIP]
 * Object previews will now obey the "Quality" factor set in the config file. However, they will always be displayed using pixel scaling, because smooth scaling looks awful on the zoomed-in preview panels.
 * Fixed incorrect cleanup when switching between tools, which could cause odd bugs like two selected cells being visible on the tileset tool.
 * Terrain and structure editing mode will now always draw the full green bounds underneath the red occupied cells.
-* Fixed incorrect footprint for desert-theater terrain element "rock2".
 * Optimised all calculations related to centering objects in their bounding box and drawing them on the map.
 * Infantry are now positioned more accurately.
 * The terrain tool now uses a list box like all the other tools, instead of the awkward dropdown list.
 * The smudge tool now allows setting the size in the preview window, and picking craters with a different size from the map.
 * Previews in tool windows will now use higher quality graphics than the map by default. This can be adjusted in the CnCTDRAMapEditor.exe.config file, by changing the "MapScaleFactor" and "PreviewScaleFactor".
+* When removing a trigger, all celltriggers and objects linking to that trigger will now get their trigger cleared.
+* The trigger proposed for linking to objects and cells are now filtered out to only those triggers with an Event that can be triggered by that object type.
+* An Info icon next to the trigger dropdowns will give an explanation of which trigger events work for that type.
+* For celltriggers and waypoints, the item selected in the tool dropdown will now be highlighted on the map in yellow.
+* A logical default order is now selected when you pick a unit to place.
+* Editing the triggers can no longer kick you out of the Celltrigger tool.

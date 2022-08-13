@@ -51,9 +51,9 @@ namespace MobiusEditor.Model
 
         public override bool Equals(object obj)
         {
-            if (obj is HouseType)
+            if (obj is HouseType house)
             {
-                return this == obj;
+                return ReferenceEquals(this, obj) || (house.Name == Name && house.ID == ID);
             }
             else if (obj is sbyte)
             {

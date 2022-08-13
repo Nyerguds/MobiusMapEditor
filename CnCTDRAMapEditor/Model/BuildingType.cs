@@ -51,6 +51,10 @@ namespace MobiusEditor.Model
 
         public Image Thumbnail { get; set; }
 
+        public bool IsArmed => false; // Not actually true, but irrelevant for practical purposes; their Mission is not set in the ini file.
+
+        public bool IsHarvester => false;
+
         public bool IsSingleFrame { get; set; }
 
         public BuildingType(sbyte id, string name, string textId, bool[,] occupyMask, bool hasBib, string ownerHouse, TheaterType[] theaters, bool isFake, bool hasTurret, bool isSingleFrame, string factoryOverlay)

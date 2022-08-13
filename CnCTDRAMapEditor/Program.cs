@@ -366,8 +366,12 @@ namespace MobiusEditor
             if (File.Exists(currentVersionConfigFile))
             {
                 Properties.Settings.Default.Reload();
+                // Ensures there is no buildup of ancient obsolete settings in the file.
+                File.Delete(currentVersionConfigFile);
             }
             versionSetter(currentVersion.ToString());
+            // This seems to trigger the system to see all items as "dirty" so they get re-saved.
+            Properties.Settings.Default.Upgrade();
             Properties.Settings.Default.Save();
             if (otherSettingsFolders != null && otherSettingsFolders.Length > 0)
             {

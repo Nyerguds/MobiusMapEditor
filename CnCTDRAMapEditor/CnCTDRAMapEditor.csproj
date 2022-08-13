@@ -279,6 +279,7 @@
     <Compile Include="Interface\ICellOverlapper.cs" />
     <Compile Include="Interface\IGamePlugin.cs" />
     <Compile Include="Interface\INamedType.cs" />
+    <Compile Include="Interface\ITechno.cs" />
     <Compile Include="Interface\ITechnoType.cs" />
     <Compile Include="Interface\ITool.cs" />
     <Compile Include="Interface\IWidget.cs" />

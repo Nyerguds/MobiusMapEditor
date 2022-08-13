@@ -17,7 +17,7 @@ using System.Windows.Forms;
 
 namespace MobiusEditor.Controls
 {
-    public partial class PropertiesComboBox : ComboBox
+    public partial class PropertiesComboBox : ComboBoxSmartWidth
     {
         private bool savedAutoClose;
 

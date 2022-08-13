@@ -287,7 +287,6 @@ namespace MobiusEditor
             {
                 if (plugin != null)
                 {
-                    plugin.Map.Triggers.CollectionChanged -= Triggers_CollectionChanged;
                     plugin.Dispose();
                 }
                 plugin = null;
@@ -317,7 +316,6 @@ namespace MobiusEditor
                     plugin.Map.BasicSection.Author = SteamFriends.GetPersonaName();
                 }
 
-                plugin.Map.Triggers.CollectionChanged += Triggers_CollectionChanged;
                 mapPanel.MapImage = plugin.MapImage;
 
                 filename = null;
@@ -601,11 +599,14 @@ namespace MobiusEditor
 
                 foreach (var item in sameTriggers.ToArray())
                 {
-                    plugin.Map.Triggers.Add(item.NewTrigger.Clone());
-                    plugin.Map.Triggers.Remove(item.OldTrigger);
+                    if (!item.NewTrigger.Equals(item.OldTrigger))
+                    {
+                        plugin.Map.Triggers.Add(item.NewTrigger.Clone());
+                        plugin.Map.Triggers.Remove(item.OldTrigger);
+                    }
                 }
-
                 plugin.Dirty = true;
+                RefreshAvailableTools();
             }
         }
 
@@ -812,7 +813,6 @@ namespace MobiusEditor
 
             if (plugin != null)
             {
-                plugin.Map.Triggers.CollectionChanged -= Triggers_CollectionChanged;
                 plugin.Dispose();
             }
             plugin = null;
@@ -854,8 +854,6 @@ namespace MobiusEditor
                 return false;
 #endif
             }
-
-            plugin.Map.Triggers.CollectionChanged += Triggers_CollectionChanged;
             mapPanel.MapImage = plugin.MapImage;
 
             plugin.Dirty = false;
@@ -936,7 +934,7 @@ namespace MobiusEditor
                 if (plugin.Map.BuildingTypes.Any()) availableToolTypes |= ToolType.Building;
                 if (plugin.Map.OverlayTypes.Any(t => t.IsResource)) availableToolTypes |= ToolType.Resources;
                 if (plugin.Map.OverlayTypes.Any(t => t.IsWall)) availableToolTypes |= ToolType.Wall;
-                if (plugin.Map.Triggers.Any()) availableToolTypes |= ToolType.CellTrigger;
+                if (plugin.Map.FilterCellTriggers().Any()) availableToolTypes |= ToolType.CellTrigger;
             }
 
             foreach (var toolStripButton in viewToolStripButtons)
@@ -1137,11 +1135,6 @@ namespace MobiusEditor
             {
                 ClampForm(tool);
             }
-        }
-
-        private void Triggers_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
-        {
-            RefreshAvailableTools();
         }
 
         private void mainToolStripButton_Click(object sender, EventArgs e)

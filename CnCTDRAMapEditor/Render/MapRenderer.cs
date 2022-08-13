@@ -388,7 +388,7 @@ namespace MobiusEditor.Render
             if (building.Strength <= 128 && !building.Type.IsSingleFrame)
             {
                 maxIcon = Globals.TheTilesetManager.GetTileDataLength(theater.Tilesets, building.Type.Tilename);
-                hasCollapseFrame = gameType == GameType.TiberianDawn && maxIcon % 2 == 1;
+                hasCollapseFrame = gameType == GameType.TiberianDawn && maxIcon > 1 && maxIcon % 2 == 1;
                 damageIcon = maxIcon / 2;
                 collapseIcon = hasCollapseFrame ? maxIcon - 1 : damageIcon;
             }

@@ -21,7 +21,7 @@ using MobiusEditor.Interface;
 
 namespace MobiusEditor.Model
 {
-    public class Terrain : ICellOverlapper, ICellOccupier, INotifyPropertyChanged, ICloneable
+    public class Terrain : ITechno, ICellOverlapper, ICellOccupier, INotifyPropertyChanged, ICloneable
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -38,14 +38,22 @@ namespace MobiusEditor.Model
         private string trigger = Model.Trigger.None;
         public string Trigger { get => trigger; set => SetField(ref trigger, value); }
 
-        public Color Tint { get; set; } = Color.White;
+        private HouseType house;
+        public HouseType House { get => house; set => SetField(ref house, value); }
 
+        private int strength = 256;
+        public int Strength { get => strength; set => SetField(ref strength, value); }
+
+        public Color Tint { get; set; } = Color.White;
+                
         public Terrain Clone()
         {
             return new Terrain()
             {
                 Type = Type,
                 Icon = Icon,
+                House = House,
+                Strength = Strength,
                 Trigger = Trigger
             };
         }

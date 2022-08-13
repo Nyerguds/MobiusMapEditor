@@ -113,7 +113,7 @@ namespace MobiusEditor.Model
         }
     }
 
-    public class Trigger : INamedType, ICloneable
+    public class Trigger : INamedType, ICloneable, IEquatable<Trigger>
     {
         public static readonly string None = "None";
 
@@ -129,9 +129,9 @@ namespace MobiusEditor.Model
 
         public TriggerEvent Event2 { get; private set; } = new TriggerEvent { EventType = TriggerEvent.None };
 
-        public TriggerAction Action1 { get; private set; } = new TriggerAction { ActionType = TriggerEvent.None };
+        public TriggerAction Action1 { get; private set; } = new TriggerAction { ActionType = TriggerAction.None };
 
-        public TriggerAction Action2 { get; private set; } = new TriggerAction { ActionType = TriggerEvent.None };
+        public TriggerAction Action2 { get; private set; } = new TriggerAction { ActionType = TriggerAction.None };
 
         public Trigger Clone()
         {
@@ -150,18 +150,18 @@ namespace MobiusEditor.Model
 
         public override bool Equals(object obj)
         {
-            if (obj is Trigger)
+            if (obj is Trigger trig)
             {
-                return this == obj;
+                return this.Equals(trig);
             }
-            else if (obj is string)
+            else if (obj is string str)
             {
-                return string.Equals(Name, obj as string, StringComparison.OrdinalIgnoreCase);
+                return string.Equals(Name, str, StringComparison.OrdinalIgnoreCase);
             }
             return base.Equals(obj);
         }
 
-        public bool EqualsOther(Trigger other)
+        public Boolean Equals(Trigger other)
         {
             return ReferenceEquals(this, other)
                 || (other != null

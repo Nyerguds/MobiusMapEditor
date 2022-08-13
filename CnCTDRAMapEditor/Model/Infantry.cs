@@ -32,7 +32,7 @@ namespace MobiusEditor.Model
         LowerRight = 4
     }
 
-    public class Infantry : INotifyPropertyChanged, ICloneable
+    public class Infantry : ITechno, INotifyPropertyChanged, ICloneable
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -44,7 +44,7 @@ namespace MobiusEditor.Model
         private HouseType house;
         public HouseType House { get => house; set => SetField(ref house, value); }
 
-        private int strength;
+        private int strength = 256;
         public int Strength { get => strength; set => SetField(ref strength, value); }
 
         private DirectionType direction;

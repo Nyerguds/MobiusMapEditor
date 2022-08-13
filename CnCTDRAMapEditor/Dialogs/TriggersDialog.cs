@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Text;
 using System.Windows.Forms;
 
 namespace MobiusEditor.Dialogs
@@ -54,9 +55,11 @@ namespace MobiusEditor.Dialogs
                     typeLabel.Visible = typeComboBox.Visible = false;
                     event2Label.Visible = event2ComboBox.Visible = event2Flp.Visible = false;
                     action2Label.Visible = action2ComboBox.Visible = action2Flp.Visible = false;
+                    btnCheck.Visible = true;
                     break;
                 case GameType.RedAlert:
                     teamLabel.Visible = teamComboBox.Visible = false;
+                    btnCheck.Visible = false;
                     break;
             }
 
@@ -260,22 +263,7 @@ namespace MobiusEditor.Dialogs
             // If user pressed ok, nevermind,just go on.
             if (this.DialogResult == DialogResult.OK)
                 return;
-            bool hasChanges = triggers.Count != backupTriggers.Count;
-            if (!hasChanges)
-            {
-                foreach (Trigger trig in triggers)
-                {
-                    Trigger oldTrig = backupTriggers.Find(t => t.Name.Equals(trig.Name));
-                    if (oldTrig == null)
-                    {
-                        hasChanges = true;
-                        break;
-                    }
-                    hasChanges = !trig.EqualsOther(oldTrig);
-                    if (hasChanges)
-                        break;
-                }
-            }
+            bool hasChanges = CheckForChanges();
             if (hasChanges)
             {
                 DialogResult dr =  MessageBox.Show("Triggers have been changed! Are you sure you want to cancel?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
@@ -284,6 +272,26 @@ namespace MobiusEditor.Dialogs
                 this.DialogResult = DialogResult.None;
                 e.Cancel = true;
             }
+        }
+
+        private Boolean CheckForChanges()
+        {
+            // Might need to migrate this to the map.
+            if (triggers.Count != backupTriggers.Count)
+                return true;
+            foreach (Trigger trig in triggers)
+            {
+                Trigger oldTrig = backupTriggers.Find(t => t.Name.Equals(trig.Name));
+                if (oldTrig == null)
+                {
+                    return true;
+                }
+                if (!trig.Equals(oldTrig))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         private void addTriggerToolStripMenuItem_Click(object sender, EventArgs e)
@@ -905,5 +913,158 @@ namespace MobiusEditor.Dialogs
                 }
             }
         }
+
+        private void btnCheck_Click(Object sender, EventArgs e)
+        {
+            if (CheckForChanges())
+            {
+                DialogResult dr = MessageBox.Show("Warning! There are changes in the triggers. This function works best if the triggers match the state of the currently edited map. Are you sure you want to continue?", "Triggers check", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                if (dr == DialogResult.No)
+                {
+                    return;
+                }
+            }
+            string errors = String.Empty;
+            if (plugin.GameType == GameType.TiberianDawn)
+            {
+                errors = CheckTiberianDawnTriggers();
+            }
+            else if (plugin.GameType == GameType.RedAlert)
+            {
+                errors = CheckRedAlertTriggers();
+            }
+            if (String.IsNullOrEmpty(errors))
+            {
+                errors = "No issues were encountered.";
+            }
+            MessageBox.Show(errors, "Triggers check", MessageBoxButtons.OK);
+        }
+
+        private string CheckTiberianDawnTriggers()
+        {
+            // Might need to migrate this to the plugin.
+            HouseType player = plugin.Map.HouseTypes.Where(t => t.Equals(plugin.Map.BasicSection.Player)).FirstOrDefault() ?? plugin.Map.HouseTypes.First();
+            
+            List<string> errors = new List<string>();
+            List<string> curErrors = new List<string>();
+            List<ITechno> mapTechnos = plugin.Map.GetAllTechnos().ToList();
+            foreach (Trigger trigger in this.triggers)
+            {
+                curErrors.Clear();
+                string trigName = trigger.Name;
+                string event1 = trigger.Event1.EventType;
+                string action1 = trigger.Action1.ActionType;
+                bool noOwner = String.IsNullOrEmpty(trigger.House) || trigger.House == "None";
+                bool isPlayer = !noOwner && player.Equals(trigger.House);
+                //bool playerIsNonstandard = !player.Equals(TiberianDawn.HouseTypes.Good) && !player.Equals(TiberianDawn.HouseTypes.Bad);
+                //bool isGoodguy = String.Equals(trigger.House, TiberianDawn.HouseTypes.Good.Name, StringComparison.InvariantCultureIgnoreCase);
+                //bool isBadguy = String.Equals(trigger.House, TiberianDawn.HouseTypes.Bad.Name, StringComparison.InvariantCultureIgnoreCase);
+                bool isLinked = mapTechnos.Any(tech => String.Equals(trigName, tech.Trigger, StringComparison.InvariantCultureIgnoreCase));
+                //bool isLinkedToStructs = mapTechnos.Any(tech => tech is Building && String.Equals(trigName, tech.Trigger, StringComparison.InvariantCultureIgnoreCase));
+                //bool isLinkedToUnits = mapTechnos.Any(tech => (tech is Unit || tech is Infantry) && String.Equals(trigName, tech.Trigger, StringComparison.InvariantCultureIgnoreCase));
+                //bool isLinkedToTrees = mapTechnos.Any(tech => (tech is Terrain) && String.Equals(trigName, tech.Trigger, StringComparison.InvariantCultureIgnoreCase));
+                bool isCellTrig = plugin.Map.CellTriggers.Any(c => c.Value.Trigger == trigName);
+                bool hasTeam = !String.IsNullOrEmpty(trigger.Action1.Team) && trigger.Action1.Team != TeamType.None;
+                bool isAnd = trigger.PersistentType == TriggerPersistentType.SemiPersistent;
+                //bool isOr = trigger.PersistentType == TriggerPersistentType.Persistent;
+                
+                // Event checks
+                if (event1 == TiberianDawn.EventTypes.EVENT_PLAYER_ENTERED && noOwner)
+                {
+                    curErrors.Add("A \"Player Enters\" trigger without a House set will cause a game crash. If this is only used for detecting capturing, the House will not be checked, but it must still be set.");
+                }
+                if (event1 == TiberianDawn.EventTypes.EVENT_ATTACKED && !noOwner)
+                {
+                    if (isLinked)
+                    {
+                        curErrors.Add("\"Attacked\" triggers with a House set will trigger when that House is attacked. To make a trigger for checking if objects are attacked, leave the House empty.");
+                    }
+                    else if (!isPlayer)
+                    {
+                        curErrors.Add("\"Attacked\" triggers with a House set will trigger when that House is attacked. However, this logic only works for the player's House.");
+                    }
+                }
+                if (event1 == TiberianDawn.EventTypes.EVENT_ANY && action1 != TiberianDawn.ActionTypes.ACTION_WINLOSE)
+                {
+                    curErrors.Add("The \"Any\" event will trigger on literally anything that can happen to a linked object. It should normally only be used with the \"Cap=Win/Des=Lose\" action.");
+                }
+                if (event1 == TiberianDawn.EventTypes.EVENT_NBUILDINGS_DESTROYED && trigger.Event1.Data == 0)
+                {
+                    curErrors.Add("The amount of buildings that needs to be destroyed is 0.");
+                }
+                if (event1 == TiberianDawn.EventTypes.EVENT_NUNITS_DESTROYED && trigger.Event1.Data == 0)
+                {
+                    curErrors.Add("The amount of units that needs to be destroyed is 0.");
+                }
+                // Action checks
+                if (action1 == TiberianDawn.ActionTypes.ACTION_AIRSTRIKE && event1 == TiberianDawn.EventTypes.EVENT_PLAYER_ENTERED && !isPlayer && isCellTrig)
+                {
+                    curErrors.Add("This will give the Airstrike to the House that activates the Celltrigger. This will grant the AI house linked to it periodic airstrikes that will only target structure.");
+                }
+                if (action1 == TiberianDawn.ActionTypes.ACTION_WINLOSE && event1 == TiberianDawn.EventTypes.EVENT_ANY && isAnd)
+                {
+                    curErrors.Add("\"Any\" → \"Cap=Win/Des=Lose\" triggers don't function with existence status \"And\".");
+                }
+                if (action1 == TiberianDawn.ActionTypes.ACTION_ALLOWWIN && !isPlayer)
+                {
+                    curErrors.Add("Each \"Allow Win\" trigger increases the \"win blockage\" on a House, which prevents it from winning until they are all cleared. However, since this is put on the House specified in the trigger, \"Allow Win\" triggers nly work with the player's House.");
+                }
+                if (action1 == TiberianDawn.ActionTypes.ACTION_BEGIN_PRODUCTION)
+                {
+                    if (trigger.Event1.EventType != TiberianDawn.EventTypes.EVENT_PLAYER_ENTERED && noOwner)
+                    {
+                        curErrors.Add("The House set in a \"Production\" trigger determines the House that starts production, except in case of a celltrigger. Having no House will crash the game.");
+                    }
+                    //else if (trigger.Event1.EventType == TiberianDawn.EventTypes.EVENT_PLAYER_ENTERED && isCellTrig && playerIsNonstandard)
+                    //{
+                    //    curErrors.Add("For a celltrigger, the House that starts production is always be the 'classic opposing House' of the player's House.");
+                    //}
+                }
+                if (action1 == TiberianDawn.ActionTypes.ACTION_REINFORCEMENTS && !hasTeam)
+                {
+                    curErrors.Add("There is no team set to reinforce.");
+                }
+                if (action1 == TiberianDawn.ActionTypes.ACTION_DESTROY_TEAM && !hasTeam)
+                {
+                    curErrors.Add("There is no team set to disband.");
+                }
+                if (action1 == TiberianDawn.ActionTypes.ACTION_DESTROY_XXXX && this.triggers.Any(t => "XXXX".Equals(t.Name, StringComparison.InvariantCultureIgnoreCase)))
+                {
+                    curErrors.Add("There is no trigger called 'XXXX' to destroy.");
+                }
+                if (action1 == TiberianDawn.ActionTypes.ACTION_DESTROY_YYYY && this.triggers.Any(t => "YYYY".Equals(t.Name, StringComparison.InvariantCultureIgnoreCase)))
+                {
+                    curErrors.Add("There is no trigger called 'YYYY' to destroy.");
+                }
+                if (action1 == TiberianDawn.ActionTypes.ACTION_DESTROY_ZZZZ && this.triggers.Any(t => "ZZZZ".Equals(t.Name, StringComparison.InvariantCultureIgnoreCase)))
+                {
+                    curErrors.Add("There is no trigger called 'ZZZZ' to destroy.");
+                }
+                if (curErrors.Count > 0)
+                {
+                    curErrors.Insert(0, trigName.ToUpper() + ":");
+                    errors.AddRange(curErrors);
+                    errors.Add("\n");
+                }
+            }
+            if (errors.Count == 0)
+            {
+                return null;
+            }
+            StringBuilder sb = new StringBuilder("The following issues were encountered:\n\n");
+            foreach (string item in errors)
+            {
+                sb.Append(item).Append('\n');
+            }
+            sb.TrimEnd('\n');
+            return sb.ToString();
+        }
+
+        private string CheckRedAlertTriggers()
+        {
+            return null;
+            // TODO
+        }
+
     }
 }

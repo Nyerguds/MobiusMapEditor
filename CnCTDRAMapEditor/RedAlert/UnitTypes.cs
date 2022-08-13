@@ -26,15 +26,15 @@ namespace MobiusEditor.RedAlert
         public static readonly UnitType MTank2 = new UnitType(2, "2tnk", "TEXT_UNIT_RA_2TNK", "Greece", true);
         public static readonly UnitType LTank = new UnitType(3, "1tnk", "TEXT_UNIT_RA_1TNK", "Greece", true);
         public static readonly UnitType APC = new UnitType(4, "apc", "TEXT_UNIT_RA_APC", "Greece");
-        public static readonly UnitType MineLayer = new UnitType(5, "mnly", "TEXT_UNIT_RA_MNLY", "Greece");
+        public static readonly UnitType MineLayer = new UnitType(5, "mnly", "TEXT_UNIT_RA_MNLY", "Greece", false, false, false);
         public static readonly UnitType Jeep = new UnitType(6, "jeep", "TEXT_UNIT_RA_JEEP", "Greece", true);
-        public static readonly UnitType Harvester = new UnitType(7, "harv", "TEXT_UNIT_RA_HARV", "Greece");
+        public static readonly UnitType Harvester = new UnitType(7, "harv", "TEXT_UNIT_RA_HARV", "Greece", false, false, false, true);
         public static readonly UnitType Arty = new UnitType(8, "arty", "TEXT_UNIT_RA_ARTY", "Greece");
-        public static readonly UnitType MRJammer = new UnitType(9, "mrj", "TEXT_UNIT_RA_MRJ", "Greece");
-        public static readonly UnitType MGG = new UnitType(10, "mgg", "TEXT_UNIT_RA_MGG", "Greece");
-        public static readonly UnitType MCV = new UnitType(11, "mcv", "TEXT_UNIT_RA_MCV", "Greece");
+        public static readonly UnitType MRJammer = new UnitType(9, "mrj", "TEXT_UNIT_RA_MRJ", "Greece", false, false, false);
+        public static readonly UnitType MGG = new UnitType(10, "mgg", "TEXT_UNIT_RA_MGG", "Greece", false, false, false);
+        public static readonly UnitType MCV = new UnitType(11, "mcv", "TEXT_UNIT_RA_MCV", "Greece", false, false, false);
         public static readonly UnitType V2Launcher = new UnitType(12, "v2rl", "TEXT_UNIT_RA_V2RL", "USSR");
-        public static readonly UnitType ConvoyTruck = new UnitType(13, "truk", "TEXT_UNIT_RA_TRUK", "Greece");
+        public static readonly UnitType ConvoyTruck = new UnitType(13, "truk", "TEXT_UNIT_RA_TRUK", "Greece", false, false, false);
         public static readonly UnitType Ant1 = new UnitType(14, "ant1", "TEXT_UNIT_RA_ANT1", "Special");
         public static readonly UnitType Ant2 = new UnitType(15, "ant2", "TEXT_UNIT_RA_ANT2", "Special");
         public static readonly UnitType Ant3 = new UnitType(16, "ant3", "TEXT_UNIT_RA_ANT3", "Special");
@@ -45,10 +45,10 @@ namespace MobiusEditor.RedAlert
         public static readonly UnitType Phase = new UnitType(21, "stnk", "TEXT_UNIT_RA_STNK", "Greece", true);
 
         public static readonly UnitType Tran = new UnitType(0 | UnitTypeIDMask.Aircraft, "tran", "TEXT_UNIT_RA_TRAN", "USSR");
-        public static readonly UnitType Badr = new UnitType(1 | UnitTypeIDMask.Aircraft, "badr", "TEXT_UNIT_RA_BADR", "USSR", false, true);
-        public static readonly UnitType U2 = new UnitType(2 | UnitTypeIDMask.Aircraft, "u2", "TEXT_UNIT_RA_U2", "USSR", false, true);
-        public static readonly UnitType Mig = new UnitType(3 | UnitTypeIDMask.Aircraft, "mig", "TEXT_UNIT_RA_MIG", "USSR", false, true);
-        public static readonly UnitType Yak = new UnitType(4 | UnitTypeIDMask.Aircraft, "yak", "TEXT_UNIT_RA_YAK", "USSR", false, true);
+        public static readonly UnitType Badr = new UnitType(1 | UnitTypeIDMask.Aircraft, "badr", "TEXT_UNIT_RA_BADR", "USSR", false, true, true);
+        public static readonly UnitType U2 = new UnitType(2 | UnitTypeIDMask.Aircraft, "u2", "TEXT_UNIT_RA_U2", "USSR", false, true, false);
+        public static readonly UnitType Mig = new UnitType(3 | UnitTypeIDMask.Aircraft, "mig", "TEXT_UNIT_RA_MIG", "USSR", false, true, true);
+        public static readonly UnitType Yak = new UnitType(4 | UnitTypeIDMask.Aircraft, "yak", "TEXT_UNIT_RA_YAK", "USSR", false, true, true);
         public static readonly UnitType Heli = new UnitType(5 | UnitTypeIDMask.Aircraft, "heli", "TEXT_UNIT_RA_HELI", "Greece");
         public static readonly UnitType Hind = new UnitType(6 | UnitTypeIDMask.Aircraft, "hind", "TEXT_UNIT_RA_HIND", "USSR");
 

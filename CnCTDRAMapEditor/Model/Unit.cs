@@ -21,7 +21,7 @@ using System.Runtime.CompilerServices;
 
 namespace MobiusEditor.Model
 {
-    public class Unit : ICellOverlapper, ICellOccupier, INotifyPropertyChanged, ICloneable
+    public class Unit : ITechno, ICellOverlapper, ICellOccupier, INotifyPropertyChanged, ICloneable
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -35,7 +35,7 @@ namespace MobiusEditor.Model
         private HouseType house;
         public HouseType House { get => house; set => SetField(ref house, value); }
 
-        private int strength;
+        private int strength = 256;
         public int Strength { get => strength; set => SetField(ref strength, value); }
 
         private DirectionType direction;

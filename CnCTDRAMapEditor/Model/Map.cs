@@ -129,9 +129,23 @@ namespace MobiusEditor.Model
 
         public readonly string[] EventTypes;
 
+        public readonly HashSet<string> CellEventTypes;
+
+        public readonly HashSet<string> UnitEventTypes;
+
+        public readonly HashSet<string> StructureEventTypes;
+
+        public readonly HashSet<string> TerrainEventTypes;
+
         public readonly string[] ActionTypes;
 
         public readonly string[] MissionTypes;
+
+        public readonly string DefaultMissionArmed;
+
+        public readonly string DefaultMissionUnarmed;
+
+        public readonly string DefaultMissionHarvest;
 
         public readonly List<DirectionType> DirectionTypes;
 
@@ -196,7 +210,8 @@ namespace MobiusEditor.Model
         public Map(BasicSection basicSection, TheaterType theater, Size cellSize, Type houseType,
             IEnumerable<HouseType> houseTypes, IEnumerable<TheaterType> theaterTypes, IEnumerable<TemplateType> templateTypes,
             IEnumerable<TerrainType> terrainTypes, IEnumerable<OverlayType> overlayTypes, IEnumerable<SmudgeType> smudgeTypes,
-            IEnumerable<string> eventTypes, IEnumerable<string> actionTypes, IEnumerable<string> missionTypes,
+            IEnumerable<string> eventTypes, IEnumerable<string> cellEventTypes, IEnumerable<string> unitEventTypes,
+            IEnumerable<string> structureEventTypes, IEnumerable<string> terrainEventTypes, IEnumerable<string> actionTypes, IEnumerable<string> missionTypes,
             IEnumerable<DirectionType> directionTypes, IEnumerable<InfantryType> infantryTypes, IEnumerable<UnitType> unitTypes,
             IEnumerable<BuildingType> buildingTypes, IEnumerable<TeamMission> teamMissionTypes, IEnumerable<ITechnoType> teamTechnoTypes,
             IEnumerable<Waypoint> waypoints, IEnumerable<string> movieTypes, IEnumerable<string> themeTypes)
@@ -211,8 +226,15 @@ namespace MobiusEditor.Model
             OverlayTypes = new List<OverlayType>(overlayTypes);
             SmudgeTypes = new List<SmudgeType>(smudgeTypes);
             EventTypes = eventTypes.ToArray();
+            CellEventTypes = cellEventTypes.ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+            UnitEventTypes = unitEventTypes.ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+            StructureEventTypes = structureEventTypes.ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+            TerrainEventTypes = terrainEventTypes.ToHashSet(StringComparer.InvariantCultureIgnoreCase);
             ActionTypes = actionTypes.ToArray();
             MissionTypes = missionTypes.ToArray();
+            DefaultMissionArmed = MissionTypes.Where(m => m.Equals("Guard")).FirstOrDefault() ?? MissionTypes.First();
+            DefaultMissionUnarmed = MissionTypes.Where(m => m.Equals("Stop")).FirstOrDefault() ?? MissionTypes.First();
+            DefaultMissionHarvest = MissionTypes.Where(m => m.Equals("Harvest")).FirstOrDefault() ?? MissionTypes.First();
             DirectionTypes = new List<DirectionType>(directionTypes);
             InfantryTypes = new List<InfantryType>(infantryTypes);
             UnitTypes = new List<UnitType>(unitTypes);
@@ -632,7 +654,8 @@ namespace MobiusEditor.Model
         {
             var map = new Map(BasicSection, Theater, Metrics.Size, HouseType,
                 HouseTypes, TheaterTypes, TemplateTypes, TerrainTypes, OverlayTypes, SmudgeTypes,
-                EventTypes, ActionTypes, MissionTypes, DirectionTypes, InfantryTypes, UnitTypes,
+                EventTypes, CellEventTypes, UnitEventTypes, StructureEventTypes, TerrainEventTypes,
+                ActionTypes, MissionTypes, DirectionTypes, InfantryTypes, UnitTypes,
                 BuildingTypes, TeamMissionTypes, TeamTechnoTypes, Waypoints, MovieTypes, ThemeTypes)
             {
                 TopLeft = TopLeft,
@@ -642,15 +665,15 @@ namespace MobiusEditor.Model
             MapSection.CopyTo(map.MapSection);
             BriefingSection.CopyTo(map.BriefingSection);
             SteamSection.CopyTo(map.SteamSection);
-            Templates.CopyTo(map.Templates);
-            Overlay.CopyTo(map.Overlay);
-            Smudge.CopyTo(map.Smudge);
-            CellTriggers.CopyTo(map.CellTriggers);
             Array.Copy(Houses, map.Houses, map.Houses.Length);
             foreach (var trigger in Triggers)
             {
                 map.Triggers.Add(trigger);
             }
+            Templates.CopyTo(map.Templates);
+            Overlay.CopyTo(map.Overlay);
+            Smudge.CopyTo(map.Smudge);
+            CellTriggers.CopyTo(map.CellTriggers);
             foreach (var (location, occupier) in Technos)
             {
                 if (occupier is InfantryGroup infantryGroup)
@@ -671,6 +694,123 @@ namespace MobiusEditor.Model
             map.TeamTypes.AddRange(TeamTypes);
             map.EndUpdate();
             return map;
+        }
+
+        public IEnumerable<Trigger> FilterCellTriggers()
+        {
+            foreach (Trigger trigger in FilterTriggersByEvent(CellEventTypes))
+            {
+                yield return trigger;
+            }
+        }
+
+        public IEnumerable<Trigger> FilterUnitTriggers()
+        {
+            foreach (Trigger trigger in FilterTriggersByEvent(UnitEventTypes))
+            {
+                yield return trigger;
+            }
+        }
+
+        public IEnumerable<Trigger> FilterStructureTriggers()
+        {
+            foreach (Trigger trigger in FilterTriggersByEvent(StructureEventTypes))
+            {
+                yield return trigger;
+            }
+        }
+
+        public IEnumerable<Trigger> FilterTerrainTriggers()
+        {
+            foreach (Trigger trigger in FilterTriggersByEvent(TerrainEventTypes))
+            {
+                yield return trigger;
+            }
+        }
+
+        public IEnumerable<Trigger> FilterTriggersByEvent(HashSet<String> allowedEventTypes)
+        {
+            foreach (Trigger trig in this.Triggers)
+            {
+                if (trig.Event1 != null && allowedEventTypes.Contains(trig.Event1.EventType)
+                    || ((trig.EventControl == TriggerMultiStyleType.Or || trig.EventControl == TriggerMultiStyleType.And)
+                        && trig.Event2 != null && allowedEventTypes.Contains(trig.Event2.EventType)))
+                {
+                    yield return trig;
+                }
+            }
+        }
+
+        public IEnumerable<Trigger> FilterTriggersByAction(HashSet<String> allowedActionTypes)
+        {
+            foreach (Trigger trig in this.Triggers)
+            {
+                if (trig.Action1 != null && allowedActionTypes.Contains(trig.Action1.ActionType)
+                    || (trig.Action2 != null && allowedActionTypes.Contains(trig.Action2.ActionType)))
+                {
+                    yield return trig;
+                }
+            }
+        }
+
+        public void CleanUpCellTriggers()
+        {
+            HashSet<string> placeableTrigs = FilterCellTriggers().Select(t => t.Name).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+            List<int> cellsToClear = new List<int>();
+            foreach (var item in CellTriggers)
+            {
+                if (!placeableTrigs.Contains(item.Value.Trigger))
+                {
+                    cellsToClear.Add(item.Cell);
+                }
+            }
+            for (int i = 0; i < cellsToClear.Count; ++i)
+            {
+                CellTriggers[cellsToClear[i]] = null;
+            }
+        }
+
+        public IEnumerable<ITechno> GetAllTechnos()
+        {
+            foreach (var (location, occupier) in Technos)
+            {
+                if (occupier is InfantryGroup infantryGroup)
+                {
+                    foreach (var inf in infantryGroup.Infantry)
+                    {
+                        if (inf != null)
+                        {
+                            yield return inf;
+                        }
+                    }
+                }
+                else if (occupier is ITechno techno)
+                {
+                    yield return techno;
+                }
+            }
+        }
+
+        public string GetDefaultMission(ITechnoType techno)
+        {
+            return GetDefaultMission(techno, DefaultMissionArmed);
+        }
+
+        public string GetDefaultMission(ITechnoType techno, String currentMission)
+        {
+            if (techno.IsHarvester)
+            {
+                return DefaultMissionHarvest;
+            }
+            if (!techno.IsArmed)
+            {
+                return DefaultMissionUnarmed;
+            }
+            if (currentMission == DefaultMissionHarvest || currentMission == DefaultMissionUnarmed)
+            {
+                return DefaultMissionArmed;
+            }
+            return currentMission;
         }
 
         public TGA GeneratePreview(Size previewSize, GameType gameType, bool renderAll, bool sharpen)
@@ -838,15 +978,45 @@ namespace MobiusEditor.Model
 
         private void Triggers_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
-            foreach (var (_, building) in Buildings.OfType<Building>())
+            // Clean techno types
+            HashSet<string> availableUnitTriggers = FilterUnitTriggers().Select(t => t.Name).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+            HashSet<string> availableBuildingTriggers = FilterStructureTriggers().Select(t => t.Name).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+            HashSet<string> availableTerrainTriggers = FilterTerrainTriggers().Select(t => t.Name).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+            foreach (var (location, occupier) in Technos)
             {
-                if (!string.IsNullOrEmpty(building.Trigger))
+                if (occupier is InfantryGroup infantryGroup)
                 {
-                    if (Triggers.Where(t => building.Trigger.Equals(t.Name)).FirstOrDefault() == null)
+                    foreach (var inf in infantryGroup.Infantry)
                     {
-                        building.Trigger = Trigger.None;
+                        if (inf != null)
+                        {
+                            CheckTriggers(inf, availableUnitTriggers);
+                        }
                     }
                 }
+                else if (occupier is Building building)
+                {
+                    CheckTriggers(building, availableBuildingTriggers);
+                }
+                else if (occupier is Terrain terrain)
+                {
+                    CheckTriggers(terrain, availableTerrainTriggers);
+                }
+                else if (occupier is Unit unit)
+                {
+                    CheckTriggers(unit, availableUnitTriggers);
+                }
+            }
+            // Clean celltriggers
+            CleanUpCellTriggers();
+        }
+
+        private void CheckTriggers(ITechno techno, HashSet<String> availableTriggers)
+        {
+            String trig = techno.Trigger;
+            if (trig != null && !availableTriggers.Contains(trig))
+            {
+                techno.Trigger = Trigger.None;
             }
         }
     }

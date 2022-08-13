@@ -19,5 +19,9 @@ namespace MobiusEditor.Interface
         sbyte ID { get; }
 
         string Name { get; }
+
+        bool IsArmed { get; }
+
+        bool IsHarvester { get; }
     }
 }

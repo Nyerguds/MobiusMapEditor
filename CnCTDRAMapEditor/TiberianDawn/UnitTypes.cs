@@ -32,23 +32,23 @@ namespace MobiusEditor.TiberianDawn
         public static readonly UnitType MLRS = new UnitType(7, "msam", "TEXT_UNIT_TITLE_GDI_MRLS", "Goodguy", true);
         public static readonly UnitType Jeep = new UnitType(8, "jeep", "TEXT_UNIT_TITLE_GDI_HUMVEE", "Goodguy", true);
         public static readonly UnitType Buggy = new UnitType(9, "bggy", "TEXT_UNIT_TITLE_NOD_NOD_BUGGY", "Badguy", true);
-        public static readonly UnitType Harvester = new UnitType(10, "harv", "TEXT_UNIT_TITLE_GDI_HARVESTER", "Goodguy");
+        public static readonly UnitType Harvester = new UnitType(10, "harv", "TEXT_UNIT_TITLE_GDI_HARVESTER", "Goodguy", false, false, false, true);
         public static readonly UnitType Arty = new UnitType(11, "arty", "TEXT_UNIT_TITLE_NOD_ARTILLERY", "Badguy");
         public static readonly UnitType SSM = new UnitType(12, "mlrs", "TEXT_UNIT_TITLE_GDI_MLRS", "Badguy", true);
-        public static readonly UnitType Hover = new UnitType(13, "lst", "TEXT_UNIT_TITLE_LST", "Goodguy");
-        public static readonly UnitType MHQ = new UnitType(14, "mhq", "TEXT_UNIT_TITLE_MHQ", "Goodguy", true);
+        public static readonly UnitType Hover = new UnitType(13, "lst", "TEXT_UNIT_TITLE_LST", "Goodguy", false, false, false);
+        public static readonly UnitType MHQ = new UnitType(14, "mhq", "TEXT_UNIT_TITLE_MHQ", "Goodguy", true, false, false);
         public static readonly UnitType GunBoat = new UnitType(15, "boat", "TEXT_UNIT_TITLE_WAKE", "Goodguy");
-        public static readonly UnitType MCV = new UnitType(16, "mcv", "TEXT_UNIT_TITLE_GDI_MCV", "Goodguy");
+        public static readonly UnitType MCV = new UnitType(16, "mcv", "TEXT_UNIT_TITLE_GDI_MCV", "Goodguy", false, false, false);
         public static readonly UnitType Bike = new UnitType(17, "bike", "TEXT_UNIT_TITLE_NOD_RECON_BIKE", "Badguy");
         public static readonly UnitType Tric = new UnitType(18, "tric", "TEXT_UNIT_TITLE_TRIC", "Special");
         public static readonly UnitType Trex = new UnitType(19, "trex", "TEXT_UNIT_TITLE_TREX", "Special");
         public static readonly UnitType Rapt = new UnitType(20, "rapt", "TEXT_UNIT_TITLE_RAPT", "Special");
         public static readonly UnitType Steg = new UnitType(21, "steg", "TEXT_UNIT_TITLE_STEG", "Special");
 
-        public static readonly UnitType Tran = new UnitType(0 | UnitTypeIDMask.Aircraft, "tran", "TEXT_UNIT_TITLE_GDI_TRANSPORT", "Goodguy");
+        public static readonly UnitType Tran = new UnitType(0 | UnitTypeIDMask.Aircraft, "tran", "TEXT_UNIT_TITLE_GDI_TRANSPORT", "Goodguy", false, false, false);
         public static readonly UnitType A10 = new UnitType(1 | UnitTypeIDMask.Aircraft, "a10", "TEXT_UNIT_TITLE_A10", "Goodguy", false, true);
         public static readonly UnitType Heli = new UnitType(2 | UnitTypeIDMask.Aircraft, "heli", "TEXT_UNIT_TITLE_NOD_HELICOPTER", "Badguy");
-        public static readonly UnitType C17 = new UnitType(3 | UnitTypeIDMask.Aircraft, "c17", "TEXT_UNIT_TITLE_C17", "Badguy", false, true);
+        public static readonly UnitType C17 = new UnitType(3 | UnitTypeIDMask.Aircraft, "c17", "TEXT_UNIT_TITLE_C17", "Badguy", false, true, false);
         public static readonly UnitType Orca = new UnitType(4 | UnitTypeIDMask.Aircraft, "orca", "TEXT_UNIT_TITLE_GDI_ORCA", "Goodguy");
 
         private static readonly UnitType[] Types;

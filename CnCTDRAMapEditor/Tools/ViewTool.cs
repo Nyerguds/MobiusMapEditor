@@ -43,7 +43,10 @@ namespace MobiusEditor.Tools
 
         /// <summary> Layers that are important to this tool and need to be drawn last in the PostRenderMap process.</summary>
         protected MapLayerFlag priorityLayers;
-        /// <summary>Layers that are not painted by the PostRenderMap function on ViewTool level because they are handled at a specific point by the specific tool.</summary>
+        /// <summary>
+        /// Layers that are not painted by the PostRenderMap function on ViewTool level because they are handled
+        /// at a specific point in the PostRenderMap override by the implementing tool.
+        /// </summary>
         protected MapLayerFlag manuallyHandledLayers;
 
         private MapLayerFlag layers;
@@ -102,25 +105,10 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-
             PreRenderMap();
-
             using (var g = Graphics.FromImage(mapPanel.MapImage))
             {
-                if (Globals.MapSmoothScale)
-                {
-                    g.CompositingQuality = CompositingQuality.HighQuality;
-                    g.InterpolationMode = InterpolationMode.HighQualityBicubic;
-                    g.SmoothingMode = SmoothingMode.HighQuality;
-                    g.PixelOffsetMode = PixelOffsetMode.HighQuality;
-                }
-                else
-                {
-                    g.CompositingQuality = CompositingQuality.AssumeLinear;
-                    g.InterpolationMode = InterpolationMode.NearestNeighbor;
-                    g.SmoothingMode = SmoothingMode.None;
-                    g.PixelOffsetMode = PixelOffsetMode.Half;
-                }
+                MapRenderer.SetRenderSettings(g, Globals.MapSmoothScale);
                 MapRenderer.Render(plugin.GameType, RenderMap, g, e.Cells?.Where(p => map.Metrics.Contains(p)).ToHashSet(), Layers);
             }
         }
@@ -178,18 +166,28 @@ namespace MobiusEditor.Tools
 
         protected void RenderWayPoints(Graphics graphics)
         {
+            RenderWayPoints(graphics, Color.Black, Color.DarkOrange, Color.DarkOrange, false, true);
+        }
+
+        protected void RenderWayPoints(Graphics graphics, Color fillColor, Color borderColor, Color textColor, bool thickborder, bool excludeSpecified, params Waypoint[] specified)
+        {
             if ((Layers & MapLayerFlag.Waypoints) == MapLayerFlag.None)
             {
                 return;
             }
-            using (var waypointBackgroundBrush = new SolidBrush(Color.FromArgb(96, Color.Black)))
-            using (var waypointBrush = new SolidBrush(Color.FromArgb(128, Color.DarkOrange)))
-            using (var waypointPen = new Pen(Color.DarkOrange))
+            using (var waypointBackgroundBrush = new SolidBrush(Color.FromArgb(96, fillColor)))
+            using (var waypointBrush = new SolidBrush(textColor))
+            using (var waypointPen = new Pen(Color.FromArgb(128, borderColor), thickborder ? 3f : 1f))
             {
-                foreach (var waypoint in map.Waypoints)
+                Waypoint[] toPaint = excludeSpecified ? map.Waypoints : specified;
+                foreach (var waypoint in toPaint)
                 {
                     if (waypoint.Cell.HasValue)
                     {
+                        if (excludeSpecified && specified.Contains(waypoint))
+                        {
+                            continue;
+                        }
                         var x = waypoint.Cell.Value % map.Metrics.Width;
                         var y = waypoint.Cell.Value / map.Metrics.Width;
                         var location = new Point(x * Globals.MapTileWidth, y * Globals.MapTileHeight);
@@ -279,7 +277,7 @@ namespace MobiusEditor.Tools
                             Alignment = StringAlignment.Center,
                             LineAlignment = StringAlignment.Center
                         };
-                        foreach (var (trigger, bounds) in triggers.Where(x => !x.trigger.Equals("None", StringComparison.OrdinalIgnoreCase)))
+                        foreach (var (trigger, bounds) in triggers.Where(x => x.trigger != null && !x.trigger.Equals("None", StringComparison.OrdinalIgnoreCase)))
                         {
                             var font = graphics.GetAdjustedFont(trigger, SystemFonts.DefaultFont, bounds.Width, 12 / Globals.MapTileScale, 24 / Globals.MapTileScale, true);
                             var textBounds = graphics.MeasureString(trigger, font, bounds.Width, stringFormat);
@@ -297,16 +295,26 @@ namespace MobiusEditor.Tools
 
         protected void RenderCellTriggers(Graphics graphics)
         {
+            RenderCellTriggers(graphics, Color.Black, Color.White, Color.White, false, true);
+        }
+
+        protected void RenderCellTriggers(Graphics graphics, Color fillColor, Color borderColor, Color textColor, bool thickborder, bool excludeSpecified, params String[] specified)
+            {
             if ((Layers & MapLayerFlag.CellTriggers) == MapLayerFlag.None)
             {
                 return;
             }
-            using (var cellTriggersBackgroundBrush = new SolidBrush(Color.FromArgb(96, Color.Black)))
-            using (var cellTriggersBrush = new SolidBrush(Color.FromArgb(128, Color.White)))
-            using (var cellTriggerPen = new Pen(Color.White))
+            using (var cellTriggersBackgroundBrush = new SolidBrush(Color.FromArgb(96, fillColor)))
+            using (var cellTriggersBrush = new SolidBrush(Color.FromArgb(128, textColor)))
+            using (var cellTriggerPen = new Pen(borderColor, thickborder ? 3f : 1f))
             {
                 foreach (var (cell, cellTrigger) in map.CellTriggers)
                 {
+                    bool contains = specified.Contains(cellTrigger.Trigger, StringComparer.InvariantCultureIgnoreCase);
+                    if (contains && excludeSpecified || !contains && !excludeSpecified)
+                    {
+                        continue;
+                    }
                     var x = cell % map.Metrics.Width;
                     var y = cell / map.Metrics.Width;
                     var location = new Point(x * Globals.MapTileWidth, y * Globals.MapTileHeight);

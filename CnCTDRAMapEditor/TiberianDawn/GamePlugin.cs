@@ -135,11 +135,33 @@ namespace MobiusEditor.TiberianDawn
             basicSection.SetDefault();
             var houseTypes = HouseTypes.GetTypes();
             basicSection.Player = houseTypes.First().Name;
+
+            string[] cellEventTypes = new[]
+            {
+                EventTypes.EVENT_PLAYER_ENTERED,
+                EventTypes.EVENT_NONE
+            };
+
+            string[] unitEventTypes =
+            {
+                EventTypes.EVENT_DISCOVERED,
+                EventTypes.EVENT_ATTACKED,
+                EventTypes.EVENT_DESTROYED,
+                EventTypes.EVENT_ANY,
+                EventTypes.EVENT_NONE
+            };
+            string[] structureEventTypes = (new[] { EventTypes.EVENT_PLAYER_ENTERED }).Concat(unitEventTypes).ToArray();
+            string[] terrainEventTypes =
+            {
+                EventTypes.EVENT_ATTACKED
+            };
+
             Map = new Map(basicSection, null, Constants.MaxSize, typeof(House),
                 houseTypes, TheaterTypes.GetTypes(), TemplateTypes.GetTypes(), TerrainTypes.GetTypes(),
-                OverlayTypes.GetTypes(), SmudgeTypes.GetTypes(), EventTypes.GetTypes(), ActionTypes.GetTypes(),
+                OverlayTypes.GetTypes(), SmudgeTypes.GetTypes(), EventTypes.GetTypes(), cellEventTypes,
+                unitEventTypes, structureEventTypes, terrainEventTypes, ActionTypes.GetTypes(),
                 MissionTypes.GetTypes(), DirectionTypes.GetTypes(), InfantryTypes.GetTypes(), UnitTypes.GetTypes(true),
-                BuildingTypes.GetTypes(), TeamMissionTypes.GetTypes(), technoTypes, waypoints, movieTypes, themeTypes )
+                BuildingTypes.GetTypes(), TeamMissionTypes.GetTypes(), technoTypes, waypoints, movieTypes, themeTypes)
             {
                 TiberiumOrGoldValue = 25
             };
@@ -471,6 +493,11 @@ namespace MobiusEditor.TiberianDawn
                     }
                 }
             }
+            HashSet<string> checkTrigs = Trigger.None.Yield().Concat(Map.Triggers.Select(t => t.Name)).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+            HashSet<string> checkCellTrigs = Map.FilterCellTriggers().Select(t => t.Name).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+            HashSet<string> checkUnitTrigs = Trigger.None.Yield().Concat(Map.FilterUnitTriggers().Select(t => t.Name)).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+            HashSet<string> checkStrcTrigs = Trigger.None.Yield().Concat(Map.FilterStructureTriggers().Select(t => t.Name)).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+            HashSet<string> checkTerrTrigs = Trigger.None.Yield().Concat(Map.FilterTerrainTriggers().Select(t => t.Name)).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
             var terrainSection = ini.Sections.Extract("Terrain");
             if (terrainSection != null)
             {
@@ -483,12 +510,26 @@ namespace MobiusEditor.TiberianDawn
                         var terrainType = Map.TerrainTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault();
                         if (terrainType != null)
                         {
-                            if (!Map.Technos.Add(cell, new Terrain
+                            Terrain newTerr = new Terrain
+                            {
+                                Type = terrainType,
+                                Icon = terrainType.IsTransformable ? 22 : 0,
+                                Trigger = tokens[1]
+                            };
+                            if (Map.Technos.Add(cell, newTerr))
+                            {
+                                if (!checkTrigs.Contains(newTerr.Trigger))
                                 {
-                                    Type = terrainType,
-                                    Icon = terrainType.IsTransformable ? 22 : 0,
-                                    Trigger = tokens[1]
-                                }))
+                                    errors.Add(string.Format("Terrain '{0}' links to unknown trigger '{1}'", terrainType, tokens[1]));
+                                    newTerr.Trigger = Trigger.None;
+                                }
+                                else if (!checkTerrTrigs.Contains(newTerr.Trigger))
+                                {
+                                    errors.Add(string.Format("Terrain '{0}' links to trigger '{1}' which does not contain an event applicable to terrain", terrainType, tokens[1]));
+                                    newTerr.Trigger = Trigger.None;
+                                }
+                            }
+                            else
                             {
                                 var techno = Map.Technos[cell];
                                 if (techno is Building building)
@@ -602,13 +643,23 @@ namespace MobiusEditor.TiberianDawn
                                     var direction = (byte)((int.Parse(tokens[6]) + 0x08) & ~0x0F);
                                     if (infantryGroup.Infantry[stoppingPos] == null)
                                     {
+                                        if (!checkTrigs.Contains(tokens[7]))
+                                        {
+                                            errors.Add(string.Format("Infantry '{0}' links to unknown trigger '{1}'", infantryType.Name, tokens[7]));
+                                            tokens[7] = Trigger.None;
+                                        }
+                                        else if (!checkUnitTrigs.Contains(tokens[7]))
+                                        {
+                                            errors.Add(string.Format("Infantry '{0}' links to trigger '{1}' which does not contain an event applicable to infantry", infantryType.Name, tokens[7]));
+                                            tokens[7] = Trigger.None;
+                                        }
                                         infantryGroup.Infantry[stoppingPos] = new Infantry(infantryGroup)
                                         {
                                             Type = infantryType,
                                             House = Map.HouseTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault(),
                                             Strength = int.Parse(tokens[2]),
                                             Direction = Map.DirectionTypes.Where(d => d.Equals(direction)).FirstOrDefault(),
-                                            Mission = Map.MissionTypes.Where(t => t.Equals(tokens[5])).FirstOrDefault(),
+                                            Mission = Map.MissionTypes.Where(t => t.Equals(tokens[5])).FirstOrDefault() ?? Map.GetDefaultMission(infantryType),
                                             Trigger = tokens[7]
                                         };
                                     }
@@ -671,15 +722,29 @@ namespace MobiusEditor.TiberianDawn
                         {
                             var direction = (byte)((int.Parse(tokens[4]) + 0x08) & ~0x0F);
                             var cell = int.Parse(tokens[3]);
-                            if (!Map.Technos.Add(cell, new Unit()
+                            Unit newUnit = new Unit()
+                            {
+                                Type = unitType,
+                                House = Map.HouseTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault(),
+                                Strength = int.Parse(tokens[2]),
+                                Direction = Map.DirectionTypes.Where(d => d.Equals(direction)).FirstOrDefault(),
+                                Mission = Map.MissionTypes.Where(t => t.Equals(tokens[5])).FirstOrDefault() ?? Map.GetDefaultMission(unitType),
+                                Trigger = tokens[6]
+                            };
+                            if (Map.Technos.Add(cell, newUnit))
+                            {
+                                if (!checkTrigs.Contains(tokens[6]))
                                 {
-                                    Type = unitType,
-                                    House = Map.HouseTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault(),
-                                    Strength = int.Parse(tokens[2]),
-                                    Direction = Map.DirectionTypes.Where(d => d.Equals(direction)).FirstOrDefault(),
-                                    Mission = Map.MissionTypes.Where(t => t.Equals(tokens[5])).FirstOrDefault(),
-                                    Trigger = tokens[6]
-                                }))
+                                    errors.Add(string.Format("Unit '{0}' links to unknown trigger '{1}'", unitType.Name, newUnit.Trigger));
+                                    newUnit.Trigger = Trigger.None;
+                                }
+                                else if (!checkUnitTrigs.Contains(tokens[6]))
+                                {
+                                    errors.Add(string.Format("Unit '{0}' links to trigger '{1}' which does not contain an event applicable to units", unitType.Name, newUnit.Trigger));
+                                    newUnit.Trigger = Trigger.None;
+                                }
+                            }
+                            else
                             {
                                 var techno = Map.Technos[cell];
                                 if (techno is Building building)
@@ -719,9 +784,10 @@ namespace MobiusEditor.TiberianDawn
                     }
                 }
             }
-            // Game does not actually support reading this.
-            /*/
+            // Classic game does not support this, so I'm leaving this out. It's buggy anyway.
+            // Extracting it so it doesn't end up with the "extra sections"
             var aircraftSections = ini.Sections.Extract("Aircraft");
+            /*/
             if (aircraftSections != null)
             {
                 foreach (var (_, Value) in aircraftSections)
@@ -733,7 +799,6 @@ namespace MobiusEditor.TiberianDawn
                         if (aircraftType != null)
                         {
                             var direction = (byte)((int.Parse(tokens[4]) + 0x08) & ~0x0F);
-
                             var cell = int.Parse(tokens[3]);
                             if (!Map.Technos.Add(cell, new Unit()
                                 {
@@ -741,7 +806,7 @@ namespace MobiusEditor.TiberianDawn
                                     House = Map.HouseTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault(),
                                     Strength = int.Parse(tokens[2]),
                                     Direction = Map.DirectionTypes.Where(d => d.Equals(direction)).FirstOrDefault(),
-                                    Mission = Map.MissionTypes.Where(t => t.Equals(tokens[5])).FirstOrDefault()
+                                    Mission = Map.MissionTypes.Where(t => t.Equals(tokens[5])).FirstOrDefault() ?? Map.GetDefaultMission(aircraftType)
                                 }))
                             {
                                 var techno = Map.Technos[cell];
@@ -940,10 +1005,24 @@ namespace MobiusEditor.TiberianDawn
                     {
                         if (Map.Metrics.Contains(cell))
                         {
-                            Map.CellTriggers[cell] = new CellTrigger
+                            if (checkTrigs.Contains(Value))
                             {
-                                Trigger = Value
-                            };
+                                if (checkCellTrigs.Contains(Value))
+                                {
+                                    Map.CellTriggers[cell] = new CellTrigger
+                                    {
+                                        Trigger = Value
+                                    };
+                                }
+                                else
+                                {
+                                    errors.Add(string.Format("Cell trigger {0} links to trigger '{1}' which does not contain a placeable event", cell, Value));
+                                }
+                            }
+                            else
+                            {
+                                errors.Add(string.Format("Cell trigger {0} links to unknown trigger '{1}'", cell, Value));
+                            }
                         }
                         else
                         {
@@ -1296,7 +1375,7 @@ namespace MobiusEditor.TiberianDawn
                     unit.Trigger
                 );
             }
-            // Game does not actually support reading this.
+            // Classic game does not support this, so I'm leaving this out. It's buggy anyway.
             /*/
             var aircraftSection = ini.Sections.Add("Aircraft");
             var aircraftIndex = 0;

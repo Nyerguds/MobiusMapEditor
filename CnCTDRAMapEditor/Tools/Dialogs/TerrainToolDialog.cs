@@ -25,7 +25,7 @@ namespace MobiusEditor.Tools.Dialogs
 {
     public partial class TerrainToolDialog : ToolDialog<TerrainTool>
     {
-        public TypeListBox TerrainTypeComboBox => terrainTypeListBox;
+        public TypeListBox TerrainTypeListBox => terrainTypeListBox;
 
         public MapPanel TerrainTypeMapPanel => terrainTypeMapPanel;
 
@@ -45,8 +45,8 @@ namespace MobiusEditor.Tools.Dialogs
 
         protected override void InitializeInternal(MapPanel mapPanel, MapLayerFlag activeLayers, ToolStripStatusLabel toolStatusLabel, ToolTip mouseToolTip, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> undoRedoList)
         {
-            TerrainTypeComboBox.Types = plugin.Map.TerrainTypes.Where(t => t.Theaters.Contains(plugin.Map.Theater)).OrderBy(t => t.ID);
-            Tool = new TerrainTool(mapPanel, activeLayers, toolStatusLabel, TerrainTypeComboBox,
+            TerrainTypeListBox.Types = plugin.Map.TerrainTypes.Where(t => t.Theaters.Contains(plugin.Map.Theater)).OrderBy(t => t.ID);
+            Tool = new TerrainTool(mapPanel, activeLayers, toolStatusLabel, TerrainTypeListBox,
                 TerrainTypeMapPanel, TerrainProperties, plugin, undoRedoList);
         }
     }

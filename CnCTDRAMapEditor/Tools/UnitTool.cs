@@ -72,13 +72,14 @@ namespace MobiusEditor.Tools
         {
             previewMap = map;
             manuallyHandledLayers = MapLayerFlag.TechnoTriggers;
+            UnitType unitType = unitTypesBox.Types.First() as UnitType;
             mockUnit = new Unit()
             {
-                Type = unitTypesBox.Types.First() as UnitType,
+                Type = unitType,
                 House = map.Houses.First().Type,
                 Strength = 256,
                 Direction = map.DirectionTypes.Where(d => d.Equals(FacingType.North)).First(),
-                Mission = map.MissionTypes.Where(m => m.Equals("Guard")).FirstOrDefault() ?? map.MissionTypes.First()
+                Mission = map.GetDefaultMission(unitType)
             };
             mockUnit.PropertyChanged += MockUnit_PropertyChanged;
 
@@ -140,6 +141,7 @@ namespace MobiusEditor.Tools
         private void UnitTypeComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
             SelectedUnitType = unitTypesBox.SelectedValue as UnitType;
+            mockUnit.Mission = map.GetDefaultMission(SelectedUnitType, mockUnit.Mission);
         }
 
         private void UnitTool_KeyDown(object sender, KeyEventArgs e)

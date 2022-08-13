@@ -76,13 +76,14 @@ namespace MobiusEditor.Tools
         {
             previewMap = map;
             manuallyHandledLayers = MapLayerFlag.TechnoTriggers;
+            InfantryType infType = infantryTypesBox.Types.First() as InfantryType;
             mockInfantry = new Infantry(null)
             {
-                Type = infantryTypesBox.Types.First() as InfantryType,
+                Type = infType,
                 House = map.Houses.First().Type,
                 Strength = 256,
                 Direction = map.DirectionTypes.Where(d => d.Equals(FacingType.South)).First(),
-                Mission = map.MissionTypes.Where(m => m.Equals("Guard")).FirstOrDefault() ?? map.MissionTypes.First()
+                Mission = map.GetDefaultMission(infType)
             };
             mockInfantry.PropertyChanged += MockInfantry_PropertyChanged;
             this.infantryTypesBox = infantryTypesBox;
@@ -137,6 +138,7 @@ namespace MobiusEditor.Tools
         private void InfantryTypeComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
             SelectedInfantryType = infantryTypesBox.SelectedValue as InfantryType;
+            mockInfantry.Mission = map.GetDefaultMission(SelectedInfantryType, mockInfantry.Mission);            
         }
 
         private void InfantryTool_KeyDown(object sender, KeyEventArgs e)

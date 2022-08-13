@@ -20,7 +20,7 @@ using System.Drawing;
 
 namespace MobiusEditor.Model
 {
-    public class TerrainType : ICellOverlapper, ICellOccupier, IBrowsableType
+    public class TerrainType : ITechnoType, ICellOverlapper, ICellOccupier, IBrowsableType
     {
         public sbyte ID { get; private set; }
 
@@ -39,6 +39,10 @@ namespace MobiusEditor.Model
         public bool IsTransformable { get; private set; }
 
         public TemplateTypeFlag TemplateType { get; private set; }
+
+        public bool IsArmed => false;
+
+        public bool IsHarvester => false;
 
         public Size GetRenderSize(Size cellSize)
         {

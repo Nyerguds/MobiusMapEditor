@@ -14,12 +14,16 @@
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using MobiusEditor.Interface;
 using MobiusEditor.Model;
+using MobiusEditor.Render;
 using MobiusEditor.Utility;
 using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Data;
+using System.Drawing;
 using System.Linq;
+using System.Reflection;
 using System.Windows.Forms;
 
 namespace MobiusEditor.Controls
@@ -29,6 +33,8 @@ namespace MobiusEditor.Controls
         private bool isMockObject;
 
         public IGamePlugin Plugin { get; private set; }
+
+        private string triggerToolTip;
 
         private INotifyPropertyChanged obj;
         public INotifyPropertyChanged Object
@@ -63,8 +69,8 @@ namespace MobiusEditor.Controls
         public void Initialize(IGamePlugin plugin, bool isMockObject)
         {
             this.isMockObject = isMockObject;
-
             Plugin = plugin;
+            plugin.Map.Triggers.CollectionChanged -= Triggers_CollectionChanged;
             plugin.Map.Triggers.CollectionChanged += Triggers_CollectionChanged;
 
             houseComboBox.DataSource = plugin.Map.Houses.Select(t => new TypeItem<HouseType>(t.Type.Name, t.Type)).ToArray();
@@ -86,7 +92,31 @@ namespace MobiusEditor.Controls
 
         private void UpdateDataSource()
         {
-            triggerComboBox.DataSource = Trigger.None.Yield().Concat(Plugin.Map.Triggers.Select(t => t.Name).Distinct()).ToArray();
+            string selected = triggerComboBox.SelectedItem as string;
+            triggerComboBox.DataSource = null;
+            triggerComboBox.Items.Clear();
+            string[] items;
+            string[] filteredTypes;
+            switch (obj)
+            {
+                case Infantry infantry:
+                case Unit unit:
+                    items = Trigger.None.Yield().Concat(Plugin.Map.FilterUnitTriggers().Select(t => t.Name).Distinct()).ToArray();
+                    filteredTypes = Plugin.Map.EventTypes.Where(ev => Plugin.Map.UnitEventTypes.Contains(ev)).Distinct().ToArray();
+                    break;
+                case Building building:
+                    items = Trigger.None.Yield().Concat(Plugin.Map.FilterStructureTriggers().Select(t => t.Name).Distinct()).ToArray();
+                    filteredTypes = Plugin.Map.EventTypes.Where(ev => Plugin.Map.StructureEventTypes.Contains(ev)).Distinct().ToArray();
+                    break;
+                default:
+                    items = Trigger.None.Yield().Concat(Plugin.Map.Triggers.Select(t => t.Name).Distinct()).ToArray();
+                    filteredTypes = null;
+                    break;
+            }
+            int selectIndex = selected == null ? 0 : Enumerable.Range(0, items.Length).FirstOrDefault(x => String.Equals(items[x], selected, StringComparison.InvariantCultureIgnoreCase));
+            triggerComboBox.DataSource = items;
+            triggerComboBox.SelectedIndex = selectIndex;
+            triggerToolTip = filteredTypes == null ? null : "Allowed trigger events:\n\u2022 " + String.Join("\n\u2022 ", filteredTypes);
         }
 
         private void Rebind()
@@ -172,6 +202,7 @@ namespace MobiusEditor.Controls
             houseComboBox.DataBindings.Add("SelectedValue", obj, "House");
             strengthNud.DataBindings.Add("Value", obj, "Strength");
             directionComboBox.DataBindings.Add("SelectedValue", obj, "Direction");
+            UpdateDataSource();
             triggerComboBox.DataBindings.Add("SelectedItem", obj, "Trigger");
         }
 
@@ -234,6 +265,37 @@ namespace MobiusEditor.Controls
             {
                 binding.WriteValue();
             }
+        }
+
+        private void LblTriggerInfo_Paint(Object sender, PaintEventArgs e)
+        {
+            Control lbl = sender as Control;
+            int iconDim = (int)Math.Round(Math.Min(lbl.ClientSize.Width, lbl.ClientSize.Height) * .8f);
+            int x = (lbl.ClientSize.Width - iconDim) / 2;
+            int y = (lbl.ClientSize.Height - iconDim) / 2;
+            e.Graphics.DrawIcon(SystemIcons.Information, new Rectangle(x, y, iconDim, iconDim));
+        }
+
+        private void LblTriggerInfo_MouseEnter(Object sender, EventArgs e)
+        {
+            Control target = sender as Control;
+            if (target == null || triggerToolTip == null)
+            {
+                this.toolTip1.Hide(target);
+                return;
+            }
+            Point resPoint = target.PointToScreen(new Point(0, target.Height));
+            MethodInfo m = toolTip1.GetType().GetMethod("SetTool",
+                       BindingFlags.Instance | BindingFlags.NonPublic);
+            // private void SetTool(IWin32Window win, string text, TipInfo.Type type, Point position)
+            m.Invoke(toolTip1, new object[] { target, triggerToolTip, 2, resPoint });
+            //this.toolTip1.Show(triggerToolTip, target, target.Width, 0, 10000);
+        }
+
+        private void LblTriggerInfo_MouseLeave(Object sender, EventArgs e)
+        {
+            Control target = sender as Control;
+            this.toolTip1.Hide(target);
         }
     }
 

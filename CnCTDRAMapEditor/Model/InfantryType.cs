@@ -30,6 +30,10 @@ namespace MobiusEditor.Model
 
         public string OwnerHouse { get; private set; }
 
+        public bool IsArmed { get; private set; }
+
+        public bool IsHarvester => false;
+
         private Size _RenderSize;
 
         public Size GetRenderSize(Size cellSize)
@@ -39,16 +43,22 @@ namespace MobiusEditor.Model
         }
         public Image Thumbnail { get; set; }
 
-        public InfantryType(sbyte id, string name, string textId, string ownerHouse)
+        public InfantryType(sbyte id, string name, string textId, string ownerHouse, bool isArmed)
         {
             ID = id;
             Name = name;
             DisplayName = Globals.TheGameTextManager[textId] + " (" + Name.ToUpperInvariant() + ")";
             OwnerHouse = ownerHouse;
+            IsArmed = isArmed;
+        }
+
+        public InfantryType(sbyte id, string name, string textId, string ownerHouse)
+            : this(id, name, textId, ownerHouse, true)
+        {
         }
 
         public InfantryType(sbyte id, string name, string textId)
-            : this(id, name, textId, null)
+            : this(id, name, textId, null, true)
         {
         }
 

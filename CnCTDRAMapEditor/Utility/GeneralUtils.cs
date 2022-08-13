@@ -18,8 +18,9 @@ namespace MobiusEditor.Utility
         }
     }
 
-    public class GeneralUtils
+    public static class GeneralUtils
     {
+
         public static String MakeNew4CharName(IEnumerable<string> currentList, string fallback, params string[] reservedNames)
         {
             string name = string.Empty;
@@ -73,6 +74,7 @@ namespace MobiusEditor.Utility
             }
             return value;
         }
+
         public static string FilterToExisting(string value, string defaultVal, Boolean trimSource, IEnumerable<string> existing)
         {
             if (String.IsNullOrEmpty(value))
@@ -88,6 +90,27 @@ namespace MobiusEditor.Utility
                 }
             }
             return defaultVal;
+        }
+
+        public static StringBuilder TrimEnd(this StringBuilder sb, params char[] toTrim)
+        {
+            if (sb == null || sb.Length == 0) return sb;
+            int i = sb.Length - 1;
+            if (toTrim.Length > 0)
+            {
+                for (; i >= 0; --i)
+                    if (!toTrim.Contains(sb[i]))
+                        break;
+            }
+            else
+            {
+                for (; i >= 0; --i)
+                    if (!char.IsWhiteSpace(sb[i]))
+                        break;
+            }
+            if (i < sb.Length - 1)
+                sb.Length = i + 1;
+            return sb;
         }
     }
 }

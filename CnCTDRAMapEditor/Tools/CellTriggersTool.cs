@@ -18,26 +18,57 @@ using MobiusEditor.Interface;
 using MobiusEditor.Model;
 using MobiusEditor.Utility;
 using MobiusEditor.Widgets;
+using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace MobiusEditor.Tools
 {
     public class CellTriggersTool : ViewTool
     {
-        private readonly ComboBox triggerCombo;
+        private readonly ComboBox triggerComboBox;
 
         private readonly Dictionary<int, CellTrigger> undoCellTriggers = new Dictionary<int, CellTrigger>();
         private readonly Dictionary<int, CellTrigger> redoCellTriggers = new Dictionary<int, CellTrigger>();
 
         private bool placementMode;
+        private IGamePlugin plugin;
+
+        public string TriggerToolTip { get; set; }
 
         public CellTriggersTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, ComboBox triggerCombo, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> url)
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
-            this.priorityLayers = MapLayerFlag.CellTriggers;
-            this.triggerCombo = triggerCombo;
+            this.manuallyHandledLayers = MapLayerFlag.CellTriggers;
+            this.triggerComboBox = triggerCombo;
+            this.plugin = plugin;
+            UpdateDataSource();
+            plugin.Map.Triggers.CollectionChanged += Triggers_CollectionChanged;
+        }
+
+        private void Triggers_CollectionChanged(Object sender, NotifyCollectionChangedEventArgs e)
+        {
+            UpdateDataSource();
+        }
+
+        private void UpdateDataSource()
+        {
+            string selected = triggerComboBox.SelectedItem as string;
+            triggerComboBox.DataSource = null;
+            triggerComboBox.Items.Clear();
+            string[] items = plugin.Map.FilterCellTriggers().Select(t => t.Name).Distinct().ToArray();
+            string[] filteredTypes = plugin.Map.EventTypes.Where(ev => plugin.Map.CellEventTypes.Contains(ev)).Distinct().ToArray();
+            if (items.Length == 0)
+            {
+                items = new[] { Trigger.None };
+            }
+            int selectIndex = selected == null ? 0 : Enumerable.Range(0, items.Length).FirstOrDefault(x => String.Equals(items[x], selected, StringComparison.InvariantCultureIgnoreCase));
+            triggerComboBox.DataSource = items;
+            triggerComboBox.SelectedIndex = selectIndex;
+            TriggerToolTip = filteredTypes == null ? null : "Allowed trigger events:\n\u2022 " + String.Join("\n\u2022 ", filteredTypes);
         }
 
         private void MapPanel_MouseDown(object sender, MouseEventArgs e)
@@ -120,7 +151,7 @@ namespace MobiusEditor.Tools
                     {
                         undoCellTriggers[cell] = map.CellTriggers[cell];
                     }
-                    var cellTrigger = new CellTrigger { Trigger = triggerCombo.SelectedItem as string };
+                    var cellTrigger = new CellTrigger { Trigger = triggerComboBox.SelectedItem as string };
                     map.CellTriggers[cell] = cellTrigger;
                     redoCellTriggers[cell] = cellTrigger;
                     mapPanel.Invalidate();
@@ -175,7 +206,7 @@ namespace MobiusEditor.Tools
                 var cellTrigger = map.CellTriggers[cell];
                 if (cellTrigger != null)
                 {
-                    triggerCombo.SelectedItem = cellTrigger.Trigger;
+                    triggerComboBox.SelectedItem = cellTrigger.Trigger;
                 }
             }
         }
@@ -205,6 +236,23 @@ namespace MobiusEditor.Tools
             url.Track(undoAction, redoAction);
         }
 
+        private void TriggerCombo_SelectedIndexChanged(System.Object sender, System.EventArgs e)
+        {
+            mapPanel.Invalidate();
+        }
+
+        protected override void PostRenderMap(Graphics graphics)
+        {
+            base.PostRenderMap(graphics);
+            string selected = triggerComboBox.SelectedItem as string;
+            string[] selectedRange = selected != null ? new[] { selected } : new string[] { };
+            RenderCellTriggers(graphics, Color.Black, Color.White, Color.White, false, true, selectedRange);
+            if (selected != null)
+            {
+                RenderCellTriggers(graphics, Color.Black, Color.Yellow, Color.Yellow, true, false, selectedRange);
+            }
+        }
+
         private void UpdateStatus()
         {
             if (placementMode)
@@ -220,6 +268,7 @@ namespace MobiusEditor.Tools
         public override void Activate()
         {
             base.Activate();
+            this.triggerComboBox.SelectedIndexChanged += this.TriggerCombo_SelectedIndexChanged;
             this.mapPanel.MouseDown += MapPanel_MouseDown;
             this.mapPanel.MouseUp += MapPanel_MouseUp;
             this.mapPanel.MouseMove += MapPanel_MouseMove;
@@ -232,6 +281,7 @@ namespace MobiusEditor.Tools
         public override void Deactivate()
         {
             base.Deactivate();
+            this.triggerComboBox.SelectedIndexChanged -= this.TriggerCombo_SelectedIndexChanged;
             mapPanel.MouseDown -= MapPanel_MouseDown;
             mapPanel.MouseUp -= MapPanel_MouseUp;
             mapPanel.MouseMove -= MapPanel_MouseMove;

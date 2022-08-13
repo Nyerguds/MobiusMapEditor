@@ -91,7 +91,7 @@ namespace MobiusEditor.Tools
 
             this.terrainProperties = terrainProperties;
             this.terrainProperties.Terrain = mockTerrain;
-            this.terrainProperties.Visible = plugin.GameType == GameType.TiberianDawn;
+            this.terrainProperties.Visible = plugin.Map.TerrainEventTypes.Count > 0;
 
             navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
 

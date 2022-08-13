@@ -299,9 +299,35 @@ namespace MobiusEditor.RedAlert
             var houseTypes = HouseTypes.GetTypes();
             basicSection.Player = houseTypes.First().Name;
 
+            string[] cellEventTypes =
+            {
+                EventTypes.TEVENT_CROSS_HORIZONTAL,
+                EventTypes.TEVENT_CROSS_VERTICAL,
+                EventTypes.TEVENT_ENTERS_ZONE,
+                EventTypes.TEVENT_PLAYER_ENTERED,
+                EventTypes.TEVENT_ANY,
+                EventTypes.TEVENT_DISCOVERED,
+                EventTypes.TEVENT_NONE
+            };
+            string[] unitEventTypes =
+            {
+		        EventTypes.TEVENT_DISCOVERED,
+		        EventTypes.TEVENT_DESTROYED,
+		        EventTypes.TEVENT_ATTACKED,
+		        EventTypes.TEVENT_ANY,
+		        EventTypes.TEVENT_NONE
+            };
+            string[] structureEventTypes = unitEventTypes.Concat( new []
+            {
+                EventTypes.TEVENT_PLAYER_ENTERED,
+                EventTypes.TEVENT_SPIED,
+            }).ToArray();
+            string[] terrainEventTypes = { };
+
             Map = new Map(basicSection, null, Constants.MaxSize, typeof(House),
                 houseTypes, TheaterTypes.GetTypes(), TemplateTypes.GetTypes(), TerrainTypes.GetTypes(),
-                OverlayTypes.GetTypes(), SmudgeTypes.GetTypes(), EventTypes.GetTypes(), ActionTypes.GetTypes(),
+                OverlayTypes.GetTypes(), SmudgeTypes.GetTypes(), EventTypes.GetTypes(), cellEventTypes,
+                unitEventTypes, structureEventTypes, terrainEventTypes, ActionTypes.GetTypes(),
                 MissionTypes.GetTypes(), DirectionTypes.GetTypes(), InfantryTypes.GetTypes(), UnitTypes.GetTypes(),
                 BuildingTypes.GetTypes(), TeamMissionTypes.GetTypes(), technoTypes, waypoints, movieTypes, themeTypes)
             {
@@ -602,6 +628,12 @@ namespace MobiusEditor.RedAlert
                     }
                 }
             }
+            HashSet<string> checkTrigs = Trigger.None.Yield().Concat(Map.Triggers.Select(t => t.Name)).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+            HashSet<string> checkCellTrigs = Map.FilterCellTriggers().Select(t => t.Name).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+            HashSet<string> checkUnitTrigs = Trigger.None.Yield().Concat(Map.FilterUnitTriggers().Select(t => t.Name)).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+            HashSet<string> checkStrcTrigs = Trigger.None.Yield().Concat(Map.FilterStructureTriggers().Select(t => t.Name)).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+            // Terrain objects in RA have no triggers
+            //HashSet<string> checkTerrTrigs = Trigger.None.Yield().Concat(Map.FilterTerrainTriggers().Select(t => t.Name)).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
 
             var mapPackSection = ini.Sections.Extract("MapPack");
             if (mapPackSection != null)
@@ -659,12 +691,26 @@ namespace MobiusEditor.RedAlert
                     var terrainType = Map.TerrainTypes.Where(t => t.Equals(name)).FirstOrDefault();
                     if (terrainType != null)
                     {
-                        if (!Map.Technos.Add(cell, new Terrain
+                        Terrain newTerr = new Terrain
                         {
                             Type = terrainType,
                             Icon = terrainType.IsTransformable ? 22 : 0,
                             Trigger = Trigger.None
-                        }))
+                        };
+                        if (Map.Technos.Add(cell, newTerr))
+                        {
+                            //if (!checkTrigs.Contains(newTerr.Trigger))
+                            //{
+                            //    errors.Add(string.Format("Terrain '{0}' links to unknown trigger '{1}'", terrainType, newTerr.Trigger));
+                            //    newTerr.Trigger = Trigger.None;
+                            //}
+                            //else if (!checkTerrTrigs.Contains(Value))
+                            //{
+                            //    errors.Add(string.Format("Terrain '{0}' links to trigger '{1}' which does not contain an event applicable to terrain", terrainType, newTerr.Trigger));
+                            //    newTerr.Trigger = Trigger.None;
+                            //}
+                        }
+                        else
                         {
                             var techno = Map.Technos[cell];
                             if (techno is Building building)
@@ -677,7 +723,7 @@ namespace MobiusEditor.RedAlert
                             }
                             else if (techno is Terrain terrain)
                             {
-                                errors.Add(string.Format("Terrain '{0}' overlaps terrain '{1}' in cell {2}, skipping", name, terrain.Type.Name, cell));
+                                errors.Add(string.Format("Terrain '{0}' overlaps terrain object '{1}' in cell {2}, skipping", name, terrain.Type.Name, cell));
                             }
                             else if (techno is InfantryGroup infantry)
                             {
@@ -771,17 +817,30 @@ namespace MobiusEditor.RedAlert
                         if (unitType != null)
                         {
                             var direction = (byte)((int.Parse(tokens[4]) + 0x08) & ~0x0F);
-
                             var cell = int.Parse(tokens[3]);
-                            if (!Map.Technos.Add(cell, new Unit()
+                            Unit newUnit = new Unit()
                             {
                                 Type = unitType,
                                 House = Map.HouseTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault(),
                                 Strength = int.Parse(tokens[2]),
                                 Direction = Map.DirectionTypes.Where(d => d.Equals(direction)).FirstOrDefault(),
-                                Mission = tokens[5],
+                                Mission = Map.MissionTypes.Where(t => t.Equals(tokens[5])).FirstOrDefault() ?? Map.GetDefaultMission(unitType),
                                 Trigger = tokens[6]
-                            }))
+                            };
+                            if (Map.Technos.Add(cell, newUnit))
+                            {
+                                if (!checkTrigs.Contains(tokens[6]))
+                                {
+                                    errors.Add(string.Format("Unit '{0}' links to unknown trigger '{1}'", tokens[1], tokens[6]));
+                                    newUnit.Trigger = Trigger.None;
+                                }
+                                else if (!checkUnitTrigs.Contains(tokens[6]))
+                                {
+                                    errors.Add(string.Format("Unit '{0}' links to trigger '{1}' which does not contain an event applicable to units", tokens[1], tokens[6]));
+                                    newUnit.Trigger = Trigger.None;
+                                }
+                            }
+                            else
                             {
                                 var techno = Map.Technos[cell];
                                 if (techno is Building building)
@@ -821,8 +880,10 @@ namespace MobiusEditor.RedAlert
                     }
                 }
             }
-
+            // Classic game does not support this, so I'm leaving this out. It's buggy anyway.
+            // Extracting it so it doesn't end up with the "extra sections"
             var aircraftSections = ini.Sections.Extract("Aircraft");
+            /*/            
             if (aircraftSections != null)
             {
                 foreach (var (_, Value) in aircraftSections)
@@ -841,7 +902,7 @@ namespace MobiusEditor.RedAlert
                                     House = Map.HouseTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault(),
                                     Strength = int.Parse(tokens[2]),
                                     Direction = Map.DirectionTypes.Where(d => d.Equals(direction)).FirstOrDefault(),
-                                    Mission = tokens[5]
+                                    Mission = Map.MissionTypes.Where(t => t.Equals(tokens[5])).FirstOrDefault() ?? Map.GetDefaultMission(aircraftType)
                                 }))
                             {
                                 var techno = Map.Technos[cell];
@@ -882,6 +943,7 @@ namespace MobiusEditor.RedAlert
                     }
                 }
             }
+            //*/
 
             var shipsSection = ini.Sections.Extract("Ships");
             if (shipsSection != null)
@@ -895,17 +957,30 @@ namespace MobiusEditor.RedAlert
                         if (vesselType != null)
                         {
                             var direction = (byte)((int.Parse(tokens[4]) + 0x08) & ~0x0F);
-
                             var cell = int.Parse(tokens[3]);
-                            if (!Map.Technos.Add(cell, new Unit()
+                            Unit newShip = new Unit()
+                            {
+                                Type = vesselType,
+                                House = Map.HouseTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault(),
+                                Strength = int.Parse(tokens[2]),
+                                Direction = Map.DirectionTypes.Where(d => d.Equals(direction)).FirstOrDefault(),
+                                Mission = Map.MissionTypes.Where(t => t.Equals(tokens[5])).FirstOrDefault() ?? Map.GetDefaultMission(vesselType),
+                                Trigger = tokens[6]
+                            };
+                            if (Map.Technos.Add(cell, newShip))
+                            {
+                                if (!checkTrigs.Contains(tokens[6]))
                                 {
-                                    Type = vesselType,
-                                    House = Map.HouseTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault(),
-                                    Strength = int.Parse(tokens[2]),
-                                    Direction = Map.DirectionTypes.Where(d => d.Equals(direction)).FirstOrDefault(),
-                                    Mission = Map.MissionTypes.Where(t => t.Equals(tokens[5])).FirstOrDefault(),
-                                    Trigger = tokens[6]
-                                }))
+                                    errors.Add(string.Format("Ship '{0}' links to unknown trigger '{1}'", tokens[1], tokens[6]));
+                                    newShip.Trigger = Trigger.None;
+                                }
+                                else if (!checkUnitTrigs.Contains(tokens[6]))
+                                {
+                                    errors.Add(string.Format("Ship '{0}' links to trigger '{1}' which does not contain an event applicable to ships", tokens[1], tokens[6]));
+                                    newShip.Trigger = Trigger.None;
+                                }
+                            }
+                            else
                             {
                                 var techno = Map.Technos[cell];
                                 if (techno is Building building)
@@ -964,23 +1039,31 @@ namespace MobiusEditor.RedAlert
                                 infantryGroup = new InfantryGroup();
                                 Map.Technos.Add(cell, infantryGroup);
                             }
-
                             if (infantryGroup != null)
                             {
                                 var stoppingPos = int.Parse(tokens[4]);
                                 if (stoppingPos < Globals.NumInfantryStops)
                                 {
                                     var direction = (byte)((int.Parse(tokens[6]) + 0x08) & ~0x0F);
-
                                     if (infantryGroup.Infantry[stoppingPos] == null)
                                     {
+                                        if (!checkTrigs.Contains(tokens[7]))
+                                        {
+                                            errors.Add(string.Format("Infantry '{0}' links to unknown trigger '{1}'", infantryType, tokens[7]));
+                                            tokens[7] = Trigger.None;
+                                        }
+                                        else if (!checkUnitTrigs.Contains(tokens[7]))
+                                        {
+                                            errors.Add(string.Format("Infantry '{0}' links to trigger '{1}' which does not contain an event applicable to infantry", infantryType, tokens[7]));
+                                            tokens[7] = Trigger.None;
+                                        }
                                         infantryGroup.Infantry[stoppingPos] = new Infantry(infantryGroup)
                                         {
                                             Type = infantryType,
                                             House = Map.HouseTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault(),
                                             Strength = int.Parse(tokens[2]),
                                             Direction = Map.DirectionTypes.Where(d => d.Equals(direction)).FirstOrDefault(),
-                                            Mission = Map.MissionTypes.Where(t => t.Equals(tokens[5])).FirstOrDefault(),
+                                            Mission = Map.MissionTypes.Where(t => t.Equals(tokens[5])).FirstOrDefault() ?? Map.GetDefaultMission(infantryType),
                                             Trigger = tokens[7]
                                         };
                                     }
@@ -1043,20 +1126,34 @@ namespace MobiusEditor.RedAlert
                         if (buildingType != null)
                         {
                             var direction = (byte)((int.Parse(tokens[4]) + 0x08) & ~0x0F);
-                            bool sellable = (tokens.Length >= 7) ? (int.Parse(tokens[6]) != 0) : false;
-                            bool rebuild = (tokens.Length >= 8) ? (int.Parse(tokens[7]) != 0) : false;
+                            bool sellable = (tokens.Length >= 7) && (int.Parse(tokens[6]) != 0);
+                            bool rebuild = (tokens.Length >= 8) && (int.Parse(tokens[7]) != 0);
 
                             var cell = int.Parse(tokens[3]);
-                            if (!Map.Buildings.Add(cell, new Building()
+                            Building newBld = new Building()
+                            {
+                                Type = buildingType,
+                                House = Map.HouseTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault(),
+                                Strength = int.Parse(tokens[2]),
+                                Direction = Map.DirectionTypes.Where(d => d.Equals(direction)).FirstOrDefault(),
+                                Trigger = tokens[5],
+                                Sellable = sellable,
+                                Rebuild = rebuild
+                            };
+                            if (Map.Buildings.Add(cell, newBld))
+                            {
+                                if (!checkTrigs.Contains(tokens[5]))
                                 {
-                                    Type = buildingType,
-                                    House = Map.HouseTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault(),
-                                    Strength = int.Parse(tokens[2]),
-                                    Direction = Map.DirectionTypes.Where(d => d.Equals(direction)).FirstOrDefault(),
-                                    Trigger = tokens[5],
-                                    Sellable = sellable,
-                                    Rebuild = rebuild
-                                }))
+                                    errors.Add(string.Format("Structure '{0}' links to unknown trigger '{1}'", tokens[1], tokens[5]));
+                                    newBld.Trigger = Trigger.None;
+                                }
+                                else if (!checkStrcTrigs.Contains(tokens[5]))
+                                {
+                                    errors.Add(string.Format("Structure '{0}' links to trigger '{1}' which does not contain an event applicable to structures", tokens[1], tokens[5]));
+                                    newBld.Trigger = Trigger.None;
+                                }
+                            }
+                            else
                             {
                                 var techno = Map.Technos[cell];
                                 if (techno is Building building)
@@ -1189,7 +1286,6 @@ namespace MobiusEditor.RedAlert
                     }
                 }
             }
-
             var cellTriggersSection = ini.Sections.Extract("CellTriggers");
             if (cellTriggersSection != null)
             {
@@ -1199,10 +1295,24 @@ namespace MobiusEditor.RedAlert
                     {
                         if (Map.Metrics.Contains(cell))
                         {
-                            Map.CellTriggers[cell] = new CellTrigger
+                            if (checkTrigs.Contains(Value))
                             {
-                                Trigger = Value
-                            };
+                                if (checkCellTrigs.Contains(Value))
+                                {
+                                    Map.CellTriggers[cell] = new CellTrigger
+                                    {
+                                        Trigger = Value
+                                    };
+                                }
+                                else
+                                {
+                                    errors.Add(string.Format("Cell trigger {0} links to trigger '{1}' which does not contain a placeable event", cell, Value));
+                                }
+                            }
+                            else
+                            {
+                                errors.Add(string.Format("Cell trigger {0} links to unknown trigger '{1}'", cell, Value));
+                            }
                         }
                         else
                         {
@@ -1504,6 +1614,8 @@ namespace MobiusEditor.RedAlert
                     unit.Trigger
                 );
             }
+            // Classic game does not support this, so I'm leaving this out.
+            /*/
             var aircraftSection = ini.Sections.Add("AIRCRAFT");
             var aircraftIndex = 0;
             foreach (var (location, aircraft) in Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsAircraft))
@@ -1521,7 +1633,7 @@ namespace MobiusEditor.RedAlert
                     aircraft.Mission
                 );
             }
-
+            //*/
             var shipsSection = ini.Sections.Add("SHIPS");
             var shipsIndex = 0;
             foreach (var (location, ship) in Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsVessel))

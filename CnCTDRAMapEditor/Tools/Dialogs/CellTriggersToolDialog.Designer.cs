@@ -42,82 +42,97 @@ namespace MobiusEditor.Tools.Dialogs
         /// </summary>
         private void InitializeComponent()
         {
-            this.tableLayoutPanel4 = new System.Windows.Forms.TableLayoutPanel();
+            this.components = new System.ComponentModel.Container();
+            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.label1 = new System.Windows.Forms.Label();
-            this.triggerCombo = new System.Windows.Forms.ComboBox();
-            this.tableLayoutPanel4.SuspendLayout();
+            this.triggerComboBox = new System.Windows.Forms.ComboBox();
+            this.lblTriggerInfo = new System.Windows.Forms.Label();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
-            // tableLayoutPanel4
+            // tableLayoutPanel1
             // 
-            this.tableLayoutPanel4.AutoSize = true;
-            this.tableLayoutPanel4.ColumnCount = 2;
-            this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
-            this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
-            this.tableLayoutPanel4.Controls.Add(this.label1, 0, 0);
-            this.tableLayoutPanel4.Controls.Add(this.triggerCombo, 1, 0);
-            this.tableLayoutPanel4.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel4.Location = new System.Drawing.Point(0, 0);
-            this.tableLayoutPanel4.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.tableLayoutPanel4.Name = "tableLayoutPanel4";
-            this.tableLayoutPanel4.RowCount = 2;
-            this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel4.Size = new System.Drawing.Size(218, 118);
-            this.tableLayoutPanel4.TabIndex = 3;
+            this.tableLayoutPanel1.AutoSize = true;
+            this.tableLayoutPanel1.ColumnCount = 3;
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 31.25F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 68.75F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 28F));
+            this.tableLayoutPanel1.Controls.Add(this.label1, 0, 0);
+            this.tableLayoutPanel1.Controls.Add(this.triggerComboBox, 1, 0);
+            this.tableLayoutPanel1.Controls.Add(this.lblTriggerInfo, 2, 0);
+            this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
+            this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.tableLayoutPanel1.Name = "tableLayoutPanel1";
+            this.tableLayoutPanel1.RowCount = 2;
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(218, 118);
+            this.tableLayoutPanel1.TabIndex = 3;
             // 
             // label1
             // 
             this.label1.AutoSize = true;
             this.label1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.label1.Location = new System.Drawing.Point(4, 0);
-            this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(58, 38);
+            this.label1.Size = new System.Drawing.Size(58, 28);
             this.label1.TabIndex = 0;
             this.label1.Text = "Trigger";
             this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // triggerCombo
             // 
-            this.triggerCombo.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.triggerCombo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.triggerCombo.FormattingEnabled = true;
-            this.triggerCombo.Location = new System.Drawing.Point(70, 5);
-            this.triggerCombo.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.triggerCombo.Name = "triggerCombo";
-            this.triggerCombo.Size = new System.Drawing.Size(144, 28);
-            this.triggerCombo.TabIndex = 1;
+            this.triggerComboBox.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.triggerComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.triggerComboBox.FormattingEnabled = true;
+            this.triggerComboBox.Location = new System.Drawing.Point(70, 5);
+            this.triggerComboBox.Name = "triggerComboBox";
+            this.triggerComboBox.Size = new System.Drawing.Size(144, 28);
+            this.triggerComboBox.TabIndex = 1;
+            // 
+            // lblTriggerInfo
+            // 
+            this.lblTriggerInfo.AutoSize = true;
+            this.lblTriggerInfo.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblTriggerInfo.Location = new System.Drawing.Point(201, 0);
+            this.lblTriggerInfo.Margin = new System.Windows.Forms.Padding(0);
+            this.lblTriggerInfo.Name = "lblTriggerInfo";
+            this.lblTriggerInfo.Size = new System.Drawing.Size(29, 27);
+            this.lblTriggerInfo.TabIndex = 10;
+            this.lblTriggerInfo.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.lblTriggerInfo.Paint += new System.Windows.Forms.PaintEventHandler(this.LblTriggerInfo_Paint);
+            this.lblTriggerInfo.MouseEnter += new System.EventHandler(this.LblTriggerInfo_MouseEnter);
+            this.lblTriggerInfo.MouseLeave += new System.EventHandler(this.LblTriggerInfo_MouseLeave);
             // 
             // CellTriggersToolDialog
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.AutoSize = true;
-            this.ClientSize = new System.Drawing.Size(218, 118);
+            this.ClientSize = new System.Drawing.Size(250, 30);
             this.ControlBox = false;
-            this.Controls.Add(this.tableLayoutPanel4);
+            this.Controls.Add(this.tableLayoutPanel1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
             this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.MinimumSize = new System.Drawing.Size(210, 91);
+            this.MinimumSize = new System.Drawing.Size(210, 30);
             this.Name = "CellTriggersToolDialog";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
             this.Text = "Cell Triggers";
-            this.tableLayoutPanel4.ResumeLayout(false);
-            this.tableLayoutPanel4.PerformLayout();
+            this.tableLayoutPanel1.ResumeLayout(false);
+            this.tableLayoutPanel1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
-
         }
 
         #endregion
 
-        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel4;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.ComboBox triggerCombo;
+        private System.Windows.Forms.ComboBox triggerComboBox;
+        private System.Windows.Forms.ToolTip toolTip1;
+        private System.Windows.Forms.Label lblTriggerInfo;
     }
 }

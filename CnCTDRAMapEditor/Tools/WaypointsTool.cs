@@ -41,7 +41,7 @@ namespace MobiusEditor.Tools
             IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> url)
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
-            this.priorityLayers = MapLayerFlag.Waypoints;
+            this.manuallyHandledLayers = MapLayerFlag.Waypoints;
             this.jumpToButton = jumpToButton;
             this.jumpToButton.Click += JumpToButton_Click;
             this.waypointCombo = waypointCombo;
@@ -259,6 +259,7 @@ namespace MobiusEditor.Tools
         private void WaypointCombo_SelectedIndexChanged(Object sender, EventArgs e)
         {
             jumpToButton.Enabled = waypointCombo.SelectedItem is Waypoint wp && wp.Cell.HasValue;
+            mapPanel.Invalidate();
         }
 
         private void JumpToButton_Click(System.Object sender, System.EventArgs e)
@@ -287,6 +288,18 @@ namespace MobiusEditor.Tools
                         mapPanel.AutoScrollPosition = new Point(x,y);
                     }
                 }
+            }
+        }
+
+        protected override void PostRenderMap(Graphics graphics)
+        {
+            base.PostRenderMap(graphics);
+            Waypoint selected = waypointCombo.SelectedItem as Waypoint;
+            Waypoint[] selectedRange = selected != null ? new [] { selected } : new Waypoint[] { };
+            RenderWayPoints(graphics, Color.Black, Color.DarkOrange, Color.DarkOrange, false, true, selectedRange);
+            if (selected != null)
+            {
+                RenderWayPoints(graphics, Color.Black, Color.Yellow, Color.Yellow, true, false, selectedRange);
             }
         }
 

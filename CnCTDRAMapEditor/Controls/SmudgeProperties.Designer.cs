@@ -89,13 +89,13 @@ namespace MobiusEditor.Controls
             this.stateComboBox.TabIndex = 9;
             this.stateComboBox.SelectedIndexChanged += new System.EventHandler(this.comboBox_SelectedValueChanged);
             // 
-            // TriggerProperties
+            // SmudgeProperties
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.tableLayoutPanel1);
             this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.Name = "TriggerProperties";
+            this.Name = "SmudgeProperties";
             this.Size = new System.Drawing.Size(336, 38);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();

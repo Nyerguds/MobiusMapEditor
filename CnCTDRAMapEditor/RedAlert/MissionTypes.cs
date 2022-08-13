@@ -20,28 +20,30 @@ namespace MobiusEditor.RedAlert
     {
         private static readonly string[] Types = new string[]
         {
+            // Nyerguds upgrade: Removed irrelevant types for preplaced units.
+            // Note that TeamTypes use a separate list, defined in the TeamMissionTypes class.
             "Sleep",
-            "Attack",
-            "Move",
-            "QMove",
-            "Retreat",
-            "Guard",
+            //"Attack",
+            //"Move",
+            //"QMove",
+            //"Retreat",
             "Sticky",
-            "Enter",
-            "Capture",
+            "Guard",
+            //"Enter",
+            //"Capture",
             "Harvest",
             "Area Guard",
             "Return",
             "Stop",
-            "Ambush",
+            //"Ambush",
             "Hunt",
-            "Unload",
-            "Sabotage",
-            "Construction",
-            "Selling",
-            "Repair",
-            "Rescue",
-            "Missile",
+            //"Unload",
+            //"Sabotage",
+            //"Construction",
+            //"Selling",
+            //"Repair",
+            //"Rescue",
+            //"Missile",
             "Harmless"
         };
 

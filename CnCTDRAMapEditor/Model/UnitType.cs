@@ -50,6 +50,10 @@ namespace MobiusEditor.Model
 
         public bool IsVessel => (ID & UnitTypeIDMask.Vessel) != 0;
 
+        public bool IsArmed { get; private set; }
+
+        public bool IsHarvester { get; private set; }
+
         private Size _RenderSize;
 
         public Size GetRenderSize(Size cellSize)
@@ -60,7 +64,7 @@ namespace MobiusEditor.Model
 
         public Image Thumbnail { get; set; }
 
-        public UnitType(sbyte id, string name, string textId, string ownerHouse, bool hasTurret, bool isFixedWing)
+        public UnitType(sbyte id, string name, string textId, string ownerHouse, bool hasTurret, bool isFixedWing, bool isArmed, bool isHarvester)
         {
             ID = id;
             Name = name;
@@ -68,10 +72,22 @@ namespace MobiusEditor.Model
             OwnerHouse = ownerHouse;
             HasTurret = hasTurret;
             IsFixedWing = isFixedWing;
+            IsArmed = isArmed;
+            IsHarvester = isHarvester;
+        }
+
+        public UnitType(sbyte id, string name, string textId, string ownerHouse, bool hasTurret, bool isFixedWing, bool isArmed)
+            : this(id, name, textId, ownerHouse, hasTurret, isFixedWing, isArmed, false)
+        {
+        }
+
+        public UnitType(sbyte id, string name, string textId, string ownerHouse, bool hasTurret, bool isFixedWing)
+            : this(id, name, textId, ownerHouse, hasTurret, isFixedWing, true, false)
+        {
         }
 
         public UnitType(sbyte id, string name, string textId, string ownerHouse, bool hasTurret)
-            : this(id, name, textId, ownerHouse, hasTurret, false)
+            : this(id, name, textId, ownerHouse, hasTurret, false, true, false)
         {
         }
 
