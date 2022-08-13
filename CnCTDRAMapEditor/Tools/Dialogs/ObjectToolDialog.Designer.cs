@@ -13,6 +13,7 @@
 // GNU General Public License along with permitted additional restrictions 
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using MobiusEditor.Interface;
+using MobiusEditor.Utility;
 
 namespace MobiusEditor.Tools.Dialogs
 {
@@ -44,7 +45,7 @@ namespace MobiusEditor.Tools.Dialogs
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
+            CustomComponentResourceManager resources = new CustomComponentResourceManager(typeof(ObjectToolDialog<>), "ObjectToolDialog");
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.objectTypeMapPanel = new MobiusEditor.Controls.MapPanel();
             this.objectTypeListBox = new MobiusEditor.Controls.TypeListBox();

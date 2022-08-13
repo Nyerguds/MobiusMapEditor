@@ -636,6 +636,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Tools\Dialogs\ObjectToolDialog.resx">
       <DependentUpon>ObjectToolDialog.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Tools\Dialogs\GenericToolDialog.resx">
       <DependentUpon>GenericToolDialog.cs</DependentUpon>

@@ -44,14 +44,14 @@ namespace MobiusEditor.Tools.Dialogs
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SmudgeToolDialog));
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            this.smudgeTypeMapPanel = new MobiusEditor.Controls.MapPanel();
             this.smudgeTypeListBox = new MobiusEditor.Controls.TypeListBox();
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
+            this.smudgeTypeMapPanel = new MobiusEditor.Controls.MapPanel();
             this.smudgeProperties = new MobiusEditor.Controls.SmudgeProperties();
-            this.tableLayoutPanel2.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
+            this.tableLayoutPanel2.SuspendLayout();
             this.SuspendLayout();
             // 
             // tableLayoutPanel1
@@ -65,46 +65,12 @@ namespace MobiusEditor.Tools.Dialogs
             this.tableLayoutPanel1.Controls.Add(this.tableLayoutPanel2, 1, 0);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
-            this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 1;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(565, 582);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(504, 320);
             this.tableLayoutPanel1.TabIndex = 0;
-            //
-            // tableLayoutPanel2
-            //
-            this.tableLayoutPanel2.ColumnCount = 1;
-            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel2.Controls.Add(this.smudgeTypeMapPanel, 0, 0);
-            this.tableLayoutPanel2.Controls.Add(this.smudgeProperties, 0, 1);
-            this.tableLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel2.Location = new System.Drawing.Point(0, 0);
-            this.tableLayoutPanel2.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
-            this.tableLayoutPanel2.Name = "tableLayoutPanel2";
-            this.tableLayoutPanel2.RowCount = 3;
-            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel2.Size = new System.Drawing.Size(365, 582);
-            this.tableLayoutPanel2.TabIndex = 0;
-            // 
-            // smudgeTypeMapPanel
-            // 
-            this.smudgeTypeMapPanel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.smudgeTypeMapPanel.Location = new System.Drawing.Point(4, 35);
-            this.smudgeTypeMapPanel.MapImage = null;
-            this.smudgeTypeMapPanel.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
-            this.smudgeTypeMapPanel.MaxZoom = 8;
-            this.smudgeTypeMapPanel.MinZoom = 1;
-            this.smudgeTypeMapPanel.Name = "smudgeTypeMapPanel";
-            this.smudgeTypeMapPanel.SmoothScale = false;
-            this.smudgeTypeMapPanel.Size = new System.Drawing.Size(357, 272);
-            this.smudgeTypeMapPanel.TabIndex = 3;
-            this.smudgeTypeMapPanel.Zoom = 1;
-            this.smudgeTypeMapPanel.ZoomStep = 1;
             //
             // smudgeTypeListBox
             //
@@ -116,38 +82,67 @@ namespace MobiusEditor.Tools.Dialogs
             this.smudgeTypeListBox.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.smudgeTypeListBox.MissingThumbnail = ((System.Drawing.Image)(resources.GetObject("smudgeTypeComboBox.MissingThumbnail")));
             this.smudgeTypeListBox.Name = "smudgeTypeListBox";
-            this.smudgeTypeListBox.Size = new System.Drawing.Size(200, 582);
+            this.smudgeTypeListBox.Size = new System.Drawing.Size(244, 310);
             this.smudgeTypeListBox.TabIndex = 2;
             this.smudgeTypeListBox.ValueMember = "Type";
+            //
+            // tableLayoutPanel2
+            //
+            this.tableLayoutPanel2.ColumnCount = 1;
+            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel2.Controls.Add(this.smudgeTypeMapPanel, 0, 0);
+            this.tableLayoutPanel2.Controls.Add(this.smudgeProperties, 0, 1);
+            this.tableLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanel2.Location = new System.Drawing.Point(256, 4);
+            this.tableLayoutPanel2.Margin = new System.Windows.Forms.Padding(4);
+            this.tableLayoutPanel2.Name = "tableLayoutPanel2";
+            this.tableLayoutPanel2.RowCount = 2;
+            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 40F));
+            this.tableLayoutPanel2.Size = new System.Drawing.Size(244, 312);
+            this.tableLayoutPanel2.TabIndex = 0;
+            // 
+            // smudgeTypeMapPanel
+            // 
+            this.smudgeTypeMapPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.smudgeTypeMapPanel.Location = new System.Drawing.Point(4, 5);
+            this.smudgeTypeMapPanel.MapImage = null;
+            this.smudgeTypeMapPanel.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.smudgeTypeMapPanel.MaxZoom = 8;
+            this.smudgeTypeMapPanel.MinZoom = 1;
+            this.smudgeTypeMapPanel.Name = "smudgeTypeMapPanel";
+            this.smudgeTypeMapPanel.SmoothScale = false;
+            this.smudgeTypeMapPanel.Size = new System.Drawing.Size(236, 200);
+            this.smudgeTypeMapPanel.TabIndex = 2;
+            this.smudgeTypeMapPanel.Zoom = 1;
+            this.smudgeTypeMapPanel.ZoomStep = 1;
             // 
             // smudgeProperties
             // 
-            this.smudgeProperties.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.smudgeProperties.Location = new System.Drawing.Point(5, 316);
-            this.smudgeProperties.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
+            this.smudgeProperties.Dock = System.Windows.Forms.DockStyle.Top;
+            this.smudgeProperties.Location = new System.Drawing.Point(4, 215);
+            this.smudgeProperties.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.smudgeProperties.Name = "smudgeProperties";
-            this.smudgeProperties.Size = new System.Drawing.Size(355, 261);
-            this.smudgeProperties.TabIndex = 4;
+            this.smudgeProperties.Size = new System.Drawing.Size(236, 30);
+            this.smudgeProperties.TabIndex = 3;
             // 
-            // ObjectToolDialog
+            // SmudgeToolDialog
             // 
-            this.ClientSize = new System.Drawing.Size(580, 420);
+            this.ClientSize = new System.Drawing.Size(504, 320);
             this.ControlBox = false;
             this.Controls.Add(this.tableLayoutPanel1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;
-            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.MinimumSize = new System.Drawing.Size(400, 460);
-            this.Name = "ObjectToolDialog";
+            this.MinimumSize = new System.Drawing.Size(520, 336);
+            this.Name = "SmudgeToolDialog";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
             this.Text = "Smudge";
-            this.tableLayoutPanel2.ResumeLayout(false);
             this.tableLayoutPanel1.ResumeLayout(false);
+            this.tableLayoutPanel2.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
         }

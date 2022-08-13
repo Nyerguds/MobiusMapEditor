@@ -124,7 +124,7 @@ v1.4.0.4: [WIP]
 * Files opened from filenames with nonstandard extensions will not change these extensions when saving the file. This also means RA maps opened from a .ini file will no longer change the extension to .mpr when saving.
 * Terrain objects will now only pop up a poperties box for setting a trigger in TD mode.
 * Optimised loading so the editor will skip loading objects from different theaters.
-* Fixed user settings loading, so it can port over the settings (game folder, invite warning, and the dialog locations) from previous versions. (It's a hacky system, but it works.)
+* User settings (game folder, invite warning, and the dialog locations) will now be ported over from previous versions.
 * Added support for loading mod xml info and graphics through the "ModsToLoad" setting in "CnCTDRAMapEditor.exe.config". The syntax is a semicolon-separated list, with each entry either a Steam workshop ID, or a folder under "Documents\CnCRemastered\Mods\". As folder, the path must contain the "Tiberian_Dawn" or "Red_Alert" part at the start. That prefix folder will also be used as consistency check for the mod type as defined inside "ccmod.json". Mods given by folder name will also be looked up in the Steam workshop folders, with the prefix folder used only for the consistency check. Mods do NOT have to be enabled in the game to work in the editor.
 * Added support for the unique pattern of TD's CONC pavement. You will need the "ConcretePavementTD" mod to actually see that, though. This mod is enabled by default in the editor's settings, so it will automatically be used if found.
 * Fixed loading and saving of the videos set in the map options dialog, so no more errors pop up there.
@@ -165,3 +165,4 @@ v1.4.0.4: [WIP]
 * For celltriggers and waypoints, the item selected in the tool dropdown will now be highlighted on the map in yellow.
 * A logical default order is now selected when you pick a unit to place.
 * Editing the triggers can no longer kick you out of the Celltrigger tool.
+* The brush size on the resource tool will now adjust itself if an incorrect (even) value is given.

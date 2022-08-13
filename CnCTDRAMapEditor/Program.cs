@@ -41,8 +41,14 @@ namespace MobiusEditor
             {
                 Thread.CurrentThread.CurrentCulture = CultureInfo.CreateSpecificCulture("en-US");
             }
-            CopyLastUserConfig(Properties.Settings.Default.ApplicationVersion, v => Properties.Settings.Default.ApplicationVersion = v);
-
+            //CopyLastUserConfig(Properties.Settings.Default.ApplicationVersion, v => Properties.Settings.Default.ApplicationVersion = v);
+            Version version = Assembly.GetExecutingAssembly().GetName().Version;
+            if (!Version.TryParse(Properties.Settings.Default.ApplicationVersion, out Version oldVersion) || oldVersion < version)
+            {
+                Properties.Settings.Default.Upgrade();
+                Properties.Settings.Default.ApplicationVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+                Properties.Settings.Default.Save();
+            }
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
@@ -369,9 +375,11 @@ namespace MobiusEditor
                 // Ensures there is no buildup of ancient obsolete settings in the file.
                 File.Delete(currentVersionConfigFile);
             }
-            versionSetter(currentVersion.ToString());
             // This seems to trigger the system to see all items as "dirty" so they get re-saved.
             Properties.Settings.Default.Upgrade();
+            Properties.Settings.Default.Save();
+            Properties.Settings.Default.Reload();
+            versionSetter(currentVersion.ToString());
             Properties.Settings.Default.Save();
             if (otherSettingsFolders != null && otherSettingsFolders.Length > 0)
             {

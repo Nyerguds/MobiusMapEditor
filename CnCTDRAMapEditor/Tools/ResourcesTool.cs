@@ -59,7 +59,16 @@ namespace MobiusEditor.Tools
 
         private void BrushSizeNud_ValueChanged(object sender, EventArgs e)
         {
-            navigationWidget.MouseoverSize = new Size((int)brushSizeNud.Value, (int)brushSizeNud.Value);
+            int actualValue = (int)brushSizeNud.Value | 1;
+            if (brushSizeNud.Value != actualValue)
+            {
+                // Will re-trigger this, and then go to the other case.
+                brushSizeNud.Value = actualValue;
+            }
+            else
+            {
+                navigationWidget.MouseoverSize = new Size((int)brushSizeNud.Value, (int)brushSizeNud.Value);
+            }
         }
 
         private void ResourceTool_KeyDown(object sender, KeyEventArgs e)

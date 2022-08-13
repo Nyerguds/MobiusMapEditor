@@ -13,6 +13,7 @@
 // GNU General Public License along with permitted additional restrictions 
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using MobiusEditor.Interface;
+using MobiusEditor.Utility;
 
 namespace MobiusEditor.Tools.Dialogs
 {
@@ -44,7 +45,7 @@ namespace MobiusEditor.Tools.Dialogs
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(TemplateToolDialog));
+            CustomComponentResourceManager resources = new CustomComponentResourceManager(typeof(ObjectToolDialog<>), "ObjectToolDialog");
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.genericTypeMapPanel = new MobiusEditor.Controls.MapPanel();
             this.genericTypeListBox = new MobiusEditor.Controls.TypeListBox();
@@ -54,8 +55,8 @@ namespace MobiusEditor.Tools.Dialogs
             // tableLayoutPanel1
             // 
             this.tableLayoutPanel1.ColumnCount = 2;
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel1.Controls.Add(this.genericTypeMapPanel, 1, 0);
             this.tableLayoutPanel1.Controls.Add(this.genericTypeListBox, 0, 0);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -65,23 +66,11 @@ namespace MobiusEditor.Tools.Dialogs
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.Size = new System.Drawing.Size(474, 254);
             this.tableLayoutPanel1.TabIndex = 0;
-            // 
-            // genericTypeMapPanel
-            // 
-            this.genericTypeMapPanel.Dock = System.Windows.Forms.DockStyle.Right;
-            this.genericTypeMapPanel.Location = new System.Drawing.Point(3, 30);
-            this.genericTypeMapPanel.MaxZoom = 8;
-            this.genericTypeMapPanel.MinZoom = 1;
-            this.genericTypeMapPanel.Name = "genericTypeMapPanel";
-            this.genericTypeMapPanel.SmoothScale = false;
-            this.genericTypeMapPanel.Size = new System.Drawing.Size(268, 221);
-            this.genericTypeMapPanel.TabIndex = 3;
-            this.genericTypeMapPanel.Zoom = 1;
             //
             // genericTypeListBox
             //
             this.genericTypeListBox.DisplayMember = "Name";
-            this.genericTypeListBox.Dock = System.Windows.Forms.DockStyle.Left;
+            this.genericTypeListBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.genericTypeListBox.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawVariable;
             this.genericTypeListBox.FormattingEnabled = true;
             this.genericTypeListBox.Location = new System.Drawing.Point(3, 3);
@@ -90,6 +79,18 @@ namespace MobiusEditor.Tools.Dialogs
             this.genericTypeListBox.Size = new System.Drawing.Size(268, 268);
             this.genericTypeListBox.TabIndex = 2;
             this.genericTypeListBox.ValueMember = "Type";
+            // 
+            // genericTypeMapPanel
+            // 
+            this.genericTypeMapPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.genericTypeMapPanel.Location = new System.Drawing.Point(3, 30);
+            this.genericTypeMapPanel.MaxZoom = 8;
+            this.genericTypeMapPanel.MinZoom = 1;
+            this.genericTypeMapPanel.Name = "genericTypeMapPanel";
+            this.genericTypeMapPanel.SmoothScale = false;
+            this.genericTypeMapPanel.Size = new System.Drawing.Size(268, 221);
+            this.genericTypeMapPanel.TabIndex = 3;
+            this.genericTypeMapPanel.Zoom = 1;
             // 
             // GenericToolDialog
             // 
@@ -110,7 +111,6 @@ namespace MobiusEditor.Tools.Dialogs
             this.Text = "Map";
             this.tableLayoutPanel1.ResumeLayout(false);
             this.ResumeLayout(false);
-
         }
 
         #endregion

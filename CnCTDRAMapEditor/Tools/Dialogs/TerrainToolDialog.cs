@@ -26,9 +26,9 @@ namespace MobiusEditor.Tools.Dialogs
     public partial class TerrainToolDialog : ToolDialog<TerrainTool>
     {
         public TypeListBox TerrainTypeListBox => terrainTypeListBox;
-
+        
         public MapPanel TerrainTypeMapPanel => terrainTypeMapPanel;
-
+        
         public TerrainProperties TerrainProperties => terrainProperties;
 
         public TerrainToolDialog(Form parentForm)

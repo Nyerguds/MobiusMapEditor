@@ -42,6 +42,7 @@ namespace MobiusEditor.Tools.Dialogs
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(WaypointsToolDialog));
             this.tableLayoutPanel4 = new System.Windows.Forms.TableLayoutPanel();
             this.lblWaypoint = new System.Windows.Forms.Label();
             this.waypointCombo = new MobiusEditor.Controls.ComboBoxSmartWidth();
