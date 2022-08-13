@@ -305,7 +305,6 @@ namespace MobiusEditor.RedAlert
                 EventTypes.TEVENT_CROSS_VERTICAL,
                 EventTypes.TEVENT_ENTERS_ZONE,
                 EventTypes.TEVENT_PLAYER_ENTERED,
-                EventTypes.TEVENT_ANY,
                 EventTypes.TEVENT_DISCOVERED,
                 EventTypes.TEVENT_NONE
             };

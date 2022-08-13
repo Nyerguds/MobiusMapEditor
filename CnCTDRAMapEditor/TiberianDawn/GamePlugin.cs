@@ -153,7 +153,9 @@ namespace MobiusEditor.TiberianDawn
             string[] structureEventTypes = (new[] { EventTypes.EVENT_PLAYER_ENTERED }).Concat(unitEventTypes).ToArray();
             string[] terrainEventTypes =
             {
-                EventTypes.EVENT_ATTACKED
+                EventTypes.EVENT_ATTACKED,
+                EventTypes.EVENT_ANY,
+                EventTypes.EVENT_NONE
             };
 
             Map = new Map(basicSection, null, Constants.MaxSize, typeof(House),
