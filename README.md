@@ -191,3 +191,4 @@ v1.4.0.4: [WIP]
 * Red Alert interior theater no longer crashes when trying to show the bibs in the Smudge tool window.
 * Red Alert structures can no longer be put in an illegal state where Prebult is disabled but the rebuild priority is set to -1.
 * Fixed a crash in the RA triggers caused by the removal of the Aircraft types from the placeable objects.
+* Fixed refresh issues that occurred when moving the mouse out of the map area while still in placement mode.
