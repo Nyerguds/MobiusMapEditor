@@ -127,19 +127,25 @@ namespace MobiusEditor.Model
 
         public void Init(TheaterType theater)
         {
+            // Cheeky hack for Nod SpecOps '99 mission 2.
+            if ("P04".Equals(this.Name, StringComparison.InvariantCultureIgnoreCase) && this.ID == 70 && "desert".Equals(theater.Name, StringComparison.InvariantCultureIgnoreCase))
+            {
+                if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, Name, 1, out Tile tile))
+                {
+                    this.IconWidth = 2;
+                }
+            }
             var oldImage = Thumbnail;
             var size = new Size(Globals.PreviewTileWidth, Globals.PreviewTileHeight);
             var iconSize = Math.Max(IconWidth, IconHeight);
             var thumbnail = new Bitmap(iconSize * size.Width, iconSize * size.Height);
             var mask = new bool[IconWidth, IconHeight];
             Array.Clear(mask, 0, mask.Length);
-
             bool found = false;
             using (var g = Graphics.FromImage(thumbnail))
             {
                 MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
                 g.Clear(Color.Transparent);
-
                 int icon = 0;
                 for (var y = 0; y < IconHeight; ++y)
                 {

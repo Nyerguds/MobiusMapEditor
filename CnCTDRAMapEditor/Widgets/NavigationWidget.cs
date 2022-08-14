@@ -27,10 +27,13 @@ namespace MobiusEditor.Widgets
 
         public Point NewCell { get; private set; }
 
-        public MouseCellChangedEventArgs(Point oldCell, Point newCell)
+        public MouseButtons MouseButtons { get; private set; }
+
+        public MouseCellChangedEventArgs(Point oldCell, Point newCell, MouseButtons mouseButtons)
         {
             OldCell = oldCell;
             NewCell = newCell;
+            MouseButtons = mouseButtons;
         }
     }
 
@@ -124,7 +127,7 @@ namespace MobiusEditor.Widgets
             var oldCell = MouseCell;
             MouseCell = newMouseCell;
 
-            MouseCellChanged?.Invoke(this, new MouseCellChangedEventArgs(oldCell, MouseCell));
+            MouseCellChanged?.Invoke(this, new MouseCellChangedEventArgs(oldCell, MouseCell, Control.MouseButtons));
 
             mapPanel.Invalidate();
         }

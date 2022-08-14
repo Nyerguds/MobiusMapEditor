@@ -127,6 +127,11 @@ namespace MobiusEditor.Tools
             }
         }
 
+        private void MapPanel_MouseLeave(object sender, EventArgs e)
+        {
+            ExitPlacementMode();
+        }
+
         private void MapPanel_MouseMove(object sender, MouseEventArgs e)
         {
             if (!placementMode && (Control.ModifierKeys == Keys.Shift))
@@ -349,6 +354,7 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseDown += MapPanel_MouseDown;
             this.mapPanel.MouseUp += MapPanel_MouseUp;
             this.mapPanel.MouseMove += MapPanel_MouseMove;
+            this.mapPanel.MouseLeave += MapPanel_MouseLeave;
             (this.mapPanel as Control).KeyDown += OverlaysTool_KeyDown;
             (this.mapPanel as Control).KeyUp += OverlaysTool_KeyUp;
             navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
@@ -357,12 +363,14 @@ namespace MobiusEditor.Tools
 
         public override void Deactivate()
         {
+            ExitPlacementMode();
             base.Deactivate();
-            mapPanel.MouseDown -= MapPanel_MouseDown;
+            this.mapPanel.MouseDown -= MapPanel_MouseDown;
             this.mapPanel.MouseUp -= MapPanel_MouseUp;
-            mapPanel.MouseMove -= MapPanel_MouseMove;
-            (mapPanel as Control).KeyDown -= OverlaysTool_KeyDown;
-            (mapPanel as Control).KeyUp -= OverlaysTool_KeyUp;
+            this.mapPanel.MouseMove -= MapPanel_MouseMove;
+            this.mapPanel.MouseLeave -= MapPanel_MouseLeave;
+            (this.mapPanel as Control).KeyDown -= OverlaysTool_KeyDown;
+            (this.mapPanel as Control).KeyUp -= OverlaysTool_KeyUp;
             navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;
         }
 

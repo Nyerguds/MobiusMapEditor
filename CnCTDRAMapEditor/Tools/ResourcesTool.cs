@@ -110,6 +110,11 @@ namespace MobiusEditor.Tools
             }
         }
 
+        private void MapPanel_MouseLeave(object sender, EventArgs e)
+        {
+            ExitPlacementMode();
+        }
+
         private void MapPanel_MouseUp(object sender, MouseEventArgs e)
         {
             if (placementMode)
@@ -333,6 +338,7 @@ namespace MobiusEditor.Tools
             base.Activate();
             this.mapPanel.MouseDown += MapPanel_MouseDown;
             this.mapPanel.MouseUp += MapPanel_MouseUp;
+            this.mapPanel.MouseLeave += MapPanel_MouseLeave;
             (this.mapPanel as Control).KeyDown += ResourceTool_KeyDown;
             navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
             url.Undone += Url_UndoRedo;
@@ -342,10 +348,12 @@ namespace MobiusEditor.Tools
 
         public override void Deactivate()
         {
+            ExitPlacementMode();
             base.Deactivate();
-            mapPanel.MouseDown -= MapPanel_MouseDown;
-            mapPanel.MouseUp -= MapPanel_MouseUp;
-            (mapPanel as Control).KeyDown -= ResourceTool_KeyDown;
+            this.mapPanel.MouseDown -= MapPanel_MouseDown;
+            this.mapPanel.MouseUp -= MapPanel_MouseUp;
+            this.mapPanel.MouseLeave -= MapPanel_MouseLeave;
+            (this.mapPanel as Control).KeyDown -= ResourceTool_KeyDown;
             navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;
             url.Undone -= Url_UndoRedo;
             url.Redone -= Url_UndoRedo;

@@ -123,6 +123,11 @@ namespace MobiusEditor.Tools
             }
         }
 
+        private void MapPanel_MouseLeave(object sender, EventArgs e)
+        {
+            ExitPlacementMode();
+        }
+
         private void MapPanel_MouseMove(object sender, MouseEventArgs e)
         {
             if (!placementMode && (Control.ModifierKeys == Keys.Shift))
@@ -285,6 +290,7 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseDown += MapPanel_MouseDown;
             this.mapPanel.MouseUp += MapPanel_MouseUp;
             this.mapPanel.MouseMove += MapPanel_MouseMove;
+            this.mapPanel.MouseLeave += MapPanel_MouseLeave;
             (this.mapPanel as Control).KeyDown += CellTriggersTool_KeyDown;
             (this.mapPanel as Control).KeyUp += CellTriggersTool_KeyUp;
             navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
@@ -293,11 +299,13 @@ namespace MobiusEditor.Tools
 
         public override void Deactivate()
         {
+            ExitPlacementMode();
             base.Deactivate();
             this.triggerComboBox.SelectedIndexChanged -= this.TriggerCombo_SelectedIndexChanged;
-            mapPanel.MouseDown -= MapPanel_MouseDown;
-            mapPanel.MouseUp -= MapPanel_MouseUp;
-            mapPanel.MouseMove -= MapPanel_MouseMove;
+            this.mapPanel.MouseDown -= MapPanel_MouseDown;
+            this.mapPanel.MouseUp -= MapPanel_MouseUp;
+            this.mapPanel.MouseMove -= MapPanel_MouseMove;
+            this.mapPanel.MouseLeave -= MapPanel_MouseLeave;
             (mapPanel as Control).KeyDown -= CellTriggersTool_KeyDown;
             (mapPanel as Control).KeyUp -= CellTriggersTool_KeyUp;
             navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;

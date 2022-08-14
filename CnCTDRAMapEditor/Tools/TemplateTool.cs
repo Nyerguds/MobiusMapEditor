@@ -115,11 +115,12 @@ namespace MobiusEditor.Tools
                 {
                     selectedIcon = value;
                     templateTypeMapPanel.Invalidate();
-                    if (placementMode && (SelectedTemplateType != null))
+                    TemplateType selected = SelectedTemplateType;
+                    if (placementMode && (selected != null))
                     {
-                        for (var y = 0; y < SelectedTemplateType.IconHeight; ++y)
+                        for (var y = 0; y < selected.IconHeight; ++y)
                         {
-                            for (var x = 0; x < SelectedTemplateType.IconWidth; ++x)
+                            for (var x = 0; x < selected.IconWidth; ++x)
                             {
                                 mapPanel.Invalidate(map, new Point(navigationWidget.MouseCell.X + x, navigationWidget.MouseCell.Y + y));
                             }
@@ -230,7 +231,8 @@ namespace MobiusEditor.Tools
 
         private void TemplateTypeMapPanel_MouseDown(object sender, MouseEventArgs e)
         {
-            if ((SelectedTemplateType == null) || ((SelectedTemplateType.IconWidth * SelectedTemplateType.IconHeight) == 1))
+            TemplateType selected = SelectedTemplateType;
+            if ((selected == null) || ((selected.IconWidth * selected.IconHeight) == 1))
             {
                 SelectedIcon = null;
             }
@@ -239,11 +241,11 @@ namespace MobiusEditor.Tools
                 if (e.Button == MouseButtons.Left)
                 {
                     var templateTypeMouseCell = templateTypeNavigationWidget.MouseCell;
-                    if ((templateTypeMouseCell.X >= 0) && (templateTypeMouseCell.X < SelectedTemplateType.IconWidth))
+                    if ((templateTypeMouseCell.X >= 0) && (templateTypeMouseCell.X < selected.IconWidth))
                     {
-                        if ((templateTypeMouseCell.Y >= 0) && (templateTypeMouseCell.Y < SelectedTemplateType.IconHeight))
+                        if ((templateTypeMouseCell.Y >= 0) && (templateTypeMouseCell.Y < selected.IconHeight))
                         {
-                            if (SelectedTemplateType.IconMask[templateTypeMouseCell.X, templateTypeMouseCell.Y])
+                            if (selected.IconMask[templateTypeMouseCell.X, templateTypeMouseCell.Y])
                             {
                                 SelectedIcon = templateTypeMouseCell;
                             }
@@ -260,42 +262,45 @@ namespace MobiusEditor.Tools
         private void TemplateTypeMapPanel_PostRender(object sender, RenderEventArgs e)
         {
             e.Graphics.Transform = new Matrix();
-            if (SelectedTemplateType != null)
+            TemplateType selected = SelectedTemplateType;
+            if (selected == null)
             {
-                if (SelectedIcon.HasValue)
+                return;
+            }
+            if (SelectedIcon.HasValue)
+            {
+                int panelWidth = templateTypeMapPanel.ClientSize.Width;
+                int panelHeight = templateTypeMapPanel.ClientSize.Height;
+                int iconWidth = selected.IconWidth;
+                int iconHeight = selected.IconHeight;
+                int maxIconRect = Math.Max(iconWidth, iconHeight);
+                int scaleX = panelWidth / maxIconRect;
+                int scaleY = panelHeight / maxIconRect;
+                int scale = Math.Min(scaleX, scaleY);
+                int leftoverX = panelWidth - (scale * maxIconRect);
+                int leftoverY = panelHeight - (scale * maxIconRect);
+                int padX = leftoverX / 2;
+                int padY = leftoverY / 2;
+                using (var selectedIconPen = new Pen(Color.Yellow, Math.Max(1, scale / 16)))
                 {
-                    int panelWidth = templateTypeMapPanel.ClientSize.Width;
-                    int panelHeight = templateTypeMapPanel.ClientSize.Height;
-                    int iconWidth = SelectedTemplateType.IconWidth;
-                    int iconHeight = SelectedTemplateType.IconHeight;
-                    int maxIconRect = Math.Max(iconWidth, iconHeight);
-                    int scaleX = panelWidth / maxIconRect;
-                    int scaleY = panelHeight / maxIconRect;
-                    int scale = Math.Min(scaleX, scaleY);
-                    int leftoverX = panelWidth - (scale * maxIconRect);
-                    int leftoverY = panelHeight - (scale * maxIconRect);
-                    int padX = leftoverX / 2;
-                    int padY = leftoverY / 2;
-                    using (var selectedIconPen = new Pen(Color.Yellow, Math.Max(1, scale/16))) {
-                        var cellSize = new Size(scale, scale);
-                        var rect = new Rectangle(new Point(padX + SelectedIcon.Value.X * cellSize.Width, padY + SelectedIcon.Value.Y * cellSize.Height), cellSize);
-                        e.Graphics.DrawRectangle(selectedIconPen, rect);
-                    }
+                    var cellSize = new Size(scale, scale);
+                    var rect = new Rectangle(new Point(padX + SelectedIcon.Value.X * cellSize.Width, padY + SelectedIcon.Value.Y * cellSize.Height), cellSize);
+                    e.Graphics.DrawRectangle(selectedIconPen, rect);
                 }
-                var sizeStringFormat = new StringFormat
-                {
-                    Alignment = StringAlignment.Center,
-                    LineAlignment = StringAlignment.Center
-                };
-                var text = string.Format("{0} ({1}x{2})", SelectedTemplateType.DisplayName, SelectedTemplateType.IconWidth, SelectedTemplateType.IconHeight);
-                var textSize = e.Graphics.MeasureString(text, SystemFonts.CaptionFont) + new SizeF(6.0f, 6.0f);
-                var textBounds = new RectangleF(new PointF(0, 0), textSize);
-                using (var sizeBackgroundBrush = new SolidBrush(Color.FromArgb(128, Color.Black)))
-                using (var sizeTextBrush = new SolidBrush(Color.White))
-                {
-                    e.Graphics.FillRectangle(sizeBackgroundBrush, textBounds);
-                    e.Graphics.DrawString(text, SystemFonts.CaptionFont, sizeTextBrush, textBounds, sizeStringFormat);
-                }
+            }
+            var sizeStringFormat = new StringFormat
+            {
+                Alignment = StringAlignment.Center,
+                LineAlignment = StringAlignment.Center
+            };
+            var text = string.Format("{0} ({1}x{2})", selected.DisplayName, selected.IconWidth, selected.IconHeight);
+            var textSize = e.Graphics.MeasureString(text, SystemFonts.CaptionFont) + new SizeF(6.0f, 6.0f);
+            var textBounds = new RectangleF(new PointF(0, 0), textSize);
+            using (var sizeBackgroundBrush = new SolidBrush(Color.FromArgb(128, Color.Black)))
+            using (var sizeTextBrush = new SolidBrush(Color.White))
+            {
+                e.Graphics.FillRectangle(sizeBackgroundBrush, textBounds);
+                e.Graphics.DrawString(text, SystemFonts.CaptionFont, sizeTextBrush, textBounds, sizeStringFormat);
             }
         }
 
@@ -354,9 +359,10 @@ namespace MobiusEditor.Tools
 
         private void HandlePlace(MouseButtons button)
         {
+            TemplateType selected = SelectedTemplateType;
             if (button == MouseButtons.Left)
             {
-                if ((selectedTemplateType.Flag & TemplateTypeFlag.Clear) != 0)
+                if (selected == null || (selected.Flag & TemplateTypeFlag.Clear) != 0)
                     RemoveTemplate(navigationWidget.MouseCell);
                 else
                     SetTemplate(navigationWidget.MouseCell);
@@ -398,6 +404,11 @@ namespace MobiusEditor.Tools
                     CommitChange();
                 }
             }
+        }
+
+        private void MapPanel_MouseLeave(object sender, EventArgs e)
+        {
+            ExitAllModes();
         }
 
         private void MapPanel_MouseMove(object sender, MouseEventArgs e)
@@ -498,7 +509,8 @@ namespace MobiusEditor.Tools
             else if (placementMode)
             {
                 HandlePlace(Control.MouseButtons);
-                if (SelectedTemplateType != null)
+                TemplateType selected = SelectedTemplateType;
+                if (selected != null)
                 {
                     foreach (var location in new Point[] { e.OldCell, e.NewCell })
                     {
@@ -508,11 +520,11 @@ namespace MobiusEditor.Tools
                         }
                         else
                         {
-                            for (var y = 0; y < SelectedTemplateType.IconHeight; ++y)
+                            for (var y = 0; y < selected.IconHeight; ++y)
                             {
-                                for (var x = 0; x < SelectedTemplateType.IconWidth; ++x)
+                                for (var x = 0; x < selected.IconWidth; ++x)
                                 {
-                                    if (!SelectedTemplateType.IconMask[x, y])
+                                    if (!selected.IconMask[x, y])
                                     {
                                         continue;
                                     }
@@ -523,7 +535,7 @@ namespace MobiusEditor.Tools
                     }
                 }
             }
-            else if((Control.MouseButtons == MouseButtons.Left) || (Control.MouseButtons == MouseButtons.Right))
+            else if ((Control.MouseButtons == MouseButtons.Left) || (Control.MouseButtons == MouseButtons.Right))
             {
                 PickTemplate(navigationWidget.MouseCell, Control.MouseButtons == MouseButtons.Left);
             }
@@ -553,61 +565,63 @@ namespace MobiusEditor.Tools
 
         private void SetTemplate(Point location)
         {
-            if (SelectedTemplateType != null)
+            TemplateType selected = SelectedTemplateType;
+            if (selected == null)
             {
-                if (SelectedIcon.HasValue)
+                return;
+            }
+            if (SelectedIcon.HasValue)
+            {
+                if (map.Metrics.GetCell(location, out int cell))
                 {
-                    if (map.Metrics.GetCell(location, out int cell))
+                    if (!undoTemplates.ContainsKey(cell))
                     {
-                        if (!undoTemplates.ContainsKey(cell))
+                        undoTemplates[cell] = map.Templates[location];
+                    }
+                    var icon = (SelectedIcon.Value.Y * selected.IconWidth) + SelectedIcon.Value.X;
+                    var template = new Template { Type = selected, Icon = icon };
+                    map.Templates[cell] = template;
+                    redoTemplates[cell] = template;
+                    mapPanel.Invalidate(map, cell);
+                    plugin.Dirty = true;
+                }
+            }
+            else
+            {
+                for (int y = 0, icon = 0; y < selected.IconHeight; ++y)
+                {
+                    for (var x = 0; x < selected.IconWidth; ++x, ++icon)
+                    {
+                        if (!selected.IconMask[x, y])
                         {
-                            undoTemplates[cell] = map.Templates[location];
+                            continue;
                         }
-                        var icon = (SelectedIcon.Value.Y * SelectedTemplateType.IconWidth) + SelectedIcon.Value.X;
-                        var template = new Template { Type = SelectedTemplateType, Icon = icon };
-                        map.Templates[cell] = template;
-                        redoTemplates[cell] = template;
-                        mapPanel.Invalidate(map, cell);
-                        plugin.Dirty = true;
+                        var subLocation = new Point(location.X + x, location.Y + y);
+                        if (map.Metrics.GetCell(subLocation, out int cell))
+                        {
+                            if (!undoTemplates.ContainsKey(cell))
+                            {
+                                undoTemplates[cell] = map.Templates[subLocation];
+                            }
+                        }
                     }
                 }
-                else
+                for (int y = 0, icon = 0; y < selected.IconHeight; ++y)
                 {
-                    for (int y = 0, icon = 0; y < SelectedTemplateType.IconHeight; ++y)
+                    for (var x = 0; x < selected.IconWidth; ++x, ++icon)
                     {
-                        for (var x = 0; x < SelectedTemplateType.IconWidth; ++x, ++icon)
+                        if (!selected.IconMask[x, y])
                         {
-                            if (!SelectedTemplateType.IconMask[x, y])
-                            {
-                                continue;
-                            }
-                            var subLocation = new Point(location.X + x, location.Y + y);
-                            if (map.Metrics.GetCell(subLocation, out int cell))
-                            {
-                                if (!undoTemplates.ContainsKey(cell))
-                                {
-                                    undoTemplates[cell] = map.Templates[subLocation];
-                                }
-                            }
+                            continue;
                         }
-                    }
-                    for (int y = 0, icon = 0; y < SelectedTemplateType.IconHeight; ++y)
-                    {
-                        for (var x = 0; x < SelectedTemplateType.IconWidth; ++x, ++icon)
+                        var subLocation = new Point(location.X + x, location.Y + y);
+                        if (map.Metrics.GetCell(subLocation, out int cell))
                         {
-                            if (!SelectedTemplateType.IconMask[x, y])
-                            {
-                                continue;
-                            }
-                            var subLocation = new Point(location.X + x, location.Y + y);
-                            if (map.Metrics.GetCell(subLocation, out int cell))
-                            {
-                                var template = new Template { Type = SelectedTemplateType, Icon = icon };
-                                map.Templates[cell] = template;
-                                redoTemplates[cell] = template;
-                                mapPanel.Invalidate(map, cell);
-                                plugin.Dirty = true;
-                            }
+                            var template = new Template { Type = selected, Icon = icon };
+                            map.Templates[cell] = template;
+                            redoTemplates[cell] = template;
+                            mapPanel.Invalidate(map, cell);
+                            plugin.Dirty = true;
                         }
                     }
                 }
@@ -616,58 +630,56 @@ namespace MobiusEditor.Tools
 
         private void RemoveTemplate(Point location)
         {
-            if (SelectedTemplateType != null)
+            TemplateType selected = SelectedTemplateType;
+            if (selected == null || SelectedIcon.HasValue)
             {
-                if (SelectedIcon.HasValue)
+                if (map.Metrics.GetCell(location, out int cell))
                 {
-                    if (map.Metrics.GetCell(location, out int cell))
+                    if (!undoTemplates.ContainsKey(cell))
                     {
-                        if (!undoTemplates.ContainsKey(cell))
+                        undoTemplates[cell] = map.Templates[location];
+                    }
+                    map.Templates[cell] = null;
+                    redoTemplates[cell] = null;
+                    mapPanel.Invalidate(map, cell);
+                    plugin.Dirty = true;
+                }
+            }
+            else
+            {
+                for (int y = 0, icon = 0; y < selected.IconHeight; ++y)
+                {
+                    for (var x = 0; x < selected.IconWidth; ++x, ++icon)
+                    {
+                        if (!selected.IconMask[x, y])
                         {
-                            undoTemplates[cell] = map.Templates[location];
+                            continue;
                         }
-                        map.Templates[cell] = null;
-                        redoTemplates[cell] = null;
-                        mapPanel.Invalidate(map, cell);
-                        plugin.Dirty = true;
+                        var subLocation = new Point(location.X + x, location.Y + y);
+                        if (map.Metrics.GetCell(subLocation, out int cell))
+                        {
+                            if (!undoTemplates.ContainsKey(cell))
+                            {
+                                undoTemplates[cell] = map.Templates[subLocation];
+                            }
+                        }
                     }
                 }
-                else
+                for (int y = 0, icon = 0; y < selected.IconHeight; ++y)
                 {
-                    for (int y = 0, icon = 0; y < SelectedTemplateType.IconHeight; ++y)
+                    for (var x = 0; x < selected.IconWidth; ++x, ++icon)
                     {
-                        for (var x = 0; x < SelectedTemplateType.IconWidth; ++x, ++icon)
+                        if (!selected.IconMask[x, y])
                         {
-                            if (!SelectedTemplateType.IconMask[x, y])
-                            {
-                                continue;
-                            }
-                            var subLocation = new Point(location.X + x, location.Y + y);
-                            if (map.Metrics.GetCell(subLocation, out int cell))
-                            {
-                                if (!undoTemplates.ContainsKey(cell))
-                                {
-                                    undoTemplates[cell] = map.Templates[subLocation];
-                                }
-                            }
+                            continue;
                         }
-                    }
-                    for (int y = 0, icon = 0; y < SelectedTemplateType.IconHeight; ++y)
-                    {
-                        for (var x = 0; x < SelectedTemplateType.IconWidth; ++x, ++icon)
+                        var subLocation = new Point(location.X + x, location.Y + y);
+                        if (map.Metrics.GetCell(subLocation, out int cell))
                         {
-                            if (!SelectedTemplateType.IconMask[x, y])
-                            {
-                                continue;
-                            }
-                            var subLocation = new Point(location.X + x, location.Y + y);
-                            if (map.Metrics.GetCell(subLocation, out int cell))
-                            {
-                                map.Templates[cell] = null;
-                                redoTemplates[cell] = null;
-                                mapPanel.Invalidate(map, cell);
-                                plugin.Dirty = true;
-                            }
+                            map.Templates[cell] = null;
+                            redoTemplates[cell] = null;
+                            mapPanel.Invalidate(map, cell);
+                            plugin.Dirty = true;
                         }
                     }
                 }
@@ -682,16 +694,7 @@ namespace MobiusEditor.Tools
             }
             placementMode = true;
             navigationWidget.MouseoverSize = Size.Empty;
-            if (SelectedTemplateType != null)
-            {
-                for (var y = 0; y < SelectedTemplateType.IconHeight; ++y)
-                {
-                    for (var x = 0; x < SelectedTemplateType.IconWidth; ++x)
-                    {
-                        mapPanel.Invalidate(map, new Point(navigationWidget.MouseCell.X + x, navigationWidget.MouseCell.Y + y));
-                    }
-                }
-            }
+            InvalidateCurrentArea();
             UpdateStatus();
         }
 
@@ -704,16 +707,7 @@ namespace MobiusEditor.Tools
             boundsMode = true;
             dragBounds = map.Bounds;
             navigationWidget.MouseoverSize = Size.Empty;
-            if (SelectedTemplateType != null)
-            {
-                for (var y = 0; y < SelectedTemplateType.IconHeight; ++y)
-                {
-                    for (var x = 0; x < SelectedTemplateType.IconWidth; ++x)
-                    {
-                        mapPanel.Invalidate(map, new Point(navigationWidget.MouseCell.X + x, navigationWidget.MouseCell.Y + y));
-                    }
-                }
-            }
+            InvalidateCurrentArea();
             UpdateTooltip();
             UpdateStatus();
         }
@@ -729,18 +723,24 @@ namespace MobiusEditor.Tools
             dragBounds = Rectangle.Empty;
             placementMode = false;
             navigationWidget.MouseoverSize = new Size(1, 1);
-            if (SelectedTemplateType != null)
+            InvalidateCurrentArea();
+            UpdateTooltip();
+            UpdateStatus();
+        }
+
+        private void InvalidateCurrentArea()
+        {
+            TemplateType selected = SelectedTemplateType;
+            if (selected != null)
             {
-                for (var y = 0; y < SelectedTemplateType.IconHeight; ++y)
+                for (var y = 0; y < selected.IconHeight; ++y)
                 {
-                    for (var x = 0; x < SelectedTemplateType.IconWidth; ++x)
+                    for (var x = 0; x < selected.IconWidth; ++x)
                     {
                         mapPanel.Invalidate(map, new Point(navigationWidget.MouseCell.X + x, navigationWidget.MouseCell.Y + y));
                     }
                 }
             }
-            UpdateTooltip();
-            UpdateStatus();
         }
 
         private void UpdateTooltip()
@@ -771,8 +771,8 @@ namespace MobiusEditor.Tools
                 }
                 var screenPosition = mapPanel.PointToScreen(tooltipPosition);
                 var screen = Screen.FromControl(mapPanel);
-                screenPosition.X = Math.Max(0, Math.Min(screen.WorkingArea.Width - tooltipSize.Width, screenPosition.X));
-                screenPosition.Y = Math.Max(0, Math.Min(screen.WorkingArea.Height - tooltipSize.Height, screenPosition.Y));
+                screenPosition.X = Math.Max(screen.WorkingArea.X, Math.Min(screen.WorkingArea.X + screen.WorkingArea.Width - tooltipSize.Width, screenPosition.X));
+                screenPosition.Y = Math.Max(screen.WorkingArea.Y, Math.Min(screen.WorkingArea.Y + screen.WorkingArea.Height - tooltipSize.Height, screenPosition.Y));
                 tooltipPosition = mapPanel.PointToClient(screenPosition);
                 mouseTooltip.Show(tooltip, mapPanel, tooltipPosition.X, tooltipPosition.Y);
             }
@@ -795,10 +795,11 @@ namespace MobiusEditor.Tools
                 {
                     SelectedTemplateType = map.TemplateTypes.Where(t => t.Equals("clear1")).FirstOrDefault();
                 }
-                if (!wholeTemplate && ((SelectedTemplateType.IconWidth * SelectedTemplateType.IconHeight) > 1))
+                TemplateType selected = SelectedTemplateType;
+                if (!wholeTemplate && ((selected.IconWidth * selected.IconHeight) > 1))
                 {
                     var icon = template?.Icon ?? 0;
-                    SelectedIcon = new Point(icon % SelectedTemplateType.IconWidth, icon / SelectedTemplateType.IconWidth);
+                    SelectedIcon = new Point(icon % selected.IconWidth, icon / selected.IconWidth);
                 }
                 else
                 {
@@ -919,36 +920,39 @@ namespace MobiusEditor.Tools
         {
             base.PreRenderMap();
             previewMap = map.Clone();
-            if (placementMode)
+            if (!placementMode)
             {
-                var location = navigationWidget.MouseCell;
-                if (SelectedTemplateType != null)
+                return;
+            }
+            TemplateType selected = SelectedTemplateType;
+            if (selected == null)
+            {
+                return;
+            }
+            var location = navigationWidget.MouseCell;
+            if (SelectedIcon.HasValue)
+            {
+                if (previewMap.Metrics.GetCell(location, out int cell))
                 {
-                    if (SelectedIcon.HasValue)
+                    var icon = (SelectedIcon.Value.Y * selected.IconWidth) + SelectedIcon.Value.X;
+                    previewMap.Templates[cell] = new Template { Type = selected, Icon = icon };
+                }
+            }
+            else
+            {
+                int icon = 0;
+                for (var y = 0; y < selected.IconHeight; ++y)
+                {
+                    for (var x = 0; x < selected.IconWidth; ++x, ++icon)
                     {
-                        if (previewMap.Metrics.GetCell(location, out int cell))
+                        if (!selected.IconMask[x, y])
                         {
-                            var icon = (SelectedIcon.Value.Y * SelectedTemplateType.IconWidth) + SelectedIcon.Value.X;
-                            previewMap.Templates[cell] = new Template { Type = SelectedTemplateType, Icon = icon };
+                            continue;
                         }
-                    }
-                    else
-                    {
-                        int icon = 0;
-                        for (var y = 0; y < SelectedTemplateType.IconHeight; ++y)
+                        var subLocation = new Point(location.X + x, location.Y + y);
+                        if (previewMap.Metrics.GetCell(subLocation, out int cell))
                         {
-                            for (var x = 0; x < SelectedTemplateType.IconWidth; ++x, ++icon)
-                            {
-                                if (!SelectedTemplateType.IconMask[x, y])
-                                {
-                                    continue;
-                                }
-                                var subLocation = new Point(location.X + x, location.Y + y);
-                                if (previewMap.Metrics.GetCell(subLocation, out int cell))
-                                {
-                                    previewMap.Templates[cell] = new Template { Type = SelectedTemplateType, Icon = icon };
-                                }
-                            }
+                            previewMap.Templates[cell] = new Template { Type = selected, Icon = icon };
                         }
                     }
                 }
@@ -977,18 +981,20 @@ namespace MobiusEditor.Tools
                 if (placementMode)
                 {
                     var location = navigationWidget.MouseCell;
-                    if (SelectedTemplateType != null)
+                    TemplateType selected = SelectedTemplateType;
+                    if (selected == null)
                     {
-                        var previewBounds = new Rectangle(
-                            location.X * Globals.MapTileWidth,
-                            location.Y * Globals.MapTileHeight,
-                            (SelectedIcon.HasValue ? 1 : SelectedTemplateType.IconWidth) * Globals.MapTileWidth,
-                            (SelectedIcon.HasValue ? 1 : SelectedTemplateType.IconHeight) * Globals.MapTileHeight
-                        );
-                        using (var previewPen = new Pen(Color.Green, 4.0f))
-                        {
-                            graphics.DrawRectangle(previewPen, previewBounds);
-                        }
+                        return;
+                    }
+                    var previewBounds = new Rectangle(
+                        location.X * Globals.MapTileWidth,
+                        location.Y * Globals.MapTileHeight,
+                        (SelectedIcon.HasValue ? 1 : selected.IconWidth) * Globals.MapTileWidth,
+                        (SelectedIcon.HasValue ? 1 : selected.IconHeight) * Globals.MapTileHeight
+                    );
+                    using (var previewPen = new Pen(Color.Green, 4.0f))
+                    {
+                        graphics.DrawRectangle(previewPen, previewBounds);
                     }
                 }
             }
@@ -1000,6 +1006,7 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseDown += MapPanel_MouseDown;
             this.mapPanel.MouseUp += MapPanel_MouseUp;
             this.mapPanel.MouseMove += MapPanel_MouseMove;
+            this.mapPanel.MouseLeave += MapPanel_MouseLeave;
             (this.mapPanel as Control).KeyDown += TemplateTool_KeyDown;
             (this.mapPanel as Control).KeyUp += TemplateTool_KeyUp;
             navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
@@ -1011,10 +1018,12 @@ namespace MobiusEditor.Tools
 
         public override void Deactivate()
         {
+            ExitAllModes();
             base.Deactivate();
             mapPanel.MouseDown -= MapPanel_MouseDown;
             mapPanel.MouseUp -= MapPanel_MouseUp;
             mapPanel.MouseMove -= MapPanel_MouseMove;
+            mapPanel.MouseLeave -= MapPanel_MouseLeave;
             (mapPanel as Control).KeyDown -= TemplateTool_KeyDown;
             (mapPanel as Control).KeyUp -= TemplateTool_KeyUp;
             navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;

@@ -41,11 +41,15 @@ namespace MobiusEditor
             {
                 Thread.CurrentThread.CurrentCulture = CultureInfo.CreateSpecificCulture("en-US");
             }
-            //CopyLastUserConfig(Properties.Settings.Default.ApplicationVersion, v => Properties.Settings.Default.ApplicationVersion = v);
+            
             Version version = Assembly.GetExecutingAssembly().GetName().Version;
             if (!Version.TryParse(Properties.Settings.Default.ApplicationVersion, out Version oldVersion) || oldVersion < version)
             {
                 Properties.Settings.Default.Upgrade();
+                if (String.IsNullOrEmpty(Properties.Settings.Default.ApplicationVersion))
+                {
+                    CopyLastUserConfig(Properties.Settings.Default.ApplicationVersion, v => Properties.Settings.Default.ApplicationVersion = v);
+                }
                 Properties.Settings.Default.ApplicationVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
                 Properties.Settings.Default.Save();
             }
@@ -318,7 +322,7 @@ namespace MobiusEditor
             }
             if (currentParent != null && currentParent.Parent != null && currentParent.Parent.Exists)
             {
-                otherSettingsFolders = currentParent.Parent.GetDirectories(dirNameProgPart + "*");
+                otherSettingsFolders = currentParent.Parent.GetDirectories(dirNameProgPart + "*").OrderBy(p => p.CreationTime).Reverse().ToArray();
             }
             if (otherSettingsFolders != null && otherSettingsFolders.Length > 0 && previousSettingsDir == null)
             {
@@ -372,13 +376,7 @@ namespace MobiusEditor
             if (File.Exists(currentVersionConfigFile))
             {
                 Properties.Settings.Default.Reload();
-                // Ensures there is no buildup of ancient obsolete settings in the file.
-                File.Delete(currentVersionConfigFile);
             }
-            // This seems to trigger the system to see all items as "dirty" so they get re-saved.
-            Properties.Settings.Default.Upgrade();
-            Properties.Settings.Default.Save();
-            Properties.Settings.Default.Reload();
             versionSetter(currentVersion.ToString());
             Properties.Settings.Default.Save();
             if (otherSettingsFolders != null && otherSettingsFolders.Length > 0)

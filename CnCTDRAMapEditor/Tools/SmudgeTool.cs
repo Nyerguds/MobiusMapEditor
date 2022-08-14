@@ -99,6 +99,11 @@ namespace MobiusEditor.Tools
             SelectedSmudgeType = smudgeTypeListBox.Types.First() as SmudgeType;
         }
 
+        private void MapPanel_MouseLeave(object sender, EventArgs e)
+        {
+            ExitPlacementMode();
+        }
+
         private void MapPanel_MouseDoubleClick(object sender, MouseEventArgs e)
         {
             if (Control.ModifierKeys != Keys.None)
@@ -381,6 +386,7 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseDown += MapPanel_MouseDown;
             this.mapPanel.MouseMove += MapPanel_MouseMove;
             this.mapPanel.MouseDoubleClick += MapPanel_MouseDoubleClick;
+            this.mapPanel.MouseLeave += MapPanel_MouseLeave;
             (this.mapPanel as Control).KeyDown += SmudgeTool_KeyDown;
             (this.mapPanel as Control).KeyUp += SmudgeTool_KeyUp;
             UpdateStatus();
@@ -388,12 +394,14 @@ namespace MobiusEditor.Tools
 
         public override void Deactivate()
         {
+            ExitPlacementMode();
             base.Deactivate();
-            mapPanel.MouseDown -= MapPanel_MouseDown;
-            mapPanel.MouseMove -= MapPanel_MouseMove;
-            mapPanel.MouseDoubleClick -= MapPanel_MouseDoubleClick;
-            (mapPanel as Control).KeyDown -= SmudgeTool_KeyDown;
-            (mapPanel as Control).KeyUp -= SmudgeTool_KeyUp;
+            this.mapPanel.MouseDown -= MapPanel_MouseDown;
+            this.mapPanel.MouseMove -= MapPanel_MouseMove;
+            this.mapPanel.MouseDoubleClick -= MapPanel_MouseDoubleClick;
+            this.mapPanel.MouseLeave -= MapPanel_MouseLeave;
+            (this.mapPanel as Control).KeyDown -= SmudgeTool_KeyDown;
+            (this.mapPanel as Control).KeyUp -= SmudgeTool_KeyUp;
         }
 
         #region IDisposable Support

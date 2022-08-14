@@ -95,6 +95,11 @@ namespace MobiusEditor.Tools
             SelectedTerrainType = terrainTypeComboBox.Types.First() as TerrainType;
         }
 
+        private void MapPanel_MouseLeave(object sender, EventArgs e)
+        {
+            ExitPlacementMode();
+        }
+
         private void MapPanel_MouseDoubleClick(object sender, MouseEventArgs e)
         {
             if (Control.ModifierKeys != Keys.None)
@@ -403,6 +408,7 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseMove += MapPanel_MouseMove;
             this.mapPanel.MouseUp += MapPanel_MouseUp;
             this.mapPanel.MouseDoubleClick += MapPanel_MouseDoubleClick;
+            this.mapPanel.MouseLeave += MapPanel_MouseLeave;
             (this.mapPanel as Control).KeyDown += TerrainTool_KeyDown;
             (this.mapPanel as Control).KeyUp += TerrainTool_KeyUp;
             UpdateStatus();
@@ -410,13 +416,15 @@ namespace MobiusEditor.Tools
 
         public override void Deactivate()
         {
+            ExitPlacementMode();
             base.Deactivate();
-            mapPanel.MouseDown -= MapPanel_MouseDown;
-            mapPanel.MouseMove -= MapPanel_MouseMove;
-            mapPanel.MouseUp -= MapPanel_MouseUp;
-            mapPanel.MouseDoubleClick -= MapPanel_MouseDoubleClick;
-            (mapPanel as Control).KeyDown -= TerrainTool_KeyDown;
-            (mapPanel as Control).KeyUp -= TerrainTool_KeyUp;
+            this.mapPanel.MouseDown -= MapPanel_MouseDown;
+            this.mapPanel.MouseMove -= MapPanel_MouseMove;
+            this.mapPanel.MouseUp -= MapPanel_MouseUp;
+            this.mapPanel.MouseDoubleClick -= MapPanel_MouseDoubleClick;
+            this.mapPanel.MouseLeave -= MapPanel_MouseLeave;
+            (this.mapPanel as Control).KeyDown -= TerrainTool_KeyDown;
+            (this.mapPanel as Control).KeyUp -= TerrainTool_KeyUp;
         }
 
         #region IDisposable Support

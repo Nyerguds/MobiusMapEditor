@@ -94,6 +94,11 @@ namespace MobiusEditor.Tools
             }
         }
 
+        private void MapPanel_MouseLeave(object sender, EventArgs e)
+        {
+            ExitPlacementMode();
+        }
+
         private void MapPanel_MouseMove(object sender, MouseEventArgs e)
         {
             if (!placementMode && (Control.ModifierKeys == Keys.Shift))
@@ -313,17 +318,20 @@ namespace MobiusEditor.Tools
             base.Activate();
             this.mapPanel.MouseDown += MapPanel_MouseDown;
             this.mapPanel.MouseMove += MapPanel_MouseMove;
+            this.mapPanel.MouseLeave += MapPanel_MouseLeave;
             (this.mapPanel as Control).KeyDown += WaypointsTool_KeyDown;
             (this.mapPanel as Control).KeyUp += WaypointsTool_KeyUp;
         }
 
         public override void Deactivate()
         {
+            ExitPlacementMode();
             base.Deactivate();
-            mapPanel.MouseDown -= MapPanel_MouseDown;
-            mapPanel.MouseMove -= MapPanel_MouseMove;
-            (mapPanel as Control).KeyDown -= WaypointsTool_KeyDown;
-            (mapPanel as Control).KeyUp -= WaypointsTool_KeyUp;
+            this.mapPanel.MouseDown -= MapPanel_MouseDown;
+            this.mapPanel.MouseMove -= MapPanel_MouseMove;
+            this.mapPanel.MouseLeave -= MapPanel_MouseLeave;
+            (this.mapPanel as Control).KeyDown -= WaypointsTool_KeyDown;
+            (this.mapPanel as Control).KeyUp -= WaypointsTool_KeyUp;
         }
 
         #region IDisposable Support
