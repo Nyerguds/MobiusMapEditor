@@ -122,11 +122,10 @@ namespace MobiusEditor.Tools.Dialogs
             // 
             // objectProperties
             // 
-            this.objectProperties.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            this.objectProperties.Dock = System.Windows.Forms.DockStyle.Fill;
             this.objectProperties.Location = new System.Drawing.Point(5, 316);
             this.objectProperties.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
+            this.objectProperties.MinimumSize = new System.Drawing.Size(230, 213);
             this.objectProperties.Name = "objectProperties";
             this.objectProperties.Object = null;
             this.objectProperties.Size = new System.Drawing.Size(355, 261);
@@ -134,14 +133,14 @@ namespace MobiusEditor.Tools.Dialogs
             // 
             // ObjectToolDialog
             // 
-            this.ClientSize = new System.Drawing.Size(580, 420);
+            this.ClientSize = new System.Drawing.Size(580, 400);
             this.ControlBox = false;
             this.Controls.Add(this.tableLayoutPanel1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;
             this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.MinimumSize = new System.Drawing.Size(400, 460);
+            this.MinimumSize = new System.Drawing.Size(500, 500);
             this.Name = "ObjectToolDialog";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;

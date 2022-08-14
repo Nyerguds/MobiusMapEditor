@@ -30,6 +30,14 @@ namespace MobiusEditor.Tools
 {
     public class TemplateTool : ViewTool
     {
+        /// <summary> Layers that are important to this tool and need to be drawn last in the PostRenderMap process.</summary>
+        protected override MapLayerFlag PriorityLayers => MapLayerFlag.None;
+        /// <summary>
+        /// Layers that are not painted by the PostRenderMap function on ViewTool level because they are handled
+        /// at a specific point in the PostRenderMap override by the implementing tool.
+        /// </summary>
+        protected override MapLayerFlag ManuallyHandledLayers => MapLayerFlag.Boundaries;
+
         private const int DesignResWidth = 3840;
         private const int DesignTextureWidth = 256;
 
@@ -82,7 +90,6 @@ namespace MobiusEditor.Tools
                     }
                     templateTypeListView.SelectedIndexChanged += TemplateTypeListView_SelectedIndexChanged;
                     templateTypeListView.EndUpdate();
-
                     if (placementMode && (selectedTemplateType != null))
                     {
                         for (var y = 0; y < selectedTemplateType.IconHeight; ++y)
@@ -128,7 +135,6 @@ namespace MobiusEditor.Tools
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
             previewMap = map;
-            manuallyHandledLayers = MapLayerFlag.Boundaries;
             this.templateTypeListView = templateTypeListView;
             this.templateTypeListView.SelectedIndexChanged -= TemplateTypeListView_SelectedIndexChanged;
             string templateCategory(TemplateType template)
@@ -334,7 +340,6 @@ namespace MobiusEditor.Tools
             if (boundsMode)
             {
                 dragEdge = DetectDragEdge();
-
                 UpdateStatus();
             }
             else if (placementMode)
@@ -745,7 +750,6 @@ namespace MobiusEditor.Tools
                 var tooltip = string.Format("X = {0}\nY = {1}\nWidth = {2}\nHeight = {3}", dragBounds.Left, dragBounds.Top, dragBounds.Width, dragBounds.Height);
                 var textSize = TextRenderer.MeasureText(tooltip, SystemFonts.CaptionFont);
                 var tooltipSize = new Size(textSize.Width + 6, textSize.Height + 6);
-
                 var tooltipPosition = mapPanel.PointToClient(Control.MousePosition);
                 switch (dragEdge)
                 {

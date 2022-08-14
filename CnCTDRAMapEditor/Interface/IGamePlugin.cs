@@ -50,5 +50,7 @@ namespace MobiusEditor.Interface
         IEnumerable<string> Load(string path, FileType fileType);
 
         bool Save(string path, FileType fileType);
+
+        string Validate();
     }
 }

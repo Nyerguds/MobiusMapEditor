@@ -39,8 +39,8 @@ namespace MobiusEditor.TiberianDawn
         public static readonly TerrainType Tree16 = new TerrainType(15, "t16", new TheaterType[] { TheaterTypes.Winter, TheaterTypes.Temperate }, new bool[2, 2] { { false, false }, { true, false } });
         public static readonly TerrainType Tree17 = new TerrainType(16, "t17", new TheaterType[] { TheaterTypes.Winter, TheaterTypes.Temperate }, new bool[2, 2] { { false, false }, { true, false } });
         public static readonly TerrainType Tree18 = new TerrainType(17, "t18", new TheaterType[] { TheaterTypes.Desert }, new bool[2, 3] { { false, false, false }, { false, true, false } });
-        public static readonly TerrainType Split1 = new TerrainType(18, "split2", new TheaterType[] { TheaterTypes.Temperate, TheaterTypes.Winter }, new bool[2, 2] { { false, false }, { true, false } }, true);
-        public static readonly TerrainType Split2 = new TerrainType(19, "split3", new TheaterType[] { TheaterTypes.Temperate, TheaterTypes.Winter, TheaterTypes.Desert }, new bool[2, 2] { { false, false }, { true, false } }, true);
+        public static readonly TerrainType Split1 = new TerrainType(18, "split2", new TheaterType[] { TheaterTypes.Temperate, TheaterTypes.Winter }, new bool[2, 2] { { false, false }, { true, false } }, 22);
+        public static readonly TerrainType Split2 = new TerrainType(19, "split3", new TheaterType[] { TheaterTypes.Temperate, TheaterTypes.Winter, TheaterTypes.Desert }, new bool[2, 2] { { false, false }, { true, false } }, 22);
         public static readonly TerrainType Clump1 = new TerrainType(20, "tc01", new TheaterType[] { TheaterTypes.Winter, TheaterTypes.Temperate }, new bool[2, 3] { { false, false, false }, { true, true, false } });
         public static readonly TerrainType Clump2 = new TerrainType(21, "tc02", new TheaterType[] { TheaterTypes.Winter, TheaterTypes.Temperate }, new bool[2, 3] { { false, true, false }, { true, true, false } });
         public static readonly TerrainType Clump3 = new TerrainType(22, "tc03", new TheaterType[] { TheaterTypes.Winter, TheaterTypes.Temperate }, new bool[2, 3] { { true, true, false }, { true, true, false } });

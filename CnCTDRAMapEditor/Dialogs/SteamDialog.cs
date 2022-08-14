@@ -65,7 +65,8 @@ namespace MobiusEditor.Dialogs
 
             Directory.CreateDirectory(PreviewDirectory);
             var previewPath = Path.Combine(PreviewDirectory, "Minimap.png");
-            plugin.Map.GenerateWorkshopPreview(plugin.GameType, plugin.Map.BasicSection.SoloMission).ToBitmap().Save(previewPath, ImageFormat.Png);
+            // Now generates all contents.
+            plugin.Map.GenerateWorkshopPreview(plugin.GameType, true).ToBitmap().Save(previewPath, ImageFormat.Png);
 
             if (plugin.Map.BasicSection.SoloMission)
             {

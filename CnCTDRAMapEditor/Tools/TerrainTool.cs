@@ -28,6 +28,14 @@ namespace MobiusEditor.Tools
 {
     public class TerrainTool : ViewTool
     {
+        /// <summary> Layers that are important to this tool and need to be drawn last in the PostRenderMap process.</summary>
+        protected override MapLayerFlag PriorityLayers => MapLayerFlag.None;
+        /// <summary>
+        /// Layers that are not painted by the PostRenderMap function on ViewTool level because they are handled
+        /// at a specific point in the PostRenderMap override by the implementing tool.
+        /// </summary>
+        protected override MapLayerFlag ManuallyHandledLayers => MapLayerFlag.TechnoTriggers;
+
         private readonly TypeListBox terrainTypeListBox;
         private readonly MapPanel terrainTypeMapPanel;
         private readonly TerrainProperties terrainProperties;
@@ -55,18 +63,14 @@ namespace MobiusEditor.Tools
                     {
                         mapPanel.Invalidate(map, new Rectangle(navigationWidget.MouseCell, selectedTerrainType.OverlapBounds.Size));
                     }
-
                     selectedTerrainType = value;
                     terrainTypeListBox.SelectedValue = selectedTerrainType;
-
                     if (placementMode && (selectedTerrainType != null))
                     {
                         mapPanel.Invalidate(map, new Rectangle(navigationWidget.MouseCell, selectedTerrainType.OverlapBounds.Size));
                     }
-
                     mockTerrain.Type = selectedTerrainType;
-                    mockTerrain.Icon = selectedTerrainType.IsTransformable ? 22 : 0;
-
+                    mockTerrain.Icon = selectedTerrainType.DisplayIcon;
                     RefreshMapPanel();
                 }
             }
@@ -76,25 +80,18 @@ namespace MobiusEditor.Tools
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
             previewMap = map;
-            manuallyHandledLayers = MapLayerFlag.TechnoTriggers;
-
             mockTerrain = new Terrain();
             mockTerrain.PropertyChanged += MockTerrain_PropertyChanged;
-
             this.terrainTypeListBox = terrainTypeComboBox;
             this.terrainTypeListBox.SelectedIndexChanged += TerrainTypeCombo_SelectedIndexChanged;
-
             this.terrainTypeMapPanel = terrainTypeMapPanel;
             this.terrainTypeMapPanel.BackColor = Color.White;
             this.terrainTypeMapPanel.MaxZoom = 1;
             this.terrainTypeMapPanel.SmoothScale = Globals.PreviewSmoothScale;
-
             this.terrainProperties = terrainProperties;
             this.terrainProperties.Terrain = mockTerrain;
             this.terrainProperties.Visible = plugin.Map.TerrainEventTypes.Count > 0;
-
             navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
-
             SelectedTerrainType = terrainTypeComboBox.Types.First() as TerrainType;
         }
 
@@ -104,13 +101,11 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-
             if (map.Metrics.GetCell(navigationWidget.MouseCell, out int cell))
             {
                 if (map.Technos[cell] is Terrain terrain)
                 {
                     selectedTerrain = null;
-
                     selectedTerrainProperties?.Close();
                     // only TD supports triggers ("Attacked" type) on terrain types.
                     if (plugin.GameType == GameType.TiberianDawn)
@@ -182,7 +177,6 @@ namespace MobiusEditor.Tools
             {
                 selectedTerrain = null;
                 selectedTerrainPivot = Point.Empty;
-
                 UpdateStatus();
             }
         }
@@ -232,28 +226,23 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-
             if (SelectedTerrainType != null)
             {
                 var terrain = mockTerrain.Clone();
                 if (map.Technos.Add(location, terrain))
                 {
                     mapPanel.Invalidate(map, terrain);
-
                     void undoAction(UndoRedoEventArgs e)
                     {
                         e.MapPanel.Invalidate(e.Map, location);
                         e.Map.Technos.Remove(terrain);
                     }
-
                     void redoAction(UndoRedoEventArgs e)
                     {
                         e.Map.Technos.Add(location, terrain);
                         e.MapPanel.Invalidate(e.Map, location);
                     }
-
                     url.Track(undoAction, redoAction);
-
                     plugin.Dirty = true;
                 }
             }
@@ -265,21 +254,17 @@ namespace MobiusEditor.Tools
             {
                 mapPanel.Invalidate(map, terrain);
                 map.Technos.Remove(location);
-
                 void undoAction(UndoRedoEventArgs e)
                 {
                     e.Map.Technos.Add(location, terrain);
                     e.MapPanel.Invalidate(e.Map, location);
                 }
-
                 void redoAction(UndoRedoEventArgs e)
                 {
                     e.MapPanel.Invalidate(e.Map, location);
                     e.Map.Technos.Remove(terrain);
                 }
-
                 url.Track(undoAction, redoAction);
-
                 plugin.Dirty = true;
             }
         }
@@ -290,16 +275,12 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-
             placementMode = true;
-
             navigationWidget.MouseoverSize = Size.Empty;
-
             if (SelectedTerrainType != null)
             {
                 mapPanel.Invalidate(map, new Rectangle(navigationWidget.MouseCell, selectedTerrainType.OverlapBounds.Size));
             }
-
             UpdateStatus();
         }
 
@@ -309,16 +290,12 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-
             placementMode = false;
-
             navigationWidget.MouseoverSize = new Size(1, 1);
-
             if (SelectedTerrainType != null)
             {
                 mapPanel.Invalidate(map, new Rectangle(navigationWidget.MouseCell, selectedTerrainType.OverlapBounds.Size));
             }
-
             UpdateStatus();
         }
 
@@ -341,7 +318,6 @@ namespace MobiusEditor.Tools
                 selectedTerrain = map.Technos[cell] as Terrain;
                 selectedTerrainPivot = (selectedTerrain != null) ? (location - (Size)map.Technos[selectedTerrain].Value) : Point.Empty;
             }
-
             UpdateStatus();
         }
 
@@ -369,7 +345,6 @@ namespace MobiusEditor.Tools
         protected override void PreRenderMap()
         {
             base.PreRenderMap();
-
             previewMap = map.Clone();
             if (placementMode)
             {
@@ -381,7 +356,7 @@ namespace MobiusEditor.Tools
                         var terrain = new Terrain
                         {
                             Type = SelectedTerrainType,
-                            Icon = SelectedTerrainType.IsTransformable ? 22 : 0,
+                            Icon = SelectedTerrainType.DisplayIcon,
                             Tint = Color.FromArgb(128, Color.White)
                         };
                         previewMap.Technos.Add(location, terrain);
@@ -393,7 +368,6 @@ namespace MobiusEditor.Tools
         protected override void PostRenderMap(Graphics graphics)
         {
             base.PostRenderMap(graphics);
-
             using (var terrainPen = new Pen(Color.Green, 4.0f))
             using (var occupyPen = new Pen(Color.Red, 2.0f))
             {
@@ -461,7 +435,6 @@ namespace MobiusEditor.Tools
                 }
                 disposedValue = true;
             }
-
             base.Dispose(disposing);
         }
         #endregion

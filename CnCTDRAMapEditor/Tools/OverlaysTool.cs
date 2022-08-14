@@ -28,6 +28,14 @@ namespace MobiusEditor.Tools
 {
     public class OverlaysTool : ViewTool
     {
+        /// <summary> Layers that are important to this tool and need to be drawn last in the PostRenderMap process.</summary>
+        protected override MapLayerFlag PriorityLayers => MapLayerFlag.None;
+        /// <summary>
+        /// Layers that are not painted by the PostRenderMap function on ViewTool level because they are handled
+        /// at a specific point in the PostRenderMap override by the implementing tool.
+        /// </summary>
+        protected override MapLayerFlag ManuallyHandledLayers => MapLayerFlag.None;
+
         private readonly TypeListBox overlayTypeComboBox;
         private readonly MapPanel overlayTypeMapPanel;
 

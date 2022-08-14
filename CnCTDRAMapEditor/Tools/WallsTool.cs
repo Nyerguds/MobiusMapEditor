@@ -28,6 +28,14 @@ namespace MobiusEditor.Tools
 {
     public class WallsTool : ViewTool
     {
+        /// <summary> Layers that are important to this tool and need to be drawn last in the PostRenderMap process.</summary>
+        protected override MapLayerFlag PriorityLayers => MapLayerFlag.None;
+        /// <summary>
+        /// Layers that are not painted by the PostRenderMap function on ViewTool level because they are handled
+        /// at a specific point in the PostRenderMap override by the implementing tool.
+        /// </summary>
+        protected override MapLayerFlag ManuallyHandledLayers => MapLayerFlag.None;
+
         private readonly TypeListBox wallTypeComboBox;
         private readonly MapPanel wallTypeMapPanel;
 
@@ -164,12 +172,9 @@ namespace MobiusEditor.Tools
                         {
                             undoOverlays[cell] = map.Overlay[cell];
                         }
-
                         map.Overlay[cell] = overlay;
                         redoOverlays[cell] = overlay;
-
                         mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1));
-
                         plugin.Dirty = true;
                     }
                 }
@@ -187,12 +192,9 @@ namespace MobiusEditor.Tools
                     {
                         undoOverlays[cell] = map.Overlay[cell];
                     }
-
                     map.Overlay[cell] = null;
                     redoOverlays[cell] = null;
-
                     mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1));
-
                     plugin.Dirty = true;
                 }
             }
@@ -213,7 +215,6 @@ namespace MobiusEditor.Tools
                     return Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1);
                 }));
             }
-
             var redoOverlays2 = new Dictionary<int, Overlay>(redoOverlays);
             void redoAction(UndoRedoEventArgs e)
             {
@@ -227,10 +228,8 @@ namespace MobiusEditor.Tools
                     return Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1);
                 }));
             }
-
             undoOverlays.Clear();
             redoOverlays.Clear();
-
             url.Track(undoAction, redoAction);
         }
 
@@ -240,16 +239,12 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-
             placementMode = true;
-
             navigationWidget.MouseoverSize = Size.Empty;
-
             if (SelectedWallType != null)
             {
                 mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(navigationWidget.MouseCell, new Size(1, 1)), 1, 1));
             }
-
             UpdateStatus();
         }
 
@@ -259,16 +254,12 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-
             placementMode = false;
-
             navigationWidget.MouseoverSize = new Size(1, 1);
-
             if (SelectedWallType != null)
             {
                 mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(navigationWidget.MouseCell, new Size(1, 1)), 1, 1));
             }
-
             UpdateStatus();
         }
 
@@ -304,7 +295,6 @@ namespace MobiusEditor.Tools
         protected override void PreRenderMap()
         {
             base.PreRenderMap();
-
             previewMap = map.Clone();
             if (placementMode)
             {
@@ -375,7 +365,6 @@ namespace MobiusEditor.Tools
                 }
                 disposedValue = true;
             }
-
             base.Dispose(disposing);
         }
         #endregion

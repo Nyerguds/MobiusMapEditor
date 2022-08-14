@@ -32,7 +32,7 @@ namespace MobiusEditor.TiberianDawn
     {
         private static readonly Regex MovieRegex = new Regex(@"^(?:.*?\\)*(.*?)\.BK2$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
-        private static readonly IEnumerable<ITechnoType> technoTypes;
+        private static readonly IEnumerable<ITechnoType> fullTechnoTypes;
 
         private readonly IEnumerable<string> movieTypes;
 
@@ -104,7 +104,7 @@ namespace MobiusEditor.TiberianDawn
 
         static GamePlugin()
         {
-            technoTypes = InfantryTypes.GetTypes().Cast<ITechnoType>().Concat(UnitTypes.GetTypes(false).Cast<ITechnoType>());
+            fullTechnoTypes = InfantryTypes.GetTypes().Cast<ITechnoType>().Concat(UnitTypes.GetTypes(false).Cast<ITechnoType>());
         }
 
         public GamePlugin(bool mapImage)
@@ -163,7 +163,7 @@ namespace MobiusEditor.TiberianDawn
                 OverlayTypes.GetTypes(), SmudgeTypes.GetTypes(), EventTypes.GetTypes(), cellEventTypes,
                 unitEventTypes, structureEventTypes, terrainEventTypes, ActionTypes.GetTypes(),
                 MissionTypes.GetTypes(), DirectionTypes.GetTypes(), InfantryTypes.GetTypes(), UnitTypes.GetTypes(true),
-                BuildingTypes.GetTypes(), TeamMissionTypes.GetTypes(), technoTypes, waypoints, movieTypes, themeTypes)
+                BuildingTypes.GetTypes(), TeamMissionTypes.GetTypes(), fullTechnoTypes, waypoints, movieTypes, themeTypes)
             {
                 TiberiumOrGoldValue = 25
             };
@@ -191,6 +191,7 @@ namespace MobiusEditor.TiberianDawn
 
         public IEnumerable<string> Load(string path, FileType fileType)
         {
+            var ini = new INI();
             var errors = new List<string>();
             var iniPath = fileType == FileType.INI ? path : Path.ChangeExtension(path, ".ini");
             var binPath = fileType == FileType.BIN ? path : Path.ChangeExtension(path, ".bin");
@@ -198,43 +199,51 @@ namespace MobiusEditor.TiberianDawn
             {
                 case FileType.INI:
                 case FileType.BIN:
-                {
-                    var ini = new INI();
                     using (var iniReader = new StreamReader(iniPath))
                     using (var binReader = new BinaryReader(new FileStream(binPath, FileMode.Open, FileAccess.Read)))
                     {
                         string iniText = FixRoad2Load(iniReader);
                         ini.Parse(iniText);
                         errors.AddRange(LoadINI(ini));
-                        LoadBinary(binReader);
+                        if (binReader.BaseStream.Length != 0x2000)
+                        {
+                            errors.Add(String.Format("'{0}' does not have the correct size for a Tiberian Dawn .bin file.", Path.GetFileName(binPath)));
+                            Map.Templates.Clear();
+                        }
+                        else
+                        {
+                            errors.AddRange(LoadBinary(binReader));
+                        }
                     }
                     break;
-                }
                 case FileType.MEG:
                 case FileType.PGM:
-                {
                     using (var megafile = new Megafile(path))
                     {
                         var iniFile = megafile.Where(p => Path.GetExtension(p).ToLower() == ".ini").FirstOrDefault();
                         var binFile = megafile.Where(p => Path.GetExtension(p).ToLower() == ".bin").FirstOrDefault();
                         if ((iniFile != null) && (binFile != null))
                         {
-                            var ini = new INI();
                             using (var iniReader = new StreamReader(megafile.Open(iniFile)))
                             using (var binReader = new BinaryReader(megafile.Open(binFile)))
                             {
                                 ini.Parse(iniReader);
                                 errors.AddRange(LoadINI(ini));
-                                LoadBinary(binReader);
+                                if (binReader.BaseStream.Length != 0x2000)
+                                {
+                                    errors.Add(String.Format("'{0}' does not have the correct size for a Tiberian Dawn .bin file.", Path.GetFileName(binFile)));
+                                    Map.Templates.Clear();
+                                }
+                                else
+                                {
+                                    errors.AddRange(LoadBinary(binReader));
+                                }
                             }
                         }
                     }
                     break;
-                }
                 default:
-                {
                     throw new NotSupportedException();
-                }
             }
             return errors;
         }
@@ -408,7 +417,7 @@ namespace MobiusEditor.TiberianDawn
                             var classTokens = tokens[0].Split(':'); tokens.RemoveAt(0);
                             if (classTokens.Length == 2)
                             {
-                                var type = technoTypes.Where(t => t.Name.Equals(classTokens[0], StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+                                var type = fullTechnoTypes.Where(t => t.Name.Equals(classTokens[0], StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
                                 byte count;
                                 if (!byte.TryParse(classTokens[1], out count))
                                     count = 1;
@@ -418,12 +427,12 @@ namespace MobiusEditor.TiberianDawn
                                 }
                                 else
                                 {
-                                    errors.Add(string.Format("Team '{0}' references unknown class '{1}'", Key, classTokens[0]));
+                                    errors.Add(string.Format("Team '{0}' references unknown class '{1}'.", Key, classTokens[0]));
                                 }
                             }
                             else
                             {
-                                errors.Add(string.Format("Team '{0}' has wrong number of tokens for class index {1} (expecting 2)", Key, i));
+                                errors.Add(string.Format("Team '{0}' has wrong number of tokens for class index {1} (expecting 2).", Key, i));
                             }
                         }
                         var numMissions = int.Parse(tokens[0]); tokens.RemoveAt(0);
@@ -443,12 +452,12 @@ namespace MobiusEditor.TiberianDawn
                                 }
                                 else
                                 {
-                                    errors.Add(string.Format("Team '{0}' references unknown class '{1}'", Key, missionTokens[0]));
+                                    errors.Add(string.Format("Team '{0}' references unknown class '{1}'.", Key, missionTokens[0]));
                                 }
                             }
                             else
                             {
-                                errors.Add(string.Format("Team '{0}' has wrong number of tokens for mission index {1} (expecting 2)", Key, i));
+                                errors.Add(string.Format("Team '{0}' has wrong number of tokens for mission index {1} (expecting 2).", Key, i));
                             }
                         }
                         if (tokens.Count > 0)
@@ -491,7 +500,7 @@ namespace MobiusEditor.TiberianDawn
                     }
                     else
                     {
-                        errors.Add(string.Format("Trigger '{0}' has too few tokens (expecting at least 5)", Key));
+                        errors.Add(string.Format("Trigger '{0}' has too few tokens (expecting at least 5).", Key));
                     }
                 }
             }
@@ -515,19 +524,19 @@ namespace MobiusEditor.TiberianDawn
                             Terrain newTerr = new Terrain
                             {
                                 Type = terrainType,
-                                Icon = terrainType.IsTransformable ? 22 : 0,
+                                Icon = terrainType.DisplayIcon,
                                 Trigger = tokens[1]
                             };
                             if (Map.Technos.Add(cell, newTerr))
                             {
                                 if (!checkTrigs.Contains(newTerr.Trigger))
                                 {
-                                    errors.Add(string.Format("Terrain '{0}' links to unknown trigger '{1}'", terrainType, tokens[1]));
+                                    errors.Add(string.Format("Terrain '{0}' links to unknown trigger '{1}'.", terrainType, tokens[1]));
                                     newTerr.Trigger = Trigger.None;
                                 }
                                 else if (!checkTerrTrigs.Contains(newTerr.Trigger))
                                 {
-                                    errors.Add(string.Format("Terrain '{0}' links to trigger '{1}' which does not contain an event applicable to terrain", terrainType, tokens[1]));
+                                    errors.Add(string.Format("Terrain '{0}' links to trigger '{1}' which does not contain an event applicable to terrain.", terrainType, tokens[1]));
                                     newTerr.Trigger = Trigger.None;
                                 }
                             }
@@ -536,38 +545,38 @@ namespace MobiusEditor.TiberianDawn
                                 var techno = Map.Technos[cell];
                                 if (techno is Building building)
                                 {
-                                    errors.Add(string.Format("Terrain '{0}' overlaps structure '{1}' in cell {2}, skipping", tokens[0], building.Type.Name, cell));
+                                    errors.Add(string.Format("Terrain '{0}' overlaps structure '{1}' in cell {2}; skipping.", tokens[0], building.Type.Name, cell));
                                 }
                                 else if (techno is Overlay overlay)
                                 {
-                                    errors.Add(string.Format("Terrain '{0}' overlaps overlay '{1}' in cell {2}, skipping", tokens[0], overlay.Type.Name, cell));
+                                    errors.Add(string.Format("Terrain '{0}' overlaps overlay '{1}' in cell {2}; skipping.", tokens[0], overlay.Type.Name, cell));
                                 }
                                 else if (techno is Terrain terrain)
                                 {
-                                    errors.Add(string.Format("Terrain '{0}' overlaps terrain '{1}' in cell {2}, skipping", tokens[0], terrain.Type.Name, cell));
+                                    errors.Add(string.Format("Terrain '{0}' overlaps terrain '{1}' in cell {2}; skipping.", tokens[0], terrain.Type.Name, cell));
                                 }
                                 else if (techno is InfantryGroup infantry)
                                 {
-                                    errors.Add(string.Format("Terrain '{0}' overlaps infantry in cell {1}, skipping", tokens[0], cell));
+                                    errors.Add(string.Format("Terrain '{0}' overlaps infantry in cell {1}; skipping.", tokens[0], cell));
                                 }
                                 else if (techno is Unit unit)
                                 {
-                                    errors.Add(string.Format("Terrain '{0}' overlaps unit '{1}' in cell {2}, skipping", tokens[0], unit.Type.Name, cell));
+                                    errors.Add(string.Format("Terrain '{0}' overlaps unit '{1}' in cell {2}; skipping.", tokens[0], unit.Type.Name, cell));
                                 }
                                 else
                                 {
-                                    errors.Add(string.Format("Terrain '{0}' overlaps unknown techno in cell {1}, skipping", tokens[0], cell));
+                                    errors.Add(string.Format("Terrain '{0}' overlaps unknown techno in cell {1}; skipping.", tokens[0], cell));
                                 }
                             }
                         }
                         else
                         {
-                            errors.Add(string.Format("Terrain '{0}' references unknown terrain", tokens[0]));
+                            errors.Add(string.Format("Terrain '{0}' references unknown terrain.", tokens[0]));
                         }
                     }
                     else
                     {
-                        errors.Add(string.Format("Terrain '{0}' has wrong number of tokens (expecting 2)", Key));
+                        errors.Add(string.Format("Terrain '{0}' has wrong number of tokens (expecting 2).", Key));
                     }
                 }
             }
@@ -584,7 +593,7 @@ namespace MobiusEditor.TiberianDawn
                     }
                     else
                     {
-                        errors.Add(string.Format("Overlay '{0}' references unknown overlay", Value));
+                        errors.Add(string.Format("Overlay '{0}' references unknown overlay.", Value));
                     }
                 }
             }
@@ -614,7 +623,7 @@ namespace MobiusEditor.TiberianDawn
                         }
                         else
                         {
-                            errors.Add(string.Format("Smudge '{0}' references unknown smudge", tokens[0]));
+                            errors.Add(string.Format("Smudge '{0}' references unknown smudge.", tokens[0]));
                         }
                     }
                 }
@@ -647,12 +656,12 @@ namespace MobiusEditor.TiberianDawn
                                     {
                                         if (!checkTrigs.Contains(tokens[7]))
                                         {
-                                            errors.Add(string.Format("Infantry '{0}' links to unknown trigger '{1}'", infantryType.Name, tokens[7]));
+                                            errors.Add(string.Format("Infantry '{0}' links to unknown trigger '{1}'.", infantryType.Name, tokens[7]));
                                             tokens[7] = Trigger.None;
                                         }
                                         else if (!checkUnitTrigs.Contains(tokens[7]))
                                         {
-                                            errors.Add(string.Format("Infantry '{0}' links to trigger '{1}' which does not contain an event applicable to infantry", infantryType.Name, tokens[7]));
+                                            errors.Add(string.Format("Infantry '{0}' links to trigger '{1}' which does not contain an event applicable to infantry.", infantryType.Name, tokens[7]));
                                             tokens[7] = Trigger.None;
                                         }
                                         infantryGroup.Infantry[stoppingPos] = new Infantry(infantryGroup)
@@ -667,12 +676,12 @@ namespace MobiusEditor.TiberianDawn
                                     }
                                     else
                                     {
-                                        errors.Add(string.Format("Infantry '{0}' overlaps another infantry at position {1} in cell {2}, skipping", tokens[1], stoppingPos, cell));
+                                        errors.Add(string.Format("Infantry '{0}' overlaps another infantry at position {1} in cell {2}; skipping.", tokens[1], stoppingPos, cell));
                                     }
                                 }
                                 else
                                 {
-                                    errors.Add(string.Format("Infantry '{0}' has invalid position {1} in cell {2}, skipping", tokens[1], stoppingPos, cell));
+                                    errors.Add(string.Format("Infantry '{0}' has invalid position {1} in cell {2}; skipping.", tokens[1], stoppingPos, cell));
                                 }
                             }
                             else
@@ -680,34 +689,34 @@ namespace MobiusEditor.TiberianDawn
                                 var techno = Map.Technos[cell];
                                 if (techno is Building building)
                                 {
-                                    errors.Add(string.Format("Infantry '{0}' overlaps structure '{1}' in cell {2}, skipping", tokens[1], building.Type.Name, cell));
+                                    errors.Add(string.Format("Infantry '{0}' overlaps structure '{1}' in cell {2}; skipping.", tokens[1], building.Type.Name, cell));
                                 }
                                 else if (techno is Overlay overlay)
                                 {
-                                    errors.Add(string.Format("Infantry '{0}' overlaps overlay '{1}' in cell {2}, skipping", tokens[1], overlay.Type.Name, cell));
+                                    errors.Add(string.Format("Infantry '{0}' overlaps overlay '{1}' in cell {2}; skipping.", tokens[1], overlay.Type.Name, cell));
                                 }
                                 else if (techno is Terrain terrain)
                                 {
-                                    errors.Add(string.Format("Infantry '{0}' overlaps terrain '{1}' in cell {2}, skipping", tokens[1], terrain.Type.Name, cell));
+                                    errors.Add(string.Format("Infantry '{0}' overlaps terrain '{1}' in cell {2}; skipping.", tokens[1], terrain.Type.Name, cell));
                                 }
                                 else if (techno is Unit unit)
                                 {
-                                    errors.Add(string.Format("Infantry '{0}' overlaps unit '{1}' in cell {2}, skipping", tokens[1], unit.Type.Name, cell));
+                                    errors.Add(string.Format("Infantry '{0}' overlaps unit '{1}' in cell {2}; skipping.", tokens[1], unit.Type.Name, cell));
                                 }
                                 else
                                 {
-                                    errors.Add(string.Format("Infantry '{0}' overlaps unknown techno in cell {1}, skipping", tokens[1], cell));
+                                    errors.Add(string.Format("Infantry '{0}' overlaps unknown techno in cell {1}; skipping.", tokens[1], cell));
                                 }
                             }
                         }
                         else
                         {
-                            errors.Add(string.Format("Infantry '{0}' references unknown infantry", tokens[1]));
+                            errors.Add(string.Format("Infantry '{0}' references unknown infantry.", tokens[1]));
                         }
                     }
                     else
                     {
-                        errors.Add(string.Format("Infantry '{0}' has wrong number of tokens (expecting 8)", tokens[1]));
+                        errors.Add(string.Format("Infantry '{0}' has wrong number of tokens (expecting 8).", tokens[1]));
                     }
                 }
             }
@@ -737,12 +746,12 @@ namespace MobiusEditor.TiberianDawn
                             {
                                 if (!checkTrigs.Contains(tokens[6]))
                                 {
-                                    errors.Add(string.Format("Unit '{0}' links to unknown trigger '{1}'", unitType.Name, newUnit.Trigger));
+                                    errors.Add(string.Format("Unit '{0}' links to unknown trigger '{1}'.", unitType.Name, newUnit.Trigger));
                                     newUnit.Trigger = Trigger.None;
                                 }
                                 else if (!checkUnitTrigs.Contains(tokens[6]))
                                 {
-                                    errors.Add(string.Format("Unit '{0}' links to trigger '{1}' which does not contain an event applicable to units", unitType.Name, newUnit.Trigger));
+                                    errors.Add(string.Format("Unit '{0}' links to trigger '{1}' which does not contain an event applicable to units.", unitType.Name, newUnit.Trigger));
                                     newUnit.Trigger = Trigger.None;
                                 }
                             }
@@ -751,38 +760,38 @@ namespace MobiusEditor.TiberianDawn
                                 var techno = Map.Technos[cell];
                                 if (techno is Building building)
                                 {
-                                    errors.Add(string.Format("Unit '{0}' overlaps structure '{1}' in cell {2}, skipping", tokens[1], building.Type.Name, cell));
+                                    errors.Add(string.Format("Unit '{0}' overlaps structure '{1}' in cell {2}; skipping.", tokens[1], building.Type.Name, cell));
                                 }
                                 else if (techno is Overlay overlay)
                                 {
-                                    errors.Add(string.Format("Unit '{0}' overlaps overlay '{1}' in cell {2}, skipping", tokens[1], overlay.Type.Name, cell));
+                                    errors.Add(string.Format("Unit '{0}' overlaps overlay '{1}' in cell {2}; skipping.", tokens[1], overlay.Type.Name, cell));
                                 }
                                 else if (techno is Terrain terrain)
                                 {
-                                    errors.Add(string.Format("Unit '{0}' overlaps terrain '{1}' in cell {2}, skipping", tokens[1], terrain.Type.Name, cell));
+                                    errors.Add(string.Format("Unit '{0}' overlaps terrain '{1}' in cell {2}; skipping.", tokens[1], terrain.Type.Name, cell));
                                 }
                                 else if (techno is InfantryGroup infantry)
                                 {
-                                    errors.Add(string.Format("Unit '{0}' overlaps infantry in cell {1}, skipping", tokens[1], cell));
+                                    errors.Add(string.Format("Unit '{0}' overlaps infantry in cell {1}; skipping.", tokens[1], cell));
                                 }
                                 else if (techno is Unit unit)
                                 {
-                                    errors.Add(string.Format("Unit '{0}' overlaps unit '{1}' in cell {2}, skipping", tokens[1], unit.Type.Name, cell));
+                                    errors.Add(string.Format("Unit '{0}' overlaps unit '{1}' in cell {2}; skipping.", tokens[1], unit.Type.Name, cell));
                                 }
                                 else
                                 {
-                                    errors.Add(string.Format("Unit '{0}' overlaps unknown techno in cell {1}, skipping", tokens[1], cell));
+                                    errors.Add(string.Format("Unit '{0}' overlaps unknown techno in cell {1}; skipping.", tokens[1], cell));
                                 }
                             }
                         }
                         else
                         {
-                            errors.Add(string.Format("Unit '{0}' references unknown unit", tokens[1]));
+                            errors.Add(string.Format("Unit '{0}' references unknown unit.", tokens[1]));
                         }
                     }
                     else
                     {
-                        errors.Add(string.Format("Unit '{0}' has wrong number of tokens (expecting 7)", tokens[1]));
+                        errors.Add(string.Format("Unit '{0}' has wrong number of tokens (expecting 7).", tokens[1]));
                     }
                 }
             }
@@ -814,38 +823,38 @@ namespace MobiusEditor.TiberianDawn
                                 var techno = Map.Technos[cell];
                                 if (techno is Building building)
                                 {
-                                    errors.Add(string.Format("Aircraft '{0}' overlaps structure '{1}' in cell {2}, skipping", tokens[1], building.Type.Name, cell));
+                                    errors.Add(string.Format("Aircraft '{0}' overlaps structure '{1}' in cell {2}; skipping.", tokens[1], building.Type.Name, cell));
                                 }
                                 else if (techno is Overlay overlay)
                                 {
-                                    errors.Add(string.Format("Aircraft '{0}' overlaps overlay '{1}' in cell {2}, skipping", tokens[1], overlay.Type.Name, cell));
+                                    errors.Add(string.Format("Aircraft '{0}' overlaps overlay '{1}' in cell {2}; skipping.", tokens[1], overlay.Type.Name, cell));
                                 }
                                 else if (techno is Terrain terrain)
                                 {
-                                    errors.Add(string.Format("Aircraft '{0}' overlaps terrain '{1}' in cell {2}, skipping", tokens[1], terrain.Type.Name, cell));
+                                    errors.Add(string.Format("Aircraft '{0}' overlaps terrain '{1}' in cell {2}; skipping.", tokens[1], terrain.Type.Name, cell));
                                 }
                                 else if (techno is InfantryGroup infantry)
                                 {
-                                    errors.Add(string.Format("Aircraft '{0}' overlaps infantry in cell {1}, skipping", tokens[1], cell));
+                                    errors.Add(string.Format("Aircraft '{0}' overlaps infantry in cell {1}; skipping.", tokens[1], cell));
                                 }
                                 else if (techno is Unit unit)
                                 {
-                                    errors.Add(string.Format("Aircraft '{0}' overlaps unit '{1}' in cell {2}, skipping", tokens[1], unit.Type.Name, cell));
+                                    errors.Add(string.Format("Aircraft '{0}' overlaps unit '{1}' in cell {2}; skipping.", tokens[1], unit.Type.Name, cell));
                                 }
                                 else
                                 {
-                                    errors.Add(string.Format("Aircraft '{0}' overlaps unknown techno in cell {1}, skipping", tokens[1], cell));
+                                    errors.Add(string.Format("Aircraft '{0}' overlaps unknown techno in cell {1}; skipping.", tokens[1], cell));
                                 }
                             }
                         }
                         else
                         {
-                            errors.Add(string.Format("Aircraft '{0}' references unknown aircraft", tokens[1]));
+                            errors.Add(string.Format("Aircraft '{0}' references unknown aircraft.", tokens[1]));
                         }
                     }
                     else
                     {
-                        errors.Add(string.Format("Aircraft '{0}' has wrong number of tokens (expecting 6)", tokens[1]));
+                        errors.Add(string.Format("Aircraft '{0}' has wrong number of tokens (expecting 6).", tokens[1]));
                     }
                 }
             }
@@ -871,43 +880,43 @@ namespace MobiusEditor.TiberianDawn
                                 Strength = int.Parse(tokens[2]),
                                 Direction = Map.DirectionTypes.Where(d => d.Equals(direction)).FirstOrDefault(),
                                 Trigger = tokens[5]
-                                }))
+                            }))
                             {
                                 var techno = Map.Technos[cell];
                                 if (techno is Building building)
                                 {
-                                    errors.Add(string.Format("Structure '{0}' overlaps structure '{1}' in cell {2}, skipping", tokens[1], building.Type.Name, cell));
+                                    errors.Add(string.Format("Structure '{0}' overlaps structure '{1}' in cell {2}; skipping.", tokens[1], building.Type.Name, cell));
                                 }
                                 else if (techno is Overlay overlay)
                                 {
-                                    errors.Add(string.Format("Structure '{0}' overlaps overlay '{1}' in cell {2}, skipping", tokens[1], overlay.Type.Name, cell));
+                                    errors.Add(string.Format("Structure '{0}' overlaps overlay '{1}' in cell {2}; skipping.", tokens[1], overlay.Type.Name, cell));
                                 }
                                 else if (techno is Terrain terrain)
                                 {
-                                    errors.Add(string.Format("Structure '{0}' overlaps terrain '{1}' in cell {2}, skipping", tokens[1], terrain.Type.Name, cell));
+                                    errors.Add(string.Format("Structure '{0}' overlaps terrain '{1}' in cell {2}; skipping.", tokens[1], terrain.Type.Name, cell));
                                 }
                                 else if (techno is InfantryGroup infantry)
                                 {
-                                    errors.Add(string.Format("Structure '{0}' overlaps infantry in cell {1}, skipping", tokens[1], cell));
+                                    errors.Add(string.Format("Structure '{0}' overlaps infantry in cell {1}; skipping.", tokens[1], cell));
                                 }
                                 else if (techno is Unit unit)
                                 {
-                                    errors.Add(string.Format("Structure '{0}' overlaps unit '{1}' in cell {2}, skipping", tokens[1], unit.Type.Name, cell));
+                                    errors.Add(string.Format("Structure '{0}' overlaps unit '{1}' in cell {2}; skipping.", tokens[1], unit.Type.Name, cell));
                                 }
                                 else
                                 {
-                                    errors.Add(string.Format("Structure '{0}' overlaps unknown techno in cell {1}, skipping", tokens[1], cell));
+                                    errors.Add(string.Format("Structure '{0}' overlaps unknown techno in cell {1}; skipping.", tokens[1], cell));
                                 }
                             }
                         }
                         else
                         {
-                            errors.Add(string.Format("Structure '{0}' references unknown structure", tokens[1]));
+                            errors.Add(string.Format("Structure '{0}' references unknown structure.", tokens[1]));
                         }
                     }
                     else
                     {
-                        errors.Add(string.Format("Structure '{0}' has wrong number of tokens (expecting 6)", tokens[1]));
+                        errors.Add(string.Format("Structure '{0}' has wrong number of tokens (expecting 6).", tokens[1]));
                     }
                 }
             }
@@ -944,17 +953,17 @@ namespace MobiusEditor.TiberianDawn
                             }
                             else
                             {
-                                errors.Add(string.Format("Base priority {0} references unknown structure '{1}'", priority, tokens[0]));
+                                errors.Add(string.Format("Base priority {0} references unknown structure '{1}'.", priority, tokens[0]));
                             }
                         }
                         else
                         {
-                            errors.Add(string.Format("Base priority {0} has wrong number of tokens (expecting 2)", priority));
+                            errors.Add(string.Format("Base priority {0} has wrong number of tokens (expecting 2).", priority));
                         }
                     }
                     else if (!Key.Equals("Count", StringComparison.CurrentCultureIgnoreCase))
                     {
-                        errors.Add(string.Format("Invalid base priority '{0}' (expecting integer)", Key));
+                        errors.Add(string.Format("Invalid base priority '{0}' (expecting integer).", Key));
                     }
                 }
             }
@@ -978,23 +987,23 @@ namespace MobiusEditor.TiberianDawn
                                     Map.Waypoints[waypoint].Cell = null;
                                     if (cell != -1)
                                     {
-                                        errors.Add(string.Format("Waypoint {0} cell value {1} out of range (expecting between {2} and {3})", waypoint, cell, 0, Map.Metrics.Length - 1));
+                                        errors.Add(string.Format("Waypoint {0} cell value {1} out of range (expecting between {2} and {3}).", waypoint, cell, 0, Map.Metrics.Length - 1));
                                     }
                                 }
                             }
                             else if (cell != -1)
                             {
-                                errors.Add(string.Format("Waypoint {0} out of range (expecting between {1} and {2})", waypoint, 0, Map.Waypoints.Length - 1));
+                                errors.Add(string.Format("Waypoint {0} out of range (expecting between {1} and {2}).", waypoint, 0, Map.Waypoints.Length - 1));
                             }
                         }
                         else
                         {
-                            errors.Add(string.Format("Waypoint {0} has invalid cell '{1}' (expecting integer)", waypoint, Value));
+                            errors.Add(string.Format("Waypoint {0} has invalid cell '{1}' (expecting integer).", waypoint, Value));
                         }
                     }
                     else
                     {
-                        errors.Add(string.Format("Invalid waypoint '{0}' (expecting integer)", Key));
+                        errors.Add(string.Format("Invalid waypoint '{0}' (expecting integer).", Key));
                     }
                 }
             }
@@ -1018,22 +1027,22 @@ namespace MobiusEditor.TiberianDawn
                                 }
                                 else
                                 {
-                                    errors.Add(string.Format("Cell trigger {0} links to trigger '{1}' which does not contain a placeable event", cell, Value));
+                                    errors.Add(string.Format("Cell trigger {0} links to trigger '{1}' which does not contain a placeable event.", cell, Value));
                                 }
                             }
                             else
                             {
-                                errors.Add(string.Format("Cell trigger {0} links to unknown trigger '{1}'", cell, Value));
+                                errors.Add(string.Format("Cell trigger {0} links to unknown trigger '{1}'.", cell, Value));
                             }
                         }
                         else
                         {
-                            errors.Add(string.Format("Cell trigger {0} outside map bounds", cell));
+                            errors.Add(string.Format("Cell trigger {0} outside map bounds.", cell));
                         }
                     }
                     else
                     {
-                        errors.Add(string.Format("Invalid cell trigger '{0}' (expecting integer)", Key));
+                        errors.Add(string.Format("Invalid cell trigger '{0}' (expecting integer).", Key));
                     }
                 }
             }
@@ -1068,8 +1077,9 @@ namespace MobiusEditor.TiberianDawn
             return errors;
         }
 
-        private void LoadBinary(BinaryReader reader)
+        private IEnumerable<string> LoadBinary(BinaryReader reader)
         {
+            var errors = new List<string>();
             Map.Templates.Clear();
             for (var y = 0; y < Map.Metrics.Height; ++y)
             {
@@ -1079,35 +1089,56 @@ namespace MobiusEditor.TiberianDawn
                     var iconValue = reader.ReadByte();
                     var templateType = Map.TemplateTypes.Where(t => t.Equals(typeValue)).FirstOrDefault();
                     // Prevent loading of illegal tiles.
-                    if (templateType != null
-                        && (!templateType.Theaters.Contains(Map.Theater)
-                            || templateType == TemplateTypes.Clear || iconValue >= templateType.NumIcons
-                            || !templateType.IconMask[iconValue % templateType.IconWidth, iconValue / templateType.IconWidth]))
+                    if (templateType != null)
                     {
-                        templateType = null;
+                        bool tileOk = false;
+                        if (!templateType.Theaters.Contains(Map.Theater))
+                        {
+                            errors.Add(String.Format("Template '{0}' at cell [{1},{2}] is not available in the set theater.", templateType.Name.ToUpper(), x, y));
+                        }
+                        else if (iconValue >= templateType.NumIcons)
+                        {
+                            errors.Add(String.Format("Template '{0}' at cell [{1},{2}] has an icon set ({3}) that is outside its icons range.", templateType.Name.ToUpper(), x, y, iconValue));
+                        }
+                        else if (!templateType.IconMask[iconValue % templateType.IconWidth, iconValue / templateType.IconWidth])
+                        {
+                            errors.Add(String.Format("Template '{0}' at cell [{1},{2}] has an icon set ({3}) that is not part of its placeable cells.", templateType.Name.ToUpper(), x, y, iconValue));
+                        }
+                        else if (templateType != TemplateTypes.Clear)
+                        {
+                            // Not going to give an error for explicit "Clear" templates. Probably just from XCC Editor. But it still gets wiped.
+                            tileOk = true;
+                        }
+                        if (!tileOk)
+                        {
+                            templateType = null;
+                        }
+                    }
+                    else if (typeValue != 0xFF)
+                    {
+                        errors.Add(String.Format("Unknown template value {0:X2} at cell [{1},{2}]", typeValue, x, y));
                     }
                     Map.Templates[x, y] = (templateType != null) ? new Template { Type = templateType, Icon = iconValue } : null;
                 }
             }
+            return errors;
         }
 
         public bool Save(string path, FileType fileType)
         {
-            if (!Validate())
+            String errors = Validate();
+            if (errors != null)
             {
+                MessageBox.Show(errors, "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
             var iniPath = fileType == FileType.INI ? path : Path.ChangeExtension(path, ".ini");
             var binPath = fileType == FileType.BIN ? path : Path.ChangeExtension(path, ".bin");
+            var ini = new INI();
             switch (fileType)
             {
                 case FileType.INI:
                 case FileType.BIN:
-                {
-                    var tgaPath = Path.ChangeExtension(path, ".tga");
-                    var jsonPath = Path.ChangeExtension(path, ".json");
-
-                    var ini = new INI();
                     SaveINI(ini, fileType);
                     using (var iniWriter = new StreamWriter(iniPath))
                     {
@@ -1119,21 +1150,23 @@ namespace MobiusEditor.TiberianDawn
                     {
                         SaveBinary(binWriter);
                     }
-                    using (var tgaStream = new FileStream(tgaPath, FileMode.Create))
+                    if (!Map.BasicSection.SoloMission || !Properties.Settings.Default.NoMetaFilesForSinglePlay)
                     {
-                        SaveMapPreview(tgaStream, Map.BasicSection.SoloMission);
-                    }
-                    using (var jsonStream = new FileStream(jsonPath, FileMode.Create))
-                    using (var jsonWriter = new JsonTextWriter(new StreamWriter(jsonStream)))
-                    {
-                        SaveJSON(jsonWriter);
+                        var tgaPath = Path.ChangeExtension(path, ".tga");
+                        var jsonPath = Path.ChangeExtension(path, ".json");
+                        using (var tgaStream = new FileStream(tgaPath, FileMode.Create))
+                        {
+                            SaveMapPreview(tgaStream, true);
+                        }
+                        using (var jsonStream = new FileStream(jsonPath, FileMode.Create))
+                        using (var jsonWriter = new JsonTextWriter(new StreamWriter(jsonStream)))
+                        {
+                            SaveJSON(jsonWriter);
+                        }
                     }
                     break;
-                }
                 case FileType.MEG:
                 case FileType.PGM:
-                {
-                    var ini = new INI();
                     SaveINI(ini, fileType);
                     using (var iniStream = new MemoryStream())
                     using (var binStream = new MemoryStream())
@@ -1144,15 +1177,13 @@ namespace MobiusEditor.TiberianDawn
                     using (var jsonWriter = new JsonTextWriter(new StreamWriter(jsonStream)))
                     using (var megafileBuilder = new MegafileBuilder(@"", path))
                     {
-
-                        //iniWriter.Write(ini.ToString());
                         FixRoad2Save(ini, iniWriter);
                         iniWriter.Flush();
                         iniStream.Position = 0;
                         SaveBinary(binWriter);
                         binWriter.Flush();
                         binStream.Position = 0;
-                        SaveMapPreview(tgaStream, Map.BasicSection.SoloMission);
+                        SaveMapPreview(tgaStream, true);
                         tgaStream.Position = 0;
                         SaveJSON(jsonWriter);
                         jsonWriter.Flush();
@@ -1168,11 +1199,8 @@ namespace MobiusEditor.TiberianDawn
                         megafileBuilder.Write();
                     }
                     break;
-                }
                 default:
-                {
                     throw new NotSupportedException();
-                }
             }
             return true;
         }
@@ -1241,7 +1269,7 @@ namespace MobiusEditor.TiberianDawn
                 cellTriggersSection[cell.ToString()] = cellTrigger.Trigger;
             }
             var teamTypesSection = ini.Sections.Add("TeamTypes");
-            foreach(var teamType in Map.TeamTypes)
+            foreach (var teamType in Map.TeamTypes)
             {
                 var classes = teamType.Classes
                     .Select(c => string.Format("{0}:{1}", c.Type.Name.ToUpperInvariant(), c.Count))
@@ -1478,10 +1506,9 @@ namespace MobiusEditor.TiberianDawn
             writer.WriteEndObject();
         }
 
-        private bool Validate()
+        public String Validate()
         {
             StringBuilder sb = new StringBuilder("Error(s) during map validation:");
-
             bool ok = true;
             int numAircraft = Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsAircraft).Count();
             int numBuildings = Map.Buildings.OfType<Building>().Where(x => x.Occupier.IsPrebuilt).Count();
@@ -1489,68 +1516,53 @@ namespace MobiusEditor.TiberianDawn
             int numTerrain = Map.Technos.OfType<Terrain>().Count();
             int numUnits = Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsUnit).Count();
             int numWaypoints = Map.Waypoints.Count(w => w.Cell.HasValue);
-
             if (numAircraft > Constants.MaxAircraft)
             {
                 sb.Append(Environment.NewLine + string.Format("Maximum number of aircraft exceeded ({0} > {1})", numAircraft, Constants.MaxAircraft));
                 ok = false;
             }
-
             if (numBuildings > Constants.MaxBuildings)
             {
                 sb.Append(Environment.NewLine + string.Format("Maximum number of structures exceeded ({0} > {1})", numBuildings, Constants.MaxBuildings));
                 ok = false;
             }
-
             if (numInfantry > Constants.MaxInfantry)
             {
                 sb.Append(Environment.NewLine + string.Format("Maximum number of infantry exceeded ({0} > {1})", numInfantry, Constants.MaxInfantry));
                 ok = false;
             }
-
             if (numTerrain > Constants.MaxTerrain)
             {
                 sb.Append(Environment.NewLine + string.Format("Maximum number of terrain objects exceeded ({0} > {1})", numTerrain, Constants.MaxTerrain));
                 ok = false;
             }
-
             if (numUnits > Constants.MaxUnits)
             {
                 sb.Append(Environment.NewLine + string.Format("Maximum number of units exceeded ({0} > {1})", numUnits, Constants.MaxUnits));
                 ok = false;
             }
-
             if (Map.TeamTypes.Count > Constants.MaxTeams)
             {
                 sb.Append(Environment.NewLine + string.Format("Maximum number of team types exceeded ({0} > {1})", Map.TeamTypes.Count, Constants.MaxTeams));
                 ok = false;
             }
-
             if (Map.Triggers.Count > Constants.MaxTriggers)
             {
                 sb.Append(Environment.NewLine + string.Format("Maximum number of triggers exceeded ({0} > {1})", Map.Triggers.Count, Constants.MaxTriggers));
                 ok = false;
             }
-
             if (!Map.BasicSection.SoloMission && (numWaypoints < 2))
             {
                 sb.Append(Environment.NewLine + "Skirmish/Multiplayer maps need at least 2 waypoints for player starting locations.");
                 ok = false;
             }
-
             var homeWaypoint = Map.Waypoints.Where(w => w.Equals("Home")).FirstOrDefault();
             if (Map.BasicSection.SoloMission && !homeWaypoint.Cell.HasValue)
             {
                 sb.Append(Environment.NewLine + string.Format("Single-player maps need the Home waypoint to be placed.", Map.Triggers.Count, Constants.MaxTriggers));
                 ok = false;
             }
-
-            if (!ok)
-            {
-                MessageBox.Show(sb.ToString(), "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-
-            return ok;
+            return ok ? null : sb.ToString();
         }
 
         private void BasicSection_PropertyChanged(object sender, PropertyChangedEventArgs e)

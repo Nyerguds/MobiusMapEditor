@@ -36,6 +36,14 @@ namespace MobiusEditor.Tools
         private Map previewMap;
         protected override Map RenderMap => previewMap;
 
+        /// <summary> Layers that are important to this tool and need to be drawn last in the PostRenderMap process.</summary>
+        protected override MapLayerFlag PriorityLayers => MapLayerFlag.None;
+        /// <summary>
+        /// Layers that are not painted by the PostRenderMap function on ViewTool level because they are handled
+        /// at a specific point in the PostRenderMap override by the implementing tool.
+        /// </summary>
+        protected override MapLayerFlag ManuallyHandledLayers => MapLayerFlag.TechnoTriggers;
+
         private bool placementMode;
 
         private readonly Infantry mockInfantry;
@@ -75,7 +83,6 @@ namespace MobiusEditor.Tools
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
             previewMap = map;
-            manuallyHandledLayers = MapLayerFlag.TechnoTriggers;
             InfantryType infType = infantryTypesBox.Types.First() as InfantryType;
             mockInfantry = new Infantry(null)
             {

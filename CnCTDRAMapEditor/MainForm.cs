@@ -386,6 +386,12 @@ namespace MobiusEditor
             }
             else
             {
+                String errors = plugin.Validate();
+                if (errors != null)
+                {
+                    MessageBox.Show(errors, "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
                 var fileInfo = new FileInfo(filename);
                 if (SaveFile(fileInfo.FullName, loadedFileType))
                 {
@@ -404,7 +410,12 @@ namespace MobiusEditor
             {
                 return;
             }
-
+            String errors = plugin.Validate();
+            if (errors != null)
+            {
+                MessageBox.Show(errors, "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
             SaveFileDialog sfd = new SaveFileDialog
             {
                 AutoUpgradeEnabled = false,
@@ -451,7 +462,12 @@ namespace MobiusEditor
             {
                 return;
             }
-
+            String errors = plugin.Validate();
+            if (errors != null)
+            {
+                MessageBox.Show(errors, "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
             SaveFileDialog sfd = new SaveFileDialog
             {
                 AutoUpgradeEnabled = false,
@@ -872,6 +888,7 @@ namespace MobiusEditor
 
         private bool SaveFile(string saveFilename, FileType inputNameType)
         {
+            // This part assumes validation is already done.
             FileType fileType = FileType.None;
             switch (Path.GetExtension(saveFilename).ToLower())
             {
@@ -900,12 +917,10 @@ namespace MobiusEditor
             {
                 plugin.Map.SteamSection.Title = plugin.Map.BasicSection.Name;
             }
-
             if (!plugin.Save(saveFilename, fileType))
             {
                 return false;
             }
-
             var fileInfo = new FileInfo(saveFilename);
             if (fileInfo.Exists && fileInfo.Length > Globals.MaxMapSize)
             {

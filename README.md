@@ -10,6 +10,24 @@ Right now, I'm not really looking into making this a joint project. Specific bug
 
 ---
 
+## Configuration
+
+The file "CnCTDRAMapEditor.exe.config" contains settings to customise the editor. This is what they do:
+
+* **ModsToLoad**: semicolon (or comma) separated list of mod entries. A mod entry can either be a Steam workshop ID, or a path of the type "Tiberian_Dawn\ModName" or "Red_Alert\ModName". The paths will initially be looked up under My Documents, but will also check the Steam workshop files, and use the game prefix part to verify the mod's targeted game. Note that mods are **not** loaded conditionally in the editor based on this targeted game; the editor loads all assets of both games on startup. The editor also has no way to check which mods are actually enabled in the game, and will load anything that is configured of which the files can be found.
+* **NoMetaFilesForSinglePlay**: Suppresses the generation of .tga and .json files for single player maps.
+* **MapScaleFactor**: Integer division factor for the size at which assets are rendered on the map; higher means lower quality. This will make the UI more responsive. Negative values will enable smooth scaling, which gives nicer graphics but will maje the UI noticeable less responsive.
+* **PreviewScaleFactor**: Integer division factor for the size at which assets are rendered on the preview tools. Negative values will enable smooth scaling, but this usually doesn't look good on the upscaled preview graphics.
+* **ObjectToolItemSizeMultiplier**: Floating-point multiplication factor for downsizing the item icons on the selection lists on the tool windows.
+* **TemplateToolTextureSizeMultiplier**: Floating-point multiplication factor for the size of tiles shown on the Map tool. This scaling is somehow done relative to the screen size; not sure.
+* **MaxMapTileTextureSize**: Maximum for the size of the tiles shown on the Map tool. Leave on 0 to disable.
+
+The **ModsToLoad** setting will have the `ConcretePavementTD` mod set by default, to complete the incomplete Remastered TD graphics set. The mod can be downloaded here:
+
+https://steamcommunity.com/sharedfiles/filedetails/?id=2844969675
+
+---
+
 ## Change log
 
 ### Features added by Rampastring:
@@ -122,24 +140,25 @@ v1.4.0.4: [WIP]
 * Added \*.ini to the list of possible extensions for opening RA maps. Apparently before I only added it for saving.
 * The editor will now accept nonstandard extensions from drag & drop without any issues. For TD maps, it will need to find the accompanying bin or ini file with the correct extension.
 * Files opened from filenames with nonstandard extensions will not change these extensions when saving the file. This also means RA maps opened from a .ini file will no longer change the extension to .mpr when saving.
-* Terrain objects will now only pop up a poperties box for setting a trigger in TD mode.
+* Terrain objects will now only pop up a poperties box for setting a trigger on TD maps.
 * Optimised loading so the editor will skip loading objects from different theaters.
-* User settings (game folder, invite warning, and the dialog locations) will now be ported over from previous versions.
+* User settings (game folder, invite warning, and the dialog locations) will now be properly ported over from previous versions.
 * Added support for loading mod xml info and graphics through the "ModsToLoad" setting in "CnCTDRAMapEditor.exe.config". The syntax is a semicolon-separated list, with each entry either a Steam workshop ID, or a folder under "Documents\CnCRemastered\Mods\". As folder, the path must contain the "Tiberian_Dawn" or "Red_Alert" part at the start. That prefix folder will also be used as consistency check for the mod type as defined inside "ccmod.json". Mods given by folder name will also be looked up in the Steam workshop folders, with the prefix folder used only for the consistency check. Mods do NOT have to be enabled in the game to work in the editor.
-* Added support for the unique pattern of TD's CONC pavement. You will need the "ConcretePavementTD" mod to actually see that, though. This mod is enabled by default in the editor's settings, so it will automatically be used if found.
+* Added support for the unique pattern of TD's "conc" pavement. You will need the "ConcretePavementTD" mod to actually see that, though. This mod is filled in by default in the editor's mod loading settings, meaning it will automatically be used if found.
 * Fixed loading and saving of the videos set in the map options dialog, so no more errors pop up there.
-* Made video names freely editable for TD missions. Any mod-added video in TD is playable from missions.
+* Made video names freely editable for TD missions. Any mod-added video in TD is playable from missions. Be warned that when a video is not found, this will cause the game to hang for several minutes.
 * The preview selection in the Steam publish dialog will now open in the correct folder.
-* The preview rendered for singleplayer maps for the Steam publish (which is not used by default) will show all map contents.
+* The new setting "NoMetaFilesForSinglePlay" in "CnCTDRAMapEditor.exe.config" will suppress the generation of .json and .TGA file when saving single player missions. Not writing them is now the default behaviour.
+* The previews rendered for workshop maps will now show all map contents, to give a better representation of what is on the map. Note that for single play missions, this preview is generated in the folder but is optional.
 * Removed crater types CR2 to CR6; they don't work correctly in either game and will just show the smallest size of CR1. Any craters of other types encountered on map load will now be converted to CR1.
 * The teamtypes dialog no longer uses data grids for its teams and orders.
-* The controls of the orders now correctly adapt to the types of each order, giving dropdowns for special choices lists and for waypoints.
+* The controls of the orders in the teamtypes dialog now correctly adapt to the types of each order, giving dropdowns for special choices lists and for waypoints.
 * The waypoints that can be selected for an RA teamtype now correctly start from -1 as "(none)".
 * Fixed colour of "Special" in RA to have the same colour as Spain.
-* Trigger Events and Actions retained their argument data when changing their type, meaning the UI would pick the equivalent data on whatever list or control popped up for the new type. This has been fixed.
+* Fixed the fact trigger Events and Actions retained their argument data when changing their type, meaning the UI would pick the equivalent data on whatever list or control popped up for the new type.
 * RA triggers now show human-readable data for the Event and Action arguments.
 * The editor no longer locks up when the triggers dialog shows an empty list of teamtypes or triggers because none were made yet.
-* Removed Aircraft section handling from TD.
+* Removed Aircraft section handling. Aircraft were never able to be pre-placed in the original game, and the re-enabled sections in the Remasters have issues; aircraft will still spawn in the air and fly somewhere close.
 * Like walls, overlay placement and removing can now be dragged to affect multiple cells.
 * All waypoint will now be shown with their coordinates.
 * Added "Jump to..." button on the waypoints tool. This will only have any effect when zoomed in.
@@ -148,21 +167,21 @@ v1.4.0.4: [WIP]
 * Map indicators will now be painted in this order: map boundaries, celltriggers, waypoints, object triggers. The later ones will be on top and thus most visible.
 * Map indicators for the type you are currently editing are now always drawn last, and thus the most visible. (e.g. overlapping celltriggers and waypoints)
 * Unit/building/infantry tools now paint the object trigger labels last, so they no longer get painted over by the occupied cell indicators.
-* TGA files that are not inside a .zip file can now also load their positioning metadata from accompanying .meta files.
+* For assets / mods loading, TGA files that are not inside a .zip file can now also load their positioning metadata from accompanying .meta files.
 * Factory doors will no longer be seen as semitransparent on the placement preview.
-* "Quality" factor in the config file (indicating a downscaling factor of the graphics) now accepts negative values to enable smooth scaling.
-* Object previews will now obey the "Quality" factor set in the config file. However, they will always be displayed using pixel scaling, because smooth scaling looks awful on the zoomed-in preview panels.
-* Fixed incorrect cleanup when switching between tools, which could cause odd bugs like two selected cells being visible on the tileset tool.
-* Terrain and structure editing mode will now always draw the full green bounds underneath the red occupied cells.
+* Fixed incorrect cleanup of internal tool objects, which could cause odd bugs like two selected cells being visible on the tileset tool.
+* Terrain and structure editing mode will now draw all full green bounds underneath the red occupied cells. Before, both were drawn per object and could cause odd overlaps.
 * Optimised all calculations related to centering objects in their bounding box and drawing them on the map.
 * Infantry are now positioned more accurately.
 * The terrain tool now uses a list box like all the other tools, instead of the awkward dropdown list.
 * The smudge tool now allows setting the size in the preview window, and picking craters with a different size from the map.
-* Previews in tool windows will now use higher quality graphics than the map by default. This can be adjusted in the CnCTDRAMapEditor.exe.config file, by changing the "MapScaleFactor" and "PreviewScaleFactor".
-* When removing a trigger, all celltriggers and objects linking to that trigger will now get their trigger cleared.
-* The trigger proposed for linking to objects and cells are now filtered out to only those triggers with an Event that can be triggered by that object type.
-* An Info icon next to the trigger dropdowns will give an explanation of which trigger events work for that type.
+* The "MapScaleFactor" and "PreviewScaleFactor" settings in the "CnCTDRAMapEditor.exe.config" file can adjust the downscaling factor for respectively the map graphics and the preview graphics. Higher values will reduce quality, but will make the editor more responsive. By default, previews in tool windows will now use higher quality graphics than the map. Using a negative value will enable smooth scaling. (Not advised, but it's available)
+* When removing a trigger, all celltriggers and objects linking to that trigger will now get their trigger cleared. Before, this only happened for structures.
+* The triggers available for linking to objects and cells are now filtered out to only those triggers with an Event that can be triggered by that object type. This will also affect the cleanup of triggers if a trigger's Event was changed to something not compatible with the objects it was linked to.
+* An Info icon next to the trigger dropdowns in the placement tool windows will give an explanation of which trigger events work for that type.
 * For celltriggers and waypoints, the item selected in the tool dropdown will now be highlighted on the map in yellow.
-* A logical default order is now selected when you pick a unit to place.
-* Editing the triggers can no longer kick you out of the Celltrigger tool.
+* A logical default Mission is now selected when you pick a unit to place.
+* Editing the triggers can no longer kick you out of the Celltrigger tool even though placeable triggers remain after the edits.
 * The brush size on the resource tool will now adjust itself if an incorrect (even) value is given.
+* Map loading validation will now also validate terrain templates, meaning corrupted maps have a much higher likelihood to give correct feedback.
+* Map validation will now be done before the "Save File" dialog opens.

@@ -29,6 +29,14 @@ namespace MobiusEditor.Tools
 {
     public class SmudgeTool : ViewTool
     {
+        /// <summary> Layers that are important to this tool and need to be drawn last in the PostRenderMap process.</summary>
+        protected override MapLayerFlag PriorityLayers => MapLayerFlag.None;
+        /// <summary>
+        /// Layers that are not painted by the PostRenderMap function on ViewTool level because they are handled
+        /// at a specific point in the PostRenderMap override by the implementing tool.
+        /// </summary>
+        protected override MapLayerFlag ManuallyHandledLayers => MapLayerFlag.None;
+
         private readonly TypeListBox smudgeTypeListBox;
         private readonly MapPanel smudgeTypeMapPanel;
         private readonly SmudgeProperties smudgeProperties;
@@ -79,7 +87,6 @@ namespace MobiusEditor.Tools
                 Icon = 0
             };
             mockSmudge.PropertyChanged += MockSmudge_PropertyChanged;
-
             this.smudgeTypeListBox = smudgeTypeListBox;
             this.smudgeTypeListBox.SelectedIndexChanged += SmudgeTypeComboBox_SelectedIndexChanged;
             this.smudgeTypeMapPanel = smudgeTypeMapPanel;
@@ -88,9 +95,7 @@ namespace MobiusEditor.Tools
             this.smudgeTypeMapPanel.SmoothScale = Globals.PreviewSmoothScale;
             this.smudgeProperties = smudgeProperties;
             this.smudgeProperties.Smudge = mockSmudge;
-
             navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
-
             SelectedSmudgeType = smudgeTypeListBox.Types.First() as SmudgeType;
         }
 
@@ -100,25 +105,20 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-
             if (map.Metrics.GetCell(navigationWidget.MouseCell, out int cell))
             {
                 if (map.Smudge[cell] is Smudge smudge && (smudge.Type.Flag & SmudgeTypeFlag.Bib) == 0)
                 {
                     selectedSmudge = smudge;
                     selectedSmudgeCell = cell;
-
                     selectedSmudgeProperties?.Close();
                     selectedSmudgeProperties = new SmudgePropertiesPopup(plugin, smudge);
                     selectedSmudgeProperties.Closed += (cs, ce) =>
                     {
                         navigationWidget.Refresh();
                     };
-
                     smudge.PropertyChanged += SelectedSmudge_PropertyChanged;
-
                     selectedSmudgeProperties.Show(mapPanel, mapPanel.PointToClient(Control.MousePosition));
-
                     UpdateStatus();
                 }
             }
@@ -211,21 +211,17 @@ namespace MobiusEditor.Tools
                     var smudge = mockSmudge.Clone();
                     map.Smudge[location] = smudge;
                     mapPanel.Invalidate(map, location);
-
                     void undoAction(UndoRedoEventArgs e)
                     {
                         e.MapPanel.Invalidate(e.Map, location);
                         e.Map.Smudge[location] = null;
                     }
-
                     void redoAction(UndoRedoEventArgs e)
                     {
                         e.Map.Smudge[location] = smudge;
                         e.MapPanel.Invalidate(e.Map, location);
                     }
-
                     url.Track(undoAction, redoAction);
-
                     plugin.Dirty = true;
                 }
             }
@@ -237,21 +233,17 @@ namespace MobiusEditor.Tools
             {
                 map.Smudge[location] = null;
                 mapPanel.Invalidate(map, location);
-
                 void undoAction(UndoRedoEventArgs e)
                 {
                     e.Map.Smudge[location] = smudge;
                     e.MapPanel.Invalidate(e.Map, location);
                 }
-
                 void redoAction(UndoRedoEventArgs e)
                 {
                     e.MapPanel.Invalidate(e.Map, location);
                     e.Map.Smudge[location] = null;
                 }
-
                 url.Track(undoAction, redoAction);
-
                 plugin.Dirty = true;
             }
         }
@@ -262,16 +254,12 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-
             placementMode = true;
-
             navigationWidget.MouseoverSize = Size.Empty;
-
             if (SelectedSmudgeType != null)
             {
                 mapPanel.Invalidate(map, navigationWidget.MouseCell);
             }
-
             UpdateStatus();
         }
 
@@ -281,16 +269,12 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-
             placementMode = false;
-
             navigationWidget.MouseoverSize = new Size(1, 1);
-
             if (SelectedSmudgeType != null)
             {
                 mapPanel.Invalidate(map, navigationWidget.MouseCell);
             }
-
             UpdateStatus();
         }
 
@@ -306,7 +290,9 @@ namespace MobiusEditor.Tools
                     {
                         SmudgeType sm = map.SmudgeTypes.FirstOrDefault(s => (s.Flag & SmudgeTypeFlag.Bib) == 0 && s.Name == smudge.Type.Name);
                         if (sm != null)
+                        {
                             SelectedSmudgeType = sm;
+                        }
                     }
                     else
                     {
@@ -319,7 +305,6 @@ namespace MobiusEditor.Tools
 
         private void RefreshMapPanel()
         {
-
             var oldImage = smudgeTypeMapPanel.MapImage;
             if (mockSmudge.Type != null)
             {
@@ -357,7 +342,6 @@ namespace MobiusEditor.Tools
         protected override void PreRenderMap()
         {
             base.PreRenderMap();
-
             previewMap = map.Clone();
             if (placementMode)
             {
@@ -380,7 +364,6 @@ namespace MobiusEditor.Tools
         protected override void PostRenderMap(Graphics graphics)
         {
             base.PostRenderMap(graphics);
-
             using (var smudgePen = new Pen(Color.Green, 4.0f))
             {
                 foreach (var (cell, smudge) in previewMap.Smudge.Where(x => (x.Value.Type.Flag & SmudgeTypeFlag.Bib) == SmudgeTypeFlag.None))
@@ -428,7 +411,6 @@ namespace MobiusEditor.Tools
                 }
                 disposedValue = true;
             }
-
             base.Dispose(disposing);
         }
         #endregion

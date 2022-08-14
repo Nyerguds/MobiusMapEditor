@@ -23,7 +23,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -42,12 +41,12 @@ namespace MobiusEditor.Tools
         protected virtual Map RenderMap => map;
 
         /// <summary> Layers that are important to this tool and need to be drawn last in the PostRenderMap process.</summary>
-        protected MapLayerFlag priorityLayers;
+        protected abstract MapLayerFlag PriorityLayers { get; }
         /// <summary>
         /// Layers that are not painted by the PostRenderMap function on ViewTool level because they are handled
         /// at a specific point in the PostRenderMap override by the implementing tool.
         /// </summary>
-        protected MapLayerFlag manuallyHandledLayers;
+        protected abstract MapLayerFlag ManuallyHandledLayers { get; }
 
         private MapLayerFlag layers;
         public MapLayerFlag Layers
@@ -68,14 +67,10 @@ namespace MobiusEditor.Tools
             this.layers = layers;
             this.plugin = plugin;
             this.url = url;
-
             this.mapPanel = mapPanel;
-
             this.statusLbl = statusLbl;
-
             map = plugin.Map;
             map.BasicSection.PropertyChanged += BasicSection_PropertyChanged;
-
             navigationWidget = new NavigationWidget(mapPanel, map.Metrics, Globals.MapTileSize);
         }
 
@@ -125,40 +120,40 @@ namespace MobiusEditor.Tools
         {
             // Only render these if they are not in the priority layers, and not handled manually.
             // The functions themselves will take care of checking whether they are in the active layers to render.
-            if ((priorityLayers & MapLayerFlag.Boundaries) == MapLayerFlag.None
-                && (manuallyHandledLayers & MapLayerFlag.Boundaries) == MapLayerFlag.None)
+            if ((PriorityLayers & MapLayerFlag.Boundaries) == MapLayerFlag.None
+                && (ManuallyHandledLayers & MapLayerFlag.Boundaries) == MapLayerFlag.None)
             {
                 RenderMapBoundaries(graphics);
             }
-            if ((priorityLayers & MapLayerFlag.CellTriggers) == MapLayerFlag.None
-                && (manuallyHandledLayers & MapLayerFlag.CellTriggers) == MapLayerFlag.None)
+            if ((PriorityLayers & MapLayerFlag.CellTriggers) == MapLayerFlag.None
+                && (ManuallyHandledLayers & MapLayerFlag.CellTriggers) == MapLayerFlag.None)
             {
                 RenderCellTriggers(graphics);
             }
-            if ((priorityLayers & MapLayerFlag.Waypoints) == MapLayerFlag.None
-                && (manuallyHandledLayers & MapLayerFlag.Waypoints) == MapLayerFlag.None)
+            if ((PriorityLayers & MapLayerFlag.Waypoints) == MapLayerFlag.None
+                && (ManuallyHandledLayers & MapLayerFlag.Waypoints) == MapLayerFlag.None)
             {
                 RenderWayPoints(graphics);
             }
-            if ((priorityLayers & MapLayerFlag.TechnoTriggers) == MapLayerFlag.None
-                && (manuallyHandledLayers & MapLayerFlag.TechnoTriggers) == MapLayerFlag.None)
+            if ((PriorityLayers & MapLayerFlag.TechnoTriggers) == MapLayerFlag.None
+                && (ManuallyHandledLayers & MapLayerFlag.TechnoTriggers) == MapLayerFlag.None)
             {
                 RenderTechnoTriggers(graphics);
             }
             // Priority layers are only drawn at the end, so they get painted over all others.
-            if ((priorityLayers & MapLayerFlag.Boundaries) != MapLayerFlag.None)
+            if ((PriorityLayers & MapLayerFlag.Boundaries) != MapLayerFlag.None)
             {
                 RenderMapBoundaries(graphics);
             }
-            if ((priorityLayers & MapLayerFlag.CellTriggers) != MapLayerFlag.None)
+            if ((PriorityLayers & MapLayerFlag.CellTriggers) != MapLayerFlag.None)
             {
                 RenderCellTriggers(graphics);
             }
-            if ((priorityLayers & MapLayerFlag.Waypoints) != MapLayerFlag.None)
+            if ((PriorityLayers & MapLayerFlag.Waypoints) != MapLayerFlag.None)
             {
                 RenderWayPoints(graphics);
             }
-            if ((priorityLayers & MapLayerFlag.TechnoTriggers) != MapLayerFlag.None)
+            if ((PriorityLayers & MapLayerFlag.TechnoTriggers) != MapLayerFlag.None)
             {
                 RenderTechnoTriggers(graphics);
             }

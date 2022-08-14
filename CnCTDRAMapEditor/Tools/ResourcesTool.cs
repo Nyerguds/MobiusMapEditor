@@ -28,6 +28,14 @@ namespace MobiusEditor.Tools
 {
     public class ResourcesTool : ViewTool
     {
+        /// <summary> Layers that are important to this tool and need to be drawn last in the PostRenderMap process.</summary>
+        protected override MapLayerFlag PriorityLayers => MapLayerFlag.None;
+        /// <summary>
+        /// Layers that are not painted by the PostRenderMap function on ViewTool level because they are handled
+        /// at a specific point in the PostRenderMap override by the implementing tool.
+        /// </summary>
+        protected override MapLayerFlag ManuallyHandledLayers => MapLayerFlag.None;
+
         private readonly Label totalResourcesLbl;
         private readonly NumericUpDown brushSizeNud;
         private readonly CheckBox gemsCheckBox;
@@ -44,11 +52,8 @@ namespace MobiusEditor.Tools
             this.totalResourcesLbl = totalResourcesLbl;
             this.brushSizeNud = brushSizeNud;
             this.gemsCheckBox = gemsCheckBox;
-
             this.brushSizeNud.ValueChanged += BrushSizeNud_ValueChanged;
-
             navigationWidget.MouseoverSize = new Size((int)brushSizeNud.Value, (int)brushSizeNud.Value);
-
             Update();
         }
 
@@ -115,7 +120,6 @@ namespace MobiusEditor.Tools
                     ExitPlacementMode();
                 }
             }
-
             if ((undoOverlays.Count > 0) || (redoOverlays.Count > 0))
             {
                 CommitChange();
@@ -135,7 +139,6 @@ namespace MobiusEditor.Tools
                     RemoveResource(e.NewCell);
                 }
             }
-
             if (brushSizeNud.Value > 1)
             {
                 foreach (var cell in new Point[] { e.OldCell, e.NewCell })
@@ -174,20 +177,16 @@ namespace MobiusEditor.Tools
                             {
                                 undoOverlays[cell] = map.Overlay[cell];
                             }
-
                             var overlay = new Overlay { Type = resourceType, Icon = 0 };
                             map.Overlay[cell] = overlay;
                             redoOverlays[cell] = overlay;
-
                             plugin.Dirty = true;
                         }
                     }
                 }
             }
-
             rectangle.Inflate(1, 1);
             mapPanel.Invalidate(map, rectangle);
-
             Update();
         }
 
@@ -205,18 +204,14 @@ namespace MobiusEditor.Tools
                         {
                             undoOverlays[cell] = map.Overlay[cell];
                         }
-
                         map.Overlay[cell] = null;
                         redoOverlays[cell] = null;
-
                         plugin.Dirty = true;
                     }
                 }
             }
-
             rectangle.Inflate(1, 1);
             mapPanel.Invalidate(map, rectangle);
-
             Update();
         }
 
@@ -226,10 +221,8 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-
             placementMode = true;
             additivePlacement = additive;
-
             UpdateStatus();
         }
 
@@ -239,9 +232,7 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-
             placementMode = false;
-
             UpdateStatus();
         }
 

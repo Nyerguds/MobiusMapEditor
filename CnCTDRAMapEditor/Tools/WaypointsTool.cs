@@ -28,6 +28,14 @@ namespace MobiusEditor.Tools
 {
     public class WaypointsTool : ViewTool
     {
+        /// <summary> Layers that are important to this tool and need to be drawn last in the PostRenderMap process.</summary>
+        protected override MapLayerFlag PriorityLayers => MapLayerFlag.None;
+        /// <summary>
+        /// Layers that are not painted by the PostRenderMap function on ViewTool level because they are handled
+        /// at a specific point in the PostRenderMap override by the implementing tool.
+        /// </summary>
+        protected override MapLayerFlag ManuallyHandledLayers => MapLayerFlag.Waypoints;
+
         private readonly ComboBox waypointCombo;
         private readonly Button jumpToButton;
 
@@ -41,7 +49,6 @@ namespace MobiusEditor.Tools
             IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> url)
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
-            this.manuallyHandledLayers = MapLayerFlag.Waypoints;
             this.jumpToButton = jumpToButton;
             this.jumpToButton.Click += JumpToButton_Click;
             this.waypointCombo = waypointCombo;
@@ -116,17 +123,14 @@ namespace MobiusEditor.Tools
                     {
                         undoWaypoint = null;
                     }
-
                     waypoint.Cell = cell;
                     redoWaypoint = (waypoint, waypoint.Cell);
                     CommitChange();
                     mapPanel.Invalidate();
-
                     waypointCombo.DataSource = null;
                     waypointCombo.Items.Clear();
                     waypointCombo.DataSource = wp.ToArray();
                     waypointCombo.SelectedIndex = selected;
-
                     plugin.Dirty = true;
                 }
             }
@@ -158,12 +162,10 @@ namespace MobiusEditor.Tools
                     {
                         undoWaypoint = (waypoint, waypoint.Cell);
                     }
-
                     waypoint.Cell = null;
                     redoWaypoint = (waypoint, null);
                     CommitChange();
                     mapPanel.Invalidate();
-
                     waypointCombo.DataSource = null;
                     waypointCombo.Items.Clear();
                     waypointCombo.DataSource = wp.ToArray();
@@ -180,9 +182,7 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-
             placementMode = true;
-
             UpdateStatus();
         }
 
@@ -192,9 +192,7 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-
             placementMode = false;
-
             UpdateStatus();
         }
 
@@ -242,17 +240,14 @@ namespace MobiusEditor.Tools
                 undoWaypoint2.Value.waypoint.Cell = undoWaypoint2.Value.cell;
                 mapPanel.Invalidate();
             }
-
             var redoWaypoint2 = redoWaypoint;
             void redoAction(UndoRedoEventArgs e)
             {
                 redoWaypoint2.Value.waypoint.Cell = redoWaypoint2.Value.cell;
                 mapPanel.Invalidate();
             }
-
             undoWaypoint = null;
             redoWaypoint = null;
-
             url.Track(undoAction, redoAction);
         }
 
@@ -277,11 +272,9 @@ namespace MobiusEditor.Tools
                         double mapSize = isWidth ? map.Metrics.Width : map.Metrics.Height;
                         // pixels per tile at zoom level 1.
                         double basicTileSize = scaleFull / mapSize;
-
                         // Convert cell position to actual position on image.
                         int cellX = (int)Math.Round(basicTileSize * mapPanel.Zoom * (cellPoint.X + 0.5));
                         int cellY = (int)Math.Round(basicTileSize * mapPanel.Zoom * (cellPoint.Y + 0.5));
-
                         // Get location to use to center the waypoint on the screen.
                         int x = cellX - mapPanel.ClientRectangle.Width / 2;
                         int y = cellY - mapPanel.ClientRectangle.Height / 2;
@@ -348,7 +341,6 @@ namespace MobiusEditor.Tools
                 }
                 disposedValue = true;
             }
-
             base.Dispose(disposing);
         }
         #endregion

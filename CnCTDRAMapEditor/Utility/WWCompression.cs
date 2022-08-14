@@ -75,7 +75,7 @@ namespace MobiusEditor.Utility
         {
             return datasize + ((datasize / 63) * 3) + 4;
         }
-        
+
         /// <summary>
         ///    Compresses data to the proprietary LCW format used in
         ///    many games developed by Westwood Studios. Compression is better
@@ -258,9 +258,9 @@ namespace MobiusEditor.Utility
         {
             if (input == null || input.Length == 0 || output == null || output.Length == 0)
                 return 0;
-	        Boolean relative = false;
+            Boolean relative = false;
             // Nyer's C# conversion: replacements for write and read for pointers.
-	        Int32 writeOffset = 0;
+            Int32 writeOffset = 0;
             // Output length should be part of the information given in the file format using LCW.
             // Techncically it can just be cropped at the end, though this value is used to
             // automatically cut off repeat-commands that go too far.
@@ -269,67 +269,67 @@ namespace MobiusEditor.Utility
                 readEnd = input.Length;
 
             //Decide if the stream uses relative 3 and 5 byte commands
-	        //Extension allows effective compression of data > 64k
-	        //https://github.com/madmoose/scummvm/blob/bladerunner/engines/bladerunner/decompress_lcw.cpp
+            //Extension allows effective compression of data > 64k
+            //https://github.com/madmoose/scummvm/blob/bladerunner/engines/bladerunner/decompress_lcw.cpp
             // this is only used by later games for decoding hi-color vqa files.
             // For other stuff (like shp), just check in advance to decide if the data is too big.
             if (readOffset >= readEnd)
                 return writeOffset;
-	        if (input[readOffset] == 0)
-	        {
-		        relative = true;
-		        readOffset++;
-	        }
-	        //DEBUG_SAY("LCW Decompression... \n");
-	        while (writeOffset < writeEnd)
-	        {
+            if (input[readOffset] == 0)
+            {
+                relative = true;
+                readOffset++;
+            }
+            //DEBUG_SAY("LCW Decompression... \n");
+            while (writeOffset < writeEnd)
+            {
                 if (readOffset >= readEnd)
-	                return writeOffset;
-		        Byte flag = input[readOffset++];
-		        UInt16 cpysize;
+                    return writeOffset;
+                Byte flag = input[readOffset++];
+                UInt16 cpysize;
                 UInt16 offset;
 
-		        if ((flag & 0x80) != 0)
-		        {
-			        if ((flag & 0x40) != 0)
-			        {
+                if ((flag & 0x80) != 0)
+                {
+                    if ((flag & 0x40) != 0)
+                    {
                         cpysize = (UInt16)((flag & 0x3F) + 3);
-				        //long set 0b11111110
-				        if (flag == 0xFE)
-				        {
+                        if (flag == 0xFE)
+                        {
+                            //long set 0b11111110
                             if (readOffset >= readEnd)
                                 return writeOffset;
                             cpysize = input[readOffset++];
                             if (readOffset >= readEnd)
                                 return writeOffset;
                             cpysize += (UInt16)((input[readOffset++]) << 8);
-					        if (cpysize > writeEnd - writeOffset)
+                            if (cpysize > writeEnd - writeOffset)
                                 cpysize = (UInt16)(writeEnd - writeOffset);
                             if (readOffset >= readEnd)
                                 return writeOffset;
-					        //DEBUG_SAY("0b11111110 Source Pos %ld, Dest Pos %ld, Count %d\n", source - sstart - 3, dest - start, cpysize);
+                            //DEBUG_SAY("0b11111110 Source Pos %ld, Dest Pos %ld, Count %d\n", source - sstart - 3, dest - start, cpysize);
                             for (; cpysize > 0; --cpysize)
                             {
                                 if (writeOffset >= writeEnd)
                                     return writeOffset;
                                 output[writeOffset++] = input[readOffset];
                             }
-				            readOffset++;
-				        }
-				        else
-				        {
-					        Int32 s;
-					        //long move, abs 0b11111111
-					        if (flag == 0xFF)
-					        {
+                            readOffset++;
+                        }
+                        else
+                        {
+                            Int32 s;
+                            if (flag == 0xFF)
+                            {
+                                //long move, abs 0b11111111
                                 if (readOffset >= readEnd)
                                     return writeOffset;
                                 cpysize = input[readOffset++];
                                 if (readOffset >= readEnd)
                                     return writeOffset;
-						        cpysize += (UInt16)((input[readOffset++]) << 8);
-						        if (cpysize > writeEnd - writeOffset)
-							        cpysize = (UInt16)(writeEnd - writeOffset);
+                                cpysize += (UInt16)((input[readOffset++]) << 8);
+                                if (cpysize > writeEnd - writeOffset)
+                                    cpysize = (UInt16)(writeEnd - writeOffset);
                                 if (readOffset >= readEnd)
                                     return writeOffset;
                                 offset = input[readOffset++];
@@ -337,87 +337,87 @@ namespace MobiusEditor.Utility
                                     return writeOffset;
                                 offset += (UInt16)((input[readOffset++]) << 8);
                                 //extended format for VQA32
-						        if (relative)
-							        s = writeOffset - offset;
-						        else
-							        s = offset;
-						        //DEBUG_SAY("0b11111111 Source Pos %ld, Dest Pos %ld, Count %d, Offset %d\n", source - sstart - 5, dest - start, cpysize, offset);
-					            for (; cpysize > 0; --cpysize)
-					            {
+                                if (relative)
+                                    s = writeOffset - offset;
+                                else
+                                    s = offset;
+                                //DEBUG_SAY("0b11111111 Source Pos %ld, Dest Pos %ld, Count %d, Offset %d\n", source - sstart - 5, dest - start, cpysize, offset);
+                                for (; cpysize > 0; --cpysize)
+                                {
                                     if (writeOffset >= writeEnd)
                                         return writeOffset;
-					                output[writeOffset++] = output[s++];
-					            }
-					            //short move abs 0b11??????
-					        }
-					        else
-					        {
-						        if (cpysize > writeEnd - writeOffset)
-							        cpysize = (UInt16)(writeEnd - writeOffset);
+                                    output[writeOffset++] = output[s++];
+                                }
+                            }
+                            else
+                            {
+                                //short move abs 0b11??????
+                                if (cpysize > writeEnd - writeOffset)
+                                    cpysize = (UInt16)(writeEnd - writeOffset);
                                 if (readOffset >= readEnd)
                                     return writeOffset;
                                 offset = input[readOffset++];
                                 if (readOffset >= readEnd)
                                     return writeOffset;
                                 offset += (UInt16)((input[readOffset++]) << 8);
-						        //extended format for VQA32
-						        if (relative)
-							        s = writeOffset - offset;
-						        else
-							        s = offset;
-						        //DEBUG_SAY("0b11?????? Source Pos %ld, Dest Pos %ld, Count %d, Offset %d\n", source - sstart - 3, dest - start, cpysize, offset);
-					            for (; cpysize > 0; --cpysize)
+                                //extended format for VQA32
+                                if (relative)
+                                    s = writeOffset - offset;
+                                else
+                                    s = offset;
+                                //DEBUG_SAY("0b11?????? Source Pos %ld, Dest Pos %ld, Count %d, Offset %d\n", source - sstart - 3, dest - start, cpysize, offset);
+                                for (; cpysize > 0; --cpysize)
                                 {
                                     if (writeOffset >= writeEnd)
                                         return writeOffset;
                                     output[writeOffset++] = output[s++];
-					            }
-					        }
-				        }
-			        //short copy 0b10??????
-			        }
-			        else
-			        {
-				        if (flag == 0x80)
-				        {
-					        //DEBUG_SAY("0b10?????? Source Pos %ld, Dest Pos %ld, Count %d\n", source - sstart - 1, dest - start, 0);
-					        return writeOffset;
-				        }
-				        cpysize = (UInt16)(flag & 0x3F);
-				        if (cpysize > writeEnd - writeOffset)
-					        cpysize = (UInt16)(writeEnd - writeOffset);
-				        //DEBUG_SAY("0b10?????? Source Pos %ld, Dest Pos %ld, Count %d\n", source - sstart - 1, dest - start, cpysize);
-			            for (; cpysize > 0; --cpysize)
-			            {
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        //short copy 0b10??????
+                        if (flag == 0x80)
+                        {
+                            //DEBUG_SAY("0b10?????? Source Pos %ld, Dest Pos %ld, Count %d\n", source - sstart - 1, dest - start, 0);
+                            return writeOffset;
+                        }
+                        cpysize = (UInt16)(flag & 0x3F);
+                        if (cpysize > writeEnd - writeOffset)
+                            cpysize = (UInt16)(writeEnd - writeOffset);
+                        //DEBUG_SAY("0b10?????? Source Pos %ld, Dest Pos %ld, Count %d\n", source - sstart - 1, dest - start, cpysize);
+                        for (; cpysize > 0; --cpysize)
+                        {
                             if (readOffset >= readEnd || writeOffset >= writeEnd)
                                 return writeOffset;
-			                output[writeOffset++] = input[readOffset++];
-			            }
-			        }
-		        //short move rel 0b0???????
-		        }
-		        else
-		        {
-			        cpysize = (UInt16)((flag >> 4) + 3);
-			        if (cpysize > writeEnd - writeOffset)
-				        cpysize = (UInt16)(writeEnd - writeOffset);
+                            output[writeOffset++] = input[readOffset++];
+                        }
+                    }
+                }
+                else
+                {
+                    //short move rel 0b0???????
+                    cpysize = (UInt16)((flag >> 4) + 3);
+                    if (cpysize > writeEnd - writeOffset)
+                        cpysize = (UInt16)(writeEnd - writeOffset);
                     if (readOffset >= readEnd)
                         return writeOffset;
-			        offset = (UInt16)(((flag & 0xF) << 8) + input[readOffset++]);
-			        //DEBUG_SAY("0b0??????? Source Pos %ld, Dest Pos %ld, Count %d, Offset %d\n", source - sstart - 2, dest - start, cpysize, offset);
-			        for (; cpysize > 0; --cpysize)
+                    offset = (UInt16)(((flag & 0xF) << 8) + input[readOffset++]);
+                    //DEBUG_SAY("0b0??????? Source Pos %ld, Dest Pos %ld, Count %d, Offset %d\n", source - sstart - 2, dest - start, cpysize, offset);
+                    for (; cpysize > 0; --cpysize)
                     {
                         if (writeOffset >= writeEnd || writeOffset < offset)
                             return writeOffset;
-				        output[writeOffset] = output[writeOffset - offset];
-				        writeOffset++;
-			        }
-		        }
-	        }
+                        output[writeOffset] = output[writeOffset - offset];
+                        writeOffset++;
+                    }
+                }
+            }
             // If buffer is full, make sure to skip end command!
             if (writeOffset == writeEnd && readOffset < input.Length && input[readOffset] == 0x80)
                 readOffset++;
-	        return writeOffset;
+            return writeOffset;
         }
 
         /// <summary>
@@ -455,7 +455,7 @@ namespace MobiusEditor.Utility
                 //Only evaluate other options if we don't have a matched pair
                 while (testsp < getsendp && source[testsp] != @base[testbp])
                 {
-                    if ((source[testsp] ^  @base[testbp]) == lastxor)
+                    if ((source[testsp] ^ @base[testbp]) == lastxor)
                     {
                         ++fillcount;
                         ++xorcount;
@@ -625,10 +625,10 @@ namespace MobiusEditor.Utility
                     }
                     if (xorStart >= xorEnd)
                         return;
-                    count = (UInt16) (xorSource[xorStart++] & 0xFF);
+                    count = (UInt16)(xorSource[xorStart++] & 0xFF);
                     if (xorStart >= xorEnd)
                         return;
-                    count += (UInt16) (xorSource[xorStart++] << 8);
+                    count += (UInt16)(xorSource[xorStart++] << 8);
 
                     //0b10000000 0 0
                     if (count == 0)
@@ -668,7 +668,7 @@ namespace MobiusEditor.Utility
                     for (; count > 0; --count)
                     {
                         if (putp >= dataEnd)
-                            return; 
+                            return;
                         data[putp++] ^= value;
                     }
                 }

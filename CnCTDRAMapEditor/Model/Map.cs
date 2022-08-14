@@ -502,16 +502,16 @@ namespace MobiusEditor.Model
                         }
                     }
                 }
-                const int OF_N = 0x01;
-                const int OF_NE	= 0x02;
-                const int OF_E	= 0x04;
-                const int OF_SE	= 0x08;
-                const int OF_S	= 0x10;
-                const int EF_N	= 0x01;
-                const int EF_NW	= 0x10;
-                const int EF_W	= 0x08;
-                const int EF_SW	= 0x04;
-                const int EF_S	= 0x02;
+                const int OF_N  = 0x01;
+                const int OF_NE = 0x02;
+                const int OF_E  = 0x04;
+                const int OF_SE = 0x08;
+                const int OF_S  = 0x10;
+                const int EF_N  = 0x01;
+                const int EF_NW = 0x10;
+                const int EF_W  = 0x08;
+                const int EF_SW = 0x04;
+                const int EF_S  = 0x02;
                 ConcreteEnum icon = 0;
                 if (isodd != 0)
                 {

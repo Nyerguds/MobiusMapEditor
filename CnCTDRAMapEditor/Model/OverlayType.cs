@@ -112,17 +112,25 @@ namespace MobiusEditor.Model
 
         public override bool Equals(object obj)
         {
-            if (obj is OverlayType)
+            if (obj is OverlayType ovl)
             {
-                return this == obj;
+                return ReferenceEquals(this, obj) || (this.ID == ovl.ID && string.Equals(this.Name, ovl.Name, StringComparison.OrdinalIgnoreCase));
             }
-            else if (obj is sbyte)
+            else if (obj is sbyte sb)
             {
-                return ID == (sbyte)obj;
+                return this.ID == sb;
             }
-            else if (obj is string)
+            else if (obj is byte b)
             {
-                return string.Equals(Name, obj as string, StringComparison.OrdinalIgnoreCase);
+                return this.ID == b;
+            }
+            else if (obj is int i)
+            {
+                return this.ID == i;
+            }
+            else if (obj is string str)
+            {
+                return string.Equals(this.Name, str, StringComparison.OrdinalIgnoreCase);
             }
 
             return base.Equals(obj);

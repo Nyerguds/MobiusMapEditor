@@ -110,6 +110,7 @@ namespace MobiusEditor.Tools.Dialogs
         protected override void Dispose(bool disposing)
         {
             Tool?.Dispose();
+            this.Tool = default(T);
             base.Dispose(disposing);
         }
     }

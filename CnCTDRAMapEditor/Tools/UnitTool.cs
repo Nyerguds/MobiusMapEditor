@@ -29,6 +29,14 @@ namespace MobiusEditor.Tools
 {
     public class UnitTool : ViewTool
     {
+        /// <summary> Layers that are important to this tool and need to be drawn last in the PostRenderMap process.</summary>
+        protected override MapLayerFlag PriorityLayers => MapLayerFlag.None;
+        /// <summary>
+        /// Layers that are not painted by the PostRenderMap function on ViewTool level because they are handled
+        /// at a specific point in the PostRenderMap override by the implementing tool.
+        /// </summary>
+        protected override MapLayerFlag ManuallyHandledLayers => MapLayerFlag.TechnoTriggers;
+
         private readonly TypeListBox unitTypesBox;
         private readonly MapPanel unitTypeMapPanel;
         private readonly ObjectProperties objectProperties;
@@ -71,7 +79,6 @@ namespace MobiusEditor.Tools
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
             previewMap = map;
-            manuallyHandledLayers = MapLayerFlag.TechnoTriggers;
             UnitType unitType = unitTypesBox.Types.First() as UnitType;
             mockUnit = new Unit()
             {
@@ -82,20 +89,15 @@ namespace MobiusEditor.Tools
                 Mission = map.GetDefaultMission(unitType)
             };
             mockUnit.PropertyChanged += MockUnit_PropertyChanged;
-
             this.unitTypesBox = unitTypesBox;
             this.unitTypesBox.SelectedIndexChanged += UnitTypeComboBox_SelectedIndexChanged;
-
             this.unitTypeMapPanel = unitTypeMapPanel;
             this.unitTypeMapPanel.BackColor = Color.White;
             this.unitTypeMapPanel.MaxZoom = 1;
             this.unitTypeMapPanel.SmoothScale = Globals.PreviewSmoothScale;
-
             this.objectProperties = objectProperties;
             this.objectProperties.Object = mockUnit;
-
             navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
-
             SelectedUnitType = mockUnit.Type;
         }
 
@@ -105,24 +107,19 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-
             if (map.Metrics.GetCell(navigationWidget.MouseCell, out int cell))
             {
                 if (map.Technos[cell] is Unit unit)
                 {
                     selectedUnit = null;
-
                     selectedObjectProperties?.Close();
                     selectedObjectProperties = new ObjectPropertiesPopup(objectProperties.Plugin, unit);
                     selectedObjectProperties.Closed += (cs, ce) =>
                     {
                         navigationWidget.Refresh();
                     };
-
                     unit.PropertyChanged += SelectedUnit_PropertyChanged;
-
                     selectedObjectProperties.Show(mapPanel, mapPanel.PointToClient(Control.MousePosition));
-
                     UpdateStatus();
                 }
             }
@@ -200,7 +197,6 @@ namespace MobiusEditor.Tools
             if (selectedUnit != null)
             {
                 selectedUnit = null;
-
                 UpdateStatus();
             }
         }
@@ -261,16 +257,12 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-
             placementMode = true;
-
             navigationWidget.MouseoverSize = Size.Empty;
-
             if (SelectedUnitType != null)
             {
                 mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(navigationWidget.MouseCell, new Size(1, 1)), 1, 1));
             }
-
             UpdateStatus();
         }
 
@@ -280,16 +272,12 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-
             placementMode = false;
-
             navigationWidget.MouseoverSize = new Size(1, 1);
-
             if (SelectedUnitType != null)
             {
                 mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(navigationWidget.MouseCell, new Size(1, 1)), 1, 1));
             }
-
             UpdateStatus();
         }
 
@@ -315,7 +303,6 @@ namespace MobiusEditor.Tools
             {
                 selectedUnit = map.Technos[cell] as Unit;
             }
-
             UpdateStatus();
         }
 
@@ -362,7 +349,6 @@ namespace MobiusEditor.Tools
         protected override void PreRenderMap()
         {
             base.PreRenderMap();
-
             previewMap = map.Clone();
             if (placementMode)
             {

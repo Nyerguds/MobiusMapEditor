@@ -65,7 +65,7 @@ namespace MobiusEditor.TiberianDawn
         {
             // only return placeable units; you can't place down aircraft in C&C
             if (placeableOnly)
-                return Types.Where(t => (t.IsUnit));
+                return Types.Where(t => !t.IsAircraft);
             return Types;
         }
     }

@@ -63,35 +63,35 @@ namespace MobiusEditor.Render
 
         private static readonly Point[] TurretAdjust = new Point[]
         {
-            new Point(1, 2),	// N
+            new Point(1, 2),    // N
             new Point(-1, 1),
             new Point(-2, 0),
             new Point(-3, 0),
-            new Point(-3, 1),	// NW
+            new Point(-3, 1),   // NW
             new Point(-4, -1),
             new Point(-4, -1),
             new Point(-5, -2),
-            new Point(-5, -3),	// W
+            new Point(-5, -3),  // W
             new Point(-5, -3),
             new Point(-3, -3),
             new Point(-3, -4),
-            new Point(-3, -4),	// SW
+            new Point(-3, -4),  // SW
             new Point(-3, -5),
             new Point(-2, -5),
             new Point(-1, -5),
-            new Point(0, -5),	// S
+            new Point(0, -5),   // S
             new Point(1, -6),
             new Point(2, -5),
             new Point(3, -5),
-            new Point(4, -5),	// SE
+            new Point(4, -5),   // SE
             new Point(6, -4),
             new Point(6, -3),
             new Point(6, -3),
-            new Point(6, -3),	// E
+            new Point(6, -3),   // E
             new Point(5, -1),
             new Point(5, -1),
             new Point(4, 0),
-            new Point(3, 0),	// NE
+            new Point(3, 0),    // NE
             new Point(2, 0),
             new Point(2, 1),
             new Point(1, 2)

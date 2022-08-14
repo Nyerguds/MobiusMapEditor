@@ -36,7 +36,7 @@ namespace MobiusEditor.Model
 
         public TheaterType[] Theaters { get; private set; }
 
-        public bool IsTransformable { get; private set; }
+        public int DisplayIcon { get; private set; }
 
         public TemplateTypeFlag TemplateType { get; private set; }
 
@@ -51,28 +51,28 @@ namespace MobiusEditor.Model
 
         public Image Thumbnail { get; set; }
 
-        public TerrainType(sbyte id, string name, TheaterType[] theaters, bool[,] occupyMask, bool isTransformable, TemplateTypeFlag templateType)
+        public TerrainType(sbyte id, string name, TheaterType[] theaters, bool[,] occupyMask, int displayIcon, TemplateTypeFlag templateType)
         {
             ID = id;
             Name = name;
             Theaters = theaters;
             OccupyMask = occupyMask;
-            IsTransformable = isTransformable;
+            DisplayIcon = displayIcon;
             TemplateType = templateType;
         }
 
-        public TerrainType(sbyte id, string name, TheaterType[] theaters, bool[,] occupyMask, bool isTransformable)
-            : this(id, name, theaters, occupyMask, isTransformable, TemplateTypeFlag.None)
+        public TerrainType(sbyte id, string name, TheaterType[] theaters, bool[,] occupyMask, int displayIcon)
+            : this(id, name, theaters, occupyMask, displayIcon, TemplateTypeFlag.None)
         {
         }
 
         public TerrainType(sbyte id, string name, TheaterType[] theaters, bool[,] occupyMask, TemplateTypeFlag templateType)
-            : this(id, name, theaters, occupyMask, false, templateType)
+            : this(id, name, theaters, occupyMask, 0, templateType)
         {
         }
 
         public TerrainType(sbyte id, string name, TheaterType[] theaters, bool[,] occupyMask)
-            : this(id, name, theaters, occupyMask, false, TemplateTypeFlag.None)
+            : this(id, name, theaters, occupyMask, 0, TemplateTypeFlag.None)
         {
         }
 
@@ -113,7 +113,7 @@ namespace MobiusEditor.Model
                 tileName = "OREMINE";
             }
 
-            if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, tileName, IsTransformable ? 22 : 0, out Tile tile))
+            if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, tileName, DisplayIcon, out Tile tile))
             {
                 var tileSize = Globals.PreviewTileSize;
                 var renderSize = new Size(tileSize.Width * Size.Width, tileSize.Height * Size.Height);
