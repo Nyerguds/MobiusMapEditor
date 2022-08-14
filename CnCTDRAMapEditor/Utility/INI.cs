@@ -155,7 +155,7 @@ namespace MobiusEditor.Utility
                 var m = INIHelpers.KeyValueRegex.Match(line);
                 if (m.Success)
                 {
-                    Keys[m.Groups[1].Value] = m.Groups[2].Value;
+                    Keys[m.Groups[1].Value] = m.Groups[2].Value.Trim();
                 }
             }
         }

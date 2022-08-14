@@ -473,7 +473,10 @@ namespace MobiusEditor.RedAlert
                         }
                         Map.TeamTypes.Add(teamType);
                     }
-                    catch (ArgumentOutOfRangeException) { }
+                    catch (ArgumentOutOfRangeException)
+                    {
+                        errors.Add(string.Format("Teamtype '{0}' has errors and can't be parsed.", Key));
+                    }
                 }
             }
             var triggersSection = ini.Sections.Extract("Trigs");
@@ -598,11 +601,11 @@ namespace MobiusEditor.RedAlert
                                 var templateType = Map.TemplateTypes.Where(t => t.Equals(typeValue)).FirstOrDefault();
                                 if (templateType == null && typeValue != 0xFFFF)
                                 {
-                                    errors.Add(String.Format("Unknown template value {0:X2} at cell [{1},{2}]", typeValue, x, y));
+                                    errors.Add(String.Format("Unknown template value {0:X2} at cell [{1},{2}]; clearing.", typeValue, x, y));
                                 }
                                 else if ((templateType != null) && !templateType.Theaters.Contains(Map.Theater))
                                 {
-                                    errors.Add(String.Format("Template '{0}' at cell [{1},{2}] is not available in the set theater.", templateType.Name.ToUpper(), x, y));
+                                    errors.Add(String.Format("Template '{0}' at cell [{1},{2}] is not available in the set theater; clearing.", templateType.Name.ToUpper(), x, y));
                                     templateType = null;
                                 }
                                 Map.Templates[x, y] = (templateType != null) ? new Template { Type = templateType } : null;
@@ -621,11 +624,11 @@ namespace MobiusEditor.RedAlert
                                     bool tileOk = false;
                                     if (iconValue >= templateType.NumIcons)
                                     {
-                                        errors.Add(String.Format("Template '{0}' at cell [{1},{2}] has an icon set ({3}) that is outside its icons range.", templateType.Name.ToUpper(), x, y, iconValue));
+                                        errors.Add(String.Format("Template '{0}' at cell [{1},{2}] has an icon set ({3}) that is outside its icons range; clearing.", templateType.Name.ToUpper(), x, y, iconValue));
                                     }
                                     else if (!templateType.IconMask[iconValue % templateType.IconWidth, iconValue / templateType.IconWidth])
                                     {
-                                        errors.Add(String.Format("Template '{0}' at cell [{1},{2}] has an icon set ({3}) that is not part of its placeable cells.", templateType.Name.ToUpper(), x, y, iconValue));
+                                        errors.Add(String.Format("Template '{0}' at cell [{1},{2}] has an icon set ({3}) that is not part of its placeable cells; clearing.", templateType.Name.ToUpper(), x, y, iconValue));
                                     }
                                     else if (templateType != TemplateTypes.Clear)
                                     {
@@ -665,12 +668,12 @@ namespace MobiusEditor.RedAlert
                         {
                             //if (!checkTrigs.Contains(newTerr.Trigger))
                             //{
-                            //    errors.Add(string.Format("Terrain '{0}' links to unknown trigger '{1}'.", terrainType, newTerr.Trigger));
+                            //    errors.Add(string.Format("Terrain '{0}' links to unknown trigger '{1}'; clearing trigger..", terrainType, newTerr.Trigger));
                             //    newTerr.Trigger = Trigger.None;
                             //}
                             //else if (!checkTerrTrigs.Contains(Value))
                             //{
-                            //    errors.Add(string.Format("Terrain '{0}' links to trigger '{1}' which does not contain an event applicable to terrain.", terrainType, newTerr.Trigger));
+                            //    errors.Add(string.Format("Terrain '{0}' links to trigger '{1}' which does not contain an event applicable to terrain; clearing trigger.", terrainType, newTerr.Trigger));
                             //    newTerr.Trigger = Trigger.None;
                             //}
                         }
@@ -764,12 +767,16 @@ namespace MobiusEditor.RedAlert
                             errors.Add(string.Format("Smudge '{0}' references unknown smudge.", tokens[0]));
                         }
                     }
+                    else
+                    {
+                        errors.Add(string.Format("Smudge on cell '{0}' has wrong number of tokens (expecting 3).", Key));
+                    }
                 }
             }
             var unitsSection = ini.Sections.Extract("Units");
             if (unitsSection != null)
             {
-                foreach (var (_, Value) in unitsSection)
+                foreach (var (Key, Value) in unitsSection)
                 {
                     var tokens = Value.Split(',');
                     if (tokens.Length == 7)
@@ -792,12 +799,12 @@ namespace MobiusEditor.RedAlert
                             {
                                 if (!checkTrigs.Contains(tokens[6]))
                                 {
-                                    errors.Add(string.Format("Unit '{0}' links to unknown trigger '{1}'.", tokens[1], tokens[6]));
+                                    errors.Add(string.Format("Unit '{0}' links to unknown trigger '{1}'; clearing trigger.", tokens[1], tokens[6]));
                                     newUnit.Trigger = Trigger.None;
                                 }
                                 else if (!checkUnitTrigs.Contains(tokens[6]))
                                 {
-                                    errors.Add(string.Format("Unit '{0}' links to trigger '{1}' which does not contain an event applicable to units.", tokens[1], tokens[6]));
+                                    errors.Add(string.Format("Unit '{0}' links to trigger '{1}' which does not contain an event applicable to units; clearing trigger.", tokens[1], tokens[6]));
                                     newUnit.Trigger = Trigger.None;
                                 }
                             }
@@ -837,17 +844,24 @@ namespace MobiusEditor.RedAlert
                     }
                     else
                     {
-                        errors.Add(string.Format("Unit '{0}' has wrong number of tokens (expecting 7).", tokens[1]));
+                        if (tokens.Length < 2)
+                        {
+                            errors.Add(string.Format("Unit entry '{0}' has wrong number of tokens (expecting 7).", Key));
+                        }
+                        else
+                        {
+                            errors.Add(string.Format("Unit '{0}' has wrong number of tokens (expecting 7).", tokens[1]));
+                        }
                     }
                 }
             }
             // Classic game does not support this, so I'm leaving this out. It's buggy anyway.
             // Extracting it so it doesn't end up with the "extra sections"
-            var aircraftSections = ini.Sections.Extract("Aircraft");
-            /*/            
-            if (aircraftSections != null)
+            var aircraftSection = ini.Sections.Extract("Aircraft");
+            /*/
+            if (aircraftSection != null)
             {
-                foreach (var (_, Value) in aircraftSections)
+                foreach (var (Key, Value) in aircraftSection)
                 {
                     var tokens = Value.Split(',');
                     if (tokens.Length == 6)
@@ -900,7 +914,14 @@ namespace MobiusEditor.RedAlert
                     }
                     else
                     {
-                        errors.Add(string.Format("Aircraft '{0}' has wrong number of tokens (expecting 6).", tokens[1]));
+                        if (tokens.Length < 2)
+                        {
+                            errors.Add(string.Format("Aircraft entry '{0}' has wrong number of tokens (expecting 6).", Key));
+                        }
+                        else
+                        {
+                            errors.Add(string.Format("Aircraft '{0}' has wrong number of tokens (expecting 6).", tokens[1]));
+                        }
                     }
                 }
             }
@@ -908,7 +929,7 @@ namespace MobiusEditor.RedAlert
             var shipsSection = ini.Sections.Extract("Ships");
             if (shipsSection != null)
             {
-                foreach (var (_, Value) in shipsSection)
+                foreach (var (Key, Value) in shipsSection)
                 {
                     var tokens = Value.Split(',');
                     if (tokens.Length == 7)
@@ -931,12 +952,12 @@ namespace MobiusEditor.RedAlert
                             {
                                 if (!checkTrigs.Contains(tokens[6]))
                                 {
-                                    errors.Add(string.Format("Ship '{0}' links to unknown trigger '{1}'.", tokens[1], tokens[6]));
+                                    errors.Add(string.Format("Ship '{0}' links to unknown trigger '{1}'; clearing trigger.", tokens[1], tokens[6]));
                                     newShip.Trigger = Trigger.None;
                                 }
                                 else if (!checkUnitTrigs.Contains(tokens[6]))
                                 {
-                                    errors.Add(string.Format("Ship '{0}' links to trigger '{1}' which does not contain an event applicable to ships.", tokens[1], tokens[6]));
+                                    errors.Add(string.Format("Ship '{0}' links to trigger '{1}' which does not contain an event applicable to ships; clearing trigger.", tokens[1], tokens[6]));
                                     newShip.Trigger = Trigger.None;
                                 }
                             }
@@ -976,14 +997,21 @@ namespace MobiusEditor.RedAlert
                     }
                     else
                     {
-                        errors.Add(string.Format("Ship '{0}' has wrong number of tokens (expecting 7).", tokens[1]));
+                        if (tokens.Length < 2)
+                        {
+                            errors.Add(string.Format("Ship entry '{0}' has wrong number of tokens (expecting 7).", Key));
+                        }
+                        else
+                        {
+                            errors.Add(string.Format("Ship '{0}' has wrong number of tokens (expecting 7).", tokens[1]));
+                        }
                     }
                 }
             }
-            var infantrySections = ini.Sections.Extract("Infantry");
-            if (infantrySections != null)
+            var infantrySection = ini.Sections.Extract("Infantry");
+            if (infantrySection != null)
             {
-                foreach (var (_, Value) in infantrySections)
+                foreach (var (Key, Value) in infantrySection)
                 {
                     var tokens = Value.Split(',');
                     if (tokens.Length == 8)
@@ -1008,12 +1036,12 @@ namespace MobiusEditor.RedAlert
                                     {
                                         if (!checkTrigs.Contains(tokens[7]))
                                         {
-                                            errors.Add(string.Format("Infantry '{0}' links to unknown trigger '{1}'.", infantryType, tokens[7]));
+                                            errors.Add(string.Format("Infantry '{0}' links to unknown trigger '{1}'; clearing trigger.", infantryType, tokens[7]));
                                             tokens[7] = Trigger.None;
                                         }
                                         else if (!checkUnitTrigs.Contains(tokens[7]))
                                         {
-                                            errors.Add(string.Format("Infantry '{0}' links to trigger '{1}' which does not contain an event applicable to infantry.", infantryType, tokens[7]));
+                                            errors.Add(string.Format("Infantry '{0}' links to trigger '{1}' which does not contain an event applicable to infantry; clearing trigger.", infantryType, tokens[7]));
                                             tokens[7] = Trigger.None;
                                         }
                                         infantryGroup.Infantry[stoppingPos] = new Infantry(infantryGroup)
@@ -1068,14 +1096,21 @@ namespace MobiusEditor.RedAlert
                     }
                     else
                     {
-                        errors.Add(string.Format("Infantry '{0}' has wrong number of tokens (expecting 8).", tokens[1]));
+                        if (tokens.Length < 2)
+                        {
+                            errors.Add(string.Format("Infantry entry '{0}' has wrong number of tokens (expecting 8).", Key));
+                        }
+                        else
+                        {
+                            errors.Add(string.Format("Infantry '{0}' has wrong number of tokens (expecting 8).", tokens[1]));
+                        }
                     }
                 }
             }
             var structuresSection = ini.Sections.Extract("Structures");
             if (structuresSection != null)
             {
-                foreach (var (_, Value) in structuresSection)
+                foreach (var (Key, Value) in structuresSection)
                 {
                     var tokens = Value.Split(',');
                     if (tokens.Length >= 6)
@@ -1101,12 +1136,12 @@ namespace MobiusEditor.RedAlert
                             {
                                 if (!checkTrigs.Contains(tokens[5]))
                                 {
-                                    errors.Add(string.Format("Structure '{0}' links to unknown trigger '{1}'.", tokens[1], tokens[5]));
+                                    errors.Add(string.Format("Structure '{0}' links to unknown trigger '{1}'; clearing trigger.", tokens[1], tokens[5]));
                                     newBld.Trigger = Trigger.None;
                                 }
                                 else if (!checkStrcTrigs.Contains(tokens[5]))
                                 {
-                                    errors.Add(string.Format("Structure '{0}' links to trigger '{1}' which does not contain an event applicable to structures.", tokens[1], tokens[5]));
+                                    errors.Add(string.Format("Structure '{0}' links to trigger '{1}' which does not contain an event applicable to structures; clearing trigger.", tokens[1], tokens[5]));
                                     newBld.Trigger = Trigger.None;
                                 }
                             }
@@ -1146,7 +1181,14 @@ namespace MobiusEditor.RedAlert
                     }
                     else
                     {
-                        errors.Add(string.Format("Structure '{0}' has wrong number of tokens (expecting 6).", tokens[1]));
+                        if (tokens.Length < 2)
+                        {
+                            errors.Add(string.Format("Structure entry '{0}' has wrong number of tokens (expecting 6).", Key));
+                        }
+                        else
+                        {
+                            errors.Add(string.Format("Structure '{0}' has wrong number of tokens (expecting 6).", tokens[1]));
+                        }
                     }
                 }
             }
@@ -1261,17 +1303,17 @@ namespace MobiusEditor.RedAlert
                                 }
                                 else
                                 {
-                                    errors.Add(string.Format("Cell trigger {0} links to trigger '{1}' which does not contain a placeable event.", cell, Value));
+                                    errors.Add(string.Format("Cell trigger {0} links to trigger '{1}' which does not contain a placeable event; skipping.", cell, Value));
                                 }
                             }
                             else
                             {
-                                errors.Add(string.Format("Cell trigger {0} links to unknown trigger '{1}'.", cell, Value));
+                                errors.Add(string.Format("Cell trigger {0} links to unknown trigger '{1}'; skipping.", cell, Value));
                             }
                         }
                         else
                         {
-                            errors.Add(string.Format("Cell trigger {0} outside map bounds.", cell));
+                            errors.Add(string.Format("Cell trigger {0} outside map bounds; skipping.", cell));
                         }
                     }
                     else

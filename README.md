@@ -16,7 +16,7 @@ The file "CnCTDRAMapEditor.exe.config" contains settings to customise the editor
 
 * **ModsToLoad**: semicolon (or comma) separated list of mod entries. A mod entry can either be a Steam workshop ID, or a path of the type "Tiberian_Dawn\ModName" or "Red_Alert\ModName". The paths will initially be looked up under My Documents, but will also check the Steam workshop files, and use the game prefix part to verify the mod's targeted game. Note that mods are **not** loaded conditionally in the editor based on this targeted game; the editor loads all assets of both games on startup. The editor also has no way to check which mods are actually enabled in the game, and will load anything that is configured and of which the files can be found.
 * **NoMetaFilesForSinglePlay**: Suppresses the generation of .tga and .json files for single player maps.
-* **MapScaleFactor**: Integer division factor for the size at which assets are rendered on the map; higher means lower quality. This will make the UI more responsive. Negative values will enable smooth scaling, which gives nicer graphics but will maje the UI noticeable less responsive.
+* **MapScaleFactor**: Integer division factor for the size at which assets are rendered on the map; higher means lower quality. This will make the UI more responsive. Negative values will enable smooth scaling, which gives nicer graphics but will make the UI noticeable less responsive.
 * **PreviewScaleFactor**: Integer division factor for the size at which assets are rendered on the preview tools. Negative values will enable smooth scaling, but this usually doesn't look good on the upscaled preview graphics.
 * **ObjectToolItemSizeMultiplier**: Floating-point multiplication factor for downsizing the item icons on the selection lists on the tool windows.
 * **TemplateToolTextureSizeMultiplier**: Floating-point multiplication factor for the size of tiles shown on the Map tool. This scaling is somehow done relative to the screen size; not sure.
@@ -152,7 +152,8 @@ v1.4.0.4: [WIP]
 * The previews rendered for workshop maps will now show all map contents, to give a better representation of what is on the map. Note that for single play missions, this preview is generated in the folder but is optional.
 * Removed crater types CR2 to CR6; they don't work correctly in either game and will just show the smallest size of CR1. Any craters of other types encountered on map load will now be converted to CR1.
 * The teamtypes dialog no longer uses data grids for its teams and orders.
-* The controls of the orders in the teamtypes dialog now correctly adapt to the types of each order, giving dropdowns for special choices lists and for waypoints.
+* Teamtypes now show full names for unit types.
+* The input for arguments for orders in the teamtypes dialog now correctly adapts to the types of each order, giving dropdowns for special choices lists and for waypoints.
 * The waypoints that can be selected for an RA teamtype now correctly start from -1 as "(none)".
 * Fixed colour of "Special" in RA to have the same colour as Spain.
 * Fixed the fact trigger Events and Actions retained their argument data when changing their type, meaning the UI would pick the equivalent data on whatever list or control popped up for the new type.
@@ -185,3 +186,5 @@ v1.4.0.4: [WIP]
 * The brush size on the resource tool will now adjust itself if an incorrect (even) value is given.
 * Map loading validation will now also validate terrain templates, meaning corrupted maps have a much higher likelihood to give correct feedback.
 * Map validation will now be done before the "Save File" dialog opens.
+* Ini reading will now trim the value, like the original game does, allowing entries of the type "key = value".
+* Fixed potential crashes in the generation of map validation messages.

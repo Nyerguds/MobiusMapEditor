@@ -41,7 +41,7 @@ namespace MobiusEditor.Controls
                 this.cmbTechno.DataSource = null;
                 this.cmbTechno.Items.Clear();
                 this.cmbTechno.DataSource = technoTypes;
-                this.cmbTechno.DisplayMember = "Name";
+                this.cmbTechno.DisplayMember = "DisplayName";
             }
             finally
             {

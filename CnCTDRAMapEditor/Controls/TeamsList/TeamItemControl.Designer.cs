@@ -32,7 +32,7 @@
             this.panel2 = new System.Windows.Forms.Panel();
             this.numAmount = new MobiusEditor.Controls.EnhNumericUpDown();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.cmbTechno = new System.Windows.Forms.ComboBox();
+            this.cmbTechno = new MobiusEditor.Controls.ComboBoxSmartWidth();
             this.panel3 = new System.Windows.Forms.Panel();
             this.btnRemove = new System.Windows.Forms.Button();
             this.tableLayoutPanel1.SuspendLayout();
@@ -150,7 +150,6 @@
             this.panel1.ResumeLayout(false);
             this.panel3.ResumeLayout(false);
             this.ResumeLayout(false);
-
         }
 
         #endregion
@@ -159,7 +158,7 @@
         private System.Windows.Forms.Panel panel2;
         private EnhNumericUpDown numAmount;
         private System.Windows.Forms.Panel panel1;
-        private System.Windows.Forms.ComboBox cmbTechno;
+        private MobiusEditor.Controls.ComboBoxSmartWidth cmbTechno;
         private System.Windows.Forms.Panel panel3;
         private System.Windows.Forms.Button btnRemove;
     }
