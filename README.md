@@ -14,7 +14,7 @@ Right now, I'm not really looking into making this a joint project. Specific bug
 
 The file "CnCTDRAMapEditor.exe.config" contains settings to customise the editor. This is what they do:
 
-* **ModsToLoad**: semicolon (or comma) separated list of mod entries. A mod entry can either be a Steam workshop ID, or a path of the type "Tiberian_Dawn\ModName" or "Red_Alert\ModName". The paths will initially be looked up under My Documents, but will also check the Steam workshop files, and use the game prefix part to verify the mod's targeted game. Note that mods are **not** loaded conditionally in the editor based on this targeted game; the editor loads all assets of both games on startup. The editor also has no way to check which mods are actually enabled in the game, and will load anything that is configured of which the files can be found.
+* **ModsToLoad**: semicolon (or comma) separated list of mod entries. A mod entry can either be a Steam workshop ID, or a path of the type "Tiberian_Dawn\ModName" or "Red_Alert\ModName". The paths will initially be looked up under My Documents, but will also check the Steam workshop files, and use the game prefix part to verify the mod's targeted game. Note that mods are **not** loaded conditionally in the editor based on this targeted game; the editor loads all assets of both games on startup. The editor also has no way to check which mods are actually enabled in the game, and will load anything that is configured and of which the files can be found.
 * **NoMetaFilesForSinglePlay**: Suppresses the generation of .tga and .json files for single player maps.
 * **MapScaleFactor**: Integer division factor for the size at which assets are rendered on the map; higher means lower quality. This will make the UI more responsive. Negative values will enable smooth scaling, which gives nicer graphics but will maje the UI noticeable less responsive.
 * **PreviewScaleFactor**: Integer division factor for the size at which assets are rendered on the preview tools. Negative values will enable smooth scaling, but this usually doesn't look good on the upscaled preview graphics.
@@ -22,7 +22,7 @@ The file "CnCTDRAMapEditor.exe.config" contains settings to customise the editor
 * **TemplateToolTextureSizeMultiplier**: Floating-point multiplication factor for the size of tiles shown on the Map tool. This scaling is somehow done relative to the screen size; not sure.
 * **MaxMapTileTextureSize**: Maximum for the size of the tiles shown on the Map tool. Leave on 0 to disable.
 
-The **ModsToLoad** setting will have the `ConcretePavementTD` mod set by default, to complete the incomplete TD Remastered graphics set.
+The **ModsToLoad** setting will have the `ConcretePavementTD` mod set by default, to complete the incomplete TD Remastered graphics set, meaning it will automatically be loaded if found.
 
 You can find the mod [on the Steam workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2844969675) and [on ModDB](https://www.moddb.com/games/command-conquer-remastered/addons/concretepavementtd).
 
