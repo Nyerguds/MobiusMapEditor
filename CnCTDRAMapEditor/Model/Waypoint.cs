@@ -56,15 +56,14 @@ namespace MobiusEditor.Model
 
         public override bool Equals(object obj)
         {
-            if (obj is Waypoint)
+            if (obj is Waypoint wp)
             {
-                return this == obj;
+                return ReferenceEquals(this, wp) || string.Equals(this.Name, wp.Name, StringComparison.OrdinalIgnoreCase) && this.Cell == wp.Cell;
             }
-            else if (obj is string)
+            else if (obj is string str)
             {
-                return string.Equals(Name, obj as string, StringComparison.OrdinalIgnoreCase);
+                return string.Equals(Name, str, StringComparison.OrdinalIgnoreCase);
             }
-
             return base.Equals(obj);
         }
 

@@ -296,7 +296,7 @@ namespace MobiusEditor.Tools
             base.PostRenderMap(graphics);
             Waypoint selected = waypointCombo.SelectedItem as Waypoint;
             Waypoint[] selectedRange = selected != null ? new [] { selected } : new Waypoint[] { };
-            RenderWayPoints(graphics, Color.Black, Color.DarkOrange, Color.DarkOrange, false, true, selectedRange);
+            RenderWayPoints(graphics, selectedRange);
             if (selected != null)
             {
                 RenderWayPoints(graphics, Color.Black, Color.Yellow, Color.Yellow, true, false, selectedRange);

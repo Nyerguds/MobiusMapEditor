@@ -246,7 +246,7 @@ namespace MobiusEditor.Tools
             base.PostRenderMap(graphics);
             string selected = triggerComboBox.SelectedItem as string;
             string[] selectedRange = selected != null ? new[] { selected } : new string[] { };
-            RenderCellTriggers(graphics, Color.Black, Color.White, Color.White, false, true, selectedRange);
+            RenderCellTriggers(graphics, selectedRange);
             if (selected != null)
             {
                 RenderCellTriggers(graphics, Color.Black, Color.Yellow, Color.Yellow, true, false, selectedRange);

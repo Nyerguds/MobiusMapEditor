@@ -164,9 +164,9 @@ namespace MobiusEditor.Tools
             }
         }
 
-        protected void RenderWayPoints(Graphics graphics)
+        protected void RenderWayPoints(Graphics graphics, params Waypoint[] specifiedToExclude)
         {
-            RenderWayPoints(graphics, Color.Black, Color.DarkOrange, Color.DarkOrange, false, true);
+            RenderWayPoints(graphics, Color.Black, Color.DarkOrange, Color.DarkOrange, false, true, specifiedToExclude);
         }
 
         protected void RenderWayPoints(Graphics graphics, Color fillColor, Color borderColor, Color textColor, bool thickborder, bool excludeSpecified, params Waypoint[] specified)
@@ -293,24 +293,25 @@ namespace MobiusEditor.Tools
             }
         }
 
-        protected void RenderCellTriggers(Graphics graphics)
+        protected void RenderCellTriggers(Graphics graphics, params String[] specifiedToExclude)
         {
-            RenderCellTriggers(graphics, Color.Black, Color.White, Color.White, false, true);
+            RenderCellTriggers(graphics, Color.Black, Color.White, Color.White, false, true, specifiedToExclude);
         }
 
         protected void RenderCellTriggers(Graphics graphics, Color fillColor, Color borderColor, Color textColor, bool thickborder, bool excludeSpecified, params String[] specified)
-            {
+        {
             if ((Layers & MapLayerFlag.CellTriggers) == MapLayerFlag.None)
             {
                 return;
             }
+            HashSet<String> specifiedSet = new HashSet<String>(specified, StringComparer.InvariantCultureIgnoreCase);
             using (var cellTriggersBackgroundBrush = new SolidBrush(Color.FromArgb(96, fillColor)))
             using (var cellTriggersBrush = new SolidBrush(Color.FromArgb(128, textColor)))
             using (var cellTriggerPen = new Pen(borderColor, thickborder ? 3f : 1f))
             {
                 foreach (var (cell, cellTrigger) in map.CellTriggers)
                 {
-                    bool contains = specified.Contains(cellTrigger.Trigger, StringComparer.InvariantCultureIgnoreCase);
+                    bool contains = specifiedSet.Contains(cellTrigger.Trigger);
                     if (contains && excludeSpecified || !contains && !excludeSpecified)
                     {
                         continue;
