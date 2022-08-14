@@ -22,9 +22,9 @@ The file "CnCTDRAMapEditor.exe.config" contains settings to customise the editor
 * **TemplateToolTextureSizeMultiplier**: Floating-point multiplication factor for the size of tiles shown on the Map tool. This scaling is somehow done relative to the screen size; not sure.
 * **MaxMapTileTextureSize**: Maximum for the size of the tiles shown on the Map tool. Leave on 0 to disable.
 
-The **ModsToLoad** setting will have the `ConcretePavementTD` mod set by default, to complete the incomplete Remastered TD graphics set. The mod can be downloaded here:
+The **ModsToLoad** setting will have the `ConcretePavementTD` mod set by default, to complete the incomplete Remastered TD graphics set.
 
-https://steamcommunity.com/sharedfiles/filedetails/?id=2844969675
+You can find the mod [on the Steam workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2844969675) and [on ModDB](https://www.moddb.com/games/command-conquer-remastered/addons/concretepavementtd).
 
 ---
 
