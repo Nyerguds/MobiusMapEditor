@@ -36,13 +36,13 @@ namespace MobiusEditor.RedAlert
         public static readonly SmudgeType Scorch5 = new SmudgeType(10, "sc5");
         public static readonly SmudgeType Scorch6 = new SmudgeType(11, "sc6");
         // placeable versions of the bibs. Experimental for now - UI doesn't seem able to handle their full size like the game does.
-        public static readonly SmudgeType Bib1Pl = new SmudgeType(12, "bib1", new Size(4, 2));
-        public static readonly SmudgeType Bib2Pl = new SmudgeType(13, "bib2", new Size(3, 2));
-        public static readonly SmudgeType Bib3Pl = new SmudgeType(14, "bib3", new Size(2, 2));
+        public static readonly SmudgeType Bib1Pl = new SmudgeType(12, "bib1", new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, new Size(4, 2));
+        public static readonly SmudgeType Bib2Pl = new SmudgeType(13, "bib2", new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, new Size(3, 2));
+        public static readonly SmudgeType Bib3Pl = new SmudgeType(14, "bib3", new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, new Size(2, 2));
         // The bibs to use under buildings. Kept separately to avoid conflict.
-        public static readonly SmudgeType Bib1 = new SmudgeType(15, "bib1", new Size(4, 2), SmudgeTypeFlag.Bib1);
-        public static readonly SmudgeType Bib2 = new SmudgeType(16, "bib2", new Size(3, 2), SmudgeTypeFlag.Bib2);
-        public static readonly SmudgeType Bib3 = new SmudgeType(17, "bib3", new Size(2, 2), SmudgeTypeFlag.Bib3);
+        public static readonly SmudgeType Bib1 = new SmudgeType(15, "bib1", new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, new Size(4, 2), SmudgeTypeFlag.Bib1);
+        public static readonly SmudgeType Bib2 = new SmudgeType(16, "bib2", new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, new Size(3, 2), SmudgeTypeFlag.Bib2);
+        public static readonly SmudgeType Bib3 = new SmudgeType(17, "bib3", new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, new Size(2, 2), SmudgeTypeFlag.Bib3);
 
         private static SmudgeType[] Types;
 

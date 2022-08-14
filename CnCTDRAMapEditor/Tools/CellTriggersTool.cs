@@ -68,13 +68,15 @@ namespace MobiusEditor.Tools
             triggerComboBox.Items.Clear();
             string[] items = plugin.Map.FilterCellTriggers().Select(t => t.Name).Distinct().ToArray();
             string[] filteredTypes = plugin.Map.EventTypes.Where(ev => plugin.Map.CellEventTypes.Contains(ev)).Distinct().ToArray();
-            if (items.Length == 0)
+            bool hasItems = items.Length > 0;
+            if (!hasItems)
             {
                 items = new[] { Trigger.None };
             }
             int selectIndex = selected == null ? 0 : Enumerable.Range(0, items.Length).FirstOrDefault(x => String.Equals(items[x], selected, StringComparison.InvariantCultureIgnoreCase));
             triggerComboBox.DataSource = items;
             triggerComboBox.SelectedIndex = selectIndex;
+            triggerComboBox.Enabled = hasItems;
             TriggerToolTip = filteredTypes == null ? null : "Allowed trigger events:\n\u2022 " + String.Join("\n\u2022 ", filteredTypes);
         }
 
@@ -150,19 +152,23 @@ namespace MobiusEditor.Tools
 
         private void SetCellTrigger(Point location)
         {
-            if (map.Metrics.GetCell(location, out int cell))
+            string trigger = triggerComboBox.SelectedItem as string;
+            if (trigger != null && !String.Equals(Trigger.None, trigger))
             {
-                if (map.CellTriggers[cell] == null)
+                if (map.Metrics.GetCell(location, out int cell))
                 {
-                    if (!undoCellTriggers.ContainsKey(cell))
+                    if (map.CellTriggers[cell] == null)
                     {
-                        undoCellTriggers[cell] = map.CellTriggers[cell];
+                        if (!undoCellTriggers.ContainsKey(cell))
+                        {
+                            undoCellTriggers[cell] = map.CellTriggers[cell];
+                        }
+                        var cellTrigger = new CellTrigger { Trigger = triggerComboBox.SelectedItem as string };
+                        map.CellTriggers[cell] = cellTrigger;
+                        redoCellTriggers[cell] = cellTrigger;
+                        mapPanel.Invalidate();
+                        plugin.Dirty = true;
                     }
-                    var cellTrigger = new CellTrigger { Trigger = triggerComboBox.SelectedItem as string };
-                    map.CellTriggers[cell] = cellTrigger;
-                    redoCellTriggers[cell] = cellTrigger;
-                    mapPanel.Invalidate();
-                    plugin.Dirty = true;
                 }
             }
         }

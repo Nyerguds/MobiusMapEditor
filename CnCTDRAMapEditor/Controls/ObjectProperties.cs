@@ -220,6 +220,8 @@ namespace MobiusEditor.Controls
                         if (obj is Building building)
                         {
                             prebuiltCheckBox.Enabled = building.BasePriority >= 0;
+                            if (building.BasePriority < 0 && !prebuiltCheckBox.Checked)
+                                prebuiltCheckBox.Checked = true;
                         }
                     }
                     break;

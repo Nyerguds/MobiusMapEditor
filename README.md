@@ -179,12 +179,15 @@ v1.4.0.4: [WIP]
 * The "MapScaleFactor" and "PreviewScaleFactor" settings in the "CnCTDRAMapEditor.exe.config" file can adjust the downscaling factor for respectively the map graphics and the preview graphics. Higher values will reduce quality, but will make the editor more responsive. By default, previews in tool windows will now use higher quality graphics than the map. Using a negative value will enable smooth scaling. (Not advised, but it's available)
 * When removing a trigger, all celltriggers and objects linking to that trigger will now get their trigger cleared. Before, this only happened for structures.
 * The triggers available for linking to objects and cells are now filtered out to only those triggers with an Event that can be triggered by that object type. This will also affect the cleanup of triggers if a trigger's Event was changed to something not compatible with the objects it was linked to.
-* An Info icon next to the trigger dropdowns in the placement tool windows will give an explanation of which trigger events work for that type.
+* An "Info" icon next to the trigger dropdowns in the placement tool windows will give an explanation of which trigger events work for that type.
 * For celltriggers and waypoints, the item selected in the tool dropdown will now be highlighted on the map in yellow.
 * A logical default Mission is now selected when you pick a unit to place.
-* Editing the triggers can no longer kick you out of the Celltrigger tool even though placeable triggers remain after the edits.
+* The Celltrigger tool will now always be enabled, even if there are no placeable triggers available. This way, people can still check the "Info" icon on the tool to see the requirements for placeable waypoints.
 * The brush size on the resource tool will now adjust itself if an incorrect (even) value is given.
 * Map loading validation will now also validate terrain templates, meaning corrupted maps have a much higher likelihood to give correct feedback.
 * Map validation will now be done before the "Save File" dialog opens.
 * Ini reading will now trim the value, like the original game does, allowing entries of the type "key = value".
 * Fixed potential crashes in the generation of map validation messages.
+* Red Alert interior theater no longer crashes when trying to show the bibs in the Smudge tool window.
+* Red Alert structures can no longer be put in an illegal state where Prebult is disabled but the rebuild priority is set to -1.
+* Fixed a crash in the RA triggers caused by the removal of the Aircraft types from the placeable objects.

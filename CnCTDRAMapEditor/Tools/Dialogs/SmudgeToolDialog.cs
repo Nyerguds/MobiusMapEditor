@@ -25,7 +25,9 @@ namespace MobiusEditor.Tools.Dialogs
         protected override void InitializeInternal(MapPanel mapPanel, MapLayerFlag activeLayers, ToolStripStatusLabel toolStatusLabel,
             ToolTip mouseToolTip, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> undoRedoList)
         {
-            smudgeTypeListBox.Types = plugin.Map.SmudgeTypes.Where(t => (t.Flag & SmudgeTypeFlag.Bib) == SmudgeTypeFlag.None).OrderBy(t => t.ID);
+            smudgeTypeListBox.Types = plugin.Map.SmudgeTypes
+                .Where(t => (t.Flag & SmudgeTypeFlag.Bib) == SmudgeTypeFlag.None && ((t.Theaters == null) || t.Theaters.Contains(plugin.Map.Theater)))
+                .OrderBy(t => t.ID);
             Tool = new SmudgeTool(mapPanel, activeLayers, toolStatusLabel, smudgeTypeListBox, smudgeTypeMapPanel, smudgeProperties, plugin, undoRedoList);
         }
     }

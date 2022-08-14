@@ -39,47 +39,74 @@ namespace MobiusEditor.Model
 
         public string DisplayName => Name;
 
+        public TheaterType[] Theaters { get; private set; }
+
         public Size Size { get; set; }
-        public int Icons{ get; set; }
+        public int Icons { get; set; }
 
         public SmudgeTypeFlag Flag { get; private set; }
 
         public Image Thumbnail { get; set; }
 
         public SmudgeType(sbyte id, string name)
-            :this(id, name, new Size(1, 1), 1, SmudgeTypeFlag.None)
-        {
-        }
-        public SmudgeType(sbyte id, string name, int icons)
-            :this(id, name, new Size(1, 1), icons, SmudgeTypeFlag.None)
+            : this(id, name, null, new Size(1, 1), 1, SmudgeTypeFlag.None)
         {
         }
 
+        public SmudgeType(sbyte id, string name, TheaterType[] theaters)
+            : this(id, name, theaters, new Size(1, 1), 1, SmudgeTypeFlag.None)
+        {
+        }
+
+        public SmudgeType(sbyte id, string name, int icons)
+            : this(id, name, null, new Size(1, 1), icons, SmudgeTypeFlag.None)
+        {
+        }
+
+        public SmudgeType(sbyte id, string name, TheaterType[] theaters, int icons)
+            : this(id, name, theaters, new Size(1, 1), icons, SmudgeTypeFlag.None)
+        {
+        }
+
+        public SmudgeType(sbyte id, string name, TheaterType[] theaters, Size size, SmudgeTypeFlag flag)
+            : this(id, name, theaters, size, 1, flag)
+        {
+        }
 
         public SmudgeType(sbyte id, string name, Size size, SmudgeTypeFlag flag)
-            : this(id, name, size, 1, flag)
-        {
-        }
-        
-        public SmudgeType(sbyte id, string name, Size size)
-            : this(id, name, size, SmudgeTypeFlag.None)
+            : this(id, name, null, size, 1, flag)
         {
         }
 
-        public SmudgeType(sbyte id, string name, SmudgeTypeFlag type)
-            : this(id, name, new Size(1, 1), type)
+        public SmudgeType(sbyte id, string name, Size size)
+            : this(id, name, null, size, SmudgeTypeFlag.None)
+        {
+        }
+
+        public SmudgeType(sbyte id, string name, TheaterType[] theaters, Size size)
+            : this(id, name, theaters, size, SmudgeTypeFlag.None)
+        {
+        }
+
+        public SmudgeType(sbyte id, string name, TheaterType[] theaters, SmudgeTypeFlag flag)
+            : this(id, name, theaters, new Size(1, 1), flag)
         {
         }
 
         public SmudgeType(sbyte id, string name, Size size, int icons, SmudgeTypeFlag flag)
+            : this(id, name, null, size, icons, flag)
+        {
+        }
+
+        public SmudgeType(sbyte id, string name, TheaterType[] theaters, Size size, int icons, SmudgeTypeFlag flag)
         {
             ID = id;
             Name = name;
             Size = size;
             Icons = icons;
             Flag = flag;
+            Theaters = theaters;
         }
-
 
         public override bool Equals(object obj)
         {

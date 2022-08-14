@@ -302,21 +302,30 @@ namespace MobiusEditor.Model
             foreach (var templateType in TemplateTypes)
             {
                 if ((templateType.Theaters == null) || templateType.Theaters.Contains(Theater))
+                {
                     templateType.Init(Theater);
+                }
             }
             foreach (var smudgeType in SmudgeTypes)
             {
-                smudgeType.Init(Theater);
+                if ((smudgeType.Theaters == null) || smudgeType.Theaters.Contains(Theater))
+                {
+                    smudgeType.Init(Theater);
+                }
             }
             foreach (var overlayType in OverlayTypes)
             {
                 if ((overlayType.Theaters == null) || overlayType.Theaters.Contains(Theater))
+                {
                     overlayType.Init(Theater);
+                }
             }
             foreach (var terrainType in TerrainTypes)
             {
                 if ((terrainType.Theaters == null) || terrainType.Theaters.Contains(Theater))
+                {
                     terrainType.Init(Theater);
+                }
             }
             foreach (var infantryType in InfantryTypes)
             {
@@ -329,7 +338,9 @@ namespace MobiusEditor.Model
             foreach (var buildingType in BuildingTypes)
             {
                 if ((buildingType.Theaters == null) || buildingType.Theaters.Contains(Theater))
+                {
                     buildingType.Init(gameType, Theater, HouseTypes.Where(h => h.Equals(buildingType.OwnerHouse)).FirstOrDefault(), DirectionTypes.Where(d => d.Facing == FacingType.North).First());
+                }
             }
         }
 

@@ -577,7 +577,7 @@ namespace MobiusEditor.Dialogs
                                 eventValueComboBox.Visible = true;
                                 eventValueComboBox.DisplayMember = "Name";
                                 eventValueComboBox.ValueMember = "Value";
-                                eventValueComboBox.DataSource = plugin.Map.UnitTypes.Where(t => t.IsAircraft).Select(t => new { Name = t.DisplayName, Value = (long)t.ID }).ToArray();
+                                eventValueComboBox.DataSource = plugin.Map.TeamTechnoTypes.Where(t => (t is UnitType) && ((UnitType)t).IsAircraft).Select(t => new { Name = t.DisplayName, Value = (long)t.ID }).ToArray();
                                 eventValueComboBox.DataBindings.Add("SelectedValue", triggerEvent, "Data");
                                 if (triggerEventData == null)
                                 {

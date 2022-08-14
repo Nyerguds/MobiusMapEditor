@@ -86,7 +86,7 @@ namespace MobiusEditor.Model
         }
 
         public OverlayType(sbyte id, string name, string textId, TheaterType[] theaters, OverlayTypeFlag flag)
-            :this(id, name, textId, theaters, flag, null, -1)
+            : this(id, name, textId, theaters, flag, null, -1)
         {
         }
 

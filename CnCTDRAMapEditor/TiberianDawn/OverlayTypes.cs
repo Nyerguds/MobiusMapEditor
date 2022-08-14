@@ -46,13 +46,13 @@ namespace MobiusEditor.TiberianDawn
         public static readonly OverlayType Road2 = new OverlayType(19, "roadfullslab", "Concrete Road (full)", null, OverlayTypeFlag.Decoration, "road", 1);
         // Not available to place down sadly: even the ini read for it in the game code only succeeds if 'IsGross' is enabled.
         //public static readonly OverlayType Squishy = new OverlayType(19, "SQUISH", OverlayTypeFlag.Decoration);
-        public static readonly OverlayType V12 = new OverlayType(20, "v12", "TEXT_STRUCTURE_TITLE_CIV12", new TheaterType[] { TheaterTypes.Temperate });
-        public static readonly OverlayType V13 = new OverlayType(21, "v13", "TEXT_STRUCTURE_TITLE_CIV12", new TheaterType[] { TheaterTypes.Temperate });
-        public static readonly OverlayType V14 = new OverlayType(22, "v14", "TEXT_STRUCTURE_TITLE_CIV13", new TheaterType[] { TheaterTypes.Temperate, TheaterTypes.Winter });
-        public static readonly OverlayType V15 = new OverlayType(23, "v15", "TEXT_STRUCTURE_TITLE_CIV14", new TheaterType[] { TheaterTypes.Temperate, TheaterTypes.Winter });
-        public static readonly OverlayType V16 = new OverlayType(24, "v16", "TEXT_STRUCTURE_TITLE_CIV15", new TheaterType[] { TheaterTypes.Temperate, TheaterTypes.Winter });
-        public static readonly OverlayType V17 = new OverlayType(25, "v17", "TEXT_STRUCTURE_TITLE_CIV16", new TheaterType[] { TheaterTypes.Temperate, TheaterTypes.Winter });
-        public static readonly OverlayType V18 = new OverlayType(26, "v18", "TEXT_STRUCTURE_TITLE_CIV17", new TheaterType[] { TheaterTypes.Temperate, TheaterTypes.Winter });
+        public static readonly OverlayType V12 = new OverlayType(20, "v12", "TEXT_STRUCTURE_TITLE_CIV12", new[] { TheaterTypes.Temperate });
+        public static readonly OverlayType V13 = new OverlayType(21, "v13", "TEXT_STRUCTURE_TITLE_CIV12", new[] { TheaterTypes.Temperate });
+        public static readonly OverlayType V14 = new OverlayType(22, "v14", "TEXT_STRUCTURE_TITLE_CIV13", new[] { TheaterTypes.Temperate, TheaterTypes.Winter });
+        public static readonly OverlayType V15 = new OverlayType(23, "v15", "TEXT_STRUCTURE_TITLE_CIV14", new[] { TheaterTypes.Temperate, TheaterTypes.Winter });
+        public static readonly OverlayType V16 = new OverlayType(24, "v16", "TEXT_STRUCTURE_TITLE_CIV15", new[] { TheaterTypes.Temperate, TheaterTypes.Winter });
+        public static readonly OverlayType V17 = new OverlayType(25, "v17", "TEXT_STRUCTURE_TITLE_CIV16", new[] { TheaterTypes.Temperate, TheaterTypes.Winter });
+        public static readonly OverlayType V18 = new OverlayType(26, "v18", "TEXT_STRUCTURE_TITLE_CIV17", new[] { TheaterTypes.Temperate, TheaterTypes.Winter });
         public static readonly OverlayType FlagSpot = new OverlayType(27, "fpls", "TEXT_CF_ONHOVER_SPOT", OverlayTypeFlag.Flag);
         public static readonly OverlayType WoodCrate = new OverlayType(28, "wcrate", "Wooden Crate", OverlayTypeFlag.Crate);
         public static readonly OverlayType SteelCrate = new OverlayType(29, "scrate", "Steel Crate", OverlayTypeFlag.Crate);
