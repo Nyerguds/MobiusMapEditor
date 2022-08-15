@@ -23,10 +23,11 @@ namespace MobiusEditor.Model
     [Flags]
     public enum TemplateTypeFlag
     {
-        None    = 0,
-        Clear   = (1 << 1),
-        Water   = (1 << 2),
-        OreMine = (1 << 3),
+        None       = 0,
+        Clear      = (1 << 1),
+        Water      = (1 << 2),
+        OreMine    = (1 << 3),
+        RandomCell = (1 << 4),
     }
 
     public class TemplateType : IBrowsableType
@@ -43,7 +44,7 @@ namespace MobiusEditor.Model
 
         public Size IconSize => new Size(IconWidth, IconHeight);
 
-        public int NumIcons => IconWidth * IconHeight;
+        public int NumIcons { get; private set; }
 
         public bool[,] IconMask { get; set; }
 
@@ -61,6 +62,7 @@ namespace MobiusEditor.Model
             Name = name;
             IconWidth = iconWidth;
             IconHeight = iconHeight;
+            NumIcons = IconWidth * IconHeight;
             Theaters = theaters;
             Flag = flag;
             // Mask override for tiles that contain too many graphics in the Remaster. Indices with '0' are removed from the tiles.
@@ -128,11 +130,12 @@ namespace MobiusEditor.Model
         public void Init(TheaterType theater)
         {
             // Cheeky hack for Nod SpecOps '99 mission 2.
-            if ("P04".Equals(this.Name, StringComparison.InvariantCultureIgnoreCase) && this.ID == 70 && "desert".Equals(theater.Name, StringComparison.InvariantCultureIgnoreCase))
+            // This allows adding tiles to existing 1x1 tiles. However, it excludes clear terrain and the specific RA 1x1 random cell selector tiles.
+            if (IconWidth == 1 & IconHeight == 1 && (Flag & TemplateTypeFlag.Clear) == TemplateTypeFlag.None && (Flag & TemplateTypeFlag.RandomCell) == TemplateTypeFlag.None)
             {
-                if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, Name, 1, out Tile tile))
+                if (Globals.TheTilesetManager.GetTileDataLength(theater.Tilesets, Name) > 1)
                 {
-                    this.IconWidth = 2;
+                    Flag |= TemplateTypeFlag.RandomCell;
                 }
             }
             var oldImage = Thumbnail;
@@ -147,16 +150,32 @@ namespace MobiusEditor.Model
                 MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
                 g.Clear(Color.Transparent);
                 int icon = 0;
-                for (var y = 0; y < IconHeight; ++y)
+                if ((Flag & TemplateTypeFlag.RandomCell) != TemplateTypeFlag.None)
                 {
-                    for (var x = 0; x < IconWidth; ++x, ++icon)
+                    int numIcons = Globals.TheTilesetManager.GetTileDataLength(theater.Tilesets, Name);
+                    if (numIcons >= 1)
                     {
-                        if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, Name, icon, out Tile tile))
+                        NumIcons = numIcons;
+                        if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, Name, 0, out Tile tile))
                         {
-                            if (MaskOverride == null || MaskOverride[x, y])
+                            g.DrawImage(tile.Image, 0, 0, size.Width, size.Height);
+                            found = mask[0, 0] = true;
+                        }
+                    }
+                }
+                else
+                {
+                    for (var y = 0; y < IconHeight; ++y)
+                    {
+                        for (var x = 0; x < IconWidth; ++x, ++icon)
+                        {
+                            if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, Name, icon, out Tile tile))
                             {
-                                g.DrawImage(tile.Image, x * size.Width, y * size.Height, size.Width, size.Height);
-                                found = mask[x, y] = true;
+                                if (MaskOverride == null || MaskOverride[x, y])
+                                {
+                                    g.DrawImage(tile.Image, x * size.Width, y * size.Height, size.Width, size.Height);
+                                    found = mask[x, y] = true;
+                                }
                             }
                         }
                     }

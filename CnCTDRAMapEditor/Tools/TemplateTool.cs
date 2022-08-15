@@ -58,6 +58,7 @@ namespace MobiusEditor.Tools
         private bool boundsMode;
         private Rectangle dragBounds;
         private int dragEdge = -1;
+        private Random random;
 
         private TemplateType selectedTemplateType;
         private TemplateType SelectedTemplateType
@@ -136,6 +137,7 @@ namespace MobiusEditor.Tools
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
             previewMap = map;
+            this.random = Globals.PlaceRandomTiles ? new Random() : null;
             this.templateTypeListView = templateTypeListView;
             this.templateTypeListView.SelectedIndexChanged -= TemplateTypeListView_SelectedIndexChanged;
             string templateCategory(TemplateType template)
@@ -606,6 +608,7 @@ namespace MobiusEditor.Tools
                         }
                     }
                 }
+                bool isRandom = (selected.Flag & TemplateTypeFlag.RandomCell) != TemplateTypeFlag.None && selected.IconWidth == 1 && selected.IconHeight == 1;
                 for (int y = 0, icon = 0; y < selected.IconHeight; ++y)
                 {
                     for (var x = 0; x < selected.IconWidth; ++x, ++icon)
@@ -617,7 +620,8 @@ namespace MobiusEditor.Tools
                         var subLocation = new Point(location.X + x, location.Y + y);
                         if (map.Metrics.GetCell(subLocation, out int cell))
                         {
-                            var template = new Template { Type = selected, Icon = icon };
+                            int placeIcon = isRandom && random != null ? random.Next(0, selected.NumIcons) : icon;
+                            var template = new Template { Type = selected, Icon = placeIcon };
                             map.Templates[cell] = template;
                             redoTemplates[cell] = template;
                             mapPanel.Invalidate(map, cell);

@@ -509,8 +509,9 @@ namespace MobiusEditor.Render
             string teamColor = infantry.House?.UnitTeamColor;
             if (Globals.TheTilesetManager.GetTeamColorTileData(theater.Tilesets, infantry.Type.Name, icon, Globals.TheTeamColorManager[teamColor], out Tile tile))
             {
-                int infantryCorrectX = tileSize.Width / -8;
-                int infantryCorrectY = tileSize.Height / 8;
+                // These values are experimental, from comparing map editor screenshots to game screenshots. -Nyer
+                int infantryCorrectX = tileSize.Width / -12;
+                int infantryCorrectY = tileSize.Height / 6;
                 var baseLocation = new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height)
                     + new Size(tileSize.Width / 2, tileSize.Height / 2);
                 var offset = Point.Empty;

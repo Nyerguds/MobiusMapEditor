@@ -814,8 +814,9 @@ namespace MobiusEditor
                     errorMessageBox.ShowDialog();
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                //System.Windows.Forms.MessageBox.Show("Error: " + ex.Message + "\n\n" + ex.StackTrace);
 #if DEVELOPER
                 throw;
 #else

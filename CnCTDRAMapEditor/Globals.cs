@@ -27,6 +27,7 @@ namespace MobiusEditor
             MapSmoothScale = Properties.Settings.Default.MapScaleFactor < 0;
             PreviewTileScale = Math.Max(1, Math.Abs(Properties.Settings.Default.PreviewScaleFactor));
             PreviewSmoothScale = Properties.Settings.Default.PreviewScaleFactor < 0;
+            PlaceRandomTiles = Properties.Settings.Default.PlaceRandomTiles;
         }
 
         public const string TilesetsXMLPath = @"DATA\XML\TILESETS.XML";
@@ -48,6 +49,8 @@ namespace MobiusEditor
         public static int PreviewTileWidth => OriginalTileWidth / PreviewTileScale;
         public static int PreviewTileHeight => OriginalTileHeight / PreviewTileScale;
         public static Size PreviewTileSize => new Size(PreviewTileWidth, PreviewTileHeight);
+
+        public static bool PlaceRandomTiles;
 
         public const int PixelWidth = 24;
         public const int PixelHeight = 24;

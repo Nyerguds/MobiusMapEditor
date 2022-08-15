@@ -16,6 +16,7 @@ The file "CnCTDRAMapEditor.exe.config" contains settings to customise the editor
 
 * **ModsToLoad**: semicolon (or comma) separated list of mod entries. A mod entry can either be a Steam workshop ID, or a path of the type "Tiberian_Dawn\ModName" or "Red_Alert\ModName". The paths will initially be looked up under My Documents, but will also check the Steam workshop files, and use the game prefix part to verify the mod's targeted game. Note that mods are **not** loaded conditionally in the editor based on this targeted game; the editor loads all assets of both games on startup. The editor also has no way to check which mods are actually enabled in the game, and will load anything that is configured and of which the files can be found.
 * **NoMetaFilesForSinglePlay**: Suppresses the generation of .tga and .json files for single player maps.
+* **PlaceRandomTiles**: Red Alert Interior maps have an unused feature that several of its 1x1 tiles contain alternate versions. This option, which is enabled by default, will randomise placement of these tile types. Can be disabled if you want a "cleaner" look.
 * **MapScaleFactor**: Integer division factor for the size at which assets are rendered on the map; higher means lower quality. This will make the UI more responsive. Negative values will enable smooth scaling, which gives nicer graphics but will make the UI noticeable less responsive.
 * **PreviewScaleFactor**: Integer division factor for the size at which assets are rendered on the preview tools. Negative values will enable smooth scaling, but this usually doesn't look good on the upscaled preview graphics.
 * **ObjectToolItemSizeMultiplier**: Floating-point multiplication factor for downsizing the item icons on the selection lists on the tool windows.
@@ -192,3 +193,6 @@ v1.4.0.4: [WIP]
 * Red Alert structures can no longer be put in an illegal state where Prebult is disabled but the rebuild priority is set to -1.
 * Fixed a crash in the RA triggers caused by the removal of the Aircraft types from the placeable objects.
 * Fixed refresh issues that occurred when moving the mouse out of the map area while still in placement mode.
+* Red Alert's Interior tileset now supports randomising the 1x1 tiles that contains alternate versions.
+* If mods add extra tiles to existing 1x1 tilesets, these will be treated as 1x1 randomisable too.
+* Tanya's default colouring in the editor preview is now Allied.

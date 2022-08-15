@@ -26,7 +26,7 @@ namespace MobiusEditor.RedAlert
         public static readonly InfantryType E3 = new InfantryType(2, "e3", "TEXT_UNIT_RA_E3", "Greece");
         public static readonly InfantryType E4 = new InfantryType(3, "e4", "TEXT_UNIT_RA_E4", "USSR");
         public static readonly InfantryType E6 = new InfantryType(4, "e6", "TEXT_UNIT_RA_E6", "USSR", false);
-        public static readonly InfantryType E7 = new InfantryType(5, "e7", "TEXT_UNIT_RA_E7", "USSR");
+        public static readonly InfantryType E7 = new InfantryType(5, "e7", "TEXT_UNIT_RA_E7", "Greece");
         public static readonly InfantryType E8 = new InfantryType(6, "spy", "TEXT_UNIT_RA_SPY", "Greece", false);
         public static readonly InfantryType E9 = new InfantryType(7, "thf", "TEXT_UNIT_RA_THF", "Greece", false);
         public static readonly InfantryType Medic = new InfantryType(8, "medi", "TEXT_UNIT_RA_MEDI", "Greece");

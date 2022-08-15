@@ -222,6 +222,7 @@ namespace MobiusEditor.Dialogs
         {
             AddTeamType();
         }
+
         private void TeamTypesDialog_FormClosing(object sender, FormClosingEventArgs e)
         {
             // If user pressed ok, nevermind,just go on.

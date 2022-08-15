@@ -57,7 +57,7 @@ namespace MobiusEditor.Controls
             {
                 this.m_Loading = true;
                 this.Info = info;
-                this.cmbTechno.Text = info != null ? info.Type.Name : defaultType.Name;
+                this.cmbTechno.SelectedItem = info != null ? info.Type : defaultType;
                 this.numAmount.Value = info != null ? info.Count : 0;
             }
             finally
