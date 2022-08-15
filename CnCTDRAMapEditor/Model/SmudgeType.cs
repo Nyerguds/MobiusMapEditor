@@ -16,7 +16,9 @@ using MobiusEditor.Interface;
 using MobiusEditor.Render;
 using MobiusEditor.Utility;
 using System;
+using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 
 namespace MobiusEditor.Model
 {
@@ -160,6 +162,27 @@ namespace MobiusEditor.Model
                 try { oldImage.Dispose(); }
                 catch { /* ignore */ }
             }
+        }
+
+        public static SmudgeType GetBib(IEnumerable<SmudgeType> SmudgeTypes, int width)
+        {
+            var bib1Type = SmudgeTypes.Where(t => t.Flag == SmudgeTypeFlag.Bib1).FirstOrDefault();
+            var bib2Type = SmudgeTypes.Where(t => t.Flag == SmudgeTypeFlag.Bib2).FirstOrDefault();
+            var bib3Type = SmudgeTypes.Where(t => t.Flag == SmudgeTypeFlag.Bib3).FirstOrDefault();
+            SmudgeType bibType = null;
+            switch (width)
+            {
+                case 2:
+                    bibType = bib3Type;
+                    break;
+                case 3:
+                    bibType = bib2Type;
+                    break;
+                case 4:
+                    bibType = bib1Type;
+                    break;
+            }
+            return bibType;
         }
     }
 }

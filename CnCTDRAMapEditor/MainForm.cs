@@ -551,45 +551,13 @@ namespace MobiusEditor
             TriggersDialog td = new TriggersDialog(plugin, maxTriggers);
             if (td.ShowDialog() == DialogResult.OK)
             {
-                var oldTriggers =
-                    from leftTrigger in plugin.Map.Triggers
-                    join rightTrigger in td.Triggers
-                    on leftTrigger.Name equals rightTrigger.Name into result
-                    where result.Count() == 0
-                    select leftTrigger;
-                var newTriggers =
-                    from leftTrigger in td.Triggers
-                    join rightTrigger in plugin.Map.Triggers
-                    on leftTrigger.Name equals rightTrigger.Name into result
-                    where result.Count() == 0
-                    select leftTrigger;
-                var sameTriggers =
-                    from leftTrigger in plugin.Map.Triggers
-                    join rightTrigger in td.Triggers
-                    on leftTrigger.Name equals rightTrigger.Name
-                    select new
-                    {
-                        OldTrigger = leftTrigger,
-                        NewTrigger = rightTrigger
-                    };
-                foreach (var oldTrigger in oldTriggers.ToArray())
+                List<Trigger> reordered = td.Triggers.OrderBy(t => t.Name, new ExplorerComparer()).ToList();
+                if (Trigger.CheckForChanges(plugin.Map.Triggers.ToList(), reordered))
                 {
-                    plugin.Map.Triggers.Remove(oldTrigger);
+                    plugin.Map.Triggers.ReplaceRange(reordered);
+                    plugin.Dirty = true;
+                    RefreshAvailableTools();
                 }
-                foreach (var newTrigger in newTriggers.ToArray())
-                {
-                    plugin.Map.Triggers.Add(newTrigger.Clone());
-                }
-                foreach (var item in sameTriggers.ToArray())
-                {
-                    if (!item.NewTrigger.Equals(item.OldTrigger))
-                    {
-                        plugin.Map.Triggers.Add(item.NewTrigger.Clone());
-                        plugin.Map.Triggers.Remove(item.OldTrigger);
-                    }
-                }
-                plugin.Dirty = true;
-                RefreshAvailableTools();
             }
         }
 

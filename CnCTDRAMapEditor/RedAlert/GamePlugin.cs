@@ -301,10 +301,16 @@ namespace MobiusEditor.RedAlert
                 EventTypes.TEVENT_SPIED,
             }).ToArray();
             string[] terrainEventTypes = { };
+            string[] cellActionTypes = { ActionTypes.TACTION_DESTROY_OBJECT };
+            string[] unitActionTypes = { };
+            string[] structureActionTypes = { ActionTypes.TACTION_DESTROY_OBJECT };
+            string[] terrainActionTypes = { };
+
             Map = new Map(basicSection, null, Constants.MaxSize, typeof(House),
-                houseTypes, TheaterTypes.GetTypes(), TemplateTypes.GetTypes(), TerrainTypes.GetTypes(),
-                OverlayTypes.GetTypes(), SmudgeTypes.GetTypes(), EventTypes.GetTypes(), cellEventTypes,
-                unitEventTypes, structureEventTypes, terrainEventTypes, ActionTypes.GetTypes(),
+                houseTypes, TheaterTypes.GetTypes(), TemplateTypes.GetTypes(),
+                TerrainTypes.GetTypes(), OverlayTypes.GetTypes(), SmudgeTypes.GetTypes(),
+                EventTypes.GetTypes(), cellEventTypes, unitEventTypes, structureEventTypes, terrainEventTypes,
+                ActionTypes.GetTypes(), cellActionTypes, unitActionTypes, structureActionTypes, terrainActionTypes,
                 MissionTypes.GetTypes(), DirectionTypes.GetTypes(), InfantryTypes.GetTypes(), UnitTypes.GetTypes(true),
                 BuildingTypes.GetTypes(), TeamMissionTypes.GetTypes(), fullTechnoTypes, waypoints, movieTypes, themeTypes)
             {

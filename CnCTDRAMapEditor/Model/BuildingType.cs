@@ -72,24 +72,27 @@ namespace MobiusEditor.Model
             HasTurret = hasTurret;
             FactoryOverlay = factoryOverlay;
             IsSingleFrame = isSingleFrame;
-
             if (HasBib)
             {
                 OccupyMask = new bool[BaseOccupyMask.GetLength(0) + 1, BaseOccupyMask.GetLength(1)];
-                for (var i = 0; i < BaseOccupyMask.GetLength(0) - 1; ++i)
+                for (var i = 0; i < BaseOccupyMask.GetLength(0); ++i)
                 {
                     for (var j = 0; j < BaseOccupyMask.GetLength(1); ++j)
                     {
                         OccupyMask[i, j] = BaseOccupyMask[i, j];
                     }
                 }
-                for (var j = 0; j < OccupyMask.GetLength(1); ++j)
+                if (!Globals.IgnoreBibs)
                 {
-                    OccupyMask[OccupyMask.GetLength(0) - 2, j] = true;
-                    OccupyMask[OccupyMask.GetLength(0) - 1, j] = true;
+                    for (var j = 0; j < OccupyMask.GetLength(1); ++j)
+                    {
+                        OccupyMask[OccupyMask.GetLength(0) - 2, j] = true;
+                        OccupyMask[OccupyMask.GetLength(0) - 1, j] = true;
+                    }
                 }
             }
             else
+            //*/
             {
                 OccupyMask = BaseOccupyMask;
             }

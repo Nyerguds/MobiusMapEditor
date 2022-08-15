@@ -13,7 +13,9 @@
 // GNU General Public License along with permitted additional restrictions 
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using MobiusEditor.Interface;
+using MobiusEditor.Utility;
 using System;
+using System.Collections.Generic;
 
 namespace MobiusEditor.Model
 {
@@ -36,7 +38,7 @@ namespace MobiusEditor.Model
     {
         public static readonly string None = "None";
 
-        public string EventType { get; set; }
+        public string EventType { get; set; } = None;
 
         public string Team { get; set; }
 
@@ -59,7 +61,9 @@ namespace MobiusEditor.Model
 
         public bool Equals(TriggerEvent other)
         {
-            return this.EventType == other.EventType
+            return
+                this.EventType.EqualsOrDefaultIgnoreCase(other.EventType, None)
+                && this.Team.EqualsOrDefaultIgnoreCase(other.Team, Trigger.None)
                 && this.Team == other.Team
                 && this.Data == other.Data;
         }
@@ -74,7 +78,7 @@ namespace MobiusEditor.Model
     {
         public static readonly string None = "None";
 
-        public string ActionType { get; set; }
+        public string ActionType { get; set; } = None;
 
         public string Trigger { get; set; }
 
@@ -101,8 +105,9 @@ namespace MobiusEditor.Model
 
         public bool Equals(TriggerAction other)
         {
-            return this.ActionType == other.ActionType
-                && this.Trigger == other.Trigger
+            return
+                this.ActionType.EqualsOrDefaultIgnoreCase(other.ActionType, None)
+                && this.Trigger.EqualsOrDefaultIgnoreCase(other.Trigger, Model.Trigger.None)
                 && this.Team == other.Team
                 && this.Data == other.Data;
         }
@@ -167,7 +172,7 @@ namespace MobiusEditor.Model
                 || (other != null
                 && this.Name == other.Name
                 && this.PersistentType == other.PersistentType
-                && this.House == other.House
+                && this.House.EqualsOrDefaultIgnoreCase(other.House, Model.House.None)
                 && this.EventControl == other.EventControl
                 && this.Event1.Equals(other.Event1)
                 && this.Event2.Equals(other.Event2)
@@ -188,6 +193,36 @@ namespace MobiusEditor.Model
         object ICloneable.Clone()
         {
             return Clone();
+        }
+
+
+        public static Boolean CheckForChanges(List<Trigger> list1, List<Trigger> list2)
+        {
+            // Might need to migrate this to the map.
+            if (list1.Count != list2.Count)
+                return true;
+            HashSet<string> found = new HashSet<string>();
+            foreach (Trigger trig in list1)
+            {
+                Trigger oldTrig = list2.Find(t => t.Name.Equals(trig.Name));
+                if (oldTrig == null)
+                {
+                    return true;
+                }
+                found.Add(trig.Name);
+                if (!trig.Equals(oldTrig))
+                {
+                    return true;
+                }
+            }
+            foreach (Trigger trig in list2)
+            {
+                if (!found.Contains(trig.Name))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }

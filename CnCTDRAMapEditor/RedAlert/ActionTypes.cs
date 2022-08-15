@@ -52,7 +52,7 @@ namespace MobiusEditor.RedAlert
         public const string TACTION_CLEAR_GLOBAL = "Global Clear...";
         public const string TACTION_BASE_BUILDING = "Auto Base Building...";
         public const string TACTION_CREEP_SHADOW = "Grow shroud one 'step'";
-        public const string TACTION_DESTROY_OBJECT = "Destroy attached building";
+        public const string TACTION_DESTROY_OBJECT = "Destroy attached object";
         public const string TACTION_1_SPECIAL = "Add 1-time special weapon...";
         public const string TACTION_FULL_SPECIAL = "Add repeating special weapon...";
         public const string TACTION_PREFERRED_TARGET = "Preferred target...";

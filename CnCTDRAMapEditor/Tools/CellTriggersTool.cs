@@ -43,7 +43,6 @@ namespace MobiusEditor.Tools
         private readonly Dictionary<int, CellTrigger> redoCellTriggers = new Dictionary<int, CellTrigger>();
 
         private bool placementMode;
-        private IGamePlugin plugin;
 
         public string TriggerToolTip { get; set; }
 
@@ -51,7 +50,6 @@ namespace MobiusEditor.Tools
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
             this.triggerComboBox = triggerCombo;
-            this.plugin = plugin;
             UpdateDataSource();
             plugin.Map.Triggers.CollectionChanged += Triggers_CollectionChanged;
         }
@@ -67,7 +65,8 @@ namespace MobiusEditor.Tools
             triggerComboBox.DataSource = null;
             triggerComboBox.Items.Clear();
             string[] items = plugin.Map.FilterCellTriggers().Select(t => t.Name).Distinct().ToArray();
-            string[] filteredTypes = plugin.Map.EventTypes.Where(ev => plugin.Map.CellEventTypes.Contains(ev)).Distinct().ToArray();
+            string[] filteredEvents = plugin.Map.EventTypes.Where(ev => plugin.Map.CellEventTypes.Contains(ev)).Distinct().ToArray();
+            string[] filteredActions = plugin.Map.ActionTypes.Where(ev => plugin.Map.CellActionTypes.Contains(ev)).Distinct().ToArray();
             bool hasItems = items.Length > 0;
             if (!hasItems)
             {
@@ -77,7 +76,7 @@ namespace MobiusEditor.Tools
             triggerComboBox.DataSource = items;
             triggerComboBox.SelectedIndex = selectIndex;
             triggerComboBox.Enabled = hasItems;
-            TriggerToolTip = filteredTypes == null ? null : "Allowed trigger events:\n\u2022 " + String.Join("\n\u2022 ", filteredTypes);
+            TriggerToolTip = Map.MakeAllowedTriggersToolTip(filteredEvents, filteredActions);
         }
 
         private void MapPanel_MouseDown(object sender, MouseEventArgs e)

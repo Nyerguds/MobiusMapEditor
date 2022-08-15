@@ -22,6 +22,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
+using System.Text;
 using TGASharpLib;
 
 namespace MobiusEditor.Model
@@ -128,16 +129,16 @@ namespace MobiusEditor.Model
         public readonly List<SmudgeType> SmudgeTypes;
 
         public readonly string[] EventTypes;
-
         public readonly HashSet<string> CellEventTypes;
-
         public readonly HashSet<string> UnitEventTypes;
-
         public readonly HashSet<string> StructureEventTypes;
-
         public readonly HashSet<string> TerrainEventTypes;
 
         public readonly string[] ActionTypes;
+        public readonly HashSet<string> CellActionTypes;
+        public readonly HashSet<string> UnitActionTypes;
+        public readonly HashSet<string> StructureActionTypes;
+        public readonly HashSet<string> TerrainActionTypes;
 
         public readonly string[] MissionTypes;
 
@@ -177,7 +178,7 @@ namespace MobiusEditor.Model
 
         public readonly CellGrid<CellTrigger> CellTriggers;
 
-        public readonly ObservableCollection<Trigger> Triggers;
+        public readonly ObservableRangeCollection<Trigger> Triggers;
 
         public readonly List<TeamType> TeamTypes;
 
@@ -210,11 +211,11 @@ namespace MobiusEditor.Model
         public Map(BasicSection basicSection, TheaterType theater, Size cellSize, Type houseType,
             IEnumerable<HouseType> houseTypes, IEnumerable<TheaterType> theaterTypes, IEnumerable<TemplateType> templateTypes,
             IEnumerable<TerrainType> terrainTypes, IEnumerable<OverlayType> overlayTypes, IEnumerable<SmudgeType> smudgeTypes,
-            IEnumerable<string> eventTypes, IEnumerable<string> cellEventTypes, IEnumerable<string> unitEventTypes,
-            IEnumerable<string> structureEventTypes, IEnumerable<string> terrainEventTypes, IEnumerable<string> actionTypes, IEnumerable<string> missionTypes,
-            IEnumerable<DirectionType> directionTypes, IEnumerable<InfantryType> infantryTypes, IEnumerable<UnitType> unitTypes,
-            IEnumerable<BuildingType> buildingTypes, IEnumerable<TeamMission> teamMissionTypes, IEnumerable<ITechnoType> teamTechnoTypes,
-            IEnumerable<Waypoint> waypoints, IEnumerable<string> movieTypes, IEnumerable<string> themeTypes)
+            IEnumerable<string> eventTypes, IEnumerable<string> cellEventTypes, IEnumerable<string> unitEventTypes, IEnumerable<string> structureEventTypes, IEnumerable<string> terrainEventTypes,
+            IEnumerable<string> actionTypes, IEnumerable<string> cellActionTypes, IEnumerable<string> unitActionTypes, IEnumerable<string> structureActionTypes, IEnumerable<string> terrainActionTypes,
+            IEnumerable<string> missionTypes, IEnumerable<DirectionType> directionTypes, IEnumerable<InfantryType> infantryTypes,
+            IEnumerable<UnitType> unitTypes, IEnumerable<BuildingType> buildingTypes, IEnumerable<TeamMission> teamMissionTypes,
+            IEnumerable<ITechnoType> teamTechnoTypes, IEnumerable<Waypoint> waypoints, IEnumerable<string> movieTypes, IEnumerable<string> themeTypes)
         {
             BasicSection = basicSection;
 
@@ -230,6 +231,11 @@ namespace MobiusEditor.Model
             UnitEventTypes = unitEventTypes.ToHashSet(StringComparer.InvariantCultureIgnoreCase);
             StructureEventTypes = structureEventTypes.ToHashSet(StringComparer.InvariantCultureIgnoreCase);
             TerrainEventTypes = terrainEventTypes.ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+            CellActionTypes = cellActionTypes.ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+            UnitActionTypes = unitActionTypes.ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+            StructureActionTypes = structureActionTypes.ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+            TerrainActionTypes = terrainActionTypes.ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+
             ActionTypes = actionTypes.ToArray();
             MissionTypes = missionTypes.ToArray();
             DefaultMissionArmed = MissionTypes.Where(m => m.Equals("Guard")).FirstOrDefault() ?? MissionTypes.First();
@@ -251,7 +257,7 @@ namespace MobiusEditor.Model
             Technos = new OccupierSet<ICellOccupier>(Metrics);
             Buildings = new OccupierSet<ICellOccupier>(Metrics);
             Overlappers = new OverlapperSet<ICellOverlapper>(Metrics);
-            Triggers = new ObservableCollection<Trigger>();
+            Triggers = new ObservableRangeCollection<Trigger>();
             TeamTypes = new List<TeamType>();
             Houses = HouseTypes.Select(t => { var h = (House)Activator.CreateInstance(HouseType, t); h.SetDefault(); return h; }).ToArray();
             Waypoints = waypoints.ToArray();
@@ -622,24 +628,8 @@ namespace MobiusEditor.Model
             {
                 return;
             }
-            var bib1Type = SmudgeTypes.Where(t => t.Flag == SmudgeTypeFlag.Bib1).FirstOrDefault();
-            var bib2Type = SmudgeTypes.Where(t => t.Flag == SmudgeTypeFlag.Bib2).FirstOrDefault();
-            var bib3Type = SmudgeTypes.Where(t => t.Flag == SmudgeTypeFlag.Bib3).FirstOrDefault();
-
-            SmudgeType bibType = null;
-            switch (building.Type.Size.Width)
-            {
-                case 2:
-                    bibType = bib3Type;
-                    break;
-                case 3:
-                    bibType = bib2Type;
-                    break;
-                case 4:
-                    bibType = bib1Type;
-                    break;
-            }
-            if (bibType != null)
+            SmudgeType bibType = SmudgeType.GetBib(SmudgeTypes, building.Type.Size.Width);
+            if (bibType != null && (bibType.Theaters == null || bibType.Theaters.Contains(this.MapSection.Theater)))
             {
                 int icon = 0;
                 for (var y = 0; y < bibType.Size.Height; ++y)
@@ -666,8 +656,9 @@ namespace MobiusEditor.Model
             var map = new Map(BasicSection, Theater, Metrics.Size, HouseType,
                 HouseTypes, TheaterTypes, TemplateTypes, TerrainTypes, OverlayTypes, SmudgeTypes,
                 EventTypes, CellEventTypes, UnitEventTypes, StructureEventTypes, TerrainEventTypes,
-                ActionTypes, MissionTypes, DirectionTypes, InfantryTypes, UnitTypes,
-                BuildingTypes, TeamMissionTypes, TeamTechnoTypes, Waypoints, MovieTypes, ThemeTypes)
+                ActionTypes, CellActionTypes, UnitActionTypes, StructureActionTypes, TerrainActionTypes,
+                MissionTypes, DirectionTypes, InfantryTypes, UnitTypes, BuildingTypes, TeamMissionTypes,
+                TeamTechnoTypes, Waypoints, MovieTypes, ThemeTypes)
             {
                 TopLeft = TopLeft,
                 Size = Size
@@ -709,7 +700,7 @@ namespace MobiusEditor.Model
 
         public IEnumerable<Trigger> FilterCellTriggers()
         {
-            foreach (Trigger trigger in FilterTriggersByEvent(CellEventTypes))
+            foreach (Trigger trigger in FilterTriggersByEvent(CellEventTypes).Concat(FilterTriggersByAction(CellActionTypes).Distinct()))
             {
                 yield return trigger;
             }
@@ -717,7 +708,7 @@ namespace MobiusEditor.Model
 
         public IEnumerable<Trigger> FilterUnitTriggers()
         {
-            foreach (Trigger trigger in FilterTriggersByEvent(UnitEventTypes))
+            foreach (Trigger trigger in FilterTriggersByEvent(UnitEventTypes).Concat(FilterTriggersByAction(UnitActionTypes).Distinct()))
             {
                 yield return trigger;
             }
@@ -725,7 +716,7 @@ namespace MobiusEditor.Model
 
         public IEnumerable<Trigger> FilterStructureTriggers()
         {
-            foreach (Trigger trigger in FilterTriggersByEvent(StructureEventTypes))
+            foreach (Trigger trigger in FilterTriggersByEvent(StructureEventTypes).Concat(FilterTriggersByAction(StructureActionTypes).Distinct()))
             {
                 yield return trigger;
             }
@@ -733,7 +724,7 @@ namespace MobiusEditor.Model
 
         public IEnumerable<Trigger> FilterTerrainTriggers()
         {
-            foreach (Trigger trigger in FilterTriggersByEvent(TerrainEventTypes))
+            foreach (Trigger trigger in FilterTriggersByEvent(TerrainEventTypes).Concat(FilterTriggersByAction(TerrainActionTypes).Distinct()))
             {
                 yield return trigger;
             }
@@ -752,6 +743,26 @@ namespace MobiusEditor.Model
             }
         }
 
+        public static String MakeAllowedTriggersToolTip(string[] filteredEvents, string[] filteredActions)
+        {
+            StringBuilder tooltip = new StringBuilder();
+            bool hasEvents = filteredEvents != null && filteredEvents.Length > 0;
+            bool hasActions = filteredActions != null && filteredActions.Length > 0;
+            if (hasEvents)
+            {
+                tooltip.Append("Allowed trigger events:\n\u2022 ")
+                    .Append(String.Join("\n\u2022 ", filteredEvents));
+                if (hasActions)
+                    tooltip.Append('\n');
+            }
+            if (hasActions)
+            {
+                tooltip.Append("Allowed trigger actions:\n\u2022 ")
+                    .Append(String.Join("\n\u2022 ", filteredActions));
+            }
+            return hasEvents || hasActions ? tooltip.ToString() : null;
+        }
+
         public IEnumerable<Trigger> FilterTriggersByAction(HashSet<String> allowedActionTypes)
         {
             foreach (Trigger trig in this.Triggers)
@@ -763,6 +774,7 @@ namespace MobiusEditor.Model
                 }
             }
         }
+
 
         public void CleanUpCellTriggers()
         {

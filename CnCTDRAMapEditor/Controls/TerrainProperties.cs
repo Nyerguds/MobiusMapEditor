@@ -16,6 +16,7 @@ using MobiusEditor.Interface;
 using MobiusEditor.Model;
 using MobiusEditor.Utility;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
@@ -82,12 +83,15 @@ namespace MobiusEditor.Controls
             string selected = triggerComboBox.SelectedItem as string;
             triggerComboBox.DataSource = null;
             triggerComboBox.Items.Clear();
-            string[] items =  Trigger.None.Yield().Concat(Plugin.Map.FilterTerrainTriggers().Select(t => t.Name).Distinct()).ToArray();
-            string[] filteredTypes = Plugin.Map.EventTypes.Where(ev => Plugin.Map.TerrainEventTypes.Contains(ev)).Distinct().ToArray();
+            string[] items =  Plugin.Map.FilterTerrainTriggers().Select(t => t.Name).Distinct().ToArray();
+            string[] filteredEvents = Plugin.Map.EventTypes.Where(ev => Plugin.Map.TerrainEventTypes.Contains(ev)).Distinct().ToArray();
+            string[] filteredActions = Plugin.Map.ActionTypes.Where(ev => Plugin.Map.TerrainActionTypes.Contains(ev)).Distinct().ToArray();
+            HashSet<string> allowedTriggers = new HashSet<string>(items);
+            items = Trigger.None.Yield().Concat(Plugin.Map.Triggers.Select(t => t.Name).Where(t => allowedTriggers.Contains(t)).Distinct()).ToArray();
             int selectIndex = selected == null ? 0 : Enumerable.Range(0, items.Length).FirstOrDefault(x => String.Equals(items[x], selected, StringComparison.InvariantCultureIgnoreCase));
             triggerComboBox.DataSource = items;
             triggerComboBox.SelectedIndex = selectIndex;
-            triggerToolTip = filteredTypes == null ? null : "Allowed trigger events:\n\u2022 " + String.Join("\n\u2022 ", filteredTypes);
+            triggerToolTip = Map.MakeAllowedTriggersToolTip(filteredEvents, filteredActions);
         }
 
         private void Rebind()

@@ -106,13 +106,13 @@ namespace MobiusEditor.Model
 
         public bool CanAdd(int x, int y, T occupier, bool[,] occupyMask) => CanAdd(new Point(x, y), occupier, occupyMask);
 
-        public bool CanAdd(int cell, T occupier, bool[,] occupyMask) => metrics.GetLocation(cell, out Point location) ? CanAdd(location, occupier, occupyMask) : false;
+        public bool CanAdd(int cell, T occupier, bool[,] occupyMask) => metrics.GetLocation(cell, out Point location) && CanAdd(location, occupier, occupyMask);
 
-        public bool CanAdd(Point location, T occupier) => (occupier != null) ? CanAdd(location, occupier, occupier.OccupyMask) : false;
+        public bool CanAdd(Point location, T occupier) => occupier != null && CanAdd(location, occupier, occupier.OccupyMask);
 
-        public bool CanAdd(int x, int y, T occupier) => (occupier != null) ? CanAdd(x, y, occupier, occupier.OccupyMask) : false;
+        public bool CanAdd(int x, int y, T occupier) => occupier != null && CanAdd(x, y, occupier, occupier.OccupyMask);
 
-        public bool CanAdd(int cell, T occupier) => (occupier != null) ? CanAdd(cell, occupier, occupier.OccupyMask) : false;
+        public bool CanAdd(int cell, T occupier) => occupier != null && CanAdd(cell, occupier, occupier.OccupyMask);
 
         public bool Add(Point location, T occupier, bool[,] occupyMask)
         {
@@ -127,13 +127,13 @@ namespace MobiusEditor.Model
 
         public bool Add(int x, int y, T occupier, bool[,] occupyMask) => Add(new Point(x, y), occupier, occupyMask);
 
-        public bool Add(int cell, T occupier, bool[,] occupyMask) => metrics.GetLocation(cell, out Point location) ? Add(location, occupier, occupyMask) : false;
+        public bool Add(int cell, T occupier, bool[,] occupyMask) => metrics.GetLocation(cell, out Point location) && Add(location, occupier, occupyMask);
 
-        public bool Add(Point location, T occupier) => (occupier != null) ? Add(location, occupier, occupier.OccupyMask) : false;
+        public bool Add(Point location, T occupier) => (occupier != null) && Add(location, occupier, occupier.OccupyMask);
 
-        public bool Add(int x, int y, T occupier) => (occupier != null) ? Add(x, y, occupier, occupier.OccupyMask) : false;
+        public bool Add(int x, int y, T occupier) => (occupier != null) && Add(x, y, occupier, occupier.OccupyMask);
 
-        public bool Add(int cell, T occupier) => (occupier != null) ? Add(cell, occupier, occupier.OccupyMask) : false;
+        public bool Add(int cell, T occupier) => (occupier != null) && Add(cell, occupier, occupier.OccupyMask);
 
         public void Clear()
         {
@@ -142,11 +142,11 @@ namespace MobiusEditor.Model
             OnCleared();
         }
 
-        public bool Contains(int x, int y) => ((x >= 0) && (x < occupierCells.GetLength(1)) && (y >= 0) && (y < occupierCells.GetLength(0)));
+        public bool Contains(int x, int y) => (x >= 0) && (x < occupierCells.GetLength(1)) && (y >= 0) && (y < occupierCells.GetLength(0));
 
         public bool Contains(Point location) => Contains(location.X, location.Y);
 
-        public bool Contains(int cell) => metrics.GetLocation(cell, out Point location) ? Contains(location) : false;
+        public bool Contains(int cell) => metrics.GetLocation(cell, out Point location) && Contains(location);
 
         public bool Contains(T occupier) => occupiers.ContainsKey(occupier);
 
@@ -168,7 +168,7 @@ namespace MobiusEditor.Model
 
         public bool Remove(int x, int y) => Remove(new Point(x, y));
 
-        public bool Remove(int cell) => metrics.GetLocation(cell, out Point location) ? Remove(location) : false;
+        public bool Remove(int cell) => metrics.GetLocation(cell, out Point location) && Remove(location);
 
         public IEnumerable<(Point Location, U Occupier)> OfType<U>() where U : T => this.Where(i => i.Occupier is U).Select(i => (i.Location, (U)i.Occupier));
 

@@ -26,6 +26,8 @@ namespace MobiusEditor.Model
 
     public class Waypoint : INamedType
     {
+        public static readonly string None = "None";
+
         public CellMetrics Metrics { get; set; }
         public string Name { get; private set; }
 

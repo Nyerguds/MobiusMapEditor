@@ -24,6 +24,7 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Windows.Forms;
 
 namespace MobiusEditor.Controls
@@ -96,27 +97,33 @@ namespace MobiusEditor.Controls
             triggerComboBox.DataSource = null;
             triggerComboBox.Items.Clear();
             string[] items;
-            string[] filteredTypes;
+            string[] filteredEvents;
+            string[] filteredActions;
             switch (obj)
             {
                 case Infantry infantry:
                 case Unit unit:
-                    items = Trigger.None.Yield().Concat(Plugin.Map.FilterUnitTriggers().Select(t => t.Name).Distinct()).ToArray();
-                    filteredTypes = Plugin.Map.EventTypes.Where(ev => Plugin.Map.UnitEventTypes.Contains(ev)).Distinct().ToArray();
+                    items = Plugin.Map.FilterUnitTriggers().Select(t => t.Name).Distinct().ToArray();
+                    filteredEvents = Plugin.Map.EventTypes.Where(ev => Plugin.Map.UnitEventTypes.Contains(ev)).Distinct().ToArray();
+                    filteredActions = Plugin.Map.ActionTypes.Where(ac => Plugin.Map.UnitActionTypes.Contains(ac)).Distinct().ToArray();
                     break;
                 case Building building:
-                    items = Trigger.None.Yield().Concat(Plugin.Map.FilterStructureTriggers().Select(t => t.Name).Distinct()).ToArray();
-                    filteredTypes = Plugin.Map.EventTypes.Where(ev => Plugin.Map.StructureEventTypes.Contains(ev)).Distinct().ToArray();
+                    items = Plugin.Map.FilterStructureTriggers().Select(t => t.Name).Distinct().ToArray();
+                    filteredEvents = Plugin.Map.EventTypes.Where(ac => Plugin.Map.StructureEventTypes.Contains(ac)).Distinct().ToArray();
+                    filteredActions = Plugin.Map.ActionTypes.Where(ac => Plugin.Map.StructureActionTypes.Contains(ac)).Distinct().ToArray();
                     break;
                 default:
-                    items = Trigger.None.Yield().Concat(Plugin.Map.Triggers.Select(t => t.Name).Distinct()).ToArray();
-                    filteredTypes = null;
+                    items = Plugin.Map.Triggers.Select(t => t.Name).Distinct().ToArray();
+                    filteredEvents = null;
+                    filteredActions = null;
                     break;
             }
+            HashSet<string> allowedTriggers = new HashSet<string>(items);
+            items = Trigger.None.Yield().Concat(Plugin.Map.Triggers.Select(t => t.Name).Where(t => allowedTriggers.Contains(t)).Distinct()).ToArray();
             int selectIndex = selected == null ? 0 : Enumerable.Range(0, items.Length).FirstOrDefault(x => String.Equals(items[x], selected, StringComparison.InvariantCultureIgnoreCase));
             triggerComboBox.DataSource = items;
             triggerComboBox.SelectedIndex = selectIndex;
-            triggerToolTip = filteredTypes == null ? null : "Allowed trigger events:\n\u2022 " + String.Join("\n\u2022 ", filteredTypes);
+            triggerToolTip = Map.MakeAllowedTriggersToolTip(filteredEvents, filteredActions);
         }
 
         private void Rebind()

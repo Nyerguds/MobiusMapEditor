@@ -429,9 +429,10 @@ namespace MobiusEditor.Tools
             {
                 foreach (var (topLeft, building) in map.Buildings.OfType<Building>())
                 {
+                    Rectangle typeBounds = building.Type.OverlapBounds;
                     var bounds = new Rectangle(
                         new Point(topLeft.X * Globals.MapTileWidth, topLeft.Y * Globals.MapTileHeight),
-                        new Size(building.Type.Size.Width * Globals.MapTileWidth, building.Type.Size.Height * Globals.MapTileHeight)
+                        new Size(typeBounds.Width * Globals.MapTileWidth, typeBounds.Height * Globals.MapTileHeight)
                     );
                     graphics.DrawRectangle(buildingPen, bounds);
                 }

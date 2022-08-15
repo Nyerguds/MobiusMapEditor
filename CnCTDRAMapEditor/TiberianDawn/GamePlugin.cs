@@ -157,11 +157,16 @@ namespace MobiusEditor.TiberianDawn
                 EventTypes.EVENT_ANY,
                 EventTypes.EVENT_NONE
             };
+            string[] cellActionTypes = { };
+            string[] unitActionTypes = { };
+            string[] structureActionTypes = { };
+            string[] terrainActionTypes = { };
 
             Map = new Map(basicSection, null, Constants.MaxSize, typeof(House),
-                houseTypes, TheaterTypes.GetTypes(), TemplateTypes.GetTypes(), TerrainTypes.GetTypes(),
-                OverlayTypes.GetTypes(), SmudgeTypes.GetTypes(), EventTypes.GetTypes(), cellEventTypes,
-                unitEventTypes, structureEventTypes, terrainEventTypes, ActionTypes.GetTypes(),
+                houseTypes, TheaterTypes.GetTypes(), TemplateTypes.GetTypes(),
+                TerrainTypes.GetTypes(), OverlayTypes.GetTypes(), SmudgeTypes.GetTypes(),
+                EventTypes.GetTypes(), cellEventTypes, unitEventTypes, structureEventTypes, terrainEventTypes,
+                ActionTypes.GetTypes(), cellActionTypes, unitActionTypes, structureActionTypes, terrainActionTypes,
                 MissionTypes.GetTypes(), DirectionTypes.GetTypes(), InfantryTypes.GetTypes(), UnitTypes.GetTypes(true),
                 BuildingTypes.GetTypes(), TeamMissionTypes.GetTypes(), fullTechnoTypes, waypoints, movieTypes, themeTypes)
             {

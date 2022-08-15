@@ -11,6 +11,9 @@
     <Setting Name="PlaceRandomTiles" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>
+    <Setting Name="IgnoreBibs" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
     <Setting Name="MapScaleFactor" Type="System.Int32" Scope="Application">
       <Value Profile="(Default)">2</Value>
     </Setting>

@@ -120,6 +120,33 @@ namespace MobiusEditor.Utility
             return smallestOnFail ? new Font(originalFont.Name, minSize, originalFont.Style) : originalFont;
         }
 
+        /// <summary>
+        /// Returns true if both strings are equal, or if both are null, empty, or the given default value.
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="other"></param>
+        /// <param name="def"></param>
+        /// <returns></returns>
+        public static bool EqualsOrDefaultIgnoreCase(this string str, string other, string def)
+        {
+            return EqualsOrDefault(str, other, def, StringComparison.InvariantCultureIgnoreCase);
+        }
+
+        /// <summary>
+        /// Returns true if both strings are equal, or if both are null, empty, or the given default value.
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="other"></param>
+        /// <param name="def"></param>
+        /// <param name="sc"></param>
+        /// <returns></returns>
+        public static bool EqualsOrDefault(this string str, string other, string def, StringComparison sc)
+        {
+            return ((String.IsNullOrEmpty(str) || String.Equals(str, def, sc)) &&
+                  (String.IsNullOrEmpty(other) || String.Equals(other, def, sc)))
+                || String.Equals(str,other, sc);
+        }
+
         public static Bitmap Sharpen(this Bitmap bitmap, double strength)
         {
             var sharpenImage = bitmap.Clone() as Bitmap;

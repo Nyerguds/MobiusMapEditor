@@ -438,6 +438,7 @@ namespace MobiusEditor.Dialogs
             this.event1Nud.SelectionStart = 0;
             this.event1Nud.Size = new System.Drawing.Size(70, 20);
             this.event1Nud.TabIndex = 0;
+            this.event1Nud.ValueChanged += new System.EventHandler(this.Event1Nud_ValueChanged);
             // 
             // event1ValueComboBox
             // 
@@ -486,6 +487,7 @@ namespace MobiusEditor.Dialogs
             this.event2Nud.SelectionStart = 0;
             this.event2Nud.Size = new System.Drawing.Size(70, 20);
             this.event2Nud.TabIndex = 0;
+            this.event2Nud.ValueChanged += new System.EventHandler(this.Event2Nud_ValueChanged);
             // 
             // event2ValueComboBox
             // 
@@ -534,6 +536,7 @@ namespace MobiusEditor.Dialogs
             this.action1Nud.SelectionStart = 0;
             this.action1Nud.Size = new System.Drawing.Size(70, 20);
             this.action1Nud.TabIndex = 0;
+            this.action1Nud.ValueChanged += new System.EventHandler(this.Action1Nud_ValueChanged);
             // 
             // action1ValueComboBox
             // 
@@ -582,6 +585,7 @@ namespace MobiusEditor.Dialogs
             this.action2Nud.SelectionStart = 0;
             this.action2Nud.Size = new System.Drawing.Size(70, 20);
             this.action2Nud.TabIndex = 0;
+            this.action2Nud.ValueChanged += new System.EventHandler(this.Action2Nud_ValueChanged);
             // 
             // action2ValueComboBox
             // 

@@ -143,6 +143,8 @@ namespace MobiusEditor.Model
     public class House
     {
 
+        public static readonly string None = "None";
+
         public readonly HouseType Type;
 
         [NonSerializedINIKey]

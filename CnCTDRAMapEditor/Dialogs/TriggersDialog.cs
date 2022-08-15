@@ -33,7 +33,7 @@ namespace MobiusEditor.Dialogs
 
         private readonly List<Trigger> backupTriggers;
         private readonly List<Trigger> triggers;
-        public IEnumerable<Trigger> Triggers => triggers;
+        public List<Trigger> Triggers => triggers;
 
         private ListViewItem SelectedItem => (triggersListView.SelectedItems.Count > 0) ? triggersListView.SelectedItems[0] : null;
 
@@ -100,7 +100,7 @@ namespace MobiusEditor.Dialogs
                 "E1 => A1; E2 => A2",
             };
 
-            houseComboBox.DataSource = "None".Yield().Concat(plugin.Map.Houses.Select(t => t.Type.Name)).ToArray();
+            houseComboBox.DataSource = House.None.Yield().Concat(plugin.Map.Houses.Select(t => t.Type.Name)).ToArray();
             existenceComboBox.DataSource = Enum.GetValues(typeof(TriggerPersistentType)).Cast<int>()
                 .Select(v => new { Name = existenceNames[v], Value = (TriggerPersistentType)v })
                 .ToArray();
@@ -111,7 +111,7 @@ namespace MobiusEditor.Dialogs
             event2ComboBox.DataSource = plugin.Map.EventTypes.Where(t => !string.IsNullOrEmpty(t)).ToArray();
             action1ComboBox.DataSource = plugin.Map.ActionTypes.Where(t => !string.IsNullOrEmpty(t)).ToArray();
             action2ComboBox.DataSource = plugin.Map.ActionTypes.Where(t => !string.IsNullOrEmpty(t)).ToArray();
-            teamComboBox.DataSource = "None".Yield().Concat(plugin.Map.TeamTypes.Select(t => t.Name)).ToArray();
+            teamComboBox.DataSource = TeamType.None.Yield().Concat(plugin.Map.TeamTypes.Select(t => t.Name)).ToArray();
 
             triggersTableLayoutPanel.Visible = false;
         }
@@ -208,14 +208,6 @@ namespace MobiusEditor.Dialogs
                 trig.Event1.Data = (long)event1Nud.Value;
             }
         }
-        private void Event1Nud_ValueEntered(object sender, ValueEnteredEventArgs e)
-        {
-            Trigger trig = SelectedTrigger;
-            if (trig != null && trig.Event1 != null)
-            {
-                trig.Event1.Data = (long)event1Nud.EnteredValue;
-            }
-        }
 
         private void Event2Nud_ValueChanged(object sender, EventArgs e)
         {
@@ -226,21 +218,21 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        private void Event2Nud_ValueEntered(object sender, ValueEnteredEventArgs e)
-        {
-            Trigger trig = SelectedTrigger;
-            if (trig != null && trig.Event2 != null)
-            {
-                trig.Event2.Data = (long)event2Nud.EnteredValue;
-            }
-        }
-
-        private void Action1Nud_ValueEntered(object sender, ValueEnteredEventArgs e)
+        private void Action1Nud_ValueChanged(object sender, EventArgs e)
         {
             Trigger trig = SelectedTrigger;
             if (trig != null && trig.Action1 != null)
             {
                 trig.Action1.Data = (long)action1Nud.EnteredValue;
+            }
+        }
+
+        private void Action2Nud_ValueChanged(object sender, EventArgs e)
+        {
+            Trigger trig = SelectedTrigger;
+            if (trig != null && trig.Action2 != null)
+            {
+                trig.Action2.Data = (long)action2Nud.EnteredValue;
             }
         }
 
@@ -263,7 +255,7 @@ namespace MobiusEditor.Dialogs
             // If user pressed ok, nevermind,just go on.
             if (this.DialogResult == DialogResult.OK)
                 return;
-            bool hasChanges = CheckForChanges();
+            bool hasChanges = Trigger.CheckForChanges(triggers, backupTriggers);
             if (hasChanges)
             {
                 DialogResult dr =  MessageBox.Show("Triggers have been changed! Are you sure you want to cancel?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
@@ -272,26 +264,6 @@ namespace MobiusEditor.Dialogs
                 this.DialogResult = DialogResult.None;
                 e.Cancel = true;
             }
-        }
-
-        private Boolean CheckForChanges()
-        {
-            // Might need to migrate this to the map.
-            if (triggers.Count != backupTriggers.Count)
-                return true;
-            foreach (Trigger trig in triggers)
-            {
-                Trigger oldTrig = backupTriggers.Find(t => t.Name.Equals(trig.Name));
-                if (oldTrig == null)
-                {
-                    return true;
-                }
-                if (!trig.Equals(oldTrig))
-                {
-                    return true;
-                }
-            }
-            return false;
         }
 
         private void addTriggerToolStripMenuItem_Click(object sender, EventArgs e)
@@ -315,7 +287,7 @@ namespace MobiusEditor.Dialogs
         {
             if (triggersListView.Items.Count >= maxTriggers)
                 return;
-            string name = GeneralUtils.MakeNew4CharName(triggers.Select(t => t.Name), "????", "none");
+            string name = GeneralUtils.MakeNew4CharName(triggers.Select(t => t.Name), "????", Trigger.None);
             var trigger = new Trigger { Name = name, House = plugin.Map.HouseTypes.First().Name };
             var item = new ListViewItem(trigger.Name)
             {
@@ -366,7 +338,7 @@ namespace MobiusEditor.Dialogs
                 e.CancelEdit = true;
                 MessageBox.Show(string.Format("Trigger name is longer than {0} characters.", maxLength), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            else if ("None".Equals(curName, StringComparison.InvariantCultureIgnoreCase))
+            else if (Trigger.None.Equals(curName, StringComparison.InvariantCultureIgnoreCase))
             {
                 e.CancelEdit = true;
                 MessageBox.Show(string.Format("Trigger name 'None' is reserved and cannot be used."), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -491,7 +463,7 @@ namespace MobiusEditor.Dialogs
                         {
                             case RedAlert.EventTypes.TEVENT_LEAVES_MAP:
                                 eventValueComboBox.Visible = true;
-                                eventValueComboBox.DataSource = plugin.Map.TeamTypes.Count == 0 ? new[] { "None" } : plugin.Map.TeamTypes.Select(t => t.Name).ToArray();
+                                eventValueComboBox.DataSource = plugin.Map.TeamTypes.Count == 0 ? new[] { TeamType.None } : plugin.Map.TeamTypes.Select(t => t.Name).ToArray();
                                 eventValueComboBox.DataBindings.Add("SelectedItem", triggerEvent, "Team");
                                 if (triggerEventData == null)
                                 {
@@ -516,7 +488,7 @@ namespace MobiusEditor.Dialogs
                                 eventValueComboBox.Visible = true;
                                 eventValueComboBox.DisplayMember = "Name";
                                 eventValueComboBox.ValueMember = "Value";
-                                eventValueComboBox.DataSource = new { Name = "None", Value = (long)-1 }.Yield().Concat(plugin.Map.Houses.Select(t => new { t.Type.Name, Value = (long)t.Type.ID })).ToArray();
+                                eventValueComboBox.DataSource = new { Name = House.None, Value = (long)-1 }.Yield().Concat(plugin.Map.Houses.Select(t => new { t.Type.Name, Value = (long)t.Type.ID })).ToArray();
                                 eventValueComboBox.DataBindings.Add("SelectedValue", triggerEvent, "Data");
                                 if (triggerEventData == null)
                                 {
@@ -645,7 +617,7 @@ namespace MobiusEditor.Dialogs
                             case RedAlert.ActionTypes.TACTION_DESTROY_TEAM:
                             case RedAlert.ActionTypes.TACTION_REINFORCEMENTS:
                                 actionValueComboBox.Visible = true;
-                                actionValueComboBox.DataSource = plugin.Map.TeamTypes.Count == 0 ? new[] { "None" } : plugin.Map.TeamTypes.Select(t => t.Name).ToArray();
+                                actionValueComboBox.DataSource = plugin.Map.TeamTypes.Count == 0 ? new[] { TeamType.None } : plugin.Map.TeamTypes.Select(t => t.Name).ToArray();
                                 actionValueComboBox.DataBindings.Add("SelectedItem", triggerAction, "Team");
                                 if (triggerActionData == null)
                                 {
@@ -666,7 +638,7 @@ namespace MobiusEditor.Dialogs
                                 actionValueComboBox.Visible = true;
                                 actionValueComboBox.DisplayMember = "Name";
                                 actionValueComboBox.ValueMember = "Value";
-                                actionValueComboBox.DataSource = new { Name = "None", Value = (long)-1 }.Yield().Concat(
+                                actionValueComboBox.DataSource = new { Name = House.None, Value = (long)-1 }.Yield().Concat(
                                     plugin.Map.Houses.Select(t => new { t.Type.Name, Value = (long)t.Type.ID })).ToArray();
                                 actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
                                 if (triggerActionData == null)
@@ -698,7 +670,7 @@ namespace MobiusEditor.Dialogs
                                 actionValueComboBox.Visible = true;
                                 actionValueComboBox.DisplayMember = "Name";
                                 actionValueComboBox.ValueMember = "Value";
-                                actionValueComboBox.DataSource = new { Name = "None", Value = (long)-1 }.Yield().Concat(
+                                actionValueComboBox.DataSource = new { Name = Waypoint.None, Value = (long)-1 }.Yield().Concat(
                                     plugin.Map.Waypoints.Select((t, i) => new { t.Name, Value = (long)i })).ToArray();
                                 actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
                                 if (triggerActionData == null)
@@ -817,7 +789,8 @@ namespace MobiusEditor.Dialogs
                                 actionValueComboBox.ValueMember = "Value";
                                 var voxData = new { Name = "None", Value = (long)-1 }.Yield().Concat(
                                     RedAlert.ActionDataTypes.VoxTypes.Select((t, i) => new { Name = t, Value = (long)i })
-                                    .Where(t => t.Name != "none").OrderBy(t => t.Name, new ExplorerComparer())).ToArray();
+                                    .Where(t => !String.Equals(t.Name, "none", StringComparison.InvariantCultureIgnoreCase))
+                                    .OrderBy(t => t.Name, new ExplorerComparer())).ToArray();
                                 actionValueComboBox.DataSource = voxData;
                                 actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
                                 if (triggerActionData == null)
@@ -916,7 +889,7 @@ namespace MobiusEditor.Dialogs
 
         private void btnCheck_Click(Object sender, EventArgs e)
         {
-            if (CheckForChanges())
+            if (Trigger.CheckForChanges(triggers, backupTriggers))
             {
                 DialogResult dr = MessageBox.Show("Warning! There are changes in the triggers. This function works best if the triggers match the state of the currently edited map. Are you sure you want to continue?", "Triggers check", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
                 if (dr == DialogResult.No)
@@ -954,7 +927,7 @@ namespace MobiusEditor.Dialogs
                 string trigName = trigger.Name;
                 string event1 = trigger.Event1.EventType;
                 string action1 = trigger.Action1.ActionType;
-                bool noOwner = String.IsNullOrEmpty(trigger.House) || trigger.House == "None";
+                bool noOwner = House.None.EqualsOrDefaultIgnoreCase(trigger.House, House.None);
                 bool isPlayer = !noOwner && player.Equals(trigger.House);
                 //bool playerIsNonstandard = !player.Equals(TiberianDawn.HouseTypes.Good) && !player.Equals(TiberianDawn.HouseTypes.Bad);
                 //bool isGoodguy = String.Equals(trigger.House, TiberianDawn.HouseTypes.Good.Name, StringComparison.InvariantCultureIgnoreCase);
