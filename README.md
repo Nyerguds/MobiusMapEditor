@@ -10,6 +10,16 @@ Right now, I'm not really looking into making this a joint project. Specific bug
 
 ---
 
+## Usage
+
+The creators of the map editor have chosen to build a manual into the editor, but it might not be immediately obvious. Look at the bottom bar, and it will tell you for the currently selected editing type what your mouse buttons will do, and which modifier keys will change to different placement modes. Once you hold down the key, the bottom bar text will change, further explaining what your mouse buttons will do in this specific mode.
+
+Besides that, the scroll wheel will allow zooming in and out, and the middle mouse button will allow you to quickly drag-scroll around the map.
+
+Specific options about the map and the scripting elements can be found in the "Settings" menu.
+
+---
+
 ## Configuration
 
 The file "CnCTDRAMapEditor.exe.config" contains settings to customise the editor. This is what they do:
@@ -196,3 +206,4 @@ v1.4.0.4: [WIP]
 * Red Alert's Interior tileset now supports randomising the 1x1 tiles that contains alternate versions.
 * If mods add extra tiles to existing 1x1 tilesets, these will be treated as 1x1 randomisable too.
 * Tanya's default colouring in the editor preview is now Allied.
+* Fixed incorrect tooltip placement when using bounds dragging mode on a different monitor.
