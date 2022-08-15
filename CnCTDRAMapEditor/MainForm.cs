@@ -357,7 +357,7 @@ namespace MobiusEditor
             {
                 return;
             }
-            if (string.IsNullOrEmpty(filename))
+            if (string.IsNullOrEmpty(filename) || !Directory.Exists(Path.GetDirectoryName(filename)))
             {
                 fileSaveAsMenuItem.PerformClick();
             }

@@ -549,30 +549,31 @@ namespace MobiusEditor.TiberianDawn
                             }
                             else
                             {
-                                var techno = Map.Technos[cell];
+                                var techno = Map.FindBlockingObject(cell, terrainType, out int blockingCell);
+                                int reportCell = blockingCell == -1 ? cell : blockingCell;
                                 if (techno is Building building)
                                 {
-                                    errors.Add(string.Format("Terrain '{0}' overlaps structure '{1}' in cell {2}; skipping.", tokens[0], building.Type.Name, cell));
+                                    errors.Add(string.Format("Terrain '{0}' overlaps structure '{1}' in cell {2}; skipping.", tokens[0], building.Type.Name, blockingCell));
                                 }
                                 else if (techno is Overlay overlay)
                                 {
-                                    errors.Add(string.Format("Terrain '{0}' overlaps overlay '{1}' in cell {2}; skipping.", tokens[0], overlay.Type.Name, cell));
+                                    errors.Add(string.Format("Terrain '{0}' overlaps overlay '{1}' in cell {2}; skipping.", tokens[0], overlay.Type.Name, blockingCell));
                                 }
                                 else if (techno is Terrain terrain)
                                 {
-                                    errors.Add(string.Format("Terrain '{0}' overlaps terrain '{1}' in cell {2}; skipping.", tokens[0], terrain.Type.Name, cell));
+                                    errors.Add(string.Format("Terrain '{0}' overlaps terrain '{1}' in cell {2}; skipping.", tokens[0], terrain.Type.Name, blockingCell));
                                 }
                                 else if (techno is InfantryGroup infantry)
                                 {
-                                    errors.Add(string.Format("Terrain '{0}' overlaps infantry in cell {1}; skipping.", tokens[0], cell));
+                                    errors.Add(string.Format("Terrain '{0}' overlaps infantry in cell {1}; skipping.", tokens[0], blockingCell));
                                 }
                                 else if (techno is Unit unit)
                                 {
-                                    errors.Add(string.Format("Terrain '{0}' overlaps unit '{1}' in cell {2}; skipping.", tokens[0], unit.Type.Name, cell));
+                                    errors.Add(string.Format("Terrain '{0}' overlaps unit '{1}' in cell {2}; skipping.", tokens[0], unit.Type.Name, blockingCell));
                                 }
                                 else
                                 {
-                                    errors.Add(string.Format("Terrain '{0}' overlaps unknown techno in cell {1}; skipping.", tokens[0], cell));
+                                    errors.Add(string.Format("Terrain '{0}' overlaps unknown techno in cell {1}; skipping.", tokens[0], blockingCell));
                                 }
                             }
                         }
@@ -927,30 +928,31 @@ namespace MobiusEditor.TiberianDawn
                             }
                             else
                             {
-                                var techno = Map.Technos[cell];
+                                var techno = Map.FindBlockingObject(cell, buildingType, out int blockingCell);
+                                int reportCell = blockingCell == -1 ? cell : blockingCell;
                                 if (techno is Building building)
                                 {
-                                    errors.Add(string.Format("Structure '{0}' overlaps structure '{1}' in cell {2}; skipping.", tokens[1], building.Type.Name, cell));
+                                    errors.Add(string.Format("Structure '{0}' overlaps structure '{1}' in cell {2}; skipping.", tokens[1], building.Type.Name, reportCell));
                                 }
                                 else if (techno is Overlay overlay)
                                 {
-                                    errors.Add(string.Format("Structure '{0}' overlaps overlay '{1}' in cell {2}; skipping.", tokens[1], overlay.Type.Name, cell));
+                                    errors.Add(string.Format("Structure '{0}' overlaps overlay '{1}' in cell {2}; skipping.", tokens[1], overlay.Type.Name, reportCell));
                                 }
                                 else if (techno is Terrain terrain)
                                 {
-                                    errors.Add(string.Format("Structure '{0}' overlaps terrain '{1}' in cell {2}; skipping.", tokens[1], terrain.Type.Name, cell));
+                                    errors.Add(string.Format("Structure '{0}' overlaps terrain '{1}' in cell {2}; skipping.", tokens[1], terrain.Type.Name, reportCell));
                                 }
                                 else if (techno is InfantryGroup infantry)
                                 {
-                                    errors.Add(string.Format("Structure '{0}' overlaps infantry in cell {1}; skipping.", tokens[1], cell));
+                                    errors.Add(string.Format("Structure '{0}' overlaps infantry in cell {1}; skipping.", tokens[1], reportCell));
                                 }
                                 else if (techno is Unit unit)
                                 {
-                                    errors.Add(string.Format("Structure '{0}' overlaps unit '{1}' in cell {2}; skipping.", tokens[1], unit.Type.Name, cell));
+                                    errors.Add(string.Format("Structure '{0}' overlaps unit '{1}' in cell {2}; skipping.", tokens[1], unit.Type.Name, reportCell));
                                 }
                                 else
                                 {
-                                    errors.Add(string.Format("Structure '{0}' overlaps unknown techno in cell {1}; skipping.", tokens[1], cell));
+                                    errors.Add(string.Format("Structure '{0}' overlaps unknown techno in cell {1}; skipping.", tokens[1], reportCell));
                                 }
                             }
                         }
@@ -1124,6 +1126,9 @@ namespace MobiusEditor.TiberianDawn
                 }
             }
             UpdateBasePlayerHouse();
+            // Sort
+            List<Trigger> reordered = Map.Triggers.OrderBy(t => t.Name, new ExplorerComparer()).ToList();
+            Map.Triggers.ReplaceRange(reordered);
             extraSections = ini.Sections;
             Map.EndUpdate();
             return errors;
@@ -1145,25 +1150,24 @@ namespace MobiusEditor.TiberianDawn
                     {
                         bool isRandom = (templateType.Flag & TemplateTypeFlag.RandomCell) != TemplateTypeFlag.None;
                         bool tileOk = false;
-                        if (!templateType.Theaters.Contains(Map.Theater))
+                        if ((templateType.Flag & TemplateTypeFlag.Clear) != TemplateTypeFlag.None)
+                        {
+                            // Not going to give an error for explicit "Clear" templates. Probably just from XCC Editor. But it still gets wiped.
+                            templateType = null;
+                        }
+                        else if (!templateType.Theaters.Contains(Map.Theater))
                         {
                             errors.Add(String.Format("Template '{0}' at cell [{1},{2}] is not available in the set theater; clearing.", templateType.Name.ToUpper(), x, y));
+                            templateType = null;
                         }
                         else if (iconValue >= templateType.NumIcons)
                         {
                             errors.Add(String.Format("Template '{0}' at cell [{1},{2}] has an icon set ({3}) that is outside its icons range; clearing.", templateType.Name.ToUpper(), x, y, iconValue));
+                            templateType = null;
                         }
                         else if (!isRandom && !templateType.IconMask[iconValue % templateType.IconWidth, iconValue / templateType.IconWidth])
                         {
                             errors.Add(String.Format("Template '{0}' at cell [{1},{2}] has an icon set ({3}) that is not part of its placeable cells; clearing.", templateType.Name.ToUpper(), x, y, iconValue));
-                        }
-                        else if (templateType != TemplateTypes.Clear)
-                        {
-                            // Not going to give an error for explicit "Clear" templates. Probably just from XCC Editor. But it still gets wiped.
-                            tileOk = true;
-                        }
-                        if (!tileOk)
-                        {
                             templateType = null;
                         }
                     }

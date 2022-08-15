@@ -836,6 +836,66 @@ namespace MobiusEditor.Model
             return currentMission;
         }
 
+        public ICellOccupier FindBlockingObject(int cell, ICellOccupier obj, out int blockingCell)
+        {
+            ICellOccupier techno = null;
+            
+            blockingCell = -1;
+            if (Metrics.GetLocation(cell, out Point p))
+            {
+                bool[,] mask;
+                int ylen;
+                int xlen;
+                bool isBuilding = false;
+                if (obj is BuildingType bld)
+                {
+                    isBuilding = true;
+                    mask = bld.BaseOccupyMask;
+                    ylen = mask.GetLength(0);
+                    xlen = mask.GetLength(1);
+                    for (var y = 0; y < ylen; ++y)
+                    {
+                        for (var x = 0; x < xlen; ++x)
+                        {
+                            if (mask[y, x])
+                            {
+                                Metrics.GetCell(new Point(p.X + x, p.Y + y), out int targetCell);
+                                techno = Technos[targetCell];
+                                if (techno != null)
+                                {
+                                    blockingCell = targetCell;
+                                    return techno;
+                                }
+                            }
+                        }
+                    }
+                }
+                mask = obj.OccupyMask;
+                ylen = mask.GetLength(0);
+                xlen = mask.GetLength(1);
+                for (var y = 0; y < ylen; ++y)
+                {
+                    for (var x = 0; x < xlen; ++x)
+                    {
+                        if (mask[y, x])
+                        {
+                            Metrics.GetCell(new Point(p.X + x, p.Y + y), out int targetCell);
+                            techno = Technos[targetCell];
+                            if (techno != null)
+                            {
+                                if (!isBuilding || (!(techno is Infantry) && !(techno is InfantryGroup) && !(techno is Unit)))
+                                {
+                                    blockingCell = targetCell;
+                                    return techno;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return techno;
+        }
+
         public TGA GeneratePreview(Size previewSize, GameType gameType, bool renderAll, bool sharpen)
         {
             var mapBounds = new Rectangle(

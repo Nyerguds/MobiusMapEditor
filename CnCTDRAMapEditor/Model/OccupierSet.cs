@@ -233,9 +233,11 @@ namespace MobiusEditor.Model
 
         private static IEnumerable<Point> GetOccupyPoints(Point location, bool[,] occupyMask)
         {
-            for (var y = 0; y < occupyMask.GetLength(0); ++y)
+            int ydim = occupyMask.GetLength(0);
+            int xdim = occupyMask.GetLength(1);
+            for (var y = 0; y < ydim; ++y)
             {
-                for (var x = 0; x < occupyMask.GetLength(1); ++x)
+                for (var x = 0; x < xdim; ++x)
                 {
                     if (occupyMask[y, x])
                     {

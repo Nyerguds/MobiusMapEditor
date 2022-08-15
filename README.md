@@ -211,3 +211,6 @@ v1.4.0.4: [WIP]
 * Changed Red Alert's trigger action "Destroy attached building" to a more accurate "Destroy attached object", seeing as it even works from celltrigger to kill units.
 * Bibs are now shown as part of the building boundaries.
 * Bibs boundary checking can be disabled with a global setting.
+* Overlap detection now correctly scans the full footprint of buildings and terrain objects for the blocking object.
+* Sounds lists in RA triggers now have descriptions.
+* If you try to save an opened file but the folder it was loaded from is deleted, it will no longer give an error, but revert to "Save As" behaviour.

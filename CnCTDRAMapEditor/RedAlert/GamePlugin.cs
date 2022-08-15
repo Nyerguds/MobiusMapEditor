@@ -609,10 +609,18 @@ namespace MobiusEditor.RedAlert
                                 {
                                     errors.Add(String.Format("Unknown template value {0:X2} at cell [{1},{2}]; clearing.", typeValue, x, y));
                                 }
-                                else if ((templateType != null) && !templateType.Theaters.Contains(Map.Theater))
+                                else if (templateType != null)
                                 {
-                                    errors.Add(String.Format("Template '{0}' at cell [{1},{2}] is not available in the set theater; clearing.", templateType.Name.ToUpper(), x, y));
-                                    templateType = null;
+                                    if ((templateType.Flag & TemplateTypeFlag.Clear) != TemplateTypeFlag.None)
+                                    {
+                                        // No explicitly set Clear terrain allowed.
+                                        templateType = null;
+                                    }
+                                    else if (!templateType.Theaters.Contains(Map.Theater))
+                                    {
+                                        errors.Add(String.Format("Template '{0}' at cell [{1},{2}] is not available in the set theater; clearing.", templateType.Name.ToUpper(), x, y));
+                                        templateType = null;
+                                    }
                                 }
                                 Map.Templates[x, y] = (templateType != null) ? new Template { Type = templateType } : null;
                             }
@@ -686,30 +694,31 @@ namespace MobiusEditor.RedAlert
                         }
                         else
                         {
-                            var techno = Map.Technos[cell];
+                            var techno = Map.FindBlockingObject(cell, terrainType, out int blockingCell);
+                            int reportCell = blockingCell == -1 ? cell : blockingCell;
                             if (techno is Building building)
                             {
-                                errors.Add(string.Format("Terrain '{0}' overlaps structure '{1}' in cell {2}; skipping.", name, building.Type.Name, cell));
+                                errors.Add(string.Format("Terrain '{0}' overlaps structure '{1}' in cell {2}; skipping.", name, building.Type.Name, reportCell));
                             }
                             else if (techno is Overlay overlay)
                             {
-                                errors.Add(string.Format("Terrain '{0}' overlaps overlay '{1}' in cell {2}; skipping.", name, overlay.Type.Name, cell));
+                                errors.Add(string.Format("Terrain '{0}' overlaps overlay '{1}' in cell {2}; skipping.", name, overlay.Type.Name, reportCell));
                             }
                             else if (techno is Terrain terrain)
                             {
-                                errors.Add(string.Format("Terrain '{0}' overlaps terrain object '{1}' in cell {2}; skipping.", name, terrain.Type.Name, cell));
+                                errors.Add(string.Format("Terrain '{0}' overlaps terrain object '{1}' in cell {2}; skipping.", name, terrain.Type.Name, reportCell));
                             }
                             else if (techno is InfantryGroup infantry)
                             {
-                                errors.Add(string.Format("Terrain '{0}' overlaps infantry in cell {1}; skipping.", name, cell));
+                                errors.Add(string.Format("Terrain '{0}' overlaps infantry in cell {1}; skipping.", name, reportCell));
                             }
                             else if (techno is Unit unit)
                             {
-                                errors.Add(string.Format("Terrain '{0}' overlaps unit '{1}' in cell {2}; skipping.", name, unit.Type.Name, cell));
+                                errors.Add(string.Format("Terrain '{0}' overlaps unit '{1}' in cell {2}; skipping.", name, unit.Type.Name, reportCell));
                             }
                             else
                             {
-                                errors.Add(string.Format("Terrain '{0}' overlaps unknown techno in cell {1}; skipping.", name, cell));
+                                errors.Add(string.Format("Terrain '{0}' overlaps unknown techno in cell {1}; skipping.", name, reportCell));
                             }
                         }
                     }
@@ -1154,30 +1163,31 @@ namespace MobiusEditor.RedAlert
                             }
                             else
                             {
-                                var techno = Map.Technos[cell];
+                                var techno = Map.FindBlockingObject(cell, buildingType, out int blockingCell);
+                                int reportCell = blockingCell == -1 ? cell : blockingCell;
                                 if (techno is Building building)
                                 {
-                                    errors.Add(string.Format("Structure '{0}' overlaps structure '{1}' in cell {2}; skipping.", tokens[1], building.Type.Name, cell));
+                                    errors.Add(string.Format("Structure '{0}' overlaps structure '{1}' in cell {2}; skipping.", tokens[1], building.Type.Name, reportCell));
                                 }
                                 else if (techno is Overlay overlay)
                                 {
-                                    errors.Add(string.Format("Structure '{0}' overlaps overlay '{1}' in cell {2}; skipping.", tokens[1], overlay.Type.Name, cell));
+                                    errors.Add(string.Format("Structure '{0}' overlaps overlay '{1}' in cell {2}; skipping.", tokens[1], overlay.Type.Name, reportCell));
                                 }
                                 else if (techno is Terrain terrain)
                                 {
-                                    errors.Add(string.Format("Structure '{0}' overlaps terrain '{1}' in cell {2}; skipping.", tokens[1], terrain.Type.Name, cell));
+                                    errors.Add(string.Format("Structure '{0}' overlaps terrain '{1}' in cell {2}; skipping.", tokens[1], terrain.Type.Name, reportCell));
                                 }
                                 else if (techno is InfantryGroup infantry)
                                 {
-                                    errors.Add(string.Format("Structure '{0}' overlaps infantry in cell {1}; skipping.", tokens[1], cell));
+                                    errors.Add(string.Format("Structure '{0}' overlaps infantry in cell {1}; skipping.", tokens[1], reportCell));
                                 }
                                 else if (techno is Unit unit)
                                 {
-                                    errors.Add(string.Format("Structure '{0}' overlaps unit '{1}' in cell {2}; skipping.", tokens[1], unit.Type.Name, cell));
+                                    errors.Add(string.Format("Structure '{0}' overlaps unit '{1}' in cell {2}; skipping.", tokens[1], unit.Type.Name, reportCell));
                                 }
                                 else
                                 {
-                                    errors.Add(string.Format("Structure '{0}' overlaps unknown techno in cell {1}; skipping.", tokens[1], cell));
+                                    errors.Add(string.Format("Structure '{0}' overlaps unknown techno in cell {1}; skipping.", tokens[1], reportCell));
                                 }
                             }
                         }
@@ -1376,6 +1386,9 @@ namespace MobiusEditor.RedAlert
                 trigger.Action2.Trigger = indexToName(Map.Triggers, trigger.Action2.Trigger, Trigger.None);
             }
             UpdateBasePlayerHouse();
+            // Sort
+            List<Trigger> reordered = Map.Triggers.OrderBy(t => t.Name, new ExplorerComparer()).ToList();
+            Map.Triggers.ReplaceRange(reordered);
             extraSections = ini.Sections;
             Map.EndUpdate();
             return errors;

@@ -765,8 +765,14 @@ namespace MobiusEditor.Dialogs
                                 actionValueComboBox.DisplayMember = "Name";
                                 actionValueComboBox.ValueMember = "Value";
                                 var vocData = new { Name = "None", Value = (long)-1 }.Yield().Concat(
-                                    RedAlert.ActionDataTypes.VocTypes.Select((t, i) => new { Name = t, Value = (long)i })
-                                    .Where(t => t.Name != "x").OrderBy(t => t.Name, new ExplorerComparer())).ToArray();
+                                    RedAlert.ActionDataTypes.VocDesc.Select((t, i) => new { Name = t, Value = (long)i })
+                                    .Where(t => !String.Equals(t.Name, "x", StringComparison.InvariantCultureIgnoreCase))).ToArray();
+                                /*/
+                                var vocData = new { Name = "None", Value = (long)-1 }.Yield().Concat(
+                                    RedAlert.ActionDataTypes.VocNames.Select((t, i) => new { Name = t, Value = (long)i })
+                                    .Where(t => !String.Equals(t.Name, "x", StringComparison.InvariantCultureIgnoreCase))
+                                    .OrderBy(t => t.Name, new ExplorerComparer())).ToArray();
+                                //*/
                                 actionValueComboBox.DataSource = vocData;
                                 actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
                                 if (triggerActionData == null)
@@ -788,9 +794,14 @@ namespace MobiusEditor.Dialogs
                                 actionValueComboBox.DisplayMember = "Name";
                                 actionValueComboBox.ValueMember = "Value";
                                 var voxData = new { Name = "None", Value = (long)-1 }.Yield().Concat(
-                                    RedAlert.ActionDataTypes.VoxTypes.Select((t, i) => new { Name = t, Value = (long)i })
+                                    RedAlert.ActionDataTypes.VoxDesc.Select((t, i) => new { Name = t, Value = (long)i })
+                                    .Where(t => !String.Equals(t.Name, "none", StringComparison.InvariantCultureIgnoreCase))).ToArray();
+                                /*/
+                                var voxData = new { Name = "None", Value = (long)-1 }.Yield().Concat(
+                                    RedAlert.ActionDataTypes.VocNames.Select((t, i) => new { Name = t, Value = (long)i })
                                     .Where(t => !String.Equals(t.Name, "none", StringComparison.InvariantCultureIgnoreCase))
                                     .OrderBy(t => t.Name, new ExplorerComparer())).ToArray();
+                                //*/
                                 actionValueComboBox.DataSource = voxData;
                                 actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
                                 if (triggerActionData == null)
