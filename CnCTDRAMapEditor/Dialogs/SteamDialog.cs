@@ -36,53 +36,49 @@ namespace MobiusEditor.Dialogs
         public SteamDialog(IGamePlugin plugin)
         {
             this.plugin = plugin;
-
             InitializeComponent();
-
             visibilityComboBox.DataSource = new []
             {
                 new { Name = "Public", Value = ERemoteStoragePublishedFileVisibility.k_ERemoteStoragePublishedFileVisibilityPublic },
                 new { Name = "Friends Only", Value = ERemoteStoragePublishedFileVisibility.k_ERemoteStoragePublishedFileVisibilityFriendsOnly },
                 new { Name = "Private", Value = ERemoteStoragePublishedFileVisibility.k_ERemoteStoragePublishedFileVisibilityPrivate }
             };
-
             statusUpdateTimer.Interval = 500;
             statusUpdateTimer.Tick += StatusUpdateTimer_Tick;
-
             Disposed += (o, e) => { (previewTxt.Tag as Image)?.Dispose(); };
         }
 
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
-
             titleTxt.Text = plugin.Map.SteamSection.Title;
             descriptionTxt.Text = plugin.Map.SteamSection.Description;
             previewTxt.Text = plugin.Map.SteamSection.PreviewFile;
             visibilityComboBox.SelectedValue = plugin.Map.SteamSection.Visibility;
-
             btnPublishMap.SplitWidth = (plugin.Map.SteamSection.PublishedFileId != PublishedFileId_t.Invalid.m_PublishedFileId) ? MenuButton.DefaultSplitWidth : 0;
-
             Directory.CreateDirectory(PreviewDirectory);
             var previewPath = Path.Combine(PreviewDirectory, "Minimap.png");
             // Now generates all contents.
-            plugin.Map.GenerateWorkshopPreview(plugin.GameType, true).ToBitmap().Save(previewPath, ImageFormat.Png);
-
+            using (Bitmap pr = plugin.Map.GenerateWorkshopPreview(plugin.GameType, true).ToBitmap())
+            {
+                pr.Save(previewPath, ImageFormat.Png);
+            }
             if (plugin.Map.BasicSection.SoloMission)
             {
                 var soloBannerPath = Path.Combine(PreviewDirectory, "SoloBanner.png");
-                Properties.Resources.UI_CustomMissionPreviewDefault.Save(soloBannerPath, ImageFormat.Png);
+                using (Bitmap bm = new Bitmap(Properties.Resources.UI_CustomMissionPreviewDefault))
+                {
+                    bm.SetResolution(96, 96);
+                    bm.Save(soloBannerPath, ImageFormat.Png);
+                }
                 previewTxt.Text = soloBannerPath;
             }
             else
             {
                 previewTxt.Text = previewPath;
             }
-
             imageTooltip.SetToolTip(previewTxt, "Preview.png");
-
             statusUpdateTimer.Start();
-
             UpdateControls();
         }
 
@@ -141,24 +137,19 @@ namespace MobiusEditor.Dialogs
             {
                 plugin.Map.BasicSection.Name = titleTxt.Text;
             }
-
             if (string.IsNullOrEmpty(plugin.Map.BasicSection.Author))
             {
                 plugin.Map.BasicSection.Author = SteamFriends.GetPersonaName();
             }
-
             plugin.Map.SteamSection.PreviewFile = previewTxt.Text;
             plugin.Map.SteamSection.Title = titleTxt.Text;
             plugin.Map.SteamSection.Description = descriptionTxt.Text;
             plugin.Map.SteamSection.Visibility = (ERemoteStoragePublishedFileVisibility)visibilityComboBox.SelectedValue;
-
             var tempPath = Path.Combine(Path.GetTempPath(), "CnCRCMapEditorPublishUGC");
             Directory.CreateDirectory(tempPath);
             foreach (var file in new DirectoryInfo(tempPath).EnumerateFiles()) file.Delete();
-
             var pgmPath = Path.Combine(tempPath, "MAPDATA.PGM");
-            plugin.Save(pgmPath, FileType.PGM);
-
+            plugin.Save(pgmPath, FileType.PGM, previewTxt.Tag as Bitmap);
             var tags = new List<string>();
             switch (plugin.GameType)
             {
@@ -169,7 +160,6 @@ namespace MobiusEditor.Dialogs
                     tags.Add("RA");
                     break;
             }
-
             if (plugin.Map.BasicSection.SoloMission)
             {
                 tags.Add("SinglePlayer");
@@ -178,7 +168,6 @@ namespace MobiusEditor.Dialogs
             {
                 tags.Add("MultiPlayer");
             }
-
             if (SteamworksUGC.PublishUGC(tempPath, plugin.Map.SteamSection, tags, OnPublishSuccess, OnOperationFailed))
             {
                 statusLbl.Text = SteamworksUGC.CurrentOperation.Status;
@@ -217,25 +206,32 @@ namespace MobiusEditor.Dialogs
             try
             {
                 (previewTxt.Tag as Image)?.Dispose();
-
                 Bitmap preview = null;
                 using (Bitmap b = new Bitmap(previewTxt.Text))
                 {
-                    preview = new Bitmap(b.Width, b.Height, b.PixelFormat);
+                    preview = new Bitmap(Globals.MapPreviewSize.Width, Globals.MapPreviewSize.Height);
+                    double previewScaleW = (double)Globals.MapPreviewSize.Width / b.Width;
+                    double previewScaleH = (double)Globals.MapPreviewSize.Height / b.Height;
+                    bool maxIsW = previewScaleW < previewScaleH;
+                    double previewScale = maxIsW ? previewScaleW : previewScaleH;
+                    int width = (int)Math.Floor(b.Width * previewScale);
+                    int height = (int)Math.Floor(b.Height * previewScale);
+                    int offsetX = maxIsW ? 0 : (Globals.MapPreviewSize.Width - width) / 2;
+                    int offsetY = maxIsW ? (Globals.MapPreviewSize.Height - height) / 2 : 0;
                     using (Graphics g = Graphics.FromImage(preview))
                     {
-                        g.DrawImage(b, Point.Empty);
+                        g.Clear(Color.Black);
+                        g.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceCopy;
+                        g.DrawImage(b, new Rectangle(offsetX, offsetY, width, height), new Rectangle(0,0,b.Width, b.Height), GraphicsUnit.Pixel);
                         g.Flush();
                     }
                 }
-
                 previewTxt.Tag = preview;
             }
             catch (Exception)
             {
                 previewTxt.Tag = null;
             }
-
             UpdateControls();
         }
 

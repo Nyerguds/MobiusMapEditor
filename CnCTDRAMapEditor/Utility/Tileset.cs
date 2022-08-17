@@ -24,17 +24,17 @@ namespace MobiusEditor.Utility
 {
     public class Tile
     {
-        public Image Image { get; private set; }
+        public Bitmap Image { get; private set; }
 
         public Rectangle OpaqueBounds { get; private set; }
 
-        public Tile(Image image, Rectangle opaqueBounds)
+        public Tile(Bitmap image, Rectangle opaqueBounds)
         {
             Image = image;
             OpaqueBounds = opaqueBounds;
         }
 
-        public Tile(Image image)
+        public Tile(Bitmap image)
             : this(image, new Rectangle(0, 0, image.Width, image.Height))
         {
         }
@@ -165,7 +165,8 @@ namespace MobiusEditor.Utility
                 }
             }
             var key = teamColor?.Name ?? string.Empty;
-            if (!tileData.TeamColorTiles.TryGetValue(key, out Tile[] tileDataTiles))
+            bool needsdummy = false;
+            if (!tileData.TeamColorTiles.TryGetValue(key, out Tile[] tileDataTiles) || (needsdummy = generateFallback && tileDataTiles.Any(t => t.Image == null)))
             {
                 tileDataTiles = new Tile[tileData.Frames.Length];
                 tileData.TeamColorTiles[key] = tileDataTiles;
@@ -175,7 +176,7 @@ namespace MobiusEditor.Utility
                     var filename = tileData.Frames[i];
                     if (!string.IsNullOrEmpty(filename))
                     {
-                        (Bitmap bitmap, Rectangle opaqueBounds) = textureManager.GetTexture(filename, teamColor, isDummy);
+                        (Bitmap bitmap, Rectangle opaqueBounds) = textureManager.GetTexture(filename, teamColor, isDummy || needsdummy);
                         tileDataTiles[i] = new Tile(bitmap, opaqueBounds);
                     }
                     else

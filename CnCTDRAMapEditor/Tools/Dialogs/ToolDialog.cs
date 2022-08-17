@@ -88,17 +88,10 @@ namespace MobiusEditor.Tools.Dialogs
                 int y = Math.Min(screen.Height - 10, Math.Max(0, rec.Y + (rec.Height - this.Height) / 2));
                 Point loc = new Point(x, y);
                 startLocation = loc;
-                Location = loc;
             }
             Location = startLocation.Value;
             // execute any further Shown event handlers
             base.OnShown(e);
-        }
-
-        protected override void OnClick(EventArgs e)
-        {
-            base.OnClick(e);
-            Tool.Activate();
         }
 
         protected override void OnClosed(EventArgs e)

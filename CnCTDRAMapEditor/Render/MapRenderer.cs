@@ -143,7 +143,14 @@ namespace MobiusEditor.Render
                     if (Globals.TheTilesetManager.GetTileData(map.Theater.Tilesets, name, icon, out Tile tile))
                     {
                         var renderBounds = new Rectangle(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height, tileSize.Width, tileSize.Height);
-                        graphics.DrawImage(tile.Image, renderBounds);
+                        if(tile.Image != null)
+                        {
+                            //graphics.DrawImage(tile.Image, renderBounds);
+                            using (Bitmap tileImg = tile.Image.RemoveAlpha())
+                            {
+                                graphics.DrawImage(tileImg, renderBounds);
+                            }
+                        }
                     }
                     else
                     {
@@ -190,11 +197,7 @@ namespace MobiusEditor.Render
                     {
                         continue;
                     }
-                    string tileName = terrain.Type.Name;
-                    if ((terrain.Type.TemplateType & TemplateTypeFlag.OreMine) != TemplateTypeFlag.None)
-                    {
-                        tileName = "OREMINE";
-                    }
+                    string tileName = terrain.Type.GraphicsSource;
                     if (Globals.TheTilesetManager.GetTileData(map.Theater.Tilesets, tileName, terrain.Icon, out Tile tile))
                     {
                         var tint = terrain.Tint;
@@ -338,7 +341,7 @@ namespace MobiusEditor.Render
                 icon = overlay.Type.ForceTileNr == -1 ? overlay.Icon : overlay.Type.ForceTileNr;
             }
             // For Decoration types, generate dummy if not found.
-            if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, name, icon, out Tile tile, (overlay.Type.Flag & OverlayTypeFlag.Decoration) != 0))
+            if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, name, icon, out Tile tile, (overlay.Type.Flag & OverlayTypeFlag.Decoration) != 0, false))
             {
                 Rectangle overlayBounds = RenderBounds(tile.Image.Size, new Size(1, 1), tileSize);
                 overlayBounds.X += topLeft.X * tileSize.Width;

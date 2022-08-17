@@ -40,7 +40,7 @@ namespace MobiusEditor.Model
 
         public string EventType { get; set; } = None;
 
-        public string Team { get; set; }
+        public string Team { get; set; } = TeamType.None;
 
         public long Data { get; set; }
 
@@ -48,15 +48,16 @@ namespace MobiusEditor.Model
         {
             return new TriggerEvent()
             {
-                EventType = EventType,
-                Team = Team,
-                Data = Data
+                EventType = this.EventType,
+                Team = this.Team,
+                Data = this.Data
             };
         }
         public void FillDataFrom(TriggerEvent other)
         {
-            Team = other.Team;
-            Data = other.Data;
+            this.EventType = other.EventType ?? None;
+            this.Team = other.Team ?? TeamType.None;
+            this.Data = other.Data;
         }
 
         public bool Equals(TriggerEvent other)
@@ -80,9 +81,9 @@ namespace MobiusEditor.Model
 
         public string ActionType { get; set; } = None;
 
-        public string Trigger { get; set; }
+        public string Trigger { get; set; } = Model.Trigger.None;
 
-        public string Team { get; set; }
+        public string Team { get; set; } = TeamType.None;
 
         public long Data { get; set; }
 
@@ -90,17 +91,19 @@ namespace MobiusEditor.Model
         {
             return new TriggerAction()
             {
-                ActionType = ActionType,
-                Trigger = Trigger,
-                Team = Team,
-                Data = Data
+                ActionType = this.ActionType,
+                Trigger = this.Trigger,
+                Team = this.Team,
+                Data = this.Data
             };
         }
+
         public void FillDataFrom(TriggerAction other)
         {
-            Trigger = Trigger;
-            Team = other.Team;
-            Data = other.Data;
+            this.ActionType = other.ActionType ?? None;
+            this.Trigger = other.Trigger ?? Model.Trigger.None;
+            this.Team = other.Team ?? TeamType.None;
+            this.Data = other.Data;
         }
 
         public bool Equals(TriggerAction other)
@@ -126,31 +129,36 @@ namespace MobiusEditor.Model
 
         public TriggerPersistentType PersistentType { get; set; } = TriggerPersistentType.Volatile;
 
-        public string House { get; set; }
+        public string House { get; set; } = Model.House.None;
 
         public TriggerMultiStyleType EventControl { get; set; } = TriggerMultiStyleType.Only;
 
-        public TriggerEvent Event1 { get; private set; } = new TriggerEvent { EventType = TriggerEvent.None };
+        private readonly TriggerEvent event1 = new TriggerEvent();
+        public TriggerEvent Event1 { get { return event1;  } }
 
-        public TriggerEvent Event2 { get; private set; } = new TriggerEvent { EventType = TriggerEvent.None };
+        private readonly TriggerEvent event2 = new TriggerEvent();
+        public TriggerEvent Event2 { get { return event2; } }
 
-        public TriggerAction Action1 { get; private set; } = new TriggerAction { ActionType = TriggerAction.None };
+        private readonly TriggerAction action1 = new TriggerAction();
+        public TriggerAction Action1 { get { return action1; } }
 
-        public TriggerAction Action2 { get; private set; } = new TriggerAction { ActionType = TriggerAction.None };
+        private readonly TriggerAction action2 = new TriggerAction();
+        public TriggerAction Action2 { get { return action2; } }
 
         public Trigger Clone()
         {
-            return new Trigger()
+            Trigger clone = new Trigger()
             {
-                Name = Name,
-                PersistentType = PersistentType,
-                House = House,
-                EventControl = EventControl,
-                Event1 = Event1.Clone(),
-                Event2 = Event2.Clone(),
-                Action1 = Action1.Clone(),
-                Action2 = Action2.Clone()
+                Name = this.Name,
+                PersistentType = this.PersistentType,
+                House = this.House ?? Model.House.None,
+                EventControl = this.EventControl,
             };
+            clone.Event1.FillDataFrom(this.Event1);
+            clone.Event2.FillDataFrom(this.Event2);
+            clone.Action1.FillDataFrom(this.Action1);
+            clone.Action2.FillDataFrom(this.Action2);
+            return clone;
         }
 
         public override bool Equals(object obj)

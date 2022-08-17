@@ -40,6 +40,8 @@ namespace MobiusEditor.Model
 
         public TemplateTypeFlag TemplateType { get; private set; }
 
+        public String GraphicsSource { get; private set; }
+
         public bool IsArmed => false;
 
         public bool IsHarvester => false;
@@ -51,28 +53,38 @@ namespace MobiusEditor.Model
 
         public Image Thumbnail { get; set; }
 
-        public TerrainType(sbyte id, string name, TheaterType[] theaters, bool[,] occupyMask, int displayIcon, TemplateTypeFlag templateType)
+        public TerrainType(sbyte id, string name, TheaterType[] theaters, bool[,] occupyMask, String graphicsSource, int displayIcon, TemplateTypeFlag templateType)
         {
             ID = id;
             Name = name;
             Theaters = theaters;
             OccupyMask = occupyMask;
             DisplayIcon = displayIcon;
+            GraphicsSource = graphicsSource == null ? name : graphicsSource;
             TemplateType = templateType;
         }
 
+        public TerrainType(sbyte id, string name, TheaterType[] theaters, bool[,] occupyMask, String graphicsSource, int displayIcon)
+            : this(id, name, theaters, occupyMask, graphicsSource, displayIcon, TemplateTypeFlag.None)
+        {
+        }
+        public TerrainType(sbyte id, string name, TheaterType[] theaters, bool[,] occupyMask, String graphicsSource)
+            : this(id, name, theaters, occupyMask, graphicsSource, 0, TemplateTypeFlag.None)
+        {
+        }
+
         public TerrainType(sbyte id, string name, TheaterType[] theaters, bool[,] occupyMask, int displayIcon)
-            : this(id, name, theaters, occupyMask, displayIcon, TemplateTypeFlag.None)
+            : this(id, name, theaters, occupyMask, null, displayIcon, TemplateTypeFlag.None)
         {
         }
 
         public TerrainType(sbyte id, string name, TheaterType[] theaters, bool[,] occupyMask, TemplateTypeFlag templateType)
-            : this(id, name, theaters, occupyMask, 0, templateType)
+            : this(id, name, theaters, occupyMask, null, 0, templateType)
         {
         }
 
         public TerrainType(sbyte id, string name, TheaterType[] theaters, bool[,] occupyMask)
-            : this(id, name, theaters, occupyMask, 0, TemplateTypeFlag.None)
+            : this(id, name, theaters, occupyMask, null, 0, TemplateTypeFlag.None)
         {
         }
 
@@ -107,12 +119,7 @@ namespace MobiusEditor.Model
         public void Init(TheaterType theater)
         {
             var oldImage = Thumbnail;
-            string tileName = Name;
-            if ((TemplateType & TemplateTypeFlag.OreMine) != TemplateTypeFlag.None)
-            {
-                tileName = "OREMINE";
-            }
-
+            string tileName = GraphicsSource;
             if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, tileName, DisplayIcon, out Tile tile))
             {
                 var tileSize = Globals.PreviewTileSize;

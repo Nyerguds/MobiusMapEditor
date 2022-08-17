@@ -89,7 +89,7 @@ namespace MobiusEditor.Utility
             }
         }
 
-        public bool GetTeamColorTileData(IEnumerable<string> searchTilesets, string name, int shape, TeamColor teamColor, out int fps, out Tile[] tiles, bool generateFallback)
+        public bool GetTeamColorTileData(IEnumerable<string> searchTilesets, string name, int shape, TeamColor teamColor, out int fps, out Tile[] tiles, bool generateFallback, bool onlyIfDefined)
         {
             fps = 0;
             tiles = null;
@@ -102,20 +102,30 @@ namespace MobiusEditor.Utility
                 }
                 if (tileset.GetTileData(name, shape, teamColor, out fps, out tiles, false))
                 {
+                    if (generateFallback && tiles.Any(t => t.Image == null))
+                    {
+                        // Tile found, but contains no data. Re-fetch with dummy generation.
+                        if (tileset.GetTileData(name, shape, teamColor, out fps, out tiles, true))
+                        {
+                            return true;
+                        }
+                        continue;
+                    }
                     return true;
                 }
             }
-            if (generateFallback && first != null && first.GetTileData(name, shape, teamColor, out fps, out tiles, generateFallback))
+            // If the tile is not defined at all, and onlyifdefined is not enabled, make a dummy entry anyway.
+            if (!onlyIfDefined && generateFallback && first != null && first.GetTileData(name, shape, teamColor, out fps, out tiles, true))
             {
                 return true;
             }
             return false;
         }
 
-        public bool GetTeamColorTileData(IEnumerable<string> searchTilesets, string name, int shape, TeamColor teamColor, out int fps, out Tile tile, bool generateFallback)
+        public bool GetTeamColorTileData(IEnumerable<string> searchTilesets, string name, int shape, TeamColor teamColor, out int fps, out Tile tile, bool generateFallback, bool onlyIfDefined)
         {
             tile = null;
-            if (!GetTeamColorTileData(searchTilesets, name, shape, teamColor, out fps, out Tile[] tiles, generateFallback))
+            if (!GetTeamColorTileData(searchTilesets, name, shape, teamColor, out fps, out Tile[] tiles, generateFallback, onlyIfDefined))
             {
                 return false;
             }
@@ -123,64 +133,64 @@ namespace MobiusEditor.Utility
             return true;
         }
 
-        public bool GetTeamColorTileData(IEnumerable<string> searchTilesets, string name, int shape, TeamColor teamColor, out Tile[] tiles, bool generateFallback)
+        public bool GetTeamColorTileData(IEnumerable<string> searchTilesets, string name, int shape, TeamColor teamColor, out Tile[] tiles, bool generateFallback, bool onlyIfDefined)
         {
-            return GetTeamColorTileData(searchTilesets, name, shape, teamColor, out int fps, out tiles, generateFallback);
+            return GetTeamColorTileData(searchTilesets, name, shape, teamColor, out int fps, out tiles, generateFallback, onlyIfDefined);
         }
 
         public bool GetTeamColorTileData(IEnumerable<string> searchTilesets, string name, int shape, TeamColor teamColor, out Tile[] tiles)
         {
-            return GetTeamColorTileData(searchTilesets, name, shape, teamColor, out int fps, out tiles, false);
+            return GetTeamColorTileData(searchTilesets, name, shape, teamColor, out int fps, out tiles, false, false);
         }
 
-        public bool GetTeamColorTileData(IEnumerable<string> searchTilesets, string name, int shape, TeamColor teamColor, out Tile tile, bool generateFallback)
+        public bool GetTeamColorTileData(IEnumerable<string> searchTilesets, string name, int shape, TeamColor teamColor, out Tile tile, bool generateFallback, bool onlyIfDefined)
         {
-            return GetTeamColorTileData(searchTilesets, name, shape, teamColor, out int fps, out tile, generateFallback);
+            return GetTeamColorTileData(searchTilesets, name, shape, teamColor, out int fps, out tile, generateFallback, onlyIfDefined);
         }
 
         public bool GetTeamColorTileData(IEnumerable<string> searchTilesets, string name, int shape, TeamColor teamColor, out Tile tile)
         {
-            return GetTeamColorTileData(searchTilesets, name, shape, teamColor, out int fps, out tile, false);
+            return GetTeamColorTileData(searchTilesets, name, shape, teamColor, out int fps, out tile, false, false);
         }
 
-        public bool GetTileData(IEnumerable<string> searchTilesets, string name, int shape, out int fps, out Tile[] tiles, bool generateFallback)
+        public bool GetTileData(IEnumerable<string> searchTilesets, string name, int shape, out int fps, out Tile[] tiles, bool generateFallback, bool onlyIfDefined)
         {
-            return GetTeamColorTileData(searchTilesets, name, shape, null, out fps, out tiles, generateFallback);
+            return GetTeamColorTileData(searchTilesets, name, shape, null, out fps, out tiles, generateFallback, onlyIfDefined);
         }
 
         public bool GetTileData(IEnumerable<string> searchTilesets, string name, int shape, out int fps, out Tile[] tiles)
         {
-            return GetTeamColorTileData(searchTilesets, name, shape, null, out fps, out tiles, false);
+            return GetTeamColorTileData(searchTilesets, name, shape, null, out fps, out tiles, false, false);
         }
 
-        public bool GetTileData(IEnumerable<string> searchTilesets, string name, int shape, out int fps, out Tile tile, bool generateFallback)
+        public bool GetTileData(IEnumerable<string> searchTilesets, string name, int shape, out int fps, out Tile tile, bool generateFallback, bool onlyIfDefined)
         {
-            return GetTeamColorTileData(searchTilesets, name, shape, null, out fps, out tile, generateFallback);
+            return GetTeamColorTileData(searchTilesets, name, shape, null, out fps, out tile, generateFallback, onlyIfDefined);
         }
 
         public bool GetTileData(IEnumerable<string> searchTilesets, string name, int shape, out int fps, out Tile tile)
         {
-            return GetTeamColorTileData(searchTilesets, name, shape, null, out fps, out tile, false);
+            return GetTeamColorTileData(searchTilesets, name, shape, null, out fps, out tile, false, false);
         }
 
-        public bool GetTileData(IEnumerable<string> searchTilesets, string name, int shape, out Tile[] tiles, bool generateFallback)
+        public bool GetTileData(IEnumerable<string> searchTilesets, string name, int shape, out Tile[] tiles, bool generateFallback, bool onlyIfDefined)
         {
-            return GetTeamColorTileData(searchTilesets, name, shape, null, out tiles, generateFallback);
+            return GetTeamColorTileData(searchTilesets, name, shape, null, out tiles, generateFallback, onlyIfDefined);
         }
 
         public bool GetTileData(IEnumerable<string> searchTilesets, string name, int shape, out Tile[] tiles)
         {
-            return GetTeamColorTileData(searchTilesets, name, shape, null, out tiles, false);
+            return GetTeamColorTileData(searchTilesets, name, shape, null, out tiles, false, false);
         }
 
-        public bool GetTileData(IEnumerable<string> searchTilesets, string name, int shape, out Tile tile, bool generateFallback)
+        public bool GetTileData(IEnumerable<string> searchTilesets, string name, int shape, out Tile tile, bool generateFallback, bool onlyIfDefined)
         {
-            return GetTeamColorTileData(searchTilesets, name, shape, null, out tile, generateFallback);
+            return GetTeamColorTileData(searchTilesets, name, shape, null, out tile, generateFallback, onlyIfDefined);
         }
 
         public bool GetTileData(IEnumerable<string> searchTilesets, string name, int shape, out Tile tile)
         {
-            return GetTeamColorTileData(searchTilesets, name, shape, null, out tile, false);
+            return GetTeamColorTileData(searchTilesets, name, shape, null, out tile, false, false);
         }
 
         public int GetTileDataLength(IEnumerable<string> searchTilesets, string name)

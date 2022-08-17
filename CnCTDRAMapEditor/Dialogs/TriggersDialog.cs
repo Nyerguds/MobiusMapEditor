@@ -132,13 +132,14 @@ namespace MobiusEditor.Dialogs
             {
                 houseComboBox.DataBindings.Add("SelectedItem", SelectedTrigger, "House");
                 existenceComboBox.DataBindings.Add("SelectedValue", SelectedTrigger, "PersistentType");
+                // Set event 1
                 TriggerEvent evt1 = SelectedTrigger.Event1.Clone();
-                event1ComboBox.SelectedItem = SelectedTrigger.Event1?.EventType;
+                event1ComboBox.SelectedItem = SelectedTrigger.Event1.EventType;
                 UpdateTriggerEventControls(SelectedTrigger.Event1, event1Nud, event1ValueComboBox, evt1);
+                // Set action 1
                 TriggerAction act1 = SelectedTrigger.Action1.Clone();
-                action1ComboBox.SelectedItem = SelectedTrigger.Action1?.ActionType;
+                action1ComboBox.SelectedItem = SelectedTrigger.Action1.ActionType;
                 UpdateTriggerActionControls(SelectedTrigger.Action1, action1Nud, action1ValueComboBox, act1);
-
                 switch (plugin.GameType)
                 {
                     case GameType.TiberianDawn:
@@ -146,10 +147,11 @@ namespace MobiusEditor.Dialogs
                         break;
                     case GameType.RedAlert:
                         typeComboBox.DataBindings.Add("SelectedValue", SelectedTrigger, "EventControl");
+                        // Set event 2
                         TriggerEvent evt2 = SelectedTrigger.Event2.Clone();
                         event2ComboBox.SelectedItem = SelectedTrigger.Event2.EventType;
                         UpdateTriggerEventControls(SelectedTrigger.Event2, event2Nud, event2ValueComboBox, evt2);
-                        event2ComboBox.SelectedItem = SelectedTrigger.Event2?.EventType;
+                        // Set action 2
                         TriggerAction act2 = SelectedTrigger.Action2.Clone();
                         action2ComboBox.SelectedItem = SelectedTrigger.Action2?.ActionType;
                         UpdateTriggerActionControls(SelectedTrigger.Action2, action2Nud, action2ValueComboBox, act2);                        
@@ -223,7 +225,7 @@ namespace MobiusEditor.Dialogs
             Trigger trig = SelectedTrigger;
             if (trig != null && trig.Action1 != null)
             {
-                trig.Action1.Data = (long)action1Nud.EnteredValue;
+                trig.Action1.Data = (long)action1Nud.Value;
             }
         }
 
@@ -232,16 +234,7 @@ namespace MobiusEditor.Dialogs
             Trigger trig = SelectedTrigger;
             if (trig != null && trig.Action2 != null)
             {
-                trig.Action2.Data = (long)action2Nud.EnteredValue;
-            }
-        }
-
-        private void Action2Nud_ValueEntered(object sender, ValueEnteredEventArgs e)
-        {
-            Trigger trig = SelectedTrigger;
-            if (trig != null && trig.Action2 != null)
-            {
-                trig.Action2.Data = (long)action2Nud.EnteredValue;
+                trig.Action2.Data = (long)action2Nud.Value;
             }
         }
 
@@ -369,7 +362,6 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-
         private void Event1ComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (SelectedTrigger != null)
@@ -378,6 +370,7 @@ namespace MobiusEditor.Dialogs
             }
             UpdateTriggerEventControls(SelectedTrigger?.Event1, event1Nud, event1ValueComboBox, null);
         }
+
         private void Action1ComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (SelectedTrigger != null)
@@ -414,10 +407,8 @@ namespace MobiusEditor.Dialogs
             eventValueComboBox.DataSource = null;
             eventValueComboBox.DisplayMember = null;
             eventValueComboBox.ValueMember = null;
-
             if (triggerEvent != null)
             {
-
                 if (triggerEventData == null)
                 {
                     triggerEvent.Data = 0;
@@ -595,19 +586,18 @@ namespace MobiusEditor.Dialogs
             actionValueComboBox.DataSource = null;
             actionValueComboBox.DisplayMember = null;
             actionValueComboBox.ValueMember = null;
-
             if (triggerAction != null)
             {
                 if (triggerActionData == null)
                 {
                     triggerAction.Data = 0;
-                    triggerAction.Trigger = null;
-                    triggerAction.Team = null;  
+                    triggerAction.Trigger = Trigger.None;
+                    triggerAction.Team = TeamType.None;
                 }
                 else
                 {
                     triggerAction.FillDataFrom(triggerActionData);
-                }           
+                }
                 switch (plugin.GameType)
                 {
                     case GameType.RedAlert:
@@ -622,7 +612,9 @@ namespace MobiusEditor.Dialogs
                                 if (triggerActionData == null)
                                 {
                                     if (actionValueComboBox.Items.Count > 0)
+                                    {
                                         actionValueComboBox.SelectedIndex = 0;
+                                    }
                                 }
                                 else
                                 {
@@ -862,7 +854,6 @@ namespace MobiusEditor.Dialogs
                                 actionNud.Minimum = 1;
                                 actionNud.Maximum = 209;
                                 triggerAction.Data = 1;
-                                actionNud.DataBindings.Add("Value", triggerAction, "Data");
                                 if (triggerActionData == null)
                                 {
                                     actionNud.Value = 1;
@@ -880,7 +871,6 @@ namespace MobiusEditor.Dialogs
                             case RedAlert.ActionTypes.TACTION_SET_GLOBAL:
                             case RedAlert.ActionTypes.TACTION_CLEAR_GLOBAL:
                                 actionNud.Visible = true;
-                                actionNud.DataBindings.Add("Value", triggerAction, "Data");
                                 if (triggerActionData == null)
                                 {
                                     actionNud.Value = 0;
@@ -1012,15 +1002,15 @@ namespace MobiusEditor.Dialogs
                 {
                     curErrors.Add("There is no team set to disband.");
                 }
-                if (action1 == TiberianDawn.ActionTypes.ACTION_DESTROY_XXXX && this.triggers.Any(t => "XXXX".Equals(t.Name, StringComparison.InvariantCultureIgnoreCase)))
+                if (action1 == TiberianDawn.ActionTypes.ACTION_DESTROY_XXXX && !this.triggers.Any(t => "XXXX".Equals(t.Name, StringComparison.InvariantCultureIgnoreCase)))
                 {
                     curErrors.Add("There is no trigger called 'XXXX' to destroy.");
                 }
-                if (action1 == TiberianDawn.ActionTypes.ACTION_DESTROY_YYYY && this.triggers.Any(t => "YYYY".Equals(t.Name, StringComparison.InvariantCultureIgnoreCase)))
+                if (action1 == TiberianDawn.ActionTypes.ACTION_DESTROY_YYYY && !this.triggers.Any(t => "YYYY".Equals(t.Name, StringComparison.InvariantCultureIgnoreCase)))
                 {
                     curErrors.Add("There is no trigger called 'YYYY' to destroy.");
                 }
-                if (action1 == TiberianDawn.ActionTypes.ACTION_DESTROY_ZZZZ && this.triggers.Any(t => "ZZZZ".Equals(t.Name, StringComparison.InvariantCultureIgnoreCase)))
+                if (action1 == TiberianDawn.ActionTypes.ACTION_DESTROY_ZZZZ && !this.triggers.Any(t => "ZZZZ".Equals(t.Name, StringComparison.InvariantCultureIgnoreCase)))
                 {
                     curErrors.Add("There is no trigger called 'ZZZZ' to destroy.");
                 }

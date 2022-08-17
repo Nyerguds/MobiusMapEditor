@@ -1,8 +1,6 @@
 ## C&C Tiberian Dawn and Red Alert Map Editor
 
-An enhanced version of the C&C Tiberian Dawn and Red Alert Map Editor based on the source code released by Electronic Arts.
-The goal of the project is simply to improve the usability and convenience of the map editor, fix bugs, improve and clean its code-base,
-enhance compatibility with different kinds of systems and enhance the editor's support for mods.
+An enhanced version of the C&C Tiberian Dawn and Red Alert Map Editor based on the source code released by Electronic Arts. The goal of the project is simply to improve the usability and convenience of the map editor, fix bugs, improve and clean its code-base, enhance compatibility with different kinds of systems and enhance the editor's support for mods.
 
 ### Contributing
 
@@ -12,11 +10,17 @@ Right now, I'm not really looking into making this a joint project. Specific bug
 
 ## Usage
 
-The creators of the map editor have chosen to build a manual into the editor, but it might not be immediately obvious. Look at the bottom bar, and it will tell you for the currently selected editing type what your mouse buttons will do, and which modifier keys will change to different placement modes. Once you hold down the key, the bottom bar text will change, further explaining what your mouse buttons will do in this specific mode.
+The creators of the map editor have chosen to build a manual into the editor, but it might not be immediately obvious. Look at the bottom bar, and it will tell you for the currently selected editing type what your mouse buttons will do, and which modifier keys will change to different placement modes. Once you hold down such a keys, the bottom bar text will change, further explaining what your mouse buttons will do in this specific mode.
 
 Besides that, the scroll wheel will allow zooming in and out, and the middle mouse button will allow you to quickly drag-scroll around the map.
 
-Specific options about the map and the scripting elements can be found in the "Settings" menu.
+Specific options about the map and the scripting elements can be found in the "Settings" menu:
+
+* "Map" will allow you to set the map's name, indicate whether it is a single player mission, set videos for mission startup, win, and lose, and configure the player's House (for singleplayer) and set alliances and other settings for all the Houses used on the map.
+* "Teamtypes" will allow you to define teams that can be used in the map's scripting, or that will simply be created randomly as attack teams by the AI Houses.
+* "Triggers" will allow you to make scripts that execute on the map. Note that scripting is mostly a singleplayer thing, and is severely limited in multiplayer, especially in Tiberian Dawn.
+
+For Tiberian Dawn maps, the triggers dialog has a "Check" button that will check if any configurations in the triggers might not work, or might even cause game crashes. For more info on that, see [the TD triggers overview guide I wrote on Steam](https://steamcommunity.com/sharedfiles/filedetails/?id=2824756756). Note that this is not a scripting guide; it is an overview of what each trigger event and action will accept as inputs, and produce as output, highlighting potential issues and some workarounds. Unfortunately, I'm not very well-versed in Red Alert triggers, so there is no equivalent check function (or guide) for Red Alert.
 
 ---
 
@@ -24,7 +28,7 @@ Specific options about the map and the scripting elements can be found in the "S
 
 The file "CnCTDRAMapEditor.exe.config" contains settings to customise the editor. This is what they do:
 
-* **ModsToLoad**: semicolon (or comma) separated list of mod entries. A mod entry can either be a Steam workshop ID, or a path of the type "Tiberian_Dawn\ModName" or "Red_Alert\ModName". The paths will initially be looked up under My Documents, but will also check the Steam workshop files, and use the game prefix part to verify the mod's targeted game. Note that mods are **not** loaded conditionally in the editor based on this targeted game; the editor loads all assets of both games on startup. The editor also has no way to check which mods are actually enabled in the game, and will load anything that is configured and of which the files can be found.
+* **ModsToLoad**: semicolon (or comma) separated list of mod entries. A mod entry can either be a Steam workshop ID, or a path of the type "Tiberian_Dawn\ModName" or "Red_Alert\ModName". The paths will initially be looked up under My Documents, but will also check the Steam workshop files, and use the game prefix part to verify the mod's targeted game. Note that due to the order in which files are loaded into the editor, mods are **not** loaded conditionally per map type based on this targeted game. The editor also has no way to check which mods are actually enabled in the game, and will load anything that is configured and of which the files can be found.
 * **NoMetaFilesForSinglePlay**: Suppresses the generation of .tga and .json files for single player maps.
 * **PlaceRandomTiles**: Red Alert Interior maps have an unused feature that several of its 1x1 tiles contain alternate versions. This option, which is enabled by default, will randomise placement of these tile types. Can be disabled if you want a "cleaner" look.
 * **IgnoreBibs**: Ignore bibs in the placement of buildings. Note that if you're not careful with this, this might prevent proper rebuilding of AI bases.
@@ -44,18 +48,18 @@ You can find the mod [on the Steam workshop](https://steamcommunity.com/sharedfi
 
 ### Features added by Rampastring:
 
-* Downsized menu graphics by a user-configurable factor so you can see more placeable object types at once on sub-4K monitors.
+* Downsized tool graphics by a user-configurable factor so you can see more placeable object types at once on sub-4K monitors.
 * Improved zoom levels.
 * Fixed a couple of crashes.
-* Made tool windows remember their previous position, size and other settings upon closing and re-opening them.
+* Made tool windows remember their previous position upon closing and re-opening them.
 * Replaced drop-downs with list boxes in object type selection dialogs to allow switching between objects with fewer clicks.
 
-### Features and fixes by Nyerguds (so far):
+### Features and fixes by Nyerguds:
 
 v1.4.0.0:
 
 * Fixed overlay height overflow bug in Rampa's new UI.
-* Fixed tiles list duplicating every time the "Map" tool window is opened in Rampa's version.
+* Fixed map tiles list duplicating every time the "Map" tool window is opened in Rampa's version.
 * Split off internal overlay type "decoration", used for pavements and civilian buildings.
 * Added CONC and ROAD pavement. They have no graphics, but at least now they are accepted by the editor and not discarded as errors.
 * Sorted all items in the lists (except map tiles) by key, which is usually a lot more straightforward.
@@ -64,11 +68,11 @@ v1.4.0.0:
 * Removed irrelevant orders from the unit missions list (Selling, Missile, etc.)
 * Fixed case sensitivity related crashes in TD teamtypes.
 * TD triggers without a teamtype will now automatically get "None" filled in as teamtype, fixing the malfunctioning of their repeat status.
-* Added Ctrl-N, Ctrl+O, Ctrl+S etc shortcuts for the File menu.
+* Added Ctrl+N, Ctrl+O, Ctrl+S etc. shortcuts for the File menu.
 * Fixed double indicator on map tile selection window.
 * Fixed smudge reading in TD to allow 5 crater stages.
 * Added tool window to adjust crater stage.
-* Fixed terrain objects not saving their trigger. Note that only "Attacked" triggers work on them.
+* Fixed TD terrain objects not saving their trigger. Note that only "Attacked" triggers work on them.
 * RA "Spied by..." trigger event now shows the House to select.
 * Added "Add" buttons in triggers and teamtypes dialogs.
 * Fixed tab order in triggers and teamtypes dialogs.
@@ -146,7 +150,7 @@ v1.4.0.3:
 * The CONC and ROAD overlay types now show the same graphics as in-game. This is technically just a dummy graphic the game uses when not finding object graphics. The version in the editor is a reconstruction.
 * Removed limitation on placing resources on the top and bottom row of the map.
 
-v1.4.0.4: [WIP]
+v1.4.1.0: [WIP]
 
 * Fixed dimensions of RA's ore mine, Snow theater ice floes and Interior theater boxes, and one of the Desert theater rocks in TD.
 * Added \*.ini to the list of possible extensions for opening RA maps. Apparently before I only added it for saving.
@@ -190,16 +194,16 @@ v1.4.0.4: [WIP]
 * The smudge tool now allows setting the size in the preview window, and picking craters with a different size from the map.
 * The "MapScaleFactor" and "PreviewScaleFactor" settings in the "CnCTDRAMapEditor.exe.config" file can adjust the downscaling factor for respectively the map graphics and the preview graphics. Higher values will reduce quality, but will make the editor more responsive. By default, previews in tool windows will now use higher quality graphics than the map. Using a negative value will enable smooth scaling. (Not advised, but it's available)
 * When removing a trigger, all celltriggers and objects linking to that trigger will now get their trigger cleared. Before, this only happened for structures.
-* The triggers available for linking to objects and cells are now filtered out to only those triggers with an Event that can be triggered by that object type. This will also affect the cleanup of triggers if a trigger's Event was changed to something not compatible with the objects it was linked to.
-* An "Info" icon next to the trigger dropdowns in the placement tool windows will give an explanation of which trigger events work for that type.
+* The triggers available for linking to objects and cells are now filtered out to only those triggers with an Event (or Action, in RA) that can be linked to that object type. This will also affect the cleanup of triggers if a trigger's Event or Action was changed to something not compatible with the objects it was linked to.
+* An "Info" icon next to the trigger dropdowns in the placement tool windows will give an explanation of which trigger Events and Actions work for that type.
 * For celltriggers and waypoints, the item selected in the tool dropdown will now be highlighted on the map in yellow.
-* A logical default Mission is now selected when you pick a unit to place.
-* The Celltrigger tool will now always be enabled, even if there are no placeable triggers available. This way, people can still check the "Info" icon on the tool to see the requirements for placeable waypoints.
-* The brush size on the resource tool will now adjust itself if an incorrect (even) value is given.
-* Map loading validation will now also validate terrain templates, meaning corrupted maps have a much higher likelihood to give correct feedback.
-* Map validation will now be done before the "Save File" dialog opens.
+* When you select a unit to place, a logical default Mission (order to execute) is now selected.
+* The Celltrigger tool will now always be enabled, even if there are no placeable triggers available. This way, people can still check the "Info" icon on the tool to see the requirements for placeable triggers.
+* The brush size on the resource tool will now adjust itself if an incorrect (even) value is manually entered on it.
+* Map loading validation will now also validate terrain templates, meaning corrupted maps have a much higher likelihood to give correct feedback. This will probably cause a lot of messages on the ghost tiles caused by the original map editor not correctly cutting out complex shapes on objects like bridges and map decorations, but those just mean your map got cleaned up to a valid state.
+* Map validation will now be done _before_ the "Save File" dialog opens.
 * Ini reading will now trim the value, like the original game does, allowing entries of the type "key = value".
-* Fixed potential crashes in the generation of map validation messages.
+* Fixed potential crashes in the generation of map validation messages (when encountering empty lines like "21=").
 * Red Alert interior theater no longer crashes when trying to show the bibs in the Smudge tool window.
 * Red Alert structures can no longer be put in an illegal state where Prebult is disabled but the rebuild priority is set to -1.
 * Fixed a crash in the RA triggers caused by the removal of the Aircraft types from the placeable objects.
@@ -214,3 +218,13 @@ v1.4.0.4: [WIP]
 * Overlap detection now correctly scans the full footprint of buildings and terrain objects for the blocking object.
 * Sounds lists in RA triggers now have descriptions.
 * If you try to save an opened file but the folder it was loaded from is deleted, it will no longer give an error, but revert to "Save As" behaviour.
+* The chosen peview image in the Steam upload dialog will now also be used as in-game preview for the map.
+
+### Possible future features
+
+Some ideas that might get implemented in the future:
+
+* Add Tiberian Dawn Megamap support. (Sole Survivor map type)
+* Show bibs as their full size.
+* Indication on the UI of which tiles contain randomisable alternates. Possibly with the ability to switch between randomising or showing a palette with all alternates to pick from.
+* Separating mods between Tiberian Dawn and Red Alert, so they only activate on their specific map type.

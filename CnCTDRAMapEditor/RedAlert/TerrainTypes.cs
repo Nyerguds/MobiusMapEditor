@@ -55,7 +55,7 @@ namespace MobiusEditor.RedAlert
         public static readonly TerrainType Boxes07 = new TerrainType(31, "boxes07", new TheaterType[] { TheaterTypes.Interior }, new bool[1, 1] { { true } });
         public static readonly TerrainType Boxes08 = new TerrainType(32, "boxes08", new TheaterType[] { TheaterTypes.Interior }, new bool[1, 1] { { true } });
         public static readonly TerrainType Boxes09 = new TerrainType(33, "boxes09", new TheaterType[] { TheaterTypes.Interior }, new bool[1, 1] { { true } });
-        public static readonly TerrainType Mine = new TerrainType(34, "mine", new TheaterType[] { TheaterTypes.Temperate, TheaterTypes.Snow }, new bool[1, 1] { { true } }, TemplateTypeFlag.OreMine);
+        public static readonly TerrainType Mine = new TerrainType(34, "mine", new TheaterType[] { TheaterTypes.Temperate, TheaterTypes.Snow }, new bool[1, 1] { { true } }, "OREMINE");
 
 
         private static TerrainType[] Types;

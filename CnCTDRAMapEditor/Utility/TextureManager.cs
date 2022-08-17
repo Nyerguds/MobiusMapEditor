@@ -84,7 +84,7 @@ namespace MobiusEditor.Utility
             }
         }
 
-        public (Bitmap, Rectangle) GetTexture(string filename, TeamColor teamColor, Boolean generateFallback)
+        public (Bitmap, Rectangle) GetTexture(string filename, TeamColor teamColor, bool generateFallback)
         {
             if (!cachedTextures.ContainsKey(filename) && generateFallback)
             {

@@ -74,15 +74,25 @@ namespace MobiusEditor.Model
          // No reason not to allow placing decorations and flag pedestal.
         public bool IsPlaceable => (Flag & (OverlayTypeFlag.Crate | OverlayTypeFlag.Decoration | OverlayTypeFlag.Flag | OverlayTypeFlag.Concrete)) != OverlayTypeFlag.None;
 
-        public OverlayType(sbyte id, string name, string textId, TheaterType[] theaters, OverlayTypeFlag flag, String graphicsLoadOverride, int forceTileNr)
+        public OverlayType(sbyte id, string name, string textId, TheaterType[] theaters, OverlayTypeFlag flag, String graphicsSource, int forceTileNr)
         {
             ID = id;
             Name = name;
-            GraphicsSource = graphicsLoadOverride == null ? name : graphicsLoadOverride;
+            GraphicsSource = graphicsSource == null ? name : graphicsSource;
             ForceTileNr = forceTileNr;
             DisplayName = Globals.TheGameTextManager[textId] + " (" + GraphicsSource.ToUpperInvariant() + ")";
             Theaters = theaters;
             Flag = flag;
+        }
+
+        public OverlayType(sbyte id, string name, string textId, TheaterType[] theaters, OverlayTypeFlag flag, String graphicsSource)
+            :this(id, name, textId, theaters, flag, graphicsSource, -1)
+        {
+        }
+
+        public OverlayType(sbyte id, string name, string textId, TheaterType[] theaters, OverlayTypeFlag flag, int forceTileNr)
+            :this(id, name, textId, theaters, flag, null, forceTileNr)
+        {
         }
 
         public OverlayType(sbyte id, string name, string textId, TheaterType[] theaters, OverlayTypeFlag flag)
@@ -150,7 +160,7 @@ namespace MobiusEditor.Model
         {
             var oldImage = Thumbnail;
             int tilenr = ForceTileNr == -1 ? 0 : ForceTileNr;
-            if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, GraphicsSource, tilenr, out Tile tile, (Flag & OverlayTypeFlag.Decoration) != 0))
+            if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, GraphicsSource, tilenr, out Tile tile, (Flag & OverlayTypeFlag.Decoration) != 0, false))
             {
                 var tileSize = Globals.PreviewTileSize;
                 Rectangle overlayBounds = MapRenderer.RenderBounds(tile.Image.Size, new Size(1,1), tileSize);

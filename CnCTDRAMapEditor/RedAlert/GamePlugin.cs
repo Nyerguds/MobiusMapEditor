@@ -25,6 +25,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using TGASharpLib;
 
 namespace MobiusEditor.RedAlert
 {
@@ -336,7 +337,7 @@ namespace MobiusEditor.RedAlert
             Map.TopLeft = new Point(1, 1);
             Map.Size = Map.Metrics.Size - new Size(2, 2);
             UpdateBasePlayerHouse();
-            Dirty = true;
+            //Dirty = true;
         }
 
         public IEnumerable<string> Load(string path, FileType fileType)
@@ -1396,6 +1397,11 @@ namespace MobiusEditor.RedAlert
 
         public bool Save(string path, FileType fileType)
         {
+            return Save(path, fileType, null);
+        }
+
+        public bool Save(string path, FileType fileType, Bitmap customPreview)
+        {
             String errors = Validate();
             if (errors != null)
             {
@@ -1418,7 +1424,14 @@ namespace MobiusEditor.RedAlert
                         var jsonPath = Path.ChangeExtension(path, ".json");
                         using (var tgaStream = new FileStream(tgaPath, FileMode.Create))
                         {
-                            SaveMapPreview(tgaStream, true);
+                            if (customPreview != null)
+                            {
+                                TGA.FromBitmap(customPreview).Save(tgaStream);
+                            }
+                            else
+                            {
+                                SaveMapPreview(tgaStream, true);
+                            }
                         }
                         using (var jsonStream = new FileStream(jsonPath, FileMode.Create))
                         using (var jsonWriter = new JsonTextWriter(new StreamWriter(jsonStream)))
@@ -1441,7 +1454,14 @@ namespace MobiusEditor.RedAlert
                         iniWriter.Write(ini.ToString());
                         iniWriter.Flush();
                         iniStream.Position = 0;
-                        SaveMapPreview(tgaStream, true);
+                        if (customPreview != null)
+                        {
+                            TGA.FromBitmap(customPreview).Save(tgaStream);
+                        }
+                        else
+                        {
+                            SaveMapPreview(tgaStream, true);
+                        }
                         tgaStream.Position = 0;
                         SaveJSON(jsonWriter);
                         jsonWriter.Flush();

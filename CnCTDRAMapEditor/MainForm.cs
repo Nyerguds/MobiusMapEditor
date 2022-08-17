@@ -655,7 +655,7 @@ namespace MobiusEditor
         {
             try
             {
-                if(!File.Exists(loadFilename))
+                if (!File.Exists(loadFilename))
                 {
                     return false;
                 }
@@ -692,7 +692,7 @@ namespace MobiusEditor
                     var ini = new INI();
                     ini.Parse(inicontents);
                     // if it gets to this point, the file is a text document.
-                    fileType = FileType.INI;                    
+                    fileType = FileType.INI;
                 }
                 catch
                 {
@@ -714,10 +714,10 @@ namespace MobiusEditor
                 {
                     gameType = File.Exists(Path.ChangeExtension(loadFilename, ".bin")) ? GameType.TiberianDawn : GameType.RedAlert;
                     break;
-                }                   
+                }
                 case FileType.BIN:
                 {
-                    gameType = GameType.TiberianDawn;
+                    gameType = File.Exists(Path.ChangeExtension(loadFilename, ".ini")) ? GameType.TiberianDawn : GameType.None;
                     break;
                 }
 #if DEVELOPER
@@ -784,7 +784,8 @@ namespace MobiusEditor
             }
             catch (Exception ex)
             {
-                //System.Windows.Forms.MessageBox.Show("Error: " + ex.Message + "\n\n" + ex.StackTrace);
+                //MessageBox.Show("Error: " + ex.Message + "\n\n" + ex.StackTrace);
+                this.ResetUI();
 #if DEVELOPER
                 throw;
 #else
@@ -801,6 +802,42 @@ namespace MobiusEditor
             RefreshAvailableTools();
             RefreshActiveTool();
             return true;
+        }
+
+        private void ResetUI()
+        {
+            try
+            {
+                url.Clear();
+                // Disable all tools
+                ActiveToolType = ToolType.None;
+                this.ActiveControl = null;
+                ClearAllTools();
+                // Unlink plugin
+                IGamePlugin pl = plugin;
+                plugin = null;
+                // Remove tools
+                RefreshAvailableTools();
+                // Clear UI
+                mapPanel.MapImage = null;
+                mapPanel.Invalidate();
+                // Dispose plugin
+                if (pl != null)
+                {
+                    pl.Dispose();
+                }
+                // Unload graphics
+                Globals.TheTilesetManager.Reset();
+                Globals.TheTextureManager.Reset();
+                // Clean up loaded file status
+                filename = null;
+                loadedFileType = FileType.None;
+                SetTitle();
+            }
+            catch
+            {
+                // Ignore.
+            }
         }
 
         private bool SaveFile(string saveFilename, FileType inputNameType)
@@ -1217,6 +1254,7 @@ namespace MobiusEditor
             if (!SteamworksUGC.IsInit)
             {
                 MessageBox.Show("Steam interface is not initialized. To enable Workshop publishing, log into Steam and restart the editor.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
             }
             if (!PromptSaveMap())
             {
