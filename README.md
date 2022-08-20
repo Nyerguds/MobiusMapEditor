@@ -204,7 +204,7 @@ v1.4.1.0:
 * Ini reading will now trim the value, like the original game does, allowing entries of the type "key = value".
 * Fixed potential crashes in the generation of map validation messages (when encountering empty lines like "21=").
 * Red Alert interior theater no longer crashes when trying to show the bibs in the Smudge tool window.
-* Red Alert structures can no longer be put in an illegal state where "Prebuilt" is disabled but the rebuild priority is set to -1.
+* Structures can no longer be put in an illegal state where "Prebuilt" is disabled but the rebuild priority is set to -1.
 * Fixed a crash in the RA triggers caused by the removal of the Aircraft types from the placeable objects.
 * Fixed refresh issues that occurred when moving the mouse out of the map area while still in placement mode.
 * Fixed incorrect tooltip placement when using bounds dragging mode on a different monitor.
