@@ -26,8 +26,6 @@ For Tiberian Dawn maps, the triggers dialog has a "Check" button that will check
 
 ## Configuration
 
-[Note: this section is added for the upcoming v1.4.1.0; many of these settings are not yet available, or have different names, in the previous versions]
-
 The file "CnCTDRAMapEditor.exe.config" contains settings to customise the editor. This is what they do:
 
 * **ModsToLoad**: semicolon (or comma) separated list of mod entries. A mod entry can either be a Steam workshop ID, or a path of the type "Tiberian_Dawn\ModName" or "Red_Alert\ModName". The paths will initially be looked up under My Documents, but will also check the Steam workshop files, and use the game prefix part to verify the mod's targeted game. Note that due to the order in which files are loaded into the editor, mods are **not** loaded conditionally per map type based on this targeted game. The editor also has no way to check which mods are actually enabled in the game, and will load anything that is configured and of which the files can be found.
@@ -151,7 +149,7 @@ v1.4.0.3:
 * The CONC and ROAD overlay types now show the same graphics as in-game. This is technically just a dummy graphic the game uses when not finding object graphics. The version in the editor is a reconstruction.
 * Removed limitation on placing resources on the top and bottom row of the map.
 
-v1.4.1.0: [WIP]
+v1.4.1.0:
 
 * Fixed dimensions of RA's ore mine, Snow theater ice floes and Interior theater boxes, and one of the Desert theater rocks in TD.
 * Added \*.ini to the list of possible extensions for opening RA maps. Apparently before I only added it for saving.
