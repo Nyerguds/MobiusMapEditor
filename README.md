@@ -212,7 +212,7 @@ v1.4.1.0: [WIP]
 * Fixed incorrect tooltip placement when using bounds dragging mode on a different monitor.
 * Red Alert's Interior tileset now supports randomising the 1x1 tiles that contain alternate versions. This type will now show all alternates on a blue grid in the preview window. Specific tiles can still be picked the usual way if you do not want random ones.
 * If mods add extra tiles to existing 1x1 tilesets, these will be treated as 1x1 with alternates too.
-* Tanya's default colouring in the editor preview is now Allied.
+* Tanya's default colouring in the editor preview is now Allied, and the M.A.D. Tank's colour is now Soviet.
 * Changed Red Alert's trigger action "Destroy attached building" to a more accurate "Destroy attached object", seeing as it even works from celltrigger to kill units.
 * Bibs are now shown as part of the building boundaries.
 * Bibs boundary checking can be disabled with a global setting.
@@ -221,6 +221,7 @@ v1.4.1.0: [WIP]
 * If you try to save an opened file but the folder it was loaded from is deleted, it will no longer give an error, but revert to "Save As" behaviour.
 * The chosen preview image in the Steam upload dialog will now also be used as in-game preview for the map.
 * In TD maps, a building that is set to be rebuilt but is not built from the start will now show as House "None".
+* The Interior tiles "wall0002" to "wall0022" are now grouped per type into three dummy-entries "wallgroup1", "wallgroup2" and "wallgroup3", to simplify random placement of these tiles and to remove clutter from the tiles list.
 
 ### Possible future features
 

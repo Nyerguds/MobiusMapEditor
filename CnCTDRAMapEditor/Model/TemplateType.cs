@@ -19,16 +19,19 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Linq;
 
 namespace MobiusEditor.Model
 {
     [Flags]
     public enum TemplateTypeFlag
     {
-        None       = 0,
-        Clear      = (1 << 0),
-        Water      = (1 << 1),
-        RandomCell = (1 << 2),
+        None         = 0,
+        Clear        = (1 << 0),
+        Water        = (1 << 1),
+        RandomCell   = (1 << 2),
+        Group      = RandomCell | (1 << 3),
+        IsGrouped = (1 << 4),
     }
 
     public class TemplateType : IBrowsableType
@@ -63,6 +66,8 @@ namespace MobiusEditor.Model
 
         public Dictionary<string, bool[,]> MaskOverrides { get; private set; }
 
+        public string[] GroupTiles { get; private set; }
+
         /// <summary>
         /// Creates a TemplateType object.
         /// </summary>
@@ -73,7 +78,7 @@ namespace MobiusEditor.Model
         /// <param name="theaters">Theaters that contain this tile.</param>
         /// <param name="flag">Indicates special terrain types.</param>
         /// <param name="maskOverrides">Mask override for tiles that contain too many graphics in the Remaster. Indices with '0' are removed from the tiles. Spaces are ignored and can be added for visual separation.</param>
-        public TemplateType(ushort id, string name, int iconWidth, int iconHeight, TheaterType[] theaters, TemplateTypeFlag flag, params String[] maskOverrides)
+        public TemplateType(ushort id, string name, int iconWidth, int iconHeight, TheaterType[] theaters, TemplateTypeFlag flag)
         {
             ID = id;
             Name = name;
@@ -85,41 +90,90 @@ namespace MobiusEditor.Model
             Theaters = theaters;
             Flag = flag;
             MaskOverrides = new Dictionary<string, bool[,]>(StringComparer.InvariantCultureIgnoreCase);
+            GroupTiles = new string[0];
+        }
+
+        /// <summary>
+        /// Creates a TemplateType object.
+        /// </summary>
+        /// <param name="id">Numeric id in the game map data.</param>
+        /// <param name="name">Name of the associated graphics.</param>
+        /// <param name="iconWidth">Width in cells.</param>
+        /// <param name="iconHeight">Height in cells.</param>
+        /// <param name="theaters">Theaters that contain this tile.</param>
+        /// <param name="flag">Indicates special terrain types.</param>
+        /// <param name="maskOverrides">Mask override for tiles that contain too many graphics in the Remaster. Indices with '0' are removed from the tiles. Spaces are ignored and can be added for visual separation.</param>
+        public TemplateType(ushort id, string name, int iconWidth, int iconHeight, TheaterType[] theaters, TemplateTypeFlag flag, params String[] maskOverrides)
+            :this(id,name,iconWidth, iconHeight, theaters, flag)
+        {
+            bool isRandom = NumIcons == 1 && (flag & TemplateTypeFlag.RandomCell) != TemplateTypeFlag.None;
             // Mask override for tiles that contain too many graphics in the Remaster. Indices with '0' are removed from the tiles.
             // Spaces are ignored and can be added for visual separation.
             if (maskOverrides.Length > 0)
             {
-                bool forAll = theaters == null || maskOverrides.Length != theaters.Length;
-                for (Int32 i = 0; i < maskOverrides.Length; i++)
+                if (!isRandom)
                 {
-                    string maskOverride = maskOverrides[i];
-                    string theater = forAll ? String.Empty : theaters[i].Name;
-                    bool[, ] mask = null;
-                    if (!String.IsNullOrEmpty(maskOverride))
+                    bool forAll = theaters == null || maskOverrides.Length != theaters.Length;
+                    for (Int32 i = 0; i < maskOverrides.Length; i++)
                     {
-                        mask = new bool[iconWidth, iconHeight];
-                        int icon = 0;
-                        for (var y = 0; y < IconHeight; ++y)
+                        string maskOverride = maskOverrides[i];
+                        string theater = forAll ? String.Empty : theaters[i].Name;
+                        bool[,] mask = null;
+                        if (!String.IsNullOrEmpty(maskOverride))
                         {
-                            for (var x = 0; x < IconWidth; ++x, ++icon)
+                            mask = new bool[iconWidth, iconHeight];
+                            int icon = 0;
+                            for (var y = 0; y < IconHeight; ++y)
                             {
-                                while (icon < maskOverride.Length && maskOverride[icon] == ' ')
+                                for (var x = 0; x < IconWidth; ++x, ++icon)
                                 {
-                                    icon++;
+                                    while (icon < maskOverride.Length && maskOverride[icon] == ' ')
+                                    {
+                                        icon++;
+                                    }
+                                    mask[x, y] = icon < maskOverride.Length && maskOverride[icon] != '0';
                                 }
-                                mask[x, y] = icon < maskOverride.Length && maskOverride[icon] != '0';
                             }
                         }
-                    }
-                    if (mask != null)
-                    {
-                        MaskOverrides[theater] = mask;
-                    }
-                    if (forAll)
-                    {
-                        break;
+                        if (mask != null)
+                        {
+                            MaskOverrides[theater] = mask;
+                        }
+                        if (forAll)
+                        {
+                            break;
+                        }
                     }
                 }
+            }
+        }
+        /// <summary>
+        /// Creates a TemplateType object as 1x1 that is part of a group-entry.
+        /// </summary>
+        /// <param name="id">Numeric id in the game map data.</param>
+        /// <param name="name">Name of the associated graphics.</param>
+        /// <param name="theaters">Theaters that contain this tile.</param>
+        /// <param name="groupName">Name of the group entry it belongs to.</param>
+        public TemplateType(ushort id, string name, TheaterType[] theaters, String groupName)
+            : this(id, name, 1, 1, theaters, TemplateTypeFlag.IsGrouped)
+        {
+            GroupTiles = new string[] { groupName };
+        }
+
+        /// <summary>
+        /// Creates a TemplateType object as 1x1 containing multiple tiles. If specified, can be used as "group" of other 1x1 tiles.
+        /// </summary>
+        /// <param name="id">Numeric id in the game map data.</param>
+        /// <param name="name">Name of the associated graphics.</param>
+        /// <param name="theaters">Theaters that contain this tile.</param>
+        /// <param name="asGroup">True to create this tile as group for containing other 1x1 types. Needs 'containedTiles' to be filled in.</param>
+        /// <param name="containedTiles">The tiles contained in this group entry.</param>
+        public TemplateType(ushort id, string name, TheaterType[] theaters, bool asGroup, params String[] containedTiles)
+            : this(id, name, 1, 1, theaters, asGroup ? TemplateTypeFlag.Group : TemplateTypeFlag.RandomCell)
+        {
+            if (asGroup)
+            {
+                GroupTiles = containedTiles.ToArray();
             }
         }
 
@@ -198,15 +252,24 @@ namespace MobiusEditor.Model
             int loopWidth = IconWidth;
             int loopHeight = IconHeight;
             bool isRandom = (Flag & TemplateTypeFlag.RandomCell) != TemplateTypeFlag.None;
+            bool isGroup = (Flag & TemplateTypeFlag.Group) == TemplateTypeFlag.Group;
             if (isRandom)
             {
-                int numIcons = Globals.TheTilesetManager.GetTileDataLength(theater.Tilesets, Name);
+                Int32 numIcons;
+                if (isGroup)
+                {
+                    numIcons = GroupTiles.Length;
+                }
+                else
+                {
+                    numIcons = Globals.TheTilesetManager.GetTileDataLength(theater.Tilesets, Name);
+                }
                 if (numIcons >= 1)
                 {
                     // Try to fit it into a shape as square as possible.
                     NumIcons = numIcons;
                     Double sqrt = Math.Sqrt(numIcons);
-                    loopWidth = (sqrt - Math.Floor(sqrt)) < 0.0001  ? (int)sqrt : (int)(sqrt + 1);
+                    loopWidth = (sqrt - Math.Floor(sqrt)) < 0.0001 ? (int)sqrt : (int)(sqrt + 1);
                     loopHeight = numIcons / loopWidth + (numIcons % loopWidth == 0 ? 0 : 1);
                     mask[0, 0] = true;
                 }
@@ -232,11 +295,23 @@ namespace MobiusEditor.Model
                 {
                     for (var x = 0; x < loopWidth; ++x, ++icon)
                     {
+                        if (icon >= NumIcons)
+                        {
+                            break;
+                        }
                         if (maskOv != null && !maskOv[x, y])
                         {
                             continue;
                         }
-                        if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, Name, icon, out Tile tile, tryDummy, true))
+                        int iconToFetch = icon;
+                        string nameToFetch = Name;
+                        if (isGroup)
+                        {
+                            nameToFetch = GroupTiles[icon];
+                            iconToFetch = 0;
+                            tryDummy = false;
+                        }
+                        if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, nameToFetch, iconToFetch, out Tile tile, tryDummy, true))
                         {
                             if (tile.Image != null)
                             {

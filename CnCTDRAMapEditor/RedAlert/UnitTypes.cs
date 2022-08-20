@@ -40,7 +40,7 @@ namespace MobiusEditor.RedAlert
         public static readonly UnitType Ant3 = new UnitType(16, "ant3", "TEXT_UNIT_RA_ANT3", "Special");
         public static readonly UnitType Chrono = new UnitType(17, "ctnk", "TEXT_UNIT_RA_CTNK", "Greece");
         public static readonly UnitType Tesla = new UnitType(18, "ttnk", "TEXT_UNIT_RA_TTNK", "USSR");
-        public static readonly UnitType MAD = new UnitType(19, "qtnk", "TEXT_UNIT_RA_QTNK", "Greece");
+        public static readonly UnitType MAD = new UnitType(19, "qtnk", "TEXT_UNIT_RA_QTNK", "USSR");
         public static readonly UnitType DemoTruck = new UnitType(20, "dtrk", "TEXT_UNIT_RA_DTRK", "USSR");
         public static readonly UnitType Phase = new UnitType(21, "stnk", "TEXT_UNIT_RA_STNK", "Greece", true);
 

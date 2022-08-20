@@ -146,10 +146,10 @@ namespace MobiusEditor.Tools
                 return m.Success ? m.Groups[1].Value : string.Empty;
             }
             var templateTypes = plugin.Map.TemplateTypes
-                .Where(t =>
-                    (t.Thumbnail != null) &&
-                    t.Theaters.Contains(plugin.Map.Theater) &&
-                    ((t.Flag & TemplateTypeFlag.Clear) == TemplateTypeFlag.None))
+                .Where(t => t.Thumbnail != null
+                    && t.Theaters.Contains(plugin.Map.Theater)
+                    && (t.Flag & TemplateTypeFlag.Clear) == TemplateTypeFlag.None
+                    && (t.Flag & TemplateTypeFlag.IsGrouped) == TemplateTypeFlag.None)
                 .GroupBy(t => templateCategory(t)).OrderBy(g => g.Key);
             var templateTypeImages = templateTypes.SelectMany(g => g).Select(t => t.Thumbnail);
             var clear = plugin.Map.TemplateTypes.Where(t => (t.Flag & TemplateTypeFlag.Clear) == TemplateTypeFlag.Clear).FirstOrDefault();
@@ -233,9 +233,10 @@ namespace MobiusEditor.Tools
 
         private void TemplateTypeMapPanel_MouseDown(object sender, MouseEventArgs e)
         {
+            // This code picks the single icon from the preview pane.
             TemplateType selected = SelectedTemplateType;
             bool isRandom = selected != null && (selected.Flag & TemplateTypeFlag.RandomCell) != TemplateTypeFlag.None;
-            if (e.Button == MouseButtons.Right || (selected == null) || ((selected.IconWidth * selected.IconHeight) == 1 && !isRandom))
+            if (e.Button == MouseButtons.Right || (selected == null) || (e.Button == MouseButtons.Left && (selected.IconWidth * selected.IconHeight) == 1 && !isRandom))
             {
                 SelectedIcon = null;
                 return;
@@ -606,6 +607,7 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
+            bool isGroup = (selected.Flag & TemplateTypeFlag.Group) == TemplateTypeFlag.Group;
             if (SelectedIcon.HasValue)
             {
                 if (map.Metrics.GetCell(location, out int cell))
@@ -615,7 +617,13 @@ namespace MobiusEditor.Tools
                         undoTemplates[cell] = map.Templates[location];
                     }
                     var icon = (SelectedIcon.Value.Y * selected.ThumbnailWidth) + SelectedIcon.Value.X;
-                    var template = new Template { Type = selected, Icon = icon };
+                    TemplateType placeType = selected;
+                    if (isGroup)
+                    {
+                        placeType = map.TemplateTypes.Where(t => t.Name == selected.GroupTiles[icon]).FirstOrDefault();
+                        icon = 0;
+                    }
+                    var template = new Template { Type = placeType, Icon = icon };
                     map.Templates[cell] = template;
                     redoTemplates[cell] = template;
                     mapPanel.Invalidate(map, cell);
@@ -654,8 +662,23 @@ namespace MobiusEditor.Tools
                         var subLocation = new Point(location.X + x, location.Y + y);
                         if (map.Metrics.GetCell(subLocation, out int cell))
                         {
-                            int placeIcon = isRandom ? random.Next(0, selected.NumIcons) : icon;
-                            var template = new Template { Type = selected, Icon = placeIcon };
+                            int placeIcon;
+                            TemplateType placeType = selected;
+                            if (isGroup)
+                            {
+                                int randomType = random.Next(0, selected.NumIcons);
+                                placeType = map.TemplateTypes.Where(t => t.Name == selected.GroupTiles[randomType]).FirstOrDefault();
+                                placeIcon = 0;
+                            }
+                            else if (isRandom)
+                            {
+                                placeIcon = random.Next(0, selected.NumIcons);
+                            }
+                            else
+                            {
+                                placeIcon = icon;
+                            }
+                            var template = new Template { Type = placeType, Icon = placeIcon };
                             map.Templates[cell] = template;
                             redoTemplates[cell] = template;
                             mapPanel.Invalidate(map, cell);
@@ -825,19 +848,38 @@ namespace MobiusEditor.Tools
             if (map.Metrics.GetCell(location, out int cell))
             {
                 var template = map.Templates[cell];
+                bool groupOwned = false;
                 if (template != null)
                 {
-                    SelectedTemplateType = template.Type;
+                    if ((template.Type.Flag & TemplateTypeFlag.IsGrouped) != TemplateTypeFlag.None && template.Type.GroupTiles.Length == 1)
+                    {
+                        groupOwned = true;
+                        string owningType = template.Type.GroupTiles[0];
+                        SelectedTemplateType = map.TemplateTypes.Where(t => t.Name.Equals(owningType, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+                    }
+                    else
+                    {
+                        SelectedTemplateType = template.Type;
+                    }
                 }
                 else
                 {
-                    SelectedTemplateType = map.TemplateTypes.Where(t => t.Equals("clear1")).FirstOrDefault();
+                    SelectedTemplateType = map.TemplateTypes.Where(t => t.Name.Equals("clear1", StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
                 }
                 TemplateType selected = SelectedTemplateType;
                 bool isRandom = (selected.Flag & TemplateTypeFlag.RandomCell) != TemplateTypeFlag.None && selected.NumIcons > 1;
                 if (!wholeTemplate && ((selected.IconWidth * selected.IconHeight) > 1 || isRandom))
                 {
-                    var icon = template?.Icon ?? 0;
+                    int icon;
+                    if (groupOwned)
+                    {
+                        string origType = template.Type.Name;
+                        icon = Enumerable.Range(0, selected.GroupTiles.Length).FirstOrDefault(i => origType.Equals(selected.GroupTiles[i], StringComparison.InvariantCultureIgnoreCase));
+                    }
+                    else
+                    {
+                        icon = template?.Icon ?? 0;
+                    }
                     int width = selected.ThumbnailWidth;
                     SelectedIcon = new Point(icon % width, icon / width);
                 }

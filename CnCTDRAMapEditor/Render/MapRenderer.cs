@@ -140,6 +140,11 @@ namespace MobiusEditor.Render
                     TemplateType ttype = template?.Type ?? clear;
                     var name = ttype.Name;
                     var icon = template?.Icon ?? ((cell & 0x03) | ((cell >> 4) & 0x0C));
+                    if ((ttype.Flag & TemplateTypeFlag.Group) == TemplateTypeFlag.Group)
+                    {
+                        name = ttype.GroupTiles[icon];
+                        icon = 0;
+                    }
                     // If it's actually placed on the map, show it, even if it has no graphics.
                     if (Globals.TheTilesetManager.GetTileData(map.Theater.Tilesets, name, icon, out Tile tile, true, false))
                     {

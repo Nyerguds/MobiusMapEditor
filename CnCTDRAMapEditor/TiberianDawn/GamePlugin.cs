@@ -1153,10 +1153,9 @@ namespace MobiusEditor.TiberianDawn
                     if (templateType != null)
                     {
                         bool isRandom = (templateType.Flag & TemplateTypeFlag.RandomCell) != TemplateTypeFlag.None;
-                        bool tileOk = false;
-                        if ((templateType.Flag & TemplateTypeFlag.Clear) != TemplateTypeFlag.None)
+                        if ((templateType.Flag & TemplateTypeFlag.Clear) != TemplateTypeFlag.None || (templateType.Flag & TemplateTypeFlag.Group) == TemplateTypeFlag.Group)
                         {
-                            // Not going to give an error for explicit "Clear" templates. Probably just from XCC Editor. But it still gets wiped.
+                            // No explicitly set Clear terrain allowed. Also no explicitly set versions allowed of the "group" dummy entries.
                             templateType = null;
                         }
                         else if (!templateType.Theaters.Contains(Map.Theater))

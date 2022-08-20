@@ -612,9 +612,9 @@ namespace MobiusEditor.RedAlert
                                 }
                                 else if (templateType != null)
                                 {
-                                    if ((templateType.Flag & TemplateTypeFlag.Clear) != TemplateTypeFlag.None)
+                                    if ((templateType.Flag & TemplateTypeFlag.Clear) != TemplateTypeFlag.None || (templateType.Flag & TemplateTypeFlag.Group) == TemplateTypeFlag.Group)
                                     {
-                                        // No explicitly set Clear terrain allowed.
+                                        // No explicitly set Clear terrain allowed. Also no explicitly set versions allowed of the "group" dummy entries.
                                         templateType = null;
                                     }
                                     else if (!templateType.Theaters.Contains(Map.Theater))
