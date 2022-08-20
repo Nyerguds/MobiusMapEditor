@@ -23,7 +23,7 @@ namespace MobiusEditor.Model
     [Flags]
     public enum OverlayTypeFlag
     {
-        // Nyerguds upgrade: Added decoration type.
+        // Nyerguds upgrade: Added decoration and concrete types.
         None            = 0,
         TiberiumOrGold  = (1 << 0),
         Gems            = (1 << 1),

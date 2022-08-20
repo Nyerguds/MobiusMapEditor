@@ -1729,7 +1729,6 @@ namespace MobiusEditor.RedAlert
                 {
                     continue;
                 }
-
                 INI.WriteSection(new MapContext(Map, true), ini.Sections.Add(house.Type.Name), house);
             }
 

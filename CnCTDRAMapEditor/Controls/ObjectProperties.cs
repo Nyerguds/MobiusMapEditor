@@ -49,14 +49,15 @@ namespace MobiusEditor.Controls
                     {
                         obj.PropertyChanged -= Obj_PropertyChanged;
                     }
-
                     obj = value;
-
                     if (obj != null)
                     {
+                        if (obj is Building bld)
+                        {
+                            AdjustToStructurePrebuiltStatus(bld);
+                        }
                         obj.PropertyChanged += Obj_PropertyChanged;
                     }
-
                     Rebind();
                 }
             }
@@ -73,12 +74,9 @@ namespace MobiusEditor.Controls
             Plugin = plugin;
             plugin.Map.Triggers.CollectionChanged -= Triggers_CollectionChanged;
             plugin.Map.Triggers.CollectionChanged += Triggers_CollectionChanged;
-
             houseComboBox.DataSource = plugin.Map.Houses.Select(t => new TypeItem<HouseType>(t.Type.Name, t.Type)).ToArray();
             missionComboBox.DataSource = plugin.Map.MissionTypes;
-
             UpdateDataSource();
-
             Disposed += (sender, e) =>
             {
                 Object = null;
@@ -227,8 +225,12 @@ namespace MobiusEditor.Controls
                         if (obj is Building building)
                         {
                             prebuiltCheckBox.Enabled = building.BasePriority >= 0;
-                            if (building.BasePriority < 0 && !prebuiltCheckBox.Checked)
-                                prebuiltCheckBox.Checked = true;
+                            // Fix for the illegal state of it being set to not rebuild and not be prebuilt.
+                            if (building.BasePriority < 0 && !building.IsPrebuilt)
+                            {
+                                building.IsPrebuilt = true;
+                            }
+                            AdjustToStructurePrebuiltStatus(building);
                         }
                     }
                     break;
@@ -236,12 +238,7 @@ namespace MobiusEditor.Controls
                     {
                         if (obj is Building building)
                         {
-                            if (!building.IsPrebuilt)
-                            {
-                                var basePlayer = Plugin.Map.HouseTypes.Where(h => h.Equals(Plugin.Map.BasicSection.BasePlayer)).FirstOrDefault() ?? Plugin.Map.HouseTypes.First();
-                                building.House = basePlayer;
-                            }
-                            houseComboBox.Enabled = building.IsPrebuilt;
+                            AdjustToStructurePrebuiltStatus(building);
                         }
                     } break;
             }
@@ -250,6 +247,55 @@ namespace MobiusEditor.Controls
             {
                 Plugin.Dirty = true;
             }
+        }
+
+        private void AdjustToStructurePrebuiltStatus(Building building)
+        {
+            if (building.BasePriority >= 0 && !building.IsPrebuilt)
+            {
+                House noneHouse = Plugin.Map.HousesIncludingNone.Where(h => h.Type.ID < 0).FirstOrDefault();
+                if (noneHouse != null)
+                {
+                    // Fix for changing the combobox to one only containing "None".
+                    houseComboBox.DataBindings.Clear();
+                    houseComboBox.DataSource = noneHouse.Yield().Select(t => new TypeItem<HouseType>(t.Type.Name, t.Type)).ToArray();
+                    houseComboBox.SelectedIndex = 0;
+                    building.House = noneHouse.Type;
+                    houseComboBox.DataBindings.Add("SelectedValue", obj, "House");
+                }
+                else
+                {
+                    var basePlayer = Plugin.Map.HouseTypes.Where(h => h.Equals(Plugin.Map.BasicSection.BasePlayer)).FirstOrDefault() ?? Plugin.Map.HouseTypes.First();
+                    building.House = basePlayer;
+                }
+            }
+            else
+            {
+                // Fix for restoring "None" to a normal House. Only needed for TD.
+                HouseType selected = houseComboBox.SelectedValue as HouseType;
+                if (selected != null && selected.ID < 0)
+                {
+                    houseComboBox.DataBindings.Clear();
+                    var houses = Plugin.Map.Houses.Select(t => new TypeItem<HouseType>(t.Type.Name, t.Type)).ToArray();
+                    houseComboBox.DataSource = houses;
+                    building.House = houses.First().Type;
+                    houseComboBox.SelectedIndex = 0;
+                    houseComboBox.DataBindings.Add("SelectedValue", obj, "House");
+                }
+            }
+            if (!building.IsPrebuilt)
+            {
+                building.Strength = 255;
+                building.Direction = Plugin.Map.DirectionTypes.First();
+                building.Trigger = Trigger.None;
+            }
+            if (directionComboBox.Visible)
+            {
+                directionComboBox.Enabled = building.IsPrebuilt;
+            }
+            houseComboBox.Enabled = building.IsPrebuilt;
+            strengthNud.Enabled = building.IsPrebuilt;
+            triggerComboBox.Enabled = building.IsPrebuilt;
         }
 
         private void comboBox_SelectedValueChanged(object sender, EventArgs e)

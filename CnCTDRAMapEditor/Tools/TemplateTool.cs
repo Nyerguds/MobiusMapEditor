@@ -101,7 +101,7 @@ namespace MobiusEditor.Tools
                             }
                         }
                     }
-                    RefreshMapPanel();
+                    RefreshPreviewMapPanel();
                 }
             }
         }
@@ -137,7 +137,7 @@ namespace MobiusEditor.Tools
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
             previewMap = map;
-            this.random = Globals.PlaceRandomTiles ? new Random() : null;
+            this.random = new Random();
             this.templateTypeListView = templateTypeListView;
             this.templateTypeListView.SelectedIndexChanged -= TemplateTypeListView_SelectedIndexChanged;
             string templateCategory(TemplateType template)
@@ -164,7 +164,7 @@ namespace MobiusEditor.Tools
             var maxHeight = Math.Min(templateTypeImages.Max(t => t.Height), maxSize);
             var imageList = new ImageList();
             imageList.Images.Add(clear.Thumbnail);
-            imageList.Images.AddRange(templateTypeImages.ToArray());
+            imageList.Images.AddRange(templateTypeImages.Select(im => GeneralUtils.FitToBoundingBox(im, maxWidth, maxHeight)).ToArray());
             imageList.ImageSize = new Size(maxWidth, maxHeight);
             imageList.ColorDepth = ColorDepth.Depth24Bit;
             this.templateTypeListView.BeginUpdate();
@@ -234,29 +234,39 @@ namespace MobiusEditor.Tools
         private void TemplateTypeMapPanel_MouseDown(object sender, MouseEventArgs e)
         {
             TemplateType selected = SelectedTemplateType;
-            if ((selected == null) || ((selected.IconWidth * selected.IconHeight) == 1))
+            bool isRandom = selected != null && (selected.Flag & TemplateTypeFlag.RandomCell) != TemplateTypeFlag.None;
+            if (e.Button == MouseButtons.Right || (selected == null) || ((selected.IconWidth * selected.IconHeight) == 1 && !isRandom))
             {
                 SelectedIcon = null;
+                return;
             }
-            else
+            if (e.Button == MouseButtons.Left)
             {
-                if (e.Button == MouseButtons.Left)
+                var templateTypeMouseCell = templateTypeNavigationWidget.MouseCell;
+
+                int width = selected.ThumbnailWidth;
+                int height = selected.ThumbnailHeight;
+                int x = templateTypeMouseCell.X;
+                int y = templateTypeMouseCell.Y;
+                if ((x >= 0) && (x < width))
                 {
-                    var templateTypeMouseCell = templateTypeNavigationWidget.MouseCell;
-                    if ((templateTypeMouseCell.X >= 0) && (templateTypeMouseCell.X < selected.IconWidth))
+                    if ((y >= 0) && (y < height))
                     {
-                        if ((templateTypeMouseCell.Y >= 0) && (templateTypeMouseCell.Y < selected.IconHeight))
+                        if (isRandom)
                         {
-                            if (selected.IconMask[templateTypeMouseCell.X, templateTypeMouseCell.Y])
+                            if (y * width + x < selected.NumIcons)
+                            {
+                                SelectedIcon = templateTypeMouseCell;
+                            }
+                        }
+                        else
+                        {
+                            if (selected.IconMask[x, y])
                             {
                                 SelectedIcon = templateTypeMouseCell;
                             }
                         }
                     }
-                }
-                else if (e.Button == MouseButtons.Right)
-                {
-                    SelectedIcon = null;
                 }
             }
         }
@@ -269,20 +279,44 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-            if (SelectedIcon.HasValue)
+            bool isRandom = (selected.Flag & TemplateTypeFlag.RandomCell) != TemplateTypeFlag.None && selected.NumIcons > 1;
+            if (SelectedIcon.HasValue || isRandom)
             {
+                int width = selected.ThumbnailWidth;
+                int height = selected.ThumbnailHeight;
                 int panelWidth = templateTypeMapPanel.ClientSize.Width;
                 int panelHeight = templateTypeMapPanel.ClientSize.Height;
-                int iconWidth = selected.IconWidth;
-                int iconHeight = selected.IconHeight;
-                int maxIconRect = Math.Max(iconWidth, iconHeight);
-                int scaleX = panelWidth / maxIconRect;
-                int scaleY = panelHeight / maxIconRect;
+                int iconWidth = width;
+                int iconHeight = height;
+                int scaleX = panelWidth / iconWidth;
+                int scaleY = panelHeight / iconHeight;
                 int scale = Math.Min(scaleX, scaleY);
-                int leftoverX = panelWidth - (scale * maxIconRect);
-                int leftoverY = panelHeight - (scale * maxIconRect);
+                int leftoverX = panelWidth - (scale * iconWidth);
+                int leftoverY = panelHeight - (scale * iconHeight);
                 int padX = leftoverX / 2;
                 int padY = leftoverY / 2;
+                if (isRandom)
+                {
+                    int icon = 0;
+                    using (var selectedIconPen = new Pen(Color.LightSkyBlue, Math.Max(1, scale / 16)))
+                    {
+                        var cellSize = new Size(scale, scale);
+                        for (int y = 0; y < height; y++)
+                        {
+                            for (int x = 0; x < width; x++)
+                            {
+                                if (icon >= selected.NumIcons)
+                                {
+                                    break;
+                                }
+                                var rect = new Rectangle(new Point(padX + x * cellSize.Width, padY + y * cellSize.Height), cellSize);
+                                e.Graphics.DrawRectangle(selectedIconPen, rect);
+                                icon++;
+                            }
+                        }
+                    }
+                }
+                if (SelectedIcon.HasValue)
                 using (var selectedIconPen = new Pen(Color.Yellow, Math.Max(1, scale / 16)))
                 {
                     var cellSize = new Size(scale, scale);
@@ -543,7 +577,7 @@ namespace MobiusEditor.Tools
             }
         }
 
-        private void RefreshMapPanel()
+        private void RefreshPreviewMapPanel()
         {
             if (templateTypeNavigationWidget != null)
             {
@@ -554,7 +588,7 @@ namespace MobiusEditor.Tools
             if (selected != null)
             {
                 templateTypeMapPanel.MapImage = selected.Thumbnail;
-                var templateTypeMetrics = new CellMetrics(selected.IconWidth, selected.IconHeight);
+                var templateTypeMetrics = new CellMetrics(selected.ThumbnailWidth, selected.ThumbnailHeight);
                 templateTypeNavigationWidget = new NavigationWidget(templateTypeMapPanel, templateTypeMetrics, Globals.OriginalTileSize);
                 templateTypeNavigationWidget.MouseoverSize = Size.Empty;
                 templateTypeNavigationWidget.Activate();
@@ -580,7 +614,7 @@ namespace MobiusEditor.Tools
                     {
                         undoTemplates[cell] = map.Templates[location];
                     }
-                    var icon = (SelectedIcon.Value.Y * selected.IconWidth) + SelectedIcon.Value.X;
+                    var icon = (SelectedIcon.Value.Y * selected.ThumbnailWidth) + SelectedIcon.Value.X;
                     var template = new Template { Type = selected, Icon = icon };
                     map.Templates[cell] = template;
                     redoTemplates[cell] = template;
@@ -620,7 +654,7 @@ namespace MobiusEditor.Tools
                         var subLocation = new Point(location.X + x, location.Y + y);
                         if (map.Metrics.GetCell(subLocation, out int cell))
                         {
-                            int placeIcon = isRandom && random != null ? random.Next(0, selected.NumIcons) : icon;
+                            int placeIcon = isRandom ? random.Next(0, selected.NumIcons) : icon;
                             var template = new Template { Type = selected, Icon = placeIcon };
                             map.Templates[cell] = template;
                             redoTemplates[cell] = template;
@@ -800,10 +834,12 @@ namespace MobiusEditor.Tools
                     SelectedTemplateType = map.TemplateTypes.Where(t => t.Equals("clear1")).FirstOrDefault();
                 }
                 TemplateType selected = SelectedTemplateType;
-                if (!wholeTemplate && ((selected.IconWidth * selected.IconHeight) > 1))
+                bool isRandom = (selected.Flag & TemplateTypeFlag.RandomCell) != TemplateTypeFlag.None && selected.NumIcons > 1;
+                if (!wholeTemplate && ((selected.IconWidth * selected.IconHeight) > 1 || isRandom))
                 {
                     var icon = template?.Icon ?? 0;
-                    SelectedIcon = new Point(icon % selected.IconWidth, icon / selected.IconWidth);
+                    int width = selected.ThumbnailWidth;
+                    SelectedIcon = new Point(icon % width, icon / width);
                 }
                 else
                 {
@@ -938,7 +974,7 @@ namespace MobiusEditor.Tools
             {
                 if (previewMap.Metrics.GetCell(location, out int cell))
                 {
-                    var icon = (SelectedIcon.Value.Y * selected.IconWidth) + SelectedIcon.Value.X;
+                    var icon = (SelectedIcon.Value.Y * selected.ThumbnailWidth) + SelectedIcon.Value.X;
                     previewMap.Templates[cell] = new Template { Type = selected, Icon = icon };
                 }
             }
@@ -1046,10 +1082,21 @@ namespace MobiusEditor.Tools
                 if (disposing)
                 {
                     Deactivate();
-                    templateTypeListView.SelectedIndexChanged -= TemplateTypeListView_SelectedIndexChanged;
-                    templateTypeNavigationWidget?.Dispose();
-                    templateTypeMapPanel.MouseDown -= TemplateTypeMapPanel_MouseDown;
-                    templateTypeMapPanel.PostRender -= TemplateTypeMapPanel_PostRender;
+                    this.templateTypeListView.SelectedIndexChanged -= TemplateTypeListView_SelectedIndexChanged;
+                    this.templateTypeNavigationWidget?.Dispose();
+                    this.templateTypeMapPanel.MouseDown -= TemplateTypeMapPanel_MouseDown;
+                    this.templateTypeMapPanel.PostRender -= TemplateTypeMapPanel_PostRender;
+                    foreach (Image img in this.templateTypeListView.LargeImageList.Images)
+                    {
+                        try
+                        {
+                            img.Dispose();
+                        }
+                        catch
+                        {
+                            // Ignore.
+                        }
+                    }
                 }
                 disposedValue = true;
             }

@@ -207,23 +207,11 @@ namespace MobiusEditor.Dialogs
             {
                 (previewTxt.Tag as Image)?.Dispose();
                 Bitmap preview = null;
-                using (Bitmap b = new Bitmap(previewTxt.Text))
+                if (File.Exists(previewTxt.Text))
                 {
-                    preview = new Bitmap(Globals.MapPreviewSize.Width, Globals.MapPreviewSize.Height);
-                    double previewScaleW = (double)Globals.MapPreviewSize.Width / b.Width;
-                    double previewScaleH = (double)Globals.MapPreviewSize.Height / b.Height;
-                    bool maxIsW = previewScaleW < previewScaleH;
-                    double previewScale = maxIsW ? previewScaleW : previewScaleH;
-                    int width = (int)Math.Floor(b.Width * previewScale);
-                    int height = (int)Math.Floor(b.Height * previewScale);
-                    int offsetX = maxIsW ? 0 : (Globals.MapPreviewSize.Width - width) / 2;
-                    int offsetY = maxIsW ? (Globals.MapPreviewSize.Height - height) / 2 : 0;
-                    using (Graphics g = Graphics.FromImage(preview))
+                    using (Bitmap b = new Bitmap(previewTxt.Text))
                     {
-                        g.Clear(Color.Black);
-                        g.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceCopy;
-                        g.DrawImage(b, new Rectangle(offsetX, offsetY, width, height), new Rectangle(0,0,b.Width, b.Height), GraphicsUnit.Pixel);
-                        g.Flush();
+                        preview = GeneralUtils.FitToBoundingBox(b, Globals.MapPreviewSize.Width, Globals.MapPreviewSize.Height, Color.Black);
                     }
                 }
                 previewTxt.Tag = preview;

@@ -135,6 +135,11 @@ namespace MobiusEditor.Tools
             {
                 RenderWayPoints(graphics);
             }
+            if ((PriorityLayers & MapLayerFlag.BuildingLabels) == MapLayerFlag.None
+                && (ManuallyHandledLayers & MapLayerFlag.BuildingLabels) == MapLayerFlag.None)
+            {
+                RenderAllBuildingLabels(graphics);
+            }
             if ((PriorityLayers & MapLayerFlag.TechnoTriggers) == MapLayerFlag.None
                 && (ManuallyHandledLayers & MapLayerFlag.TechnoTriggers) == MapLayerFlag.None)
             {
@@ -153,9 +158,67 @@ namespace MobiusEditor.Tools
             {
                 RenderWayPoints(graphics);
             }
+            if ((PriorityLayers & MapLayerFlag.BuildingLabels) != MapLayerFlag.None)
+            {
+                RenderAllBuildingLabels(graphics);
+            }
             if ((PriorityLayers & MapLayerFlag.TechnoTriggers) != MapLayerFlag.None)
             {
                 RenderTechnoTriggers(graphics);
+            }
+        }
+
+        private void RenderAllBuildingLabels(Graphics graphics)
+        {
+            if ((Layers & MapLayerFlag.Buildings) == MapLayerFlag.None
+                || (Layers & MapLayerFlag.BuildingLabels) == MapLayerFlag.None)
+            {
+                return;
+            }
+            foreach (var (topLeft, building) in map.Buildings.OfType<Building>())
+            {
+                RenderBuildingLabels(graphics, building, topLeft, Globals.MapTileWidth, Globals.MapTileHeight, false);
+            }
+        }
+
+        protected void RenderBuildingLabels(Graphics g, Building building, Point topLeft, int tileWidth, int tileHeight, Boolean forPreview)
+        {
+            var stringFormat = new StringFormat
+            {
+                Alignment = StringAlignment.Center,
+                LineAlignment = StringAlignment.Center
+            };
+            var maxSize = building.Type.Size;
+            var buildingBounds = new Rectangle(
+                new Point(topLeft.X * tileWidth, topLeft.Y * tileHeight),
+                new Size(maxSize.Width * tileWidth, maxSize.Height * tileHeight)
+            );
+            if (building.Type.IsFake)
+            {
+                var text = Globals.TheGameTextManager["TEXT_UI_FAKE"];
+                var textSize = g.MeasureString(text, SystemFonts.CaptionFont) + new SizeF(6.0f, 6.0f);
+                var textBounds = new RectangleF(buildingBounds.Location, textSize);
+                using (var fakeBackgroundBrush = new SolidBrush(Color.FromArgb((forPreview ? 128 : 256) * 2 / 3, Color.Black)))
+                using (var fakeTextBrush = new SolidBrush(Color.FromArgb(forPreview ? building.Tint.A : 255, Color.White)))
+                {
+                    g.FillRectangle(fakeBackgroundBrush, textBounds);
+                    g.DrawString(text, SystemFonts.CaptionFont, fakeTextBrush, textBounds, stringFormat);
+                }
+            }
+            if (building.BasePriority >= 0)
+            {
+                var text = building.BasePriority.ToString();
+                var textSize = g.MeasureString(text, SystemFonts.CaptionFont) + new SizeF(6.0f, 6.0f);
+                var textBounds = new RectangleF(buildingBounds.Location +
+                    new Size((int)((buildingBounds.Width - textSize.Width) / 2.0f), (int)(buildingBounds.Height - textSize.Height)),
+                    textSize
+                );
+                using (var baseBackgroundBrush = new SolidBrush(Color.FromArgb((forPreview ? 128 : 256) * 2 / 3, Color.Black)))
+                using (var baseTextBrush = new SolidBrush(Color.FromArgb(forPreview ? 128 : 255, Color.Red)))
+                {
+                    g.FillRectangle(baseBackgroundBrush, textBounds);
+                    g.DrawString(text, SystemFonts.CaptionFont, baseTextBrush, textBounds, stringFormat);
+                }
             }
         }
 

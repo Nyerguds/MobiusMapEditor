@@ -140,7 +140,8 @@ namespace MobiusEditor.Render
                     TemplateType ttype = template?.Type ?? clear;
                     var name = ttype.Name;
                     var icon = template?.Icon ?? ((cell & 0x03) | ((cell >> 4) & 0x0C));
-                    if (Globals.TheTilesetManager.GetTileData(map.Theater.Tilesets, name, icon, out Tile tile))
+                    // If it's actually placed on the map, show it, even if it has no graphics.
+                    if (Globals.TheTilesetManager.GetTileData(map.Theater.Tilesets, name, icon, out Tile tile, true, false))
                     {
                         var renderBounds = new Rectangle(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height, tileSize.Width, tileSize.Height);
                         if(tile.Image != null)
@@ -377,11 +378,6 @@ namespace MobiusEditor.Render
         public static (Rectangle, Action<Graphics>) Render(GameType gameType, TheaterType theater, Point topLeft, Size tileSize, int tileScale, Building building)
         {
             var tint = building.Tint;
-            var stringFormat = new StringFormat
-            {
-                Alignment = StringAlignment.Center,
-                LineAlignment = StringAlignment.Center
-            };
             var icon = 0;
             int maxIcon = 0;
             int damageIcon = 0;
@@ -469,33 +465,12 @@ namespace MobiusEditor.Render
                         paintBounds.Y += location.Y;
                         g.DrawImage(tile.Image, paintBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes);
                     }
-                    if (building.Type.IsFake)
+                    /*/
+                    if (renderLabels)
                     {
-                        var text = Globals.TheGameTextManager["TEXT_UI_FAKE"];
-                        var textSize = g.MeasureString(text, SystemFonts.CaptionFont) + new SizeF(6.0f, 6.0f);
-                        var textBounds = new RectangleF(buildingBounds.Location, textSize);
-                        using (var fakeBackgroundBrush = new SolidBrush(Color.FromArgb(building.Tint.A / 2, Color.Black)))
-                        using (var fakeTextBrush = new SolidBrush(Color.FromArgb(building.Tint.A, Color.White)))
-                        {
-                            g.FillRectangle(fakeBackgroundBrush, textBounds);
-                            g.DrawString(text, SystemFonts.CaptionFont, fakeTextBrush, textBounds, stringFormat);
-                        }
+                        RenderBuildingLabels(g, building, location, false);
                     }
-                    if (building.BasePriority >= 0)
-                    {
-                        var text = building.BasePriority.ToString();
-                        var textSize = g.MeasureString(text, SystemFonts.CaptionFont) + new SizeF(6.0f, 6.0f);
-                        var textBounds = new RectangleF(buildingBounds.Location +
-                            new Size((int)((buildingBounds.Width - textSize.Width) / 2.0f), (int)(buildingBounds.Height - textSize.Height)),
-                            textSize
-                        );
-                        using (var baseBackgroundBrush = new SolidBrush(Color.FromArgb(building.Tint.A / 2, Color.Black)))
-                        using (var baseTextBrush = new SolidBrush(Color.FromArgb(building.Tint.A, Color.Red)))
-                        {
-                            g.FillRectangle(baseBackgroundBrush, textBounds);
-                            g.DrawString(text, SystemFonts.CaptionFont, baseTextBrush, textBounds, stringFormat);
-                        }
-                    }
+                    //*/
                 }
                 return (buildingBounds, render);
             }

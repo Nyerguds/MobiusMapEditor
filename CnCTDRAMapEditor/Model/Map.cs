@@ -47,9 +47,10 @@ namespace MobiusEditor.Model
         Buildings       = 1 << 13,
         Boundaries      = 1 << 14,
         TechnoTriggers  = 1 << 15,
+        BuildingLabels  = 1 << 16,
 
         OverlayAll = Resources | Walls | Overlay,
-        Technos = Terrain | Walls | Infantry | Units | Buildings,
+        Technos = Terrain | Walls | Infantry | Units | Buildings | BuildingLabels,
 
         All = int.MaxValue
     }
@@ -118,6 +119,8 @@ namespace MobiusEditor.Model
 
         public readonly HouseType[] HouseTypes;
 
+        public readonly HouseType[] HouseTypesIncludingNone;
+
         public readonly List<TheaterType> TheaterTypes;
 
         public readonly List<TemplateType> TemplateTypes;
@@ -184,6 +187,8 @@ namespace MobiusEditor.Model
 
         public House[] Houses;
 
+        public House[] HousesIncludingNone;
+
         public readonly List<string> MovieTypes;
 
         public readonly List<string> ThemeTypes;
@@ -220,7 +225,8 @@ namespace MobiusEditor.Model
             BasicSection = basicSection;
 
             HouseType = houseType;
-            HouseTypes = houseTypes.ToArray();
+            HouseTypesIncludingNone = houseTypes.ToArray();
+            HouseTypes = HouseTypesIncludingNone.Where(h => h.ID >= 0).ToArray();
             TheaterTypes = new List<TheaterType>(theaterTypes);
             TemplateTypes = new List<TemplateType>(templateTypes);
             TerrainTypes = new List<TerrainType>(terrainTypes);
@@ -259,7 +265,8 @@ namespace MobiusEditor.Model
             Overlappers = new OverlapperSet<ICellOverlapper>(Metrics);
             Triggers = new ObservableRangeCollection<Trigger>();
             TeamTypes = new List<TeamType>();
-            Houses = HouseTypes.Select(t => { var h = (House)Activator.CreateInstance(HouseType, t); h.SetDefault(); return h; }).ToArray();
+            HousesIncludingNone = HouseTypesIncludingNone.Select(t => { var h = (House)Activator.CreateInstance(HouseType, t); h.SetDefault(); return h; }).ToArray();
+            Houses = HousesIncludingNone.Where(h => h.Type.ID >= 0).ToArray();
             Waypoints = waypoints.ToArray();
             foreach (Waypoint waypoint in Waypoints)
             {
@@ -335,17 +342,17 @@ namespace MobiusEditor.Model
             }
             foreach (var infantryType in InfantryTypes)
             {
-                infantryType.Init(gameType, Theater, HouseTypes.Where(h => h.Equals(infantryType.OwnerHouse)).FirstOrDefault(), DirectionTypes.Where(d => d.Facing == FacingType.South).First());
+                infantryType.Init(gameType, Theater, HouseTypesIncludingNone.Where(h => h.Equals(infantryType.OwnerHouse)).FirstOrDefault(), DirectionTypes.Where(d => d.Facing == FacingType.South).First());
             }
             foreach (var unitType in UnitTypes)
             {
-                unitType.Init(gameType, Theater, HouseTypes.Where(h => h.Equals(unitType.OwnerHouse)).FirstOrDefault(), DirectionTypes.Where(d => d.Facing == FacingType.North).First());
+                unitType.Init(gameType, Theater, HouseTypesIncludingNone.Where(h => h.Equals(unitType.OwnerHouse)).FirstOrDefault(), DirectionTypes.Where(d => d.Facing == FacingType.North).First());
             }
             foreach (var buildingType in BuildingTypes)
             {
                 if ((buildingType.Theaters == null) || buildingType.Theaters.Contains(Theater))
                 {
-                    buildingType.Init(gameType, Theater, HouseTypes.Where(h => h.Equals(buildingType.OwnerHouse)).FirstOrDefault(), DirectionTypes.Where(d => d.Facing == FacingType.North).First());
+                    buildingType.Init(gameType, Theater, HouseTypesIncludingNone.Where(h => h.Equals(buildingType.OwnerHouse)).FirstOrDefault(), DirectionTypes.Where(d => d.Facing == FacingType.North).First());
                 }
             }
         }
@@ -1000,7 +1007,6 @@ namespace MobiusEditor.Model
                 }
                 locations.UnionWith(Rectangle.Inflate(new Rectangle(e.Location, new Size(1, 1)), 1, 1).Points());
             }
-
             if (updateCount == 0)
             {
                 Update();
@@ -1090,7 +1096,6 @@ namespace MobiusEditor.Model
                     CheckTriggers(unit, availableUnitTriggers);
                 }
             }
-            // Clean celltriggers
             CleanUpCellTriggers();
         }
 

@@ -21,7 +21,6 @@ namespace MobiusEditor.Utility
     public class TeamColor
     {
         private readonly TeamColorManager teamColorManager;
-        private readonly MegafileManager megafileManager;
 
         public string Variant { get; private set; }
 
@@ -54,10 +53,24 @@ namespace MobiusEditor.Utility
         private Color? radarMapColor;
         public Color RadarMapColor => radarMapColor.HasValue ? radarMapColor.Value : ((Variant != null) ? teamColorManager[Variant].RadarMapColor : default);
 
-        public TeamColor(TeamColorManager teamColorManager, MegafileManager megafileManager)
+        public TeamColor(TeamColorManager teamColorManager)
         {
             this.teamColorManager = teamColorManager;
-            this.megafileManager = megafileManager;
+        }
+
+        public void Load(string name, string variant, Color? lowerBounds, Color? upperBounds, float? fudge, Vector3? hsvShift, Vector3? inputLevels, Vector2? outputLevels, Vector3? overallInputLevels, Vector2? overallOutputLevels, Color? radarMapColor)
+        {
+            Name = name;
+            Variant = variant;
+            this.lowerBounds = lowerBounds;
+            this.upperBounds = upperBounds;
+            this.fudge = fudge;
+            this.hsvShift = hsvShift;
+            this.inputLevels = inputLevels;
+            this.outputLevels = outputLevels;
+            this.overallInputLevels = overallInputLevels;
+            this.overallOutputLevels = overallOutputLevels;
+            this.radarMapColor = radarMapColor;
         }
 
         public void Load(string xml)

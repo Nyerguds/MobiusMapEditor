@@ -26,11 +26,12 @@ For Tiberian Dawn maps, the triggers dialog has a "Check" button that will check
 
 ## Configuration
 
+[Note: this section is added for the upcoming v1.4.1.0; many of these settings are not yet available, or have different names, in the previous versions]
+
 The file "CnCTDRAMapEditor.exe.config" contains settings to customise the editor. This is what they do:
 
 * **ModsToLoad**: semicolon (or comma) separated list of mod entries. A mod entry can either be a Steam workshop ID, or a path of the type "Tiberian_Dawn\ModName" or "Red_Alert\ModName". The paths will initially be looked up under My Documents, but will also check the Steam workshop files, and use the game prefix part to verify the mod's targeted game. Note that due to the order in which files are loaded into the editor, mods are **not** loaded conditionally per map type based on this targeted game. The editor also has no way to check which mods are actually enabled in the game, and will load anything that is configured and of which the files can be found.
 * **NoMetaFilesForSinglePlay**: Suppresses the generation of .tga and .json files for single player maps.
-* **PlaceRandomTiles**: Red Alert Interior maps have an unused feature that several of its 1x1 tiles contain alternate versions. This option, which is enabled by default, will randomise placement of these tile types. Can be disabled if you want a "cleaner" look.
 * **IgnoreBibs**: Ignore bibs in the placement of buildings. Note that if you're not careful with this, this might prevent proper rebuilding of AI bases.
 * **MapScaleFactor**: Integer division factor for the size at which assets are rendered on the map; higher means lower quality. This will make the UI more responsive. Negative values will enable smooth scaling, which gives nicer graphics but will make the UI noticeable less responsive.
 * **PreviewScaleFactor**: Integer division factor for the size at which assets are rendered on the preview tools. Negative values will enable smooth scaling, but this usually doesn't look good on the upscaled preview graphics.
@@ -162,37 +163,37 @@ v1.4.1.0: [WIP]
 * Added support for loading mod xml info and graphics through the "ModsToLoad" setting in "CnCTDRAMapEditor.exe.config". The syntax is a semicolon-separated list, with each entry either a Steam workshop ID, or a folder under "Documents\CnCRemastered\Mods\". As folder, the path must contain the "Tiberian_Dawn" or "Red_Alert" part at the start. That prefix folder will also be used as consistency check for the mod type as defined inside "ccmod.json". Mods given by folder name will also be looked up in the Steam workshop folders, with the prefix folder used only for the consistency check. Mods do NOT have to be enabled in the game to work in the editor.
 * Added support for the unique pattern of TD's "conc" pavement. You will need the "ConcretePavementTD" mod to actually see that, though. This mod is filled in by default in the editor's mod loading settings, meaning it will automatically be used if found.
 * Fixed loading and saving of the videos set in the map options dialog, so no more errors pop up there.
-* Made video names freely editable for TD missions. Any mod-added video in TD is playable from missions. Be warned that when a video is not found, this will cause the game to hang for several minutes.
+* Made video names freely editable for TD missions. Any mod-added video in TD is playable from missions. Be warned that when a video is not found, this may cause the game to hang for several minutes.
 * The preview selection in the Steam publish dialog will now open in the correct folder.
-* The new setting "NoMetaFilesForSinglePlay" in "CnCTDRAMapEditor.exe.config" will suppress the generation of .json and .TGA file when saving single player missions. Not writing them is now the default behaviour.
-* The previews rendered for workshop maps will now show all map contents, to give a better representation of what is on the map. Note that for single play missions, this preview is generated in the folder but is optional.
+* The new setting "NoMetaFilesForSinglePlay" in "CnCTDRAMapEditor.exe.config" will suppress the generation of .json and .TGA file when saving single player missions to disc. Not writing them is now the default behaviour. This does not affect the Steam workshop upload behaviour.
+* The rendered previews will now show all map contents, to give a better representation of what is on the map. Note that for single play missions, this preview is generated in the folder but is optional.
 * Removed crater types CR2 to CR6; they don't work correctly in either game and will just show the smallest size of CR1. Any craters of other types encountered on map load will now be converted to CR1.
 * The teamtypes dialog no longer uses data grids for its teams and orders.
 * Teamtypes now show full names for unit types.
-* The input for arguments for orders in the teamtypes dialog now correctly adapts to the types of each order, giving dropdowns for special choices lists and for waypoints.
+* The input for arguments for orders in the teamtypes dialog now correctly adapts to the type of each order, giving dropdowns for special choices lists and for waypoints.
 * The waypoints that can be selected for an RA teamtype now correctly start from -1 as "(none)".
 * Fixed colour of "Special" in RA to have the same colour as Spain.
 * Fixed the fact trigger Events and Actions retained their argument data when changing their type, meaning the UI would pick the equivalent data on whatever list or control popped up for the new type.
 * RA triggers now show human-readable data for the Event and Action arguments.
-* The editor no longer locks up when the triggers dialog shows an empty list of teamtypes or triggers because none were made yet.
+* The editor no longer locks up when the triggers dialog shows an empty list of teamtypes or (previously-saved) triggers because none were made yet.
 * Removed Aircraft section handling. Aircraft were never able to be pre-placed in the original game, and the re-enabled sections in the Remasters have issues; aircraft will still spawn in the air and fly somewhere close.
 * Like walls, overlay placement and removing can now be dragged to affect multiple cells.
 * All waypoint will now be shown with their coordinates.
 * Added "Jump to..." button on the waypoints tool. This will only have any effect when zoomed in.
 * Clicking overlapping waypoints multiple times will cycle to the next one in the list on each click. Right-clicking will cycle backwards.
 * When deleting overlapping waypoints, if the currently selected waypoint is one of them, that one will be deleted first.
-* Map indicators will now be painted in this order: map boundaries, celltriggers, waypoints, object triggers. The later ones will be on top and thus most visible.
+* Map indicators will now be painted in this order: map boundaries, celltriggers, waypoints, building labels, object triggers. The later ones will be on top and thus most visible.
 * Map indicators for the type you are currently editing are now always drawn last, and thus the most visible. (e.g. overlapping celltriggers and waypoints)
 * Unit/building/infantry tools now paint the object trigger labels last, so they no longer get painted over by the occupied cell indicators.
 * For assets / mods loading, TGA files that are not inside a .zip file can now also load their positioning metadata from accompanying .meta files.
 * Factory doors will no longer be seen as semitransparent on the placement preview.
 * Fixed incorrect cleanup of internal tool objects, which could cause odd bugs like two selected cells being visible on the tileset tool.
-* Terrain and structure editing mode will now draw all full green bounds underneath the red occupied cells. Before, both were drawn per object and could cause odd overlaps.
+* Terrain and structure editing mode will now draw the green overall bounds of all objects, and only then the red occupied cells. Before, both were drawn per object and could cause odd overlaps.
 * Optimised all calculations related to centering objects in their bounding box and drawing them on the map.
 * Infantry are now positioned more accurately.
 * The terrain tool now uses a list box like all the other tools, instead of the awkward dropdown list.
 * The smudge tool now allows setting the size in the preview window, and picking craters with a different size from the map.
-* The "MapScaleFactor" and "PreviewScaleFactor" settings in the "CnCTDRAMapEditor.exe.config" file can adjust the downscaling factor for respectively the map graphics and the preview graphics. Higher values will reduce quality, but will make the editor more responsive. By default, previews in tool windows will now use higher quality graphics than the map. Using a negative value will enable smooth scaling. (Not advised, but it's available)
+* The "MapScaleFactor" and "PreviewScaleFactor" settings in the "CnCTDRAMapEditor.exe.config" file can adjust the downscaling factor for respectively the map graphics and the preview graphics. Higher values will reduce quality, but will make the editor more responsive. By default, previews in tool windows will now use higher quality graphics than the map. Setting a negative value will enable smooth scaling. (Not advised, but it's available)
 * When removing a trigger, all celltriggers and objects linking to that trigger will now get their trigger cleared. Before, this only happened for structures.
 * The triggers available for linking to objects and cells are now filtered out to only those triggers with an Event (or Action, in RA) that can be linked to that object type. This will also affect the cleanup of triggers if a trigger's Event or Action was changed to something not compatible with the objects it was linked to.
 * An "Info" icon next to the trigger dropdowns in the placement tool windows will give an explanation of which trigger Events and Actions work for that type.
@@ -205,26 +206,26 @@ v1.4.1.0: [WIP]
 * Ini reading will now trim the value, like the original game does, allowing entries of the type "key = value".
 * Fixed potential crashes in the generation of map validation messages (when encountering empty lines like "21=").
 * Red Alert interior theater no longer crashes when trying to show the bibs in the Smudge tool window.
-* Red Alert structures can no longer be put in an illegal state where Prebult is disabled but the rebuild priority is set to -1.
+* Red Alert structures can no longer be put in an illegal state where "Prebuilt" is disabled but the rebuild priority is set to -1.
 * Fixed a crash in the RA triggers caused by the removal of the Aircraft types from the placeable objects.
 * Fixed refresh issues that occurred when moving the mouse out of the map area while still in placement mode.
 * Fixed incorrect tooltip placement when using bounds dragging mode on a different monitor.
-* Red Alert's Interior tileset now supports randomising the 1x1 tiles that contains alternate versions.
-* If mods add extra tiles to existing 1x1 tilesets, these will be treated as 1x1 randomisable too.
+* Red Alert's Interior tileset now supports randomising the 1x1 tiles that contain alternate versions. This type will now show all alternates on a blue grid in the preview window. Specific tiles can still be picked the usual way if you do not want random ones.
+* If mods add extra tiles to existing 1x1 tilesets, these will be treated as 1x1 with alternates too.
 * Tanya's default colouring in the editor preview is now Allied.
 * Changed Red Alert's trigger action "Destroy attached building" to a more accurate "Destroy attached object", seeing as it even works from celltrigger to kill units.
 * Bibs are now shown as part of the building boundaries.
 * Bibs boundary checking can be disabled with a global setting.
-* Overlap detection now correctly scans the full footprint of buildings and terrain objects for the blocking object.
+* The overlap detection in the map loading now correctly scans the full footprint of buildings and terrain objects, and will now correctly report the blocking object.
 * Sounds lists in RA triggers now have descriptions.
 * If you try to save an opened file but the folder it was loaded from is deleted, it will no longer give an error, but revert to "Save As" behaviour.
-* The chosen peview image in the Steam upload dialog will now also be used as in-game preview for the map.
+* The chosen preview image in the Steam upload dialog will now also be used as in-game preview for the map.
+* In TD maps, a building that is set to be rebuilt but is not built from the start will now show as House "None".
 
 ### Possible future features
 
 Some ideas that might get implemented in the future:
 
 * Add Tiberian Dawn Megamap support. (Sole Survivor map type)
-* Show bibs as their full size.
-* Indication on the UI of which tiles contain randomisable alternates. Possibly with the ability to switch between randomising or showing a palette with all alternates to pick from.
+* Show bibs placed as the 'smudge' type as their full size.
 * Separating mods between Tiberian Dawn and Red Alert, so they only activate on their specific map type.

@@ -13,8 +13,10 @@
 // GNU General Public License along with permitted additional restrictions 
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Xml;
 
 namespace MobiusEditor.Utility
@@ -60,12 +62,18 @@ namespace MobiusEditor.Utility
                 xmlDoc = new XmlDocument();
                 xmlDoc.Load(megafileManager.Open(xmlPath));
             }
+            // Add default black for unowned.
+            var teamColorNone = new TeamColor(this);
+            teamColorNone.Load("NONE", "BASE_TEAM",
+                Color.FromArgb(66, 255, 0), Color.FromArgb(0, 255, 56), 0,
+                new Vector3(0.30f, -1.00f, 0.00f), new Vector3(0f, 1f, 1f), new Vector2(0.0f, 0.1f),
+                new Vector3(0, 1, 1), new Vector2(0, 1), Color.FromArgb(61, 61, 59));
+            teamColors[teamColorNone.Name] = teamColorNone;
             foreach (XmlNode teamColorNode in xmlDoc.SelectNodes("/*/TeamColorTypeClass"))
             {
-                var teamColor = new TeamColor(this, megafileManager);
+                var teamColor = new TeamColor(this);
                 teamColor.Load(teamColorNode.OuterXml);
-
-                teamColors[teamColorNode.Attributes["Name"].Value] = teamColor;
+                teamColors[teamColor.Name] = teamColor;
             }
             foreach (var teamColor in TopologicalSortTeamColors())
             {

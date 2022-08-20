@@ -61,7 +61,7 @@ namespace MobiusEditor.Model
         private Color tint = Color.White;
         public Color Tint
         {
-            get => IsPrebuilt ? tint : Color.FromArgb((int)(tint.A * 0.75f), tint.R, tint.G, tint.B);
+            get => IsPrebuilt ? tint : Color.FromArgb((int)(tint.A * 0.60f), tint.R, tint.G, tint.B);
             set => tint = value;
         }
 

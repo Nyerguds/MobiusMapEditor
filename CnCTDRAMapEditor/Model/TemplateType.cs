@@ -26,9 +26,9 @@ namespace MobiusEditor.Model
     public enum TemplateTypeFlag
     {
         None       = 0,
-        Clear      = (1 << 1),
-        Water      = (1 << 2),
-        RandomCell = (1 << 3),
+        Clear      = (1 << 0),
+        Water      = (1 << 1),
+        RandomCell = (1 << 2),
     }
 
     public class TemplateType : IBrowsableType
@@ -44,6 +44,12 @@ namespace MobiusEditor.Model
         public int IconHeight { get; private set; }
 
         public Size IconSize => new Size(IconWidth, IconHeight);
+
+        public int ThumbnailWidth { get; private set; }
+
+        public int ThumbnailHeight { get; private set; }
+
+        public Size ThumbnailSize => new Size(IconWidth, IconHeight);
 
         public int NumIcons { get; private set; }
 
@@ -74,6 +80,8 @@ namespace MobiusEditor.Model
             IconWidth = iconWidth;
             IconHeight = iconHeight;
             NumIcons = IconWidth * IconHeight;
+            ThumbnailWidth = IconWidth;
+            ThumbnailHeight = IconHeight;
             Theaters = theaters;
             Flag = flag;
             MaskOverrides = new Dictionary<string, bool[,]>(StringComparer.InvariantCultureIgnoreCase);
@@ -186,60 +194,58 @@ namespace MobiusEditor.Model
             }
             var oldImage = Thumbnail;
             var size = new Size(Globals.PreviewTileWidth, Globals.PreviewTileHeight);
-            var iconSize = Math.Max(IconWidth, IconHeight);
-            var thumbnail = new Bitmap(iconSize * size.Width, iconSize * size.Height);
             var mask = new bool[IconWidth, IconHeight];
-            Array.Clear(mask, 0, mask.Length);
-            bool found = false;
+            int loopWidth = IconWidth;
+            int loopHeight = IconHeight;
+            bool isRandom = (Flag & TemplateTypeFlag.RandomCell) != TemplateTypeFlag.None;
+            if (isRandom)
+            {
+                int numIcons = Globals.TheTilesetManager.GetTileDataLength(theater.Tilesets, Name);
+                if (numIcons >= 1)
+                {
+                    // Try to fit it into a shape as square as possible.
+                    NumIcons = numIcons;
+                    Double sqrt = Math.Sqrt(numIcons);
+                    loopWidth = (sqrt - Math.Floor(sqrt)) < 0.0001  ? (int)sqrt : (int)(sqrt + 1);
+                    loopHeight = numIcons / loopWidth + (numIcons % loopWidth == 0 ? 0 : 1);
+                    mask[0, 0] = true;
+                }
+            }
+            // To not have to redo the calculation on random times.
+            ThumbnailWidth = loopWidth;
+            ThumbnailHeight = loopHeight;
+            var thumbnail = new Bitmap(loopWidth * size.Width, loopHeight * size.Height);
+            bool found = mask[0, 0];
             using (var g = Graphics.FromImage(thumbnail))
             {
                 MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
                 g.Clear(Color.Transparent);
                 int icon = 0;
-                if ((Flag & TemplateTypeFlag.RandomCell) != TemplateTypeFlag.None)
+                // If the requested tile is 100% definitely inside the bounds of what is supposed to have graphics, allow it to fetch dummy graphics.
+                bool tryDummy = !isRandom && IconWidth == 1 || IconHeight == 1;
+                // Try to get mask; first specific per theater, then the general all-theaters mask.
+                // The dictionary should only contain either a general one or one per theater, so the fetch order doesn't really matter.
+                bool[,] maskOv = null;
+                if (!isRandom && MaskOverrides.Keys.Count > 0 && !MaskOverrides.TryGetValue(theater.Name, out maskOv))
+                    MaskOverrides.TryGetValue(String.Empty, out maskOv);
+                for (var y = 0; y < loopHeight; ++y)
                 {
-                    int numIcons = Globals.TheTilesetManager.GetTileDataLength(theater.Tilesets, Name);
-                    if (numIcons >= 1)
+                    for (var x = 0; x < loopWidth; ++x, ++icon)
                     {
-                        NumIcons = numIcons;
-                        if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, Name, 0, out Tile tile, true, true))
+                        if (maskOv != null && !maskOv[x, y])
+                        {
+                            continue;
+                        }
+                        if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, Name, icon, out Tile tile, tryDummy, true))
                         {
                             if (tile.Image != null)
                             {
                                 using (Bitmap tileImg = tile.Image.RemoveAlpha())
                                 {
-                                    g.DrawImage(tileImg, 0, 0, size.Width, size.Height);
+                                    g.DrawImage(tileImg, x * size.Width, y * size.Height, size.Width, size.Height);
                                 }
-                                found = mask[0, 0] = true;
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    // If the requested tile is 100% definitely inside the bounds of what is supposed to have graphics, allow it to fetch dummy graphics.
-                    bool tryDummy = IconWidth == 1 || IconHeight == 1;
-                    // Try to get mask; first specific per theater, then the general all-theaters mask.
-                    // The dictionary should only contain either a general one or one per theater, so the fetch order doesn't really matter.
-                    bool[,] maskOv = null;
-                    if (MaskOverrides.Keys.Count > 0 && !MaskOverrides.TryGetValue(theater.Name, out maskOv))
-                        MaskOverrides.TryGetValue(String.Empty, out maskOv);
-                    for (var y = 0; y < IconHeight; ++y)
-                    {
-                        for (var x = 0; x < IconWidth; ++x, ++icon)
-                        {
-                            if (maskOv != null && !maskOv[x, y])
-                            {
-                                continue;
-                            }
-                            if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, Name, icon, out Tile tile, tryDummy, true))
-                            {
-                                if (tile.Image != null)
+                                if (!isRandom)
                                 {
-                                    using (Bitmap tileImg = tile.Image.RemoveAlpha())
-                                    {
-                                        g.DrawImage(tileImg, x * size.Width, y * size.Height, size.Width, size.Height);
-                                    }
                                     found = mask[x, y] = true;
                                 }
                             }

@@ -999,6 +999,7 @@ namespace MobiusEditor.TiberianDawn
                                     Map.Buildings.Add(location, new Building()
                                     {
                                         Type = buildingType,
+                                        House = HouseTypes.None,
                                         Strength = 256,
                                         Direction = DirectionTypes.North,
                                         BasePriority = priority,
@@ -1510,7 +1511,6 @@ namespace MobiusEditor.TiberianDawn
                 {
                     continue;
                 }
-
                 INI.WriteSection(new MapContext(Map, false), ini.Sections.Add(house.Type.Name), house);
             }
             var overlaySection = ini.Sections.Add("Overlay");
@@ -1671,8 +1671,7 @@ namespace MobiusEditor.TiberianDawn
         private void UpdateBasePlayerHouse()
         {
             Map.BasicSection.BasePlayer = HouseTypes.GetBasePlayer(Map.BasicSection.Player);
-
-            var basePlayer = Map.HouseTypes.Where(h => h.Equals(Map.BasicSection.BasePlayer)).FirstOrDefault() ?? Map.HouseTypes.First();
+            var basePlayer = Map.HouseTypesIncludingNone.Where(h => h.Equals(Map.BasicSection.BasePlayer)).FirstOrDefault() ?? Map.HouseTypes.First();
             foreach (var (_, building) in Map.Buildings.OfType<Building>())
             {
                 if (!building.IsPrebuilt)

@@ -28,9 +28,9 @@ namespace MobiusEditor.Model
         None = 0,
         // Only used for the bibs automatically added under buildings.
         Bib = 1 << 3,
-        Bib1 = 0 | Bib,
-        Bib2 = 1 | Bib,
-        Bib3 = 2 | Bib,
+        Bib1 = Bib | 1 << 0,
+        Bib2 = Bib | 1 << 1,
+        Bib3 = Bib | 1 << 2,
     }
 
     public class SmudgeType : IBrowsableType

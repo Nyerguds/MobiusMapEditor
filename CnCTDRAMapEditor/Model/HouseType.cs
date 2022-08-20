@@ -45,7 +45,7 @@ namespace MobiusEditor.Model
         }
 
         public HouseType(sbyte id, string name)
-            : this(id, name, null)
+            : this(id, name, null, null)
         {
         }
 

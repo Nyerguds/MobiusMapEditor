@@ -42,7 +42,7 @@ namespace MobiusEditor.Tools
         /// Layers that are not painted by the PostRenderMap function on ViewTool level because they are handled
         /// at a specific point in the PostRenderMap override by the implementing tool.
         /// </summary>
-        protected override MapLayerFlag ManuallyHandledLayers => MapLayerFlag.TechnoTriggers;
+        protected override MapLayerFlag ManuallyHandledLayers => MapLayerFlag.TechnoTriggers | MapLayerFlag.BuildingLabels;
 
         private bool placementMode;
 
@@ -265,9 +265,7 @@ namespace MobiusEditor.Tools
                             mapPanel.Invalidate(map, baseBuilding);
                         }
                     }
-
                     mapPanel.Invalidate(map, building);
-
                     plugin.Dirty = true;
                 }
             }
@@ -332,12 +330,12 @@ namespace MobiusEditor.Tools
                 if (map.Buildings[cell] is Building building)
                 {
                     SelectedBuildingType = building.Type;
-                    mockBuilding.House = building.House;
                     mockBuilding.Strength = building.Strength;
                     mockBuilding.Direction = building.Direction;
                     mockBuilding.Trigger = building.Trigger;
                     mockBuilding.BasePriority = building.BasePriority;
                     mockBuilding.IsPrebuilt = building.IsPrebuilt;
+                    mockBuilding.House = building.House;
                     mockBuilding.Sellable = building.Sellable;
                     mockBuilding.Rebuild = building.Rebuild;
                 }
@@ -367,6 +365,7 @@ namespace MobiusEditor.Tools
                     {
                         MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
                         render.Item2(g);
+                        RenderBuildingLabels(g, mockBuilding, new Point(0, 0), Globals.PreviewTileWidth, Globals.PreviewTileHeight, false);
                     }
                     buildingTypeMapPanel.MapImage = buildingPreview;
                 }
@@ -454,6 +453,19 @@ namespace MobiusEditor.Tools
                     }
                 }
             }
+            foreach (var (topLeft, building) in map.Buildings.OfType<Building>())
+            {
+                RenderBuildingLabels(graphics, building, topLeft, Globals.MapTileWidth, Globals.MapTileHeight, false);
+            }
+            // Find the preview and add labels to it too.
+            foreach (var (topLeft, building) in previewMap.Buildings.OfType<Building>())
+            {
+                if (placementMode && building.Type.ID == mockBuilding.Type.ID && navigationWidget.MouseCell == topLeft && map.Technos.CanAdd(topLeft, building, building.Type.BaseOccupyMask))
+                {
+                    RenderBuildingLabels(graphics, building, topLeft, Globals.MapTileWidth, Globals.MapTileHeight, true);
+                    break;
+                }
+            }
             RenderTechnoTriggers(graphics);
         }
 
@@ -467,10 +479,9 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseLeave += MapPanel_MouseLeave;
             (this.mapPanel as Control).KeyDown += UnitTool_KeyDown;
             (this.mapPanel as Control).KeyUp += UnitTool_KeyUp;
-            navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
+            this.navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
             UpdateStatus();
         }
-
         public override void Deactivate()
         {
             ExitPlacementMode();

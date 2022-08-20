@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Drawing;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -123,6 +124,40 @@ namespace MobiusEditor.Utility
             if (i < sb.Length - 1)
                 sb.Length = i + 1;
             return sb;
+        }
+        public static Bitmap FitToBoundingBox(Image image, int maxWidth, int maxHeight)
+        {
+            return FitToBoundingBox(image, maxWidth, maxHeight, Color.Transparent);
+        }
+
+        public static Bitmap FitToBoundingBox(Image image, int maxWidth, int maxHeight, Color clearColor)
+        {
+            Bitmap newImg = new Bitmap(maxWidth, maxHeight);
+            Rectangle resized = GeneralUtils.FitToBoundingBox(image.Width, image.Height, maxWidth, maxHeight);
+            using (Graphics g = Graphics.FromImage(newImg))
+            {
+                g.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceCopy;
+                if (clearColor.ToArgb() != Color.Transparent.ToArgb())
+                {
+                    g.Clear(clearColor);
+                }
+                g.DrawImage(image, resized, new Rectangle(0, 0, image.Width, image.Height), GraphicsUnit.Pixel);
+                g.Flush();
+            }
+            return newImg;
+        }
+
+        public static Rectangle FitToBoundingBox(int imgWidth, int imgHeight, int maxWidth, int maxHeight)
+        {
+            double previewScaleW = (double)maxWidth / imgWidth;
+            double previewScaleH = (double)maxHeight / imgHeight;
+            bool maxIsW = previewScaleW < previewScaleH;
+            double previewScale = maxIsW ? previewScaleW : previewScaleH;
+            int width = (int)Math.Floor(imgWidth * previewScale);
+            int height = (int)Math.Floor(imgHeight * previewScale);
+            int offsetX = maxIsW ? 0 : (maxWidth - width) / 2;
+            int offsetY = maxIsW ? (maxHeight - height) / 2 : 0;
+            return new Rectangle(offsetX, offsetY, width, height);
         }
     }
 }

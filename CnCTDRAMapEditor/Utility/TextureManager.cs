@@ -322,59 +322,68 @@ namespace MobiusEditor.Utility
                     var bpp = Image.GetPixelFormatSize(data.PixelFormat) / 8;
                     var bytes = new byte[data.Stride * data.Height];
                     Marshal.Copy(data.Scan0, bytes, 0, bytes.Length);
+                    int lineWidth = ((data.Width * Image.GetPixelFormatSize(data.PixelFormat)) + 7) / 8;
+                    int height = data.Height;
+                    int stride = data.Stride;
                     result.opaqueBounds = CalculateOpaqueBounds(bytes, data.Width, data.Height, bpp, data.Stride);
-                    for (int j = 0; j < bytes.Length; j += bpp)
+                    int lineStart = 0;
+                    for (int y = 0; y < height; y++)
                     {
-                        var pixel = Color.FromArgb(bytes[j + 2], bytes[j + 1], bytes[j + 0]);
-                        (float r, float g, float b) = (pixel.R.ToLinear(), pixel.G.ToLinear(), pixel.B.ToLinear());
-                        (float x, float y, float z, float w) K = (0.0f, -1.0f / 3.0f, 2.0f / 3.0f, -1.0f);
-                        (float x, float y, float z, float w) p = (g >= b) ? (g, b, K.x, K.y) : (b, g, K.w, K.z);
-                        (float x, float y, float z, float w) q = (r >= p.x) ? (r, p.y, p.z, p.x) : (p.x, p.y, p.w, r);
-                        (float d, float e) = (q.x - Math.Min(q.w, q.y), 1e-10f);
-                        (float hue, float saturation, float value) = (Math.Abs(q.z + (q.w - q.y) / (6.0f * d + e)), d / (q.x + e), q.x);
-                        var lowerHue = teamColor.LowerBounds.GetHue() / 360.0f;
-                        var upperHue = teamColor.UpperBounds.GetHue() / 360.0f;
-                        if ((hue >= lowerHue) && (upperHue >= hue))
+                        for (int x = 0; x < lineWidth; x += bpp)
                         {
-                            hue = (hue / (upperHue - lowerHue)) * ((upperHue + teamColor.Fudge) - (lowerHue - teamColor.Fudge));
-                            hue += teamColor.HSVShift.X;
-                            saturation += teamColor.HSVShift.Y;
-                            value += teamColor.HSVShift.Z;
-                            (float x, float y, float z, float w) L = (1.0f, 2.0f / 3.0f, 1.0f / 3.0f, 3.0f);
-                            (float x, float y, float z) m = (
-                                Math.Abs(frac(hue + L.x) * 6.0f - L.w),
-                                Math.Abs(frac(hue + L.y) * 6.0f - L.w),
-                                Math.Abs(frac(hue + L.z) * 6.0f - L.w)
+                            int addr = lineStart + x;
+                            var pixel = Color.FromArgb(bytes[addr + 2], bytes[addr + 1], bytes[addr + 0]);
+                            (float r, float g, float b) = (pixel.R.ToLinear(), pixel.G.ToLinear(), pixel.B.ToLinear());
+                            (float x, float y, float z, float w) K = (0.0f, -1.0f / 3.0f, 2.0f / 3.0f, -1.0f);
+                            (float x, float y, float z, float w) p = (g >= b) ? (g, b, K.x, K.y) : (b, g, K.w, K.z);
+                            (float x, float y, float z, float w) q = (r >= p.x) ? (r, p.y, p.z, p.x) : (p.x, p.y, p.w, r);
+                            (float d, float e) = (q.x - Math.Min(q.w, q.y), 1e-10f);
+                            (float hue, float saturation, float value) = (Math.Abs(q.z + (q.w - q.y) / (6.0f * d + e)), d / (q.x + e), q.x);
+                            var lowerHue = teamColor.LowerBounds.GetHue() / 360.0f;
+                            var upperHue = teamColor.UpperBounds.GetHue() / 360.0f;
+                            if ((hue >= lowerHue) && (upperHue >= hue))
+                            {
+                                hue = (hue / (upperHue - lowerHue)) * ((upperHue + teamColor.Fudge) - (lowerHue - teamColor.Fudge));
+                                hue += teamColor.HSVShift.X;
+                                saturation += teamColor.HSVShift.Y;
+                                value += teamColor.HSVShift.Z;
+                                (float x, float y, float z, float w) L = (1.0f, 2.0f / 3.0f, 1.0f / 3.0f, 3.0f);
+                                (float x, float y, float z) m = (
+                                    Math.Abs(frac(hue + L.x) * 6.0f - L.w),
+                                    Math.Abs(frac(hue + L.y) * 6.0f - L.w),
+                                    Math.Abs(frac(hue + L.z) * 6.0f - L.w)
+                                );
+                                r = value * lerp(L.x, saturate(m.x - L.x), saturation);
+                                g = value * lerp(L.x, saturate(m.y - L.x), saturation);
+                                b = value * lerp(L.x, saturate(m.z - L.x), saturation);
+                                (float x, float y, float z) n = (
+                                    Math.Min(1.0f, Math.Max(0.0f, r - teamColor.InputLevels.X) / (teamColor.InputLevels.Z - teamColor.InputLevels.X)),
+                                    Math.Min(1.0f, Math.Max(0.0f, g - teamColor.InputLevels.X) / (teamColor.InputLevels.Z - teamColor.InputLevels.X)),
+                                    Math.Min(1.0f, Math.Max(0.0f, b - teamColor.InputLevels.X) / (teamColor.InputLevels.Z - teamColor.InputLevels.X))
+                                );
+                                n.x = (float)Math.Pow(n.x, teamColor.InputLevels.Y);
+                                n.y = (float)Math.Pow(n.y, teamColor.InputLevels.Y);
+                                n.z = (float)Math.Pow(n.z, teamColor.InputLevels.Y);
+                                r = lerp(teamColor.OutputLevels.X, teamColor.OutputLevels.Y, n.x);
+                                g = lerp(teamColor.OutputLevels.X, teamColor.OutputLevels.Y, n.y);
+                                b = lerp(teamColor.OutputLevels.X, teamColor.OutputLevels.Y, n.z);
+                            }
+                            (float x, float y, float z) n2 = (
+                                Math.Min(1.0f, Math.Max(0.0f, r - teamColor.OverallInputLevels.X) / (teamColor.OverallInputLevels.Z - teamColor.OverallInputLevels.X)),
+                                Math.Min(1.0f, Math.Max(0.0f, g - teamColor.OverallInputLevels.X) / (teamColor.OverallInputLevels.Z - teamColor.OverallInputLevels.X)),
+                                Math.Min(1.0f, Math.Max(0.0f, b - teamColor.OverallInputLevels.X) / (teamColor.OverallInputLevels.Z - teamColor.OverallInputLevels.X))
                             );
-                            r = value * lerp(L.x, saturate(m.x - L.x), saturation);
-                            g = value * lerp(L.x, saturate(m.y - L.x), saturation);
-                            b = value * lerp(L.x, saturate(m.z - L.x), saturation);
-                            (float x, float y, float z) n = (
-                                Math.Min(1.0f, Math.Max(0.0f, r - teamColor.InputLevels.X) / (teamColor.InputLevels.Z - teamColor.InputLevels.X)),
-                                Math.Min(1.0f, Math.Max(0.0f, g - teamColor.InputLevels.X) / (teamColor.InputLevels.Z - teamColor.InputLevels.X)),
-                                Math.Min(1.0f, Math.Max(0.0f, b - teamColor.InputLevels.X) / (teamColor.InputLevels.Z - teamColor.InputLevels.X))
-                            );
-                            n.x = (float)Math.Pow(n.x, teamColor.InputLevels.Y);
-                            n.y = (float)Math.Pow(n.y, teamColor.InputLevels.Y);
-                            n.z = (float)Math.Pow(n.z, teamColor.InputLevels.Y);
-                            r = lerp(teamColor.OutputLevels.X, teamColor.OutputLevels.Y, n.x);
-                            g = lerp(teamColor.OutputLevels.X, teamColor.OutputLevels.Y, n.y);
-                            b = lerp(teamColor.OutputLevels.X, teamColor.OutputLevels.Y, n.z);
+                            n2.x = (float)Math.Pow(n2.x, teamColor.OverallInputLevels.Y);
+                            n2.y = (float)Math.Pow(n2.y, teamColor.OverallInputLevels.Y);
+                            n2.z = (float)Math.Pow(n2.z, teamColor.OverallInputLevels.Y);
+                            r = lerp(teamColor.OverallOutputLevels.X, teamColor.OverallOutputLevels.Y, n2.x);
+                            g = lerp(teamColor.OverallOutputLevels.X, teamColor.OverallOutputLevels.Y, n2.y);
+                            b = lerp(teamColor.OverallOutputLevels.X, teamColor.OverallOutputLevels.Y, n2.z);
+                            bytes[addr + 2] = (byte)(r.ToSRGB() * 255.0f);
+                            bytes[addr + 1] = (byte)(g.ToSRGB() * 255.0f);
+                            bytes[addr + 0] = (byte)(b.ToSRGB() * 255.0f);
                         }
-                        (float x, float y, float z) n2 = (
-                            Math.Min(1.0f, Math.Max(0.0f, r - teamColor.OverallInputLevels.X) / (teamColor.OverallInputLevels.Z - teamColor.OverallInputLevels.X)),
-                            Math.Min(1.0f, Math.Max(0.0f, g - teamColor.OverallInputLevels.X) / (teamColor.OverallInputLevels.Z - teamColor.OverallInputLevels.X)),
-                            Math.Min(1.0f, Math.Max(0.0f, b - teamColor.OverallInputLevels.X) / (teamColor.OverallInputLevels.Z - teamColor.OverallInputLevels.X))
-                        );
-                        n2.x = (float)Math.Pow(n2.x, teamColor.OverallInputLevels.Y);
-                        n2.y = (float)Math.Pow(n2.y, teamColor.OverallInputLevels.Y);
-                        n2.z = (float)Math.Pow(n2.z, teamColor.OverallInputLevels.Y);
-                        r = lerp(teamColor.OverallOutputLevels.X, teamColor.OverallOutputLevels.Y, n2.x);
-                        g = lerp(teamColor.OverallOutputLevels.X, teamColor.OverallOutputLevels.Y, n2.y);
-                        b = lerp(teamColor.OverallOutputLevels.X, teamColor.OverallOutputLevels.Y, n2.z);
-                        bytes[j + 2] = (byte)(r.ToSRGB() * 255.0f);
-                        bytes[j + 1] = (byte)(g.ToSRGB() * 255.0f);
-                        bytes[j + 0] = (byte)(b.ToSRGB() * 255.0f);
+                        lineStart += stride;
                     }
                     Marshal.Copy(bytes, 0, data.Scan0, bytes.Length);
                 }
@@ -533,10 +542,11 @@ namespace MobiusEditor.Utility
 
         private static Rectangle CalculateOpaqueBounds(byte[] data, int width, int height, int bpp, int stride)
         {
+            int lineWidth = (width * bpp + 7) / 8;
             bool isTransparentRow(int y)
             {
                 var start = y * stride;
-                for (var i = bpp - 1; i < stride; i += bpp)
+                for (var i = bpp - 1; i < lineWidth; i += bpp)
                 {
                     if (data[start + i] != 0)
                     {
@@ -545,7 +555,6 @@ namespace MobiusEditor.Utility
                 }
                 return true;
             }
-
             var opaqueBounds = new Rectangle(0, 0, width, height);
             for (int y = 0; y < height; ++y)
             {
@@ -563,7 +572,6 @@ namespace MobiusEditor.Utility
                     break;
                 }
             }
-
             bool isTransparentColumn(int x)
             {
                 var start = (x * bpp) + (bpp - 1);
@@ -576,7 +584,6 @@ namespace MobiusEditor.Utility
                 }
                 return true;
             }
-
             for (int x = 0; x < width; ++x)
             {
                 if (!isTransparentColumn(x))
@@ -593,7 +600,6 @@ namespace MobiusEditor.Utility
                     break;
                 }
             }
-
             return opaqueBounds;
         }
 
