@@ -224,8 +224,8 @@ v1.4.1.0:
 v1.4.1.1:
 
 * The Red Alert teamtype order "Guard Area" now correctly has 'time' as argument type, rather than a waypoint.
-* Added a system to detect singleplayer missions from the original game and automatically mark them as singleplayer if they conform to the classic naming scheme for singleplayer missions, and contain a Lose and Win trigger.
-* The "New" and "Open" functions will now abort if you choose to save the unsaved opened map but it does pass the basic waypoints validation.
+* Added a system to detect singleplayer missions from the original games and automatically mark them as singleplayer if they conform to the classic naming scheme for singleplayer missions, and contain a Lose and Win trigger.
+* The "New" and "Open" functions will now abort if you choose to save the unsaved opened map but it doesn't pass the basic waypoints validation.
 * the title of the window will now show "Untitled.ini" or "Untitled.mpr" when you have a new but unsaved map opened.
 * The title of the window will now show an asterisk behind the filename to indicate that the current file has unsaved changes.
 * Maps loaded from file are now seen as 'modified' if any issues were detected that made the editor change or discard data during the loading process.
