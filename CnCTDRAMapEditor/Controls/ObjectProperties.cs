@@ -334,7 +334,21 @@ namespace MobiusEditor.Controls
         private void LblTriggerInfo_MouseEnter(Object sender, EventArgs e)
         {
             Control target = sender as Control;
-            if (target == null || triggerToolTip == null)
+            string tooltip;
+            if (Object is Building bld && !bld.IsPrebuilt)
+            {
+                tooltip = "Triggers can only be linked to prebuilt structures.";
+            }
+            else
+            {
+                tooltip = triggerToolTip;
+            }
+            ShowToolTip( target, tooltip);
+        }
+        
+        private void ShowToolTip(Control target, string message) {
+            
+            if (target == null || message == null)
             {
                 this.toolTip1.Hide(target);
                 return;
@@ -343,7 +357,7 @@ namespace MobiusEditor.Controls
             MethodInfo m = toolTip1.GetType().GetMethod("SetTool",
                        BindingFlags.Instance | BindingFlags.NonPublic);
             // private void SetTool(IWin32Window win, string text, TipInfo.Type type, Point position)
-            m.Invoke(toolTip1, new object[] { target, triggerToolTip, 2, resPoint });
+            m.Invoke(toolTip1, new object[] { target, message, 2, resPoint });
             //this.toolTip1.Show(triggerToolTip, target, target.Width, 0, 10000);
         }
 
@@ -365,7 +379,6 @@ namespace MobiusEditor.Controls
             ObjectProperties = new ObjectProperties();
             ObjectProperties.Initialize(plugin, false);
             ObjectProperties.Object = obj;
-
             host = new ToolStripControlHost(ObjectProperties);
             Padding = Margin = host.Padding = host.Margin = Padding.Empty;
             MinimumSize = ObjectProperties.MinimumSize;

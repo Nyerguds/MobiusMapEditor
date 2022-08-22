@@ -20,20 +20,28 @@ namespace MobiusEditor.Dialogs
 {
     public partial class ErrorMessageBox : Form
     {
+        public string Title
+        {
+            set { this.Text = value; }
+            get { return this.Text;  }
+        }
+
         public string Message
         {
-            set
-            {
-                lblMessage.Text = value;
-            }
+            set { lblMessage.Text = value; }
+            get { return lblMessage.Text; }
         }
 
         public IEnumerable<string> Errors
         {
-            set
-            {
-                txtErrors.Text = string.Join(Environment.NewLine, value);
-            }
+            set { txtErrors.Text = string.Join(Environment.NewLine, value); }
+            get { return (txtErrors.Text ?? String.Empty).Replace("\r\n", "\n").Replace('\r', '\n').Split('\n'); }
+        }
+
+        public bool UseWordWrap
+        {
+            set { txtErrors.WordWrap = value; }
+            get { return txtErrors.WordWrap; }
         }
 
         public ErrorMessageBox()

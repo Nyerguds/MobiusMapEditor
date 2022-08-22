@@ -33,6 +33,8 @@ namespace MobiusEditor.RedAlert
     {
         private readonly IEnumerable<string> movieTypes;
 
+        private static readonly Regex SinglePlayRegex = new Regex("^SC[A-LN-Z]\\d{2}[EWX][A-EL]$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
         private const string RemarkOld = " (Classic only)";
 
         private static readonly IEnumerable<string> movieTypesRemarksOld = new string[]
@@ -252,7 +254,14 @@ namespace MobiusEditor.RedAlert
 
         public Image MapImage { get; private set; }
 
-        public bool Dirty { get; set; }
+        IFeedBackHandler feedBackHandler;
+
+        bool isDirty;
+        public bool Dirty
+        {
+            get { return isDirty; }
+            set { isDirty = value; feedBackHandler?.UpdateStatus(); }
+        }
 
         private INISectionCollection extraSections;
 
@@ -261,8 +270,14 @@ namespace MobiusEditor.RedAlert
             fullTechnoTypes = InfantryTypes.GetTypes().Cast<ITechnoType>().Concat(UnitTypes.GetTypes(false).Cast<ITechnoType>());
         }
 
-        public GamePlugin(bool mapImage)
+        public GamePlugin(IFeedBackHandler feedBackHandler)
+            : this(true, feedBackHandler)
         {
+        }
+
+        public GamePlugin(bool mapImage, IFeedBackHandler feedBackHandler)
+        {
+            this.feedBackHandler = feedBackHandler;
             var playerWaypoints = Enumerable.Range(0, 8).Select(i => new Waypoint(string.Format("P{0}", i), WaypointFlag.PlayerStart));
             var generalWaypoints = Enumerable.Range(8, 90).Select(i => new Waypoint(i.ToString()));
             var specialWaypoints = new Waypoint[] { new Waypoint("Home"), new Waypoint("Reinf."), new Waypoint("Special") };
@@ -326,11 +341,6 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        public GamePlugin()
-            : this(true)
-        {
-        }
-
         public void New(string theater)
         {
             Map.Theater = Map.TheaterTypes.Where(t => t.Equals(theater)).FirstOrDefault() ?? TheaterTypes.Temperate;
@@ -353,7 +363,8 @@ namespace MobiusEditor.RedAlert
                         {
                             ini.Parse(reader);
                         }
-                        errors.AddRange(LoadINI(ini));
+                        bool forceSingle = SinglePlayRegex.IsMatch(Path.GetFileNameWithoutExtension(path));
+                        errors.AddRange(LoadINI(ini, forceSingle));
                     }
                     break;
                 case FileType.MEG:
@@ -369,7 +380,7 @@ namespace MobiusEditor.RedAlert
                                 {
                                     ini.Parse(reader);
                                 }
-                                errors.AddRange(LoadINI(ini));
+                                errors.AddRange(LoadINI(ini, false));
                             }
                         }
                     }
@@ -380,7 +391,7 @@ namespace MobiusEditor.RedAlert
             return errors;
         }
 
-        private IEnumerable<string> LoadINI(INI ini)
+        private IEnumerable<string> LoadINI(INI ini, bool forceSoloMission)
         {
             var errors = new List<string>();
             Map.BeginUpdate();
@@ -1388,9 +1399,17 @@ namespace MobiusEditor.RedAlert
             }
             UpdateBasePlayerHouse();
             // Sort
-            List<Trigger> reordered = Map.Triggers.OrderBy(t => t.Name, new ExplorerComparer()).ToList();
-            Map.Triggers.ReplaceRange(reordered);
+            List<Trigger> reorderedTriggers = Map.Triggers.OrderBy(t => t.Name, new ExplorerComparer()).ToList();
+            Map.Triggers.ReplaceRange(reorderedTriggers);
             extraSections = ini.Sections;
+            bool switchedToSolo = forceSoloMission && !Map.BasicSection.SoloMission
+                && (reorderedTriggers.Any(t => t.Action1.ActionType == ActionTypes.TACTION_WIN) || reorderedTriggers.Any(t => t.Action2.ActionType == ActionTypes.TACTION_WIN))
+                && (reorderedTriggers.Any(t => t.Action1.ActionType == ActionTypes.TACTION_LOSE) || reorderedTriggers.Any(t => t.Action2.ActionType == ActionTypes.TACTION_LOSE));
+            if (switchedToSolo)
+            {
+                errors.Insert(0, "Filename detected as classic single player mission format, and win and lose trigger detected. Applying \"SoloMission\" flag.");
+                Map.BasicSection.SoloMission = true;
+            }
             Map.EndUpdate();
             return errors;
         }

@@ -66,7 +66,7 @@ namespace MobiusEditor.Dialogs
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(447, 285);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(684, 361);
             this.tableLayoutPanel1.TabIndex = 0;
             // 
             // lblMessage
@@ -86,7 +86,7 @@ namespace MobiusEditor.Dialogs
             this.txtErrors.Name = "txtErrors";
             this.txtErrors.ReadOnly = true;
             this.txtErrors.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.txtErrors.Size = new System.Drawing.Size(441, 231);
+            this.txtErrors.Size = new System.Drawing.Size(678, 307);
             this.txtErrors.TabIndex = 0;
             this.txtErrors.WordWrap = false;
             // 
@@ -98,15 +98,15 @@ namespace MobiusEditor.Dialogs
             this.flowLayoutPanel1.Controls.Add(this.btnCopy);
             this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.flowLayoutPanel1.FlowDirection = System.Windows.Forms.FlowDirection.RightToLeft;
-            this.flowLayoutPanel1.Location = new System.Drawing.Point(3, 253);
+            this.flowLayoutPanel1.Location = new System.Drawing.Point(3, 329);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(441, 29);
+            this.flowLayoutPanel1.Size = new System.Drawing.Size(678, 29);
             this.flowLayoutPanel1.TabIndex = 1;
             // 
             // btnOK
             // 
             this.btnOK.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnOK.Location = new System.Drawing.Point(363, 3);
+            this.btnOK.Location = new System.Drawing.Point(600, 3);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(75, 23);
             this.btnOK.TabIndex = 0;
@@ -115,7 +115,7 @@ namespace MobiusEditor.Dialogs
             // 
             // btnCopy
             // 
-            this.btnCopy.Location = new System.Drawing.Point(246, 3);
+            this.btnCopy.Location = new System.Drawing.Point(483, 3);
             this.btnCopy.Name = "btnCopy";
             this.btnCopy.Size = new System.Drawing.Size(111, 23);
             this.btnCopy.TabIndex = 1;
@@ -129,12 +129,12 @@ namespace MobiusEditor.Dialogs
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnOK;
-            this.ClientSize = new System.Drawing.Size(447, 285);
+            this.ClientSize = new System.Drawing.Size(684, 361);
             this.Controls.Add(this.tableLayoutPanel1);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "ErrorMessageBox";
+            this.ShowIcon = false;
             this.ShowInTaskbar = false;
             this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;

@@ -32,7 +32,7 @@ using System.Windows.Forms;
 
 namespace MobiusEditor
 {
-    public partial class MainForm : Form
+    public partial class MainForm : Form, IFeedBackHandler
     {
         private static readonly ToolType[] toolTypes;
 
@@ -142,9 +142,14 @@ namespace MobiusEditor
         {
             AssemblyName assn = Assembly.GetExecutingAssembly().GetName();
             System.Version currentVersion = assn.Version;
-            if (filename != null)
+            string file = filename;
+            if (plugin != null && file == null)
             {
-                this.Text = string.Format("CnC TDRA Map Editor v{0} - {1}", currentVersion, filename);
+                file = "Untitled" + (plugin.GameType == GameType.TiberianDawn ? ".ini" : ".mpr");
+            }
+            if (file != null)
+            {
+                this.Text = string.Format("CnC TDRA Map Editor v{0} - {1}{2}", currentVersion, file, plugin != null && plugin.Dirty ? "*" : String.Empty);
             }
             else
             {
@@ -283,14 +288,14 @@ namespace MobiusEditor
                 {
                     Globals.TheTeamColorManager.Reset();
                     Globals.TheTeamColorManager.Load(@"DATA\XML\CNCTDTEAMCOLORS.XML");
-                    plugin = new TiberianDawn.GamePlugin();
+                    plugin = new TiberianDawn.GamePlugin(this);
                     plugin.New(nmd.TheaterName);
                 }
                 else if (nmd.GameType == GameType.RedAlert)
                 {
                     Globals.TheTeamColorManager.Reset();
                     Globals.TheTeamColorManager.Load(@"DATA\XML\CNCRATEAMCOLORS.XML");
-                    plugin = new RedAlert.GamePlugin();
+                    plugin = new RedAlert.GamePlugin(this);
                     plugin.New(nmd.TheaterName);
                 }
                 if (SteamworksUGC.IsInit)
@@ -762,24 +767,28 @@ namespace MobiusEditor
                     {
                         Globals.TheTeamColorManager.Reset();
                         Globals.TheTeamColorManager.Load(@"DATA\XML\CNCTDTEAMCOLORS.XML");
-                        plugin = new TiberianDawn.GamePlugin();
+                        plugin = new TiberianDawn.GamePlugin(this);
                     }
                     break;
                 case GameType.RedAlert:
                     {
                         Globals.TheTeamColorManager.Reset();
                         Globals.TheTeamColorManager.Load(@"DATA\XML\CNCRATEAMCOLORS.XML");
-                        plugin = new RedAlert.GamePlugin();
+                        plugin = new RedAlert.GamePlugin(this);
                     }
                     break;
             }
+            string[] errors;
             try
             {
-                var errors = plugin.Load(loadFilename, fileType).ToArray();
+                errors = plugin.Load(loadFilename, fileType).ToArray();
                 if (errors.Length > 0)
                 {
-                    ErrorMessageBox errorMessageBox = new ErrorMessageBox { Errors = errors };
-                    errorMessageBox.ShowDialog();
+                    using (ErrorMessageBox emb = new ErrorMessageBox())
+                    {
+                        emb.Errors = errors;
+                        emb.ShowDialog();
+                    }
                 }
             }
             catch (Exception ex)
@@ -793,7 +802,7 @@ namespace MobiusEditor
 #endif
             }
             mapPanel.MapImage = plugin.MapImage;
-            plugin.Dirty = false;
+            plugin.Dirty = errors != null && errors.Length > 0;
             filename = loadFilename;
             loadedFileType = fileType;
             SetTitle();
@@ -1303,6 +1312,12 @@ namespace MobiusEditor
                 {
                     case DialogResult.Yes:
                         {
+                            String errors = plugin.Validate();
+                            if (errors != null)
+                            {
+                                MessageBox.Show(errors, "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                return false;
+                            }
                             if (string.IsNullOrEmpty(filename))
                             {
                                 fileSaveAsMenuItem.PerformClick();
@@ -1321,6 +1336,11 @@ namespace MobiusEditor
                 }
             }
             return !cancel;
+        }
+
+        public void UpdateStatus()
+        {
+            SetTitle();
         }
     }
 }

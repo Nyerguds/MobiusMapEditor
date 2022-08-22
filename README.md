@@ -221,6 +221,17 @@ v1.4.1.0:
 * In TD maps, a building that is set to be rebuilt but is not built from the start will now show as House "None".
 * The Interior tiles "wall0002" to "wall0022" are now grouped per type into three dummy-entries "wallgroup1", "wallgroup2" and "wallgroup3", to simplify random placement of these tiles and to remove clutter from the tiles list.
 
+v1.4.1.1:
+
+* The Red Alert teamtype order "Guard Area" now correctly has 'time' as argument type, rather than a waypoint.
+* Added a system to detect singleplayer missions from the original game and automatically mark them as singleplayer if they conform to the classic naming scheme for singleplayer missions, and contain a Lose and Win trigger.
+* The "New" and "Open" functions will now abort if you choose to save the unsaved opened map but it does pass the basic waypoints validation.
+* the title of the window will now show "Untitled.ini" or "Untitled.mpr" when you have a new but unsaved map opened.
+* The title of the window will now show an asterisk behind the filename to indicate that the current file has unsaved changes.
+* Maps loaded from file are now seen as 'modified' if any issues were detected that made the editor change or discard data during the loading process.
+* The triggers check feedback (TD only) now also uses the large window used for showing the map load errors.
+
+
 ### Possible future features
 
 Some ideas that might get implemented in the future:

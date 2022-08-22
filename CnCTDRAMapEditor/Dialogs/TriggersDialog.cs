@@ -898,23 +898,31 @@ namespace MobiusEditor.Dialogs
                     return;
                 }
             }
-            string errors = String.Empty;
+            string[] errors = null;
             if (plugin.GameType == GameType.TiberianDawn)
             {
-                errors = CheckTiberianDawnTriggers();
+                errors = CheckTiberianDawnTriggers()?.ToArray();
             }
             else if (plugin.GameType == GameType.RedAlert)
             {
-                errors = CheckRedAlertTriggers();
+                errors = CheckRedAlertTriggers()?.ToArray();
             }
-            if (String.IsNullOrEmpty(errors))
+            if (errors == null || errors.Length == 0)
             {
-                errors = "No issues were encountered.";
+                MessageBox.Show("No issues were encountered.", "Triggers check", MessageBoxButtons.OK);
+                return;
             }
-            MessageBox.Show(errors, "Triggers check", MessageBoxButtons.OK);
+            using (ErrorMessageBox emb = new ErrorMessageBox())
+            {
+                emb.Title = "Triggers check";
+                emb.Message = "The following issues were encountered:";
+                emb.Errors = errors;
+                emb.UseWordWrap = true;
+                emb.ShowDialog();
+            }
         }
 
-        private string CheckTiberianDawnTriggers()
+        private IEnumerable<string> CheckTiberianDawnTriggers()
         {
             // Might need to migrate this to the plugin.
             HouseType player = plugin.Map.HouseTypes.Where(t => t.Equals(plugin.Map.BasicSection.Player)).FirstOrDefault() ?? plugin.Map.HouseTypes.First();
@@ -1016,25 +1024,15 @@ namespace MobiusEditor.Dialogs
                 }
                 if (curErrors.Count > 0)
                 {
-                    curErrors.Insert(0, trigName.ToUpper() + ":");
+                    errors.Add(trigName.ToUpper() + ":");
                     errors.AddRange(curErrors);
-                    errors.Add("\n");
+                    errors.Add(String.Empty);
                 }
             }
-            if (errors.Count == 0)
-            {
-                return null;
-            }
-            StringBuilder sb = new StringBuilder("The following issues were encountered:\n\n");
-            foreach (string item in errors)
-            {
-                sb.Append(item).Append('\n');
-            }
-            sb.TrimEnd('\n');
-            return sb.ToString();
+            return errors;
         }
 
-        private string CheckRedAlertTriggers()
+        private IEnumerable<string> CheckRedAlertTriggers()
         {
             return null;
             // TODO

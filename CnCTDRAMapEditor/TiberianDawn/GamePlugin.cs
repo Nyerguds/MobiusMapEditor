@@ -31,6 +31,7 @@ namespace MobiusEditor.TiberianDawn
 {
     public class GamePlugin : IGamePlugin
     {
+        private static readonly Regex SinglePlayRegex = new Regex("^SC[A-LN-Z]\\d{2}[EWX][A-EL]$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private static readonly Regex MovieRegex = new Regex(@"^(?:.*?\\)*(.*?)\.BK2$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         private static readonly IEnumerable<ITechnoType> fullTechnoTypes;
@@ -99,7 +100,14 @@ namespace MobiusEditor.TiberianDawn
 
         public Image MapImage { get; private set; }
 
-        public bool Dirty { get; set; }
+        IFeedBackHandler feedBackHandler;
+
+        bool isDirty;
+        public bool Dirty
+        {
+            get { return isDirty; }
+            set { isDirty = value; feedBackHandler?.UpdateStatus(); }
+        }
 
         private INISectionCollection extraSections;
 
@@ -108,8 +116,14 @@ namespace MobiusEditor.TiberianDawn
             fullTechnoTypes = InfantryTypes.GetTypes().Cast<ITechnoType>().Concat(UnitTypes.GetTypes(false).Cast<ITechnoType>());
         }
 
-        public GamePlugin(bool mapImage)
+        public GamePlugin(IFeedBackHandler feedBackHandler)
+            : this(true, feedBackHandler)
         {
+        }
+
+        public GamePlugin(bool mapImage, IFeedBackHandler feedBackHandler)
+        {
+            this.feedBackHandler = feedBackHandler;
             const int mplayers = 6;
             var playerWaypoints = Enumerable.Range(0, mplayers).Select(i => new Waypoint(string.Format("P{0}", i), WaypointFlag.PlayerStart));
             var generalWaypoints = Enumerable.Range(mplayers, 25 - mplayers).Select(i => new Waypoint(i.ToString()));
@@ -181,11 +195,6 @@ namespace MobiusEditor.TiberianDawn
             }
         }
 
-        public GamePlugin()
-            : this(true)
-        {
-        }
-
         public void New(string theater)
         {
             Map.Theater = Map.TheaterTypes.Where(t => t.Equals(theater)).FirstOrDefault() ?? TheaterTypes.Temperate;
@@ -210,7 +219,8 @@ namespace MobiusEditor.TiberianDawn
                     {
                         string iniText = FixRoad2Load(iniReader);
                         ini.Parse(iniText);
-                        errors.AddRange(LoadINI(ini));
+                        bool forceSingle = SinglePlayRegex.IsMatch(Path.GetFileNameWithoutExtension(path));
+                        errors.AddRange(LoadINI(ini, forceSingle));
                         if (binReader.BaseStream.Length != 0x2000)
                         {
                             errors.Add(String.Format("'{0}' does not have the correct size for a Tiberian Dawn .bin file.", Path.GetFileName(binPath)));
@@ -234,7 +244,7 @@ namespace MobiusEditor.TiberianDawn
                             using (var binReader = new BinaryReader(megafile.Open(binFile)))
                             {
                                 ini.Parse(iniReader);
-                                errors.AddRange(LoadINI(ini));
+                                errors.AddRange(LoadINI(ini, false));
                                 if (binReader.BaseStream.Length != 0x2000)
                                 {
                                     errors.Add(String.Format("'{0}' does not have the correct size for a Tiberian Dawn .bin file.", Path.GetFileName(binFile)));
@@ -351,7 +361,7 @@ namespace MobiusEditor.TiberianDawn
             return iniText;
         }
 
-        private IEnumerable<string> LoadINI(INI ini)
+        private IEnumerable<string> LoadINI(INI ini, bool forceSoloMission)
         {
             var errors = new List<string>();
             Map.BeginUpdate();
@@ -1130,10 +1140,18 @@ namespace MobiusEditor.TiberianDawn
             UpdateBasePlayerHouse();
             // Sort
             var comparer = new ExplorerComparer();
-            List<Trigger> reordered = Map.Triggers.OrderBy(t => t.Name, comparer).ToList();
-            Map.Triggers.ReplaceRange(reordered);
+            List<Trigger> reorderedTriggers = Map.Triggers.OrderBy(t => t.Name, comparer).ToList();
+            Map.Triggers.ReplaceRange(reorderedTriggers);
             Map.TeamTypes.Sort((x, y) => comparer.Compare(x.Name, y.Name));
             extraSections = ini.Sections;
+            bool switchedToSolo = forceSoloMission && !Map.BasicSection.SoloMission
+                && reorderedTriggers.Any(t => t.Action1.ActionType == ActionTypes.ACTION_WIN)
+                && reorderedTriggers.Any(t => t.Action1.ActionType == ActionTypes.ACTION_LOSE);
+            if (switchedToSolo)
+            {
+                errors.Insert(0, "Filename detected as classic single player mission format, and win and lose trigger detected. Applying \"SoloMission\" flag.");
+                Map.BasicSection.SoloMission = true;
+            }
             Map.EndUpdate();
             return errors;
         }

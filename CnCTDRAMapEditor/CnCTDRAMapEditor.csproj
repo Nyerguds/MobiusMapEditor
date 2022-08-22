@@ -277,6 +277,7 @@
     <Compile Include="Interface\IBrowsableType.cs" />
     <Compile Include="Interface\ICellOccupier.cs" />
     <Compile Include="Interface\ICellOverlapper.cs" />
+    <Compile Include="Interface\IFeedBackHandler.cs" />
     <Compile Include="Interface\IGamePlugin.cs" />
     <Compile Include="Interface\INamedType.cs" />
     <Compile Include="Interface\ITechno.cs" />

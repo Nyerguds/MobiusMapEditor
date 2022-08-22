@@ -27,7 +27,7 @@ namespace MobiusEditor.RedAlert
         public static readonly TeamMission Formation = new TeamMission(2, "Change Formation...", TeamMissionArgType.OptionsList, (0, "None"), (1, "Tight (surround weaker units)"), (2, "Spread Out"), (3, "Wedge North"), (4, "Wedge East"), (5, "Wedge South"), (6, "Wedge West"), (7, "Column N/S"), (8, "Line E/W"));
         public static readonly TeamMission Move = new TeamMission(3, "Move to Waypoint...", TeamMissionArgType.Waypoint);
         public static readonly TeamMission Movecell = new TeamMission(4, "Move to Cell...", TeamMissionArgType.MapCell);
-        public static readonly TeamMission Guard = new TeamMission(5, "Guard Area...", TeamMissionArgType.Waypoint);
+        public static readonly TeamMission Guard = new TeamMission(5, "Guard Area...", TeamMissionArgType.Time);
         public static readonly TeamMission Loop = new TeamMission(6, "Jump to Order #...", TeamMissionArgType.OrderNumber);
         public static readonly TeamMission AttackTarcom = new TeamMission(7, "Attack Tarcom...", TeamMissionArgType.Tarcom);
         public static readonly TeamMission Unload = new TeamMission(8, "Unload", TeamMissionArgType.None);
