@@ -21,26 +21,26 @@ namespace MobiusEditor.TiberianDawn
 {
     public static class InfantryTypes
     {
-        public static readonly InfantryType E1 = new InfantryType(0, "e1", "TEXT_UNIT_TITLE_GDI_MINIGUNNER", "Goodguy");
-        public static readonly InfantryType E2 = new InfantryType(1, "e2", "TEXT_UNIT_TITLE_GDI_GRENADIER", "Goodguy");
-        public static readonly InfantryType E3 = new InfantryType(2, "e3", "TEXT_UNIT_TITLE_GDI_ROCKET_SOLDIER", "Badguy");
-        public static readonly InfantryType E4 = new InfantryType(3, "e4", "TEXT_UNIT_TITLE_NOD_FLAMETHROWER", "Badguy");
-        public static readonly InfantryType E5 = new InfantryType(4, "e5", "TEXT_UNIT_TITLE_NOD_CHEM_WARRIOR", "Badguy");
-        public static readonly InfantryType E7 = new InfantryType(5, "e6", "TEXT_UNIT_TITLE_GDI_ENGINEER", "Goodguy", false);
+        public static readonly InfantryType E1 = new InfantryType(0, "e1", "TEXT_UNIT_TITLE_GDI_MINIGUNNER", "Goodguy", UnitTypeFlag.IsArmed);
+        public static readonly InfantryType E2 = new InfantryType(1, "e2", "TEXT_UNIT_TITLE_GDI_GRENADIER", "Goodguy", UnitTypeFlag.IsArmed);
+        public static readonly InfantryType E3 = new InfantryType(2, "e3", "TEXT_UNIT_TITLE_GDI_ROCKET_SOLDIER", "Badguy", UnitTypeFlag.IsArmed);
+        public static readonly InfantryType E4 = new InfantryType(3, "e4", "TEXT_UNIT_TITLE_NOD_FLAMETHROWER", "Badguy", UnitTypeFlag.IsArmed);
+        public static readonly InfantryType E5 = new InfantryType(4, "e5", "TEXT_UNIT_TITLE_NOD_CHEM_WARRIOR", "Badguy", UnitTypeFlag.IsArmed);
+        public static readonly InfantryType E7 = new InfantryType(5, "e6", "TEXT_UNIT_TITLE_GDI_ENGINEER", "Goodguy");
         public static readonly InfantryType Commando = new InfantryType(6, "rmbo", "TEXT_UNIT_TITLE_GDI_COMMANDO", "Goodguy");
-        public static readonly InfantryType C1 = new InfantryType(7, "c1", "TEXT_UNIT_TITLE_CIV1", "Neutral");
-        public static readonly InfantryType C2 = new InfantryType(8, "c2", "TEXT_UNIT_TITLE_CIV2", "Neutral", false);
-        public static readonly InfantryType C3 = new InfantryType(9, "c3", "TEXT_UNIT_TITLE_CIV3", "Neutral", false);
-        public static readonly InfantryType C4 = new InfantryType(10, "c4", "TEXT_UNIT_TITLE_CIV4", "Neutral", false);
-        public static readonly InfantryType C5 = new InfantryType(11, "c5", "TEXT_UNIT_TITLE_CIV5", "Neutral", false);
-        public static readonly InfantryType C6 = new InfantryType(12, "c6", "TEXT_UNIT_TITLE_CIV6", "Neutral", false);
-        public static readonly InfantryType C7 = new InfantryType(13, "c7", "TEXT_UNIT_TITLE_CIV7", "Neutral");
-        public static readonly InfantryType C8 = new InfantryType(14, "c8", "TEXT_UNIT_TITLE_CIV8", "Neutral", false);
-        public static readonly InfantryType C9 = new InfantryType(15, "c9", "TEXT_UNIT_TITLE_CIV9", "Neutral", false);
-        public static readonly InfantryType C10 = new InfantryType(16, "c10", "TEXT_UNIT_TITLE_C10", "Neutral", false);
-        public static readonly InfantryType Moebius = new InfantryType(17, "moebius", "TEXT_UNIT_TITLE_MOEBIUS", "Neutral", false);
-        public static readonly InfantryType Delphi = new InfantryType(18, "delphi", "TEXT_UNIT_TITLE_DELPHI", "Neutral");
-        public static readonly InfantryType DrChan = new InfantryType(19, "chan", "TEXT_UNIT_TITLE_CHAN", "Neutral", false);
+        public static readonly InfantryType C1 = new InfantryType(7, "c1", "TEXT_UNIT_TITLE_CIV1", "Neutral", UnitTypeFlag.IsArmed);
+        public static readonly InfantryType C2 = new InfantryType(8, "c2", "TEXT_UNIT_TITLE_CIV2", "Neutral");
+        public static readonly InfantryType C3 = new InfantryType(9, "c3", "TEXT_UNIT_TITLE_CIV3", "Neutral");
+        public static readonly InfantryType C4 = new InfantryType(10, "c4", "TEXT_UNIT_TITLE_CIV4", "Neutral");
+        public static readonly InfantryType C5 = new InfantryType(11, "c5", "TEXT_UNIT_TITLE_CIV5", "Neutral");
+        public static readonly InfantryType C6 = new InfantryType(12, "c6", "TEXT_UNIT_TITLE_CIV6", "Neutral");
+        public static readonly InfantryType C7 = new InfantryType(13, "c7", "TEXT_UNIT_TITLE_CIV7", "Neutral", UnitTypeFlag.IsArmed);
+        public static readonly InfantryType C8 = new InfantryType(14, "c8", "TEXT_UNIT_TITLE_CIV8", "Neutral");
+        public static readonly InfantryType C9 = new InfantryType(15, "c9", "TEXT_UNIT_TITLE_CIV9", "Neutral");
+        public static readonly InfantryType C10 = new InfantryType(16, "c10", "TEXT_UNIT_TITLE_C10", "Neutral");
+        public static readonly InfantryType Moebius = new InfantryType(17, "moebius", "TEXT_UNIT_TITLE_MOEBIUS", "Neutral");
+        public static readonly InfantryType Delphi = new InfantryType(18, "delphi", "TEXT_UNIT_TITLE_DELPHI", "Neutral", UnitTypeFlag.IsArmed);
+        public static readonly InfantryType DrChan = new InfantryType(19, "chan", "TEXT_UNIT_TITLE_CHAN", "Neutral");
 
         private static readonly InfantryType[] Types;
 

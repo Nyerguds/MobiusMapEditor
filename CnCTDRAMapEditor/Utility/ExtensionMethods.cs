@@ -73,6 +73,57 @@ namespace MobiusEditor.Utility
             }
         }
 
+        /// <summary>
+        /// Returns the points contained in a specified border of a given rectangle. The border is only considered to be inside the rectangle area.
+        /// If the thickness it exceeds Y/2 or X/2, the entire contents of the rectangle will be returned.
+        /// </summary>
+        /// <param name="rectangle">Rectangle</param>
+        /// <param name="thickness">Thickness of the border inside the rectangle.</param>
+        /// <returns></returns>
+        public static IEnumerable<Point> BorderCells(this Rectangle rectangle, int thickness)
+        {
+            int startYTop = rectangle.Top;
+            int endYTop = Math.Min(rectangle.Top + thickness, rectangle.Bottom);
+            int startYBottom = Math.Max(rectangle.Bottom-thickness, endYTop);
+            int endYBottom = rectangle.Bottom;
+
+            int startXLeft = rectangle.Left;
+            int endXLeft = Math.Min(rectangle.Left + thickness, rectangle.Right);
+            int startXRight = Math.Max(rectangle.Right - thickness, endXLeft);
+            int endXRight = rectangle.Right;
+
+            // Top block: all points
+            for (var y = startYTop; y < endYTop; ++y)
+            {
+                for (var x = rectangle.Left; x < rectangle.Right; ++x)
+                {
+                    yield return new Point(x, y);
+                }
+            }
+            // Center block
+            for (var y = endYTop; y < startYBottom; ++y)
+            {
+                // Left side
+                for (var x = startXLeft; x < endXLeft; ++x)
+                {
+                    yield return new Point(x, y);
+                }
+                // Right side
+                for (var x = startXRight; x < endXRight; ++x)
+                {
+                    yield return new Point(x, y);
+                }
+            }
+            // Bottom block
+            for (var y = startYBottom; y < endYBottom; ++y)
+            {
+                for (var x = rectangle.Left; x < rectangle.Right; ++x)
+                {
+                    yield return new Point(x, y);
+                }
+            }
+        }
+
         public static IEnumerable<T> Yield<T>(this T item)
         {
             yield return item;
@@ -145,6 +196,37 @@ namespace MobiusEditor.Utility
             return ((String.IsNullOrEmpty(str) || String.Equals(str, def, sc)) &&
                   (String.IsNullOrEmpty(other) || String.Equals(other, def, sc)))
                 || String.Equals(str,other, sc);
+        }
+
+        public static Bitmap FitToBoundingBox(this Image image, int maxWidth, int maxHeight)
+        {
+            return FitToBoundingBox(image, maxWidth, maxHeight, Color.Transparent);
+        }
+        public static Bitmap FitToBoundingBox(this Image image, int maxWidth, int maxHeight, Color clearColor)
+        {
+            return FitToBoundingBox(image, new Rectangle(0, 0, image.Width, image.Height), maxWidth, maxHeight, clearColor);
+        }
+
+        public static Bitmap FitToBoundingBox(this Image image, Rectangle cutout, int maxWidth, int maxHeight, Color clearColor)
+        {
+            Bitmap newImg = new Bitmap(maxWidth, maxHeight);
+            Rectangle resized = GeneralUtils.GetBoundingBoxCenter(cutout.Width, cutout.Height, maxWidth, maxHeight);
+            using (Graphics g = Graphics.FromImage(newImg))
+            {
+                g.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceCopy;
+                if (clearColor.ToArgb() != Color.Transparent.ToArgb())
+                {
+                    g.Clear(clearColor);
+                }
+                g.DrawImage(image, resized, cutout, GraphicsUnit.Pixel);
+                g.Flush();
+            }
+            return newImg;
+        }
+
+        public static Rectangle GetBoundingBoxCenter(this Image image, int maxWidth, int maxHeight)
+        {
+            return GeneralUtils.GetBoundingBoxCenter(image.Width, image.Height, maxWidth, maxHeight);
         }
 
         public static Bitmap RemoveAlpha(this Bitmap bitmap)

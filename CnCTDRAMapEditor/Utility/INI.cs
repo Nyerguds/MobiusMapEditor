@@ -102,6 +102,16 @@ namespace MobiusEditor.Utility
             this[key] = converter.ConvertToString(value);
         }
 
+        public T Get<T>(string key, TypeConverter converter) where T : struct
+        {
+            return (T)converter.ConvertFromString(this[key]);
+        }
+
+        public void Set<T>(string key, T value, TypeConverter converter) where T : struct
+        {
+            this[key] = converter.ConvertToString(value);
+        }
+
         public bool Remove(string key)
         {
             if (!KeyValues.Contains(key))

@@ -23,11 +23,14 @@ namespace MobiusEditor
     {
         static Globals()
         {
-            MapTileScale = Math.Max(1, Math.Abs(Properties.Settings.Default.MapScaleFactor));
-            MapSmoothScale = Properties.Settings.Default.MapScaleFactor < 0;
-            PreviewTileScale = Math.Max(1, Math.Abs(Properties.Settings.Default.PreviewScaleFactor));
-            PreviewSmoothScale = Properties.Settings.Default.PreviewScaleFactor < 0;
+            MapTileScale = Math.Min(1, Math.Max(0.05f, Math.Abs(Properties.Settings.Default.MapScale)));
+            MapSmoothScale = Properties.Settings.Default.MapScale < 0;
+            PreviewTileScale = Math.Min(1, Math.Max(0.05f, Math.Abs(Properties.Settings.Default.PreviewScale)));
+            PreviewSmoothScale = Properties.Settings.Default.PreviewScale < 0;
+            ExportTileScale = Math.Min(1, Math.Max(0.05f, Math.Abs(Properties.Settings.Default.ExportScale)));
+            ExportSmoothScale = Properties.Settings.Default.ExportScale < 0;
             IgnoreBibs = Properties.Settings.Default.IgnoreBibs;
+            IgnoreRaObsoleteClear = Properties.Settings.Default.IgnoreRaObsoleteClear;
         }
 
         public const string TilesetsXMLPath = @"DATA\XML\TILESETS.XML";
@@ -39,18 +42,26 @@ namespace MobiusEditor
         public const int OriginalTileHeight = 128;
         public static readonly Size OriginalTileSize = new Size(OriginalTileWidth, OriginalTileHeight);
 
-        public static int MapTileScale { get; set; }
+        public static double MapTileScale { get; set; }
         public static bool MapSmoothScale { get; set; }
-        public static int MapTileWidth => OriginalTileWidth / MapTileScale;
-        public static int MapTileHeight => OriginalTileHeight / MapTileScale;
+        public static int MapTileWidth => Math.Max(1, (int)(OriginalTileWidth * MapTileScale));
+        public static int MapTileHeight => Math.Max(1, (int)(OriginalTileHeight * MapTileScale));
         public static Size MapTileSize => new Size(MapTileWidth, MapTileHeight);
-        public static int PreviewTileScale { get; set; }
+
+        public static double PreviewTileScale { get; set; }
         public static bool PreviewSmoothScale { get; set; }
-        public static int PreviewTileWidth => OriginalTileWidth / PreviewTileScale;
-        public static int PreviewTileHeight => OriginalTileHeight / PreviewTileScale;
+        public static int PreviewTileWidth => Math.Max(1, (int)(OriginalTileWidth * PreviewTileScale));
+        public static int PreviewTileHeight => (int)(OriginalTileHeight * PreviewTileScale);
         public static Size PreviewTileSize => new Size(PreviewTileWidth, PreviewTileHeight);
 
+        public static double ExportTileScale { get; set; }
+        public static bool ExportSmoothScale { get; set; }
+        public static int ExportTileWidth => Math.Max(1, (int)(OriginalTileWidth * ExportTileScale));
+        public static int ExportTileHeight => Math.Max(1, (int)(OriginalTileHeight * ExportTileScale));
+        public static Size ExportTileSize => new Size(ExportTileWidth, ExportTileHeight);
+
         public static bool IgnoreBibs;
+        public static bool IgnoreRaObsoleteClear;
 
         public const int PixelWidth = 24;
         public const int PixelHeight = 24;

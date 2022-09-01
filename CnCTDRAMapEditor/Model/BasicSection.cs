@@ -143,6 +143,11 @@ namespace MobiusEditor.Model
         [DefaultValue(null)]
         public string BasePlayer { get => basePlayer; set => SetField(ref basePlayer, value); }
 
+        private bool expansionEnabled;
+        [NonSerializedINIKey]
+        [DefaultValue(true)]
+        public bool ExpansionEnabled { get => expansionEnabled; set => SetField(ref expansionEnabled, value); }
+
         private bool soloMission;
         [DefaultValue(false)]
         public bool SoloMission { get => soloMission; set => SetField(ref soloMission, value); }

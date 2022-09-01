@@ -136,10 +136,12 @@ namespace MobiusEditor.Dialogs
                 TriggerEvent evt1 = SelectedTrigger.Event1.Clone();
                 event1ComboBox.SelectedItem = SelectedTrigger.Event1.EventType;
                 UpdateTriggerEventControls(SelectedTrigger.Event1, event1Nud, event1ValueComboBox, evt1);
+                SelectedTrigger.Event1.FillDataFrom(evt1);
                 // Set action 1
                 TriggerAction act1 = SelectedTrigger.Action1.Clone();
                 action1ComboBox.SelectedItem = SelectedTrigger.Action1.ActionType;
                 UpdateTriggerActionControls(SelectedTrigger.Action1, action1Nud, action1ValueComboBox, act1);
+                SelectedTrigger.Action1.FillDataFrom(act1);
                 switch (plugin.GameType)
                 {
                     case GameType.TiberianDawn:
@@ -151,10 +153,12 @@ namespace MobiusEditor.Dialogs
                         TriggerEvent evt2 = SelectedTrigger.Event2.Clone();
                         event2ComboBox.SelectedItem = SelectedTrigger.Event2.EventType;
                         UpdateTriggerEventControls(SelectedTrigger.Event2, event2Nud, event2ValueComboBox, evt2);
+                        SelectedTrigger.Event2.FillDataFrom(evt2);
                         // Set action 2
                         TriggerAction act2 = SelectedTrigger.Action2.Clone();
                         action2ComboBox.SelectedItem = SelectedTrigger.Action2?.ActionType;
-                        UpdateTriggerActionControls(SelectedTrigger.Action2, action2Nud, action2ValueComboBox, act2);                        
+                        UpdateTriggerActionControls(SelectedTrigger.Action2, action2Nud, action2ValueComboBox, act2);
+                        SelectedTrigger.Action2.FillDataFrom(act2);
                         break;
                 }
 
@@ -205,7 +209,7 @@ namespace MobiusEditor.Dialogs
         private void Event1Nud_ValueChanged(object sender, EventArgs e)
         {
             Trigger trig = SelectedTrigger;
-            if (trig != null && trig.Event1 != null)
+            if (trig?.Event1 != null)
             {
                 trig.Event1.Data = (long)event1Nud.Value;
             }
@@ -214,7 +218,7 @@ namespace MobiusEditor.Dialogs
         private void Event2Nud_ValueChanged(object sender, EventArgs e)
         {
             Trigger trig = SelectedTrigger;
-            if (trig != null && trig.Event2 != null)
+            if (trig?.Event2 != null)
             {
                 trig.Event2.Data = (long)event2Nud.Value;
             }
@@ -223,7 +227,7 @@ namespace MobiusEditor.Dialogs
         private void Action1Nud_ValueChanged(object sender, EventArgs e)
         {
             Trigger trig = SelectedTrigger;
-            if (trig != null && trig.Action1 != null)
+            if (trig?.Action1 != null)
             {
                 trig.Action1.Data = (long)action1Nud.Value;
             }
@@ -232,7 +236,7 @@ namespace MobiusEditor.Dialogs
         private void Action2Nud_ValueChanged(object sender, EventArgs e)
         {
             Trigger trig = SelectedTrigger;
-            if (trig != null && trig.Action2 != null)
+            if (trig?.Action2 != null)
             {
                 trig.Action2.Data = (long)action2Nud.Value;
             }
@@ -660,10 +664,12 @@ namespace MobiusEditor.Dialogs
                             case RedAlert.ActionTypes.TACTION_REVEAL_SOME:
                             case RedAlert.ActionTypes.TACTION_REVEAL_ZONE:
                                 actionValueComboBox.Visible = true;
-                                actionValueComboBox.DisplayMember = "Name";
+                                actionValueComboBox.DisplayMember = "Label";
                                 actionValueComboBox.ValueMember = "Value";
-                                actionValueComboBox.DataSource = new { Name = Waypoint.None, Value = (long)-1 }.Yield().Concat(
-                                    plugin.Map.Waypoints.Select((t, i) => new { t.Name, Value = (long)i })).ToArray();
+                                Waypoint[] wps = plugin.Map.Waypoints;
+                                actionValueComboBox.DataSource = new DropDownItem<long>(-1, Waypoint.None).Yield().Concat(
+                                    Enumerable.Range(0, wps.Length).Select(wp => new DropDownItem<long>(wp, wps[wp].ToString()))).ToArray();
+                                //new { Name = Waypoint.None, Value = (long)-1 }.Yield().Concat(plugin.Map.Waypoints.Select((t, i) => new { t.Name, Value = (long)i })).ToArray();
                                 actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
                                 if (triggerActionData == null)
                                 {

@@ -59,7 +59,12 @@ namespace MobiusEditor.RedAlert
 
         public static string GetBasePlayer(string player)
         {
-            return (USSR.Equals(player) || Ukraine.Equals(player) || Bad.Equals(player)) ? Good.Name : Bad.Name;
+            return GetClassicOpposingPlayer(player);
+        }
+
+        public static string GetClassicOpposingPlayer(string player)
+        {
+            return (USSR.Equals(player) || Ukraine.Equals(player) || Bad.Equals(player)) ? Greece.Name : USSR.Name;
         }
     }
 }

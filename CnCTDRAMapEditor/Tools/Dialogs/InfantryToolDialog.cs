@@ -18,7 +18,6 @@ namespace MobiusEditor.Tools.Dialogs
 
         protected override void InitializeInternal(MapPanel mapPanel, MapLayerFlag activeLayers, ToolStripStatusLabel toolStatusLabel, ToolTip mouseToolTip, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> undoRedoList)
         {
-            ObjectTypeListBox.Types = plugin.Map.InfantryTypes.OrderBy(t => t.ID);
             Tool = new InfantryTool(mapPanel, activeLayers, toolStatusLabel, ObjectTypeListBox,
                 ObjectTypeMapPanel, ObjectProperties, plugin, undoRedoList);
         }

@@ -125,6 +125,22 @@ namespace MobiusEditor.Utility
             return true;
         }
 
+
+        public bool TryGetMember(string memberName, out object result)
+        {
+            if (!trackableProperties.TryGetValue(memberName, out PropertyInfo property))
+            {
+                result = null;
+                return false;
+            }
+
+            if (!propertyValues.TryGetValue(memberName, out result))
+            {
+                result = property.GetValue(Object);
+            }
+            return true;
+        }
+
         public override bool TrySetMember(SetMemberBinder binder, object value)
         {
             if (!trackableProperties.TryGetValue(binder.Name, out PropertyInfo property))

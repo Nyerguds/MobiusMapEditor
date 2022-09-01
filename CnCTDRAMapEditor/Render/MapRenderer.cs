@@ -105,9 +105,9 @@ namespace MobiusEditor.Render
             randomSeed = Guid.NewGuid().GetHashCode();
         }
 
-        public static void Render(GameType gameType, Map map, Graphics graphics, ISet<Point> locations, MapLayerFlag layers, int tileScale)
+        public static void Render(GameType gameType, Map map, Graphics graphics, ISet<Point> locations, MapLayerFlag layers, double tileScale)
         {
-            var tileSize = new Size(Globals.OriginalTileWidth / tileScale, Globals.OriginalTileHeight / tileScale);
+            var tileSize = new Size(Math.Max(1, (int)(Globals.OriginalTileWidth * tileScale)), Math.Max(1, (int)(Globals.OriginalTileHeight * tileScale)));
             var tiberiumOrGoldTypes = map.OverlayTypes.Where(t => t.IsTiberiumOrGold).Select(t => t).ToArray();
             var gemTypes = map.OverlayTypes.Where(t => t.IsGem).ToArray();
             var overlappingRenderList = new List<(Rectangle, Action<Graphics>)>();
@@ -164,15 +164,26 @@ namespace MobiusEditor.Render
                     }
                 }
             }
-
+            // Attached bibs are counted under Buildings, not Smudge.
+            if ((layers & MapLayerFlag.Buildings) != MapLayerFlag.None)
+            {
+                foreach (var topLeft in renderLocations())
+                {
+                    var smudge = map.Smudge[topLeft];
+                    if (smudge != null && (smudge.Type.Flag & SmudgeTypeFlag.Bib) != SmudgeTypeFlag.None)
+                    {
+                        Render(map.Theater, topLeft, tileSize, tileScale, smudge).Item2(graphics);
+                    }
+                }
+            }
             if ((layers & MapLayerFlag.Smudge) != MapLayerFlag.None)
             {
                 foreach (var topLeft in renderLocations())
                 {
                     var smudge = map.Smudge[topLeft];
-                    if (smudge != null)
+                    if (smudge != null && (smudge.Type.Flag & SmudgeTypeFlag.Bib) == SmudgeTypeFlag.None)
                     {
-                        Render(map.Theater, topLeft, tileSize, smudge).Item2(graphics);
+                        Render(map.Theater, topLeft, tileSize, tileScale, smudge).Item2(graphics);
                     }
                 }
             }
@@ -223,7 +234,7 @@ namespace MobiusEditor.Render
                         }
                         var location = new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height);
                         var maxSize = new Size(terrain.Type.Size.Width * tileSize.Width, terrain.Type.Size.Height * tileSize.Height);
-                        Rectangle paintBounds = RenderBounds(tile.Image.Size, terrain.Type.Size, tileSize);
+                        Rectangle paintBounds = RenderBounds(tile.Image.Size, terrain.Type.Size, tileScale);
                         paintBounds.X += location.X;
                         paintBounds.Y += location.Y;
                         var terrainBounds = new Rectangle(location, maxSize);
@@ -287,7 +298,7 @@ namespace MobiusEditor.Render
             Render(gameType, map, graphics, locations, layers, Globals.MapTileScale);
         }
 
-        public static (Rectangle, Action<Graphics>) Render(TheaterType theater, Point topLeft, Size tileSize, Smudge smudge)
+        public static (Rectangle, Action<Graphics>) Render(TheaterType theater, Point topLeft, Size tileSize, double tileScale, Smudge smudge)
         {
             var tint = smudge.Tint;
             var imageAttributes = new ImageAttributes();
@@ -306,7 +317,7 @@ namespace MobiusEditor.Render
             }
             if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, smudge.Type.Name, smudge.Icon, out Tile tile))
             {
-                Rectangle smudgeBounds = RenderBounds(tile.Image.Size, new Size(1, 1), tileSize);
+                Rectangle smudgeBounds = RenderBounds(tile.Image.Size, new Size(1, 1), tileScale);
                 smudgeBounds.X += topLeft.X * tileSize.Width;
                 smudgeBounds.Y += topLeft.Y * tileSize.Width;
                 void render(Graphics g)
@@ -322,7 +333,7 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static (Rectangle, Action<Graphics>) Render(GameType gameType, TheaterType theater, OverlayType[] tiberiumOrGoldTypes, OverlayType[] gemTypes, Point topLeft, Size tileSize, int tileScale, Overlay overlay)
+        public static (Rectangle, Action<Graphics>) Render(GameType gameType, TheaterType theater, OverlayType[] tiberiumOrGoldTypes, OverlayType[] gemTypes, Point topLeft, Size tileSize, double tileScale, Overlay overlay)
         {
             string name;
             if (overlay.Type.IsGem)
@@ -338,7 +349,7 @@ namespace MobiusEditor.Render
                 name = overlay.Type.GraphicsSource;
             }
             int icon;
-            if (gameType == GameType.TiberianDawn && overlay.Type == TiberianDawn.OverlayTypes.Concrete)
+            if (overlay.Type.IsConcrete || overlay.Type.IsResource || overlay.Type.IsWall)
             {
                 icon = overlay.Icon;
             }
@@ -349,7 +360,7 @@ namespace MobiusEditor.Render
             // For Decoration types, generate dummy if not found.
             if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, name, icon, out Tile tile, (overlay.Type.Flag & OverlayTypeFlag.Decoration) != 0, false))
             {
-                Rectangle overlayBounds = RenderBounds(tile.Image.Size, new Size(1, 1), tileSize);
+                Rectangle overlayBounds = RenderBounds(tile.Image.Size, new Size(1, 1), tileScale);
                 overlayBounds.X += topLeft.X * tileSize.Width;
                 overlayBounds.Y += topLeft.Y * tileSize.Width;
                 var tint = overlay.Tint;
@@ -380,7 +391,7 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static (Rectangle, Action<Graphics>) Render(GameType gameType, TheaterType theater, Point topLeft, Size tileSize, int tileScale, Building building)
+        public static (Rectangle, Action<Graphics>) Render(GameType gameType, TheaterType theater, Point topLeft, Size tileSize, double tileScale, Building building)
         {
             var tint = building.Tint;
             var icon = 0;
@@ -787,17 +798,17 @@ namespace MobiusEditor.Render
 
         public static Rectangle RenderBounds(Size size, Size cellDimensions, Size cellSize)
         {
-            int scaleFactorX = Globals.OriginalTileWidth / cellSize.Width;
-            int scaleFactorY = Globals.OriginalTileHeight / cellSize.Height;
+            double scaleFactorX = cellSize.Width / (double)Globals.OriginalTileWidth;
+            double scaleFactorY = cellSize.Height / (double)Globals.OriginalTileHeight;
             return RenderBounds(size, cellDimensions, scaleFactorX, scaleFactorY);
         }
 
-        public static Rectangle RenderBounds(Size size, Size cellDimensions, int scaleFactor)
+        public static Rectangle RenderBounds(Size size, Size cellDimensions, double scaleFactor)
         {
             return RenderBounds(size, cellDimensions, scaleFactor, scaleFactor);
         }
 
-        public static Rectangle RenderBounds(Size size, Size cellDimensions, int scaleFactorX, int scaleFactorY)
+        public static Rectangle RenderBounds(Size size, Size cellDimensions, double scaleFactorX, double scaleFactorY)
         {
             Size maxSize = new Size(cellDimensions.Width * Globals.OriginalTileWidth, cellDimensions.Height * Globals.OriginalTileHeight);
             // If graphics are too large, scale them down using the largest dimension
@@ -815,7 +826,8 @@ namespace MobiusEditor.Render
             // center graphics inside bounding box
             int locX = (maxSize.Width - newSize.Width) / 2;
             int locY = (maxSize.Height - newSize.Height) / 2;
-            return new Rectangle(locX / scaleFactorX, locY / scaleFactorY, newSize.Width / scaleFactorX, newSize.Height / scaleFactorY);
+            return new Rectangle((int)(locX * scaleFactorX), (int)(locY * scaleFactorY),
+                Math.Max(1, (int)(newSize.Width * scaleFactorX)), Math.Max(1, (int)(newSize.Height * scaleFactorY)));
         }
     }
 }

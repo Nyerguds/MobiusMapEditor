@@ -17,6 +17,7 @@ using MobiusEditor.Interface;
 using MobiusEditor.Model;
 using System;
 using System.Drawing;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 namespace MobiusEditor.Widgets
@@ -39,17 +40,32 @@ namespace MobiusEditor.Widgets
 
     public class NavigationWidget : IWidget
     {
-        private static readonly Pen defaultMouseoverPen = new Pen(Color.Yellow, 4);
+        private Cursor currentCursor = Cursors.Default;
+        public Cursor CurrentCursor
+        {
+            get { return currentCursor; }
+            set
+            {
+                currentCursor = value;
+                Cursor.Current = IsDragging() ? Cursors.SizeAll : currentCursor;
+            }
+        }
+
+        [DllImport("user32.dll")]
+        public static extern short GetAsyncKeyState(int key);
+
+        private readonly Pen defaultMouseoverPen;
 
         private readonly MapPanel mapPanel;
-        private readonly Size cellSize;
+        public Size CellSize { get; private set; }
 
-        private bool dragging = false;
-        private Point lastMouseLocation;
+        private Size? startScrollMouseLocation;
+        private Point? startScrollFromLocation;
 
         public CellMetrics Metrics { get; private set; }
 
         public Point MouseCell { get; private set; }
+        public Point ClosestMouseCellBorder { get; private set; }
         public Point MouseSubPixel { get; private set; }
 
         private Size mouseoverSize = new Size(1, 1);
@@ -59,13 +75,26 @@ namespace MobiusEditor.Widgets
             set => mouseoverSize = !value.IsEmpty ? new Size(value.Width | 1, value.Height | 1) : Size.Empty;
         }
 
+        public PointF ZoomedCellSize
+        {
+            get
+            {
+                float mapScale = mapPanel.ClientSize.Width > mapPanel.ClientSize.Height
+                    ? mapPanel.ClientSize.Width / (float)mapPanel.CameraBounds.Width 
+                    : mapPanel.ClientSize.Height / (float)mapPanel.CameraBounds.Height;
+                return new PointF(mapScale * mapPanel.MapImage.Width / Metrics.Width, mapScale * mapPanel.MapImage.Height / Metrics.Height);
+            }
+        }
+
         public event EventHandler<MouseCellChangedEventArgs> MouseCellChanged;
+        public event EventHandler<MouseCellChangedEventArgs> ClosestMouseCellBorderChanged;
 
         public NavigationWidget(MapPanel mapPanel, CellMetrics metrics, Size cellSize)
         {
             this.mapPanel = mapPanel;
             Metrics = metrics;
-            this.cellSize = cellSize;
+            this.CellSize = cellSize;
+            this.defaultMouseoverPen = new Pen(Color.Yellow, Math.Max(1, cellSize.Width / 16));
         }
 
         public void Refresh()
@@ -73,63 +102,108 @@ namespace MobiusEditor.Widgets
             OnMouseMove(mapPanel.PointToClient(Control.MousePosition));
         }
 
+        private bool IsDragging()
+        {
+            return (Control.MouseButtons & MouseButtons.Middle) != MouseButtons.None || (GetAsyncKeyState(32) & 0x8000) != 0;
+        }
+
+        private void DisableDragging()
+        {
+            startScrollMouseLocation = null;
+            startScrollFromLocation = null;
+            Cursor.Current = currentCursor;
+        }
+
+        private bool CheckIfDragging()
+        {
+            bool isDragging = IsDragging();
+            if (!isDragging)
+            {
+                DisableDragging();
+                return false;
+            }
+            if (isDragging && !startScrollMouseLocation.HasValue)
+            {
+                startScrollMouseLocation = (Size)mapPanel.PointToClient(Control.MousePosition);
+                startScrollFromLocation = mapPanel.AutoScrollPosition;
+                Cursor.Current = Cursors.SizeAll;
+                // Only return true if already dragging, not when initialising.
+                return false;
+            }
+            return isDragging;
+        }
+
         private void MapPanel_MouseDown(object sender, MouseEventArgs e)
         {
-            if ((e.Button & MouseButtons.Middle) != MouseButtons.None)
-            {
-                lastMouseLocation = e.Location;
-                dragging = true;
-            }
+            CheckIfDragging();
         }
+
+        private void MapPanel_MouseUp(object sender, MouseEventArgs e)
+        {
+            CheckIfDragging();
+        }
+
+        private void MapPanel_KeyDown(Object sender, KeyEventArgs e)
+        {
+            CheckIfDragging();
+        }        
+
+        private void MapPanel_KeyUp(Object sender, KeyEventArgs e)
+        {
+            CheckIfDragging();
+        }        
 
         private void MapPanel_MouseMove(object sender, MouseEventArgs e)
         {
-            OnMouseMove(e.Location);
+            OnMouseMove(mapPanel.PointToClient(Control.MousePosition));
         }
 
         private void OnMouseMove(Point location)
         {
-            if (dragging)
+            if (CheckIfDragging() && startScrollMouseLocation.HasValue && startScrollFromLocation.HasValue)
             {
-                if ((Control.MouseButtons & MouseButtons.Middle) == MouseButtons.None)
+                Cursor.Current = Cursors.SizeAll;
+                Point delta = location - startScrollMouseLocation.Value;
+                if (!delta.IsEmpty)
                 {
-                    dragging = false;
-                }
-                else
-                {
-                    var delta = location - (Size)lastMouseLocation;
-                    if (!delta.IsEmpty)
-                    {
-                        mapPanel.AutoScrollPosition = new Point(-mapPanel.AutoScrollPosition.X - delta.X, -mapPanel.AutoScrollPosition.Y - delta.Y);
-                    }
+                    mapPanel.AutoScrollPosition = new Point(-startScrollFromLocation.Value.X - delta.X, -startScrollFromLocation.Value.Y - delta.Y);
                 }
             }
-
-            lastMouseLocation = location;
-
-            var newMousePosition = mapPanel.ClientToMap(location);
+            Point newMousePosition = mapPanel.ClientToMap(location);
             MouseSubPixel = new Point(
-                (newMousePosition.X * Globals.PixelWidth / cellSize.Width) % Globals.PixelWidth,
-                (newMousePosition.Y * Globals.PixelHeight / cellSize.Height) % Globals.PixelHeight
+                (newMousePosition.X * Globals.PixelWidth / CellSize.Width) % Globals.PixelWidth,
+                (newMousePosition.Y * Globals.PixelHeight / CellSize.Height) % Globals.PixelHeight
             );
-
-            var newMouseCell = new Point(newMousePosition.X / cellSize.Width, newMousePosition.Y / cellSize.Height);
-            if (MouseCell == newMouseCell)
+            Point newMouseCell = new Point(newMousePosition.X / CellSize.Width, newMousePosition.Y / CellSize.Height);
+            Point newClosestMouseCellBorder = newMouseCell;
+            if (MouseSubPixel.X >= Globals.PixelWidth / 2)
             {
-                return;
+                newClosestMouseCellBorder.X += 1;
             }
-
-            if (!Metrics.Contains(newMouseCell))
+            if (MouseSubPixel.Y >= Globals.PixelHeight / 2)
             {
-                return;
+                newClosestMouseCellBorder.Y += 1;
             }
-
-            var oldCell = MouseCell;
-            MouseCell = newMouseCell;
-
-            MouseCellChanged?.Invoke(this, new MouseCellChangedEventArgs(oldCell, MouseCell, Control.MouseButtons));
-
-            mapPanel.Invalidate();
+            bool mouseCellChanged = MouseCell != newMouseCell;
+            bool closestChanged = ClosestMouseCellBorder != newClosestMouseCellBorder;
+            if (mouseCellChanged && Metrics.Contains(newMouseCell))
+            {
+                var oldCell = MouseCell;
+                MouseCell = newMouseCell;
+                MouseCellChanged?.Invoke(this, new MouseCellChangedEventArgs(oldCell, MouseCell, Control.MouseButtons));
+            }
+            // This excludes the outer border, but that's okay; it's not allowed for border dragging anyway.
+            if (closestChanged && Metrics.Contains(newClosestMouseCellBorder) && newClosestMouseCellBorder.X > 0 && newClosestMouseCellBorder.Y > 0)
+            {
+                var oldCell = ClosestMouseCellBorder;
+                ClosestMouseCellBorder = newClosestMouseCellBorder;
+                ClosestMouseCellBorderChanged?.Invoke(this, new MouseCellChangedEventArgs(oldCell, ClosestMouseCellBorder, Control.MouseButtons));
+            }
+            if (closestChanged || mouseCellChanged)
+            {
+                // This is the normal Repaint-triggering invalidate, not the full map re-render one.
+                mapPanel.Invalidate();
+            }
         }
 
         public void Render(Graphics graphics)
@@ -141,8 +215,8 @@ namespace MobiusEditor.Widgets
         {
             if (!MouseoverSize.IsEmpty)
             {
-                var rect = new Rectangle(new Point(mouseCell.X * cellSize.Width, mouseCell.Y * cellSize.Height), cellSize);
-                rect.Inflate(cellSize.Width * (MouseoverSize.Width / 2), cellSize.Height * (MouseoverSize.Height / 2));
+                var rect = new Rectangle(new Point(mouseCell.X * CellSize.Width, mouseCell.Y * CellSize.Height), CellSize);
+                rect.Inflate(CellSize.Width * (MouseoverSize.Width / 2), CellSize.Height * (MouseoverSize.Height / 2));
                 graphics.DrawRectangle(defaultMouseoverPen, rect);
             }
         }
@@ -150,13 +224,20 @@ namespace MobiusEditor.Widgets
         public void Activate()
         {
             this.mapPanel.MouseDown += MapPanel_MouseDown;
+            this.mapPanel.MouseUp += MapPanel_MouseUp;
+            (this.mapPanel as Control).KeyDown += this.MapPanel_KeyDown;
+            (this.mapPanel as Control).KeyUp += this.MapPanel_KeyUp;
             this.mapPanel.MouseMove += MapPanel_MouseMove;
         }
 
         public void Deactivate()
         {
-            mapPanel.MouseDown -= MapPanel_MouseDown;
-            mapPanel.MouseMove -= MapPanel_MouseMove;
+            this.mapPanel.MouseMove -= MapPanel_MouseMove;
+            (this.mapPanel as Control).KeyDown -= this.MapPanel_KeyDown;
+            (this.mapPanel as Control).KeyUp -= this.MapPanel_KeyUp;
+            this.mapPanel.MouseUp -= MapPanel_MouseUp;
+            this.mapPanel.MouseDown -= MapPanel_MouseDown;
+            DisableDragging();
         }
 
         #region IDisposable Support

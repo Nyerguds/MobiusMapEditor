@@ -317,7 +317,7 @@ namespace MobiusEditor.Tools
                 using (var g = Graphics.FromImage(smudgePreview))
                 {
                     MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
-                    MapRenderer.Render(map.Theater, new Point(0, 0), Globals.PreviewTileSize, mockSmudge).Item2(g);
+                    MapRenderer.Render(map.Theater, new Point(0, 0), Globals.PreviewTileSize, Globals.PreviewTileScale, mockSmudge).Item2(g);
                 }
                 smudgeTypeMapPanel.MapImage = smudgePreview;
             }
@@ -369,7 +369,7 @@ namespace MobiusEditor.Tools
         protected override void PostRenderMap(Graphics graphics)
         {
             base.PostRenderMap(graphics);
-            using (var smudgePen = new Pen(Color.Green, 4.0f))
+            using (var smudgePen = new Pen(Color.Green, Math.Max(1, Globals.MapTileSize.Width / 16.0f)))
             {
                 foreach (var (cell, smudge) in previewMap.Smudge.Where(x => (x.Value.Type.Flag & SmudgeTypeFlag.Bib) == SmudgeTypeFlag.None))
                 {

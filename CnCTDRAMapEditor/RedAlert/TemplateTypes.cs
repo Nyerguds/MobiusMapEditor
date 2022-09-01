@@ -402,7 +402,7 @@ namespace MobiusEditor.RedAlert
         public static readonly TemplateType WALL0047 = new TemplateType(375, "wall0047", 3, 2, new [] { TheaterTypes.Interior });
         public static readonly TemplateType WALL0048 = new TemplateType(376, "wall0048", 3, 2, new [] { TheaterTypes.Interior });
         public static readonly TemplateType WALL0049 = new TemplateType(377, "wall0049", 3, 3, new[] { TheaterTypes.Interior });
-        public static readonly TemplateType Bridge1h = new TemplateType(378, "bridge1h", 5, 3, new [] { TheaterTypes.Temperate, TheaterTypes.Snow }, "01111 11111 00100");
+        public static readonly TemplateType Bridge1h = new TemplateType(378, "bridge1h", 5, 3, new [] { TheaterTypes.Temperate, TheaterTypes.Snow }, "01111 11111 00111");
         public static readonly TemplateType Bridge2h = new TemplateType(379, "bridge2h", 5, 2, new [] { TheaterTypes.Temperate, TheaterTypes.Snow });
         public static readonly TemplateType Bridge1ax = new TemplateType(380, "br1x", 5, 3, new [] { TheaterTypes.Temperate, TheaterTypes.Snow }, "10011 00001 00001");
         public static readonly TemplateType Bridge2ax = new TemplateType(381, "br2x", 5, 1, new [] { TheaterTypes.Temperate, TheaterTypes.Snow }, "10001");

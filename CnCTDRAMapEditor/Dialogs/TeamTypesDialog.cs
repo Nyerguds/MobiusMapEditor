@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
@@ -30,6 +31,9 @@ namespace MobiusEditor.Dialogs
 {
     public partial class TeamTypesDialog : Form, ListedControlController<TeamTypeClass>, ListedControlController<TeamTypeMission>
     {
+        private Bitmap infoImage;
+        private string triggerToolTip;
+
         private readonly IGamePlugin plugin;
         private readonly int maxTeams;
         private readonly IEnumerable<ITechnoType> technoTypes;
@@ -59,6 +63,14 @@ namespace MobiusEditor.Dialogs
             this.technoTypes = plugin.Map.TeamTechnoTypes;
 
             InitializeComponent();
+            infoImage = new Bitmap(27, 27);
+            using (Graphics g = Graphics.FromImage(infoImage))
+            {
+                g.DrawIcon(SystemIcons.Information, new Rectangle(0, 0, infoImage.Width, infoImage.Height));
+            }
+            lblTriggerInfo.Image = infoImage;
+            lblTriggerInfo.ImageAlign = ContentAlignment.MiddleCenter;
+
             int extraWidth = nudRecruitPriority.Width + nudRecruitPriority.Margin.Left + nudRecruitPriority.Margin.Right;
             ttf = new ToolTipFixer(this, toolTip1, 10000, new Dictionary<Type, int> { { typeof(Label), extraWidth } });
 
@@ -76,7 +88,8 @@ namespace MobiusEditor.Dialogs
             teamTypes = new List<TeamType>();
             backupTeamTypes = new List<TeamType>();
             Waypoint[] wps = plugin.Map.Waypoints;
-            this.wayPoints = Enumerable.Range(0, wps.Length).Select(wp => new DropDownItem<int>(wp, wps[wp].Name + " [" + (wps[wp].Cell.HasValue ? wps[wp].Cell.Value.ToString() : "-") + "]")).ToArray();
+            this.wayPoints = Enumerable.Range(0, wps.Length).Select(wp => new DropDownItem<int>(wp, wps[wp].ToString())).ToArray();
+
             int nrOfTeams = Math.Min(maxTeams, plugin.Map.TeamTypes.Count);
             btnAddTeamType.Enabled = nrOfTeams < maxTeams;
             teamTypesListView.BeginUpdate();
@@ -89,17 +102,23 @@ namespace MobiusEditor.Dialogs
                 {
                     Tag = teamType
                 };
+                item.SubItems.Add(teamType.House.Name);
                 teamTypesListView.Items.Add(item).ToolTipText = teamType.Name;
             }
             teamTypesListView.EndUpdate();
 
             cmbHouse.DataSource = plugin.Map.Houses.Select(t => new TypeItem<HouseType>(t.Type.Name, t.Type)).ToArray();
-            // Fairly sure this is wrong...
-            //cmbWaypoint.DataSource = "(none)".Yield().Concat(plugin.Map.Waypoints.Select(w => w.Name)).ToArray();
-            cmbWaypoint.DataSource = new DropDownItem<int>(-1, "(none)").Yield().Concat(wayPoints).ToArray();
+            cmbWaypoint.DataSource = new DropDownItem<int>(-1, Waypoint.None).Yield().Concat(wayPoints).ToArray();
             cmbWaypoint.ValueMember = "Value";
             cmbWaypoint.DisplayMember = "Label";
-            cmbTrigger.DataSource = Trigger.None.Yield().Concat(plugin.Map.Triggers.Select(t => t.Name)).ToArray();
+
+            string[] items = plugin.Map.FilterUnitTriggers().Select(t => t.Name).Distinct().ToArray();
+            string[] filteredEvents = plugin.Map.EventTypes.Where(ev => plugin.Map.UnitEventTypes.Contains(ev)).Distinct().ToArray();
+            string[] filteredActions = plugin.Map.ActionTypes.Where(ac => plugin.Map.UnitActionTypes.Contains(ac)).Distinct().ToArray();
+            triggerToolTip = Map.MakeAllowedTriggersToolTip(filteredEvents, filteredActions);
+            HashSet<string> allowedTriggers = new HashSet<string>(items);
+            items = Trigger.None.Yield().Concat(plugin.Map.Triggers.Select(t => t.Name).Where(t => allowedTriggers.Contains(t)).Distinct()).ToArray();
+            cmbTrigger.DataSource = items;
 
             defaultTeam = technoTypes.FirstOrDefault();
             // Fix for case sensitivity issue in teamtype missions
@@ -108,6 +127,34 @@ namespace MobiusEditor.Dialogs
             this.teamMissionTypes = missions.ToArray();
             this.defaultMission = missions.FirstOrDefault();
             teamTypeTableLayoutPanel.Visible = false;
+        }
+
+        private void LblTriggerInfo_MouseEnter(Object sender, EventArgs e)
+        {
+            Control target = sender as Control;
+            ShowToolTip(target, triggerToolTip);
+        }
+
+        private void ShowToolTip(Control target, string message)
+        {
+
+            if (target == null || message == null)
+            {
+                this.toolTip1.Hide(target);
+                return;
+            }
+            Point resPoint = target.PointToScreen(new Point(0, target.Height));
+            MethodInfo m = toolTip1.GetType().GetMethod("SetTool",
+                       BindingFlags.Instance | BindingFlags.NonPublic);
+            // private void SetTool(IWin32Window win, string text, TipInfo.Type type, Point position)
+            m.Invoke(toolTip1, new object[] { target, message, 2, resPoint });
+            //this.toolTip1.Show(triggerToolTip, target, target.Width, 0, 10000);
+        }
+
+        private void LblTriggerInfo_MouseLeave(Object sender, EventArgs e)
+        {
+            Control target = sender as Control;
+            this.toolTip1.Hide(target);
         }
 
         private void TeamTypesListView_SelectedIndexChanged(object sender, EventArgs e)
@@ -319,10 +366,13 @@ namespace MobiusEditor.Dialogs
             {
                 Tag = teamType
             };
+            item.SubItems.Add(teamType.House.Name);
             teamTypes.Add(teamType);
             teamTypesListView.Items.Add(item).ToolTipText = teamType.Name;
             btnAddTeamType.Enabled = teamTypes.Count < maxTeams;
+            CalcListColSizes();
             item.Selected = true;
+            teamTypesListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.EnsureVisible();
             item.BeginEdit();
         }
 
@@ -340,6 +390,7 @@ namespace MobiusEditor.Dialogs
             if (index >= 0 && teamTypesListView.Items.Count > index)
                 teamTypesListView.Items[index].Selected = true;
             btnAddTeamType.Enabled = teamTypes.Count < maxTeams;
+            CalcListColSizes();
         }
 
         private void TeamTypesListView_AfterLabelEdit(object sender, LabelEditEventArgs e)
@@ -480,9 +531,68 @@ namespace MobiusEditor.Dialogs
             ttf.Dispose();
             if (disposing && (components != null))
             {
+                try
+                {
+                    lblTriggerInfo.Image = null;
+                }
+                catch { /*ignore*/}
+                try
+                {
+                    infoImage.Dispose();
+                    infoImage = null;
+                }
+                catch { /*ignore*/}
                 components.Dispose();
             }
             base.Dispose(disposing);
+        }
+
+        private void TeamTypesDialog_Resize(Object sender, EventArgs e)
+        {
+            CalcListColSizes();
+        }
+        
+        private void teamTypesListView_ColumnWidthChanging(Object sender, ColumnWidthChangingEventArgs e)
+        {
+            e.Cancel = true;
+            //CalcListColSizes();
+            e.NewWidth = teamTypesListView.Columns[e.ColumnIndex].Width;
+        }
+
+
+        private void CalcListColSizes()
+        {
+            int amount = teamTypesListView.Columns.Count;
+            int width = teamTypesListView.ClientSize.Width;
+            int colWidth = width / amount;
+            int remainder = width % amount;
+            foreach (ColumnHeader col in teamTypesListView.Columns)
+            {
+                int cwidth = colWidth;
+                if (remainder > 0)
+                {
+                    width += remainder--;
+                }
+                col.Width = cwidth;
+            }
+        }
+
+        private void cmbHouse_SelectedValueChanged(Object sender, EventArgs e)
+        {
+            if (teamTypesListView.SelectedItems.Count == 0 || !(cmbHouse.SelectedItem is TypeItem<HouseType> selectedHouse))
+            {
+                return;
+            }
+            ListViewItem item = teamTypesListView.SelectedItems[0];
+            if (item.SubItems.Count > 1 && item.SubItems[1].Text != selectedHouse.Name)
+            {
+                item.SubItems[1].Text = selectedHouse.Name;
+            }
+        }
+
+        private void TeamTypesDialog_Shown(Object sender, EventArgs e)
+        {
+            CalcListColSizes();
         }
     }
 }

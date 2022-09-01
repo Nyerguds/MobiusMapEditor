@@ -42,7 +42,7 @@ namespace MobiusEditor.Tools
         /// Layers that are not painted by the PostRenderMap function on ViewTool level because they are handled
         /// at a specific point in the PostRenderMap override by the implementing tool.
         /// </summary>
-        protected override MapLayerFlag ManuallyHandledLayers => MapLayerFlag.TechnoTriggers | MapLayerFlag.BuildingLabels;
+        protected override MapLayerFlag ManuallyHandledLayers => MapLayerFlag.TechnoTriggers | MapLayerFlag.BuildingRebuild;
 
         private bool placementMode;
 
@@ -365,7 +365,7 @@ namespace MobiusEditor.Tools
                     {
                         MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
                         render.Item2(g);
-                        RenderBuildingLabels(g, mockBuilding, new Point(0, 0), Globals.PreviewTileWidth, Globals.PreviewTileHeight, false);
+                        RenderBuildingLabels(g, mockBuilding, new Point(0, 0), Globals.PreviewTileSize, Globals.PreviewTileScale, Layers, false);
                     }
                     buildingTypeMapPanel.MapImage = buildingPreview;
                 }
@@ -423,8 +423,14 @@ namespace MobiusEditor.Tools
         protected override void PostRenderMap(Graphics graphics)
         {
             base.PostRenderMap(graphics);
-            using (var buildingPen = new Pen(Color.Green, 4.0f))
-            using (var occupyPen = new Pen(Color.Red, 2.0f))
+            float boundsPenSize = Math.Max(1, Globals.MapTileSize.Width / 16.0f);
+            float occupyPenSize = Math.Max(0.5f, Globals.MapTileSize.Width / 32.0f);
+            if (occupyPenSize == boundsPenSize)
+            {
+                boundsPenSize += 2;
+            }
+            using (var boundsPen = new Pen(Color.Green, boundsPenSize))
+            using (var occupyPen = new Pen(Color.Red, occupyPenSize))
             {
                 foreach (var (topLeft, building) in map.Buildings.OfType<Building>())
                 {
@@ -433,7 +439,7 @@ namespace MobiusEditor.Tools
                         new Point(topLeft.X * Globals.MapTileWidth, topLeft.Y * Globals.MapTileHeight),
                         new Size(typeBounds.Width * Globals.MapTileWidth, typeBounds.Height * Globals.MapTileHeight)
                     );
-                    graphics.DrawRectangle(buildingPen, bounds);
+                    graphics.DrawRectangle(boundsPen, bounds);
                 }
                 foreach (var (topLeft, building) in map.Buildings.OfType<Building>())
                 {
@@ -455,18 +461,18 @@ namespace MobiusEditor.Tools
             }
             foreach (var (topLeft, building) in map.Buildings.OfType<Building>())
             {
-                RenderBuildingLabels(graphics, building, topLeft, Globals.MapTileWidth, Globals.MapTileHeight, false);
+                RenderBuildingLabels(graphics, building, topLeft, Globals.MapTileSize, Globals.MapTileScale, Layers, false);
             }
             // Find the preview and add labels to it too.
             foreach (var (topLeft, building) in previewMap.Buildings.OfType<Building>())
             {
                 if (placementMode && building.Type.ID == mockBuilding.Type.ID && navigationWidget.MouseCell == topLeft && map.Technos.CanAdd(topLeft, building, building.Type.BaseOccupyMask))
                 {
-                    RenderBuildingLabels(graphics, building, topLeft, Globals.MapTileWidth, Globals.MapTileHeight, true);
+                    RenderBuildingLabels(graphics, building, topLeft, Globals.MapTileSize, Globals.MapTileScale, Layers, true);
                     break;
                 }
             }
-            RenderTechnoTriggers(graphics);
+            RenderTechnoTriggers(graphics, map, Globals.MapTileSize, Globals.MapTileScale, Layers);
         }
 
         public override void Activate()

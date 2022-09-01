@@ -125,29 +125,8 @@ namespace MobiusEditor.Utility
                 sb.Length = i + 1;
             return sb;
         }
-        public static Bitmap FitToBoundingBox(Image image, int maxWidth, int maxHeight)
-        {
-            return FitToBoundingBox(image, maxWidth, maxHeight, Color.Transparent);
-        }
 
-        public static Bitmap FitToBoundingBox(Image image, int maxWidth, int maxHeight, Color clearColor)
-        {
-            Bitmap newImg = new Bitmap(maxWidth, maxHeight);
-            Rectangle resized = GeneralUtils.FitToBoundingBox(image.Width, image.Height, maxWidth, maxHeight);
-            using (Graphics g = Graphics.FromImage(newImg))
-            {
-                g.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceCopy;
-                if (clearColor.ToArgb() != Color.Transparent.ToArgb())
-                {
-                    g.Clear(clearColor);
-                }
-                g.DrawImage(image, resized, new Rectangle(0, 0, image.Width, image.Height), GraphicsUnit.Pixel);
-                g.Flush();
-            }
-            return newImg;
-        }
-
-        public static Rectangle FitToBoundingBox(int imgWidth, int imgHeight, int maxWidth, int maxHeight)
+        public static Rectangle GetBoundingBoxCenter(int imgWidth, int imgHeight, int maxWidth, int maxHeight)
         {
             double previewScaleW = (double)maxWidth / imgWidth;
             double previewScaleH = (double)maxHeight / imgHeight;

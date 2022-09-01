@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -57,23 +58,83 @@ namespace MobiusEditor.Model
 
     public class MapSection : INotifyPropertyChanged
     {
+        private readonly int fullWidth;
+        private readonly int fullHeight;
+
+        public MapSection(int fullWidth, int fullHeight)
+        {
+            this.fullWidth = fullWidth;
+            this.fullHeight = fullHeight;
+        }
+
+        public MapSection(Size fullSize)
+        {
+            this.fullWidth = fullSize.Width;
+            this.fullHeight = fullSize.Height;
+        }
+
+        public void FixBounds()
+        {
+            int fixedX = Math.Max(1, Math.Min(fullWidth - 2, x));
+            int fixedY = Math.Max(1, Math.Min(fullHeight - 2, y));
+            int fixedWidth = Math.Max(1, Math.Min(fullWidth - x - 1, width));
+            int fixedHeight = Math.Max(1, Math.Min(fullHeight - y - 1, height));
+            // Assign fixed values.
+            X = fixedX;
+            Y = fixedY;
+            Width = fixedWidth;
+            Height = fixedHeight;
+        }
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         private int x;
         [DefaultValue(0)]
-        public int X { get => x; set => SetField(ref x, value); }
+        public int X
+        {
+            get { return x; }
+            set
+            {
+                value = Math.Max(1, Math.Min(fullWidth - 2, value));
+                SetField(ref x, value);
+            }
+        }
 
         private int y;
         [DefaultValue(0)]
-        public int Y { get => y; set => SetField(ref y, value); }
+        public int Y
+        {
+            get { return y; }
+            set
+            {
+                value = Math.Max(1, Math.Min(fullWidth - 2, value));
+                SetField(ref y, value);
+            }
+        }
 
         private int width;
         [DefaultValue(0)]
-        public int Width { get => width; set => SetField(ref width, value); }
+        public int Width
+        {
+            get { return width; }
+            set
+            {
+                value = Math.Max(1, Math.Min(fullWidth - 2, value));
+                SetField(ref width, value);
+            }
+        }
 
         private int height;
         [DefaultValue(0)]
-        public int Height { get => height; set => SetField(ref height, value); }
+        public int Height
+        {
+            get { return height; }
+            set
+            {
+                value = Math.Max(1, Math.Min(fullHeight - 2, value));
+                SetField(ref height, value);
+            }
+        }
 
         private TheaterType theater;
         [TypeConverter(typeof(TheaterTypeConverter))]

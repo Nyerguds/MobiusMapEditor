@@ -31,26 +31,24 @@ namespace MobiusEditor.Model
     public enum MapLayerFlag
     {
         None            = 0,
-        Basic           = 1 << 0,
-        Map             = 1 << 1,
-        Template        = 1 << 2,
-        Terrain         = 1 << 3,
-        Resources       = 1 << 4,
-        Walls           = 1 << 5,
-        Overlay         = 1 << 6,
-        Smudge          = 1 << 7,
-        Waypoints       = 1 << 8,
-        CellTriggers    = 1 << 9,
-        Houses          = 1 << 10,
-        Infantry        = 1 << 11,
-        Units           = 1 << 12,
-        Buildings       = 1 << 13,
-        Boundaries      = 1 << 14,
-        TechnoTriggers  = 1 << 15,
-        BuildingLabels  = 1 << 16,
+        Template        = 1 << 0,
+        Terrain         = 1 << 1,
+        Resources       = 1 << 2,
+        Walls           = 1 << 3,
+        Overlay         = 1 << 4,
+        Smudge          = 1 << 5,
+        Waypoints       = 1 << 6,
+        CellTriggers    = 1 << 7,
+        Infantry        = 1 << 8,
+        Units           = 1 << 9,
+        Buildings       = 1 << 10,
+        Boundaries      = 1 << 11,
+        TechnoTriggers  = 1 << 12,
+        BuildingRebuild = 1 << 13,
+        BuildingFakes   = 1 << 14,
 
         OverlayAll = Resources | Walls | Overlay,
-        Technos = Terrain | Walls | Infantry | Units | Buildings | BuildingLabels,
+        Technos = Terrain | Walls | Infantry | Units | Buildings | BuildingFakes,
 
         All = int.MaxValue
     }
@@ -89,7 +87,7 @@ namespace MobiusEditor.Model
 
         public readonly BasicSection BasicSection;
 
-        public readonly MapSection MapSection = new MapSection();
+        public readonly MapSection MapSection;
 
         public readonly BriefingSection BriefingSection = new BriefingSection();
 
@@ -153,13 +151,47 @@ namespace MobiusEditor.Model
 
         public readonly List<DirectionType> DirectionTypes;
 
-        public readonly List<InfantryType> InfantryTypes;
+        public readonly List<InfantryType> AllInfantryTypes;
 
-        public readonly List<UnitType> UnitTypes;
+        public List<InfantryType> InfantryTypes
+        {
+            get
+            {
+                if (BasicSection == null || !BasicSection.ExpansionEnabled)
+                {
+                    return AllInfantryTypes.Where(inf => !inf.IsExpansionUnit).ToList();
+                }
+                return AllInfantryTypes.ToList();
+            }
+        }
+
+        public readonly List<UnitType> AllUnitTypes;
+        public List<UnitType> UnitTypes
+        {
+            get
+            {
+                if (BasicSection == null || !BasicSection.ExpansionEnabled)
+                {
+                    return AllUnitTypes.Where(un => !un.IsExpansionUnit).ToList();
+                }
+                return AllUnitTypes.ToList();
+            }
+        }
 
         public readonly List<BuildingType> BuildingTypes;
 
-        public readonly List<ITechnoType> TeamTechnoTypes;
+        public readonly List<ITechnoType> AllTeamTechnoTypes;
+        public List<ITechnoType> TeamTechnoTypes
+        {
+            get
+            {
+                if (BasicSection == null || !BasicSection.ExpansionEnabled)
+                {
+                    return AllTeamTechnoTypes.Where(tc => (tc is UnitType ut && !ut.IsExpansionUnit) || (tc is InfantryType it && !it.IsExpansionUnit)).ToList();
+                }
+                return AllTeamTechnoTypes.ToList();
+            }
+        }
 
         public readonly TeamMission[] TeamMissionTypes;
 
@@ -222,8 +254,8 @@ namespace MobiusEditor.Model
             IEnumerable<UnitType> unitTypes, IEnumerable<BuildingType> buildingTypes, IEnumerable<TeamMission> teamMissionTypes,
             IEnumerable<ITechnoType> teamTechnoTypes, IEnumerable<Waypoint> waypoints, IEnumerable<string> movieTypes, IEnumerable<string> themeTypes)
         {
+            MapSection = new MapSection(cellSize);
             BasicSection = basicSection;
-
             HouseType = houseType;
             HouseTypesIncludingNone = houseTypes.ToArray();
             HouseTypes = HouseTypesIncludingNone.Where(h => h.ID >= 0).ToArray();
@@ -248,11 +280,11 @@ namespace MobiusEditor.Model
             DefaultMissionUnarmed = MissionTypes.Where(m => m.Equals("Stop")).FirstOrDefault() ?? MissionTypes.First();
             DefaultMissionHarvest = MissionTypes.Where(m => m.Equals("Harvest")).FirstOrDefault() ?? MissionTypes.First();
             DirectionTypes = new List<DirectionType>(directionTypes);
-            InfantryTypes = new List<InfantryType>(infantryTypes);
-            UnitTypes = new List<UnitType>(unitTypes);
+            AllInfantryTypes = new List<InfantryType>(infantryTypes);
+            AllUnitTypes = new List<UnitType>(unitTypes);
             BuildingTypes = new List<BuildingType>(buildingTypes);
             TeamMissionTypes = teamMissionTypes.ToArray();
-            TeamTechnoTypes = new List<ITechnoType>(teamTechnoTypes);
+            AllTeamTechnoTypes = new List<ITechnoType>(teamTechnoTypes);
             MovieTypes = new List<string>(movieTypes);
             ThemeTypes = new List<string>(themeTypes);
 
@@ -312,48 +344,37 @@ namespace MobiusEditor.Model
 
         public void InitTheater(GameType gameType)
         {
-            foreach (var templateType in TemplateTypes)
+            foreach (var templateType in TemplateTypes.Where(itm => itm.Theaters == null || itm.Theaters.Contains(Theater)))
             {
-                if ((templateType.Theaters == null) || templateType.Theaters.Contains(Theater))
-                {
-                    templateType.Init(Theater);
-                }
+                templateType.Init(Theater);
             }
-            foreach (var smudgeType in SmudgeTypes)
+            foreach (var smudgeType in SmudgeTypes.Where(itm => itm.Theaters == null || itm.Theaters.Contains(Theater)))
             {
-                if ((smudgeType.Theaters == null) || smudgeType.Theaters.Contains(Theater))
-                {
-                    smudgeType.Init(Theater);
-                }
+                smudgeType.Init(Theater);
             }
-            foreach (var overlayType in OverlayTypes)
+            foreach (var overlayType in OverlayTypes.Where(itm => itm.Theaters == null || itm.Theaters.Contains(Theater)))
             {
-                if ((overlayType.Theaters == null) || overlayType.Theaters.Contains(Theater))
-                {
-                    overlayType.Init(Theater);
-                }
+                overlayType.Init(Theater);
             }
-            foreach (var terrainType in TerrainTypes)
+            foreach (var terrainType in TerrainTypes.Where(itm => itm.Theaters == null || itm.Theaters.Contains(Theater)))
             {
-                if ((terrainType.Theaters == null) || terrainType.Theaters.Contains(Theater))
-                {
-                    terrainType.Init(Theater);
-                }
+                terrainType.Init(Theater);
             }
-            foreach (var infantryType in InfantryTypes)
+            // Ignore expansion status for these; they can still be enabled later.
+            DirectionType infDir = DirectionTypes.Where(d => d.Facing == FacingType.South).First();
+            foreach (var infantryType in AllInfantryTypes)
             {
-                infantryType.Init(gameType, Theater, HouseTypesIncludingNone.Where(h => h.Equals(infantryType.OwnerHouse)).FirstOrDefault(), DirectionTypes.Where(d => d.Facing == FacingType.South).First());
+                infantryType.Init(gameType, Theater, HouseTypesIncludingNone.Where(h => h.Equals(infantryType.OwnerHouse)).FirstOrDefault(), infDir);
             }
-            foreach (var unitType in UnitTypes)
+            DirectionType unitDir = DirectionTypes.Where(d => d.Facing == FacingType.SouthWest).First();
+            foreach (var unitType in AllUnitTypes)
             {
-                unitType.Init(gameType, Theater, HouseTypesIncludingNone.Where(h => h.Equals(unitType.OwnerHouse)).FirstOrDefault(), DirectionTypes.Where(d => d.Facing == FacingType.North).First());
+                unitType.Init(gameType, Theater, HouseTypesIncludingNone.Where(h => h.Equals(unitType.OwnerHouse)).FirstOrDefault(), unitDir);
             }
-            foreach (var buildingType in BuildingTypes)
+            DirectionType bldDir = DirectionTypes.Where(d => d.Facing == FacingType.North).First();
+            foreach (var buildingType in BuildingTypes.Where(itm => itm.Theaters == null || itm.Theaters.Contains(Theater)))
             {
-                if ((buildingType.Theaters == null) || buildingType.Theaters.Contains(Theater))
-                {
-                    buildingType.Init(gameType, Theater, HouseTypesIncludingNone.Where(h => h.Equals(buildingType.OwnerHouse)).FirstOrDefault(), DirectionTypes.Where(d => d.Facing == FacingType.North).First());
-                }
+                buildingType.Init(gameType, Theater, HouseTypesIncludingNone.Where(h => h.Equals(buildingType.OwnerHouse)).FirstOrDefault(), bldDir);
             }
         }
 
@@ -664,8 +685,8 @@ namespace MobiusEditor.Model
                 HouseTypes, TheaterTypes, TemplateTypes, TerrainTypes, OverlayTypes, SmudgeTypes,
                 EventTypes, CellEventTypes, UnitEventTypes, StructureEventTypes, TerrainEventTypes,
                 ActionTypes, CellActionTypes, UnitActionTypes, StructureActionTypes, TerrainActionTypes,
-                MissionTypes, DirectionTypes, InfantryTypes, UnitTypes, BuildingTypes, TeamMissionTypes,
-                TeamTechnoTypes, Waypoints, MovieTypes, ThemeTypes)
+                MissionTypes, DirectionTypes, AllInfantryTypes, AllUnitTypes, BuildingTypes, TeamMissionTypes,
+                AllTeamTechnoTypes, Waypoints, MovieTypes, ThemeTypes)
             {
                 TopLeft = TopLeft,
                 Size = Size
@@ -905,23 +926,34 @@ namespace MobiusEditor.Model
 
         public TGA GeneratePreview(Size previewSize, GameType gameType, bool renderAll, bool sharpen)
         {
-            var mapBounds = new Rectangle(
-                Bounds.Left * Globals.OriginalTileWidth,
-                Bounds.Top * Globals.OriginalTileHeight,
-                Bounds.Width * Globals.OriginalTileWidth,
-                Bounds.Height * Globals.OriginalTileHeight
-            );
+            MapLayerFlag toRender = MapLayerFlag.Template | (renderAll ? MapLayerFlag.OverlayAll | MapLayerFlag.Smudge | MapLayerFlag.Technos : MapLayerFlag.Resources);
+            return GeneratePreview(previewSize, gameType, toRender, true, true, sharpen);
+        }
+
+        public TGA GeneratePreview(Size previewSize, GameType gameType, MapLayerFlag toRender, bool smooth, bool crop, bool sharpen)
+        {
+            Rectangle mapBounds;
+            HashSet<Point> locations;
+            if (crop)
+            {
+                mapBounds = new Rectangle(Bounds.Left * Globals.OriginalTileWidth, Bounds.Top * Globals.OriginalTileHeight,
+                    Bounds.Width * Globals.OriginalTileWidth, Bounds.Height * Globals.OriginalTileHeight);
+                locations = Bounds.Points().ToHashSet();
+            }
+            else
+            {
+                mapBounds = new Rectangle(0, 0, Metrics.Width * Globals.OriginalTileWidth, Metrics.Height * Globals.OriginalTileHeight);
+                locations = Metrics.Bounds.Points().ToHashSet();
+            }
             var previewScale = Math.Min(previewSize.Width / (float)mapBounds.Width, previewSize.Height / (float)mapBounds.Height);
             var scaledSize = new Size((int)(previewSize.Width / previewScale), (int)(previewSize.Height / previewScale));
 
             using (var fullBitmap = new Bitmap(Metrics.Width * Globals.OriginalTileWidth, Metrics.Height * Globals.OriginalTileHeight))
             using (var croppedBitmap = new Bitmap(previewSize.Width, previewSize.Height))
             {
-                var locations = Bounds.Points().ToHashSet();
                 using (var g = Graphics.FromImage(fullBitmap))
                 {
-                    MapRenderer.SetRenderSettings(g, false);
-                    MapLayerFlag toRender = MapLayerFlag.Template | (renderAll ? MapLayerFlag.OverlayAll | MapLayerFlag.Technos : MapLayerFlag.Resources);
+                    MapRenderer.SetRenderSettings(g, smooth);
                     MapRenderer.Render(gameType, this, g, locations, toRender, 1);
                 }
                 using (var g = Graphics.FromImage(croppedBitmap))
@@ -1068,6 +1100,7 @@ namespace MobiusEditor.Model
         private void Triggers_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
             // Clean techno types
+            HashSet<string> availableTriggers = Triggers.Select(t => t.Name).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
             HashSet<string> availableUnitTriggers = FilterUnitTriggers().Select(t => t.Name).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
             HashSet<string> availableBuildingTriggers = FilterStructureTriggers().Select(t => t.Name).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
             HashSet<string> availableTerrainTriggers = FilterTerrainTriggers().Select(t => t.Name).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
@@ -1096,6 +1129,31 @@ namespace MobiusEditor.Model
                     CheckTriggers(unit, availableUnitTriggers);
                 }
             }
+            // Clean teamtypes
+            foreach (var team in TeamTypes)
+            {
+                String trig = team.Trigger;
+                if (trig != null && !availableUnitTriggers.Contains(trig))
+                {
+                    team.Trigger = Trigger.None;
+                }
+            }
+            // Clean triggers
+            foreach (var trig in Triggers)
+            {
+                if (trig == null)
+                {
+                    continue;
+                }
+                if (trig.Action1.Trigger != Trigger.None && !availableTriggers.Contains(trig.Action1.Trigger))
+                {
+                    trig.Action1.Trigger = Trigger.None;
+                }
+                if (trig.Action2.Trigger != Trigger.None && !availableTriggers.Contains(trig.Action2.Trigger))
+                {
+                    trig.Action2.Trigger = Trigger.None;
+                }
+            }
             CleanUpCellTriggers();
         }
 
@@ -1106,6 +1164,150 @@ namespace MobiusEditor.Model
             {
                 techno.Trigger = Trigger.None;
             }
+        }
+
+        public IEnumerable<string> AssessPower(GameType gameType)
+        {
+            HashSet<string> housesWithProd = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+            if (gameType == GameType.TiberianDawn)
+            {
+                // Tiberian Dawn logic: find AIs with construction yard and Production trigger.
+                HashSet<string> housesWithCY = new HashSet<string>();
+                foreach ((_, Building bld) in Buildings.OfType<Building>().Where(b => b.Occupier.IsPrebuilt &&
+                    b.Occupier.House.ID > 0 && (b.Occupier.Type.Flag & BuildingTypeFlag.Factory) == BuildingTypeFlag.Factory))
+                {
+                    housesWithCY.Add(bld.House.Name);
+                }
+                foreach ((_, Unit unit) in Technos.OfType<Unit>().Where(b => 
+                    "mcv".Equals(b.Occupier.Type.Name, StringComparison.InvariantCultureIgnoreCase)
+                    && "Unload".Equals(b.Occupier.Mission, StringComparison.InvariantCultureIgnoreCase)))
+                {
+                    housesWithCY.Add(unit.House.Name);
+                }
+                string cellTriggerHouse = TiberianDawn.HouseTypes.GetClassicOpposingPlayer(BasicSection.Player);
+                foreach (var trig in Triggers)
+                {
+                    string triggerHouse = trig.House;
+                    if (trig.Action1.ActionType == TiberianDawn.ActionTypes.ACTION_BEGIN_PRODUCTION)
+                    {
+                        if (trig.Event1.EventType == TiberianDawn.EventTypes.EVENT_PLAYER_ENTERED)
+                        {
+                            // Either a cell trigger, or a building to capture. Scan for celltriggers.
+                            if (housesWithCY.Contains(cellTriggerHouse))
+                            {
+                                foreach (var item in CellTriggers)
+                                {
+                                    if (trig.Equals(item.Value.Trigger))
+                                    {
+                                        housesWithProd.Add(cellTriggerHouse);
+                                        break;
+                                    }
+                                }
+                            }
+                            // Scan for attached buildings to capture.
+                            if (housesWithCY.Contains(triggerHouse))
+                            {
+                                foreach ((_, Building bld) in Buildings.OfType<Building>())
+                                {
+                                    if (trig.Equals(bld.Trigger))
+                                    {
+                                        housesWithProd.Add(triggerHouse);
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        else if (housesWithCY.Contains(triggerHouse))
+                        {
+                            housesWithProd.Add(trig.House);
+                        }
+                    }
+                }
+            }
+            else if (gameType == GameType.RedAlert)
+            {
+                if (BasicSection.BasePlayer == null)
+                {
+                    BasicSection.BasePlayer = RedAlert.HouseTypes.GetBasePlayer(BasicSection.Player);
+                }
+                HouseType rebuildHouse = this.HouseTypesIncludingNone.Where(h => h.Name == BasicSection.BasePlayer).FirstOrDefault();
+                housesWithProd.Add(rebuildHouse.Name);
+            }
+            Dictionary<String, int[]> powerWithUnbuilt = new Dictionary<string, int[]>(StringComparer.CurrentCultureIgnoreCase);
+            Dictionary<String, int[]> powerWithoutUnbuilt = new Dictionary<string, int[]>(StringComparer.CurrentCultureIgnoreCase);
+            foreach (HouseType house in this.HouseTypes)
+            {
+                if (housesWithProd.Contains(house.Name))
+                {
+                    powerWithUnbuilt[house.Name] = new int[2];
+                }
+                powerWithoutUnbuilt[house.Name] = new int[2];
+            }
+            foreach ((_, Building bld) in Buildings.OfType<Building>())
+            {
+                int bldUsage = bld.Type.PowerUsage;
+                int bldProd = bld.Type.PowerProduction;
+                int[] housePwr;
+                // These should all belong to the "rebuild house" due to internal property change listeners; no need to explicitly check.
+                if (!bld.IsPrebuilt)
+                {
+                    foreach (string house in housesWithProd)
+                    {
+                        if (powerWithUnbuilt.TryGetValue(house, out housePwr))
+                        {
+                            housePwr[0] += bldUsage;
+                            housePwr[1] += bldProd;
+                        }
+                    }
+                }
+                else if (powerWithUnbuilt.TryGetValue(bld.House.Name, out housePwr))
+                {
+                    housePwr[0] += bldUsage;
+                    housePwr[1] += bldProd;
+                }
+                if (bld.IsPrebuilt && powerWithoutUnbuilt.TryGetValue(bld.House.Name, out housePwr))
+                {
+                    housePwr[0] += bldUsage;
+                    housePwr[1] += bldProd;
+                }
+            }
+            List<string> info = new List<string>();
+            List<string> prodHouses = new List<string>();
+            foreach (HouseType house in HouseTypes)
+            {
+                if (housesWithProd.Contains(house.Name))
+                {
+                    prodHouses.Add(house.Name);
+                }
+            }
+            info.Add("Production-capable Houses: " + String.Join(", ", prodHouses.ToArray()));
+            foreach (HouseType house in HouseTypes)
+            {
+                int[] housePwrAll;
+                int[] housePwrBuilt;
+                if (powerWithUnbuilt.TryGetValue(house.Name, out housePwrAll))
+                {
+                    powerWithoutUnbuilt.TryGetValue(house.Name, out housePwrBuilt);
+                    int houseUsage = housePwrAll[0]; // PowerUsage;
+                    int houseProd = housePwrAll[1]; // PowerProduction;
+                    int houseUsageBuilt = housePwrBuilt[0]; // PowerUsage;
+                    int houseProdBuilt = housePwrBuilt[1]; // PowerProduction;
+
+                    String houseInfo = String.Format("{0}: {1} - Produces {2}, uses {3}. (Without unbuilt: {4} - Produces {5}, uses {6}.)",
+                        house.Name, houseProd < houseUsage ? "!!" : "OK", houseProd, houseUsage,
+                        houseProdBuilt < houseUsageBuilt ? "!!" : "OK", houseProdBuilt, houseUsageBuilt);
+                    info.Add(houseInfo);
+                }
+                else if (powerWithoutUnbuilt.TryGetValue(house.Name, out housePwrBuilt))
+                {
+                    int houseUsageBuilt = housePwrBuilt[0]; // PowerUsage;
+                    int houseProdBuilt = housePwrBuilt[1]; // PowerProduction;
+                    String houseInfo = String.Format("{0}: {1} - Produces {2}, uses {3}.",
+                        house.Name, houseProdBuilt < houseUsageBuilt ? "!!" : "OK", houseProdBuilt, houseUsageBuilt);
+                    info.Add(houseInfo);
+                }
+            }
+            return info;
         }
     }
 }

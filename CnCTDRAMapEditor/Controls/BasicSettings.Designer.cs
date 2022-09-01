@@ -43,6 +43,9 @@ namespace MobiusEditor.Controls
         private void InitializeComponent()
         {
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this.lblWin4Remaster = new System.Windows.Forms.Label();
+            this.lblWin3Remaster = new System.Windows.Forms.Label();
+            this.lblWin2Remaster = new System.Windows.Forms.Label();
             this.lblCarryoverClassic = new System.Windows.Forms.Label();
             this.themeLabel = new System.Windows.Forms.Label();
             this.loseLabel = new System.Windows.Forms.Label();
@@ -78,9 +81,7 @@ namespace MobiusEditor.Controls
             this.baseComboBox = new MobiusEditor.Controls.ComboBoxSmartWidth();
             this.themeComboBox = new MobiusEditor.Controls.ComboBoxSmartWidth();
             this.lblThemeClassic = new System.Windows.Forms.Label();
-            this.lblWin2Remaster = new System.Windows.Forms.Label();
-            this.lblWin3Remaster = new System.Windows.Forms.Label();
-            this.lblWin4Remaster = new System.Windows.Forms.Label();
+            this.hasExpansionUnitsCheckBox = new System.Windows.Forms.CheckBox();
             this.tableLayoutPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.buildLevelNud)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.percentNud)).BeginInit();
@@ -132,10 +133,12 @@ namespace MobiusEditor.Controls
             this.tableLayoutPanel1.Controls.Add(this.baseComboBox, 1, 6);
             this.tableLayoutPanel1.Controls.Add(this.themeComboBox, 1, 7);
             this.tableLayoutPanel1.Controls.Add(this.lblThemeClassic, 2, 7);
+            this.tableLayoutPanel1.Controls.Add(this.hasExpansionUnitsCheckBox, 1, 18);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.RowCount = 18;
+            this.tableLayoutPanel1.RowCount = 19;
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
@@ -154,8 +157,41 @@ namespace MobiusEditor.Controls
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(400, 428);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(400, 500);
             this.tableLayoutPanel1.TabIndex = 1;
+            // 
+            // lblWin4Remaster
+            // 
+            this.lblWin4Remaster.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblWin4Remaster.Location = new System.Drawing.Point(302, 355);
+            this.lblWin4Remaster.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.lblWin4Remaster.Name = "lblWin4Remaster";
+            this.lblWin4Remaster.Size = new System.Drawing.Size(96, 25);
+            this.lblWin4Remaster.TabIndex = 37;
+            this.lblWin4Remaster.Text = "(Remaster only)";
+            this.lblWin4Remaster.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // lblWin3Remaster
+            // 
+            this.lblWin3Remaster.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblWin3Remaster.Location = new System.Drawing.Point(302, 330);
+            this.lblWin3Remaster.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.lblWin3Remaster.Name = "lblWin3Remaster";
+            this.lblWin3Remaster.Size = new System.Drawing.Size(96, 25);
+            this.lblWin3Remaster.TabIndex = 36;
+            this.lblWin3Remaster.Text = "(Remaster only)";
+            this.lblWin3Remaster.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // lblWin2Remaster
+            // 
+            this.lblWin2Remaster.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblWin2Remaster.Location = new System.Drawing.Point(302, 305);
+            this.lblWin2Remaster.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.lblWin2Remaster.Name = "lblWin2Remaster";
+            this.lblWin2Remaster.Size = new System.Drawing.Size(96, 25);
+            this.lblWin2Remaster.TabIndex = 35;
+            this.lblWin2Remaster.Text = "(Remaster only)";
+            this.lblWin2Remaster.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // lblCarryoverClassic
             // 
@@ -438,24 +474,48 @@ namespace MobiusEditor.Controls
             // buildLevelNud
             // 
             this.buildLevelNud.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.buildLevelNud.EnteredValue = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
             this.buildLevelNud.Location = new System.Drawing.Point(103, 3);
             this.buildLevelNud.Name = "buildLevelNud";
+            this.buildLevelNud.SelectedText = "";
+            this.buildLevelNud.SelectionLength = 0;
+            this.buildLevelNud.SelectionStart = 0;
             this.buildLevelNud.Size = new System.Drawing.Size(194, 20);
             this.buildLevelNud.TabIndex = 1;
             // 
             // percentNud
             // 
             this.percentNud.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.percentNud.EnteredValue = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
             this.percentNud.Location = new System.Drawing.Point(103, 81);
             this.percentNud.Name = "percentNud";
+            this.percentNud.SelectedText = "";
+            this.percentNud.SelectionLength = 0;
+            this.percentNud.SelectionStart = 0;
             this.percentNud.Size = new System.Drawing.Size(194, 20);
             this.percentNud.TabIndex = 7;
             // 
             // carryOverMoneyNud
             // 
             this.carryOverMoneyNud.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.carryOverMoneyNud.EnteredValue = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
             this.carryOverMoneyNud.Location = new System.Drawing.Point(103, 29);
             this.carryOverMoneyNud.Name = "carryOverMoneyNud";
+            this.carryOverMoneyNud.SelectedText = "";
+            this.carryOverMoneyNud.SelectionLength = 0;
+            this.carryOverMoneyNud.SelectionStart = 0;
             this.carryOverMoneyNud.Size = new System.Drawing.Size(194, 20);
             this.carryOverMoneyNud.TabIndex = 3;
             // 
@@ -523,38 +583,17 @@ namespace MobiusEditor.Controls
             this.lblThemeClassic.Text = "(Classic only)";
             this.lblThemeClassic.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
-            // lblWin2Remaster
+            // hasExpansionUnitsCheckBox
             // 
-            this.lblWin2Remaster.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lblWin2Remaster.Location = new System.Drawing.Point(302, 305);
-            this.lblWin2Remaster.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.lblWin2Remaster.Name = "lblWin2Remaster";
-            this.lblWin2Remaster.Size = new System.Drawing.Size(96, 25);
-            this.lblWin2Remaster.TabIndex = 35;
-            this.lblWin2Remaster.Text = "(Remaster only)";
-            this.lblWin2Remaster.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            // 
-            // lblWin3Remaster
-            // 
-            this.lblWin3Remaster.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lblWin3Remaster.Location = new System.Drawing.Point(302, 330);
-            this.lblWin3Remaster.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.lblWin3Remaster.Name = "lblWin3Remaster";
-            this.lblWin3Remaster.Size = new System.Drawing.Size(96, 25);
-            this.lblWin3Remaster.TabIndex = 36;
-            this.lblWin3Remaster.Text = "(Remaster only)";
-            this.lblWin3Remaster.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            // 
-            // lblWin4Remaster
-            // 
-            this.lblWin4Remaster.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lblWin4Remaster.Location = new System.Drawing.Point(302, 355);
-            this.lblWin4Remaster.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.lblWin4Remaster.Name = "lblWin4Remaster";
-            this.lblWin4Remaster.Size = new System.Drawing.Size(96, 25);
-            this.lblWin4Remaster.TabIndex = 37;
-            this.lblWin4Remaster.Text = "(Remaster only)";
-            this.lblWin4Remaster.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.hasExpansionUnitsCheckBox.AutoSize = true;
+            this.hasExpansionUnitsCheckBox.Location = new System.Drawing.Point(102, 428);
+            this.hasExpansionUnitsCheckBox.Margin = new System.Windows.Forms.Padding(2);
+            this.hasExpansionUnitsCheckBox.Name = "hasExpansionUnitsCheckBox";
+            this.hasExpansionUnitsCheckBox.Size = new System.Drawing.Size(150, 17);
+            this.hasExpansionUnitsCheckBox.TabIndex = 32;
+            this.hasExpansionUnitsCheckBox.Text = "Aftermath Expansion Units";
+            this.hasExpansionUnitsCheckBox.UseVisualStyleBackColor = true;
+            this.hasExpansionUnitsCheckBox.CheckedChanged += new System.EventHandler(this.isSinglePlayerCheckBox_CheckedChanged);
             // 
             // BasicSettings
             // 
@@ -562,7 +601,7 @@ namespace MobiusEditor.Controls
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.tableLayoutPanel1);
             this.Name = "BasicSettings";
-            this.Size = new System.Drawing.Size(400, 428);
+            this.Size = new System.Drawing.Size(400, 500);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.buildLevelNud)).EndInit();
@@ -614,5 +653,6 @@ namespace MobiusEditor.Controls
         private System.Windows.Forms.Label lblWin4Remaster;
         private System.Windows.Forms.Label lblWin3Remaster;
         private System.Windows.Forms.Label lblWin2Remaster;
+        private System.Windows.Forms.CheckBox hasExpansionUnitsCheckBox;
     }
 }

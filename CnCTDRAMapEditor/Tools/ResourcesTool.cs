@@ -144,6 +144,9 @@ namespace MobiusEditor.Tools
                     RemoveResource(e.NewCell);
                 }
             }
+            /*/
+            // This code doesn't function. Thankfully, resources don't actually paint a preview anyway.
+            // MapToClient seems fundamentally broken; it requires coordinates of the mouse at image scale.
             if (brushSizeNud.Value > 1)
             {
                 foreach (var cell in new Point[] { e.OldCell, e.NewCell })
@@ -154,6 +157,7 @@ namespace MobiusEditor.Tools
                     )));
                 }
             }
+            //*/
         }
 
         private void AddResource(Point location)
@@ -319,7 +323,7 @@ namespace MobiusEditor.Tools
         {
             base.PostRenderMap(graphics);
 
-            using (var resourcePen = new Pen(Color.Green, 4.0f))
+            using (var resourcePen = new Pen(Color.Green, Math.Max(1, Globals.MapTileSize.Width / 16)))
             {
                 foreach (var (cell, overlay) in map.Overlay)
                 {

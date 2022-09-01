@@ -540,13 +540,13 @@ namespace MobiusEditor.Utility
             return (bm, r);
         }
 
-        private static Rectangle CalculateOpaqueBounds(byte[] data, int width, int height, int bpp, int stride)
+        private static Rectangle CalculateOpaqueBounds(byte[] data, int width, int height, int bytespp, int stride)
         {
-            int lineWidth = (width * bpp + 7) / 8;
+            int lineWidth = width * bytespp;
             bool isTransparentRow(int y)
             {
                 var start = y * stride;
-                for (var i = bpp - 1; i < lineWidth; i += bpp)
+                for (var i = bytespp - 1; i < lineWidth; i += bytespp)
                 {
                     if (data[start + i] != 0)
                     {
@@ -574,7 +574,7 @@ namespace MobiusEditor.Utility
             }
             bool isTransparentColumn(int x)
             {
-                var start = (x * bpp) + (bpp - 1);
+                var start = (x * bytespp) + (bytespp - 1);
                 for (var y = opaqueBounds.Top; y < opaqueBounds.Bottom; ++y)
                 {
                     if (data[start + (y * stride)] != 0)
@@ -603,7 +603,7 @@ namespace MobiusEditor.Utility
             return opaqueBounds;
         }
 
-        private static Rectangle CalculateOpaqueBounds(Bitmap bitmap)
+        public static Rectangle CalculateOpaqueBounds(Bitmap bitmap)
         {
             BitmapData data = null;
             try

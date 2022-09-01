@@ -31,6 +31,7 @@ namespace MobiusEditor.Controls
 {
     public partial class ObjectProperties : UserControl
     {
+        private Bitmap infoImage;
         private bool isMockObject;
 
         public IGamePlugin Plugin { get; private set; }
@@ -43,12 +44,14 @@ namespace MobiusEditor.Controls
             get => obj;
             set
             {
-                if (obj != value)
+                if (!ReferenceEquals(obj, value))
                 {
+                    // old obj
                     if (obj != null)
                     {
                         obj.PropertyChanged -= Obj_PropertyChanged;
                     }
+                    // new obj
                     obj = value;
                     if (obj != null)
                     {
@@ -66,6 +69,13 @@ namespace MobiusEditor.Controls
         public ObjectProperties()
         {
             InitializeComponent();
+            infoImage = new Bitmap(27, 27);
+            using (Graphics g = Graphics.FromImage(infoImage))
+            {
+                g.DrawIcon(SystemIcons.Information, new Rectangle(0, 0, infoImage.Width, infoImage.Height));
+            }
+            lblTriggerInfo.Image = infoImage;
+            lblTriggerInfo.ImageAlign = ContentAlignment.MiddleCenter;
         }
 
         public void Initialize(IGamePlugin plugin, bool isMockObject)
@@ -80,6 +90,17 @@ namespace MobiusEditor.Controls
             Disposed += (sender, e) =>
             {
                 Object = null;
+                try
+                {
+                    lblTriggerInfo.Image = null;
+                }
+                catch { /*ignore*/}
+                try
+                {
+                    infoImage.Dispose();
+                    infoImage = null;
+                }
+                catch { /*ignore*/}
                 plugin.Map.Triggers.CollectionChanged -= Triggers_CollectionChanged;
             };
         }
@@ -92,6 +113,7 @@ namespace MobiusEditor.Controls
         private void UpdateDataSource()
         {
             string selected = triggerComboBox.SelectedItem as string;
+            triggerComboBox.DataBindings.Clear();
             triggerComboBox.DataSource = null;
             triggerComboBox.Items.Clear();
             string[] items;
@@ -120,8 +142,12 @@ namespace MobiusEditor.Controls
             items = Trigger.None.Yield().Concat(Plugin.Map.Triggers.Select(t => t.Name).Where(t => allowedTriggers.Contains(t)).Distinct()).ToArray();
             int selectIndex = selected == null ? 0 : Enumerable.Range(0, items.Length).FirstOrDefault(x => String.Equals(items[x], selected, StringComparison.InvariantCultureIgnoreCase));
             triggerComboBox.DataSource = items;
-            triggerComboBox.SelectedIndex = selectIndex;
             triggerToolTip = Map.MakeAllowedTriggersToolTip(filteredEvents, filteredActions);
+            if (obj != null)
+            {
+                triggerComboBox.DataBindings.Add("SelectedItem", obj, "Trigger");
+            }
+            triggerComboBox.SelectedItem = items[selectIndex];
         }
 
         private void Rebind()
@@ -208,7 +234,6 @@ namespace MobiusEditor.Controls
             strengthNud.DataBindings.Add("Value", obj, "Strength");
             directionComboBox.DataBindings.Add("SelectedValue", obj, "Direction");
             UpdateDataSource();
-            triggerComboBox.DataBindings.Add("SelectedItem", obj, "Trigger");
         }
 
         private void Obj_PropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -320,15 +345,6 @@ namespace MobiusEditor.Controls
             {
                 binding.WriteValue();
             }
-        }
-
-        private void LblTriggerInfo_Paint(Object sender, PaintEventArgs e)
-        {
-            Control lbl = sender as Control;
-            int iconDim = (int)Math.Round(Math.Min(lbl.ClientSize.Width, lbl.ClientSize.Height) * .8f);
-            int x = (lbl.ClientSize.Width - iconDim) / 2;
-            int y = (lbl.ClientSize.Height - iconDim) / 2;
-            e.Graphics.DrawIcon(SystemIcons.Information, new Rectangle(x, y, iconDim, iconDim));
         }
 
         private void LblTriggerInfo_MouseEnter(Object sender, EventArgs e)

@@ -26,7 +26,6 @@ namespace MobiusEditor.Controls
         public BasicSettings(IGamePlugin plugin, dynamic basicSection)
         {
             InitializeComponent();
-
             playerComboBox.DataSource = plugin.Map.Houses.Select(h => h.Type.Name).ToArray();
             baseComboBox.DataSource = plugin.Map.Houses.Select(h => h.Type.Name).ToArray();
             var themeData = plugin.Map.ThemeTypes.ToList();
@@ -69,6 +68,7 @@ namespace MobiusEditor.Controls
                 case GameType.TiberianDawn:
                     buildLevelNud.DataBindings.Add("Value", basicSection, "BuildLevel");
                     baseLabel.Visible = baseComboBox.Visible = false;
+                    hasExpansionUnitsCheckBox.Visible = false;
                     introComboBox.DropDownStyle = ComboBoxStyle.DropDown;
                     briefComboBox.DropDownStyle = ComboBoxStyle.DropDown;
                     actionComboBox.DropDownStyle = ComboBoxStyle.DropDown;
@@ -81,6 +81,7 @@ namespace MobiusEditor.Controls
                 case GameType.RedAlert:
                     buildLevelNud.Visible = buildLevelLabel.Visible = false;
                     baseComboBox.DataBindings.Add("SelectedItem", basicSection, "BasePlayer");
+                    hasExpansionUnitsCheckBox.DataBindings.Add("Checked", basicSection, "ExpansionEnabled");
                     break;
             }
 
@@ -97,7 +98,6 @@ namespace MobiusEditor.Controls
             bool sp = isSinglePlayerCheckBox.Checked;
             themeComboBox.Enabled = introComboBox.Enabled = briefComboBox.Enabled = actionComboBox.Enabled = loseComboBox.Enabled = sp;
             winComboBox.Enabled = win2ComboBox.Enabled = win3ComboBox.Enabled = win4ComboBox.Enabled = sp;
-
         }
     }
 }

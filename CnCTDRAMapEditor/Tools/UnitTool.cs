@@ -20,6 +20,7 @@ using MobiusEditor.Render;
 using MobiusEditor.Utility;
 using MobiusEditor.Widgets;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
@@ -79,7 +80,8 @@ namespace MobiusEditor.Tools
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
             previewMap = map;
-            UnitType unitType = unitTypesBox.Types.First() as UnitType;
+            List<UnitType> unitTypes = plugin.Map.UnitTypes.Where(t => !t.IsFixedWing).OrderBy(t => t.ID).ToList();
+            UnitType unitType = unitTypes.First();
             mockUnit = new Unit()
             {
                 Type = unitType,
@@ -90,6 +92,7 @@ namespace MobiusEditor.Tools
             };
             mockUnit.PropertyChanged += MockUnit_PropertyChanged;
             this.unitTypesBox = unitTypesBox;
+            this.unitTypesBox.Types = unitTypes;
             this.unitTypesBox.SelectedIndexChanged += UnitTypeComboBox_SelectedIndexChanged;
             this.unitTypeMapPanel = unitTypeMapPanel;
             this.unitTypeMapPanel.BackColor = Color.White;
@@ -99,6 +102,42 @@ namespace MobiusEditor.Tools
             this.objectProperties.Object = mockUnit;
             navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
             SelectedUnitType = mockUnit.Type;
+        }
+
+        protected override void UpdateExpansionUnits()
+        {
+            int selectedIndex = unitTypesBox.SelectedIndex;
+            UnitType selected = unitTypesBox.SelectedValue as UnitType;
+            unitTypesBox.SelectedIndexChanged -= UnitTypeComboBox_SelectedIndexChanged;
+            List<UnitType> updatedTypes = plugin.Map.UnitTypes.Where(t => !t.IsFixedWing).OrderBy(t => t.ID).ToList();
+            if (!updatedTypes.Contains(selected))
+            {
+                // Find nearest existing.
+                selected = null;
+                List<UnitType> oldTypes = this.unitTypesBox.Types.Cast<UnitType>().ToList();
+                for (int i = selectedIndex; i >= 0; --i)
+                {
+                    if (updatedTypes.Contains(oldTypes[i]))
+                    {
+                        selected = oldTypes[i];
+                        break;
+                    }
+                }
+                if (selected == null)
+                {
+                    for (int i = selectedIndex; i < oldTypes.Count; ++i)
+                    {
+                        if (updatedTypes.Contains(oldTypes[i]))
+                        {
+                            selected = oldTypes[i];
+                            break;
+                        }
+                    }
+                }
+            }
+            unitTypesBox.Types = updatedTypes;
+            unitTypesBox.SelectedIndexChanged += UnitTypeComboBox_SelectedIndexChanged;
+            unitTypesBox.SelectedValue = selected;
         }
 
         private void MapPanel_MouseDoubleClick(object sender, MouseEventArgs e)
@@ -373,7 +412,7 @@ namespace MobiusEditor.Tools
         protected override void PostRenderMap(Graphics graphics)
         {
             base.PostRenderMap(graphics);
-            using (var unitPen = new Pen(Color.Green, 4.0f))
+            using (var unitPen = new Pen(Color.Green, Math.Max(1, Globals.MapTileSize.Width / 16.0f)))
             {
                 foreach (var (topLeft, _) in map.Technos.OfType<Unit>())
                 {
@@ -381,7 +420,7 @@ namespace MobiusEditor.Tools
                     graphics.DrawRectangle(unitPen, bounds);
                 }
             }
-            RenderTechnoTriggers(graphics);
+            RenderTechnoTriggers(graphics, map, Globals.MapTileSize, Globals.MapTileScale, Layers);
         }
 
         public override void Activate()

@@ -91,6 +91,84 @@ namespace MobiusEditor.Tools
                         }
                     }
                     break;
+                case "ExpansionEnabled":
+                    UpdateExpansionUnits();
+                    RemoveExpansionUnits();
+                    break;
+            }
+        }
+
+        protected virtual void UpdateExpansionUnits()
+        {
+
+        }
+
+        private void RemoveExpansionUnits()
+        {
+            if (map.BasicSection.ExpansionEnabled)
+            {
+                // Expansion is enabled. Nothing to do.
+                return;
+            }
+            // Technos on map
+            List<(Point, ICellOccupier)> toDelete = new List<(Point, ICellOccupier)>();
+            foreach ((Point p, ICellOccupier occup) in map.Technos)
+            {
+                if (occup is Unit un)
+                {
+                    if (un.Type.IsExpansionUnit)
+                    {
+                        toDelete.Add((p, occup));
+                    }
+                }
+                else if (occup is InfantryGroup ifg)
+                {
+                    if (ifg.Infantry.Any(inf => inf != null && inf.Type.IsExpansionUnit))
+                    {
+                        toDelete.Add((p, occup));
+                    }
+                }
+            }
+            foreach ((Point point, ICellOccupier occup) in toDelete)
+            {
+                if (occup is Unit un)
+                {
+                    mapPanel.Invalidate(map, un);
+                    map.Technos.Remove(occup);
+                }
+                else if (occup is InfantryGroup infantryGroup)
+                {
+                    Infantry[] inf = infantryGroup.Infantry;
+                    for (int i = 0; i < inf.Length; ++i)
+                    {
+                        if (inf[i] != null && (inf[i].Type.Flag & UnitTypeFlag.IsExpansionUnit) == UnitTypeFlag.IsExpansionUnit)
+                        {
+                            inf[i] = null;
+                        }
+                    }
+                    bool delGroup = inf.All(i => i == null);
+                    mapPanel.Invalidate(map, infantryGroup);
+                    if (delGroup)
+                    {
+                        map.Technos.Remove(infantryGroup);
+                    }
+                }
+            }
+            // Teamtypes
+            foreach (TeamType teamtype in map.TeamTypes)
+            {
+                List<TeamTypeClass> toRemove = new List<TeamTypeClass>();
+                foreach (TeamTypeClass ttclass in teamtype.Classes)
+                {
+                    if ((ttclass.Type is UnitType ut && ut.IsExpansionUnit) || (ttclass.Type is InfantryType it && it.IsExpansionUnit))
+                    {
+                        toRemove.Add(ttclass);
+                    }
+                }
+                foreach (TeamTypeClass ttclass in toRemove)
+                {
+                    teamtype.Classes.Remove(ttclass);
+                }
             }
         }
 
@@ -118,71 +196,111 @@ namespace MobiusEditor.Tools
 
         protected virtual void PostRenderMap(Graphics graphics)
         {
+            PostRenderMap(graphics, this.map, Globals.MapTileScale, PriorityLayers, ManuallyHandledLayers, Layers);
+        }
+
+        public static void PostRenderMap(Graphics graphics, Map map, double tileScale,  MapLayerFlag priorityLayers, MapLayerFlag manuallyHandledLayers, MapLayerFlag layersToRender)
+        {
+            Size tileSize = new Size(Math.Max(1, (int)(Globals.OriginalTileWidth * tileScale)), Math.Max(1, (int)(Globals.OriginalTileHeight * tileScale)));
+
             // Only render these if they are not in the priority layers, and not handled manually.
             // The functions themselves will take care of checking whether they are in the active layers to render.
-            if ((PriorityLayers & MapLayerFlag.Boundaries) == MapLayerFlag.None
-                && (ManuallyHandledLayers & MapLayerFlag.Boundaries) == MapLayerFlag.None)
+            if ((priorityLayers & MapLayerFlag.Boundaries) == MapLayerFlag.None
+                && (manuallyHandledLayers & MapLayerFlag.Boundaries) == MapLayerFlag.None)
             {
-                RenderMapBoundaries(graphics);
+                RenderMapBoundaries(graphics, layersToRender, map, tileSize);
             }
-            if ((PriorityLayers & MapLayerFlag.CellTriggers) == MapLayerFlag.None
-                && (ManuallyHandledLayers & MapLayerFlag.CellTriggers) == MapLayerFlag.None)
+            if ((priorityLayers & MapLayerFlag.CellTriggers) == MapLayerFlag.None
+                && (manuallyHandledLayers & MapLayerFlag.CellTriggers) == MapLayerFlag.None)
             {
-                RenderCellTriggers(graphics);
+                RenderCellTriggers(graphics, map, tileSize, tileScale, layersToRender);
             }
-            if ((PriorityLayers & MapLayerFlag.Waypoints) == MapLayerFlag.None
-                && (ManuallyHandledLayers & MapLayerFlag.Waypoints) == MapLayerFlag.None)
+            if ((priorityLayers & MapLayerFlag.Waypoints) == MapLayerFlag.None
+                && (manuallyHandledLayers & MapLayerFlag.Waypoints) == MapLayerFlag.None)
             {
-                RenderWayPoints(graphics);
+                RenderWayPoints(graphics, map, tileSize, tileScale, layersToRender);
             }
-            if ((PriorityLayers & MapLayerFlag.BuildingLabels) == MapLayerFlag.None
-                && (ManuallyHandledLayers & MapLayerFlag.BuildingLabels) == MapLayerFlag.None)
+            if ((priorityLayers & MapLayerFlag.BuildingRebuild) == MapLayerFlag.None
+                && (manuallyHandledLayers & MapLayerFlag.BuildingRebuild) == MapLayerFlag.None)
             {
-                RenderAllBuildingLabels(graphics);
+                RenderAllBuildingLabels(graphics, map, tileSize, tileScale, layersToRender);
             }
-            if ((PriorityLayers & MapLayerFlag.TechnoTriggers) == MapLayerFlag.None
-                && (ManuallyHandledLayers & MapLayerFlag.TechnoTriggers) == MapLayerFlag.None)
+            if ((priorityLayers & MapLayerFlag.TechnoTriggers) == MapLayerFlag.None
+                && (manuallyHandledLayers & MapLayerFlag.TechnoTriggers) == MapLayerFlag.None)
             {
-                RenderTechnoTriggers(graphics);
+                RenderTechnoTriggers(graphics, map, tileSize, tileScale, layersToRender);
             }
             // Priority layers are only drawn at the end, so they get painted over all others.
-            if ((PriorityLayers & MapLayerFlag.Boundaries) != MapLayerFlag.None)
+            if ((priorityLayers & MapLayerFlag.Boundaries) != MapLayerFlag.None)
             {
-                RenderMapBoundaries(graphics);
+                RenderMapBoundaries(graphics, layersToRender, map, tileSize);
             }
-            if ((PriorityLayers & MapLayerFlag.CellTriggers) != MapLayerFlag.None)
+            if ((priorityLayers & MapLayerFlag.CellTriggers) != MapLayerFlag.None)
             {
-                RenderCellTriggers(graphics);
+                RenderCellTriggers(graphics, map, tileSize, tileScale, layersToRender);
             }
-            if ((PriorityLayers & MapLayerFlag.Waypoints) != MapLayerFlag.None)
+            if ((priorityLayers & MapLayerFlag.Waypoints) != MapLayerFlag.None)
             {
-                RenderWayPoints(graphics);
+                RenderWayPoints(graphics, map, tileSize, tileScale, layersToRender);
             }
-            if ((PriorityLayers & MapLayerFlag.BuildingLabels) != MapLayerFlag.None)
+            if ((priorityLayers & MapLayerFlag.BuildingRebuild) != MapLayerFlag.None)
             {
-                RenderAllBuildingLabels(graphics);
+                RenderAllBuildingLabels(graphics, map, tileSize, tileScale, layersToRender);
             }
-            if ((PriorityLayers & MapLayerFlag.TechnoTriggers) != MapLayerFlag.None)
+            if ((priorityLayers & MapLayerFlag.TechnoTriggers) != MapLayerFlag.None)
             {
-                RenderTechnoTriggers(graphics);
+                RenderTechnoTriggers(graphics, map, tileSize, tileScale, layersToRender);
             }
         }
 
-        private void RenderAllBuildingLabels(Graphics graphics)
+        private static void RenderAllBuildingLabels(Graphics graphics, Map map, Size tileSize, double tileScale, MapLayerFlag layersToRender)
         {
-            if ((Layers & MapLayerFlag.Buildings) == MapLayerFlag.None
-                || (Layers & MapLayerFlag.BuildingLabels) == MapLayerFlag.None)
+            if ((layersToRender & MapLayerFlag.Buildings) == MapLayerFlag.None
+                || ((layersToRender & MapLayerFlag.BuildingRebuild) == MapLayerFlag.None && (layersToRender & MapLayerFlag.BuildingFakes) == MapLayerFlag.None))
             {
                 return;
             }
             foreach (var (topLeft, building) in map.Buildings.OfType<Building>())
             {
-                RenderBuildingLabels(graphics, building, topLeft, Globals.MapTileWidth, Globals.MapTileHeight, false);
+                RenderBuildingLabels(graphics, building, topLeft, tileSize, tileScale, layersToRender, false);
             }
         }
 
-        protected void RenderBuildingLabels(Graphics g, Building building, Point topLeft, int tileWidth, int tileHeight, Boolean forPreview)
+        protected static void RenderBuildingFakeLabel(Graphics graphics, Building building, Point topLeft, Size tileSize, double tileScale, MapLayerFlag layersToRender)
         {
+            if ((layersToRender & MapLayerFlag.BuildingFakes) == MapLayerFlag.None)
+            {
+                return;
+            }
+            var size = new Size(building.Type.Size.Width * tileSize.Width, building.Type.Size.Height * tileSize.Height);
+            string fakeText = Globals.TheGameTextManager["TEXT_UI_FAKE"];
+            Rectangle bounds = new Rectangle(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height, size.Width, size.Height);
+            using (var fakeBackgroundBrush = new SolidBrush(Color.FromArgb(96, Color.Black)))
+            using (var fakeBrush = new SolidBrush(Color.LimeGreen))
+            {
+                StringFormat stringFormat = new StringFormat
+                {
+                    Alignment = StringAlignment.Center,
+                    LineAlignment = StringAlignment.Center
+                };
+                using (var font = graphics.GetAdjustedFont(fakeText, SystemFonts.DefaultFont, bounds.Width,
+                    Math.Max(1, (int)(12 * tileScale)), Math.Max(1, (int)(24 * tileScale)), true))
+                {
+                    var textBounds = graphics.MeasureString(fakeText, font, bounds.Width, stringFormat);
+                    var backgroundBounds = new RectangleF(bounds.Location, textBounds);
+                    //backgroundBounds.Offset((bounds.Width - textBounds.Width) / 2.0f, (bounds.Height - textBounds.Height) / 2.0f);
+                    graphics.FillRectangle(fakeBackgroundBrush, backgroundBounds);
+                    graphics.DrawString(fakeText, font, fakeBrush, bounds, stringFormat);
+                }
+            }
+        }
+
+        protected static void RenderBuildingLabels(Graphics graphics, Building building, Point topLeft, Size tileSize, double tileScale, MapLayerFlag layersToRender, Boolean forPreview)
+        {
+            if ((layersToRender & MapLayerFlag.Buildings) == MapLayerFlag.None)
+            {
+                return;
+            }
             var stringFormat = new StringFormat
             {
                 Alignment = StringAlignment.Center,
@@ -190,52 +308,60 @@ namespace MobiusEditor.Tools
             };
             var maxSize = building.Type.Size;
             var buildingBounds = new Rectangle(
-                new Point(topLeft.X * tileWidth, topLeft.Y * tileHeight),
-                new Size(maxSize.Width * tileWidth, maxSize.Height * tileHeight)
+                new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height),
+                new Size(maxSize.Width * tileSize.Width, maxSize.Height * tileSize.Height)
             );
-            if (building.Type.IsFake)
+            if (building.Type.IsFake && (layersToRender & MapLayerFlag.BuildingFakes) == MapLayerFlag.BuildingFakes)
             {
-                var text = Globals.TheGameTextManager["TEXT_UI_FAKE"];
-                var textSize = g.MeasureString(text, SystemFonts.CaptionFont) + new SizeF(6.0f, 6.0f);
-                var textBounds = new RectangleF(buildingBounds.Location, textSize);
+                string fakeText = Globals.TheGameTextManager["TEXT_UI_FAKE"];
                 using (var fakeBackgroundBrush = new SolidBrush(Color.FromArgb((forPreview ? 128 : 256) * 2 / 3, Color.Black)))
                 using (var fakeTextBrush = new SolidBrush(Color.FromArgb(forPreview ? building.Tint.A : 255, Color.White)))
                 {
-                    g.FillRectangle(fakeBackgroundBrush, textBounds);
-                    g.DrawString(text, SystemFonts.CaptionFont, fakeTextBrush, textBounds, stringFormat);
+                    using (var font = graphics.GetAdjustedFont(fakeText, SystemFonts.DefaultFont, buildingBounds.Width,
+                        Math.Max(1, (int)(12 * tileScale)), Math.Max(1, (int)(24 * tileScale)), true))
+                    {
+                        var textBounds = graphics.MeasureString(fakeText, font, buildingBounds.Width, stringFormat);
+                        var backgroundBounds = new RectangleF(buildingBounds.Location, textBounds);
+                        graphics.FillRectangle(fakeBackgroundBrush, backgroundBounds);
+                        graphics.DrawString(fakeText, font, fakeTextBrush, backgroundBounds, stringFormat);
+                    }
                 }
             }
-            if (building.BasePriority >= 0)
+            if (building.BasePriority >= 0 && (layersToRender & MapLayerFlag.BuildingRebuild) == MapLayerFlag.BuildingRebuild)
             {
-                var text = building.BasePriority.ToString();
-                var textSize = g.MeasureString(text, SystemFonts.CaptionFont) + new SizeF(6.0f, 6.0f);
-                var textBounds = new RectangleF(buildingBounds.Location +
-                    new Size((int)((buildingBounds.Width - textSize.Width) / 2.0f), (int)(buildingBounds.Height - textSize.Height)),
-                    textSize
-                );
+                string priText = building.BasePriority.ToString();
                 using (var baseBackgroundBrush = new SolidBrush(Color.FromArgb((forPreview ? 128 : 256) * 2 / 3, Color.Black)))
                 using (var baseTextBrush = new SolidBrush(Color.FromArgb(forPreview ? 128 : 255, Color.Red)))
                 {
-                    g.FillRectangle(baseBackgroundBrush, textBounds);
-                    g.DrawString(text, SystemFonts.CaptionFont, baseTextBrush, textBounds, stringFormat);
+                    using (var font = graphics.GetAdjustedFont(priText, SystemFonts.DefaultFont, buildingBounds.Width,
+                        Math.Max(1, (int)(12 * tileScale)), Math.Max(1, (int)(24 * tileScale)), true))
+                    {
+                        var textBounds = graphics.MeasureString(priText, font, buildingBounds.Width, stringFormat);
+                        var backgroundBounds = new RectangleF(buildingBounds.Location, textBounds);
+                        backgroundBounds.Offset((buildingBounds.Width - textBounds.Width) / 2.0f, buildingBounds.Height -  textBounds.Height);
+                        graphics.FillRectangle(baseBackgroundBrush, backgroundBounds);
+                        graphics.DrawString(priText, font, baseTextBrush, backgroundBounds, stringFormat);
+                    }
                 }
             }
         }
 
-        protected void RenderWayPoints(Graphics graphics, params Waypoint[] specifiedToExclude)
+        protected static void RenderWayPoints(Graphics graphics, Map map, Size tileSize, double tileScale, MapLayerFlag layersToRender, params Waypoint[] specifiedToExclude)
         {
-            RenderWayPoints(graphics, Color.Black, Color.DarkOrange, Color.DarkOrange, false, true, specifiedToExclude);
+            RenderWayPoints(graphics, map, tileSize, tileScale, layersToRender, Color.Black, Color.DarkOrange, Color.DarkOrange, false, true, specifiedToExclude);
         }
 
-        protected void RenderWayPoints(Graphics graphics, Color fillColor, Color borderColor, Color textColor, bool thickborder, bool excludeSpecified, params Waypoint[] specified)
+        protected static void RenderWayPoints(Graphics graphics, Map map, Size tileSize, double tileScale, MapLayerFlag layersToRender, Color fillColor, Color borderColor, Color textColor, bool thickborder, bool excludeSpecified, params Waypoint[] specified)
         {
-            if ((Layers & MapLayerFlag.Waypoints) == MapLayerFlag.None)
+            if ((layersToRender & MapLayerFlag.Waypoints) == MapLayerFlag.None)
             {
                 return;
             }
+            float borderSize = Math.Max(0.5f, tileSize.Width / 60.0f);
+            float thickBorderSize = Math.Max(1f, tileSize.Width / 20.0f);
             using (var waypointBackgroundBrush = new SolidBrush(Color.FromArgb(96, fillColor)))
             using (var waypointBrush = new SolidBrush(textColor))
-            using (var waypointPen = new Pen(Color.FromArgb(128, borderColor), thickborder ? 3f : 1f))
+            using (var waypointPen = new Pen(Color.FromArgb(128, borderColor), thickborder ? thickBorderSize : borderSize))
             {
                 Waypoint[] toPaint = excludeSpecified ? map.Waypoints : specified;
                 foreach (var waypoint in toPaint)
@@ -248,8 +374,8 @@ namespace MobiusEditor.Tools
                         }
                         var x = waypoint.Cell.Value % map.Metrics.Width;
                         var y = waypoint.Cell.Value / map.Metrics.Width;
-                        var location = new Point(x * Globals.MapTileWidth, y * Globals.MapTileHeight);
-                        var textBounds = new Rectangle(location, Globals.MapTileSize);
+                        var location = new Point(x * tileSize.Width, y * tileSize.Height);
+                        var textBounds = new Rectangle(location, tileSize);
                         graphics.FillRectangle(waypointBackgroundBrush, textBounds);
                         graphics.DrawRectangle(waypointPen, textBounds);
                         StringFormat stringFormat = new StringFormat
@@ -258,75 +384,92 @@ namespace MobiusEditor.Tools
                             LineAlignment = StringAlignment.Center
                         };
                         var text = waypoint.Name.ToString();
-                        var font = graphics.GetAdjustedFont(text, SystemFonts.DefaultFont, textBounds.Width, 24 / Globals.MapTileScale, 48 / Globals.MapTileScale, true);
-                        graphics.DrawString(text.ToString(), font, waypointBrush, textBounds, stringFormat);
+                        using (var font = graphics.GetAdjustedFont(text, SystemFonts.DefaultFont, textBounds.Width,
+                            Math.Max(1, (int)(24 * tileScale)), Math.Max(1, (int)(48 * tileScale)), true))
+                        {
+                            graphics.DrawString(text.ToString(), font, waypointBrush, textBounds, stringFormat);
+                        }
                     }
                 }
             }
         }
 
-        protected void RenderTechnoTriggers(Graphics graphics)
+        protected static void RenderTechnoTriggers(Graphics graphics, Map map, Size tileSize, double tileScale, MapLayerFlag layersToRender)
         {
-            if ((Layers & MapLayerFlag.TechnoTriggers) == MapLayerFlag.None)
+            if ((layersToRender & MapLayerFlag.TechnoTriggers) == MapLayerFlag.None)
             {
                 return;
             }
+            float borderSize = Math.Max(0.5f, tileSize.Width / 60.0f);
             using (var technoTriggerBackgroundBrush = new SolidBrush(Color.FromArgb(96, Color.Black)))
             using (var technoTriggerBrush = new SolidBrush(Color.LimeGreen))
-            using (var technoTriggerPen = new Pen(Color.LimeGreen))
+            using (var technoTriggerPen = new Pen(Color.LimeGreen, borderSize))
             {
                 foreach (var (cell, techno) in map.Technos)
                 {
-                    var location = new Point(cell.X * Globals.MapTileWidth, cell.Y * Globals.MapTileHeight);
+                    var location = new Point(cell.X * tileSize.Width, cell.Y * tileSize.Height);
                     (string trigger, Rectangle bounds)[] triggers = null;
                     if (techno is Terrain terrain)
                     {
-                        triggers = new (string, Rectangle)[] { (terrain.Trigger, new Rectangle(location, terrain.Type.GetRenderSize(Globals.MapTileSize))) };
+                        if ((layersToRender & MapLayerFlag.Terrain) == MapLayerFlag.Terrain)
+                        {
+                            triggers = new (string, Rectangle)[] { (terrain.Trigger, new Rectangle(location, terrain.Type.GetRenderSize(tileSize))) };
+                        }
                     }
                     else if (techno is Building building)
                     {
-                        var size = new Size(building.Type.Size.Width * Globals.MapTileWidth, building.Type.Size.Height * Globals.MapTileHeight);
-                        triggers = new (string, Rectangle)[] { (building.Trigger, new Rectangle(location, size)) };
+                        if ((layersToRender & MapLayerFlag.Buildings) == MapLayerFlag.Buildings)
+                        {
+                            var size = new Size(building.Type.Size.Width * tileSize.Width, building.Type.Size.Height * tileSize.Height);
+                            triggers = new (string, Rectangle)[] { (building.Trigger, new Rectangle(location, size)) };
+                        }
                     }
                     else if (techno is Unit unit)
                     {
-                        triggers = new (string, Rectangle)[] { (unit.Trigger, new Rectangle(location, Globals.MapTileSize)) };
+                        if ((layersToRender & MapLayerFlag.Units) == MapLayerFlag.Units)
+                        {
+                            triggers = new (string, Rectangle)[] { (unit.Trigger, new Rectangle(location, tileSize)) };
+                        }
                     }
                     else if (techno is InfantryGroup infantryGroup)
                     {
-                        List<(string, Rectangle)> infantryTriggers = new List<(string, Rectangle)>();
-                        for (var i = 0; i < infantryGroup.Infantry.Length; ++i)
+                        if ((layersToRender & MapLayerFlag.Infantry) == MapLayerFlag.Infantry)
                         {
-                            var infantry = infantryGroup.Infantry[i];
-                            if (infantry == null)
+
+                            List<(string, Rectangle)> infantryTriggers = new List<(string, Rectangle)>();
+                            for (var i = 0; i < infantryGroup.Infantry.Length; ++i)
                             {
-                                continue;
+                                var infantry = infantryGroup.Infantry[i];
+                                if (infantry == null)
+                                {
+                                    continue;
+                                }
+                                var size = tileSize;
+                                var offset = Size.Empty;
+                                switch ((InfantryStoppingType)i)
+                                {
+                                    case InfantryStoppingType.UpperLeft:
+                                        offset.Width = -size.Width / 4;
+                                        offset.Height = -size.Height / 4;
+                                        break;
+                                    case InfantryStoppingType.UpperRight:
+                                        offset.Width = size.Width / 4;
+                                        offset.Height = -size.Height / 4;
+                                        break;
+                                    case InfantryStoppingType.LowerLeft:
+                                        offset.Width = -size.Width / 4;
+                                        offset.Height = size.Height / 4;
+                                        break;
+                                    case InfantryStoppingType.LowerRight:
+                                        offset.Width = size.Width / 4;
+                                        offset.Height = size.Height / 4;
+                                        break;
+                                }
+                                var bounds = new Rectangle(location + offset, size);
+                                infantryTriggers.Add((infantry.Trigger, bounds));
                             }
-                            var size = Globals.MapTileSize;
-                            var offset = Size.Empty;
-                            switch ((InfantryStoppingType)i)
-                            {
-                                case InfantryStoppingType.UpperLeft:
-                                    offset.Width = -size.Width / 4;
-                                    offset.Height = -size.Height / 4;
-                                    break;
-                                case InfantryStoppingType.UpperRight:
-                                    offset.Width = size.Width / 4;
-                                    offset.Height = -size.Height / 4;
-                                    break;
-                                case InfantryStoppingType.LowerLeft:
-                                    offset.Width = -size.Width / 4;
-                                    offset.Height = size.Height / 4;
-                                    break;
-                                case InfantryStoppingType.LowerRight:
-                                    offset.Width = size.Width / 4;
-                                    offset.Height = size.Height / 4;
-                                    break;
-                            }
-                            var bounds = new Rectangle(location + offset, size);
-                            infantryTriggers.Add((infantry.Trigger, bounds));
+                            triggers = infantryTriggers.ToArray();
                         }
-                        triggers = infantryTriggers.ToArray();
                     }
                     if (triggers != null)
                     {
@@ -337,35 +480,39 @@ namespace MobiusEditor.Tools
                         };
                         foreach (var (trigger, bounds) in triggers.Where(x => x.trigger != null && !x.trigger.Equals("None", StringComparison.OrdinalIgnoreCase)))
                         {
-                            var font = graphics.GetAdjustedFont(trigger, SystemFonts.DefaultFont, bounds.Width, 12 / Globals.MapTileScale, 24 / Globals.MapTileScale, true);
-                            var textBounds = graphics.MeasureString(trigger, font, bounds.Width, stringFormat);
-                            var backgroundBounds = new RectangleF(bounds.Location, textBounds);
-                            backgroundBounds.Offset((bounds.Width - textBounds.Width) / 2.0f, (bounds.Height - textBounds.Height) / 2.0f);
-                            graphics.FillRectangle(technoTriggerBackgroundBrush, backgroundBounds);
-                            graphics.DrawRectangle(technoTriggerPen, Rectangle.Round(backgroundBounds));
-
-                            graphics.DrawString(trigger, font, technoTriggerBrush, bounds, stringFormat);
+                            using (var font = graphics.GetAdjustedFont(trigger, SystemFonts.DefaultFont, bounds.Width,
+                                Math.Max(1,(int)(12 * tileScale)), Math.Max(1, (int)(24 * tileScale)), true))
+                            {
+                                var textBounds = graphics.MeasureString(trigger, font, bounds.Width, stringFormat);
+                                var backgroundBounds = new RectangleF(bounds.Location, textBounds);
+                                backgroundBounds.Offset((bounds.Width - textBounds.Width) / 2.0f, (bounds.Height - textBounds.Height) / 2.0f);
+                                graphics.FillRectangle(technoTriggerBackgroundBrush, backgroundBounds);
+                                graphics.DrawRectangle(technoTriggerPen, Rectangle.Round(backgroundBounds));
+                                graphics.DrawString(trigger, font, technoTriggerBrush, bounds, stringFormat);
+                            }
                         }
                     }
                 }
             }
         }
 
-        protected void RenderCellTriggers(Graphics graphics, params String[] specifiedToExclude)
+        protected static void RenderCellTriggers(Graphics graphics, Map map, Size tileSize, double tileScale, MapLayerFlag layersToRender, params String[] specifiedToExclude)
         {
-            RenderCellTriggers(graphics, Color.Black, Color.White, Color.White, false, true, specifiedToExclude);
+            RenderCellTriggers(graphics, map, tileSize, tileScale, layersToRender, Color.Black, Color.White, Color.White, false, true, specifiedToExclude);
         }
 
-        protected void RenderCellTriggers(Graphics graphics, Color fillColor, Color borderColor, Color textColor, bool thickborder, bool excludeSpecified, params String[] specified)
+        protected static void RenderCellTriggers(Graphics graphics, Map map, Size tileSize, double tileScale, MapLayerFlag layersToRender, Color fillColor, Color borderColor, Color textColor, bool thickborder, bool excludeSpecified, params String[] specified)
         {
-            if ((Layers & MapLayerFlag.CellTriggers) == MapLayerFlag.None)
+            if ((layersToRender & MapLayerFlag.CellTriggers) == MapLayerFlag.None)
             {
                 return;
             }
+            float borderSize = Math.Max(0.5f, tileSize.Width / 60.0f);
+            float thickBorderSize = Math.Max(1f, tileSize.Width / 20.0f);
             HashSet<String> specifiedSet = new HashSet<String>(specified, StringComparer.InvariantCultureIgnoreCase);
             using (var cellTriggersBackgroundBrush = new SolidBrush(Color.FromArgb(96, fillColor)))
             using (var cellTriggersBrush = new SolidBrush(Color.FromArgb(128, textColor)))
-            using (var cellTriggerPen = new Pen(borderColor, thickborder ? 3f : 1f))
+            using (var cellTriggerPen = new Pen(borderColor, thickborder ? thickBorderSize : borderSize))
             {
                 foreach (var (cell, cellTrigger) in map.CellTriggers)
                 {
@@ -376,8 +523,8 @@ namespace MobiusEditor.Tools
                     }
                     var x = cell % map.Metrics.Width;
                     var y = cell / map.Metrics.Width;
-                    var location = new Point(x * Globals.MapTileWidth, y * Globals.MapTileHeight);
-                    var textBounds = new Rectangle(location, Globals.MapTileSize);
+                    var location = new Point(x * tileSize.Width, y * tileSize.Height);
+                    var textBounds = new Rectangle(location, tileSize);
                     graphics.FillRectangle(cellTriggersBackgroundBrush, textBounds);
                     graphics.DrawRectangle(cellTriggerPen, textBounds);
                     StringFormat stringFormat = new StringFormat
@@ -386,25 +533,33 @@ namespace MobiusEditor.Tools
                         LineAlignment = StringAlignment.Center
                     };
                     var text = cellTrigger.Trigger;
-                    var font = graphics.GetAdjustedFont(text, SystemFonts.DefaultFont, textBounds.Width, 24 / Globals.MapTileScale, 48 / Globals.MapTileScale, true);
-                    graphics.DrawString(text.ToString(), font, cellTriggersBrush, textBounds, stringFormat);
+                    using (var font = graphics.GetAdjustedFont(text, SystemFonts.DefaultFont, textBounds.Width,
+                        Math.Max(1, (int)(24 * tileScale)), Math.Max(1, (int)(48 * tileScale)), true))
+                    {
+                        graphics.DrawString(text.ToString(), font, cellTriggersBrush, textBounds, stringFormat);
+                    }
                 }
             }
         }
 
-        protected void RenderMapBoundaries(Graphics graphics)
+        protected static void RenderMapBoundaries(Graphics graphics, MapLayerFlag Layers, Map map, Size tileSize)
+        {
+            RenderMapBoundaries(graphics, Layers, map, tileSize, Color.Cyan);
+        }
+
+        protected static void RenderMapBoundaries(Graphics graphics, MapLayerFlag Layers, Map map, Size tileSize, Color color)
         {
             if ((Layers & MapLayerFlag.Boundaries) == MapLayerFlag.None)
             {
                 return;
             }
             var bounds = Rectangle.FromLTRB(
-                map.Bounds.Left * Globals.MapTileWidth,
-                map.Bounds.Top * Globals.MapTileHeight,
-                map.Bounds.Right * Globals.MapTileWidth,
-                map.Bounds.Bottom * Globals.MapTileHeight
+                map.Bounds.Left * tileSize.Width,
+                map.Bounds.Top * tileSize.Height,
+                map.Bounds.Right * tileSize.Width,
+                map.Bounds.Bottom * tileSize.Height
             );
-            using (var boundsPen = new Pen(Color.Cyan, 8.0f))
+            using (var boundsPen = new Pen(color, Math.Max(1f, tileSize.Width / 8.0f)))
                 graphics.DrawRectangle(boundsPen, bounds);
         }
 

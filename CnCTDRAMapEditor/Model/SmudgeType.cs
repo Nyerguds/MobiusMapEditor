@@ -48,7 +48,7 @@ namespace MobiusEditor.Model
 
         public SmudgeTypeFlag Flag { get; private set; }
 
-        public Image Thumbnail { get; set; }
+        public Bitmap Thumbnail { get; set; }
 
         public SmudgeType(sbyte id, string name)
             : this(id, name, null, new Size(1, 1), 1, SmudgeTypeFlag.None)
@@ -87,11 +87,6 @@ namespace MobiusEditor.Model
 
         public SmudgeType(sbyte id, string name, TheaterType[] theaters, Size size)
             : this(id, name, theaters, size, SmudgeTypeFlag.None)
-        {
-        }
-
-        public SmudgeType(sbyte id, string name, TheaterType[] theaters, SmudgeTypeFlag flag)
-            : this(id, name, theaters, new Size(1, 1), flag)
         {
         }
 
@@ -144,7 +139,7 @@ namespace MobiusEditor.Model
             if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, Name, 0, out Tile tile))
             {
                 var tileSize = Globals.PreviewTileSize;
-                Rectangle overlayBounds = MapRenderer.RenderBounds(tile.Image.Size, new Size(1, 1), tileSize);
+                Rectangle overlayBounds = MapRenderer.RenderBounds(tile.Image.Size, new Size(1, 1), Globals.PreviewTileScale);
                 Bitmap th = new Bitmap(tileSize.Width, tileSize.Height);
                 using (Graphics g = Graphics.FromImage(th))
                 {

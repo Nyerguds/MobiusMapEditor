@@ -49,18 +49,18 @@ namespace MobiusEditor.Controls
             this.directionLabel = new System.Windows.Forms.Label();
             this.missionLabel = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
-            this.prebuiltCheckBox = new System.Windows.Forms.CheckBox();
-            this.basePriorityLabel = new System.Windows.Forms.Label();
-            this.sellableCheckBox = new System.Windows.Forms.CheckBox();
-            this.rebuildCheckBox = new System.Windows.Forms.CheckBox();
-            this.lblTriggerInfo = new System.Windows.Forms.Label();
-            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.houseComboBox = new MobiusEditor.Controls.PropertiesComboBox();
             this.strengthNud = new MobiusEditor.Controls.EnhNumericUpDown();
             this.directionComboBox = new MobiusEditor.Controls.PropertiesComboBox();
             this.missionComboBox = new MobiusEditor.Controls.PropertiesComboBox();
             this.triggerComboBox = new MobiusEditor.Controls.PropertiesComboBox();
             this.basePriorityNud = new MobiusEditor.Controls.EnhNumericUpDown();
+            this.prebuiltCheckBox = new System.Windows.Forms.CheckBox();
+            this.basePriorityLabel = new System.Windows.Forms.Label();
+            this.sellableCheckBox = new System.Windows.Forms.CheckBox();
+            this.rebuildCheckBox = new System.Windows.Forms.CheckBox();
+            this.lblTriggerInfo = new System.Windows.Forms.Label();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.tableLayoutPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.strengthNud)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.basePriorityNud)).BeginInit();
@@ -71,7 +71,7 @@ namespace MobiusEditor.Controls
             this.tableLayoutPanel1.ColumnCount = 3;
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 40F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 60F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 29F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 30F));
             this.tableLayoutPanel1.Controls.Add(this.label1, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.label2, 0, 1);
             this.tableLayoutPanel1.Controls.Add(this.directionLabel, 0, 2);
@@ -159,66 +159,6 @@ namespace MobiusEditor.Controls
             this.label5.TabIndex = 4;
             this.label5.Text = "Trigger";
             this.label5.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            // 
-            // prebuiltCheckBox
-            // 
-            this.prebuiltCheckBox.AutoSize = true;
-            this.prebuiltCheckBox.Location = new System.Drawing.Point(82, 160);
-            this.prebuiltCheckBox.Margin = new System.Windows.Forms.Padding(2);
-            this.prebuiltCheckBox.Name = "prebuiltCheckBox";
-            this.prebuiltCheckBox.Size = new System.Drawing.Size(61, 17);
-            this.prebuiltCheckBox.TabIndex = 12;
-            this.prebuiltCheckBox.Text = "Prebuilt";
-            this.prebuiltCheckBox.UseVisualStyleBackColor = true;
-            this.prebuiltCheckBox.CheckedChanged += new System.EventHandler(this.checkBox_CheckedChanged);
-            // 
-            // basePriorityLabel
-            // 
-            this.basePriorityLabel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.basePriorityLabel.Location = new System.Drawing.Point(3, 134);
-            this.basePriorityLabel.Name = "basePriorityLabel";
-            this.basePriorityLabel.Size = new System.Drawing.Size(74, 24);
-            this.basePriorityLabel.TabIndex = 13;
-            this.basePriorityLabel.Text = "Base Priority";
-            this.basePriorityLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            // 
-            // sellableCheckBox
-            // 
-            this.sellableCheckBox.AutoSize = true;
-            this.sellableCheckBox.Location = new System.Drawing.Point(82, 181);
-            this.sellableCheckBox.Margin = new System.Windows.Forms.Padding(2);
-            this.sellableCheckBox.Name = "sellableCheckBox";
-            this.sellableCheckBox.Size = new System.Drawing.Size(63, 17);
-            this.sellableCheckBox.TabIndex = 14;
-            this.sellableCheckBox.Text = "Sellable";
-            this.sellableCheckBox.UseVisualStyleBackColor = true;
-            this.sellableCheckBox.CheckedChanged += new System.EventHandler(this.checkBox_CheckedChanged);
-            // 
-            // rebuildCheckBox
-            // 
-            this.rebuildCheckBox.AutoSize = true;
-            this.rebuildCheckBox.Location = new System.Drawing.Point(82, 202);
-            this.rebuildCheckBox.Margin = new System.Windows.Forms.Padding(2);
-            this.rebuildCheckBox.Name = "rebuildCheckBox";
-            this.rebuildCheckBox.Size = new System.Drawing.Size(62, 17);
-            this.rebuildCheckBox.TabIndex = 15;
-            this.rebuildCheckBox.Text = "Rebuild";
-            this.rebuildCheckBox.UseVisualStyleBackColor = true;
-            this.rebuildCheckBox.CheckedChanged += new System.EventHandler(this.checkBox_CheckedChanged);
-            // 
-            // lblTriggerInfo
-            // 
-            this.lblTriggerInfo.AutoSize = true;
-            this.lblTriggerInfo.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lblTriggerInfo.Location = new System.Drawing.Point(200, 107);
-            this.lblTriggerInfo.Margin = new System.Windows.Forms.Padding(0);
-            this.lblTriggerInfo.Name = "lblTriggerInfo";
-            this.lblTriggerInfo.Size = new System.Drawing.Size(30, 27);
-            this.lblTriggerInfo.TabIndex = 16;
-            this.lblTriggerInfo.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.lblTriggerInfo.Paint += new System.Windows.Forms.PaintEventHandler(this.LblTriggerInfo_Paint);
-            this.lblTriggerInfo.MouseEnter += new System.EventHandler(this.LblTriggerInfo_MouseEnter);
-            this.lblTriggerInfo.MouseLeave += new System.EventHandler(this.LblTriggerInfo_MouseLeave);
             // 
             // houseComboBox
             // 
@@ -330,6 +270,64 @@ namespace MobiusEditor.Controls
             this.basePriorityNud.Size = new System.Drawing.Size(116, 20);
             this.basePriorityNud.TabIndex = 11;
             this.basePriorityNud.ValueChanged += new System.EventHandler(this.nud_ValueChanged);
+            // 
+            // prebuiltCheckBox
+            // 
+            this.prebuiltCheckBox.AutoSize = true;
+            this.prebuiltCheckBox.Location = new System.Drawing.Point(82, 160);
+            this.prebuiltCheckBox.Margin = new System.Windows.Forms.Padding(2);
+            this.prebuiltCheckBox.Name = "prebuiltCheckBox";
+            this.prebuiltCheckBox.Size = new System.Drawing.Size(61, 17);
+            this.prebuiltCheckBox.TabIndex = 12;
+            this.prebuiltCheckBox.Text = "Prebuilt";
+            this.prebuiltCheckBox.UseVisualStyleBackColor = true;
+            this.prebuiltCheckBox.CheckedChanged += new System.EventHandler(this.checkBox_CheckedChanged);
+            // 
+            // basePriorityLabel
+            // 
+            this.basePriorityLabel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.basePriorityLabel.Location = new System.Drawing.Point(3, 134);
+            this.basePriorityLabel.Name = "basePriorityLabel";
+            this.basePriorityLabel.Size = new System.Drawing.Size(74, 24);
+            this.basePriorityLabel.TabIndex = 13;
+            this.basePriorityLabel.Text = "Base Priority";
+            this.basePriorityLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // sellableCheckBox
+            // 
+            this.sellableCheckBox.AutoSize = true;
+            this.sellableCheckBox.Location = new System.Drawing.Point(82, 181);
+            this.sellableCheckBox.Margin = new System.Windows.Forms.Padding(2);
+            this.sellableCheckBox.Name = "sellableCheckBox";
+            this.sellableCheckBox.Size = new System.Drawing.Size(63, 17);
+            this.sellableCheckBox.TabIndex = 14;
+            this.sellableCheckBox.Text = "Sellable";
+            this.sellableCheckBox.UseVisualStyleBackColor = true;
+            this.sellableCheckBox.CheckedChanged += new System.EventHandler(this.checkBox_CheckedChanged);
+            // 
+            // rebuildCheckBox
+            // 
+            this.rebuildCheckBox.AutoSize = true;
+            this.rebuildCheckBox.Location = new System.Drawing.Point(82, 202);
+            this.rebuildCheckBox.Margin = new System.Windows.Forms.Padding(2);
+            this.rebuildCheckBox.Name = "rebuildCheckBox";
+            this.rebuildCheckBox.Size = new System.Drawing.Size(62, 17);
+            this.rebuildCheckBox.TabIndex = 15;
+            this.rebuildCheckBox.Text = "Rebuild";
+            this.rebuildCheckBox.UseVisualStyleBackColor = true;
+            this.rebuildCheckBox.CheckedChanged += new System.EventHandler(this.checkBox_CheckedChanged);
+            // 
+            // lblTriggerInfo
+            // 
+            this.lblTriggerInfo.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblTriggerInfo.Location = new System.Drawing.Point(200, 107);
+            this.lblTriggerInfo.Margin = new System.Windows.Forms.Padding(0);
+            this.lblTriggerInfo.Name = "lblTriggerInfo";
+            this.lblTriggerInfo.Size = new System.Drawing.Size(30, 27);
+            this.lblTriggerInfo.TabIndex = 16;
+            this.lblTriggerInfo.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.lblTriggerInfo.MouseEnter += new System.EventHandler(this.LblTriggerInfo_MouseEnter);
+            this.lblTriggerInfo.MouseLeave += new System.EventHandler(this.LblTriggerInfo_MouseLeave);
             // 
             // ObjectProperties
             // 

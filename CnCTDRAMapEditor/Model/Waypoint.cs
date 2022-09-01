@@ -21,7 +21,11 @@ namespace MobiusEditor.Model
     public enum WaypointFlag
     {
         None,
-        PlayerStart
+        PlayerStart,
+        Flare,
+        Home,
+        Reinforce,
+        Special
     }
 
     public class Waypoint : INamedType

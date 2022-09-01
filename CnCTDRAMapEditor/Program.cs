@@ -161,7 +161,10 @@ namespace MobiusEditor
             {
                 arg = null;
             }
-            Application.Run(new MainForm(arg));
+            using (MainForm mainForm = new MainForm(arg))
+            {
+                Application.Run(mainForm);
+            }
             if (SteamworksUGC.IsSteamBuild)
             {
                 SteamworksUGC.Shutdown();

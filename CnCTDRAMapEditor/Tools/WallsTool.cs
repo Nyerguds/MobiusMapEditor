@@ -322,7 +322,7 @@ namespace MobiusEditor.Tools
         protected override void PostRenderMap(Graphics graphics)
         {
             base.PostRenderMap(graphics);
-            using (var wallPen = new Pen(Color.Green, 4.0f))
+            using (var wallPen = new Pen(Color.Green, Math.Max(1, Globals.MapTileSize.Width / 16)))
             {
                 foreach (var (cell, overlay) in previewMap.Overlay.Where(x => x.Value.Type.IsWall))
                 {

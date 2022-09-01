@@ -52,19 +52,28 @@ namespace MobiusEditor.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("2")]
-        public int MapScaleFactor {
+        [global::System.Configuration.DefaultSettingValueAttribute("0.5")]
+        public double MapScale {
             get {
-                return ((int)(this["MapScaleFactor"]));
+                return ((double)(this["MapScale"]));
             }
         }
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("1")]
-        public int PreviewScaleFactor {
+        public double PreviewScale {
             get {
-                return ((int)(this["PreviewScaleFactor"]));
+                return ((double)(this["PreviewScale"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("-0.5")]
+        public double ExportScale {
+            get {
+                return ((double)(this["ExportScale"]));
             }
         }
         
@@ -260,6 +269,15 @@ namespace MobiusEditor.Properties {
             }
             set {
                 this["ApplicationVersion"] = value;
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool IgnoreRaObsoleteClear {
+            get {
+                return ((bool)(this["IgnoreRaObsoleteClear"]));
             }
         }
     }

@@ -35,9 +35,9 @@ namespace MobiusEditor.Model
 
         public int Length => Width * Height;
 
-        public bool Contains(Point location) => ((location.X >= 0) && (location.X < Width) && (location.Y >= 0) && (location.Y < Height));
+        public bool Contains(Point location) => (location.X >= 0) && (location.X < Width) && (location.Y >= 0) && (location.Y < Height);
 
-        public bool Contains(int cell) => ((cell >= 0) && (cell < Length));
+        public bool Contains(int cell) => (cell >= 0) && (cell < Length);
 
         public CellMetrics(int width, int height)
         {
@@ -128,6 +128,21 @@ namespace MobiusEditor.Model
         {
             location.X = Math.Max(topLeftMargin.Width, Math.Min(Width - bottomRightMargin.Width - 1, location.X));
             location.Y = Math.Max(topLeftMargin.Height, Math.Min(Height - bottomRightMargin.Height - 1, location.Y));
+        }
+
+
+        public bool IsInBounds(int cell)
+        {
+            if (GetLocation(cell, out Point location))
+            {
+                return IsInBounds(location.X, location.Y);
+            }
+            return false;
+        }
+
+        public bool IsInBounds(int x, int y)
+        {
+            return Bounds.IntersectsWith(new Rectangle(x, y, 1, 1));
         }
     }
 }

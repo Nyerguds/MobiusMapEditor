@@ -211,7 +211,7 @@ namespace MobiusEditor.Dialogs
                 {
                     using (Bitmap b = new Bitmap(previewTxt.Text))
                     {
-                        preview = GeneralUtils.FitToBoundingBox(b, Globals.MapPreviewSize.Width, Globals.MapPreviewSize.Height, Color.Black);
+                        preview = b.FitToBoundingBox(Globals.MapPreviewSize.Width, Globals.MapPreviewSize.Height, Color.Black);
                     }
                 }
                 previewTxt.Tag = preview;

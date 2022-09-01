@@ -20,6 +20,6 @@ namespace MobiusEditor.Interface
     {
         string DisplayName { get; }
 
-        Image Thumbnail { get; }
+        Bitmap Thumbnail { get; }
     }
 }

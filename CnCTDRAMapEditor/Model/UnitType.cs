@@ -20,6 +20,17 @@ using System.Drawing;
 
 namespace MobiusEditor.Model
 {
+    [Flags]
+    public enum UnitTypeFlag
+    {
+        None          = 0,
+        HasTurret     = 1 << 0,
+        IsFixedWing   = 1 << 1,
+        IsArmed       = 1 << 2,
+        IsHarvester   = 1 << 3,
+        IsExpansionUnit = 1 << 4,
+    }
+
     public static class UnitTypeIDMask
     {
         public const sbyte Aircraft   = 1 << 5;
@@ -34,15 +45,13 @@ namespace MobiusEditor.Model
 
         public string DisplayName { get; private set; }
 
+        public UnitTypeFlag Flag { get; private set; }
+
         public Rectangle OverlapBounds => new Rectangle(-1, -1, 3, 3);
 
         public bool[,] OccupyMask => new bool[1, 1] { { true } };
 
         public string OwnerHouse { get; private set; }
-
-        public bool HasTurret { get; private set; }
-
-        public bool IsFixedWing { get; private set; }
 
         public bool IsUnit => !IsAircraft && !IsVessel;
 
@@ -50,9 +59,15 @@ namespace MobiusEditor.Model
 
         public bool IsVessel => (ID & UnitTypeIDMask.Vessel) != 0;
 
-        public bool IsArmed { get; private set; }
+        public bool HasTurret => (Flag & UnitTypeFlag.HasTurret) == UnitTypeFlag.HasTurret;
 
-        public bool IsHarvester { get; private set; }
+        public bool IsFixedWing => (Flag & UnitTypeFlag.IsFixedWing) == UnitTypeFlag.IsFixedWing;
+
+        public bool IsArmed => (Flag & UnitTypeFlag.IsArmed) == UnitTypeFlag.IsArmed;
+
+        public bool IsHarvester => (Flag & UnitTypeFlag.IsHarvester) == UnitTypeFlag.IsHarvester;
+
+        public bool IsExpansionUnit => (Flag & UnitTypeFlag.IsExpansionUnit) == UnitTypeFlag.IsExpansionUnit;
 
         private Size _RenderSize;
 
@@ -62,55 +77,32 @@ namespace MobiusEditor.Model
             return new Size(_RenderSize.Width * cellSize.Width / Globals.OriginalTileWidth, _RenderSize.Height * cellSize.Height / Globals.OriginalTileHeight);
         }
 
-        public Image Thumbnail { get; set; }
+        public Bitmap Thumbnail { get; set; }
 
-        public UnitType(sbyte id, string name, string textId, string ownerHouse, bool hasTurret, bool isFixedWing, bool isArmed, bool isHarvester)
+        public UnitType(sbyte id, string name, string textId, string ownerHouse, UnitTypeFlag flags) //bool hasTurret, bool isFixedWing, bool isArmed, bool isHarvester)
         {
             ID = id;
             Name = name;
             DisplayName = Globals.TheGameTextManager[textId] + " (" + Name.ToUpperInvariant() + ")";
             OwnerHouse = ownerHouse;
-            HasTurret = hasTurret;
-            IsFixedWing = isFixedWing;
-            IsArmed = isArmed;
-            IsHarvester = isHarvester;
+            Flag = flags;
         }
 
-        public UnitType(sbyte id, string name, string textId, string ownerHouse, bool hasTurret, bool isFixedWing, bool isArmed)
-            : this(id, name, textId, ownerHouse, hasTurret, isFixedWing, isArmed, false)
-        {
-        }
-
-        public UnitType(sbyte id, string name, string textId, string ownerHouse, bool hasTurret, bool isFixedWing)
-            : this(id, name, textId, ownerHouse, hasTurret, isFixedWing, true, false)
-        {
-        }
-
-        public UnitType(sbyte id, string name, string textId, string ownerHouse, bool hasTurret)
-            : this(id, name, textId, ownerHouse, hasTurret, false, true, false)
+        public UnitType(sbyte id, string name, string textId, string ownerHouse)
+            : this(id, name, textId, ownerHouse, UnitTypeFlag.None)
         {
         }
 
         public UnitType(sbyte id, string name, string textId)
-            : this(id, name, textId, null, false)
-        {
-        }
-
-        public UnitType(sbyte id, string name, string textId, string ownerHouse)
-            : this(id, name, textId, ownerHouse, false)
-        {
-        }
-
-        public UnitType(sbyte id, string name, string textId, bool hasTurret)
-            : this(id, name, textId, null, hasTurret)
+            : this(id, name, textId, null, UnitTypeFlag.None)
         {
         }
 
         public override bool Equals(object obj)
         {
-            if (obj is UnitType)
+            if (obj is UnitType unit)
             {
-                return this == obj;
+                return ReferenceEquals(this, obj) || string.Equals(Name, unit.Name, StringComparison.OrdinalIgnoreCase) && ID == unit.ID;
             }
             else if (obj is sbyte)
             {

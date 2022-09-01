@@ -337,7 +337,7 @@ namespace MobiusEditor.Tools
         protected override void PostRenderMap(Graphics graphics)
         {
             base.PostRenderMap(graphics);
-            using (var overlayPen = new Pen(Color.Green, 4.0f))
+            using (var overlayPen = new Pen(Color.Green, Math.Max(1, Globals.MapTileSize.Width / 16.0f)))
             {
                 foreach (var (cell, overlay) in previewMap.Overlay.Where(x => x.Value.Type.IsPlaceable))
                 {

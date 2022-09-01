@@ -17,6 +17,7 @@ using MobiusEditor.Dialogs;
 using MobiusEditor.Event;
 using MobiusEditor.Interface;
 using MobiusEditor.Model;
+using MobiusEditor.Tools;
 using MobiusEditor.Tools.Dialogs;
 using MobiusEditor.Utility;
 using Steamworks;
@@ -24,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -34,6 +36,9 @@ namespace MobiusEditor
 {
     public partial class MainForm : Form, IFeedBackHandler
     {
+
+        private Dictionary<int, Bitmap> theaterIcons = new Dictionary<int, Bitmap>();
+
         private static readonly ToolType[] toolTypes;
 
         private ToolType availableToolTypes = ToolType.None;
@@ -69,7 +74,13 @@ namespace MobiusEditor
                     activeLayers = value;
                     if (activeTool != null)
                     {
-                        activeTool.Layers = ActiveLayers;
+                        MapLayerFlag active = activeLayers;
+                        // Save some processing by just always removing this one.
+                        if (plugin.GameType == GameType.TiberianDawn)
+                        {
+                            active &= ~MapLayerFlag.BuildingFakes;
+                        }
+                        activeTool.Layers = active;
                     }
                 }
             }
@@ -274,9 +285,12 @@ namespace MobiusEditor
             {
                 return;
             }
-            NewMapDialog nmd = new NewMapDialog();
-            if (nmd.ShowDialog() == DialogResult.OK)
+            using (NewMapDialog nmd = new NewMapDialog())
             {
+                if (nmd.ShowDialog() != DialogResult.OK)
+                {
+                    return;
+                }
                 if (plugin != null)
                 {
                     plugin.Dispose();
@@ -302,6 +316,7 @@ namespace MobiusEditor
                 {
                     plugin.Map.BasicSection.Author = SteamFriends.GetPersonaName();
                 }
+                LoadIcons(plugin);
                 mapPanel.MapImage = plugin.MapImage;
                 filename = null;
                 SetTitle();
@@ -326,33 +341,38 @@ namespace MobiusEditor
             var pgmFilter = string.Empty;
             string allSupported = "All supported types (*.ini;*.bin;*.mpr)|*.ini;*.bin;*.mpr";
 #endif
-            OpenFileDialog ofd = new OpenFileDialog
+            String selectedFileName = null;
+            using (OpenFileDialog ofd = new OpenFileDialog())
             {
-                AutoUpgradeEnabled = false,
-                RestoreDirectory = true
-            };
-            ofd.Filter = allSupported + "|Tiberian Dawn files (*.ini;*.bin)|*.ini;*.bin|Red Alert files (*.mpr;*.ini)|*.mpr;*.ini" + pgmFilter  + "|All files (*.*)|*.*";
-            if (plugin != null)
-            {
-                switch (plugin.GameType)
+                ofd.AutoUpgradeEnabled = false;
+                ofd.RestoreDirectory = true;
+                ofd.Filter = allSupported + "|Tiberian Dawn files (*.ini;*.bin)|*.ini;*.bin|Red Alert files (*.mpr;*.ini)|*.mpr;*.ini" + pgmFilter + "|All files (*.*)|*.*";
+                if (plugin != null)
                 {
-                    case GameType.TiberianDawn:
-                        ofd.InitialDirectory = Path.GetDirectoryName(filename) ?? TiberianDawn.Constants.SaveDirectory;
-                        ofd.FilterIndex = 2;
-                        break;
-                    case GameType.RedAlert:
-                        ofd.InitialDirectory = Path.GetDirectoryName(filename) ?? RedAlert.Constants.SaveDirectory;
-                        ofd.FilterIndex = 3;
-                        break;
+                    switch (plugin.GameType)
+                    {
+                        case GameType.TiberianDawn:
+                            ofd.InitialDirectory = Path.GetDirectoryName(filename) ?? TiberianDawn.Constants.SaveDirectory;
+                            //ofd.FilterIndex = 2;
+                            break;
+                        case GameType.RedAlert:
+                            ofd.InitialDirectory = Path.GetDirectoryName(filename) ?? RedAlert.Constants.SaveDirectory;
+                            //ofd.FilterIndex = 3;
+                            break;
+                    }
+                }
+                else
+                {
+                    ofd.InitialDirectory = Globals.RootSaveDirectory;
+                }
+                if (ofd.ShowDialog() == DialogResult.OK)
+                {
+                    selectedFileName = ofd.FileName;
                 }
             }
-            else
+            if (selectedFileName != null)
             {
-                ofd.InitialDirectory = Globals.RootSaveDirectory;
-            }
-            if (ofd.ShowDialog() == DialogResult.OK)
-            {
-                OpenFile(ofd.FileName, false);
+                OpenFile(selectedFileName, false);
             }
         }
 
@@ -371,7 +391,7 @@ namespace MobiusEditor
                 String errors = plugin.Validate();
                 if (errors != null)
                 {
-                    MessageBox.Show(errors, "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(errors, "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Error, MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
                     return;
                 }
                 var fileInfo = new FileInfo(filename);
@@ -398,34 +418,39 @@ namespace MobiusEditor
                 MessageBox.Show(errors, "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-            SaveFileDialog sfd = new SaveFileDialog
+            string savePath = null;
+            using (SaveFileDialog sfd = new SaveFileDialog())
             {
-                AutoUpgradeEnabled = false,
-                RestoreDirectory = true
-            };
-            var filters = new List<string>();
-            switch (plugin.GameType)
-            {
-                case GameType.TiberianDawn:
-                    filters.Add("Tiberian Dawn files (*.ini;*.bin)|*.ini;*.bin");
-                    sfd.InitialDirectory = TiberianDawn.Constants.SaveDirectory;
-                    break;
-                case GameType.RedAlert:
-                    filters.Add("Red Alert files (*.mpr;*.ini)|*.mpr;*.ini");
-                    sfd.InitialDirectory = RedAlert.Constants.SaveDirectory;
-                    break;
+                sfd.AutoUpgradeEnabled = false;
+                sfd.RestoreDirectory = true;
+
+                var filters = new List<string>();
+                switch (plugin.GameType)
+                {
+                    case GameType.TiberianDawn:
+                        filters.Add("Tiberian Dawn files (*.ini;*.bin)|*.ini;*.bin");
+                        sfd.InitialDirectory = TiberianDawn.Constants.SaveDirectory;
+                        break;
+                    case GameType.RedAlert:
+                        filters.Add("Red Alert files (*.mpr;*.ini)|*.mpr;*.ini");
+                        sfd.InitialDirectory = RedAlert.Constants.SaveDirectory;
+                        break;
+                }
+                filters.Add("All files (*.*)|*.*");
+                sfd.Filter = string.Join("|", filters);
+                if (!string.IsNullOrEmpty(filename))
+                {
+                    sfd.InitialDirectory = Path.GetDirectoryName(filename);
+                    sfd.FileName = Path.GetFileName(filename);
+                }
+                if (sfd.ShowDialog(this) == DialogResult.OK)
+                {
+                    savePath = sfd.FileName;
+                }
             }
-            filters.Add("All files (*.*)|*.*");
-            sfd.Filter = string.Join("|", filters);
-            if (!string.IsNullOrEmpty(filename))
+            if (savePath != null)
             {
-                sfd.InitialDirectory = Path.GetDirectoryName(filename);
-                sfd.FileName = Path.GetFileName(filename);
-            }
-            if (sfd.ShowDialog() == DialogResult.OK)
-            {
-                var fileInfo = new FileInfo(sfd.FileName);
-                // nonstandard extensions will be seen as ini
+                var fileInfo = new FileInfo(savePath);
                 if (SaveFile(fileInfo.FullName, FileType.INI))
                 {
                     mru.Add(fileInfo);
@@ -449,15 +474,21 @@ namespace MobiusEditor
                 MessageBox.Show(errors, "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-            SaveFileDialog sfd = new SaveFileDialog
+            string savePath = null;
+            using (SaveFileDialog sfd = new SaveFileDialog())
             {
-                AutoUpgradeEnabled = false,
-                RestoreDirectory = true
-            };
-            sfd.Filter = "MEG files (*.meg)|*.meg";
-            if (sfd.ShowDialog() == DialogResult.OK)
+                sfd.AutoUpgradeEnabled = false;
+                sfd.RestoreDirectory = true;
+                
+                sfd.Filter = "MEG files (*.meg)|*.meg";
+                if (sfd.ShowDialog(this) == DialogResult.OK)
+                {
+                    savePath = sfd.FileName;
+                }
+            }
+            if (savePath != null)
             {
-                plugin.Save(sfd.FileName, FileType.MEG);
+                plugin.Save(savePath, FileType.MEG);
             }
         }
 
@@ -491,16 +522,19 @@ namespace MobiusEditor
             var basicSettings = new PropertyTracker<BasicSection>(plugin.Map.BasicSection);
             var briefingSettings = new PropertyTracker<BriefingSection>(plugin.Map.BriefingSection);
             var houseSettingsTrackers = plugin.Map.Houses.ToDictionary(h => h, h => new PropertyTracker<House>(h));
-            MapSettingsDialog msd = new MapSettingsDialog(plugin, basicSettings, briefingSettings, houseSettingsTrackers);
-            if (msd.ShowDialog() == DialogResult.OK)
+            using (MapSettingsDialog msd = new MapSettingsDialog(plugin, basicSettings, briefingSettings, houseSettingsTrackers))
             {
-                basicSettings.Commit();
-                briefingSettings.Commit();
-                foreach (var houseSettingsTracker in houseSettingsTrackers.Values)
+                msd.StartPosition = FormStartPosition.CenterParent;
+                if (msd.ShowDialog(this) == DialogResult.OK)
                 {
-                    houseSettingsTracker.Commit();
+                    basicSettings.Commit();
+                    briefingSettings.Commit();
+                    foreach (var houseSettingsTracker in houseSettingsTrackers.Values)
+                    {
+                        houseSettingsTracker.Commit();
+                    }
+                    plugin.Dirty = true;
                 }
-                plugin.Dirty = true;
             }
         }
 
@@ -524,12 +558,15 @@ namespace MobiusEditor
                     }
                     break;
             }
-            TeamTypesDialog ttd = new TeamTypesDialog(plugin, maxTeams);
-            if (ttd.ShowDialog() == DialogResult.OK)
+            using (TeamTypesDialog ttd = new TeamTypesDialog(plugin, maxTeams))
             {
-                plugin.Map.TeamTypes.Clear();
-                plugin.Map.TeamTypes.AddRange(ttd.TeamTypes.Select(t => t.Clone()));
-                plugin.Dirty = true;
+                ttd.StartPosition = FormStartPosition.CenterParent;
+                if (ttd.ShowDialog(this) == DialogResult.OK)
+                {
+                    plugin.Map.TeamTypes.Clear();
+                    plugin.Map.TeamTypes.AddRange(ttd.TeamTypes.OrderBy(t => t.Name, new ExplorerComparer()).Select(t => t.Clone()));
+                    plugin.Dirty = true;
+                }
             }
         }
 
@@ -553,15 +590,71 @@ namespace MobiusEditor
                     }
                     break;
             }
-            TriggersDialog td = new TriggersDialog(plugin, maxTriggers);
-            if (td.ShowDialog() == DialogResult.OK)
+            using (TriggersDialog td = new TriggersDialog(plugin, maxTriggers))
             {
-                List<Trigger> reordered = td.Triggers.OrderBy(t => t.Name, new ExplorerComparer()).ToList();
-                if (Trigger.CheckForChanges(plugin.Map.Triggers.ToList(), reordered))
+                td.StartPosition = FormStartPosition.CenterParent;
+                if (td.ShowDialog(this) == DialogResult.OK)
                 {
-                    plugin.Map.Triggers.ReplaceRange(reordered);
-                    plugin.Dirty = true;
-                    RefreshAvailableTools();
+                    List<Trigger> reordered = td.Triggers.OrderBy(t => t.Name, new ExplorerComparer()).ToList();
+                    if (Trigger.CheckForChanges(plugin.Map.Triggers.ToList(), reordered))
+                    {
+                        plugin.Map.Triggers.ReplaceRange(reordered);
+                        plugin.Dirty = true;
+                        RefreshAvailableTools();
+                    }
+                }
+            }
+        }
+
+        private void toolsPowerMenuItem_Click(Object sender, EventArgs e)
+        {
+            if (plugin == null)
+            {
+                return;
+            }
+            using (ErrorMessageBox emb = new ErrorMessageBox())
+            {
+                emb.Title = "Power usage";
+                emb.Message = "Power balance per House:";
+                emb.Errors = plugin.Map.AssessPower(plugin.GameType);
+                emb.StartPosition = FormStartPosition.CenterParent;
+                emb.ShowDialog(this);
+            }
+        }
+
+        private void toolsExportImage_Click(Object sender, EventArgs e)
+        {
+            if (plugin == null)
+            {
+                return;
+            }
+            string savePath = null;
+            using (SaveFileDialog sfd = new SaveFileDialog())
+            {
+                sfd.AutoUpgradeEnabled = false;
+                sfd.RestoreDirectory = true;
+                sfd.AddExtension = true;
+                sfd.Filter = "PNG files (*.png)|*.png";
+                if (!string.IsNullOrEmpty(filename))
+                {
+                    sfd.InitialDirectory = Path.GetDirectoryName(filename);
+                    sfd.FileName = Path.GetFileNameWithoutExtension(filename) + ".png";
+                }
+                if (sfd.ShowDialog(this) == DialogResult.OK)
+                {
+                    savePath = sfd.FileName;
+                }
+            }
+            if (savePath != null)
+            {
+                Size size = new Size(plugin.Map.Metrics.Width * Globals.ExportTileWidth, plugin.Map.Metrics.Height * Globals.ExportTileHeight);
+                using (Bitmap pr = plugin.Map.GeneratePreview(size, plugin.GameType, ActiveLayers, Globals.ExportSmoothScale, false, false).ToBitmap())
+                {
+                    using (Graphics g = Graphics.FromImage(pr))
+                    {
+                        ViewTool.PostRenderMap(g, plugin.Map, Globals.ExportTileScale, MapLayerFlag.None, MapLayerFlag.None, ActiveLayers);
+                    }
+                    pr.Save(savePath, ImageFormat.Png);
                 }
             }
         }
@@ -754,6 +847,7 @@ namespace MobiusEditor
             {
                 return false;
             }
+            Unload();
             if (plugin != null)
             {
                 plugin.Dispose();
@@ -782,19 +876,21 @@ namespace MobiusEditor
             try
             {
                 errors = plugin.Load(loadFilename, fileType).ToArray();
+                LoadIcons(plugin);
                 if (errors.Length > 0)
                 {
                     using (ErrorMessageBox emb = new ErrorMessageBox())
                     {
                         emb.Errors = errors;
-                        emb.ShowDialog();
+                        emb.StartPosition = FormStartPosition.CenterParent;
+                        emb.ShowDialog(this);
                     }
                 }
             }
             catch (Exception ex)
             {
                 //MessageBox.Show("Error: " + ex.Message + "\n\n" + ex.StackTrace);
-                this.ResetUI();
+                this.Unload();
 #if DEVELOPER
                 throw;
 #else
@@ -813,7 +909,10 @@ namespace MobiusEditor
             return true;
         }
 
-        private void ResetUI()
+        /// <summary>
+        /// This clears the UI and plugin in a safe way, ending up with a blank slate.
+        /// </summary>
+        private void Unload()
         {
             try
             {
@@ -895,19 +994,40 @@ namespace MobiusEditor
 
         private void RefreshAvailableTools()
         {
+            // Menu items
+            if (plugin != null)
+            {
+                fileSaveMenuItem.Enabled = true;
+                fileSaveAsMenuItem.Enabled = true;
+                filePublishMenuItem.Enabled = true;
+                fileExportMenuItem.Enabled = true;
+                editUndoMenuItem.Enabled = true;
+                editRedoMenuItem.Enabled = true;
+                settingsMapSettingsMenuItem.Enabled = true;
+                settingsTeamTypesMenuItem.Enabled = true;
+                settingsTriggersMenuItem.Enabled = true;
+                toolsPowerMenuItem.Enabled = true;
+                toolsExportImageMenuItem.Enabled = true;
+                developerGoToINIMenuItem.Enabled = true;
+                developerDebugShowOverlapCellsMenuItem.Enabled = true;
+                developerGenerateMapPreviewDirectoryMenuItem.Enabled = true;
+                viewIndicatorsBuildingFakeLabelsMenuItem.Visible = plugin.GameType == GameType.RedAlert;
+            }
+            // Tools
             availableToolTypes = ToolType.None;
             if (plugin != null)
             {
+                TheaterType th = plugin.Map.Theater;
                 availableToolTypes |= ToolType.Waypoint;
-                if (plugin.Map.TemplateTypes.Any()) availableToolTypes |= ToolType.Map;
+                if (plugin.Map.TemplateTypes.Any(t => t.Theaters == null || t.Theaters.Contains(th))) availableToolTypes |= ToolType.Map;
                 if (plugin.Map.SmudgeTypes.Any()) availableToolTypes |= ToolType.Smudge;
-                if (plugin.Map.OverlayTypes.Any(t => t.IsPlaceable && ((t.Theaters == null) || t.Theaters.Contains(plugin.Map.Theater)))) availableToolTypes |= ToolType.Overlay;
-                if (plugin.Map.TerrainTypes.Any(t => t.Theaters.Contains(plugin.Map.Theater))) availableToolTypes |= ToolType.Terrain;
+                if (plugin.Map.OverlayTypes.Any(t => t.IsPlaceable && ((t.Theaters == null) || t.Theaters.Contains(th)))) availableToolTypes |= ToolType.Overlay;
+                if (plugin.Map.TerrainTypes.Any(t => t.Theaters == null || t.Theaters.Contains(th))) availableToolTypes |= ToolType.Terrain;
                 if (plugin.Map.InfantryTypes.Any()) availableToolTypes |= ToolType.Infantry;
                 if (plugin.Map.UnitTypes.Any()) availableToolTypes |= ToolType.Unit;
-                if (plugin.Map.BuildingTypes.Any()) availableToolTypes |= ToolType.Building;
-                if (plugin.Map.OverlayTypes.Any(t => t.IsResource)) availableToolTypes |= ToolType.Resources;
-                if (plugin.Map.OverlayTypes.Any(t => t.IsWall)) availableToolTypes |= ToolType.Wall;
+                if (plugin.Map.BuildingTypes.Any(t => t.Theaters == null || t.Theaters.Contains(th))) availableToolTypes |= ToolType.Building;
+                if (plugin.Map.OverlayTypes.Any(t => t.IsResource && (t.Theaters == null || t.Theaters.Contains(th)))) availableToolTypes |= ToolType.Resources;
+                if (plugin.Map.OverlayTypes.Any(t => t.IsWall && (t.Theaters == null || t.Theaters.Contains(th)))) availableToolTypes |= ToolType.Wall;
                 availableToolTypes |= ToolType.CellTrigger;
             }
             foreach (var toolStripButton in viewToolStripButtons)
@@ -919,6 +1039,22 @@ namespace MobiusEditor
 
         private void ClearAllTools()
         {
+            // Menu items
+            fileSaveMenuItem.Enabled = false;
+            fileSaveAsMenuItem.Enabled = false;
+            filePublishMenuItem.Enabled = false;
+            fileExportMenuItem.Enabled = false;
+            editUndoMenuItem.Enabled = false;
+            editRedoMenuItem.Enabled = false;
+            settingsMapSettingsMenuItem.Enabled = false;
+            settingsTeamTypesMenuItem.Enabled = false;
+            settingsTriggersMenuItem.Enabled = false;
+            toolsPowerMenuItem.Enabled = false;
+            toolsExportImageMenuItem.Enabled = false;
+            developerGoToINIMenuItem.Enabled = false;
+            developerDebugShowOverlapCellsMenuItem.Enabled = false;
+            developerGenerateMapPreviewDirectoryMenuItem.Enabled = false;
+            // Tools
             ClearActiveTool();
             foreach (var kvp in toolForms)
             {
@@ -1017,10 +1153,16 @@ namespace MobiusEditor
                     toolForms.Add(ActiveToolType, toolDialog);
                 }
             }
+            MapLayerFlag active = ActiveLayers;
+            // Save some processing by just always removing this one.
+            if (plugin.GameType == GameType.TiberianDawn)
+            {
+                active &= ~MapLayerFlag.BuildingFakes;
+            }
             if (toolDialog != null)
             {
                 activeToolForm = (Form)toolDialog;
-                toolDialog.Initialize(mapPanel, ActiveLayers, toolStatusLabel, mouseToolTip, plugin, url);
+                toolDialog.Initialize(mapPanel, active, toolStatusLabel, mouseToolTip, plugin, url);
                 activeTool = toolDialog.GetTool();
                 activeToolForm.ResizeEnd -= ActiveToolForm_ResizeEnd;
                 activeToolForm.Shown -= this.ActiveToolForm_Shown;
@@ -1126,36 +1268,168 @@ namespace MobiusEditor
         private void UpdateVisibleLayers()
         {
             MapLayerFlag layers = MapLayerFlag.All;
-            if (!viewLayersBoundariesMenuItem.Checked)
+            if (!viewIndicatorsBoundariesMenuItem.Checked)
             {
                 layers &= ~MapLayerFlag.Boundaries;
             }
-            if (!viewLayersOverlayMenuItem.Checked)
+            if (!viewMapBuildingsMenuItem.Checked)
             {
-                layers &= ~MapLayerFlag.OverlayAll;
+                layers &= ~MapLayerFlag.Buildings;
             }
-            if (!viewLayersTerrainMenuItem.Checked)
+            if (!viewMapUnitsMenuItem.Checked)
+            {
+                layers &= ~MapLayerFlag.Units;
+            }
+            if (!viewMapInfantryMenuItem.Checked)
+            {
+                layers &= ~MapLayerFlag.Infantry;
+            }
+            if (!viewMapTerrainMenuItem.Checked)
             {
                 layers &= ~MapLayerFlag.Terrain;
             }
-            if (!viewLayersWaypointsMenuItem.Checked)
+            if (!viewMapOverlayMenuItem.Checked)
+            {
+                layers &= ~MapLayerFlag.OverlayAll;
+            }
+            if (!viewMapSmudgeMenuItem.Checked)
+            {
+                layers &= ~MapLayerFlag.Smudge;
+            }
+            if (!viewIndicatorsWaypointsMenuItem.Checked)
             {
                 layers &= ~MapLayerFlag.Waypoints;
             }
-            if (!viewLayersCellTriggersMenuItem.Checked)
+            if (!viewIndicatorsCellTriggersMenuItem.Checked)
             {
                 layers &= ~MapLayerFlag.CellTriggers;
             }
-            if (!viewLayersObjectTriggersMenuItem.Checked)
+            if (!viewIndicatorsObjectTriggersMenuItem.Checked)
             {
                 layers &= ~MapLayerFlag.TechnoTriggers;
+            }
+            if (!viewIndicatorsBuildingFakeLabelsMenuItem.Checked)
+            {
+                layers &= ~MapLayerFlag.BuildingFakes;
+            }
+            if (!viewIndicatorsBuildingRebuildLabelsMenuItem.Checked)
+            {
+                layers &= ~MapLayerFlag.BuildingRebuild;
             }
             ActiveLayers = layers;
         }
 
-        private void viewLayersMenuItem_CheckedChanged(object sender, EventArgs e)
+        private void ViewMenuItem_CheckedChanged(object sender, EventArgs e)
         {
             UpdateVisibleLayers();
+        }
+
+        private void ViewMapEnableAllMenuItem_Click(object sender, EventArgs e)
+        {
+            ITool activeTool = this.activeTool;
+            try
+            {
+                // Suppress updates.
+                this.activeTool = null;
+                viewMapBuildingsMenuItem.Checked = true;
+                viewMapUnitsMenuItem.Checked = true;
+                viewMapInfantryMenuItem.Checked = true;
+                viewMapTerrainMenuItem.Checked = true;
+                viewMapOverlayMenuItem.Checked = true;
+                viewMapSmudgeMenuItem.Checked = true;
+            }
+            finally
+            {
+                // Re-enable tool, force refresh.
+                MapLayerFlag layerBackup = this.activeLayers;
+                // Clear without refresh
+                this.activeLayers = MapLayerFlag.None;
+                // Restore tool
+                this.activeTool = activeTool;
+                // Set with refresh
+                ActiveLayers = layerBackup;
+            }
+        }
+
+        private void ViewMapDisableAllMenuItem_Click(object sender, EventArgs e)
+        {
+            ITool activeTool = this.activeTool;
+            try
+            {
+                // Suppress updates.
+                this.activeTool = null;
+                viewMapBuildingsMenuItem.Checked = false;
+                viewMapUnitsMenuItem.Checked = false;
+                viewMapInfantryMenuItem.Checked = false;
+                viewMapTerrainMenuItem.Checked = false;
+                viewMapOverlayMenuItem.Checked = false;
+                viewMapSmudgeMenuItem.Checked = false;
+            }
+            finally
+            {
+                // Re-enable tool, force refresh.
+                MapLayerFlag layerBackup = this.activeLayers;
+                // Clear without refresh
+                this.activeLayers = MapLayerFlag.None;
+                // Restore tool
+                this.activeTool = activeTool;
+                // Set with refresh
+                ActiveLayers = layerBackup;
+            }
+        }
+
+        private void ViewIndicatorsEnableAllToolStripMenuItem_Click(Object sender, EventArgs e)
+        {
+            ITool activeTool = this.activeTool;
+            try
+            {
+                // Suppress updates.
+                this.activeTool = null;
+                viewIndicatorsBoundariesMenuItem.Checked = true;
+                viewIndicatorsWaypointsMenuItem.Checked = true;
+                viewIndicatorsCellTriggersMenuItem.Checked = true;
+                viewIndicatorsObjectTriggersMenuItem.Checked = true;
+                viewIndicatorsBuildingFakeLabelsMenuItem.Checked = true;
+                viewIndicatorsBuildingRebuildLabelsMenuItem.Checked = true;
+            }
+            finally
+            {
+                // Re-enable tool, force refresh.
+                MapLayerFlag layerBackup = this.activeLayers;
+                // Clear without refresh
+                this.activeLayers = MapLayerFlag.None;
+                // Restore tool
+                this.activeTool = activeTool;
+                // Set with refresh
+                ActiveLayers = layerBackup;
+            }
+        }
+
+        private void ViewIndicatorsDisableAllToolStripMenuItem_Click(Object sender, EventArgs e)
+        {
+            ITool activeTool = this.activeTool;
+            try
+            {
+                // Suppress updates.
+                this.activeTool = null;
+                viewIndicatorsBoundariesMenuItem.Checked = false;
+                viewIndicatorsWaypointsMenuItem.Checked = false;
+                viewIndicatorsCellTriggersMenuItem.Checked = false;
+                viewIndicatorsObjectTriggersMenuItem.Checked = false;
+                viewIndicatorsBuildingFakeLabelsMenuItem.Checked = false;
+                viewIndicatorsBuildingRebuildLabelsMenuItem.Checked = false;
+            }
+            finally
+            {
+                // Re-enable tool, force refresh.
+                MapLayerFlag layerBackup = this.activeLayers;
+                // Clear without refresh
+                this.activeLayers = MapLayerFlag.None;
+                // Restore tool
+                this.activeTool = activeTool;
+                // Set with refresh
+                ActiveLayers = layerBackup;
+            }
         }
 
         private void toolTabControl_Selected(object sender, TabControlEventArgs e)
@@ -1292,6 +1566,8 @@ namespace MobiusEditor
 
         private void MainForm_Shown(object sender, System.EventArgs e)
         {
+            ClearAllTools();
+            RefreshAvailableTools();
             if (filename != null)
                 this.OpenFile(filename, false);
         }
@@ -1299,6 +1575,40 @@ namespace MobiusEditor
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
             e.Cancel = !PromptSaveMap();
+            if (e.Cancel)
+            {
+                return;
+            }
+            // Restore default icons, then dispose custom ones.
+            // Form dispose should take care of the default ones.
+            LoadNewIcon(mapToolStripButton, null, null, 0);
+            LoadNewIcon(smudgeToolStripButton, null, null, 1);
+            LoadNewIcon(overlayToolStripButton, null, null, 2);
+            LoadNewIcon(terrainToolStripButton, null, null, 3);
+            LoadNewIcon(infantryToolStripButton, null, null, 4);
+            LoadNewIcon(unitToolStripButton, null, null, 5);
+            LoadNewIcon(buildingToolStripButton, null, null, 6);
+            LoadNewIcon(resourcesToolStripButton, null, null, 7);
+            LoadNewIcon(wallsToolStripButton, null, null, 8);
+            LoadNewIcon(waypointsToolStripButton, null, null, 9);
+            LoadNewIcon(cellTriggersToolStripButton, null, null, 10);
+            List<Bitmap> toDispose = new List<Bitmap>();
+            foreach (int key in theaterIcons.Keys)
+            {
+                toDispose.Add(theaterIcons[key]);
+            }
+            theaterIcons.Clear();
+            foreach (Bitmap bm in toDispose)
+            {
+                try
+                {
+                    bm.Dispose();
+                }
+                catch
+                {
+                    // Ignore
+                }
+            }
         }
 
         private bool PromptSaveMap()
@@ -1341,6 +1651,82 @@ namespace MobiusEditor
         public void UpdateStatus()
         {
             SetTitle();
+        }
+
+        private void MainForm_Load(Object sender, EventArgs e)
+        {
+            /*/
+            Globals.TheTilesetManager.Reset();
+            Globals.TheTextureManager.Reset();
+            Globals.TheTeamColorManager.Reset();
+            Globals.TheTeamColorManager.Load(@"DATA\XML\CNCTDTEAMCOLORS.XML");
+
+            using (IGamePlugin plugin = new TiberianDawn.GamePlugin(this))
+            {
+                string th = TiberianDawn.TheaterTypes.Temperate.Name;
+                plugin.New(th);
+                LoadIcons(plugin);
+            }
+            //*/
+        }
+
+        private void LoadIcons(IGamePlugin plugin)
+        {
+            TemplateType template = plugin.Map.TemplateTypes.Where(tt => (tt.Flag & TemplateTypeFlag.Clear) != TemplateTypeFlag.Clear && tt.IconWidth == 1 && tt.IconHeight == 1 && (tt.Theaters == null || tt.Theaters.Contains(plugin.Map.Theater))).OrderBy(tt => tt.Name).FirstOrDefault();
+            Tile templateTile = null;
+            if (template != null) Globals.TheTilesetManager.GetTileData(plugin.Map.Theater.Tilesets, template.Name, 0, out templateTile, false, true);
+            SmudgeType smudge = plugin.Map.SmudgeTypes.Where(sm => (sm.Flag & SmudgeTypeFlag.Bib) == SmudgeTypeFlag.None && sm.Icons == 1 && (sm.Theaters == null || sm.Theaters.Contains(plugin.Map.Theater))).OrderBy(sm => sm.ID).FirstOrDefault();
+            OverlayType overlay = plugin.Map.OverlayTypes.Where(ov => (ov.Flag & OverlayTypeFlag.Crate) == OverlayTypeFlag.Crate && (ov.Theaters == null || ov.Theaters.Contains(plugin.Map.Theater))).OrderBy(ov => ov.ID).FirstOrDefault();
+            Tile overlayTile = null;
+            if (overlay != null) Globals.TheTilesetManager.GetTileData(plugin.Map.Theater.Tilesets, overlay.Name, 0, out overlayTile, false, true);
+            TerrainType terrain = plugin.Map.TerrainTypes.Where(tr => tr.Theaters.Contains(plugin.Map.Theater)).OrderBy(tr => tr.ID).FirstOrDefault();;
+            InfantryType infantry = plugin.Map.InfantryTypes.FirstOrDefault();
+            UnitType unit = plugin.Map.UnitTypes.FirstOrDefault();
+            BuildingType building = plugin.Map.BuildingTypes.Where(bl => bl.Size.Width == 2 && bl.Size.Height == 2 && (bl.Theaters == null || bl.Theaters.Contains(plugin.Map.Theater))).OrderBy(bl => bl.ID).FirstOrDefault();
+            OverlayType resource = plugin.Map.OverlayTypes.Where(ov => (ov.Flag & OverlayTypeFlag.TiberiumOrGold) == OverlayTypeFlag.TiberiumOrGold).OrderBy(ov => ov.ID).FirstOrDefault();
+            OverlayType wall = plugin.Map.OverlayTypes.Where(ov => (ov.Flag & OverlayTypeFlag.Wall) == OverlayTypeFlag.Wall).OrderBy(ov => ov.ID).FirstOrDefault();
+            Globals.TheTilesetManager.GetTileData(plugin.Map.Theater.Tilesets, "beacon", 0, out Tile waypoint, false, true);
+            Globals.TheTilesetManager.GetTileData(plugin.Map.Theater.Tilesets, "mine", 3, out Tile cellTrigger, false, true);
+            LoadNewIcon(mapToolStripButton, templateTile?.Image, plugin, 0);
+            LoadNewIcon(smudgeToolStripButton, smudge?.Thumbnail, plugin, 1);
+            LoadNewIcon(overlayToolStripButton, overlayTile?.Image, plugin, 2);
+            LoadNewIcon(terrainToolStripButton, terrain?.Thumbnail, plugin, 3);
+            LoadNewIcon(infantryToolStripButton, infantry?.Thumbnail, plugin, 4);
+            LoadNewIcon(unitToolStripButton, unit?.Thumbnail, plugin, 5);
+            LoadNewIcon(buildingToolStripButton, building?.Thumbnail, plugin, 6);
+            LoadNewIcon(resourcesToolStripButton, resource?.Thumbnail, plugin, 7);
+            LoadNewIcon(wallsToolStripButton, wall?.Thumbnail, plugin, 8);
+            LoadNewIcon(waypointsToolStripButton, waypoint?.Image, plugin, 9);
+            LoadNewIcon(cellTriggersToolStripButton, cellTrigger?.Image, plugin, 10);
+        }
+
+        private void LoadNewIcon(ViewToolStripButton button, Bitmap image, IGamePlugin plugin, int index)
+        {
+            if (image == null || plugin == null)
+            {
+                if (button.Tag is Image img)
+                {
+                    button.Image = img;
+                }
+                return;
+            }
+            int id = ((int)plugin.GameType) << 8 | Enumerable.Range(0, plugin.Map.TheaterTypes.Count).FirstOrDefault(i => plugin.Map.TheaterTypes[i].Equals(plugin.Map.Theater)) << 4 | index;
+            if (button.Tag == null)
+            {
+                // Backup default image
+                button.Tag = button.Image;
+            }
+            if (theaterIcons.TryGetValue(id, out Bitmap bm))
+            {
+                button.Image = bm;
+            }
+            else
+            {
+                Rectangle opaqueBounds = TextureManager.CalculateOpaqueBounds(image);
+                Bitmap img = image.FitToBoundingBox(opaqueBounds, 24, 24, Color.Transparent);
+                theaterIcons[id] = img;
+                button.Image = img;
+            }
         }
     }
 }

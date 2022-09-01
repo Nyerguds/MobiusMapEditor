@@ -373,13 +373,19 @@ namespace MobiusEditor.Tools
         protected override void PostRenderMap(Graphics graphics)
         {
             base.PostRenderMap(graphics);
-            using (var terrainPen = new Pen(Color.Green, 4.0f))
-            using (var occupyPen = new Pen(Color.Red, 2.0f))
+            float boundsPenSize = Math.Max(1, Globals.MapTileSize.Width / 16.0f);
+            float occupyPenSize = Math.Max(0.5f, Globals.MapTileSize.Width / 32.0f);
+            if (occupyPenSize == boundsPenSize)
+            {
+                boundsPenSize++;
+            }
+            using (var boundsPen = new Pen(Color.Green, boundsPenSize))
+            using (var occupyPen = new Pen(Color.Red, occupyPenSize))
             {
                 foreach (var (topLeft, terrain) in previewMap.Technos.OfType<Terrain>())
                 {
                     var bounds = new Rectangle(new Point(topLeft.X * Globals.MapTileWidth, topLeft.Y * Globals.MapTileHeight), terrain.Type.GetRenderSize(Globals.MapTileSize));
-                    graphics.DrawRectangle(terrainPen, bounds);
+                    graphics.DrawRectangle(boundsPen, bounds);
                 }
                 foreach (var (topLeft, terrain) in previewMap.Technos.OfType<Terrain>())
                 {
@@ -398,7 +404,7 @@ namespace MobiusEditor.Tools
                     }
                 }
             }
-            RenderTechnoTriggers(graphics);
+            RenderTechnoTriggers(graphics, map, Globals.MapTileSize, Globals.MapTileScale, Layers);
         }
 
         public override void Activate()

@@ -56,13 +56,15 @@ namespace MobiusEditor.Dialogs
         private readonly PropertyTracker<BriefingSection> briefingSettingsTracker;
         private readonly IDictionary<House, PropertyTracker<House>> houseSettingsTrackers;
         private readonly TreeNode playersNode;
+        private bool expansionWasEnabled;
+
 
         public MapSettingsDialog(IGamePlugin plugin, PropertyTracker<BasicSection> basicSettingsTracker, PropertyTracker<BriefingSection> briefingSettingsTracker,
             IDictionary<House, PropertyTracker<House>> houseSettingsTrackers)
         {
             InitializeComponent();
-
             this.plugin = plugin;
+            expansionWasEnabled = plugin.Map.BasicSection.ExpansionEnabled;
             this.basicSettingsTracker = basicSettingsTracker;
             this.briefingSettingsTracker = briefingSettingsTracker;
             this.houseSettingsTrackers = houseSettingsTrackers;
@@ -73,7 +75,7 @@ namespace MobiusEditor.Dialogs
             settingsTreeView.Nodes.Add("BRIEFING", "Briefing");
 
             playersNode = settingsTreeView.Nodes.Add("Players");
-            foreach (var player in plugin.Map.Houses)
+            foreach (var player in this.plugin.Map.Houses)
             {
                 var playerNode = playersNode.Nodes.Add(player.Type.Name, player.Type.Name);
                 playerNode.Checked = player.Enabled;
@@ -155,6 +157,27 @@ namespace MobiusEditor.Dialogs
             {
                 ((dynamic)houseSettingsTrackers[player]).Enabled = e.Node.Checked;
             }
+        }
+
+        private void MapSettingsDialog_FormClosing(Object sender, FormClosingEventArgs e)
+        {
+            if (this.DialogResult != DialogResult.OK || !expansionWasEnabled || plugin == null || plugin.GameType != GameType.RedAlert)
+            {
+                return;
+            }
+            if (basicSettingsTracker.TryGetMember("ExpansionEnabled", out object result) && (result is bool res) && !res)
+            {
+                if (plugin.Map.GetAllTechnos().Any(t => (t is Unit un && un.Type.IsExpansionUnit) || (t is Infantry it && it.Type.IsExpansionUnit))
+                    || plugin.Map.TeamTypes.Any(tt => tt.Classes.Any(cl => (cl.Type is UnitType ut && ut.IsExpansionUnit) || (cl.Type is InfantryType it && it.IsExpansionUnit))))
+                {
+                    DialogResult dres = MessageBox.Show("Expansion units have been disabled. This will remove all expansion units currently present on the map and in team types.\n\nAre you sure you want to continue?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2);
+                    if (dres != DialogResult.Yes)
+                    {
+                        e.Cancel = true;
+                    }
+                }
+            }
+            
         }
     }
 }

@@ -30,7 +30,11 @@ namespace MobiusEditor.Model
 
         public string OwnerHouse { get; private set; }
 
-        public bool IsArmed { get; private set; }
+        public UnitTypeFlag Flag { get; private set; }
+
+        public bool IsArmed => (Flag & UnitTypeFlag.IsArmed) == UnitTypeFlag.IsArmed;
+
+        public bool IsExpansionUnit => (Flag & UnitTypeFlag.IsExpansionUnit) == UnitTypeFlag.IsExpansionUnit;
 
         public bool IsHarvester => false;
 
@@ -41,24 +45,19 @@ namespace MobiusEditor.Model
             //RenderSize = new Size(tile.Image.Width / Globals.MapTileScale, tile.Image.Height / Globals.MapTileScale);
             return new Size(_RenderSize.Width * cellSize.Width / Globals.OriginalTileWidth, _RenderSize.Height * cellSize.Height / Globals.OriginalTileHeight);
         }
-        public Image Thumbnail { get; set; }
+        public Bitmap Thumbnail { get; set; }
 
-        public InfantryType(sbyte id, string name, string textId, string ownerHouse, bool isArmed)
+        public InfantryType(sbyte id, string name, string textId, string ownerHouse, UnitTypeFlag flags)
         {
             ID = id;
             Name = name;
             DisplayName = Globals.TheGameTextManager[textId] + " (" + Name.ToUpperInvariant() + ")";
             OwnerHouse = ownerHouse;
-            IsArmed = isArmed;
+            Flag = flags;
         }
 
         public InfantryType(sbyte id, string name, string textId, string ownerHouse)
-            : this(id, name, textId, ownerHouse, true)
-        {
-        }
-
-        public InfantryType(sbyte id, string name, string textId)
-            : this(id, name, textId, null, true)
+            : this(id, name, textId, ownerHouse, UnitTypeFlag.None)
         {
         }
 

@@ -47,7 +47,7 @@ namespace MobiusEditor.Model
 
         public OverlayTypeFlag Flag { get; private set; }
 
-        public Image Thumbnail { get; set; }
+        public Bitmap Thumbnail { get; set; }
 
         public String GraphicsSource { get; private set; }
 
@@ -115,6 +115,11 @@ namespace MobiusEditor.Model
         {
         }
 
+        public OverlayType(sbyte id, string name, OverlayTypeFlag flag, int forceTileNr)
+            : this(id, name, name, null, flag, null, forceTileNr)
+        {
+        }
+
         public OverlayType(sbyte id, string name, string textId)
             : this(id, name, textId, null, OverlayTypeFlag.None)
         {
@@ -163,7 +168,7 @@ namespace MobiusEditor.Model
             if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, GraphicsSource, tilenr, out Tile tile, (Flag & OverlayTypeFlag.Decoration) != 0, false))
             {
                 var tileSize = Globals.PreviewTileSize;
-                Rectangle overlayBounds = MapRenderer.RenderBounds(tile.Image.Size, new Size(1,1), tileSize);
+                Rectangle overlayBounds = MapRenderer.RenderBounds(tile.Image.Size, new Size(1, 1), Globals.PreviewTileScale);
                 Bitmap th = new Bitmap(tileSize.Width, tileSize.Height);
                 using (Graphics g = Graphics.FromImage(th))
                 {

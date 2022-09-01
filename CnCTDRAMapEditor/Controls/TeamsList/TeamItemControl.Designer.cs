@@ -45,8 +45,8 @@
             // tableLayoutPanel1
             // 
             this.tableLayoutPanel1.ColumnCount = 3;
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 60F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 40F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 70F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 30F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 26F));
             this.tableLayoutPanel1.Controls.Add(this.panel2, 1, 0);
             this.tableLayoutPanel1.Controls.Add(this.panel1, 0, 0);
@@ -64,10 +64,10 @@
             // 
             this.panel2.Controls.Add(this.numAmount);
             this.panel2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel2.Location = new System.Drawing.Point(164, 0);
+            this.panel2.Location = new System.Drawing.Point(191, 0);
             this.panel2.Margin = new System.Windows.Forms.Padding(0);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(109, 23);
+            this.panel2.Size = new System.Drawing.Size(82, 23);
             this.panel2.TabIndex = 2;
             // 
             // numAmount
@@ -89,7 +89,7 @@
             this.numAmount.SelectedText = "";
             this.numAmount.SelectionLength = 0;
             this.numAmount.SelectionStart = 0;
-            this.numAmount.Size = new System.Drawing.Size(107, 20);
+            this.numAmount.Size = new System.Drawing.Size(80, 20);
             this.numAmount.TabIndex = 2;
             this.numAmount.ValueChanged += new System.EventHandler(this.numAmount_ValueChanged);
             // 
@@ -100,7 +100,7 @@
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Margin = new System.Windows.Forms.Padding(0);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(164, 23);
+            this.panel1.Size = new System.Drawing.Size(191, 23);
             this.panel1.TabIndex = 1;
             // 
             // cmbTechno
@@ -111,7 +111,7 @@
             this.cmbTechno.Location = new System.Drawing.Point(2, 1);
             this.cmbTechno.Margin = new System.Windows.Forms.Padding(0);
             this.cmbTechno.Name = "cmbTechno";
-            this.cmbTechno.Size = new System.Drawing.Size(162, 21);
+            this.cmbTechno.Size = new System.Drawing.Size(189, 21);
             this.cmbTechno.TabIndex = 1;
             this.cmbTechno.SelectedIndexChanged += new System.EventHandler(this.cmbTechno_SelectedIndexChanged);
             // 
@@ -150,6 +150,7 @@
             this.panel1.ResumeLayout(false);
             this.panel3.ResumeLayout(false);
             this.ResumeLayout(false);
+
         }
 
         #endregion

@@ -58,7 +58,7 @@ namespace MobiusEditor.Model
 
         public bool[,] IconMask { get; set; }
 
-        public Image Thumbnail { get; set; }
+        public Bitmap Thumbnail { get; set; }
 
         public TheaterType[] Theaters { get; private set; }
 
@@ -66,6 +66,10 @@ namespace MobiusEditor.Model
 
         public Dictionary<string, bool[,]> MaskOverrides { get; private set; }
 
+        /// <summary>
+        /// This gets filled in by template types with the 'Group' flag. On template types with the 'IsGrouped' tag, it should be
+        /// filled in with a single item containing the name of the group template they belong to.
+        /// </summary>
         public string[] GroupTiles { get; private set; }
 
         /// <summary>
@@ -210,13 +214,17 @@ namespace MobiusEditor.Model
             {
                 return this == obj;
             }
-            else if (obj is byte)
+            else if (obj is byte bid)
             {
-                return ID == (byte)obj;
+                return ID == bid;
             }
-            else if (obj is ushort)
+            else if (obj is ushort sid)
             {
-                return ID == (ushort)obj;
+                return ID == sid;
+            }
+            else if (obj is int iid)
+            {
+                return ID == iid;
             }
             else if (obj is string)
             {
@@ -237,6 +245,11 @@ namespace MobiusEditor.Model
         }
 
         public void Init(TheaterType theater)
+        {
+            Init(theater, false);
+        }
+        
+        public void Init(TheaterType theater, bool forceDummy)
         {
             // This allows mods to add 'random' tiles to existing 1x1 tiles. Check excludes 'Clear' terrain and items already defined as random.
             if (IconWidth == 1 & IconHeight == 1 && (Flag & TemplateTypeFlag.Clear) == TemplateTypeFlag.None && (Flag & TemplateTypeFlag.RandomCell) == TemplateTypeFlag.None)
@@ -264,14 +277,15 @@ namespace MobiusEditor.Model
                 {
                     numIcons = Globals.TheTilesetManager.GetTileDataLength(theater.Tilesets, Name);
                 }
-                if (numIcons >= 1)
+                numIcons = Math.Max(1, numIcons);
+                NumIcons = numIcons;
+                mask[0, 0] = true;
+                if (numIcons > 1)
                 {
                     // Try to fit it into a shape as square as possible.
-                    NumIcons = numIcons;
                     Double sqrt = Math.Sqrt(numIcons);
                     loopWidth = (sqrt - Math.Floor(sqrt)) < 0.0001 ? (int)sqrt : (int)(sqrt + 1);
                     loopHeight = numIcons / loopWidth + (numIcons % loopWidth == 0 ? 0 : 1);
-                    mask[0, 0] = true;
                 }
             }
             // To not have to redo the calculation on random times.
@@ -285,7 +299,8 @@ namespace MobiusEditor.Model
                 g.Clear(Color.Transparent);
                 int icon = 0;
                 // If the requested tile is 100% definitely inside the bounds of what is supposed to have graphics, allow it to fetch dummy graphics.
-                bool tryDummy = !isRandom && IconWidth == 1 || IconHeight == 1;
+                // Always allow dummy graphics for the first cell of a 1x1-random template.
+                bool tryDummy = forceDummy || (!isRandom && (IconWidth == 1 || IconHeight == 1)) || NumIcons == 1;
                 // Try to get mask; first specific per theater, then the general all-theaters mask.
                 // The dictionary should only contain either a general one or one per theater, so the fetch order doesn't really matter.
                 bool[,] maskOv = null;
@@ -309,9 +324,10 @@ namespace MobiusEditor.Model
                         {
                             nameToFetch = GroupTiles[icon];
                             iconToFetch = 0;
-                            tryDummy = false;
+                            tryDummy = forceDummy;
                         }
-                        if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, nameToFetch, iconToFetch, out Tile tile, tryDummy, true))
+                        // Fetch dummy if definitely in bounds, first cell of a random one, or dummy is forced.
+                        if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, nameToFetch, iconToFetch, out Tile tile, tryDummy, forceDummy || !isRandom || (x == 0 && y == 0)))
                         {
                             if (tile.Image != null)
                             {

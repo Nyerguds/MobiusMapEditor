@@ -21,7 +21,7 @@ namespace MobiusEditor.TiberianDawn
 {
     public static class HouseTypes
     {
-        public static readonly HouseType None = new HouseType(-1, "None", "NONE");
+        public static readonly HouseType None = new HouseType(-1, House.None, "NONE");
         public static readonly HouseType Good = new HouseType(0, "GoodGuy", "GOOD");
         public static readonly HouseType Bad = new HouseType(1, "BadGuy", "BAD_UNIT", "BAD_STRUCTURE", ("harv", "BAD_STRUCTURE"), ("mcv", "BAD_STRUCTURE"));
         // Added actual recoloring
@@ -55,7 +55,12 @@ namespace MobiusEditor.TiberianDawn
         public static string GetBasePlayer(string player)
         {
             return None.Name;
-            //return Bad.Equals(player) ? Good.Name : Bad.Name;
+            //return GetClassicOpposingPlayer(player);
+        }
+
+        public static string GetClassicOpposingPlayer(string player)
+        {
+            return Good.Equals(player) ? Bad.Name : Good.Name;
         }
     }
 }

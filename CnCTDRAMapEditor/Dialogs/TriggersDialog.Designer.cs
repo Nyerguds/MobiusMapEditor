@@ -602,6 +602,7 @@ namespace MobiusEditor.Dialogs
             this.triggersListView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.nameColumnHeader});
             this.triggersListView.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.triggersListView.FullRowSelect = true;
             this.triggersListView.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
             this.triggersListView.HideSelection = false;
             this.triggersListView.LabelEdit = true;

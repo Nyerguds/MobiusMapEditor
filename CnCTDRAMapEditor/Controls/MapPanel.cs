@@ -32,6 +32,7 @@ namespace MobiusEditor.Controls
     {
         private bool updatingCamera;
         private Rectangle cameraBounds;
+        public Rectangle CameraBounds => cameraBounds;
         private Point lastScrollPosition;
 
         private (Point map, SizeF client)? referencePositions;
@@ -205,9 +206,18 @@ namespace MobiusEditor.Controls
             {
                 return;
             }
+            Invalidate(invalidateMap, cellBounds.Points());
+        }
+
+        public void Invalidate(Map invalidateMap, IEnumerable<Point> locations)
+        {
+            if (fullInvalidation)
+            {
+                return;
+            }
 
             var count = invalidateCells.Count;
-            invalidateCells.UnionWith(cellBounds.Points());
+            invalidateCells.UnionWith(locations);
             if (invalidateCells.Count > count)
             {
                 var overlapCells = invalidateMap.Overlappers.Overlaps(invalidateCells).ToHashSet();
@@ -222,15 +232,7 @@ namespace MobiusEditor.Controls
             {
                 return;
             }
-
-            var count = invalidateCells.Count;
-            invalidateCells.UnionWith(cellBounds.SelectMany(c => c.Points()));
-            if (invalidateCells.Count > count)
-            {
-                var overlapCells = invalidateMap.Overlappers.Overlaps(invalidateCells).ToHashSet();
-                invalidateCells.UnionWith(overlapCells);
-                Invalidate();
-            }
+            Invalidate(invalidateMap, cellBounds.SelectMany(c => c.Points()));
         }
 
         public void Invalidate(Map invalidateMap, Point location)
@@ -239,18 +241,7 @@ namespace MobiusEditor.Controls
             {
                 return;
             }
-
-            Invalidate(invalidateMap, new Rectangle(location, new Size(1, 1)));
-        }
-
-        public void Invalidate(Map invalidateMap, IEnumerable<Point> locations)
-        {
-            if (fullInvalidation)
-            {
-                return;
-            }
-
-            Invalidate(invalidateMap, locations.Select(l => new Rectangle(l, new Size(1, 1))));
+            Invalidate(invalidateMap, location.Yield());
         }
 
         public void Invalidate(Map invalidateMap, int cell)
@@ -259,7 +250,6 @@ namespace MobiusEditor.Controls
             {
                 return;
             }
-
             if (invalidateMap.Metrics.GetLocation(cell, out Point location))
             {
                 Invalidate(invalidateMap, location);
@@ -340,25 +330,22 @@ namespace MobiusEditor.Controls
             InvalidateScroll();
 
             PreRender?.Invoke(this, new RenderEventArgs(pe.Graphics, fullInvalidation ? null : invalidateCells));
-
-            if (mapImage != null)
+            Image mapImg = mapImage;
+            if (mapImg != null)
             {
                 pe.Graphics.Transform = compositeTransform;
-
                 var oldCompositingMode = pe.Graphics.CompositingMode;
                 var oldCompositingQuality = pe.Graphics.CompositingQuality;
                 var oldInterpolationMode = pe.Graphics.InterpolationMode;
                 var oldPixelOffsetMode = pe.Graphics.PixelOffsetMode;
                 MapRenderer.SetRenderSettings(pe.Graphics, SmoothScale);
-                pe.Graphics.DrawImage(mapImage, 0, 0);
+                pe.Graphics.DrawImage(mapImg, 0, 0);
                 pe.Graphics.CompositingMode = oldCompositingMode;
                 pe.Graphics.CompositingQuality = oldCompositingQuality;
                 pe.Graphics.InterpolationMode = oldInterpolationMode;
                 pe.Graphics.PixelOffsetMode = oldPixelOffsetMode;
             }
-
             PostRender?.Invoke(this, new RenderEventArgs(pe.Graphics, fullInvalidation ? null : invalidateCells));
-
 #if DEVELOPER
             if (Globals.Developer.ShowOverlapCells)
             {
@@ -369,7 +356,6 @@ namespace MobiusEditor.Controls
                 }
             }
 #endif
-
             invalidateCells.Clear();
             fullInvalidation = false;
         }

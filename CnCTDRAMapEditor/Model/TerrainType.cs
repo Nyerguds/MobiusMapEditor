@@ -51,7 +51,7 @@ namespace MobiusEditor.Model
             return new Size(Size.Width * cellSize.Width, Size.Height * cellSize.Height);
         }
 
-        public Image Thumbnail { get; set; }
+        public Bitmap Thumbnail { get; set; }
 
         public TerrainType(sbyte id, string name, TheaterType[] theaters, bool[,] occupyMask, String graphicsSource, int displayIcon, TemplateTypeFlag templateType)
         {
@@ -124,7 +124,7 @@ namespace MobiusEditor.Model
             {
                 var tileSize = Globals.PreviewTileSize;
                 var renderSize = new Size(tileSize.Width * Size.Width, tileSize.Height * Size.Height);
-                Rectangle overlayBounds = MapRenderer.RenderBounds(tile.Image.Size, Size, tileSize);
+                Rectangle overlayBounds = MapRenderer.RenderBounds(tile.Image.Size, Size, Globals.PreviewTileScale);
                 Bitmap th = new Bitmap(renderSize.Width, renderSize.Height);
                 using (Graphics g = Graphics.FromImage(th))
                 {

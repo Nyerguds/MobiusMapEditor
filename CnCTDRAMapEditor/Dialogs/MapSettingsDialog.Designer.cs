@@ -145,6 +145,7 @@ namespace MobiusEditor.Dialogs
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Map Settings";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MapSettingsDialog_FormClosing);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
             this.flowLayoutPanel1.ResumeLayout(false);
