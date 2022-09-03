@@ -278,7 +278,8 @@ namespace MobiusEditor.Model
             MissionTypes = missionTypes.ToArray();
             DefaultMissionArmed = MissionTypes.Where(m => m.Equals("Guard")).FirstOrDefault() ?? MissionTypes.First();
             DefaultMissionUnarmed = MissionTypes.Where(m => m.Equals("Stop")).FirstOrDefault() ?? MissionTypes.First();
-            DefaultMissionHarvest = MissionTypes.Where(m => m.Equals("Harvest")).FirstOrDefault() ?? MissionTypes.First();
+            // Reverts to "stop" if there are no resources (RA indoor)
+            DefaultMissionHarvest = OverlayTypes.Any(ov => ov.IsResource) ? MissionTypes.Where(m => m.Equals("Harvest")).FirstOrDefault() ?? DefaultMissionUnarmed : DefaultMissionUnarmed;
             DirectionTypes = new List<DirectionType>(directionTypes);
             AllInfantryTypes = new List<InfantryType>(infantryTypes);
             AllUnitTypes = new List<UnitType>(unitTypes);

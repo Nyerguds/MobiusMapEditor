@@ -544,23 +544,23 @@ namespace MobiusEditor.Tools
 
         protected static void RenderMapBoundaries(Graphics graphics, MapLayerFlag Layers, Map map, Size tileSize)
         {
-            RenderMapBoundaries(graphics, Layers, map, tileSize, Color.Cyan);
+            RenderMapBoundaries(graphics, Layers, map, map.Bounds, tileSize, Color.Cyan);
         }
 
-        protected static void RenderMapBoundaries(Graphics graphics, MapLayerFlag Layers, Map map, Size tileSize, Color color)
+        protected static void RenderMapBoundaries(Graphics graphics, MapLayerFlag Layers, Map map, Rectangle bounds, Size tileSize, Color color)
         {
             if ((Layers & MapLayerFlag.Boundaries) == MapLayerFlag.None)
             {
                 return;
             }
-            var bounds = Rectangle.FromLTRB(
-                map.Bounds.Left * tileSize.Width,
-                map.Bounds.Top * tileSize.Height,
-                map.Bounds.Right * tileSize.Width,
-                map.Bounds.Bottom * tileSize.Height
+            var boundsRect = Rectangle.FromLTRB(
+                bounds.Left * tileSize.Width,
+                bounds.Top * tileSize.Height,
+                bounds.Right * tileSize.Width,
+                bounds.Bottom * tileSize.Height
             );
             using (var boundsPen = new Pen(color, Math.Max(1f, tileSize.Width / 8.0f)))
-                graphics.DrawRectangle(boundsPen, bounds);
+                graphics.DrawRectangle(boundsPen, boundsRect);
         }
 
         /// <summary>

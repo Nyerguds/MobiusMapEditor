@@ -278,8 +278,11 @@ namespace MobiusEditor.RedAlert
         public GamePlugin(bool mapImage, IFeedBackHandler feedBackHandler)
         {
             this.feedBackHandler = feedBackHandler;
-            var playerWaypoints = Enumerable.Range(0, 8).Select(i => new Waypoint(string.Format("P{0}", i), WaypointFlag.PlayerStart));
-            var generalWaypoints = Enumerable.Range(8, 90).Select(i => new Waypoint(i.ToString()));
+            const int mplayers = 16;
+            var playerWaypoints = Enumerable.Range(0, mplayers).Select(i => new Waypoint(string.Format("P{0}", i), WaypointFlag.PlayerStart));
+            var generalWaypoints = Enumerable.Range(mplayers, 98 - mplayers).Select(i => new Waypoint(i.ToString()));
+            //var playerWaypoints = Enumerable.Range(0, 8).Select(i => new Waypoint(string.Format("P{0}", i), WaypointFlag.PlayerStart));
+            //var generalWaypoints = Enumerable.Range(8, 90).Select(i => new Waypoint(i.ToString()));
             var specialWaypoints = new Waypoint[] { new Waypoint("Home", WaypointFlag.Home), new Waypoint("Reinf.", WaypointFlag.Reinforce), new Waypoint("Special", WaypointFlag.Special) };
             var waypoints = playerWaypoints.Concat(generalWaypoints).Concat(specialWaypoints);
             var movies = new List<string>(movieTypesRa);
@@ -2080,7 +2083,7 @@ namespace MobiusEditor.RedAlert
             var homeWaypoint = Map.Waypoints.Where(w => (w.Flag & WaypointFlag.Home) == WaypointFlag.Home).FirstOrDefault();
             if (Map.BasicSection.SoloMission && !homeWaypoint.Cell.HasValue)
             {
-                sb.Append(Environment.NewLine + string.Format("Single-player maps need the Home waypoint to be placed.", Map.Triggers.Count, Constants.MaxTriggers));
+                sb.Append(Environment.NewLine + "Single-player maps need the Home waypoint to be placed.");
                 ok = false;
             }
             return ok ? null : sb.ToString();

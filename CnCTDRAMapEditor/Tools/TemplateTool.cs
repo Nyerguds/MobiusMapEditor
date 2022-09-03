@@ -241,31 +241,31 @@ namespace MobiusEditor.Tools
                 SelectedIcon = null;
                 return;
             }
-            if (e.Button == MouseButtons.Left)
+            if (e.Button != MouseButtons.Left)
             {
-                var templateTypeMouseCell = templateTypeNavigationWidget.MouseCell;
-
-                int width = selected.ThumbnailWidth;
-                int height = selected.ThumbnailHeight;
-                int x = templateTypeMouseCell.X;
-                int y = templateTypeMouseCell.Y;
-                if ((x >= 0) && (x < width))
+                return;
+            }
+            var templateTypeMouseCell = templateTypeNavigationWidget.MouseCell;
+            int width = selected.ThumbnailWidth;
+            int height = selected.ThumbnailHeight;
+            int x = templateTypeMouseCell.X;
+            int y = templateTypeMouseCell.Y;
+            if ((x >= 0) && (x < width))
+            {
+                if ((y >= 0) && (y < height))
                 {
-                    if ((y >= 0) && (y < height))
+                    if (isRandom)
                     {
-                        if (isRandom)
+                        if (y * width + x < selected.NumIcons)
                         {
-                            if (y * width + x < selected.NumIcons)
-                            {
-                                SelectedIcon = templateTypeMouseCell;
-                            }
+                            SelectedIcon = templateTypeMouseCell;
                         }
-                        else
+                    }
+                    else
+                    {
+                        if (selected.IconMask == null || selected.IconMask[x, y])
                         {
-                            if (selected.IconMask == null || selected.IconMask[x, y])
-                            {
-                                SelectedIcon = templateTypeMouseCell;
-                            }
+                            SelectedIcon = templateTypeMouseCell;
                         }
                     }
                 }
@@ -318,11 +318,13 @@ namespace MobiusEditor.Tools
                     }
                 }
                 if (SelectedIcon.HasValue)
-                using (var selectedIconPen = new Pen(Color.Yellow, Math.Max(1, scale / 16)))
                 {
-                    var cellSize = new Size(scale, scale);
-                    var rect = new Rectangle(new Point(padX + SelectedIcon.Value.X * cellSize.Width, padY + SelectedIcon.Value.Y * cellSize.Height), cellSize);
-                    e.Graphics.DrawRectangle(selectedIconPen, rect);
+                    using (var selectedIconPen = new Pen(Color.Yellow, Math.Max(1, scale / 16)))
+                    {
+                        var cellSize = new Size(scale, scale);
+                        var rect = new Rectangle(new Point(padX + SelectedIcon.Value.X * cellSize.Width, padY + SelectedIcon.Value.Y * cellSize.Height), cellSize);
+                        e.Graphics.DrawRectangle(selectedIconPen, rect);
+                    }
                 }
             }
             var sizeStringFormat = new StringFormat
@@ -346,16 +348,24 @@ namespace MobiusEditor.Tools
             if (e.KeyCode == Keys.ShiftKey)
             {
                 if (boundsMode)
+                {
                     ExitAllModes();
+                }
                 else
+                {
                     EnterPlacementMode();
+                }
             }
             else if (e.KeyCode == Keys.ControlKey)
             {
                 if (placementMode)
+                {
                     ExitAllModes();
+                }
                 else
+                {
                     EnterBoundsMode();
+                }
             }
             else
             {
@@ -402,9 +412,13 @@ namespace MobiusEditor.Tools
             if (button == MouseButtons.Left)
             {
                 if (selected == null || (selected.Flag & TemplateTypeFlag.Clear) != 0)
+                {
                     RemoveTemplate(navigationWidget.MouseCell);
+                }
                 else
+                {
                     SetTemplate(navigationWidget.MouseCell);
+                }
             }
             else if (button == MouseButtons.Right)
             {
@@ -548,26 +562,27 @@ namespace MobiusEditor.Tools
             }
             HandlePlace(Control.MouseButtons);
             TemplateType selected = SelectedTemplateType;
-            if (selected != null)
+            if (selected == null)
             {
-                foreach (var location in new Point[] { e.OldCell, e.NewCell })
+                return;
+            }
+            foreach (var location in new Point[] { e.OldCell, e.NewCell })
+            {
+                if (SelectedIcon.HasValue)
                 {
-                    if (SelectedIcon.HasValue)
+                    mapPanel.Invalidate(map, new Point(location.X, location.Y));
+                }
+                else
+                {
+                    for (var y = 0; y < selected.IconHeight; ++y)
                     {
-                        mapPanel.Invalidate(map, new Point(location.X, location.Y));
-                    }
-                    else
-                    {
-                        for (var y = 0; y < selected.IconHeight; ++y)
+                        for (var x = 0; x < selected.IconWidth; ++x)
                         {
-                            for (var x = 0; x < selected.IconWidth; ++x)
+                            if (selected.IconMask != null && !selected.IconMask[x, y])
                             {
-                                if (selected.IconMask != null && !selected.IconMask[x, y])
-                                {
-                                    continue;
-                                }
-                                mapPanel.Invalidate(map, new Point(location.X + x, location.Y + y));
+                                continue;
                             }
+                            mapPanel.Invalidate(map, new Point(location.X + x, location.Y + y));
                         }
                     }
                 }
@@ -781,7 +796,6 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-            
             boundsMode = false;
             navigationWidget.CurrentCursor = Cursors.Default;
             dragEdge = FacingType.None;
@@ -796,14 +810,15 @@ namespace MobiusEditor.Tools
         private void InvalidateCurrentArea()
         {
             TemplateType selected = SelectedTemplateType;
-            if (selected != null)
+            if (selected == null)
             {
-                for (var y = 0; y < selected.IconHeight; ++y)
+                return;
+            }
+            for (var y = 0; y < selected.IconHeight; ++y)
+            {
+                for (var x = 0; x < selected.IconWidth; ++x)
                 {
-                    for (var x = 0; x < selected.IconWidth; ++x)
-                    {
-                        mapPanel.Invalidate(map, new Point(navigationWidget.MouseCell.X + x, navigationWidget.MouseCell.Y + y));
-                    }
+                    mapPanel.Invalidate(map, new Point(navigationWidget.MouseCell.X + x, navigationWidget.MouseCell.Y + y));
                 }
             }
         }
@@ -836,7 +851,6 @@ namespace MobiusEditor.Tools
                 {
                     tooltipPosition.X -= (int)(navigationWidget.MouseSubPixel.X * zoomedCell.X / Globals.PixelWidth);
                 }
-                //*/
                 switch (showEdge)
                 {
                     case FacingType.North:
@@ -1135,11 +1149,11 @@ namespace MobiusEditor.Tools
             base.PostRenderMap(graphics);
             if (boundsMode)
             {
-                RenderMapBoundaries(graphics, Layers, map, Globals.MapTileSize, Color.Red);
+                RenderMapBoundaries(graphics, Layers, map, dragBounds, Globals.MapTileSize, Color.Red);
             }
             else
             {
-                RenderMapBoundaries(graphics, Layers, map, Globals.MapTileSize, Color.Cyan);
+                RenderMapBoundaries(graphics, Layers, map, Globals.MapTileSize);
                 if (placementMode)
                 {
                     var location = navigationWidget.MouseCell;
@@ -1154,7 +1168,7 @@ namespace MobiusEditor.Tools
                         (SelectedIcon.HasValue ? 1 : selected.IconWidth) * Globals.MapTileWidth,
                         (SelectedIcon.HasValue ? 1 : selected.IconHeight) * Globals.MapTileHeight
                     );
-                    using (var previewPen = new Pen(Color.Green, 4.0f))
+                    using (var previewPen = new Pen(Color.Green, Math.Max(1, Globals.MapTileSize.Width / 16.0f)))
                     {
                         graphics.DrawRectangle(previewPen, previewBounds);
                     }

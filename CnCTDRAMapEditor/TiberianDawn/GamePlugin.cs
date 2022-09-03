@@ -124,7 +124,7 @@ namespace MobiusEditor.TiberianDawn
         public GamePlugin(bool mapImage, IFeedBackHandler feedBackHandler)
         {
             this.feedBackHandler = feedBackHandler;
-            const int mplayers = 6;
+            const int mplayers = 16;
             var playerWaypoints = Enumerable.Range(0, mplayers).Select(i => new Waypoint(string.Format("P{0}", i), WaypointFlag.PlayerStart));
             var generalWaypoints = Enumerable.Range(mplayers, 25 - mplayers).Select(i => new Waypoint(i.ToString()));
             var specialWaypoints = new Waypoint[] { new Waypoint("Flare", WaypointFlag.Flare), new Waypoint("Home", WaypointFlag.Home), new Waypoint("Reinf.", WaypointFlag.Reinforce) };
@@ -1705,7 +1705,7 @@ namespace MobiusEditor.TiberianDawn
             var homeWaypoint = Map.Waypoints.Where(w => (w.Flag & WaypointFlag.Home) == WaypointFlag.Home).FirstOrDefault();
             if (Map.BasicSection.SoloMission && !homeWaypoint.Cell.HasValue)
             {
-                sb.Append(Environment.NewLine + string.Format("Single-player maps need the Home waypoint to be placed.", Map.Triggers.Count, Constants.MaxTriggers));
+                sb.Append(Environment.NewLine + "Single-player maps need the Home waypoint to be placed.");
                 ok = false;
             }
             return ok ? null : sb.ToString();

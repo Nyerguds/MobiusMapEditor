@@ -18,14 +18,15 @@ using System.Drawing;
 
 namespace MobiusEditor.Model
 {
+    [Flags]
     public enum WaypointFlag
     {
-        None,
-        PlayerStart,
-        Flare,
-        Home,
-        Reinforce,
-        Special
+        None = 0,
+        PlayerStart = 1 << 0,
+        Flare       = 1 << 1,
+        Home        = 1 << 2,
+        Reinforce   = 1 << 3,
+        Special     = 1 << 4
     }
 
     public class Waypoint : INamedType
