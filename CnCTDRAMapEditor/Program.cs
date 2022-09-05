@@ -13,6 +13,7 @@
 // GNU General Public License along with permitted additional restrictions 
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using MobiusEditor.Dialogs;
+using MobiusEditor.Interface;
 using MobiusEditor.Utility;
 using System;
 using System.Collections.Generic;
@@ -116,11 +117,11 @@ namespace MobiusEditor
             }
 #endif
             // Check if any mods are allowed to override the default stuff to load.
-            string[] modPaths = GetModPaths(gameId, Properties.Settings.Default.ModsToLoad);
+            Dictionary<GameType, string[]> modPaths = GetModPaths(gameId, Properties.Settings.Default.ModsToLoad);
             // Initialize texture, tileset, team color, and game text managers
-            Globals.TheTextureManager = new TextureManager(Globals.TheMegafileManager, modPaths);
-            Globals.TheTilesetManager = new TilesetManager(Globals.TheMegafileManager, Globals.TheTextureManager, Globals.TilesetsXMLPath, Globals.TexturesPath, modPaths);
-            Globals.TheTeamColorManager = new TeamColorManager(Globals.TheMegafileManager, modPaths);
+            Globals.TheTextureManager = new TextureManager(Globals.TheMegafileManager);
+            Globals.TheTilesetManager = new TilesetManager(Globals.TheMegafileManager, Globals.TheTextureManager, Globals.TilesetsXMLPath, Globals.TexturesPath);
+            Globals.TheTeamColorManager = new TeamColorManager(Globals.TheMegafileManager);
             // Not adapted to mods for now...
             var cultureName = CultureInfo.CurrentUICulture.Name;
             var gameTextFilename = string.Format(Globals.GameTextFilenameFormat, cultureName.ToUpper());
@@ -163,6 +164,7 @@ namespace MobiusEditor
             }
             using (MainForm mainForm = new MainForm(arg))
             {
+                mainForm.ModPaths = modPaths;
                 Application.Run(mainForm);
             }
             if (SteamworksUGC.IsSteamBuild)
@@ -172,7 +174,7 @@ namespace MobiusEditor
             Globals.TheMegafileManager.Dispose();
         }
 
-        private static string[] GetModPaths(string gameId, string modstoLoad)
+        private static Dictionary<GameType, string[]> GetModPaths(string gameId, string modstoLoad)
         {
             Regex numbersOnly = new Regex("^\\d+$");
             Regex modregex = new Regex("\"game_type\"\\s*:\\s*\"((RA)|(TD))\"");
@@ -182,9 +184,11 @@ namespace MobiusEditor
             string modsFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "CnCRemastered", "Mods");
             string[] steamLibraryFolders = SteamAssist.GetLibraryFoldersForAppId(gameId);
             string[] mods = (modstoLoad ?? String.Empty).Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
-            List<string> modPaths = new List<string>();
+            List<string> modPathsRa = new List<string>();
+            List<string> modPathsTd = new List<string>();
             for (int i = 0; i < mods.Length; ++i)
             {
+                List<string> modList;
                 string modDef = mods[i].Trim();
                 if (String.IsNullOrEmpty(modDef))
                 {
@@ -195,9 +199,20 @@ namespace MobiusEditor
                 if (numbersOnly.IsMatch(modDef))
                 {
                     addonModPath = SteamAssist.TryGetSteamModFolder(gameId, modDef, null, contentFile); // addonModName);
-                    if (addonModPath != null && CheckAddonPathModType(addonModPath, contentFile, modregex, 1) != null)
+                    if (addonModPath != null)
                     {
-                        modPaths.Add(addonModPath);
+                        switch (CheckAddonPathModType(addonModPath, contentFile, modregex, 1))
+                        {
+                            case "TD":
+                                modList = modPathsTd;
+                                break;
+                            case "RA":
+                                modList = modPathsRa;
+                                break;
+                            default:
+                                continue;
+                        }
+                        modList.Add(addonModPath);
                     }
                     // don't bother checking more on a numbers-only entry.
                     continue;
@@ -210,6 +225,7 @@ namespace MobiusEditor
                     continue;
                 }
                 String expectedModType = isTDMod ? "TD" : "RA";
+                modList = isTDMod ? modPathsTd : modPathsRa;
                 string actualModFolder = modDef.Substring(isTDMod ? tdModFolder.Length : raModFolder.Length);
                 // check if the trimmed-off part was indeed the whole folder name.
                 if (!actualModFolder.StartsWith("\\") && !actualModFolder.StartsWith("/"))
@@ -225,7 +241,7 @@ namespace MobiusEditor
                 addonModPath = Path.Combine(modsFolder, modDef);
                 if (CheckAddonPathModType(addonModPath, contentFile, modregex, 1) == expectedModType)
                 {
-                    modPaths.Add(addonModPath);
+                    modList.Add(addonModPath);
                 }
                 // try to find mod in steam library.
                 foreach (string libFolder in steamLibraryFolders)
@@ -240,13 +256,16 @@ namespace MobiusEditor
                         addonModPath = Path.Combine(modFolder, actualModFolder);
                         if (CheckAddonPathModType(addonModPath, contentFile, modregex, 1) == expectedModType)
                         {
-                            modPaths.Add(addonModPath);
+                            modList.Add(addonModPath);
                             break;
                         }
                     }
                 }
             }
-            return modPaths.Distinct(StringComparer.CurrentCultureIgnoreCase).ToArray();
+            Dictionary<GameType, string[]> finalModPaths = new Dictionary<GameType, string[]>();
+            finalModPaths.Add(GameType.TiberianDawn, modPathsTd.Distinct(StringComparer.CurrentCultureIgnoreCase).ToArray());
+            finalModPaths.Add(GameType.RedAlert, modPathsRa.Distinct(StringComparer.CurrentCultureIgnoreCase).ToArray());
+            return finalModPaths;
         }
 
         private static string CheckAddonPathModType(string addonModPath, string contentFile, Regex modregex, int group)

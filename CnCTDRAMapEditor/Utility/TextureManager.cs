@@ -32,7 +32,8 @@ namespace MobiusEditor.Utility
         private static string MissingTexture = "DATA\\ART\\TEXTURES\\SRGB\\COMMON\\MISC\\MISSING.TGA";
         private bool processedMissingTexture = false;
 
-        private string[] expandModPaths = null;
+        public string[] ExpandModPaths { get; set; }
+
 #if false
         private class ImageData
         {
@@ -46,10 +47,10 @@ namespace MobiusEditor.Utility
         private Dictionary<string, Bitmap> cachedTextures = new Dictionary<string, Bitmap>();
         private Dictionary<(string, TeamColor), (Bitmap, Rectangle)> teamColorTextures = new Dictionary<(string, TeamColor), (Bitmap, Rectangle)>();
 
-        public TextureManager(MegafileManager megafileManager, String[] expandModPaths)
+        public TextureManager(MegafileManager megafileManager, params String[] expandModPaths)
         {
             this.megafileManager = megafileManager;
-            this.expandModPaths = expandModPaths;
+            this.ExpandModPaths = expandModPaths;
         }
 
         public void Reset()
@@ -112,12 +113,12 @@ namespace MobiusEditor.Utility
                     var archiveDir = Path.GetDirectoryName(filename);
                     var archivePath = archiveDir + ".ZIP";
                     // First attempt to find the texture in mod folders.
-                    if (expandModPaths != null && expandModPaths.Length > 0)
+                    if (ExpandModPaths != null && ExpandModPaths.Length > 0)
                     {
-                        for (int i = 0; i < expandModPaths.Length; ++i)
+                        for (int i = 0; i < ExpandModPaths.Length; ++i)
                         {
                             // First attempt to find the texture in an archive
-                            var modArch = Path.Combine(expandModPaths[i], archivePath);
+                            var modArch = Path.Combine(ExpandModPaths[i], archivePath);
                             if (File.Exists(modArch))
                             {
                                 using (FileStream fs = new FileStream(modArch, FileMode.Open))
@@ -128,7 +129,7 @@ namespace MobiusEditor.Utility
                             // Next attempt to load a standalone file
                             if (tga == null)
                             {
-                                var modFile = Path.Combine(expandModPaths[i], filename);
+                                var modFile = Path.Combine(ExpandModPaths[i], filename);
                                 if (File.Exists(modFile))
                                 {
                                     using (var fileStream = new FileStream(modFile, FileMode.Open))
@@ -278,11 +279,11 @@ namespace MobiusEditor.Utility
                     // Try loading as a DDS
                     var ddsFilename = Path.ChangeExtension(filename, ".DDS");
                     Bitmap bitmap = null;
-                    if (expandModPaths != null && expandModPaths.Length > 0)
+                    if (ExpandModPaths != null && ExpandModPaths.Length > 0)
                     {
-                        for (int i = 0; i < expandModPaths.Length; ++i)
+                        for (int i = 0; i < ExpandModPaths.Length; ++i)
                         {
-                            var modFile = Path.Combine(expandModPaths[i], ddsFilename);
+                            var modFile = Path.Combine(ExpandModPaths[i], ddsFilename);
                             if (File.Exists(modFile))
                             {
                                 using (FileStream fs = new FileStream(modFile, FileMode.Open))

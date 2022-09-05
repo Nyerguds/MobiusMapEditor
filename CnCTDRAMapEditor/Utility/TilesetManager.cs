@@ -24,18 +24,32 @@ namespace MobiusEditor.Utility
         private readonly Dictionary<string, Tileset> tilesets = new Dictionary<string, Tileset>();
 
         private readonly MegafileManager megafileManager;
-        private string[] expandModPaths = null;
+        private readonly TextureManager textureManager;
+        private readonly string xmlPath;
+        private readonly string texturesPath;
 
-        public TilesetManager(MegafileManager megafileManager, TextureManager textureManager, string xmlPath, string texturesPath, string[] expandModPaths)
+        public string[] ExpandModPaths { get; set; }
+
+
+        public TilesetManager(MegafileManager megafileManager, TextureManager textureManager, string xmlPath, string texturesPath, params string[] expandModPaths)
         {
             this.megafileManager = megafileManager;
-            this.expandModPaths = expandModPaths;
+            this.textureManager = textureManager;
+            this.xmlPath = xmlPath;
+            this.texturesPath = texturesPath;
+            this.ExpandModPaths = expandModPaths;
+            LoadXmlfiles();
+        }
+
+        private void LoadXmlfiles()
+        {
+            tilesets.Clear();
             XmlDocument xmlDoc = null;
-            if (expandModPaths != null && expandModPaths.Length > 0)
+            if (ExpandModPaths != null && ExpandModPaths.Length > 0)
             {
-                for (int i = 0; i < expandModPaths.Length; ++i)
+                for (int i = 0; i < ExpandModPaths.Length; ++i)
                 {
-                    string modXmlPath = Path.Combine(expandModPaths[i], xmlPath);
+                    string modXmlPath = Path.Combine(ExpandModPaths[i], xmlPath);
                     if (modXmlPath != null && File.Exists(modXmlPath))
                     {
                         xmlDoc = new XmlDocument();
@@ -53,11 +67,11 @@ namespace MobiusEditor.Utility
             {
                 string xmlFile = Path.Combine(Path.GetDirectoryName(xmlPath), fileNode.InnerText);
                 XmlDocument fileXmlDoc = null;
-                if (expandModPaths != null && expandModPaths.Length > 0)
+                if (ExpandModPaths != null && ExpandModPaths.Length > 0)
                 {
-                    for (int i = 0; i < expandModPaths.Length; ++i)
+                    for (int i = 0; i < ExpandModPaths.Length; ++i)
                     {
-                        string modXmlPath = Path.Combine(expandModPaths[i], xmlFile);
+                        string modXmlPath = Path.Combine(ExpandModPaths[i], xmlFile);
                         if (modXmlPath != null && File.Exists(modXmlPath))
                         {
                             fileXmlDoc = new XmlDocument();
@@ -87,6 +101,7 @@ namespace MobiusEditor.Utility
             {
                 item.Value.Reset();
             }
+            LoadXmlfiles();
         }
 
         public bool GetTeamColorTileData(IEnumerable<string> searchTilesets, string name, int shape, TeamColor teamColor, out int fps, out Tile[] tiles, bool generateFallback, bool onlyIfDefined)

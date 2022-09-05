@@ -61,19 +61,19 @@ namespace MobiusEditor.Controls
             this.isMockObject = isMockObject;
 
             Plugin = plugin;
-            plugin.Map.Triggers.CollectionChanged -= Triggers_CollectionChanged;
-            plugin.Map.Triggers.CollectionChanged += Triggers_CollectionChanged;
+            plugin.Map.TriggersUpdated -= Triggers_CollectionChanged;
+            plugin.Map.TriggersUpdated += Triggers_CollectionChanged;
 
             UpdateDataSource();
 
             Disposed += (sender, e) =>
             {
                 Terrain = null;
-                plugin.Map.Triggers.CollectionChanged -= Triggers_CollectionChanged;
+                plugin.Map.TriggersUpdated -= Triggers_CollectionChanged;
             };
         }
 
-        private void Triggers_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        private void Triggers_CollectionChanged(object sender, EventArgs e)
         {
             UpdateDataSource();
         }

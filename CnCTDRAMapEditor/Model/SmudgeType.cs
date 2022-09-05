@@ -27,10 +27,9 @@ namespace MobiusEditor.Model
     {
         None = 0,
         // Only used for the bibs automatically added under buildings.
-        Bib = 1 << 3,
-        Bib1 = Bib | 1 << 0,
-        Bib2 = Bib | 1 << 1,
-        Bib3 = Bib | 1 << 2,
+        Bib1 = 1 << 0,
+        Bib2 = 1 << 1,
+        Bib3 = 1 << 2,
     }
 
     public class SmudgeType : IBrowsableType
@@ -47,6 +46,7 @@ namespace MobiusEditor.Model
         public int Icons { get; set; }
 
         public SmudgeTypeFlag Flag { get; private set; }
+        public bool IsAutoBib => (Flag & (SmudgeTypeFlag.Bib1 | SmudgeTypeFlag.Bib2 | SmudgeTypeFlag.Bib3)) != SmudgeTypeFlag.None;
 
         public Bitmap Thumbnail { get; set; }
 
@@ -178,6 +178,13 @@ namespace MobiusEditor.Model
                     break;
             }
             return bibType;
+        }
+
+        public static Int32 GetCellFromIcon(Smudge smudge, int cell,  CellMetrics metrics)
+        {
+            int x = smudge.Icon % smudge.Type.Size.Width;
+            int y = smudge.Icon / smudge.Type.Size.Width;
+            return cell - x - metrics.Width * y;
         }
     }
 }

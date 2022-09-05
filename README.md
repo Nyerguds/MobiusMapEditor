@@ -1,4 +1,4 @@
-## C&C Tiberian Dawn and Red Alert Map Editor
+﻿## C&C Tiberian Dawn and Red Alert Map Editor
 
 An enhanced version of the C&C Tiberian Dawn and Red Alert Map Editor based on the source code released by Electronic Arts. The goal of the project is simply to improve the usability and convenience of the map editor, fix bugs, improve and clean its code-base, enhance compatibility with different kinds of systems and enhance the editor's support for mods.
 
@@ -28,16 +28,18 @@ For Tiberian Dawn maps, the triggers dialog has a "Check" button that will check
 
 The file "CnCTDRAMapEditor.exe.config" contains settings to customise the editor. This is what they do:
 
-* **ModsToLoad**: semicolon (or comma) separated list of mod entries. A mod entry can either be a Steam workshop ID, or a path of the type "Tiberian_Dawn\ModName" or "Red_Alert\ModName". The paths will initially be looked up under My Documents, but will also check the Steam workshop files, and use the game prefix part to verify the mod's targeted game. Note that due to the order in which files are loaded into the editor, mods are **not** loaded conditionally per map type based on this targeted game. The editor also has no way to check which mods are actually enabled in the game, and will load anything that is configured and of which the files can be found.
-* **NoMetaFilesForSinglePlay**: Suppresses the generation of .tga and .json files for single player maps.
+* **ModsToLoad**: semicolon (or comma) separated list of mod entries. A mod entry can either be a Steam workshop ID, or a path of the type "Tiberian_Dawn\ModName" or "Red_Alert\ModName". The paths will initially be looked up under My Documents, but the loading system will also check the Steam workshop files, and use the game prefix part to verify the mod's targeted game. Note that due to the order in which files are loaded into the editor, mods are **not** loaded conditionally per map type based on this targeted game. The editor also has no way to check which mods are actually enabled in the game, and will load anything that is configured and of which the files can be found.
+* **NoMetaFilesForSinglePlay**: Suppresses the generation of .tga and .json files for single player maps saved to disc. This does not affect Steam uploads.
 * **IgnoreBibs**: Ignore bibs in the placement of buildings. Note that if you're not careful with this, this might prevent proper rebuilding of AI bases.
-* **MapScaleFactor**: Integer division factor for the size at which assets are rendered on the map; higher means lower quality. This will make the UI more responsive. Negative values will enable smooth scaling, which gives nicer graphics but will make the UI noticeable less responsive.
-* **PreviewScaleFactor**: Integer division factor for the size at which assets are rendered on the preview tools. Negative values will enable smooth scaling, but this usually doesn't look good on the upscaled preview graphics.
+* **MapScale**: Scaling multiplier for the size at which assets are rendered on the map; higher means lower quality. This will make the UI more responsive. Negative values will enable smooth scaling, which gives nicer graphics but will make the UI noticeable _less_ responsive. Defaults to 0.5.
+* **PreviewScale**: Scaling multiplier for the size at which assets are rendered on the preview tools. Negative values will enable smooth scaling, but this usually doesn't look good on the upscaled preview graphics. Defaults to 1
+* **ExportScale**: Scaling multiplier for the size at which an exported image will be generated through "Tools" → "Export As Image". Negative values will enable smooth scaling. Defaults to -0.5.
 * **ObjectToolItemSizeMultiplier**: Floating-point multiplication factor for downsizing the item icons on the selection lists on the tool windows.
 * **TemplateToolTextureSizeMultiplier**: Floating-point multiplication factor for the size of tiles shown on the Map tool. This scaling is somehow done relative to the screen size; not sure.
 * **MaxMapTileTextureSize**: Maximum for the size of the tiles shown on the Map tool. Leave on 0 to disable.
+* **IgnoreRaObsoleteClear**: Prevents the clearing of tiles with ID 255 on RA maps. This is purely a research option for analysing modern changes on old maps.
 
-The **ModsToLoad** setting will have the `ConcretePavementTD` mod set by default, to complete the incomplete TD Remastered graphics set, meaning it will automatically be loaded if found.
+The **ModsToLoad** setting will have the `Tiberian_Dawn\ConcretePavementTD` mod set by default, to complete the incomplete TD Remastered graphics set, meaning it will automatically be loaded if found.
 
 You can find the mod [on the Steam workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2844969675) and [on ModDB](https://www.moddb.com/games/command-conquer-remastered/addons/concretepavementtd).
 
@@ -231,6 +233,42 @@ v1.4.1.1:
 * Maps loaded from file are now seen as 'modified' if any issues were detected that made the editor change or discard data during the loading process.
 * The triggers check feedback (TD only) now also uses the large window used for showing the map load errors.
 
+v1.4.2.0:
+
+* Menu items related to map actions will now be disabled if no map is loaded.
+* Fixed "Destroy attached object" trigger in RA not being seen as valid on units.
+* Added power balance evaluation tool.
+* If a map is saved without a map name set in the map settings, the filename will be filled in as name.
+* Expanded the "View" menu to enable and disable drawing for all possible map elements and indicators on the map.
+* Vehicle previews are now shown in a more dynamic south-west facing.
+* When a map is opened, the editor will load theater-specific icons into the toolstrip.
+* Resource placement is now disabled in Interior theater.
+* Map loading now checks if map objects exist in the specified theater.
+* An image export function has been added. This will mirror the current items enabled in the "View" menu. Its size is determined by the "ExportScale" setting in "CnCTDRAMapEditor.exe.config".
+* Fixed a glitch that made the trigger dropdown of the opened tool stop functioning correctly after editing the triggers.
+* Template 'BRIDGE1H' in RA now shows its full available tileset. Seems this is an odd corner case where Westwood were the ones who forgot to cut it out properly, but that does make its two last tiles valid.
+* The editor will now detect when, on Red Alert maps, the obsolete tile with id 255 is used as 'clear' terrain, and will only show a single message about it. There is an "IgnoreRaObsoleteClear" setting in "CnCTDRAMapEditor.exe.config" to disable filtering out this tile, though that is only useful for research purposes.
+* Fixed the map panel crashing when a repaint is done on an already-closed map. This happenen when a map was opened, then another one was loaded but showed the load errors dialog, and then something (like "Show Desktop") triggered a repaint of the editor.
+* Changed all scaling settings to floating point numbers, making them much more accurate.
+* Building labels for fake buildings and for the rebuild priority will now scale correctly with the map scaling settings, meaning they should always remain the same size relative to the building.
+* Indicator lines like the map border, cell occupation indicators and the yellow selection box will now scale with the map scaling settings, meaning they don't become bigger when reducing the graphics scale.
+* Aftermath units can now be enabled and disabled in the "Map Settings" window. Disabling this will clear any expansion units from the map and from Teamtypes.
+* When Aftermath units are detected on map load, but the Aftermath units setting was not enabled in the ini, the loading system will enable the Aftermath units setting.
+* All waypoints in the triggers and teamtypes dialogs now show their coordinates.
+* Vastly optimised map bounds dragging.
+* Map bounds dragging will no longer revert when releasing the [Ctrl] key before the mouse button.
+* The label shown when dragging the map border now appears on the inside of the bounds, exactly a cell away from the bounds, and only updates on every cell change.
+* Map bounds dragging will change the border at the moment you cross the halfway point between cells, rather than when entering a new cell, making it much more intuitive.
+* Drag-scrolling, which is normally middle mouse button, now also works by holding down the space bar, to support devices (like laptops touch pads) without middle mouse button.
+* Drag-scrolling is now much more accurate.
+* Fixed an issue in the triggers where data got reset if you switched between two triggers that both had a field that contained the same numeric data.
+* Teamtypes now show the House in the list.
+* Teamtypes in Red Alert maps now filter out the triggers list to unit-applicable triggers only.
+* Teamtypes and triggers can now be selected by clicking anywhere on their row, rather than having to click specifically on the text in the row.
+* The check on multiplayer waypoints being placed down now correctly checks only the specific player start waypoints, rather than just any waypoints including the special singleplay ones.
+* The possible multiplayer waypoints to place on a map now go from 0 to 15.
+* If the mission is marked as single player scenario, the first waypoints are no longer indicated as player start positions with a "P" prefix.
+* Mods will now only be loaded for maps targeted at their respective game, meaning common assets can be overridden differently by TD and RA mods.
 
 ### Possible future features
 
@@ -238,4 +276,3 @@ Some ideas that might get implemented in the future:
 
 * Add Tiberian Dawn Megamap support. (Sole Survivor map type)
 * Show bibs placed as the 'smudge' type as their full size.
-* Separating mods between Tiberian Dawn and Red Alert, so they only activate on their specific map type.

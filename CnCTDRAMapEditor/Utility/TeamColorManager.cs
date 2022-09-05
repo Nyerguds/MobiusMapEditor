@@ -26,14 +26,14 @@ namespace MobiusEditor.Utility
         private readonly Dictionary<string, TeamColor> teamColors = new Dictionary<string, TeamColor>();
 
         private readonly MegafileManager megafileManager;
-        private string[] expandModPaths = null;
+        public string[] ExpandModPaths { get; set; }
 
         public TeamColor this[string key] => !string.IsNullOrEmpty(key) ? teamColors[key] : null;
 
-        public TeamColorManager(MegafileManager megafileManager, string[] expandModPaths)
+        public TeamColorManager(MegafileManager megafileManager, params string[] expandModPaths)
         {
             this.megafileManager = megafileManager;
-            this.expandModPaths = expandModPaths;
+            this.ExpandModPaths = expandModPaths;
         }
 
         public void Reset()
@@ -44,11 +44,11 @@ namespace MobiusEditor.Utility
         public void Load(string xmlPath)
         {
             XmlDocument xmlDoc = null;
-            if (expandModPaths != null && expandModPaths.Length > 0)
+            if (ExpandModPaths != null && ExpandModPaths.Length > 0)
             {
-                for (int i = 0; i < expandModPaths.Length; ++i)
+                for (int i = 0; i < ExpandModPaths.Length; ++i)
                 {
-                    string modXmlPath = Path.Combine(expandModPaths[i], xmlPath);
+                    string modXmlPath = Path.Combine(ExpandModPaths[i], xmlPath);
                     if (modXmlPath != null && File.Exists(modXmlPath))
                     {
                         xmlDoc = new XmlDocument();

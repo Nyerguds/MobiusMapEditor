@@ -210,10 +210,38 @@ namespace MobiusEditor.Model
         public readonly OverlapperSet<ICellOverlapper> Overlappers;
 
         public readonly Waypoint[] Waypoints;
+        
+        public event EventHandler<EventArgs> WaypointsUpdated;
+
+        public void FlagWaypointsUpdate()
+        {
+            if (WaypointsUpdated != null)
+                WaypointsUpdated(this, new EventArgs());
+        }
 
         public readonly CellGrid<CellTrigger> CellTriggers;
 
-        public readonly ObservableRangeCollection<Trigger> Triggers;
+        public event EventHandler<EventArgs> TriggersUpdated;
+
+        public void FlagTriggersUpdate()
+        {
+            if (TriggersUpdated != null)
+                TriggersUpdated(this, new EventArgs());
+        }
+
+        private List<Trigger> triggers;
+        public List<Trigger> Triggers
+        {
+            get { return triggers; }
+            set
+            {
+                triggers = value;
+                // Only an actual replacing of the list will call these, but they can be called manually after an update.
+                // A bit more manual than the whole ObservableCollection system, but a lot less cumbersome.
+                CleanUpTriggers();
+                FlagTriggersUpdate();
+            }
+        }
 
         public readonly List<TeamType> TeamTypes;
 
@@ -296,7 +324,7 @@ namespace MobiusEditor.Model
             Technos = new OccupierSet<ICellOccupier>(Metrics);
             Buildings = new OccupierSet<ICellOccupier>(Metrics);
             Overlappers = new OverlapperSet<ICellOverlapper>(Metrics);
-            Triggers = new ObservableRangeCollection<Trigger>();
+            triggers = new List<Trigger>();
             TeamTypes = new List<TeamType>();
             HousesIncludingNone = HouseTypesIncludingNone.Select(t => { var h = (House)Activator.CreateInstance(HouseType, t); h.SetDefault(); return h; }).ToArray();
             Houses = HousesIncludingNone.Where(h => h.Type.ID >= 0).ToArray();
@@ -327,7 +355,6 @@ namespace MobiusEditor.Model
             Technos.OccupierRemoved += Technos_OccupierRemoved;
             Buildings.OccupierAdded += Buildings_OccupierAdded;
             Buildings.OccupierRemoved += Buildings_OccupierRemoved;
-            Triggers.CollectionChanged += Triggers_CollectionChanged;
         }
 
         public void BeginUpdate()
@@ -643,7 +670,7 @@ namespace MobiusEditor.Model
 
         private void RemoveBibs(Building building)
         {
-            var bibCells = Smudge.IntersectsWith(building.BibCells).Where(x => (x.Value.Type.Flag & SmudgeTypeFlag.Bib) != SmudgeTypeFlag.None).Select(x => x.Cell).ToArray();
+            var bibCells = Smudge.IntersectsWith(building.BibCells).Where(x => x.Value.Type.IsAutoBib).Select(x => x.Cell).ToArray();
             foreach (var cell in bibCells)
             {
                 Smudge[cell] = null;
@@ -1098,7 +1125,7 @@ namespace MobiusEditor.Model
             Technos.Remove(e.Occupier);
         }
 
-        private void Triggers_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        public void CleanUpTriggers()
         {
             // Clean techno types
             HashSet<string> availableTriggers = Triggers.Select(t => t.Name).ToHashSet(StringComparer.InvariantCultureIgnoreCase);

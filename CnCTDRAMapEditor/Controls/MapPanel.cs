@@ -290,8 +290,7 @@ namespace MobiusEditor.Controls
         protected override void OnMouseEnter(EventArgs e)
         {
             base.OnMouseEnter(e);
-
-            if (FocusOnMouseEnter)
+            if (FocusOnMouseEnter && Form.ActiveForm != null)
             {
                 Focus();
             }

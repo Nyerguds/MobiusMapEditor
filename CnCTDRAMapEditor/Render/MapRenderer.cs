@@ -170,7 +170,7 @@ namespace MobiusEditor.Render
                 foreach (var topLeft in renderLocations())
                 {
                     var smudge = map.Smudge[topLeft];
-                    if (smudge != null && (smudge.Type.Flag & SmudgeTypeFlag.Bib) != SmudgeTypeFlag.None)
+                    if (smudge != null && smudge.Type.IsAutoBib)
                     {
                         Render(map.Theater, topLeft, tileSize, tileScale, smudge).Item2(graphics);
                     }
@@ -181,7 +181,7 @@ namespace MobiusEditor.Render
                 foreach (var topLeft in renderLocations())
                 {
                     var smudge = map.Smudge[topLeft];
-                    if (smudge != null && (smudge.Type.Flag & SmudgeTypeFlag.Bib) == SmudgeTypeFlag.None)
+                    if (smudge != null && !smudge.Type.IsAutoBib)
                     {
                         Render(map.Theater, topLeft, tileSize, tileScale, smudge).Item2(graphics);
                     }

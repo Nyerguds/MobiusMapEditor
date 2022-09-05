@@ -34,9 +34,9 @@ namespace MobiusEditor.Model
         public static readonly string None = "None";
 
         public CellMetrics Metrics { get; set; }
-        public string Name { get; private set; }
+        public string Name { get; set; }
 
-        public WaypointFlag Flag { get; private set; }
+        public WaypointFlag Flag { get; set; }
 
         public int? Cell { get; set; }
         public Point Point { get; set; }

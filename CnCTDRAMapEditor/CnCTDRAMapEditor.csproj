@@ -552,7 +552,6 @@
     <Compile Include="Utility\MegafileManager.cs" />
     <Compile Include="Utility\MRU.cs" />
     <Compile Include="Utility\PropertyTracker.cs" />
-    <Compile Include="Utility\RangeObservableCollection.cs" />
     <Compile Include="Utility\SteamAssist.cs" />
     <Compile Include="Utility\SteamworksUGC.cs" />
     <Compile Include="Utility\TeamColor.cs" />

@@ -36,6 +36,7 @@ namespace MobiusEditor
 {
     public partial class MainForm : Form, IFeedBackHandler
     {
+        public Dictionary<GameType, string[]> ModPaths { get; set; }
 
         private Dictionary<int, Bitmap> theaterIcons = new Dictionary<int, Bitmap>();
 
@@ -296,8 +297,16 @@ namespace MobiusEditor
                     plugin.Dispose();
                 }
                 plugin = null;
-                Globals.TheTilesetManager.Reset();
+                string[] modPaths = null;
+                if (ModPaths != null)
+                {
+                    ModPaths.TryGetValue(nmd.GameType, out modPaths);
+                }
+                Globals.TheTextureManager.ExpandModPaths = modPaths;
                 Globals.TheTextureManager.Reset();
+                Globals.TheTilesetManager.ExpandModPaths = modPaths;
+                Globals.TheTilesetManager.Reset();
+                Globals.TheTeamColorManager.ExpandModPaths = modPaths;
                 if (nmd.GameType == GameType.TiberianDawn)
                 {
                     Globals.TheTeamColorManager.Reset();
@@ -598,8 +607,8 @@ namespace MobiusEditor
                     List<Trigger> reordered = td.Triggers.OrderBy(t => t.Name, new ExplorerComparer()).ToList();
                     if (Trigger.CheckForChanges(plugin.Map.Triggers.ToList(), reordered))
                     {
-                        plugin.Map.Triggers.ReplaceRange(reordered);
                         plugin.Dirty = true;
+                        plugin.Map.Triggers = reordered;
                         RefreshAvailableTools();
                     }
                 }
@@ -853,8 +862,16 @@ namespace MobiusEditor
                 plugin.Dispose();
             }
             plugin = null;
-            Globals.TheTilesetManager.Reset();
+            string[] modPaths = null;
+            if (ModPaths != null)
+            {
+                ModPaths.TryGetValue(gameType, out modPaths);
+            }
+            Globals.TheTextureManager.ExpandModPaths = modPaths;
             Globals.TheTextureManager.Reset();
+            Globals.TheTilesetManager.ExpandModPaths = modPaths;
+            Globals.TheTilesetManager.Reset();
+            Globals.TheTeamColorManager.ExpandModPaths = modPaths;
             switch (gameType)
             {
                 case GameType.TiberianDawn:
@@ -898,10 +915,9 @@ namespace MobiusEditor
 #endif
             }
             mapPanel.MapImage = plugin.MapImage;
-            plugin.Dirty = errors != null && errors.Length > 0;
             filename = loadFilename;
             loadedFileType = fileType;
-            SetTitle();
+            plugin.Dirty = errors != null && errors.Length > 0;
             url.Clear();
             ClearAllTools();
             RefreshAvailableTools();
@@ -1653,29 +1669,12 @@ namespace MobiusEditor
             SetTitle();
         }
 
-        private void MainForm_Load(Object sender, EventArgs e)
-        {
-            /*/
-            Globals.TheTilesetManager.Reset();
-            Globals.TheTextureManager.Reset();
-            Globals.TheTeamColorManager.Reset();
-            Globals.TheTeamColorManager.Load(@"DATA\XML\CNCTDTEAMCOLORS.XML");
-
-            using (IGamePlugin plugin = new TiberianDawn.GamePlugin(this))
-            {
-                string th = TiberianDawn.TheaterTypes.Temperate.Name;
-                plugin.New(th);
-                LoadIcons(plugin);
-            }
-            //*/
-        }
-
         private void LoadIcons(IGamePlugin plugin)
         {
             TemplateType template = plugin.Map.TemplateTypes.Where(tt => (tt.Flag & TemplateTypeFlag.Clear) != TemplateTypeFlag.Clear && tt.IconWidth == 1 && tt.IconHeight == 1 && (tt.Theaters == null || tt.Theaters.Contains(plugin.Map.Theater))).OrderBy(tt => tt.Name).FirstOrDefault();
             Tile templateTile = null;
             if (template != null) Globals.TheTilesetManager.GetTileData(plugin.Map.Theater.Tilesets, template.Name, 0, out templateTile, false, true);
-            SmudgeType smudge = plugin.Map.SmudgeTypes.Where(sm => (sm.Flag & SmudgeTypeFlag.Bib) == SmudgeTypeFlag.None && sm.Icons == 1 && (sm.Theaters == null || sm.Theaters.Contains(plugin.Map.Theater))).OrderBy(sm => sm.ID).FirstOrDefault();
+            SmudgeType smudge = plugin.Map.SmudgeTypes.Where(sm => !sm.IsAutoBib && sm.Icons == 1 && sm.Size.Width == 1 && sm.Size.Height == 1 && (sm.Theaters == null || sm.Theaters.Contains(plugin.Map.Theater))).OrderBy(sm => sm.ID).FirstOrDefault();
             OverlayType overlay = plugin.Map.OverlayTypes.Where(ov => (ov.Flag & OverlayTypeFlag.Crate) == OverlayTypeFlag.Crate && (ov.Theaters == null || ov.Theaters.Contains(plugin.Map.Theater))).OrderBy(ov => ov.ID).FirstOrDefault();
             Tile overlayTile = null;
             if (overlay != null) Globals.TheTilesetManager.GetTileData(plugin.Map.Theater.Tilesets, overlay.Name, 0, out overlayTile, false, true);

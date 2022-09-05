@@ -20,7 +20,6 @@ using MobiusEditor.Utility;
 using MobiusEditor.Widgets;
 using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -51,10 +50,9 @@ namespace MobiusEditor.Tools
         {
             this.triggerComboBox = triggerCombo;
             UpdateDataSource();
-            plugin.Map.Triggers.CollectionChanged += Triggers_CollectionChanged;
         }
 
-        private void Triggers_CollectionChanged(Object sender, NotifyCollectionChangedEventArgs e)
+        private void Triggers_CollectionChanged(object sender, EventArgs e)
         {
             UpdateDataSource();
         }
@@ -285,6 +283,7 @@ namespace MobiusEditor.Tools
         public override void Activate()
         {
             base.Activate();
+            plugin.Map.TriggersUpdated += Triggers_CollectionChanged;
             this.triggerComboBox.SelectedIndexChanged += this.TriggerCombo_SelectedIndexChanged;
             this.mapPanel.MouseDown += MapPanel_MouseDown;
             this.mapPanel.MouseUp += MapPanel_MouseUp;
@@ -300,6 +299,7 @@ namespace MobiusEditor.Tools
         {
             ExitPlacementMode();
             base.Deactivate();
+            plugin.Map.TriggersUpdated -= Triggers_CollectionChanged;
             this.triggerComboBox.SelectedIndexChanged -= this.TriggerCombo_SelectedIndexChanged;
             this.mapPanel.MouseDown -= MapPanel_MouseDown;
             this.mapPanel.MouseUp -= MapPanel_MouseUp;

@@ -31,6 +31,7 @@ namespace MobiusEditor.RedAlert
 {
     class GamePlugin : IGamePlugin
     {
+        private const int multiStartPoints = 16;
         private readonly IEnumerable<string> movieTypes;
 
         private static readonly Regex SinglePlayRegex = new Regex("^SC[A-LN-Z]\\d{2}[EWX][A-EL]$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
@@ -278,9 +279,8 @@ namespace MobiusEditor.RedAlert
         public GamePlugin(bool mapImage, IFeedBackHandler feedBackHandler)
         {
             this.feedBackHandler = feedBackHandler;
-            const int mplayers = 16;
-            var playerWaypoints = Enumerable.Range(0, mplayers).Select(i => new Waypoint(string.Format("P{0}", i), WaypointFlag.PlayerStart));
-            var generalWaypoints = Enumerable.Range(mplayers, 98 - mplayers).Select(i => new Waypoint(i.ToString()));
+            var playerWaypoints = Enumerable.Range(0, multiStartPoints).Select(i => new Waypoint(string.Format("P{0}", i), WaypointFlag.PlayerStart));
+            var generalWaypoints = Enumerable.Range(multiStartPoints, 98 - multiStartPoints).Select(i => new Waypoint(i.ToString()));
             //var playerWaypoints = Enumerable.Range(0, 8).Select(i => new Waypoint(string.Format("P{0}", i), WaypointFlag.PlayerStart));
             //var generalWaypoints = Enumerable.Range(8, 90).Select(i => new Waypoint(i.ToString()));
             var specialWaypoints = new Waypoint[] { new Waypoint("Home", WaypointFlag.Home), new Waypoint("Reinf.", WaypointFlag.Reinforce), new Waypoint("Special", WaypointFlag.Special) };
@@ -894,7 +894,7 @@ namespace MobiusEditor.RedAlert
                     if (tokens.Length == 3)
                     {
                         bool badCrater = craterRegex.IsMatch(tokens[0]);
-                        var smudgeType = badCrater ? SmudgeTypes.Crater1 : Map.SmudgeTypes.Where(t => t.Equals(tokens[0]) && (t.Flag & SmudgeTypeFlag.Bib) == 0).FirstOrDefault();
+                        var smudgeType = badCrater ? SmudgeTypes.Crater1 : Map.SmudgeTypes.Where(t => t.Equals(tokens[0]) && !t.IsAutoBib).FirstOrDefault();
                         if (smudgeType != null)
                         {
                             if (smudgeType.Theaters != null && !smudgeType.Theaters.Contains(Map.Theater))
@@ -1556,7 +1556,9 @@ namespace MobiusEditor.RedAlert
             Map.TeamTypes.AddRange(teamTypes.OrderBy(t => t.Name, comparer));
             UpdateBasePlayerHouse();
             List<Trigger> reorderedTriggers = Map.Triggers.OrderBy(t => t.Name, comparer).ToList();
-            Map.Triggers.ReplaceRange(reorderedTriggers);
+            // Won't trigger the automatic cleanup and notifications.
+            Map.Triggers.Clear();
+            Map.Triggers.AddRange(reorderedTriggers);
             ExtraSections = ini.Sections;
             bool switchedToSolo = forceSoloMission && !Map.BasicSection.SoloMission
                 && (reorderedTriggers.Any(t => t.Action1.ActionType == ActionTypes.TACTION_WIN) || reorderedTriggers.Any(t => t.Action2.ActionType == ActionTypes.TACTION_WIN))
@@ -1697,11 +1699,22 @@ namespace MobiusEditor.RedAlert
             ini["Basic"]["NewINIFormat"] = "3";
             var aftermathSection = ini.Sections.Add("Aftermath");
             aftermathSection["NewUnitsEnabled"] = basic.ExpansionEnabled ? "1" : "0";
-
             var smudgeSection = ini.Sections.Add("SMUDGE");
-            foreach (var (cell, smudge) in Map.Smudge.Where(item => (item.Value.Type.Flag & SmudgeTypeFlag.Bib) == SmudgeTypeFlag.None))
+            // Flatten multi-cell bibs
+            Dictionary<int, Smudge> resolvedSmudge = new Dictionary<int, Smudge>();
+            foreach (var (cell, smudge) in Map.Smudge.Where(item => !item.Value.Type.IsAutoBib))
             {
-                smudgeSection[cell.ToString()] = string.Format("{0},{1},{2}", smudge.Type.Name.ToUpper(), cell, smudge.Icon);
+                int actualCell = cell;
+                if (smudge.Type.Icons == 1 && (smudge.Type.Size.Width > 0 || smudge.Type.Size.Height > 0) && smudge.Icon > 0)
+                {
+                    actualCell = SmudgeType.GetCellFromIcon(smudge, cell, this.Map.Metrics);
+                }
+                resolvedSmudge[actualCell] = smudge;
+            }
+            foreach (int cell in resolvedSmudge.Keys.OrderBy(c => c))
+            {
+                Smudge smudge = resolvedSmudge[cell];
+                smudgeSection[cell.ToString()] = string.Format("{0},{1},{2}", smudge.Type.Name.ToUpper(), cell, Math.Min(smudge.Type.Icons - 1, smudge.Icon));
             }
             var terrainSection = ini.Sections.Add("TERRAIN");
             foreach (var (location, terrain) in Map.Technos.OfType<Terrain>())
@@ -2100,6 +2113,9 @@ namespace MobiusEditor.RedAlert
                     //UpdateExpansionUnits();
                     Dirty = true;
                     break;
+                case "SoloMission":
+                    UpdateWaypoints();
+                    break;
             }
         }
 
@@ -2129,6 +2145,16 @@ namespace MobiusEditor.RedAlert
                     building.House = basePlayer;
                 }
             }
+        }
+
+        private void UpdateWaypoints()
+        {
+            bool isSolo = Map.BasicSection.SoloMission;
+            for (int i = 0; i < multiStartPoints; ++i)
+            {
+                Map.Waypoints[i].Name = isSolo ? i.ToString() : string.Format("P{0}", i);
+            }
+            Map.FlagWaypointsUpdate();
         }
 
         private void CompressLCWSection(INISection section, byte[] decompressedBytes)

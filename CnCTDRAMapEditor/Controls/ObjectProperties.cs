@@ -82,8 +82,8 @@ namespace MobiusEditor.Controls
         {
             this.isMockObject = isMockObject;
             Plugin = plugin;
-            plugin.Map.Triggers.CollectionChanged -= Triggers_CollectionChanged;
-            plugin.Map.Triggers.CollectionChanged += Triggers_CollectionChanged;
+            plugin.Map.TriggersUpdated -= Triggers_CollectionChanged;
+            plugin.Map.TriggersUpdated += Triggers_CollectionChanged;
             houseComboBox.DataSource = plugin.Map.Houses.Select(t => new TypeItem<HouseType>(t.Type.Name, t.Type)).ToArray();
             missionComboBox.DataSource = plugin.Map.MissionTypes;
             UpdateDataSource();
@@ -101,11 +101,11 @@ namespace MobiusEditor.Controls
                     infoImage = null;
                 }
                 catch { /*ignore*/}
-                plugin.Map.Triggers.CollectionChanged -= Triggers_CollectionChanged;
+                plugin.Map.TriggersUpdated -= Triggers_CollectionChanged;
             };
         }
 
-        private void Triggers_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        private void Triggers_CollectionChanged(object sender, EventArgs e)
         {
             UpdateDataSource();
         }

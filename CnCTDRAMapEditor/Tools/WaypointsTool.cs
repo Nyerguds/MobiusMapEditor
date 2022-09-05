@@ -262,7 +262,7 @@ namespace MobiusEditor.Tools
             mapPanel.Invalidate();
         }
 
-        private void JumpToButton_Click(System.Object sender, System.EventArgs e)
+        private void JumpToButton_Click(Object sender, EventArgs e)
         {
             if (waypointCombo.SelectedItem is Waypoint wp)
             {
@@ -313,20 +313,34 @@ namespace MobiusEditor.Tools
             }
         }
 
+        private void Map_WaypointsUpdated(Object sender, EventArgs e)
+        {
+            this.waypointCombo.SelectedIndexChanged -= this.WaypointCombo_SelectedIndexChanged;
+            int selected = waypointCombo.SelectedIndex;
+            mapPanel.Invalidate();
+            waypointCombo.DataSource = null;
+            waypointCombo.Items.Clear();
+            waypointCombo.DataSource = map.Waypoints.ToArray();
+            waypointCombo.SelectedIndex = selected;
+            this.waypointCombo.SelectedIndexChanged += this.WaypointCombo_SelectedIndexChanged;
+        }
+
         public override void Activate()
         {
             base.Activate();
+            (this.mapPanel as Control).KeyDown += WaypointsTool_KeyDown;
+            (this.mapPanel as Control).KeyUp += WaypointsTool_KeyUp;
             this.mapPanel.MouseDown += MapPanel_MouseDown;
             this.mapPanel.MouseMove += MapPanel_MouseMove;
             this.mapPanel.MouseLeave += MapPanel_MouseLeave;
-            (this.mapPanel as Control).KeyDown += WaypointsTool_KeyDown;
-            (this.mapPanel as Control).KeyUp += WaypointsTool_KeyUp;
+            this.map.WaypointsUpdated += this.Map_WaypointsUpdated;
         }
 
         public override void Deactivate()
         {
             ExitPlacementMode();
             base.Deactivate();
+            this.map.WaypointsUpdated -= this.Map_WaypointsUpdated;
             this.mapPanel.MouseDown -= MapPanel_MouseDown;
             this.mapPanel.MouseMove -= MapPanel_MouseMove;
             this.mapPanel.MouseLeave -= MapPanel_MouseLeave;

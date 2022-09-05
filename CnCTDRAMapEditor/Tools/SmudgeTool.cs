@@ -112,7 +112,7 @@ namespace MobiusEditor.Tools
             }
             if (map.Metrics.GetCell(navigationWidget.MouseCell, out int cell))
             {
-                if (map.Smudge[cell] is Smudge smudge && (smudge.Type.Flag & SmudgeTypeFlag.Bib) == 0)
+                if (map.Smudge[cell] is Smudge smudge && !smudge.Type.IsAutoBib)
                 {
                     selectedSmudge = smudge;
                     selectedSmudgeCell = cell;
@@ -137,7 +137,7 @@ namespace MobiusEditor.Tools
         private void SelectedSmudge_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             Smudge smudge = sender as Smudge;
-            if (smudge != null && ((smudge.Type.Flag & SmudgeTypeFlag.Bib) == SmudgeTypeFlag.None) && ReferenceEquals(smudge, selectedSmudge))
+            if (smudge != null && !smudge.Type.IsAutoBib && ReferenceEquals(smudge, selectedSmudge))
             {
                 mapPanel.Invalidate(map, selectedSmudgeCell);
             }
@@ -234,7 +234,7 @@ namespace MobiusEditor.Tools
 
         private void RemoveSmudge(Point location)
         {
-            if ((map.Smudge[location] is Smudge smudge) && ((smudge.Type.Flag & SmudgeTypeFlag.Bib) == SmudgeTypeFlag.None))
+            if (map.Smudge[location] is Smudge smudge && !smudge.Type.IsAutoBib)
             {
                 map.Smudge[location] = null;
                 mapPanel.Invalidate(map, location);
@@ -291,9 +291,9 @@ namespace MobiusEditor.Tools
                 if (smudge != null)
                 {
                     // convert building bib back to usable bib
-                    if ((smudge.Type.Flag & SmudgeTypeFlag.Bib) != 0)
+                    if (smudge.Type.IsAutoBib)
                     {
-                        SmudgeType sm = map.SmudgeTypes.FirstOrDefault(s => (s.Flag & SmudgeTypeFlag.Bib) == 0 && s.Name == smudge.Type.Name);
+                        SmudgeType sm = map.SmudgeTypes.FirstOrDefault(s => !s.IsAutoBib && s.Name == smudge.Type.Name);
                         if (sm != null)
                         {
                             SelectedSmudgeType = sm;
@@ -371,7 +371,7 @@ namespace MobiusEditor.Tools
             base.PostRenderMap(graphics);
             using (var smudgePen = new Pen(Color.Green, Math.Max(1, Globals.MapTileSize.Width / 16.0f)))
             {
-                foreach (var (cell, smudge) in previewMap.Smudge.Where(x => (x.Value.Type.Flag & SmudgeTypeFlag.Bib) == SmudgeTypeFlag.None))
+                foreach (var (cell, smudge) in previewMap.Smudge.Where(x => !x.Value.Type.IsAutoBib))
                 {
                     previewMap.Metrics.GetLocation(cell, out Point topLeft);
                     var bounds = new Rectangle(new Point(topLeft.X * Globals.MapTileWidth, topLeft.Y * Globals.MapTileHeight), Globals.MapTileSize);
