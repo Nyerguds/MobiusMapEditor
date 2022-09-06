@@ -270,9 +270,12 @@ v1.4.2.0:
 * If the mission is marked as single player scenario, the first waypoints are no longer indicated as player start positions with a "P" prefix.
 * Mods will now only be loaded for maps targeted at their respective game, meaning common assets can be overridden differently by TD and RA mods.
 
+v1.4.2.1: [WIP]
+* Fixed a bug where the default House in TD maps was set to "None", causing them to crash the game.
+* Bibs placed as the 'smudge' type now show their full size, and can be placed in ways that makes them partially overlap. As long as at least one cell of a bib exists, the bib exists.
+
 ### Possible future features
 
 Some ideas that might get implemented in the future:
 
 * Add Tiberian Dawn Megamap support. (Sole Survivor map type)
-* Show bibs placed as the 'smudge' type as their full size.

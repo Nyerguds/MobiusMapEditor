@@ -50,7 +50,7 @@ namespace MobiusEditor.Tools
         private readonly Smudge mockSmudge;
 
         private Smudge selectedSmudge;
-        private int selectedSmudgeCell;
+        private Point selectedSmudgePoint;
         private SmudgePropertiesPopup selectedSmudgeProperties;
 
         private SmudgeType selectedSmudgeType;
@@ -111,12 +111,13 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
+            Point mousePoint = navigationWidget.MouseCell;
             if (map.Metrics.GetCell(navigationWidget.MouseCell, out int cell))
             {
                 if (map.Smudge[cell] is Smudge smudge && !smudge.Type.IsAutoBib)
                 {
                     selectedSmudge = smudge;
-                    selectedSmudgeCell = cell;
+                    selectedSmudgePoint = SmudgeType.GetPointFromIcon(smudge, mousePoint);
                     selectedSmudgeProperties?.Close();
                     selectedSmudgeProperties = new SmudgePropertiesPopup(plugin, smudge);
                     selectedSmudgeProperties.Closed += (cs, ce) =>
@@ -140,7 +141,7 @@ namespace MobiusEditor.Tools
             Smudge smudge = sender as Smudge;
             if (smudge != null && !smudge.Type.IsAutoBib && ReferenceEquals(smudge, selectedSmudge))
             {
-                mapPanel.Invalidate(map, selectedSmudgeCell);
+                mapPanel.Invalidate(map, new Rectangle(selectedSmudgePoint, smudge.Type.Size));
             }
         }
 
@@ -428,13 +429,21 @@ namespace MobiusEditor.Tools
         private void RefreshMapPanel()
         {
             var oldImage = smudgeTypeMapPanel.MapImage;
-            if (mockSmudge.Type != null)
+            SmudgeType mockType = mockSmudge?.Type;
+            if (mockType != null)
             {
-                var smudgePreview = new Bitmap(Globals.PreviewTileWidth, Globals.PreviewTileWidth);
+                var smudgePreview = new Bitmap(Globals.PreviewTileWidth * mockType.Size.Width, Globals.PreviewTileWidth * mockType.Size.Height);
                 using (var g = Graphics.FromImage(smudgePreview))
                 {
                     MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
-                    MapRenderer.Render(map.Theater, new Point(0, 0), Globals.PreviewTileSize, Globals.PreviewTileScale, mockSmudge).Item2(g);
+                    if (mockType.Icons > 1)
+                    {
+                        MapRenderer.Render(map.Theater, new Point(0, 0), Globals.PreviewTileSize, Globals.PreviewTileScale, mockSmudge).Item2(g);
+                    }
+                    else if (mockType.Thumbnail != null && mockType.Icons == 1)
+                    {
+                        g.DrawImage(mockType.Thumbnail, new Rectangle(new Point(0, 0), mockType.Thumbnail.Size));
+                    }
                 }
                 smudgeTypeMapPanel.MapImage = smudgePreview;
             }
