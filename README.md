@@ -10,7 +10,7 @@ Right now, I'm not really looking into making this a joint project. Specific bug
 
 ## Usage
 
-The creators of the map editor have chosen to build a manual into the editor, but it might not be immediately obvious. Look at the bottom bar, and it will tell you for the currently selected editing type what your mouse buttons will do, and which modifier keys will change to different placement modes. Once you hold down such a keys, the bottom bar text will change, further explaining what your mouse buttons will do in this specific mode.
+The creators of the map editor have chosen to build a manual into the editor, but it might not be immediately obvious. Look at the bottom bar, and it will tell you for the currently selected editing type what your mouse buttons will do, and which modifier keys will change to different placement modes. Once you hold down such a key, the bottom bar text will change, further explaining what your mouse buttons will do in this specific mode.
 
 Besides that, the scroll wheel will allow zooming in and out, and the middle mouse button will allow you to quickly drag-scroll around the map.
 
