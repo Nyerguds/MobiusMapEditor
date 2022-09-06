@@ -273,6 +273,7 @@ v1.4.2.0:
 v1.4.2.1: [WIP]
 * Fixed a bug where the default House in TD maps was set to "None", causing them to crash the game.
 * Bibs placed as the 'smudge' type now show their full size, and can be placed in ways that makes them partially overlap. As long as at least one cell of a bib exists, the bib exists.
+* If a json is saved for a singleplayer map, its waypoints list now only contain the Home waypoint, since saving the first waypoints as start locations is pointless for them.
 
 ### Possible future features
 

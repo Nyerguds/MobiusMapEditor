@@ -1673,9 +1673,20 @@ namespace MobiusEditor.TiberianDawn
             writer.WriteValue(Map.MapSection.Theater.Name.ToUpper());
             writer.WritePropertyName("Waypoints");
             writer.WriteStartArray();
-            foreach (var waypoint in Map.Waypoints.Where(w => (w.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart && w.Cell.HasValue))
+            if (!Map.BasicSection.SoloMission)
             {
-                writer.WriteValue(waypoint.Cell.Value);
+                foreach (var waypoint in Map.Waypoints.Where(w => (w.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart && w.Cell.HasValue))
+                {
+                    writer.WriteValue(waypoint.Cell.Value);
+                }
+            }
+            else
+            {
+                // Probably useless, but better than the player start points.
+                foreach (var waypoint in Map.Waypoints.Where(w => (w.Flag & WaypointFlag.Home) == WaypointFlag.Home && w.Cell.HasValue))
+                {
+                    writer.WriteValue(waypoint.Cell.Value);
+                }
             }
             writer.WriteEndArray();
             writer.WriteEndObject();
