@@ -149,7 +149,7 @@ namespace MobiusEditor.TiberianDawn
             var basicSection = new BasicSection();
             basicSection.SetDefault();
             var houseTypes = HouseTypes.GetTypes();
-            basicSection.Player = houseTypes.First().Name;
+            basicSection.Player = houseTypes.Where(h => h.ID > -1).First().Name;
             basicSection.BasePlayer = HouseTypes.GetBasePlayer(basicSection.Player);
             string[] cellEventTypes = new[]
             {
@@ -654,11 +654,26 @@ namespace MobiusEditor.TiberianDawn
                             int icon = 0;
                             if (smudgeType.Icons > 1 && int.TryParse(tokens[2], out icon))
                                 icon = Math.Max(0, Math.Min(smudgeType.Icons - 1, icon));
-                            Map.Smudge[cell] = new Smudge
+                            bool multiCell = smudgeType.IsMultiCell;
+                            if (Map.Metrics.GetLocation(cell, out Point location))
                             {
-                                Type = smudgeType,
-                                Icon = icon
-                            };
+                                int placeIcon = 0;
+                                Size size = smudgeType.Size;
+                                Point placeLocation = location;
+                                for (int y = 0; y < size.Height; ++y)
+                                {
+                                    for (int x = 0; x < size.Width; ++x)
+                                    {
+                                        placeLocation.X = location.X + x;
+                                        Map.Smudge[placeLocation] = new Smudge
+                                        {
+                                            Type = smudgeType,
+                                            Icon = multiCell ? placeIcon++ : icon
+                                        };
+                                    }
+                                    placeLocation.Y++;
+                                }
+                            }
                         }
                         else
                         {

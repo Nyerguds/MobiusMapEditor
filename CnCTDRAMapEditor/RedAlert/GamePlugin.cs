@@ -350,6 +350,7 @@ namespace MobiusEditor.RedAlert
             Map.Theater = Map.TheaterTypes.Where(t => t.Equals(theater)).FirstOrDefault() ?? TheaterTypes.Temperate;
             Map.TopLeft = new Point(1, 1);
             Map.Size = Map.Metrics.Size - new Size(2, 2);
+            Map.BasicSection.Player = Map.HouseTypes.FirstOrDefault()?.Name;
             UpdateBasePlayerHouse();
             //Dirty = true;
         }

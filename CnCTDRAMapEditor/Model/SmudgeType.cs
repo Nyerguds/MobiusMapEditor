@@ -47,6 +47,7 @@ namespace MobiusEditor.Model
 
         public SmudgeTypeFlag Flag { get; private set; }
         public bool IsAutoBib => (Flag & (SmudgeTypeFlag.Bib1 | SmudgeTypeFlag.Bib2 | SmudgeTypeFlag.Bib3)) != SmudgeTypeFlag.None;
+        public bool IsMultiCell => Icons == 1 && (Size.Width > 0 || Size.Height > 0);
 
         public Bitmap Thumbnail { get; set; }
 
@@ -107,9 +108,9 @@ namespace MobiusEditor.Model
 
         public override bool Equals(object obj)
         {
-            if (obj is SmudgeType)
+            if (obj is SmudgeType sm)
             {
-                return this == obj;
+                return ReferenceEquals(this, sm) || (ID == sm.ID && Name == sm.Name && Flag == sm.Flag && Size == sm.Size && Icons == sm.Icons);
             }
             else if (obj is sbyte)
             {
@@ -119,7 +120,6 @@ namespace MobiusEditor.Model
             {
                 return string.Equals(Name, obj as string, StringComparison.OrdinalIgnoreCase);
             }
-
             return base.Equals(obj);
         }
 
@@ -136,20 +136,35 @@ namespace MobiusEditor.Model
         public void Init(TheaterType theater)
         {
             var oldImage = Thumbnail;
-            if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, Name, 0, out Tile tile))
+            var tileSize = Globals.PreviewTileSize;
+            Bitmap th = new Bitmap(tileSize.Width * Size.Width, tileSize.Height * Size.Height);
+            bool found = false;
+            using (Graphics g = Graphics.FromImage(th))
             {
-                var tileSize = Globals.PreviewTileSize;
-                Rectangle overlayBounds = MapRenderer.RenderBounds(tile.Image.Size, new Size(1, 1), Globals.PreviewTileScale);
-                Bitmap th = new Bitmap(tileSize.Width, tileSize.Height);
-                using (Graphics g = Graphics.FromImage(th))
+                MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
+                int icon = 0;
+                for (int y = 0; y < Size.Height; y++)
                 {
-                    MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
-                    g.DrawImage(tile.Image, overlayBounds);
+                    for (int x = 0; x < Size.Width; x++)
+                    {
+                        if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, Name, icon++, out Tile tile))
+                        {
+                            found = true;
+                            Rectangle overlayBounds = MapRenderer.RenderBounds(tile.Image.Size, new Size(1, 1), Globals.PreviewTileScale);
+                            overlayBounds.X += tileSize.Width * x;
+                            overlayBounds.Y += tileSize.Height * y;
+                            g.DrawImage(tile.Image, overlayBounds);
+                        }
+                    }
                 }
+            }
+            if (found)
+            {
                 Thumbnail = th;
             }
             else
             {
+                th.Dispose();
                 Thumbnail = null;
             }
             if (oldImage != null)
@@ -180,8 +195,19 @@ namespace MobiusEditor.Model
             return bibType;
         }
 
+        public static Point GetPointFromIcon(Smudge smudge, Point point)
+        {
+            if (!smudge.Type.IsMultiCell)
+                return point;
+            int x = smudge.Icon % smudge.Type.Size.Width;
+            int y = smudge.Icon / smudge.Type.Size.Width;
+            return new Point(point.X - x, point.Y - y);
+        }
+
         public static Int32 GetCellFromIcon(Smudge smudge, int cell,  CellMetrics metrics)
         {
+            if (!smudge.Type.IsMultiCell)
+                return cell;
             int x = smudge.Icon % smudge.Type.Size.Width;
             int y = smudge.Icon / smudge.Type.Size.Width;
             return cell - x - metrics.Width * y;
