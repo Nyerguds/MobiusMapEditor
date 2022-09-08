@@ -145,12 +145,14 @@ namespace MobiusEditor.Tools
                 var m = CategoryRegex.Match(template.Name);
                 return m.Success ? m.Groups[1].Value : string.Empty;
             }
+            ExplorerComparer expl = new ExplorerComparer();
             var templateTypes = plugin.Map.TemplateTypes
                 .Where(t => t.Thumbnail != null
                     && t.Theaters.Contains(plugin.Map.Theater)
                     && (t.Flag & TemplateTypeFlag.Clear) == TemplateTypeFlag.None
                     && (t.Flag & TemplateTypeFlag.IsGrouped) == TemplateTypeFlag.None)
-                .GroupBy(t => templateCategory(t)).OrderBy(g => g.Key);
+                .OrderBy(t => t.Name, expl)
+                .GroupBy(t => templateCategory(t)).OrderBy(g => g.Key, expl);
             var templateTypeImages = templateTypes.SelectMany(g => g).Select(t => t.Thumbnail);
             var clear = plugin.Map.TemplateTypes.Where(t => (t.Flag & TemplateTypeFlag.Clear) == TemplateTypeFlag.Clear).FirstOrDefault();
             Screen screen = Screen.FromHandle(mapPanel.Handle) ?? Screen.PrimaryScreen;

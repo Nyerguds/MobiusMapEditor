@@ -16,7 +16,6 @@ using MobiusEditor.Controls;
 using MobiusEditor.Controls.ControlsList;
 using MobiusEditor.Interface;
 using MobiusEditor.Model;
-using MobiusEditor.Tools;
 using MobiusEditor.Utility;
 using System;
 using System.Collections.Generic;
@@ -24,7 +23,6 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Reflection;
-using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
 namespace MobiusEditor.Dialogs

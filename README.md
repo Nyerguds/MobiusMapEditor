@@ -10,9 +10,9 @@ Right now, I'm not really looking into making this a joint project. Specific bug
 
 ## Usage
 
-The creators of the map editor have chosen to build a manual into the editor, but it might not be immediately obvious. Look at the bottom bar, and it will tell you for the currently selected editing type what your mouse buttons will do, and which modifier keys will change to different placement modes. Once you hold down such a key, the bottom bar text will change, further explaining what your mouse buttons will do in this specific mode.
+The creators of the map editor have chosen to build a manual into the editor, but it might not be immediately obvious. Look at the bottom bar, and it will tell you for the currently selected editing type what your mouse buttons will do, and which modifier keys will change to different placement modes. Once you hold down such a key, the bottom bar text will change, further explaining what your mouse buttons will do in this specific mode. Several types of objects can also be dragged around, and will change the bottom bar text accordingly when the mouse button is pressed down on an object.
 
-Besides that, the scroll wheel will allow zooming in and out, and the middle mouse button will allow you to quickly drag-scroll around the map.
+Besides that, the scroll wheel will allow zooming in and out, and holding down either the middle mouse button or the space bar will allow you to quickly drag-scroll around the map.
 
 Specific options about the map and the scripting elements can be found in the "Settings" menu:
 
@@ -38,6 +38,7 @@ The file "CnCTDRAMapEditor.exe.config" contains settings to customise the editor
 * **TemplateToolTextureSizeMultiplier**: Floating-point multiplication factor for the size of tiles shown on the Map tool. This scaling is somehow done relative to the screen size; not sure.
 * **MaxMapTileTextureSize**: Maximum for the size of the tiles shown on the Map tool. Leave on 0 to disable.
 * **IgnoreRaObsoleteClear**: Prevents the clearing of tiles with ID 255 on RA maps. This is purely a research option for analysing modern changes on old maps.
+* [WIP; v1.4.2.1] **UndoRedoStackSize**: The amount of undo/redo actions stored in memory. Defaults to 50.
 
 The **ModsToLoad** setting will have the `Tiberian_Dawn\ConcretePavementTD` mod set by default, to complete the incomplete TD Remastered graphics set, meaning it will automatically be loaded if found.
 
@@ -267,13 +268,19 @@ v1.4.2.0:
 * Teamtypes and triggers can now be selected by clicking anywhere on their row, rather than having to click specifically on the text in the row.
 * The check on multiplayer waypoints being placed down now correctly checks only the specific player start waypoints, rather than just any waypoints including the special singleplay ones.
 * The possible multiplayer waypoints to place on a map now go from 0 to 15.
-* If the mission is marked as single player scenario, the first waypoints are no longer indicated as player start positions with a "P" prefix.
+* If the map is marked as single player scenario, the first waypoints are no longer indicated as player start positions with a "P" prefix.
 * Mods will now only be loaded for maps targeted at their respective game, meaning common assets can be overridden differently by TD and RA mods.
 
 v1.4.2.1: [WIP]
+
 * Fixed a bug where the default House in TD maps was set to "None", causing them to crash the game.
 * Bibs placed as the 'smudge' type now show their full size, and can be placed in ways that makes them partially overlap. As long as at least one cell of a bib exists, the bib exists.
 * If a json is saved for a singleplayer map, its waypoints list now only contain the Home waypoint, since saving the first waypoints as start locations is pointless for them.
+* The smudge placement mode will now show a red cursor when hovering over bibs attached to buildings, to indicate those can't be replaced or removed.
+* All actions in the editor now have undo/redo functionality.
+* The amount of stored undo/redo actions can now be set in the "UndoRedoStackSize" setting in "CnCTDRAMapEditor.exe.config".
+* Undo/Redo actions can be cleared using a new option in the Edit menu. This can be used in case too many might make the editor laggy.
+* Disabling Aftermath units will now clear the Undo/Redo history, to avoid conflicts.
 
 ### Possible future features
 

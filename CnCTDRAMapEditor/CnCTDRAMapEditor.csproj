@@ -528,7 +528,7 @@
     <Compile Include="Tools\Dialogs\WaypointsToolDialog.Designer.cs">
       <DependentUpon>WaypointsToolDialog.cs</DependentUpon>
     </Compile>
-    <Compile Include="Tools\DropDownItem.cs" />
+    <Compile Include="Utility\DropDownItem.cs" />
     <Compile Include="Tools\InfantryTool.cs" />
     <Compile Include="Tools\OverlaysTool.cs" />
     <Compile Include="Tools\ResourcesTool.cs" />

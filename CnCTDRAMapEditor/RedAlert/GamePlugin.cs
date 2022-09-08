@@ -33,6 +33,7 @@ namespace MobiusEditor.RedAlert
     {
         private const int multiStartPoints = 16;
         private readonly IEnumerable<string> movieTypes;
+        private bool isLoading = false;
 
         private static readonly Regex SinglePlayRegex = new Regex("^SC[A-LN-Z]\\d{2}[EWX][A-EL]$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
@@ -261,7 +262,11 @@ namespace MobiusEditor.RedAlert
         public bool Dirty
         {
             get { return isDirty; }
-            set { isDirty = value; feedBackHandler?.UpdateStatus(); }
+            set
+            {
+                isDirty = value;
+                feedBackHandler?.UpdateStatus();
+            }
         }
 
         public INISectionCollection ExtraSections { get; private set; }
@@ -347,53 +352,67 @@ namespace MobiusEditor.RedAlert
 
         public void New(string theater)
         {
-            Map.Theater = Map.TheaterTypes.Where(t => t.Equals(theater)).FirstOrDefault() ?? TheaterTypes.Temperate;
-            Map.TopLeft = new Point(1, 1);
-            Map.Size = Map.Metrics.Size - new Size(2, 2);
-            Map.BasicSection.Player = Map.HouseTypes.FirstOrDefault()?.Name;
-            UpdateBasePlayerHouse();
-            //Dirty = true;
+            try
+            {
+                isLoading = true;
+                Map.Theater = Map.TheaterTypes.Where(t => t.Equals(theater)).FirstOrDefault() ?? TheaterTypes.Temperate;
+                Map.TopLeft = new Point(1, 1);
+                Map.Size = Map.Metrics.Size - new Size(2, 2);
+                Map.BasicSection.Player = Map.HouseTypes.FirstOrDefault()?.Name;
+                UpdateBasePlayerHouse();
+            }
+            finally
+            {
+                isLoading = false;
+            }
         }
 
         public IEnumerable<string> Load(string path, FileType fileType)
         {
-            var errors = new List<string>();
-            switch (fileType)
+            try
             {
-                case FileType.INI:
-                case FileType.BIN:
-                    {
-                        var ini = new INI();
-                        using (var reader = new StreamReader(path))
+                var errors = new List<string>();
+                switch (fileType)
+                {
+                    case FileType.INI:
+                    case FileType.BIN:
                         {
-                            ini.Parse(reader);
-                        }
-                        bool forceSingle = SinglePlayRegex.IsMatch(Path.GetFileNameWithoutExtension(path));
-                        errors.AddRange(LoadINI(ini, forceSingle));
-                    }
-                    break;
-                case FileType.MEG:
-                case FileType.PGM:
-                    {
-                        using (var megafile = new Megafile(path))
-                        {
-                            var mprFile = megafile.Where(p => Path.GetExtension(p).ToLower() == ".mpr").FirstOrDefault();
-                            if (mprFile != null)
+                            var ini = new INI();
+                            using (var reader = new StreamReader(path))
                             {
-                                var ini = new INI();
-                                using (var reader = new StreamReader(megafile.Open(mprFile)))
+                                ini.Parse(reader);
+                            }
+                            bool forceSingle = SinglePlayRegex.IsMatch(Path.GetFileNameWithoutExtension(path));
+                            errors.AddRange(LoadINI(ini, forceSingle));
+                        }
+                        break;
+                    case FileType.MEG:
+                    case FileType.PGM:
+                        {
+                            using (var megafile = new Megafile(path))
+                            {
+                                var mprFile = megafile.Where(p => Path.GetExtension(p).ToLower() == ".mpr").FirstOrDefault();
+                                if (mprFile != null)
                                 {
-                                    ini.Parse(reader);
+                                    var ini = new INI();
+                                    using (var reader = new StreamReader(megafile.Open(mprFile)))
+                                    {
+                                        ini.Parse(reader);
+                                    }
+                                    errors.AddRange(LoadINI(ini, false));
                                 }
-                                errors.AddRange(LoadINI(ini, false));
                             }
                         }
-                    }
-                    break;
-                default:
-                    throw new NotSupportedException();
+                        break;
+                    default:
+                        throw new NotSupportedException();
+                }
+                return errors;
             }
-            return errors;
+            finally
+            {
+                isLoading = false;
+            }
         }
 
         private IEnumerable<string> LoadINI(INI ini, bool forceSoloMission)
@@ -910,11 +929,26 @@ namespace MobiusEditor.RedAlert
                             int icon = 0;
                             if (smudgeType.Icons > 1 && int.TryParse(tokens[2], out icon))
                                 icon = Math.Max(0, Math.Min(smudgeType.Icons - 1, icon));
-                            Map.Smudge[cell] = new Smudge
+                            bool multiCell = smudgeType.IsMultiCell;
+                            if (Map.Metrics.GetLocation(cell, out Point location))
                             {
-                                Type = smudgeType,
-                                Icon = icon
-                            };
+                                int placeIcon = 0;
+                                Size size = smudgeType.Size;
+                                Point placeLocation = location;
+                                for (int y = 0; y < size.Height; ++y)
+                                {
+                                    for (int x = 0; x < size.Width; ++x)
+                                    {
+                                        placeLocation.X = location.X + x;
+                                        Map.Smudge[placeLocation] = new Smudge
+                                        {
+                                            Type = smudgeType,
+                                            Icon = multiCell ? placeIcon++ : icon
+                                        };
+                                    }
+                                    placeLocation.Y++;
+                                }
+                            }
                         }
                         else
                         {
@@ -1705,12 +1739,11 @@ namespace MobiusEditor.RedAlert
             Dictionary<int, Smudge> resolvedSmudge = new Dictionary<int, Smudge>();
             foreach (var (cell, smudge) in Map.Smudge.Where(item => !item.Value.Type.IsAutoBib))
             {
-                int actualCell = cell;
-                if (smudge.Type.Icons == 1 && (smudge.Type.Size.Width > 0 || smudge.Type.Size.Height > 0) && smudge.Icon > 0)
+                int actualCell = SmudgeType.GetCellFromIcon(smudge, cell, this.Map.Metrics);
+                if (!resolvedSmudge.ContainsKey(actualCell))
                 {
-                    actualCell = SmudgeType.GetCellFromIcon(smudge, cell, this.Map.Metrics);
+                    resolvedSmudge[actualCell] = smudge;
                 }
-                resolvedSmudge[actualCell] = smudge;
             }
             foreach (int cell in resolvedSmudge.Keys.OrderBy(c => c))
             {
@@ -2122,8 +2155,12 @@ namespace MobiusEditor.RedAlert
                     UpdateBasePlayerHouse();
                     break;
                 case "ExpansionEnabled":
+                    // Not here. See ViewTool.cs for the Aftermath units clearing.
                     //UpdateExpansionUnits();
-                    Dirty = true;
+                    if (!isLoading)
+                    {
+                        Dirty = true;
+                    }
                     break;
                 case "SoloMission":
                     UpdateWaypoints();

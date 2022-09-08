@@ -100,7 +100,7 @@ namespace MobiusEditor
 
         private readonly MRU mru;
 
-        private readonly UndoRedoList<UndoRedoEventArgs> url = new UndoRedoList<UndoRedoEventArgs>();
+        private readonly UndoRedoList<UndoRedoEventArgs> url = new UndoRedoList<UndoRedoEventArgs>(Globals.UndoRedoStackSize);
 
         private readonly Timer steamUpdateTimer = new Timer();
 
@@ -152,21 +152,27 @@ namespace MobiusEditor
 
         private void SetTitle()
         {
-            AssemblyName assn = Assembly.GetExecutingAssembly().GetName();
-            System.Version currentVersion = assn.Version;
             string file = filename;
             if (plugin != null && file == null)
             {
                 file = "Untitled" + (plugin.GameType == GameType.TiberianDawn ? ".ini" : ".mpr");
             }
+            String mainTitle = GetProgramVersionTitle();
             if (file != null)
             {
-                this.Text = string.Format("CnC TDRA Map Editor v{0} - {1}{2}", currentVersion, file, plugin != null && plugin.Dirty ? "*" : String.Empty);
+                this.Text = string.Format("{0} - {1}{2}", mainTitle, file, plugin != null && plugin.Dirty ? "*" : String.Empty);
             }
             else
             {
-                this.Text = string.Format("CnC TDRA Map Editor v{0}", currentVersion);
+                this.Text = mainTitle;
             }
+        }
+
+        private String GetProgramVersionTitle()
+        {
+            AssemblyName assn = Assembly.GetExecutingAssembly().GetName();
+            System.Version currentVersion = assn.Version;
+            return string.Format("CnC TDRA Map Editor v{0}", currentVersion);
         }
 
         private void SteamUpdateTimer_Tick(object sender, EventArgs e)
@@ -254,7 +260,7 @@ namespace MobiusEditor
             {
                 if (editUndoMenuItem.Enabled)
                 {
-                    editUndoMenuItem_Click(this, new EventArgs());
+                    EditUndoMenuItem_Click(this, new EventArgs());
                 }
                 return true;
             }
@@ -262,7 +268,7 @@ namespace MobiusEditor
             {
                 if (editRedoMenuItem.Enabled)
                 {
-                    editRedoMenuItem_Click(this, new EventArgs());
+                    EditRedoMenuItem_Click(this, new EventArgs());
                 }
                 return true;
             }
@@ -273,6 +279,7 @@ namespace MobiusEditor
         {
             editUndoMenuItem.Enabled = url.CanUndo;
             editRedoMenuItem.Enabled = url.CanRedo;
+            editClearUndoRedoMenuItem.Enabled = url.CanUndo || url.CanRedo;
         }
 
         private void UndoRedo_Updated(object sender, EventArgs e)
@@ -280,7 +287,7 @@ namespace MobiusEditor
             UpdateUndoRedo();
         }
 
-        private void fileNewMenuItem_Click(object sender, EventArgs e)
+        private void FileNewMenuItem_Click(object sender, EventArgs e)
         {
             if (!PromptSaveMap())
             {
@@ -336,7 +343,7 @@ namespace MobiusEditor
             }
         }
 
-        private void fileOpenMenuItem_Click(object sender, EventArgs e)
+        private void FileOpenMenuItem_Click(object sender, EventArgs e)
         {
             if (!PromptSaveMap())
             {
@@ -385,7 +392,7 @@ namespace MobiusEditor
             }
         }
 
-        private void fileSaveMenuItem_Click(object sender, EventArgs e)
+        private void FileSaveMenuItem_Click(object sender, EventArgs e)
         {
             if (plugin == null)
             {
@@ -415,7 +422,7 @@ namespace MobiusEditor
             }
         }
 
-        private void fileSaveAsMenuItem_Click(object sender, EventArgs e)
+        private void FileSaveAsMenuItem_Click(object sender, EventArgs e)
         {
             if (plugin == null)
             {
@@ -471,7 +478,7 @@ namespace MobiusEditor
             }
         }
 
-        private void fileExportMenuItem_Click(object sender, EventArgs e)
+        private void FileExportMenuItem_Click(object sender, EventArgs e)
         {
             if (plugin == null)
             {
@@ -501,12 +508,12 @@ namespace MobiusEditor
             }
         }
 
-        private void fileExitMenuItem_Click(object sender, EventArgs e)
+        private void FileExitMenuItem_Click(object sender, EventArgs e)
         {
             Close();
         }
 
-        private void editUndoMenuItem_Click(object sender, EventArgs e)
+        private void EditUndoMenuItem_Click(object sender, EventArgs e)
         {
             if (url.CanUndo)
             {
@@ -514,7 +521,7 @@ namespace MobiusEditor
             }
         }
 
-        private void editRedoMenuItem_Click(object sender, EventArgs e)
+        private void EditRedoMenuItem_Click(object sender, EventArgs e)
         {
             if (url.CanRedo)
             {
@@ -522,12 +529,21 @@ namespace MobiusEditor
             }
         }
 
-        private void settingsMapSettingsMenuItem_Click(object sender, EventArgs e)
+        private void EditClearUndoRedoMenuItem_Click(object sender, EventArgs e)
+        {
+            if (DialogResult.Yes == MessageBox.Show("This will remove all undo/redo information. Are you sure?", GetProgramVersionTitle(), MessageBoxButtons.YesNo))
+            {
+                url.Clear();
+            }
+        }
+
+        private void SettingsMapSettingsMenuItem_Click(object sender, EventArgs e)
         {
             if (plugin == null)
             {
                 return;
             }
+            bool expansionEnabled = plugin.Map.BasicSection.ExpansionEnabled;
             var basicSettings = new PropertyTracker<BasicSection>(plugin.Map.BasicSection);
             var briefingSettings = new PropertyTracker<BriefingSection>(plugin.Map.BriefingSection);
             var houseSettingsTrackers = plugin.Map.Houses.ToDictionary(h => h, h => new PropertyTracker<House>(h));
@@ -545,9 +561,16 @@ namespace MobiusEditor
                     plugin.Dirty = true;
                 }
             }
+            if (expansionEnabled && !plugin.Map.BasicSection.ExpansionEnabled)
+            {
+                // If Aftermath units were disbled, we can't guarantee none of them are still in
+                // the undo/redo history, so the undo/redo history is cleared to avoid issues.
+                // The rest of the cleanup can be found in the ViewTool class, in the BasicSection_PropertyChanged function.
+                url.Clear();
+            }
         }
 
-        private void settingsTeamTypesMenuItem_Click(object sender, EventArgs e)
+        private void SettingsTeamTypesMenuItem_Click(object sender, EventArgs e)
         {
             if (plugin == null)
             {
@@ -579,7 +602,7 @@ namespace MobiusEditor
             }
         }
 
-        private void settingsTriggersMenuItem_Click(object sender, EventArgs e)
+        private void SettingsTriggersMenuItem_Click(object sender, EventArgs e)
         {
             if (plugin == null)
             {
@@ -615,7 +638,7 @@ namespace MobiusEditor
             }
         }
 
-        private void toolsPowerMenuItem_Click(Object sender, EventArgs e)
+        private void ToolsPowerMenuItem_Click(Object sender, EventArgs e)
         {
             if (plugin == null)
             {
@@ -631,7 +654,7 @@ namespace MobiusEditor
             }
         }
 
-        private void toolsExportImage_Click(Object sender, EventArgs e)
+        private void ToolsExportImage_Click(Object sender, EventArgs e)
         {
             if (plugin == null)
             {
@@ -673,7 +696,7 @@ namespace MobiusEditor
             OpenFile(e.FullName, true);
         }
 
-        private void mapPanel_MouseMove(object sender, MouseEventArgs e)
+        private void MapPanel_MouseMove(object sender, MouseEventArgs e)
         {
             if (plugin != null)
             {
@@ -1017,8 +1040,9 @@ namespace MobiusEditor
                 fileSaveAsMenuItem.Enabled = true;
                 filePublishMenuItem.Enabled = true;
                 fileExportMenuItem.Enabled = true;
-                editUndoMenuItem.Enabled = true;
-                editRedoMenuItem.Enabled = true;
+                editUndoMenuItem.Enabled = url.CanUndo;
+                editRedoMenuItem.Enabled = url.CanRedo;
+                editClearUndoRedoMenuItem.Enabled = url.CanUndo || url.CanRedo;
                 settingsMapSettingsMenuItem.Enabled = true;
                 settingsTeamTypesMenuItem.Enabled = true;
                 settingsTriggersMenuItem.Enabled = true;
@@ -1062,6 +1086,7 @@ namespace MobiusEditor
             fileExportMenuItem.Enabled = false;
             editUndoMenuItem.Enabled = false;
             editRedoMenuItem.Enabled = false;
+            editClearUndoRedoMenuItem.Enabled = false;
             settingsMapSettingsMenuItem.Enabled = false;
             settingsTeamTypesMenuItem.Enabled = false;
             settingsTriggersMenuItem.Enabled = false;
@@ -1584,6 +1609,7 @@ namespace MobiusEditor
         {
             ClearAllTools();
             RefreshAvailableTools();
+            UpdateUndoRedo();
             if (filename != null)
                 this.OpenFile(filename, false);
         }
@@ -1671,19 +1697,25 @@ namespace MobiusEditor
 
         private void LoadIcons(IGamePlugin plugin)
         {
-            TemplateType template = plugin.Map.TemplateTypes.Where(tt => (tt.Flag & TemplateTypeFlag.Clear) != TemplateTypeFlag.Clear && tt.IconWidth == 1 && tt.IconHeight == 1 && (tt.Theaters == null || tt.Theaters.Contains(plugin.Map.Theater))).OrderBy(tt => tt.Name).FirstOrDefault();
+            TemplateType template = plugin.Map.TemplateTypes.Where(tt => (tt.Flag & TemplateTypeFlag.Clear) != TemplateTypeFlag.Clear && tt.IconWidth == 1 && tt.IconHeight == 1
+                                        && (tt.Theaters == null || tt.Theaters.Contains(plugin.Map.Theater))).OrderBy(tt => tt.Name).FirstOrDefault();
             Tile templateTile = null;
             if (template != null) Globals.TheTilesetManager.GetTileData(plugin.Map.Theater.Tilesets, template.Name, 0, out templateTile, false, true);
-            SmudgeType smudge = plugin.Map.SmudgeTypes.Where(sm => !sm.IsAutoBib && sm.Icons == 1 && sm.Size.Width == 1 && sm.Size.Height == 1 && (sm.Theaters == null || sm.Theaters.Contains(plugin.Map.Theater))).OrderBy(sm => sm.ID).FirstOrDefault();
-            OverlayType overlay = plugin.Map.OverlayTypes.Where(ov => (ov.Flag & OverlayTypeFlag.Crate) == OverlayTypeFlag.Crate && (ov.Theaters == null || ov.Theaters.Contains(plugin.Map.Theater))).OrderBy(ov => ov.ID).FirstOrDefault();
+            SmudgeType smudge = plugin.Map.SmudgeTypes.Where(sm => !sm.IsAutoBib && sm.Icons == 1 && sm.Size.Width == 1 && sm.Size.Height == 1
+                                        && (sm.Theaters == null || sm.Theaters.Contains(plugin.Map.Theater))).OrderBy(sm => sm.ID).FirstOrDefault();
+            OverlayType overlay = plugin.Map.OverlayTypes.Where(ov => (ov.Flag & OverlayTypeFlag.Crate) == OverlayTypeFlag.Crate
+                                        && (ov.Theaters == null || ov.Theaters.Contains(plugin.Map.Theater))).OrderBy(ov => ov.ID).FirstOrDefault();
             Tile overlayTile = null;
             if (overlay != null) Globals.TheTilesetManager.GetTileData(plugin.Map.Theater.Tilesets, overlay.Name, 0, out overlayTile, false, true);
-            TerrainType terrain = plugin.Map.TerrainTypes.Where(tr => tr.Theaters.Contains(plugin.Map.Theater)).OrderBy(tr => tr.ID).FirstOrDefault();;
+            TerrainType terrain = plugin.Map.TerrainTypes.Where(tr => tr.Theaters == null || tr.Theaters.Contains(plugin.Map.Theater)).OrderBy(tr => tr.ID).FirstOrDefault();;
             InfantryType infantry = plugin.Map.InfantryTypes.FirstOrDefault();
             UnitType unit = plugin.Map.UnitTypes.FirstOrDefault();
-            BuildingType building = plugin.Map.BuildingTypes.Where(bl => bl.Size.Width == 2 && bl.Size.Height == 2 && (bl.Theaters == null || bl.Theaters.Contains(plugin.Map.Theater))).OrderBy(bl => bl.ID).FirstOrDefault();
-            OverlayType resource = plugin.Map.OverlayTypes.Where(ov => (ov.Flag & OverlayTypeFlag.TiberiumOrGold) == OverlayTypeFlag.TiberiumOrGold).OrderBy(ov => ov.ID).FirstOrDefault();
-            OverlayType wall = plugin.Map.OverlayTypes.Where(ov => (ov.Flag & OverlayTypeFlag.Wall) == OverlayTypeFlag.Wall).OrderBy(ov => ov.ID).FirstOrDefault();
+            BuildingType building = plugin.Map.BuildingTypes.Where(bl => bl.Size.Width == 2 && bl.Size.Height == 2
+                                        && (bl.Theaters == null || bl.Theaters.Contains(plugin.Map.Theater))).OrderBy(bl => bl.ID).FirstOrDefault();
+            OverlayType resource = plugin.Map.OverlayTypes.Where(ov => (ov.Flag & OverlayTypeFlag.TiberiumOrGold) == OverlayTypeFlag.TiberiumOrGold
+                                        && (ov.Theaters == null || ov.Theaters.Contains(plugin.Map.Theater))).OrderBy(ov => ov.ID).FirstOrDefault();
+            OverlayType wall = plugin.Map.OverlayTypes.Where(ov => (ov.Flag & OverlayTypeFlag.Wall) == OverlayTypeFlag.Wall
+                                        && (ov.Theaters == null || ov.Theaters.Contains(plugin.Map.Theater))).OrderBy(ov => ov.ID).FirstOrDefault();
             Globals.TheTilesetManager.GetTileData(plugin.Map.Theater.Tilesets, "beacon", 0, out Tile waypoint, false, true);
             Globals.TheTilesetManager.GetTileData(plugin.Map.Theater.Tilesets, "mine", 3, out Tile cellTrigger, false, true);
             LoadNewIcon(mapToolStripButton, templateTile?.Image, plugin, 0);

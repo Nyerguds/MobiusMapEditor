@@ -31,6 +31,7 @@ namespace MobiusEditor
             ExportSmoothScale = Properties.Settings.Default.ExportScale < 0;
             IgnoreBibs = Properties.Settings.Default.IgnoreBibs;
             IgnoreRaObsoleteClear = Properties.Settings.Default.IgnoreRaObsoleteClear;
+            UndoRedoStackSize = Properties.Settings.Default.UndoRedoStackSize;
         }
 
         public const string TilesetsXMLPath = @"DATA\XML\TILESETS.XML";
@@ -62,6 +63,8 @@ namespace MobiusEditor
 
         public static bool IgnoreBibs;
         public static bool IgnoreRaObsoleteClear;
+
+        public static int UndoRedoStackSize = 50;
 
         public const int PixelWidth = 24;
         public const int PixelHeight = 24;

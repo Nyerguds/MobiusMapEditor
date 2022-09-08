@@ -29,6 +29,12 @@
     <Setting Name="ObjectToolItemSizeMultiplier" Type="System.Double" Scope="Application">
       <Value Profile="(Default)">0.3</Value>
     </Setting>
+    <Setting Name="IgnoreRaObsoleteClear" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="UndoRedoStackSize" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">50</Value>
+    </Setting>
     <Setting Name="ShowInviteWarning" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
@@ -70,9 +76,6 @@
     </Setting>
     <Setting Name="ApplicationVersion" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
-    </Setting>
-    <Setting Name="IgnoreRaObsoleteClear" Type="System.Boolean" Scope="Application">
-      <Value Profile="(Default)">False</Value>
     </Setting>
   </Settings>
 </SettingsFile>

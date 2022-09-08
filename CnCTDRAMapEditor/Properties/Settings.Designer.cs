@@ -104,6 +104,24 @@ namespace MobiusEditor.Properties {
             }
         }
         
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool IgnoreRaObsoleteClear {
+            get {
+                return ((bool)(this["IgnoreRaObsoleteClear"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("50")]
+        public int UndoRedoStackSize {
+            get {
+                return ((int)(this["UndoRedoStackSize"]));
+            }
+        }
+        
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
@@ -269,15 +287,6 @@ namespace MobiusEditor.Properties {
             }
             set {
                 this["ApplicationVersion"] = value;
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool IgnoreRaObsoleteClear {
-            get {
-                return ((bool)(this["IgnoreRaObsoleteClear"]));
             }
         }
     }

@@ -54,12 +54,17 @@ namespace MobiusEditor.Model
 
         public Smudge Clone()
         {
-            return new Smudge()
-            {
-                Type = Type,
-                Icon = Icon,
-                Tint = Tint
-            };
+            Smudge clone = new Smudge();
+            clone.CloneDataFrom(this);
+            return clone;
         }
+
+        public void CloneDataFrom(Smudge other)
+        {
+            Type = other.Type;
+            Icon = other.Icon;
+            Tint = other.Tint;
+        }
+        
     }
 }

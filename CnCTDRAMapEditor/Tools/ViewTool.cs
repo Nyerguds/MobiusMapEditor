@@ -100,7 +100,7 @@ namespace MobiusEditor.Tools
 
         protected virtual void UpdateExpansionUnits()
         {
-
+            // Can be overridden by sub-tools to update their object lists.
         }
 
         private void RemoveExpansionUnits()

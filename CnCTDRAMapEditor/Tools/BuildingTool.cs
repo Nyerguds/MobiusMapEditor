@@ -49,8 +49,9 @@ namespace MobiusEditor.Tools
         private readonly Building mockBuilding;
 
         private Building selectedBuilding;
-        private ObjectPropertiesPopup selectedObjectProperties;
+        private Point? selectedBuildingLocation;
         private Point selectedBuildingPivot;
+        private ObjectPropertiesPopup selectedObjectProperties;
 
         private BuildingType selectedBuildingType;
         private BuildingType SelectedBuildingType
@@ -111,17 +112,47 @@ namespace MobiusEditor.Tools
                 {
                     selectedBuilding = null;
                     selectedBuildingPivot = Point.Empty;
+                    Building preEdit = building.Clone();
                     selectedObjectProperties?.Close();
                     selectedObjectProperties = new ObjectPropertiesPopup(objectProperties.Plugin, building);
                     selectedObjectProperties.Closed += (cs, ce) =>
                     {
                         navigationWidget.Refresh();
+                        AddUndoRedo(building, preEdit);
                     };
                     building.PropertyChanged += SelectedBuilding_PropertyChanged;
                     selectedObjectProperties.Show(mapPanel, mapPanel.PointToClient(Control.MousePosition));
                     UpdateStatus();
                 }
             }
+        }
+
+        private void AddUndoRedo(Building building, Building preEdit)
+        {
+            // building = building in its final edited form. Clone for preservation
+            Building redoBuilding = building.Clone();
+            Building undoBuilding = preEdit;
+            void undoAction(UndoRedoEventArgs ev)
+            {
+                building.CloneDataFrom(undoBuilding);
+                if (building.Trigger == null || (!Trigger.None.Equals(building.Trigger, StringComparison.InvariantCultureIgnoreCase)
+                    && !ev.Map.FilterStructureTriggers().Any(tr => tr.Name.Equals(building.Trigger, StringComparison.InvariantCultureIgnoreCase))))
+                {
+                    building.Trigger = Trigger.None;
+                }
+                ev.MapPanel.Invalidate(ev.Map, building);
+            }
+            void redoAction(UndoRedoEventArgs ev)
+            {
+                building.CloneDataFrom(redoBuilding);
+                if (building.Trigger == null || (!Trigger.None.Equals(building.Trigger, StringComparison.InvariantCultureIgnoreCase)
+                    && !ev.Map.FilterStructureTriggers().Any(tr => tr.Name.Equals(building.Trigger, StringComparison.InvariantCultureIgnoreCase))))
+                {
+                    building.Trigger = Trigger.None;
+                }
+                ev.MapPanel.Invalidate(ev.Map, building);
+            }
+            url.Track(undoAction, redoAction);
         }
 
         private void MockBuilding_PropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -201,12 +232,37 @@ namespace MobiusEditor.Tools
 
         private void MapPanel_MouseUp(object sender, MouseEventArgs e)
         {
-            if (selectedBuilding != null)
+            if (selectedBuilding != null && selectedBuildingLocation.HasValue)
             {
+                AddMoveUndoTracking(selectedBuilding, selectedBuildingLocation.Value);
                 selectedBuilding = null;
+                selectedBuildingLocation = null;
                 selectedBuildingPivot = Point.Empty;
-
                 UpdateStatus();
+            }
+        }
+
+        private void AddMoveUndoTracking(Building toMove, Point startLocation)
+        {
+            Point? finalLocation = map.Technos[toMove];
+            if (finalLocation.HasValue && finalLocation.Value != selectedBuildingLocation)
+            {
+                Point endLocation = finalLocation.Value;
+                void undoAction(UndoRedoEventArgs ev)
+                {
+                    ev.MapPanel.Invalidate(ev.Map, toMove);
+                    ev.Map.Buildings.Remove(toMove);
+                    ev.Map.Buildings.Add(startLocation, toMove);
+                    ev.MapPanel.Invalidate(ev.Map, toMove);
+                }
+                void redoAction(UndoRedoEventArgs ev)
+                {
+                    ev.MapPanel.Invalidate(ev.Map, toMove);
+                    ev.Map.Buildings.Remove(toMove);
+                    ev.Map.Buildings.Add(endLocation, toMove);
+                    ev.MapPanel.Invalidate(ev.Map, toMove);
+                }
+                url.Track(undoAction, redoAction);
             }
         }
 
@@ -222,19 +278,19 @@ namespace MobiusEditor.Tools
             }
             else if (selectedBuilding != null)
             {
-                var oldLocation = map.Technos[selectedBuilding].Value;
+                Building toMove = selectedBuilding;
+                var oldLocation = map.Technos[toMove].Value;
                 var newLocation = new Point(Math.Max(0, e.NewCell.X - selectedBuildingPivot.X), Math.Max(0, e.NewCell.Y - selectedBuildingPivot.Y));
-                mapPanel.Invalidate(map, selectedBuilding);
-                map.Buildings.Remove(selectedBuilding);
-                if (map.Technos.CanAdd(newLocation, selectedBuilding, selectedBuilding.Type.BaseOccupyMask) &&
-                    map.Buildings.Add(newLocation, selectedBuilding))
+                mapPanel.Invalidate(map, toMove);
+                map.Buildings.Remove(toMove);
+                if (map.Technos.CanAdd(newLocation, toMove, toMove.Type.BaseOccupyMask) && map.Buildings.Add(newLocation, toMove))
                 {
-                    mapPanel.Invalidate(map, selectedBuilding);
+                    mapPanel.Invalidate(map, toMove);
                     plugin.Dirty = true;
                 }
                 else
                 {
-                    map.Buildings.Add(oldLocation, selectedBuilding);
+                    map.Buildings.Add(oldLocation, toMove);
                 }
             }
         }
@@ -246,26 +302,65 @@ namespace MobiusEditor.Tools
                 var building = mockBuilding.Clone();
                 if (map.Technos.CanAdd(location, building, building.Type.BaseOccupyMask) && map.Buildings.Add(location, building))
                 {
+                    Building[] baseBuildings = null;
+                    int[] buildingPrioritiesOld = null;
+                    Building[] baseBuildingsOrdered = null;
                     if (building.BasePriority >= 0)
                     {
-                        foreach (var baseBuilding in map.Buildings.OfType<Building>().Select(x => x.Occupier).Where(x => x.BasePriority >= 0))
+                        baseBuildings = map.Buildings.OfType<Building>().Select(x => x.Occupier).Where(x => x.BasePriority >= 0).ToArray();
+                        buildingPrioritiesOld = new int[baseBuildings.Length];
+                        for (Int32 i = 0; i < baseBuildings.Length; ++i)
                         {
+                            Building baseBuilding = baseBuildings[i];
+                            buildingPrioritiesOld[i] = baseBuilding.BasePriority;
                             if ((building != baseBuilding) && (baseBuilding.BasePriority >= building.BasePriority))
                             {
                                 baseBuilding.BasePriority++;
                             }
                         }
-                        var baseBuildings = map.Buildings.OfType<Building>().Select(x => x.Occupier).Where(x => x.BasePriority >= 0).OrderBy(x => x.BasePriority).ToArray();
-                        for (var i = 0; i < baseBuildings.Length; ++i)
+                        baseBuildingsOrdered = baseBuildings.OrderBy(x => x.BasePriority).ToArray();
+                        for (var i = 0; i < baseBuildingsOrdered.Length; ++i)
                         {
-                            baseBuildings[i].BasePriority = i;
+                            baseBuildingsOrdered[i].BasePriority = i;
                         }
-                        foreach (var baseBuilding in map.Buildings.OfType<Building>().Select(x => x.Occupier).Where(x => x.BasePriority >= 0))
+                        foreach (var baseBuilding in baseBuildings)
                         {
                             mapPanel.Invalidate(map, baseBuilding);
                         }
                     }
                     mapPanel.Invalidate(map, building);
+                    void undoAction(UndoRedoEventArgs e)
+                    {
+                        e.MapPanel.Invalidate(e.Map, building);
+                        e.Map.Buildings.Remove(building);
+                        if (baseBuildings != null && buildingPrioritiesOld != null && baseBuildings.Length == buildingPrioritiesOld.Length)
+                        {
+                            for (Int32 i = 0; i < baseBuildings.Length; ++i)
+                            {
+                                Building bld = baseBuildings[i];
+                                if (building != bld)
+                                {
+                                    bld.BasePriority = buildingPrioritiesOld[i];
+                                    e.MapPanel.Invalidate(map, bld);
+                                }
+                            }
+                        }
+                    }
+                    void redoAction(UndoRedoEventArgs e)
+                    {
+                        e.Map.Buildings.Add(location, building);
+                        if (baseBuildingsOrdered != null)
+                        {
+                            for (Int32 i = 0; i < baseBuildingsOrdered.Length; ++i)
+                            {
+                                Building bld = baseBuildingsOrdered[i];
+                                bld.BasePriority = i;
+                                e.MapPanel.Invalidate(e.Map, bld);
+                            }
+                        }
+                        e.MapPanel.Invalidate(e.Map, building);
+                    }
+                    url.Track(undoAction, redoAction);
                     plugin.Dirty = true;
                 }
             }
@@ -275,13 +370,18 @@ namespace MobiusEditor.Tools
         {
             if (map.Buildings[location] is Building building)
             {
+                Building[] baseBuildings = null;
+                int[] buildingPrioritiesOld = null;
+
                 mapPanel.Invalidate(map, building);
                 map.Buildings.Remove(building);
                 if (building.BasePriority >= 0)
                 {
-                    var baseBuildings = map.Buildings.OfType<Building>().Select(x => x.Occupier).Where(x => x.BasePriority >= 0).OrderBy(x => x.BasePriority).ToArray();
+                    baseBuildings = map.Buildings.OfType<Building>().Select(x => x.Occupier).Where(x => x.BasePriority >= 0).OrderBy(x => x.BasePriority).ToArray();
+                    buildingPrioritiesOld = new int[baseBuildings.Length];
                     for (var i = 0; i < baseBuildings.Length; ++i)
                     {
+                        buildingPrioritiesOld[i] = baseBuildings[i].BasePriority;
                         baseBuildings[i].BasePriority = i;
                     }
                     foreach (var baseBuilding in map.Buildings.OfType<Building>().Select(x => x.Occupier).Where(x => x.BasePriority >= 0))
@@ -289,6 +389,35 @@ namespace MobiusEditor.Tools
                         mapPanel.Invalidate(map, baseBuilding);
                     }
                 }
+                void undoAction(UndoRedoEventArgs e)
+                {
+                    e.Map.Buildings.Add(location, building);
+                    if (baseBuildings != null && buildingPrioritiesOld != null && baseBuildings.Length == buildingPrioritiesOld.Length)
+                    {
+                        for (Int32 i = 0; i < baseBuildings.Length; ++i)
+                        {
+                            Building bld = baseBuildings[i];
+                            bld.BasePriority = buildingPrioritiesOld[i];
+                            e.MapPanel.Invalidate(e.Map, bld);
+                        }
+                    }
+                    e.MapPanel.Invalidate(e.Map, building);
+                }
+                void redoAction(UndoRedoEventArgs e)
+                {
+                    e.MapPanel.Invalidate(e.Map, building);
+                    e.Map.Buildings.Remove(building);
+                    if (baseBuildings != null)
+                    {
+                        for (Int32 i = 0; i < baseBuildings.Length; ++i)
+                        {
+                            Building bld = baseBuildings[i];
+                            bld.BasePriority = i;
+                            e.MapPanel.Invalidate(map, bld);
+                        }
+                    }
+                }
+                url.Track(undoAction, redoAction);
                 plugin.Dirty = true;
             }
         }
@@ -344,10 +473,17 @@ namespace MobiusEditor.Tools
 
         private void SelectBuilding(Point location)
         {
+            selectedBuilding = null;
+            selectedBuildingLocation = null;
+            selectedBuildingPivot = Point.Empty;
             if (map.Metrics.GetCell(location, out int cell))
             {
-                selectedBuilding = map.Buildings[cell] as Building;
-                selectedBuildingPivot = (selectedBuilding != null) ? (location - (Size)map.Buildings[selectedBuilding].Value) : Point.Empty;
+                Building selected = map.Buildings[cell] as Building;
+                Point? selectedLocation = selected != null ? map.Buildings[selected] : null;
+                Point selectedPivot = selected != null ? location - (Size)selectedLocation : Point.Empty;
+                selectedBuilding = selected;
+                selectedBuildingLocation = selectedLocation;
+                selectedBuildingPivot = selectedPivot;
             }
             UpdateStatus();
         }
@@ -397,7 +533,7 @@ namespace MobiusEditor.Tools
             }
             else
             {
-                statusLbl.Text = "Shift to enter placement mode, Left-Click drag to move building, Double-Click update building properties, Right-Click to pick building";
+                statusLbl.Text = "Shift to enter placement mode, Left-Click drag to move building, Double-Click to update building properties, Right-Click to pick building";
             }
         }
 

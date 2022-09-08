@@ -50,6 +50,7 @@ namespace MobiusEditor.Tools
         private readonly Unit mockUnit;
 
         private Unit selectedUnit;
+        private Point? selectedUnitLocation;
         private ObjectPropertiesPopup selectedObjectProperties;
 
         private UnitType selectedUnitType;
@@ -151,17 +152,47 @@ namespace MobiusEditor.Tools
                 if (map.Technos[cell] is Unit unit)
                 {
                     selectedUnit = null;
+                    Unit preEdit = unit.Clone();
                     selectedObjectProperties?.Close();
                     selectedObjectProperties = new ObjectPropertiesPopup(objectProperties.Plugin, unit);
                     selectedObjectProperties.Closed += (cs, ce) =>
                     {
                         navigationWidget.Refresh();
+                        AddUndoRedo(unit, preEdit);
                     };
                     unit.PropertyChanged += SelectedUnit_PropertyChanged;
                     selectedObjectProperties.Show(mapPanel, mapPanel.PointToClient(Control.MousePosition));
                     UpdateStatus();
                 }
             }
+        }
+
+        private void AddUndoRedo(Unit unit, Unit preEdit)
+        {
+            // unit = unit in its final edited form. Clone for preservation
+            Unit redoUnit = unit.Clone();
+            Unit undoUnit = preEdit;
+            void undoAction(UndoRedoEventArgs ev)
+            {
+                unit.CloneDataFrom(undoUnit);
+                if (unit.Trigger == null || (!Trigger.None.Equals(unit.Trigger, StringComparison.InvariantCultureIgnoreCase)
+                    && !ev.Map.FilterUnitTriggers().Any(tr => tr.Name.Equals(unit.Trigger, StringComparison.InvariantCultureIgnoreCase))))
+                {
+                    unit.Trigger = Trigger.None;
+                }
+                ev.MapPanel.Invalidate(ev.Map, unit);
+            }
+            void redoAction(UndoRedoEventArgs ev)
+            {
+                unit.CloneDataFrom(redoUnit);
+                if (unit.Trigger == null || (!Trigger.None.Equals(unit.Trigger, StringComparison.InvariantCultureIgnoreCase)
+                    && !ev.Map.FilterUnitTriggers().Any(tr => tr.Name.Equals(unit.Trigger, StringComparison.InvariantCultureIgnoreCase))))
+                {
+                    unit.Trigger = Trigger.None;
+                }
+                ev.MapPanel.Invalidate(ev.Map, unit);
+            }
+            url.Track(undoAction, redoAction);
         }
 
         private void MockUnit_PropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -238,10 +269,36 @@ namespace MobiusEditor.Tools
 
         private void MapPanel_MouseUp(object sender, MouseEventArgs e)
         {
-            if (selectedUnit != null)
+            if (selectedUnit != null && selectedUnitLocation.HasValue)
             {
+                AddMoveUndoTracking(selectedUnit, selectedUnitLocation.Value);
                 selectedUnit = null;
+                selectedUnitLocation = null;
                 UpdateStatus();
+            }
+        }
+
+        private void AddMoveUndoTracking(Unit toMove, Point startLocation)
+        {
+            Point? finalLocation = map.Technos[toMove];
+            if (finalLocation.HasValue && finalLocation.Value != startLocation)
+            {
+                Point endLocation = finalLocation.Value;
+                void undoAction(UndoRedoEventArgs ev)
+                {
+                    ev.MapPanel.Invalidate(ev.Map, toMove);
+                    ev.Map.Technos.Remove(toMove);
+                    ev.Map.Technos.Add(startLocation, toMove);
+                    ev.MapPanel.Invalidate(ev.Map, toMove);
+                }
+                void redoAction(UndoRedoEventArgs ev)
+                {
+                    ev.MapPanel.Invalidate(ev.Map, toMove);
+                    ev.Map.Technos.Remove(toMove);
+                    ev.Map.Technos.Add(endLocation, toMove);
+                    ev.MapPanel.Invalidate(ev.Map, toMove);
+                }
+                url.Track(undoAction, redoAction);
             }
         }
 
@@ -280,6 +337,17 @@ namespace MobiusEditor.Tools
                 if (map.Technos.Add(location, unit))
                 {
                     mapPanel.Invalidate(map, unit);
+                    void undoAction(UndoRedoEventArgs e)
+                    {
+                        e.MapPanel.Invalidate(e.Map, unit);
+                        e.Map.Technos.Remove(unit);
+                    }
+                    void redoAction(UndoRedoEventArgs e)
+                    {
+                        e.Map.Technos.Add(location, unit);
+                        e.MapPanel.Invalidate(e.Map, unit);
+                    }
+                    url.Track(undoAction, redoAction);
                     plugin.Dirty = true;
                 }
             }
@@ -291,6 +359,17 @@ namespace MobiusEditor.Tools
             {
                 mapPanel.Invalidate(map, unit);
                 map.Technos.Remove(unit);
+                void undoAction(UndoRedoEventArgs e)
+                {
+                    e.Map.Technos.Add(location, unit);
+                    e.MapPanel.Invalidate(e.Map, unit);
+                }
+                void redoAction(UndoRedoEventArgs e)
+                {
+                    e.MapPanel.Invalidate(e.Map, unit);
+                    e.Map.Technos.Remove(unit);
+                }
+                url.Track(undoAction, redoAction);
                 plugin.Dirty = true;
             }
         }
@@ -343,9 +422,14 @@ namespace MobiusEditor.Tools
 
         private void SelectUnit(Point location)
         {
+            selectedUnit = null;
+            selectedUnitLocation = null;
             if (map.Metrics.GetCell(location, out int cell))
             {
-                selectedUnit = map.Technos[cell] as Unit;
+                Unit selected = map.Technos[cell] as Unit;
+                Point selectedLocation = selected != null ? map.Technos[selected].Value : Point.Empty;
+                selectedUnit = selected;
+                selectedUnitLocation = selectedLocation;
             }
             UpdateStatus();
         }
@@ -386,7 +470,7 @@ namespace MobiusEditor.Tools
             }
             else
             {
-                statusLbl.Text = "Shift to enter placement mode, Left-Click drag to move unit, Double-Click update unit properties, Right-Click to pick unit";
+                statusLbl.Text = "Shift to enter placement mode, Left-Click drag to move unit, Double-Click to update unit properties, Right-Click to pick unit";
             }
         }
 

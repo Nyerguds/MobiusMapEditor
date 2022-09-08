@@ -54,7 +54,28 @@ namespace MobiusEditor.Widgets
         [DllImport("user32.dll")]
         public static extern short GetAsyncKeyState(int key);
 
-        private readonly Pen defaultMouseoverPen;
+        private Pen defaultMouseoverPen;
+
+        private Color penColor = Color.Yellow;
+        public Color PenColor
+        {
+            get
+            {
+                return penColor;
+            }
+            set
+            {
+                penColor = value;
+                Pen p = defaultMouseoverPen;
+                defaultMouseoverPen = null;
+                if (p != null)
+                {
+                    try { p.Dispose(); }
+                    catch { /* Ignore*/ }
+                }
+                this.defaultMouseoverPen = new Pen(value, Math.Max(1, CellSize.Width / 16));
+            }
+        }
 
         private readonly MapPanel mapPanel;
         public Size CellSize { get; private set; }
@@ -94,7 +115,7 @@ namespace MobiusEditor.Widgets
             this.mapPanel = mapPanel;
             Metrics = metrics;
             this.CellSize = cellSize;
-            this.defaultMouseoverPen = new Pen(Color.Yellow, Math.Max(1, cellSize.Width / 16));
+            this.PenColor = Color.Yellow;
         }
 
         public void Refresh()
@@ -213,11 +234,12 @@ namespace MobiusEditor.Widgets
 
         public void RenderRect(Graphics graphics, Point mouseCell)
         {
-            if (!MouseoverSize.IsEmpty)
+            Pen p = defaultMouseoverPen;
+            if (!MouseoverSize.IsEmpty && p != null)
             {
                 var rect = new Rectangle(new Point(mouseCell.X * CellSize.Width, mouseCell.Y * CellSize.Height), CellSize);
                 rect.Inflate(CellSize.Width * (MouseoverSize.Width / 2), CellSize.Height * (MouseoverSize.Height / 2));
-                graphics.DrawRectangle(defaultMouseoverPen, rect);
+                graphics.DrawRectangle(p, rect);
             }
         }
 

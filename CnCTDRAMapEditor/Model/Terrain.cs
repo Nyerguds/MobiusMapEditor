@@ -45,17 +45,21 @@ namespace MobiusEditor.Model
         public int Strength { get => strength; set => SetField(ref strength, value); }
 
         public Color Tint { get; set; } = Color.White;
-                
+
         public Terrain Clone()
         {
-            return new Terrain()
-            {
-                Type = Type,
-                Icon = Icon,
-                House = House,
-                Strength = Strength,
-                Trigger = Trigger
-            };
+            Terrain clone = new Terrain();
+            clone.CloneDataFrom(this);
+            return clone;
+        }
+
+        public void CloneDataFrom(Terrain other)
+        {
+            Type = other.Type;
+            Icon = other.Icon;
+            House = other.House;
+            Strength = other.Strength;
+            Trigger = other.Trigger;
         }
 
         protected bool SetField<T>(ref T field, T value, [CallerMemberName] string propertyName = null)

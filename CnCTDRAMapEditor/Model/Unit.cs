@@ -51,15 +51,19 @@ namespace MobiusEditor.Model
 
         public Unit Clone()
         {
-            return new Unit()
-            {
-                Type = Type,
-                House = House,
-                Strength = Strength,
-                Direction = Direction,
-                Mission = Mission,
-                Trigger = Trigger
-            };
+            Unit clone = new Unit();
+            clone.CloneDataFrom(this);
+            return clone;
+        }
+
+        public void CloneDataFrom(Unit other)
+        {
+            Type = other.Type;
+            House = other.House;
+            Strength = other.Strength;
+            Direction = other.Direction;
+            Mission = other.Mission;
+            Trigger = other.Trigger;
         }
 
         protected bool SetField<T>(ref T field, T value, [CallerMemberName] string propertyName = null)

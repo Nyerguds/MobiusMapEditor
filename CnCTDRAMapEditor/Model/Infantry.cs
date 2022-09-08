@@ -65,17 +65,21 @@ namespace MobiusEditor.Model
 
         public Infantry Clone()
         {
-            return new Infantry(InfantryGroup)
-            {
-                Type = Type,
-                House = House,
-                Strength = Strength,
-                Direction = Direction,
-                Trigger = Trigger,
-                Mission = Mission,
-            };
+            Infantry clone = new Infantry(InfantryGroup);
+            clone.CloneDataFrom(this);
+            return clone;
         }
-    
+
+        public void CloneDataFrom(Infantry other)
+        {
+            Type = other.Type;
+            House = other.House;
+            Strength = other.Strength;
+            Direction = other.Direction;
+            Trigger = other.Trigger;
+            Mission = other.Mission;
+        }
+
         protected bool SetField<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
         {
             if (EqualityComparer<T>.Default.Equals(field, value))

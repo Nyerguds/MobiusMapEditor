@@ -67,19 +67,24 @@ namespace MobiusEditor.Model
 
         public Building Clone()
         {
-            return new Building()
-            {
-                Type = Type,
-                House = House,
-                Strength = Strength,
-                Direction = Direction,
-                Trigger = Trigger,
-                BasePriority = BasePriority,
-                IsPrebuilt = IsPrebuilt,
-                Sellable = Sellable,
-                Rebuild = Rebuild,
-                Tint = Tint
-            };
+            Building clone = new Building();
+            clone.CloneDataFrom(this);
+            return clone;
+        }
+
+        public void CloneDataFrom(Building other)
+        {
+            Type = other.Type;
+            House = other.House;
+            Strength = other.Strength;
+            Direction = other.Direction;
+            Trigger = other.Trigger;
+            BasePriority = other.BasePriority;
+            IsPrebuilt = other.IsPrebuilt;
+            Sellable = other.Sellable;
+            Rebuild = other.Rebuild;
+            // Copy internal value, not alpha-adjusted one.
+            Tint = other.tint;
         }
 
         protected bool SetField<T>(ref T field, T value, [CallerMemberName] string propertyName = null)

@@ -231,18 +231,24 @@ namespace MobiusEditor.Tools
             var undoCellTriggers2 = new Dictionary<int, CellTrigger>(undoCellTriggers);
             void undoAction(UndoRedoEventArgs e)
             {
+                List<Trigger> valid = e.Map.FilterCellTriggers().ToList();
                 foreach (var kv in undoCellTriggers2)
                 {
-                    e.Map.CellTriggers[kv.Key] = kv.Value;
+                    CellTrigger cellTrig = kv.Value;
+                    bool isValid = cellTrig == null || valid.Any(t => t.Name.Equals(cellTrig.Trigger, StringComparison.InvariantCultureIgnoreCase));
+                    e.Map.CellTriggers[kv.Key] = isValid ? cellTrig : null;
                 }
                 e.MapPanel.Invalidate();
             }
             var redoCellTriggers2 = new Dictionary<int, CellTrigger>(redoCellTriggers);
             void redoAction(UndoRedoEventArgs e)
             {
+                List<Trigger> valid = e.Map.FilterCellTriggers().ToList();
                 foreach (var kv in redoCellTriggers2)
                 {
-                    e.Map.CellTriggers[kv.Key] = kv.Value;
+                    CellTrigger cellTrig = kv.Value;
+                    bool isValid = cellTrig == null || valid.Any(t => t.Name.Equals(cellTrig.Trigger, StringComparison.InvariantCultureIgnoreCase));
+                    e.Map.CellTriggers[kv.Key] = isValid ? cellTrig : null;
                 }
                 e.MapPanel.Invalidate();
             }

@@ -50,6 +50,8 @@ namespace MobiusEditor.Tools
         private readonly Infantry mockInfantry;
 
         private Infantry selectedInfantry;
+        private Point? selectedInfantryLocation;
+        private int selectedInfantryStop = -1;
         private ObjectPropertiesPopup selectedObjectProperties;
 
         private InfantryType selectedInfantryType;
@@ -157,11 +159,13 @@ namespace MobiusEditor.Tools
                     if (infantryGroup.Infantry[i] is Infantry infantry)
                     {
                         selectedInfantry = null;
+                        Infantry preEdit = infantry.Clone();
                         selectedObjectProperties?.Close();
                         selectedObjectProperties = new ObjectPropertiesPopup(objectProperties.Plugin, infantry);
                         selectedObjectProperties.Closed += (cs, ce) =>
                         {
                             navigationWidget.Refresh();
+                            AddUndoRedo(infantry, preEdit);
                         };
                         infantry.PropertyChanged += SelectedInfantry_PropertyChanged;
                         selectedObjectProperties.Show(mapPanel, mapPanel.PointToClient(Control.MousePosition));
@@ -169,6 +173,34 @@ namespace MobiusEditor.Tools
                     }
                 }
             }
+        }
+
+        private void AddUndoRedo(Infantry infantry, Infantry preEdit)
+        {
+            // infantry = infantry in its final edited form. Clone for preservation
+            Infantry redoInf = infantry.Clone();
+            Infantry undoInf = preEdit;
+            void undoAction(UndoRedoEventArgs ev)
+            {
+                infantry.CloneDataFrom(undoInf);
+                if (infantry.Trigger == null || (!Trigger.None.Equals(infantry.Trigger, StringComparison.InvariantCultureIgnoreCase)
+                    && !ev.Map.FilterUnitTriggers().Any(tr => tr.Name.Equals(infantry.Trigger, StringComparison.InvariantCultureIgnoreCase))))
+                {
+                    infantry.Trigger = Trigger.None;
+                }
+                ev.MapPanel.Invalidate(ev.Map, infantry.InfantryGroup);
+            }
+            void redoAction(UndoRedoEventArgs ev)
+            {
+                infantry.CloneDataFrom(redoInf);
+                if (infantry.Trigger == null || (!Trigger.None.Equals(infantry.Trigger, StringComparison.InvariantCultureIgnoreCase)
+                    && !ev.Map.FilterUnitTriggers().Any(tr => tr.Name.Equals(infantry.Trigger, StringComparison.InvariantCultureIgnoreCase))))
+                {
+                    infantry.Trigger = Trigger.None;
+                }
+                ev.MapPanel.Invalidate(ev.Map, infantry.InfantryGroup);
+            }
+            url.Track(undoAction, redoAction);
         }
 
         private void MockInfantry_PropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -292,10 +324,82 @@ namespace MobiusEditor.Tools
 
         private void MapPanel_MouseUp(object sender, MouseEventArgs e)
         {
-            if (selectedInfantry != null)
+            if (selectedInfantry != null && selectedInfantryLocation.HasValue && selectedInfantryStop != -1)
             {
+                AddMoveUndoTracking(selectedInfantry, selectedInfantryLocation.Value, selectedInfantryStop);
                 selectedInfantry = null;
+                selectedInfantryLocation = null;
+                selectedInfantryStop = -1;
                 UpdateStatus();
+            }
+        }
+
+        private void AddMoveUndoTracking(Infantry toMove, Point startLocation, int startStop)
+        {
+            Point? finalLocation = map.Technos[toMove.InfantryGroup].Value;
+            int finalStop = Array.IndexOf(toMove.InfantryGroup.Infantry, selectedInfantry);
+            if (finalLocation.HasValue && finalStop != -1 && (finalLocation.Value != startLocation || finalStop != startStop))
+            {
+                Point endLocation = finalLocation.Value;
+                void undoAction(UndoRedoEventArgs ev)
+                {
+                    InfantryGroup startGroup = ev.Map.Technos[startLocation] as InfantryGroup;
+                    InfantryGroup finalGroup = ev.Map.Technos[endLocation] as InfantryGroup;
+                    if (startGroup == finalGroup)
+                    {
+                        ev.MapPanel.Invalidate(ev.Map, startGroup);
+                        startGroup.Infantry[startStop] = toMove;
+                        startGroup.Infantry[finalStop] = null;
+                        toMove.InfantryGroup = startGroup;
+                    }
+                    else
+                    {
+                        if (startGroup == null)
+                        {
+                            startGroup = new InfantryGroup();
+                            ev.Map.Technos.Add(startLocation, startGroup);
+                        }
+                        startGroup.Infantry[startStop] = toMove;
+                        toMove.InfantryGroup = startGroup;
+                        ev.MapPanel.Invalidate(ev.Map, startGroup);
+                        finalGroup.Infantry[finalStop] = null;
+                        ev.MapPanel.Invalidate(ev.Map, finalGroup);
+                        if (finalGroup.Infantry.All(x => x == null))
+                        {
+                            ev.Map.Technos.Remove(finalGroup);
+                        }
+                    }
+                }
+                void redoAction(UndoRedoEventArgs ev)
+                {
+                    InfantryGroup startGroup = ev.Map.Technos[startLocation] as InfantryGroup;
+                    InfantryGroup finalGroup = ev.Map.Technos[endLocation] as InfantryGroup;
+                    if (finalGroup == startGroup)
+                    {
+                        ev.MapPanel.Invalidate(ev.Map, finalGroup);
+                        finalGroup.Infantry[startStop] = null;
+                        finalGroup.Infantry[finalStop] = toMove;
+                        toMove.InfantryGroup = finalGroup;
+                    }
+                    else
+                    {
+                        if (finalGroup == null)
+                        {
+                            finalGroup = new InfantryGroup();
+                            ev.Map.Technos.Add(endLocation, finalGroup);
+                        }
+                        finalGroup.Infantry[startStop] = toMove;
+                        toMove.InfantryGroup = finalGroup;
+                        ev.MapPanel.Invalidate(ev.Map, finalGroup);
+                        startGroup.Infantry[finalStop] = null;
+                        ev.MapPanel.Invalidate(ev.Map, startGroup);
+                        if (startGroup.Infantry.All(x => x == null))
+                        {
+                            ev.Map.Technos.Remove(startGroup);
+                        }
+                    }
+                }
+                url.Track(undoAction, redoAction);
             }
         }
 
@@ -313,61 +417,130 @@ namespace MobiusEditor.Tools
 
         private void AddInfantry(Point location)
         {
-            if (SelectedInfantryType != null)
+            if (SelectedInfantryType == null)
             {
-                if (map.Metrics.GetCell(location, out int cell))
+                return;
+            }
+            if (!map.Metrics.GetCell(location, out int cell))
+            {
+                return;
+            }
+            InfantryGroup infantryGroup = null;
+            var techno = map.Technos[cell];
+            if (techno == null)
+            {
+                infantryGroup = new InfantryGroup();
+                map.Technos.Add(cell, infantryGroup);
+            }
+            else if (techno is InfantryGroup)
+            {
+                infantryGroup = techno as InfantryGroup;
+            }
+            if (infantryGroup != null)
+            {
+                foreach (var placeStop in InfantryGroup.ClosestStoppingTypes(navigationWidget.MouseSubPixel).Cast<int>())
                 {
-                    InfantryGroup infantryGroup = null;
-                    var techno = map.Technos[cell];
-                    if (techno == null)
+                    if (infantryGroup.Infantry[placeStop] != null)
                     {
-                        infantryGroup = new InfantryGroup();
-                        map.Technos.Add(cell, infantryGroup);
+                        continue;
                     }
-                    else if (techno is InfantryGroup)
+                    var infantry = mockInfantry.Clone();
+                    infantryGroup.Infantry[placeStop] = infantry;
+                    infantry.InfantryGroup = infantryGroup;
+                    mapPanel.Invalidate(map, infantryGroup);
+                    void undoAction(UndoRedoEventArgs ev)
                     {
-                        infantryGroup = techno as InfantryGroup;
-                    }
-                    if (infantryGroup != null)
-                    {
-                        foreach (var i in InfantryGroup.ClosestStoppingTypes(navigationWidget.MouseSubPixel).Cast<int>())
+                        InfantryGroup placeGroup = ev.Map.Technos[cell] as InfantryGroup;
+                        if (placeGroup != null && placeGroup.Infantry[placeStop] != null)
                         {
-                            if (infantryGroup.Infantry[i] == null)
+                            placeGroup.Infantry[placeStop] = null;
+                            mapPanel.Invalidate(map, placeGroup);
+                            if (placeGroup.Infantry.All(x => x == null))
                             {
-                                var infantry = mockInfantry.Clone();
-                                infantryGroup.Infantry[i] = infantry;
-                                infantry.InfantryGroup = infantryGroup;
-                                mapPanel.Invalidate(map, infantryGroup);
-                                plugin.Dirty = true;
-                                break;
+                                ev.Map.Technos.Remove(placeGroup);
                             }
+                            plugin.Dirty = true;
                         }
                     }
+                    void redoAction(UndoRedoEventArgs ev)
+                    {
+                        ICellOccupier occupier = ev.Map.Technos[cell];
+                        InfantryGroup placeGroup = occupier as InfantryGroup;
+                        if (occupier == null)
+                        {
+                            placeGroup = new InfantryGroup();
+                            ev.Map.Technos.Add(cell, placeGroup);
+                        }
+                        if (placeGroup != null)
+                        {
+                            ev.MapPanel.Invalidate(ev.Map, placeGroup);
+                            placeGroup.Infantry[placeStop] = infantry;
+                            infantry.InfantryGroup = placeGroup;
+                        }
+                    }
+                    url.Track(undoAction, redoAction);
+                    plugin.Dirty = true;
+                    break;
                 }
             }
         }
 
         private void RemoveInfantry(Point location)
         {
-            if (map.Metrics.GetCell(location, out int cell))
+            if (!map.Metrics.GetCell(location, out int cell))
             {
-                if (map.Technos[cell] is InfantryGroup infantryGroup)
+                return;
+            }
+            if (!(map.Technos[cell] is InfantryGroup infantryGroup))
+            {
+                return;
+            }
+            foreach (var placeStop in InfantryGroup.ClosestStoppingTypes(navigationWidget.MouseSubPixel).Cast<int>())
+            {
+                Infantry delInf = infantryGroup.Infantry[placeStop];
+                if (delInf == null)
                 {
-                    foreach (var i in InfantryGroup.ClosestStoppingTypes(navigationWidget.MouseSubPixel).Cast<int>())
+                    continue;
+                }
+                infantryGroup.Infantry[placeStop] = null;
+                mapPanel.Invalidate(map, infantryGroup);
+                plugin.Dirty = true;
+                if (infantryGroup.Infantry.All(x => x == null))
+                {
+                    map.Technos.Remove(infantryGroup);
+                }
+                void undoAction(UndoRedoEventArgs ev)
+                {
+                    ICellOccupier occupier = ev.Map.Technos[cell];
+                    InfantryGroup placeGroup = occupier as InfantryGroup;
+                    if (occupier == null)
                     {
-                        if (infantryGroup.Infantry[i] != null)
-                        {
-                            infantryGroup.Infantry[i] = null;
-                            mapPanel.Invalidate(map, infantryGroup);
-                            plugin.Dirty = true;
-                            break;
-                        }
+                        placeGroup = new InfantryGroup();
+                        ev.Map.Technos.Add(cell, placeGroup);
                     }
-                    if (infantryGroup.Infantry.All(i => i == null))
+                    if (placeGroup != null)
                     {
-                        map.Technos.Remove(infantryGroup);
+                        ev.MapPanel.Invalidate(ev.Map, placeGroup);
+                        placeGroup.Infantry[placeStop] = delInf;
+                        delInf.InfantryGroup = placeGroup;
                     }
                 }
+                void redoAction(UndoRedoEventArgs ev)
+                {
+                    InfantryGroup placeGroup = ev.Map.Technos[cell] as InfantryGroup;
+                    if (placeGroup != null && placeGroup.Infantry[placeStop] != null)
+                    {
+                        placeGroup.Infantry[placeStop] = null;
+                        mapPanel.Invalidate(map, placeGroup);
+                        if (placeGroup.Infantry.All(x => x == null))
+                        {
+                            ev.Map.Technos.Remove(placeGroup);
+                        }
+                        plugin.Dirty = true;
+                    }
+                }
+                url.Track(undoAction, redoAction);
+                break;
             }
         }
 
@@ -425,15 +598,19 @@ namespace MobiusEditor.Tools
 
         private void SelectInfantry(Point location)
         {
+            selectedInfantry = null;
+            selectedInfantryLocation = null;
+            selectedInfantryStop = -1;
             if (map.Metrics.GetCell(location, out int cell))
             {
-                selectedInfantry = null;
                 if (map.Technos[cell] is InfantryGroup infantryGroup)
                 {
                     var i = InfantryGroup.ClosestStoppingTypes(navigationWidget.MouseSubPixel).Cast<int>().First();
                     if (infantryGroup.Infantry[i] is Infantry infantry)
                     {
                         selectedInfantry = infantry;
+                        selectedInfantryLocation = location;
+                        selectedInfantryStop = i;
                     }
                 }
             }

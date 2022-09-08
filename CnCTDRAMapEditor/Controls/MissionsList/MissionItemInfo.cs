@@ -1,11 +1,9 @@
 ﻿using MobiusEditor.Controls.ControlsList;
 using MobiusEditor.Model;
-using MobiusEditor.Tools;
+using MobiusEditor.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace MobiusEditor.Controls
