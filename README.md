@@ -281,6 +281,7 @@ v1.4.2.1: [WIP]
 * The amount of stored undo/redo actions can now be set in the "UndoRedoStackSize" setting in "CnCTDRAMapEditor.exe.config".
 * Undo/Redo actions can be cleared using a new option in the Edit menu. This can be used in case too many might make the editor laggy.
 * Disabling Aftermath units will now clear the Undo/Redo history, to avoid conflicts.
+* Fixed undo/redo of map bounds dragging; it was severely bugged and often reduced the bounds to minimum size.
 
 ### Possible future features
 

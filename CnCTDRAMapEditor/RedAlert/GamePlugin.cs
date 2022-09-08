@@ -698,7 +698,7 @@ namespace MobiusEditor.RedAlert
                                 var templateType = Map.TemplateTypes.Where(t => t.Equals(typeValue)).FirstOrDefault();
                                 if (templateType == null && typeValue != 0xFFFF)
                                 {
-                                    errors.Add(String.Format("Unknown template value {0:X2} at cell [{1},{2}]; clearing.", typeValue, x, y));
+                                    errors.Add(String.Format("Unknown template value {0:X4} at cell [{1},{2}]; clearing.", typeValue, x, y));
                                 }
                                 else if (templateType != null)
                                 {
@@ -732,8 +732,9 @@ namespace MobiusEditor.RedAlert
                                         if (typeValue == 255 && !clearedOldClear)
                                         {
                                             // This means 255 is allowed, and we're in Interior theater.
-                                            if (!Map.Bounds.IntersectsWith(new Rectangle(x, y, 1, 1)))
+                                            if (!Map.Bounds.Contains(x, y))
                                             {
+                                                // Only count tiles outside the map borders, for the 80% check.
                                                 oldClearCount++;
                                             }
                                         }

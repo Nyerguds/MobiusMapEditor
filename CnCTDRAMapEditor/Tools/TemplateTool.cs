@@ -1032,6 +1032,7 @@ namespace MobiusEditor.Tools
             if (dragBounds != map.Bounds)
             {
                 var oldBounds = map.Bounds;
+                var newBounds = dragBounds;
                 void undoAction(UndoRedoEventArgs ure)
                 {
                     ure.Map.Bounds = oldBounds;
@@ -1039,10 +1040,10 @@ namespace MobiusEditor.Tools
                 }
                 void redoAction(UndoRedoEventArgs ure)
                 {
-                    ure.Map.Bounds = dragBounds;
+                    ure.Map.Bounds = newBounds;
                     ure.MapPanel.Invalidate();
                 }
-                map.Bounds = dragBounds;
+                map.Bounds = newBounds;
                 plugin.Dirty = true;
                 url.Track(undoAction, redoAction);
                 mapPanel.Invalidate();
