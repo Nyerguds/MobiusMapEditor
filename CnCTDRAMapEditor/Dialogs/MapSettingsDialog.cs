@@ -172,7 +172,7 @@ namespace MobiusEditor.Dialogs
                 {
                     // The actual cleanup this refers to can be found in the ViewTool class, in the BasicSection_PropertyChanged function.
                     // The undo/redo clearing is done in the MainForm function that opens this form.
-                    DialogResult dres = MessageBox.Show("Expansion units have been disabled. This will remove all expansion units currently present on the map and in team types.\n\nBecause of the complexity of this cleanup, this cannot be undone, and the Undo/Redo history will be cleared to avoid conflicts with previous-performed actions involving expansion units.\n\nAre you sure you want to continue?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2);
+                    DialogResult dres = MessageBox.Show("Expansion units have been disabled. This will remove all expansion units currently present on the map and in team types.\n\nBecause of its complexity, this cleanup cannot be undone, and the Undo/Redo history will be cleared to avoid conflicts with previous-performed actions involving expansion units.\n\nAre you sure you want to continue?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2);
                     if (dres != DialogResult.Yes)
                     {
                         e.Cancel = true;
