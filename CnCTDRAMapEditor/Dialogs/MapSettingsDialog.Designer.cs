@@ -55,8 +55,8 @@ namespace MobiusEditor.Dialogs
             // tableLayoutPanel1
             // 
             this.tableLayoutPanel1.ColumnCount = 2;
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 20F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 80F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 30F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 70F));
             this.tableLayoutPanel1.Controls.Add(this.flowLayoutPanel1, 0, 1);
             this.tableLayoutPanel1.Controls.Add(this.settingsTreeView, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.settingsPanel, 1, 0);
@@ -66,7 +66,7 @@ namespace MobiusEditor.Dialogs
             this.tableLayoutPanel1.RowCount = 2;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(784, 561);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(600, 461);
             this.tableLayoutPanel1.TabIndex = 0;
             // 
             // flowLayoutPanel1
@@ -78,16 +78,16 @@ namespace MobiusEditor.Dialogs
             this.flowLayoutPanel1.Controls.Add(this.btnOK);
             this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.flowLayoutPanel1.FlowDirection = System.Windows.Forms.FlowDirection.RightToLeft;
-            this.flowLayoutPanel1.Location = new System.Drawing.Point(3, 524);
+            this.flowLayoutPanel1.Location = new System.Drawing.Point(3, 424);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(778, 34);
+            this.flowLayoutPanel1.Size = new System.Drawing.Size(594, 34);
             this.flowLayoutPanel1.TabIndex = 1;
             // 
             // btnCancel
             // 
             this.btnCancel.AutoSize = true;
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(708, 2);
+            this.btnCancel.Location = new System.Drawing.Point(524, 2);
             this.btnCancel.Margin = new System.Windows.Forms.Padding(2);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(68, 30);
@@ -99,7 +99,7 @@ namespace MobiusEditor.Dialogs
             // 
             this.btnOK.AutoSize = true;
             this.btnOK.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.btnOK.Location = new System.Drawing.Point(654, 2);
+            this.btnOK.Location = new System.Drawing.Point(470, 2);
             this.btnOK.Margin = new System.Windows.Forms.Padding(2);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(50, 30);
@@ -115,7 +115,7 @@ namespace MobiusEditor.Dialogs
             this.settingsTreeView.HideSelection = false;
             this.settingsTreeView.Location = new System.Drawing.Point(3, 3);
             this.settingsTreeView.Name = "settingsTreeView";
-            this.settingsTreeView.Size = new System.Drawing.Size(150, 515);
+            this.settingsTreeView.Size = new System.Drawing.Size(174, 415);
             this.settingsTreeView.TabIndex = 2;
             this.settingsTreeView.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.settingsTreeView_AfterCheck);
             this.settingsTreeView.DrawNode += new System.Windows.Forms.DrawTreeNodeEventHandler(this.settingsTreeView_DrawNode);
@@ -124,10 +124,10 @@ namespace MobiusEditor.Dialogs
             // settingsPanel
             // 
             this.settingsPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.settingsPanel.Location = new System.Drawing.Point(166, 10);
+            this.settingsPanel.Location = new System.Drawing.Point(190, 10);
             this.settingsPanel.Margin = new System.Windows.Forms.Padding(10);
             this.settingsPanel.Name = "settingsPanel";
-            this.settingsPanel.Size = new System.Drawing.Size(608, 501);
+            this.settingsPanel.Size = new System.Drawing.Size(400, 401);
             this.settingsPanel.TabIndex = 3;
             // 
             // MapSettingsDialog
@@ -135,11 +135,12 @@ namespace MobiusEditor.Dialogs
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(784, 561);
+            this.ClientSize = new System.Drawing.Size(600, 461);
             this.ControlBox = false;
             this.Controls.Add(this.tableLayoutPanel1);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
+            this.MinimumSize = new System.Drawing.Size(600, 500);
             this.Name = "MapSettingsDialog";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;

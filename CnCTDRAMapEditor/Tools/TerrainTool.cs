@@ -419,22 +419,24 @@ namespace MobiusEditor.Tools
         {
             base.PreRenderMap();
             previewMap = map.Clone();
-            if (placementMode)
+            if (!placementMode)
             {
-                var location = navigationWidget.MouseCell;
-                if (SelectedTerrainType != null)
+                return;
+            }
+            if (SelectedTerrainType == null)
+            {
+                return;
+            }
+            var location = navigationWidget.MouseCell;
+            if (previewMap.Metrics.Contains(location))
+            {
+                var terrain = new Terrain
                 {
-                    if (previewMap.Metrics.Contains(location))
-                    {
-                        var terrain = new Terrain
-                        {
-                            Type = SelectedTerrainType,
-                            Icon = SelectedTerrainType.DisplayIcon,
-                            Tint = Color.FromArgb(128, Color.White)
-                        };
-                        previewMap.Technos.Add(location, terrain);
-                    }
-                }
+                    Type = SelectedTerrainType,
+                    Icon = SelectedTerrainType.DisplayIcon,
+                    Tint = Color.FromArgb(128, Color.White)
+                };
+                previewMap.Technos.Add(location, terrain);
             }
         }
 

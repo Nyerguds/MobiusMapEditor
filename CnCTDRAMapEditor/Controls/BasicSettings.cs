@@ -48,11 +48,13 @@ namespace MobiusEditor.Controls
             loseComboBox.DataSource = movData.ToArray();
             carryOverMoneyNud.DataBindings.Add("Value", basicSection, "CarryOverMoney");
             nameTxt.DataBindings.Add("Text", basicSection, "Name");
-            percentNud.DataBindings.Add("Value", basicSection, "Percent");
+            // Disable "Percent"; it's a useless Dune II leftover.
+            //percentNud.DataBindings.Add("Value", basicSection, "Percent");
             percentNud.Visible = false;
             percentLabel.Visible = false;
             playerComboBox.DataBindings.Add("SelectedItem", basicSection, "Player");
             authorTxt.DataBindings.Add("Text", basicSection, "Author");
+            isSinglePlayerCheckBox.DataBindings.DefaultDataSourceUpdateMode = DataSourceUpdateMode.OnPropertyChanged;
             isSinglePlayerCheckBox.DataBindings.Add("Checked", basicSection, "SoloMission");
             themeComboBox.DataBindings.Add("Text", basicSection, "Theme");
             introComboBox.DataBindings.Add("Text", basicSection, "Intro");

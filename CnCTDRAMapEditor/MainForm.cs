@@ -152,6 +152,7 @@ namespace MobiusEditor
 
         private void SetTitle()
         {
+            //MessageBox.Show("setting title");
             string file = filename;
             if (plugin != null && file == null)
             {
@@ -544,10 +545,12 @@ namespace MobiusEditor
                 return;
             }
             bool expansionEnabled = plugin.Map.BasicSection.ExpansionEnabled;
+            bool rulesChanged = false;
             var basicSettings = new PropertyTracker<BasicSection>(plugin.Map.BasicSection);
             var briefingSettings = new PropertyTracker<BriefingSection>(plugin.Map.BriefingSection);
+            string extraIniText = (plugin.GameType == GameType.RedAlert ? plugin.ExtraIniText : String.Empty).Trim();
             var houseSettingsTrackers = plugin.Map.Houses.ToDictionary(h => h, h => new PropertyTracker<House>(h));
-            using (MapSettingsDialog msd = new MapSettingsDialog(plugin, basicSettings, briefingSettings, houseSettingsTrackers))
+            using (MapSettingsDialog msd = new MapSettingsDialog(plugin, basicSettings, briefingSettings, houseSettingsTrackers, extraIniText))
             {
                 msd.StartPosition = FormStartPosition.CenterParent;
                 if (msd.ShowDialog(this) == DialogResult.OK)
@@ -558,14 +561,20 @@ namespace MobiusEditor
                     {
                         houseSettingsTracker.Commit();
                     }
+                    if (plugin.GameType == GameType.RedAlert && !extraIniText.Equals(msd.ExtraIniText, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        plugin.ExtraIniText = msd.ExtraIniText;
+                        rulesChanged = true;
+                    }
                     plugin.Dirty = true;
                 }
             }
-            if (expansionEnabled && !plugin.Map.BasicSection.ExpansionEnabled)
+            if (rulesChanged || (expansionEnabled && !plugin.Map.BasicSection.ExpansionEnabled))
             {
-                // If Aftermath units were disbled, we can't guarantee none of them are still in
+                // If Aftermath units were disabled, we can't guarantee none of them are still in
                 // the undo/redo history, so the undo/redo history is cleared to avoid issues.
                 // The rest of the cleanup can be found in the ViewTool class, in the BasicSection_PropertyChanged function.
+                // Rule changes will clear undo to avoid conflicts with placed smudge types.
                 url.Clear();
             }
         }
@@ -649,6 +658,22 @@ namespace MobiusEditor
                 emb.Title = "Power usage";
                 emb.Message = "Power balance per House:";
                 emb.Errors = plugin.Map.AssessPower(plugin.GameType);
+                emb.StartPosition = FormStartPosition.CenterParent;
+                emb.ShowDialog(this);
+            }
+        }
+
+        private void ToolsStorageMenuItem_Click(Object sender, EventArgs e)
+        {
+            if (plugin == null)
+            {
+                return;
+            }
+            using (ErrorMessageBox emb = new ErrorMessageBox())
+            {
+                emb.Title = "Silo storage";
+                emb.Message = "Available silo storage per House:";
+                emb.Errors = plugin.Map.AssessStorage(plugin.GameType);
                 emb.StartPosition = FormStartPosition.CenterParent;
                 emb.ShowDialog(this);
             }
@@ -1129,7 +1154,7 @@ namespace MobiusEditor
             }
             ClearActiveTool();
             bool found = toolForms.TryGetValue(ActiveToolType, out IToolDialog toolDialog);
-            if (!found)
+            if (!found || (toolDialog is Form toolFrm && toolFrm.IsDisposed))
             {
                 switch (ActiveToolType)
                 {
@@ -1191,7 +1216,7 @@ namespace MobiusEditor
                 }
                 if (toolDialog != null)
                 {
-                    toolForms.Add(ActiveToolType, toolDialog);
+                    toolForms[ActiveToolType] = toolDialog;
                 }
             }
             MapLayerFlag active = ActiveLayers;

@@ -257,7 +257,7 @@ namespace MobiusEditor.Tools
                 redomap[p] = null;
                 map.Smudge[p] = null;
             }
-            RestoreNearbySmudge(undomap, redomap);
+            RestoreNearbySmudge(map, undomap.Keys, redomap);
             Point placeLocation = location;
             var basicSmudge = mockSmudge.Clone();
             for (int y = 0; y < size.Height; ++y)
@@ -287,6 +287,7 @@ namespace MobiusEditor.Tools
                 placeLocation.Y++;
             }
             mapPanel.Invalidate(map, undomap.Keys);
+            mapPanel.Invalidate(map, redomap.Keys);
             void undoAction(UndoRedoEventArgs e)
             {
                 e.MapPanel.Invalidate(e.Map, undomap.Keys);
@@ -316,8 +317,9 @@ namespace MobiusEditor.Tools
             // Clear points
             RemoveSmudgePoints(toClear, undomap, redomap);
             // Restore nearby bibs
-            RestoreNearbySmudge(undomap, redomap);
+            RestoreNearbySmudge(map, undomap.Keys, redomap);
             mapPanel.Invalidate(map, undomap.Keys);
+            mapPanel.Invalidate(map, redomap.Keys);
             // TODO
             void undoAction(UndoRedoEventArgs e)
             {
@@ -374,12 +376,16 @@ namespace MobiusEditor.Tools
             }
         }
 
-        private void RestoreNearbySmudge(Dictionary<Point, Smudge> undomap, Dictionary<Point, Smudge> redomap)
+        public static void RestoreNearbySmudge(Map map, IEnumerable<Point> points, Dictionary<Point, Smudge> redomap)
         {
+            if (points == null)
+            {
+                return;
+            }
             // Maximum size that can be occupied by multi-cell bibs.
             int maxW = map.SmudgeTypes.Where(sm => sm.IsMultiCell && !sm.IsAutoBib).Max(sm => sm.Size.Width);
             int maxH = map.SmudgeTypes.Where(sm => sm.IsMultiCell && !sm.IsAutoBib).Max(sm => sm.Size.Height);
-            foreach (Point loc in undomap.Keys.OrderBy(p => p.X).ThenByDescending(p => p.Y))
+            foreach (Point loc in points.OrderBy(p => p.X).ThenByDescending(p => p.Y))
             {
                 // scan smudges from bottom to top, right to left, to find if any cell from a nearby smudge should occupy this location.
                 Rectangle scanRect = new Rectangle(loc.X - maxW + 1, loc.Y - maxH + 1, maxW * 2 - 1, maxH * 2 - 1);
@@ -396,7 +402,10 @@ namespace MobiusEditor.Tools
                     {
                         Smudge fixSmudge = toFix.Clone();
                         fixSmudge.Icon = (loc.Y - fixBase.Y) * toFixType.Size.Width + loc.X - fixBase.X;
-                        redomap[loc] = fixSmudge;
+                        if (redomap != null)
+                        {
+                            redomap[loc] = fixSmudge;
+                        }
                         map.Smudge[loc] = fixSmudge;
                         break;
                     }
@@ -537,48 +546,49 @@ namespace MobiusEditor.Tools
 
         protected override void PreRenderMap()
         {
-            navigationWidget.MouseoverSize = Size.Empty;
             base.PreRenderMap();
             previewMap = map.Clone();
-            if (placementMode)
+            if (!placementMode)
             {
-                var location = navigationWidget.MouseCell;
-                SmudgeType selected = SelectedSmudgeType;
-                if (selected == null || !previewMap.Metrics.GetCell(location, out _))
+                return;
+            }
+            navigationWidget.MouseoverSize = Size.Empty;
+            var location = navigationWidget.MouseCell;
+            SmudgeType selected = SelectedSmudgeType;
+            if (selected == null || !previewMap.Metrics.GetCell(location, out _))
+            {
+                return;
+            }
+            int icon = 0;
+            Size size = selected.Size;
+            bool multiCell = selected.IsMultiCell;
+            Point placeLocation = location;
+            var basicSmudge = mockSmudge.Clone();
+            for (int y = 0; y < size.Height; ++y)
+            {
+                for (int x = 0; x < size.Width; ++x)
                 {
-                    return;
-                }
-                int icon = 0;
-                Size size = selected.Size;
-                bool multiCell = selected.IsMultiCell;
-                Point placeLocation = location;
-                var basicSmudge = mockSmudge.Clone();
-                for (int y = 0; y < size.Height; ++y)
-                {
-                    for (int x = 0; x < size.Width; ++x)
+                    placeLocation.X = location.X + x;
+                    var mock = basicSmudge.Clone();
+                    mock.Tint = Color.FromArgb(128, Color.White);
+                    if (multiCell)
                     {
-                        placeLocation.X = location.X + x;
-                        var mock = basicSmudge.Clone();
-                        mock.Tint = Color.FromArgb(128, Color.White);
-                        if (multiCell)
+                        mock.Icon = icon++;
+                    }
+                    Smudge oldSmudge = previewMap.Smudge[placeLocation];
+                    if (oldSmudge != null && oldSmudge.Type.IsAutoBib)
+                    {
+                        if (x == 0 && y == 0)
                         {
-                            mock.Icon = icon++;
-                        }
-                        Smudge oldSmudge = previewMap.Smudge[placeLocation];
-                        if (oldSmudge != null && oldSmudge.Type.IsAutoBib)
-                        {
-                            if (x == 0 && y == 0)
-                            {
-                                navigationWidget.MouseoverSize = new Size(1, 1);
-                            }
-                        }
-                        else
-                        {
-                            previewMap.Smudge[placeLocation] = mock;
+                            navigationWidget.MouseoverSize = new Size(1, 1);
                         }
                     }
-                    placeLocation.Y++;
+                    else
+                    {
+                        previewMap.Smudge[placeLocation] = mock;
+                    }
                 }
+                placeLocation.Y++;
             }
         }
 

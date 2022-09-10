@@ -20,6 +20,7 @@ using MobiusEditor.Render;
 using MobiusEditor.Utility;
 using MobiusEditor.Widgets;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
@@ -50,6 +51,7 @@ namespace MobiusEditor.Tools
 
         private Building selectedBuilding;
         private Point? selectedBuildingLocation;
+        private Dictionary<Point, Smudge> selectedBuildingEatenSmudge;
         private Point selectedBuildingPivot;
         private ObjectPropertiesPopup selectedObjectProperties;
 
@@ -90,7 +92,7 @@ namespace MobiusEditor.Tools
             };
             mockBuilding.PropertyChanged += MockBuilding_PropertyChanged;
             this.buildingTypesBox = buildingTypesBox;
-            this.buildingTypesBox.SelectedIndexChanged += UnitTypeComboBox_SelectedIndexChanged;
+            this.buildingTypesBox.SelectedIndexChanged += BuildingTypeComboBox_SelectedIndexChanged;
             this.buildingTypeMapPanel = buildingTypeMapPanel;
             this.buildingTypeMapPanel.BackColor = Color.White;
             this.buildingTypeMapPanel.MaxZoom = 1;
@@ -169,12 +171,12 @@ namespace MobiusEditor.Tools
             mapPanel.Invalidate(map, sender as Building);
         }
 
-        private void UnitTypeComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        private void BuildingTypeComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
             SelectedBuildingType = buildingTypesBox.SelectedValue as BuildingType;
         }
 
-        private void UnitTool_KeyDown(object sender, KeyEventArgs e)
+        private void BuildingTool_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.ShiftKey)
             {
@@ -182,7 +184,7 @@ namespace MobiusEditor.Tools
             }
         }
 
-        private void UnitTool_KeyUp(object sender, KeyEventArgs e)
+        private void BuildingTool_KeyUp(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.ShiftKey)
             {
@@ -235,6 +237,7 @@ namespace MobiusEditor.Tools
             if (selectedBuilding != null && selectedBuildingLocation.HasValue)
             {
                 AddMoveUndoTracking(selectedBuilding, selectedBuildingLocation.Value);
+                selectedBuildingEatenSmudge = null;
                 selectedBuilding = null;
                 selectedBuildingLocation = null;
                 selectedBuildingPivot = Point.Empty;
@@ -245,6 +248,7 @@ namespace MobiusEditor.Tools
         private void AddMoveUndoTracking(Building toMove, Point startLocation)
         {
             Point? finalLocation = map.Technos[toMove];
+            Dictionary<Point, Smudge> eaten = selectedBuildingEatenSmudge.ToDictionary(p => p.Key, p => p.Value);
             if (finalLocation.HasValue && finalLocation.Value != selectedBuildingLocation)
             {
                 Point endLocation = finalLocation.Value;
@@ -252,6 +256,18 @@ namespace MobiusEditor.Tools
                 {
                     ev.MapPanel.Invalidate(ev.Map, toMove);
                     ev.Map.Buildings.Remove(toMove);
+                    if (eaten != null)
+                    {
+                        foreach (Point p in eaten.Keys)
+                        {
+                            Smudge oldSmudge = ev.Map.Smudge[p];
+                            if (oldSmudge == null || !oldSmudge.Type.IsAutoBib)
+                            {
+                                ev.Map.Smudge[p] = eaten[p];
+                                // DO NOT REMOVE THE POINTS FROM "eaten": the undo might be done again in the future.
+                            }
+                        }
+                    }
                     ev.Map.Buildings.Add(startLocation, toMove);
                     ev.MapPanel.Invalidate(ev.Map, toMove);
                 }
@@ -259,6 +275,18 @@ namespace MobiusEditor.Tools
                 {
                     ev.MapPanel.Invalidate(ev.Map, toMove);
                     ev.Map.Buildings.Remove(toMove);
+                    if (eaten != null)
+                    {
+                        foreach (Point p in eaten.Keys)
+                        {
+                            Smudge oldSmudge = ev.Map.Smudge[p];
+                            if (oldSmudge == null || !oldSmudge.Type.IsAutoBib)
+                            {
+                                ev.Map.Smudge[p] = eaten[p];
+                                // DO NOT REMOVE THE POINTS FROM "eaten": the undo might be done again in the future.
+                            }
+                        }
+                    }
                     ev.Map.Buildings.Add(endLocation, toMove);
                     ev.MapPanel.Invalidate(ev.Map, toMove);
                 }
@@ -282,7 +310,54 @@ namespace MobiusEditor.Tools
                 var oldLocation = map.Technos[toMove].Value;
                 var newLocation = new Point(Math.Max(0, e.NewCell.X - selectedBuildingPivot.X), Math.Max(0, e.NewCell.Y - selectedBuildingPivot.Y));
                 mapPanel.Invalidate(map, toMove);
+                Point[] oldBibPoints = null;
+                Point[] newBibPoints = null;
+                Point[] allBibPoints = null;
+                Dictionary<Point, Smudge> refreshList = new Dictionary<Point, Smudge>();
+                if (toMove.Type.HasBib)
+                {
+                    oldBibPoints = map.Smudge.IntersectsWith(toMove.BibCells).Where(x => x.Value.Type.IsAutoBib)
+                        .Select(b => map.Metrics.GetLocation(b.Cell, out Point p) ? p : new Point(-1, -1)).Where(p => p.X >= 0 && p.Y >= 0).ToArray();
+                    Dictionary<Point, Smudge> newBib = toMove.GetBib(newLocation, map.SmudgeTypes);
+                    newBibPoints = newBib.Keys.ToArray();
+                    allBibPoints = oldBibPoints.Union(newBibPoints).ToArray();
+                    if (selectedBuildingEatenSmudge == null)
+                    {
+                        selectedBuildingEatenSmudge = new Dictionary<Point, Smudge>();
+                    }
+                    foreach (Point newBibPoint in newBibPoints)
+                    {
+                        Smudge oldSmudge = map.Smudge[newBibPoint];
+                        if (oldSmudge != null && !oldSmudge.Type.IsAutoBib && !selectedBuildingEatenSmudge.ContainsKey(newBibPoint)) {
+                            selectedBuildingEatenSmudge.Add(newBibPoint, oldSmudge);
+                        }
+                    }
+                }                
                 map.Buildings.Remove(toMove);
+                // All bib points are restored initially, so the RestoreNearbySmudge logic can do its magic on them.
+                if (allBibPoints != null && selectedBuildingEatenSmudge != null)
+                {
+                    foreach (Point p in allBibPoints)
+                    {
+                        if (selectedBuildingEatenSmudge.TryGetValue(p, out Smudge toRestore))
+                        {
+                            Smudge oldSmudge = map.Smudge[p];
+                            if (oldSmudge == null || !oldSmudge.Type.IsAutoBib)
+                            {
+                                map.Smudge[p] = toRestore;
+                                // Remove any points that are restored and no longer relevant to remember.
+                                if (!newBibPoints.Contains(p))
+                                {
+                                    selectedBuildingEatenSmudge.Remove(p);
+                                }
+                            }
+                        }
+                    }
+                }
+                if (allBibPoints != null)
+                {
+                    SmudgeTool.RestoreNearbySmudge(map, allBibPoints, refreshList);
+                }
                 if (map.Technos.CanAdd(newLocation, toMove, toMove.Type.BaseOccupyMask) && map.Buildings.Add(newLocation, toMove))
                 {
                     mapPanel.Invalidate(map, toMove);
@@ -292,77 +367,113 @@ namespace MobiusEditor.Tools
                 {
                     map.Buildings.Add(oldLocation, toMove);
                 }
+                mapPanel.Invalidate(map, refreshList.Keys);
             }
         }
 
         private void AddBuilding(Point location)
         {
-            if (SelectedBuildingType != null)
+            if (SelectedBuildingType == null)
             {
-                var building = mockBuilding.Clone();
-                if (map.Technos.CanAdd(location, building, building.Type.BaseOccupyMask) && map.Buildings.Add(location, building))
+                return;
+            }
+            var building = mockBuilding.Clone();
+            if (!map.Technos.CanAdd(location, building, building.Type.BaseOccupyMask))
+            {
+                return;
+            }
+            Dictionary<Point, Smudge> newBib = building.GetBib(location, map.SmudgeTypes);
+            Dictionary<Point, Smudge> eatenSmudge = null;
+            if (newBib != null)
+            {
+                Point[] newBibPoints = newBib.Keys.ToArray();
+                eatenSmudge = new Dictionary<Point, Smudge>();
+                foreach (Point newBibPoint in newBibPoints)
                 {
-                    Building[] baseBuildings = null;
-                    int[] buildingPrioritiesOld = null;
-                    Building[] baseBuildingsOrdered = null;
-                    if (building.BasePriority >= 0)
+                    Smudge oldSmudge = map.Smudge[newBibPoint];
+                    if (oldSmudge != null && !oldSmudge.Type.IsAutoBib && !eatenSmudge.ContainsKey(newBibPoint))
                     {
-                        baseBuildings = map.Buildings.OfType<Building>().Select(x => x.Occupier).Where(x => x.BasePriority >= 0).ToArray();
-                        buildingPrioritiesOld = new int[baseBuildings.Length];
+                        eatenSmudge.Add(newBibPoint, oldSmudge);
+                    }
+                }
+            }
+            selectedBuilding = null;
+            selectedBuildingLocation = null;
+            selectedBuildingPivot = Point.Empty;
+            if (map.Buildings.Add(location, building))
+            {
+                Building[] baseBuildings = null;
+                int[] buildingPrioritiesOld = null;
+                Building[] baseBuildingsOrdered = null;
+                if (building.BasePriority >= 0)
+                {
+                    baseBuildings = map.Buildings.OfType<Building>().Select(x => x.Occupier).Where(x => x.BasePriority >= 0).ToArray();
+                    buildingPrioritiesOld = new int[baseBuildings.Length];
+                    for (Int32 i = 0; i < baseBuildings.Length; ++i)
+                    {
+                        Building baseBuilding = baseBuildings[i];
+                        buildingPrioritiesOld[i] = baseBuilding.BasePriority;
+                        if ((building != baseBuilding) && (baseBuilding.BasePriority >= building.BasePriority))
+                        {
+                            baseBuilding.BasePriority++;
+                        }
+                    }
+                    baseBuildingsOrdered = baseBuildings.OrderBy(x => x.BasePriority).ToArray();
+                    for (var i = 0; i < baseBuildingsOrdered.Length; ++i)
+                    {
+                        baseBuildingsOrdered[i].BasePriority = i;
+                    }
+                    foreach (var baseBuilding in baseBuildings)
+                    {
+                        mapPanel.Invalidate(map, baseBuilding);
+                    }
+                }
+                mapPanel.Invalidate(map, building);
+                void undoAction(UndoRedoEventArgs e)
+                {
+                    e.MapPanel.Invalidate(e.Map, building);
+                    e.Map.Buildings.Remove(building);
+                    if (eatenSmudge != null)
+                    {
+                        foreach (Point p in eatenSmudge.Keys)
+                        {
+                            Smudge oldSmudge = e.Map.Smudge[p];
+                            if (oldSmudge == null || !oldSmudge.Type.IsAutoBib)
+                            {
+                                e.Map.Smudge[p] = eatenSmudge[p];
+                                // DO NOT REMOVE THE POINTS FROM "eatenSmudge": the undo might be done again in the future.
+                            }
+                        }
+                    }
+                    if (baseBuildings != null && buildingPrioritiesOld != null && baseBuildings.Length == buildingPrioritiesOld.Length)
+                    {
                         for (Int32 i = 0; i < baseBuildings.Length; ++i)
                         {
-                            Building baseBuilding = baseBuildings[i];
-                            buildingPrioritiesOld[i] = baseBuilding.BasePriority;
-                            if ((building != baseBuilding) && (baseBuilding.BasePriority >= building.BasePriority))
+                            Building bld = baseBuildings[i];
+                            if (building != bld)
                             {
-                                baseBuilding.BasePriority++;
-                            }
-                        }
-                        baseBuildingsOrdered = baseBuildings.OrderBy(x => x.BasePriority).ToArray();
-                        for (var i = 0; i < baseBuildingsOrdered.Length; ++i)
-                        {
-                            baseBuildingsOrdered[i].BasePriority = i;
-                        }
-                        foreach (var baseBuilding in baseBuildings)
-                        {
-                            mapPanel.Invalidate(map, baseBuilding);
-                        }
-                    }
-                    mapPanel.Invalidate(map, building);
-                    void undoAction(UndoRedoEventArgs e)
-                    {
-                        e.MapPanel.Invalidate(e.Map, building);
-                        e.Map.Buildings.Remove(building);
-                        if (baseBuildings != null && buildingPrioritiesOld != null && baseBuildings.Length == buildingPrioritiesOld.Length)
-                        {
-                            for (Int32 i = 0; i < baseBuildings.Length; ++i)
-                            {
-                                Building bld = baseBuildings[i];
-                                if (building != bld)
-                                {
-                                    bld.BasePriority = buildingPrioritiesOld[i];
-                                    e.MapPanel.Invalidate(map, bld);
-                                }
+                                bld.BasePriority = buildingPrioritiesOld[i];
+                                e.MapPanel.Invalidate(map, bld);
                             }
                         }
                     }
-                    void redoAction(UndoRedoEventArgs e)
-                    {
-                        e.Map.Buildings.Add(location, building);
-                        if (baseBuildingsOrdered != null)
-                        {
-                            for (Int32 i = 0; i < baseBuildingsOrdered.Length; ++i)
-                            {
-                                Building bld = baseBuildingsOrdered[i];
-                                bld.BasePriority = i;
-                                e.MapPanel.Invalidate(e.Map, bld);
-                            }
-                        }
-                        e.MapPanel.Invalidate(e.Map, building);
-                    }
-                    url.Track(undoAction, redoAction);
-                    plugin.Dirty = true;
                 }
+                void redoAction(UndoRedoEventArgs e)
+                {
+                    e.Map.Buildings.Add(location, building);
+                    if (baseBuildingsOrdered != null)
+                    {
+                        for (Int32 i = 0; i < baseBuildingsOrdered.Length; ++i)
+                        {
+                            Building bld = baseBuildingsOrdered[i];
+                            bld.BasePriority = i;
+                            e.MapPanel.Invalidate(e.Map, bld);
+                        }
+                    }
+                    e.MapPanel.Invalidate(e.Map, building);
+                }
+                url.Track(undoAction, redoAction);
+                plugin.Dirty = true;
             }
         }
 
@@ -370,11 +481,14 @@ namespace MobiusEditor.Tools
         {
             if (map.Buildings[location] is Building building)
             {
+                Point actualPoint = map.Buildings[building].Value;
                 Building[] baseBuildings = null;
                 int[] buildingPrioritiesOld = null;
 
+                Point[] bibPoints = building.GetBib(actualPoint, map.SmudgeTypes)?.Keys?.ToArray();
                 mapPanel.Invalidate(map, building);
                 map.Buildings.Remove(building);
+                SmudgeTool.RestoreNearbySmudge(map, bibPoints, null);
                 if (building.BasePriority >= 0)
                 {
                     baseBuildings = map.Buildings.OfType<Building>().Select(x => x.Occupier).Where(x => x.BasePriority >= 0).OrderBy(x => x.BasePriority).ToArray();
@@ -391,7 +505,7 @@ namespace MobiusEditor.Tools
                 }
                 void undoAction(UndoRedoEventArgs e)
                 {
-                    e.Map.Buildings.Add(location, building);
+                    e.Map.Buildings.Add(actualPoint, building);
                     if (baseBuildings != null && buildingPrioritiesOld != null && baseBuildings.Length == buildingPrioritiesOld.Length)
                     {
                         for (Int32 i = 0; i < baseBuildings.Length; ++i)
@@ -407,6 +521,7 @@ namespace MobiusEditor.Tools
                 {
                     e.MapPanel.Invalidate(e.Map, building);
                     e.Map.Buildings.Remove(building);
+                    SmudgeTool.RestoreNearbySmudge(map, bibPoints, null);
                     if (baseBuildings != null)
                     {
                         for (Int32 i = 0; i < baseBuildings.Length; ++i)
@@ -473,6 +588,7 @@ namespace MobiusEditor.Tools
 
         private void SelectBuilding(Point location)
         {
+            selectedBuildingEatenSmudge = null;
             selectedBuilding = null;
             selectedBuildingLocation = null;
             selectedBuildingPivot = Point.Empty;
@@ -481,6 +597,7 @@ namespace MobiusEditor.Tools
                 Building selected = map.Buildings[cell] as Building;
                 Point? selectedLocation = selected != null ? map.Buildings[selected] : null;
                 Point selectedPivot = selected != null ? location - (Size)selectedLocation : Point.Empty;
+                selectedBuildingEatenSmudge = new Dictionary<Point, Smudge>();
                 selectedBuilding = selected;
                 selectedBuildingLocation = selectedLocation;
                 selectedBuildingPivot = selectedPivot;
@@ -619,8 +736,8 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseDoubleClick += MapPanel_MouseDoubleClick;
             this.mapPanel.MouseMove += MapPanel_MouseMove;
             this.mapPanel.MouseLeave += MapPanel_MouseLeave;
-            (this.mapPanel as Control).KeyDown += UnitTool_KeyDown;
-            (this.mapPanel as Control).KeyUp += UnitTool_KeyUp;
+            (this.mapPanel as Control).KeyDown += BuildingTool_KeyDown;
+            (this.mapPanel as Control).KeyUp += BuildingTool_KeyUp;
             this.navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
             UpdateStatus();
         }
@@ -633,8 +750,8 @@ namespace MobiusEditor.Tools
             mapPanel.MouseDoubleClick -= MapPanel_MouseDoubleClick;
             mapPanel.MouseMove -= MapPanel_MouseMove;
             mapPanel.MouseLeave -= MapPanel_MouseLeave;
-            (mapPanel as Control).KeyDown -= UnitTool_KeyDown;
-            (mapPanel as Control).KeyUp -= UnitTool_KeyUp;
+            (mapPanel as Control).KeyDown -= BuildingTool_KeyDown;
+            (mapPanel as Control).KeyUp -= BuildingTool_KeyUp;
             navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;
         }
 
@@ -648,7 +765,7 @@ namespace MobiusEditor.Tools
                 if (disposing)
                 {
                     Deactivate();
-                    buildingTypesBox.SelectedIndexChanged -= UnitTypeComboBox_SelectedIndexChanged;
+                    buildingTypesBox.SelectedIndexChanged -= BuildingTypeComboBox_SelectedIndexChanged;
                 }
                 disposedValue = true;
             }

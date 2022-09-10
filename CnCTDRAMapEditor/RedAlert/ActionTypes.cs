@@ -31,7 +31,7 @@ namespace MobiusEditor.RedAlert
         public const string TACTION_DZ = "Drop Zone Flare (waypoint)...";
         public const string TACTION_FIRE_SALE = "Fire Sale...";
         public const string TACTION_PLAY_MOVIE = "Play Movie...";
-        public const string TACTION_TEXT_TRIGGER = "Text Trigger (ID num)...";
+        public const string TACTION_TEXT_TRIGGER = "Text Trigger...";
         public const string TACTION_DESTROY_TRIGGER = "Destroy Trigger...";
         public const string TACTION_AUTOCREATE = "Autocreate Begins...";
         public const string TACTION_WINLOSE = ""; // The remains of TD's "Cap=Win/Des=Lose" trigger

@@ -660,39 +660,41 @@ namespace MobiusEditor.Tools
         protected override void PreRenderMap()
         {
             base.PreRenderMap();
-
             previewMap = map.Clone();
-            if (placementMode)
+            if (!placementMode)
             {
-                var location = navigationWidget.MouseCell;
-                if (SelectedInfantryType != null)
+                return;
+            }
+            var location = navigationWidget.MouseCell;
+            if (SelectedInfantryType == null)
+            {
+                return;
+            }
+            if (!previewMap.Metrics.GetCell(location, out int cell))
+            {
+                return;
+            }
+            InfantryGroup infantryGroup;
+            var techno = previewMap.Technos[cell];
+            if (techno == null)
+            {
+                infantryGroup = new InfantryGroup();
+                previewMap.Technos.Add(cell, infantryGroup);
+            }
+            else
+            {
+                infantryGroup = techno as InfantryGroup;
+            }
+            if (infantryGroup != null)
+            {
+                foreach (var i in InfantryGroup.ClosestStoppingTypes(navigationWidget.MouseSubPixel).Cast<int>())
                 {
-                    if (previewMap.Metrics.GetCell(location, out int cell))
+                    if (infantryGroup.Infantry[i] == null)
                     {
-                        InfantryGroup infantryGroup = null;
-                        var techno = previewMap.Technos[cell];
-                        if (techno == null)
-                        {
-                            infantryGroup = new InfantryGroup();
-                            previewMap.Technos.Add(cell, infantryGroup);
-                        }
-                        else if (techno is InfantryGroup)
-                        {
-                            infantryGroup = techno as InfantryGroup;
-                        }
-                        if (infantryGroup != null)
-                        {
-                            foreach (var i in InfantryGroup.ClosestStoppingTypes(navigationWidget.MouseSubPixel).Cast<int>())
-                            {
-                                if (infantryGroup.Infantry[i] == null)
-                                {
-                                    var infantry = mockInfantry.Clone();
-                                    infantry.Tint = Color.FromArgb(128, Color.White);
-                                    infantryGroup.Infantry[i] = infantry;
-                                    break;
-                                }
-                            }
-                        }
+                        var infantry = mockInfantry.Clone();
+                        infantry.Tint = Color.FromArgb(128, Color.White);
+                        infantryGroup.Infantry[i] = infantry;
+                        break;
                     }
                 }
             }

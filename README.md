@@ -282,6 +282,16 @@ v1.4.2.1: [WIP]
 * Undo/Redo actions can be cleared using a new option in the Edit menu. This can be used in case too many might make the editor laggy.
 * Disabling Aftermath units will now clear the Undo/Redo history, to avoid conflicts.
 * Fixed undo/redo of map bounds dragging; it was severely bugged and often reduced the bounds to minimum size.
+* Fixed bug where tool windows can be closed with Alt+F4, causing the editor to crash when trying to re-open them.
+* Fixed tab indices on the "New Map" dialog, so the radio buttons are selected by default.
+* Mobile Radar Jammer and Mobile Gap Generator now show different facings for their "turrets".
+* Fixed a bug in the power balance tool which made it ignore the first House
+* Added a silo storage capacity tool.
+* Added a section in the map settings for scenario-specific options in RA maps.
+* Added a rules editing field for RA maps that allows editing/adding ini sections not handled by the editor.
+* Dragging a building's bib over smudge will no longer remove the smudge, unless it's actually placed down on it.
+* Undoing a building's placement or moving will now restore any smudge the building's bib replaced.
+* Added map template fill mode ([Ctrl]+[Alt]+[Left-click]) and fill-clear mode ([Ctrl]+[Alt]+[Right-click]).
 
 ### Possible future features
 

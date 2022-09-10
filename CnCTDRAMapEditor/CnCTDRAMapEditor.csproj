@@ -177,6 +177,18 @@
     <Compile Include="Controls\PropertiesComboBox.Designer.cs">
       <DependentUpon>PropertiesComboBox.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\RulesSettings.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\RulesSettings.Designer.cs">
+      <DependentUpon>RulesSettings.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\ScenarioSettings.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\ScenarioSettings.Designer.cs">
+      <DependentUpon>ScenarioSettings.cs</DependentUpon>
+    </Compile>
     <Compile Include="Controls\SmudgeProperties.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -528,6 +540,7 @@
     <Compile Include="Tools\Dialogs\WaypointsToolDialog.Designer.cs">
       <DependentUpon>WaypointsToolDialog.cs</DependentUpon>
     </Compile>
+    <Compile Include="Utility\BlobDetection.cs" />
     <Compile Include="Utility\DropDownItem.cs" />
     <Compile Include="Tools\InfantryTool.cs" />
     <Compile Include="Tools\OverlaysTool.cs" />
@@ -578,6 +591,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\MissionsList\MissionItemControl.resx">
       <DependentUpon>MissionItemControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\RulesSettings.resx">
+      <DependentUpon>RulesSettings.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\ScenarioSettings.resx">
+      <DependentUpon>ScenarioSettings.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\SmudgeProperties.resx">
       <DependentUpon>SmudgeProperties.cs</DependentUpon>

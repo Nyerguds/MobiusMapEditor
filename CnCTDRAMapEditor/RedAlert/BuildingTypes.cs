@@ -35,8 +35,8 @@ namespace MobiusEditor.RedAlert
         public static readonly BuildingType AAGun = new BuildingType(9, "agun", "TEXT_STRUCTURE_RA_AGUN", 0, 50, new bool[2, 1] { { false }, { true } }, "Greece", BuildingTypeFlag.Turret);
         public static readonly BuildingType FlameTurret = new BuildingType(10, "ftur", "TEXT_STRUCTURE_RA_FTUR", 0, 20, new bool[1, 1] { { true } }, "USSR");
         public static readonly BuildingType Const = new BuildingType(11, "fact", "TEXT_STRUCTURE_RA_FACT", 0, 0, new bool[3, 3] { { true, true, true }, { true, true, true }, { true, true, true } }, "Greece", BuildingTypeFlag.Bib | BuildingTypeFlag.Factory);
-        public static readonly BuildingType Refinery = new BuildingType(12, "proc", "TEXT_STRUCTURE_RA_PROC", 0, 30, new bool[3, 3] { { false, true, false }, { true, true, true }, { true, false, false } }, "Greece", BuildingTypeFlag.Bib);
-        public static readonly BuildingType Storage = new BuildingType(13, "silo", "TEXT_STRUCTURE_RA_SILO", 0, 10, new bool[1, 1] { { true } }, "Greece");
+        public static readonly BuildingType Refinery = new BuildingType(12, "proc", "TEXT_STRUCTURE_RA_PROC", 0, 30, 2000, new bool[3, 3] { { false, true, false }, { true, true, true }, { true, false, false } }, "Greece", BuildingTypeFlag.Bib);
+        public static readonly BuildingType Storage = new BuildingType(13, "silo", "TEXT_STRUCTURE_RA_SILO", 0, 10, 1500, new bool[1, 1] { { true } }, "Greece");
         public static readonly BuildingType Helipad = new BuildingType(14, "hpad", "TEXT_STRUCTURE_RA_HPAD", 0, 10, new bool[2, 2] { { true, true }, { true, true } }, "Greece", BuildingTypeFlag.Bib);
         public static readonly BuildingType SAM = new BuildingType(15, "sam", "TEXT_STRUCTURE_RA_SAM", 0, 20, new bool[1, 2] { { true, true } }, "USSR", BuildingTypeFlag.Turret);
         public static readonly BuildingType AirStrip = new BuildingType(16, "afld", "TEXT_STRUCTURE_RA_AFLD", 0, 30, new bool[2, 3] { { true, true, true }, { true, true, true } }, "USSR");
@@ -108,6 +108,9 @@ namespace MobiusEditor.RedAlert
     {
         [DefaultValue(0)]
         public int Power { get; set; }
+
+        [DefaultValue(0)]
+        public int Storage { get; set; }
 
         [TypeConverter(typeof(OneZeroBooleanTypeConverter))]
         [DefaultValue(false)]

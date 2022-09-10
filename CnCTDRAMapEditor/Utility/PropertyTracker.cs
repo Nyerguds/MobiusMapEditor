@@ -26,6 +26,7 @@ namespace MobiusEditor.Utility
         private readonly T obj;
         private readonly PropertyInfo propertyInfo;
         private readonly Dictionary<string, object> propertyValues;
+        private PropertyTracker<T> updateNotifier;
 
         public override Type ComponentType => obj.GetType();
 
@@ -33,12 +34,13 @@ namespace MobiusEditor.Utility
 
         public override Type PropertyType => propertyInfo.PropertyType;
 
-        public TrackablePropertyDescriptor(string name, T obj, PropertyInfo propertyInfo, Dictionary<string, object> propertyValues)
+        public TrackablePropertyDescriptor(string name, T obj, PropertyInfo propertyInfo, Dictionary<string, object> propertyValues, PropertyTracker<T> updateNotifier)
             : base(name, null)
         {
             this.obj = obj;
             this.propertyInfo = propertyInfo;
             this.propertyValues = propertyValues;
+            this.updateNotifier = updateNotifier;
         }
 
         public override bool CanResetValue(object component)
@@ -70,6 +72,10 @@ namespace MobiusEditor.Utility
             {
                 propertyValues[Name] = value;
             }
+            if (updateNotifier != null)
+            {
+                updateNotifier.NotifyPropertyChanged(Name);
+            }
         }
 
         public override bool ShouldSerializeValue(object component)
@@ -82,6 +88,8 @@ namespace MobiusEditor.Utility
     {
         private readonly Dictionary<string, PropertyInfo> trackableProperties;
         private readonly Dictionary<string, object> propertyValues = new Dictionary<string, object>();
+
+        public event PropertyChangedEventHandler PropertyChanged;
 
         public T Object { get; private set; }
         
@@ -155,8 +163,17 @@ namespace MobiusEditor.Utility
             else
             {
                 propertyValues[binder.Name] = value;
+                NotifyPropertyChanged(binder.Name);
             }
             return true;
+        }
+
+        public void NotifyPropertyChanged(String name)
+        {
+            if (this.PropertyChanged != null)
+            {
+                this.PropertyChanged(this, new PropertyChangedEventArgs(name));
+            }
         }
 
         public AttributeCollection GetAttributes()
@@ -208,7 +225,7 @@ namespace MobiusEditor.Utility
         {
             var propertyDescriptors = trackableProperties.Select(kv =>
             {
-                return new TrackablePropertyDescriptor<T>(kv.Key, Object, kv.Value, propertyValues);
+                return new TrackablePropertyDescriptor<T>(kv.Key, Object, kv.Value, propertyValues, this);
             }).ToArray();
             return new PropertyDescriptorCollection(propertyDescriptors);
         }

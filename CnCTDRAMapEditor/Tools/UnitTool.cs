@@ -478,19 +478,18 @@ namespace MobiusEditor.Tools
         {
             base.PreRenderMap();
             previewMap = map.Clone();
-            if (placementMode)
+            if (!placementMode)
             {
-                var location = navigationWidget.MouseCell;
-                if (SelectedUnitType != null)
-                {
-                    var unit = mockUnit.Clone();
-                    unit.Tint = Color.FromArgb(128, Color.White);
-                    if (previewMap.Technos.Add(location, unit))
-                    {
-                        mapPanel.Invalidate(previewMap, unit);
-                    }
-                }
+                return;
             }
+            if (SelectedUnitType == null)
+            {
+                return;
+            }
+            var location = navigationWidget.MouseCell;
+            var unit = mockUnit.Clone();
+            unit.Tint = Color.FromArgb(128, Color.White);
+            previewMap.Technos.Add(location, unit);
         }
 
         protected override void PostRenderMap(Graphics graphics)

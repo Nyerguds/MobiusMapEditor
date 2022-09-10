@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Linq;
 using System.Runtime.CompilerServices;
 
 namespace MobiusEditor.Model
@@ -85,6 +86,38 @@ namespace MobiusEditor.Model
             Rebuild = other.Rebuild;
             // Copy internal value, not alpha-adjusted one.
             Tint = other.tint;
+        }
+
+        public Dictionary<Point, Smudge> GetBib(Point location, List<SmudgeType> smudgeTypes, Boolean ignoreActualStatus = false)
+        {
+            if (!Type.HasBib && !ignoreActualStatus)
+            {
+                return null;
+            }
+            SmudgeType bibType = SmudgeType.GetBib(smudgeTypes, Type.Size.Width);
+            // Theaters don't actually matter; invisible bibs in Interior are still seen as bibs.
+            if (bibType == null)// || bibType.Theaters != null && !bibType.Theaters.Contains(theater))
+            {
+                return null;
+            }
+            Dictionary<Point, Smudge> bibCells = new Dictionary<Point, Smudge>();
+            int icon = 0;
+            for (var y = 0; y < bibType.Size.Height; ++y)
+            {
+                for (var x = 0; x < bibType.Size.Width; ++x, ++icon)
+                {
+                    Point loc = new Point(location.X + x, location.Y + Type.Size.Height + y - 1);
+
+                    Smudge bibCell = new Smudge
+                    {
+                        Type = bibType,
+                        Icon = icon,
+                        Tint = this.Tint
+                    };
+                    bibCells[loc] = bibCell;
+                }
+            }
+            return bibCells;
         }
 
         protected bool SetField<T>(ref T field, T value, [CallerMemberName] string propertyName = null)

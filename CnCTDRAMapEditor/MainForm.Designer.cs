@@ -61,6 +61,7 @@ namespace MobiusEditor
             this.editToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editUndoMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editRedoMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.editClearUndoRedoMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.settingsMapSettingsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.settingsTeamTypesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -112,7 +113,7 @@ namespace MobiusEditor
             this.waypointsToolStripButton = new MobiusEditor.Controls.ViewToolStripButton();
             this.cellTriggersToolStripButton = new MobiusEditor.Controls.ViewToolStripButton();
             this.mapPanel = new MobiusEditor.Controls.MapPanel();
-            this.editClearUndoRedoMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolsStorageMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mainMenuStrip.SuspendLayout();
             this.mainStatusStrip.SuspendLayout();
             this.mainToolStrip.SuspendLayout();
@@ -243,7 +244,7 @@ namespace MobiusEditor
             // 
             this.editUndoMenuItem.Name = "editUndoMenuItem";
             this.editUndoMenuItem.ShortcutKeyDisplayString = "Ctrl + Z";
-            this.editUndoMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.editUndoMenuItem.Size = new System.Drawing.Size(165, 22);
             this.editUndoMenuItem.Text = "&Undo";
             this.editUndoMenuItem.Click += new System.EventHandler(this.EditUndoMenuItem_Click);
             // 
@@ -251,9 +252,16 @@ namespace MobiusEditor
             // 
             this.editRedoMenuItem.Name = "editRedoMenuItem";
             this.editRedoMenuItem.ShortcutKeyDisplayString = "Ctrl + Y";
-            this.editRedoMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.editRedoMenuItem.Size = new System.Drawing.Size(165, 22);
             this.editRedoMenuItem.Text = "&Redo";
             this.editRedoMenuItem.Click += new System.EventHandler(this.EditRedoMenuItem_Click);
+            // 
+            // editClearUndoRedoMenuItem
+            // 
+            this.editClearUndoRedoMenuItem.Name = "editClearUndoRedoMenuItem";
+            this.editClearUndoRedoMenuItem.Size = new System.Drawing.Size(165, 22);
+            this.editClearUndoRedoMenuItem.Text = "Clear Undo/Redo";
+            this.editClearUndoRedoMenuItem.Click += new System.EventHandler(this.EditClearUndoRedoMenuItem_Click);
             // 
             // settingsToolStripMenuItem
             // 
@@ -293,6 +301,7 @@ namespace MobiusEditor
             // 
             this.toolsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolsPowerMenuItem,
+            this.toolsStorageMenuItem,
             this.toolsExportImageMenuItem});
             this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
             this.toolsToolStripMenuItem.Size = new System.Drawing.Size(46, 20);
@@ -335,20 +344,20 @@ namespace MobiusEditor
             this.viewMapOverlayMenuItem,
             this.viewMapSmudgeMenuItem});
             this.mapToolStripMenuItem.Name = "mapToolStripMenuItem";
-            this.mapToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.mapToolStripMenuItem.Size = new System.Drawing.Size(126, 22);
             this.mapToolStripMenuItem.Text = "&Map";
             // 
             // viewMapEnableAllMenuItem
             // 
             this.viewMapEnableAllMenuItem.Name = "viewMapEnableAllMenuItem";
-            this.viewMapEnableAllMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.viewMapEnableAllMenuItem.Size = new System.Drawing.Size(129, 22);
             this.viewMapEnableAllMenuItem.Text = "Enable All";
             this.viewMapEnableAllMenuItem.Click += new System.EventHandler(this.ViewMapEnableAllMenuItem_Click);
             // 
             // viewMapDisableAllMenuItem
             // 
             this.viewMapDisableAllMenuItem.Name = "viewMapDisableAllMenuItem";
-            this.viewMapDisableAllMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.viewMapDisableAllMenuItem.Size = new System.Drawing.Size(129, 22);
             this.viewMapDisableAllMenuItem.Text = "Disable All";
             this.viewMapDisableAllMenuItem.Click += new System.EventHandler(this.ViewMapDisableAllMenuItem_Click);
             // 
@@ -358,7 +367,7 @@ namespace MobiusEditor
             this.viewMapBuildingsMenuItem.CheckOnClick = true;
             this.viewMapBuildingsMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.viewMapBuildingsMenuItem.Name = "viewMapBuildingsMenuItem";
-            this.viewMapBuildingsMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.viewMapBuildingsMenuItem.Size = new System.Drawing.Size(129, 22);
             this.viewMapBuildingsMenuItem.Text = "&Buildings";
             this.viewMapBuildingsMenuItem.CheckedChanged += new System.EventHandler(this.ViewMenuItem_CheckedChanged);
             // 
@@ -368,7 +377,7 @@ namespace MobiusEditor
             this.viewMapInfantryMenuItem.CheckOnClick = true;
             this.viewMapInfantryMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.viewMapInfantryMenuItem.Name = "viewMapInfantryMenuItem";
-            this.viewMapInfantryMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.viewMapInfantryMenuItem.Size = new System.Drawing.Size(129, 22);
             this.viewMapInfantryMenuItem.Text = "&Infantry";
             this.viewMapInfantryMenuItem.CheckedChanged += new System.EventHandler(this.ViewMenuItem_CheckedChanged);
             // 
@@ -378,7 +387,7 @@ namespace MobiusEditor
             this.viewMapUnitsMenuItem.CheckOnClick = true;
             this.viewMapUnitsMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.viewMapUnitsMenuItem.Name = "viewMapUnitsMenuItem";
-            this.viewMapUnitsMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.viewMapUnitsMenuItem.Size = new System.Drawing.Size(129, 22);
             this.viewMapUnitsMenuItem.Text = "&Units";
             this.viewMapUnitsMenuItem.CheckedChanged += new System.EventHandler(this.ViewMenuItem_CheckedChanged);
             // 
@@ -388,7 +397,7 @@ namespace MobiusEditor
             this.viewMapTerrainMenuItem.CheckOnClick = true;
             this.viewMapTerrainMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.viewMapTerrainMenuItem.Name = "viewMapTerrainMenuItem";
-            this.viewMapTerrainMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.viewMapTerrainMenuItem.Size = new System.Drawing.Size(129, 22);
             this.viewMapTerrainMenuItem.Text = "&Terrain";
             this.viewMapTerrainMenuItem.CheckedChanged += new System.EventHandler(this.ViewMenuItem_CheckedChanged);
             // 
@@ -398,7 +407,7 @@ namespace MobiusEditor
             this.viewMapOverlayMenuItem.CheckOnClick = true;
             this.viewMapOverlayMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.viewMapOverlayMenuItem.Name = "viewMapOverlayMenuItem";
-            this.viewMapOverlayMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.viewMapOverlayMenuItem.Size = new System.Drawing.Size(129, 22);
             this.viewMapOverlayMenuItem.Text = "&Overlay";
             this.viewMapOverlayMenuItem.CheckedChanged += new System.EventHandler(this.ViewMenuItem_CheckedChanged);
             // 
@@ -408,7 +417,7 @@ namespace MobiusEditor
             this.viewMapSmudgeMenuItem.CheckOnClick = true;
             this.viewMapSmudgeMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.viewMapSmudgeMenuItem.Name = "viewMapSmudgeMenuItem";
-            this.viewMapSmudgeMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.viewMapSmudgeMenuItem.Size = new System.Drawing.Size(129, 22);
             this.viewMapSmudgeMenuItem.Text = "&Smudge";
             this.viewMapSmudgeMenuItem.CheckedChanged += new System.EventHandler(this.ViewMenuItem_CheckedChanged);
             // 
@@ -424,7 +433,7 @@ namespace MobiusEditor
             this.viewIndicatorsBuildingRebuildLabelsMenuItem,
             this.viewIndicatorsBuildingFakeLabelsMenuItem});
             this.viewLabelsEnableAllMenuItem.Name = "viewLabelsEnableAllMenuItem";
-            this.viewLabelsEnableAllMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.viewLabelsEnableAllMenuItem.Size = new System.Drawing.Size(126, 22);
             this.viewLabelsEnableAllMenuItem.Text = "&Indicators";
             // 
             // viewIndicatorsEnableAllMenuItem
@@ -524,7 +533,7 @@ namespace MobiusEditor
             // developerGenerateMapPreviewDirectoryMenuItem
             // 
             this.developerGenerateMapPreviewDirectoryMenuItem.Name = "developerGenerateMapPreviewDirectoryMenuItem";
-            this.developerGenerateMapPreviewDirectoryMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.developerGenerateMapPreviewDirectoryMenuItem.Size = new System.Drawing.Size(131, 22);
             this.developerGenerateMapPreviewDirectoryMenuItem.Text = "&Directory...";
             this.developerGenerateMapPreviewDirectoryMenuItem.Click += new System.EventHandler(this.developerGenerateMapPreviewDirectoryMenuItem_Click);
             // 
@@ -743,12 +752,12 @@ namespace MobiusEditor
             this.mapPanel.DragEnter += new System.Windows.Forms.DragEventHandler(this.MapPanel_DragEnter);
             this.mapPanel.MouseMove += new System.Windows.Forms.MouseEventHandler(this.MapPanel_MouseMove);
             // 
-            // editClearUndoRedoMenuItem
+            // toolsStorageMenuItem
             // 
-            this.editClearUndoRedoMenuItem.Name = "editClearUndoRedoMenuItem";
-            this.editClearUndoRedoMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.editClearUndoRedoMenuItem.Text = "Clear Undo/Redo";
-            this.editClearUndoRedoMenuItem.Click += new System.EventHandler(this.EditClearUndoRedoMenuItem_Click);
+            this.toolsStorageMenuItem.Name = "toolsStorageMenuItem";
+            this.toolsStorageMenuItem.Size = new System.Drawing.Size(204, 22);
+            this.toolsStorageMenuItem.Text = "Silo Storage...";
+            this.toolsStorageMenuItem.Click += new System.EventHandler(this.ToolsStorageMenuItem_Click);
             // 
             // MainForm
             // 
@@ -847,6 +856,7 @@ namespace MobiusEditor
         private System.Windows.Forms.ToolStripMenuItem viewIndicatorsWaypointsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem viewIndicatorsCellTriggersMenuItem;
         private System.Windows.Forms.ToolStripMenuItem editClearUndoRedoMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem toolsStorageMenuItem;
     }
 }
 

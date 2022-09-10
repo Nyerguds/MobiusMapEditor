@@ -657,21 +657,28 @@ namespace MobiusEditor.Render
                     new Size(tileSize.Width / 2, tileSize.Height / 2);
                 var renderSize = unit.Type.GetRenderSize(tileSize);
                 var renderBounds = new Rectangle(location - new Size(renderSize.Width / 2, renderSize.Height / 2), renderSize);
-                Tile radarTile = null;
-                if ((unit.Type == RedAlert.UnitTypes.MGG) ||
-                    (unit.Type == RedAlert.UnitTypes.MRJammer) ||
-                    (unit.Type == RedAlert.UnitTypes.Tesla))
-                {
-                    Globals.TheTilesetManager.GetTeamColorTileData(theater.Tilesets, unit.Type.Name, 32, Globals.TheTeamColorManager[teamColor], out radarTile);
-                }
                 Tile turretTile = null;
                 if (unit.Type.HasTurret)
                 {
                     var turretName = unit.Type.Name;
                     var turretIcon = icon + 32;
-                    if (unit.Type == RedAlert.UnitTypes.Phase)
+                    if (gameType == GameType.RedAlert)
                     {
-                        turretIcon += 6;
+                        if (unit.Type == RedAlert.UnitTypes.Phase)
+                        {
+                            turretIcon += 6;
+                        }
+                        else if (unit.Type == RedAlert.UnitTypes.MGG)
+                        {
+                            int mggIcon = icon / 2;
+                            if (mggIcon >= 8)
+                                mggIcon -= 8;
+                            turretIcon = 32 + mggIcon;
+                        }
+                        else if (unit.Type == RedAlert.UnitTypes.Tesla)
+                        {
+                            turretIcon = 32;
+                        }
                     }
                     if (unit.Type.IsVessel)
                     {
@@ -693,7 +700,7 @@ namespace MobiusEditor.Render
 #endif
                         turretIcon = BodyShape[Facing32[unit.Direction.ID]];
                     }
-                    if(turretName != null)
+                    if (turretName != null)
                         Globals.TheTilesetManager.GetTeamColorTileData(theater.Tilesets, turretName, turretIcon, Globals.TheTeamColorManager[teamColor], out turretTile);
                 }
 
@@ -715,24 +722,6 @@ namespace MobiusEditor.Render
                         imageAttributes.SetColorMatrix(colorMatrix);
                     }
                     g.DrawImage(tile.Image, renderBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes);
-                    if (radarTile != null)
-                    {
-                        Point turretAdjust = Point.Empty;
-                        if (unit.Type == RedAlert.UnitTypes.MGG)
-                        {
-                            turretAdjust = TurretAdjust[Facing32[unit.Direction.ID]];
-                        }
-                        else if (unit.Type != RedAlert.UnitTypes.Tesla)
-                        {
-                            turretAdjust.Y = -5;
-                        }
-                        var radarBounds = renderBounds;
-                        radarBounds.Offset(
-                            turretAdjust.X * tileSize.Width / Globals.PixelWidth,
-                            turretAdjust.Y * tileSize.Height / Globals.PixelHeight
-                        );
-                        g.DrawImage(radarTile.Image, radarBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes);
-                    }
                     if (turretTile != null)
                     {
                         Point turretAdjust = Point.Empty;
@@ -745,6 +734,14 @@ namespace MobiusEditor.Render
                             else if (unit.Type == RedAlert.UnitTypes.Jeep)
                             {
                                 turretAdjust.Y = -4;
+                            }
+                            else if (unit.Type == RedAlert.UnitTypes.MGG)
+                            {
+                                turretAdjust = TurretAdjust[Facing32[unit.Direction.ID]];
+                            }
+                            else if (unit.Type == RedAlert.UnitTypes.MRJammer)
+                            {
+                                turretAdjust.Y = -5;
                             }
                         }
                         else if (gameType == GameType.TiberianDawn)

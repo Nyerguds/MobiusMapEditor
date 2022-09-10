@@ -12,50 +12,28 @@
 // distributed with this program. You should have received a copy of the 
 // GNU General Public License along with permitted additional restrictions 
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
-using MobiusEditor.Model;
-using MobiusEditor.Utility;
+using MobiusEditor.Interface;
 using System;
-using System.Collections.Generic;
-using System.Drawing;
+using System.Windows.Forms;
 
-namespace MobiusEditor.Interface
+namespace MobiusEditor.Controls
 {
-    public enum FileType
+    public partial class RulesSettings : UserControl
     {
-        None,
-        INI,
-        BIN,
-        MEG,
-        PGM
-    }
+        public event EventHandler TextNeedsUpdating;
 
-    public enum GameType
-    {
-        None,
-        TiberianDawn,
-        RedAlert
-    }
+        public RulesSettings(string iniText)
+        {
+            InitializeComponent();
+            txtRules.Text = iniText;
+        }
 
-    public interface IGamePlugin : IDisposable
-    {
-        GameType GameType { get; }
-
-        Map Map { get; }
-
-        Image MapImage { get; }
-
-        bool Dirty { get; set; }
-
-        String ExtraIniText { get; set; }
-
-        void New(string theater);
-
-        IEnumerable<string> Load(string path, FileType fileType);
-
-        bool Save(string path, FileType fileType);
-
-        bool Save(string path, FileType fileType, Bitmap customPreview);
-
-        string Validate();
+        private void txtRules_Leave(Object sender, EventArgs e)
+        {
+            if (TextNeedsUpdating != null)
+            {
+                TextNeedsUpdating(sender, e);
+            }
+        }
     }
 }

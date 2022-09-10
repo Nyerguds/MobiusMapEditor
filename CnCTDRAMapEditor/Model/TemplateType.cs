@@ -210,9 +210,9 @@ namespace MobiusEditor.Model
 
         public override bool Equals(object obj)
         {
-            if (obj is TemplateType)
+            if (obj is TemplateType tmp)
             {
-                return this == obj;
+                return ReferenceEquals(this, obj) || (tmp.ID == this.ID && String.Equals(tmp.Name, this.Name, StringComparison.InvariantCultureIgnoreCase));
             }
             else if (obj is byte bid)
             {

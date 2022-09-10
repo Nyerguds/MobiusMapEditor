@@ -853,19 +853,21 @@ namespace MobiusEditor.Dialogs
                                 }
                                 break;
                             case RedAlert.ActionTypes.TACTION_TEXT_TRIGGER:
-                                actionNud.Visible = true;
-                                actionNud.Minimum = 1;
-                                actionNud.Maximum = 209;
-                                triggerAction.Data = 1;
+                                actionValueComboBox.Visible = true;
+                                actionValueComboBox.DisplayMember = "Name";
+                                actionValueComboBox.ValueMember = "Value";
+                                var txtData = RedAlert.ActionDataTypes.TextDesc.Select((t, i) => new { Name = t, Value = (long)i + 1 }).ToArray();
+                                actionValueComboBox.DataSource = txtData;
+                                actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
                                 if (triggerActionData == null)
                                 {
-                                    actionNud.Value = 1;
+                                    actionValueComboBox.SelectedIndex = 0;
                                 }
                                 else
                                 {
-                                    if (triggerActionData.Data > 209 || triggerActionData.Data < 1)
+                                    if (triggerActionData.Data < 1 || triggerActionData.Data > 209)
                                         triggerActionData.Data = 1;
-                                    actionNud.Value = triggerActionData.Data;
+                                    actionValueComboBox.SelectedValue = triggerActionData.Data;
                                 }
                                 break;
                             case RedAlert.ActionTypes.TACTION_ADD_TIMER:

@@ -23,7 +23,7 @@ namespace MobiusEditor.Controls
         {
             InitializeComponent();
 
-            briefingTxt.DataBindings.Add("Text", briefingSection, "Briefing");
+            txtBriefing.DataBindings.Add("Text", briefingSection, "Briefing");
         }
     }
 }

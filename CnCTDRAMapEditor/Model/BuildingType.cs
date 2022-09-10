@@ -47,6 +47,8 @@ namespace MobiusEditor.Model
 
         public int PowerProduction { get; set; }
 
+        public int Storage { get; set; }
+
         public Rectangle OverlapBounds => new Rectangle(Point.Empty, new Size(OccupyMask.GetLength(1), OccupyMask.GetLength(0)));
 
         public bool[,] OccupyMask { get; private set; }
@@ -91,7 +93,7 @@ namespace MobiusEditor.Model
 
         public bool IsSingleFrame => (Flag & BuildingTypeFlag.SingleFrame) == BuildingTypeFlag.SingleFrame;
 
-        public BuildingType(sbyte id, string name, string textId, int powerProd, int powerUse, bool[,] occupyMask, string ownerHouse, TheaterType[] theaters, string factoryOverlay, BuildingTypeFlag flag)
+        public BuildingType(sbyte id, string name, string textId, int powerProd, int powerUse, int storage, bool[,] occupyMask, string ownerHouse, TheaterType[] theaters, string factoryOverlay, BuildingTypeFlag flag)
         {
             ID = id;
             Flag = flag;
@@ -100,6 +102,7 @@ namespace MobiusEditor.Model
             Tilename = name;
             PowerProduction = powerProd;
             PowerUsage = powerUse;
+            Storage = storage;
             BaseOccupyMask = occupyMask;
             int maskY = occupyMask.GetLength(0);
             int maskX = occupyMask.GetLength(1);
@@ -110,23 +113,33 @@ namespace MobiusEditor.Model
             RecalculateBibs();
         }
 
+        public BuildingType(sbyte id, string name, string textId, int powerProd, int powerUse, int storage, bool[,] occupyMask, string ownerHouse)
+            : this(id, name, textId, powerProd, powerUse, storage, occupyMask, ownerHouse, null, null, BuildingTypeFlag.None)
+        {
+        }
+
         public BuildingType(sbyte id, string name, string textId, int powerProd, int powerUse, bool[,] occupyMask, string ownerHouse)
-            : this(id, name, textId, powerProd, powerUse, occupyMask, ownerHouse, null, null, BuildingTypeFlag.None)
+            : this(id, name, textId, powerProd, powerUse, 0, occupyMask, ownerHouse, null, null, BuildingTypeFlag.None)
         {
         }
 
         public BuildingType(sbyte id, string name, string textId, int powerProd, int powerUse, bool[,] occupyMask, string ownerHouse, string factoryOverlay, BuildingTypeFlag flag)
-            : this(id, name, textId, powerProd, powerUse, occupyMask, ownerHouse, null, factoryOverlay, flag)
+            : this(id, name, textId, powerProd, powerUse, 0, occupyMask, ownerHouse, null, factoryOverlay, flag)
+        {
+        }
+
+        public BuildingType(sbyte id, string name, string textId, int powerProd, int powerUse, int storage, bool[,] occupyMask, string ownerHouse, BuildingTypeFlag flag)
+            : this(id, name, textId, powerProd, powerUse, storage, occupyMask, ownerHouse, null, null, flag)
         {
         }
 
         public BuildingType(sbyte id, string name, string textId, int powerProd, int powerUse, bool[,] occupyMask, string ownerHouse, BuildingTypeFlag flag)
-            : this(id, name, textId, powerProd, powerUse, occupyMask, ownerHouse, null, null, flag)
+            : this(id, name, textId, powerProd, powerUse, 0, occupyMask, ownerHouse, null, null, flag)
         {
         }
 
         public BuildingType(sbyte id, string name, string textId, int powerProd, int powerUse, bool[,] occupyMask, string ownerHouse, TheaterType[] theaters)
-            : this(id, name, textId, powerProd, powerUse, occupyMask, ownerHouse, theaters, null, BuildingTypeFlag.None)
+            : this(id, name, textId, powerProd, powerUse, 0, occupyMask, ownerHouse, theaters, null, BuildingTypeFlag.None)
         {
         }
 
@@ -178,7 +191,7 @@ namespace MobiusEditor.Model
                 theaters = new TheaterType[thLen];
                 Array.Copy(Theaters, theaters, thLen);
             }
-            BuildingType newBld = new BuildingType(ID, Tilename, DisplayName, PowerProduction, PowerUsage, bOccupyMask, OwnerHouse, theaters, FactoryOverlay, Flag);
+            BuildingType newBld = new BuildingType(ID, Tilename, DisplayName, PowerProduction, PowerUsage, Storage, bOccupyMask, OwnerHouse, theaters, FactoryOverlay, Flag);
             // Fix this
             newBld.DisplayName = DisplayName;
             return newBld;

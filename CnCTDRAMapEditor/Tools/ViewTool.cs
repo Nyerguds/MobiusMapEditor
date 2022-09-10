@@ -172,6 +172,18 @@ namespace MobiusEditor.Tools
             }
         }
 
+
+        private void Map_RulesChanged(Object sender, EventArgs e)
+        {
+            // Bibs may have changed. Refresh all buildings.
+            foreach ((Point p, Building bld) in map.Buildings.OfType<Building>())
+            {
+                Dictionary<Point, Smudge> bibPoints = bld.GetBib(p, map.SmudgeTypes, true);
+                mapPanel.Invalidate(map, bibPoints.Keys);
+                SmudgeTool.RestoreNearbySmudge(map, bibPoints.Keys, null);
+            }
+        }
+
         private void MapPanel_PreRender(object sender, RenderEventArgs e)
         {
             if ((e.Cells != null) && (e.Cells.Count == 0))
@@ -573,6 +585,7 @@ namespace MobiusEditor.Tools
             navigationWidget.Activate();
             this.mapPanel.PreRender += MapPanel_PreRender;
             this.mapPanel.PostRender += MapPanel_PostRender;
+            this.map.RulesChanged += this.Map_RulesChanged;
         }
 
         /// <summary>
@@ -586,6 +599,7 @@ namespace MobiusEditor.Tools
             navigationWidget.Deactivate();
             mapPanel.PreRender -= MapPanel_PreRender;
             mapPanel.PostRender -= MapPanel_PostRender;
+            this.map.RulesChanged -= this.Map_RulesChanged;
         }
 
         #region IDisposable Support

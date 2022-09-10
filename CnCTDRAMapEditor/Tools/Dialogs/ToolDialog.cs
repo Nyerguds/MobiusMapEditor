@@ -48,6 +48,7 @@ namespace MobiusEditor.Tools.Dialogs
                     }
                 }
             }
+            this.FormClosing += this.ObjectToolDialog_FormClosing;
         }
 
         protected abstract void InitializeInternal(MapPanel mapPanel, MapLayerFlag activeLayers, ToolStripStatusLabel toolStatusLabel, ToolTip mouseToolTip, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> undoRedoList);
@@ -92,6 +93,12 @@ namespace MobiusEditor.Tools.Dialogs
             Location = startLocation.Value;
             // execute any further Shown event handlers
             base.OnShown(e);
+        }
+        
+        private void ObjectToolDialog_FormClosing(System.Object sender, FormClosingEventArgs e)
+        {
+            // Prevents users from closing the form with Alt+F4
+            e.Cancel = e.CloseReason == CloseReason.UserClosing;
         }
 
         protected override void OnClosed(EventArgs e)

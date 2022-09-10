@@ -20,58 +20,64 @@ namespace MobiusEditor.RedAlert
     public class BasicSection : Model.BasicSection
     {
         private bool toCarryOver;
-        [TypeConverter(typeof(OneZeroBooleanTypeConverter))]
+        [TypeConverter(typeof(YesNoBooleanTypeConverter))]
         [DefaultValue(false)]
         public bool ToCarryOver { get => toCarryOver; set => SetField(ref toCarryOver, value); }
 
         private bool toInherit;
-        [TypeConverter(typeof(OneZeroBooleanTypeConverter))]
+        [TypeConverter(typeof(YesNoBooleanTypeConverter))]
         [DefaultValue(false)]
         public bool ToInherit { get => toInherit; set => SetField(ref toInherit, value); }
 
         private bool timerInherit;
-        [TypeConverter(typeof(OneZeroBooleanTypeConverter))]
+        [TypeConverter(typeof(YesNoBooleanTypeConverter))]
         [DefaultValue(false)]
         public bool TimerInherit { get => timerInherit; set => SetField(ref timerInherit, value); }
 
-        private bool endOfGame;
-        [TypeConverter(typeof(OneZeroBooleanTypeConverter))]
-        [DefaultValue(false)]
-        public bool EndOfGame { get => endOfGame; set => SetField(ref endOfGame, value); }
-
         private bool civEvac;
-        [TypeConverter(typeof(OneZeroBooleanTypeConverter))]
+        [TypeConverter(typeof(YesNoBooleanTypeConverter))]
         [DefaultValue(false)]
         public bool CivEvac { get => civEvac; set => SetField(ref civEvac, value); }
 
+        private bool endOfGame;
+        [TypeConverter(typeof(YesNoBooleanTypeConverter))]
+        [DefaultValue(false)]
+        public bool EndOfGame { get => endOfGame; set => SetField(ref endOfGame, value); }
+
         private bool noSpyPlane;
-        [TypeConverter(typeof(OneZeroBooleanTypeConverter))]
+        [TypeConverter(typeof(YesNoBooleanTypeConverter))]
         [DefaultValue(false)]
         public bool NoSpyPlane { get => noSpyPlane; set => SetField(ref noSpyPlane, value); }
 
         private bool skipScore;
-        [TypeConverter(typeof(OneZeroBooleanTypeConverter))]
+        [TypeConverter(typeof(YesNoBooleanTypeConverter))]
         [DefaultValue(false)]
         public bool SkipScore { get => skipScore; set => SetField(ref skipScore, value); }
 
         private bool oneTimeOnly;
-        [TypeConverter(typeof(OneZeroBooleanTypeConverter))]
+        [TypeConverter(typeof(YesNoBooleanTypeConverter))]
         [DefaultValue(false)]
         public bool OneTimeOnly { get => oneTimeOnly; set => SetField(ref oneTimeOnly, value); }
 
         private bool skipMapSelect;
-        [TypeConverter(typeof(OneZeroBooleanTypeConverter))]
+        [TypeConverter(typeof(YesNoBooleanTypeConverter))]
         [DefaultValue(false)]
         public bool SkipMapSelect { get => skipMapSelect; set => SetField(ref skipMapSelect, value); }
 
+        private bool official;
+        [TypeConverter(typeof(YesNoBooleanTypeConverter))]
+        [DefaultValue(false)]
+        public bool Official { get => official; set => SetField(ref official, value); }
+
+        private bool fillSilos;
+        [TypeConverter(typeof(YesNoBooleanTypeConverter))]
+        [DefaultValue(false)]
+        public bool FillSilos { get => fillSilos; set => SetField(ref fillSilos, value); }
+
         private bool truckCrate;
-        [TypeConverter(typeof(OneZeroBooleanTypeConverter))]
+        [TypeConverter(typeof(YesNoBooleanTypeConverter))]
         [DefaultValue(false)]
         public bool TruckCrate { get => truckCrate; set => SetField(ref truckCrate, value); }
 
-        private bool fillSilos;
-        [TypeConverter(typeof(OneZeroBooleanTypeConverter))]
-        [DefaultValue(false)]
-        public bool FillSilos { get => fillSilos; set => SetField(ref fillSilos, value); }
     }
 }

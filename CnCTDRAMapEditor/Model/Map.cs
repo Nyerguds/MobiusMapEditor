@@ -85,6 +85,17 @@ namespace MobiusEditor.Model
         private IDictionary<MapLayerFlag, ISet<Point>> invalidateLayers = new Dictionary<MapLayerFlag, ISet<Point>>();
         private bool invalidateOverlappers;
 
+
+        public void NotifyRulesChanges()
+        {
+            if (RulesChanged != null)
+            {
+                this.RulesChanged(this, EventArgs.Empty);
+            }
+        }
+
+        public event EventHandler RulesChanged;
+
         public readonly BasicSection BasicSection;
 
         public readonly MapSection MapSection;
@@ -680,35 +691,25 @@ namespace MobiusEditor.Model
 
         private void AddBibs(Point location, Building building)
         {
-            if (!building.Type.HasBib)
+            Dictionary<Point, Smudge> bibPoints = building.GetBib(location, SmudgeTypes);
+            if (bibPoints == null)
             {
                 return;
             }
-            SmudgeType bibType = SmudgeType.GetBib(SmudgeTypes, building.Type.Size.Width);
-            if (bibType != null && (bibType.Theaters == null || bibType.Theaters.Contains(this.MapSection.Theater)))
+            foreach(Point p in bibPoints.Keys)
             {
-                int icon = 0;
-                for (var y = 0; y < bibType.Size.Height; ++y)
+                if (Metrics.GetCell(p, out int subCell))
                 {
-                    for (var x = 0; x < bibType.Size.Width; ++x, ++icon)
-                    {
-                        if (Metrics.GetCell(new Point(location.X + x, location.Y + building.Type.Size.Height + y - 1), out int subCell))
-                        {
-                            Smudge[subCell] = new Smudge
-                            {
-                                Type = bibType,
-                                Icon = icon,
-                                Tint = building.Tint
-                            };
-                            building.BibCells.Add(subCell);
-                        }
-                    }
+                    Smudge[subCell] = bibPoints[p];
+                    building.BibCells.Add(subCell);
                 }
             }
         }
 
         public Map Clone()
         {
+            // This is a shallow clone; the map is new, but the placed content all still reference the original objects.
+            // These shallow copies are used for map preview during editing, where dummy objects can be added without any issue.
             var map = new Map(BasicSection, Theater, Metrics.Size, HouseType,
                 HouseTypes, TheaterTypes, TemplateTypes, TerrainTypes, OverlayTypes, SmudgeTypes,
                 EventTypes, CellEventTypes, UnitEventTypes, StructureEventTypes, TerrainEventTypes,
@@ -724,10 +725,7 @@ namespace MobiusEditor.Model
             BriefingSection.CopyTo(map.BriefingSection);
             SteamSection.CopyTo(map.SteamSection);
             Array.Copy(Houses, map.Houses, map.Houses.Length);
-            foreach (var trigger in Triggers)
-            {
-                map.Triggers.Add(trigger);
-            }
+            map.Triggers.AddRange(Triggers);
             Templates.CopyTo(map.Templates);
             Overlay.CopyTo(map.Overlay);
             Smudge.CopyTo(map.Smudge);
@@ -736,6 +734,8 @@ namespace MobiusEditor.Model
             {
                 if (occupier is InfantryGroup infantryGroup)
                 {
+                    // This creates an InfantryGroup not linked to its infantry, but it is necessary
+                    // to ensure that the real InfantryGroups are not polluted with dummy objects.
                     var newInfantryGroup = new InfantryGroup();
                     Array.Copy(infantryGroup.Infantry, newInfantryGroup.Infantry, newInfantryGroup.Infantry.Length);
                     map.Technos.Add(location, newInfantryGroup);
@@ -747,6 +747,7 @@ namespace MobiusEditor.Model
             }
             foreach (var (location, building) in Buildings)
             {
+                // Silly side effect: this fixes any building bibs.
                 map.Buildings.Add(location, building);
             }
             map.TeamTypes.AddRange(TeamTypes);
@@ -1196,71 +1197,7 @@ namespace MobiusEditor.Model
 
         public IEnumerable<string> AssessPower(GameType gameType)
         {
-            HashSet<string> housesWithProd = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
-            if (gameType == GameType.TiberianDawn)
-            {
-                // Tiberian Dawn logic: find AIs with construction yard and Production trigger.
-                HashSet<string> housesWithCY = new HashSet<string>();
-                foreach ((_, Building bld) in Buildings.OfType<Building>().Where(b => b.Occupier.IsPrebuilt &&
-                    b.Occupier.House.ID > 0 && (b.Occupier.Type.Flag & BuildingTypeFlag.Factory) == BuildingTypeFlag.Factory))
-                {
-                    housesWithCY.Add(bld.House.Name);
-                }
-                foreach ((_, Unit unit) in Technos.OfType<Unit>().Where(b => 
-                    "mcv".Equals(b.Occupier.Type.Name, StringComparison.InvariantCultureIgnoreCase)
-                    && "Unload".Equals(b.Occupier.Mission, StringComparison.InvariantCultureIgnoreCase)))
-                {
-                    housesWithCY.Add(unit.House.Name);
-                }
-                string cellTriggerHouse = TiberianDawn.HouseTypes.GetClassicOpposingPlayer(BasicSection.Player);
-                foreach (var trig in Triggers)
-                {
-                    string triggerHouse = trig.House;
-                    if (trig.Action1.ActionType == TiberianDawn.ActionTypes.ACTION_BEGIN_PRODUCTION)
-                    {
-                        if (trig.Event1.EventType == TiberianDawn.EventTypes.EVENT_PLAYER_ENTERED)
-                        {
-                            // Either a cell trigger, or a building to capture. Scan for celltriggers.
-                            if (housesWithCY.Contains(cellTriggerHouse))
-                            {
-                                foreach (var item in CellTriggers)
-                                {
-                                    if (trig.Equals(item.Value.Trigger))
-                                    {
-                                        housesWithProd.Add(cellTriggerHouse);
-                                        break;
-                                    }
-                                }
-                            }
-                            // Scan for attached buildings to capture.
-                            if (housesWithCY.Contains(triggerHouse))
-                            {
-                                foreach ((_, Building bld) in Buildings.OfType<Building>())
-                                {
-                                    if (trig.Equals(bld.Trigger))
-                                    {
-                                        housesWithProd.Add(triggerHouse);
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                        else if (housesWithCY.Contains(triggerHouse))
-                        {
-                            housesWithProd.Add(trig.House);
-                        }
-                    }
-                }
-            }
-            else if (gameType == GameType.RedAlert)
-            {
-                if (BasicSection.BasePlayer == null)
-                {
-                    BasicSection.BasePlayer = RedAlert.HouseTypes.GetBasePlayer(BasicSection.Player);
-                }
-                HouseType rebuildHouse = this.HouseTypesIncludingNone.Where(h => h.Name == BasicSection.BasePlayer).FirstOrDefault();
-                housesWithProd.Add(rebuildHouse.Name);
-            }
+            HashSet<string> housesWithProd = GetHousesWithProduction(gameType);
             Dictionary<String, int[]> powerWithUnbuilt = new Dictionary<string, int[]>(StringComparer.CurrentCultureIgnoreCase);
             Dictionary<String, int[]> powerWithoutUnbuilt = new Dictionary<string, int[]>(StringComparer.CurrentCultureIgnoreCase);
             foreach (HouseType house in this.HouseTypes)
@@ -1332,6 +1269,142 @@ namespace MobiusEditor.Model
                     int houseProdBuilt = housePwrBuilt[1]; // PowerProduction;
                     String houseInfo = String.Format("{0}: {1} - Produces {2}, uses {3}.",
                         house.Name, houseProdBuilt < houseUsageBuilt ? "!!" : "OK", houseProdBuilt, houseUsageBuilt);
+                    info.Add(houseInfo);
+                }
+            }
+            return info;
+        }
+
+        private HashSet<String> GetHousesWithProduction(GameType gameType)
+        {
+            HashSet<string> housesWithProd = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+            if (gameType == GameType.TiberianDawn)
+            {
+                // Tiberian Dawn logic: find AIs with construction yard and Production trigger.
+                HashSet<string> housesWithCY = new HashSet<string>();
+                foreach ((_, Building bld) in Buildings.OfType<Building>().Where(b => b.Occupier.IsPrebuilt &&
+                    b.Occupier.House.ID >= 0 && (b.Occupier.Type.Flag & BuildingTypeFlag.Factory) == BuildingTypeFlag.Factory))
+                {
+                    housesWithCY.Add(bld.House.Name);
+                }
+                foreach ((_, Unit unit) in Technos.OfType<Unit>().Where(b =>
+                    "mcv".Equals(b.Occupier.Type.Name, StringComparison.InvariantCultureIgnoreCase)
+                    && "Unload".Equals(b.Occupier.Mission, StringComparison.InvariantCultureIgnoreCase)))
+                {
+                    housesWithCY.Add(unit.House.Name);
+                }
+                string cellTriggerHouse = TiberianDawn.HouseTypes.GetClassicOpposingPlayer(BasicSection.Player);
+                foreach (var trig in Triggers)
+                {
+                    string triggerHouse = trig.House;
+                    if (trig.Action1.ActionType == TiberianDawn.ActionTypes.ACTION_BEGIN_PRODUCTION)
+                    {
+                        if (trig.Event1.EventType == TiberianDawn.EventTypes.EVENT_PLAYER_ENTERED)
+                        {
+                            // Either a cell trigger, or a building to capture. Scan for celltriggers.
+                            if (housesWithCY.Contains(cellTriggerHouse))
+                            {
+                                foreach (var item in CellTriggers)
+                                {
+                                    if (trig.Equals(item.Value.Trigger))
+                                    {
+                                        housesWithProd.Add(cellTriggerHouse);
+                                        break;
+                                    }
+                                }
+                            }
+                            // Scan for attached buildings to capture.
+                            if (housesWithCY.Contains(triggerHouse))
+                            {
+                                foreach ((_, Building bld) in Buildings.OfType<Building>())
+                                {
+                                    if (trig.Equals(bld.Trigger))
+                                    {
+                                        housesWithProd.Add(triggerHouse);
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        else if (housesWithCY.Contains(triggerHouse))
+                        {
+                            housesWithProd.Add(trig.House);
+                        }
+                    }
+                }
+            }
+            else if (gameType == GameType.RedAlert)
+            {
+                if (BasicSection.BasePlayer == null)
+                {
+                    BasicSection.BasePlayer = RedAlert.HouseTypes.GetBasePlayer(BasicSection.Player);
+                }
+                HouseType rebuildHouse = this.HouseTypesIncludingNone.Where(h => h.Name == BasicSection.BasePlayer).FirstOrDefault();
+                housesWithProd.Add(rebuildHouse.Name);
+            }
+            return housesWithProd;
+        }
+
+        public IEnumerable<string> AssessStorage(GameType gameType)
+        {
+            HashSet<string> housesWithProd = GetHousesWithProduction(gameType);
+            Dictionary<String, int> storageWithUnbuilt = new Dictionary<string, int>(StringComparer.CurrentCultureIgnoreCase);
+            Dictionary<String, int> storageWithoutUnbuilt = new Dictionary<string, int>(StringComparer.CurrentCultureIgnoreCase);
+            foreach (HouseType house in this.HouseTypes)
+            {
+                if (housesWithProd.Contains(house.Name))
+                {
+                    storageWithUnbuilt[house.Name] = 0;
+                }
+                storageWithoutUnbuilt[house.Name] = 0;
+            }
+            foreach ((_, Building bld) in Buildings.OfType<Building>())
+            {
+                int bldStorage = bld.Type.Storage;
+                if (!bld.IsPrebuilt)
+                {
+                    foreach (string house in housesWithProd)
+                    {
+                        if (storageWithUnbuilt.ContainsKey(house))
+                        {
+                            storageWithUnbuilt[house] += bldStorage;
+                        }
+                    }
+                }
+                else if (storageWithUnbuilt.ContainsKey(bld.House.Name))
+                {
+                    storageWithUnbuilt[bld.House.Name] += bldStorage;
+                }
+                if (bld.IsPrebuilt && storageWithoutUnbuilt.ContainsKey(bld.House.Name))
+                {
+                    storageWithoutUnbuilt[bld.House.Name] += bldStorage;
+                }
+            }
+            List<string> info = new List<string>();
+            List<string> prodHouses = new List<string>();
+            foreach (HouseType house in HouseTypes)
+            {
+                if (housesWithProd.Contains(house.Name))
+                {
+                    prodHouses.Add(house.Name);
+                }
+            }
+            info.Add("Production-capable Houses: " + String.Join(", ", prodHouses.ToArray()));
+            foreach (HouseType house in HouseTypes)
+            {
+                int houseStorageBuilt;
+                if (storageWithUnbuilt.TryGetValue(house.Name, out int houseStorageAll))
+                {
+                    storageWithoutUnbuilt.TryGetValue(house.Name, out houseStorageBuilt);
+
+                    String houseInfo = String.Format("{0}: Storage capacity: {1}. (Without unbuilt: {2})",
+                        house.Name, houseStorageAll, houseStorageBuilt);
+                    info.Add(houseInfo);
+                }
+                else if (storageWithoutUnbuilt.TryGetValue(house.Name, out houseStorageBuilt))
+                {
+                    String houseInfo = String.Format("{0}: Storage capacity: {1}.",
+                        house.Name, houseStorageBuilt);
                     info.Add(houseInfo);
                 }
             }
