@@ -56,8 +56,11 @@ namespace MobiusEditor.Tools
             {
                 if (layers != value)
                 {
+                    MapLayerFlag modifiedBits = layers ^ value;
+                    bool refreshIndicatorsOnly = (modifiedBits & ~MapLayerFlag.Indicators) == 0;
                     layers = value;
-                    Invalidate();
+                    Invalidate(refreshIndicatorsOnly);
+                    RefreshPreviewPanel();
                 }
             }
         }
@@ -74,9 +77,17 @@ namespace MobiusEditor.Tools
             navigationWidget = new NavigationWidget(mapPanel, map.Metrics, Globals.MapTileSize);
         }
 
-        protected void Invalidate()
+        protected void Invalidate(bool refreshIndicatorsOnly)
         {
-            mapPanel.Invalidate(RenderMap);
+            if (refreshIndicatorsOnly)
+            {
+                mapPanel.Invalidate();
+            }
+            else
+            {
+                // Full repaint.
+                mapPanel.Invalidate(RenderMap);
+            }
         }
 
         private void BasicSection_PropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -172,6 +183,7 @@ namespace MobiusEditor.Tools
             }
         }
 
+        protected abstract void RefreshPreviewPanel();
 
         private void Map_RulesChanged(Object sender, EventArgs e)
         {
@@ -179,9 +191,13 @@ namespace MobiusEditor.Tools
             foreach ((Point p, Building bld) in map.Buildings.OfType<Building>())
             {
                 Dictionary<Point, Smudge> bibPoints = bld.GetBib(p, map.SmudgeTypes, true);
-                mapPanel.Invalidate(map, bibPoints.Keys);
-                SmudgeTool.RestoreNearbySmudge(map, bibPoints.Keys, null);
+                if (bibPoints != null)
+                {
+                    mapPanel.Invalidate(map, bibPoints.Keys);
+                    SmudgeTool.RestoreNearbySmudge(map, bibPoints.Keys, null);
+                }
             }
+            RefreshPreviewPanel();
         }
 
         private void MapPanel_PreRender(object sender, RenderEventArgs e)
@@ -265,7 +281,7 @@ namespace MobiusEditor.Tools
             }
         }
 
-        private static void RenderAllBuildingLabels(Graphics graphics, Map map, Size tileSize, double tileScale, MapLayerFlag layersToRender)
+        public static void RenderAllBuildingLabels(Graphics graphics, Map map, Size tileSize, double tileScale, MapLayerFlag layersToRender)
         {
             if ((layersToRender & MapLayerFlag.Buildings) == MapLayerFlag.None
                 || ((layersToRender & MapLayerFlag.BuildingRebuild) == MapLayerFlag.None && (layersToRender & MapLayerFlag.BuildingFakes) == MapLayerFlag.None))
@@ -278,36 +294,7 @@ namespace MobiusEditor.Tools
             }
         }
 
-        protected static void RenderBuildingFakeLabel(Graphics graphics, Building building, Point topLeft, Size tileSize, double tileScale, MapLayerFlag layersToRender)
-        {
-            if ((layersToRender & MapLayerFlag.BuildingFakes) == MapLayerFlag.None)
-            {
-                return;
-            }
-            var size = new Size(building.Type.Size.Width * tileSize.Width, building.Type.Size.Height * tileSize.Height);
-            string fakeText = Globals.TheGameTextManager["TEXT_UI_FAKE"];
-            Rectangle bounds = new Rectangle(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height, size.Width, size.Height);
-            using (var fakeBackgroundBrush = new SolidBrush(Color.FromArgb(96, Color.Black)))
-            using (var fakeBrush = new SolidBrush(Color.LimeGreen))
-            {
-                StringFormat stringFormat = new StringFormat
-                {
-                    Alignment = StringAlignment.Center,
-                    LineAlignment = StringAlignment.Center
-                };
-                using (var font = graphics.GetAdjustedFont(fakeText, SystemFonts.DefaultFont, bounds.Width,
-                    Math.Max(1, (int)(12 * tileScale)), Math.Max(1, (int)(24 * tileScale)), true))
-                {
-                    var textBounds = graphics.MeasureString(fakeText, font, bounds.Width, stringFormat);
-                    var backgroundBounds = new RectangleF(bounds.Location, textBounds);
-                    //backgroundBounds.Offset((bounds.Width - textBounds.Width) / 2.0f, (bounds.Height - textBounds.Height) / 2.0f);
-                    graphics.FillRectangle(fakeBackgroundBrush, backgroundBounds);
-                    graphics.DrawString(fakeText, font, fakeBrush, bounds, stringFormat);
-                }
-            }
-        }
-
-        protected static void RenderBuildingLabels(Graphics graphics, Building building, Point topLeft, Size tileSize, double tileScale, MapLayerFlag layersToRender, Boolean forPreview)
+        public static void RenderBuildingLabels(Graphics graphics, Building building, Point topLeft, Size tileSize, double tileScale, MapLayerFlag layersToRender, Boolean forPreview)
         {
             if ((layersToRender & MapLayerFlag.Buildings) == MapLayerFlag.None)
             {

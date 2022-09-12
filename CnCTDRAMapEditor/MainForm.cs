@@ -1086,13 +1086,14 @@ namespace MobiusEditor
                 availableToolTypes |= ToolType.Waypoint;
                 if (plugin.Map.TemplateTypes.Any(t => t.Theaters == null || t.Theaters.Contains(th))) availableToolTypes |= ToolType.Map;
                 if (plugin.Map.SmudgeTypes.Any()) availableToolTypes |= ToolType.Smudge;
-                if (plugin.Map.OverlayTypes.Any(t => t.IsPlaceable && ((t.Theaters == null) || t.Theaters.Contains(th)))) availableToolTypes |= ToolType.Overlay;
-                if (plugin.Map.TerrainTypes.Any(t => t.Theaters == null || t.Theaters.Contains(th))) availableToolTypes |= ToolType.Terrain;
+                if (plugin.Map.OverlayTypes.Any(t => t.IsPlaceable && (!Globals.FilterTheaterObjects || t.Theaters == null || t.Theaters.Contains(th)))) availableToolTypes |= ToolType.Overlay;
+                if (plugin.Map.TerrainTypes.Any(t => !Globals.FilterTheaterObjects || t.Theaters == null || t.Theaters.Contains(th))) availableToolTypes |= ToolType.Terrain;
                 if (plugin.Map.InfantryTypes.Any()) availableToolTypes |= ToolType.Infantry;
                 if (plugin.Map.UnitTypes.Any()) availableToolTypes |= ToolType.Unit;
-                if (plugin.Map.BuildingTypes.Any(t => t.Theaters == null || t.Theaters.Contains(th))) availableToolTypes |= ToolType.Building;
-                if (plugin.Map.OverlayTypes.Any(t => t.IsResource && (t.Theaters == null || t.Theaters.Contains(th)))) availableToolTypes |= ToolType.Resources;
-                if (plugin.Map.OverlayTypes.Any(t => t.IsWall && (t.Theaters == null || t.Theaters.Contains(th)))) availableToolTypes |= ToolType.Wall;
+                if (plugin.Map.BuildingTypes.Any(t => !Globals.FilterTheaterObjects || t.Theaters == null || t.Theaters.Contains(th))) availableToolTypes |= ToolType.Building;
+                if (plugin.Map.OverlayTypes.Any(t => t.IsResource && (!Globals.FilterTheaterObjects || t.Theaters == null || t.Theaters.Contains(th)))) availableToolTypes |= ToolType.Resources;
+                if (plugin.Map.OverlayTypes.Any(t => t.IsWall && (!Globals.FilterTheaterObjects || t.Theaters == null || t.Theaters.Contains(th)))) availableToolTypes |= ToolType.Wall;
+                // Always allow celltrigger tool, even if triggers list is empty; it contains a tooltip saying which triggers are eligible.
                 availableToolTypes |= ToolType.CellTrigger;
             }
             foreach (var toolStripButton in viewToolStripButtons)

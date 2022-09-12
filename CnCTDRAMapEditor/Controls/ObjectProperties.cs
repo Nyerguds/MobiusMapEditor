@@ -119,13 +119,14 @@ namespace MobiusEditor.Controls
             string[] items;
             string[] filteredEvents;
             string[] filteredActions;
+            Boolean isAircraft = obj is Unit un && un.Type.IsAircraft;
             switch (obj)
             {
                 case Infantry infantry:
                 case Unit unit:
                     items = Plugin.Map.FilterUnitTriggers().Select(t => t.Name).Distinct().ToArray();
-                    filteredEvents = Plugin.Map.EventTypes.Where(ev => Plugin.Map.UnitEventTypes.Contains(ev)).Distinct().ToArray();
-                    filteredActions = Plugin.Map.ActionTypes.Where(ac => Plugin.Map.UnitActionTypes.Contains(ac)).Distinct().ToArray();
+                    filteredEvents = isAircraft ? new string[0] : Plugin.Map.EventTypes.Where(ev => Plugin.Map.UnitEventTypes.Contains(ev)).Distinct().ToArray();
+                    filteredActions = isAircraft ? new string[0] : Plugin.Map.ActionTypes.Where(ac => Plugin.Map.UnitActionTypes.Contains(ac)).Distinct().ToArray();
                     break;
                 case Building building:
                     items = Plugin.Map.FilterStructureTriggers().Select(t => t.Name).Distinct().ToArray();
@@ -142,6 +143,7 @@ namespace MobiusEditor.Controls
             items = Trigger.None.Yield().Concat(Plugin.Map.Triggers.Select(t => t.Name).Where(t => allowedTriggers.Contains(t)).Distinct()).ToArray();
             int selectIndex = selected == null ? 0 : Enumerable.Range(0, items.Length).FirstOrDefault(x => String.Equals(items[x], selected, StringComparison.InvariantCultureIgnoreCase));
             triggerComboBox.DataSource = items;
+            triggerComboBox.Enabled = !isAircraft;
             triggerToolTip = Map.MakeAllowedTriggersToolTip(filteredEvents, filteredActions);
             if (obj != null)
             {
@@ -354,6 +356,10 @@ namespace MobiusEditor.Controls
             if (Object is Building bld && !bld.IsPrebuilt)
             {
                 tooltip = "Triggers can only be linked to prebuilt structures.";
+            }
+            else if (Object is Unit un && un.Type.IsAircraft)
+            {
+                tooltip = "Triggers can not be linked to aircraft.";
             }
             else
             {

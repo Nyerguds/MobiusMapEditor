@@ -70,10 +70,10 @@ namespace MobiusEditor.RedAlert
                  select field.GetValue(null) as UnitType).ToArray();
         }
 
-        public static IEnumerable<UnitType> GetTypes(bool placeableOnly)
+        public static IEnumerable<UnitType> GetTypes(bool withoutAircraft)
         {
             // only return placeable units, not aircraft.
-            if (placeableOnly)
+            if (withoutAircraft)
                 return Types.Where(t => !t.IsAircraft);
             return Types;
         }

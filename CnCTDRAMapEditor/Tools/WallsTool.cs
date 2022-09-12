@@ -36,6 +36,11 @@ namespace MobiusEditor.Tools
         /// </summary>
         protected override MapLayerFlag ManuallyHandledLayers => MapLayerFlag.None;
 
+        protected override void RefreshPreviewPanel()
+        {
+            // This tool has no panel.
+        }
+
         private readonly TypeListBox wallTypeComboBox;
         private readonly MapPanel wallTypeMapPanel;
 

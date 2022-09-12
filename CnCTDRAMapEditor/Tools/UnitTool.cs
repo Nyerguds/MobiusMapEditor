@@ -72,7 +72,7 @@ namespace MobiusEditor.Tools
                         mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(navigationWidget.MouseCell, new Size(1, 1)), 1, 1));
                     }
                     mockUnit.Type = selectedUnitType;
-                    RefreshMapPanel();
+                    RefreshPreviewPanel();
                 }
             }
         }
@@ -197,7 +197,7 @@ namespace MobiusEditor.Tools
 
         private void MockUnit_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            RefreshMapPanel();
+            RefreshPreviewPanel();
         }
 
         private void SelectedUnit_PropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -434,7 +434,7 @@ namespace MobiusEditor.Tools
             UpdateStatus();
         }
 
-        private void RefreshMapPanel()
+        protected override void RefreshPreviewPanel()
         {
             var oldImage = unitTypeMapPanel.MapImage;
             if (mockUnit.Type != null)
@@ -497,13 +497,13 @@ namespace MobiusEditor.Tools
             base.PostRenderMap(graphics);
             using (var unitPen = new Pen(Color.Green, Math.Max(1, Globals.MapTileSize.Width / 16.0f)))
             {
-                foreach (var (topLeft, _) in map.Technos.OfType<Unit>())
+                foreach (var (topLeft, _) in previewMap.Technos.OfType<Unit>())
                 {
                     var bounds = new Rectangle(new Point(topLeft.X * Globals.MapTileWidth, topLeft.Y * Globals.MapTileHeight), Globals.MapTileSize);
                     graphics.DrawRectangle(unitPen, bounds);
                 }
             }
-            RenderTechnoTriggers(graphics, map, Globals.MapTileSize, Globals.MapTileScale, Layers);
+            RenderTechnoTriggers(graphics, previewMap, Globals.MapTileSize, Globals.MapTileScale, Layers);
         }
 
         public override void Activate()

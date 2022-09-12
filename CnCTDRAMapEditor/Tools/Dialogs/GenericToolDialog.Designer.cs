@@ -45,7 +45,7 @@ namespace MobiusEditor.Tools.Dialogs
         /// </summary>
         private void InitializeComponent()
         {
-            CustomComponentResourceManager resources = new CustomComponentResourceManager(typeof(ObjectToolDialog<>), "ObjectToolDialog");
+            CustomComponentResourceManager resources = new CustomComponentResourceManager(typeof(GenericToolDialog<>), "GenericToolDialog");
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.genericTypeMapPanel = new MobiusEditor.Controls.MapPanel();
             this.genericTypeListBox = new MobiusEditor.Controls.TypeListBox();

@@ -16,6 +16,7 @@ using MobiusEditor.Controls;
 using MobiusEditor.Event;
 using MobiusEditor.Interface;
 using MobiusEditor.Model;
+using MobiusEditor.Render;
 using MobiusEditor.Utility;
 using MobiusEditor.Widgets;
 using System;
@@ -61,7 +62,7 @@ namespace MobiusEditor.Tools
                     }
                     selectedOverlayType = value;
                     overlayTypeComboBox.SelectedValue = selectedOverlayType;
-                    RefreshMapPanel();
+                    RefreshPreviewPanel();
                 }
             }
         }
@@ -295,9 +296,49 @@ namespace MobiusEditor.Tools
             }
         }
 
-        private void RefreshMapPanel()
+        protected override void RefreshPreviewPanel()
         {
-            overlayTypeMapPanel.MapImage = SelectedOverlayType?.Thumbnail;
+            var oldImage = overlayTypeMapPanel.MapImage;
+            if (SelectedOverlayType != null)
+            {
+                var overlayPreview = new Bitmap(Globals.PreviewTileWidth, Globals.PreviewTileHeight);
+                Overlay mockOverlay = new Overlay()
+                {
+                    Type = SelectedOverlayType,
+                    Icon = 0
+                };
+                var render = MapRenderer.Render(plugin.GameType, map.Theater, new OverlayType[0], new OverlayType[0], new Point(0,0), Globals.PreviewTileSize, Globals.PreviewTileScale, mockOverlay);
+                if (!render.Item1.IsEmpty)
+                {
+                    using (var g = Graphics.FromImage(overlayPreview))
+                    {
+                        MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
+                        render.Item2(g);
+                    }
+                }
+                else
+                {
+                    // This should never happen; the map renderer renders dummy graphics for overlay now.
+                    using (var g = Graphics.FromImage(overlayPreview))
+                    {
+                        MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
+                        List<(int, Overlay)> overlayList = new List<(int, Overlay)>();
+                        overlayList.Add((0, new Overlay() { Type = SelectedOverlayType, Icon = 0 }));
+                        RenderOverlayBounds(g, Globals.PreviewTileSize, overlayList, new CellMetrics(new Size(1, 1)));
+                    }
+                }
+                overlayTypeMapPanel.MapImage = overlayPreview;
+            }
+            else
+            {
+                overlayTypeMapPanel.MapImage = null;
+            }
+            if (oldImage != null)
+            {
+                try { oldImage.Dispose(); }
+                catch { /* ignore */ }
+            }
+            overlayTypeMapPanel.Invalidate();
         }
 
         private void UpdateStatus()
@@ -336,12 +377,17 @@ namespace MobiusEditor.Tools
         protected override void PostRenderMap(Graphics graphics)
         {
             base.PostRenderMap(graphics);
-            using (var overlayPen = new Pen(Color.Green, Math.Max(1, Globals.MapTileSize.Width / 16.0f)))
+            RenderOverlayBounds(graphics, Globals.MapTileSize, previewMap.Overlay.Where(x => x.Value.Type.IsPlaceable), previewMap.Metrics);
+        }
+
+        private static void RenderOverlayBounds(Graphics graphics, Size tileSize, IEnumerable<(int, Overlay)> overlayList, CellMetrics metrics)
+        {
+            using (var overlayPen = new Pen(Color.Green, Math.Max(1, tileSize.Width / 16.0f)))
             {
-                foreach (var (cell, overlay) in previewMap.Overlay.Where(x => x.Value.Type.IsPlaceable))
+                foreach (var (cell, overlay) in overlayList)
                 {
-                    previewMap.Metrics.GetLocation(cell, out Point topLeft);
-                    var bounds = new Rectangle(new Point(topLeft.X * Globals.MapTileWidth, topLeft.Y * Globals.MapTileHeight), Globals.MapTileSize);
+                    metrics.GetLocation(cell, out Point topLeft);
+                    var bounds = new Rectangle(new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height), tileSize);
                     graphics.DrawRectangle(overlayPen, bounds);
                 }
             }

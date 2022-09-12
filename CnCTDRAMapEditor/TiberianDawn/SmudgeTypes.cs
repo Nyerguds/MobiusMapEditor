@@ -17,25 +17,26 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 
 namespace MobiusEditor.TiberianDawn
 {
     public static class SmudgeTypes
     {
         public static readonly SmudgeType Crater1 = new SmudgeType(0, "cr1", 5);
-        // Seems RA has issues reading these from missions.
-        //public static readonly SmudgeType Crater2 = new SmudgeType(1, "cr2", 5);
-        //public static readonly SmudgeType Crater3 = new SmudgeType(2, "cr3", 5);
-        //public static readonly SmudgeType Crater4 = new SmudgeType(3, "cr4", 5);
-        //public static readonly SmudgeType Crater5 = new SmudgeType(4, "cr5", 5);
-        //public static readonly SmudgeType Crater6 = new SmudgeType(5, "cr6", 5);
+        // Seems the game has issues reading these from missions.
+        public static readonly SmudgeType Crater2 = new SmudgeType(1, "cr2", 5);
+        public static readonly SmudgeType Crater3 = new SmudgeType(2, "cr3", 5);
+        public static readonly SmudgeType Crater4 = new SmudgeType(3, "cr4", 5);
+        public static readonly SmudgeType Crater5 = new SmudgeType(4, "cr5", 5);
+        public static readonly SmudgeType Crater6 = new SmudgeType(5, "cr6", 5);
         public static readonly SmudgeType Scorch1 = new SmudgeType(6, "sc1");
         public static readonly SmudgeType Scorch2 = new SmudgeType(7, "sc2");
         public static readonly SmudgeType Scorch3 = new SmudgeType(8, "sc3");
         public static readonly SmudgeType Scorch4 = new SmudgeType(9, "sc4");
         public static readonly SmudgeType Scorch5 = new SmudgeType(10, "sc5");
         public static readonly SmudgeType Scorch6 = new SmudgeType(11, "sc6");
-        // placeable versions of the bibs. Experimental for now - UI doesn't seem able to handle their full size like the game does.
+        // placeable versions of the bibs.
         public static readonly SmudgeType Bib1Pl = new SmudgeType(12, "bib1", new Size(4, 2));
         public static readonly SmudgeType Bib2Pl = new SmudgeType(13, "bib2", new Size(3, 2));
         public static readonly SmudgeType Bib3Pl = new SmudgeType(14, "bib3", new Size(2, 2));
@@ -45,18 +46,29 @@ namespace MobiusEditor.TiberianDawn
         public static readonly SmudgeType Bib3 = new SmudgeType(17, "bib3", new Size(2, 2), SmudgeTypeFlag.Bib3);
 
         private static SmudgeType[] Types;
+        private static Regex BadCraters;
 
         static SmudgeTypes()
         {
+            BadCraters = new Regex("^CR[2-6]$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
             Types =
                 (from field in typeof(SmudgeTypes).GetFields(BindingFlags.Static | BindingFlags.Public)
                  where field.IsInitOnly && typeof(SmudgeType).IsAssignableFrom(field.FieldType)
                  select field.GetValue(null) as SmudgeType).ToArray();
         }
 
-        public static IEnumerable<SmudgeType> GetTypes()
+        public static Regex GetBadCraterRegex()
         {
-            return Types;
+            return BadCraters;
+        }
+
+        public static IEnumerable<SmudgeType> GetTypes(bool singleCrater)
+        {
+            if (!singleCrater)
+            {
+                return Types;
+            }
+            return Types.Where(sm => !BadCraters.IsMatch(sm.Name));
         }
     }
 }

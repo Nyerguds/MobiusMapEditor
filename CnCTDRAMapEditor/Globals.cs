@@ -29,9 +29,13 @@ namespace MobiusEditor
             PreviewSmoothScale = Properties.Settings.Default.PreviewScale < 0;
             ExportTileScale = Math.Min(1, Math.Max(0.05f, Math.Abs(Properties.Settings.Default.ExportScale)));
             ExportSmoothScale = Properties.Settings.Default.ExportScale < 0;
-            IgnoreBibs = Properties.Settings.Default.IgnoreBibs;
-            IgnoreRaObsoleteClear = Properties.Settings.Default.IgnoreRaObsoleteClear;
             UndoRedoStackSize = Properties.Settings.Default.UndoRedoStackSize;
+            DisableAirUnits = Properties.Settings.Default.DisableAirUnits;
+            ConvertCraters = Properties.Settings.Default.ConvertCraters;
+            BlockingBibs = Properties.Settings.Default.BlockingBibs;
+            ConvertRaObsoleteClear = Properties.Settings.Default.ConvertRaObsoleteClear;
+            BoundsObstructFill = Properties.Settings.Default.BoundsObstructFill;
+            FilterTheaterObjects = Properties.Settings.Default.FilterTheaterObjects;
         }
 
         public const string TilesetsXMLPath = @"DATA\XML\TILESETS.XML";
@@ -61,8 +65,12 @@ namespace MobiusEditor
         public static int ExportTileHeight => Math.Max(1, (int)(OriginalTileHeight * ExportTileScale));
         public static Size ExportTileSize => new Size(ExportTileWidth, ExportTileHeight);
 
-        public static bool IgnoreBibs;
-        public static bool IgnoreRaObsoleteClear;
+        public static bool DisableAirUnits;
+        public static bool ConvertCraters;
+        public static bool BlockingBibs;
+        public static bool ConvertRaObsoleteClear;
+        public static bool BoundsObstructFill;
+        public static bool FilterTheaterObjects;
 
         public static int UndoRedoStackSize = 50;
 

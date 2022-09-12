@@ -80,7 +80,7 @@ namespace MobiusEditor.Tools.Dialogs
             this.smudgeTypeListBox.FormattingEnabled = true;
             this.smudgeTypeListBox.Location = new System.Drawing.Point(4, 4);
             this.smudgeTypeListBox.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
-            this.smudgeTypeListBox.MissingThumbnail = ((System.Drawing.Image)(resources.GetObject("smudgeTypeComboBox.MissingThumbnail")));
+            this.smudgeTypeListBox.MissingThumbnail = ((System.Drawing.Image)(resources.GetObject("smudgeTypeListBox.MissingThumbnail")));
             this.smudgeTypeListBox.Name = "smudgeTypeListBox";
             this.smudgeTypeListBox.Size = new System.Drawing.Size(244, 310);
             this.smudgeTypeListBox.TabIndex = 2;

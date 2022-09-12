@@ -37,19 +37,20 @@ namespace MobiusEditor.Model
         Walls           = 1 << 3,
         Overlay         = 1 << 4,
         Smudge          = 1 << 5,
-        Waypoints       = 1 << 6,
-        CellTriggers    = 1 << 7,
-        Infantry        = 1 << 8,
-        Units           = 1 << 9,
-        Buildings       = 1 << 10,
-        Boundaries      = 1 << 11,
+        Infantry        = 1 << 6,
+        Units           = 1 << 7,
+        Buildings       = 1 << 8,
+
+        Boundaries      = 1 << 9,
+        Waypoints       = 1 << 10,
+        CellTriggers    = 1 << 11,
         TechnoTriggers  = 1 << 12,
         BuildingRebuild = 1 << 13,
         BuildingFakes   = 1 << 14,
 
         OverlayAll = Resources | Walls | Overlay,
         Technos = Terrain | Walls | Infantry | Units | Buildings | BuildingFakes,
-
+        Indicators = Boundaries | Waypoints | CellTriggers | TechnoTriggers | BuildingRebuild | BuildingFakes,
         All = int.MaxValue
     }
 

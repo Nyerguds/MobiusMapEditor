@@ -72,9 +72,9 @@ namespace MobiusEditor.Tools
                     {
                         mapPanel.Invalidate(map, new Rectangle(navigationWidget.MouseCell, selectedSmudgeType.Size));
                     }
-                    mockSmudge.Icon = 0;
+                    mockSmudge.Icon = Math.Min(selectedSmudgeType.Icons - 1, mockSmudge.Icon);
                     mockSmudge.Type = selectedSmudgeType;
-                    RefreshMapPanel();
+                    RefreshPreviewPanel();
                 }
             }
         }
@@ -155,7 +155,7 @@ namespace MobiusEditor.Tools
 
         private void MockSmudge_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            RefreshMapPanel();
+            RefreshPreviewPanel();
         }
 
         private void SelectedSmudge_PropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -500,24 +500,38 @@ namespace MobiusEditor.Tools
             }
         }
 
-        private void RefreshMapPanel()
+        protected override void RefreshPreviewPanel()
         {
             var oldImage = smudgeTypeMapPanel.MapImage;
             SmudgeType mockType = mockSmudge?.Type;
             if (mockType != null)
             {
-                var smudgePreview = new Bitmap(Globals.PreviewTileWidth * mockType.Size.Width, Globals.PreviewTileWidth * mockType.Size.Height);
+                Size mockSize = mockType.Size;
+                CellMetrics mockMetrics = new CellMetrics(mockSize);
+                var smudgePreview = new Bitmap(Globals.PreviewTileWidth * mockSize.Width, Globals.PreviewTileWidth * mockSize.Height);
                 using (var g = Graphics.FromImage(smudgePreview))
                 {
                     MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
-                    if (mockType.Icons > 1)
+                    List<(int, Smudge)> smudgeList = new List<(int, Smudge)>();
+                    int icons = mockSize.Width * mockSize.Height;
+                    for (int i = 0; i < icons; ++i)
                     {
-                        MapRenderer.Render(map.Theater, new Point(0, 0), Globals.PreviewTileSize, Globals.PreviewTileScale, mockSmudge).Item2(g);
+                        Smudge smudge = new Smudge()
+                        {
+                            Type = mockType,
+                            Icon = mockType.IsMultiCell ? i : mockSmudge.Icon
+                        };
+                        smudgeList.Add((i, smudge));
+                        mockMetrics.GetLocation(i, out Point p);
+                        var render = MapRenderer.Render(map.Theater, p, Globals.PreviewTileSize, Globals.PreviewTileScale, smudge);
+                        if (!render.Item1.IsEmpty)
+                        {
+                            MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
+                            render.Item2(g);
+                        }
                     }
-                    else if (mockType.Thumbnail != null && mockType.Icons == 1)
-                    {
-                        g.DrawImage(mockType.Thumbnail, new Rectangle(new Point(0, 0), mockType.Thumbnail.Size));
-                    }
+                    RenderSmudgeBounds(g, Globals.PreviewTileSize, smudgeList, mockMetrics);
+
                 }
                 smudgeTypeMapPanel.MapImage = smudgePreview;
             }
@@ -530,6 +544,7 @@ namespace MobiusEditor.Tools
                 try { oldImage.Dispose(); }
                 catch { /* ignore */ }
             }
+            smudgeTypeMapPanel.Invalidate();
         }
 
         private void UpdateStatus()
@@ -595,12 +610,17 @@ namespace MobiusEditor.Tools
         protected override void PostRenderMap(Graphics graphics)
         {
             base.PostRenderMap(graphics);
-            using (var smudgePen = new Pen(Color.Green, Math.Max(1, Globals.MapTileSize.Width / 16.0f)))
+            RenderSmudgeBounds(graphics, Globals.MapTileSize, previewMap.Smudge.Where(x => !x.Value.Type.IsAutoBib), previewMap.Metrics);
+        }
+
+        public static void RenderSmudgeBounds(Graphics graphics, Size tileSize, IEnumerable<(int, Smudge)> smudgeList, CellMetrics metrics)
+        {
+            using (var smudgePen = new Pen(Color.Green, Math.Max(1, tileSize.Width / 16.0f)))
             {
-                foreach (var (cell, smudge) in previewMap.Smudge.Where(x => !x.Value.Type.IsAutoBib))
+                foreach (var (cell, smudge) in smudgeList)
                 {
-                    previewMap.Metrics.GetLocation(cell, out Point topLeft);
-                    var bounds = new Rectangle(new Point(topLeft.X * Globals.MapTileWidth, topLeft.Y * Globals.MapTileHeight), Globals.MapTileSize);
+                    metrics.GetLocation(cell, out Point topLeft);
+                    var bounds = new Rectangle(new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height), tileSize);
                     graphics.DrawRectangle(smudgePen, bounds);
                 }
             }

@@ -36,6 +36,11 @@ namespace MobiusEditor.Tools
         /// </summary>
         protected override MapLayerFlag ManuallyHandledLayers => MapLayerFlag.Waypoints;
 
+        protected override void RefreshPreviewPanel()
+        {
+            // This tool has no panel.
+        }
+
         private readonly ComboBox waypointCombo;
         private readonly Button jumpToButton;
 

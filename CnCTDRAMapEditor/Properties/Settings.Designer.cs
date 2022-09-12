@@ -34,24 +34,6 @@ namespace MobiusEditor.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool NoMetaFilesForSinglePlay {
-            get {
-                return ((bool)(this["NoMetaFilesForSinglePlay"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool IgnoreBibs {
-            get {
-                return ((bool)(this["IgnoreBibs"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("0.5")]
         public double MapScale {
             get {
@@ -106,19 +88,73 @@ namespace MobiusEditor.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool IgnoreRaObsoleteClear {
+        [global::System.Configuration.DefaultSettingValueAttribute("50")]
+        public int UndoRedoStackSize {
             get {
-                return ((bool)(this["IgnoreRaObsoleteClear"]));
+                return ((int)(this["UndoRedoStackSize"]));
             }
         }
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("50")]
-        public int UndoRedoStackSize {
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool NoMetaFilesForSinglePlay {
             get {
-                return ((int)(this["UndoRedoStackSize"]));
+                return ((bool)(this["NoMetaFilesForSinglePlay"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool ConvertRaObsoleteClear {
+            get {
+                return ((bool)(this["ConvertRaObsoleteClear"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool BlockingBibs {
+            get {
+                return ((bool)(this["BlockingBibs"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool DisableAirUnits {
+            get {
+                return ((bool)(this["DisableAirUnits"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool ConvertCraters {
+            get {
+                return ((bool)(this["ConvertCraters"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool BoundsObstructFill {
+            get {
+                return ((bool)(this["BoundsObstructFill"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool FilterTheaterObjects {
+            get {
+                return ((bool)(this["FilterTheaterObjects"]));
             }
         }
         

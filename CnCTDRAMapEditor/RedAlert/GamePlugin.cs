@@ -293,29 +293,30 @@ namespace MobiusEditor.RedAlert
                 {
                     return;
                 }
-                ini.Sections.Extract("Digest");
-                ini.Sections.Extract("Basic");
-                ini.Sections.Extract("Aftermath");
-                ini.Sections.Extract("Map");
-                ini.Sections.Extract("Steam");
-                ini.Sections.Extract("TeamTypes");
-                ini.Sections.Extract("Trigs");
-                ini.Sections.Extract("MapPack");
-                ini.Sections.Extract("Terrain");
-                ini.Sections.Extract("OverlayPack");
-                ini.Sections.Extract("Smudge");
-                ini.Sections.Extract("Units");
-                ini.Sections.Extract("Aircraft");
-                ini.Sections.Extract("Ships");
-                ini.Sections.Extract("Infantry");
-                ini.Sections.Extract("Structures");
-                ini.Sections.Extract("Base");
-                ini.Sections.Extract("Waypoints");
-                ini.Sections.Extract("CellTriggers");
-                ini.Sections.Extract("Briefing");
+                // Remove any sections known and handled / disallowed by the editor.
+                ini.Sections.Remove("Digest");
+                ini.Sections.Remove("Basic");
+                ini.Sections.Remove("Aftermath");
+                ini.Sections.Remove("Map");
+                ini.Sections.Remove("Steam");
+                ini.Sections.Remove("TeamTypes");
+                ini.Sections.Remove("Trigs");
+                ini.Sections.Remove("MapPack");
+                ini.Sections.Remove("Terrain");
+                ini.Sections.Remove("OverlayPack");
+                ini.Sections.Remove("Smudge");
+                ini.Sections.Remove("Units");
+                ini.Sections.Remove("Aircraft");
+                ini.Sections.Remove("Ships");
+                ini.Sections.Remove("Infantry");
+                ini.Sections.Remove("Structures");
+                ini.Sections.Remove("Base");
+                ini.Sections.Remove("Waypoints");
+                ini.Sections.Remove("CellTriggers");
+                ini.Sections.Remove("Briefing");
                 foreach (var house in Map.Houses)
                 {
-                    ini.Sections.Extract(house.Type.Name);
+                    ini.Sections.Remove(house.Type.Name);
                 }
                 extraSections = ini.Sections.Count == 0 ? null : ini.Sections;
                 UpdateBuildingRules(ini, this.Map);
@@ -337,8 +338,6 @@ namespace MobiusEditor.RedAlert
             this.feedBackHandler = feedBackHandler;
             var playerWaypoints = Enumerable.Range(0, multiStartPoints).Select(i => new Waypoint(string.Format("P{0}", i), WaypointFlag.PlayerStart));
             var generalWaypoints = Enumerable.Range(multiStartPoints, 98 - multiStartPoints).Select(i => new Waypoint(i.ToString()));
-            //var playerWaypoints = Enumerable.Range(0, 8).Select(i => new Waypoint(string.Format("P{0}", i), WaypointFlag.PlayerStart));
-            //var generalWaypoints = Enumerable.Range(8, 90).Select(i => new Waypoint(i.ToString()));
             var specialWaypoints = new Waypoint[] { new Waypoint("Home", WaypointFlag.Home), new Waypoint("Reinf.", WaypointFlag.Reinforce), new Waypoint("Special", WaypointFlag.Special) };
             var waypoints = playerWaypoints.Concat(generalWaypoints).Concat(specialWaypoints);
             var movies = new List<string>(movieTypesRa);
@@ -384,10 +383,10 @@ namespace MobiusEditor.RedAlert
 
             Map = new Map(basicSection, null, Constants.MaxSize, typeof(House),
                 houseTypes, TheaterTypes.GetTypes(), TemplateTypes.GetTypes(),
-                TerrainTypes.GetTypes(), OverlayTypes.GetTypes(), SmudgeTypes.GetTypes(),
+                TerrainTypes.GetTypes(), OverlayTypes.GetTypes(), SmudgeTypes.GetTypes(Globals.ConvertCraters),
                 EventTypes.GetTypes(), cellEventTypes, unitEventTypes, structureEventTypes, terrainEventTypes,
                 ActionTypes.GetTypes(), cellActionTypes, unitActionTypes, structureActionTypes, terrainActionTypes,
-                MissionTypes.GetTypes(), DirectionTypes.GetTypes(), InfantryTypes.GetTypes(), UnitTypes.GetTypes(true),
+                MissionTypes.GetTypes(), DirectionTypes.GetTypes(), InfantryTypes.GetTypes(), UnitTypes.GetTypes(Globals.DisableAirUnits),
                 BuildingTypes.GetTypes(), TeamMissionTypes.GetTypes(), fullTechnoTypes, waypoints, movieTypes, themeTypes)
             {
                 TiberiumOrGoldValue = 35,
@@ -750,7 +749,7 @@ namespace MobiusEditor.RedAlert
                                     {
                                         if (typeValue == 255)
                                         {
-                                            if (!Globals.IgnoreRaObsoleteClear)
+                                            if (Globals.ConvertRaObsoleteClear)
                                             {
                                                 if (!clearedOldClear)
                                                 {
@@ -766,7 +765,7 @@ namespace MobiusEditor.RedAlert
                                             templateType = null;
                                         }
                                     }
-                                    if (!Globals.IgnoreRaObsoleteClear)
+                                    if (Globals.ConvertRaObsoleteClear)
                                     {
                                         if (typeValue == 255 && !clearedOldClear)
                                         {
@@ -856,7 +855,7 @@ namespace MobiusEditor.RedAlert
                     var terrainType = Map.TerrainTypes.Where(t => t.Equals(name)).FirstOrDefault();
                     if (terrainType != null)
                     {
-                        if (terrainType.Theaters != null && !terrainType.Theaters.Contains(Map.Theater))
+                        if (Globals.FilterTheaterObjects && terrainType.Theaters != null && !terrainType.Theaters.Contains(Map.Theater))
                         {
                             errors.Add(string.Format("Terrain '{0}' is not available in the set theater; skipping.", terrainType.Name));
                             continue;
@@ -932,7 +931,7 @@ namespace MobiusEditor.RedAlert
                             var overlayType = Map.OverlayTypes.Where(t => t.Equals(overlayId)).FirstOrDefault();
                             if (overlayType != null)
                             {
-                                if (overlayType.Theaters != null && !overlayType.Theaters.Contains(Map.Theater))
+                                if (Globals.FilterTheaterObjects && overlayType.Theaters != null && !overlayType.Theaters.Contains(Map.Theater))
                                 {
                                     errors.Add(string.Format("Overlay '{0}' is not available in the set theater; skipping.", overlayType.Name));
                                     continue;
@@ -948,8 +947,6 @@ namespace MobiusEditor.RedAlert
                 }
             }
             var smudgeSection = ini.Sections.Extract("Smudge");
-            // Craters other than cr1 don't work right in the game. Replace them by stage-0 cr1.
-            Regex craterRegex = new Regex("^CR[2-6]$", RegexOptions.IgnoreCase);
             if (smudgeSection != null)
             {
                 foreach (var (Key, Value) in smudgeSection)
@@ -963,11 +960,12 @@ namespace MobiusEditor.RedAlert
                     var tokens = Value.Split(',');
                     if (tokens.Length == 3)
                     {
-                        bool badCrater = craterRegex.IsMatch(tokens[0]);
+                        // Craters other than cr1 don't work right in the game. Replace them by stage-0 cr1.
+                        bool badCrater = Globals.ConvertCraters && SmudgeTypes.GetBadCraterRegex().IsMatch(tokens[0]);
                         var smudgeType = badCrater ? SmudgeTypes.Crater1 : Map.SmudgeTypes.Where(t => t.Equals(tokens[0]) && !t.IsAutoBib).FirstOrDefault();
                         if (smudgeType != null)
                         {
-                            if (smudgeType.Theaters != null && !smudgeType.Theaters.Contains(Map.Theater))
+                            if (Globals.FilterTheaterObjects && smudgeType.Theaters != null && !smudgeType.Theaters.Contains(Map.Theater))
                             {
                                 errors.Add(string.Format("Smudge '{0}' is not available in the set theater; skipping.", smudgeType.Name));
                                 continue;
@@ -1113,11 +1111,10 @@ namespace MobiusEditor.RedAlert
                     }
                 }
             }
-            // Classic game does not support this, so I'm leaving this out. It's buggy anyway.
-            // Extracting it so it doesn't end up with the "extra sections"
+            // Classic game does not support this, so I'm leaving this out by default.
+            // It is always extracted, so it doesn't end up with the "extra sections"
             var aircraftSection = ini.Sections.Extract("Aircraft");
-            /*/
-            if (aircraftSection != null)
+            if (!Globals.DisableAirUnits && aircraftSection != null)
             {
                 foreach (var (Key, Value) in aircraftSection)
                 {
@@ -1199,7 +1196,6 @@ namespace MobiusEditor.RedAlert
                     }
                 }
             }
-            //*/
             var shipsSection = ini.Sections.Extract("Ships");
             if (shipsSection != null)
             {
@@ -1435,7 +1431,7 @@ namespace MobiusEditor.RedAlert
                             errors.Add(string.Format("Structure '{0}' references unknown structure.", tokens[1]));
                             continue;
                         }
-                        if (buildingType.Theaters != null && !buildingType.Theaters.Contains(Map.Theater))
+                        if (Globals.FilterTheaterObjects && buildingType.Theaters != null && !buildingType.Theaters.Contains(Map.Theater))
                         {
                             errors.Add(string.Format("Structure '{0}' is not available in the set theater; skipping.", buildingType.Name));
                             continue;
@@ -1547,7 +1543,7 @@ namespace MobiusEditor.RedAlert
                                 errors.Add(string.Format("Base rebuild entry {0} references unknown structure '{1}'.", priority, tokens[0]));
                                 continue;
                             }
-                            if (buildingType.Theaters != null && !buildingType.Theaters.Contains(Map.Theater))
+                            if (Globals.FilterTheaterObjects && buildingType.Theaters != null && !buildingType.Theaters.Contains(Map.Theater))
                             {
                                 errors.Add(string.Format("Base rebuild entry {0} references structure '{1}' which is not available in the set theater; skipping.", priority, buildingType.Name));
                                 continue;
@@ -2030,7 +2026,7 @@ namespace MobiusEditor.RedAlert
                         infantry.Strength,
                         cell,
                         i,
-                        infantry.Mission,
+                        String.IsNullOrEmpty(infantry.Mission) ? "Guard" : infantry.Mission,
                         infantry.Direction.ID,
                         infantry.Trigger
                     );
@@ -2085,30 +2081,31 @@ namespace MobiusEditor.RedAlert
                     unit.Strength,
                     cell,
                     unit.Direction.ID,
-                    unit.Mission,
+                    String.IsNullOrEmpty(unit.Mission) ? "Guard" : unit.Mission,
                     unit.Trigger
                 );
             }
-            // Classic game does not support this, so I'm leaving this out.
-            /*/
-            var aircraftSection = ini.Sections.Add("AIRCRAFT");
-            var aircraftIndex = 0;
-            foreach (var (location, aircraft) in Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsAircraft))
+            // Classic game does not support this, so it's disabled by default.
+            if (!Globals.DisableAirUnits)
             {
-                var key = aircraftIndex.ToString("D3");
-                aircraftIndex++;
+                var aircraftSection = ini.Sections.Add("AIRCRAFT");
+                var aircraftIndex = 0;
+                foreach (var (location, aircraft) in Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsAircraft))
+                {
+                    var key = aircraftIndex.ToString("D3");
+                    aircraftIndex++;
 
-                Map.Metrics.GetCell(location, out int cell);
-                aircraftSection[key] = string.Format("{0},{1},{2},{3},{4},{5}",
-                    aircraft.House.Name,
-                    aircraft.Type.Name,
-                    aircraft.Strength,
-                    cell,
-                    aircraft.Direction.ID,
-                    aircraft.Mission
-                );
+                    Map.Metrics.GetCell(location, out int cell);
+                    aircraftSection[key] = string.Format("{0},{1},{2},{3},{4},{5}",
+                        aircraft.House.Name,
+                        aircraft.Type.Name,
+                        aircraft.Strength,
+                        cell,
+                        aircraft.Direction.ID,
+                        String.IsNullOrEmpty(aircraft.Mission) ? "Guard" : aircraft.Mission
+                    );
+                }
             }
-            //*/
             var shipsSection = ini.Sections.Add("SHIPS");
             var shipsIndex = 0;
             foreach (var (location, ship) in Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsVessel))
@@ -2123,7 +2120,7 @@ namespace MobiusEditor.RedAlert
                     ship.Strength,
                     cell,
                     ship.Direction.ID,
-                    ship.Mission,
+                    String.IsNullOrEmpty(ship.Mission) ? "Guard" : ship.Mission,
                     ship.Trigger
                 );
             }

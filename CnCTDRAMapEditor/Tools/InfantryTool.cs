@@ -77,7 +77,7 @@ namespace MobiusEditor.Tools
 
                     mockInfantry.Type = selectedInfantryType;
 
-                    RefreshMapPanel();
+                    RefreshPreviewPanel();
                 }
             }
         }
@@ -205,7 +205,7 @@ namespace MobiusEditor.Tools
 
         private void MockInfantry_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            RefreshMapPanel();
+            RefreshPreviewPanel();
         }
 
         private void SelectedInfantry_PropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -617,7 +617,7 @@ namespace MobiusEditor.Tools
             UpdateStatus();
         }
 
-        private void RefreshMapPanel()
+        protected override void RefreshPreviewPanel()
         {
             var oldImage = infantryTypeMapPanel.MapImage;
             if (mockInfantry.Type != null)
@@ -705,13 +705,13 @@ namespace MobiusEditor.Tools
             base.PostRenderMap(graphics);
             using (var infantryPen = new Pen(Color.Green, Math.Max(1, Globals.MapTileSize.Width / 16)))
             {
-                foreach (var (topLeft, _) in map.Technos.OfType<InfantryGroup>())
+                foreach (var (topLeft, _) in previewMap.Technos.OfType<InfantryGroup>())
                 {
                     var bounds = new Rectangle(new Point(topLeft.X * Globals.MapTileWidth, topLeft.Y * Globals.MapTileHeight), Globals.MapTileSize);
                     graphics.DrawRectangle(infantryPen, bounds);
                 }
             }
-            RenderTechnoTriggers(graphics, map, Globals.MapTileSize, Globals.MapTileScale, Layers);
+            RenderTechnoTriggers(graphics, previewMap, Globals.MapTileSize, Globals.MapTileScale, Layers);
         }
 
         public override void Activate()

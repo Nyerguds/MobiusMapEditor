@@ -74,7 +74,7 @@ namespace MobiusEditor.Tools
                         mapPanel.Invalidate(map, new Rectangle(navigationWidget.MouseCell, selectedBuildingType.OverlapBounds.Size));
                     }
                     mockBuilding.Type = selectedBuildingType;
-                    RefreshMapPanel();
+                    RefreshPreviewPanel();
                 }
             }
         }
@@ -163,7 +163,7 @@ namespace MobiusEditor.Tools
             {
                 mockBuilding.Direction = map.DirectionTypes.Where(d => d.Equals(FacingType.North)).First();
             }
-            RefreshMapPanel();
+            RefreshPreviewPanel();
         }
 
         private void SelectedBuilding_PropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -605,27 +605,44 @@ namespace MobiusEditor.Tools
             UpdateStatus();
         }
 
-        private void RefreshMapPanel()
+        protected override void RefreshPreviewPanel()
         {
             var oldImage = buildingTypeMapPanel.MapImage;
             if (mockBuilding.Type != null)
             {
-                var render = MapRenderer.Render(plugin.GameType, map.Theater, new Point(0, 0), Globals.PreviewTileSize, Globals.PreviewTileScale, mockBuilding);
-                if (!render.Item1.IsEmpty)
+                Dictionary <Point, Smudge> bibCells = mockBuilding.GetBib(new Point(0, 0), map.SmudgeTypes);
+                List<(Rectangle, Action<Graphics>)> bibRender = new List<(Rectangle, Action<Graphics>)>();
+                if (bibCells != null)
                 {
-                    var buildingPreview = new Bitmap(render.Item1.Width, render.Item1.Height);
-                    using (var g = Graphics.FromImage(buildingPreview))
+                    foreach (var point in bibCells.Keys)
                     {
-                        MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
-                        render.Item2(g);
-                        RenderBuildingLabels(g, mockBuilding, new Point(0, 0), Globals.PreviewTileSize, Globals.PreviewTileScale, Layers, false);
+                        var bibCellRender = MapRenderer.Render(map.Theater, point, Globals.PreviewTileSize, Globals.PreviewTileScale, bibCells[point]);
+                        bibRender.Add(bibCellRender);
                     }
-                    buildingTypeMapPanel.MapImage = buildingPreview;
                 }
-                else
+                var renderBuilding = MapRenderer.Render(plugin.GameType, map.Theater, new Point(0, 0), Globals.PreviewTileSize, Globals.PreviewTileScale, mockBuilding);
+                Size previewSize = mockBuilding.OverlapBounds.Size;
+                var buildingPreview = new Bitmap(previewSize.Width * Globals.PreviewTileWidth, previewSize.Height * Globals.PreviewTileHeight);
+                using (var g = Graphics.FromImage(buildingPreview))
                 {
-                    buildingTypeMapPanel.MapImage = null;
+                    MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
+                    foreach (var bib in bibRender)
+                    {
+                        if (!bib.Item1.IsEmpty)
+                        {
+                            bib.Item2(g);
+                        }
+                    }
+                    if (!renderBuilding.Item1.IsEmpty)
+                    {
+                        renderBuilding.Item2(g);
+                    }
+                    List<(Point p, Building ter)> buildingList = new List<(Point p, Building ter)>();
+                    buildingList.Add((new Point(0, 0), mockBuilding));
+                    RenderBuildingBounds(g, Globals.PreviewTileSize, buildingList);
+                    RenderBuildingLabels(g, mockBuilding, new Point(0, 0), Globals.PreviewTileSize, Globals.PreviewTileScale, MapLayerFlag.All, false);
                 }
+                buildingTypeMapPanel.MapImage = buildingPreview;
             }
             else
             {
@@ -636,6 +653,7 @@ namespace MobiusEditor.Tools
                 try { oldImage.Dispose(); }
                 catch { /* ignore */ }
             }
+            buildingTypeMapPanel.Invalidate();
         }
 
         private void UpdateStatus()
@@ -676,8 +694,18 @@ namespace MobiusEditor.Tools
         protected override void PostRenderMap(Graphics graphics)
         {
             base.PostRenderMap(graphics);
-            float boundsPenSize = Math.Max(1, Globals.MapTileSize.Width / 16.0f);
-            float occupyPenSize = Math.Max(0.5f, Globals.MapTileSize.Width / 32.0f);
+            RenderBuildingBounds(graphics, Globals.MapTileSize, previewMap.Buildings.OfType<Building>());
+            foreach (var (topLeft, building) in previewMap.Buildings.OfType<Building>())
+            {
+                RenderBuildingLabels(graphics, building, topLeft, Globals.MapTileSize, Globals.MapTileScale, Layers, false);
+            }
+            RenderTechnoTriggers(graphics, previewMap, Globals.MapTileSize, Globals.MapTileScale, Layers);
+        }
+
+        private static void RenderBuildingBounds(Graphics graphics, Size tileSize, IEnumerable<(Point, Building)> buildings)
+        {
+            float boundsPenSize = Math.Max(1, tileSize.Width / 16.0f);
+            float occupyPenSize = Math.Max(0.5f, tileSize.Width / 32.0f);
             if (occupyPenSize == boundsPenSize)
             {
                 boundsPenSize += 2;
@@ -685,16 +713,16 @@ namespace MobiusEditor.Tools
             using (var boundsPen = new Pen(Color.Green, boundsPenSize))
             using (var occupyPen = new Pen(Color.Red, occupyPenSize))
             {
-                foreach (var (topLeft, building) in map.Buildings.OfType<Building>())
+                foreach (var (topLeft, building) in buildings)
                 {
                     Rectangle typeBounds = building.Type.OverlapBounds;
                     var bounds = new Rectangle(
-                        new Point(topLeft.X * Globals.MapTileWidth, topLeft.Y * Globals.MapTileHeight),
-                        new Size(typeBounds.Width * Globals.MapTileWidth, typeBounds.Height * Globals.MapTileHeight)
+                        new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height),
+                        new Size(typeBounds.Width * tileSize.Width, typeBounds.Height * tileSize.Height)
                     );
                     graphics.DrawRectangle(boundsPen, bounds);
                 }
-                foreach (var (topLeft, building) in map.Buildings.OfType<Building>())
+                foreach (var (topLeft, building) in buildings)
                 {
                     for (var y = 0; y < building.Type.BaseOccupyMask.GetLength(0); ++y)
                     {
@@ -703,29 +731,13 @@ namespace MobiusEditor.Tools
                             if (building.Type.BaseOccupyMask[y, x])
                             {
                                 var occupyBounds = new Rectangle(
-                                    new Point((topLeft.X + x) * Globals.MapTileWidth, (topLeft.Y + y) * Globals.MapTileHeight),
-                                    Globals.MapTileSize
-                                );
+                                    new Point((topLeft.X + x) * tileSize.Width, (topLeft.Y + y) * tileSize.Height), tileSize);
                                 graphics.DrawRectangle(occupyPen, occupyBounds);
                             }
                         }
                     }
                 }
             }
-            foreach (var (topLeft, building) in map.Buildings.OfType<Building>())
-            {
-                RenderBuildingLabels(graphics, building, topLeft, Globals.MapTileSize, Globals.MapTileScale, Layers, false);
-            }
-            // Find the preview and add labels to it too.
-            foreach (var (topLeft, building) in previewMap.Buildings.OfType<Building>())
-            {
-                if (placementMode && building.Type.ID == mockBuilding.Type.ID && navigationWidget.MouseCell == topLeft && map.Technos.CanAdd(topLeft, building, building.Type.BaseOccupyMask))
-                {
-                    RenderBuildingLabels(graphics, building, topLeft, Globals.MapTileSize, Globals.MapTileScale, Layers, true);
-                    break;
-                }
-            }
-            RenderTechnoTriggers(graphics, map, Globals.MapTileSize, Globals.MapTileScale, Layers);
         }
 
         public override void Activate()

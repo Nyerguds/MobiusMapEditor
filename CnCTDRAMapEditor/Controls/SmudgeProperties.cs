@@ -14,11 +14,8 @@
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using MobiusEditor.Interface;
 using MobiusEditor.Model;
-using MobiusEditor.Utility;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -85,7 +82,10 @@ namespace MobiusEditor.Controls
                 return;
             }
             UpdateDataSource();
-            stateComboBox.DataBindings.Add("SelectedItem", smudge, "Icon");
+            if (stateComboBox.Items.Count > 1)
+            {
+                stateComboBox.DataBindings.Add("SelectedItem", smudge, "Icon");
+            }
             stateComboBox.Enabled = stateComboBox.Items.Count > 1;
         }
 

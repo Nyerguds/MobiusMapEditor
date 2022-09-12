@@ -214,36 +214,7 @@ namespace MobiusEditor.Render
                     {
                         continue;
                     }
-                    string tileName = terrain.Type.GraphicsSource;
-                    if (Globals.TheTilesetManager.GetTileData(map.Theater.Tilesets, tileName, terrain.Icon, out Tile tile))
-                    {
-                        var tint = terrain.Tint;
-                        var imageAttributes = new ImageAttributes();
-                        if (tint != Color.White)
-                        {
-                            var colorMatrix = new ColorMatrix(new float[][]
-                            {
-                                new float[] {tint.R / 255.0f, 0, 0, 0, 0},
-                                new float[] {0, tint.G / 255.0f, 0, 0, 0},
-                                new float[] {0, 0, tint.B / 255.0f, 0, 0},
-                                new float[] {0, 0, 0, tint.A / 255.0f, 0},
-                                new float[] {0, 0, 0, 0, 1},
-                            }
-                            );
-                            imageAttributes.SetColorMatrix(colorMatrix);
-                        }
-                        var location = new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height);
-                        var maxSize = new Size(terrain.Type.Size.Width * tileSize.Width, terrain.Type.Size.Height * tileSize.Height);
-                        Rectangle paintBounds = RenderBounds(tile.Image.Size, terrain.Type.Size, tileScale);
-                        paintBounds.X += location.X;
-                        paintBounds.Y += location.Y;
-                        var terrainBounds = new Rectangle(location, maxSize);
-                        overlappingRenderList.Add((terrainBounds, g => g.DrawImage(tile.Image, paintBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes)));
-                    }
-                    else
-                    {
-                        Debug.Print(string.Format("Terrain {0} ({1}) not found", tileName, terrain.Icon));
-                    }
+                    overlappingRenderList.Add(Render(gameType, map.Theater, topLeft, tileSize, tileScale, terrain));
                 }
             }
             if ((layers & MapLayerFlag.Buildings) != MapLayerFlag.None)
@@ -391,6 +362,42 @@ namespace MobiusEditor.Render
             }
         }
 
+        public static (Rectangle, Action<Graphics>) Render(GameType gameType, TheaterType theater, Point topLeft, Size tileSize, double tileScale, Terrain terrain)
+        {
+            string tileName = terrain.Type.GraphicsSource;
+            if (!Globals.TheTilesetManager.GetTileData(theater.Tilesets, tileName, terrain.Icon, out Tile tile))
+            {
+                Debug.Print(string.Format("Terrain {0} ({1}) not found", tileName, terrain.Icon));
+                return (Rectangle.Empty, (g) => { });
+            }
+            var tint = terrain.Tint;
+            var imageAttributes = new ImageAttributes();
+            if (tint != Color.White)
+            {
+                var colorMatrix = new ColorMatrix(new float[][]
+                {
+                                new float[] {tint.R / 255.0f, 0, 0, 0, 0},
+                                new float[] {0, tint.G / 255.0f, 0, 0, 0},
+                                new float[] {0, 0, tint.B / 255.0f, 0, 0},
+                                new float[] {0, 0, 0, tint.A / 255.0f, 0},
+                                new float[] {0, 0, 0, 0, 1},
+                }
+                );
+                imageAttributes.SetColorMatrix(colorMatrix);
+            }
+            var location = new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height);
+            var maxSize = new Size(terrain.Type.Size.Width * tileSize.Width, terrain.Type.Size.Height * tileSize.Height);
+            Rectangle paintBounds = RenderBounds(tile.Image.Size, terrain.Type.Size, tileScale);
+            paintBounds.X += location.X;
+            paintBounds.Y += location.Y;
+            var terrainBounds = new Rectangle(location, maxSize);
+            void render(Graphics g)
+            {
+                g.DrawImage(tile.Image, paintBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes);
+            }
+            return (terrainBounds, render);
+        }
+
         public static (Rectangle, Action<Graphics>) Render(GameType gameType, TheaterType theater, Point topLeft, Size tileSize, double tileScale, Building building)
         {
             var tint = building.Tint;
@@ -426,7 +433,8 @@ namespace MobiusEditor.Render
                     icon = damageIcon;
                 }
             }
-            if (Globals.TheTilesetManager.GetTeamColorTileData(theater.Tilesets, building.Type.Tilename, icon, Globals.TheTeamColorManager[building.House.BuildingTeamColor], out Tile tile))
+            TeamColor tc = building.Type.CanRemap ? Globals.TheTeamColorManager[building.House.BuildingTeamColor] : null;
+            if (Globals.TheTilesetManager.GetTeamColorTileData(theater.Tilesets, building.Type.Tilename, icon, tc, out Tile tile))
             {
                 var location = new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height);
                 var maxSize = new Size(building.Type.Size.Width * tileSize.Width, building.Type.Size.Height * tileSize.Height);

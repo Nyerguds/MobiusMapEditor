@@ -14,6 +14,7 @@
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using MobiusEditor.Interface;
 using MobiusEditor.Render;
+using MobiusEditor.Tools;
 using System;
 using System.Drawing;
 
@@ -29,6 +30,7 @@ namespace MobiusEditor.Model
         Fake        = (1 << 2),
         Turret      = (1 << 3),
         SingleFrame = (1 << 4),
+        NoRemap     = (1 << 5),
     }
 
     public class BuildingType : ICellOverlapper, ICellOccupier, ITechnoType, IBrowsableType
@@ -76,22 +78,16 @@ namespace MobiusEditor.Model
         }
 
         public string OwnerHouse { get; private set; }
-
         public TheaterType[] Theaters { get; private set; }
-
-        public bool IsFake => (Flag & BuildingTypeFlag.Fake) == BuildingTypeFlag.Fake;
-
-        public bool HasTurret => (Flag & BuildingTypeFlag.Turret) == BuildingTypeFlag.Turret;
-
         public string FactoryOverlay { get; private set; }
-
         public Bitmap Thumbnail { get; set; }
-
         public bool IsArmed => false; // Not actually true, but irrelevant for practical purposes; their Mission is not set in the ini file.
-
         public bool IsHarvester => false;
 
+        public bool IsFake => (Flag & BuildingTypeFlag.Fake) == BuildingTypeFlag.Fake;
+        public bool HasTurret => (Flag & BuildingTypeFlag.Turret) == BuildingTypeFlag.Turret;
         public bool IsSingleFrame => (Flag & BuildingTypeFlag.SingleFrame) == BuildingTypeFlag.SingleFrame;
+        public bool CanRemap => (Flag & BuildingTypeFlag.NoRemap) != BuildingTypeFlag.NoRemap;
 
         public BuildingType(sbyte id, string name, string textId, int powerProd, int powerUse, int storage, bool[,] occupyMask, string ownerHouse, TheaterType[] theaters, string factoryOverlay, BuildingTypeFlag flag)
         {
@@ -113,6 +109,11 @@ namespace MobiusEditor.Model
             RecalculateBibs();
         }
 
+        public BuildingType(sbyte id, string name, string textId, int powerProd, int powerUse, bool[,] occupyMask, string ownerHouse, TheaterType[] theaters, BuildingTypeFlag flag)
+            : this(id, name, textId, powerProd, powerUse, 0, occupyMask, ownerHouse, theaters, null, flag)
+        {
+        }
+        
         public BuildingType(sbyte id, string name, string textId, int powerProd, int powerUse, int storage, bool[,] occupyMask, string ownerHouse)
             : this(id, name, textId, powerProd, powerUse, storage, occupyMask, ownerHouse, null, null, BuildingTypeFlag.None)
         {
@@ -157,7 +158,7 @@ namespace MobiusEditor.Model
                         OccupyMask[y, x] = BaseOccupyMask[y, x];
                     }
                 }
-                if (!Globals.IgnoreBibs)
+                if (Globals.BlockingBibs)
                 {
                     for (var x = 0; x < maskX; ++x)
                     {
@@ -244,6 +245,10 @@ namespace MobiusEditor.Model
                 {
                     MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
                     render.Item2(g);
+                    if (IsFake)
+                    {
+                        ViewTool.RenderBuildingLabels(g, mockBuilding, Point.Empty, Globals.PreviewTileSize, Globals.PreviewTileScale, MapLayerFlag.BuildingFakes, false);
+                    }
                 }
                 Thumbnail = buildingPreview;
             }

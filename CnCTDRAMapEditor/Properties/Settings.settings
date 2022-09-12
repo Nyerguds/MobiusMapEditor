@@ -5,12 +5,6 @@
     <Setting Name="ModsToLoad" Type="System.String" Scope="Application">
       <Value Profile="(Default)">2844969675;Tiberian_Dawn\ConcretePavementTD</Value>
     </Setting>
-    <Setting Name="NoMetaFilesForSinglePlay" Type="System.Boolean" Scope="Application">
-      <Value Profile="(Default)">True</Value>
-    </Setting>
-    <Setting Name="IgnoreBibs" Type="System.Boolean" Scope="Application">
-      <Value Profile="(Default)">False</Value>
-    </Setting>
     <Setting Name="MapScale" Type="System.Double" Scope="Application">
       <Value Profile="(Default)">0.5</Value>
     </Setting>
@@ -29,12 +23,30 @@
     <Setting Name="ObjectToolItemSizeMultiplier" Type="System.Double" Scope="Application">
       <Value Profile="(Default)">0.3</Value>
     </Setting>
-    <Setting Name="IgnoreRaObsoleteClear" Type="System.Boolean" Scope="Application">
-      <Value Profile="(Default)">False</Value>
-    </Setting>
     <Setting Name="UndoRedoStackSize" Type="System.Int32" Scope="Application">
       <Value Profile="(Default)">50</Value>
     </Setting>
+    <Setting Name="NoMetaFilesForSinglePlay" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="ConvertRaObsoleteClear" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="BlockingBibs" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="DisableAirUnits" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="ConvertCraters" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="BoundsObstructFill" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+	<Setting Name="FilterTheaterObjects" Type="System.Boolean" Scope="Application">
+		<Value Profile="(Default)">True</Value>
+	</Setting>
     <Setting Name="ShowInviteWarning" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>

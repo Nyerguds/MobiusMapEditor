@@ -103,7 +103,7 @@ namespace MobiusEditor.Tools
                             }
                         }
                     }
-                    RefreshPreviewMapPanel();
+                    RefreshPreviewPanel();
                 }
             }
         }
@@ -444,108 +444,135 @@ namespace MobiusEditor.Tools
 
         private void HandleFill(MouseButtons button)
         {
-            bool place = button == MouseButtons.Left;
-            bool clear = button == MouseButtons.Right;
             TemplateType selected = SelectedTemplateType;
-            Point? icon = SelectedIcon;
-            if (place && selected == null)
+            if (selected == null)
             {
-                place = false;
-                clear = true;
+                return;
             }
-            if ((!place && !clear) || place && clear)
+            Point? icon = SelectedIcon;
+            bool clear = button == MouseButtons.Right;
+            bool place = button == MouseButtons.Left;
+            // beware: mask has this odd quirk that x comes first, like in coords.
+            // This means flattening it to an array will mess up the order.
+            bool[,] mask = selected.IconMask;
+            bool is1x1 = selected.IconWidth == 1 && selected.IconHeight == 1;
+            if ((!place && !clear) || (place && clear))
             {
                 return;
             }
             Point currentCell = navigationWidget.MouseCell;
-            TemplateType toFind = null;
-            String[] groupToFind = null;
-            if (selected != null)
+            // Determine which types to include in the fill detection
+            HashSet<TemplateType> templatesToFind = new HashSet<TemplateType>();
+            if (place || is1x1)
             {
-                if (selected.IconHeight == 1 && selected.IconWidth == 1 || place)
+                TemplateType toFind = map.Templates[currentCell]?.Type;
+                if (toFind != null && (toFind.Flag & TemplateTypeFlag.IsGrouped) != TemplateTypeFlag.None && toFind.GroupTiles.Length == 1)
                 {
-                    Template cellToFind = map.Templates[currentCell];
-                    toFind = cellToFind == null ? null : cellToFind.Type;
-
-                    if (toFind != null && (toFind.Flag & TemplateTypeFlag.IsGrouped) != TemplateTypeFlag.None && toFind.GroupTiles.Length == 1)
-                    {
-                        string owningType = toFind.GroupTiles[0];
-                        TemplateType group = map.TemplateTypes.Where(t => t.Name.Equals(owningType, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
-                        groupToFind = group.GroupTiles.ToArray();
-                    }
+                    string owningType = toFind.GroupTiles[0];
+                    TemplateType group = map.TemplateTypes.Where(t => t.Name.Equals(owningType, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+                    templatesToFind.UnionWith(map.TemplateTypes.Where(t => group.GroupTiles.Contains(t.Name, StringComparer.InvariantCultureIgnoreCase)));
                 }
-                else if (clear)
+                else
                 {
-                    // For Clear, it'll evaluate all cell types under the full selected tile, and clear all adjacent tiles of all those types.
-                    List<TemplateType> typesToFind = new List<TemplateType>();
-                    int endY = currentCell.Y + selected.IconHeight;
-                    int endX = currentCell.X + selected.IconWidth;
-                    for (int y = currentCell.Y; y < endY; ++y)
-                    {
-                        for (int x = currentCell.X; x < endX; ++x)
-                        {
-                            if (map.Metrics.GetCell(new Point(x, y), out int cell))
-                            {
-                                typesToFind.Add(map.Templates[cell]?.Type);
-                            }
-                        }
-                    }
-                    // Detect any group types inside it and get the full list.
-                    List<string> listToFind = new List<string>();
-                    foreach (TemplateType tp in typesToFind)
-                    {
-                        if (tp != null && (tp.Flag & TemplateTypeFlag.IsGrouped) != TemplateTypeFlag.None && tp.GroupTiles.Length == 1)
-                        {
-                            string owningType = tp.GroupTiles[0];
-                            TemplateType group = map.TemplateTypes.Where(t => t.Name.Equals(owningType, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
-                            listToFind.AddRange(group.GroupTiles);
-                        }
-                        else
-                        {
-                            listToFind.Add(tp?.Name);
-                        }
-                    }
-                    groupToFind = listToFind.Distinct().ToArray();
+                    templatesToFind.Add(toFind);
                 }
             }
+            else if (clear)
+            {
+                // For Clear, it'll evaluate all cell types under the full selected tile, and clear all adjacent tiles of all those types.
+                List<TemplateType> typesToFind = new List<TemplateType>();
+                for (int y = 0; y < selected.IconHeight; ++y)
+                {
+                    for (int x = 0; x < selected.IconWidth; ++x)
+                    {
+                        Point toCheck = new Point(x + currentCell.X, y + currentCell.Y);
+                        if (mask[x, y] && map.Metrics.GetCell(toCheck, out int cell))
+                        {
+                            typesToFind.Add(map.Templates[cell]?.Type);
+                        }
+                    }
+                }
+                // Detect any group types inside it and get the full list.
+                foreach (TemplateType tp in typesToFind)
+                {
+                    if (tp != null && (tp.Flag & TemplateTypeFlag.IsGrouped) != TemplateTypeFlag.None && tp.GroupTiles.Length == 1)
+                    {
+                        string owningType = tp.GroupTiles[0];
+                        TemplateType group = map.TemplateTypes.Where(t => t.Name.Equals(owningType, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+                        templatesToFind.UnionWith(map.TemplateTypes.Where(t => group.GroupTiles.Contains(t.Name, StringComparer.InvariantCultureIgnoreCase)));
+                    }
+                    else
+                    {
+                        templatesToFind.Add(tp);
+                    }
+                }
+            }
+            // Transform map data to simpler array.
             int mapWidth = map.Metrics.Width;
             int mapHeight = map.Metrics.Height;
             Template[] scanData = new Template[mapHeight * mapWidth];
-
             foreach ((int cell, Template t) in map.Templates)
             {
                 scanData[cell] = t;
             }
-            Boolean containsType(Template[] mapData, int yVal, int xVal)
+            // Determine which cells to perform the blob search on.
+            List<Point> detectPoints = new List<Point>();
+            if (place || is1x1)
             {
-                TemplateType typeAtPoint = mapData[mapWidth * yVal + xVal]?.Type;
-                if (toFind == null && groupToFind == null)
-                {
-                    return typeAtPoint == null;
-                }
-                if (typeAtPoint == null)
-                {
-                    // If the group contains null; it fits.
-                    return groupToFind != null && groupToFind.Any(t => t == null);
-                }
-                if (groupToFind != null)
-                {
-                    return groupToFind.Any(t => String.Equals(t, typeAtPoint.Name, StringComparison.InvariantCultureIgnoreCase));
-                }
-                return typeAtPoint.Equals(toFind);
+                // Placement mode: only fill from the actual mouse point.
+                detectPoints.Add(currentCell);
             }
-            List<Point> fillPoints = BlobDetection.MakeBlobForPoint(currentCell.X, currentCell.Y, scanData, mapWidth, mapHeight,
-                                                                    containsType, false, false, null, out Boolean[,] inBlob);
+            else
+            {
+                // Clear mode: fill with all cells in the grid that are in the icon mask.
+                for (int y = 0; y < selected.IconHeight; ++y)
+                {
+                    for (int x = 0; x < selected.IconWidth; ++x)
+                    {
+                        Point toAdd = new Point(x + currentCell.X, y + currentCell.Y);
+                        if (mask[x, y] && map.Metrics.GetCell(toAdd, out int cell))
+                        {
+                            detectPoints.Add(toAdd);
+                        }
+                    }
+                }
+            }
+            // Actual flood fill part.
+            Rectangle bounds = map.Bounds;
+            bool inBounds = bounds.Contains(currentCell);
+            bool validCell(Template[] mapData, int yVal, int xVal)
+            {
+                if (Globals.BoundsObstructFill)
+                {
+                    bool pointInBounds = bounds.Contains(xVal, yVal);
+                    if ((inBounds && !pointInBounds) || (!inBounds && pointInBounds))
+                    {
+                        return false;
+                    }
+                }
+                return templatesToFind.Contains(mapData[mapWidth * yVal + xVal]?.Type);
+            }
+            HashSet<Point> fillPoints = new HashSet<Point>();
+            foreach (Point p in detectPoints)
+            {
+                if (!fillPoints.Contains(p))
+                {
+                    List<Point> blobPoints = BlobDetection.MakeBlobForPoint(p.X, p.Y, scanData, mapWidth, mapHeight,
+                        validCell, false, false, null, out _);
+                    fillPoints.UnionWith(blobPoints);
+                }
+            }
             undoTemplates.Clear();
             redoTemplates.Clear();
-            bool is1x1 = selected.IconWidth == 1 && selected.IconHeight == 1;
-            if (clear || icon.HasValue || is1x1)
+            // Prevent it from placing down actual clear terrain.
+            bool isClear = clear || (selected.Flag & TemplateTypeFlag.Clear) == TemplateTypeFlag.Clear;
+            if (isClear || icon.HasValue || is1x1)
             {
                 foreach (Point fill in fillPoints)
                 {
                     if (map.Metrics.GetCell(fill, out int cell))
                     {
-                        if (clear)
+                        if (isClear)
                         {
                             undoTemplates[cell] = map.Templates[fill];
                             map.Templates[cell] = null;
@@ -557,6 +584,7 @@ namespace MobiusEditor.Tools
                         }
                     }
                 }
+                mapPanel.Invalidate(map, fillPoints);
             }
             else if (place)
             {
@@ -565,7 +593,6 @@ namespace MobiusEditor.Tools
                 // get offset
                 int originX = currentCell.X % width;
                 int originY = currentCell.Y % height;
-                bool[] toFill = selected.IconMask.Cast<bool>().ToArray();
                 List<Point> refreshList = new List<Point>();
                 foreach (Point p in fillPoints)
                 {
@@ -576,7 +603,7 @@ namespace MobiusEditor.Tools
                     if (diffY < 0)
                         diffY += height;
                     int paintIcon = diffY * width + diffX;
-                    if (!toFill[paintIcon])
+                    if (!mask[diffX,diffY])
                     {
                         continue;
                     }
@@ -593,11 +620,10 @@ namespace MobiusEditor.Tools
                         redoTemplates[cell] = tmp;
                     }
                 }
-                // Exclude nonexistent tiles that didn't get replaced.
-                fillPoints = refreshList;
+                // Exclude nonexistent tiles that didn't get replaced from the refresh.
+                mapPanel.Invalidate(map, refreshList);
             }
             CommitTileChanges(true);
-            mapPanel.Invalidate(map, fillPoints);
         }
 
         private void MapPanel_MouseUp(object sender, MouseEventArgs e)
@@ -773,7 +799,7 @@ namespace MobiusEditor.Tools
             }
         }
 
-        private void RefreshPreviewMapPanel()
+        protected override void RefreshPreviewPanel()
         {
             if (templateTypeNavigationWidget != null)
             {
@@ -1302,7 +1328,7 @@ namespace MobiusEditor.Tools
             }
             else if (fillMode)
             {
-                statusLbl.Text = "Left-Click to fill, Right-Click to clear-fill; affects all neighboring tiles of the underlying type.";
+                statusLbl.Text = "Left-Click to fill all tiles adjacent to the mouse cell of the type under the mouse cell, Right-Click to clear all adjacent tiles of all types under the selected template's cells.";
             }
             else if (boundsMode)
             {

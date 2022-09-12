@@ -36,6 +36,11 @@ namespace MobiusEditor.Tools
         /// </summary>
         protected override MapLayerFlag ManuallyHandledLayers => MapLayerFlag.CellTriggers;
 
+        protected override void RefreshPreviewPanel()
+        {
+            // This tool has no panel.
+        }
+
         private readonly ComboBox triggerComboBox;
 
         private readonly Dictionary<int, CellTrigger> undoCellTriggers = new Dictionary<int, CellTrigger>();

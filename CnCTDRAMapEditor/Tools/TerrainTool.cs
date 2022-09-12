@@ -16,9 +16,11 @@ using MobiusEditor.Controls;
 using MobiusEditor.Event;
 using MobiusEditor.Interface;
 using MobiusEditor.Model;
+using MobiusEditor.Render;
 using MobiusEditor.Utility;
 using MobiusEditor.Widgets;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
@@ -72,7 +74,7 @@ namespace MobiusEditor.Tools
                     }
                     mockTerrain.Type = selectedTerrainType;
                     mockTerrain.Icon = selectedTerrainType.DisplayIcon;
-                    RefreshMapPanel();
+                    RefreshPreviewPanel();
                 }
             }
         }
@@ -160,7 +162,7 @@ namespace MobiusEditor.Tools
 
         private void MockTerrain_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            RefreshMapPanel();
+            RefreshPreviewPanel();
         }
 
         private void TerrainTypeCombo_SelectedIndexChanged(object sender, EventArgs e)
@@ -392,9 +394,37 @@ namespace MobiusEditor.Tools
             UpdateStatus();
         }
 
-        private void RefreshMapPanel()
+        protected override void RefreshPreviewPanel()
         {
-            terrainTypeMapPanel.MapImage = mockTerrain.Type.Thumbnail;
+            var oldImage = terrainTypeMapPanel.MapImage;
+            if (mockTerrain.Type != null)
+            {
+                Size previewSize = mockTerrain.Type.OverlapBounds.Size;
+                var terrainPreview = new Bitmap(previewSize.Width * Globals.PreviewTileWidth, previewSize.Height * Globals.PreviewTileHeight);
+                using (var g = Graphics.FromImage(terrainPreview))
+                {
+                    MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
+                    var render = MapRenderer.Render(plugin.GameType, map.Theater, new Point(0, 0), Globals.PreviewTileSize, Globals.PreviewTileScale, mockTerrain);
+                    if (!render.Item1.IsEmpty)
+                    {
+                        render.Item2(g);
+                    }
+                    List<(Point p, Terrain ter)> terrainList = new List<(Point p, Terrain ter)>();
+                    terrainList.Add((new Point(0, 0), mockTerrain));
+                    RenderTerrainBounds(g, Globals.PreviewTileSize, terrainList);
+                }
+                terrainTypeMapPanel.MapImage = terrainPreview;
+            }
+            else
+            {
+                terrainTypeMapPanel.MapImage = null;
+            }
+            if (oldImage != null)
+            {
+                try { oldImage.Dispose(); }
+                catch { /* ignore */ }
+            }
+            terrainTypeMapPanel.Invalidate();
         }
 
         private void UpdateStatus()
@@ -443,8 +473,14 @@ namespace MobiusEditor.Tools
         protected override void PostRenderMap(Graphics graphics)
         {
             base.PostRenderMap(graphics);
-            float boundsPenSize = Math.Max(1, Globals.MapTileSize.Width / 16.0f);
-            float occupyPenSize = Math.Max(0.5f, Globals.MapTileSize.Width / 32.0f);
+            RenderTerrainBounds(graphics, Globals.MapTileSize, previewMap.Technos.OfType<Terrain>());
+            RenderTechnoTriggers(graphics, map, Globals.MapTileSize, Globals.MapTileScale, Layers);
+        }
+
+        private static void RenderTerrainBounds(Graphics graphics, Size tileSize, IEnumerable<(Point p, Terrain ter)> terrainList)
+        {
+            float boundsPenSize = Math.Max(1, tileSize.Width / 16.0f);
+            float occupyPenSize = Math.Max(0.5f, tileSize.Width / 32.0f);
             if (occupyPenSize == boundsPenSize)
             {
                 boundsPenSize++;
@@ -452,12 +488,12 @@ namespace MobiusEditor.Tools
             using (var boundsPen = new Pen(Color.Green, boundsPenSize))
             using (var occupyPen = new Pen(Color.Red, occupyPenSize))
             {
-                foreach (var (topLeft, terrain) in previewMap.Technos.OfType<Terrain>())
+                foreach (var (topLeft, terrain) in terrainList)
                 {
-                    var bounds = new Rectangle(new Point(topLeft.X * Globals.MapTileWidth, topLeft.Y * Globals.MapTileHeight), terrain.Type.GetRenderSize(Globals.MapTileSize));
+                    var bounds = new Rectangle(new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height), terrain.Type.GetRenderSize(tileSize));
                     graphics.DrawRectangle(boundsPen, bounds);
                 }
-                foreach (var (topLeft, terrain) in previewMap.Technos.OfType<Terrain>())
+                foreach (var (topLeft, terrain) in terrainList)
                 {
                     for (var y = 0; y < terrain.Type.OccupyMask.GetLength(0); ++y)
                     {
@@ -466,16 +502,14 @@ namespace MobiusEditor.Tools
                             if (!terrain.Type.OccupyMask[y, x])
                                 continue;
                             var occupyBounds = new Rectangle(
-                                new Point((topLeft.X + x) * Globals.MapTileWidth, (topLeft.Y + y) * Globals.MapTileHeight),
-                                Globals.MapTileSize
-                            );
+                                new Point((topLeft.X + x) * tileSize.Width, (topLeft.Y + y) * tileSize.Height), tileSize);
                             graphics.DrawRectangle(occupyPen, occupyBounds);
                         }
                     }
                 }
             }
-            RenderTechnoTriggers(graphics, map, Globals.MapTileSize, Globals.MapTileScale, Layers);
         }
+        
 
         public override void Activate()
         {

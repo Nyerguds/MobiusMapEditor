@@ -19,7 +19,7 @@ namespace MobiusEditor.Tools.Dialogs
         protected override void InitializeInternal(MapPanel mapPanel, MapLayerFlag activeLayers, ToolStripStatusLabel toolStatusLabel, ToolTip mouseToolTip, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> undoRedoList)
         {
             ObjectTypeListBox.Types = plugin.Map.BuildingTypes
-                .Where(t => (t.Theaters == null) || t.Theaters.Contains(plugin.Map.Theater))
+                .Where(t => !Globals.FilterTheaterObjects || t.Theaters == null || t.Theaters.Contains(plugin.Map.Theater))
                 .OrderBy(t => t.ID);
             Tool = new BuildingTool(mapPanel, activeLayers, toolStatusLabel, ObjectTypeListBox,
                 ObjectTypeMapPanel, ObjectProperties, plugin, undoRedoList);
