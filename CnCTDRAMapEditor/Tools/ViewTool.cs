@@ -98,6 +98,7 @@ namespace MobiusEditor.Tools
                         {
                             mapPanel.Invalidate(map, baseBuilding);
                         }
+                        MapPropertiesChanged();
                     }
                     break;
                 case "ExpansionEnabled":
@@ -105,6 +106,16 @@ namespace MobiusEditor.Tools
                     RemoveExpansionUnits();
                     break;
             }
+        }
+
+        protected virtual void MapPropertiesChanged()
+        {
+            // Can be overridden by tool windows.
+        }
+
+        protected virtual void RefreshPreviewPanel()
+        {
+            // Can be overridden by tool windows.
         }
 
         protected virtual void UpdateExpansionUnits()
@@ -180,8 +191,6 @@ namespace MobiusEditor.Tools
                 }
             }
         }
-
-        protected abstract void RefreshPreviewPanel();
 
         private void Map_RulesChanged(Object sender, MapRefreshEventArgs e)
         {

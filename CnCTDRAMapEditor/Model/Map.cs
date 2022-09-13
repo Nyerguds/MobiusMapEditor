@@ -681,6 +681,19 @@ namespace MobiusEditor.Model
             }
         }
 
+        public HouseType GetBaseHouse(GameType gameType)
+        {
+            House noneHouse = HousesIncludingNone.Where(h => h.Type.ID < 0).FirstOrDefault();
+            if (noneHouse != null && gameType == GameType.TiberianDawn)
+            {
+                return noneHouse.Type;
+            }
+            else
+            {
+                return HouseTypes.Where(h => h.Equals(BasicSection.BasePlayer)).FirstOrDefault() ?? HouseTypes.First();
+            }
+        }
+
         private void RemoveBibs(Building building)
         {
             var bibCells = Smudge.IntersectsWith(building.BibCells).Where(x => x.Value.Type.IsAutoBib).Select(x => x.Cell).ToArray();
@@ -897,18 +910,15 @@ namespace MobiusEditor.Model
 
         public ICellOccupier FindBlockingObject(int cell, ICellOccupier obj, out int blockingCell)
         {
-            ICellOccupier techno = null;
-            
             blockingCell = -1;
             if (Metrics.GetLocation(cell, out Point p))
             {
                 bool[,] mask;
                 int ylen;
                 int xlen;
-                bool isBuilding = false;
+                // First check bounds without bib.
                 if (obj is BuildingType bld)
                 {
-                    isBuilding = true;
                     mask = bld.BaseOccupyMask;
                     ylen = mask.GetLength(0);
                     xlen = mask.GetLength(1);
@@ -919,11 +929,12 @@ namespace MobiusEditor.Model
                             if (mask[y, x])
                             {
                                 Metrics.GetCell(new Point(p.X + x, p.Y + y), out int targetCell);
-                                techno = Technos[targetCell];
-                                if (techno != null)
+                                ICellOccupier techno = Technos[targetCell];
+                                ICellOccupier b = Buildings[targetCell];
+                                if (techno != null || b != null)
                                 {
                                     blockingCell = targetCell;
-                                    return techno;
+                                    return techno ?? b;
                                 }
                             }
                         }
@@ -939,20 +950,18 @@ namespace MobiusEditor.Model
                         if (mask[y, x])
                         {
                             Metrics.GetCell(new Point(p.X + x, p.Y + y), out int targetCell);
-                            techno = Technos[targetCell];
-                            if (techno != null)
+                            ICellOccupier techno = Technos[targetCell];
+                            ICellOccupier b = Buildings[targetCell];
+                            if (techno != null || b != null)
                             {
-                                if (!isBuilding || (!(techno is Infantry) && !(techno is InfantryGroup) && !(techno is Unit)))
-                                {
-                                    blockingCell = targetCell;
-                                    return techno;
-                                }
+                                blockingCell = targetCell;
+                                return techno ?? b;
                             }
                         }
                     }
                 }
             }
-            return techno;
+            return null;
         }
 
         public TGA GeneratePreview(Size previewSize, GameType gameType, bool renderAll, bool sharpen)

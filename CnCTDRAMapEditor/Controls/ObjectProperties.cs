@@ -280,14 +280,14 @@ namespace MobiusEditor.Controls
         {
             if (building.BasePriority >= 0 && !building.IsPrebuilt)
             {
-                House noneHouse = Plugin.Map.HousesIncludingNone.Where(h => h.Type.ID < 0).FirstOrDefault();
-                if (noneHouse != null)
+                HouseType house = Plugin.Map.GetBaseHouse(Plugin.GameType);
+                if (house.ID < 0)
                 {
                     // Fix for changing the combobox to one only containing "None".
                     houseComboBox.DataBindings.Clear();
-                    houseComboBox.DataSource = noneHouse.Yield().Select(t => new TypeItem<HouseType>(t.Type.Name, t.Type)).ToArray();
+                    houseComboBox.DataSource = house.Yield().Select(t => new TypeItem<HouseType>(t.Name, t)).ToArray();
                     houseComboBox.SelectedIndex = 0;
-                    building.House = noneHouse.Type;
+                    building.House = house;
                     houseComboBox.DataBindings.Add("SelectedValue", obj, "House");
                 }
                 else
@@ -315,6 +315,8 @@ namespace MobiusEditor.Controls
                 building.Strength = 255;
                 building.Direction = Plugin.Map.DirectionTypes.First();
                 building.Trigger = Trigger.None;
+                building.Sellable = false;
+                building.Rebuild = false;
             }
             if (directionComboBox.Visible)
             {
@@ -323,6 +325,14 @@ namespace MobiusEditor.Controls
             houseComboBox.Enabled = building.IsPrebuilt;
             strengthNud.Enabled = building.IsPrebuilt;
             triggerComboBox.Enabled = building.IsPrebuilt;
+            if (sellableCheckBox.Visible)
+            {
+                sellableCheckBox.Enabled = building.IsPrebuilt;
+            }
+            if (rebuildCheckBox.Visible)
+            {
+                rebuildCheckBox.Enabled = building.IsPrebuilt;
+            }
         }
 
         private void comboBox_SelectedValueChanged(object sender, EventArgs e)

@@ -62,6 +62,11 @@ namespace MobiusEditor.Utility
             }
         }
 
+        public static Point CenterPoint(this Rectangle rectangle)
+        {
+            return new Point(rectangle.X + rectangle.Width / 2, rectangle.Y + rectangle.Height / 2);
+        }
+
         public static IEnumerable<Point> Points(this Rectangle rectangle)
         {
             for (var y = rectangle.Top; y < rectangle.Bottom; ++y)

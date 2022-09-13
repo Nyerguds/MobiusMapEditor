@@ -89,7 +89,7 @@ namespace MobiusEditor.Model
         public event PropertyChangedEventHandler PropertyChanged;
 
         private int x;
-        [DefaultValue(0)]
+        [DefaultValue(1)]
         public int X
         {
             get { return x; }
@@ -101,7 +101,7 @@ namespace MobiusEditor.Model
         }
 
         private int y;
-        [DefaultValue(0)]
+        [DefaultValue(1)]
         public int Y
         {
             get { return y; }
@@ -113,7 +113,7 @@ namespace MobiusEditor.Model
         }
 
         private int width;
-        [DefaultValue(0)]
+        [DefaultValue(1)]
         public int Width
         {
             get { return width; }
@@ -125,7 +125,7 @@ namespace MobiusEditor.Model
         }
 
         private int height;
-        [DefaultValue(0)]
+        [DefaultValue(1)]
         public int Height
         {
             get { return height; }

@@ -1117,10 +1117,10 @@ namespace MobiusEditor.Render
 
         public static void RenderMapBoundaries(Graphics graphics, Map map, Size tileSize)
         {
-            RenderMapBoundaries(graphics, map.Bounds, tileSize, Color.Cyan);
+            RenderMapBoundaries(graphics, map.Bounds, tileSize, Color.Cyan, false);
         }
 
-        public static void RenderMapBoundaries(Graphics graphics, Rectangle bounds, Size tileSize, Color color)
+        public static void RenderMapBoundaries(Graphics graphics, Rectangle bounds, Size tileSize, Color color, bool diagonals)
         {
             var boundsRect = Rectangle.FromLTRB(
                 bounds.Left * tileSize.Width,
@@ -1129,7 +1129,14 @@ namespace MobiusEditor.Render
                 bounds.Bottom * tileSize.Height
             );
             using (var boundsPen = new Pen(color, Math.Max(1f, tileSize.Width / 8.0f)))
+            {
                 graphics.DrawRectangle(boundsPen, boundsRect);
+                if (diagonals)
+                {
+                    graphics.DrawLine(boundsPen, new Point(boundsRect.X, boundsRect.Y), new Point(boundsRect.Right, boundsRect.Bottom));
+                    graphics.DrawLine(boundsPen, new Point(boundsRect.Right, boundsRect.Y), new Point(boundsRect.X, boundsRect.Bottom));
+                }
+            }
         }
 
         public static void SetRenderSettings(Graphics g, Boolean smooth)

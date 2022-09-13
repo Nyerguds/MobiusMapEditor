@@ -63,7 +63,6 @@ namespace MobiusEditor.Model
             {
                 return string.Equals(Name, obj as string, StringComparison.OrdinalIgnoreCase);
             }
-
             return base.Equals(obj);
         }
 

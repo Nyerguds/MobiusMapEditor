@@ -32,20 +32,18 @@ The file "CnCTDRAMapEditor.exe.config" contains settings to customise the editor
 
 * **ModsToLoad**: semicolon (or comma) separated list of mod entries. A mod entry can either be a Steam workshop ID, or a path of the type "Tiberian_Dawn\ModName" or "Red_Alert\ModName". The paths will initially be looked up under My Documents, but the loading system will also check the Steam workshop files, and use the game prefix part to verify the mod's targeted game. Note that due to the order in which files are loaded into the editor, mods are **not** loaded conditionally per map type based on this targeted game. The editor also has no way to check which mods are actually enabled in the game, and will load anything that is configured and of which the files can be found.
 * **MapScale**: Scaling multiplier for the size at which assets are rendered on the map; higher means lower quality. This will make the UI more responsive. Negative values will enable smooth scaling, which gives nicer graphics but will make the UI noticeable _less_ responsive. Defaults to 0.5.
-* **PreviewScale**: Scaling multiplier for the size at which assets are rendered on the preview tools. Negative values will enable smooth scaling, but this usually doesn't look good on the upscaled preview graphics. Defaults to 1
+* **PreviewScale**: Scaling multiplier for the size at which assets are rendered on the preview tools. Negative values will enable smooth scaling, but this usually doesn't look good on the upscaled preview graphics. Defaults to 1.
 * **ExportScale**: Scaling multiplier for the size at which an exported image will be generated through "Tools" → "Export As Image". Negative values will enable smooth scaling. Defaults to -0.5.
 * **ObjectToolItemSizeMultiplier**: Floating-point multiplication factor for downsizing the item icons on the selection lists on the tool windows.
 * **TemplateToolTextureSizeMultiplier**: Floating-point multiplication factor for the size of tiles shown on the Map tool. This scaling is somehow done relative to the screen size; not sure.
 * **MaxMapTileTextureSize**: Maximum for the size of the tiles shown on the Map tool. Leave on 0 to disable.
-* [WIP; v1.4.3.0] **UndoRedoStackSize**: The amount of undo/redo actions stored in memory. Defaults to 50.
+* **UndoRedoStackSize**: The amount of undo/redo actions stored in memory. Defaults to 50.
 
 The **ModsToLoad** setting will have the `Tiberian_Dawn\ConcretePavementTD` mod set by default, to complete the incomplete TD Remastered graphics set, meaning it will automatically be loaded if found.
 
 You can find the mod [on the Steam workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2844969675) and [on ModDB](https://www.moddb.com/games/command-conquer-remastered/addons/concretepavementtd).
 
 ### Tweaks:
-
-[WIP; v1.4.3.0. Some already exist in the current version with slightly different names]
 
 These options are all enabled by default, but can be disabled if you wish. Use these at your own risk.
 
@@ -80,7 +78,7 @@ These options are all enabled by default, but can be disabled if you wish. Use t
 * Sorted all items in the lists (except map tiles) by key, which is usually a lot more straightforward.
 * Split off specific separate list for techno types usable in teamtypes.
 * Removed the Aircraft from the placeable units in TD.
-* Removed irrelevant orders from the unit missions list (Selling, Missile, etc.)
+* Removed irrelevant orders from the unit missions list (Selling, Missile, etc).
 * Fixed case sensitivity related crashes in TD teamtypes.
 * TD triggers without a teamtype will now automatically get "None" filled in as teamtype, fixing the malfunctioning of their repeat status.
 * Added [Ctrl]+[N], [Ctrl]+[O], [Ctrl]+[S] etc. shortcuts for the File menu.
@@ -92,7 +90,7 @@ These options are all enabled by default, but can be disabled if you wish. Use t
 * Added "Add" buttons in triggers and teamtypes dialogs.
 * Fixed tab order in triggers and teamtypes dialogs.
 * Fixed crash in "already exists" messages for triggers and teamtypes.
-* Randomised tiberium on save, like the original WW editor does. (this is purely cosmetic; the game re-randomises it on map load.)
+* Randomised tiberium on save, like the original WW editor does. (This is purely cosmetic; the game re-randomises it on map load.)
 * [EXPERIMENTAL] Added ability to place bibs as smudge type. They won't show their full size in the editor at the moment, though.
 
 #### v1.4.0.1:
@@ -284,7 +282,7 @@ These options are all enabled by default, but can be disabled if you wish. Use t
 * If the map is marked as single player scenario, the first waypoints are no longer indicated as player start positions with a "P" prefix.
 * Mods will now only be loaded for maps targeted at their respective game, meaning common assets can be overridden differently by TD and RA mods.
 
-#### v1.4.3.0: [WIP]
+#### v1.4.3.0:
 
 * Fixed a bug where the default House in TD maps was set to "None", causing them to crash the game.
 * Bibs placed as the 'smudge' type now show their full size, and can be placed in ways that makes them partially overlap. As long as at least one cell of a bib exists, the bib exists.
@@ -298,7 +296,7 @@ These options are all enabled by default, but can be disabled if you wish. Use t
 * Fixed bug where tool windows can be closed with [Alt]+[F4], causing the editor to crash when trying to re-open them.
 * Fixed tab indices on the "New Map" dialog, so the radio buttons are selected by default.
 * Mobile Radar Jammer and Mobile Gap Generator now show different facings for their "turrets".
-* Fixed a bug in the power balance tool which made it ignore the first House
+* Fixed a bug in the power balance tool which made it ignore the first House.
 * Added a silo storage capacity tool.
 * Added a section in the map settings for scenario-specific options in RA maps.
 * Added a rules editing field for RA maps that allows editing/adding ini sections not handled by the editor. Changing building bibs, power and resource storage in this will immediately affect the editor.
@@ -309,13 +307,19 @@ These options are all enabled by default, but can be disabled if you wish. Use t
 * Added options to re-enable aircraft and full craters list.
 * Changed all tweak options to have True as default value.
 * Fixed the fact the Oil Pump (V19) was not usable in Interior theater.
-* Added specific "FilterTheaterObjects" option for the behavior of filtering out theater-illegal objects
-* Added the Desert civilian buildings to RA (though they won't show unless "FilterTheaterObjects" is disabled)
+* Added specific "FilterTheaterObjects" option for the behavior of filtering out theater-illegal objects.
+* Added the Desert civilian buildings to RA (though they won't show unless "FilterTheaterObjects" is disabled).
 * The building tool preview now shows bibs.
 * Object previews for multi-cell types in the tool window now show the occupied cell indicators.
 * Placement previews now show the occupied cell indicators.
 * Civilian buildings in RA maps will no longer change their colors to the House that owns them. This does not apply to TD, since the TD civilian buildings actually change their color in-game.
 * Fake buildings once again show the "Fake" label on the preview in the buildings list. This was accidentally removed when splitting off the label drawing to an indicator.
+* For RA, changing the "Base" House in the map settings will now also change the House on the preview pane if it is not set as Prebuilt.
+* Improved the system to detect blocking objects on map load.
+* The "Sellable" and "Rebuild" options for RA buildings are now disabled if the structure is not set as Prebuilt.
+* While holding [Ctrl] in Map mode to enable bounds editing mode, diagonals will now be drawn inside the bounds rectangle to easily see the center.
+* While holding [Ctrl] in Map mode to enable bounds editing mode, the whole bounds rectangle can now be moved by clicking inside it and dragging it around.
+* While holding [Ctrl] in Map mode to enable bounds editing mode, you will no longer select tiles when clicking.
 
 ### Possible future features
 

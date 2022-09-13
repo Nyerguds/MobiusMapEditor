@@ -157,7 +157,7 @@ namespace MobiusEditor.Tools
 
         private void MockBuilding_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if ((mockBuilding.Type == null) || !mockBuilding.Type.HasTurret)
+            if (e.PropertyName == "Type" && (mockBuilding.Type == null || !mockBuilding.Type.HasTurret))
             {
                 mockBuilding.Direction = map.DirectionTypes.Where(d => d.Equals(FacingType.North)).First();
             }
@@ -601,6 +601,16 @@ namespace MobiusEditor.Tools
                 selectedBuildingPivot = selectedPivot;
             }
             UpdateStatus();
+        }
+
+        protected override void MapPropertiesChanged()
+        {
+            HouseType baseHouse;
+            if (!mockBuilding.IsPrebuilt && !mockBuilding.House.Equals(baseHouse = map.GetBaseHouse(plugin.GameType)))
+            {
+                mockBuilding.House = baseHouse;
+                // Doesn't need a refresh call; that's handled by MockBuilding_PropertyChanged
+            }
         }
 
         protected override void RefreshPreviewPanel()

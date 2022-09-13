@@ -644,30 +644,37 @@ namespace MobiusEditor.TiberianDawn
                             else
                             {
                                 var techno = Map.FindBlockingObject(cell, terrainType, out int blockingCell);
-                                int reportCell = blockingCell == -1 ? cell : blockingCell;
+                                string reportCell = blockingCell == -1 ? cell.ToString() : "<unknown>";
                                 if (techno is Building building)
                                 {
-                                    errors.Add(string.Format("Terrain '{0}' overlaps structure '{1}' in cell {2}; skipping.", terrainType.Name, building.Type.Name, blockingCell));
+                                    errors.Add(string.Format("Terrain '{0}' on cell {1} overlaps structure '{2}' in cell {3}; skipping.", terrainType.Name, cell, building.Type.Name, reportCell));
                                 }
                                 else if (techno is Overlay overlay)
                                 {
-                                    errors.Add(string.Format("Terrain '{0}' overlaps overlay '{1}' in cell {2}; skipping.", terrainType.Name, overlay.Type.Name, blockingCell));
+                                    errors.Add(string.Format("Terrain '{0}' on cell {1} overlaps overlay '{2}' in cell {3}; skipping.", terrainType.Name, cell, overlay.Type.Name, reportCell));
                                 }
                                 else if (techno is Terrain terrain)
                                 {
-                                    errors.Add(string.Format("Terrain '{0}' overlaps terrain '{1}' in cell {2}; skipping.", terrainType.Name, terrain.Type.Name, blockingCell));
+                                    errors.Add(string.Format("Terrain '{0}' on cell {1} overlaps terrain '{2}' in cell {3}; skipping.", terrainType.Name, cell, terrain.Type.Name, reportCell));
                                 }
                                 else if (techno is InfantryGroup infantry)
                                 {
-                                    errors.Add(string.Format("Terrain '{0}' overlaps infantry in cell {1}; skipping.", terrainType.Name, blockingCell));
+                                    errors.Add(string.Format("Terrain '{0}' on cell {1} overlaps infantry in cell {2}; skipping.", terrainType.Name, cell, reportCell));
                                 }
                                 else if (techno is Unit unit)
                                 {
-                                    errors.Add(string.Format("Terrain '{0}' overlaps unit '{1}' in cell {2}; skipping.", terrainType.Name, unit.Type.Name, blockingCell));
+                                    errors.Add(string.Format("Terrain '{0}' on cell {1} overlaps unit '{2}' in cell {3}; skipping.", terrainType.Name, cell, unit.Type.Name, reportCell));
                                 }
                                 else
                                 {
-                                    errors.Add(string.Format("Terrain '{0}' overlaps unknown techno in cell {1}; skipping.", terrainType.Name, blockingCell));
+                                    if (blockingCell != -1)
+                                    {
+                                        errors.Add(string.Format("Terrain '{0}' placed on cell {1} overlaps unknown techno in cell {2}; skipping.", terrainType.Name, cell, reportCell));
+                                    }
+                                    else
+                                    {
+                                        errors.Add(string.Format("Terrain '{0}' placed on cell {1} overlaps unknown techno; skipping.", terrainType.Name, cell));
+                                    }
                                 }
                             }
                         }
@@ -1140,30 +1147,51 @@ namespace MobiusEditor.TiberianDawn
                         else
                         {
                             var techno = Map.FindBlockingObject(cell, buildingType, out int blockingCell);
-                            int reportCell = blockingCell == -1 ? cell : blockingCell;
+                            string reportCell = blockingCell == -1 ? cell.ToString() : "<unknown>";
                             if (techno is Building building)
                             {
-                                errors.Add(string.Format("Structure '{0}' overlaps structure '{1}' in cell {2}; skipping.", buildingType.Name, building.Type.Name, reportCell));
+                                bool onBib = false;
+                                if (building.Type.HasBib)
+                                {
+                                    Point newPoint = new Point(cell % Map.Metrics.Width, cell / Map.Metrics.Width);
+                                    // Not in main area; must be on bib.
+                                    onBib = !OccupierSet<Building>.GetOccupyPoints(Map.Buildings[building].Value, building.Type.BaseOccupyMask).Contains(newPoint);
+                                }
+                                if (onBib)
+                                {
+                                    errors.Add(string.Format("Structure '{0}' placed on cell {1} overlaps bib of structure '{2}' in cell {3}; skipping.", buildingType.Name, cell, building.Type.Name, reportCell));
+                                }
+                                else
+                                {
+                                    errors.Add(string.Format("Structure '{0}' placed on cell {1} overlaps structure '{2}' in cell {3}; skipping.", buildingType.Name, cell, building.Type.Name, reportCell));
+                                }
                             }
                             else if (techno is Overlay overlay)
                             {
-                                errors.Add(string.Format("Structure '{0}' overlaps overlay '{1}' in cell {2}; skipping.", buildingType.Name, overlay.Type.Name, reportCell));
+                                errors.Add(string.Format("Structure '{0}' placed on cell {1} overlaps overlay '{2}' in cell {3}; skipping.", buildingType.Name, cell, overlay.Type.Name, reportCell));
                             }
                             else if (techno is Terrain terrain)
                             {
-                                errors.Add(string.Format("Structure '{0}' overlaps terrain '{1}' in cell {2}; skipping.", buildingType.Name, terrain.Type.Name, reportCell));
+                                errors.Add(string.Format("Structure '{0}' placed on cell {1} overlaps terrain '{2}' in cell {3}; skipping.", buildingType.Name, cell, terrain.Type.Name, reportCell));
                             }
                             else if (techno is InfantryGroup infantry)
                             {
-                                errors.Add(string.Format("Structure '{0}' overlaps infantry in cell {1}; skipping.", buildingType.Name, reportCell));
+                                errors.Add(string.Format("Structure '{0}' placed on cell {1} overlaps infantry in cell {2}; skipping.", buildingType.Name, cell, reportCell));
                             }
                             else if (techno is Unit unit)
                             {
-                                errors.Add(string.Format("Structure '{0}' overlaps unit '{1}' in cell {2}; skipping.", buildingType.Name, unit.Type.Name, reportCell));
+                                errors.Add(string.Format("Structure '{0}' placed on cell {1} overlaps unit '{2}' in cell {3}; skipping.", buildingType.Name, cell, unit.Type.Name, reportCell));
                             }
                             else
                             {
-                                errors.Add(string.Format("Structure '{0}' overlaps unknown techno in cell {1}; skipping.", buildingType.Name, reportCell));
+                                if (blockingCell != -1)
+                                {
+                                    errors.Add(string.Format("Structure '{0}' placed on cell {1} overlaps unknown techno in cell {2}; skipping.", buildingType.Name, cell, blockingCell));
+                                }
+                                else
+                                {
+                                    errors.Add(string.Format("Structure '{0}' placed on cell {1} overlaps unknown techno; skipping.", buildingType.Name, cell));
+                                }
                             }
                         }
                     }

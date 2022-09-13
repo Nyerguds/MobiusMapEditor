@@ -57,6 +57,8 @@ namespace MobiusEditor.Tools
         private bool boundsMode;
         private Rectangle dragBounds;
         private FacingType dragEdge = FacingType.None;
+        private Point? dragStartPoint = null;
+        private Rectangle? dragStartBounds = null;
         private Random random;
 
         private bool fillMode;
@@ -220,6 +222,8 @@ namespace MobiusEditor.Tools
             {
                 dragBounds = map.Bounds;
                 dragEdge = FacingType.None;
+                dragStartPoint = null;
+                dragStartBounds = null;
                 UpdateTooltip();
                 mapPanel.Invalidate();
             }
@@ -403,8 +407,15 @@ namespace MobiusEditor.Tools
         {
             if (boundsMode)
             {
-                dragEdge = DetectDragEdge();
-                UpdateStatus();
+                if (Control.MouseButtons == MouseButtons.Left)
+                {
+                    dragEdge = DetectDragEdge();
+                    Point startPoint = navigationWidget.MouseCell;
+                    dragStartPoint = map.Bounds.Contains(startPoint) ? (Point?)startPoint : null;
+                    dragStartBounds = dragBounds;
+                    //navigationWidget.CurrentCursor = Cursors.SizeAll;
+                    UpdateStatus();
+                }
             }
             else if (placementMode)
             {
@@ -414,7 +425,6 @@ namespace MobiusEditor.Tools
             {
                 HandleFill(e.Button);
             }
-
             else if ((e.Button == MouseButtons.Left) || (e.Button == MouseButtons.Right))
             {
                 PickTemplate(navigationWidget.MouseCell, e.Button == MouseButtons.Left);
@@ -674,6 +684,12 @@ namespace MobiusEditor.Tools
                     case FacingType.SouthEast:
                         cursor = Cursors.SizeNWSE;
                         break;
+                    case FacingType.None:
+                        if (map.Bounds.Contains(navigationWidget.MouseCell) || dragStartPoint.HasValue && dragStartBounds.HasValue)
+                        {
+                            cursor = Cursors.SizeAll;
+                        }
+                        break;
                 }
                 // NavigationWidget manages all mouse cursor changes, so tools don't conflict with each other.
                 if (navigationWidget.CurrentCursor != cursor)
@@ -690,7 +706,7 @@ namespace MobiusEditor.Tools
 
         private void MouseoverWidget_ClosestMouseCellBorderChanged(object sender, MouseCellChangedEventArgs e)
         {
-            if (dragEdge == FacingType.None)
+            if (dragEdge == FacingType.None || Control.MouseButtons != MouseButtons.Left)
             {
                 return;
             }
@@ -749,8 +765,19 @@ namespace MobiusEditor.Tools
 
         private void MouseoverWidget_MouseCellChanged(object sender, MouseCellChangedEventArgs e)
         {
-            if (dragEdge != FacingType.None)
+            Point mouseCell = navigationWidget.MouseCell;
+            if (boundsMode)
             {
+                if (dragEdge == FacingType.None && dragStartPoint.HasValue && dragStartBounds.HasValue)
+                {
+                    int xDiff = dragStartPoint.Value.X - mouseCell.X;
+                    int yDiff = dragStartPoint.Value.Y - mouseCell.Y;
+                    int xMax = map.Metrics.Width - dragStartBounds.Value.Width - 1;
+                    int yMax = map.Metrics.Height - dragStartBounds.Value.Height - 1;
+                    dragBounds.X = Math.Max(1, Math.Min(dragStartBounds.Value.X - xDiff, xMax));
+                    dragBounds.Y = Math.Max(1, Math.Min(dragStartBounds.Value.Y - yDiff, yMax));
+                    UpdateTooltip();
+                }
                 return;
             }
             mouseTooltip.Hide(mapPanel);
@@ -758,7 +785,7 @@ namespace MobiusEditor.Tools
             {
                 if ((Control.MouseButtons == MouseButtons.Left) || (Control.MouseButtons == MouseButtons.Right))
                 {
-                    PickTemplate(navigationWidget.MouseCell, Control.MouseButtons == MouseButtons.Left);
+                    PickTemplate(mouseCell, Control.MouseButtons == MouseButtons.Left);
                 }
                 return;
             }
@@ -988,10 +1015,13 @@ namespace MobiusEditor.Tools
             navigationWidget.CurrentCursor = Cursors.Default;
             dragEdge = FacingType.None;
             dragBounds = Rectangle.Empty;
+            dragStartPoint = null;
+            dragStartBounds = null;
             placementMode = false;
             fillMode = true;
             navigationWidget.MouseoverSize = Size.Empty;
             InvalidateCurrentArea();
+            mapPanel.Invalidate();
             UpdateStatus();
         }
 
@@ -1005,10 +1035,13 @@ namespace MobiusEditor.Tools
             navigationWidget.CurrentCursor = Cursors.Default;
             dragEdge = FacingType.None;
             dragBounds = Rectangle.Empty;
+            dragStartPoint = null;
+            dragStartBounds = null;
             fillMode = false;
             placementMode = true;
             navigationWidget.MouseoverSize = Size.Empty;
             InvalidateCurrentArea();
+            mapPanel.Invalidate();
             UpdateStatus();
         }
 
@@ -1022,8 +1055,11 @@ namespace MobiusEditor.Tools
             placementMode = false;
             boundsMode = true;
             dragBounds = map.Bounds;
+            dragStartPoint = null;
+            dragStartBounds = null;
             navigationWidget.MouseoverSize = Size.Empty;
             InvalidateCurrentArea();
+            mapPanel.Invalidate();
             UpdateTooltip();
             UpdateStatus();
         }
@@ -1038,10 +1074,13 @@ namespace MobiusEditor.Tools
             navigationWidget.CurrentCursor = Cursors.Default;
             dragEdge = FacingType.None;
             dragBounds = Rectangle.Empty;
+            dragStartPoint = null;
+            dragStartBounds = null;
             placementMode = false;
             fillMode = false;
             navigationWidget.MouseoverSize = new Size(1, 1);
             InvalidateCurrentArea();
+            mapPanel.Invalidate();
             UpdateTooltip();
             UpdateStatus();
         }
@@ -1065,65 +1104,80 @@ namespace MobiusEditor.Tools
         private void UpdateTooltip()
         {
             FacingType showEdge = dragEdge != FacingType.None ? dragEdge : DetectDragEdge();
-            if (boundsMode && showEdge != FacingType.None)
+            if (boundsMode && (showEdge != FacingType.None || (dragStartPoint.HasValue && dragStartBounds.HasValue)))
             {
                 var tooltip = string.Format("X = {0}\nY = {1}\nWidth = {2}\nHeight = {3}", dragBounds.Left, dragBounds.Top, dragBounds.Width, dragBounds.Height);
                 var textSize = TextRenderer.MeasureText(tooltip, SystemFonts.CaptionFont);
                 var tooltipSize = new Size(textSize.Width + 6, textSize.Height + 6);
-
+                Point mouseCell = navigationWidget.MouseCell;
                 Point tooltipPosition = Control.MousePosition;
                 PointF zoomedCell = navigationWidget.ZoomedCellSize;
                 // Corrects to nearest border; should match NavigationWidget.ClosestMouseCellBorder
-                if (navigationWidget.ClosestMouseCellBorder.Y > navigationWidget.MouseCell.Y)
+                if (showEdge != FacingType.None)
                 {
-                    tooltipPosition.Y += (int)((Globals.PixelWidth - navigationWidget.MouseSubPixel.Y) * zoomedCell.Y / Globals.PixelWidth);
+                    if (navigationWidget.ClosestMouseCellBorder.Y > mouseCell.Y)
+                    {
+                        tooltipPosition.Y += (int)((Globals.PixelWidth - navigationWidget.MouseSubPixel.Y) * zoomedCell.Y / Globals.PixelWidth);
+                    }
+                    else
+                    {
+                        tooltipPosition.Y -= (int)(navigationWidget.MouseSubPixel.Y * zoomedCell.Y / Globals.PixelWidth);
+                    }
+                    if (navigationWidget.ClosestMouseCellBorder.X > mouseCell.X)
+                    {
+                        tooltipPosition.X += (int)((Globals.PixelWidth - navigationWidget.MouseSubPixel.X) * zoomedCell.X / Globals.PixelWidth);
+                    }
+                    else
+                    {
+                        tooltipPosition.X -= (int)(navigationWidget.MouseSubPixel.X * zoomedCell.X / Globals.PixelWidth);
+                    }
+                    switch (showEdge)
+                    {
+                        case FacingType.North:
+                        case FacingType.NorthEast:
+                        case FacingType.NorthWest:
+                            tooltipPosition.Y += (int)zoomedCell.Y;
+                            break;
+                        case FacingType.South:
+                        case FacingType.SouthEast:
+                        case FacingType.SouthWest:
+                            tooltipPosition.Y -= (int)zoomedCell.Y;
+                            break;
+                    }
+                    switch (showEdge)
+                    {
+                        case FacingType.SouthWest:
+                        case FacingType.West:
+                        case FacingType.NorthWest:
+                            tooltipPosition.X += (int)zoomedCell.X;
+                            break;
+                        case FacingType.SouthEast:
+                        case FacingType.East:
+                        case FacingType.NorthEast:
+                            tooltipPosition.X -= (int)zoomedCell.X;
+                            break;
+                    }
+                    switch (showEdge)
+                    {
+                        case FacingType.South:
+                        case FacingType.SouthEast:
+                        case FacingType.SouthWest:
+                            tooltipPosition.Y -= tooltipSize.Height;
+                            break;
+                    }
                 }
-                else
+                else if (dragStartPoint.HasValue && dragStartBounds.HasValue)
                 {
-                    tooltipPosition.Y -= (int)(navigationWidget.MouseSubPixel.Y * zoomedCell.Y / Globals.PixelWidth);
-                }
-                if (navigationWidget.ClosestMouseCellBorder.X > navigationWidget.MouseCell.X)
-                {
-                    tooltipPosition.X += (int)((Globals.PixelWidth - navigationWidget.MouseSubPixel.X) * zoomedCell.X / Globals.PixelWidth);
-                }
-                else
-                {
-                    tooltipPosition.X -= (int)(navigationWidget.MouseSubPixel.X * zoomedCell.X / Globals.PixelWidth);
-                }
-                switch (showEdge)
-                {
-                    case FacingType.North:
-                    case FacingType.NorthEast:
-                    case FacingType.NorthWest:
-                        tooltipPosition.Y += (int)zoomedCell.Y;
-                        break;
-                    case FacingType.South:
-                    case FacingType.SouthEast:
-                    case FacingType.SouthWest:
-                        tooltipPosition.Y -= (int)zoomedCell.Y;
-                        break;
-                }
-                switch (showEdge)
-                {
-                    case FacingType.SouthWest:
-                    case FacingType.West:
-                    case FacingType.NorthWest:
+                    // Always towards the center, one cell away from the mouse.
+                    Point center = dragBounds.CenterPoint();
+                    if (mouseCell.X < center.X)
                         tooltipPosition.X += (int)zoomedCell.X;
-                        break;
-                    case FacingType.SouthEast:
-                    case FacingType.East:
-                    case FacingType.NorthEast:
-                        tooltipPosition.X -= (int)zoomedCell.X;
-                        break;
-                }
-                //*/
-                switch (showEdge)
-                {
-                    case FacingType.South:
-                    case FacingType.SouthEast:
-                    case FacingType.SouthWest:
-                        tooltipPosition.Y -= tooltipSize.Height;
-                        break;
+                    else
+                        tooltipPosition.X -= (int)zoomedCell.X + tooltipSize.Width;
+                    if (mouseCell.Y < center.Y)
+                        tooltipPosition.Y += (int)zoomedCell.Y;
+                    else
+                        tooltipPosition.Y -= (int)zoomedCell.Y + tooltipSize.Height;
                 }
                 switch (showEdge)
                 {
@@ -1283,10 +1337,12 @@ namespace MobiusEditor.Tools
                 map.Bounds = newBounds;
                 plugin.Dirty = true;
                 url.Track(undoAction, redoAction);
-                mapPanel.Invalidate();
             }
             dragEdge = FacingType.None;
+            dragStartPoint = null;
+            dragStartBounds = null;
             UpdateStatus();
+            mapPanel.Invalidate();
         }
 
         private void CommitTileChanges(bool noCheck)
@@ -1334,9 +1390,13 @@ namespace MobiusEditor.Tools
                 {
                     statusLbl.Text = "Release left button to end dragging map bounds edge";
                 }
+                else if (dragStartPoint.HasValue && dragStartBounds.HasValue)
+                {
+                    statusLbl.Text = "Release left button to end dragging map bounds";
+                }
                 else
                 {
-                    statusLbl.Text = "Left-Click a map bounds edge to start dragging";
+                    statusLbl.Text = "Left-Click inside the bounds or on a map bounds edge to start dragging";
                 }
             }
             else
@@ -1393,7 +1453,7 @@ namespace MobiusEditor.Tools
             base.PostRenderMap(graphics);
             if (boundsMode)
             {
-                MapRenderer.RenderMapBoundaries(graphics, dragBounds, Globals.MapTileSize, Color.Red);
+                MapRenderer.RenderMapBoundaries(graphics, dragBounds, Globals.MapTileSize, Color.Red, true);
             }
             else
             {
