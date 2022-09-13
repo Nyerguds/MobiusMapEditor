@@ -30,8 +30,6 @@ namespace MobiusEditor.Tools
 {
     public class UnitTool : ViewTool
     {
-        /// <summary> Layers that are important to this tool and need to be drawn last in the PostRenderMap process.</summary>
-        protected override MapLayerFlag PriorityLayers => MapLayerFlag.None;
         /// <summary>
         /// Layers that are not painted by the PostRenderMap function on ViewTool level because they are handled
         /// at a specific point in the PostRenderMap override by the implementing tool.
@@ -495,15 +493,11 @@ namespace MobiusEditor.Tools
         protected override void PostRenderMap(Graphics graphics)
         {
             base.PostRenderMap(graphics);
-            using (var unitPen = new Pen(Color.Green, Math.Max(1, Globals.MapTileSize.Width / 16.0f)))
+            MapRenderer.RenderAllBoundsFromPoint(graphics, Globals.MapTileSize, previewMap.Technos.OfType<Unit>());
+            if ((Layers & (MapLayerFlag.Units | MapLayerFlag.TechnoTriggers)) == (MapLayerFlag.Units | MapLayerFlag.TechnoTriggers))
             {
-                foreach (var (topLeft, _) in previewMap.Technos.OfType<Unit>())
-                {
-                    var bounds = new Rectangle(new Point(topLeft.X * Globals.MapTileWidth, topLeft.Y * Globals.MapTileHeight), Globals.MapTileSize);
-                    graphics.DrawRectangle(unitPen, bounds);
-                }
+                MapRenderer.RenderAllTechnoTriggers(graphics, previewMap, Globals.MapTileSize, Globals.MapTileScale, Layers);
             }
-            RenderTechnoTriggers(graphics, previewMap, Globals.MapTileSize, Globals.MapTileScale, Layers);
         }
 
         public override void Activate()

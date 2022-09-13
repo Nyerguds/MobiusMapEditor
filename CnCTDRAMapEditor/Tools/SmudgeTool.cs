@@ -30,8 +30,6 @@ namespace MobiusEditor.Tools
 {
     public class SmudgeTool : ViewTool
     {
-        /// <summary> Layers that are important to this tool and need to be drawn last in the PostRenderMap process.</summary>
-        protected override MapLayerFlag PriorityLayers => MapLayerFlag.None;
         /// <summary>
         /// Layers that are not painted by the PostRenderMap function on ViewTool level because they are handled
         /// at a specific point in the PostRenderMap override by the implementing tool.
@@ -512,6 +510,7 @@ namespace MobiusEditor.Tools
                 using (var g = Graphics.FromImage(smudgePreview))
                 {
                     MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
+                    // Needs to be done here manually since "one" multi-cell smudge is really just a collection of smudge cells.
                     List<(int, Smudge)> smudgeList = new List<(int, Smudge)>();
                     int icons = mockSize.Width * mockSize.Height;
                     for (int i = 0; i < icons; ++i)
@@ -526,12 +525,10 @@ namespace MobiusEditor.Tools
                         var render = MapRenderer.Render(map.Theater, p, Globals.PreviewTileSize, Globals.PreviewTileScale, smudge);
                         if (!render.Item1.IsEmpty)
                         {
-                            MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
                             render.Item2(g);
                         }
                     }
-                    RenderSmudgeBounds(g, Globals.PreviewTileSize, smudgeList, mockMetrics);
-
+                    MapRenderer.RenderAllBoundsFromCell(g, Globals.PreviewTileSize, smudgeList, mockMetrics);
                 }
                 smudgeTypeMapPanel.MapImage = smudgePreview;
             }
@@ -610,20 +607,7 @@ namespace MobiusEditor.Tools
         protected override void PostRenderMap(Graphics graphics)
         {
             base.PostRenderMap(graphics);
-            RenderSmudgeBounds(graphics, Globals.MapTileSize, previewMap.Smudge.Where(x => !x.Value.Type.IsAutoBib), previewMap.Metrics);
-        }
-
-        public static void RenderSmudgeBounds(Graphics graphics, Size tileSize, IEnumerable<(int, Smudge)> smudgeList, CellMetrics metrics)
-        {
-            using (var smudgePen = new Pen(Color.Green, Math.Max(1, tileSize.Width / 16.0f)))
-            {
-                foreach (var (cell, smudge) in smudgeList)
-                {
-                    metrics.GetLocation(cell, out Point topLeft);
-                    var bounds = new Rectangle(new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height), tileSize);
-                    graphics.DrawRectangle(smudgePen, bounds);
-                }
-            }
+            MapRenderer.RenderAllBoundsFromCell(graphics, Globals.MapTileSize, previewMap.Smudge.Where(x => !x.Value.Type.IsAutoBib), previewMap.Metrics);
         }
 
         public override void Activate()

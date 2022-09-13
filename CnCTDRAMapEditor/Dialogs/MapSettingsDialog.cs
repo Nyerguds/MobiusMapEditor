@@ -266,7 +266,12 @@ namespace MobiusEditor.Dialogs
                 }
                 if (rulesChanged)
                 {
-                    msg.Append("Rules have been changed.\n\n");
+                    msg.Append("Rules have been changed.");
+                    if (Globals.BlockingBibs)
+                    {
+                        msg.Append(" If any bibs were added, be aware that this may remove overlapped structures and walls.");
+                    }
+                    msg.Append("\n\n");
                 }
                 // The undo/redo clearing is done in the MainForm function that opens this form.
                 msg.Append("The Undo/Redo history will be cleared to avoid conflicts with previous-performed actions involving any objects affected by this.")

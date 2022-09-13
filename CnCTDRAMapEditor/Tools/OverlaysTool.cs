@@ -29,8 +29,6 @@ namespace MobiusEditor.Tools
 {
     public class OverlaysTool : ViewTool
     {
-        /// <summary> Layers that are important to this tool and need to be drawn last in the PostRenderMap process.</summary>
-        protected override MapLayerFlag PriorityLayers => MapLayerFlag.None;
         /// <summary>
         /// Layers that are not painted by the PostRenderMap function on ViewTool level because they are handled
         /// at a specific point in the PostRenderMap override by the implementing tool.
@@ -324,7 +322,7 @@ namespace MobiusEditor.Tools
                         MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
                         List<(int, Overlay)> overlayList = new List<(int, Overlay)>();
                         overlayList.Add((0, new Overlay() { Type = SelectedOverlayType, Icon = 0 }));
-                        RenderOverlayBounds(g, Globals.PreviewTileSize, overlayList, new CellMetrics(new Size(1, 1)));
+                        MapRenderer.RenderAllBoundsFromCell(g, Globals.PreviewTileSize, overlayList, new CellMetrics(new Size(1, 1)));
                     }
                 }
                 overlayTypeMapPanel.MapImage = overlayPreview;
@@ -377,20 +375,7 @@ namespace MobiusEditor.Tools
         protected override void PostRenderMap(Graphics graphics)
         {
             base.PostRenderMap(graphics);
-            RenderOverlayBounds(graphics, Globals.MapTileSize, previewMap.Overlay.Where(x => x.Value.Type.IsPlaceable), previewMap.Metrics);
-        }
-
-        private static void RenderOverlayBounds(Graphics graphics, Size tileSize, IEnumerable<(int, Overlay)> overlayList, CellMetrics metrics)
-        {
-            using (var overlayPen = new Pen(Color.Green, Math.Max(1, tileSize.Width / 16.0f)))
-            {
-                foreach (var (cell, overlay) in overlayList)
-                {
-                    metrics.GetLocation(cell, out Point topLeft);
-                    var bounds = new Rectangle(new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height), tileSize);
-                    graphics.DrawRectangle(overlayPen, bounds);
-                }
-            }
+            MapRenderer.RenderAllBoundsFromCell(graphics, Globals.MapTileSize, previewMap.Overlay.Where(x => x.Value.Type.IsPlaceable), previewMap.Metrics);
         }
 
         public override void Activate()

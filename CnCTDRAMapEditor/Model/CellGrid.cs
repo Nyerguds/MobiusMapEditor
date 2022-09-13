@@ -64,7 +64,7 @@ namespace MobiusEditor.Model
         private readonly CellMetrics metrics;
         private readonly T[,] cells;
 
-        public T this[int x, int y]
+        public T this[int y, int x]
         {
             get => cells[y, x];
             set
@@ -78,9 +78,9 @@ namespace MobiusEditor.Model
             }
         }
 
-        public T this[Point location] { get => this[location.X, location.Y]; set => this[location.X, location.Y] = value; }
+        public T this[Point location] { get => this[location.Y, location.X]; set => this[location.Y, location.X] = value; }
 
-        public T this[int cell] { get => this[cell % metrics.Width, cell / metrics.Width]; set => this[cell % metrics.Width, cell / metrics.Width] = value; }
+        public T this[int cell] { get => this[cell / metrics.Width, cell % metrics.Width]; set => this[cell / metrics.Width, cell % metrics.Width] = value; }
 
         public Size Size => metrics.Size;
 

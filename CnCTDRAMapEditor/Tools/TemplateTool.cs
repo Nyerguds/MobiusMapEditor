@@ -16,6 +16,7 @@ using MobiusEditor.Controls;
 using MobiusEditor.Event;
 using MobiusEditor.Interface;
 using MobiusEditor.Model;
+using MobiusEditor.Render;
 using MobiusEditor.Utility;
 using MobiusEditor.Widgets;
 using System;
@@ -30,8 +31,6 @@ namespace MobiusEditor.Tools
 {
     public class TemplateTool : ViewTool
     {
-        /// <summary> Layers that are important to this tool and need to be drawn last in the PostRenderMap process.</summary>
-        protected override MapLayerFlag PriorityLayers => MapLayerFlag.None;
         /// <summary>
         /// Layers that are not painted by the PostRenderMap function on ViewTool level because they are handled
         /// at a specific point in the PostRenderMap override by the implementing tool.
@@ -258,7 +257,7 @@ namespace MobiusEditor.Tools
                     }
                     else
                     {
-                        if (selected.IconMask == null || selected.IconMask[x, y])
+                        if (selected.IconMask == null || selected.IconMask[y, x])
                         {
                             SelectedIcon = templateTypeMouseCell;
                         }
@@ -452,8 +451,7 @@ namespace MobiusEditor.Tools
             Point? icon = SelectedIcon;
             bool clear = button == MouseButtons.Right;
             bool place = button == MouseButtons.Left;
-            // beware: mask has this odd quirk that x comes first, like in coords.
-            // This means flattening it to an array will mess up the order.
+            // Since is this now ordered logically as [y,x] it might be a good idea to flatten it and do icon lookups.
             bool[,] mask = selected.IconMask;
             bool is1x1 = selected.IconWidth == 1 && selected.IconHeight == 1;
             if ((!place && !clear) || (place && clear))
@@ -486,7 +484,7 @@ namespace MobiusEditor.Tools
                     for (int x = 0; x < selected.IconWidth; ++x)
                     {
                         Point toCheck = new Point(x + currentCell.X, y + currentCell.Y);
-                        if (mask[x, y] && map.Metrics.GetCell(toCheck, out int cell))
+                        if (mask[y, x] && map.Metrics.GetCell(toCheck, out int cell))
                         {
                             typesToFind.Add(map.Templates[cell]?.Type);
                         }
@@ -530,7 +528,7 @@ namespace MobiusEditor.Tools
                     for (int x = 0; x < selected.IconWidth; ++x)
                     {
                         Point toAdd = new Point(x + currentCell.X, y + currentCell.Y);
-                        if (mask[x, y] && map.Metrics.GetCell(toAdd, out int cell))
+                        if (mask[y, x] && map.Metrics.GetCell(toAdd, out int cell))
                         {
                             detectPoints.Add(toAdd);
                         }
@@ -603,7 +601,7 @@ namespace MobiusEditor.Tools
                     if (diffY < 0)
                         diffY += height;
                     int paintIcon = diffY * width + diffX;
-                    if (!mask[diffX,diffY])
+                    if (!mask[diffY, diffX])
                     {
                         continue;
                     }
@@ -788,7 +786,7 @@ namespace MobiusEditor.Tools
                     {
                         for (var x = 0; x < selected.IconWidth; ++x)
                         {
-                            if (selected.IconMask != null && !selected.IconMask[x, y])
+                            if (selected.IconMask != null && !selected.IconMask[y, x])
                             {
                                 continue;
                             }
@@ -866,7 +864,7 @@ namespace MobiusEditor.Tools
                 {
                     for (var x = 0; x < selected.IconWidth; ++x, ++icon)
                     {
-                        if (selected.IconMask != null && !selected.IconMask[x, y])
+                        if (selected.IconMask != null && !selected.IconMask[y, x])
                         {
                             continue;
                         }
@@ -885,7 +883,7 @@ namespace MobiusEditor.Tools
                 {
                     for (var x = 0; x < selected.IconWidth; ++x, ++icon)
                     {
-                        if (selected.IconMask != null && !selected.IconMask[x, y])
+                        if (selected.IconMask != null && !selected.IconMask[y, x])
                         {
                             continue;
                         }
@@ -945,7 +943,7 @@ namespace MobiusEditor.Tools
                 {
                     for (var x = 0; x < selected.IconWidth; ++x, ++icon)
                     {
-                        if (selected.IconMask != null && !selected.IconMask[x, y])
+                        if (selected.IconMask != null && !selected.IconMask[y, x])
                         {
                             continue;
                         }
@@ -963,7 +961,7 @@ namespace MobiusEditor.Tools
                 {
                     for (var x = 0; x < selected.IconWidth; ++x, ++icon)
                     {
-                        if (selected.IconMask != null && !selected.IconMask[x, y])
+                        if (selected.IconMask != null && !selected.IconMask[y, x])
                         {
                             continue;
                         }
@@ -1376,7 +1374,7 @@ namespace MobiusEditor.Tools
                 {
                     for (var x = 0; x < selected.IconWidth; ++x, ++icon)
                     {
-                        if (selected.IconMask != null && !selected.IconMask[x, y])
+                        if (selected.IconMask != null && !selected.IconMask[y, x])
                         {
                             continue;
                         }
@@ -1395,11 +1393,14 @@ namespace MobiusEditor.Tools
             base.PostRenderMap(graphics);
             if (boundsMode)
             {
-                RenderMapBoundaries(graphics, Layers, map, dragBounds, Globals.MapTileSize, Color.Red);
+                MapRenderer.RenderMapBoundaries(graphics, dragBounds, Globals.MapTileSize, Color.Red);
             }
             else
             {
-                RenderMapBoundaries(graphics, Layers, map, Globals.MapTileSize);
+                if ((Layers & MapLayerFlag.Boundaries) == MapLayerFlag.Boundaries)
+                {
+                    MapRenderer.RenderMapBoundaries(graphics, map, Globals.MapTileSize);
+                }
                 if (placementMode || fillMode)
                 {
                     var location = navigationWidget.MouseCell;
@@ -1420,6 +1421,8 @@ namespace MobiusEditor.Tools
                     using (var previewPen = new Pen(fillMode ? Color.Red : Color.Green, Math.Max(1, Globals.MapTileSize.Width / 16.0f)))
                     {
                         graphics.DrawRectangle(previewPen, previewBounds);
+                        // Special indicator to tell the user that the top-left cell has a special purpose:
+                        // when pattern-filling, only this cell will serve as fill origin.
                         if (fillMode && (selected.IconWidth != 1 || selected.IconHeight != 1))
                         {
                             graphics.DrawRectangle(previewPen, singleCell);

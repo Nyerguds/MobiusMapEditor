@@ -97,7 +97,6 @@ namespace MobiusEditor.Render
             new Point(1, 2)
         };
 
-        private static readonly int[] tiberiumCounts = new int[] { 0, 1, 3, 4, 6, 7, 8, 10, 11 };
         private static readonly int randomSeed;
 
         static MapRenderer()
@@ -489,12 +488,6 @@ namespace MobiusEditor.Render
                         paintBounds.Y += location.Y;
                         g.DrawImage(tile.Image, paintBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes);
                     }
-                    /*/
-                    if (renderLabels)
-                    {
-                        RenderBuildingLabels(g, building, location, false);
-                    }
-                    //*/
                 }
                 return (buildingBounds, render);
             }
@@ -781,6 +774,362 @@ namespace MobiusEditor.Render
                 Debug.Print(string.Format("Unit {0} ({1}) not found", unit.Type.Name, icon));
                 return (Rectangle.Empty, (g) => { });
             }
+        }
+
+        public static void RenderAllBoundsFromCell<T>(Graphics graphics, Size tileSize, IEnumerable<(int, T)> renderList, CellMetrics metrics)
+        {
+            RenderAllBoundsFromCell(graphics, tileSize, renderList, metrics, Color.Green);
+        }
+
+        public static void RenderAllBoundsFromCell<T>(Graphics graphics, Size tileSize, IEnumerable<(int, T)> renderList, CellMetrics metrics, Color boundsColor)
+        {
+            using (var boundsPen = new Pen(boundsColor, Math.Max(1, tileSize.Width / 16.0f)))
+            {
+                foreach (var (cell, _) in renderList)
+                {
+                    metrics.GetLocation(cell, out Point topLeft);
+                    var bounds = new Rectangle(new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height), tileSize);
+                    graphics.DrawRectangle(boundsPen, bounds);
+                }
+            }
+        }
+
+        public static void RenderAllBoundsFromPoint<T>(Graphics graphics, Size tileSize, IEnumerable<(Point, T)> renderList)
+        {
+            RenderAllBoundsFromPoint(graphics, tileSize, renderList, Color.Green);
+        }
+
+        public static void RenderAllBoundsFromPoint<T>(Graphics graphics, Size tileSize, IEnumerable<(Point, T)> renderList, Color boundsColor)
+        {
+            using (var boundsPen = new Pen(boundsColor, Math.Max(1, tileSize.Width / 16.0f)))
+            {
+                foreach (var (topLeft, _) in renderList)
+                {
+                    var bounds = new Rectangle(new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height), tileSize);
+                    graphics.DrawRectangle(boundsPen, bounds);
+                }
+            }
+        }
+
+        public static void RenderAllOccupierBounds<T>(Graphics graphics, Size tileSize, IEnumerable<(Point, T)> occupiers) where T : ICellOccupier, ICellOverlapper
+        {
+            RenderAllOccupierBounds(graphics, tileSize, occupiers, Color.Green, Color.Red);
+        }
+
+        public static void RenderAllOccupierBounds<T>(Graphics graphics, Size tileSize, IEnumerable<(Point, T)> occupiers, Color boundsColor, Color OccupierColor) where T: ICellOccupier, ICellOverlapper
+        {
+            float boundsPenSize = Math.Max(1, tileSize.Width / 16.0f);
+            float occupyPenSize = Math.Max(0.5f, tileSize.Width / 32.0f);
+            if (occupyPenSize == boundsPenSize)
+            {
+                boundsPenSize += 2;
+            }
+            using (var boundsPen = new Pen(boundsColor, boundsPenSize))
+            using (var occupyPen = new Pen(OccupierColor, occupyPenSize))
+            {
+                foreach (var (topLeft, occupier) in occupiers)
+                {
+                    Rectangle typeBounds = occupier.OverlapBounds;
+                    var bounds = new Rectangle(
+                        new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height),
+                        new Size(typeBounds.Width * tileSize.Width, typeBounds.Height * tileSize.Height)
+                    );
+                    graphics.DrawRectangle(boundsPen, bounds);
+                }
+                foreach (var (topLeft, occupier) in occupiers)
+                {
+                    bool[,] occupyMask = occupier is Building bl ? bl.Type.BaseOccupyMask : occupier.OccupyMask;
+
+                    for (var y = 0; y < occupyMask.GetLength(0); ++y)
+                    {
+                        for (var x = 0; x < occupyMask.GetLength(1); ++x)
+                        {
+                            if (occupyMask[y, x])
+                            {
+                                var occupyBounds = new Rectangle(
+                                    new Point((topLeft.X + x) * tileSize.Width, (topLeft.Y + y) * tileSize.Height), tileSize);
+                                graphics.DrawRectangle(occupyPen, occupyBounds);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        public static void RenderAllFakeBuildingLabels(Graphics graphics, Map map, Size tileSize, double tileScale)
+        {
+            foreach (var (topLeft, building) in map.Buildings.OfType<Building>())
+            {
+                RenderFakeBuildingLabel(graphics, building, topLeft, tileSize, tileScale, false);
+            }
+        }
+
+        public static void RenderFakeBuildingLabel(Graphics graphics, Building building, Point topLeft, Size tileSize, double tileScale, Boolean forPreview)
+        {
+            var stringFormat = new StringFormat
+            {
+                Alignment = StringAlignment.Center,
+                LineAlignment = StringAlignment.Center
+            };
+            var maxSize = building.Type.Size;
+            var buildingBounds = new Rectangle(
+                new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height),
+                new Size(maxSize.Width * tileSize.Width, maxSize.Height * tileSize.Height)
+            );
+            if (building.Type.IsFake)
+            {
+                string fakeText = Globals.TheGameTextManager["TEXT_UI_FAKE"];
+                using (var fakeBackgroundBrush = new SolidBrush(Color.FromArgb((forPreview ? 128 : 256) * 2 / 3, Color.Black)))
+                using (var fakeTextBrush = new SolidBrush(Color.FromArgb(forPreview ? building.Tint.A : 255, Color.White)))
+                {
+                    using (var font = graphics.GetAdjustedFont(fakeText, SystemFonts.DefaultFont, buildingBounds.Width,
+                        Math.Max(1, (int)(12 * tileScale)), Math.Max(1, (int)(24 * tileScale)), true))
+                    {
+                        var textBounds = graphics.MeasureString(fakeText, font, buildingBounds.Width, stringFormat);
+                        var backgroundBounds = new RectangleF(buildingBounds.Location, textBounds);
+                        graphics.FillRectangle(fakeBackgroundBrush, backgroundBounds);
+                        graphics.DrawString(fakeText, font, fakeTextBrush, backgroundBounds, stringFormat);
+                    }
+                }
+            }
+        }
+
+        public static void RenderAllRebuildPriorityLabels(Graphics graphics, Map map, Size tileSize, double tileScale)
+        {
+            foreach (var (topLeft, building) in map.Buildings.OfType<Building>())
+            {
+                RenderRebuildPriorityLabel(graphics, building, topLeft, tileSize, tileScale, false);
+            }
+        }
+
+        public static void RenderRebuildPriorityLabel(Graphics graphics, Building building, Point topLeft, Size tileSize, double tileScale, Boolean forPreview)
+        {
+            var stringFormat = new StringFormat
+            {
+                Alignment = StringAlignment.Center,
+                LineAlignment = StringAlignment.Center
+            };
+            var maxSize = building.Type.Size;
+            var buildingBounds = new Rectangle(
+                new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height),
+                new Size(maxSize.Width * tileSize.Width, maxSize.Height * tileSize.Height)
+            );
+            if (building.BasePriority >= 0)
+            {
+                string priText = building.BasePriority.ToString();
+                using (var baseBackgroundBrush = new SolidBrush(Color.FromArgb((forPreview ? 128 : 256) * 2 / 3, Color.Black)))
+                using (var baseTextBrush = new SolidBrush(Color.FromArgb(forPreview ? 128 : 255, Color.Red)))
+                {
+                    using (var font = graphics.GetAdjustedFont(priText, SystemFonts.DefaultFont, buildingBounds.Width,
+                        Math.Max(1, (int)(12 * tileScale)), Math.Max(1, (int)(24 * tileScale)), true))
+                    {
+                        var textBounds = graphics.MeasureString(priText, font, buildingBounds.Width, stringFormat);
+                        var backgroundBounds = new RectangleF(buildingBounds.Location, textBounds);
+                        backgroundBounds.Offset((buildingBounds.Width - textBounds.Width) / 2.0f, buildingBounds.Height - textBounds.Height);
+                        graphics.FillRectangle(baseBackgroundBrush, backgroundBounds);
+                        graphics.DrawString(priText, font, baseTextBrush, backgroundBounds, stringFormat);
+                    }
+                }
+            }
+        }
+
+        public static void RenderAllTechnoTriggers(Graphics graphics, Map map, Size tileSize, double tileScale, MapLayerFlag layersToRender)
+        {
+            float borderSize = Math.Max(0.5f, tileSize.Width / 60.0f);
+            using (var technoTriggerBackgroundBrush = new SolidBrush(Color.FromArgb(96, Color.Black)))
+            using (var technoTriggerBrush = new SolidBrush(Color.LimeGreen))
+            using (var technoTriggerPen = new Pen(Color.LimeGreen, borderSize))
+            {
+                foreach (var (cell, techno) in map.Technos)
+                {
+                    var location = new Point(cell.X * tileSize.Width, cell.Y * tileSize.Height);
+                    (string trigger, Rectangle bounds)[] triggers = null;
+                    if (techno is Terrain terrain)
+                    {
+                        if ((layersToRender & MapLayerFlag.Terrain) == MapLayerFlag.Terrain)
+                        {
+                            triggers = new (string, Rectangle)[] { (terrain.Trigger, new Rectangle(location, terrain.Type.GetRenderSize(tileSize))) };
+                        }
+                    }
+                    else if (techno is Building building)
+                    {
+                        if ((layersToRender & MapLayerFlag.Buildings) == MapLayerFlag.Buildings)
+                        {
+                            var size = new Size(building.Type.Size.Width * tileSize.Width, building.Type.Size.Height * tileSize.Height);
+                            triggers = new (string, Rectangle)[] { (building.Trigger, new Rectangle(location, size)) };
+                        }
+                    }
+                    else if (techno is Unit unit)
+                    {
+                        if ((layersToRender & MapLayerFlag.Units) == MapLayerFlag.Units)
+                        {
+                            triggers = new (string, Rectangle)[] { (unit.Trigger, new Rectangle(location, tileSize)) };
+                        }
+                    }
+                    else if (techno is InfantryGroup infantryGroup)
+                    {
+                        if ((layersToRender & MapLayerFlag.Infantry) == MapLayerFlag.Infantry)
+                        {
+                            List<(string, Rectangle)> infantryTriggers = new List<(string, Rectangle)>();
+                            for (var i = 0; i < infantryGroup.Infantry.Length; ++i)
+                            {
+                                var infantry = infantryGroup.Infantry[i];
+                                if (infantry == null)
+                                {
+                                    continue;
+                                }
+                                var size = tileSize;
+                                var offset = Size.Empty;
+                                switch ((InfantryStoppingType)i)
+                                {
+                                    case InfantryStoppingType.UpperLeft:
+                                        offset.Width = -size.Width / 4;
+                                        offset.Height = -size.Height / 4;
+                                        break;
+                                    case InfantryStoppingType.UpperRight:
+                                        offset.Width = size.Width / 4;
+                                        offset.Height = -size.Height / 4;
+                                        break;
+                                    case InfantryStoppingType.LowerLeft:
+                                        offset.Width = -size.Width / 4;
+                                        offset.Height = size.Height / 4;
+                                        break;
+                                    case InfantryStoppingType.LowerRight:
+                                        offset.Width = size.Width / 4;
+                                        offset.Height = size.Height / 4;
+                                        break;
+                                }
+                                var bounds = new Rectangle(location + offset, size);
+                                infantryTriggers.Add((infantry.Trigger, bounds));
+                            }
+                            triggers = infantryTriggers.ToArray();
+                        }
+                    }
+                    if (triggers != null)
+                    {
+                        StringFormat stringFormat = new StringFormat
+                        {
+                            Alignment = StringAlignment.Center,
+                            LineAlignment = StringAlignment.Center
+                        };
+                        foreach (var (trigger, bounds) in triggers.Where(x => x.trigger != null && !x.trigger.Equals("None", StringComparison.OrdinalIgnoreCase)))
+                        {
+                            using (var font = graphics.GetAdjustedFont(trigger, SystemFonts.DefaultFont, bounds.Width,
+                                Math.Max(1, (int)(12 * tileScale)), Math.Max(1, (int)(24 * tileScale)), true))
+                            {
+                                var textBounds = graphics.MeasureString(trigger, font, bounds.Width, stringFormat);
+                                var backgroundBounds = new RectangleF(bounds.Location, textBounds);
+                                backgroundBounds.Offset((bounds.Width - textBounds.Width) / 2.0f, (bounds.Height - textBounds.Height) / 2.0f);
+                                graphics.FillRectangle(technoTriggerBackgroundBrush, backgroundBounds);
+                                graphics.DrawRectangle(technoTriggerPen, Rectangle.Round(backgroundBounds));
+                                graphics.DrawString(trigger, font, technoTriggerBrush, bounds, stringFormat);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        public static void RenderWayPoints(Graphics graphics, Map map, Size tileSize, double tileScale, params Waypoint[] specifiedToExclude)
+        {
+            RenderWayPoints(graphics, map, tileSize, tileScale, Color.Black, Color.DarkOrange, Color.DarkOrange, false, true, specifiedToExclude);
+        }
+
+        public static void RenderWayPoints(Graphics graphics, Map map, Size tileSize, double tileScale, Color fillColor, Color borderColor, Color textColor, bool thickborder, bool excludeSpecified, params Waypoint[] specified)
+        {
+            HashSet<Waypoint> specifiedWaypoints = specified.ToHashSet();
+            float borderSize = Math.Max(0.5f, tileSize.Width / 60.0f);
+            float thickBorderSize = Math.Max(1f, tileSize.Width / 20.0f);
+            using (var waypointBackgroundBrush = new SolidBrush(Color.FromArgb(96, fillColor)))
+            using (var waypointBrush = new SolidBrush(textColor))
+            using (var waypointPen = new Pen(Color.FromArgb(128, borderColor), thickborder ? thickBorderSize : borderSize))
+            {
+                Waypoint[] toPaint = excludeSpecified ? map.Waypoints : specified;
+                StringFormat stringFormat = new StringFormat
+                {
+                    Alignment = StringAlignment.Center,
+                    LineAlignment = StringAlignment.Center
+                };
+                foreach (var waypoint in toPaint)
+                {
+                    if (waypoint.Cell.HasValue && map.Metrics.GetLocation(waypoint.Cell.Value, out Point point))
+                    {
+                        if (excludeSpecified && specifiedWaypoints.Contains(waypoint))
+                        {
+                            continue;
+                        }
+                        var location = new Point(point.X * tileSize.Width, point.Y * tileSize.Height);
+                        var textBounds = new Rectangle(location, tileSize);
+                        graphics.FillRectangle(waypointBackgroundBrush, textBounds);
+                        graphics.DrawRectangle(waypointPen, textBounds);
+                        var text = waypoint.Name.ToString();
+                        using (var font = graphics.GetAdjustedFont(text, SystemFonts.DefaultFont, textBounds.Width,
+                            Math.Max(1, (int)(24 * tileScale)), Math.Max(1, (int)(48 * tileScale)), true))
+                        {
+                            graphics.DrawString(text.ToString(), font, waypointBrush, textBounds, stringFormat);
+                        }
+                    }
+                }
+            }
+        }
+
+        public static void RenderCellTriggers(Graphics graphics, Map map, Size tileSize, double tileScale, params String[] specifiedToExclude)
+        {
+            RenderCellTriggers(graphics, map, tileSize, tileScale, Color.Black, Color.White, Color.White, false, true, specifiedToExclude);
+        }
+
+        public static void RenderCellTriggers(Graphics graphics, Map map, Size tileSize, double tileScale, Color fillColor, Color borderColor, Color textColor, bool thickborder, bool excludeSpecified, params String[] specified)
+        {
+            float borderSize = Math.Max(0.5f, tileSize.Width / 60.0f);
+            float thickBorderSize = Math.Max(1f, tileSize.Width / 20.0f);
+            HashSet<String> specifiedSet = new HashSet<String>(specified, StringComparer.InvariantCultureIgnoreCase);
+            using (var cellTriggersBackgroundBrush = new SolidBrush(Color.FromArgb(96, fillColor)))
+            using (var cellTriggersBrush = new SolidBrush(Color.FromArgb(128, textColor)))
+            using (var cellTriggerPen = new Pen(borderColor, thickborder ? thickBorderSize : borderSize))
+            {
+                foreach (var (cell, cellTrigger) in map.CellTriggers)
+                {
+                    bool contains = specifiedSet.Contains(cellTrigger.Trigger);
+                    if (contains && excludeSpecified || !contains && !excludeSpecified)
+                    {
+                        continue;
+                    }
+                    var x = cell % map.Metrics.Width;
+                    var y = cell / map.Metrics.Width;
+                    var location = new Point(x * tileSize.Width, y * tileSize.Height);
+                    var textBounds = new Rectangle(location, tileSize);
+                    graphics.FillRectangle(cellTriggersBackgroundBrush, textBounds);
+                    graphics.DrawRectangle(cellTriggerPen, textBounds);
+                    StringFormat stringFormat = new StringFormat
+                    {
+                        Alignment = StringAlignment.Center,
+                        LineAlignment = StringAlignment.Center
+                    };
+                    var text = cellTrigger.Trigger;
+                    using (var font = graphics.GetAdjustedFont(text, SystemFonts.DefaultFont, textBounds.Width,
+                        Math.Max(1, (int)(24 * tileScale)), Math.Max(1, (int)(48 * tileScale)), true))
+                    {
+                        graphics.DrawString(text.ToString(), font, cellTriggersBrush, textBounds, stringFormat);
+                    }
+                }
+            }
+        }
+
+        public static void RenderMapBoundaries(Graphics graphics, Map map, Size tileSize)
+        {
+            RenderMapBoundaries(graphics, map.Bounds, tileSize, Color.Cyan);
+        }
+
+        public static void RenderMapBoundaries(Graphics graphics, Rectangle bounds, Size tileSize, Color color)
+        {
+            var boundsRect = Rectangle.FromLTRB(
+                bounds.Left * tileSize.Width,
+                bounds.Top * tileSize.Height,
+                bounds.Right * tileSize.Width,
+                bounds.Bottom * tileSize.Height
+            );
+            using (var boundsPen = new Pen(color, Math.Max(1f, tileSize.Width / 8.0f)))
+                graphics.DrawRectangle(boundsPen, boundsRect);
         }
 
         public static void SetRenderSettings(Graphics g, Boolean smooth)

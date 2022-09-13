@@ -329,7 +329,7 @@ namespace MobiusEditor.Dialogs
             // 
             // existenceComboBox
             // 
-            this.existenceComboBox.DisplayMember = "Name";
+            this.existenceComboBox.DisplayMember = "Label";
             this.existenceComboBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.existenceComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.existenceComboBox.FormattingEnabled = true;
@@ -342,7 +342,7 @@ namespace MobiusEditor.Dialogs
             // 
             // typeComboBox
             // 
-            this.typeComboBox.DisplayMember = "Name";
+            this.typeComboBox.DisplayMember = "Label";
             this.typeComboBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.typeComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.typeComboBox.FormattingEnabled = true;

@@ -48,7 +48,7 @@ namespace MobiusEditor.Dialogs
         private MissionItemInfo missionItemInfo;
 
         private IEnumerable<TeamMission> teamMissionTypes;
-        private DropDownItem<int>[] wayPoints;
+        private ListItem<int>[] wayPoints;
         //private Dictionary<string, string> teamMissionTooltips;
         private ITechnoType defaultTeam;
         private TeamMission defaultMission;
@@ -86,7 +86,7 @@ namespace MobiusEditor.Dialogs
             teamTypes = new List<TeamType>();
             backupTeamTypes = new List<TeamType>();
             Waypoint[] wps = plugin.Map.Waypoints;
-            this.wayPoints = Enumerable.Range(0, wps.Length).Select(wp => new DropDownItem<int>(wp, wps[wp].ToString())).ToArray();
+            this.wayPoints = Enumerable.Range(0, wps.Length).Select(wp => new ListItem<int>(wp, wps[wp].ToString())).ToArray();
 
             int nrOfTeams = Math.Min(maxTeams, plugin.Map.TeamTypes.Count);
             btnAddTeamType.Enabled = nrOfTeams < maxTeams;
@@ -106,7 +106,7 @@ namespace MobiusEditor.Dialogs
             teamTypesListView.EndUpdate();
 
             cmbHouse.DataSource = plugin.Map.Houses.Select(t => new TypeItem<HouseType>(t.Type.Name, t.Type)).ToArray();
-            cmbWaypoint.DataSource = new DropDownItem<int>(-1, Waypoint.None).Yield().Concat(wayPoints).ToArray();
+            cmbWaypoint.DataSource = new ListItem<int>(-1, Waypoint.None).Yield().Concat(wayPoints).ToArray();
             cmbWaypoint.ValueMember = "Value";
             cmbWaypoint.DisplayMember = "Label";
 

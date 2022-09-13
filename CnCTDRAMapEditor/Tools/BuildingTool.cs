@@ -37,13 +37,11 @@ namespace MobiusEditor.Tools
         private Map previewMap;
         protected override Map RenderMap => previewMap;
 
-        /// <summary> Layers that are important to this tool and need to be drawn last in the PostRenderMap process.</summary>
-        protected override MapLayerFlag PriorityLayers => MapLayerFlag.None;
         /// <summary>
         /// Layers that are not painted by the PostRenderMap function on ViewTool level because they are handled
         /// at a specific point in the PostRenderMap override by the implementing tool.
         /// </summary>
-        protected override MapLayerFlag ManuallyHandledLayers => MapLayerFlag.TechnoTriggers | MapLayerFlag.BuildingRebuild;
+        protected override MapLayerFlag ManuallyHandledLayers => MapLayerFlag.TechnoTriggers | MapLayerFlag.BuildingRebuild | MapLayerFlag.BuildingFakes;
 
         private bool placementMode;
 
@@ -639,8 +637,15 @@ namespace MobiusEditor.Tools
                     }
                     List<(Point p, Building ter)> buildingList = new List<(Point p, Building ter)>();
                     buildingList.Add((new Point(0, 0), mockBuilding));
-                    RenderBuildingBounds(g, Globals.PreviewTileSize, buildingList);
-                    RenderBuildingLabels(g, mockBuilding, new Point(0, 0), Globals.PreviewTileSize, Globals.PreviewTileScale, MapLayerFlag.All, false);
+                    MapRenderer.RenderAllOccupierBounds(g, Globals.PreviewTileSize, buildingList);
+                    if ((Layers & MapLayerFlag.BuildingFakes) == MapLayerFlag.BuildingFakes)
+                    {
+                        MapRenderer.RenderFakeBuildingLabel(g, mockBuilding, new Point(0, 0), Globals.PreviewTileSize, Globals.PreviewTileScale, false);
+                    }
+                    if ((Layers & MapLayerFlag.BuildingRebuild) == MapLayerFlag.BuildingRebuild)
+                    {
+                        MapRenderer.RenderRebuildPriorityLabel(g, mockBuilding, new Point(0, 0), Globals.PreviewTileSize, Globals.PreviewTileScale, false);
+                    }
                 }
                 buildingTypeMapPanel.MapImage = buildingPreview;
             }
@@ -694,48 +699,20 @@ namespace MobiusEditor.Tools
         protected override void PostRenderMap(Graphics graphics)
         {
             base.PostRenderMap(graphics);
-            RenderBuildingBounds(graphics, Globals.MapTileSize, previewMap.Buildings.OfType<Building>());
-            foreach (var (topLeft, building) in previewMap.Buildings.OfType<Building>())
+            MapRenderer.RenderAllOccupierBounds(graphics, Globals.MapTileSize, previewMap.Buildings.OfType<Building>());
+            if ((Layers & MapLayerFlag.Buildings) == MapLayerFlag.Buildings)
             {
-                RenderBuildingLabels(graphics, building, topLeft, Globals.MapTileSize, Globals.MapTileScale, Layers, false);
-            }
-            RenderTechnoTriggers(graphics, previewMap, Globals.MapTileSize, Globals.MapTileScale, Layers);
-        }
-
-        private static void RenderBuildingBounds(Graphics graphics, Size tileSize, IEnumerable<(Point, Building)> buildings)
-        {
-            float boundsPenSize = Math.Max(1, tileSize.Width / 16.0f);
-            float occupyPenSize = Math.Max(0.5f, tileSize.Width / 32.0f);
-            if (occupyPenSize == boundsPenSize)
-            {
-                boundsPenSize += 2;
-            }
-            using (var boundsPen = new Pen(Color.Green, boundsPenSize))
-            using (var occupyPen = new Pen(Color.Red, occupyPenSize))
-            {
-                foreach (var (topLeft, building) in buildings)
+                if ((Layers & MapLayerFlag.BuildingFakes) == MapLayerFlag.BuildingFakes)
                 {
-                    Rectangle typeBounds = building.Type.OverlapBounds;
-                    var bounds = new Rectangle(
-                        new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height),
-                        new Size(typeBounds.Width * tileSize.Width, typeBounds.Height * tileSize.Height)
-                    );
-                    graphics.DrawRectangle(boundsPen, bounds);
+                    MapRenderer.RenderAllFakeBuildingLabels(graphics, previewMap, Globals.MapTileSize, Globals.MapTileScale);
                 }
-                foreach (var (topLeft, building) in buildings)
+                if ((Layers & MapLayerFlag.BuildingRebuild) == MapLayerFlag.BuildingRebuild)
                 {
-                    for (var y = 0; y < building.Type.BaseOccupyMask.GetLength(0); ++y)
-                    {
-                        for (var x = 0; x < building.Type.BaseOccupyMask.GetLength(1); ++x)
-                        {
-                            if (building.Type.BaseOccupyMask[y, x])
-                            {
-                                var occupyBounds = new Rectangle(
-                                    new Point((topLeft.X + x) * tileSize.Width, (topLeft.Y + y) * tileSize.Height), tileSize);
-                                graphics.DrawRectangle(occupyPen, occupyBounds);
-                            }
-                        }
-                    }
+                    MapRenderer.RenderAllRebuildPriorityLabels(graphics, previewMap, Globals.MapTileSize, Globals.MapTileScale);
+                }
+                if ((Layers & MapLayerFlag.TechnoTriggers) == MapLayerFlag.TechnoTriggers)
+                {
+                    MapRenderer.RenderAllTechnoTriggers(graphics, previewMap, Globals.MapTileSize, Globals.MapTileScale, Layers);
                 }
             }
         }

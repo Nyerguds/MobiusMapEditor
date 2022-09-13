@@ -778,7 +778,7 @@ namespace MobiusEditor.RedAlert
                                         }
                                     }
                                 }
-                                Map.Templates[x, y] = (templateType != null) ? new Template { Type = templateType } : null;
+                                Map.Templates[y, x] = (templateType != null) ? new Template { Type = templateType } : null;
                             }
                         }
                         if (oldClearCount > 0)
@@ -793,10 +793,10 @@ namespace MobiusEditor.RedAlert
                                 {
                                     for (var x = 0; x < width; ++x)
                                     {
-                                        Template cell = Map.Templates[x, y];
+                                        Template cell = Map.Templates[y, x];
                                         if (cell != null && cell.Type.ID == 255)
                                         {
-                                            Map.Templates[x, y] = null;
+                                            Map.Templates[y, x] = null;
                                         }
                                     }
                                 }
@@ -807,7 +807,7 @@ namespace MobiusEditor.RedAlert
                             for (var x = 0; x < width; ++x)
                             {
                                 var iconValue = reader.ReadByte();
-                                var template = Map.Templates[x, y];
+                                var template = Map.Templates[y, x];
                                 // Prevent loading of illegal tiles.
                                 if (template != null)
                                 {
@@ -818,7 +818,7 @@ namespace MobiusEditor.RedAlert
                                     {
                                         errors.Add(String.Format("Template '{0}' at cell [{1},{2}] has an icon set ({3}) that is outside its icons range; clearing.", templateType.Name.ToUpper(), x, y, iconValue));
                                     }
-                                    else if (!isRandom && templateType.IconMask != null && !templateType.IconMask[iconValue % templateType.IconWidth, iconValue / templateType.IconWidth])
+                                    else if (!isRandom && templateType.IconMask != null && !templateType.IconMask[iconValue / templateType.IconWidth, iconValue % templateType.IconWidth])
                                     {
                                         errors.Add(String.Format("Template '{0}' at cell [{1},{2}] has an icon set ({3}) that is not part of its placeable cells; clearing.", templateType.Name.ToUpper(), x, y, iconValue));
                                     }
@@ -828,7 +828,7 @@ namespace MobiusEditor.RedAlert
                                     }
                                     if (!tileOk)
                                     {
-                                        Map.Templates[x, y] = null;
+                                        Map.Templates[y, x] = null;
                                     }
                                     else
                                     {
@@ -1740,6 +1740,16 @@ namespace MobiusEditor.RedAlert
         private void UpdateBuildingRules(INI ini, Map map)
         {
             Dictionary<string, BuildingType> originals = BuildingTypes.GetTypes().ToDictionary(b => b.Name, StringComparer.InvariantCultureIgnoreCase);
+            HashSet<Point> refreshPoints = new HashSet<Point>();
+            List<(Point Location, Building Occupier)> buildings = map.Buildings.OfType<Building>()
+                 .OrderBy(pb => pb.Location.Y * map.Metrics.Width + pb.Location.X).ToList();
+            // Remove all buildings
+            foreach ((Point p, Building b) in buildings)
+            {
+                refreshPoints.UnionWith(OccupierSet<Building>.GetOccupyPoints(p, b.OccupyMask));
+                map.Buildings.Remove(b);
+            }
+            // Potentially add new bibs that obstruct stuff
             foreach (BuildingType bType in map.BuildingTypes)
             {
                 if (!originals.TryGetValue(bType.Name, out BuildingType orig))
@@ -1753,7 +1763,7 @@ namespace MobiusEditor.RedAlert
                     bType.PowerUsage = orig.PowerUsage;
                     bType.PowerProduction = orig.PowerProduction;
                     bType.Storage = orig.Storage;
-                    ChangeBib(map, bType, orig.HasBib);
+                    refreshPoints.UnionWith(ChangeBib(map, buildings, bType, orig.HasBib));
                     continue;
                 }
                 RaBuildingIniSection bld = new RaBuildingIniSection();
@@ -1785,33 +1795,55 @@ namespace MobiusEditor.RedAlert
                 {
                     hasBib = orig.HasBib;
                 }
-                ChangeBib(map, bType, hasBib);
+                refreshPoints.UnionWith(ChangeBib(map, buildings, bType, hasBib));
             }
-            map.NotifyRulesChanges();
+            // Try re-adding the buildings.
+            foreach ((Point p, Building b) in buildings)
+            {
+                refreshPoints.UnionWith(OccupierSet<Building>.GetOccupyPoints(p, b.OccupyMask));
+                map.Buildings.Add(p, b);
+            }
+            map.NotifyRulesChanges(refreshPoints);
         }
 
         /// <summary>
-        /// Bibs need a special refresh logic because they affect smudge.
+        /// Bibs need a special refresh logic because they need to remove walls.
         /// </summary>
-        /// <param name="map"></param>
-        /// <param name="bType"></param>
-        /// <param name="hasBib"></param>
-        private void ChangeBib(Map map, BuildingType bType, Boolean hasBib)
+        /// <param name="map">Map</param>
+        /// //<param name="buildings">List of buildings, since the original in map got wiped.</param>
+        /// <param name="bType">Building type</param>
+        /// <param name="hasBib">true if the new setting says the building will have a bib.</param>
+        /// <returns>The points of and directly around any removed walls.</returns>
+        private IEnumerable<Point> ChangeBib(Map map, IEnumerable<(Point Location, Building Occupier)> buildings, BuildingType bType, Boolean hasBib)
         {
+            HashSet<Point> changed = new HashSet<Point>();
             if (bType.HasBib == hasBib)
             {
-                return;
+                return changed;
             }
-            List<(Point p, Building b)> buildings = map.Buildings.OfType<Building>().Where(bl => bType.Name.Equals(bl.Occupier.Type.Name, StringComparison.InvariantCultureIgnoreCase)).ToList();
-            foreach ((Point p, Building b) in buildings)
-            {
-                map.Buildings.Remove(b);
-            }
+            List<(Point p, Building b)> foundBuildings = buildings.Where(lo => bType.Name.Equals(lo.Occupier.Type.Name, StringComparison.InvariantCultureIgnoreCase))
+                .OrderBy(lo => lo.Location.Y * map.Metrics.Width + lo.Location.X).ToList();
             bType.HasBib = hasBib;
-            foreach ((Point p, Building b) in buildings)
+            foreach ((Point p, Building b) in foundBuildings)
             {
-                map.Buildings.Add(p, b);
+                IEnumerable<Point> buildingPoints = OccupierSet<Building>.GetOccupyPoints(p, b.OccupyMask);
+                // Clear any walls that may now end up on the bib.
+                if (Globals.BlockingBibs)
+                {
+                    foreach (Point bldPoint in buildingPoints)
+                    {
+                        Overlay ovl = map.Overlay[bldPoint];
+                        if (ovl != null && ovl.Type.IsWall)
+                        {
+                            Rectangle toRefresh = new Rectangle(bldPoint, new Size(1, 1));
+                            toRefresh.Inflate(1, 1);
+                            map.Overlay[bldPoint] = null;
+                            changed.UnionWith(toRefresh.Points());
+                        }
+                    }
+                }
             }
+            return changed;
         }
 
         public bool Save(string path, FileType fileType)
@@ -2195,7 +2227,7 @@ namespace MobiusEditor.RedAlert
                     {
                         for (var x = 0; x < Map.Metrics.Width; ++x)
                         {
-                            var template = Map.Templates[x, y];
+                            var template = Map.Templates[y, x];
                             if (template != null && (template.Type.Flag & TemplateTypeFlag.Clear) == 0)
                             {
                                 writer.Write(template.Type.ID);
@@ -2211,7 +2243,7 @@ namespace MobiusEditor.RedAlert
                     {
                         for (var x = 0; x < Map.Metrics.Width; ++x)
                         {
-                            var template = Map.Templates[x, y];
+                            var template = Map.Templates[y, x];
                             if (template != null && (template.Type.Flag & TemplateTypeFlag.Clear) == 0)
                             {
                                 writer.Write((byte)template.Icon);

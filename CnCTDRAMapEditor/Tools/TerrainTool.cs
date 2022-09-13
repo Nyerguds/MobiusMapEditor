@@ -30,8 +30,6 @@ namespace MobiusEditor.Tools
 {
     public class TerrainTool : ViewTool
     {
-        /// <summary> Layers that are important to this tool and need to be drawn last in the PostRenderMap process.</summary>
-        protected override MapLayerFlag PriorityLayers => MapLayerFlag.None;
         /// <summary>
         /// Layers that are not painted by the PostRenderMap function on ViewTool level because they are handled
         /// at a specific point in the PostRenderMap override by the implementing tool.
@@ -411,7 +409,7 @@ namespace MobiusEditor.Tools
                     }
                     List<(Point p, Terrain ter)> terrainList = new List<(Point p, Terrain ter)>();
                     terrainList.Add((new Point(0, 0), mockTerrain));
-                    RenderTerrainBounds(g, Globals.PreviewTileSize, terrainList);
+                    MapRenderer.RenderAllOccupierBounds(g, Globals.PreviewTileSize, terrainList);
                 }
                 terrainTypeMapPanel.MapImage = terrainPreview;
             }
@@ -473,43 +471,12 @@ namespace MobiusEditor.Tools
         protected override void PostRenderMap(Graphics graphics)
         {
             base.PostRenderMap(graphics);
-            RenderTerrainBounds(graphics, Globals.MapTileSize, previewMap.Technos.OfType<Terrain>());
-            RenderTechnoTriggers(graphics, map, Globals.MapTileSize, Globals.MapTileScale, Layers);
-        }
-
-        private static void RenderTerrainBounds(Graphics graphics, Size tileSize, IEnumerable<(Point p, Terrain ter)> terrainList)
-        {
-            float boundsPenSize = Math.Max(1, tileSize.Width / 16.0f);
-            float occupyPenSize = Math.Max(0.5f, tileSize.Width / 32.0f);
-            if (occupyPenSize == boundsPenSize)
+            MapRenderer.RenderAllOccupierBounds(graphics, Globals.MapTileSize, previewMap.Technos.OfType<Terrain>());
+            if ((Layers & MapLayerFlag.TechnoTriggers) == MapLayerFlag.TechnoTriggers)
             {
-                boundsPenSize++;
-            }
-            using (var boundsPen = new Pen(Color.Green, boundsPenSize))
-            using (var occupyPen = new Pen(Color.Red, occupyPenSize))
-            {
-                foreach (var (topLeft, terrain) in terrainList)
-                {
-                    var bounds = new Rectangle(new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height), terrain.Type.GetRenderSize(tileSize));
-                    graphics.DrawRectangle(boundsPen, bounds);
-                }
-                foreach (var (topLeft, terrain) in terrainList)
-                {
-                    for (var y = 0; y < terrain.Type.OccupyMask.GetLength(0); ++y)
-                    {
-                        for (var x = 0; x < terrain.Type.OccupyMask.GetLength(1); ++x)
-                        {
-                            if (!terrain.Type.OccupyMask[y, x])
-                                continue;
-                            var occupyBounds = new Rectangle(
-                                new Point((topLeft.X + x) * tileSize.Width, (topLeft.Y + y) * tileSize.Height), tileSize);
-                            graphics.DrawRectangle(occupyPen, occupyBounds);
-                        }
-                    }
-                }
+                MapRenderer.RenderAllTechnoTriggers(graphics, map, Globals.MapTileSize, Globals.MapTileScale, Layers);
             }
         }
-        
 
         public override void Activate()
         {

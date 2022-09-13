@@ -108,7 +108,7 @@ namespace MobiusEditor.Model
         /// <param name="flag">Indicates special terrain types.</param>
         /// <param name="maskOverrides">Mask override for tiles that contain too many graphics in the Remaster. Indices with '0' are removed from the tiles. Spaces are ignored and can be added for visual separation.</param>
         public TemplateType(ushort id, string name, int iconWidth, int iconHeight, TheaterType[] theaters, TemplateTypeFlag flag, params String[] maskOverrides)
-            :this(id,name,iconWidth, iconHeight, theaters, flag)
+            : this(id, name, iconWidth, iconHeight, theaters, flag)
         {
             bool isRandom = NumIcons == 1 && (flag & TemplateTypeFlag.RandomCell) != TemplateTypeFlag.None;
             // Mask override for tiles that contain too many graphics in the Remaster. Indices with '0' are removed from the tiles.
@@ -125,7 +125,7 @@ namespace MobiusEditor.Model
                         bool[,] mask = null;
                         if (!String.IsNullOrEmpty(maskOverride))
                         {
-                            mask = new bool[iconWidth, iconHeight];
+                            mask = new bool[iconHeight, iconWidth];
                             int icon = 0;
                             for (var y = 0; y < IconHeight; ++y)
                             {
@@ -135,7 +135,7 @@ namespace MobiusEditor.Model
                                     {
                                         icon++;
                                     }
-                                    mask[x, y] = icon < maskOverride.Length && maskOverride[icon] != '0';
+                                    mask[y, x] = icon < maskOverride.Length && maskOverride[icon] != '0';
                                 }
                             }
                         }
@@ -151,6 +151,7 @@ namespace MobiusEditor.Model
                 }
             }
         }
+
         /// <summary>
         /// Creates a TemplateType object as 1x1 that is part of a group-entry.
         /// </summary>
@@ -261,7 +262,7 @@ namespace MobiusEditor.Model
             }
             var oldImage = Thumbnail;
             var size = new Size(Globals.PreviewTileWidth, Globals.PreviewTileHeight);
-            var mask = new bool[IconWidth, IconHeight];
+            var mask = new bool[IconHeight, IconWidth];
             int loopWidth = IconWidth;
             int loopHeight = IconHeight;
             bool isRandom = (Flag & TemplateTypeFlag.RandomCell) != TemplateTypeFlag.None;
@@ -314,7 +315,7 @@ namespace MobiusEditor.Model
                         {
                             break;
                         }
-                        if (maskOv != null && !maskOv[x, y])
+                        if (maskOv != null && !maskOv[y, x])
                         {
                             continue;
                         }
@@ -337,7 +338,7 @@ namespace MobiusEditor.Model
                                 }
                                 if (!isRandom)
                                 {
-                                    found = mask[x, y] = true;
+                                    found = mask[y, x] = true;
                                 }
                             }
                         }

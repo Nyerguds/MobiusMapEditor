@@ -709,7 +709,7 @@ namespace MobiusEditor
                 {
                     using (Graphics g = Graphics.FromImage(pr))
                     {
-                        ViewTool.PostRenderMap(g, plugin.Map, Globals.ExportTileScale, MapLayerFlag.None, MapLayerFlag.None, ActiveLayers);
+                        ViewTool.PostRenderMap(g, plugin.Map, Globals.ExportTileScale, ActiveLayers, MapLayerFlag.None);
                     }
                     pr.Save(savePath, ImageFormat.Png);
                 }
@@ -954,7 +954,9 @@ namespace MobiusEditor
             }
             catch (Exception ex)
             {
-                //MessageBox.Show("Error: " + ex.Message + "\n\n" + ex.StackTrace);
+#if DEBUG
+                MessageBox.Show("Error: " + ex.Message + "\n\n" + ex.StackTrace);
+#endif
                 this.Unload();
 #if DEVELOPER
                 throw;

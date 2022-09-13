@@ -28,21 +28,34 @@ For Tiberian Dawn maps, the triggers dialog has a "Check" button that will check
 
 The file "CnCTDRAMapEditor.exe.config" contains settings to customise the editor. This is what they do:
 
+### Editor options:
+
 * **ModsToLoad**: semicolon (or comma) separated list of mod entries. A mod entry can either be a Steam workshop ID, or a path of the type "Tiberian_Dawn\ModName" or "Red_Alert\ModName". The paths will initially be looked up under My Documents, but the loading system will also check the Steam workshop files, and use the game prefix part to verify the mod's targeted game. Note that due to the order in which files are loaded into the editor, mods are **not** loaded conditionally per map type based on this targeted game. The editor also has no way to check which mods are actually enabled in the game, and will load anything that is configured and of which the files can be found.
-* **NoMetaFilesForSinglePlay**: Suppresses the generation of .tga and .json files for single player maps saved to disc. This does not affect Steam uploads.
-* **IgnoreBibs**: Ignore bibs in the placement of buildings. Note that if you're not careful with this, this might prevent proper rebuilding of AI bases.
 * **MapScale**: Scaling multiplier for the size at which assets are rendered on the map; higher means lower quality. This will make the UI more responsive. Negative values will enable smooth scaling, which gives nicer graphics but will make the UI noticeable _less_ responsive. Defaults to 0.5.
 * **PreviewScale**: Scaling multiplier for the size at which assets are rendered on the preview tools. Negative values will enable smooth scaling, but this usually doesn't look good on the upscaled preview graphics. Defaults to 1
 * **ExportScale**: Scaling multiplier for the size at which an exported image will be generated through "Tools" → "Export As Image". Negative values will enable smooth scaling. Defaults to -0.5.
 * **ObjectToolItemSizeMultiplier**: Floating-point multiplication factor for downsizing the item icons on the selection lists on the tool windows.
 * **TemplateToolTextureSizeMultiplier**: Floating-point multiplication factor for the size of tiles shown on the Map tool. This scaling is somehow done relative to the screen size; not sure.
 * **MaxMapTileTextureSize**: Maximum for the size of the tiles shown on the Map tool. Leave on 0 to disable.
-* **IgnoreRaObsoleteClear**: Prevents the clearing of tiles with ID 255 on RA maps. This is purely a research option for analysing modern changes on old maps.
-* [WIP; v1.4.2.1] **UndoRedoStackSize**: The amount of undo/redo actions stored in memory. Defaults to 50.
+* [WIP; v1.4.3.0] **UndoRedoStackSize**: The amount of undo/redo actions stored in memory. Defaults to 50.
 
 The **ModsToLoad** setting will have the `Tiberian_Dawn\ConcretePavementTD` mod set by default, to complete the incomplete TD Remastered graphics set, meaning it will automatically be loaded if found.
 
 You can find the mod [on the Steam workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2844969675) and [on ModDB](https://www.moddb.com/games/command-conquer-remastered/addons/concretepavementtd).
+
+### Tweaks:
+
+[WIP; v1.4.3.0. Some already exist in the current version with slightly different names]
+
+These options are all enabled by default, but can be disabled if you wish. Use these at your own risk.
+
+* **NoMetaFilesForSinglePlay**: Suppresses the generation of .tga and .json files for single player maps saved to disc, since they are useless clutter and unused by the game. This does not affect Steam uploads. Note that json files for single player maps will now only contain the Home waypoint.
+* **ConvertRaObsoleteClear**: Automatically clear tiles with ID 255 on RA Temperate/Snow maps, or on Interior maps if more than 80% of the area outside the map bounds is filled with it, to fix the fact old versions of RA saved that as Clear terrain. This can be disabled to research changes on old maps.
+* **BlockingBibs**: Bibs block the placement of other structures. Note that if you disable this, you should be careful not to block the build plan of rebuildable AI structures. Also, the games might have issues with walls overlaying building bibs.
+* **DisableAirUnits**: Air unit reading from maps was a disabled feature in the original games. Even though the Remaster re-enabled this, it is buggy and unpredictable, so the editor disables air units by default. Air units put on maps will spawn in the air, and will generally find a nearby building of their House to land at.
+* **ConvertCraters**: Any craters of the types CR2-CR6 placed in missions are bugged in the games, and revert to the smallest size of CR1. This filters them out and converts them to CR1 craters of the same size, and removes the other craters from the Smudge types list.
+* **BoundsObstructFill**: When filling map tiles with [Ctrl]+[Shift]+[Click], the map boundary acts as border blocking the fill spread. This applies both inside and outside the border.
+* **FilterTheaterObjects**: Filter out objects that don't belong in the current map's theater. This affects both map loading, and the items visible in the placement lists. Do not turn this off unless you really know what you're doing; having theater-illegal objects on maps may cause situations that crash the game.
 
 ---
 
@@ -58,7 +71,7 @@ You can find the mod [on the Steam workshop](https://steamcommunity.com/sharedfi
 
 ### Features and fixes by Nyerguds:
 
-v1.4.0.0:
+#### v1.4.0.0:
 
 * Fixed overlay height overflow bug in Rampa's new UI.
 * Fixed map tiles list duplicating every time the "Map" tool window is opened in Rampa's version.
@@ -70,7 +83,7 @@ v1.4.0.0:
 * Removed irrelevant orders from the unit missions list (Selling, Missile, etc.)
 * Fixed case sensitivity related crashes in TD teamtypes.
 * TD triggers without a teamtype will now automatically get "None" filled in as teamtype, fixing the malfunctioning of their repeat status.
-* Added Ctrl+N, Ctrl+O, Ctrl+S etc. shortcuts for the File menu.
+* Added [Ctrl]+[N], [Ctrl]+[O], [Ctrl]+[S] etc. shortcuts for the File menu.
 * Fixed double indicator on map tile selection window.
 * Fixed smudge reading in TD to allow 5 crater stages.
 * Added tool window to adjust crater stage.
@@ -82,14 +95,14 @@ v1.4.0.0:
 * Randomised tiberium on save, like the original WW editor does. (this is purely cosmetic; the game re-randomises it on map load.)
 * [EXPERIMENTAL] Added ability to place bibs as smudge type. They won't show their full size in the editor at the moment, though.
 
-v1.4.0.1:
+#### v1.4.0.1:
 
 * Added "All supported types (\*.ini;\*.bin;\*.mpr)" as default filter when opening files.
 * Added Drag & Drop support for opening map files.
 * Added command line file argument support, which allows setting the editor as application for opening ini/mpr files.
 * House Edge reading now corrects values with case differences so they show up in the dropdown.
 * Centralised the House Edge array on the House class, and changed its order to a more logical North, East, South, West.
-* Fixed order of the Multi-House colours. It seems the error is not in the editor, but in bizarre mixed-up team colour names in the remastered game itself.
+* Fixed order of the Multi-House colors. It seems the error is not in the editor, but in bizarre mixed-up team color names in the remastered game itself.
 * Remapped Neutral (TD only) and Special as yellow, as they are in the game.
 * All tool windows will now save their position.
 * Tool windows for which no position was previously set will center themselves on the right edge of the editor.
@@ -112,7 +125,7 @@ v1.4.0.1:
 * Trigger controls no longer jump around slightly when selecting different options.
 * Using the mouse wheel will now change the tiberium field size per 2, like a normal arrow click would.
 
-v1.4.0.2:
+#### v1.4.0.2:
 
 * Fixed the bug that cleared all map templates on save in v1.4.0.1 (whoops).
 * Fixed the bug in the teamtypes list that showed the wrong context menu options on right click.
@@ -131,7 +144,7 @@ v1.4.0.2:
 * The "clear1" tile is now explicitly shown in the tiles list.
 * Teamtype "Priority" value (recruit priority) is now capped at 15.
 
-v1.4.0.3:
+#### v1.4.0.3:
 
 * The editor now tries to automatically detect the game installation folder in Steam.
 * Fixed refresh errors in preview images when resizing tool windows.
@@ -152,7 +165,7 @@ v1.4.0.3:
 * The CONC and ROAD overlay types now show the same graphics as in-game. This is technically just a dummy graphic the game uses when not finding object graphics. The version in the editor is a reconstruction.
 * Removed limitation on placing resources on the top and bottom row of the map.
 
-v1.4.1.0:
+#### v1.4.1.0:
 
 * Fixed dimensions of RA's ore mine, Snow theater ice floes and Interior theater boxes, and one of the Desert theater rocks in TD.
 * Added \*.ini to the list of possible extensions for opening RA maps. Apparently before I only added it for saving.
@@ -166,14 +179,14 @@ v1.4.1.0:
 * Fixed loading and saving of the videos set in the map options dialog, so no more errors pop up there.
 * Made video names freely editable for TD missions. Any mod-added video in TD is playable from missions. Be warned that when a video is not found, this may cause the game to hang for several minutes.
 * The preview selection in the Steam publish dialog will now open in the correct folder.
-* The new setting "NoMetaFilesForSinglePlay" in "CnCTDRAMapEditor.exe.config" will suppress the generation of .json and .TGA file when saving single player missions to disc. Not writing them is now the default behaviour. This does not affect the Steam workshop upload behaviour.
+* The new setting "NoMetaFilesForSinglePlay" in "CnCTDRAMapEditor.exe.config" will suppress the generation of .json and .TGA file when saving single player missions to disc. Not writing them is now the default behavior. This does not affect the Steam workshop upload behavior.
 * The rendered previews will now show all map contents, to give a better representation of what is on the map. Note that for single play missions, this preview is generated in the folder but is optional.
 * Removed crater types CR2 to CR6; they don't work correctly in either game and will just show the smallest size of CR1. Any craters of other types encountered on map load will now be converted to CR1.
 * The teamtypes dialog no longer uses data grids for its teams and orders.
 * Teamtypes now show full names for unit types.
 * The input for arguments for orders in the teamtypes dialog now correctly adapts to the type of each order, giving dropdowns for special choices lists and for waypoints.
 * The waypoints that can be selected for an RA teamtype now correctly start from -1 as "(none)".
-* Fixed colour of "Special" in RA to have the same colour as Spain.
+* Fixed color of "Special" in RA to have the same color as Spain.
 * Fixed the fact trigger Events and Actions retained their argument data when changing their type, meaning the UI would pick the equivalent data on whatever list or control popped up for the new type.
 * RA triggers now show human-readable data for the Event and Action arguments.
 * The editor no longer locks up when the triggers dialog shows an empty list of teamtypes or (previously-saved) triggers because none were made yet.
@@ -213,18 +226,18 @@ v1.4.1.0:
 * Fixed incorrect tooltip placement when using bounds dragging mode on a different monitor.
 * Red Alert's Interior tileset now supports randomising the 1x1 tiles that contain alternate versions. This type will now show all alternates on a blue grid in the preview window. Specific tiles can still be picked the usual way if you do not want random ones.
 * If mods add extra tiles to existing 1x1 tilesets, these will be treated as 1x1 with alternates too.
-* Tanya's default colouring in the editor preview is now Allied, and the M.A.D. Tank's colour is now Soviet.
+* Tanya's default coloring in the editor preview is now Allied, and the M.A.D. Tank's color is now Soviet.
 * Changed Red Alert's trigger action "Destroy attached building" to a more accurate "Destroy attached object", seeing as it even works from celltrigger to kill units.
 * Bibs are now shown as part of the building boundaries.
 * Bibs boundary checking can be disabled with a global setting.
 * The overlap detection in the map loading now correctly scans the full footprint of buildings and terrain objects, and will now correctly report the blocking object.
 * Sounds lists in RA triggers now have descriptions.
-* If you try to save an opened file but the folder it was loaded from is deleted, it will no longer give an error, but revert to "Save As" behaviour.
+* If you try to save an opened file but the folder it was loaded from is deleted, it will no longer give an error, but revert to "Save As" behavior.
 * The chosen preview image in the Steam upload dialog will now also be used as in-game preview for the map.
 * In TD maps, a building that is set to be rebuilt but is not built from the start will now show as House "None".
 * The Interior tiles "wall0002" to "wall0022" are now grouped per type into three dummy-entries "wallgroup1", "wallgroup2" and "wallgroup3", to simplify random placement of these tiles and to remove clutter from the tiles list.
 
-v1.4.1.1:
+#### v1.4.1.1:
 
 * The Red Alert teamtype order "Guard Area" now correctly has 'time' as argument type, rather than a waypoint.
 * Added a system to detect singleplayer missions from the original games and automatically mark them as singleplayer if they conform to the classic naming scheme for singleplayer missions, and contain a Lose and Win trigger.
@@ -234,7 +247,7 @@ v1.4.1.1:
 * Maps loaded from file are now seen as 'modified' if any issues were detected that made the editor change or discard data during the loading process.
 * The triggers check feedback (TD only) now also uses the large window used for showing the map load errors.
 
-v1.4.2.0:
+#### v1.4.2.0:
 
 * Menu items related to map actions will now be disabled if no map is loaded.
 * Fixed "Destroy attached object" trigger in RA not being seen as valid on units.
@@ -271,7 +284,7 @@ v1.4.2.0:
 * If the map is marked as single player scenario, the first waypoints are no longer indicated as player start positions with a "P" prefix.
 * Mods will now only be loaded for maps targeted at their respective game, meaning common assets can be overridden differently by TD and RA mods.
 
-v1.4.2.1: [WIP]
+#### v1.4.3.0: [WIP]
 
 * Fixed a bug where the default House in TD maps was set to "None", causing them to crash the game.
 * Bibs placed as the 'smudge' type now show their full size, and can be placed in ways that makes them partially overlap. As long as at least one cell of a bib exists, the bib exists.
@@ -282,16 +295,27 @@ v1.4.2.1: [WIP]
 * Undo/Redo actions can be cleared using a new option in the Edit menu. This can be used in case too many might make the editor laggy.
 * Disabling Aftermath units will now clear the Undo/Redo history, to avoid conflicts.
 * Fixed undo/redo of map bounds dragging; it was severely bugged and often reduced the bounds to minimum size.
-* Fixed bug where tool windows can be closed with Alt+F4, causing the editor to crash when trying to re-open them.
+* Fixed bug where tool windows can be closed with [Alt]+[F4], causing the editor to crash when trying to re-open them.
 * Fixed tab indices on the "New Map" dialog, so the radio buttons are selected by default.
 * Mobile Radar Jammer and Mobile Gap Generator now show different facings for their "turrets".
 * Fixed a bug in the power balance tool which made it ignore the first House
 * Added a silo storage capacity tool.
 * Added a section in the map settings for scenario-specific options in RA maps.
-* Added a rules editing field for RA maps that allows editing/adding ini sections not handled by the editor.
+* Added a rules editing field for RA maps that allows editing/adding ini sections not handled by the editor. Changing building bibs, power and resource storage in this will immediately affect the editor.
 * Dragging a building's bib over smudge will no longer remove the smudge, unless it's actually placed down on it.
 * Undoing a building's placement or moving will now restore any smudge the building's bib replaced.
-* Added map template fill mode ([Ctrl]+[Alt]+[Left-click]) and fill-clear mode ([Ctrl]+[Alt]+[Right-click]).
+* Added map template fill mode ([Ctrl]+[Shift]+[Left-Click]) and fill-clear mode ([Ctrl]+[Shift]+[Right-Click]).
+* Enabling/disabling Indicator items in the View menu no longer does a full refresh of the map, making it nearly instant.
+* Added options to re-enable aircraft and full craters list.
+* Changed all tweak options to have True as default value.
+* Fixed the fact the Oil Pump (V19) was not usable in Interior theater.
+* Added specific "FilterTheaterObjects" option for the behavior of filtering out theater-illegal objects
+* Added the Desert civilian buildings to RA (though they won't show unless "FilterTheaterObjects" is disabled)
+* The building tool preview now shows bibs.
+* Object previews for multi-cell types in the tool window now show the occupied cell indicators.
+* Placement previews now show the occupied cell indicators.
+* Civilian buildings in RA maps will no longer change their colors to the House that owns them. This does not apply to TD, since the TD civilian buildings actually change their color in-game.
+* Fake buildings once again show the "Fake" label on the preview in the buildings list. This was accidentally removed when splitting off the label drawing to an indicator.
 
 ### Possible future features
 

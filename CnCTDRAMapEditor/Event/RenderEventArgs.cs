@@ -18,16 +18,14 @@ using System.Drawing;
 
 namespace MobiusEditor.Event
 {
-    public class RenderEventArgs : EventArgs
+    public class RenderEventArgs : MapRefreshEventArgs
     {
         public Graphics Graphics { get; private set; }
 
-        public ISet<Point> Cells { get; private set; }
-
-        public RenderEventArgs(Graphics graphics, ISet<Point> cells)
+        public RenderEventArgs(Graphics graphics, ISet<Point> points)
+            :base(points)
         {
             Graphics = graphics;
-            Cells = cells;
         }
     }
 }

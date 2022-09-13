@@ -88,7 +88,6 @@ namespace MobiusEditor.Dialogs
                     existenceNames = new string[] { "Temporary", "Semi-Constant", "Constant" };
                     break;
             }
-
             string[] typeNames = new string[]
             {
                 "E => A1 [+ A2]",
@@ -96,20 +95,17 @@ namespace MobiusEditor.Dialogs
                 "E1 || E2 => A1 [+ A2]",
                 "E1 => A1; E2 => A2",
             };
-
             houseComboBox.DataSource = House.None.Yield().Concat(plugin.Map.Houses.Select(t => t.Type.Name)).ToArray();
-            existenceComboBox.DataSource = Enum.GetValues(typeof(TriggerPersistentType)).Cast<int>()
-                .Select(v => new { Name = existenceNames[v], Value = (TriggerPersistentType)v })
-                .ToArray();
-            typeComboBox.DataSource = Enum.GetValues(typeof(TriggerMultiStyleType)).Cast<int>()
-                .Select(v => new { Name = typeNames[v], Value = (TriggerMultiStyleType)v })
+            existenceComboBox.DataSource = Enum.GetValues(typeof(TriggerPersistentType)).Cast<TriggerPersistentType>()
+                .Select(v => new ListItem<TriggerPersistentType>(v, existenceNames[(int)v])).ToArray();
+            typeComboBox.DataSource = Enum.GetValues(typeof(TriggerMultiStyleType)).Cast<TriggerMultiStyleType>()
+                .Select(v => new ListItem<TriggerMultiStyleType>(v, typeNames[(int)v]))
                 .ToArray();
             event1ComboBox.DataSource = plugin.Map.EventTypes.Where(t => !string.IsNullOrEmpty(t)).ToArray();
             event2ComboBox.DataSource = plugin.Map.EventTypes.Where(t => !string.IsNullOrEmpty(t)).ToArray();
             action1ComboBox.DataSource = plugin.Map.ActionTypes.Where(t => !string.IsNullOrEmpty(t)).ToArray();
             action2ComboBox.DataSource = plugin.Map.ActionTypes.Where(t => !string.IsNullOrEmpty(t)).ToArray();
             teamComboBox.DataSource = TeamType.None.Yield().Concat(plugin.Map.TeamTypes.Select(t => t.Name)).ToArray();
-
             triggersTableLayoutPanel.Visible = false;
         }
 
@@ -433,9 +429,9 @@ namespace MobiusEditor.Dialogs
                                 break;
                             case TiberianDawn.EventTypes.EVENT_BUILD:
                                 eventValueComboBox.Visible = true;
-                                eventValueComboBox.DisplayMember = "Name";
+                                eventValueComboBox.DisplayMember = "Label";
                                 eventValueComboBox.ValueMember = "Value";
-                                eventValueComboBox.DataSource = plugin.Map.BuildingTypes.Select(t => new { Name = t.DisplayName, Value = (long)t.ID }).ToArray();
+                                eventValueComboBox.DataSource = plugin.Map.BuildingTypes.Select(t => new ListItem<long>(t.ID, t.DisplayName)).ToArray();
                                 eventValueComboBox.DataBindings.Add("SelectedValue", triggerEvent, "Data");
                                 if (triggerEventData == null)
                                 {
@@ -478,9 +474,10 @@ namespace MobiusEditor.Dialogs
                             case RedAlert.EventTypes.TEVENT_UNITS_DESTROYED:
                             case RedAlert.EventTypes.TEVENT_ALL_DESTROYED:
                                 eventValueComboBox.Visible = true;
-                                eventValueComboBox.DisplayMember = "Name";
+                                eventValueComboBox.DisplayMember = "Label";
                                 eventValueComboBox.ValueMember = "Value";
-                                eventValueComboBox.DataSource = new { Name = House.None, Value = (long)-1 }.Yield().Concat(plugin.Map.Houses.Select(t => new { t.Type.Name, Value = (long)t.Type.ID })).ToArray();
+                                eventValueComboBox.DataSource = new ListItem<long>(-1, House.None).Yield()
+                                    .Concat(plugin.Map.Houses.Select(t => new ListItem<long>(t.Type.ID, t.Type.Name))).ToArray();
                                 eventValueComboBox.DataBindings.Add("SelectedValue", triggerEvent, "Data");
                                 if (triggerEventData == null)
                                 {
@@ -494,9 +491,9 @@ namespace MobiusEditor.Dialogs
                             case RedAlert.EventTypes.TEVENT_BUILDING_EXISTS:
                             case RedAlert.EventTypes.TEVENT_BUILD:
                                 eventValueComboBox.Visible = true;
-                                eventValueComboBox.DisplayMember = "Name";
+                                eventValueComboBox.DisplayMember = "Label";
                                 eventValueComboBox.ValueMember = "Value";
-                                eventValueComboBox.DataSource = plugin.Map.BuildingTypes.Select(t => new { Name = t.DisplayName, Value = (long)t.ID }).ToArray();
+                                eventValueComboBox.DataSource = plugin.Map.BuildingTypes.Select(t => new ListItem<long>(t.ID, t.DisplayName)).ToArray();
                                 eventValueComboBox.DataBindings.Add("SelectedValue", triggerEvent, "Data");
                                 if (triggerEventData == null)
                                 {
@@ -509,9 +506,9 @@ namespace MobiusEditor.Dialogs
                                 break;
                             case RedAlert.EventTypes.TEVENT_BUILD_UNIT:
                                 eventValueComboBox.Visible = true;
-                                eventValueComboBox.DisplayMember = "Name";
+                                eventValueComboBox.DisplayMember = "Label";
                                 eventValueComboBox.ValueMember = "Value";
-                                eventValueComboBox.DataSource = plugin.Map.UnitTypes.Where(t => t.IsUnit).Select(t => new { Name = t.DisplayName, Value = (long)t.ID }).ToArray();
+                                eventValueComboBox.DataSource = plugin.Map.UnitTypes.Where(t => t.IsUnit).Select(t => new ListItem<long>(t.ID, t.DisplayName)).ToArray();
                                 eventValueComboBox.DataBindings.Add("SelectedValue", triggerEvent, "Data");
                                 if (triggerEventData == null)
                                 {
@@ -524,9 +521,9 @@ namespace MobiusEditor.Dialogs
                                 break;
                             case RedAlert.EventTypes.TEVENT_BUILD_INFANTRY:
                                 eventValueComboBox.Visible = true;
-                                eventValueComboBox.DisplayMember = "Name";
+                                eventValueComboBox.DisplayMember = "Label";
                                 eventValueComboBox.ValueMember = "Value";
-                                eventValueComboBox.DataSource = plugin.Map.InfantryTypes.Select(t => new { Name = t.DisplayName, Value = (long)t.ID }).ToArray();
+                                eventValueComboBox.DataSource = plugin.Map.InfantryTypes.Select(t => new ListItem<long>(t.ID, t.DisplayName)).ToArray();
                                 eventValueComboBox.DataBindings.Add("SelectedValue", triggerEvent, "Data");
                                 if (triggerEventData == null)
                                 {
@@ -539,9 +536,10 @@ namespace MobiusEditor.Dialogs
                                 break;
                             case RedAlert.EventTypes.TEVENT_BUILD_AIRCRAFT:
                                 eventValueComboBox.Visible = true;
-                                eventValueComboBox.DisplayMember = "Name";
+                                eventValueComboBox.DisplayMember = "Label";
                                 eventValueComboBox.ValueMember = "Value";
-                                eventValueComboBox.DataSource = plugin.Map.TeamTechnoTypes.Where(t => (t is UnitType) && ((UnitType)t).IsAircraft).Select(t => new { Name = t.DisplayName, Value = (long)t.ID }).ToArray();
+                                eventValueComboBox.DataSource = plugin.Map.TeamTechnoTypes.Where(t => (t is UnitType) && ((UnitType)t).IsAircraft)
+                                    .Select(t => new ListItem<long>(t.ID, t.DisplayName)).ToArray();
                                 eventValueComboBox.DataBindings.Add("SelectedValue", triggerEvent, "Data");
                                 if (triggerEventData == null)
                                 {
@@ -629,10 +627,10 @@ namespace MobiusEditor.Dialogs
                             case RedAlert.ActionTypes.TACTION_AUTOCREATE:
                             case RedAlert.ActionTypes.TACTION_ALL_HUNT:
                                 actionValueComboBox.Visible = true;
-                                actionValueComboBox.DisplayMember = "Name";
+                                actionValueComboBox.DisplayMember = "Label";
                                 actionValueComboBox.ValueMember = "Value";
-                                actionValueComboBox.DataSource = new { Name = House.None, Value = (long)-1 }.Yield().Concat(
-                                    plugin.Map.Houses.Select(t => new { t.Type.Name, Value = (long)t.Type.ID })).ToArray();
+                                actionValueComboBox.DataSource = new ListItem<long>(-1, House.None).Yield().Concat(
+                                    plugin.Map.Houses.Select(t => new ListItem<long>(t.Type.ID, t.Type.Name))).ToArray();
                                 actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
                                 if (triggerActionData == null)
                                 {
@@ -646,7 +644,7 @@ namespace MobiusEditor.Dialogs
                             case RedAlert.ActionTypes.TACTION_FORCE_TRIGGER:
                             case RedAlert.ActionTypes.TACTION_DESTROY_TRIGGER:
                                 actionValueComboBox.Visible = true;
-                                actionValueComboBox.DataSource = triggers.Select(t => t.Name).ToArray();
+                                actionValueComboBox.DataSource = triggers.Select(t => t.Name).OrderBy(t => t, new ExplorerComparer()).ToArray();
                                 actionValueComboBox.DataBindings.Add("SelectedItem", triggerAction, "Trigger");
                                 if (triggerActionData == null)
                                 {
@@ -664,9 +662,8 @@ namespace MobiusEditor.Dialogs
                                 actionValueComboBox.DisplayMember = "Label";
                                 actionValueComboBox.ValueMember = "Value";
                                 Waypoint[] wps = plugin.Map.Waypoints;
-                                actionValueComboBox.DataSource = new DropDownItem<long>(-1, Waypoint.None).Yield().Concat(
-                                    Enumerable.Range(0, wps.Length).Select(wp => new DropDownItem<long>(wp, wps[wp].ToString()))).ToArray();
-                                //new { Name = Waypoint.None, Value = (long)-1 }.Yield().Concat(plugin.Map.Waypoints.Select((t, i) => new { t.Name, Value = (long)i })).ToArray();
+                                actionValueComboBox.DataSource = new ListItem<long>(-1, Waypoint.None).Yield().Concat(
+                                    Enumerable.Range(0, wps.Length).Select(wp => new ListItem<long>(wp, wps[wp].ToString()))).ToArray();
                                 actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
                                 if (triggerActionData == null)
                                 {
@@ -680,11 +677,11 @@ namespace MobiusEditor.Dialogs
                             case RedAlert.ActionTypes.TACTION_1_SPECIAL:
                             case RedAlert.ActionTypes.TACTION_FULL_SPECIAL:
                                 actionValueComboBox.Visible = true;
-                                actionValueComboBox.DisplayMember = "Name";
+                                actionValueComboBox.DisplayMember = "Label";
                                 actionValueComboBox.ValueMember = "Value";
-                                var superData = new { Name = "None", Value = (long)-1 }.Yield().Concat(
-                                    RedAlert.ActionDataTypes.SuperTypes.Select((t, i) => new { Name = t, Value = (long)i }))
-                                    .OrderBy(t => t.Name).ToArray();
+                                var superData = new ListItem<long>(-1, "None").Yield().Concat(
+                                    RedAlert.ActionDataTypes.SuperTypes.Select((t, i) => new ListItem<long>(i, t)))
+                                    .OrderBy(t => t.Label).ToArray();
                                 actionValueComboBox.DataSource = superData;
                                 actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
                                 if (triggerActionData == null)
@@ -695,17 +692,12 @@ namespace MobiusEditor.Dialogs
                                 {
                                     actionValueComboBox.SelectedValue = triggerActionData.Data;
                                 }
-                                /*/
-                                actionValueComboBox.DataSource = Enum.GetValues(typeof(RedAlert.ActionDataTypes.SpecialWeaponType)).Cast<int>()
-                                    .Select(v => new { Name = Enum.GetName(typeof(RedAlert.ActionDataTypes.SpecialWeaponType), v), Value = (long)v })
-                                    .ToArray();
-                                //*/
                                 break;
                             case RedAlert.ActionTypes.TACTION_PLAY_MUSIC:
                                 actionValueComboBox.Visible = true;
-                                actionValueComboBox.DisplayMember = "Name";
+                                actionValueComboBox.DisplayMember = "Label";
                                 actionValueComboBox.ValueMember = "Value";
-                                var musData = plugin.Map.ThemeTypes.Select((t, i) => new { Name = t, Value = (long)i - 1 }).OrderBy(t => t.Name).ToList();
+                                var musData = plugin.Map.ThemeTypes.Select((t, i) => new ListItem<long>(i - 1, t)).OrderBy(t => t.Label).ToList();
                                 var musDefItem = musData.Where(t => t.Value == -1).FirstOrDefault();
                                 if (musDefItem != null)
                                 {
@@ -722,17 +714,13 @@ namespace MobiusEditor.Dialogs
                                 {
                                     actionValueComboBox.SelectedValue = triggerActionData.Data;
                                 }
-                                /*/
-                                actionValueComboBox.DataSource = Enum.GetValues(typeof(RedAlert.ActionDataTypes.ThemeType)).Cast<int>()
-                                    .Select(v => new { Name = Enum.GetName(typeof(RedAlert.ActionDataTypes.ThemeType), v), Value = (long)v })
-                                    .ToArray();
-                                //*/
                                 break;
                             case RedAlert.ActionTypes.TACTION_PLAY_MOVIE:
                                 actionValueComboBox.Visible = true;
-                                actionValueComboBox.DisplayMember = "Name";
+                                actionValueComboBox.DisplayMember = "Label";
                                 actionValueComboBox.ValueMember = "Value";
-                                var movData = plugin.Map.MovieTypes.Select((t, i) => new { Name = t, Value = (long)i - 1 }).OrderBy(t => t.Name, new ExplorerComparer()).ToList();
+                                // First video is the "None" entry; expose as -1.
+                                var movData = plugin.Map.MovieTypes.Select((t, i) => new ListItem<long>(i - 1, t)).OrderBy(t => t.Label, new ExplorerComparer()).ToList();
                                 var movDefItem = movData.Where(t => t.Value == -1).FirstOrDefault();
                                 if (movDefItem != null)
                                 {
@@ -749,25 +737,14 @@ namespace MobiusEditor.Dialogs
                                 {
                                     actionValueComboBox.SelectedValue = triggerActionData.Data;
                                 }
-                                /*/
-                                actionValueComboBox.DataSource = Enum.GetValues(typeof(RedAlert.ActionDataTypes.VQType)).Cast<int>()
-                                    .Select(v => new { Name = Enum.GetName(typeof(RedAlert.ActionDataTypes.VQType), v), Value = (long)v })
-                                    .ToArray();
-                                //*/
                                 break;
                             case RedAlert.ActionTypes.TACTION_PLAY_SOUND:
                                 actionValueComboBox.Visible = true;
-                                actionValueComboBox.DisplayMember = "Name";
+                                actionValueComboBox.DisplayMember = "Label";
                                 actionValueComboBox.ValueMember = "Value";
-                                var vocData = new { Name = "None", Value = (long)-1 }.Yield().Concat(
-                                    RedAlert.ActionDataTypes.VocDesc.Select((t, i) => new { Name = t, Value = (long)i })
-                                    .Where(t => !String.Equals(t.Name, "x", StringComparison.InvariantCultureIgnoreCase))).ToArray();
-                                /*/
-                                var vocData = new { Name = "None", Value = (long)-1 }.Yield().Concat(
-                                    RedAlert.ActionDataTypes.VocNames.Select((t, i) => new { Name = t, Value = (long)i })
-                                    .Where(t => !String.Equals(t.Name, "x", StringComparison.InvariantCultureIgnoreCase))
-                                    .OrderBy(t => t.Name, new ExplorerComparer())).ToArray();
-                                //*/
+                                var vocData = new ListItem<long>(-1, "None").Yield().Concat(
+                                    RedAlert.ActionDataTypes.VocDesc.Select((t, i) => new ListItem<long>(i, t))
+                                    .Where(t => !String.Equals(t.Label, "x", StringComparison.InvariantCultureIgnoreCase))).ToArray();
                                 actionValueComboBox.DataSource = vocData;
                                 actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
                                 if (triggerActionData == null)
@@ -778,25 +755,14 @@ namespace MobiusEditor.Dialogs
                                 {
                                     actionValueComboBox.SelectedValue = triggerActionData.Data;
                                 }
-                                /*/
-                                actionValueComboBox.DataSource = Enum.GetValues(typeof(RedAlert.ActionDataTypes.VocType)).Cast<int>()
-                                    .Select(v => new { Name = Enum.GetName(typeof(RedAlert.ActionDataTypes.VocType), v), Value = (long)v })
-                                    .ToArray();
-                                //*/
                                 break;
                             case RedAlert.ActionTypes.TACTION_PLAY_SPEECH:
                                 actionValueComboBox.Visible = true;
-                                actionValueComboBox.DisplayMember = "Name";
+                                actionValueComboBox.DisplayMember = "Label";
                                 actionValueComboBox.ValueMember = "Value";
-                                var voxData = new { Name = "None", Value = (long)-1 }.Yield().Concat(
-                                    RedAlert.ActionDataTypes.VoxDesc.Select((t, i) => new { Name = t, Value = (long)i })
-                                    .Where(t => !String.Equals(t.Name, "none", StringComparison.InvariantCultureIgnoreCase))).ToArray();
-                                /*/
-                                var voxData = new { Name = "None", Value = (long)-1 }.Yield().Concat(
-                                    RedAlert.ActionDataTypes.VocNames.Select((t, i) => new { Name = t, Value = (long)i })
-                                    .Where(t => !String.Equals(t.Name, "none", StringComparison.InvariantCultureIgnoreCase))
-                                    .OrderBy(t => t.Name, new ExplorerComparer())).ToArray();
-                                //*/
+                                var voxData = new ListItem<long>(-1, "None").Yield().Concat(
+                                    RedAlert.ActionDataTypes.VoxDesc.Select((t, i) => new ListItem<long>(i, t))
+                                    .Where(t => !String.Equals(t.Label, "none", StringComparison.InvariantCultureIgnoreCase))).ToArray();
                                 actionValueComboBox.DataSource = voxData;
                                 actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
                                 if (triggerActionData == null)
@@ -807,17 +773,12 @@ namespace MobiusEditor.Dialogs
                                 {
                                     actionValueComboBox.SelectedValue = triggerActionData.Data;
                                 }
-                                /*/
-                                actionValueComboBox.DataSource = Enum.GetValues(typeof(RedAlert.ActionDataTypes.VoxType)).Cast<int>()
-                                    .Select(v => new { Name = Enum.GetName(typeof(RedAlert.ActionDataTypes.VoxType), v), Value = (long)v })
-                                    .ToArray();
-                                //*/
                                 break;
                             case RedAlert.ActionTypes.TACTION_PREFERRED_TARGET:
                                 actionValueComboBox.Visible = true;
-                                actionValueComboBox.DisplayMember = "Name";
+                                actionValueComboBox.DisplayMember = "Label";
                                 actionValueComboBox.ValueMember = "Value";
-                                var quarryData = RedAlert.TeamMissionTypes.Attack.DropdownOptions.Select(t => new { Name = t.Item2, Value = (long)t.Item1 }).ToArray();
+                                var quarryData = RedAlert.TeamMissionTypes.Attack.DropdownOptions.Select(t => new ListItem<long>(t.Item1, t.Item2)).ToArray();
                                 actionValueComboBox.DataSource = quarryData;
                                 actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
                                 if (triggerActionData == null)
@@ -828,17 +789,12 @@ namespace MobiusEditor.Dialogs
                                 {
                                     actionValueComboBox.SelectedValue = triggerActionData.Data;
                                 }
-                                /*/
-                                actionValueComboBox.DataSource = Enum.GetValues(typeof(RedAlert.ActionDataTypes.QuarryType)).Cast<int>()
-                                    .Select(v => new { Name = Enum.GetName(typeof(RedAlert.ActionDataTypes.QuarryType), v), Value = (long)v })
-                                    .ToArray();
-                                //*/
                                 break;
                             case RedAlert.ActionTypes.TACTION_BASE_BUILDING:
                                 actionValueComboBox.Visible = true;
-                                actionValueComboBox.DisplayMember = "Name";
+                                actionValueComboBox.DisplayMember = "Label";
                                 actionValueComboBox.ValueMember = "Value";
-                                var trueFalseData = new long[] { 0, 1 }.Select(b => new { Name = b == 0 ? "On" : "Off", Value = b }).ToArray();
+                                var trueFalseData = new long[] { 0, 1 }.Select(b => new ListItem<long>(b, b == 0 ? "On" : "Off")).ToArray();
                                 actionValueComboBox.DataSource = trueFalseData;
                                 actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
                                 if (triggerActionData == null)
@@ -854,9 +810,9 @@ namespace MobiusEditor.Dialogs
                                 break;
                             case RedAlert.ActionTypes.TACTION_TEXT_TRIGGER:
                                 actionValueComboBox.Visible = true;
-                                actionValueComboBox.DisplayMember = "Name";
+                                actionValueComboBox.DisplayMember = "Label";
                                 actionValueComboBox.ValueMember = "Value";
-                                var txtData = RedAlert.ActionDataTypes.TextDesc.Select((t, i) => new { Name = t, Value = (long)i + 1 }).ToArray();
+                                var txtData = RedAlert.ActionDataTypes.TextDesc.Select((t, i) => new ListItem<long>(i + 1, t)).ToArray();
                                 actionValueComboBox.DataSource = txtData;
                                 actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
                                 if (triggerActionData == null)

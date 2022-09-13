@@ -1393,7 +1393,7 @@ namespace MobiusEditor.TiberianDawn
                             errors.Add(String.Format("Template '{0}' at cell [{1},{2}] has an icon set ({3}) that is outside its icons range; clearing.", templateType.Name.ToUpper(), x, y, iconValue));
                             templateType = null;
                         }
-                        else if (!isRandom && templateType.IconMask != null && !templateType.IconMask[iconValue % templateType.IconWidth, iconValue / templateType.IconWidth])
+                        else if (!isRandom && templateType.IconMask != null && !templateType.IconMask[iconValue / templateType.IconWidth, iconValue % templateType.IconWidth])
                         {
                             errors.Add(String.Format("Template '{0}' at cell [{1},{2}] has an icon set ({3}) that is not part of its placeable cells; clearing.", templateType.Name.ToUpper(), x, y, iconValue));
                             templateType = null;
@@ -1403,7 +1403,7 @@ namespace MobiusEditor.TiberianDawn
                     {
                         errors.Add(String.Format("Unknown template value {0:X2} at cell [{1},{2}]; clearing.", typeValue, x, y));
                     }
-                    Map.Templates[x, y] = (templateType != null) ? new Template { Type = templateType, Icon = iconValue } : null;
+                    Map.Templates[y, x] = (templateType != null) ? new Template { Type = templateType, Icon = iconValue } : null;
                 }
             }
             return errors;
@@ -1805,7 +1805,7 @@ namespace MobiusEditor.TiberianDawn
             {
                 for (var x = 0; x < Map.Metrics.Width; ++x)
                 {
-                    var template = Map.Templates[x, y];
+                    var template = Map.Templates[y, x];
                     if (template != null && (template.Type.Flag & TemplateTypeFlag.Clear) == 0)
                     {
                         writer.Write((byte)template.Type.ID);

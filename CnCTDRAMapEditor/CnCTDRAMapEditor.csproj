@@ -541,7 +541,6 @@
       <DependentUpon>WaypointsToolDialog.cs</DependentUpon>
     </Compile>
     <Compile Include="Utility\BlobDetection.cs" />
-    <Compile Include="Utility\DropDownItem.cs" />
     <Compile Include="Tools\InfantryTool.cs" />
     <Compile Include="Tools\OverlaysTool.cs" />
     <Compile Include="Tools\ResourcesTool.cs" />
@@ -560,11 +559,13 @@
     <Compile Include="Utility\GeneralUtils.cs" />
     <Compile Include="Utility\GenericBooleanTypeConverter.cs" />
     <Compile Include="Utility\INI.cs" />
+    <Compile Include="Utility\ListItem.cs" />
     <Compile Include="Utility\Megafile.cs" />
     <Compile Include="Utility\MegafileBuilder.cs" />
     <Compile Include="Utility\MegafileManager.cs" />
     <Compile Include="Utility\MRU.cs" />
     <Compile Include="Utility\PropertyTracker.cs" />
+    <Compile Include="Event\MapRefreshEventArgs.cs" />
     <Compile Include="Utility\SteamAssist.cs" />
     <Compile Include="Utility\SteamworksUGC.cs" />
     <Compile Include="Utility\TeamColor.cs" />

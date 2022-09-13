@@ -16,6 +16,7 @@ using MobiusEditor.Controls;
 using MobiusEditor.Event;
 using MobiusEditor.Interface;
 using MobiusEditor.Model;
+using MobiusEditor.Render;
 using MobiusEditor.Utility;
 using System;
 using System.Collections.Generic;
@@ -28,8 +29,6 @@ namespace MobiusEditor.Tools
 {
     public class WaypointsTool : ViewTool
     {
-        /// <summary> Layers that are important to this tool and need to be drawn last in the PostRenderMap process.</summary>
-        protected override MapLayerFlag PriorityLayers => MapLayerFlag.None;
         /// <summary>
         /// Layers that are not painted by the PostRenderMap function on ViewTool level because they are handled
         /// at a specific point in the PostRenderMap override by the implementing tool.
@@ -299,10 +298,10 @@ namespace MobiusEditor.Tools
             base.PostRenderMap(graphics);
             Waypoint selected = waypointCombo.SelectedItem as Waypoint;
             Waypoint[] selectedRange = selected != null ? new [] { selected } : new Waypoint[] { };
-            RenderWayPoints(graphics, map, Globals.MapTileSize, Globals.MapTileScale, Layers, selectedRange);
+            MapRenderer.RenderWayPoints(graphics, map, Globals.MapTileSize, Globals.MapTileScale, selectedRange);
             if (selected != null)
             {
-                RenderWayPoints(graphics, map, Globals.MapTileSize, Globals.MapTileScale, Layers, Color.Black, Color.Yellow, Color.Yellow, true, false, selectedRange);
+                MapRenderer.RenderWayPoints(graphics, map, Globals.MapTileSize, Globals.MapTileScale, Color.Black, Color.Yellow, Color.Yellow, true, false, selectedRange);
             }
         }
 

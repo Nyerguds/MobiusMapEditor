@@ -12,6 +12,7 @@
 // distributed with this program. You should have received a copy of the 
 // GNU General Public License along with permitted additional restrictions 
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
+using MobiusEditor.Event;
 using MobiusEditor.Interface;
 using MobiusEditor.Render;
 using MobiusEditor.Utility;
@@ -87,15 +88,15 @@ namespace MobiusEditor.Model
         private bool invalidateOverlappers;
 
 
-        public void NotifyRulesChanges()
+        public void NotifyRulesChanges(ISet<Point> refreshPoints)
         {
             if (RulesChanged != null)
             {
-                this.RulesChanged(this, EventArgs.Empty);
+                this.RulesChanged(this, new MapRefreshEventArgs(refreshPoints));
             }
         }
 
-        public event EventHandler RulesChanged;
+        public event EventHandler<MapRefreshEventArgs> RulesChanged;
 
         public readonly BasicSection BasicSection;
 

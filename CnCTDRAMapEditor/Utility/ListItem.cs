@@ -4,12 +4,12 @@ using System.Windows.Forms;
 
 namespace MobiusEditor.Utility
 {
-    public class DropDownItem<T>
+    public class ListItem<T>
     {
         public T Value { get; private set; }
         public String Label { get; private set; }
 
-        public DropDownItem(T value, String label)
+        public ListItem(T value, String label)
         {
             this.Value = value;
             this.Label = label;
@@ -20,11 +20,11 @@ namespace MobiusEditor.Utility
             return this.Label;
         }
 
-        public static int GetIndexInList(T value, DropDownItem<T>[] items)
+        public static int GetIndexInList(T value, ListItem<T>[] items)
         {
             for (Int32 i = 0; i < items.Count(); i++)
             {
-                DropDownItem<T> item = items[i];
+                ListItem<T> item = items[i];
                 if (item != null && item.Value.Equals(value))
                 {
                     return i;
@@ -37,7 +37,7 @@ namespace MobiusEditor.Utility
         {
             for (Int32 i = 0; i < dropdown.Items.Count; i++)
             {
-                DropDownItem<T> item = dropdown.Items[i] as DropDownItem<T>;
+                ListItem<T> item = dropdown.Items[i] as ListItem<T>;
                 if (item != null && item.Value.Equals(value))
                 {
                     return i;

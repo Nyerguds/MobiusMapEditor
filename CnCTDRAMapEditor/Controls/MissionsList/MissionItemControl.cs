@@ -16,7 +16,7 @@ namespace MobiusEditor.Controls
         private ListedControlController<TeamTypeMission> m_Controller;
         private TeamMission defaultMission;
         private TeamMissionArgType currentType = TeamMissionArgType.None;
-        private DropDownItem<int>[] waypoints;
+        private ListItem<int>[] waypoints;
         private int mapSize;
         private ToolTip tooltip;
 
@@ -26,13 +26,13 @@ namespace MobiusEditor.Controls
             
         }
 
-        public MissionItemControl(TeamTypeMission info, ListedControlController<TeamTypeMission> controller, IEnumerable<TeamMission> missions, IEnumerable<DropDownItem<int>> waypoints, int mapSize, ToolTip tooltip)
+        public MissionItemControl(TeamTypeMission info, ListedControlController<TeamTypeMission> controller, IEnumerable<TeamMission> missions, IEnumerable<ListItem<int>> waypoints, int mapSize, ToolTip tooltip)
         {
             InitializeComponent();
             SetInfo(info, controller, missions, waypoints, mapSize, tooltip);
         }
 
-        public void SetInfo(TeamTypeMission info, ListedControlController<TeamTypeMission> controller, IEnumerable<TeamMission> missions, IEnumerable<DropDownItem<int>> waypoints, int mapSize, ToolTip tooltip) 
+        public void SetInfo(TeamTypeMission info, ListedControlController<TeamTypeMission> controller, IEnumerable<TeamMission> missions, IEnumerable<ListItem<int>> waypoints, int mapSize, ToolTip tooltip) 
         {
             try
             {
@@ -96,7 +96,7 @@ namespace MobiusEditor.Controls
                     this.cmbValue.Visible = true;
                     this.cmbValue.DataSource = waypoints;
                     //this.cmbValue.Tool
-                    selectIndex = DropDownItem<int>.GetIndexInList((int)value, waypoints);
+                    selectIndex = ListItem<int>.GetIndexInList((int)value, waypoints);
                     if (selectIndex == -1 && waypoints.Length > 0)
                     {
                         selectIndex = 0;
@@ -106,9 +106,9 @@ namespace MobiusEditor.Controls
                 case TeamMissionArgType.OptionsList:
                     this.numValue.Visible = false;
                     this.cmbValue.Visible = true;
-                    DropDownItem<int>[] items = mission.DropdownOptions.Select(tup => new DropDownItem<int>(tup.Item1, tup.Item2)).ToArray();
+                    ListItem<int>[] items = mission.DropdownOptions.Select(tup => new ListItem<int>(tup.Item1, tup.Item2)).ToArray();
                     this.cmbValue.DataSource = items;
-                    selectIndex = DropDownItem<int>.GetIndexInList((int)value, items);
+                    selectIndex = ListItem<int>.GetIndexInList((int)value, items);
                     if (selectIndex == -1 && items.Length > 0)
                     {
                         selectIndex = 0;
@@ -136,7 +136,6 @@ namespace MobiusEditor.Controls
             }
             if (tooltip != null)
             {
-
                 tooltip.SetToolTip(cmbValue, null);
                 tooltip.SetToolTip(numValue, null);
                 switch (mission.ArgType)
@@ -161,7 +160,8 @@ namespace MobiusEditor.Controls
                         tooltip.SetToolTip(numValue, "0-based index in this orders list");
                         break;
                     case TeamMissionArgType.GlobalNumber:
-                        tooltip.SetToolTip(cmbValue, "Global to set"); break;
+                        tooltip.SetToolTip(cmbValue, "Global to set");
+                        break;
                     case TeamMissionArgType.Tarcom:
                         tooltip.SetToolTip(numValue, "Tarcom");
                         break;
@@ -206,7 +206,7 @@ namespace MobiusEditor.Controls
             {
                 return;
             }
-            DropDownItem<int> item = this.cmbValue.SelectedItem as DropDownItem<int>;
+            ListItem<int> item = this.cmbValue.SelectedItem as ListItem<int>;
             if (item == null)
             {
                 return;

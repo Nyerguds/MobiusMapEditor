@@ -11,11 +11,11 @@ namespace MobiusEditor.Controls
     internal class MissionItemInfo : CustomControlInfo<MissionItemControl, TeamTypeMission>
     {
         TeamMission[] missions;
-        DropDownItem<int>[] waypoints;
+        ListItem<int>[] waypoints;
         int mapSize;
         ToolTip tooltip;
 
-        public MissionItemInfo(String name, IEnumerable<TeamTypeMission> properties, IEnumerable<TeamMission> missions, IEnumerable<DropDownItem<int>> waypoints, int mapSize, ToolTip tooltip)
+        public MissionItemInfo(String name, IEnumerable<TeamTypeMission> properties, IEnumerable<TeamMission> missions, IEnumerable<ListItem<int>> waypoints, int mapSize, ToolTip tooltip)
         {
             Name = name;
             Properties = properties.ToArray();

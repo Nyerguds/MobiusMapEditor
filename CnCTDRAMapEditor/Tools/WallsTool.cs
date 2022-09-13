@@ -16,6 +16,7 @@ using MobiusEditor.Controls;
 using MobiusEditor.Event;
 using MobiusEditor.Interface;
 using MobiusEditor.Model;
+using MobiusEditor.Render;
 using MobiusEditor.Utility;
 using MobiusEditor.Widgets;
 using System;
@@ -28,8 +29,6 @@ namespace MobiusEditor.Tools
 {
     public class WallsTool : ViewTool
     {
-        /// <summary> Layers that are important to this tool and need to be drawn last in the PostRenderMap process.</summary>
-        protected override MapLayerFlag PriorityLayers => MapLayerFlag.None;
         /// <summary>
         /// Layers that are not painted by the PostRenderMap function on ViewTool level because they are handled
         /// at a specific point in the PostRenderMap override by the implementing tool.
@@ -200,7 +199,7 @@ namespace MobiusEditor.Tools
                 {
                     if (!undoOverlays.ContainsKey(cell))
                     {
-                        undoOverlays[cell] = map.Overlay[cell];
+                        undoOverlays[cell] = overlay;
                     }
                     map.Overlay[cell] = null;
                     redoOverlays[cell] = null;
@@ -327,15 +326,7 @@ namespace MobiusEditor.Tools
         protected override void PostRenderMap(Graphics graphics)
         {
             base.PostRenderMap(graphics);
-            using (var wallPen = new Pen(Color.Green, Math.Max(1, Globals.MapTileSize.Width / 16)))
-            {
-                foreach (var (cell, overlay) in previewMap.Overlay.Where(x => x.Value.Type.IsWall))
-                {
-                    previewMap.Metrics.GetLocation(cell, out Point topLeft);
-                    var bounds = new Rectangle(new Point(topLeft.X * Globals.MapTileWidth, topLeft.Y * Globals.MapTileHeight), Globals.MapTileSize);
-                    graphics.DrawRectangle(wallPen, bounds);
-                }
-            }
+            MapRenderer.RenderAllBoundsFromCell(graphics, Globals.MapTileSize, previewMap.Overlay.Where(x => x.Value.Type.IsWall), previewMap.Metrics);
         }
 
         public override void Activate()
