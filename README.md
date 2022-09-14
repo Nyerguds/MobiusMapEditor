@@ -330,7 +330,7 @@ These options are all enabled by default, but can be disabled if you wish. Use t
 #### v1.4.3.2:
 
 * Fixed a crash in the smudge restore system when you delete a smudge or building that is too close to the map edge.
-* Reduced maximum waypoints in the editor to 8, since the games apparently can't show more.
+* Reduced maximum multiplayer start positions in the editor to 8, since the games apparently can't show more.
 
 ### Possible future features
 
