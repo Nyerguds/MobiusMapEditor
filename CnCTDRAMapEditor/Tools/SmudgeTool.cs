@@ -387,7 +387,7 @@ namespace MobiusEditor.Tools
             {
                 // scan smudges from bottom to top, right to left, to find if any cell from a nearby smudge should occupy this location.
                 Rectangle scanRect = new Rectangle(loc.X - maxW + 1, loc.Y - maxH + 1, maxW * 2 - 1, maxH * 2 - 1);
-                foreach (Point p in scanRect.Points().OrderByDescending(p => p.X).ThenByDescending(p => p.Y))
+                foreach (Point p in scanRect.Points().Where(p => map.Bounds.Contains(p)).OrderByDescending(p => p.X).ThenByDescending(p => p.Y))
                 {
                     Smudge toFix = map.Smudge[p];
                     SmudgeType toFixType = toFix?.Type;

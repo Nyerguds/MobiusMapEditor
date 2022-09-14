@@ -31,7 +31,7 @@ namespace MobiusEditor.TiberianDawn
 {
     public class GamePlugin : IGamePlugin
     {
-        private const int multiStartPoints = 16;
+        private const int multiStartPoints = 8;
         private static readonly Regex SinglePlayRegex = new Regex("^SC[A-LN-Z]\\d{2}[EWX][A-EL]$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private static readonly Regex MovieRegex = new Regex(@"^(?:.*?\\)*(.*?)\.BK2$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
@@ -1899,48 +1899,48 @@ namespace MobiusEditor.TiberianDawn
             int numWaypoints = Map.Waypoints.Count(w => (w.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart && w.Cell.HasValue);
             if (numAircraft > Constants.MaxAircraft)
             {
-                sb.Append(Environment.NewLine + string.Format("Maximum number of aircraft exceeded ({0} > {1})", numAircraft, Constants.MaxAircraft));
+                sb.AppendLine().Append(string.Format("Maximum number of aircraft exceeded ({0} > {1})", numAircraft, Constants.MaxAircraft));
                 ok = false;
             }
             if (numBuildings > Constants.MaxBuildings)
             {
-                sb.Append(Environment.NewLine + string.Format("Maximum number of structures exceeded ({0} > {1})", numBuildings, Constants.MaxBuildings));
+                sb.AppendLine().Append(string.Format("Maximum number of structures exceeded ({0} > {1})", numBuildings, Constants.MaxBuildings));
                 ok = false;
             }
             if (numInfantry > Constants.MaxInfantry)
             {
-                sb.Append(Environment.NewLine + string.Format("Maximum number of infantry exceeded ({0} > {1})", numInfantry, Constants.MaxInfantry));
+                sb.AppendLine().Append(string.Format("Maximum number of infantry exceeded ({0} > {1})", numInfantry, Constants.MaxInfantry));
                 ok = false;
             }
             if (numTerrain > Constants.MaxTerrain)
             {
-                sb.Append(Environment.NewLine + string.Format("Maximum number of terrain objects exceeded ({0} > {1})", numTerrain, Constants.MaxTerrain));
+                sb.AppendLine().Append(string.Format("Maximum number of terrain objects exceeded ({0} > {1})", numTerrain, Constants.MaxTerrain));
                 ok = false;
             }
             if (numUnits > Constants.MaxUnits)
             {
-                sb.Append(Environment.NewLine + string.Format("Maximum number of units exceeded ({0} > {1})", numUnits, Constants.MaxUnits));
+                sb.AppendLine().Append(string.Format("Maximum number of units exceeded ({0} > {1})", numUnits, Constants.MaxUnits));
                 ok = false;
             }
             if (Map.TeamTypes.Count > Constants.MaxTeams)
             {
-                sb.Append(Environment.NewLine + string.Format("Maximum number of team types exceeded ({0} > {1})", Map.TeamTypes.Count, Constants.MaxTeams));
+                sb.AppendLine().Append(string.Format("Maximum number of team types exceeded ({0} > {1})", Map.TeamTypes.Count, Constants.MaxTeams));
                 ok = false;
             }
             if (Map.Triggers.Count > Constants.MaxTriggers)
             {
-                sb.Append(Environment.NewLine + string.Format("Maximum number of triggers exceeded ({0} > {1})", Map.Triggers.Count, Constants.MaxTriggers));
+                sb.AppendLine().Append(string.Format("Maximum number of triggers exceeded ({0} > {1})", Map.Triggers.Count, Constants.MaxTriggers));
                 ok = false;
             }
             if (!Map.BasicSection.SoloMission && (numWaypoints < 2))
             {
-                sb.Append(Environment.NewLine + "Skirmish/Multiplayer maps need at least 2 waypoints for player starting locations.");
+                sb.AppendLine().Append("Skirmish/Multiplayer maps need at least 2 waypoints for player starting locations.");
                 ok = false;
             }
             var homeWaypoint = Map.Waypoints.Where(w => (w.Flag & WaypointFlag.Home) == WaypointFlag.Home).FirstOrDefault();
             if (Map.BasicSection.SoloMission && !homeWaypoint.Cell.HasValue)
             {
-                sb.Append(Environment.NewLine + "Single-player maps need the Home waypoint to be placed.");
+                sb.AppendLine().Append("Single-player maps need the Home waypoint to be placed.");
                 ok = false;
             }
             return ok ? null : sb.ToString();

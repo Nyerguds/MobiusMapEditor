@@ -327,6 +327,11 @@ These options are all enabled by default, but can be disabled if you wish. Use t
 * When flood-clearing with a template containing cells on both sides of the map bounds, the clear operation will now ignore the map bounds.
 * Flood fill clear will now no longer ignore if the user has a single cell from a template selected.
 
+#### v1.4.3.2:
+
+* Fixed a crash in the smudge restore system when you delete a smudge or building that is too close to the map edge.
+* Reduced maximum waypoints in the editor to 8, since the games apparently can't show more.
+
 ### Possible future features
 
 Some ideas that might get implemented in the future:
