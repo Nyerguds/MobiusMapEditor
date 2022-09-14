@@ -463,7 +463,7 @@ namespace MobiusEditor.Tools
             bool place = button == MouseButtons.Left;
             // Since is this now ordered logically as [y,x] it might be a good idea to flatten it and do icon lookups.
             bool[,] mask = selected.IconMask;
-            bool is1x1 = selected.IconWidth == 1 && selected.IconHeight == 1;
+            bool is1x1 = icon.HasValue || (selected.IconWidth == 1 && selected.IconHeight == 1);
             if ((!place && !clear) || (place && clear))
             {
                 return;
@@ -538,7 +538,7 @@ namespace MobiusEditor.Tools
                     for (int x = 0; x < selected.IconWidth; ++x)
                     {
                         Point toAdd = new Point(x + currentCell.X, y + currentCell.Y);
-                        if (mask[y, x] && map.Metrics.GetCell(toAdd, out int cell))
+                        if (mask[y, x] && map.Metrics.Contains(toAdd))
                         {
                             detectPoints.Add(toAdd);
                         }
@@ -547,13 +547,16 @@ namespace MobiusEditor.Tools
             }
             // Actual flood fill part.
             Rectangle bounds = map.Bounds;
-            bool inBounds = bounds.Contains(currentCell);
+            int insideBounds = detectPoints.Count(dp => bounds.Contains(dp));
+            // Null means some points are outside, some are inside. It disables the whole bounds logic.
+            bool? inBounds = insideBounds > 0 && insideBounds < detectPoints.Count ? null : (bool?)(insideBounds != 0);
             bool validCell(Template[] mapData, int yVal, int xVal)
             {
-                if (Globals.BoundsObstructFill)
+                if (Globals.BoundsObstructFill && inBounds.HasValue)
                 {
+                    bool inB = inBounds.Value;
                     bool pointInBounds = bounds.Contains(xVal, yVal);
-                    if ((inBounds && !pointInBounds) || (!inBounds && pointInBounds))
+                    if ((inB && !pointInBounds) || (!inB && pointInBounds))
                     {
                         return false;
                     }
@@ -567,7 +570,11 @@ namespace MobiusEditor.Tools
                 {
                     List<Point> blobPoints = BlobDetection.MakeBlobForPoint(p.X, p.Y, scanData, mapWidth, mapHeight,
                         validCell, false, false, null, out _);
-                    fillPoints.UnionWith(blobPoints);
+                    // Should never be null; all points return at least themselves.
+                    if (blobPoints != null)
+                    {
+                        fillPoints.UnionWith(blobPoints);
+                    }
                 }
             }
             undoTemplates.Clear();

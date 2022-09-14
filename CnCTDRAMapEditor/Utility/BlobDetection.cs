@@ -159,6 +159,7 @@ namespace MobiusEditor.Utility
         /// <param name="getEdgesOnly">True to make the lists in 'blobs' only contain the edge points of the blobs. The 'inBlobs' items will still have all points marked.</param>
         /// <param name="inBlobs">Output parameter for receiving the blobs as boolean[,] arrays.</param>
         /// <param name="inAnyBlob">Output parameter for receiving all points in all the blobs as single boolean[,] array.</param>
+        /// <returns>The list of blobs, as list of list of points</returns>
         public static List<List<Point>> FindBlobs<T>(T data, Int32 width, Int32 height, Func<T, Int32, Int32, Boolean> clearsThreshold, Boolean allEightEdges, Boolean getEdgesOnly, out List<Boolean[,]> inBlobs, out Boolean[,] inAnyBlob)
         {
             List<List<Point>> blobs = new List<List<Point>>();
@@ -310,7 +311,7 @@ namespace MobiusEditor.Utility
         /// <param name="getEdgesOnly">True to make a blob containing only the edge points. The 'inBlob' and 'inAnyBlob' arrays will still have all points marked.</param>
         /// <param name="inAnyBlob">array of booleans with true values for the coordinates of all points already added to blobs. If not null, this is checked, and will be updated with the new added points.</param>
         /// <param name="inBlob">array of booleans with true values for the coordinates that are in the returned blob.</param>
-        /// <returns>A boolean representation of the currently added new blob, or null iof no blob was added. Can be null.</returns>
+        /// <returns>A list containing all points in the new blob, or null if the point was either already in <see cref="inAnyBlob"/>, or the given point itself does not pass <see cref="clearsThreshold"/>. Can be null.</returns>
         public static List<Point> MakeBlobForPoint<T>(Int32 pointX, Int32 pointY, T data, Int32 width, Int32 height, Func<T, Int32, Int32, Boolean> clearsThreshold, Boolean allEightEdges, Boolean getEdgesOnly, Boolean[,] inAnyBlob, out Boolean[,] inBlob)
         {
             // If the point is already in a blob, or if it doesn't clear the threshold, abort.

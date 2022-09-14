@@ -286,7 +286,7 @@ These options are all enabled by default, but can be disabled if you wish. Use t
 
 * Fixed a bug where the default House in TD maps was set to "None", causing them to crash the game.
 * Bibs placed as the 'smudge' type now show their full size, and can be placed in ways that makes them partially overlap. As long as at least one cell of a bib exists, the bib exists.
-* If a json is saved for a singleplayer map, its waypoints list now only contain the Home waypoint, since saving the first waypoints as start locations is pointless for them.
+* If a json is saved for a singleplayer map, its waypoints list now only contains the Home waypoint, since saving the first waypoints as start locations is pointless for them.
 * The smudge placement mode will now show a red cursor when hovering over bibs attached to buildings, to indicate those can't be replaced or removed.
 * All actions in the editor now have undo/redo functionality.
 * The amount of stored undo/redo actions can now be set in the "UndoRedoStackSize" setting in "CnCTDRAMapEditor.exe.config".
@@ -294,7 +294,7 @@ These options are all enabled by default, but can be disabled if you wish. Use t
 * Disabling Aftermath units will now clear the Undo/Redo history, to avoid conflicts.
 * Fixed undo/redo of map bounds dragging; it was severely bugged and often reduced the bounds to minimum size.
 * Fixed bug where tool windows can be closed with [Alt]+[F4], causing the editor to crash when trying to re-open them.
-* Fixed tab indices on the "New Map" dialog, so the radio buttons are selected by default.
+* Fixed tab order on the "New Map" dialog, so the radio buttons are selected by default.
 * Mobile Radar Jammer and Mobile Gap Generator now show different facings for their "turrets".
 * Fixed a bug in the power balance tool which made it ignore the first House.
 * Added a silo storage capacity tool.
@@ -320,6 +320,12 @@ These options are all enabled by default, but can be disabled if you wish. Use t
 * While holding [Ctrl] in Map mode to enable bounds editing mode, diagonals will now be drawn inside the bounds rectangle to easily see the center.
 * While holding [Ctrl] in Map mode to enable bounds editing mode, the whole bounds rectangle can now be moved by clicking inside it and dragging it around.
 * While holding [Ctrl] in Map mode to enable bounds editing mode, you will no longer select tiles when clicking.
+
+#### v1.4.3.1:
+
+* Fixed a crash when flood-clearing with a template that crossed the map bounds.
+* When flood-clearing with a template containing cells on both sides of the map bounds, the clear operation will now ignore the map bounds.
+* Flood fill clear will now no longer ignore if the user has a single cell from a template selected.
 
 ### Possible future features
 
