@@ -13,13 +13,15 @@
 // GNU General Public License along with permitted additional restrictions 
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using MobiusEditor.Interface;
+using MobiusEditor.Model;
+using MobiusEditor.Utility;
 using System.Windows.Forms;
 
 namespace MobiusEditor.Controls
 {
     public partial class BriefingSettings : UserControl
     {
-        public BriefingSettings(IGamePlugin plugin, dynamic briefingSection)
+        public BriefingSettings(IGamePlugin plugin, PropertyTracker<BriefingSection> briefingSection)
         {
             InitializeComponent();
 

@@ -68,6 +68,8 @@ namespace MobiusEditor
             this.settingsTriggersMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolsPowerMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolsStorageMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolsRandomizeTilesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolsExportImageMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mapToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -112,8 +114,8 @@ namespace MobiusEditor
             this.wallsToolStripButton = new MobiusEditor.Controls.ViewToolStripButton();
             this.waypointsToolStripButton = new MobiusEditor.Controls.ViewToolStripButton();
             this.cellTriggersToolStripButton = new MobiusEditor.Controls.ViewToolStripButton();
+            this.selectToolStripButton = new MobiusEditor.Controls.ViewToolStripButton();
             this.mapPanel = new MobiusEditor.Controls.MapPanel();
-            this.toolsStorageMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mainMenuStrip.SuspendLayout();
             this.mainStatusStrip.SuspendLayout();
             this.mainToolStrip.SuspendLayout();
@@ -131,7 +133,7 @@ namespace MobiusEditor
             this.developerToolStripMenuItem});
             this.mainMenuStrip.Location = new System.Drawing.Point(0, 0);
             this.mainMenuStrip.Name = "mainMenuStrip";
-            this.mainMenuStrip.Size = new System.Drawing.Size(1027, 24);
+            this.mainMenuStrip.Size = new System.Drawing.Size(1008, 24);
             this.mainMenuStrip.TabIndex = 1;
             this.mainMenuStrip.Text = "menuStrip1";
             // 
@@ -302,6 +304,7 @@ namespace MobiusEditor
             this.toolsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolsPowerMenuItem,
             this.toolsStorageMenuItem,
+            this.toolsRandomizeTilesMenuItem,
             this.toolsExportImageMenuItem});
             this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
             this.toolsToolStripMenuItem.Size = new System.Drawing.Size(46, 20);
@@ -314,6 +317,20 @@ namespace MobiusEditor
             this.toolsPowerMenuItem.Size = new System.Drawing.Size(204, 22);
             this.toolsPowerMenuItem.Text = "&Power Balance...";
             this.toolsPowerMenuItem.Click += new System.EventHandler(this.ToolsPowerMenuItem_Click);
+            // 
+            // toolsStorageMenuItem
+            // 
+            this.toolsStorageMenuItem.Name = "toolsStorageMenuItem";
+            this.toolsStorageMenuItem.Size = new System.Drawing.Size(204, 22);
+            this.toolsStorageMenuItem.Text = "Silo Storage...";
+            this.toolsStorageMenuItem.Click += new System.EventHandler(this.ToolsStorageMenuItem_Click);
+            // 
+            // toolsRandomizeTilesMenuItem
+            // 
+            this.toolsRandomizeTilesMenuItem.Name = "toolsRandomizeTilesMenuItem";
+            this.toolsRandomizeTilesMenuItem.Size = new System.Drawing.Size(204, 22);
+            this.toolsRandomizeTilesMenuItem.Text = "Re-randomize tiles";
+            this.toolsRandomizeTilesMenuItem.Click += new System.EventHandler(this.ToolsRandomizeTilesMenuItem_Click);
             // 
             // toolsExportImageMenuItem
             // 
@@ -572,10 +589,10 @@ namespace MobiusEditor
             this.toolStatusLabel,
             this.cellStatusLabel,
             this.copyrightStatusLabel});
-            this.mainStatusStrip.Location = new System.Drawing.Point(0, 527);
+            this.mainStatusStrip.Location = new System.Drawing.Point(0, 539);
             this.mainStatusStrip.Name = "mainStatusStrip";
             this.mainStatusStrip.Padding = new System.Windows.Forms.Padding(2, 0, 14, 0);
-            this.mainStatusStrip.Size = new System.Drawing.Size(1027, 22);
+            this.mainStatusStrip.Size = new System.Drawing.Size(1008, 22);
             this.mainStatusStrip.TabIndex = 2;
             this.mainStatusStrip.Text = "statusStrip1";
             // 
@@ -594,7 +611,7 @@ namespace MobiusEditor
             // copyrightStatusLabel
             // 
             this.copyrightStatusLabel.Name = "copyrightStatusLabel";
-            this.copyrightStatusLabel.Size = new System.Drawing.Size(1007, 17);
+            this.copyrightStatusLabel.Size = new System.Drawing.Size(988, 17);
             this.copyrightStatusLabel.Spring = true;
             this.copyrightStatusLabel.Text = "©2020 Electronic Arts Inc.";
             this.copyrightStatusLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
@@ -613,11 +630,12 @@ namespace MobiusEditor
             this.resourcesToolStripButton,
             this.wallsToolStripButton,
             this.waypointsToolStripButton,
-            this.cellTriggersToolStripButton});
+            this.cellTriggersToolStripButton,
+            this.selectToolStripButton});
             this.mainToolStrip.Location = new System.Drawing.Point(0, 24);
             this.mainToolStrip.Name = "mainToolStrip";
             this.mainToolStrip.Padding = new System.Windows.Forms.Padding(0, 0, 2, 0);
-            this.mainToolStrip.Size = new System.Drawing.Size(1027, 31);
+            this.mainToolStrip.Size = new System.Drawing.Size(1008, 31);
             this.mainToolStrip.TabIndex = 3;
             this.mainToolStrip.Text = "toolStrip1";
             this.mainToolStrip.MouseMove += new System.Windows.Forms.MouseEventHandler(this.mainToolStrip_MouseMove);
@@ -732,6 +750,16 @@ namespace MobiusEditor
             this.cellTriggersToolStripButton.ToolType = MobiusEditor.Interface.ToolType.CellTrigger;
             this.cellTriggersToolStripButton.Click += new System.EventHandler(this.mainToolStripButton_Click);
             // 
+            // selectToolStripButton
+            // 
+            this.selectToolStripButton.Image = ((System.Drawing.Image)(resources.GetObject("selectToolStripButton.Image")));
+            this.selectToolStripButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.selectToolStripButton.Name = "selectToolStripButton";
+            this.selectToolStripButton.Size = new System.Drawing.Size(66, 28);
+            this.selectToolStripButton.Text = "Select";
+            this.selectToolStripButton.ToolType = MobiusEditor.Interface.ToolType.Select;
+            this.selectToolStripButton.Visible = false;
+            // 
             // mapPanel
             // 
             this.mapPanel.AllowDrop = true;
@@ -743,7 +771,7 @@ namespace MobiusEditor
             this.mapPanel.MaxZoom = 8D;
             this.mapPanel.MinZoom = 1D;
             this.mapPanel.Name = "mapPanel";
-            this.mapPanel.Size = new System.Drawing.Size(1027, 472);
+            this.mapPanel.Size = new System.Drawing.Size(1008, 484);
             this.mapPanel.SmoothScale = false;
             this.mapPanel.TabIndex = 4;
             this.mapPanel.Zoom = 1D;
@@ -752,18 +780,11 @@ namespace MobiusEditor
             this.mapPanel.DragEnter += new System.Windows.Forms.DragEventHandler(this.MapPanel_DragEnter);
             this.mapPanel.MouseMove += new System.Windows.Forms.MouseEventHandler(this.MapPanel_MouseMove);
             // 
-            // toolsStorageMenuItem
-            // 
-            this.toolsStorageMenuItem.Name = "toolsStorageMenuItem";
-            this.toolsStorageMenuItem.Size = new System.Drawing.Size(204, 22);
-            this.toolsStorageMenuItem.Text = "Silo Storage...";
-            this.toolsStorageMenuItem.Click += new System.EventHandler(this.ToolsStorageMenuItem_Click);
-            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1027, 549);
+            this.ClientSize = new System.Drawing.Size(1008, 561);
             this.Controls.Add(this.mapPanel);
             this.Controls.Add(this.mainToolStrip);
             this.Controls.Add(this.mainStatusStrip);
@@ -857,6 +878,8 @@ namespace MobiusEditor
         private System.Windows.Forms.ToolStripMenuItem viewIndicatorsCellTriggersMenuItem;
         private System.Windows.Forms.ToolStripMenuItem editClearUndoRedoMenuItem;
         private System.Windows.Forms.ToolStripMenuItem toolsStorageMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem toolsRandomizeTilesMenuItem;
+        private Controls.ViewToolStripButton selectToolStripButton;
     }
 }
 

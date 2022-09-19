@@ -13,6 +13,7 @@
 // GNU General Public License along with permitted additional restrictions 
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using MobiusEditor.Interface;
+using MobiusEditor.Model;
 using MobiusEditor.Utility;
 using System;
 using System.Data;
@@ -23,7 +24,7 @@ namespace MobiusEditor.Controls
 {
     public partial class BasicSettings : UserControl
     {
-        public BasicSettings(IGamePlugin plugin, dynamic basicSection)
+        public BasicSettings(IGamePlugin plugin, PropertyTracker<BasicSection> basicSection)
         {
             InitializeComponent();
             playerComboBox.DataSource = plugin.Map.Houses.Select(h => h.Type.Name).ToArray();

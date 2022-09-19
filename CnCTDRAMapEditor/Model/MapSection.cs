@@ -13,12 +13,10 @@
 // GNU General Public License along with permitted additional restrictions 
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
-using System.Runtime.CompilerServices;
 
 namespace MobiusEditor.Model
 {
@@ -56,7 +54,7 @@ namespace MobiusEditor.Model
         }
     }
 
-    public class MapSection : INotifyPropertyChanged
+    public class MapSection : NotifiableIniSection
     {
         private readonly int fullWidth;
         private readonly int fullHeight;
@@ -85,8 +83,6 @@ namespace MobiusEditor.Model
             Width = fixedWidth;
             Height = fixedHeight;
         }
-
-        public event PropertyChangedEventHandler PropertyChanged;
 
         private int x;
         [DefaultValue(1)]
@@ -140,18 +136,5 @@ namespace MobiusEditor.Model
         [TypeConverter(typeof(TheaterTypeConverter))]
         [DefaultValue(null)]
         public TheaterType Theater { get => theater; set => SetField(ref theater, value); }
-
-        protected bool SetField<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
-        {
-            if (EqualityComparer<T>.Default.Equals(field, value))
-            {
-                return false;
-            }
-            field = value;
-            OnPropertyChanged(propertyName);
-            return true;
-        }
-
-        protected void OnPropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 }

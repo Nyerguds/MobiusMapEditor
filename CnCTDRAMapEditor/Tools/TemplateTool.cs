@@ -413,7 +413,6 @@ namespace MobiusEditor.Tools
                     Point startPoint = navigationWidget.MouseCell;
                     dragStartPoint = map.Bounds.Contains(startPoint) ? (Point?)startPoint : null;
                     dragStartBounds = dragBounds;
-                    //navigationWidget.CurrentCursor = Cursors.SizeAll;
                     UpdateStatus();
                 }
             }
@@ -641,6 +640,37 @@ namespace MobiusEditor.Tools
             CommitTileChanges(true);
         }
 
+        public static String RandomizeTiles(IGamePlugin plugin, MapPanel mapPanel, UndoRedoList<UndoRedoEventArgs> url)
+        {
+            Random rnd = new Random();
+            Dictionary<int, Template> undoTemplates = new Dictionary<int, Template>();
+            Dictionary<int, Template> redoTemplates = new Dictionary<int, Template>();
+            TemplateTypeFlag toRandomise = TemplateTypeFlag.RandomCell | TemplateTypeFlag.IsGrouped;
+            Map map = plugin.Map;
+
+            if (map.TemplateTypes.Where(t => t.Theaters == null || t.Theaters.Contains(map.Theater)).All(tm => (tm.Flag & toRandomise) == TemplateTypeFlag.None))
+            {
+                return "This map's theater does not contain randomizable tiles.";
+            }
+            int mapLength = map.Metrics.Length;
+            int mapWidth = map.Metrics.Width;
+            for (int i = 0; i < mapLength; ++i)
+            {
+                Point location = new Point(i / mapWidth, i % mapWidth);
+                TemplateType cur = PickTemplate(map, location, true, out _);
+                if (cur == null || (cur.Flag & TemplateTypeFlag.RandomCell) == TemplateTypeFlag.None)
+                {
+                    continue;
+                }
+                SetTemplate(map, cur, location, null, undoTemplates, redoTemplates, rnd);
+            }
+            mapPanel.Invalidate(map, redoTemplates.Keys);
+            int count = undoTemplates.Count;
+            // This clears the undo/redo lists, so refresh and count needs to be taken first.
+            CommitTileChanges(url, undoTemplates, redoTemplates, plugin);
+            return String.Format("{0} cells replaced.", count);
+        }
+
         private void MapPanel_MouseUp(object sender, MouseEventArgs e)
         {
             CommitEdgeDrag();
@@ -670,6 +700,15 @@ namespace MobiusEditor.Tools
             {
                 ExitAllModes();
             }
+            CheckBoundsCursor();
+            if (!boundsMode)
+            {
+                mouseTooltip.Hide(mapPanel);
+            }
+        }
+
+        private void CheckBoundsCursor()
+        {
             var cursor = Cursors.Default;
             if (boundsMode)
             {
@@ -692,7 +731,7 @@ namespace MobiusEditor.Tools
                         cursor = Cursors.SizeNWSE;
                         break;
                     case FacingType.None:
-                        if (map.Bounds.Contains(navigationWidget.MouseCell) || dragStartPoint.HasValue && dragStartBounds.HasValue)
+                        if (map.Bounds.Contains(navigationWidget.MouseCell) || (dragStartPoint.HasValue && dragStartBounds.HasValue))
                         {
                             cursor = Cursors.SizeAll;
                         }
@@ -704,10 +743,6 @@ namespace MobiusEditor.Tools
                     navigationWidget.CurrentCursor = cursor;
                     UpdateTooltip();
                 }
-            }
-            if (!boundsMode)
-            {
-                mouseTooltip.Hide(mapPanel);
             }
         }
 
@@ -861,7 +896,18 @@ namespace MobiusEditor.Tools
 
         private void SetTemplate(Point location, bool skipInvalidate)
         {
-            TemplateType selected = SelectedTemplateType;
+            Dictionary<int, Template> addedRedoTemplates = new Dictionary<int, Template>();
+            SetTemplate(map, SelectedTemplateType, location, SelectedIcon, undoTemplates, addedRedoTemplates, random);
+            addedRedoTemplates.ToList().ForEach(kv => redoTemplates[kv.Key] = kv.Value);
+            if (!skipInvalidate)
+            {
+                mapPanel.Invalidate(map, addedRedoTemplates.Keys);
+            }
+        }
+
+        public static void SetTemplate(Map map, TemplateType selected, Point location, Point? SelectedIcon,
+            Dictionary<int, Template> undoTemplates, Dictionary<int, Template> redoTemplates, Random randomiser)
+        {
             if (selected == null)
             {
                 return;
@@ -882,14 +928,9 @@ namespace MobiusEditor.Tools
                         placeType = map.TemplateTypes.Where(t => t.Name == selected.GroupTiles[icon]).FirstOrDefault();
                         icon = 0;
                     }
-                    var template = new Template { Type = placeType, Icon = icon };
-                    map.Templates[cell] = template;
-                    redoTemplates[cell] = template;
-                    if (!skipInvalidate)
-                    {
-                        mapPanel.Invalidate(map, cell);
-                    }
-                    plugin.Dirty = true;
+                    var placeTemplate = new Template { Type = placeType, Icon = icon };
+                    map.Templates[cell] = placeTemplate;
+                    redoTemplates[cell] = placeTemplate;
                 }
             }
             else
@@ -928,13 +969,13 @@ namespace MobiusEditor.Tools
                             TemplateType placeType = selected;
                             if (isGroup)
                             {
-                                int randomType = random.Next(0, selected.NumIcons);
+                                int randomType = randomiser.Next(0, selected.NumIcons);
                                 placeType = map.TemplateTypes.Where(t => t.Name == selected.GroupTiles[randomType]).FirstOrDefault();
                                 placeIcon = 0;
                             }
                             else if (isRandom)
                             {
-                                placeIcon = random.Next(0, selected.NumIcons);
+                                placeIcon = randomiser.Next(0, selected.NumIcons);
                             }
                             else
                             {
@@ -943,11 +984,6 @@ namespace MobiusEditor.Tools
                             var template = new Template { Type = placeType, Icon = placeIcon };
                             map.Templates[cell] = template;
                             redoTemplates[cell] = template;
-                            if (!skipInvalidate)
-                            {
-                                mapPanel.Invalidate(map, cell);
-                            }
-                            plugin.Dirty = true;
                         }
                     }
                 }
@@ -968,7 +1004,6 @@ namespace MobiusEditor.Tools
                     map.Templates[cell] = null;
                     redoTemplates[cell] = null;
                     mapPanel.Invalidate(map, cell);
-                    plugin.Dirty = true;
                 }
             }
             else
@@ -1005,7 +1040,6 @@ namespace MobiusEditor.Tools
                             map.Templates[cell] = null;
                             redoTemplates[cell] = null;
                             mapPanel.Invalidate(map, cell);
-                            plugin.Dirty = true;
                         }
                     }
                 }
@@ -1069,6 +1103,7 @@ namespace MobiusEditor.Tools
             mapPanel.Invalidate();
             UpdateTooltip();
             UpdateStatus();
+            CheckBoundsCursor();
         }
 
         private void ExitAllModes()
@@ -1208,6 +1243,14 @@ namespace MobiusEditor.Tools
 
         private void PickTemplate(Point location, bool wholeTemplate)
         {
+            SelectedTemplateType = PickTemplate(map, location, wholeTemplate, out Point? selectedIcon);
+            SelectedIcon = selectedIcon;
+        }
+
+        public static TemplateType PickTemplate(Map map, Point location, bool wholeTemplate, out Point? selectedIcon)
+        {
+            TemplateType picked = null;
+            selectedIcon = null;
             if (map.Metrics.GetCell(location, out int cell))
             {
                 var template = map.Templates[cell];
@@ -1218,18 +1261,18 @@ namespace MobiusEditor.Tools
                     {
                         groupOwned = true;
                         string owningType = template.Type.GroupTiles[0];
-                        SelectedTemplateType = map.TemplateTypes.Where(t => t.Name.Equals(owningType, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+                        picked = map.TemplateTypes.Where(t => t.Name.Equals(owningType, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
                     }
                     else
                     {
-                        SelectedTemplateType = template.Type;
+                        picked = template.Type;
                     }
                 }
                 else
                 {
-                    SelectedTemplateType = map.TemplateTypes.Where(t => t.Name.Equals("clear1", StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+                    picked = map.TemplateTypes.Where(t => t.Name.Equals("clear1", StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
                 }
-                TemplateType selected = SelectedTemplateType;
+                TemplateType selected = picked;
                 bool isRandom = (selected.Flag & TemplateTypeFlag.RandomCell) != TemplateTypeFlag.None && selected.NumIcons > 1;
                 if (!wholeTemplate && ((selected.IconWidth * selected.IconHeight) > 1 || isRandom))
                 {
@@ -1244,13 +1287,14 @@ namespace MobiusEditor.Tools
                         icon = template?.Icon ?? 0;
                     }
                     int width = selected.ThumbnailWidth;
-                    SelectedIcon = new Point(icon % width, icon / width);
+                    selectedIcon = new Point(icon % width, icon / width);
                 }
                 else
                 {
-                    SelectedIcon = null;
+                    selectedIcon = null;
                 }
             }
+            return picked;
         }
 
         private FacingType DetectDragEdge()
@@ -1331,18 +1375,27 @@ namespace MobiusEditor.Tools
             {
                 var oldBounds = map.Bounds;
                 var newBounds = dragBounds;
+                bool origDirtyState = plugin.Dirty;
+                plugin.Dirty = true;
                 void undoAction(UndoRedoEventArgs ure)
                 {
                     ure.Map.Bounds = oldBounds;
                     ure.MapPanel.Invalidate();
+                    if (ure.Plugin != null)
+                    {
+                        ure.Plugin.Dirty = origDirtyState;
+                    }
                 }
                 void redoAction(UndoRedoEventArgs ure)
                 {
                     ure.Map.Bounds = newBounds;
                     ure.MapPanel.Invalidate();
+                    if (ure.Plugin != null)
+                    {
+                        ure.Plugin.Dirty = true;
+                    }
                 }
                 map.Bounds = newBounds;
-                plugin.Dirty = true;
                 url.Track(undoAction, redoAction);
             }
             dragEdge = FacingType.None;
@@ -1354,11 +1407,22 @@ namespace MobiusEditor.Tools
 
         private void CommitTileChanges(bool noCheck)
         {
-            if ((!noCheck && !placementMode) || (undoTemplates.Count == 0) || (redoTemplates.Count == 0))
+            if (!noCheck && !placementMode)
+            {
+                return;
+            }
+            CommitTileChanges(this.url, this.undoTemplates, this.redoTemplates, plugin);
+        }
+
+        private static void CommitTileChanges(UndoRedoList<UndoRedoEventArgs> url, Dictionary<int, Template> undoTemplates, Dictionary<int, Template> redoTemplates, IGamePlugin plugin)
+        {
+            if (undoTemplates.Count == 0 || redoTemplates.Count == 0)
             {
                 return;
             }
             var undoTemplates2 = new Dictionary<int, Template>(undoTemplates);
+            bool origDirtyState = plugin.Dirty;
+            plugin.Dirty = true;
             void undoAction(UndoRedoEventArgs e)
             {
                 foreach (var kv in undoTemplates2)
@@ -1366,6 +1430,10 @@ namespace MobiusEditor.Tools
                     e.Map.Templates[kv.Key] = kv.Value;
                 }
                 e.MapPanel.Invalidate(e.Map, undoTemplates2.Keys);
+                if (e.Plugin != null)
+                {
+                    e.Plugin.Dirty = origDirtyState;
+                }
             }
             var redoTemplates2 = new Dictionary<int, Template>(redoTemplates);
             void redoAction(UndoRedoEventArgs e)
@@ -1375,6 +1443,10 @@ namespace MobiusEditor.Tools
                     e.Map.Templates[kv.Key] = kv.Value;
                 }
                 e.MapPanel.Invalidate(e.Map, redoTemplates2.Keys);
+                if (e.Plugin != null)
+                {
+                    e.Plugin.Dirty = true;
+                }
             }
             undoTemplates.Clear();
             redoTemplates.Clear();

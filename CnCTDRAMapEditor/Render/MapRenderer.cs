@@ -364,9 +364,9 @@ namespace MobiusEditor.Render
         public static (Rectangle, Action<Graphics>) Render(GameType gameType, TheaterType theater, Point topLeft, Size tileSize, double tileScale, Terrain terrain)
         {
             string tileName = terrain.Type.GraphicsSource;
-            if (!Globals.TheTilesetManager.GetTileData(theater.Tilesets, tileName, terrain.Icon, out Tile tile))
+            if (!Globals.TheTilesetManager.GetTileData(theater.Tilesets, tileName, terrain.Type.DisplayIcon, out Tile tile))
             {
-                Debug.Print(string.Format("Terrain {0} ({1}) not found", tileName, terrain.Icon));
+                Debug.Print(string.Format("Terrain {0} ({1}) not found", tileName, terrain.Type.DisplayIcon));
                 return (Rectangle.Empty, (g) => { });
             }
             var tint = terrain.Tint;

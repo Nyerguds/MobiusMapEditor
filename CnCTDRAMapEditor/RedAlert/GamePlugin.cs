@@ -293,10 +293,15 @@ namespace MobiusEditor.RedAlert
                 {
                     return;
                 }
+                // Strip "NewUnitsEnabled" from the Aftermath section.
+                INISection amSection = ini.Sections["Aftermath"];
+                if (amSection != null)
+                {
+                    amSection.Keys.Remove("NewUnitsEnabled");
+                }
                 // Remove any sections known and handled / disallowed by the editor.
                 ini.Sections.Remove("Digest");
                 ini.Sections.Remove("Basic");
-                ini.Sections.Remove("Aftermath");
                 ini.Sections.Remove("Map");
                 ini.Sections.Remove("Steam");
                 ini.Sections.Remove("TeamTypes");
@@ -417,12 +422,14 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        public IEnumerable<string> Load(string path, FileType fileType)
+        public IEnumerable<string> Load(string path, FileType fileType, out bool modified)
         {
             try
             {
                 isLoading = true;
                 var errors = new List<string>();
+                modified = false;
+                bool forceSingle = false;
                 switch (fileType)
                 {
                     case FileType.INI:
@@ -433,7 +440,7 @@ namespace MobiusEditor.RedAlert
                             {
                                 ini.Parse(reader);
                             }
-                            bool forceSingle = SinglePlayRegex.IsMatch(Path.GetFileNameWithoutExtension(path));
+                            forceSingle = SinglePlayRegex.IsMatch(Path.GetFileNameWithoutExtension(path));
                             errors.AddRange(LoadINI(ini, forceSingle));
                         }
                         break;
@@ -457,6 +464,11 @@ namespace MobiusEditor.RedAlert
                         break;
                     default:
                         throw new NotSupportedException();
+                }
+                if (errors.Count > 0)
+                {
+                    // If only one message is inside the errors, and the "force single" boolean is set, the single message is about that.
+                    modified = !forceSingle || errors.Count > 1;
                 }
                 return errors;
             }
@@ -500,17 +512,16 @@ namespace MobiusEditor.RedAlert
             Map.BasicSection.Player = Map.HouseTypes.Where(t => t.Equals(Map.BasicSection.Player)).FirstOrDefault()?.Name ?? Map.HouseTypes.First().Name;
             Map.BasicSection.BasePlayer = HouseTypes.GetBasePlayer(Map.BasicSection.Player);
             bool aftermathEnabled = false;
-            var AftermathSection = ini.Sections.Extract("Aftermath");
-            if (AftermathSection != null)
+            // Don't remove from extra sections.
+            INISection aftermathSection = ini.Sections["Aftermath"];
+            if (aftermathSection != null)
             {
-                foreach (var (Key, Value) in AftermathSection)
-                {
-                    if ("NewUnitsEnabled".Equals(Key, StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        aftermathEnabled = Int32.TryParse(Value, out int val) && val == 1;
-                        break;
-                    }
-                }
+                var amEnabled = aftermathSection["NewUnitsEnabled"];
+                aftermathEnabled = amEnabled != null && Int32.TryParse(amEnabled, out int val) && val == 1;
+                aftermathSection.Keys.Remove("NewUnitsEnabled");
+                // Remove if empty.
+                if (aftermathSection.Empty)
+                    ini.Sections.Remove(aftermathSection.Name);
             }
             // Needs to be enabled in advance; it determines which units are valid to have placed on the map.
             Map.BasicSection.ExpansionEnabled = aftermathEnabled;
@@ -863,7 +874,6 @@ namespace MobiusEditor.RedAlert
                         Terrain newTerr = new Terrain
                         {
                             Type = terrainType,
-                            Icon = terrainType.DisplayIcon,
                             Trigger = Trigger.None
                         };
                         if (Map.Technos.Add(cell, newTerr))
@@ -1963,11 +1973,37 @@ namespace MobiusEditor.RedAlert
 
         private void SaveINI(INI ini, FileType fileType, string fileName)
         {
+            INISection aftermathSection = null;
+            List<INISection> addedExtra = new List<INISection>();
             if (extraSections != null)
             {
-                ini.Sections.AddRange(extraSections);
+                foreach (INISection section in extraSections)
+                {
+                    if ("Aftermath".Equals(section.Name, StringComparison.OrdinalIgnoreCase))
+                    {
+                        aftermathSection = section;
+                    }
+                    else
+                    {
+                        addedExtra.Add(section);
+                    }
+                }
             }
             Model.BasicSection basic = Map.BasicSection;
+            // Make new section
+            INISection newAftermathSection = new INISection("Aftermath");
+            newAftermathSection["NewUnitsEnabled"] = basic.ExpansionEnabled ? "1" : "0";
+            if (aftermathSection != null)
+            {
+                // If old section is present, remove NewUnitsEnabled value from it, and copy the remainder into the new one.
+                aftermathSection.Keys.Remove("NewUnitsEnabled");
+                foreach ((string key, string value) in aftermathSection)
+                {
+                    newAftermathSection[key] = value;
+                }
+            }
+            ini.Sections.Add(newAftermathSection);
+            ini.Sections.AddRange(addedExtra);
             char[] cutfrom = { ';', '(' };
             basic.Intro = GeneralUtils.TrimRemarks(basic.Intro, true, cutfrom);
             basic.Brief = GeneralUtils.TrimRemarks(basic.Brief, true, cutfrom);
@@ -1999,8 +2035,6 @@ namespace MobiusEditor.RedAlert
                 INI.WriteSection(new MapContext(Map, false), ini.Sections.Add("Steam"), Map.SteamSection);
             }
             ini["Basic"]["NewINIFormat"] = "3";
-            var aftermathSection = ini.Sections.Add("Aftermath");
-            aftermathSection["NewUnitsEnabled"] = basic.ExpansionEnabled ? "1" : "0";
             var smudgeSection = ini.Sections.Add("SMUDGE");
             // Flatten multi-cell bibs
             Dictionary<int, Smudge> resolvedSmudge = new Dictionary<int, Smudge>();

@@ -249,12 +249,14 @@ namespace MobiusEditor.TiberianDawn
             UpdateBasePlayerHouse();
         }
 
-        public IEnumerable<string> Load(string path, FileType fileType)
+        public IEnumerable<string> Load(string path, FileType fileType, out bool modified)
         {
             var ini = new INI();
             var errors = new List<string>();
             var iniPath = fileType == FileType.INI ? path : Path.ChangeExtension(path, ".ini");
             var binPath = fileType == FileType.BIN ? path : Path.ChangeExtension(path, ".bin");
+            modified = false;
+            bool forceSingle = false;
             switch (fileType)
             {
                 case FileType.INI:
@@ -264,7 +266,7 @@ namespace MobiusEditor.TiberianDawn
                     {
                         string iniText = FixRoad2Load(iniReader);
                         ini.Parse(iniText);
-                        bool forceSingle = SinglePlayRegex.IsMatch(Path.GetFileNameWithoutExtension(path));
+                        forceSingle = SinglePlayRegex.IsMatch(Path.GetFileNameWithoutExtension(path));
                         errors.AddRange(LoadINI(ini, forceSingle));
                         if (binReader.BaseStream.Length != 0x2000)
                         {
@@ -305,6 +307,11 @@ namespace MobiusEditor.TiberianDawn
                     break;
                 default:
                     throw new NotSupportedException();
+            }
+            if (errors.Count > 0)
+            {
+                // If only one message is inside the errors, and the "force single" boolean is set, the single message is about that.
+                modified = !forceSingle || errors.Count > 1;
             }
             return errors;
         }
@@ -625,7 +632,6 @@ namespace MobiusEditor.TiberianDawn
                             Terrain newTerr = new Terrain
                             {
                                 Type = terrainType,
-                                Icon = terrainType.DisplayIcon,
                                 Trigger = tokens[1]
                             };
                             if (Map.Technos.Add(cell, newTerr))

@@ -111,7 +111,8 @@ namespace MobiusEditor.Dialogs
             foreach (var player in this.plugin.Map.Houses)
             {
                 var playerNode = playersNode.Nodes.Add(player.Type.Name, player.Type.Name);
-                playerNode.Checked = player.Enabled;
+                bool enabled = houseSettingsTrackers[player].TryGetMember("Enabled", out object res) && (res is bool en) && en;
+                playerNode.Checked = enabled;
             }
             playersNode.Expand();
             settingsTreeView.EndUpdate();
@@ -158,7 +159,6 @@ namespace MobiusEditor.Dialogs
                     break;
                 case "RULES":
                     {
-                        // TODO clone briefing panel, add extra logic.
                         RulesSettings rulesPanel = new RulesSettings(ExtraIniText);
                         rulesPanel.TextNeedsUpdating += this.RulesPanel_TextNeedsUpdating;
                         settingsPanel.Controls.Add(rulesPanel);
@@ -235,7 +235,9 @@ namespace MobiusEditor.Dialogs
             var player = plugin.Map.Houses.Where(h => h.Type.Name == e.Node.Name).FirstOrDefault();
             if (player != null)
             {
-                ((dynamic)houseSettingsTrackers[player]).Enabled = e.Node.Checked;
+                // I don't think I like "dynamic". With "TrySetMember" you at least SEE that the variable is looked up by string.
+                //((dynamic)houseSettingsTrackers[player]).Enabled = e.Node.Checked;
+                houseSettingsTrackers[player].TrySetMember("Enabled", e.Node.Checked);
             }
         }
 

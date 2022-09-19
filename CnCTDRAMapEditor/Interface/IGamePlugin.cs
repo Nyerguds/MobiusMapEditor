@@ -50,7 +50,7 @@ namespace MobiusEditor.Interface
 
         void New(string theater);
 
-        IEnumerable<string> Load(string path, FileType fileType);
+        IEnumerable<string> Load(string path, FileType fileType, out bool modified);
 
         bool Save(string path, FileType fileType);
 

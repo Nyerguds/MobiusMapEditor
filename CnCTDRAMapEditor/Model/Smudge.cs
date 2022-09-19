@@ -21,7 +21,7 @@ using System.Runtime.CompilerServices;
 
 namespace MobiusEditor.Model
 {
-    public class Smudge: ICellOverlapper, INotifyPropertyChanged, ICloneable
+    public class Smudge: ICellOverlapper, INotifyPropertyChanged, ICloneable, IEquatable<Smudge>
     {
         public event PropertyChangedEventHandler PropertyChanged;
         private SmudgeType type;
@@ -65,6 +65,10 @@ namespace MobiusEditor.Model
             Icon = other.Icon;
             Tint = other.Tint;
         }
-        
+
+        public Boolean Equals(Smudge other)
+        {
+            return this.Type == other.Type && this.Icon == other.Icon;
+        }
     }
 }

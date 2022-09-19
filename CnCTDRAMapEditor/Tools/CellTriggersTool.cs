@@ -114,6 +114,37 @@ namespace MobiusEditor.Tools
             {
                 EnterPlacementMode();
             }
+            else if (triggerComboBox.Enabled)
+            {
+                int maxVal = triggerComboBox.Items.Count - 1;
+                int curVal = triggerComboBox.SelectedIndex;
+                int newVal = curVal;
+                switch (e.KeyCode)
+                {
+                    case Keys.Home:
+                        newVal = 0;
+                        break;
+                    case Keys.End:
+                        newVal = maxVal;
+                        break;
+                    case Keys.PageDown:
+                        newVal = Math.Min(curVal + 10, maxVal);
+                        break;
+                    case Keys.PageUp:
+                        newVal = Math.Max(curVal - 10, 0);
+                        break;
+                    case Keys.Down:
+                        newVal = Math.Min(curVal + 1, maxVal);
+                        break;
+                    case Keys.Up:
+                        newVal = Math.Max(curVal - 1, 0);
+                        break;
+                }
+                if (curVal != newVal)
+                {
+                    triggerComboBox.SelectedIndex = newVal;
+                }
+            }
         }
 
         private void CellTriggersTool_KeyUp(object sender, KeyEventArgs e)
@@ -173,7 +204,6 @@ namespace MobiusEditor.Tools
                         map.CellTriggers[cell] = cellTrigger;
                         redoCellTriggers[cell] = cellTrigger;
                         mapPanel.Invalidate();
-                        plugin.Dirty = true;
                     }
                 }
             }
@@ -193,7 +223,6 @@ namespace MobiusEditor.Tools
                     map.CellTriggers[cell] = null;
                     redoCellTriggers[cell] = null;
                     mapPanel.Invalidate();
-                    plugin.Dirty = true;
                 }
             }
         }
@@ -232,6 +261,8 @@ namespace MobiusEditor.Tools
 
         private void CommitChange()
         {
+            bool origDirtyState = plugin.Dirty;
+            plugin.Dirty = true;
             var undoCellTriggers2 = new Dictionary<int, CellTrigger>(undoCellTriggers);
             void undoAction(UndoRedoEventArgs e)
             {
@@ -243,6 +274,10 @@ namespace MobiusEditor.Tools
                     e.Map.CellTriggers[kv.Key] = isValid ? cellTrig : null;
                 }
                 e.MapPanel.Invalidate();
+                if (e.Plugin != null)
+                {
+                    e.Plugin.Dirty = origDirtyState;
+                }
             }
             var redoCellTriggers2 = new Dictionary<int, CellTrigger>(redoCellTriggers);
             void redoAction(UndoRedoEventArgs e)
@@ -255,6 +290,10 @@ namespace MobiusEditor.Tools
                     e.Map.CellTriggers[kv.Key] = isValid ? cellTrig : null;
                 }
                 e.MapPanel.Invalidate();
+                if (e.Plugin != null)
+                {
+                    e.Plugin.Dirty = true;
+                }
             }
             undoCellTriggers.Clear();
             redoCellTriggers.Clear();

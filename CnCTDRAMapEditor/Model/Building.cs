@@ -22,7 +22,7 @@ using System.Runtime.CompilerServices;
 
 namespace MobiusEditor.Model
 {
-    public class Building : ITechno, ICellOverlapper, ICellOccupier, INotifyPropertyChanged, ICloneable
+    public class Building : ITechno, ICellOverlapper, ICellOccupier, INotifyPropertyChanged, ICloneable, IEquatable<Building>
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -136,6 +136,19 @@ namespace MobiusEditor.Model
         object ICloneable.Clone()
         {
             return Clone();
+        }
+
+        public Boolean Equals(Building other)
+        {
+            return this.Type == other.Type &&
+                this.House == other.House &&
+                this.Strength == other.Strength &&
+                this.Direction == other.Direction &&
+                this.Trigger == other.Trigger &&
+                this.BasePriority == other.BasePriority &&
+                this.IsPrebuilt == other.IsPrebuilt &&
+                this.Sellable == other.Sellable &&
+                this.Rebuild == other.Rebuild;
         }
     }
 }

@@ -103,6 +103,8 @@ namespace MobiusEditor.Utility
                 .ToDictionary(k => k.Name, v => v);
         }
 
+        public bool HasChanges => propertyValues.Count > 0;
+
         public void Revert() => propertyValues.Clear();
 
         public void Commit()
@@ -164,6 +166,25 @@ namespace MobiusEditor.Utility
             {
                 propertyValues[binder.Name] = value;
                 NotifyPropertyChanged(binder.Name);
+            }
+            return true;
+        }
+
+        public bool TrySetMember(string memberName, object value)
+        {
+            if (!trackableProperties.TryGetValue(memberName, out PropertyInfo property))
+            {
+                return false;
+            }
+
+            if (Equals(property.GetValue(Object), value))
+            {
+                propertyValues.Remove(memberName);
+            }
+            else
+            {
+                propertyValues[memberName] = value;
+                NotifyPropertyChanged(memberName);
             }
             return true;
         }

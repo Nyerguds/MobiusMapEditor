@@ -188,7 +188,6 @@ namespace MobiusEditor.Tools
                             var overlay = new Overlay { Type = resourceType, Icon = 0 };
                             map.Overlay[cell] = overlay;
                             redoOverlays[cell] = overlay;
-                            plugin.Dirty = true;
                         }
                     }
                 }
@@ -214,7 +213,6 @@ namespace MobiusEditor.Tools
                         }
                         map.Overlay[cell] = null;
                         redoOverlays[cell] = null;
-                        plugin.Dirty = true;
                     }
                 }
             }
@@ -246,6 +244,8 @@ namespace MobiusEditor.Tools
 
         private void CommitChange()
         {
+            bool origDirtyState = plugin.Dirty;
+            plugin.Dirty = true;
             var undoOverlays2 = new Dictionary<int, Overlay>(undoOverlays);
             void undoAction(UndoRedoEventArgs e)
             {
@@ -260,6 +260,10 @@ namespace MobiusEditor.Tools
                     rectangle.Inflate(1, 1);
                     return rectangle;
                 }));
+                if (e.Plugin != null)
+                {
+                    e.Plugin.Dirty = origDirtyState;
+                }
             }
 
             var redoOverlays2 = new Dictionary<int, Overlay>(redoOverlays);
@@ -276,11 +280,13 @@ namespace MobiusEditor.Tools
                     rectangle.Inflate(1, 1);
                     return rectangle;
                 }));
+                if (e.Plugin != null)
+                {
+                    e.Plugin.Dirty = true;
+                }
             }
-
             undoOverlays.Clear();
             redoOverlays.Clear();
-
             url.Track(undoAction, redoAction);
         }
 

@@ -71,7 +71,6 @@ namespace MobiusEditor.Tools
                         mapPanel.Invalidate(map, new Rectangle(navigationWidget.MouseCell, selectedTerrainType.OverlapBounds.Size));
                     }
                     mockTerrain.Type = selectedTerrainType;
-                    mockTerrain.Icon = selectedTerrainType.DisplayIcon;
                     RefreshPreviewPanel();
                 }
             }
@@ -121,7 +120,7 @@ namespace MobiusEditor.Tools
                         selectedTerrainProperties.Closed += (cs, ce) =>
                         {
                             navigationWidget.Refresh();
-                            AddUndoRedo(terrain, preEdit);
+                            AddPropertiesUndoRedo(terrain, preEdit);
                         };
                         selectedTerrainProperties.Show(mapPanel, mapPanel.PointToClient(Control.MousePosition));
                     }
@@ -130,30 +129,44 @@ namespace MobiusEditor.Tools
             }
         }
 
-        private void AddUndoRedo(Terrain terrain, Terrain preEdit)
+        private void AddPropertiesUndoRedo(Terrain terrain, Terrain preEdit)
         {
             // terrain = terrain in its final edited form. Clone for preservation
-            Terrain redoUnit = terrain.Clone();
-            Terrain undoUnit = preEdit;
+            Terrain redoTerr = terrain.Clone();
+            Terrain undoTerr = preEdit;
+            if (redoTerr.Equals(undoTerr))
+            {
+                return;
+            }
+            bool origDirtyState = plugin.Dirty;
+            plugin.Dirty = true;
             void undoAction(UndoRedoEventArgs ev)
             {
-                terrain.CloneDataFrom(undoUnit);
+                terrain.CloneDataFrom(undoTerr);
                 if (terrain.Trigger == null || (!Trigger.None.Equals(terrain.Trigger, StringComparison.InvariantCultureIgnoreCase)
                     && !ev.Map.FilterTerrainTriggers().Any(tr => tr.Name.Equals(terrain.Trigger, StringComparison.InvariantCultureIgnoreCase))))
                 {
                     terrain.Trigger = Trigger.None;
                 }
                 ev.MapPanel.Invalidate(ev.Map, terrain);
+                if (ev.Plugin != null)
+                {
+                    ev.Plugin.Dirty = origDirtyState;
+                }
             }
             void redoAction(UndoRedoEventArgs ev)
             {
-                terrain.CloneDataFrom(redoUnit);
+                terrain.CloneDataFrom(redoTerr);
                 if (terrain.Trigger == null || (!Trigger.None.Equals(terrain.Trigger, StringComparison.InvariantCultureIgnoreCase)
                     && !ev.Map.FilterTerrainTriggers().Any(tr => tr.Name.Equals(terrain.Trigger, StringComparison.InvariantCultureIgnoreCase))))
                 {
                     terrain.Trigger = Trigger.None;
                 }
                 ev.MapPanel.Invalidate(ev.Map, terrain);
+                if (ev.Plugin != null)
+                {
+                    ev.Plugin.Dirty = true;
+                }
             }
             url.Track(undoAction, redoAction);
         }
@@ -225,12 +238,18 @@ namespace MobiusEditor.Tools
             if (finalLocation.HasValue && finalLocation.Value != startLocation)
             {
                 Point endLocation = finalLocation.Value;
+                bool origDirtyState = plugin.Dirty;
+                plugin.Dirty = true;
                 void undoAction(UndoRedoEventArgs ev)
                 {
                     ev.MapPanel.Invalidate(ev.Map, toMove);
                     ev.Map.Technos.Remove(toMove);
                     ev.Map.Technos.Add(startLocation, toMove);
                     ev.MapPanel.Invalidate(ev.Map, toMove);
+                    if (ev.Plugin != null)
+                    {
+                        ev.Plugin.Dirty = origDirtyState;
+                    }
                 }
                 void redoAction(UndoRedoEventArgs ev)
                 {
@@ -238,6 +257,10 @@ namespace MobiusEditor.Tools
                     ev.Map.Technos.Remove(toMove);
                     ev.Map.Technos.Add(endLocation, toMove);
                     ev.MapPanel.Invalidate(ev.Map, toMove);
+                    if (ev.Plugin != null)
+                    {
+                        ev.Plugin.Dirty = true;
+                    }
                 }
                 url.Track(undoAction, redoAction);
             }
@@ -275,7 +298,6 @@ namespace MobiusEditor.Tools
                 if (map.Technos.Add(newLocation, toMove))
                 {
                     mapPanel.Invalidate(map, toMove);
-                    plugin.Dirty = true;
                 }
                 else
                 {
@@ -295,19 +317,28 @@ namespace MobiusEditor.Tools
                 var terrain = mockTerrain.Clone();
                 if (map.Technos.Add(location, terrain))
                 {
+                    bool origDirtyState = plugin.Dirty;
+                    plugin.Dirty = true;
                     mapPanel.Invalidate(map, terrain);
                     void undoAction(UndoRedoEventArgs e)
                     {
                         e.MapPanel.Invalidate(e.Map, location);
                         e.Map.Technos.Remove(terrain);
+                        if (e.Plugin != null)
+                        {
+                            e.Plugin.Dirty = origDirtyState;
+                        }
                     }
                     void redoAction(UndoRedoEventArgs e)
                     {
                         e.Map.Technos.Add(location, terrain);
                         e.MapPanel.Invalidate(e.Map, location);
+                        if (e.Plugin != null)
+                        {
+                            e.Plugin.Dirty = true;
+                        }
                     }
                     url.Track(undoAction, redoAction);
-                    plugin.Dirty = true;
                 }
             }
         }
@@ -318,18 +349,27 @@ namespace MobiusEditor.Tools
             {
                 mapPanel.Invalidate(map, terrain);
                 map.Technos.Remove(location);
+                bool origDirtyState = plugin.Dirty;
+                plugin.Dirty = true;
                 void undoAction(UndoRedoEventArgs e)
                 {
                     e.Map.Technos.Add(location, terrain);
                     e.MapPanel.Invalidate(e.Map, terrain);
+                    if (e.Plugin != null)
+                    {
+                        e.Plugin.Dirty = origDirtyState;
+                    }
                 }
                 void redoAction(UndoRedoEventArgs e)
                 {
                     e.MapPanel.Invalidate(e.Map, terrain);
                     e.Map.Technos.Remove(terrain);
+                    if (e.Plugin != null)
+                    {
+                        e.Plugin.Dirty = true;
+                    }
                 }
                 url.Track(undoAction, redoAction);
-                plugin.Dirty = true;
             }
         }
 
@@ -461,7 +501,6 @@ namespace MobiusEditor.Tools
                 var terrain = new Terrain
                 {
                     Type = SelectedTerrainType,
-                    Icon = SelectedTerrainType.DisplayIcon,
                     Tint = Color.FromArgb(128, Color.White)
                 };
                 previewMap.Technos.Add(location, terrain);

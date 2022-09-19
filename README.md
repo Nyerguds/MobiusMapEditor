@@ -332,6 +332,19 @@ These options are all enabled by default, but can be disabled if you wish. Use t
 * Fixed a crash in the smudge restore system when you delete a smudge or building that is too close to the map edge.
 * Reduced maximum multiplayer start positions in the editor to 8, since the games apparently can't show more.
 
+#### v1.4.3.3: [WIP]
+
+* When your mouse cursor is inside the map bounds and you press [Ctrl] in Map mode to enable bounds editing mode, your cursor will now immediately change to the Move cursor, without requiring any mouse movement.
+* The status bar at the bottom will now explicitly mention the sub-position of the infantry under the mouse cursor.
+* When loading a map, if a map's file name identifies it as classic single player mission, this will no longer mark the mission as "modified" by the loading process. This will make it simpler to open classic maps for reference without getting a save prompt on close. Do note that lots of classic maps contain errors in triggers being linked to wrong objects, and the automatic fixes for that **will** still mark the map as modified.
+* Fixed issues with the editor window getting focused simply by moving the mouse over it. The main window can steal focus from the tool window, but not the other way around.
+* In Waypoints and Cell Triggers editing mode, the Up, Down, PageUp, PageDown, Home and End keys will now let you go through the dropdown items list. PageUp and PageDown will skip 10 items.
+* In Waypoints editing mode, pressing [Shift] and a key will select special waypoints: [F]lare, [H]ome, [R]einforce, [S]pecial.
+* The shortcut keys to select the different editing modes (normally Q, W, E, R, T, Y, A, S, D, F, G) now work on keyboard position, meaning thy will also work in the logical way on on AZERTY keyboards.
+* Fixed bug where the checked states of the Houses in the Map Settings would reset when changing the "Single-Player" checkbox.
+* The [Aftermath] section is no longer ignored in the map settings' Rules editor, so Aftermath detail settings can be added. The actual "NewUnitsEnabled" setting in this is ignored, though; toggling the expansion units can only be done in the Basic settings.
+* Undo/Redo tracking will now also undo the map's modified-status.
+
 ### Possible future features
 
 Some ideas that might get implemented in the future:

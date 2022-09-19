@@ -13,6 +13,7 @@
 // GNU General Public License along with permitted additional restrictions 
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using MobiusEditor.Controls;
+using MobiusEditor.Interface;
 using MobiusEditor.Model;
 
 namespace MobiusEditor.Event
@@ -21,11 +22,21 @@ namespace MobiusEditor.Event
     {
         public MapPanel MapPanel { get; private set; }
 
+        public IGamePlugin Plugin { get; private set; }
+
         public Map Map { get; private set; }
 
-        public UndoRedoEventArgs(MapPanel mapPanel, Map map)
+        public UndoRedoEventArgs(MapPanel mapPanel, IGamePlugin plugin)
         {
             MapPanel = mapPanel;
+            Plugin = plugin;
+            Map = plugin.Map;
+        }
+
+        public UndoRedoEventArgs(MapPanel mapPanel, Map map, IGamePlugin plugin)
+        {
+            MapPanel = mapPanel;
+            Plugin = plugin;
             Map = map;
         }
     }

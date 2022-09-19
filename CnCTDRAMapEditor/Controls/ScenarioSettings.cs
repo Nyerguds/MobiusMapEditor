@@ -13,6 +13,7 @@
 // GNU General Public License along with permitted additional restrictions 
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using MobiusEditor.Interface;
+using MobiusEditor.Model;
 using MobiusEditor.Utility;
 using System;
 using System.Data;
@@ -23,7 +24,7 @@ namespace MobiusEditor.Controls
 {
     public partial class ScenarioSettings : UserControl
     {
-        public ScenarioSettings(dynamic basicSection)
+        public ScenarioSettings(PropertyTracker<BasicSection> basicSection)
         {
             InitializeComponent();
             chkToCarryOver.DataBindings.Add("Checked", basicSection, "ToCarryOver");

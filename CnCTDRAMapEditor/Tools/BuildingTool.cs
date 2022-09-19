@@ -118,7 +118,7 @@ namespace MobiusEditor.Tools
                     selectedObjectProperties.Closed += (cs, ce) =>
                     {
                         navigationWidget.Refresh();
-                        AddUndoRedo(building, preEdit);
+                        AddPropertiesUndoRedo(building, preEdit);
                     };
                     building.PropertyChanged += SelectedBuilding_PropertyChanged;
                     selectedObjectProperties.Show(mapPanel, mapPanel.PointToClient(Control.MousePosition));
@@ -127,11 +127,17 @@ namespace MobiusEditor.Tools
             }
         }
 
-        private void AddUndoRedo(Building building, Building preEdit)
+        private void AddPropertiesUndoRedo(Building building, Building preEdit)
         {
             // building = building in its final edited form. Clone for preservation
             Building redoBuilding = building.Clone();
             Building undoBuilding = preEdit;
+            if (redoBuilding.Equals(undoBuilding))
+            {
+                return;
+            }
+            bool origDirtyState = plugin.Dirty;
+            plugin.Dirty = true;
             void undoAction(UndoRedoEventArgs ev)
             {
                 building.CloneDataFrom(undoBuilding);
@@ -141,6 +147,10 @@ namespace MobiusEditor.Tools
                     building.Trigger = Trigger.None;
                 }
                 ev.MapPanel.Invalidate(ev.Map, building);
+                if (ev.Plugin != null)
+                {
+                    ev.Plugin.Dirty = origDirtyState;
+                }
             }
             void redoAction(UndoRedoEventArgs ev)
             {
@@ -151,6 +161,10 @@ namespace MobiusEditor.Tools
                     building.Trigger = Trigger.None;
                 }
                 ev.MapPanel.Invalidate(ev.Map, building);
+                if (ev.Plugin != null)
+                {
+                    ev.Plugin.Dirty = true;
+                }
             }
             url.Track(undoAction, redoAction);
         }
@@ -249,6 +263,8 @@ namespace MobiusEditor.Tools
             Dictionary<Point, Smudge> eaten = selectedBuildingEatenSmudge.ToDictionary(p => p.Key, p => p.Value);
             if (finalLocation.HasValue && finalLocation.Value != selectedBuildingLocation)
             {
+                bool origDirtyState = plugin.Dirty;
+                plugin.Dirty = true;
                 Point endLocation = finalLocation.Value;
                 void undoAction(UndoRedoEventArgs ev)
                 {
@@ -268,6 +284,10 @@ namespace MobiusEditor.Tools
                     }
                     ev.Map.Buildings.Add(startLocation, toMove);
                     ev.MapPanel.Invalidate(ev.Map, toMove);
+                    if (ev.Plugin != null)
+                    {
+                        ev.Plugin.Dirty = origDirtyState;
+                    }
                 }
                 void redoAction(UndoRedoEventArgs ev)
                 {
@@ -287,6 +307,10 @@ namespace MobiusEditor.Tools
                     }
                     ev.Map.Buildings.Add(endLocation, toMove);
                     ev.MapPanel.Invalidate(ev.Map, toMove);
+                    if (ev.Plugin != null)
+                    {
+                        ev.Plugin.Dirty = true;
+                    }
                 }
                 url.Track(undoAction, redoAction);
             }
@@ -359,7 +383,6 @@ namespace MobiusEditor.Tools
                 if (map.Technos.CanAdd(newLocation, toMove, toMove.Type.BaseOccupyMask) && map.Buildings.Add(newLocation, toMove))
                 {
                     mapPanel.Invalidate(map, toMove);
-                    plugin.Dirty = true;
                 }
                 else
                 {
@@ -427,6 +450,8 @@ namespace MobiusEditor.Tools
                     }
                 }
                 mapPanel.Invalidate(map, building);
+                bool origDirtyState = plugin.Dirty;
+                plugin.Dirty = true;
                 void undoAction(UndoRedoEventArgs e)
                 {
                     e.MapPanel.Invalidate(e.Map, building);
@@ -455,6 +480,10 @@ namespace MobiusEditor.Tools
                             }
                         }
                     }
+                    if (e.Plugin != null)
+                    {
+                        e.Plugin.Dirty = origDirtyState;
+                    }
                 }
                 void redoAction(UndoRedoEventArgs e)
                 {
@@ -469,9 +498,12 @@ namespace MobiusEditor.Tools
                         }
                     }
                     e.MapPanel.Invalidate(e.Map, building);
+                    if (e.Plugin != null)
+                    {
+                        e.Plugin.Dirty = true;
+                    }
                 }
                 url.Track(undoAction, redoAction);
-                plugin.Dirty = true;
             }
         }
 
@@ -501,6 +533,8 @@ namespace MobiusEditor.Tools
                         mapPanel.Invalidate(map, baseBuilding);
                     }
                 }
+                bool origDirtyState = plugin.Dirty;
+                plugin.Dirty = true;
                 void undoAction(UndoRedoEventArgs e)
                 {
                     e.Map.Buildings.Add(actualPoint, building);
@@ -514,6 +548,10 @@ namespace MobiusEditor.Tools
                         }
                     }
                     e.MapPanel.Invalidate(e.Map, building);
+                    if (e.Plugin != null)
+                    {
+                        e.Plugin.Dirty = origDirtyState;
+                    }
                 }
                 void redoAction(UndoRedoEventArgs e)
                 {
@@ -529,9 +567,12 @@ namespace MobiusEditor.Tools
                             e.MapPanel.Invalidate(map, bld);
                         }
                     }
+                    if (e.Plugin != null)
+                    {
+                        e.Plugin.Dirty = true;
+                    }
                 }
                 url.Track(undoAction, redoAction);
-                plugin.Dirty = true;
             }
         }
 

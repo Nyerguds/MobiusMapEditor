@@ -201,6 +201,12 @@ namespace MobiusEditor.Tools
             RefreshPreviewPanel();
         }
 
+        private void Map_MapContentsChanged(Object sender, MapRefreshEventArgs e)
+        {
+            // General event meant to refresh map.
+            mapPanel.Invalidate(map, e.Points);
+        }
+
         private void MapPanel_PreRender(object sender, RenderEventArgs e)
         {
             if ((e.Points != null) && (e.Points.Count == 0))
@@ -273,10 +279,11 @@ namespace MobiusEditor.Tools
         /// </summary>
         public virtual void Activate()
         {
-            navigationWidget.Activate();
+            this.navigationWidget.Activate();
             this.mapPanel.PreRender += MapPanel_PreRender;
             this.mapPanel.PostRender += MapPanel_PostRender;
             this.map.RulesChanged += this.Map_RulesChanged;
+            this.map.MapContentsChanged += this.Map_MapContentsChanged;
         }
 
         /// <summary>
@@ -287,10 +294,11 @@ namespace MobiusEditor.Tools
         /// </summary>
         public virtual void Deactivate()
         {
-            navigationWidget.Deactivate();
-            mapPanel.PreRender -= MapPanel_PreRender;
-            mapPanel.PostRender -= MapPanel_PostRender;
+            this.navigationWidget.Deactivate();
+            this.mapPanel.PreRender -= MapPanel_PreRender;
+            this.mapPanel.PostRender -= MapPanel_PostRender;
             this.map.RulesChanged -= this.Map_RulesChanged;
+            this.map.MapContentsChanged -= this.Map_MapContentsChanged;
         }
 
         #region IDisposable Support

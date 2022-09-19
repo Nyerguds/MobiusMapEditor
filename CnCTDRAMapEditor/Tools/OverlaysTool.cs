@@ -180,7 +180,6 @@ namespace MobiusEditor.Tools
                         map.Overlay[cell] = overlay;
                         redoOverlays[cell] = overlay;
                         mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1));
-                        plugin.Dirty = true;
                     }
                 }
             }
@@ -197,18 +196,16 @@ namespace MobiusEditor.Tools
                     {
                         undoOverlays[cell] = map.Overlay[cell];
                     }
-
                     map.Overlay[cell] = null;
                     redoOverlays[cell] = null;
-
                     mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1));
-
-                    plugin.Dirty = true;
                 }
             }
         }
         private void CommitChange()
         {
+            bool origDirtyState = plugin.Dirty;
+            plugin.Dirty = true;
             var undoOverlays2 = new Dictionary<int, Overlay>(undoOverlays);
             void undoAction(UndoRedoEventArgs e)
             {
@@ -221,8 +218,11 @@ namespace MobiusEditor.Tools
                     e.Map.Metrics.GetLocation(k, out Point location);
                     return Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1);
                 }));
+                if (e.Plugin != null)
+                {
+                    e.Plugin.Dirty = origDirtyState;
+                }
             }
-
             var redoOverlays2 = new Dictionary<int, Overlay>(redoOverlays);
             void redoAction(UndoRedoEventArgs e)
             {
@@ -235,11 +235,13 @@ namespace MobiusEditor.Tools
                     e.Map.Metrics.GetLocation(k, out Point location);
                     return Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1);
                 }));
+                if (e.Plugin != null)
+                {
+                    e.Plugin.Dirty = true;
+                }
             }
-
             undoOverlays.Clear();
             redoOverlays.Clear();
-
             url.Track(undoAction, redoAction);
         }
 
@@ -249,16 +251,12 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-
             placementMode = true;
-
             navigationWidget.MouseoverSize = Size.Empty;
-
             if (SelectedOverlayType != null)
             {
                 mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(navigationWidget.MouseCell, new Size(1, 1)), 1, 1));
             }
-
             UpdateStatus();
         }
 
@@ -268,16 +266,12 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-
             placementMode = false;
-
             navigationWidget.MouseoverSize = new Size(1, 1);
-
             if (SelectedOverlayType != null)
             {
                 mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(navigationWidget.MouseCell, new Size(1, 1)), 1, 1));
             }
-
             UpdateStatus();
         }
 

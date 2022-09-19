@@ -118,6 +118,6 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="lblRules.Text" xml:space="preserve">
-    <value>The text below shows all INI sections not managed by the editor. Add any rule changes you need. Sections managed by the editor ([Basic], [Units], [Trigs] etc.) will be ignored. Rule changes will be applied in the editor</value>
+    <value>The text below shows all INI sections not managed by the editor. Add any rule changes you need. Sections managed by the editor ([Basic], [Units], [Trigs] etc.) will be ignored. Rule changes will be applied in the editor. [Aftermath] can be added, but its "NewUnitsEnabled" option is managed by the editor (in "Basic") and will be ignored here.</value>
   </data>
 </root>

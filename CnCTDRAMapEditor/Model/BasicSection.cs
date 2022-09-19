@@ -14,15 +14,26 @@
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using MobiusEditor.Utility;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
-using System.Runtime.CompilerServices;
 
 namespace MobiusEditor.Model
 {
     public class PercentageTypeConverter : TypeConverter
     {
+
+        bool addPercentageSign;
+
+        public PercentageTypeConverter()
+        {
+            addPercentageSign = false;
+        }
+
+        public PercentageTypeConverter(bool withSign)
+        {
+            addPercentageSign = withSign;
+        }
+
         public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
         {
             return (context is MapContext) && (sourceType == typeof(string));
@@ -39,9 +50,11 @@ namespace MobiusEditor.Model
             {
                 return null;
             }
-
             var mapContext = context as MapContext;
-            return mapContext.FractionalPercentages ? (percent / 100M).ToString("D2") : percent.ToString();
+            string retVal = mapContext != null && mapContext.FractionalPercentages ? (percent / 100M).ToString("D2") : percent.ToString();
+            if (addPercentageSign)
+                retVal += "%";
+            return retVal;
         }
 
         public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
@@ -50,9 +63,11 @@ namespace MobiusEditor.Model
             {
                 return null;
             }
-
+            str = str.Trim();
             var mapContext = context as MapContext;
-            if (mapContext.FractionalPercentages && str.Contains("."))
+            if (str.EndsWith("%"))
+                str = str.Substring(0, str.Length - 1);
+            if (mapContext != null && mapContext.FractionalPercentages && str.Contains("."))
             {
                 if (!decimal.TryParse(str, out decimal percent))
                 {
@@ -71,10 +86,8 @@ namespace MobiusEditor.Model
         }
     }
 
-    public class BasicSection : INotifyPropertyChanged
+    public class BasicSection : NotifiableIniSection
     {
-        public event PropertyChangedEventHandler PropertyChanged;
-
         private string name;
         [DefaultValue(null)]
         public string Name { get => name; set => SetField(ref name, value); }
@@ -151,18 +164,5 @@ namespace MobiusEditor.Model
         private bool soloMission;
         [DefaultValue(false)]
         public bool SoloMission { get => soloMission; set => SetField(ref soloMission, value); }
-
-        protected bool SetField<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
-        {
-            if (EqualityComparer<T>.Default.Equals(field, value))
-            {
-                return false;
-            }
-            field = value;
-            OnPropertyChanged(propertyName);
-            return true;
-        }
-
-        protected void OnPropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 }

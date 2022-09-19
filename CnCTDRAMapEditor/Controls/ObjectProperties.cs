@@ -269,11 +269,7 @@ namespace MobiusEditor.Controls
                         }
                     } break;
             }
-
-            if (!isMockObject)
-            {
-                Plugin.Dirty = true;
-            }
+            // The undo/redo system now handles plugin dirty state.
         }
 
         private void AdjustToStructurePrebuiltStatus(Building building)

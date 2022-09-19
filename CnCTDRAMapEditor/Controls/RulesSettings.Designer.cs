@@ -52,12 +52,12 @@ namespace MobiusEditor.Controls
             // txtRules
             // 
             this.txtRules.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.txtRules.Location = new System.Drawing.Point(2, 36);
+            this.txtRules.Location = new System.Drawing.Point(2, 49);
             this.txtRules.Margin = new System.Windows.Forms.Padding(2, 10, 2, 2);
             this.txtRules.Multiline = true;
             this.txtRules.Name = "txtRules";
             this.txtRules.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtRules.Size = new System.Drawing.Size(596, 362);
+            this.txtRules.Size = new System.Drawing.Size(596, 349);
             this.txtRules.TabIndex = 1;
             this.txtRules.Leave += new System.EventHandler(this.txtRules_Leave);
             // 
@@ -67,7 +67,7 @@ namespace MobiusEditor.Controls
             this.lblRules.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lblRules.Location = new System.Drawing.Point(3, 0);
             this.lblRules.Name = "lblRules";
-            this.lblRules.Size = new System.Drawing.Size(594, 26);
+            this.lblRules.Size = new System.Drawing.Size(594, 39);
             this.lblRules.TabIndex = 0;
             this.lblRules.Text = resources.GetString("lblRules.Text");
             // 

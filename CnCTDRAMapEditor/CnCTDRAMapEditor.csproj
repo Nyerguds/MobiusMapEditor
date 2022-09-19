@@ -316,6 +316,7 @@
     <Compile Include="Model\Infantry.cs" />
     <Compile Include="Model\Map.cs" />
     <Compile Include="Model\MapSection.cs" />
+    <Compile Include="Model\NotifiableIniSection.cs" />
     <Compile Include="Model\OccupierSet.cs" />
     <Compile Include="Model\OverlapperSet.cs" />
     <Compile Include="Model\Overlay.cs" />
@@ -559,6 +560,7 @@
     <Compile Include="Utility\GeneralUtils.cs" />
     <Compile Include="Utility\GenericBooleanTypeConverter.cs" />
     <Compile Include="Utility\INI.cs" />
+    <Compile Include="Utility\Keyboard.cs" />
     <Compile Include="Utility\ListItem.cs" />
     <Compile Include="Utility\Megafile.cs" />
     <Compile Include="Utility\MegafileBuilder.cs" />

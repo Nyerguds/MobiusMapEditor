@@ -32,7 +32,7 @@ namespace MobiusEditor.Model
         LowerRight = 4
     }
 
-    public class Infantry : ITechno, INotifyPropertyChanged, ICloneable
+    public class Infantry : ITechno, INotifyPropertyChanged, ICloneable, IEquatable<Infantry>
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -97,10 +97,39 @@ namespace MobiusEditor.Model
         {
             return Clone();
         }
+
+        public Boolean Equals(Infantry other)
+        {
+            return this.Type == other.Type &&
+                this.House == other.House &&
+                this.Strength == other.Strength &&
+                this.Direction == other.Direction &&
+                this.Trigger == other.Trigger &&
+                this.Mission == other.Mission;
+        }
     }
 
     public class InfantryGroup : ICellOverlapper, ICellOccupier
     {
+        private static readonly string[] StoppingTypeNames =
+        {
+            "Center",
+            "Top left",
+            "Top right",
+            "Bottom left",
+            "Bottom right"
+        };
+
+        public static String GetStoppingTypeName(InfantryStoppingType stopLocation)
+        {
+            int index = (int)stopLocation;
+            if (index >= 0 && index < Enum.GetValues(typeof(InfantryStoppingType)).Length)
+            {
+                return StoppingTypeNames[index];
+            }
+            return null;
+        }
+
         private static readonly Point[] stoppingLocations = new Point[Globals.NumInfantryStops];
 
         public Rectangle OverlapBounds => new Rectangle(-1, -1, 3, 3);

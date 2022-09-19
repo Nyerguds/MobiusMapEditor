@@ -87,7 +87,7 @@ namespace MobiusEditor.Model
         private IDictionary<MapLayerFlag, ISet<Point>> invalidateLayers = new Dictionary<MapLayerFlag, ISet<Point>>();
         private bool invalidateOverlappers;
 
-
+        public event EventHandler<MapRefreshEventArgs> RulesChanged;
         public void NotifyRulesChanges(ISet<Point> refreshPoints)
         {
             if (RulesChanged != null)
@@ -96,7 +96,14 @@ namespace MobiusEditor.Model
             }
         }
 
-        public event EventHandler<MapRefreshEventArgs> RulesChanged;
+        public event EventHandler<MapRefreshEventArgs> MapContentsChanged;
+        public void NotifyMapContentsChanged(ISet<Point> refreshPoints)
+        {
+            if (MapContentsChanged != null)
+            {
+                this.MapContentsChanged(this, new MapRefreshEventArgs(refreshPoints));
+            }
+        }
 
         public readonly BasicSection BasicSection;
 

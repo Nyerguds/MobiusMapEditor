@@ -21,15 +21,12 @@ using MobiusEditor.Interface;
 
 namespace MobiusEditor.Model
 {
-    public class Terrain : ITechno, ICellOverlapper, ICellOccupier, INotifyPropertyChanged, ICloneable
+    public class Terrain : ITechno, ICellOverlapper, ICellOccupier, INotifyPropertyChanged, ICloneable, IEquatable<Terrain>
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
         private TerrainType type;
         public TerrainType Type { get => type; set => SetField(ref type, value); }
-
-        private int icon;
-        public int Icon { get => icon; set => SetField(ref icon, value); }
 
         public Rectangle OverlapBounds => Type.OverlapBounds;
 
@@ -56,7 +53,6 @@ namespace MobiusEditor.Model
         public void CloneDataFrom(Terrain other)
         {
             Type = other.Type;
-            Icon = other.Icon;
             House = other.House;
             Strength = other.Strength;
             Trigger = other.Trigger;
@@ -78,6 +74,14 @@ namespace MobiusEditor.Model
         object ICloneable.Clone()
         {
             return Clone();
+        }
+
+        public Boolean Equals(Terrain other)
+        {
+            return this.Type == other.Type &&
+                this.House == other.House &&
+                this.Strength == other.Strength &&
+                this.Trigger == other.Trigger;
         }
     }
 }

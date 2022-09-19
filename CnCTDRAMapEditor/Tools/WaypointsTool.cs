@@ -20,7 +20,6 @@ using MobiusEditor.Render;
 using MobiusEditor.Utility;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -83,6 +82,10 @@ namespace MobiusEditor.Tools
             {
                 EnterPlacementMode();
             }
+            else
+            {
+                CheckSelectShortcuts(e);
+            }
         }
 
         private void WaypointsTool_KeyUp(object sender, KeyEventArgs e)
@@ -135,7 +138,6 @@ namespace MobiusEditor.Tools
                     waypointCombo.Items.Clear();
                     waypointCombo.DataSource = wp.ToArray();
                     waypointCombo.SelectedIndex = selected;
-                    plugin.Dirty = true;
                 }
             }
         }
@@ -174,9 +176,60 @@ namespace MobiusEditor.Tools
                     waypointCombo.Items.Clear();
                     waypointCombo.DataSource = wp.ToArray();
                     waypointCombo.SelectedIndex = waypointIndex;
-                    
-                    plugin.Dirty = true;
                 }
+            }
+        }
+
+        private void CheckSelectShortcuts(KeyEventArgs e)
+        {
+            int maxVal = waypointCombo.Items.Count - 1;
+            int curVal = waypointCombo.SelectedIndex;
+            int? newVal = null;
+            if (Control.ModifierKeys == Keys.Shift)
+            {
+                switch (e.KeyCode)
+                {
+                    case (Keys.F):
+                        newVal = Enumerable.Range(0, map.Waypoints.Length).Cast<int?>().Where(i => (map.Waypoints[i.Value].Flag & WaypointFlag.Flare) == WaypointFlag.Flare).FirstOrDefault();
+                        break;
+                    case (Keys.H):
+                        newVal = Enumerable.Range(0, map.Waypoints.Length).Cast<int?>().Where(i => (map.Waypoints[i.Value].Flag & WaypointFlag.Home) == WaypointFlag.Home).FirstOrDefault();
+                        break;
+                    case (Keys.R):
+                        newVal = Enumerable.Range(0, map.Waypoints.Length).Cast<int?>().Where(i => (map.Waypoints[i.Value].Flag & WaypointFlag.Reinforce) == WaypointFlag.Reinforce).FirstOrDefault();
+                        break;
+                    case (Keys.S):
+                        newVal = Enumerable.Range(0, map.Waypoints.Length).Cast<int?>().Where(i => (map.Waypoints[i.Value].Flag & WaypointFlag.Special) == WaypointFlag.Special).FirstOrDefault();
+                        break;
+                }
+            }
+            else
+            {
+                switch (e.KeyCode)
+                {
+                    case Keys.Home:
+                        newVal = 0;
+                        break;
+                    case Keys.End:
+                        newVal = maxVal;
+                        break;
+                    case Keys.PageDown:
+                        newVal = Math.Min(curVal + 10, maxVal);
+                        break;
+                    case Keys.PageUp:
+                        newVal = Math.Max(curVal - 10, 0);
+                        break;
+                    case Keys.Down:
+                        newVal = Math.Min(curVal + 1, maxVal);
+                        break;
+                    case Keys.Up:
+                        newVal = Math.Max(curVal - 1, 0);
+                        break;
+                }
+            }
+            if (newVal.HasValue && curVal != newVal.Value)
+            {
+                waypointCombo.SelectedIndex = newVal.Value;
             }
         }
 
@@ -238,17 +291,27 @@ namespace MobiusEditor.Tools
 
         private void CommitChange()
         {
+            bool origDirtyState = plugin.Dirty;
+            plugin.Dirty = true;
             var undoWaypoint2 = undoWaypoint;
             void undoAction(UndoRedoEventArgs e)
             {
                 undoWaypoint2.Value.waypoint.Cell = undoWaypoint2.Value.cell;
                 mapPanel.Invalidate();
+                if (e.Plugin != null)
+                {
+                    e.Plugin.Dirty = origDirtyState;
+                }
             }
             var redoWaypoint2 = redoWaypoint;
             void redoAction(UndoRedoEventArgs e)
             {
                 redoWaypoint2.Value.waypoint.Cell = redoWaypoint2.Value.cell;
                 mapPanel.Invalidate();
+                if (e.Plugin != null)
+                {
+                    e.Plugin.Dirty = true;
+                }
             }
             undoWaypoint = null;
             redoWaypoint = null;
@@ -302,13 +365,37 @@ namespace MobiusEditor.Tools
 
         private void UpdateStatus()
         {
+            WaypointFlag flag = WaypointFlag.None;
+            Waypoint[] wps = map.Waypoints;
+            int wplen = map.Waypoints.Length;
+            for (int i = 0; i < wplen; ++i) {
+                flag |= wps[i].Flag;
+            }
+            List<String> specialKeys = new List<string>();
+            if ((flag & WaypointFlag.Flare) != WaypointFlag.None)
+            {
+                specialKeys.Add("F");
+            }
+            if ((flag & WaypointFlag.Home) != WaypointFlag.None)
+            {
+                specialKeys.Add("H");
+            }
+            if ((flag & WaypointFlag.Reinforce) != WaypointFlag.None)
+            {
+                specialKeys.Add("R");
+            }
+            if ((flag & WaypointFlag.Special) != WaypointFlag.None)
+            {
+                specialKeys.Add("S");
+            }
+
             if (placementMode)
             {
-                statusLbl.Text = "Left-Click to set cell waypoint, Right-Click to clear cell waypoint";
+                statusLbl.Text = "Left-Click to set cell waypoint, Right-Click to clear cell waypoint, " + String.Join("/", specialKeys) + " to select a special waypoint";
             }
             else
             {
-                statusLbl.Text = "Shift to enter placement mode, Left-Click or Right-Click to pick cell waypoint";
+                statusLbl.Text = "Shift to enter placement mode, Left-Click or Right-Click to pick cell waypoint, Shift + " + String.Join("/", specialKeys) + " to select a special waypoint";
             }
         }
 

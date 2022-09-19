@@ -123,7 +123,7 @@ namespace MobiusEditor.Tools
                     selectedSmudgeProperties.Closed += (cs, ce) =>
                     {
                         navigationWidget.Refresh();
-                        AddUndoRedo(smudge, preEdit);
+                        AddPropertiesUndoRedo(smudge, preEdit);
                     };
                     smudge.PropertyChanged += SelectedSmudge_PropertyChanged;
                     selectedSmudgeProperties.Show(mapPanel, mapPanel.PointToClient(Control.MousePosition));
@@ -132,21 +132,34 @@ namespace MobiusEditor.Tools
             }
         }
 
-        private void AddUndoRedo(Smudge smudge, Smudge preEdit)
+        private void AddPropertiesUndoRedo(Smudge smudge, Smudge preEdit)
         {
-            // building = building in its final edited form. Clone for preservation
+            // smudge = smudge in its final edited form. Clone for preservation
             Smudge redoSmudge = smudge.Clone();
             Smudge undoSmudge = preEdit;
-            preEdit = null;
+            if (redoSmudge.Equals(undoSmudge))
+            {
+                return;
+            }
+            bool origDirtyState = plugin.Dirty;
+            plugin.Dirty = true;
             void undoAction(UndoRedoEventArgs ev)
             {
                 smudge.CloneDataFrom(undoSmudge);
                 ev.MapPanel.Invalidate(ev.Map, smudge);
+                if (ev.Plugin != null)
+                {
+                    ev.Plugin.Dirty = origDirtyState;
+                }
             }
             void redoAction(UndoRedoEventArgs ev)
             {
                 smudge.CloneDataFrom(redoSmudge);
                 ev.MapPanel.Invalidate(ev.Map, smudge);
+                if (ev.Plugin != null)
+                {
+                    ev.Plugin.Dirty = true;
+                }
             }
             url.Track(undoAction, redoAction);
         }
@@ -286,12 +299,18 @@ namespace MobiusEditor.Tools
             }
             mapPanel.Invalidate(map, undomap.Keys);
             mapPanel.Invalidate(map, redomap.Keys);
+            bool origDirtyState = plugin.Dirty;
+            plugin.Dirty = true;
             void undoAction(UndoRedoEventArgs e)
             {
                 e.MapPanel.Invalidate(e.Map, undomap.Keys);
                 foreach (Point p in undomap.Keys)
                 {
                     e.Map.Smudge[p] = undomap[p];
+                }
+                if (e.Plugin != null)
+                {
+                    e.Plugin.Dirty = origDirtyState;
                 }
             }
             void redoAction(UndoRedoEventArgs e)
@@ -300,10 +319,12 @@ namespace MobiusEditor.Tools
                 {
                     e.Map.Smudge[p] = redomap[p];
                 }
-                e.MapPanel.Invalidate(e.Map, redomap.Keys);
+                e.MapPanel.Invalidate(e.Map, redomap.Keys); if (e.Plugin != null)
+                {
+                    e.Plugin.Dirty = true;
+                }
             }
             url.Track(undoAction, redoAction);
-            plugin.Dirty = true;
         }
 
         private void RemoveSmudge(Point location)
@@ -318,6 +339,8 @@ namespace MobiusEditor.Tools
             RestoreNearbySmudge(map, undomap.Keys, redomap);
             mapPanel.Invalidate(map, undomap.Keys);
             mapPanel.Invalidate(map, redomap.Keys);
+            bool origDirtyState = plugin.Dirty;
+            plugin.Dirty = true;
             // TODO
             void undoAction(UndoRedoEventArgs e)
             {
@@ -326,6 +349,10 @@ namespace MobiusEditor.Tools
                     e.Map.Smudge[p] = undomap[p];
                 }
                 e.MapPanel.Invalidate(e.Map, undomap.Keys);
+                if (e.Plugin != null)
+                {
+                    e.Plugin.Dirty = origDirtyState;
+                }
             }
             void redoAction(UndoRedoEventArgs e)
             {
@@ -334,9 +361,12 @@ namespace MobiusEditor.Tools
                 {
                     e.Map.Smudge[p] = redomap[p];
                 }
+                if (e.Plugin != null)
+                {
+                    e.Plugin.Dirty = true;
+                }
             }
             url.Track(undoAction, redoAction);
-            plugin.Dirty = true;
         }
 
         private void RemoveSmudgePoints(Rectangle toClear, Dictionary<Point, Smudge> undomap, Dictionary<Point, Smudge> redomap)
