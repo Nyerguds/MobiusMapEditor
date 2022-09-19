@@ -56,6 +56,7 @@ namespace MobiusEditor.Dialogs
             this.radioTheater1 = new System.Windows.Forms.RadioButton();
             this.radioTheater2 = new System.Windows.Forms.RadioButton();
             this.radioTheater3 = new System.Windows.Forms.RadioButton();
+            this.chkMegamap = new System.Windows.Forms.CheckBox();
             this.tableLayoutPanel1.SuspendLayout();
             this.flowLayoutPanel1.SuspendLayout();
             this.flowLayoutPanel2.SuspendLayout();
@@ -124,6 +125,7 @@ namespace MobiusEditor.Dialogs
             // 
             this.flowLayoutPanel2.Controls.Add(this.groupBox1);
             this.flowLayoutPanel2.Controls.Add(this.groupBox2);
+            this.flowLayoutPanel2.Controls.Add(this.chkMegamap);
             this.flowLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.flowLayoutPanel2.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
             this.flowLayoutPanel2.Location = new System.Drawing.Point(2, 2);
@@ -246,6 +248,17 @@ namespace MobiusEditor.Dialogs
             this.radioTheater3.Text = "Winter";
             this.radioTheater3.UseVisualStyleBackColor = true;
             // 
+            // chkMegamap
+            // 
+            this.chkMegamap.AutoSize = true;
+            this.chkMegamap.Location = new System.Drawing.Point(7, 170);
+            this.chkMegamap.Margin = new System.Windows.Forms.Padding(7, 3, 3, 3);
+            this.chkMegamap.Name = "chkMegamap";
+            this.chkMegamap.Size = new System.Drawing.Size(177, 17);
+            this.chkMegamap.TabIndex = 2;
+            this.chkMegamap.Text = "Megamap (Sole Survivor format)";
+            this.chkMegamap.UseVisualStyleBackColor = true;
+            // 
             // NewMapDialog
             // 
             this.AcceptButton = this.btnOK;
@@ -269,6 +282,7 @@ namespace MobiusEditor.Dialogs
             this.flowLayoutPanel1.ResumeLayout(false);
             this.flowLayoutPanel1.PerformLayout();
             this.flowLayoutPanel2.ResumeLayout(false);
+            this.flowLayoutPanel2.PerformLayout();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.flowLayoutPanel3.ResumeLayout(false);
@@ -297,5 +311,6 @@ namespace MobiusEditor.Dialogs
         private System.Windows.Forms.RadioButton radioTheater1;
         private System.Windows.Forms.RadioButton radioTheater2;
         private System.Windows.Forms.RadioButton radioTheater3;
+        private System.Windows.Forms.CheckBox chkMegamap;
     }
 }

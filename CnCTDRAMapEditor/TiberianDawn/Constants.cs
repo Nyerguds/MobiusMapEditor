@@ -22,6 +22,7 @@ namespace MobiusEditor.TiberianDawn
         public static readonly string SaveDirectory = Path.Combine(Globals.RootSaveDirectory, "Tiberian_Dawn");
 
         public static readonly Size MaxSize = new Size(64, 64);
+        public static readonly Size MaxSizeMega = new Size(128, 128);
 
         public const int MaxAircraft = 100;
         public const int MaxBuildings = 500;

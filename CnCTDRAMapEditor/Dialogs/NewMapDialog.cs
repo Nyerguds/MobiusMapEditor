@@ -34,6 +34,14 @@ namespace MobiusEditor.Dialogs
             }
         }
 
+        public bool MegaMap
+        {
+            get
+            {
+                return chkMegamap.Checked;
+            }
+        }
+
         public string TheaterName
         {
             get
@@ -80,6 +88,7 @@ namespace MobiusEditor.Dialogs
             {
                 GameType = GameType.RedAlert;
             }
+            chkMegamap.Visible = GameType == GameType.TiberianDawn;
         }
     }
 }

@@ -31,8 +31,10 @@ namespace MobiusEditor.TiberianDawn
 {
     public class GamePlugin : IGamePlugin
     {
+        private bool isMegaMap = false;
+
         private const int multiStartPoints = 8;
-        private static readonly Regex SinglePlayRegex = new Regex("^SC[A-LN-Z]\\d{2}[EWX][A-EL]$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex SinglePlayRegex = new Regex("^SC[A-LN-RT-Z]\\d{2}[EWX][A-EL]$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private static readonly Regex MovieRegex = new Regex(@"^(?:.*?\\)*(.*?)\.BK2$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         private static readonly IEnumerable<ITechnoType> fullTechnoTypes;
@@ -158,18 +160,63 @@ namespace MobiusEditor.TiberianDawn
             }
         }
 
+        public static bool CheckForMegamap(String path, FileType fileType)
+        {
+            try
+            {
+                String iniContents = null;
+                switch (fileType)
+                {
+                    case FileType.INI:
+                    case FileType.BIN:
+                        String iniPath = fileType == FileType.INI ? path : Path.ChangeExtension(path, ".ini");
+                        Byte[] bytes = File.ReadAllBytes(path);
+                        Encoding enc = new UTF8Encoding(false, true);
+                        iniContents = enc.GetString(bytes);
+                        break;
+                    case FileType.MEG:
+                    case FileType.PGM:
+                        using (var megafile = new Megafile(path))
+                        {
+                            var testIniFile = megafile.Where(p => Path.GetExtension(p).ToLower() == ".ini").FirstOrDefault();
+                            if (testIniFile != null)
+                            {
+                                using (var iniReader = new StreamReader(megafile.Open(testIniFile)))
+                                {
+                                    iniContents = iniReader.ReadToEnd();
+                                }
+                            }
+                        }
+                        break;
+                }
+                if (iniContents == null)
+                {
+                    return false;
+                }
+                INI checkIni = new INI();
+                checkIni.Parse(iniContents);
+                INISection mapSection = checkIni.Sections.Extract("Map");
+                return mapSection.Keys.Contains("Version") && mapSection["Version"].Trim() == "1";
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         static GamePlugin()
         {
             fullTechnoTypes = InfantryTypes.GetTypes().Cast<ITechnoType>().Concat(UnitTypes.GetTypes(false).Cast<ITechnoType>());
         }
 
-        public GamePlugin(IFeedBackHandler feedBackHandler)
-            : this(true, feedBackHandler)
+        public GamePlugin(bool megaMap, IFeedBackHandler feedBackHandler)
+            : this(true, megaMap, feedBackHandler)
         {
         }
 
-        public GamePlugin(bool mapImage, IFeedBackHandler feedBackHandler)
+        public GamePlugin(bool mapImage, bool megaMap, IFeedBackHandler feedBackHandler)
         {
+            this.isMegaMap = megaMap;
             this.feedBackHandler = feedBackHandler;
             var playerWaypoints = Enumerable.Range(0, multiStartPoints).Select(i => new Waypoint(string.Format("P{0}", i), WaypointFlag.PlayerStart));
             var generalWaypoints = Enumerable.Range(multiStartPoints, 25 - multiStartPoints).Select(i => new Waypoint(i.ToString()));
@@ -222,8 +269,8 @@ namespace MobiusEditor.TiberianDawn
             string[] unitActionTypes = { };
             string[] structureActionTypes = { };
             string[] terrainActionTypes = { };
-
-            Map = new Map(basicSection, null, Constants.MaxSize, typeof(House),
+            Size mapSize = !megaMap ? Constants.MaxSize : Constants.MaxSizeMega;
+            Map = new Map(basicSection, null, mapSize, typeof(House),
                 houseTypes, TheaterTypes.GetTypes(), TemplateTypes.GetTypes(),
                 TerrainTypes.GetTypes(), OverlayTypes.GetTypes(), SmudgeTypes.GetTypes(Globals.ConvertCraters),
                 EventTypes.GetTypes(), cellEventTypes, unitEventTypes, structureEventTypes, terrainEventTypes,
@@ -268,14 +315,15 @@ namespace MobiusEditor.TiberianDawn
                         ini.Parse(iniText);
                         forceSingle = SinglePlayRegex.IsMatch(Path.GetFileNameWithoutExtension(path));
                         errors.AddRange(LoadINI(ini, forceSingle));
-                        if (binReader.BaseStream.Length != 0x2000)
+                        long mapLen = binReader.BaseStream.Length;
+                        if (mapLen == 0x2000 || (isMegaMap && mapLen % 4 == 0))
                         {
-                            errors.Add(String.Format("'{0}' does not have the correct size for a Tiberian Dawn .bin file.", Path.GetFileName(binPath)));
-                            Map.Templates.Clear();
+                            errors.AddRange(!isMegaMap ? LoadBinaryClassic(binReader) : LoadBinaryMega(binReader));
                         }
                         else
                         {
-                            errors.AddRange(LoadBinary(binReader));
+                            errors.Add(String.Format("'{0}' does not have the correct size for a Tiberian Dawn .bin file.", Path.GetFileName(binPath)));
+                            Map.Templates.Clear();
                         }
                     }
                     break;
@@ -292,14 +340,15 @@ namespace MobiusEditor.TiberianDawn
                             {
                                 ini.Parse(iniReader);
                                 errors.AddRange(LoadINI(ini, false));
-                                if (binReader.BaseStream.Length != 0x2000)
+                                long mapLen = binReader.BaseStream.Length;
+                                if (mapLen == 0x2000 || (isMegaMap && mapLen % 4 == 0))
                                 {
-                                    errors.Add(String.Format("'{0}' does not have the correct size for a Tiberian Dawn .bin file.", Path.GetFileName(binFile)));
-                                    Map.Templates.Clear();
+                                    errors.AddRange(!isMegaMap ? LoadBinaryClassic(binReader) : LoadBinaryMega(binReader));
                                 }
                                 else
                                 {
-                                    errors.AddRange(LoadBinary(binReader));
+                                    errors.Add(String.Format("'{0}' does not have the correct size for a Tiberian Dawn .bin file.", Path.GetFileName(binFile)));
+                                    Map.Templates.Clear();
                                 }
                             }
                         }
@@ -470,7 +519,33 @@ namespace MobiusEditor.TiberianDawn
                 }
                 else
                 {
-                    Map.BriefingSection.Briefing = string.Join(" ", briefingSection.Keys.Select(k => k.Value)).Replace("@", Environment.NewLine);
+                    StringBuilder briefLines = new StringBuilder();
+                    int line = 1;
+                    String lineStr;
+                    bool addSpace = false;
+                    while (briefingSection.Keys.Contains(lineStr = line.ToString()))
+                    {
+                        String briefLine = briefingSection[lineStr].Trim();
+                        // C&C95 v1.06 line break format.
+                        bool hasBreak = briefLine.EndsWith("##");
+                        if (hasBreak)
+                        {
+                            briefLine = briefLine.Substring(0, briefLine.Length - 2);
+                        }
+                        if (addSpace)
+                        {
+                            briefLines.Append(" ");
+                        }
+                        briefLines.Append(briefLine);
+                        if (hasBreak)
+                        {
+                            briefLines.AppendLine();
+                        }
+                        addSpace = !hasBreak;
+                        line++;
+                    }
+                    Map.BriefingSection.Briefing = briefLines.ToString();
+                    //Map.BriefingSection.Briefing = string.Join(" ", briefingSection.Keys.Select(k => k.Value)).Replace("@", Environment.NewLine);
                 }
             }
             var steamSection = ini.Sections.Extract("Steam");
@@ -1238,7 +1313,8 @@ namespace MobiusEditor.TiberianDawn
                                     errors.Add(string.Format("Coordinates for base rebuild entry '{0}' cannot be parsed; value: '{1}'; skipping.", buildingType.Name, tokens[1]));
                                     continue;
                                 }
-                                var location = new Point((coord >> 8) & 0x3F, (coord >> 24) & 0x3F);
+                                // Preparations for megamap support.
+                                Point location = new Point((coord >> 8) & 0x7F, (coord >> 24) & 0x7F);
                                 if (Map.Buildings.OfType<Building>().Where(x => x.Location == location).FirstOrDefault().Occupier is Building building)
                                 {
                                     building.BasePriority = priority;
@@ -1397,7 +1473,7 @@ namespace MobiusEditor.TiberianDawn
             return errors;
         }
 
-        private IEnumerable<string> LoadBinary(BinaryReader reader)
+        private IEnumerable<string> LoadBinaryClassic(BinaryReader reader)
         {
             var errors = new List<string>();
             Map.Templates.Clear();
@@ -1407,40 +1483,74 @@ namespace MobiusEditor.TiberianDawn
                 {
                     var typeValue = reader.ReadByte();
                     var iconValue = reader.ReadByte();
-                    var templateType = Map.TemplateTypes.Where(t => t.Equals(typeValue)).FirstOrDefault();
-                    // Prevent loading of illegal tiles.
-                    if (templateType != null)
-                    {
-                        bool isRandom = (templateType.Flag & TemplateTypeFlag.RandomCell) != TemplateTypeFlag.None;
-                        if ((templateType.Flag & TemplateTypeFlag.Clear) != TemplateTypeFlag.None || (templateType.Flag & TemplateTypeFlag.Group) == TemplateTypeFlag.Group)
-                        {
-                            // No explicitly set Clear terrain allowed. Also no explicitly set versions allowed of the "group" dummy entries.
-                            templateType = null;
-                        }
-                        else if (templateType.Theaters != null && !templateType.Theaters.Contains(Map.Theater))
-                        {
-                            errors.Add(String.Format("Template '{0}' at cell [{1},{2}] is not available in the set theater; clearing.", templateType.Name.ToUpper(), x, y));
-                            templateType = null;
-                        }
-                        else if (iconValue >= templateType.NumIcons)
-                        {
-                            errors.Add(String.Format("Template '{0}' at cell [{1},{2}] has an icon set ({3}) that is outside its icons range; clearing.", templateType.Name.ToUpper(), x, y, iconValue));
-                            templateType = null;
-                        }
-                        else if (!isRandom && templateType.IconMask != null && !templateType.IconMask[iconValue / templateType.IconWidth, iconValue % templateType.IconWidth])
-                        {
-                            errors.Add(String.Format("Template '{0}' at cell [{1},{2}] has an icon set ({3}) that is not part of its placeable cells; clearing.", templateType.Name.ToUpper(), x, y, iconValue));
-                            templateType = null;
-                        }
-                    }
-                    else if (typeValue != 0xFF)
-                    {
-                        errors.Add(String.Format("Unknown template value {0:X2} at cell [{1},{2}]; clearing.", typeValue, x, y));
-                    }
+                    TemplateType templateType = ChecKTemplateType(typeValue, iconValue, x, y, errors);
                     Map.Templates[y, x] = (templateType != null) ? new Template { Type = templateType, Icon = iconValue } : null;
                 }
             }
             return errors;
+        }
+
+        private IEnumerable<string> LoadBinaryMega(BinaryReader reader)
+        {
+            var errors = new List<string>();
+            Map.Templates.Clear();
+            long dataLen = reader.BaseStream.Length;
+            int mapLen = Map.Metrics.Length;
+            int mapWidth = Map.Metrics.Width;
+            while (reader.BaseStream.Position < dataLen)
+            {
+                byte cellLow = reader.ReadByte();
+                byte cellHi = reader.ReadByte();
+                int cell = (cellHi << 8) | cellLow;
+                if (cell > mapLen)
+                {
+                    errors.Add(String.Format("Map contains cell number '{0}' which is too large for a TD MegaMap.", cell));
+                    // Just abort I guess?
+                    break;
+                }
+                int y = cell / mapWidth;
+                int x = cell % mapWidth;
+                byte typeValue = reader.ReadByte();
+                byte iconValue = reader.ReadByte();
+                TemplateType templateType = ChecKTemplateType(typeValue, iconValue, x, y, errors);
+                Map.Templates[y,x] = (templateType != null) ? new Template { Type = templateType, Icon = iconValue } : null;
+            }
+            return errors;
+        }
+
+        private TemplateType ChecKTemplateType(int typeValue, int iconValue, int x, int y, List<string> errors)
+        {
+            TemplateType templateType = Map.TemplateTypes.Where(t => t.Equals(typeValue)).FirstOrDefault();
+            // Prevent loading of illegal tiles.
+            if (templateType != null)
+            {
+                bool isRandom = (templateType.Flag & TemplateTypeFlag.RandomCell) != TemplateTypeFlag.None;
+                if ((templateType.Flag & TemplateTypeFlag.Clear) != TemplateTypeFlag.None || (templateType.Flag & TemplateTypeFlag.Group) == TemplateTypeFlag.Group)
+                {
+                    // No explicitly set Clear terrain allowed. Also no explicitly set versions allowed of the "group" dummy entries.
+                    templateType = null;
+                }
+                else if (templateType.Theaters != null && !templateType.Theaters.Contains(Map.Theater))
+                {
+                    errors.Add(String.Format("Template '{0}' at cell [{1},{2}] is not available in the set theater; clearing.", templateType.Name.ToUpper(), x, y));
+                    templateType = null;
+                }
+                else if (iconValue >= templateType.NumIcons)
+                {
+                    errors.Add(String.Format("Template '{0}' at cell [{1},{2}] has an icon set ({3}) that is outside its icons range; clearing.", templateType.Name.ToUpper(), x, y, iconValue));
+                    templateType = null;
+                }
+                else if (!isRandom && templateType.IconMask != null && !templateType.IconMask[iconValue / templateType.IconWidth, iconValue % templateType.IconWidth])
+                {
+                    errors.Add(String.Format("Template '{0}' at cell [{1},{2}] has an icon set ({3}) that is not part of its placeable cells; clearing.", templateType.Name.ToUpper(), x, y, iconValue));
+                    templateType = null;
+                }
+            }
+            else if (typeValue != 0xFF)
+            {
+                errors.Add(String.Format("Unknown template value {0:X2} at cell [{1},{2}]; clearing.", typeValue, x, y));
+            }
+            return templateType;
         }
 
         public bool Save(string path, FileType fileType)
@@ -1471,7 +1581,14 @@ namespace MobiusEditor.TiberianDawn
                     using (var binStream = new FileStream(binPath, FileMode.Create))
                     using (var binWriter = new BinaryWriter(binStream))
                     {
-                        SaveBinary(binWriter);
+                        if (!isMegaMap)
+                        {
+                            SaveBinaryClassic(binWriter);
+                        }
+                        else
+                        {
+                            SaveBinaryMega(binWriter);
+                        }
                     }
                     if (!Map.BasicSection.SoloMission || !Properties.Settings.Default.NoMetaFilesForSinglePlay)
                     {
@@ -1510,7 +1627,14 @@ namespace MobiusEditor.TiberianDawn
                         FixRoad2Save(ini, iniWriter);
                         iniWriter.Flush();
                         iniStream.Position = 0;
-                        SaveBinary(binWriter);
+                        if (!isMegaMap)
+                        {
+                            SaveBinaryClassic(binWriter);
+                        }
+                        else
+                        {
+                            SaveBinaryMega(binWriter);
+                        }
                         binWriter.Flush();
                         binStream.Position = 0;
                         if (customPreview != null)
@@ -1617,7 +1741,12 @@ namespace MobiusEditor.TiberianDawn
             }
             INI.WriteSection(new MapContext(Map, false), ini.Sections.Add("Basic"), Map.BasicSection);
             Map.MapSection.FixBounds();
-            INI.WriteSection(new MapContext(Map, false), ini.Sections.Add("Map"), Map.MapSection);
+            INISection mapSection = ini.Sections.Add("Map");
+            INI.WriteSection(new MapContext(Map, false), mapSection, Map.MapSection);
+            if (isMegaMap)
+            {
+                mapSection["Version"] = "1";
+            }
             if (fileType != FileType.PGM)
             {
                 INI.WriteSection(new MapContext(Map, false), ini.Sections.Add("Steam"), Map.SteamSection);
@@ -1702,7 +1831,7 @@ namespace MobiusEditor.TiberianDawn
 
                 baseSection[key] = string.Format("{0},{1}",
                     building.Type.Name.ToUpper(),
-                    ((location.Y & 0x3F) << 24) | ((location.X & 0x3F) << 8)
+                    ((location.Y & 0x7F) << 24) | ((location.X & 0x7F) << 8)
                 );
             }
             baseSection["Count"] = baseBuildings.Length.ToString();
@@ -1833,7 +1962,7 @@ namespace MobiusEditor.TiberianDawn
             }
         }
 
-        private void SaveBinary(BinaryWriter writer)
+        private void SaveBinaryClassic(BinaryWriter writer)
         {
             for (var y = 0; y < Map.Metrics.Height; ++y)
             {
@@ -1850,6 +1979,28 @@ namespace MobiusEditor.TiberianDawn
                         writer.Write(byte.MaxValue);
                         writer.Write((byte)0);
                     }
+                }
+            }
+        }
+
+        private void SaveBinaryMega(BinaryWriter writer)
+        {
+            int height = Map.Metrics.Height;
+            int width = Map.Metrics.Width;
+            for (var y = 0; y < height; ++y)
+            {
+                for (var x = 0; x < width; ++x)
+                {
+                    var template = Map.Templates[y, x];
+                    if (template == null || (template.Type.Flag & TemplateTypeFlag.Clear) != 0)
+                    {
+                        continue;
+                    }
+                    int cell = y * width + x;
+                    writer.Write((byte)(cell & 0xFF));
+                    writer.Write((byte)((cell >> 8) & 0xFF));
+                    writer.Write((byte)template.Type.ID);
+                    writer.Write((byte)template.Icon);
                 }
             }
         }

@@ -315,7 +315,7 @@ namespace MobiusEditor
                 {
                     Globals.TheTeamColorManager.Reset();
                     Globals.TheTeamColorManager.Load(@"DATA\XML\CNCTDTEAMCOLORS.XML");
-                    plugin = new TiberianDawn.GamePlugin(this);
+                    plugin = new TiberianDawn.GamePlugin(nmd.MegaMap, this);
                     plugin.New(nmd.TheaterName);
                 }
                 else if (nmd.GameType == GameType.RedAlert)
@@ -936,7 +936,8 @@ namespace MobiusEditor
                     {
                         Globals.TheTeamColorManager.Reset();
                         Globals.TheTeamColorManager.Load(@"DATA\XML\CNCTDTEAMCOLORS.XML");
-                        plugin = new TiberianDawn.GamePlugin(this);
+                        bool isMegaMap = TiberianDawn.GamePlugin.CheckForMegamap(loadFilename, fileType);
+                        plugin = new TiberianDawn.GamePlugin(isMegaMap, this);
                     }
                     break;
                 case GameType.RedAlert:
