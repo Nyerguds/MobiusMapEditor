@@ -206,27 +206,39 @@ namespace MobiusEditor.Controls
                         directionLabel.Visible = directionVisible;
                         directionComboBox.Visible = directionVisible;
                         missionLabel.Visible = missionComboBox.Visible = false;
-                        basePriorityLabel.Visible = basePriorityNud.Visible = true;
-                        prebuiltCheckBox.Visible = true;
-                        prebuiltCheckBox.Enabled = building.BasePriority >= 0;
-
-                        basePriorityNud.DataBindings.Add("Value", obj, "BasePriority");
-                        prebuiltCheckBox.DataBindings.Add("Checked", obj, "IsPrebuilt");
-
                         switch (Plugin.GameType)
                         {
                             case GameType.TiberianDawn:
                                 {
+                                    basePriorityLabel.Visible = basePriorityNud.Visible = true;
+                                    prebuiltCheckBox.Visible = true;
+                                    prebuiltCheckBox.Enabled = building.BasePriority >= 0;
+                                    basePriorityNud.DataBindings.Add("Value", obj, "BasePriority");
+                                    prebuiltCheckBox.DataBindings.Add("Checked", obj, "IsPrebuilt");
                                     sellableCheckBox.Visible = false;
                                     rebuildCheckBox.Visible = false;
                                 } break;
                             case GameType.RedAlert:
                                 {
+                                    basePriorityLabel.Visible = basePriorityNud.Visible = true;
+                                    prebuiltCheckBox.Visible = true;
+                                    prebuiltCheckBox.Enabled = building.BasePriority >= 0;
+                                    basePriorityNud.DataBindings.Add("Value", obj, "BasePriority");
+                                    prebuiltCheckBox.DataBindings.Add("Checked", obj, "IsPrebuilt");
                                     sellableCheckBox.DataBindings.Add("Checked", obj, "Sellable");
                                     rebuildCheckBox.DataBindings.Add("Checked", obj, "Rebuild");
                                     sellableCheckBox.Visible = true;
                                     rebuildCheckBox.Visible = true;
-                                } break;
+                                }
+                                break;
+                            case GameType.SoleSurvivor:
+                                {
+                                    basePriorityLabel.Visible = basePriorityNud.Visible = false;
+                                    prebuiltCheckBox.Visible = false;
+                                    sellableCheckBox.Visible = false;
+                                    rebuildCheckBox.Visible = false;
+                                }
+                                break;
                         }
                     }
                     break;

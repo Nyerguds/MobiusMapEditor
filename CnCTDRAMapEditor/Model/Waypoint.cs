@@ -26,7 +26,9 @@ namespace MobiusEditor.Model
         Flare       = 1 << 1,
         Home        = 1 << 2,
         Reinforce   = 1 << 3,
-        Special     = 1 << 4
+        Special     = 1 << 4,
+        CrateSpawn  = 1 << 5,
+
     }
 
     public class Waypoint : INamedType

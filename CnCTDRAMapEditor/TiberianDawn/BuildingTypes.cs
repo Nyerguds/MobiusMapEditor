@@ -39,7 +39,7 @@ namespace MobiusEditor.TiberianDawn
         public static readonly BuildingType Barracks = new BuildingType(15, "pyle", "TEXT_STRUCTURE_TITLE_GDI_BARRACKS", 0, 20, new bool[2, 2] { { true, true }, { false, false } }, "Goodguy", BuildingTypeFlag.Bib);
         public static readonly BuildingType Tanker = new BuildingType(16, "arco", "Oil Tanker", 0, 0, new bool[1, 2] { { true, true } }, "Neutral");
         public static readonly BuildingType Repair = new BuildingType(17, "fix", "TEXT_STRUCTURE_TITLE_GDI_REPAIR_FACILITY", 0, 30, new bool[3, 3] { { false, true, false }, { true, true, true }, { false, true, false} }, "Goodguy", BuildingTypeFlag.Bib);
-        public static readonly BuildingType BioLab = new BuildingType(18, "bio", "TEXT_UNIT_TITLE_BIO", 0, 40, 100, new bool[2, 2] { { true, true }, { true, true } }, "Goodguy", BuildingTypeFlag.Bib);
+        public static readonly BuildingType BioLab = new BuildingType(18, "bio", "TEXT_UNIT_TITLE_BIO", 0, 40, 100, new bool[2, 2] { { true, true }, { true, true } }, "Badguy", BuildingTypeFlag.Bib);
         public static readonly BuildingType Hand = new BuildingType(19, "hand", "TEXT_STRUCTURE_TITLE_NOD_HAND_OF_NOD", 0, 20, new bool[3, 2] { { false, false }, { true, true }, { false, true } }, "Badguy", BuildingTypeFlag.Bib);
         public static readonly BuildingType Temple = new BuildingType(20, "tmpl", "TEXT_STRUCTURE_TITLE_NOD_TEMPLE_OF_NOD", 0, 150, new bool[3, 3] { { false, false, false }, { true, true, true }, { true, true, true } }, "Badguy", BuildingTypeFlag.Bib);
         public static readonly BuildingType Eye = new BuildingType(21, "eye", "TEXT_STRUCTURE_TITLE_GDI_ADV_COMM_CENTER", 0, 200, new bool[2, 2] { { true, false }, { true, true } }, "Goodguy", BuildingTypeFlag.Bib);

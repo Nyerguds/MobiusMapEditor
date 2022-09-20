@@ -31,18 +31,18 @@ namespace MobiusEditor.TiberianDawn
 {
     public class GamePlugin : IGamePlugin
     {
-        private bool isMegaMap = false;
+        protected bool isMegaMap = false;
 
-        private const int multiStartPoints = 8;
-        private static readonly Regex SinglePlayRegex = new Regex("^SC[A-LN-RT-Z]\\d{2}[EWX][A-EL]$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        private static readonly Regex MovieRegex = new Regex(@"^(?:.*?\\)*(.*?)\.BK2$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        protected  const int multiStartPoints = 8;
+        protected  static readonly Regex SinglePlayRegex = new Regex("^SC[A-LN-RT-Z]\\d{2}[EWX][A-EL]$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        protected static readonly Regex MovieRegex = new Regex(@"^(?:.*?\\)*(.*?)\.BK2$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
-        private static readonly IEnumerable<ITechnoType> fullTechnoTypes;
+        protected static readonly IEnumerable<ITechnoType> fullTechnoTypes;
 
-        private const string defVidVal = "x";
-        private readonly IEnumerable<string> movieTypes;
+        protected const string defVidVal = "x";
+        protected readonly IEnumerable<string> movieTypes;
 
-        private static readonly IEnumerable<string> movieTypesAdditional = new string[]
+        protected static readonly IEnumerable<string> movieTypesAdditional = new string[]
         {
             "BODYBAGS (Classic only)",
             "REFINT (Classic only)",
@@ -53,7 +53,7 @@ namespace MobiusEditor.TiberianDawn
             "TRTKIL_D (Classic only)",
         };
 
-        private static readonly IEnumerable<string> themeTypes = new string[]
+        protected static readonly IEnumerable<string> themeTypes = new string[]
         {
             "No Theme",
             "AIRSTRIK",
@@ -100,11 +100,11 @@ namespace MobiusEditor.TiberianDawn
 
         public GameType GameType => GameType.TiberianDawn;
 
-        public Map Map { get; }
+        public Map Map { get; protected set; }
 
-        public Image MapImage { get; private set; }
+        public Image MapImage { get; protected set; }
 
-        IFeedBackHandler feedBackHandler;
+        protected IFeedBackHandler feedBackHandler;
 
         bool isDirty;
         public bool Dirty
@@ -113,7 +113,7 @@ namespace MobiusEditor.TiberianDawn
             set { isDirty = value; feedBackHandler?.UpdateStatus(); }
         }
 
-        private INISectionCollection extraSections;
+        protected INISectionCollection extraSections;
         public String ExtraIniText
         {
             get
@@ -162,8 +162,14 @@ namespace MobiusEditor.TiberianDawn
 
         public static bool CheckForMegamap(String path, FileType fileType)
         {
+            return CheckForIniInfo(path, fileType, "Map", "Version", "1");
+        }
+
+        public static bool CheckForIniInfo(String path, FileType fileType, string section, string key, string value)
+        {
             try
             {
+                Encoding enc = new UTF8Encoding(false, true);
                 String iniContents = null;
                 switch (fileType)
                 {
@@ -171,7 +177,6 @@ namespace MobiusEditor.TiberianDawn
                     case FileType.BIN:
                         String iniPath = fileType == FileType.INI ? path : Path.ChangeExtension(path, ".ini");
                         Byte[] bytes = File.ReadAllBytes(path);
-                        Encoding enc = new UTF8Encoding(false, true);
                         iniContents = enc.GetString(bytes);
                         break;
                     case FileType.MEG:
@@ -181,7 +186,7 @@ namespace MobiusEditor.TiberianDawn
                             var testIniFile = megafile.Where(p => Path.GetExtension(p).ToLower() == ".ini").FirstOrDefault();
                             if (testIniFile != null)
                             {
-                                using (var iniReader = new StreamReader(megafile.Open(testIniFile)))
+                                using (var iniReader = new StreamReader(megafile.Open(testIniFile), enc))
                                 {
                                     iniContents = iniReader.ReadToEnd();
                                 }
@@ -195,8 +200,12 @@ namespace MobiusEditor.TiberianDawn
                 }
                 INI checkIni = new INI();
                 checkIni.Parse(iniContents);
-                INISection mapSection = checkIni.Sections.Extract("Map");
-                return mapSection.Keys.Contains("Version") && mapSection["Version"].Trim() == "1";
+                INISection iniSection = checkIni.Sections.Extract(section);
+                if (key == null || value == null)
+                {
+                    return iniSection != null;
+                }
+                return iniSection != null && iniSection.Keys.Contains(key) && iniSection[key].Trim() == value;
             }
             catch
             {
@@ -214,14 +223,9 @@ namespace MobiusEditor.TiberianDawn
         {
         }
 
-        public GamePlugin(bool mapImage, bool megaMap, IFeedBackHandler feedBackHandler)
+        public GamePlugin()
         {
-            this.isMegaMap = megaMap;
-            this.feedBackHandler = feedBackHandler;
-            var playerWaypoints = Enumerable.Range(0, multiStartPoints).Select(i => new Waypoint(string.Format("P{0}", i), WaypointFlag.PlayerStart));
-            var generalWaypoints = Enumerable.Range(multiStartPoints, 25 - multiStartPoints).Select(i => new Waypoint(i.ToString()));
-            var specialWaypoints = new Waypoint[] { new Waypoint("Flare", WaypointFlag.Flare), new Waypoint("Home", WaypointFlag.Home), new Waypoint("Reinf.", WaypointFlag.Reinforce) };
-            var waypoints = playerWaypoints.Concat(generalWaypoints).Concat(specialWaypoints);
+            // Readonly, so I'm splitting this off
             var movies = new List<string>();
             using (var megafile = new Megafile(Path.Combine(Globals.MegafilePath, "MOVIES_TD.MEG")))
             {
@@ -239,6 +243,17 @@ namespace MobiusEditor.TiberianDawn
             movies.Sort(new ExplorerComparer());
             movies.Insert(0, defVidVal);
             movieTypes = movies.ToArray();
+        }
+
+        public GamePlugin(bool mapImage, bool megaMap, IFeedBackHandler feedBackHandler)
+            :this()
+        {
+            this.isMegaMap = megaMap;
+            this.feedBackHandler = feedBackHandler;
+            var playerWaypoints = Enumerable.Range(0, multiStartPoints).Select(i => new Waypoint(string.Format("P{0}", i), WaypointFlag.PlayerStart));
+            var generalWaypoints = Enumerable.Range(multiStartPoints, 25 - multiStartPoints).Select(i => new Waypoint(i.ToString()));
+            var specialWaypoints = new Waypoint[] { new Waypoint("Flare", WaypointFlag.Flare), new Waypoint("Home", WaypointFlag.Home), new Waypoint("Reinf.", WaypointFlag.Reinforce) };
+            Waypoint[] waypoints = playerWaypoints.Concat(generalWaypoints).Concat(specialWaypoints).ToArray();
             var basicSection = new BasicSection();
             basicSection.SetDefault();
             var houseTypes = HouseTypes.GetTypes();
@@ -249,7 +264,6 @@ namespace MobiusEditor.TiberianDawn
                 EventTypes.EVENT_PLAYER_ENTERED,
                 EventTypes.EVENT_NONE
             };
-
             string[] unitEventTypes =
             {
                 EventTypes.EVENT_DISCOVERED,
@@ -371,7 +385,7 @@ namespace MobiusEditor.TiberianDawn
         /// </summary>
         /// <param name="iniReader">Stream reader to read from.</param>
         /// <returns>The ini file as string, with all double ROAD overlay lines replaced by the dummy Road2 type.</returns>
-        private string FixRoad2Load(StreamReader iniReader)
+        protected string FixRoad2Load(StreamReader iniReader)
         {
             // ROAD's second state can only be accessed by applying ROAD overlay to the same cell twice.
             // This can be achieved by saving its Overlay line twice in the ini file. However, this is
@@ -482,7 +496,7 @@ namespace MobiusEditor.TiberianDawn
             return sb.ToString();
         }
 
-        private IEnumerable<string> LoadINI(INI ini, bool forceSoloMission)
+        protected IEnumerable<string> LoadINI(INI ini, bool forceSoloMission)
         {
             var errors = new List<string>();
             Map.BeginUpdate();
@@ -1473,7 +1487,7 @@ namespace MobiusEditor.TiberianDawn
             return errors;
         }
 
-        private IEnumerable<string> LoadBinaryClassic(BinaryReader reader)
+        protected IEnumerable<string> LoadBinaryClassic(BinaryReader reader)
         {
             var errors = new List<string>();
             Map.Templates.Clear();
@@ -1490,7 +1504,7 @@ namespace MobiusEditor.TiberianDawn
             return errors;
         }
 
-        private IEnumerable<string> LoadBinaryMega(BinaryReader reader)
+        protected IEnumerable<string> LoadBinaryMega(BinaryReader reader)
         {
             var errors = new List<string>();
             Map.Templates.Clear();
@@ -1518,7 +1532,7 @@ namespace MobiusEditor.TiberianDawn
             return errors;
         }
 
-        private TemplateType ChecKTemplateType(int typeValue, int iconValue, int x, int y, List<string> errors)
+        protected TemplateType ChecKTemplateType(int typeValue, int iconValue, int x, int y, List<string> errors)
         {
             TemplateType templateType = Map.TemplateTypes.Where(t => t.Equals(typeValue)).FirstOrDefault();
             // Prevent loading of illegal tiles.
@@ -1672,7 +1686,7 @@ namespace MobiusEditor.TiberianDawn
         /// </summary>
         /// <param name="ini">The generated ini file</param>
         /// <param name="iniWriter">The stream writer to write the text to.</param>
-        private void FixRoad2Save(INI ini, StreamWriter iniWriter)
+        protected void FixRoad2Save(INI ini, StreamWriter iniWriter)
         {
             // ROAD's second state can only be accessed by applying ROAD overlay to the same cell twice.
             // This can be achieved by saving its Overlay line twice in the ini file. However, this is
@@ -1709,7 +1723,7 @@ namespace MobiusEditor.TiberianDawn
             }
         }
 
-        private void SaveINI(INI ini, FileType fileType, string fileName)
+        protected void SaveINI(INI ini, FileType fileType, string fileName)
         {
             if (extraSections != null)
             {
@@ -1962,7 +1976,7 @@ namespace MobiusEditor.TiberianDawn
             }
         }
 
-        private void SaveBinaryClassic(BinaryWriter writer)
+        protected void SaveBinaryClassic(BinaryWriter writer)
         {
             for (var y = 0; y < Map.Metrics.Height; ++y)
             {
@@ -1983,7 +1997,7 @@ namespace MobiusEditor.TiberianDawn
             }
         }
 
-        private void SaveBinaryMega(BinaryWriter writer)
+        protected void SaveBinaryMega(BinaryWriter writer)
         {
             int height = Map.Metrics.Height;
             int width = Map.Metrics.Width;
@@ -2005,12 +2019,12 @@ namespace MobiusEditor.TiberianDawn
             }
         }
 
-        private void SaveMapPreview(Stream stream, Boolean renderAll)
+        protected void SaveMapPreview(Stream stream, Boolean renderAll)
         {
             Map.GenerateMapPreview(renderAll ? this.GameType : GameType.None, renderAll).Save(stream);
         }
 
-        private void SaveJSON(JsonTextWriter writer)
+        protected void SaveJSON(JsonTextWriter writer)
         {
             writer.WriteStartObject();
             writer.WritePropertyName("MapTileX");
@@ -2103,7 +2117,7 @@ namespace MobiusEditor.TiberianDawn
             return ok ? null : sb.ToString();
         }
 
-        private void BasicSection_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        protected void BasicSection_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             switch (e.PropertyName)
             {
@@ -2116,7 +2130,7 @@ namespace MobiusEditor.TiberianDawn
             }
         }
 
-        private void MapSection_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        protected void MapSection_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             switch (e.PropertyName)
             {
@@ -2126,7 +2140,7 @@ namespace MobiusEditor.TiberianDawn
             }
         }
 
-        private void UpdateBasePlayerHouse()
+        protected void UpdateBasePlayerHouse()
         {
             Map.BasicSection.BasePlayer = HouseTypes.GetBasePlayer(Map.BasicSection.Player);
             var basePlayer = Map.HouseTypesIncludingNone.Where(h => h.Equals(Map.BasicSection.BasePlayer)).FirstOrDefault() ?? Map.HouseTypes.First();
@@ -2140,7 +2154,7 @@ namespace MobiusEditor.TiberianDawn
             }
         }
 
-        private void UpdateWaypoints()
+        protected void UpdateWaypoints()
         {
             bool isSolo = Map.BasicSection.SoloMission;
             for (int i = 0; i < multiStartPoints; ++i)
@@ -2151,7 +2165,7 @@ namespace MobiusEditor.TiberianDawn
         }
 
         #region IDisposable Support
-        private bool disposedValue = false;
+        protected bool disposedValue = false;
 
         protected virtual void Dispose(bool disposing)
         {

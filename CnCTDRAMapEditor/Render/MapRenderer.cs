@@ -409,7 +409,7 @@ namespace MobiusEditor.Render
             if (building.Strength <= 128 && !building.Type.IsSingleFrame)
             {
                 maxIcon = Globals.TheTilesetManager.GetTileDataLength(theater.Tilesets, building.Type.Tilename);
-                hasCollapseFrame = gameType == GameType.TiberianDawn && maxIcon > 1 && maxIcon % 2 == 1;
+                hasCollapseFrame = (gameType == GameType.TiberianDawn || gameType == GameType.SoleSurvivor) && maxIcon > 1 && maxIcon % 2 == 1;
                 damageIcon = maxIcon / 2;
                 collapseIcon = hasCollapseFrame ? maxIcon - 1 : damageIcon;
             }
@@ -572,7 +572,7 @@ namespace MobiusEditor.Render
         public static (Rectangle, Action<Graphics>) Render(GameType gameType, TheaterType theater, Point topLeft, Size tileSize, Unit unit)
         {
             int icon = 0;
-            if (gameType == GameType.TiberianDawn)
+            if (gameType == GameType.TiberianDawn || gameType == GameType.SoleSurvivor)
             {
                 if ((unit.Type == TiberianDawn.UnitTypes.Tric) ||
                          (unit.Type == TiberianDawn.UnitTypes.Trex) ||
@@ -745,7 +745,7 @@ namespace MobiusEditor.Render
                                 turretAdjust.Y = -5;
                             }
                         }
-                        else if (gameType == GameType.TiberianDawn)
+                        else if (gameType == GameType.TiberianDawn || gameType == GameType.SoleSurvivor)
                         {
                             if (unit.Type == TiberianDawn.UnitTypes.Jeep ||
                                 unit.Type == TiberianDawn.UnitTypes.Buggy ||

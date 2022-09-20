@@ -461,7 +461,9 @@
     <Compile Include="TiberianDawn\DirectionTypes.cs" />
     <Compile Include="TiberianDawn\EventTypes.cs" />
     <Compile Include="TiberianDawn\GamePlugin.cs" />
+    <Compile Include="TiberianDawn\GamePluginSS.cs" />
     <Compile Include="TiberianDawn\House.cs" />
+    <Compile Include="TiberianDawn\HouseTypesSS.cs" />
     <Compile Include="TiberianDawn\HouseTypes.cs" />
     <Compile Include="TiberianDawn\BuildingTypes.cs" />
     <Compile Include="TiberianDawn\MissionTypes.cs" />

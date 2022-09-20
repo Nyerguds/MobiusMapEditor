@@ -876,15 +876,15 @@ namespace MobiusEditor
             switch (fileType)
             {
                 case FileType.INI:
-                {
-                    gameType = File.Exists(Path.ChangeExtension(loadFilename, ".bin")) ? GameType.TiberianDawn : GameType.RedAlert;
-                    break;
-                }
+                    {
+                        gameType = File.Exists(Path.ChangeExtension(loadFilename, ".bin")) ? GameType.TiberianDawn : GameType.RedAlert;
+                        break;
+                    }
                 case FileType.BIN:
-                {
-                    gameType = File.Exists(Path.ChangeExtension(loadFilename, ".ini")) ? GameType.TiberianDawn : GameType.None;
-                    break;
-                }
+                    {
+                        gameType = File.Exists(Path.ChangeExtension(loadFilename, ".ini")) ? GameType.TiberianDawn : GameType.None;
+                        break;
+                    }
 #if DEVELOPER
                 case FileType.PGM:
                 {
@@ -910,6 +910,13 @@ namespace MobiusEditor
                 }
 #endif
             }
+            if (gameType == GameType.TiberianDawn)
+            {
+                if (TiberianDawn.GamePluginSS.CheckForSSmap(loadFilename, fileType))
+                {
+                    gameType = GameType.SoleSurvivor;
+                }
+            }
             if (gameType == GameType.None)
             {
                 return false;
@@ -923,7 +930,12 @@ namespace MobiusEditor
             string[] modPaths = null;
             if (ModPaths != null)
             {
-                ModPaths.TryGetValue(gameType, out modPaths);
+                GameType modGameType = gameType;
+                if (gameType == GameType.SoleSurvivor)
+                {
+                    modGameType = GameType.TiberianDawn;
+                }
+                ModPaths.TryGetValue(modGameType, out modPaths);
             }
             Globals.TheTextureManager.ExpandModPaths = modPaths;
             Globals.TheTextureManager.Reset();
@@ -946,6 +958,11 @@ namespace MobiusEditor
                         Globals.TheTeamColorManager.Load(@"DATA\XML\CNCRATEAMCOLORS.XML");
                         plugin = new RedAlert.GamePlugin(this);
                     }
+                    break;
+                case GameType.SoleSurvivor:
+                    Globals.TheTeamColorManager.Reset();
+                    Globals.TheTeamColorManager.Load(@"DATA\XML\CNCTDTEAMCOLORS.XML");
+                    plugin = new TiberianDawn.GamePluginSS(this);
                     break;
             }
             string[] errors;

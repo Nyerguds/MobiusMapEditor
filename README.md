@@ -351,4 +351,4 @@ These options are all enabled by default, but can be disabled if you wish. Use t
 
 Some ideas that might get implemented in the future:
 
-* Seems I'm all out!
+* Add Sole Survivor as separate game type

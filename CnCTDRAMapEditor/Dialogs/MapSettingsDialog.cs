@@ -106,6 +106,14 @@ namespace MobiusEditor.Dialogs
                 }
                 settingsTreeView.Nodes.Add("RULES", "Rules");
             }
+            else
+            {
+                if (this.plugin.GameType == GameType.SoleSurvivor)
+                {
+                    settingsTreeView.Nodes.Add("CRATES", "Crates");
+                }
+                settingsTreeView.Nodes.Add("RULES", "Extra ini contents");
+            }
             settingsTreeView.Nodes.Add("BRIEFING", "Briefing");
             playersNode = settingsTreeView.Nodes.Add("Players");
             foreach (var player in this.plugin.Map.Houses)
@@ -148,6 +156,14 @@ namespace MobiusEditor.Dialogs
                         BasicSettings basicPanel = new BasicSettings(plugin, basicSettingsTracker);
                         settingsPanel.Controls.Add(basicPanel);
                         basicPanel.Dock = DockStyle.Fill;
+                    }
+                    break;
+                case "CRATES":
+                    {
+                        // TODO make crates setting screen for SS.
+                        ScenarioSettings scenPanel = new ScenarioSettings(basicSettingsTracker);
+                        settingsPanel.Controls.Add(scenPanel);
+                        scenPanel.Dock = DockStyle.Fill;
                     }
                     break;
                 case "SCENARIO":

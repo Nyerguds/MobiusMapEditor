@@ -55,8 +55,6 @@ namespace MobiusEditor.Controls
             percentLabel.Visible = false;
             playerComboBox.DataBindings.Add("SelectedItem", basicSection, "Player");
             authorTxt.DataBindings.Add("Text", basicSection, "Author");
-            isSinglePlayerCheckBox.DataBindings.DefaultDataSourceUpdateMode = DataSourceUpdateMode.OnPropertyChanged;
-            isSinglePlayerCheckBox.DataBindings.Add("Checked", basicSection, "SoloMission");
             themeComboBox.DataBindings.Add("Text", basicSection, "Theme");
             introComboBox.DataBindings.Add("Text", basicSection, "Intro");
             briefComboBox.DataBindings.Add("Text", basicSection, "Brief");
@@ -69,6 +67,8 @@ namespace MobiusEditor.Controls
             switch (plugin.GameType)
             {
                 case GameType.TiberianDawn:
+                    isSinglePlayerCheckBox.DataBindings.DefaultDataSourceUpdateMode = DataSourceUpdateMode.OnPropertyChanged;
+                    isSinglePlayerCheckBox.DataBindings.Add("Checked", basicSection, "SoloMission");
                     buildLevelNud.DataBindings.Add("Value", basicSection, "BuildLevel");
                     baseLabel.Visible = baseComboBox.Visible = false;
                     hasExpansionUnitsCheckBox.Visible = false;
@@ -80,15 +80,38 @@ namespace MobiusEditor.Controls
                     win3ComboBox.DropDownStyle = ComboBoxStyle.DropDown;
                     win4ComboBox.DropDownStyle = ComboBoxStyle.DropDown;
                     loseComboBox.DropDownStyle = ComboBoxStyle.DropDown;
+                    CheckSinglePlayerOptions();
                     break;
                 case GameType.RedAlert:
+                    isSinglePlayerCheckBox.DataBindings.DefaultDataSourceUpdateMode = DataSourceUpdateMode.OnPropertyChanged;
+                    isSinglePlayerCheckBox.DataBindings.Add("Checked", basicSection, "SoloMission");
                     buildLevelNud.Visible = buildLevelLabel.Visible = false;
                     baseComboBox.DataBindings.Add("SelectedItem", basicSection, "BasePlayer");
                     hasExpansionUnitsCheckBox.DataBindings.Add("Checked", basicSection, "ExpansionEnabled");
+                    CheckSinglePlayerOptions();
+                    break;
+                case GameType.SoleSurvivor:
+                    isSinglePlayerCheckBox.Visible = false;
+                    buildLevelNud.DataBindings.Add("Value", basicSection, "BuildLevel");
+                    baseLabel.Visible = baseComboBox.Visible = false;
+                    hasExpansionUnitsCheckBox.Visible = false;
+                    introComboBox.DropDownStyle = ComboBoxStyle.DropDown;
+                    briefComboBox.DropDownStyle = ComboBoxStyle.DropDown;
+                    actionComboBox.DropDownStyle = ComboBoxStyle.DropDown;
+                    winComboBox.DropDownStyle = ComboBoxStyle.DropDown;
+                    // Irrelevant for SS; it's all classic.
+                    lblCarryoverClassic.Visible = false;
+                    lblThemeClassic.Visible = false;
+                    // Disable these. Labels and stuff too.
+                    win2ComboBox.Visible = false;
+                    win3ComboBox.Visible = false;
+                    win4ComboBox.Visible = false;
+                    loseComboBox.Visible = false;
+
+
+
                     break;
             }
-
-            CheckSinglePlayerOptions();
         }
 
         private void isSinglePlayerCheckBox_CheckedChanged(object sender, EventArgs e)
