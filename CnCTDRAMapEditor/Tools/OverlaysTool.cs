@@ -358,7 +358,7 @@ namespace MobiusEditor.Tools
                     {
                         if (previewMap.Overlay[cell] == null)
                         {
-                            previewMap.Overlay[cell] = new Overlay { Type = SelectedOverlayType, Icon = 0, Tint = Color.FromArgb(128, Color.White) };
+                            previewMap.Overlay[cell] = new Overlay { Type = SelectedOverlayType, Icon = 0, Tint = Color.FromArgb(128, SelectedOverlayType.Tint) };
                             mapPanel.Invalidate(previewMap, Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1));
                         }
                     }

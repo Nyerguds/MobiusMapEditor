@@ -17,6 +17,7 @@ using MobiusEditor.Render;
 using MobiusEditor.Utility;
 using System;
 using System.Drawing;
+using System.Drawing.Imaging;
 
 namespace MobiusEditor.Model
 {
@@ -71,10 +72,12 @@ namespace MobiusEditor.Model
 
         public bool IsFlag => (Flag & OverlayTypeFlag.Flag) != OverlayTypeFlag.None;
 
-         // No reason not to allow placing decorations and flag pedestal.
+        public Color Tint { get; set; } = Color.White;
+
+        // No reason not to allow placing decorations and flag pedestal.
         public bool IsPlaceable => (Flag & (OverlayTypeFlag.Crate | OverlayTypeFlag.Decoration | OverlayTypeFlag.Flag | OverlayTypeFlag.Concrete)) != OverlayTypeFlag.None;
 
-        public OverlayType(sbyte id, string name, string textId, TheaterType[] theaters, OverlayTypeFlag flag, String graphicsSource, int forceTileNr)
+        public OverlayType(sbyte id, string name, string textId, TheaterType[] theaters, OverlayTypeFlag flag, String graphicsSource, int forceTileNr, Color tint)
         {
             ID = id;
             Name = name;
@@ -83,20 +86,26 @@ namespace MobiusEditor.Model
             DisplayName = Globals.TheGameTextManager[textId] + " (" + GraphicsSource.ToUpperInvariant() + ")";
             Theaters = theaters;
             Flag = flag;
+            Tint = tint;
+        }
+
+        public OverlayType(sbyte id, string name, string textId, TheaterType[] theaters, OverlayTypeFlag flag, String graphicsSource, int forceTileNr)
+            : this(id, name, textId, theaters, flag, graphicsSource, forceTileNr, Color.White)
+        {
         }
 
         public OverlayType(sbyte id, string name, string textId, TheaterType[] theaters, OverlayTypeFlag flag, String graphicsSource)
-            :this(id, name, textId, theaters, flag, graphicsSource, -1)
+            :this(id, name, textId, theaters, flag, graphicsSource, -1, Color.White)
         {
         }
 
         public OverlayType(sbyte id, string name, string textId, TheaterType[] theaters, OverlayTypeFlag flag, int forceTileNr)
-            :this(id, name, textId, theaters, flag, null, forceTileNr)
+            :this(id, name, textId, theaters, flag, null, forceTileNr, Color.White)
         {
         }
 
         public OverlayType(sbyte id, string name, string textId, TheaterType[] theaters, OverlayTypeFlag flag)
-            : this(id, name, textId, theaters, flag, null, -1)
+            : this(id, name, textId, theaters, flag, null, -1, Color.White)
         {
         }
 
@@ -116,7 +125,7 @@ namespace MobiusEditor.Model
         }
 
         public OverlayType(sbyte id, string name, OverlayTypeFlag flag, int forceTileNr)
-            : this(id, name, name, null, flag, null, forceTileNr)
+            : this(id, name, name, null, flag, null, forceTileNr, Color.White)
         {
         }
 
@@ -173,7 +182,20 @@ namespace MobiusEditor.Model
                 using (Graphics g = Graphics.FromImage(th))
                 {
                     MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
-                    g.DrawImage(tile.Image, overlayBounds);
+                    var imageAttributes = new ImageAttributes();
+                    if (Tint != Color.White)
+                    {
+                        var colorMatrix = new ColorMatrix(new float[][]
+                        {
+                            new float[] { Tint.R / 255.0f, 0, 0, 0, 0 },
+                            new float[] { 0, Tint.G / 255.0f, 0, 0, 0 },
+                            new float[] { 0, 0, Tint.B / 255.0f, 0, 0 },
+                            new float[] { 0, 0, 0, 1, 0 },
+                            new float[] { 0, 0, 0, 0, 1 },
+                        });
+                        imageAttributes.SetColorMatrix(colorMatrix);
+                    }
+                    g.DrawImage(tile.Image, overlayBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes);
                 }
                 Thumbnail = th;
             }

@@ -19,6 +19,7 @@
     <SccAuxPath>SAK</SccAuxPath>
     <SccProvider>SAK</SccProvider>
     <TargetFrameworkProfile />
+    <IsWebBootstrapper>false</IsWebBootstrapper>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -31,7 +32,6 @@
     <MapFileExtensions>true</MapFileExtensions>
     <ApplicationRevision>0</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
@@ -117,6 +117,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Controls\CrateSettings.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\CrateSettings.Designer.cs">
+      <DependentUpon>CrateSettings.cs</DependentUpon>
+    </Compile>
     <Compile Include="Controls\BasicSettings.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -364,6 +370,8 @@
     <Compile Include="RedAlert\UnitTypes.cs" />
     <Compile Include="Render\MapRenderer.cs" />
     <Compile Include="Settings.cs" />
+    <Compile Include="SoleSurvivor\GamePlugin.cs" />
+    <Compile Include="SoleSurvivor\OverlayTypes.cs" />
     <Compile Include="Steamworks.NET\autogen\isteamapplist.cs" />
     <Compile Include="Steamworks.NET\autogen\isteamapps.cs" />
     <Compile Include="Steamworks.NET\autogen\isteamclient.cs" />
@@ -456,14 +464,14 @@
     <Compile Include="Steamworks.NET\types\Steam_api_common\HSteamPipe.cs" />
     <Compile Include="Steamworks.NET\types\Steam_api_common\HSteamUser.cs" />
     <Compile Include="TiberianDawn\ActionTypes.cs" />
+    <Compile Include="SoleSurvivor\CratesSection.cs" />
     <Compile Include="TiberianDawn\BasicSection.cs" />
     <Compile Include="TiberianDawn\Constants.cs" />
     <Compile Include="TiberianDawn\DirectionTypes.cs" />
     <Compile Include="TiberianDawn\EventTypes.cs" />
     <Compile Include="TiberianDawn\GamePlugin.cs" />
-    <Compile Include="TiberianDawn\GamePluginSS.cs" />
     <Compile Include="TiberianDawn\House.cs" />
-    <Compile Include="TiberianDawn\HouseTypesSS.cs" />
+    <Compile Include="SoleSurvivor\HouseTypes.cs" />
     <Compile Include="TiberianDawn\HouseTypes.cs" />
     <Compile Include="TiberianDawn\BuildingTypes.cs" />
     <Compile Include="TiberianDawn\MissionTypes.cs" />
@@ -582,6 +590,10 @@
     <Compile Include="Utility\UndoRedoList.cs" />
     <Compile Include="Utility\WWCompression.cs" />
     <Compile Include="Widgets\NavigationWidget.cs" />
+    <EmbeddedResource Include="Controls\CrateSettings.resx">
+      <DependentUpon>CrateSettings.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\BasicSettings.resx">
       <DependentUpon>BasicSettings.cs</DependentUpon>
     </EmbeddedResource>
@@ -703,9 +715,6 @@
     <PackageReference Include="Pfim">
       <Version>0.10.1</Version>
     </PackageReference>
-    <PackageReference Include="System.ValueTuple">
-      <Version>4.5.0</Version>
-    </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.6.2">
@@ -720,4 +729,11 @@
     </BootstrapperPackage>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>if not exist bin md bin
+move *.dll bin\</PostBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PreBuildEvent>rd /s /q bin</PreBuildEvent>
+  </PropertyGroup>
 </Project>

@@ -57,6 +57,15 @@ namespace MobiusEditor.Controls
             }
         }
 
+        public Int32 IntValue
+        {
+            get { return (Int32)this.Value; }
+            set
+            {
+                this.Value = this.Constrain(value);
+            }
+        }
+
         private Decimal _EnteredValue;
         private Boolean _ScrollValidatesEnter = true;
         private Boolean _UpDownValidatesEnter = true;

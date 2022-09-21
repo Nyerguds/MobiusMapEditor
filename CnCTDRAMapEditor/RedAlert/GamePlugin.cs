@@ -253,6 +253,8 @@ namespace MobiusEditor.RedAlert
 
         public GameType GameType => GameType.RedAlert;
 
+        public bool IsMegaMap => true;
+
         public Map Map { get; }
 
         public Image MapImage { get; private set; }
@@ -341,7 +343,7 @@ namespace MobiusEditor.RedAlert
         public GamePlugin(bool mapImage, IFeedBackHandler feedBackHandler)
         {
             this.feedBackHandler = feedBackHandler;
-            var playerWaypoints = Enumerable.Range(0, multiStartPoints).Select(i => new Waypoint(string.Format("P{0}", i), WaypointFlag.PlayerStart));
+            var playerWaypoints = Enumerable.Range(0, multiStartPoints).Select(i => new Waypoint(string.Format("P{0}", i), Waypoint.GetFlagForMpId(i)));
             var generalWaypoints = Enumerable.Range(multiStartPoints, 98 - multiStartPoints).Select(i => new Waypoint(i.ToString()));
             var specialWaypoints = new Waypoint[] { new Waypoint("Home", WaypointFlag.Home), new Waypoint("Reinf.", WaypointFlag.Reinforce), new Waypoint("Special", WaypointFlag.Special) };
             var waypoints = playerWaypoints.Concat(generalWaypoints).Concat(specialWaypoints);
@@ -386,8 +388,19 @@ namespace MobiusEditor.RedAlert
             string[] structureActionTypes = { ActionTypes.TACTION_DESTROY_OBJECT };
             string[] terrainActionTypes = { };
 
-            Map = new Map(basicSection, null, Constants.MaxSize, typeof(House),
-                houseTypes, TheaterTypes.GetTypes(), TemplateTypes.GetTypes(),
+            TeamColor[] flagColors = new TeamColor[8];
+            foreach (HouseType house in houseTypes)
+            {
+                int mpId = Waypoint.GetMpIdFromFlag(house.MultiplayIdentifier);
+                if (mpId == -1)
+                {
+                    continue;
+                }
+                flagColors[mpId] = Globals.TheTeamColorManager[house.UnitTeamColor];
+            }
+
+            Map = new Map(basicSection, null, Constants.MaxSize, typeof(House), houseTypes, flagColors,
+                TheaterTypes.GetTypes(), TemplateTypes.GetTypes(),
                 TerrainTypes.GetTypes(), OverlayTypes.GetTypes(), SmudgeTypes.GetTypes(Globals.ConvertCraters),
                 EventTypes.GetTypes(), cellEventTypes, unitEventTypes, structureEventTypes, terrainEventTypes,
                 ActionTypes.GetTypes(), cellActionTypes, unitActionTypes, structureActionTypes, terrainActionTypes,
@@ -2504,6 +2517,8 @@ namespace MobiusEditor.RedAlert
             for (int i = 0; i < multiStartPoints; ++i)
             {
                 Map.Waypoints[i].Name = isSolo ? i.ToString() : string.Format("P{0}", i);
+                WaypointFlag wpf = Map.Waypoints[i].Flag;
+                Map.Waypoints[i].Flag = isSolo ? wpf & ~WaypointFlag.PlayerStart : wpf | Waypoint.GetFlagForMpId(i);
             }
             Map.FlagWaypointsUpdate();
         }

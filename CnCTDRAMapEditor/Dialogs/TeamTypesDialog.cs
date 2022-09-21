@@ -75,6 +75,7 @@ namespace MobiusEditor.Dialogs
             switch (plugin.GameType)
             {
                 case GameType.TiberianDawn:
+                case GameType.SoleSurvivor:
                     lblTrigger.Visible = cmbTrigger.Visible = false;
                     lblWaypoint.Visible = cmbWaypoint.Visible = false;
                     break;
@@ -397,6 +398,7 @@ namespace MobiusEditor.Dialogs
             switch (plugin.GameType)
             {
                 case GameType.TiberianDawn:
+                case GameType.SoleSurvivor:
                     maxLength = 8;
                     break;
                 case GameType.RedAlert:

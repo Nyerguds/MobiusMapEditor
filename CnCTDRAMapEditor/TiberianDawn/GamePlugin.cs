@@ -22,6 +22,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -98,7 +99,9 @@ namespace MobiusEditor.TiberianDawn
             "OUTTAKES"
         };
 
-        public GameType GameType => GameType.TiberianDawn;
+        public virtual GameType GameType => GameType.TiberianDawn;
+
+        public virtual bool IsMegaMap => isMegaMap;
 
         public Map Map { get; protected set; }
 
@@ -250,7 +253,7 @@ namespace MobiusEditor.TiberianDawn
         {
             this.isMegaMap = megaMap;
             this.feedBackHandler = feedBackHandler;
-            var playerWaypoints = Enumerable.Range(0, multiStartPoints).Select(i => new Waypoint(string.Format("P{0}", i), WaypointFlag.PlayerStart));
+            var playerWaypoints = Enumerable.Range(0, multiStartPoints).Select(i => new Waypoint(string.Format("P{0}", i), Waypoint.GetFlagForMpId(i)));
             var generalWaypoints = Enumerable.Range(multiStartPoints, 25 - multiStartPoints).Select(i => new Waypoint(i.ToString()));
             var specialWaypoints = new Waypoint[] { new Waypoint("Flare", WaypointFlag.Flare), new Waypoint("Home", WaypointFlag.Home), new Waypoint("Reinf.", WaypointFlag.Reinforce) };
             Waypoint[] waypoints = playerWaypoints.Concat(generalWaypoints).Concat(specialWaypoints).ToArray();
@@ -283,9 +286,28 @@ namespace MobiusEditor.TiberianDawn
             string[] unitActionTypes = { };
             string[] structureActionTypes = { };
             string[] terrainActionTypes = { };
+
+
+
+            TeamColor[] flagColors = new TeamColor[8];
+            foreach (HouseType house in houseTypes)
+            {
+                int mpId = Waypoint.GetMpIdFromFlag(house.MultiplayIdentifier);
+                if (mpId == -1)
+                {
+                    continue;
+                }
+                flagColors[mpId] = Globals.TheTeamColorManager[house.UnitTeamColor];
+            }
+            // Purple
+            flagColors[6] = new TeamColor(Globals.TheTeamColorManager, flagColors[0], "MULTI7", new Vector3(0.410f, 0.100f, 0.000f));
+            // Pink
+            flagColors[7] = new TeamColor(Globals.TheTeamColorManager, flagColors[0], "MULTI8", new Vector3(0.618f, -0.100f, 0.000f));
+
+
             Size mapSize = !megaMap ? Constants.MaxSize : Constants.MaxSizeMega;
-            Map = new Map(basicSection, null, mapSize, typeof(House),
-                houseTypes, TheaterTypes.GetTypes(), TemplateTypes.GetTypes(),
+            Map = new Map(basicSection, null, mapSize, typeof(House), houseTypes,
+                flagColors, TheaterTypes.GetTypes(), TemplateTypes.GetTypes(),
                 TerrainTypes.GetTypes(), OverlayTypes.GetTypes(), SmudgeTypes.GetTypes(Globals.ConvertCraters),
                 EventTypes.GetTypes(), cellEventTypes, unitEventTypes, structureEventTypes, terrainEventTypes,
                 ActionTypes.GetTypes(), cellActionTypes, unitActionTypes, structureActionTypes, terrainActionTypes,
@@ -2160,6 +2182,8 @@ namespace MobiusEditor.TiberianDawn
             for (int i = 0; i < multiStartPoints; ++i)
             {
                 Map.Waypoints[i].Name = isSolo ? i.ToString() : string.Format("P{0}", i);
+                WaypointFlag wpf = Map.Waypoints[i].Flag;
+                Map.Waypoints[i].Flag = isSolo ? wpf & ~WaypointFlag.PlayerStart : wpf | Waypoint.GetFlagForMpId(i);
             }
             Map.FlagWaypointsUpdate();
         }

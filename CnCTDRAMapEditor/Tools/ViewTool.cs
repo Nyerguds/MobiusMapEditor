@@ -250,10 +250,10 @@ namespace MobiusEditor.Tools
             {
                 MapRenderer.RenderCellTriggers(graphics, map, tileSize, tileScale);
             }
-            if ((layersToRender & MapLayerFlag.Waypoints) == MapLayerFlag.Waypoints
-                && (manuallyHandledLayers & MapLayerFlag.Waypoints) == MapLayerFlag.None)
+            if ((layersToRender & (MapLayerFlag.Waypoints | MapLayerFlag.WaypointsIndic)) == (MapLayerFlag.Waypoints | MapLayerFlag.WaypointsIndic)
+                && (manuallyHandledLayers & MapLayerFlag.WaypointsIndic) == MapLayerFlag.None)
             {
-                MapRenderer.RenderWayPoints(graphics, map, tileSize, tileScale);
+                MapRenderer.RenderWayPointIndicators(graphics, map, tileSize, tileScale, Color.LightGreen, false, true);
             }
             if ((layersToRender & (MapLayerFlag.Buildings | MapLayerFlag.BuildingFakes)) == (MapLayerFlag.Buildings | MapLayerFlag.BuildingFakes)
                 && (manuallyHandledLayers & MapLayerFlag.BuildingFakes) == MapLayerFlag.None)

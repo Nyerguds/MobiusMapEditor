@@ -593,7 +593,6 @@ namespace MobiusEditor.Controls
             this.hasExpansionUnitsCheckBox.TabIndex = 32;
             this.hasExpansionUnitsCheckBox.Text = "Aftermath Expansion Units";
             this.hasExpansionUnitsCheckBox.UseVisualStyleBackColor = true;
-            this.hasExpansionUnitsCheckBox.CheckedChanged += new System.EventHandler(this.isSinglePlayerCheckBox_CheckedChanged);
             // 
             // BasicSettings
             // 

@@ -22,17 +22,51 @@ namespace MobiusEditor.Model
     public enum WaypointFlag
     {
         None = 0,
-        PlayerStart = 1 << 0,
-        Flare       = 1 << 1,
-        Home        = 1 << 2,
-        Reinforce   = 1 << 3,
-        Special     = 1 << 4,
-        CrateSpawn  = 1 << 5,
-
+        Flare        = 1 << 0,
+        Home         = 1 << 1,
+        Reinforce    = 1 << 2,
+        Special      = 1 << 3,
+        CrateSpawn   = 1 << 4,
+        PlayerStart  = 1 << 5,
+        PlayerStart1 = PlayerStart | 1 << 6,
+        PlayerStart2 = PlayerStart | 1 << 7,
+        PlayerStart3 = PlayerStart | 1 << 8,
+        PlayerStart4 = PlayerStart | 1 << 9,
+        PlayerStart5 = PlayerStart | 1 << 10,
+        PlayerStart6 = PlayerStart | 1 << 11,
+        PlayerStart7 = PlayerStart | 1 << 12,
+        PlayerStart8 = PlayerStart | 1 << 13,
     }
 
     public class Waypoint : INamedType
     {
+        public static WaypointFlag GetFlagForMpId(int mpId)
+        {
+            return WaypointFlag.PlayerStart | (WaypointFlag)((int)WaypointFlag.PlayerStart << (mpId + 1));
+        }
+
+        public static int GetMpIdFromFlag(WaypointFlag flag)
+        {
+            if ((flag & WaypointFlag.PlayerStart) != WaypointFlag.PlayerStart)
+            {
+                return -1;
+            }
+            int pls = (int)WaypointFlag.PlayerStart;
+            int flagId = ((int)flag & ~pls) / (pls << 1);
+            if (flagId == 0)
+            {
+                return -1;
+            }
+            int mpId = 0;
+            // Find which multiplayer house number it has.
+            while (flagId > 1)
+            {
+                flagId >>= 1;
+                mpId++;
+            }
+            return mpId;
+        }
+
         public static readonly string None = "None";
 
         public CellMetrics Metrics { get; set; }
@@ -41,25 +75,32 @@ namespace MobiusEditor.Model
         public WaypointFlag Flag { get; set; }
 
         public int? Cell { get; set; }
-        public Point Point { get; set; }
+        public Point? Point => Cell == null || Cell == -1 || Metrics == null ? null : (Point?)new Point(Cell.Value % Metrics.Width, Cell.Value / Metrics.Width);
 
-        public Waypoint(string name, WaypointFlag flag, CellMetrics metrics)
+        public Color Tint { get; set; } = Color.White;
+
+        public Waypoint(string name, WaypointFlag flag, CellMetrics metrics, int? cell)
         {
             this.Metrics = metrics;
             Name = name;
             Flag = flag;
+            Cell = cell;
         }
 
+        public Waypoint(string name, WaypointFlag flag, CellMetrics metrics)
+            : this(name, flag, metrics, null)
+        {
+        }
         public Waypoint(string name, CellMetrics metrics)
-            : this(name, WaypointFlag.None, metrics)
+            : this(name, WaypointFlag.None, metrics, null)
         {
         }
         public Waypoint(string name, WaypointFlag flag)
-            : this(name, flag, null)
+            : this(name, flag, null, null)
         {
         }
         public Waypoint(string name)
-            : this(name, WaypointFlag.None, null)
+            : this(name, WaypointFlag.None, null, null)
         {
         }
 

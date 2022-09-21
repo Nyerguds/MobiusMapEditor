@@ -41,17 +41,18 @@ namespace MobiusEditor.Model
         Infantry        = 1 << 6,
         Units           = 1 << 7,
         Buildings       = 1 << 8,
+        Waypoints       = 1 << 9,
 
-        Boundaries      = 1 << 9,
-        Waypoints       = 1 << 10,
-        CellTriggers    = 1 << 11,
-        TechnoTriggers  = 1 << 12,
-        BuildingRebuild = 1 << 13,
-        BuildingFakes   = 1 << 14,
+        Boundaries      = 1 << 10,
+        WaypointsIndic  = 1 << 11,
+        CellTriggers    = 1 << 12,
+        TechnoTriggers  = 1 << 13,
+        BuildingRebuild = 1 << 14,
+        BuildingFakes   = 1 << 15,
 
         OverlayAll = Resources | Walls | Overlay,
         Technos = Terrain | Walls | Infantry | Units | Buildings | BuildingFakes,
-        Indicators = Boundaries | Waypoints | CellTriggers | TechnoTriggers | BuildingRebuild | BuildingFakes,
+        Indicators = Boundaries | WaypointsIndic | CellTriggers | TechnoTriggers | BuildingRebuild | BuildingFakes,
         All = int.MaxValue
     }
 
@@ -138,6 +139,8 @@ namespace MobiusEditor.Model
         public readonly HouseType[] HouseTypes;
 
         public readonly HouseType[] HouseTypesIncludingNone;
+
+        public readonly IEnumerable<TeamColor> FlagColors;
 
         public readonly List<TheaterType> TheaterTypes;
 
@@ -293,8 +296,8 @@ namespace MobiusEditor.Model
             }
         }
 
-        public Map(BasicSection basicSection, TheaterType theater, Size cellSize, Type houseType,
-            IEnumerable<HouseType> houseTypes, IEnumerable<TheaterType> theaterTypes, IEnumerable<TemplateType> templateTypes,
+        public Map(BasicSection basicSection, TheaterType theater, Size cellSize, Type houseType, IEnumerable<HouseType> houseTypes,
+            IEnumerable<TeamColor> flagColors, IEnumerable<TheaterType> theaterTypes, IEnumerable<TemplateType> templateTypes,
             IEnumerable<TerrainType> terrainTypes, IEnumerable<OverlayType> overlayTypes, IEnumerable<SmudgeType> smudgeTypes,
             IEnumerable<string> eventTypes, IEnumerable<string> cellEventTypes, IEnumerable<string> unitEventTypes, IEnumerable<string> structureEventTypes, IEnumerable<string> terrainEventTypes,
             IEnumerable<string> actionTypes, IEnumerable<string> cellActionTypes, IEnumerable<string> unitActionTypes, IEnumerable<string> structureActionTypes, IEnumerable<string> terrainActionTypes,
@@ -307,6 +310,7 @@ namespace MobiusEditor.Model
             HouseType = houseType;
             HouseTypesIncludingNone = houseTypes.ToArray();
             HouseTypes = HouseTypesIncludingNone.Where(h => h.ID >= 0).ToArray();
+            FlagColors = flagColors.ToArray();
             TheaterTypes = new List<TheaterType>(theaterTypes);
             TemplateTypes = new List<TemplateType>(templateTypes);
             TerrainTypes = new List<TerrainType>(terrainTypes);
@@ -349,10 +353,10 @@ namespace MobiusEditor.Model
             HousesIncludingNone = HouseTypesIncludingNone.Select(t => { var h = (House)Activator.CreateInstance(HouseType, t); h.SetDefault(); return h; }).ToArray();
             Houses = HousesIncludingNone.Where(h => h.Type.ID >= 0).ToArray();
             Waypoints = waypoints.ToArray();
-            foreach (Waypoint waypoint in Waypoints)
+            for (int i = 0; i < Waypoints.Length; ++i)
             {
-                // allows showing waypoints as cell coordinates.
-                waypoint.Metrics = Metrics;
+                // Deep clone, with current metric to allow showing waypoints as cell coordinates.
+                Waypoints[i] = new Waypoint(Waypoints[i].Name, Waypoints[i].Flag, Metrics, Waypoints[i].Cell);
             }
             CellTriggers = new CellGrid<CellTrigger>(Metrics);
 
@@ -730,14 +734,17 @@ namespace MobiusEditor.Model
 
         public Map Clone()
         {
+            Waypoint[] wpPreview = new Waypoint[Waypoints.Length + 1];
+            Array.Copy(Waypoints, wpPreview, Waypoints.Length);
+            wpPreview[Waypoints.Length] = new Waypoint("", null);
             // This is a shallow clone; the map is new, but the placed content all still reference the original objects.
             // These shallow copies are used for map preview during editing, where dummy objects can be added without any issue.
-            var map = new Map(BasicSection, Theater, Metrics.Size, HouseType,
-                HouseTypes, TheaterTypes, TemplateTypes, TerrainTypes, OverlayTypes, SmudgeTypes,
+            var map = new Map(BasicSection, Theater, Metrics.Size, HouseType, HouseTypesIncludingNone,
+                FlagColors, TheaterTypes, TemplateTypes, TerrainTypes, OverlayTypes, SmudgeTypes,
                 EventTypes, CellEventTypes, UnitEventTypes, StructureEventTypes, TerrainEventTypes,
                 ActionTypes, CellActionTypes, UnitActionTypes, StructureActionTypes, TerrainActionTypes,
                 MissionTypes, DirectionTypes, AllInfantryTypes, AllUnitTypes, BuildingTypes, TeamMissionTypes,
-                AllTeamTechnoTypes, Waypoints, MovieTypes, ThemeTypes)
+                AllTeamTechnoTypes, wpPreview, MovieTypes, ThemeTypes)
             {
                 TopLeft = TopLeft,
                 Size = Size
@@ -1293,9 +1300,13 @@ namespace MobiusEditor.Model
             return info;
         }
 
-        private HashSet<String> GetHousesWithProduction(GameType gameType)
+        private HashSet<string> GetHousesWithProduction(GameType gameType)
         {
             HashSet<string> housesWithProd = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+            if (gameType == GameType.SoleSurvivor)
+            {
+                return housesWithProd;
+            }
             if (gameType == GameType.TiberianDawn)
             {
                 // Tiberian Dawn logic: find AIs with construction yard and Production trigger.

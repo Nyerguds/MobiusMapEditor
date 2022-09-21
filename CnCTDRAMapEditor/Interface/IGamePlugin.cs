@@ -39,6 +39,7 @@ namespace MobiusEditor.Interface
     public interface IGamePlugin : IDisposable
     {
         GameType GameType { get; }
+        bool IsMegaMap { get; }
 
         Map Map { get; }
 

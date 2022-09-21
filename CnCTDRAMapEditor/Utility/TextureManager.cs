@@ -323,16 +323,27 @@ namespace MobiusEditor.Utility
                     var bpp = Image.GetPixelFormatSize(data.PixelFormat) / 8;
                     var bytes = new byte[data.Stride * data.Height];
                     Marshal.Copy(data.Scan0, bytes, 0, bytes.Length);
-                    int lineWidth = ((data.Width * Image.GetPixelFormatSize(data.PixelFormat)) + 7) / 8;
+                    int width = data.Width;
                     int height = data.Height;
                     int stride = data.Stride;
-                    result.opaqueBounds = CalculateOpaqueBounds(bytes, data.Width, data.Height, bpp, data.Stride);
-                    int lineStart = 0;
-                    for (int y = 0; y < height; y++)
+                    Rectangle opaqueBounds = CalculateOpaqueBounds(bytes, data.Width, data.Height, bpp, data.Stride);
+                    result.opaqueBounds = opaqueBounds;
+                    // Precalculate some stuff.
+                    var lowerHue = teamColor.LowerBounds.GetHue() / 360.0f;
+                    var upperHue = teamColor.UpperBounds.GetHue() / 360.0f;
+                    var lowerHueFudge = lowerHue - teamColor.Fudge;
+                    var upperHueFudge = upperHue + teamColor.Fudge;
+                    var hueError = (upperHueFudge - lowerHueFudge) / (upperHue - lowerHue);
+                    var hueShift = teamColor.HSVShift.X;
+                    var satShift = teamColor.HSVShift.Y;
+                    var valShift = teamColor.HSVShift.Z;
+                    // Optimisation: since we got the opaque bounds calculated anyway, might as well use them and only process what's inside.
+                    int lineStart = opaqueBounds.Top * stride;
+                    for (int y = opaqueBounds.Top; y < opaqueBounds.Bottom; y++)
                     {
-                        for (int x = 0; x < lineWidth; x += bpp)
+                        int addr = lineStart + opaqueBounds.Left * bpp;
+                        for (int x = opaqueBounds.Left; x < width; ++x)
                         {
-                            int addr = lineStart + x;
                             var pixel = Color.FromArgb(bytes[addr + 2], bytes[addr + 1], bytes[addr + 0]);
                             (float r, float g, float b) = (pixel.R.ToLinear(), pixel.G.ToLinear(), pixel.B.ToLinear());
                             (float x, float y, float z, float w) K = (0.0f, -1.0f / 3.0f, 2.0f / 3.0f, -1.0f);
@@ -340,14 +351,12 @@ namespace MobiusEditor.Utility
                             (float x, float y, float z, float w) q = (r >= p.x) ? (r, p.y, p.z, p.x) : (p.x, p.y, p.w, r);
                             (float d, float e) = (q.x - Math.Min(q.w, q.y), 1e-10f);
                             (float hue, float saturation, float value) = (Math.Abs(q.z + (q.w - q.y) / (6.0f * d + e)), d / (q.x + e), q.x);
-                            var lowerHue = teamColor.LowerBounds.GetHue() / 360.0f;
-                            var upperHue = teamColor.UpperBounds.GetHue() / 360.0f;
-                            if ((hue >= lowerHue) && (upperHue >= hue))
+                            // Processing the pixels that fall in the hue range to change
+                            if ((hue >= lowerHue) && (hue <= upperHue))
                             {
-                                hue = (hue / (upperHue - lowerHue)) * ((upperHue + teamColor.Fudge) - (lowerHue - teamColor.Fudge));
-                                hue += teamColor.HSVShift.X;
-                                saturation += teamColor.HSVShift.Y;
-                                value += teamColor.HSVShift.Z;
+                                hue = (hue * hueError) + hueShift;
+                                saturation += satShift;
+                                value += valShift;
                                 (float x, float y, float z, float w) L = (1.0f, 2.0f / 3.0f, 1.0f / 3.0f, 3.0f);
                                 (float x, float y, float z) m = (
                                     Math.Abs(frac(hue + L.x) * 6.0f - L.w),
@@ -369,6 +378,7 @@ namespace MobiusEditor.Utility
                                 g = lerp(teamColor.OutputLevels.X, teamColor.OutputLevels.Y, n.y);
                                 b = lerp(teamColor.OutputLevels.X, teamColor.OutputLevels.Y, n.z);
                             }
+                            // post-processing the overall levels
                             (float x, float y, float z) n2 = (
                                 Math.Min(1.0f, Math.Max(0.0f, r - teamColor.OverallInputLevels.X) / (teamColor.OverallInputLevels.Z - teamColor.OverallInputLevels.X)),
                                 Math.Min(1.0f, Math.Max(0.0f, g - teamColor.OverallInputLevels.X) / (teamColor.OverallInputLevels.Z - teamColor.OverallInputLevels.X)),
@@ -383,6 +393,8 @@ namespace MobiusEditor.Utility
                             bytes[addr + 2] = (byte)(r.ToSRGB() * 255.0f);
                             bytes[addr + 1] = (byte)(g.ToSRGB() * 255.0f);
                             bytes[addr + 0] = (byte)(b.ToSRGB() * 255.0f);
+                            // go to next pixel
+                            addr += bpp;
                         }
                         lineStart += stride;
                     }

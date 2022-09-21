@@ -77,7 +77,7 @@ namespace MobiusEditor
                     {
                         MapLayerFlag active = activeLayers;
                         // Save some processing by just always removing this one.
-                        if (plugin.GameType == GameType.TiberianDawn)
+                        if (plugin.GameType != GameType.RedAlert)
                         {
                             active &= ~MapLayerFlag.BuildingFakes;
                         }
@@ -325,6 +325,13 @@ namespace MobiusEditor
                     plugin = new RedAlert.GamePlugin(this);
                     plugin.New(nmd.TheaterName);
                 }
+                else if (nmd.GameType == GameType.SoleSurvivor)
+                {
+                    Globals.TheTeamColorManager.Reset();
+                    Globals.TheTeamColorManager.Load(@"DATA\XML\CNCTDTEAMCOLORS.XML");
+                    plugin = new SoleSurvivor.GamePlugin(this);
+                    plugin.New(nmd.TheaterName);
+                }
                 if (SteamworksUGC.IsInit)
                 {
                     plugin.Map.BasicSection.Author = SteamFriends.GetPersonaName();
@@ -365,6 +372,7 @@ namespace MobiusEditor
                     switch (plugin.GameType)
                     {
                         case GameType.TiberianDawn:
+                        case GameType.SoleSurvivor:
                             ofd.InitialDirectory = Path.GetDirectoryName(filename) ?? TiberianDawn.Constants.SaveDirectory;
                             //ofd.FilterIndex = 2;
                             break;
@@ -441,6 +449,7 @@ namespace MobiusEditor
                 switch (plugin.GameType)
                 {
                     case GameType.TiberianDawn:
+                    case GameType.SoleSurvivor:
                         filters.Add("Tiberian Dawn files (*.ini;*.bin)|*.ini;*.bin");
                         sfd.InitialDirectory = TiberianDawn.Constants.SaveDirectory;
                         break;
@@ -544,9 +553,14 @@ namespace MobiusEditor
             bool rulesChanged = false;
             PropertyTracker<BasicSection> basicSettings = new PropertyTracker<BasicSection>(plugin.Map.BasicSection);
             PropertyTracker<BriefingSection> briefingSettings = new PropertyTracker<BriefingSection>(plugin.Map.BriefingSection);
+            PropertyTracker<SoleSurvivor.CratesSection> cratesSettings = null;
+            if (plugin is SoleSurvivor.GamePlugin ssPlugin)
+            {
+                cratesSettings = new PropertyTracker<SoleSurvivor.CratesSection>(ssPlugin.CratesSection);
+            }
             string extraIniText = (plugin.GameType == GameType.RedAlert ? plugin.ExtraIniText : String.Empty).Trim();
             Dictionary<House, PropertyTracker<House>> houseSettingsTrackers = plugin.Map.Houses.ToDictionary(h => h, h => new PropertyTracker<House>(h));
-            using (MapSettingsDialog msd = new MapSettingsDialog(plugin, basicSettings, briefingSettings, houseSettingsTrackers, extraIniText))
+            using (MapSettingsDialog msd = new MapSettingsDialog(plugin, basicSettings, briefingSettings, cratesSettings, houseSettingsTrackers, extraIniText))
             {
                 msd.StartPosition = FormStartPosition.CenterParent;
                 if (msd.ShowDialog(this) == DialogResult.OK)
@@ -554,6 +568,10 @@ namespace MobiusEditor
                     bool hasChanges = basicSettings.HasChanges || briefingSettings.HasChanges;
                     basicSettings.Commit();
                     briefingSettings.Commit();
+                    if (cratesSettings != null)
+                    {
+                        cratesSettings.Commit();
+                    }
                     foreach (var houseSettingsTracker in houseSettingsTrackers.Values)
                     {
                         if (houseSettingsTracker.HasChanges)
@@ -589,14 +607,11 @@ namespace MobiusEditor
             switch (plugin.GameType)
             {
                 case GameType.TiberianDawn:
-                    {
-                        maxTeams = TiberianDawn.Constants.MaxTeams;
-                    }
+                case GameType.SoleSurvivor:
+                    maxTeams = TiberianDawn.Constants.MaxTeams;
                     break;
                 case GameType.RedAlert:
-                    {
-                        maxTeams = RedAlert.Constants.MaxTeams;
-                    }
+                    maxTeams = RedAlert.Constants.MaxTeams;
                     break;
             }
             using (TeamTypesDialog ttd = new TeamTypesDialog(plugin, maxTeams))
@@ -621,14 +636,11 @@ namespace MobiusEditor
             switch (plugin.GameType)
             {
                 case GameType.TiberianDawn:
-                    {
-                        maxTriggers = TiberianDawn.Constants.MaxTriggers;
-                    }
+                case GameType.SoleSurvivor:
+                    maxTriggers = TiberianDawn.Constants.MaxTriggers;
                     break;
                 case GameType.RedAlert:
-                    {
-                        maxTriggers = RedAlert.Constants.MaxTriggers;
-                    }
+                    maxTriggers = RedAlert.Constants.MaxTriggers;
                     break;
             }
             using (TriggersDialog td = new TriggersDialog(plugin, maxTriggers))
@@ -912,7 +924,7 @@ namespace MobiusEditor
             }
             if (gameType == GameType.TiberianDawn)
             {
-                if (TiberianDawn.GamePluginSS.CheckForSSmap(loadFilename, fileType))
+                if (SoleSurvivor.GamePlugin.CheckForSSmap(loadFilename, fileType))
                 {
                     gameType = GameType.SoleSurvivor;
                 }
@@ -962,7 +974,7 @@ namespace MobiusEditor
                 case GameType.SoleSurvivor:
                     Globals.TheTeamColorManager.Reset();
                     Globals.TheTeamColorManager.Load(@"DATA\XML\CNCTDTEAMCOLORS.XML");
-                    plugin = new TiberianDawn.GamePluginSS(this);
+                    plugin = new SoleSurvivor.GamePlugin(this);
                     break;
             }
             string[] errors;
@@ -1262,7 +1274,7 @@ namespace MobiusEditor
             }
             MapLayerFlag active = ActiveLayers;
             // Save some processing by just always removing this one.
-            if (plugin.GameType == GameType.TiberianDawn)
+            if (plugin.GameType == GameType.TiberianDawn || plugin.GameType == GameType.SoleSurvivor)
             {
                 active &= ~MapLayerFlag.BuildingFakes;
             }
@@ -1279,16 +1291,15 @@ namespace MobiusEditor
                 activeTool.Activate();
                 activeToolForm.ResizeEnd += ActiveToolForm_ResizeEnd;
             }
-            switch (plugin.GameType)
+            if (plugin.IsMegaMap)
             {
-                case GameType.TiberianDawn:
-                    mapPanel.MaxZoom = 8;
-                    mapPanel.ZoomStep = 0.15;
-                    break;
-                case GameType.RedAlert:
-                    mapPanel.MaxZoom = 16;
-                    mapPanel.ZoomStep = 0.2;
-                    break;
+                mapPanel.MaxZoom = 16;
+                mapPanel.ZoomStep = 0.2;
+            }
+            else
+            {
+                mapPanel.MaxZoom = 8;
+                mapPanel.ZoomStep = 0.15;
             }
             // Refresh toolstrip button checked states
             foreach (var toolStripButton in viewToolStripButtons)
@@ -1404,9 +1415,13 @@ namespace MobiusEditor
             {
                 layers &= ~MapLayerFlag.Smudge;
             }
-            if (!viewIndicatorsWaypointsMenuItem.Checked)
+            if (!viewMapWaypointsMenuItem.Checked)
             {
                 layers &= ~MapLayerFlag.Waypoints;
+            }
+            if (!viewIndicatorsWaypointsMenuItem.Checked)
+            {
+                layers &= ~MapLayerFlag.WaypointsIndic;
             }
             if (!viewIndicatorsCellTriggersMenuItem.Checked)
             {
@@ -1445,6 +1460,7 @@ namespace MobiusEditor
                 viewMapTerrainMenuItem.Checked = true;
                 viewMapOverlayMenuItem.Checked = true;
                 viewMapSmudgeMenuItem.Checked = true;
+                viewMapWaypointsMenuItem.Checked = true;
             }
             finally
             {
@@ -1472,6 +1488,7 @@ namespace MobiusEditor
                 viewMapTerrainMenuItem.Checked = false;
                 viewMapOverlayMenuItem.Checked = false;
                 viewMapSmudgeMenuItem.Checked = false;
+                viewMapWaypointsMenuItem.Checked = false;
             }
             finally
             {

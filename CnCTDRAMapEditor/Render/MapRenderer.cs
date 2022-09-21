@@ -22,6 +22,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Linq;
+using System.Numerics;
 
 namespace MobiusEditor.Render
 {
@@ -261,6 +262,19 @@ namespace MobiusEditor.Render
             {
                 renderer(graphics);
             }
+            if ((layers & MapLayerFlag.Waypoints) != MapLayerFlag.None)
+            {
+                HashSet<int> handledPoints = new HashSet<int>();
+                TeamColor[] flags = map.FlagColors.ToArray();
+                foreach (Waypoint waypoint in map.Waypoints)
+                {
+                    if (!waypoint.Cell.HasValue || (locations != null && !locations.Contains(waypoint.Point.Value)))
+                    {
+                        continue;
+                    }
+                    Render(gameType, map.Theater, tileSize, flags, waypoint).Item2(graphics);
+                }
+            }
         }
 
         public static void Render(GameType gameType, Map map, Graphics graphics, ISet<Point> locations, MapLayerFlag layers)
@@ -375,13 +389,12 @@ namespace MobiusEditor.Render
             {
                 var colorMatrix = new ColorMatrix(new float[][]
                 {
-                                new float[] {tint.R / 255.0f, 0, 0, 0, 0},
-                                new float[] {0, tint.G / 255.0f, 0, 0, 0},
-                                new float[] {0, 0, tint.B / 255.0f, 0, 0},
-                                new float[] {0, 0, 0, tint.A / 255.0f, 0},
-                                new float[] {0, 0, 0, 0, 1},
-                }
-                );
+                    new float[] {tint.R / 255.0f, 0, 0, 0, 0},
+                    new float[] {0, tint.G / 255.0f, 0, 0, 0},
+                    new float[] {0, 0, tint.B / 255.0f, 0, 0},
+                    new float[] {0, 0, 0, tint.A / 255.0f, 0},
+                    new float[] {0, 0, 0, 0, 1},
+                });
                 imageAttributes.SetColorMatrix(colorMatrix);
             }
             var location = new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height);
@@ -776,6 +789,73 @@ namespace MobiusEditor.Render
             }
         }
 
+        public static (Rectangle, Action<Graphics>) Render(GameType gameType, TheaterType theater, Size tileSize, TeamColor[] flagColors, Waypoint waypoint)
+        {
+            if (!waypoint.Point.HasValue)
+            {
+                return (Rectangle.Empty, (g) => { });
+            }
+            Point point = waypoint.Point.Value;
+            string tileGraphics = "beacon";
+            TeamColor teamColor = null;
+            if ((waypoint.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart)
+            {
+                tileGraphics = "flagfly";
+                int pls = (int)WaypointFlag.PlayerStart;
+                int flagId = ((int)waypoint.Flag & ~pls) / (pls << 1);
+                int mpId = 0;
+                // Find which multiplayer house number it has.
+                while (flagId > 1)
+                {
+                    flagId >>= 1;
+                    mpId++;
+                }
+                teamColor = flagColors[mpId];
+            }
+            else
+            {
+                tileGraphics = "beacon";
+            }
+            Color tint = waypoint.Tint;
+            float brightness = 1.0f;
+            if (gameType == GameType.SoleSurvivor && (waypoint.Flag & WaypointFlag.CrateSpawn) == WaypointFlag.CrateSpawn)
+            {
+                tileGraphics = "scrate";
+                tint = Color.FromArgb(waypoint.Tint.A, Color.Green);
+                brightness = 1.5f;
+            }
+            int icon = 0;
+            if (Globals.TheTilesetManager.GetTeamColorTileData(theater.Tilesets, tileGraphics, icon, teamColor, out Tile tile, false, true))
+            {
+                var location = new Point(point.X * tileSize.Width, point.Y * tileSize.Height);
+                var renderSize = tileSize;
+                //Rectangle renderBounds = RenderBounds(tile.Image.Size, new Size(1, 1), tileSize);
+                Rectangle renderBounds = GeneralUtils.GetBoundingBoxCenter(tile.OpaqueBounds.Width, tile.OpaqueBounds.Height, tileSize.Width, tileSize.Height);
+                renderBounds.X += location.X;
+                renderBounds.Y += location.Y;
+                void render(Graphics g)
+                {
+                    var imageAttributes = new ImageAttributes();
+                    var colorMatrix = new ColorMatrix(new float[][]
+                    {
+                        new float[] {tint.R * brightness / 255.0f, 0, 0, 0, 0},
+                        new float[] {0, tint.G * brightness / 255.0f, 0, 0, 0},
+                        new float[] {0, 0, tint.B * brightness / 255.0f, 0, 0},
+                        new float[] {0, 0, 0, (tint.A / 2) / 255.0f, 0},
+                        new float[] {0, 0, 0, 0, 1},
+                    });
+                    imageAttributes.SetColorMatrix(colorMatrix);
+                    g.DrawImage(tile.Image, renderBounds, 0, 0, tile.OpaqueBounds.Width, tile.OpaqueBounds.Height, GraphicsUnit.Pixel, imageAttributes);
+                }
+                return (renderBounds, render);
+            }
+            else
+            {
+                Debug.Print(string.Format("Waypoint graphics {0} ({1}) not found", tileGraphics, icon));
+                return (Rectangle.Empty, (g) => { });
+            }
+        }
+
         public static void RenderAllBoundsFromCell<T>(Graphics graphics, Size tileSize, IEnumerable<(int, T)> renderList, CellMetrics metrics)
         {
             RenderAllBoundsFromCell(graphics, tileSize, renderList, metrics, Color.Green);
@@ -783,9 +863,14 @@ namespace MobiusEditor.Render
 
         public static void RenderAllBoundsFromCell<T>(Graphics graphics, Size tileSize, IEnumerable<(int, T)> renderList, CellMetrics metrics, Color boundsColor)
         {
+            RenderAllBoundsFromCell(graphics, tileSize, renderList.Select(tp => tp.Item1), metrics, boundsColor);
+        }
+
+        public static void RenderAllBoundsFromCell(Graphics graphics, Size tileSize, IEnumerable<int> renderList, CellMetrics metrics, Color boundsColor)
+        {
             using (var boundsPen = new Pen(boundsColor, Math.Max(1, tileSize.Width / 16.0f)))
             {
-                foreach (var (cell, _) in renderList)
+                foreach (var cell in renderList)
                 {
                     metrics.GetLocation(cell, out Point topLeft);
                     var bounds = new Rectangle(new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height), tileSize);
@@ -796,7 +881,19 @@ namespace MobiusEditor.Render
 
         public static void RenderAllBoundsFromPoint<T>(Graphics graphics, Size tileSize, IEnumerable<(Point, T)> renderList)
         {
-            RenderAllBoundsFromPoint(graphics, tileSize, renderList, Color.Green);
+            RenderAllBoundsFromPoint(graphics, tileSize, renderList.Select(tp => tp.Item1), Color.Green);
+        }
+
+        public static void RenderAllBoundsFromPoint(Graphics graphics, Size tileSize, IEnumerable<Point> renderList, Color boundsColor)
+        {
+            using (var boundsPen = new Pen(boundsColor, Math.Max(1, tileSize.Width / 16.0f)))
+            {
+                foreach (var topLeft in renderList)
+                {
+                    var bounds = new Rectangle(new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height), tileSize);
+                    graphics.DrawRectangle(boundsPen, bounds);
+                }
+            }
         }
 
         public static void RenderAllBoundsFromPoint<T>(Graphics graphics, Size tileSize, IEnumerable<(Point, T)> renderList, Color boundsColor)
@@ -1030,12 +1127,12 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static void RenderWayPoints(Graphics graphics, Map map, Size tileSize, double tileScale, params Waypoint[] specifiedToExclude)
+        public static void RenderWayPointBounds(Graphics graphics, Map map, Size tileSize, double tileScale, params Waypoint[] specifiedToExclude)
         {
-            RenderWayPoints(graphics, map, tileSize, tileScale, Color.Black, Color.DarkOrange, Color.DarkOrange, false, true, specifiedToExclude);
+            RenderWayPointBounds(graphics, map, tileSize, tileScale, Color.Black, Color.DarkOrange, Color.DarkOrange, false, true, specifiedToExclude);
         }
 
-        public static void RenderWayPoints(Graphics graphics, Map map, Size tileSize, double tileScale, Color fillColor, Color borderColor, Color textColor, bool thickborder, bool excludeSpecified, params Waypoint[] specified)
+        public static void RenderWayPointBounds(Graphics graphics, Map map, Size tileSize, double tileScale, Color fillColor, Color borderColor, Color textColor, bool thickborder, bool excludeSpecified, params Waypoint[] specified)
         {
             HashSet<Waypoint> specifiedWaypoints = specified.ToHashSet();
             float borderSize = Math.Max(0.5f, tileSize.Width / 60.0f);
@@ -1069,6 +1166,49 @@ namespace MobiusEditor.Render
                             graphics.DrawString(text.ToString(), font, waypointBrush, textBounds, stringFormat);
                         }
                     }
+                }
+            }
+        }
+
+
+        public static void RenderWayPointIndicators(Graphics graphics, Map map, Size tileSize, double tileScale, Color textColor, bool forPreview, bool excludeSpecified, params Waypoint[] specified)
+        {
+            HashSet<Waypoint> specifiedWaypoints = specified.ToHashSet();
+
+            Waypoint[] toPaint = excludeSpecified ? map.Waypoints : specified;
+            foreach (var waypoint in toPaint)
+            {
+                if (waypoint.Cell.HasValue && map.Metrics.GetLocation(waypoint.Cell.Value, out Point point))
+                {
+                    if (excludeSpecified && specifiedWaypoints.Contains(waypoint))
+                    {
+                        continue;
+                    }
+                    RenderWayPointIndicator(graphics, waypoint, point, tileSize, tileScale, textColor, forPreview);
+                }
+            }
+        }
+
+        public static void RenderWayPointIndicator(Graphics graphics, Waypoint waypoint, Point topLeft, Size tileSize, double tileScale, Color textColor, bool forPreview)
+        {
+            var stringFormat = new StringFormat
+            {
+                Alignment = StringAlignment.Center,
+                LineAlignment = StringAlignment.Center
+            };
+            var paintBounds = new Rectangle(new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height), tileSize);
+            string wpText = waypoint.Name;
+            using (var baseBackgroundBrush = new SolidBrush(Color.FromArgb((forPreview ? 48 : 96) * 2 / 3, Color.Black)))
+            using (var baseTextBrush = new SolidBrush(Color.FromArgb(forPreview ? 64 : 128, textColor)))
+            {
+                using (var font = graphics.GetAdjustedFont(wpText, SystemFonts.DefaultFont, paintBounds.Width,
+                    Math.Max(1, (int)(12 * tileScale)), Math.Max(1, (int)(30 * tileScale)), true))
+                {
+                    var textBounds = graphics.MeasureString(wpText, font, paintBounds.Width, stringFormat);
+                    var backgroundBounds = new RectangleF(paintBounds.Location, textBounds);
+                    backgroundBounds.Offset((paintBounds.Width - textBounds.Width) / 2.0f, paintBounds.Height - textBounds.Height);
+                    graphics.FillRectangle(baseBackgroundBrush, backgroundBounds);
+                    graphics.DrawString(wpText, font, baseTextBrush, backgroundBounds, stringFormat);
                 }
             }
         }
@@ -1157,31 +1297,31 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static Rectangle RenderBounds(Size size, Size cellDimensions, Size cellSize)
+        public static Rectangle RenderBounds(Size imageSize, Size cellDimensions, Size cellSize)
         {
             double scaleFactorX = cellSize.Width / (double)Globals.OriginalTileWidth;
             double scaleFactorY = cellSize.Height / (double)Globals.OriginalTileHeight;
-            return RenderBounds(size, cellDimensions, scaleFactorX, scaleFactorY);
+            return RenderBounds(imageSize, cellDimensions, scaleFactorX, scaleFactorY);
         }
 
-        public static Rectangle RenderBounds(Size size, Size cellDimensions, double scaleFactor)
+        public static Rectangle RenderBounds(Size imageSize, Size cellDimensions, double scaleFactor)
         {
-            return RenderBounds(size, cellDimensions, scaleFactor, scaleFactor);
+            return RenderBounds(imageSize, cellDimensions, scaleFactor, scaleFactor);
         }
 
-        public static Rectangle RenderBounds(Size size, Size cellDimensions, double scaleFactorX, double scaleFactorY)
+        public static Rectangle RenderBounds(Size imageSize, Size cellDimensions, double scaleFactorX, double scaleFactorY)
         {
             Size maxSize = new Size(cellDimensions.Width * Globals.OriginalTileWidth, cellDimensions.Height * Globals.OriginalTileHeight);
             // If graphics are too large, scale them down using the largest dimension
-            Size newSize = new Size(size.Width, size.Height);
-            if ((size.Width >= size.Height) && (size.Width > maxSize.Width))
+            Size newSize = new Size(imageSize.Width, imageSize.Height);
+            if ((imageSize.Width >= imageSize.Height) && (imageSize.Width > maxSize.Width))
             {
-                newSize.Height = size.Height * maxSize.Width / size.Width;
+                newSize.Height = imageSize.Height * maxSize.Width / imageSize.Width;
                 newSize.Width = maxSize.Width;
             }
-            else if ((size.Height >= size.Width) && (size.Height > maxSize.Height))
+            else if ((imageSize.Height >= imageSize.Width) && (imageSize.Height > maxSize.Height))
             {
-                newSize.Width = size.Width * maxSize.Height / size.Height;
+                newSize.Width = imageSize.Width * maxSize.Height / imageSize.Height;
                 newSize.Height = maxSize.Height;
             }
             // center graphics inside bounding box

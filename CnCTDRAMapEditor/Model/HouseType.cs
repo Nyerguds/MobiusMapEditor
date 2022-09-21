@@ -28,24 +28,36 @@ namespace MobiusEditor.Model
 
         public string BuildingTeamColor { get; private set; }
 
+        public WaypointFlag MultiplayIdentifier { get; private set; }
+
         public IDictionary<string, string> OverrideTeamColors { get; private set; }
 
-        public HouseType(sbyte id, string name, string unitTeamColor, string buildingTeamColor, params (string type, string teamColor)[] overrideTeamColors)
+        public HouseType(sbyte id, string name, WaypointFlag multiplayIdentifier, string unitTeamColor, string buildingTeamColor, params (string type, string teamColor)[] overrideTeamColors)
         {
             ID = id;
             Name = name;
+            MultiplayIdentifier = multiplayIdentifier;
             UnitTeamColor = unitTeamColor;
             BuildingTeamColor = buildingTeamColor;
             OverrideTeamColors = overrideTeamColors.ToDictionary(x => x.type, x => x.teamColor);
         }
 
-        public HouseType(sbyte id, string name, string teamColor)
-            : this(id, name, teamColor, teamColor)
+        public HouseType(sbyte id, string name, string unitTeamColor, string buildingTeamColor, params (string type, string teamColor)[] overrideTeamColors)
+            :this(id, name,  WaypointFlag.None, unitTeamColor, buildingTeamColor, overrideTeamColors)
         {
         }
 
+        public HouseType(sbyte id, string name, string teamColor)
+            : this(id, name, WaypointFlag.None, teamColor, teamColor)
+        {
+        }
         public HouseType(sbyte id, string name)
-            : this(id, name, null, null)
+            : this(id, name, WaypointFlag.None, null, null)
+        {
+        }
+
+        public HouseType(sbyte id, string name, WaypointFlag multiplayIdentifier, string teamColor)
+            : this(id, name, multiplayIdentifier, teamColor, teamColor)
         {
         }
 

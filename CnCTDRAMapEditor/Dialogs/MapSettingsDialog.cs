@@ -59,6 +59,7 @@ namespace MobiusEditor.Dialogs
         private readonly IGamePlugin plugin;
         private readonly PropertyTracker<BasicSection> basicSettingsTracker;
         private readonly PropertyTracker<BriefingSection> briefingSettingsTracker;
+        private readonly PropertyTracker<SoleSurvivor.CratesSection> cratesSettingsTracker;
         private readonly IDictionary<House, PropertyTracker<House>> houseSettingsTrackers;
         private TreeNode playersNode;
         private bool expansionWasEnabled;
@@ -66,7 +67,7 @@ namespace MobiusEditor.Dialogs
 
 
         public MapSettingsDialog(IGamePlugin plugin, PropertyTracker<BasicSection> basicSettingsTracker, PropertyTracker<BriefingSection> briefingSettingsTracker,
-            IDictionary<House, PropertyTracker<House>> houseSettingsTrackers, string extraIniText)
+            PropertyTracker<SoleSurvivor.CratesSection> cratesSettingsTracker, IDictionary<House, PropertyTracker<House>> houseSettingsTrackers, string extraIniText)
         {
             InitializeComponent();
             this.plugin = plugin;
@@ -77,6 +78,7 @@ namespace MobiusEditor.Dialogs
             this.basicSettingsTracker.PropertyChanged += this.BasicSettingsTracker_PropertyChanged;
             this.briefingSettingsTracker = briefingSettingsTracker;
             this.houseSettingsTrackers = houseSettingsTrackers;
+            this.cratesSettingsTracker = cratesSettingsTracker;
 
             ResetSettingsTree(this.plugin.Map.BasicSection.SoloMission);
         }
@@ -152,52 +154,41 @@ namespace MobiusEditor.Dialogs
             switch (settingsTreeView.SelectedNode.Name)
             {
                 case "BASIC":
-                    {
-                        BasicSettings basicPanel = new BasicSettings(plugin, basicSettingsTracker);
-                        settingsPanel.Controls.Add(basicPanel);
-                        basicPanel.Dock = DockStyle.Fill;
-                    }
+                    BasicSettings basicPanel = new BasicSettings(plugin, basicSettingsTracker);
+                    settingsPanel.Controls.Add(basicPanel);
+                    basicPanel.Dock = DockStyle.Fill;
                     break;
                 case "CRATES":
-                    {
-                        // TODO make crates setting screen for SS.
-                        ScenarioSettings scenPanel = new ScenarioSettings(basicSettingsTracker);
-                        settingsPanel.Controls.Add(scenPanel);
-                        scenPanel.Dock = DockStyle.Fill;
-                    }
+                    
+                    // TODO make crates setting screen for SS.
+                    CrateSettings cratesPanel = new CrateSettings(cratesSettingsTracker);
+                    settingsPanel.Controls.Add(cratesPanel);
+                    cratesPanel.Dock = DockStyle.Fill;
                     break;
                 case "SCENARIO":
-                    {
-                        ScenarioSettings scenPanel = new ScenarioSettings(basicSettingsTracker);
-                        settingsPanel.Controls.Add(scenPanel);
-                        scenPanel.Dock = DockStyle.Fill;
-                    }
+                    ScenarioSettings scenPanel = new ScenarioSettings(basicSettingsTracker);
+                    settingsPanel.Controls.Add(scenPanel);
+                    scenPanel.Dock = DockStyle.Fill;
                     break;
                 case "RULES":
-                    {
-                        RulesSettings rulesPanel = new RulesSettings(ExtraIniText);
-                        rulesPanel.TextNeedsUpdating += this.RulesPanel_TextNeedsUpdating;
-                        settingsPanel.Controls.Add(rulesPanel);
-                        rulesPanel.Dock = DockStyle.Fill;
-                    }
-                    break;
+                    RulesSettings rulesPanel = new RulesSettings(ExtraIniText);
+                    rulesPanel.TextNeedsUpdating += this.RulesPanel_TextNeedsUpdating;
+                    settingsPanel.Controls.Add(rulesPanel);
+                    rulesPanel.Dock = DockStyle.Fill;
+                     break;
                 case "BRIEFING":
-                    {
-                        BriefingSettings briefPanel = new BriefingSettings(plugin, briefingSettingsTracker);
-                        settingsPanel.Controls.Add(briefPanel);
-                        briefPanel.Dock = DockStyle.Fill;
-                    }
+                    BriefingSettings briefPanel = new BriefingSettings(plugin, briefingSettingsTracker);
+                    settingsPanel.Controls.Add(briefPanel);
+                    briefPanel.Dock = DockStyle.Fill;
                     break;
                 default:
+                    var player = plugin.Map.Houses.Where(h => h.Type.Name == settingsTreeView.SelectedNode.Name).FirstOrDefault();
+                    if (player != null)
                     {
-                        var player = plugin.Map.Houses.Where(h => h.Type.Name == settingsTreeView.SelectedNode.Name).FirstOrDefault();
-                        if (player != null)
-                        {
-                            PlayerSettings playerPanel = new PlayerSettings(plugin, houseSettingsTrackers[player]);
-                            settingsPanel.Controls.Add(playerPanel);
-                            playerPanel.Dock = DockStyle.Fill;
-                        }
-                    }
+                        PlayerSettings playerPanel = new PlayerSettings(plugin, houseSettingsTrackers[player]);
+                        settingsPanel.Controls.Add(playerPanel);
+                        playerPanel.Dock = DockStyle.Fill;
+                    }                    
                     break;
             }
         }

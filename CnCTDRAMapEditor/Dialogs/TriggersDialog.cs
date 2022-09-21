@@ -46,6 +46,7 @@ namespace MobiusEditor.Dialogs
             switch (plugin.GameType)
             {
                 case GameType.TiberianDawn:
+                case GameType.SoleSurvivor:
                     existenceLabel.Text = "Loop";
                     event1Label.Text = "Event";
                     action1Label.Text = "Action";
@@ -82,6 +83,7 @@ namespace MobiusEditor.Dialogs
             switch (plugin.GameType)
             {
                 case GameType.TiberianDawn:
+                case GameType.SoleSurvivor:
                     existenceNames = new string[] { "No", "And", "Or" };
                     break;
                 case GameType.RedAlert:
@@ -138,6 +140,7 @@ namespace MobiusEditor.Dialogs
                 switch (plugin.GameType)
                 {
                     case GameType.TiberianDawn:
+                    case GameType.SoleSurvivor:
                         teamComboBox.DataBindings.Add("SelectedItem", SelectedTrigger.Action1, "Team");
                         break;
                     case GameType.RedAlert:
@@ -312,6 +315,7 @@ namespace MobiusEditor.Dialogs
             switch (plugin.GameType)
             {
                 case GameType.TiberianDawn:
+                case GameType.SoleSurvivor:
                     maxLength = 4;
                     break;
                 case GameType.RedAlert:
@@ -418,6 +422,7 @@ namespace MobiusEditor.Dialogs
                 switch (plugin.GameType)
                 {
                     case GameType.TiberianDawn:
+                    case GameType.SoleSurvivor:
                         switch (triggerEvent.EventType)
                         {
                             case TiberianDawn.EventTypes.EVENT_TIME:
@@ -860,7 +865,7 @@ namespace MobiusEditor.Dialogs
                 }
             }
             string[] errors = null;
-            if (plugin.GameType == GameType.TiberianDawn)
+            if (plugin.GameType == GameType.TiberianDawn || plugin.GameType == GameType.SoleSurvivor)
             {
                 errors = CheckTiberianDawnTriggers()?.ToArray();
             }

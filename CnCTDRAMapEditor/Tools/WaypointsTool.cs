@@ -18,6 +18,7 @@ using MobiusEditor.Interface;
 using MobiusEditor.Model;
 using MobiusEditor.Render;
 using MobiusEditor.Utility;
+using MobiusEditor.Widgets;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -32,14 +33,13 @@ namespace MobiusEditor.Tools
         /// Layers that are not painted by the PostRenderMap function on ViewTool level because they are handled
         /// at a specific point in the PostRenderMap override by the implementing tool.
         /// </summary>
-        protected override MapLayerFlag ManuallyHandledLayers => MapLayerFlag.Waypoints;
+        protected override MapLayerFlag ManuallyHandledLayers => MapLayerFlag.WaypointsIndic;
 
         private readonly ComboBox waypointCombo;
         private readonly Button jumpToButton;
 
-
-        private (Waypoint waypoint, int? cell)? undoWaypoint;
-        private (Waypoint waypoint, int? cell)? redoWaypoint;
+        private Map previewMap;
+        protected override Map RenderMap => previewMap;
 
         private bool placementMode;
 
@@ -47,12 +47,14 @@ namespace MobiusEditor.Tools
             IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> url)
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
+            previewMap = map;
             this.jumpToButton = jumpToButton;
             this.jumpToButton.Click += JumpToButton_Click;
             this.waypointCombo = waypointCombo;
             this.waypointCombo.DisplayMember = "";
             this.waypointCombo.DataSource = plugin.Map.Waypoints.ToArray();
             this.waypointCombo.SelectedIndexChanged += this.WaypointCombo_SelectedIndexChanged;
+            navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
             this.WaypointCombo_SelectedIndexChanged(null, null);
             UpdateStatus();
         }
@@ -73,6 +75,26 @@ namespace MobiusEditor.Tools
             else if ((e.Button == MouseButtons.Left) || (e.Button == MouseButtons.Right))
             {
                 PickWaypoint(navigationWidget.MouseCell, e.Button == MouseButtons.Right);
+            }
+        }
+
+
+        private void MouseoverWidget_MouseCellChanged(object sender, MouseCellChangedEventArgs e)
+        {
+            if (placementMode)
+            {
+                int selected = waypointCombo.SelectedIndex;
+                if (selected != -1)
+                {
+                    Waypoint[] wp = map.Waypoints;
+                    var waypoint = wp[selected];
+                    if (waypoint.Cell.HasValue)
+                    {
+                        mapPanel.Invalidate(map, waypoint.Cell.Value);
+                    }
+                }
+                mapPanel.Invalidate(map, e.OldCell);
+                mapPanel.Invalidate(map, e.NewCell);
             }
         }
 
@@ -115,68 +137,67 @@ namespace MobiusEditor.Tools
 
         private void SetWaypoint(Point location)
         {
-            if (map.Metrics.GetCell(location, out int cell))
+            if (!map.Metrics.GetCell(location, out int cell))
             {
-                int selected = waypointCombo.SelectedIndex;
-                Waypoint[] wp = map.Waypoints;
-                var waypoint = wp[selected];
-                if (waypoint.Cell != cell)
-                {
-                    if (undoWaypoint == null)
-                    {
-                        undoWaypoint = (waypoint, waypoint.Cell);
-                    }
-                    else if (undoWaypoint.Value.cell == cell)
-                    {
-                        undoWaypoint = null;
-                    }
-                    waypoint.Cell = cell;
-                    redoWaypoint = (waypoint, waypoint.Cell);
-                    CommitChange();
-                    mapPanel.Invalidate();
-                    waypointCombo.DataSource = null;
-                    waypointCombo.Items.Clear();
-                    waypointCombo.DataSource = wp.ToArray();
-                    waypointCombo.SelectedIndex = selected;
-                }
+                return;
             }
+            int selected = waypointCombo.SelectedIndex;
+            if (selected == -1)
+            {
+                return;
+            }
+            Waypoint[] wp = map.Waypoints;
+            var waypoint = wp[selected];
+            if (waypoint.Cell == cell)
+            {
+                return;
+            }
+            int? oldCell = waypoint.Cell;
+            waypoint.Cell = cell;
+            CommitChange(waypoint, oldCell, cell);
+            waypointCombo.DataSource = null;
+            waypointCombo.Items.Clear();
+            waypointCombo.DataSource = wp.ToArray();
+            waypointCombo.SelectedIndex = selected;
+            if (oldCell.HasValue)
+            {
+                mapPanel.Invalidate(map, oldCell.Value);
+            }
+            mapPanel.Invalidate(map, location);
         }
 
         private void RemoveWaypoint(Point location)
         {
-            if (map.Metrics.GetCell(location, out int cell))
+            if (!map.Metrics.GetCell(location, out int cell))
             {
-                Waypoint waypoint;
-                Waypoint[] wp = map.Waypoints;
-                int waypointIndex;
-                if (waypointCombo.SelectedItem is Waypoint selwp && selwp.Cell == cell)
-                {
-                    waypoint = selwp;
-                    waypointIndex = waypointCombo.SelectedIndex;
-                }
-                else
-                {
-                    waypointIndex = Enumerable.Range(0, wp.Length).Where(i => wp[i].Cell == cell).FirstOrDefault();
-                    // why doesn't "FirstOrDefault" allow GIVING a default? Bah.
-                    if (waypointIndex == 0 && wp[0].Cell != cell)
-                        waypointIndex = -1;
-                    waypoint = waypointIndex == -1 ? null : wp[waypointIndex];
-                }
-                if (waypoint != null)
-                {
-                    if (undoWaypoint == null)
-                    {
-                        undoWaypoint = (waypoint, waypoint.Cell);
-                    }
-                    waypoint.Cell = null;
-                    redoWaypoint = (waypoint, null);
-                    CommitChange();
-                    mapPanel.Invalidate();
-                    waypointCombo.DataSource = null;
-                    waypointCombo.Items.Clear();
-                    waypointCombo.DataSource = wp.ToArray();
-                    waypointCombo.SelectedIndex = waypointIndex;
-                }
+                return;
+            }
+            Waypoint waypoint;
+            Waypoint[] wp = map.Waypoints;
+            int waypointIndex;
+            if (waypointCombo.SelectedItem is Waypoint selwp && selwp.Cell == cell)
+            {
+                waypoint = selwp;
+                waypointIndex = waypointCombo.SelectedIndex;
+            }
+            else
+            {
+                waypointIndex = Enumerable.Range(0, wp.Length).Where(i => wp[i].Cell == cell).FirstOrDefault();
+                // why doesn't "FirstOrDefault" allow GIVING a default? Bah.
+                if (waypointIndex == 0 && wp[0].Cell != cell)
+                    waypointIndex = -1;
+                waypoint = waypointIndex == -1 ? null : wp[waypointIndex];
+            }
+            if (waypoint != null)
+            {
+                int? oldCell = waypoint.Cell;
+                waypoint.Cell = null;
+                CommitChange(waypoint, oldCell, null);
+                mapPanel.Invalidate(map, location);
+                waypointCombo.DataSource = null;
+                waypointCombo.Items.Clear();
+                waypointCombo.DataSource = wp.ToArray();
+                waypointCombo.SelectedIndex = waypointIndex;
             }
         }
 
@@ -229,7 +250,24 @@ namespace MobiusEditor.Tools
             }
             if (newVal.HasValue && curVal != newVal.Value)
             {
+                if (placementMode)
+                {
+                    int selected = waypointCombo.SelectedIndex;
+                    if (selected != -1)
+                    {
+                        Waypoint[] wp = map.Waypoints;
+                        var waypoint = wp[selected];
+                        if (waypoint.Cell.HasValue)
+                        {
+                            mapPanel.Invalidate(map, waypoint.Cell.Value);
+                        }
+                    }
+                }
                 waypointCombo.SelectedIndex = newVal.Value;
+                if (placementMode)
+                {
+                    mapPanel.Invalidate(map, navigationWidget.MouseCell);
+                }
             }
         }
 
@@ -240,6 +278,17 @@ namespace MobiusEditor.Tools
                 return;
             }
             placementMode = true;
+            int selected = waypointCombo.SelectedIndex;
+            if (selected != -1)
+            {
+                Waypoint[] wp = map.Waypoints;
+                var waypoint = wp[selected];
+                if (waypoint.Cell.HasValue)
+                {
+                    mapPanel.Invalidate(map, waypoint.Cell.Value);
+                }
+            }
+            mapPanel.Invalidate(map, navigationWidget.MouseCell);
             UpdateStatus();
         }
 
@@ -250,6 +299,17 @@ namespace MobiusEditor.Tools
                 return;
             }
             placementMode = false;
+            int selected = waypointCombo.SelectedIndex;
+            if (selected != -1)
+            {
+                Waypoint[] wp = map.Waypoints;
+                var waypoint = wp[selected];
+                if (waypoint.Cell.HasValue)
+                {
+                    mapPanel.Invalidate(map, waypoint.Cell.Value);
+                }
+            }
+            mapPanel.Invalidate(map, navigationWidget.MouseCell);
             UpdateStatus();
         }
 
@@ -289,39 +349,46 @@ namespace MobiusEditor.Tools
             }
         }
 
-        private void CommitChange()
+        private void CommitChange(Waypoint waypoint, int? oldCell, int? newCell)
         {
             bool origDirtyState = plugin.Dirty;
             plugin.Dirty = true;
-            var undoWaypoint2 = undoWaypoint;
             void undoAction(UndoRedoEventArgs e)
             {
-                undoWaypoint2.Value.waypoint.Cell = undoWaypoint2.Value.cell;
-                mapPanel.Invalidate();
+                waypoint.Cell = oldCell;
+                if (newCell.HasValue)
+                    e.MapPanel.Invalidate(e.Map, newCell.Value);
+                if (oldCell.HasValue)
+                    e.MapPanel.Invalidate(e.Map, oldCell.Value);
                 if (e.Plugin != null)
                 {
                     e.Plugin.Dirty = origDirtyState;
                 }
             }
-            var redoWaypoint2 = redoWaypoint;
             void redoAction(UndoRedoEventArgs e)
             {
-                redoWaypoint2.Value.waypoint.Cell = redoWaypoint2.Value.cell;
-                mapPanel.Invalidate();
+                waypoint.Cell = newCell;
+                if (newCell.HasValue)
+                    e.MapPanel.Invalidate(e.Map, newCell.Value);
+                if (oldCell.HasValue)
+                    e.MapPanel.Invalidate(e.Map, oldCell.Value);
                 if (e.Plugin != null)
                 {
                     e.Plugin.Dirty = true;
                 }
             }
-            undoWaypoint = null;
-            redoWaypoint = null;
             url.Track(undoAction, redoAction);
         }
 
         private void WaypointCombo_SelectedIndexChanged(Object sender, EventArgs e)
         {
-            jumpToButton.Enabled = waypointCombo.SelectedItem is Waypoint wp && wp.Cell.HasValue;
-            mapPanel.Invalidate();
+            Waypoint selected = waypointCombo.SelectedItem as Waypoint;
+            jumpToButton.Enabled = selected != null && selected.Cell.HasValue;
+            if (selected != null && selected.Cell.HasValue)
+            {
+                mapPanel.Invalidate(RenderMap, selected.Cell.Value);
+            }
+            mapPanel.Invalidate(RenderMap, navigationWidget.MouseCell);
         }
 
         private void JumpToButton_Click(Object sender, EventArgs e)
@@ -351,15 +418,61 @@ namespace MobiusEditor.Tools
             }
         }
 
+        protected override void PreRenderMap()
+        {
+            base.PreRenderMap();
+            previewMap = map.Clone();
+            if (!placementMode)
+            {
+                return;
+            }
+            int selectedIndex = waypointCombo.SelectedIndex;
+            if (selectedIndex == -1)
+            {
+                return;
+            }
+            Waypoint orig = previewMap.Waypoints[selectedIndex];
+            var location = navigationWidget.MouseCell;
+            if(!previewMap.Metrics.GetCell(location, out int cell))
+            {
+                return;
+            }
+            if (previewMap.Waypoints.Length == map.Waypoints.Length + 1)
+            {
+                selectedIndex = map.Waypoints.Length;
+                previewMap.Waypoints[selectedIndex] = new Waypoint(orig.Name, orig.Flag, orig.Metrics);
+            }
+            previewMap.Waypoints[selectedIndex].Cell = cell;
+            previewMap.Waypoints[selectedIndex].Tint = Color.FromArgb(128, Color.White);
+        }
+
         protected override void PostRenderMap(Graphics graphics)
         {
             base.PostRenderMap(graphics);
+            int selectedIndex = waypointCombo.SelectedIndex;
             Waypoint selected = waypointCombo.SelectedItem as Waypoint;
+            Waypoint dummySelected = null;
             Waypoint[] selectedRange = selected != null ? new [] { selected } : new Waypoint[] { };
-            MapRenderer.RenderWayPoints(graphics, map, Globals.MapTileSize, Globals.MapTileScale, selectedRange);
+            MapRenderer.RenderAllBoundsFromCell(graphics, Globals.MapTileSize,
+                map.Waypoints.Where(wp => wp != selected && wp.Cell.HasValue).Select(wp => wp.Cell.Value), map.Metrics, Color.Green);
+            MapRenderer.RenderWayPointIndicators(graphics, map, Globals.MapTileSize, Globals.MapTileScale, Color.LightGreen, false, true, selectedRange);
             if (selected != null)
             {
-                MapRenderer.RenderWayPoints(graphics, map, Globals.MapTileSize, Globals.MapTileScale, Color.Black, Color.Yellow, Color.Yellow, true, false, selectedRange);
+                bool forPreview = false;
+                if (placementMode && selectedIndex >= 0)
+                {
+                    selected = previewMap.Waypoints[selectedIndex];
+                    dummySelected = previewMap.Waypoints.Length == map.Waypoints.Length + 1 ? previewMap.Waypoints[map.Waypoints.Length] : null;
+                }
+                if (selected.Cell.HasValue)
+                {
+                    MapRenderer.RenderAllBoundsFromCell(graphics, Globals.MapTileSize, new int[] { selected.Cell.Value }, map.Metrics, Color.Yellow);
+                    MapRenderer.RenderWayPointIndicators(graphics, map, Globals.MapTileSize, Globals.MapTileScale, Color.Yellow, false, false, selectedRange);
+                }
+                if (dummySelected != null && (selected == null || selected.Cell != dummySelected.Cell))
+                {
+                    MapRenderer.RenderWayPointIndicators(graphics, map, Globals.MapTileSize, Globals.MapTileScale, Color.Yellow, true, false, new[] { dummySelected });
+                }
             }
         }
 
@@ -445,6 +558,7 @@ namespace MobiusEditor.Tools
                 {
                     this.jumpToButton.Click -= JumpToButton_Click;
                     this.waypointCombo.SelectedIndexChanged -= this.WaypointCombo_SelectedIndexChanged;
+                    navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;
                     Deactivate();
                 }
                 disposedValue = true;

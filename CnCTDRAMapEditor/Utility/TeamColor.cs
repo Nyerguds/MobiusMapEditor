@@ -57,11 +57,33 @@ namespace MobiusEditor.Utility
         {
             this.teamColorManager = teamColorManager;
         }
+        public TeamColor(TeamColorManager teamColorManager, TeamColor col, string newName, Vector3 hsvShiftOverride)
+        {
+            this.teamColorManager = teamColorManager;
+            this.Load(col);
+            this.Name = newName;
+            this.hsvShift = hsvShiftOverride;
+        }
+
+        public void Load(TeamColor col)
+        {
+            this.Name = col.Name;
+            this.Variant = col.Variant;
+            this.lowerBounds = col.LowerBounds;
+            this.upperBounds = col.UpperBounds;
+            this.fudge = col.Fudge;
+            this.hsvShift = col.HSVShift;
+            this.inputLevels = col.InputLevels;
+            this.outputLevels = col.OutputLevels;
+            this.overallInputLevels = col.OverallInputLevels;
+            this.overallOutputLevels = col.OverallOutputLevels;
+            this.radarMapColor = col.RadarMapColor;
+        }
 
         public void Load(string name, string variant, Color? lowerBounds, Color? upperBounds, float? fudge, Vector3? hsvShift, Vector3? inputLevels, Vector2? outputLevels, Vector3? overallInputLevels, Vector2? overallOutputLevels, Color? radarMapColor)
         {
-            Name = name;
-            Variant = variant;
+            this.Name = name;
+            this.Variant = variant;
             this.lowerBounds = lowerBounds;
             this.upperBounds = upperBounds;
             this.fudge = fudge;
@@ -79,8 +101,8 @@ namespace MobiusEditor.Utility
             xmlDoc.LoadXml(xml);
 
             var node = xmlDoc.FirstChild;
-            Name = node.Attributes["Name"].Value;
-            Variant = node.Attributes["Variant"]?.Value;
+            this.Name = node.Attributes["Name"].Value;
+            this.Variant = node.Attributes["Variant"]?.Value;
 
             var lowerBoundsNode = node.SelectSingleNode("LowerBounds");
             if (lowerBoundsNode != null)
@@ -95,7 +117,7 @@ namespace MobiusEditor.Utility
             var upperBoundsNode = node.SelectSingleNode("UpperBounds");
             if (upperBoundsNode != null)
             {
-                upperBounds = Color.FromArgb(
+                this.upperBounds = Color.FromArgb(
                     (int)(float.Parse(upperBoundsNode.SelectSingleNode("R").InnerText) * 255),
                     (int)(float.Parse(upperBoundsNode.SelectSingleNode("G").InnerText) * 255),
                     (int)(float.Parse(upperBoundsNode.SelectSingleNode("B").InnerText) * 255)
@@ -105,13 +127,13 @@ namespace MobiusEditor.Utility
             var fudgeNode = node.SelectSingleNode("Fudge");
             if (fudgeNode != null)
             {
-                fudge = float.Parse(fudgeNode.InnerText);
+                this.fudge = float.Parse(fudgeNode.InnerText);
             }
 
             var hsvShiftNode = node.SelectSingleNode("HSVShift");
             if (hsvShiftNode != null)
             {
-                hsvShift = new Vector3(
+                this.hsvShift = new Vector3(
                     float.Parse(hsvShiftNode.SelectSingleNode("X").InnerText),
                     float.Parse(hsvShiftNode.SelectSingleNode("Y").InnerText),
                     float.Parse(hsvShiftNode.SelectSingleNode("Z").InnerText)
@@ -121,7 +143,7 @@ namespace MobiusEditor.Utility
             var inputLevelsNode = node.SelectSingleNode("InputLevels");
             if (inputLevelsNode != null)
             {
-                inputLevels = new Vector3(
+                this.inputLevels = new Vector3(
                     float.Parse(inputLevelsNode.SelectSingleNode("X").InnerText),
                     float.Parse(inputLevelsNode.SelectSingleNode("Y").InnerText),
                     float.Parse(inputLevelsNode.SelectSingleNode("Z").InnerText)
@@ -131,7 +153,7 @@ namespace MobiusEditor.Utility
             var outputLevelsNode = node.SelectSingleNode("OutputLevels");
             if (outputLevelsNode != null)
             {
-                outputLevels = new Vector2(
+                this.outputLevels = new Vector2(
                     float.Parse(outputLevelsNode.SelectSingleNode("X").InnerText),
                     float.Parse(outputLevelsNode.SelectSingleNode("Y").InnerText)
                 );
@@ -140,7 +162,7 @@ namespace MobiusEditor.Utility
             var overallInputLevelsNode = node.SelectSingleNode("OverallInputLevels");
             if (overallInputLevelsNode != null)
             {
-                overallInputLevels = new Vector3(
+                this.overallInputLevels = new Vector3(
                     float.Parse(overallInputLevelsNode.SelectSingleNode("X").InnerText),
                     float.Parse(overallInputLevelsNode.SelectSingleNode("Y").InnerText),
                     float.Parse(overallInputLevelsNode.SelectSingleNode("Z").InnerText)
@@ -150,7 +172,7 @@ namespace MobiusEditor.Utility
             var overallOutputLevelsNode = node.SelectSingleNode("OverallOutputLevels");
             if (outputLevelsNode != null)
             {
-                overallOutputLevels = new Vector2(
+                this.overallOutputLevels = new Vector2(
                     float.Parse(overallOutputLevelsNode.SelectSingleNode("X").InnerText),
                     float.Parse(overallOutputLevelsNode.SelectSingleNode("Y").InnerText)
                 );
@@ -159,7 +181,7 @@ namespace MobiusEditor.Utility
             var radarMapColorNode = node.SelectSingleNode("RadarMapColor");
             if (radarMapColorNode != null)
             {
-                radarMapColor = Color.FromArgb(
+                this.radarMapColor = Color.FromArgb(
                     (int)(float.Parse(radarMapColorNode.SelectSingleNode("R").InnerText) * 255),
                     (int)(float.Parse(radarMapColorNode.SelectSingleNode("G").InnerText) * 255),
                     (int)(float.Parse(radarMapColorNode.SelectSingleNode("B").InnerText) * 255)
@@ -169,15 +191,15 @@ namespace MobiusEditor.Utility
 
         public void Flatten()
         {
-            lowerBounds = LowerBounds;
-            upperBounds = UpperBounds;
-            fudge = Fudge;
-            hsvShift = HSVShift;
-            inputLevels = InputLevels;
-            outputLevels = OutputLevels;
-            overallInputLevels = OverallInputLevels;
-            overallOutputLevels = OverallOutputLevels;
-            radarMapColor = RadarMapColor;
+            this.lowerBounds = this.LowerBounds;
+            this.upperBounds = this.UpperBounds;
+            this.fudge = this.Fudge;
+            this.hsvShift = this.HSVShift;
+            this.inputLevels = this.InputLevels;
+            this.outputLevels = this.OutputLevels;
+            this.overallInputLevels = this.OverallInputLevels;
+            this.overallOutputLevels = this.OverallOutputLevels;
+            this.radarMapColor = this.RadarMapColor;
         }
     }
 }
