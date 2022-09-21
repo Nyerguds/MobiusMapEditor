@@ -8,6 +8,14 @@ Right now, I'm not really looking into making this a joint project. Specific bug
 
 ---
 
+## Installation
+
+**DO NOT unpack this in the C&C Remastered Collection's install folder.** It is absolutely unnecessary to overwrite any files of the installed game.
+
+Simply unpack the editor into a new folder on your disk somewhere. On first startup, it will automatically try to detect the folder in which the game is installed, and if it can't find it, it will show a popup asking you to locate it.
+
+---
+
 ## Usage
 
 The creators of the map editor have chosen to build a manual into the editor, but it might not be immediately obvious. Look at the bottom bar, and it will tell you for the currently selected editing type what your mouse buttons will do, and which modifier keys will change to different placement modes. Once you hold down such a key, the bottom bar text will change, further explaining what your mouse buttons will do in this specific mode. Several types of objects can also be dragged around, and will change the bottom bar text accordingly when the mouse button is pressed down on an object.
@@ -346,9 +354,13 @@ These options are all enabled by default, but can be disabled if you wish. Use t
 * Undo/Redo tracking will now also undo the map's modified-status.
 * Added support for the C&C95 v1.06 briefing line split format.
 * Added Tiberian Dawn Megamap support. (Sole Survivor map type)
+* Made the editor store its dll mess in a subfolder, like the retail version does.
+* Changed waypoints style; waypoints are now actually shown on the map as objects, with flags representing multiplayer starting points, and the rest using the green beacon graphic. A small label in the same style as the building rebuild priority gives the waypoint's name. The objects and labels can be separately disabled in the View menu, though like on Structures, the indicators won't be shown if the main objects are not drawn.
+* Waypoints now show a preview in placement mode.
+* [WIP] Sole Survivor is now supported as separate game type in the editor.
 
 ### Possible future features
 
 Some ideas that might get implemented in the future:
 
-* Add Sole Survivor as separate game type
+* Seems I'm all out!
