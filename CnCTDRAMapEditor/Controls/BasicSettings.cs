@@ -103,13 +103,9 @@ namespace MobiusEditor.Controls
                     lblCarryoverClassic.Visible = false;
                     lblThemeClassic.Visible = false;
                     // Disable these. Labels and stuff too.
-                    win2ComboBox.Visible = false;
-                    win3ComboBox.Visible = false;
-                    win4ComboBox.Visible = false;
-                    loseComboBox.Visible = false;
-
-
-
+                    win2Label.Visible = win2ComboBox.Visible = lblWin2Remaster.Visible = false;
+                    win3Label.Visible = win3ComboBox.Visible = lblWin3Remaster.Visible = false;
+                    win4Label.Visible = win4ComboBox.Visible = lblWin4Remaster.Visible = false;                    
                     break;
             }
         }

@@ -453,12 +453,16 @@ namespace MobiusEditor.Tools
             Waypoint selected = waypointCombo.SelectedItem as Waypoint;
             Waypoint dummySelected = null;
             Waypoint[] selectedRange = selected != null ? new [] { selected } : new Waypoint[] { };
+            if (plugin.GameType == GameType.SoleSurvivor && (Layers & MapLayerFlag.FootballArea) == MapLayerFlag.FootballArea)
+            {
+                MapRenderer.RenderAllFootballAreas(graphics, map, Globals.MapTileSize, Globals.MapTileScale, plugin.GameType);
+                MapRenderer.RenderFootballAreaFlags(graphics, plugin.GameType, map, Globals.MapTileSize);
+            }
             MapRenderer.RenderAllBoundsFromCell(graphics, Globals.MapTileSize,
-                map.Waypoints.Where(wp => wp != selected && wp.Cell.HasValue).Select(wp => wp.Cell.Value), map.Metrics, Color.Green);
+                map.Waypoints.Where(wp => wp != selected && wp.Cell.HasValue).Select(wp => wp.Cell.Value), map.Metrics, Color.Orange);
             MapRenderer.RenderWayPointIndicators(graphics, map, Globals.MapTileSize, Globals.MapTileScale, Color.LightGreen, false, true, selectedRange);
             if (selected != null)
             {
-                bool forPreview = false;
                 if (placementMode && selectedIndex >= 0)
                 {
                     selected = previewMap.Waypoints[selectedIndex];

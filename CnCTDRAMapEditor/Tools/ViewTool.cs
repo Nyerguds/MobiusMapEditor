@@ -231,10 +231,10 @@ namespace MobiusEditor.Tools
 
         protected virtual void PostRenderMap(Graphics graphics)
         {
-            PostRenderMap(graphics, this.map, Globals.MapTileScale, Layers, ManuallyHandledLayers);
+            PostRenderMap(graphics, this.plugin.GameType, this.map, Globals.MapTileScale, Layers, ManuallyHandledLayers);
         }
 
-        public static void PostRenderMap(Graphics graphics, Map map, double tileScale, MapLayerFlag layersToRender, MapLayerFlag manuallyHandledLayers)
+        public static void PostRenderMap(Graphics graphics, GameType gameType, Map map, double tileScale, MapLayerFlag layersToRender, MapLayerFlag manuallyHandledLayers)
         {
             Size tileSize = new Size(Math.Max(1, (int)(Globals.OriginalTileWidth * tileScale)), Math.Max(1, (int)(Globals.OriginalTileHeight * tileScale)));
 
@@ -249,6 +249,12 @@ namespace MobiusEditor.Tools
                 && (manuallyHandledLayers & MapLayerFlag.CellTriggers) == MapLayerFlag.None)
             {
                 MapRenderer.RenderCellTriggers(graphics, map, tileSize, tileScale);
+            }
+            if ((layersToRender & (MapLayerFlag.Waypoints | MapLayerFlag.FootballArea)) == (MapLayerFlag.Waypoints | MapLayerFlag.FootballArea)
+                && (manuallyHandledLayers & MapLayerFlag.WaypointsIndic) == MapLayerFlag.None && gameType == GameType.SoleSurvivor)
+            {
+                MapRenderer.RenderAllFootballAreas(graphics, map, Globals.MapTileSize, Globals.MapTileScale, gameType);
+                MapRenderer.RenderFootballAreaFlags(graphics, gameType, map, Globals.MapTileSize);
             }
             if ((layersToRender & (MapLayerFlag.Waypoints | MapLayerFlag.WaypointsIndic)) == (MapLayerFlag.Waypoints | MapLayerFlag.WaypointsIndic)
                 && (manuallyHandledLayers & MapLayerFlag.WaypointsIndic) == MapLayerFlag.None)
@@ -299,6 +305,7 @@ namespace MobiusEditor.Tools
             this.mapPanel.PostRender -= MapPanel_PostRender;
             this.map.RulesChanged -= this.Map_RulesChanged;
             this.map.MapContentsChanged -= this.Map_MapContentsChanged;
+
         }
 
         #region IDisposable Support

@@ -1,7 +1,9 @@
-﻿using System;
+﻿using MobiusEditor.Interface;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -31,6 +33,54 @@ namespace MobiusEditor.Utility
 
     public static class GeneralUtils
     {
+
+        public static bool CheckForIniInfo(String path, FileType fileType, string section, string key, string value)
+        {
+            try
+            {
+                Encoding enc = new UTF8Encoding(false, true);
+                String iniContents = null;
+                switch (fileType)
+                {
+                    case FileType.INI:
+                    case FileType.BIN:
+                        String iniPath = fileType == FileType.INI ? path : Path.ChangeExtension(path, ".ini");
+                        Byte[] bytes = File.ReadAllBytes(path);
+                        iniContents = enc.GetString(bytes);
+                        break;
+                    case FileType.MEG:
+                    case FileType.PGM:
+                        using (var megafile = new Megafile(path))
+                        {
+                            var testIniFile = megafile.Where(p => Path.GetExtension(p).ToLower() == ".ini").FirstOrDefault();
+                            if (testIniFile != null)
+                            {
+                                using (var iniReader = new StreamReader(megafile.Open(testIniFile), enc))
+                                {
+                                    iniContents = iniReader.ReadToEnd();
+                                }
+                            }
+                        }
+                        break;
+                }
+                if (iniContents == null)
+                {
+                    return false;
+                }
+                INI checkIni = new INI();
+                checkIni.Parse(iniContents);
+                INISection iniSection = checkIni.Sections.Extract(section);
+                if (key == null || value == null)
+                {
+                    return iniSection != null;
+                }
+                return iniSection != null && iniSection.Keys.Contains(key) && iniSection[key].Trim() == value;
+            }
+            catch
+            {
+                return false;
+            }
+        }
 
         public static String MakeNew4CharName(IEnumerable<string> currentList, string fallback, params string[] reservedNames)
         {

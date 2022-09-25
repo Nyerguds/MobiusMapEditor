@@ -30,6 +30,30 @@ namespace MobiusEditor.Utility
 
         public TeamColor this[string key] => !string.IsNullOrEmpty(key) ? teamColors[key] : null;
 
+        public void RemoveTeamColor(string col)
+        {
+            if (col != null && teamColors.ContainsKey(col))
+            {
+                teamColors.Remove(col);
+            }
+        }
+
+        public void AddTeamColor(TeamColor col)
+        {
+            if (col != null && col.Name != null)
+            {
+                teamColors[col.Name] = col;
+            }
+        }
+
+        public void RemoveTeamColor(TeamColor col)
+        {
+            if (col != null && col.Name != null && teamColors.ContainsKey(col.Name))
+            {
+                teamColors.Remove(col.Name);
+            }
+        }
+
         public TeamColorManager(MegafileManager megafileManager, params string[] expandModPaths)
         {
             this.megafileManager = megafileManager;

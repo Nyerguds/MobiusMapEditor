@@ -264,15 +264,16 @@ namespace MobiusEditor.Render
             }
             if ((layers & MapLayerFlag.Waypoints) != MapLayerFlag.None)
             {
+                // todo avoid overlapping waypoints of the same type?
                 HashSet<int> handledPoints = new HashSet<int>();
-                TeamColor[] flags = map.FlagColors.ToArray();
+                TeamColor[] flagColors = map.FlagColors.ToArray();
                 foreach (Waypoint waypoint in map.Waypoints)
                 {
-                    if (!waypoint.Cell.HasValue || (locations != null && !locations.Contains(waypoint.Point.Value)))
+                    if (!waypoint.Point.HasValue || (locations != null && !locations.Contains(waypoint.Point.Value)))
                     {
                         continue;
                     }
-                    Render(gameType, map.Theater, tileSize, flags, waypoint).Item2(graphics);
+                    Render(gameType, map.BasicSection.SoloMission, map.Theater, tileSize, flagColors, waypoint).Item2(graphics);
                 }
             }
         }
@@ -320,11 +321,11 @@ namespace MobiusEditor.Render
         public static (Rectangle, Action<Graphics>) Render(GameType gameType, TheaterType theater, OverlayType[] tiberiumOrGoldTypes, OverlayType[] gemTypes, Point topLeft, Size tileSize, double tileScale, Overlay overlay)
         {
             string name;
-            if (overlay.Type.IsGem)
+            if (overlay.Type.IsGem && gemTypes != null)
             {
                 name = gemTypes[new Random(randomSeed ^ topLeft.GetHashCode()).Next(tiberiumOrGoldTypes.Length)].Name;
             }
-            else if (overlay.Type.IsTiberiumOrGold)
+            else if (overlay.Type.IsTiberiumOrGold && tiberiumOrGoldTypes != null)
             {
                 name = tiberiumOrGoldTypes[new Random(randomSeed ^ topLeft.GetHashCode()).Next(tiberiumOrGoldTypes.Length)].Name;
             }
@@ -342,22 +343,27 @@ namespace MobiusEditor.Render
                 icon = overlay.Type.ForceTileNr == -1 ? overlay.Icon : overlay.Type.ForceTileNr;
             }
             // For Decoration types, generate dummy if not found.
+            bool isTeleport = gameType == GameType.SoleSurvivor && overlay.Type == SoleSurvivor.OverlayTypes.Teleport;
             if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, name, icon, out Tile tile, (overlay.Type.Flag & OverlayTypeFlag.Decoration) != 0, false))
             {
+                int actualTopLeftX = topLeft.X * tileSize.Width;
+                int actualTopLeftY = topLeft.Y * tileSize.Height;
                 Rectangle overlayBounds = RenderBounds(tile.Image.Size, new Size(1, 1), tileScale);
-                overlayBounds.X += topLeft.X * tileSize.Width;
-                overlayBounds.Y += topLeft.Y * tileSize.Width;
+                overlayBounds.X += actualTopLeftX;
+                overlayBounds.Y += actualTopLeftY;
                 var tint = overlay.Tint;
+                // unused atm
+                var brightness = 1.0f;
                 void render(Graphics g)
                 {
                     var imageAttributes = new ImageAttributes();
-                    if (tint != Color.White)
+                    if (tint != Color.White || brightness != 1.0f)
                     {
                         var colorMatrix = new ColorMatrix(new float[][]
                         {
-                            new float[] {tint.R / 255.0f, 0, 0, 0, 0},
-                            new float[] {0, tint.G / 255.0f, 0, 0, 0},
-                            new float[] {0, 0, tint.B / 255.0f, 0, 0},
+                            new float[] {tint.R * brightness / 255.0f, 0, 0, 0, 0},
+                            new float[] {0, tint.G * brightness / 255.0f, 0, 0, 0},
+                            new float[] {0, 0, tint.B * brightness / 255.0f, 0, 0},
                             new float[] {0, 0, 0, tint.A / 255.0f, 0},
                             new float[] {0, 0, 0, 0, 1},
                         }
@@ -365,6 +371,17 @@ namespace MobiusEditor.Render
                         imageAttributes.SetColorMatrix(colorMatrix);
                     }
                     g.DrawImage(tile.Image, overlayBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes);
+                    if (isTeleport)
+                    {
+                        int blackBorderX = tileSize.Width / 16;
+                        int blackBorderY = tileSize.Height / 16;
+                        int blackWidth = tileSize.Width - blackBorderX * 2;
+                        int blackHeight = tileSize.Height - blackBorderY * 2;
+                        using (SolidBrush black = new SolidBrush(Color.Black))
+                        {
+                            g.FillRectangle(black, actualTopLeftX + blackBorderX, actualTopLeftY + blackBorderY, blackWidth, blackHeight);
+                        }
+                    }
                 }
                 return (overlayBounds, render);
             }
@@ -789,7 +806,7 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static (Rectangle, Action<Graphics>) Render(GameType gameType, TheaterType theater, Size tileSize, TeamColor[] flagColors, Waypoint waypoint)
+        public static (Rectangle, Action<Graphics>) Render(GameType gameType, bool soloMission, TheaterType theater, Size tileSize, TeamColor[] flagColors, Waypoint waypoint)
         {
             if (!waypoint.Point.HasValue)
             {
@@ -798,9 +815,14 @@ namespace MobiusEditor.Render
             Point point = waypoint.Point.Value;
             string tileGraphics = "beacon";
             TeamColor teamColor = null;
-            if ((waypoint.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart)
+            Color tint = waypoint.Tint;
+            float brightness = 1.0f;
+            float transMod = 0.5f;
+            if (!soloMission && (waypoint.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart)
             {
                 tileGraphics = "flagfly";
+                // Always paint flags as opaque.
+                transMod = 1.0f;
                 int pls = (int)WaypointFlag.PlayerStart;
                 int flagId = ((int)waypoint.Flag & ~pls) / (pls << 1);
                 int mpId = 0;
@@ -816,16 +838,14 @@ namespace MobiusEditor.Render
             {
                 tileGraphics = "beacon";
             }
-            Color tint = waypoint.Tint;
-            float brightness = 1.0f;
             if (gameType == GameType.SoleSurvivor && (waypoint.Flag & WaypointFlag.CrateSpawn) == WaypointFlag.CrateSpawn)
             {
                 tileGraphics = "scrate";
-                tint = Color.FromArgb(waypoint.Tint.A, Color.Green);
-                brightness = 1.5f;
+                //tint = Color.FromArgb(waypoint.Tint.A, Color.Green);
+                //brightness = 1.5f;
             }
             int icon = 0;
-            if (Globals.TheTilesetManager.GetTeamColorTileData(theater.Tilesets, tileGraphics, icon, teamColor, out Tile tile, false, true))
+            if (Globals.TheTilesetManager.GetTeamColorTileData(theater.Tilesets, tileGraphics, icon, teamColor, out Tile tile, true, true))
             {
                 var location = new Point(point.X * tileSize.Width, point.Y * tileSize.Height);
                 var renderSize = tileSize;
@@ -836,15 +856,19 @@ namespace MobiusEditor.Render
                 void render(Graphics g)
                 {
                     var imageAttributes = new ImageAttributes();
-                    var colorMatrix = new ColorMatrix(new float[][]
+                    // Waypoints get drawn as semitransparent, so always execute this.
+                    if (tint != Color.White || brightness != 1.0 || transMod != 1.0)
                     {
-                        new float[] {tint.R * brightness / 255.0f, 0, 0, 0, 0},
-                        new float[] {0, tint.G * brightness / 255.0f, 0, 0, 0},
-                        new float[] {0, 0, tint.B * brightness / 255.0f, 0, 0},
-                        new float[] {0, 0, 0, (tint.A / 2) / 255.0f, 0},
-                        new float[] {0, 0, 0, 0, 1},
-                    });
-                    imageAttributes.SetColorMatrix(colorMatrix);
+                        var colorMatrix = new ColorMatrix(new float[][]
+                        {
+                            new float[] {tint.R * brightness / 255.0f, 0, 0, 0, 0},
+                            new float[] {0, tint.G * brightness / 255.0f, 0, 0, 0},
+                            new float[] {0, 0, tint.B * brightness / 255.0f, 0, 0},
+                            new float[] {0, 0, 0, (tint.A * transMod) / 255.0f, 0},
+                            new float[] {0, 0, 0, 0, 1},
+                        });
+                        imageAttributes.SetColorMatrix(colorMatrix);
+                    }
                     g.DrawImage(tile.Image, renderBounds, 0, 0, tile.OpaqueBounds.Width, tile.OpaqueBounds.Height, GraphicsUnit.Pixel, imageAttributes);
                 }
                 return (renderBounds, render);
@@ -952,6 +976,64 @@ namespace MobiusEditor.Render
                 }
             }
         }
+
+        public static void RenderAllFootballAreas(Graphics graphics, Map map, Size tileSize, double tileScale, GameType gameType)
+        {
+            // probably wouldn't work anyway; SS "road" would not be initialised.
+            if (gameType != GameType.SoleSurvivor)
+            {
+                return;
+            }
+            HashSet<Point> footballPoints = new HashSet<Point>();
+            foreach (Waypoint waypoint in map.Waypoints)
+            {
+                if (!waypoint.Point.HasValue || Waypoint.GetMpIdFromFlag(waypoint.Flag) == -1)
+                {
+                    continue;
+                }
+                Point[] roadPoints = new Rectangle(waypoint.Point.Value.X - 1, waypoint.Point.Value.Y - 1, 4, 3).Points().ToArray();
+                foreach (Point p in roadPoints)
+                {
+                    //if (p == waypoint.Point.Value)
+                    //{
+                    //    continue;
+                    //}
+                    footballPoints.Add(p);
+                }
+            }
+            foreach (Point p in footballPoints.OrderBy(p => p.Y * map.Metrics.Width + p.X))
+            {
+                Overlay footballTerrain = new Overlay()
+                {
+                    Type = SoleSurvivor.OverlayTypes.Road,
+                    Tint = Color.FromArgb(128, Color.White)
+                };
+                Render(gameType, map.Theater, null, null, p, tileSize, tileScale, footballTerrain).Item2(graphics);
+            }
+        }
+
+        public static void RenderFootballAreaFlags(Graphics graphics, GameType gameType, Map map, Size tileSize)
+        {
+            if (gameType != GameType.SoleSurvivor)
+            {
+                return;
+            }
+            // Re-render flags on top of football areas.
+            List<Waypoint> footballWayPoints = new List<Waypoint>();
+            foreach (Waypoint waypoint in map.Waypoints)
+            {
+                if (waypoint.Point.HasValue && Waypoint.GetMpIdFromFlag(waypoint.Flag) >= 0)
+                {
+                    footballWayPoints.Add(waypoint);
+                }
+            }
+            TeamColor[] flagColors = map.FlagColors.ToArray();
+            foreach (Waypoint wp in footballWayPoints)
+            {
+                Render(gameType, false, map.Theater, tileSize, flagColors, wp).Item2(graphics);
+            }
+        }
+        
 
         public static void RenderAllFakeBuildingLabels(Graphics graphics, Map map, Size tileSize, double tileScale)
         {
@@ -1126,50 +1208,6 @@ namespace MobiusEditor.Render
                 }
             }
         }
-
-        public static void RenderWayPointBounds(Graphics graphics, Map map, Size tileSize, double tileScale, params Waypoint[] specifiedToExclude)
-        {
-            RenderWayPointBounds(graphics, map, tileSize, tileScale, Color.Black, Color.DarkOrange, Color.DarkOrange, false, true, specifiedToExclude);
-        }
-
-        public static void RenderWayPointBounds(Graphics graphics, Map map, Size tileSize, double tileScale, Color fillColor, Color borderColor, Color textColor, bool thickborder, bool excludeSpecified, params Waypoint[] specified)
-        {
-            HashSet<Waypoint> specifiedWaypoints = specified.ToHashSet();
-            float borderSize = Math.Max(0.5f, tileSize.Width / 60.0f);
-            float thickBorderSize = Math.Max(1f, tileSize.Width / 20.0f);
-            using (var waypointBackgroundBrush = new SolidBrush(Color.FromArgb(96, fillColor)))
-            using (var waypointBrush = new SolidBrush(textColor))
-            using (var waypointPen = new Pen(Color.FromArgb(128, borderColor), thickborder ? thickBorderSize : borderSize))
-            {
-                Waypoint[] toPaint = excludeSpecified ? map.Waypoints : specified;
-                StringFormat stringFormat = new StringFormat
-                {
-                    Alignment = StringAlignment.Center,
-                    LineAlignment = StringAlignment.Center
-                };
-                foreach (var waypoint in toPaint)
-                {
-                    if (waypoint.Cell.HasValue && map.Metrics.GetLocation(waypoint.Cell.Value, out Point point))
-                    {
-                        if (excludeSpecified && specifiedWaypoints.Contains(waypoint))
-                        {
-                            continue;
-                        }
-                        var location = new Point(point.X * tileSize.Width, point.Y * tileSize.Height);
-                        var textBounds = new Rectangle(location, tileSize);
-                        graphics.FillRectangle(waypointBackgroundBrush, textBounds);
-                        graphics.DrawRectangle(waypointPen, textBounds);
-                        var text = waypoint.Name.ToString();
-                        using (var font = graphics.GetAdjustedFont(text, SystemFonts.DefaultFont, textBounds.Width,
-                            Math.Max(1, (int)(24 * tileScale)), Math.Max(1, (int)(48 * tileScale)), true))
-                        {
-                            graphics.DrawString(text.ToString(), font, waypointBrush, textBounds, stringFormat);
-                        }
-                    }
-                }
-            }
-        }
-
 
         public static void RenderWayPointIndicators(Graphics graphics, Map map, Size tileSize, double tileScale, Color textColor, bool forPreview, bool excludeSpecified, params Waypoint[] specified)
         {

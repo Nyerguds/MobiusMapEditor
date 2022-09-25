@@ -49,10 +49,11 @@ namespace MobiusEditor.Model
         TechnoTriggers  = 1 << 13,
         BuildingRebuild = 1 << 14,
         BuildingFakes   = 1 << 15,
+        FootballArea    = 1 << 16,
 
         OverlayAll = Resources | Walls | Overlay,
         Technos = Terrain | Walls | Infantry | Units | Buildings | BuildingFakes,
-        Indicators = Boundaries | WaypointsIndic | CellTriggers | TechnoTriggers | BuildingRebuild | BuildingFakes,
+        Indicators = Boundaries | WaypointsIndic | CellTriggers | TechnoTriggers | BuildingRebuild | BuildingFakes | FootballArea,
         All = int.MaxValue
     }
 
@@ -236,7 +237,7 @@ namespace MobiusEditor.Model
         
         public event EventHandler<EventArgs> WaypointsUpdated;
 
-        public void FlagWaypointsUpdate()
+        public void NotifyWaypointsUpdate()
         {
             if (WaypointsUpdated != null)
                 WaypointsUpdated(this, new EventArgs());
@@ -246,7 +247,7 @@ namespace MobiusEditor.Model
 
         public event EventHandler<EventArgs> TriggersUpdated;
 
-        public void FlagTriggersUpdate()
+        public void NotifyTriggersUpdate()
         {
             if (TriggersUpdated != null)
                 TriggersUpdated(this, new EventArgs());
@@ -262,7 +263,7 @@ namespace MobiusEditor.Model
                 // Only an actual replacing of the list will call these, but they can be called manually after an update.
                 // A bit more manual than the whole ObservableCollection system, but a lot less cumbersome.
                 CleanUpTriggers();
-                FlagTriggersUpdate();
+                NotifyTriggersUpdate();
             }
         }
 
@@ -406,7 +407,7 @@ namespace MobiusEditor.Model
             }
             foreach (var overlayType in OverlayTypes.Where(itm => itm.Theaters == null || itm.Theaters.Contains(Theater)))
             {
-                overlayType.Init(Theater);
+                overlayType.Init(gameType, Theater);
             }
             foreach (var terrainType in TerrainTypes.Where(itm => itm.Theaters == null || itm.Theaters.Contains(Theater)))
             {

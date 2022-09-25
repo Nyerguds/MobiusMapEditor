@@ -170,39 +170,23 @@ namespace MobiusEditor.Model
             return Name;
         }
 
-        public void Init(TheaterType theater)
+        public void Init(GameType gameType, TheaterType theater)
         {
             var oldImage = Thumbnail;
-            int tilenr = ForceTileNr == -1 ? 0 : ForceTileNr;
-            if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, GraphicsSource, tilenr, out Tile tile, (Flag & OverlayTypeFlag.Decoration) != 0, false))
+            var tileSize = Globals.PreviewTileSize;
+            Bitmap th = new Bitmap(tileSize.Width, tileSize.Height);
+            using (Graphics g = Graphics.FromImage(th))
             {
-                var tileSize = Globals.PreviewTileSize;
-                Rectangle overlayBounds = MapRenderer.RenderBounds(tile.Image.Size, new Size(1, 1), Globals.PreviewTileScale);
-                Bitmap th = new Bitmap(tileSize.Width, tileSize.Height);
-                using (Graphics g = Graphics.FromImage(th))
+                int tilenr = ForceTileNr == -1 ? 0 : ForceTileNr;
+                Overlay mockOverlay = new Overlay()
                 {
-                    MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
-                    var imageAttributes = new ImageAttributes();
-                    if (Tint != Color.White)
-                    {
-                        var colorMatrix = new ColorMatrix(new float[][]
-                        {
-                            new float[] { Tint.R / 255.0f, 0, 0, 0, 0 },
-                            new float[] { 0, Tint.G / 255.0f, 0, 0, 0 },
-                            new float[] { 0, 0, Tint.B / 255.0f, 0, 0 },
-                            new float[] { 0, 0, 0, 1, 0 },
-                            new float[] { 0, 0, 0, 0, 1 },
-                        });
-                        imageAttributes.SetColorMatrix(colorMatrix);
-                    }
-                    g.DrawImage(tile.Image, overlayBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes);
-                }
-                Thumbnail = th;
+                    Type = this,
+                    Icon = tilenr,
+                };
+                MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
+                MapRenderer.Render(gameType, theater, null, null, Point.Empty, Globals.PreviewTileSize, Globals.PreviewTileScale, mockOverlay).Item2(g);
             }
-            else
-            {
-                Thumbnail = SystemIcons.Error.ToBitmap();
-            }
+            Thumbnail = th;
             if (oldImage != null)
             {
                 try { oldImage.Dispose(); }

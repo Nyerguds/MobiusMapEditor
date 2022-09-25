@@ -38,7 +38,7 @@ The file "CnCTDRAMapEditor.exe.config" contains settings to customise the editor
 
 ### Editor options:
 
-* **ModsToLoad**: semicolon (or comma) separated list of mod entries. A mod entry can either be a Steam workshop ID, or a path of the type "Tiberian_Dawn\ModName" or "Red_Alert\ModName". The paths will initially be looked up under My Documents, but the loading system will also check the Steam workshop files, and use the game prefix part to verify the mod's targeted game. A mod will only be applied to the editor when a map of its targeted game is opened.
+* **ModsToLoad**: semicolon (or comma) separated list of mod entries. A mod entry can either be a Steam workshop ID, or a path of the type "Tiberian_Dawn\ModName" or "Red_Alert\ModName". The paths will initially be looked up under My Documents, but the loading system will also check the Steam workshop files, and use the game prefix part to verify the mod's targeted game. A mod will only be applied to the editor when a map of its targeted game is opened. Note that mods can only apply graphical changes from the tileset and house color xml files; the editor can't read any data from compiled dll files.
 * **MapScale**: Scaling multiplier for the size at which assets are rendered on the map; higher means lower quality. This will make the UI more responsive. Negative values will enable smooth scaling, which gives nicer graphics but will make the UI noticeable _less_ responsive. Defaults to 0.5.
 * **PreviewScale**: Scaling multiplier for the size at which assets are rendered on the preview tools. Negative values will enable smooth scaling, but this usually doesn't look good on the upscaled preview graphics. Defaults to 1.
 * **ExportScale**: Scaling multiplier for the size at which an exported image will be generated through "Tools" → "Export As Image". Negative values will enable smooth scaling. Defaults to -0.5.
@@ -62,6 +62,7 @@ These options are all enabled by default, but can be disabled if you wish. Use t
 * **ConvertCraters**: Any craters of the types CR2-CR6 placed in missions are bugged in the games, and revert to the smallest size of CR1. This filters them out and converts them to CR1 craters of the same size, and removes the other craters from the Smudge types list.
 * **BoundsObstructFill**: When filling map tiles with [Ctrl]+[Shift]+[Click], the map boundary acts as border blocking the fill spread. This applies both inside and outside the border.
 * **FilterTheaterObjects**: Filter out objects that don't belong in the current map's theater. This affects both map loading, and the items visible in the placement lists. Do not turn this off unless you really know what you're doing; having theater-illegal objects on maps may cause situations that crash the game.
+* **NoOwnedObjectsInSole**: [WIP] Sole Survivor maps normally don't include placed down units, structures or infantry, so loading and saving them is disabled by default. But it seems some official maps do contain decorative civilian buildings, and old betas of the game could read those, so this option can be disabled for research purposes.
 
 ---
 
@@ -355,12 +356,21 @@ These options are all enabled by default, but can be disabled if you wish. Use t
 * Added support for the C&C95 v1.06 briefing line split format.
 * Added Tiberian Dawn Megamap support. (Sole Survivor map type)
 * Made the editor store its dll mess in a subfolder, like the retail version does.
-* Changed waypoints style; waypoints are now actually shown on the map as objects, with flags representing multiplayer starting points, and the rest using the green beacon graphic. A small label in the same style as the building rebuild priority gives the waypoint's name. The objects and labels can be separately disabled in the View menu, though like on Structures, the indicators won't be shown if the main objects are not drawn.
+* Sole Survivor is now supported as separate game type in the editor. It does not support placing buildings or crates, and its waypoints include four special crate spawning hotspots.
+* Changed waypoints to actual map objects, indicated using the green beacon graphic that was already used as icon forthe Waypoints editing mode. They can be disabled in the View menu.
+* Waypoint labels are now drawn at the bottom of the cell, in the same style as the building rebuild priority labels. They can be disabled in the View menu, but like the building labels, they will not be drawn if Waypoints are not enabled.
+* Multiplayer starting points are now shown as colored flags. For TD, the 7th point will use Nod's metallic blue, and for both TD and SS, the 8th has its value hardcoded as the purple from RA.
 * Waypoints now show a preview in placement mode.
-* [WIP] Sole Survivor is now supported as separate game type in the editor.
+* On Sole Survivor maps, there is a special "Football goal areas" indicator that shows how much area around the flag needs to be left open to be paved with concrete in Football mode.
+* The game name of the opened map type is now shown in the title bar.
+* Changed the editor name in the title to "Mobius Map Editor".
+* Red Alert maps are now specifically detected on the presence of the "[MapPack]" section. If this is not present, and there is no .bin file, it loads as TD map without map templates.
+* Sole Survivor maps now don't support owned objects (infantry, units, structures) by default, though this can be re-enabled using the "NoOwnedObjectsInSole" setting in "CnCTDRAMapEditor.exe.config".
 
 ### Possible future features
 
 Some ideas that might get implemented in the future:
 
-* Seems I'm all out!
+* Use classic graphics, making it independent from the Remaster.
+* Clone triggers / teamtypes
+* Change a map's theater

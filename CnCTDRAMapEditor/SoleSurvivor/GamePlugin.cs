@@ -16,7 +16,8 @@ namespace MobiusEditor.SoleSurvivor
     {
 
         protected const int cratePoints = 4;
-        protected const int teamStartPoints = 4;
+        protected const int teamStartPoints = 8;
+        public override String Name => "Sole Survivor";
         public override GameType GameType => GameType.SoleSurvivor;
         public override bool IsMegaMap => true;
 
@@ -27,10 +28,10 @@ namespace MobiusEditor.SoleSurvivor
 
         public static bool CheckForSSmap(string path, FileType fileType)
         {
-            return CheckForMegamap(path, fileType) && CheckForIniInfo(path, fileType, "Crates", null, null);
+            return CheckForMegamap(path, fileType) && GeneralUtils.CheckForIniInfo(path, fileType, "Crates", null, null);
         }
-
-        public CratesSection CratesSection { get; private set; }
+        protected CratesSection cratesSection;
+        public CratesSection CratesSection => cratesSection;
 
         public GamePlugin(bool mapImage, IFeedBackHandler feedBackHandler)
             : base()
@@ -42,14 +43,14 @@ namespace MobiusEditor.SoleSurvivor
             var generalWaypoints = Enumerable.Range(cratePoints + teamStartPoints, 25 - cratePoints - teamStartPoints).Select(i => new Waypoint(i.ToString()));
             var specialWaypoints = new Waypoint[] { new Waypoint("Flare", WaypointFlag.Flare), new Waypoint("Home", WaypointFlag.Home), new Waypoint("Reinf.", WaypointFlag.Reinforce) };
             Waypoint[] waypoints = crateWaypoints.Concat(teamWaypoints).Concat(generalWaypoints).Concat(specialWaypoints).ToArray();
-            var basicSection = new BasicSection();
+            var basicSection = new TiberianDawn.BasicSection();
             basicSection.SetDefault();
-            var houseTypes = HouseTypes.GetTypes();
+            var houseTypes = HouseTypes.GetTypes().ToList();
             basicSection.Player = HouseTypes.Admin.Name;
             // Irrelevant for SS. Rebuilding options will be disabled in the editor.
             basicSection.BasePlayer = HouseTypes.GetBasePlayer(basicSection.Player);
-            CratesSection = new CratesSection();
-            CratesSection.SetDefault();
+            cratesSection = new CratesSection();
+            cratesSection.SetDefault();
 
             // I guess we leave these to the TD defaults.
             string[] cellEventTypes = new[]
@@ -76,15 +77,15 @@ namespace MobiusEditor.SoleSurvivor
             string[] unitActionTypes = { };
             string[] structureActionTypes = { };
             string[] terrainActionTypes = { };
-
-            IEnumerable<BuildingType> buildings = TiberianDawn.BuildingTypes.GetTypes();
+            BuildingType[] buildings = Globals.NoOwnedObjectsInSole ? new BuildingType[0] : TiberianDawn.BuildingTypes.GetTypes().ToArray();
+            UnitType[] units = Globals.NoOwnedObjectsInSole ? new UnitType[0] : TiberianDawn.UnitTypes.GetTypes(Globals.DisableAirUnits).ToArray();
+            InfantryType[] infantry = Globals.NoOwnedObjectsInSole ? new InfantryType[0] : TiberianDawn.InfantryTypes.GetTypes().ToArray();
             foreach (BuildingType bld in buildings)
             {
                 // Power is irrelevant in SS.
                 bld.PowerUsage = 0;
                 bld.PowerProduction = 0;
             }
-
             TeamColor[] flagColors = new TeamColor[8];
             foreach (HouseType house in houseTypes)
             {
@@ -95,18 +96,17 @@ namespace MobiusEditor.SoleSurvivor
                 }
                 flagColors[mpId] = Globals.TheTeamColorManager[house.UnitTeamColor];
             }
-            // Purple
-            flagColors[6] = new TeamColor(Globals.TheTeamColorManager, flagColors[0], "MULTI7", new Vector3(0.410f, 0.100f, 0.000f));
-            // Pink
-            flagColors[7] = new TeamColor(Globals.TheTeamColorManager, flagColors[0], "MULTI8", new Vector3(0.618f, -0.100f, 0.000f));
-
+            // Dark blue
+            flagColors[6] = Globals.TheTeamColorManager["MULTI2"];
+            // RA Purple
+            flagColors[7] = new TeamColor(Globals.TheTeamColorManager, flagColors[0], "MULTI8", new Vector3(0.410f, 0.100f, 0.000f));
             Map = new Map(basicSection, null, TiberianDawn.Constants.MaxSizeMega, typeof(House), houseTypes,
                 flagColors, TiberianDawn.TheaterTypes.GetTypes(), TiberianDawn.TemplateTypes.GetTypes(),
                 TiberianDawn.TerrainTypes.GetTypes(), OverlayTypes.GetTypes(), TiberianDawn.SmudgeTypes.GetTypes(Globals.ConvertCraters),
                 TiberianDawn.EventTypes.GetTypes(), cellEventTypes, unitEventTypes, structureEventTypes, terrainEventTypes,
                 TiberianDawn.ActionTypes.GetTypes(), cellActionTypes, unitActionTypes, structureActionTypes, terrainActionTypes,
-                TiberianDawn.MissionTypes.GetTypes(), TiberianDawn.DirectionTypes.GetTypes(), TiberianDawn.InfantryTypes.GetTypes(), TiberianDawn.UnitTypes.GetTypes(true),
-                new BuildingType[0], TiberianDawn.TeamMissionTypes.GetTypes(), fullTechnoTypes, waypoints, movieTypes, themeTypes)
+                TiberianDawn.MissionTypes.GetTypes(), TiberianDawn.DirectionTypes.GetTypes(), infantry, units,
+                buildings, TiberianDawn.TeamMissionTypes.GetTypes(), fullTechnoTypes, waypoints, movieTypes, themeTypes)
             {
                 TiberiumOrGoldValue = 25
             };
@@ -123,6 +123,69 @@ namespace MobiusEditor.SoleSurvivor
             {
                 MapImage = new Bitmap(Map.Metrics.Width * Globals.MapTileWidth, Map.Metrics.Height * Globals.MapTileHeight);
             }
+        }
+
+        public override IEnumerable<string> Load(string path, FileType fileType, out bool modified)
+        {
+            return Load(path, fileType, true, out modified);
+        }
+
+        protected override List<string> LoadINI(INI ini, bool forceSoloMission)
+        {
+            List<string> errors = LoadINI(ini, forceSoloMission, true);
+            var cratesIniSection = extraSections.Extract("Crates");
+            if (cratesIniSection != null)
+            {
+                INI.ParseSection(new MapContext(Map, false), cratesIniSection, this.cratesSection);
+            }
+            return errors;
+        }
+
+        public override bool Save(string path, FileType fileType, Bitmap customPreview)
+        {
+            return Save(path, fileType, true, customPreview);
+        }
+
+        protected override void SaveINI(INI ini, FileType fileType, string fileName)
+        {
+            INISection waypointBackup = null;
+            INISection overlayBackup = null;
+            if (extraSections != null)
+            {
+                // Commonly found in official maps as backups of beta versions of the map.
+                // If found, place them under their respective original sections.
+                waypointBackup = extraSections.Extract("OldWaypoints");
+                overlayBackup = extraSections.Extract("OldOverlay");
+                ini.Sections.AddRange(extraSections);
+            }
+            INISection basicSection = SaveIniBasic(ini, fileName);
+            // Not used for SS; not Remaster, and no single play in it.
+            basicSection.Keys.Remove("SoloMission");
+            SaveIniMap(ini);
+            INISection cratesIniSection = ini.Sections.Add("Crates");
+            SaveIniWaypoints(ini);
+            if (waypointBackup != null)
+            {
+                ini.Sections.Add(waypointBackup);
+            }
+            INI.WriteSection(new MapContext(Map, false), cratesIniSection, this.cratesSection);
+            SaveIniCellTriggers(ini, true);
+            SaveIniTeamTypes(ini, true);
+            SaveIniTriggers(ini, true);
+            SaveIniHouses(ini);
+            //SaveIniBriefing(ini);
+            SaveIniUnits(ini);
+            SaveIniAircraft(ini);
+            SaveIniBase(ini, true);
+            SaveIniInfantry(ini);
+            SaveIniStructures(ini);
+            SaveINITerrain(ini);
+            SaveIniOverlay(ini);
+            if (waypointBackup != null)
+            {
+                ini.Sections.Add(overlayBackup);
+            }
+            SaveIniSmudge(ini);
         }
 
     }

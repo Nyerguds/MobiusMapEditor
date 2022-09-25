@@ -29,6 +29,18 @@ namespace MobiusEditor.Dialogs
                 if (gameType != value)
                 {
                     gameType = value;
+                    switch (value)
+                    {
+                        case GameType.TiberianDawn:
+                            radioTD.Checked = true;
+                            break;
+                        case GameType.RedAlert:
+                            radioRA.Checked = true;
+                            break;
+                        case GameType.SoleSurvivor:
+                            radioSS.Checked = true;
+                            break;
+                    }
                     UpdateGameType();
                 }
             }
@@ -63,6 +75,7 @@ namespace MobiusEditor.Dialogs
             switch(GameType)
             {
                 case GameType.TiberianDawn:
+                case GameType.SoleSurvivor:
                     {
                         radioTheater1.Text = "Desert";
                         radioTheater2.Text = "Temperate";
@@ -76,6 +89,8 @@ namespace MobiusEditor.Dialogs
                     }
                     break;
             }
+            chkMegamap.Visible = GameType == GameType.TiberianDawn;
+            lblWarning.Visible = (chkMegamap.Visible && chkMegamap.Checked) || GameType == GameType.SoleSurvivor;
         }
 
         private void radioGameType_CheckedChanged(object sender, EventArgs e)
@@ -88,7 +103,15 @@ namespace MobiusEditor.Dialogs
             {
                 GameType = GameType.RedAlert;
             }
-            chkMegamap.Visible = GameType == GameType.TiberianDawn;
+            else if (radioSS.Checked)
+            {
+                GameType = GameType.SoleSurvivor;
+            }
+        }
+
+        private void chkMegamap_CheckedChanged(Object sender, EventArgs e)
+        {
+            UpdateGameType();
         }
     }
 }

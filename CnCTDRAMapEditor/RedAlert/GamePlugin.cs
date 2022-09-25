@@ -251,6 +251,8 @@ namespace MobiusEditor.RedAlert
 
         private static readonly IEnumerable<ITechnoType> fullTechnoTypes;
 
+        public String Name => "Red Alert";
+
         public GameType GameType => GameType.RedAlert;
 
         public bool IsMegaMap => true;
@@ -328,6 +330,10 @@ namespace MobiusEditor.RedAlert
                 extraSections = ini.Sections.Count == 0 ? null : ini.Sections;
                 UpdateBuildingRules(ini, this.Map);
             }
+        }
+        public static bool CheckForRAMap(String path, FileType fileType)
+        {
+            return GeneralUtils.CheckForIniInfo(path, fileType, "MapPack", null, null);
         }
 
         static GamePlugin()
@@ -463,20 +469,21 @@ namespace MobiusEditor.RedAlert
                             using (var megafile = new Megafile(path))
                             {
                                 var mprFile = megafile.Where(p => Path.GetExtension(p).ToLower() == ".mpr").FirstOrDefault();
-                                if (mprFile != null)
+                                if (mprFile == null)
                                 {
-                                    var ini = new INI();
-                                    using (var reader = new StreamReader(megafile.Open(mprFile)))
-                                    {
-                                        ini.Parse(reader);
-                                    }
-                                    errors.AddRange(LoadINI(ini, false));
+                                    throw new ApplicationException("Cannot find the necessary file inside the " + Path.GetFileName(path) + " archive.");
                                 }
+                                var ini = new INI();
+                                using (var reader = new StreamReader(megafile.Open(mprFile)))
+                                {
+                                    ini.Parse(reader);
+                                }
+                                errors.AddRange(LoadINI(ini, false));
                             }
                         }
                         break;
                     default:
-                        throw new NotSupportedException();
+                        throw new NotSupportedException("Unsupported filetype.");
                 }
                 if (errors.Count > 0)
                 {
@@ -2511,16 +2518,24 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        private void UpdateWaypoints()
+        protected void UpdateWaypoints()
         {
             bool isSolo = Map.BasicSection.SoloMission;
-            for (int i = 0; i < multiStartPoints; ++i)
+            HashSet<Point> updated = new HashSet<Point>();
+            for (Int32 i = 0; i < Map.Waypoints.Length; ++i)
             {
-                Map.Waypoints[i].Name = isSolo ? i.ToString() : string.Format("P{0}", i);
-                WaypointFlag wpf = Map.Waypoints[i].Flag;
-                Map.Waypoints[i].Flag = isSolo ? wpf & ~WaypointFlag.PlayerStart : wpf | Waypoint.GetFlagForMpId(i);
+                Waypoint waypoint = Map.Waypoints[i];
+                if ((waypoint.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart)
+                {
+                    Map.Waypoints[i].Name = isSolo ? i.ToString() : string.Format("P{0}", i);
+                    if (waypoint.Point.HasValue)
+                    {
+                        updated.Add(waypoint.Point.Value);
+                    }
+                }
             }
-            Map.FlagWaypointsUpdate();
+            Map.NotifyWaypointsUpdate();
+            Map.NotifyMapContentsChanged(updated);
         }
 
         private void CompressLCWSection(INISection section, byte[] decompressedBytes)

@@ -51,12 +51,14 @@ namespace MobiusEditor.Dialogs
             this.flowLayoutPanel3 = new System.Windows.Forms.FlowLayoutPanel();
             this.radioTD = new System.Windows.Forms.RadioButton();
             this.radioRA = new System.Windows.Forms.RadioButton();
+            this.radioSS = new System.Windows.Forms.RadioButton();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.flowLayoutPanel4 = new System.Windows.Forms.FlowLayoutPanel();
             this.radioTheater1 = new System.Windows.Forms.RadioButton();
             this.radioTheater2 = new System.Windows.Forms.RadioButton();
             this.radioTheater3 = new System.Windows.Forms.RadioButton();
             this.chkMegamap = new System.Windows.Forms.CheckBox();
+            this.lblWarning = new System.Windows.Forms.Label();
             this.tableLayoutPanel1.SuspendLayout();
             this.flowLayoutPanel1.SuspendLayout();
             this.flowLayoutPanel2.SuspendLayout();
@@ -126,6 +128,7 @@ namespace MobiusEditor.Dialogs
             this.flowLayoutPanel2.Controls.Add(this.groupBox1);
             this.flowLayoutPanel2.Controls.Add(this.groupBox2);
             this.flowLayoutPanel2.Controls.Add(this.chkMegamap);
+            this.flowLayoutPanel2.Controls.Add(this.lblWarning);
             this.flowLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.flowLayoutPanel2.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
             this.flowLayoutPanel2.Location = new System.Drawing.Point(2, 2);
@@ -141,7 +144,7 @@ namespace MobiusEditor.Dialogs
             this.groupBox1.Margin = new System.Windows.Forms.Padding(2);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Padding = new System.Windows.Forms.Padding(2);
-            this.groupBox1.Size = new System.Drawing.Size(339, 70);
+            this.groupBox1.Size = new System.Drawing.Size(339, 89);
             this.groupBox1.TabIndex = 0;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Game Type";
@@ -151,12 +154,13 @@ namespace MobiusEditor.Dialogs
             this.flowLayoutPanel3.AutoSize = true;
             this.flowLayoutPanel3.Controls.Add(this.radioTD);
             this.flowLayoutPanel3.Controls.Add(this.radioRA);
+            this.flowLayoutPanel3.Controls.Add(this.radioSS);
             this.flowLayoutPanel3.Dock = System.Windows.Forms.DockStyle.Fill;
             this.flowLayoutPanel3.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
             this.flowLayoutPanel3.Location = new System.Drawing.Point(2, 15);
             this.flowLayoutPanel3.Margin = new System.Windows.Forms.Padding(2);
             this.flowLayoutPanel3.Name = "flowLayoutPanel3";
-            this.flowLayoutPanel3.Size = new System.Drawing.Size(335, 53);
+            this.flowLayoutPanel3.Size = new System.Drawing.Size(335, 72);
             this.flowLayoutPanel3.TabIndex = 0;
             // 
             // radioTD
@@ -185,11 +189,22 @@ namespace MobiusEditor.Dialogs
             this.radioRA.UseVisualStyleBackColor = true;
             this.radioRA.CheckedChanged += new System.EventHandler(this.radioGameType_CheckedChanged);
             // 
+            // radioSS
+            // 
+            this.radioSS.AutoSize = true;
+            this.radioSS.Location = new System.Drawing.Point(2, 44);
+            this.radioSS.Margin = new System.Windows.Forms.Padding(2);
+            this.radioSS.Name = "radioSS";
+            this.radioSS.Size = new System.Drawing.Size(88, 17);
+            this.radioSS.TabIndex = 2;
+            this.radioSS.Text = "Sole Survivor";
+            this.radioSS.UseVisualStyleBackColor = true;
+            // 
             // groupBox2
             // 
             this.groupBox2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBox2.Controls.Add(this.flowLayoutPanel4);
-            this.groupBox2.Location = new System.Drawing.Point(2, 76);
+            this.groupBox2.Location = new System.Drawing.Point(2, 95);
             this.groupBox2.Margin = new System.Windows.Forms.Padding(2);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Padding = new System.Windows.Forms.Padding(2);
@@ -251,13 +266,27 @@ namespace MobiusEditor.Dialogs
             // chkMegamap
             // 
             this.chkMegamap.AutoSize = true;
-            this.chkMegamap.Location = new System.Drawing.Point(7, 170);
+            this.chkMegamap.Location = new System.Drawing.Point(7, 189);
             this.chkMegamap.Margin = new System.Windows.Forms.Padding(7, 3, 3, 3);
             this.chkMegamap.Name = "chkMegamap";
             this.chkMegamap.Size = new System.Drawing.Size(177, 17);
             this.chkMegamap.TabIndex = 2;
             this.chkMegamap.Text = "Megamap (Sole Survivor format)";
             this.chkMegamap.UseVisualStyleBackColor = true;
+            this.chkMegamap.CheckedChanged += new System.EventHandler(this.chkMegamap_CheckedChanged);
+            // 
+            // lblWarning
+            // 
+            this.lblWarning.AutoSize = true;
+            this.lblWarning.ForeColor = System.Drawing.Color.Red;
+            this.lblWarning.Location = new System.Drawing.Point(7, 212);
+            this.lblWarning.Margin = new System.Windows.Forms.Padding(7, 3, 3, 3);
+            this.lblWarning.Name = "lblWarning";
+            this.lblWarning.Size = new System.Drawing.Size(331, 26);
+            this.lblWarning.TabIndex = 3;
+            this.lblWarning.Text = "Warning: the Sole Survivor mega map format is not supported by the Remastered Col" +
+    "lection without modding.";
+            this.lblWarning.Visible = false;
             // 
             // NewMapDialog
             // 
@@ -312,5 +341,7 @@ namespace MobiusEditor.Dialogs
         private System.Windows.Forms.RadioButton radioTheater2;
         private System.Windows.Forms.RadioButton radioTheater3;
         private System.Windows.Forms.CheckBox chkMegamap;
+        private System.Windows.Forms.RadioButton radioSS;
+        private System.Windows.Forms.Label lblWarning;
     }
 }

@@ -29,7 +29,7 @@ namespace MobiusEditor.SoleSurvivor
         public static readonly OverlayType Tiberium12 = new OverlayType(17, "ti12", OverlayTypeFlag.TiberiumOrGold, 11);
         public static readonly OverlayType Teleport = new OverlayType(18, "road", "Teleporter", null, OverlayTypeFlag.Decoration, 1);
         // Unusable in SS since it has the same name as ROAD.
-        //public static readonly OverlayType Road2 = new OverlayType(19, "road", "Concrete Road", null, OverlayTypeFlag.Decoration);
+        public static readonly OverlayType Road = new OverlayType(19, "road", "Concrete Road", null, OverlayTypeFlag.Decoration, 1);
         // Not available to place down sadly: even the ini read for it in the game code only succeeds if 'IsGross' is enabled.
         //public static readonly OverlayType Squishy = new OverlayType(20, "SQUISH", OverlayTypeFlag.Decoration);
         public static readonly OverlayType V12 = new OverlayType(21, "v12", "TEXT_STRUCTURE_TITLE_CIV12", new[] { TiberianDawn.TheaterTypes.Temperate });
@@ -41,19 +41,20 @@ namespace MobiusEditor.SoleSurvivor
         public static readonly OverlayType V18 = new OverlayType(27, "v18", "TEXT_STRUCTURE_TITLE_CIV17", new[] { TiberianDawn.TheaterTypes.Temperate, TiberianDawn.TheaterTypes.Winter });
         public static readonly OverlayType FlagSpot = new OverlayType(28, "fpls", "TEXT_CF_ONHOVER_SPOT", OverlayTypeFlag.Flag);
         // Not placeable in SS.
-        public static readonly OverlayType WoodCrate = new OverlayType(29, "wcrate", "Wooden Crate", OverlayTypeFlag.Crate);
-        public static readonly OverlayType SteelCrate = new OverlayType(30, "scrate", "Steel Crate", OverlayTypeFlag.Crate);
-        public static readonly OverlayType ArmageddonCrate = new OverlayType(31, "acrate", "Armageddon Crate", null, OverlayTypeFlag.Crate, "scrate", -1, Color.Red);
-        public static readonly OverlayType HealCrate = new OverlayType(32, "hcrate", "Heal Crate", null, OverlayTypeFlag.Crate, "scrate", -1, Color.Green);
+        //public static readonly OverlayType WoodCrate = new OverlayType(29, "wcrate", "Wooden Crate", OverlayTypeFlag.Crate);
+        //public static readonly OverlayType SteelCrate = new OverlayType(30, "scrate", "Steel Crate", OverlayTypeFlag.Crate);
+        //public static readonly OverlayType ArmageddonCrate = new OverlayType(31, "acrate", "Armageddon Crate", null, OverlayTypeFlag.Crate, "scrate", -1, Color.Red);
+        //public static readonly OverlayType HealCrate = new OverlayType(32, "hcrate", "Heal Crate", null, OverlayTypeFlag.Crate, "scrate", -1, Color.Green);
 
         private static OverlayType[] Types;
 
         static OverlayTypes()
         {
+            // ROAD is filtered out of this, but is available to the program for painting the football fields.
             Types =
                 (from field in typeof(OverlayTypes).GetFields(BindingFlags.Static | BindingFlags.Public)
                  where field.IsInitOnly && typeof(OverlayType).IsAssignableFrom(field.FieldType)
-                 select field.GetValue(null) as OverlayType).OrderBy(t => t.ID).ToArray();
+                 select field.GetValue(null) as OverlayType).Where(t => t.ID != 19).OrderBy(t => t.ID).ToArray();
             
         }
 

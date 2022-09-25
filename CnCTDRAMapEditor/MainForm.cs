@@ -76,8 +76,12 @@ namespace MobiusEditor
                     if (activeTool != null)
                     {
                         MapLayerFlag active = activeLayers;
-                        // Save some processing by just always removing this one.
-                        if (plugin.GameType != GameType.RedAlert)
+                        // Save some processing by just always removing these.
+                        if (plugin.GameType != GameType.SoleSurvivor)
+                        {
+                            active &= ~MapLayerFlag.FootballArea;
+                        }
+                        else if (plugin.GameType != GameType.RedAlert)
                         {
                             active &= ~MapLayerFlag.BuildingFakes;
                         }
@@ -155,33 +159,31 @@ namespace MobiusEditor
         {
             const string noname = "Untitled";
             String mainTitle = GetProgramVersionTitle();
-            if (plugin != null)
-            {
-                string mapName = plugin.Map.BasicSection.Name;
-                if (String.IsNullOrEmpty(mapName))
-                {
-                    if (filename != null)
-                    {
-                        mapName = Path.GetFileName(filename);
-                    }
-                    else
-                    {
-                        mapName = noname;
-                    }
-                }
-                this.Text = string.Format("{0} - {1} {2}", mainTitle, mapName, plugin != null && plugin.Dirty ? "*" : String.Empty);
-            }
-            else
+            if (plugin == null)
             {
                 this.Text = mainTitle;
+                return;
             }
+            string mapName = plugin.Map.BasicSection.Name;
+            if (String.IsNullOrEmpty(mapName))
+            {
+                if (filename != null)
+                {
+                    mapName = Path.GetFileName(filename);
+                }
+                else
+                {
+                    mapName = noname;
+                }
+            }
+            this.Text = string.Format("{0} [{1}] - {2}{3}", mainTitle, plugin.Name, mapName, plugin != null && plugin.Dirty ? " *" : String.Empty);
         }
 
         private String GetProgramVersionTitle()
         {
             AssemblyName assn = Assembly.GetExecutingAssembly().GetName();
             System.Version currentVersion = assn.Version;
-            return string.Format("CnC TDRA Map Editor v{0}", currentVersion);
+            return string.Format("Mobius Editor v{0}", currentVersion);
         }
 
         private void SteamUpdateTimer_Tick(object sender, EventArgs e)
@@ -304,7 +306,12 @@ namespace MobiusEditor
                 string[] modPaths = null;
                 if (ModPaths != null)
                 {
-                    ModPaths.TryGetValue(nmd.GameType, out modPaths);
+                    GameType modGameType = nmd.GameType;
+                    if (modGameType == GameType.SoleSurvivor)
+                    {
+                        modGameType = GameType.TiberianDawn;
+                    }
+                    ModPaths.TryGetValue(modGameType, out modPaths);
                 }
                 Globals.TheTextureManager.ExpandModPaths = modPaths;
                 Globals.TheTextureManager.Reset();
@@ -730,7 +737,7 @@ namespace MobiusEditor
                 {
                     using (Graphics g = Graphics.FromImage(pr))
                     {
-                        ViewTool.PostRenderMap(g, plugin.Map, Globals.ExportTileScale, ActiveLayers, MapLayerFlag.None);
+                        ViewTool.PostRenderMap(g, plugin.GameType, plugin.Map, Globals.ExportTileScale, ActiveLayers, MapLayerFlag.None);
                     }
                     pr.Save(savePath, ImageFormat.Png);
                 }
@@ -890,6 +897,10 @@ namespace MobiusEditor
                 case FileType.INI:
                     {
                         gameType = File.Exists(Path.ChangeExtension(loadFilename, ".bin")) ? GameType.TiberianDawn : GameType.RedAlert;
+                        if (gameType == GameType.RedAlert && !RedAlert.GamePlugin.CheckForRAMap(loadFilename, fileType))
+                        {
+                            gameType = GameType.TiberianDawn;
+                        }
                         break;
                     }
                 case FileType.BIN:
@@ -943,7 +954,7 @@ namespace MobiusEditor
             if (ModPaths != null)
             {
                 GameType modGameType = gameType;
-                if (gameType == GameType.SoleSurvivor)
+                if (modGameType == GameType.SoleSurvivor)
                 {
                     modGameType = GameType.TiberianDawn;
                 }
@@ -997,9 +1008,12 @@ namespace MobiusEditor
             }
             catch (Exception ex)
             {
+                String errorMessage = "Error loading map: " + ex.Message;
 #if DEBUG
-                MessageBox.Show("Error: " + ex.Message + "\n\n" + ex.StackTrace);
+                errorMessage += "\n\n" + ex.StackTrace;
 #endif
+                MessageBox.Show(errorMessage, this.GetProgramVersionTitle(), MessageBoxButtons.OK, MessageBoxIcon.Error);
+
                 this.Unload();
 #if DEVELOPER
                 throw;
@@ -1122,8 +1136,13 @@ namespace MobiusEditor
                 developerGoToINIMenuItem.Enabled = true;
                 developerDebugShowOverlapCellsMenuItem.Enabled = true;
                 developerGenerateMapPreviewDirectoryMenuItem.Enabled = true;
+                viewMapBuildingsMenuItem.Visible = plugin.GameType != GameType.SoleSurvivor;
+                viewIndicatorsFootballAreaMenuItem.Visible = plugin.GameType == GameType.SoleSurvivor;
                 viewIndicatorsBuildingFakeLabelsMenuItem.Visible = plugin.GameType == GameType.RedAlert;
+                viewIndicatorsBuildingRebuildLabelsMenuItem.Visible = plugin.GameType != GameType.SoleSurvivor;
             }
+            // Special rules per game.
+
             // Tools
             availableToolTypes = ToolType.None;
             if (plugin != null)
@@ -1168,6 +1187,12 @@ namespace MobiusEditor
             developerGoToINIMenuItem.Enabled = false;
             developerDebugShowOverlapCellsMenuItem.Enabled = false;
             developerGenerateMapPreviewDirectoryMenuItem.Enabled = false;
+
+            viewMapBuildingsMenuItem.Visible = plugin == null || plugin.GameType != GameType.SoleSurvivor;
+            viewIndicatorsBuildingFakeLabelsMenuItem.Visible = plugin == null || plugin.GameType == GameType.RedAlert;
+            viewIndicatorsBuildingRebuildLabelsMenuItem.Visible = plugin == null || plugin.GameType != GameType.SoleSurvivor;
+            viewIndicatorsFootballAreaMenuItem.Visible = plugin == null || plugin.GameType == GameType.SoleSurvivor;
+
             // Tools
             ClearActiveTool();
             foreach (var kvp in toolForms)
@@ -1439,6 +1464,10 @@ namespace MobiusEditor
             {
                 layers &= ~MapLayerFlag.BuildingRebuild;
             }
+            if (!viewIndicatorsFootballAreaMenuItem.Checked)
+            {
+                layers &= ~MapLayerFlag.FootballArea;
+            }
             ActiveLayers = layers;
         }
 
@@ -1664,6 +1693,20 @@ namespace MobiusEditor
                 MessageBox.Show("Steam interface is not initialized. To enable Workshop publishing, log into Steam and restart the editor.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
+            if (plugin.GameType == GameType.SoleSurvivor)
+            {
+                MessageBox.Show("Sole Survivor maps cannot be published to Steam; they are not usable by the C&C Remastered Collection.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            if (plugin.GameType == GameType.TiberianDawn && plugin.IsMegaMap)
+            {
+                //if (DialogResult.Yes != MessageBox.Show("Megamaps are not supported by the C&C Remastered Collection without modding! Are you sure you want to publish a map that will be incompatible with the standard unmodded game?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2))
+                //{
+                //    return;
+                //}
+                MessageBox.Show("Tiberian Dawn megamaps cannot be published to Steam; they are not usable by the C&C Remastered Collection without modding, and may cause issues on the official servers.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
             if (!PromptSaveMap())
             {
                 return;
@@ -1792,6 +1835,10 @@ namespace MobiusEditor
                                         && (sm.Theaters == null || sm.Theaters.Contains(plugin.Map.Theater))).OrderBy(sm => sm.ID).FirstOrDefault();
             OverlayType overlay = plugin.Map.OverlayTypes.Where(ov => (ov.Flag & OverlayTypeFlag.Crate) == OverlayTypeFlag.Crate
                                         && (ov.Theaters == null || ov.Theaters.Contains(plugin.Map.Theater))).OrderBy(ov => ov.ID).FirstOrDefault();
+            if (overlay == null) {
+                overlay = plugin.Map.OverlayTypes.Where(ov => (ov.Flag & OverlayTypeFlag.Flag) == OverlayTypeFlag.Flag
+                                            && (ov.Theaters == null || ov.Theaters.Contains(plugin.Map.Theater))).OrderBy(ov => ov.ID).FirstOrDefault();
+            }
             Tile overlayTile = null;
             if (overlay != null) Globals.TheTilesetManager.GetTileData(plugin.Map.Theater.Tilesets, overlay.Name, 0, out overlayTile, false, true);
             TerrainType terrain = plugin.Map.TerrainTypes.Where(tr => tr.Theaters == null || tr.Theaters.Contains(plugin.Map.Theater)).OrderBy(tr => tr.ID).FirstOrDefault();;

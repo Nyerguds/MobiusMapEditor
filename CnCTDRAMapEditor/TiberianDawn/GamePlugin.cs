@@ -35,7 +35,7 @@ namespace MobiusEditor.TiberianDawn
         protected bool isMegaMap = false;
 
         protected  const int multiStartPoints = 8;
-        protected  static readonly Regex SinglePlayRegex = new Regex("^SC[A-LN-RT-Z]\\d{2}[EWX][A-EL]$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        protected  static readonly Regex SinglePlayRegex = new Regex("^SC[A-LN-Z]\\d{2}[EWX][A-EL]$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         protected static readonly Regex MovieRegex = new Regex(@"^(?:.*?\\)*(.*?)\.BK2$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         protected static readonly IEnumerable<ITechnoType> fullTechnoTypes;
@@ -98,6 +98,7 @@ namespace MobiusEditor.TiberianDawn
             "NOD_MAP1",
             "OUTTAKES"
         };
+        public virtual string Name => "Tiberian Dawn";
 
         public virtual GameType GameType => GameType.TiberianDawn;
 
@@ -165,55 +166,7 @@ namespace MobiusEditor.TiberianDawn
 
         public static bool CheckForMegamap(String path, FileType fileType)
         {
-            return CheckForIniInfo(path, fileType, "Map", "Version", "1");
-        }
-
-        public static bool CheckForIniInfo(String path, FileType fileType, string section, string key, string value)
-        {
-            try
-            {
-                Encoding enc = new UTF8Encoding(false, true);
-                String iniContents = null;
-                switch (fileType)
-                {
-                    case FileType.INI:
-                    case FileType.BIN:
-                        String iniPath = fileType == FileType.INI ? path : Path.ChangeExtension(path, ".ini");
-                        Byte[] bytes = File.ReadAllBytes(path);
-                        iniContents = enc.GetString(bytes);
-                        break;
-                    case FileType.MEG:
-                    case FileType.PGM:
-                        using (var megafile = new Megafile(path))
-                        {
-                            var testIniFile = megafile.Where(p => Path.GetExtension(p).ToLower() == ".ini").FirstOrDefault();
-                            if (testIniFile != null)
-                            {
-                                using (var iniReader = new StreamReader(megafile.Open(testIniFile), enc))
-                                {
-                                    iniContents = iniReader.ReadToEnd();
-                                }
-                            }
-                        }
-                        break;
-                }
-                if (iniContents == null)
-                {
-                    return false;
-                }
-                INI checkIni = new INI();
-                checkIni.Parse(iniContents);
-                INISection iniSection = checkIni.Sections.Extract(section);
-                if (key == null || value == null)
-                {
-                    return iniSection != null;
-                }
-                return iniSection != null && iniSection.Keys.Contains(key) && iniSection[key].Trim() == value;
-            }
-            catch
-            {
-                return false;
-            }
+            return GeneralUtils.CheckForIniInfo(path, fileType, "Map", "Version", "1");
         }
 
         static GamePlugin()
@@ -287,8 +240,6 @@ namespace MobiusEditor.TiberianDawn
             string[] structureActionTypes = { };
             string[] terrainActionTypes = { };
 
-
-
             TeamColor[] flagColors = new TeamColor[8];
             foreach (HouseType house in houseTypes)
             {
@@ -299,10 +250,10 @@ namespace MobiusEditor.TiberianDawn
                 }
                 flagColors[mpId] = Globals.TheTeamColorManager[house.UnitTeamColor];
             }
+            // Metallic light blue
+            flagColors[6] = Globals.TheTeamColorManager["BAD_UNIT"];
             // Purple
-            flagColors[6] = new TeamColor(Globals.TheTeamColorManager, flagColors[0], "MULTI7", new Vector3(0.410f, 0.100f, 0.000f));
-            // Pink
-            flagColors[7] = new TeamColor(Globals.TheTeamColorManager, flagColors[0], "MULTI8", new Vector3(0.618f, -0.100f, 0.000f));
+            flagColors[7] = new TeamColor(Globals.TheTeamColorManager, flagColors[0], "MULTI8", new Vector3(0.410f, 0.100f, 0.000f));
 
 
             Size mapSize = !megaMap ? Constants.MaxSize : Constants.MaxSizeMega;
@@ -332,34 +283,58 @@ namespace MobiusEditor.TiberianDawn
             UpdateBasePlayerHouse();
         }
 
-        public IEnumerable<string> Load(string path, FileType fileType, out bool modified)
+        public virtual IEnumerable<string> Load(string path, FileType fileType, out bool modified)
+        {
+            return Load(path, fileType, false, out modified);
+        }
+
+        protected List<string> Load(string path, FileType fileType, bool forSole, out bool modified)
         {
             var ini = new INI();
             var errors = new List<string>();
-            var iniPath = fileType == FileType.INI ? path : Path.ChangeExtension(path, ".ini");
-            var binPath = fileType == FileType.BIN ? path : Path.ChangeExtension(path, ".bin");
             modified = false;
             bool forceSingle = false;
             switch (fileType)
             {
                 case FileType.INI:
                 case FileType.BIN:
-                    using (var iniReader = new StreamReader(iniPath))
-                    using (var binReader = new BinaryReader(new FileStream(binPath, FileMode.Open, FileAccess.Read)))
+                    var iniPath = fileType == FileType.INI ? path : Path.ChangeExtension(path, ".ini");
+                    var binPath = fileType == FileType.BIN ? path : Path.ChangeExtension(path, ".bin");
+                    if (!File.Exists(iniPath))
                     {
-                        string iniText = FixRoad2Load(iniReader);
-                        ini.Parse(iniText);
-                        forceSingle = SinglePlayRegex.IsMatch(Path.GetFileNameWithoutExtension(path));
-                        errors.AddRange(LoadINI(ini, forceSingle));
-                        long mapLen = binReader.BaseStream.Length;
-                        if (mapLen == 0x2000 || (isMegaMap && mapLen % 4 == 0))
+                        // Should never happen; this gets filtered out in the game type detection.
+                        throw new ApplicationException("Cannot find an ini file to load for " + Path.GetFileName(path) + ".");
+                    }
+                    using (var iniReader = new StreamReader(iniPath))
+                    {
+                        string iniText = iniReader.ReadToEnd();
+                        if (!forSole)
                         {
-                            errors.AddRange(!isMegaMap ? LoadBinaryClassic(binReader) : LoadBinaryMega(binReader));
+                            iniText = FixRoad2Load(iniText);
                         }
-                        else
+                        ini.Parse(iniText);
+                        forceSingle = !forSole && SinglePlayRegex.IsMatch(Path.GetFileNameWithoutExtension(path));
+                        errors.AddRange(LoadINI(ini, forceSingle, forSole));
+                    }
+                    if (!File.Exists(binPath))
+                    {
+                        errors.Add(String.Format("No .bin file found for file '{0}'. Using empty map.", Path.GetFileName(path)));
+                        Map.Templates.Clear();
+                    }
+                    else
+                    {
+                        using (var binReader = new BinaryReader(new FileStream(binPath, FileMode.Open, FileAccess.Read)))
                         {
-                            errors.Add(String.Format("'{0}' does not have the correct size for a Tiberian Dawn .bin file.", Path.GetFileName(binPath)));
-                            Map.Templates.Clear();
+                            long mapLen = binReader.BaseStream.Length;
+                            if ((!isMegaMap && mapLen == 0x2000) || (isMegaMap && mapLen % 4 == 0))
+                            {
+                                errors.AddRange(!isMegaMap ? LoadBinaryClassic(binReader) : LoadBinaryMega(binReader));
+                            }
+                            else
+                            {
+                                errors.Add(String.Format("'{0}' does not have the correct size for a " + this.Name + " .bin file.", Path.GetFileName(binPath)));
+                                Map.Templates.Clear();
+                            }
                         }
                     }
                     break;
@@ -369,29 +344,35 @@ namespace MobiusEditor.TiberianDawn
                     {
                         var iniFile = megafile.Where(p => Path.GetExtension(p).ToLower() == ".ini").FirstOrDefault();
                         var binFile = megafile.Where(p => Path.GetExtension(p).ToLower() == ".bin").FirstOrDefault();
-                        if ((iniFile != null) && (binFile != null))
+                        if (iniFile == null || binFile == null)
                         {
-                            using (var iniReader = new StreamReader(megafile.Open(iniFile)))
-                            using (var binReader = new BinaryReader(megafile.Open(binFile)))
+                            throw new ApplicationException("Cannot find the necessary files inside the " + Path.GetFileName(path) + " archive.");
+                        }
+                        using (var iniReader = new StreamReader(megafile.Open(iniFile)))
+                        using (var binReader = new BinaryReader(megafile.Open(binFile)))
+                        {
+                            string iniText = iniReader.ReadToEnd();
+                            if (!forSole)
                             {
-                                ini.Parse(iniReader);
-                                errors.AddRange(LoadINI(ini, false));
-                                long mapLen = binReader.BaseStream.Length;
-                                if (mapLen == 0x2000 || (isMegaMap && mapLen % 4 == 0))
-                                {
-                                    errors.AddRange(!isMegaMap ? LoadBinaryClassic(binReader) : LoadBinaryMega(binReader));
-                                }
-                                else
-                                {
-                                    errors.Add(String.Format("'{0}' does not have the correct size for a Tiberian Dawn .bin file.", Path.GetFileName(binFile)));
-                                    Map.Templates.Clear();
-                                }
+                                iniText = FixRoad2Load(iniText);
+                            }
+                            ini.Parse(iniText);
+                            errors.AddRange(LoadINI(ini, false, forSole));
+                            long mapLen = binReader.BaseStream.Length;
+                            if ((!isMegaMap && mapLen == 0x2000) || (isMegaMap && mapLen % 4 == 0))
+                            {
+                                errors.AddRange(!isMegaMap ? LoadBinaryClassic(binReader) : LoadBinaryMega(binReader));
+                            }
+                            else
+                            {
+                                errors.Add(String.Format("'{0}' does not have the correct size for a " + this.Name + " .bin file.", Path.GetFileName(binFile)));
+                                Map.Templates.Clear();
                             }
                         }
                     }
                     break;
                 default:
-                    throw new NotSupportedException();
+                    throw new NotSupportedException("Unsupported filetype.");
             }
             if (errors.Count > 0)
             {
@@ -407,7 +388,7 @@ namespace MobiusEditor.TiberianDawn
         /// </summary>
         /// <param name="iniReader">Stream reader to read from.</param>
         /// <returns>The ini file as string, with all double ROAD overlay lines replaced by the dummy Road2 type.</returns>
-        protected string FixRoad2Load(StreamReader iniReader)
+        protected string FixRoad2Load(String iniText)
         {
             // ROAD's second state can only be accessed by applying ROAD overlay to the same cell twice.
             // This can be achieved by saving its Overlay line twice in the ini file. However, this is
@@ -416,7 +397,6 @@ namespace MobiusEditor.TiberianDawn
             // get read, but those of the first are simply applied twice. For ROAD, however, this is
             // exactly what we want to achieve to unlock its second state, so the bug doesn't matter.
 
-            string iniText = iniReader.ReadToEnd();
             string[] iniTextArr = iniText.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n');
             Dictionary<int, int> foundAmounts = new Dictionary<int, int>();
             Dictionary<int, string> cellTypes = new Dictionary<int, string>();
@@ -518,7 +498,12 @@ namespace MobiusEditor.TiberianDawn
             return sb.ToString();
         }
 
-        protected IEnumerable<string> LoadINI(INI ini, bool forceSoloMission)
+        protected virtual List<string> LoadINI(INI ini, bool forceSoloMission)
+        {
+            return LoadINI(ini, forceSoloMission, false);
+        }
+
+        protected List<string> LoadINI(INI ini, bool forceSoloMission, bool forSole)
         {
             var errors = new List<string>();
             Map.BeginUpdate();
@@ -546,6 +531,7 @@ namespace MobiusEditor.TiberianDawn
                 INI.ParseSection(new MapContext(Map, false), mapSection, Map.MapSection);
             }
             Map.MapSection.FixBounds();
+            //MessageBox.Show("graphics loaded.");
             var briefingSection = ini.Sections.Extract("Briefing");
             if (briefingSection != null)
             {
@@ -1203,7 +1189,7 @@ namespace MobiusEditor.TiberianDawn
                 }
             }
             var structuresSection = ini.Sections.Extract("Structures");
-            if (structuresSection != null)
+            if (structuresSection != null && !forSole)
             {
                 foreach (var (Key, Value) in structuresSection)
                 {
@@ -1326,7 +1312,7 @@ namespace MobiusEditor.TiberianDawn
                 }
             }
             var baseSection = ini.Sections.Extract("Base");
-            if (baseSection != null)
+            if (baseSection != null && !forSole)
             {
                 foreach (var (Key, Value) in baseSection)
                 {
@@ -1497,7 +1483,7 @@ namespace MobiusEditor.TiberianDawn
             Map.Triggers.AddRange(reorderedTriggers);
             Map.TeamTypes.Sort((x, y) => comparer.Compare(x.Name, y.Name));
             extraSections = ini.Sections;
-            bool switchedToSolo = forceSoloMission && !Map.BasicSection.SoloMission
+            bool switchedToSolo = !forSole && forceSoloMission && !Map.BasicSection.SoloMission
                 && reorderedTriggers.Any(t => t.Action1.ActionType == ActionTypes.ACTION_WIN)
                 && reorderedTriggers.Any(t => t.Action1.ActionType == ActionTypes.ACTION_LOSE);
             if (switchedToSolo)
@@ -1594,9 +1580,14 @@ namespace MobiusEditor.TiberianDawn
             return Save(path, fileType, null);
         }
 
-        public bool Save(string path, FileType fileType, Bitmap customPreview)
+        public virtual bool Save(string path, FileType fileType, Bitmap customPreview)
         {
-            String errors = Validate();
+            return Save(path, fileType, false, customPreview);
+        }
+
+        public bool Save(string path, FileType fileType, bool forSS, Bitmap customPreview)
+        {
+            String errors = Validate(forSS);
             if (errors != null)
             {
                 MessageBox.Show(errors, "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -1612,7 +1603,14 @@ namespace MobiusEditor.TiberianDawn
                     SaveINI(ini, fileType, path);
                     using (var iniWriter = new StreamWriter(iniPath))
                     {
-                        FixRoad2Save(ini, iniWriter);
+                        if (forSS)
+                        {
+                            iniWriter.Write(ini.ToString());
+                        }
+                        else
+                        {
+                            FixRoad2Save(ini, iniWriter);
+                        }
                     }
                     using (var binStream = new FileStream(binPath, FileMode.Create))
                     using (var binWriter = new BinaryWriter(binStream))
@@ -1626,7 +1624,8 @@ namespace MobiusEditor.TiberianDawn
                             SaveBinaryMega(binWriter);
                         }
                     }
-                    if (!Map.BasicSection.SoloMission || !Properties.Settings.Default.NoMetaFilesForSinglePlay)
+                    // None of this junk for SS.
+                    if (!forSS && (!Map.BasicSection.SoloMission || !Properties.Settings.Default.NoMetaFilesForSinglePlay))
                     {
                         var tgaPath = Path.ChangeExtension(path, ".tga");
                         var jsonPath = Path.ChangeExtension(path, ".json");
@@ -1660,7 +1659,14 @@ namespace MobiusEditor.TiberianDawn
                     using (var jsonWriter = new JsonTextWriter(new StreamWriter(jsonStream)))
                     using (var megafileBuilder = new MegafileBuilder(@"", path))
                     {
-                        FixRoad2Save(ini, iniWriter);
+                        if (forSS)
+                        {
+                            iniWriter.Write(ini.ToString());
+                        }
+                        else
+                        {
+                            FixRoad2Save(ini, iniWriter);
+                        }
                         iniWriter.Flush();
                         iniStream.Position = 0;
                         if (!isMegaMap)
@@ -1745,12 +1751,33 @@ namespace MobiusEditor.TiberianDawn
             }
         }
 
-        protected void SaveINI(INI ini, FileType fileType, string fileName)
+        protected virtual void SaveINI(INI ini, FileType fileType, string fileName)
         {
             if (extraSections != null)
             {
                 ini.Sections.AddRange(extraSections);
             }
+            SaveIniBasic(ini, fileName);
+            SaveIniMap(ini);
+            SaveIniSteam(ini, fileType);
+            SaveIniBriefing(ini);
+            SaveIniCellTriggers(ini, false);
+            SaveIniTeamTypes(ini, false);
+            SaveIniTriggers(ini, false);
+            SaveIniWaypoints(ini);
+            SaveIniBase(ini, false);
+            SaveIniInfantry(ini);
+            SaveIniStructures(ini);
+            SaveIniUnits(ini);
+            SaveIniAircraft(ini);
+            SaveIniHouses(ini);
+            SaveIniOverlay(ini);
+            SaveIniSmudge(ini);
+            SaveINITerrain(ini);
+        }
+
+        protected INISection SaveIniBasic(INI ini, string fileName)
+        {
             Model.BasicSection basic = Map.BasicSection;
             char[] cutfrom = { ';', '(' };
             basic.Intro = GeneralUtils.TrimRemarks(basic.Intro, true, cutfrom);
@@ -1775,28 +1802,64 @@ namespace MobiusEditor.TiberianDawn
                 }
                 basic.Name = String.Join(" ", name);
             }
-            INI.WriteSection(new MapContext(Map, false), ini.Sections.Add("Basic"), Map.BasicSection);
+            INISection basicSection = ini.Sections.Add("Basic");
+            INI.WriteSection(new MapContext(Map, false), basicSection, Map.BasicSection);
+            return basicSection;
+        }
+
+        protected INISection SaveIniMap(INI ini)
+        {
             Map.MapSection.FixBounds();
             INISection mapSection = ini.Sections.Add("Map");
-            INI.WriteSection(new MapContext(Map, false), mapSection, Map.MapSection);
             if (isMegaMap)
             {
                 mapSection["Version"] = "1";
             }
-            if (fileType != FileType.PGM)
+            INI.WriteSection(new MapContext(Map, false), mapSection, Map.MapSection);
+            return mapSection;
+        }
+
+        protected INISection SaveIniSteam(INI ini, FileType fileType)
+        {
+            if (fileType == FileType.PGM)
             {
-                INI.WriteSection(new MapContext(Map, false), ini.Sections.Add("Steam"), Map.SteamSection);
+                return null;
             }
-            ini.Sections.Remove("Briefing");
-            if (!string.IsNullOrEmpty(Map.BriefingSection.Briefing))
+            INISection steamSection = ini.Sections.Add("Steam");
+            INI.WriteSection(new MapContext(Map, false), steamSection, Map.SteamSection);
+            return steamSection;
+        }
+
+        protected INISection SaveIniBriefing(INI ini)
+        {
+            if (string.IsNullOrEmpty(Map.BriefingSection.Briefing))
             {
-                var briefingSection = ini.Sections.Add("Briefing");
-                briefingSection["Text"] = Map.BriefingSection.Briefing.Replace(Environment.NewLine, "@");
+                return null;
+            }
+            var briefingSection = ini.Sections.Add("Briefing");
+            briefingSection["Text"] = Map.BriefingSection.Briefing.Replace(Environment.NewLine, "@");
+            return briefingSection;
+        }
+
+        protected INISection SaveIniCellTriggers(INI ini, bool omitEmpty)
+        {
+            if (omitEmpty && Map.CellTriggers.Count() == 0)
+            {
+                return null;
             }
             var cellTriggersSection = ini.Sections.Add("CellTriggers");
             foreach (var (cell, cellTrigger) in Map.CellTriggers)
             {
                 cellTriggersSection[cell.ToString()] = cellTrigger.Trigger;
+            }
+            return cellTriggersSection;
+        }
+
+        protected INISection SaveIniTeamTypes(INI ini, bool omitEmpty)
+        {
+            if (omitEmpty && Map.TeamTypes.Count == 0)
+            {
+                return null;
             }
             var teamTypesSection = ini.Sections.Add("TeamTypes");
             foreach (var teamType in Map.TeamTypes)
@@ -1828,7 +1891,15 @@ namespace MobiusEditor.TiberianDawn
                 };
                 teamTypesSection[teamType.Name] = string.Join(",", tokens.Where(t => !string.IsNullOrEmpty(t)));
             }
+            return teamTypesSection;
+        }
 
+        protected INISection SaveIniTriggers(INI ini, bool omitEmpty)
+        {
+            if (omitEmpty && Map.Triggers.Count == 0)
+            {
+                return null;
+            }
             var triggersSection = ini.Sections.Add("Triggers");
             foreach (var trigger in Map.Triggers)
             {
@@ -1845,9 +1916,13 @@ namespace MobiusEditor.TiberianDawn
                     String.IsNullOrEmpty(trigger.Action1.Team) ? TeamType.None : trigger.Action1.Team,
                     ((int)trigger.PersistentType).ToString()
                 };
-
                 triggersSection[trigger.Name] = string.Join(",", tokens);
             }
+            return triggersSection;
+        }
+
+        protected INISection SaveIniWaypoints(INI ini)
+        {
             var waypointsSection = ini.Sections.Add("Waypoints");
             for (var i = 0; i < Map.Waypoints.Length; ++i)
             {
@@ -1857,21 +1932,37 @@ namespace MobiusEditor.TiberianDawn
                     waypointsSection[i.ToString()] = waypoint.Cell.Value.ToString();
                 }
             }
+            return waypointsSection;
+        }
+
+        protected INISection SaveIniBase(INI ini, bool dummy)
+        {
             var baseSection = ini.Sections.Add("Base");
-            var baseBuildings = Map.Buildings.OfType<Building>().Where(x => x.Occupier.BasePriority >= 0).OrderByDescending(x => x.Occupier.BasePriority).ToArray();
-            var baseIndex = baseBuildings.Length - 1;
-            foreach (var (location, building) in baseBuildings)
+            if (!dummy)
             {
-                var key = baseIndex.ToString("D3");
-                baseIndex--;
+                var baseBuildings = Map.Buildings.OfType<Building>().Where(x => x.Occupier.BasePriority >= 0).OrderByDescending(x => x.Occupier.BasePriority).ToArray();
+                var baseIndex = baseBuildings.Length - 1;
+                foreach (var (location, building) in baseBuildings)
+                {
+                    var key = baseIndex.ToString("D3");
+                    baseIndex--;
 
-                baseSection[key] = string.Format("{0},{1}",
-                    building.Type.Name.ToUpper(),
-                    ((location.Y & 0x7F) << 24) | ((location.X & 0x7F) << 8)
-                );
+                    baseSection[key] = string.Format("{0},{1}",
+                        building.Type.Name.ToUpper(),
+                        ((location.Y & 0x7F) << 24) | ((location.X & 0x7F) << 8)
+                    );
+                }
+                baseSection["Count"] = baseBuildings.Length.ToString();
             }
-            baseSection["Count"] = baseBuildings.Length.ToString();
+            else
+            {
+                baseSection["Count"] = "0";
+            }
+            return baseSection;
+        }
 
+        protected INISection SaveIniInfantry(INI ini)
+        {
             var infantrySection = ini.Sections.Add("Infantry");
             var infantryIndex = 0;
             foreach (var (location, infantryGroup) in Map.Technos.OfType<InfantryGroup>())
@@ -1900,6 +1991,11 @@ namespace MobiusEditor.TiberianDawn
                     );
                 }
             }
+            return infantrySection;
+        }
+
+        protected INISection SaveIniStructures(INI ini)
+        {
             var structuresSection = ini.Sections.Add("Structures");
             var structureIndex = 0;
             foreach (var (location, building) in Map.Buildings.OfType<Building>().Where(x => x.Occupier.IsPrebuilt))
@@ -1916,7 +2012,12 @@ namespace MobiusEditor.TiberianDawn
                     building.Direction.ID,
                     building.Trigger
                 );
-            }
+            }            
+            return structuresSection;
+        }
+
+        protected INISection SaveIniUnits(INI ini)
+        {
             var unitsSection = ini.Sections.Add("Units");
             var unitIndex = 0;
             foreach (var (location, unit) in Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsUnit))
@@ -1935,35 +2036,54 @@ namespace MobiusEditor.TiberianDawn
                     unit.Trigger
                 );
             }
-            // Classic game does not support this, so it's disabled by default.
-            if (!Globals.DisableAirUnits)
-            {
-                var aircraftSection = ini.Sections.Add("Aircraft");
-                var aircraftIndex = 0;
-                foreach (var (location, aircraft) in Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsAircraft))
-                {
-                    var key = aircraftIndex.ToString("D3");
-                    aircraftIndex++;
+            return unitsSection;
+        }
 
-                    Map.Metrics.GetCell(location, out int cell);
-                    aircraftSection[key] = string.Format("{0},{1},{2},{3},{4},{5}",
-                        aircraft.House.Name,
-                        aircraft.Type.Name,
-                        aircraft.Strength,
-                        cell,
-                        aircraft.Direction.ID,
-                        String.IsNullOrEmpty(aircraft.Mission) ? "Guard" : aircraft.Mission
-                    );
-                }
+        protected INISection SaveIniAircraft(INI ini)
+        {
+            // Classic game does not support this, so it's disabled by default.
+            if (Globals.DisableAirUnits)
+            {
+                return null;
             }
+            var aircraftSection = ini.Sections.Add("Aircraft");
+            var aircraftIndex = 0;
+            foreach (var (location, aircraft) in Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsAircraft))
+            {
+                var key = aircraftIndex.ToString("D3");
+                aircraftIndex++;
+
+                Map.Metrics.GetCell(location, out int cell);
+                aircraftSection[key] = string.Format("{0},{1},{2},{3},{4},{5}",
+                    aircraft.House.Name,
+                    aircraft.Type.Name,
+                    aircraft.Strength,
+                    cell,
+                    aircraft.Direction.ID,
+                    String.IsNullOrEmpty(aircraft.Mission) ? "Guard" : aircraft.Mission
+                );
+            }
+            return aircraftSection;
+        }
+
+        protected IEnumerable<INISection> SaveIniHouses(INI ini)
+        {
+            List<INISection> houseSections = new List<INISection>();
             foreach (var house in Map.Houses)
             {
                 if ((house.Type.ID < 0) || !house.Enabled)
                 {
                     continue;
                 }
-                INI.WriteSection(new MapContext(Map, false), ini.Sections.Add(house.Type.Name), house);
+                INISection houseSection = ini.Sections.Add(house.Type.Name);
+                INI.WriteSection(new MapContext(Map, false), houseSection, house);
+                houseSections.Add(houseSection);
             }
+            return houseSections;
+        }
+
+        protected INISection SaveIniOverlay(INI ini)
+        {
             var overlaySection = ini.Sections.Add("Overlay");
             Regex tiberium = new Regex("TI([0-9]|(1[0-2]))", RegexOptions.IgnoreCase);
             Random rd = new Random();
@@ -1974,6 +2094,11 @@ namespace MobiusEditor.TiberianDawn
                     overlayName = "TI" + rd.Next(1, 13);
                 overlaySection[cell.ToString()] = overlayName.ToUpperInvariant();
             }
+            return overlaySection;
+        }
+
+        protected INISection SaveIniSmudge(INI ini)
+        {
             var smudgeSection = ini.Sections.Add("Smudge");
             // Flatten multi-cell bibs
             Dictionary<int, Smudge> resolvedSmudge = new Dictionary<int, Smudge>();
@@ -1990,12 +2115,18 @@ namespace MobiusEditor.TiberianDawn
                 Smudge smudge = resolvedSmudge[cell];
                 smudgeSection[cell.ToString()] = string.Format("{0},{1},{2}", smudge.Type.Name.ToUpper(), cell, Math.Min(smudge.Type.Icons - 1, smudge.Icon));
             }
+            return smudgeSection;
+        }
+
+        protected INISection SaveINITerrain(INI ini)
+        {
             var terrainSection = ini.Sections.Add("Terrain");
             foreach (var (location, terrain) in Map.Technos.OfType<Terrain>())
             {
                 Map.Metrics.GetCell(location, out int cell);
                 terrainSection[cell.ToString()] = string.Format("{0},{1}", terrain.Type.Name, terrain.Trigger);
             }
+            return terrainSection;
         }
 
         protected void SaveBinaryClassic(BinaryWriter writer)
@@ -2082,6 +2213,11 @@ namespace MobiusEditor.TiberianDawn
 
         public String Validate()
         {
+            return Validate(false);
+        }
+
+        protected String Validate(bool forSS)
+        {
             StringBuilder sb = new StringBuilder("Error(s) during map validation:");
             bool ok = true;
             int numAircraft = Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsAircraft).Count();
@@ -2125,16 +2261,19 @@ namespace MobiusEditor.TiberianDawn
                 sb.AppendLine().Append(string.Format("Maximum number of triggers exceeded ({0} > {1})", Map.Triggers.Count, Constants.MaxTriggers));
                 ok = false;
             }
-            if (!Map.BasicSection.SoloMission && (numWaypoints < 2))
+            if (!forSS)
             {
-                sb.AppendLine().Append("Skirmish/Multiplayer maps need at least 2 waypoints for player starting locations.");
-                ok = false;
-            }
-            var homeWaypoint = Map.Waypoints.Where(w => (w.Flag & WaypointFlag.Home) == WaypointFlag.Home).FirstOrDefault();
-            if (Map.BasicSection.SoloMission && !homeWaypoint.Cell.HasValue)
-            {
-                sb.AppendLine().Append("Single-player maps need the Home waypoint to be placed.");
-                ok = false;
+                if (!Map.BasicSection.SoloMission && (numWaypoints < 2))
+                {
+                    sb.AppendLine().Append("Skirmish/Multiplayer maps need at least 2 waypoints for player starting locations.");
+                    ok = false;
+                }
+                var homeWaypoint = Map.Waypoints.Where(w => (w.Flag & WaypointFlag.Home) == WaypointFlag.Home).FirstOrDefault();
+                if (Map.BasicSection.SoloMission && !homeWaypoint.Cell.HasValue)
+                {
+                    sb.AppendLine().Append("Single-player maps need the Home waypoint to be placed.");
+                    ok = false;
+                }
             }
             return ok ? null : sb.ToString();
         }
@@ -2179,13 +2318,21 @@ namespace MobiusEditor.TiberianDawn
         protected void UpdateWaypoints()
         {
             bool isSolo = Map.BasicSection.SoloMission;
-            for (int i = 0; i < multiStartPoints; ++i)
+            HashSet<Point> updated = new HashSet<Point>();
+            for (Int32 i = 0; i < Map.Waypoints.Length; ++i)
             {
-                Map.Waypoints[i].Name = isSolo ? i.ToString() : string.Format("P{0}", i);
-                WaypointFlag wpf = Map.Waypoints[i].Flag;
-                Map.Waypoints[i].Flag = isSolo ? wpf & ~WaypointFlag.PlayerStart : wpf | Waypoint.GetFlagForMpId(i);
+                Waypoint waypoint = Map.Waypoints[i];
+                if ((waypoint.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart)
+                {
+                    Map.Waypoints[i].Name = isSolo ? i.ToString() : string.Format("P{0}", i);
+                    if (waypoint.Point.HasValue)
+                    {
+                        updated.Add(waypoint.Point.Value);
+                    }
+                }
             }
-            Map.FlagWaypointsUpdate();
+            Map.NotifyWaypointsUpdate();
+            Map.NotifyMapContentsChanged(updated);
         }
 
         #region IDisposable Support

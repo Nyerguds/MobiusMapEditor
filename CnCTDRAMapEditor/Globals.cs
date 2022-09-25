@@ -36,6 +36,7 @@ namespace MobiusEditor
             ConvertRaObsoleteClear = Properties.Settings.Default.ConvertRaObsoleteClear;
             BoundsObstructFill = Properties.Settings.Default.BoundsObstructFill;
             FilterTheaterObjects = Properties.Settings.Default.FilterTheaterObjects;
+            NoOwnedObjectsInSole = Properties.Settings.Default.NoOwnedObjectsInSole;
         }
 
         public const string TilesetsXMLPath = @"DATA\XML\TILESETS.XML";
@@ -71,6 +72,7 @@ namespace MobiusEditor
         public static bool ConvertRaObsoleteClear;
         public static bool BoundsObstructFill;
         public static bool FilterTheaterObjects;
+        public static bool NoOwnedObjectsInSole;
 
         public static int UndoRedoStackSize = 50;
 

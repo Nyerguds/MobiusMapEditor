@@ -38,7 +38,10 @@ namespace MobiusEditor.Interface
 
     public interface IGamePlugin : IDisposable
     {
+        string Name { get; }
+
         GameType GameType { get; }
+
         bool IsMegaMap { get; }
 
         Map Map { get; }
@@ -47,7 +50,7 @@ namespace MobiusEditor.Interface
 
         bool Dirty { get; set; }
 
-        String ExtraIniText { get; set; }
+        string ExtraIniText { get; set; }
 
         void New(string theater);
 
