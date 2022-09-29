@@ -83,6 +83,8 @@ namespace MobiusEditor.Controls
             this.nudDensity = new MobiusEditor.Controls.EnhNumericUpDown();
             this.nudIonFactor = new MobiusEditor.Controls.EnhNumericUpDown();
             this.nudCrateTimer = new MobiusEditor.Controls.EnhNumericUpDown();
+            this.panel1 = new System.Windows.Forms.Panel();
+            this.btnDefaults = new System.Windows.Forms.Button();
             this.tableLayoutPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.nudAddStrength)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudAddWeapon)).BeginInit();
@@ -103,15 +105,17 @@ namespace MobiusEditor.Controls
             ((System.ComponentModel.ISupportInitialize)(this.nudDensity)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudIonFactor)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudCrateTimer)).BeginInit();
+            this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // tableLayoutPanel1
             // 
+            this.tableLayoutPanel1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.tableLayoutPanel1.AutoSize = true;
-            this.tableLayoutPanel1.ColumnCount = 3;
+            this.tableLayoutPanel1.ColumnCount = 2;
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 35F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 15F));
             this.tableLayoutPanel1.Controls.Add(this.label5, 0, 4);
             this.tableLayoutPanel1.Controls.Add(this.label4, 0, 3);
             this.tableLayoutPanel1.Controls.Add(this.label3, 0, 2);
@@ -152,7 +156,6 @@ namespace MobiusEditor.Controls
             this.tableLayoutPanel1.Controls.Add(this.nudDensity, 1, 1);
             this.tableLayoutPanel1.Controls.Add(this.nudIonFactor, 1, 2);
             this.tableLayoutPanel1.Controls.Add(this.nudCrateTimer, 1, 3);
-            this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 25;
@@ -181,7 +184,7 @@ namespace MobiusEditor.Controls
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(400, 645);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(463, 554);
             this.tableLayoutPanel1.TabIndex = 1;
             // 
             // label5
@@ -191,7 +194,7 @@ namespace MobiusEditor.Controls
             this.label5.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Underline, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label5.Location = new System.Drawing.Point(3, 104);
             this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(334, 26);
+            this.label5.Size = new System.Drawing.Size(457, 26);
             this.label5.TabIndex = 38;
             this.label5.Text = "Crate chance settings:";
             this.label5.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -202,7 +205,7 @@ namespace MobiusEditor.Controls
             this.label4.Location = new System.Drawing.Point(2, 78);
             this.label4.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(136, 26);
+            this.label4.Size = new System.Drawing.Size(186, 26);
             this.label4.TabIndex = 37;
             this.label4.Text = "Crate Timer";
             this.label4.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -213,7 +216,7 @@ namespace MobiusEditor.Controls
             this.label3.Location = new System.Drawing.Point(2, 52);
             this.label3.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(136, 26);
+            this.label3.Size = new System.Drawing.Size(186, 26);
             this.label3.TabIndex = 36;
             this.label3.Text = "Ion Factor";
             this.label3.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -225,7 +228,7 @@ namespace MobiusEditor.Controls
             this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Underline, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label2.Location = new System.Drawing.Point(3, 0);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(334, 26);
+            this.label2.Size = new System.Drawing.Size(457, 26);
             this.label2.TabIndex = 34;
             this.label2.Text = "General crate settings:";
             this.label2.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -236,7 +239,7 @@ namespace MobiusEditor.Controls
             this.label1.Location = new System.Drawing.Point(2, 26);
             this.label1.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(136, 26);
+            this.label1.Size = new System.Drawing.Size(186, 26);
             this.label1.TabIndex = 33;
             this.label1.Text = "Crate Density";
             this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -247,7 +250,7 @@ namespace MobiusEditor.Controls
             this.lblStealth.Location = new System.Drawing.Point(2, 313);
             this.lblStealth.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblStealth.Name = "lblStealth";
-            this.lblStealth.Size = new System.Drawing.Size(136, 26);
+            this.lblStealth.Size = new System.Drawing.Size(186, 26);
             this.lblStealth.TabIndex = 14;
             this.lblStealth.Text = "Crate: Stealth";
             this.lblStealth.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -258,7 +261,7 @@ namespace MobiusEditor.Controls
             this.lblSuper.Location = new System.Drawing.Point(2, 521);
             this.lblSuper.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblSuper.Name = "lblSuper";
-            this.lblSuper.Size = new System.Drawing.Size(136, 26);
+            this.lblSuper.Size = new System.Drawing.Size(186, 26);
             this.lblSuper.TabIndex = 30;
             this.lblSuper.Text = "Crate: Super";
             this.lblSuper.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -269,7 +272,7 @@ namespace MobiusEditor.Controls
             this.lblArmageddon.Location = new System.Drawing.Point(2, 495);
             this.lblArmageddon.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblArmageddon.Name = "lblArmageddon";
-            this.lblArmageddon.Size = new System.Drawing.Size(136, 26);
+            this.lblArmageddon.Size = new System.Drawing.Size(186, 26);
             this.lblArmageddon.TabIndex = 28;
             this.lblArmageddon.Text = "Crate: Armageddon";
             this.lblArmageddon.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -280,7 +283,7 @@ namespace MobiusEditor.Controls
             this.lblRadar.Location = new System.Drawing.Point(2, 469);
             this.lblRadar.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblRadar.Name = "lblRadar";
-            this.lblRadar.Size = new System.Drawing.Size(136, 26);
+            this.lblRadar.Size = new System.Drawing.Size(186, 26);
             this.lblRadar.TabIndex = 26;
             this.lblRadar.Text = "Crate: Radar";
             this.lblRadar.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -291,7 +294,7 @@ namespace MobiusEditor.Controls
             this.lblUnshroud.Location = new System.Drawing.Point(2, 443);
             this.lblUnshroud.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblUnshroud.Name = "lblUnshroud";
-            this.lblUnshroud.Size = new System.Drawing.Size(136, 26);
+            this.lblUnshroud.Size = new System.Drawing.Size(186, 26);
             this.lblUnshroud.TabIndex = 24;
             this.lblUnshroud.Text = "Crate: Unshroud";
             this.lblUnshroud.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -302,7 +305,7 @@ namespace MobiusEditor.Controls
             this.lblReshroud.Location = new System.Drawing.Point(2, 417);
             this.lblReshroud.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblReshroud.Name = "lblReshroud";
-            this.lblReshroud.Size = new System.Drawing.Size(136, 26);
+            this.lblReshroud.Size = new System.Drawing.Size(186, 26);
             this.lblReshroud.TabIndex = 22;
             this.lblReshroud.Text = "Crate: Reshroud";
             this.lblReshroud.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -313,7 +316,7 @@ namespace MobiusEditor.Controls
             this.lblUncloakAll.Location = new System.Drawing.Point(2, 391);
             this.lblUncloakAll.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblUncloakAll.Name = "lblUncloakAll";
-            this.lblUncloakAll.Size = new System.Drawing.Size(136, 26);
+            this.lblUncloakAll.Size = new System.Drawing.Size(186, 26);
             this.lblUncloakAll.TabIndex = 20;
             this.lblUncloakAll.Text = "Crate: Uncloak All";
             this.lblUncloakAll.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -324,7 +327,7 @@ namespace MobiusEditor.Controls
             this.lblKill.Location = new System.Drawing.Point(2, 365);
             this.lblKill.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblKill.Name = "lblKill";
-            this.lblKill.Size = new System.Drawing.Size(136, 26);
+            this.lblKill.Size = new System.Drawing.Size(186, 26);
             this.lblKill.TabIndex = 18;
             this.lblKill.Text = "Crate: Kill";
             this.lblKill.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -335,7 +338,7 @@ namespace MobiusEditor.Controls
             this.lblTeleport.Location = new System.Drawing.Point(2, 339);
             this.lblTeleport.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblTeleport.Name = "lblTeleport";
-            this.lblTeleport.Size = new System.Drawing.Size(136, 26);
+            this.lblTeleport.Size = new System.Drawing.Size(186, 26);
             this.lblTeleport.TabIndex = 16;
             this.lblTeleport.Text = "Crate: Teleport";
             this.lblTeleport.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -345,7 +348,7 @@ namespace MobiusEditor.Controls
             this.lblAddStrength.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lblAddStrength.Location = new System.Drawing.Point(3, 130);
             this.lblAddStrength.Name = "lblAddStrength";
-            this.lblAddStrength.Size = new System.Drawing.Size(134, 26);
+            this.lblAddStrength.Size = new System.Drawing.Size(184, 26);
             this.lblAddStrength.TabIndex = 0;
             this.lblAddStrength.Text = "Crate: Add Strength";
             this.lblAddStrength.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -355,7 +358,7 @@ namespace MobiusEditor.Controls
             this.lblAddWeapon.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lblAddWeapon.Location = new System.Drawing.Point(3, 156);
             this.lblAddWeapon.Name = "lblAddWeapon";
-            this.lblAddWeapon.Size = new System.Drawing.Size(134, 26);
+            this.lblAddWeapon.Size = new System.Drawing.Size(184, 26);
             this.lblAddWeapon.TabIndex = 2;
             this.lblAddWeapon.Text = "Crate: Add Weapon";
             this.lblAddWeapon.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -365,7 +368,7 @@ namespace MobiusEditor.Controls
             this.lblAddSpeed.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lblAddSpeed.Location = new System.Drawing.Point(3, 182);
             this.lblAddSpeed.Name = "lblAddSpeed";
-            this.lblAddSpeed.Size = new System.Drawing.Size(134, 26);
+            this.lblAddSpeed.Size = new System.Drawing.Size(184, 26);
             this.lblAddSpeed.TabIndex = 4;
             this.lblAddSpeed.Text = "Crate: Add Speed";
             this.lblAddSpeed.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -375,7 +378,7 @@ namespace MobiusEditor.Controls
             this.lblRapidReload.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lblRapidReload.Location = new System.Drawing.Point(3, 208);
             this.lblRapidReload.Name = "lblRapidReload";
-            this.lblRapidReload.Size = new System.Drawing.Size(134, 26);
+            this.lblRapidReload.Size = new System.Drawing.Size(184, 26);
             this.lblRapidReload.TabIndex = 6;
             this.lblRapidReload.Text = "Crate: Rapid Reload";
             this.lblRapidReload.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -385,7 +388,7 @@ namespace MobiusEditor.Controls
             this.lblAddRange.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lblAddRange.Location = new System.Drawing.Point(3, 234);
             this.lblAddRange.Name = "lblAddRange";
-            this.lblAddRange.Size = new System.Drawing.Size(134, 27);
+            this.lblAddRange.Size = new System.Drawing.Size(184, 27);
             this.lblAddRange.TabIndex = 8;
             this.lblAddRange.Text = "Crate: Add Range";
             this.lblAddRange.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -396,7 +399,7 @@ namespace MobiusEditor.Controls
             this.lblHeal.Location = new System.Drawing.Point(2, 261);
             this.lblHeal.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblHeal.Name = "lblHeal";
-            this.lblHeal.Size = new System.Drawing.Size(136, 26);
+            this.lblHeal.Size = new System.Drawing.Size(186, 26);
             this.lblHeal.TabIndex = 10;
             this.lblHeal.Text = "Crate: Heal";
             this.lblHeal.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -407,7 +410,7 @@ namespace MobiusEditor.Controls
             this.lblBomb.Location = new System.Drawing.Point(2, 287);
             this.lblBomb.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblBomb.Name = "lblBomb";
-            this.lblBomb.Size = new System.Drawing.Size(136, 26);
+            this.lblBomb.Size = new System.Drawing.Size(186, 26);
             this.lblBomb.TabIndex = 12;
             this.lblBomb.Text = "Crate: Bomb";
             this.lblBomb.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -421,7 +424,7 @@ namespace MobiusEditor.Controls
             0,
             0});
             this.nudAddStrength.IntValue = 0;
-            this.nudAddStrength.Location = new System.Drawing.Point(143, 133);
+            this.nudAddStrength.Location = new System.Drawing.Point(193, 133);
             this.nudAddStrength.Maximum = new decimal(new int[] {
             2147483647,
             0,
@@ -431,7 +434,7 @@ namespace MobiusEditor.Controls
             this.nudAddStrength.SelectedText = "";
             this.nudAddStrength.SelectionLength = 0;
             this.nudAddStrength.SelectionStart = 0;
-            this.nudAddStrength.Size = new System.Drawing.Size(194, 20);
+            this.nudAddStrength.Size = new System.Drawing.Size(267, 20);
             this.nudAddStrength.TabIndex = 35;
             // 
             // nudAddWeapon
@@ -443,7 +446,7 @@ namespace MobiusEditor.Controls
             0,
             0});
             this.nudAddWeapon.IntValue = 0;
-            this.nudAddWeapon.Location = new System.Drawing.Point(143, 159);
+            this.nudAddWeapon.Location = new System.Drawing.Point(193, 159);
             this.nudAddWeapon.Maximum = new decimal(new int[] {
             2147483647,
             0,
@@ -453,7 +456,7 @@ namespace MobiusEditor.Controls
             this.nudAddWeapon.SelectedText = "";
             this.nudAddWeapon.SelectionLength = 0;
             this.nudAddWeapon.SelectionStart = 0;
-            this.nudAddWeapon.Size = new System.Drawing.Size(194, 20);
+            this.nudAddWeapon.Size = new System.Drawing.Size(267, 20);
             this.nudAddWeapon.TabIndex = 35;
             // 
             // nudAddSpeed
@@ -465,7 +468,7 @@ namespace MobiusEditor.Controls
             0,
             0});
             this.nudAddSpeed.IntValue = 0;
-            this.nudAddSpeed.Location = new System.Drawing.Point(143, 185);
+            this.nudAddSpeed.Location = new System.Drawing.Point(193, 185);
             this.nudAddSpeed.Maximum = new decimal(new int[] {
             2147483647,
             0,
@@ -475,7 +478,7 @@ namespace MobiusEditor.Controls
             this.nudAddSpeed.SelectedText = "";
             this.nudAddSpeed.SelectionLength = 0;
             this.nudAddSpeed.SelectionStart = 0;
-            this.nudAddSpeed.Size = new System.Drawing.Size(194, 20);
+            this.nudAddSpeed.Size = new System.Drawing.Size(267, 20);
             this.nudAddSpeed.TabIndex = 35;
             // 
             // nudRapidReload
@@ -487,7 +490,7 @@ namespace MobiusEditor.Controls
             0,
             0});
             this.nudRapidReload.IntValue = 0;
-            this.nudRapidReload.Location = new System.Drawing.Point(143, 211);
+            this.nudRapidReload.Location = new System.Drawing.Point(193, 211);
             this.nudRapidReload.Maximum = new decimal(new int[] {
             2147483647,
             0,
@@ -497,7 +500,7 @@ namespace MobiusEditor.Controls
             this.nudRapidReload.SelectedText = "";
             this.nudRapidReload.SelectionLength = 0;
             this.nudRapidReload.SelectionStart = 0;
-            this.nudRapidReload.Size = new System.Drawing.Size(194, 20);
+            this.nudRapidReload.Size = new System.Drawing.Size(267, 20);
             this.nudRapidReload.TabIndex = 35;
             // 
             // nudAddRange
@@ -509,7 +512,7 @@ namespace MobiusEditor.Controls
             0,
             0});
             this.nudAddRange.IntValue = 0;
-            this.nudAddRange.Location = new System.Drawing.Point(143, 237);
+            this.nudAddRange.Location = new System.Drawing.Point(193, 237);
             this.nudAddRange.Maximum = new decimal(new int[] {
             2147483647,
             0,
@@ -519,7 +522,7 @@ namespace MobiusEditor.Controls
             this.nudAddRange.SelectedText = "";
             this.nudAddRange.SelectionLength = 0;
             this.nudAddRange.SelectionStart = 0;
-            this.nudAddRange.Size = new System.Drawing.Size(194, 20);
+            this.nudAddRange.Size = new System.Drawing.Size(267, 20);
             this.nudAddRange.TabIndex = 35;
             // 
             // nudHeal
@@ -531,7 +534,7 @@ namespace MobiusEditor.Controls
             0,
             0});
             this.nudHeal.IntValue = 0;
-            this.nudHeal.Location = new System.Drawing.Point(143, 264);
+            this.nudHeal.Location = new System.Drawing.Point(193, 264);
             this.nudHeal.Maximum = new decimal(new int[] {
             2147483647,
             0,
@@ -541,7 +544,7 @@ namespace MobiusEditor.Controls
             this.nudHeal.SelectedText = "";
             this.nudHeal.SelectionLength = 0;
             this.nudHeal.SelectionStart = 0;
-            this.nudHeal.Size = new System.Drawing.Size(194, 20);
+            this.nudHeal.Size = new System.Drawing.Size(267, 20);
             this.nudHeal.TabIndex = 35;
             // 
             // nudBomb
@@ -553,7 +556,7 @@ namespace MobiusEditor.Controls
             0,
             0});
             this.nudBomb.IntValue = 0;
-            this.nudBomb.Location = new System.Drawing.Point(143, 290);
+            this.nudBomb.Location = new System.Drawing.Point(193, 290);
             this.nudBomb.Maximum = new decimal(new int[] {
             2147483647,
             0,
@@ -563,7 +566,7 @@ namespace MobiusEditor.Controls
             this.nudBomb.SelectedText = "";
             this.nudBomb.SelectionLength = 0;
             this.nudBomb.SelectionStart = 0;
-            this.nudBomb.Size = new System.Drawing.Size(194, 20);
+            this.nudBomb.Size = new System.Drawing.Size(267, 20);
             this.nudBomb.TabIndex = 35;
             // 
             // nudStealth
@@ -575,7 +578,7 @@ namespace MobiusEditor.Controls
             0,
             0});
             this.nudStealth.IntValue = 0;
-            this.nudStealth.Location = new System.Drawing.Point(143, 316);
+            this.nudStealth.Location = new System.Drawing.Point(193, 316);
             this.nudStealth.Maximum = new decimal(new int[] {
             2147483647,
             0,
@@ -585,7 +588,7 @@ namespace MobiusEditor.Controls
             this.nudStealth.SelectedText = "";
             this.nudStealth.SelectionLength = 0;
             this.nudStealth.SelectionStart = 0;
-            this.nudStealth.Size = new System.Drawing.Size(194, 20);
+            this.nudStealth.Size = new System.Drawing.Size(267, 20);
             this.nudStealth.TabIndex = 35;
             // 
             // nudTeleport
@@ -597,7 +600,7 @@ namespace MobiusEditor.Controls
             0,
             0});
             this.nudTeleport.IntValue = 0;
-            this.nudTeleport.Location = new System.Drawing.Point(143, 342);
+            this.nudTeleport.Location = new System.Drawing.Point(193, 342);
             this.nudTeleport.Maximum = new decimal(new int[] {
             2147483647,
             0,
@@ -607,7 +610,7 @@ namespace MobiusEditor.Controls
             this.nudTeleport.SelectedText = "";
             this.nudTeleport.SelectionLength = 0;
             this.nudTeleport.SelectionStart = 0;
-            this.nudTeleport.Size = new System.Drawing.Size(194, 20);
+            this.nudTeleport.Size = new System.Drawing.Size(267, 20);
             this.nudTeleport.TabIndex = 35;
             // 
             // nudKill
@@ -619,7 +622,7 @@ namespace MobiusEditor.Controls
             0,
             0});
             this.nudKill.IntValue = 0;
-            this.nudKill.Location = new System.Drawing.Point(143, 368);
+            this.nudKill.Location = new System.Drawing.Point(193, 368);
             this.nudKill.Maximum = new decimal(new int[] {
             2147483647,
             0,
@@ -629,7 +632,7 @@ namespace MobiusEditor.Controls
             this.nudKill.SelectedText = "";
             this.nudKill.SelectionLength = 0;
             this.nudKill.SelectionStart = 0;
-            this.nudKill.Size = new System.Drawing.Size(194, 20);
+            this.nudKill.Size = new System.Drawing.Size(267, 20);
             this.nudKill.TabIndex = 35;
             // 
             // nudUncloakAll
@@ -641,7 +644,7 @@ namespace MobiusEditor.Controls
             0,
             0});
             this.nudUncloakAll.IntValue = 0;
-            this.nudUncloakAll.Location = new System.Drawing.Point(143, 394);
+            this.nudUncloakAll.Location = new System.Drawing.Point(193, 394);
             this.nudUncloakAll.Maximum = new decimal(new int[] {
             2147483647,
             0,
@@ -651,7 +654,7 @@ namespace MobiusEditor.Controls
             this.nudUncloakAll.SelectedText = "";
             this.nudUncloakAll.SelectionLength = 0;
             this.nudUncloakAll.SelectionStart = 0;
-            this.nudUncloakAll.Size = new System.Drawing.Size(194, 20);
+            this.nudUncloakAll.Size = new System.Drawing.Size(267, 20);
             this.nudUncloakAll.TabIndex = 35;
             // 
             // nudReshroud
@@ -663,7 +666,7 @@ namespace MobiusEditor.Controls
             0,
             0});
             this.nudReshroud.IntValue = 0;
-            this.nudReshroud.Location = new System.Drawing.Point(143, 420);
+            this.nudReshroud.Location = new System.Drawing.Point(193, 420);
             this.nudReshroud.Maximum = new decimal(new int[] {
             2147483647,
             0,
@@ -673,7 +676,7 @@ namespace MobiusEditor.Controls
             this.nudReshroud.SelectedText = "";
             this.nudReshroud.SelectionLength = 0;
             this.nudReshroud.SelectionStart = 0;
-            this.nudReshroud.Size = new System.Drawing.Size(194, 20);
+            this.nudReshroud.Size = new System.Drawing.Size(267, 20);
             this.nudReshroud.TabIndex = 35;
             // 
             // nudUnshroud
@@ -685,7 +688,7 @@ namespace MobiusEditor.Controls
             0,
             0});
             this.nudUnshroud.IntValue = 0;
-            this.nudUnshroud.Location = new System.Drawing.Point(143, 446);
+            this.nudUnshroud.Location = new System.Drawing.Point(193, 446);
             this.nudUnshroud.Maximum = new decimal(new int[] {
             2147483647,
             0,
@@ -695,7 +698,7 @@ namespace MobiusEditor.Controls
             this.nudUnshroud.SelectedText = "";
             this.nudUnshroud.SelectionLength = 0;
             this.nudUnshroud.SelectionStart = 0;
-            this.nudUnshroud.Size = new System.Drawing.Size(194, 20);
+            this.nudUnshroud.Size = new System.Drawing.Size(267, 20);
             this.nudUnshroud.TabIndex = 35;
             // 
             // nudRadar
@@ -707,7 +710,7 @@ namespace MobiusEditor.Controls
             0,
             0});
             this.nudRadar.IntValue = 0;
-            this.nudRadar.Location = new System.Drawing.Point(143, 472);
+            this.nudRadar.Location = new System.Drawing.Point(193, 472);
             this.nudRadar.Maximum = new decimal(new int[] {
             2147483647,
             0,
@@ -717,7 +720,7 @@ namespace MobiusEditor.Controls
             this.nudRadar.SelectedText = "";
             this.nudRadar.SelectionLength = 0;
             this.nudRadar.SelectionStart = 0;
-            this.nudRadar.Size = new System.Drawing.Size(194, 20);
+            this.nudRadar.Size = new System.Drawing.Size(267, 20);
             this.nudRadar.TabIndex = 35;
             // 
             // nudArmageddon
@@ -729,7 +732,7 @@ namespace MobiusEditor.Controls
             0,
             0});
             this.nudArmageddon.IntValue = 0;
-            this.nudArmageddon.Location = new System.Drawing.Point(143, 498);
+            this.nudArmageddon.Location = new System.Drawing.Point(193, 498);
             this.nudArmageddon.Maximum = new decimal(new int[] {
             2147483647,
             0,
@@ -739,7 +742,7 @@ namespace MobiusEditor.Controls
             this.nudArmageddon.SelectedText = "";
             this.nudArmageddon.SelectionLength = 0;
             this.nudArmageddon.SelectionStart = 0;
-            this.nudArmageddon.Size = new System.Drawing.Size(194, 20);
+            this.nudArmageddon.Size = new System.Drawing.Size(267, 20);
             this.nudArmageddon.TabIndex = 35;
             // 
             // nudSuper
@@ -751,7 +754,7 @@ namespace MobiusEditor.Controls
             0,
             0});
             this.nudSuper.IntValue = 0;
-            this.nudSuper.Location = new System.Drawing.Point(143, 524);
+            this.nudSuper.Location = new System.Drawing.Point(193, 524);
             this.nudSuper.Maximum = new decimal(new int[] {
             2147483647,
             0,
@@ -761,7 +764,7 @@ namespace MobiusEditor.Controls
             this.nudSuper.SelectedText = "";
             this.nudSuper.SelectionLength = 0;
             this.nudSuper.SelectionStart = 0;
-            this.nudSuper.Size = new System.Drawing.Size(194, 20);
+            this.nudSuper.Size = new System.Drawing.Size(267, 20);
             this.nudSuper.TabIndex = 35;
             // 
             // nudDensity
@@ -773,7 +776,7 @@ namespace MobiusEditor.Controls
             0,
             0});
             this.nudDensity.IntValue = 0;
-            this.nudDensity.Location = new System.Drawing.Point(143, 29);
+            this.nudDensity.Location = new System.Drawing.Point(193, 29);
             this.nudDensity.Maximum = new decimal(new int[] {
             2147483647,
             0,
@@ -783,7 +786,7 @@ namespace MobiusEditor.Controls
             this.nudDensity.SelectedText = "";
             this.nudDensity.SelectionLength = 0;
             this.nudDensity.SelectionStart = 0;
-            this.nudDensity.Size = new System.Drawing.Size(194, 20);
+            this.nudDensity.Size = new System.Drawing.Size(267, 20);
             this.nudDensity.TabIndex = 35;
             // 
             // nudIonFactor
@@ -795,7 +798,7 @@ namespace MobiusEditor.Controls
             0,
             0});
             this.nudIonFactor.IntValue = 0;
-            this.nudIonFactor.Location = new System.Drawing.Point(143, 55);
+            this.nudIonFactor.Location = new System.Drawing.Point(193, 55);
             this.nudIonFactor.Maximum = new decimal(new int[] {
             2147483647,
             0,
@@ -805,7 +808,7 @@ namespace MobiusEditor.Controls
             this.nudIonFactor.SelectedText = "";
             this.nudIonFactor.SelectionLength = 0;
             this.nudIonFactor.SelectionStart = 0;
-            this.nudIonFactor.Size = new System.Drawing.Size(194, 20);
+            this.nudIonFactor.Size = new System.Drawing.Size(267, 20);
             this.nudIonFactor.TabIndex = 35;
             // 
             // nudCrateTimer
@@ -817,7 +820,7 @@ namespace MobiusEditor.Controls
             0,
             0});
             this.nudCrateTimer.IntValue = 0;
-            this.nudCrateTimer.Location = new System.Drawing.Point(143, 81);
+            this.nudCrateTimer.Location = new System.Drawing.Point(193, 81);
             this.nudCrateTimer.Maximum = new decimal(new int[] {
             2147483647,
             0,
@@ -827,18 +830,40 @@ namespace MobiusEditor.Controls
             this.nudCrateTimer.SelectedText = "";
             this.nudCrateTimer.SelectionLength = 0;
             this.nudCrateTimer.SelectionStart = 0;
-            this.nudCrateTimer.Size = new System.Drawing.Size(194, 20);
+            this.nudCrateTimer.Size = new System.Drawing.Size(267, 20);
             this.nudCrateTimer.TabIndex = 35;
+            // 
+            // panel1
+            // 
+            this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.panel1.AutoScroll = true;
+            this.panel1.Controls.Add(this.tableLayoutPanel1);
+            this.panel1.Location = new System.Drawing.Point(0, 4);
+            this.panel1.Name = "panel1";
+            this.panel1.Size = new System.Drawing.Size(485, 526);
+            this.panel1.TabIndex = 2;
+            // 
+            // btnDefaults
+            // 
+            this.btnDefaults.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnDefaults.Location = new System.Drawing.Point(365, 536);
+            this.btnDefaults.Name = "btnDefaults";
+            this.btnDefaults.Size = new System.Drawing.Size(117, 23);
+            this.btnDefaults.TabIndex = 3;
+            this.btnDefaults.Text = "Reset to defaults";
+            this.btnDefaults.UseVisualStyleBackColor = true;
+            this.btnDefaults.Click += new System.EventHandler(this.btnDefaults_Click);
             // 
             // CrateSettings
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.AutoScroll = true;
-            this.Controls.Add(this.tableLayoutPanel1);
+            this.Controls.Add(this.btnDefaults);
+            this.Controls.Add(this.panel1);
             this.Name = "CrateSettings";
-            this.Size = new System.Drawing.Size(400, 645);
-            this.Load += new System.EventHandler(this.CrateSettings_Load);
+            this.Size = new System.Drawing.Size(485, 565);
             this.tableLayoutPanel1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.nudAddStrength)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudAddWeapon)).EndInit();
@@ -859,8 +884,9 @@ namespace MobiusEditor.Controls
             ((System.ComponentModel.ISupportInitialize)(this.nudDensity)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudIonFactor)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudCrateTimer)).EndInit();
+            this.panel1.ResumeLayout(false);
+            this.panel1.PerformLayout();
             this.ResumeLayout(false);
-            this.PerformLayout();
 
         }
 
@@ -907,5 +933,7 @@ namespace MobiusEditor.Controls
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.Panel panel1;
+        private System.Windows.Forms.Button btnDefaults;
     }
 }

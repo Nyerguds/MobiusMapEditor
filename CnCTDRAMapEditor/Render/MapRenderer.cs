@@ -435,8 +435,10 @@ namespace MobiusEditor.Render
             int damageIcon = 0;
             int collapseIcon = 0;
             bool hasCollapseFrame = false;
+            // In TD, damage is when BELOW the threshold. In RA, it's ON the threshold.
+            int healthyMin = gameType == GameType.RedAlert ? 128 : 127;
             // Only fetch if damaged. BuildingType.IsSingleFrame is an override for the RA mines. Everything else works with one simple logic.
-            if (building.Strength <= 128 && !building.Type.IsSingleFrame)
+            if (building.Strength <= healthyMin && !building.Type.IsSingleFrame)
             {
                 maxIcon = Globals.TheTilesetManager.GetTileDataLength(theater.Tilesets, building.Type.Tilename);
                 hasCollapseFrame = (gameType == GameType.TiberianDawn || gameType == GameType.SoleSurvivor) && maxIcon > 1 && maxIcon % 2 == 1;
@@ -446,7 +448,7 @@ namespace MobiusEditor.Render
             if (building.Type.HasTurret)
             {
                 icon = BodyShape[Facing32[building.Direction.ID]];
-                if (building.Strength <= 128)
+                if (building.Strength <= healthyMin)
                 {
                     icon += damageIcon;
                 }
@@ -457,7 +459,7 @@ namespace MobiusEditor.Render
                 {
                     icon = collapseIcon;
                 }
-                else if (building.Strength <= 128)
+                else if (building.Strength <= healthyMin)
                 {
                     icon = damageIcon;
                 }
@@ -474,7 +476,7 @@ namespace MobiusEditor.Render
                 if (building.Type.FactoryOverlay != null && (building.Strength > 1 || !hasCollapseFrame))
                 {
                     int overlayIcon = 0;
-                    if (building.Strength <= 128)
+                    if (building.Strength <= healthyMin)
                     {
                         int maxOverlayIcon = Globals.TheTilesetManager.GetTileDataLength(theater.Tilesets, building.Type.FactoryOverlay);
                         overlayIcon = maxOverlayIcon / 2;
@@ -623,9 +625,10 @@ namespace MobiusEditor.Render
                     if (unit.Type == TiberianDawn.UnitTypes.GunBoat)
                     {
                         // East facing is not actually possible to set in missions. This is just the turret facing.
-                        if (unit.Strength <= 128)
+                        // In TD, damage is when BELOW the threshold. In RA, it's ON the threshold.
+                        if (unit.Strength < 128)
                             icon += 32;
-                        if (unit.Strength <= 64)
+                        if (unit.Strength < 64)
                             icon += 32;
                     }
                 }
@@ -808,6 +811,12 @@ namespace MobiusEditor.Render
 
         public static (Rectangle, Action<Graphics>) Render(GameType gameType, bool soloMission, TheaterType theater, Size tileSize, TeamColor[] flagColors, Waypoint waypoint)
         {
+            float defaultOpacity = !soloMission && (waypoint.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart ? 1.0f : 0.5f;
+            return Render(gameType, soloMission, theater, tileSize, flagColors, waypoint, defaultOpacity);
+        }
+
+        public static (Rectangle, Action<Graphics>) Render(GameType gameType, bool soloMission, TheaterType theater, Size tileSize, TeamColor[] flagColors, Waypoint waypoint, float transparencyModifier)
+        {
             if (!waypoint.Point.HasValue)
             {
                 return (Rectangle.Empty, (g) => { });
@@ -817,12 +826,11 @@ namespace MobiusEditor.Render
             TeamColor teamColor = null;
             Color tint = waypoint.Tint;
             float brightness = 1.0f;
-            float transMod = 0.5f;
             if (!soloMission && (waypoint.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart)
             {
                 tileGraphics = "flagfly";
                 // Always paint flags as opaque.
-                transMod = 1.0f;
+                transparencyModifier = 1.0f;
                 int pls = (int)WaypointFlag.PlayerStart;
                 int flagId = ((int)waypoint.Flag & ~pls) / (pls << 1);
                 int mpId = 0;
@@ -857,14 +865,14 @@ namespace MobiusEditor.Render
                 {
                     var imageAttributes = new ImageAttributes();
                     // Waypoints get drawn as semitransparent, so always execute this.
-                    if (tint != Color.White || brightness != 1.0 || transMod != 1.0)
+                    if (tint != Color.White || brightness != 1.0 || transparencyModifier != 1.0)
                     {
                         var colorMatrix = new ColorMatrix(new float[][]
                         {
                             new float[] {tint.R * brightness / 255.0f, 0, 0, 0, 0},
                             new float[] {0, tint.G * brightness / 255.0f, 0, 0, 0},
                             new float[] {0, 0, tint.B * brightness / 255.0f, 0, 0},
-                            new float[] {0, 0, 0, (tint.A * transMod) / 255.0f, 0},
+                            new float[] {0, 0, 0, (tint.A * transparencyModifier) / 255.0f, 0},
                             new float[] {0, 0, 0, 0, 1},
                         });
                         imageAttributes.SetColorMatrix(colorMatrix);
@@ -1236,8 +1244,8 @@ namespace MobiusEditor.Render
             };
             var paintBounds = new Rectangle(new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height), tileSize);
             string wpText = waypoint.Name;
-            using (var baseBackgroundBrush = new SolidBrush(Color.FromArgb((forPreview ? 48 : 96) * 2 / 3, Color.Black)))
-            using (var baseTextBrush = new SolidBrush(Color.FromArgb(forPreview ? 64 : 128, textColor)))
+            using (var baseBackgroundBrush = new SolidBrush(Color.FromArgb(forPreview ? 64 : 128, Color.Black)))
+            using (var baseTextBrush = new SolidBrush(Color.FromArgb(forPreview ? 128 : 255, textColor)))
             {
                 using (var font = graphics.GetAdjustedFont(wpText, SystemFonts.DefaultFont, paintBounds.Width,
                     Math.Max(1, (int)(12 * tileScale)), Math.Max(1, (int)(30 * tileScale)), true))

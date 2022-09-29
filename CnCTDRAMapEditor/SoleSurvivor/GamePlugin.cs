@@ -28,8 +28,9 @@ namespace MobiusEditor.SoleSurvivor
 
         public static bool CheckForSSmap(string path, FileType fileType)
         {
-            return CheckForMegamap(path, fileType) && GeneralUtils.CheckForIniInfo(path, fileType, "Crates", null, null);
+            return GeneralUtils.CheckForIniInfo(path, fileType, "Crates", null, null);
         }
+
         protected CratesSection cratesSection;
         public CratesSection CratesSection => cratesSection;
 
@@ -114,7 +115,7 @@ namespace MobiusEditor.SoleSurvivor
             // Clean up this mess.
             foreach (House house in Map.Houses)
             {
-                if (house.Type.ID > HouseTypes.Multi1.ID)
+                if (house.Type.ID >= HouseTypes.Multi1.ID)
                 {
                     house.Enabled = false;
                 }
@@ -130,9 +131,9 @@ namespace MobiusEditor.SoleSurvivor
             return Load(path, fileType, true, out modified);
         }
 
-        protected override List<string> LoadINI(INI ini, bool forceSoloMission)
+        protected override List<string> LoadINI(INI ini, bool forceSoloMission, ref bool modified)
         {
-            List<string> errors = LoadINI(ini, forceSoloMission, true);
+            List<string> errors = LoadINI(ini, forceSoloMission, true, ref modified);
             var cratesIniSection = extraSections.Extract("Crates");
             if (cratesIniSection != null)
             {
@@ -181,7 +182,7 @@ namespace MobiusEditor.SoleSurvivor
             SaveIniStructures(ini);
             SaveINITerrain(ini);
             SaveIniOverlay(ini);
-            if (waypointBackup != null)
+            if (overlayBackup != null)
             {
                 ini.Sections.Add(overlayBackup);
             }

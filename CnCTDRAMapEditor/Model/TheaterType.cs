@@ -14,6 +14,7 @@
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MobiusEditor.Model
 {
@@ -29,7 +30,7 @@ namespace MobiusEditor.Model
         {
             ID = id;
             Name = name;
-            Tilesets = tilesets;
+            Tilesets = tilesets.Distinct();
         }
 
         public override bool Equals(object obj)

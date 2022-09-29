@@ -65,7 +65,7 @@ namespace MobiusEditor.Tools.Dialogs
             this.tableLayoutPanel4.RowCount = 2;
             this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel4.Size = new System.Drawing.Size(145, 77);
+            this.tableLayoutPanel4.Size = new System.Drawing.Size(200, 77);
             this.tableLayoutPanel4.TabIndex = 3;
             // 
             // lblWaypoint
@@ -86,7 +86,7 @@ namespace MobiusEditor.Tools.Dialogs
             this.waypointCombo.FormattingEnabled = true;
             this.waypointCombo.Location = new System.Drawing.Point(61, 3);
             this.waypointCombo.Name = "waypointCombo";
-            this.waypointCombo.Size = new System.Drawing.Size(81, 21);
+            this.waypointCombo.Size = new System.Drawing.Size(136, 21);
             this.waypointCombo.TabIndex = 1;
             // 
             // btnJumpTo
@@ -94,7 +94,7 @@ namespace MobiusEditor.Tools.Dialogs
             this.btnJumpTo.Dock = System.Windows.Forms.DockStyle.Top;
             this.btnJumpTo.Location = new System.Drawing.Point(61, 30);
             this.btnJumpTo.Name = "btnJumpTo";
-            this.btnJumpTo.Size = new System.Drawing.Size(81, 23);
+            this.btnJumpTo.Size = new System.Drawing.Size(136, 23);
             this.btnJumpTo.TabIndex = 2;
             this.btnJumpTo.Text = "Jump to...";
             this.btnJumpTo.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -102,6 +102,7 @@ namespace MobiusEditor.Tools.Dialogs
             // 
             // WaypointsToolDialog
             // 
+            this.AcceptButton = this.btnJumpTo;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;

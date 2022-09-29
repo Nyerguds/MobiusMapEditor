@@ -25,6 +25,7 @@ namespace MobiusEditor.Dialogs
 {
     public partial class TriggersDialog : Form
     {
+        private const int maxLength = 4;
         private readonly IGamePlugin plugin;
         private readonly int maxTriggers;
 
@@ -311,17 +312,6 @@ namespace MobiusEditor.Dialogs
 
         private void triggersListView_AfterLabelEdit(object sender, LabelEditEventArgs e)
         {
-            int maxLength = int.MaxValue;
-            switch (plugin.GameType)
-            {
-                case GameType.TiberianDawn:
-                case GameType.SoleSurvivor:
-                    maxLength = 4;
-                    break;
-                case GameType.RedAlert:
-                    maxLength = 23;
-                    break;
-            }
             String curName = e.Label;
             if (string.IsNullOrEmpty(curName))
             {

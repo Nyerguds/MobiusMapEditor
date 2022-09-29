@@ -116,6 +116,14 @@ namespace MobiusEditor.Utility
             propertyValues.Clear();
         }
 
+        public void SetValues(T valuesObject)
+        {
+            foreach (var propertyValue in trackableProperties)
+            {
+                TrySetMember(propertyValue.Key, trackableProperties[propertyValue.Key].GetValue(valuesObject));
+            }
+        }
+
         public IDictionary<string, object> GetUndoValues() => propertyValues.ToDictionary(kv => kv.Key, kv => trackableProperties[kv.Key].GetValue(Object));
 
         public IDictionary<string, object> GetRedoValues() => new Dictionary<string, object>(propertyValues);

@@ -1,4 +1,4 @@
-﻿## C&C Tiberian Dawn and Red Alert Map Editor
+﻿## Mobius Map Editor
 
 An enhanced version of the C&C Tiberian Dawn and Red Alert Map Editor based on the source code released by Electronic Arts. The goal of the project is simply to improve the usability and convenience of the map editor, fix bugs, improve and clean its code-base, enhance compatibility with different kinds of systems and enhance the editor's support for mods.
 
@@ -12,7 +12,7 @@ Right now, I'm not really looking into making this a joint project. Specific bug
 
 **DO NOT unpack this in the C&C Remastered Collection's install folder.** It is absolutely unnecessary to overwrite any files of the installed game.
 
-Simply unpack the editor into a new folder on your disk somewhere. On first startup, it will automatically try to detect the folder in which the game is installed, and if it can't find it, it will show a popup asking you to locate it.
+Simply unpack the editor into a new folder on your disk somewhere. On first startup, it will automatically try to detect the folder in which the game is installed, and if it can't find it, it will show a popup asking you to locate it. Note that this autodetect only works on Steam installations of the game.
 
 ---
 
@@ -38,7 +38,7 @@ The file "CnCTDRAMapEditor.exe.config" contains settings to customise the editor
 
 ### Editor options:
 
-* **ModsToLoad**: semicolon (or comma) separated list of mod entries. A mod entry can either be a Steam workshop ID, or a path of the type "Tiberian_Dawn\ModName" or "Red_Alert\ModName". The paths will initially be looked up under My Documents, but the loading system will also check the Steam workshop files, and use the game prefix part to verify the mod's targeted game. A mod will only be applied to the editor when a map of its targeted game is opened. Note that mods can only apply graphical changes from the tileset and house color xml files; the editor can't read any data from compiled dll files.
+* **ModsToLoadTD** / **ModsToLoadRA** / **ModsToLoadSS**: semicolon (or comma) separated list of mod entries for each supported game. A mod entry can either be a Steam workshop ID, or a folder name. The paths will initially be looked up in the mods folder of the respective game in the CnCRemastered\mods\ folder under your Documents folder, but the loading system will also check the Steam workshop files for a matching mod. Sole Survivor will use Tiberian Dawn mods. Note that mods can only apply graphical changes from the tileset and house color xml files; the editor can't read any data from compiled dll files. This mods system is mostly meant to apply graphical fixes to the editor.
 * **MapScale**: Scaling multiplier for the size at which assets are rendered on the map; higher means lower quality. This will make the UI more responsive. Negative values will enable smooth scaling, which gives nicer graphics but will make the UI noticeable _less_ responsive. Defaults to 0.5.
 * **PreviewScale**: Scaling multiplier for the size at which assets are rendered on the preview tools. Negative values will enable smooth scaling, but this usually doesn't look good on the upscaled preview graphics. Defaults to 1.
 * **ExportScale**: Scaling multiplier for the size at which an exported image will be generated through "Tools" → "Export As Image". Negative values will enable smooth scaling. Defaults to -0.5.
@@ -47,7 +47,7 @@ The file "CnCTDRAMapEditor.exe.config" contains settings to customise the editor
 * **MaxMapTileTextureSize**: Maximum for the size of the tiles shown on the Map tool. Leave on 0 to disable.
 * **UndoRedoStackSize**: The amount of undo/redo actions stored in memory. Defaults to 50.
 
-The **ModsToLoad** setting will have the `Tiberian_Dawn\ConcretePavementTD` mod set by default, to complete the incomplete TD Remastered graphics set, meaning it will automatically be loaded if found.
+The **ModsToLoadTD** and **ModsToLoadSS** settings will have the `ConcretePavementTD` mod set by default, to complete the incomplete TD Remastered graphics set, meaning the mod will automatically be loaded if found. Note that the editor has no way to check whether mods are enabled in the game, so that makes no difference.
 
 You can find the mod [on the Steam workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2844969675) and [on ModDB](https://www.moddb.com/games/command-conquer-remastered/addons/concretepavementtd).
 
@@ -366,6 +366,14 @@ These options are all enabled by default, but can be disabled if you wish. Use t
 * Changed the editor name in the title to "Mobius Map Editor".
 * Red Alert maps are now specifically detected on the presence of the "[MapPack]" section. If this is not present, and there is no .bin file, it loads as TD map without map templates.
 * Sole Survivor maps now don't support owned objects (infantry, units, structures) by default, though this can be re-enabled using the "NoOwnedObjectsInSole" setting in "CnCTDRAMapEditor.exe.config".
+* Restricted Red Alert trigger and teamtype names to the same lengths as Tiberian Dawn; 4 for triggers, 8 for Teamtypes.
+* Pressing [Enter] in Waypoints mode will now jump to the selected waypoint.
+* Fixed a bug in the overlap detection system that made it always give "<unknown>" for the overlapped cell on Terrain objects.
+* Split mods up into ModsToLoadTD, ModsToLoadRA and ModsToLoadSS.
+* The Civilian buildings V12 and V13 (haystacks) are now also available in TD Winter theater.
+* The trigger "Any: Cap=Win,Des=Lose" is now also seen as flag to autodetect classic single play scenarios.
+* Like the game, the editor will now fall back to Temperate graphics when not finding the Winter graphics for the Haystack buildings/overlays.
+* Fixed triggers being selectable on unbuilt buildings.
 
 ### Possible future features
 

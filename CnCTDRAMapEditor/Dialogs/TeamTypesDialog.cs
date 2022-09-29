@@ -32,6 +32,7 @@ namespace MobiusEditor.Dialogs
         private Bitmap infoImage;
         private string triggerToolTip;
 
+        private const int maxLength = 8;
         private readonly IGamePlugin plugin;
         private readonly int maxTeams;
         private readonly IEnumerable<ITechnoType> technoTypes;
@@ -394,17 +395,6 @@ namespace MobiusEditor.Dialogs
 
         private void TeamTypesListView_AfterLabelEdit(object sender, LabelEditEventArgs e)
         {
-            int maxLength = int.MaxValue;
-            switch (plugin.GameType)
-            {
-                case GameType.TiberianDawn:
-                case GameType.SoleSurvivor:
-                    maxLength = 8;
-                    break;
-                case GameType.RedAlert:
-                    maxLength = 23;
-                    break;
-            }
             String curName = e.Label;
             if (string.IsNullOrEmpty(curName))
             {

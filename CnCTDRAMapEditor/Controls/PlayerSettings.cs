@@ -46,6 +46,7 @@ namespace MobiusEditor.Controls
             switch (plugin.GameType)
             {
                 case GameType.TiberianDawn:
+                case GameType.SoleSurvivor:
                     maxInfantryNud.Visible = maxInfantryLbl.Visible = false;
                     maxVesselsNud.Visible = maxVesselsLbl.Visible = false;
                     techLevelNud.Visible = techLevelLbl.Visible = false;

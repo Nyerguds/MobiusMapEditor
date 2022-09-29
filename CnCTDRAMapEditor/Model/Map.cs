@@ -1070,7 +1070,7 @@ namespace MobiusEditor.Model
                 {
                     continue;
                 }
-                MapLayerFlag layer = MapLayerFlag.None;
+                MapLayerFlag layer;
                 if (overlay.Type.IsResource)
                 {
                     layer = MapLayerFlag.Resources;

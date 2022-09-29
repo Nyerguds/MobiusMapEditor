@@ -120,15 +120,17 @@ namespace MobiusEditor.Controls
             string[] filteredEvents;
             string[] filteredActions;
             Boolean isAircraft = obj is Unit un && un.Type.IsAircraft;
+            Boolean isOnMap = true;
             switch (obj)
             {
                 case Infantry infantry:
                 case Unit unit:
                     items = Plugin.Map.FilterUnitTriggers().Select(t => t.Name).Distinct().ToArray();
-                    filteredEvents = isAircraft ? new string[0] : Plugin.Map.EventTypes.Where(ev => Plugin.Map.UnitEventTypes.Contains(ev)).Distinct().ToArray();
-                    filteredActions = isAircraft ? new string[0] : Plugin.Map.ActionTypes.Where(ac => Plugin.Map.UnitActionTypes.Contains(ac)).Distinct().ToArray();
+                    filteredEvents = Plugin.Map.EventTypes.Where(ev => Plugin.Map.UnitEventTypes.Contains(ev)).Distinct().ToArray();
+                    filteredActions = Plugin.Map.ActionTypes.Where(ac => Plugin.Map.UnitActionTypes.Contains(ac)).Distinct().ToArray();
                     break;
                 case Building building:
+                    isOnMap = building.IsPrebuilt;
                     items = Plugin.Map.FilterStructureTriggers().Select(t => t.Name).Distinct().ToArray();
                     filteredEvents = Plugin.Map.EventTypes.Where(ac => Plugin.Map.StructureEventTypes.Contains(ac)).Distinct().ToArray();
                     filteredActions = Plugin.Map.ActionTypes.Where(ac => Plugin.Map.StructureActionTypes.Contains(ac)).Distinct().ToArray();
@@ -143,7 +145,7 @@ namespace MobiusEditor.Controls
             items = Trigger.None.Yield().Concat(Plugin.Map.Triggers.Select(t => t.Name).Where(t => allowedTriggers.Contains(t)).Distinct()).ToArray();
             int selectIndex = selected == null ? 0 : Enumerable.Range(0, items.Length).FirstOrDefault(x => String.Equals(items[x], selected, StringComparison.InvariantCultureIgnoreCase));
             triggerComboBox.DataSource = items;
-            triggerComboBox.Enabled = !isAircraft;
+            triggerComboBox.Enabled = !isAircraft && isOnMap;
             triggerToolTip = Map.MakeAllowedTriggersToolTip(filteredEvents, filteredActions);
             if (obj != null)
             {
@@ -163,12 +165,10 @@ namespace MobiusEditor.Controls
             prebuiltCheckBox.DataBindings.Clear();
             sellableCheckBox.DataBindings.Clear();
             rebuildCheckBox.DataBindings.Clear();
-
             if (obj == null)
             {
                 return;
             }
-
             switch (obj)
             {
                 case Infantry infantry:
@@ -177,7 +177,6 @@ namespace MobiusEditor.Controls
                         directionComboBox.DataSource = Plugin.Map.DirectionTypes
                             .Where(t => t.Facing != FacingType.None)
                             .Select(t => new TypeItem<DirectionType>(t.Name, t)).ToArray();
-
                         missionComboBox.DataBindings.Add("SelectedItem", obj, "Mission");
                         missionLabel.Visible = missionComboBox.Visible = true;
                         basePriorityLabel.Visible = basePriorityNud.Visible = false;
@@ -243,7 +242,6 @@ namespace MobiusEditor.Controls
                     }
                     break;
             }
-
             houseComboBox.DataBindings.Add("SelectedValue", obj, "House");
             strengthNud.DataBindings.Add("Value", obj, "Strength");
             directionComboBox.DataBindings.Add("SelectedValue", obj, "Direction");

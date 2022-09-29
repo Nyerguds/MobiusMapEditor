@@ -33,7 +33,7 @@ namespace MobiusEditor.Tools
         /// Layers that are not painted by the PostRenderMap function on ViewTool level because they are handled
         /// at a specific point in the PostRenderMap override by the implementing tool.
         /// </summary>
-        protected override MapLayerFlag ManuallyHandledLayers => MapLayerFlag.WaypointsIndic;
+        protected override MapLayerFlag ManuallyHandledLayers => MapLayerFlag.WaypointsIndic | MapLayerFlag.TechnoTriggers;
 
         private readonly ComboBox waypointCombo;
         private readonly Button jumpToButton;
@@ -246,6 +246,9 @@ namespace MobiusEditor.Tools
                     case Keys.Up:
                         newVal = Math.Max(curVal - 1, 0);
                         break;
+                    case Keys.Enter:
+                        JumpToWaypoint();
+                        break;
                 }
             }
             if (newVal.HasValue && curVal != newVal.Value)
@@ -393,29 +396,37 @@ namespace MobiusEditor.Tools
 
         private void JumpToButton_Click(Object sender, EventArgs e)
         {
-            if (waypointCombo.SelectedItem is Waypoint wp)
+            JumpToWaypoint();
+        }
+
+        protected void JumpToWaypoint()
+        {
+            if (!(waypointCombo.SelectedItem is Waypoint wp))
             {
-                int cell = wp.Cell.GetValueOrDefault(-1);
-                if (cell != -1)
-                {
-                    Point cellPoint;
-                    if (RenderMap.Metrics.GetLocation(cell, out cellPoint))
-                    {
-                        int scaleFull = Math.Min(mapPanel.ClientRectangle.Width, mapPanel.ClientRectangle.Height);
-                        bool isWidth = scaleFull == mapPanel.ClientRectangle.Width;
-                        double mapSize = isWidth ? map.Metrics.Width : map.Metrics.Height;
-                        // pixels per tile at zoom level 1.
-                        double basicTileSize = scaleFull / mapSize;
-                        // Convert cell position to actual position on image.
-                        int cellX = (int)Math.Round(basicTileSize * mapPanel.Zoom * (cellPoint.X + 0.5));
-                        int cellY = (int)Math.Round(basicTileSize * mapPanel.Zoom * (cellPoint.Y + 0.5));
-                        // Get location to use to center the waypoint on the screen.
-                        int x = cellX - mapPanel.ClientRectangle.Width / 2;
-                        int y = cellY - mapPanel.ClientRectangle.Height / 2;
-                        mapPanel.AutoScrollPosition = new Point(x,y);
-                    }
-                }
+                return;
             }
+            int cell = wp.Cell.GetValueOrDefault(-1);
+            if (cell == -1)
+            {
+                return;
+            }
+            Point cellPoint;
+            if (!RenderMap.Metrics.GetLocation(cell, out cellPoint))
+            {
+                return;
+            }
+            int scaleFull = Math.Min(mapPanel.ClientRectangle.Width, mapPanel.ClientRectangle.Height);
+            bool isWidth = scaleFull == mapPanel.ClientRectangle.Width;
+            double mapSize = isWidth ? map.Metrics.Width : map.Metrics.Height;
+            // pixels per tile at zoom level 1.
+            double basicTileSize = scaleFull / mapSize;
+            // Convert cell position to actual position on image.
+            int cellX = (int)Math.Round(basicTileSize * mapPanel.Zoom * (cellPoint.X + 0.5));
+            int cellY = (int)Math.Round(basicTileSize * mapPanel.Zoom * (cellPoint.Y + 0.5));
+            // Get location to use to center the waypoint on the screen.
+            int x = cellX - mapPanel.ClientRectangle.Width / 2;
+            int y = cellY - mapPanel.ClientRectangle.Height / 2;
+            mapPanel.AutoScrollPosition = new Point(x, y);
         }
 
         protected override void PreRenderMap()
@@ -458,6 +469,13 @@ namespace MobiusEditor.Tools
                 MapRenderer.RenderAllFootballAreas(graphics, map, Globals.MapTileSize, Globals.MapTileScale, plugin.GameType);
                 MapRenderer.RenderFootballAreaFlags(graphics, plugin.GameType, map, Globals.MapTileSize);
             }
+            // If the selected waypoint is not a flag, re-render it as opaque.
+            if (selected != null && (plugin.Map.BasicSection.SoloMission || (selected.Flag & WaypointFlag.PlayerStart) != WaypointFlag.PlayerStart))
+            {
+                MapRenderer.Render(plugin.GameType, true, map.Theater, Globals.MapTileSize, map.FlagColors.ToArray(), selected, 1.0f).Item2(graphics);
+            }
+            // Render those here to they are put over the opaque redraw of the current waypoint.
+            MapRenderer.RenderAllTechnoTriggers(graphics, plugin.Map, Globals.MapTileSize, Globals.MapTileScale, Layers);
             MapRenderer.RenderAllBoundsFromCell(graphics, Globals.MapTileSize,
                 map.Waypoints.Where(wp => wp != selected && wp.Cell.HasValue).Select(wp => wp.Cell.Value), map.Metrics, Color.Orange);
             MapRenderer.RenderWayPointIndicators(graphics, map, Globals.MapTileSize, Globals.MapTileScale, Color.LightGreen, false, true, selectedRange);

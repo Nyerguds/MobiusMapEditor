@@ -587,6 +587,7 @@ namespace MobiusEditor.Dialogs
             0,
             0,
             0});
+            this.nudInitNum.IntValue = 0;
             this.nudInitNum.Location = new System.Drawing.Point(85, 198);
             this.nudInitNum.Margin = new System.Windows.Forms.Padding(2);
             this.nudInitNum.Maximum = new decimal(new int[] {
@@ -610,6 +611,7 @@ namespace MobiusEditor.Dialogs
             0,
             0,
             0});
+            this.maxAllowedNud.IntValue = 0;
             this.maxAllowedNud.Location = new System.Drawing.Point(85, 222);
             this.maxAllowedNud.Margin = new System.Windows.Forms.Padding(2);
             this.maxAllowedNud.Maximum = new decimal(new int[] {
@@ -633,6 +635,7 @@ namespace MobiusEditor.Dialogs
             0,
             0,
             0});
+            this.nudFear.IntValue = 0;
             this.nudFear.Location = new System.Drawing.Point(85, 246);
             this.nudFear.Margin = new System.Windows.Forms.Padding(2);
             this.nudFear.Maximum = new decimal(new int[] {
@@ -716,6 +719,7 @@ namespace MobiusEditor.Dialogs
             0,
             0,
             0});
+            this.nudRecruitPriority.IntValue = 0;
             this.nudRecruitPriority.Location = new System.Drawing.Point(85, 174);
             this.nudRecruitPriority.Margin = new System.Windows.Forms.Padding(2);
             this.nudRecruitPriority.Maximum = new decimal(new int[] {

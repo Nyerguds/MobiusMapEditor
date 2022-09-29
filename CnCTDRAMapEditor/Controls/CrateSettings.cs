@@ -7,45 +7,76 @@ namespace MobiusEditor.Controls
 {
     public partial class CrateSettings : UserControl
     {
+        private PropertyTracker<SoleSurvivor.CratesSection> cratesSettings;
+
         public CrateSettings(PropertyTracker<SoleSurvivor.CratesSection> cratesSection)
         {
+            this.cratesSettings = cratesSection;
             InitializeComponent();
-            nudAddStrength.DataBindings.Add("IntValue", cratesSection, "AddStrength");
-            nudAddWeapon.DataBindings.Add("IntValue", cratesSection, "AddWeapon");
-            nudAddSpeed.DataBindings.Add("IntValue", cratesSection, "AddSpeed");
-            nudRapidReload.DataBindings.Add("IntValue", cratesSection, "RapidReload");
-            nudAddRange.DataBindings.Add("IntValue", cratesSection, "AddRange");
-            nudHeal.DataBindings.Add("IntValue", cratesSection, "Heal");
-            nudBomb.DataBindings.Add("IntValue", cratesSection, "Bomb");
-            nudStealth.DataBindings.Add("IntValue", cratesSection, "Stealth");
-            nudTeleport.DataBindings.Add("IntValue", cratesSection, "Teleport");
-            nudKill.DataBindings.Add("IntValue", cratesSection, "Kill");
-            nudUncloakAll.DataBindings.Add("IntValue", cratesSection, "UncloakAll");
-            nudReshroud.DataBindings.Add("IntValue", cratesSection, "Reshroud");
-            nudUnshroud.DataBindings.Add("IntValue", cratesSection, "Unshroud");
-            nudRadar.DataBindings.Add("IntValue", cratesSection, "Radar");
-            nudArmageddon.DataBindings.Add("IntValue", cratesSection, "Armageddon");
-            nudSuper.DataBindings.Add("IntValue", cratesSection, "Super");
-            nudDensity.DataBindings.Add("IntValue", cratesSection, "Density");
-            nudIonFactor.DataBindings.Add("IntValue", cratesSection, "IonFactor");
-            nudCrateTimer.DataBindings.Add("IntValue", cratesSection, "CrateTimer");
+            AddDataBindings();
         }
 
-        private void CrateSettings_Load(Object sender, EventArgs e)
+        private void btnDefaults_Click(Object sender, EventArgs e)
         {
-            AdjustPanelSize(this, tableLayoutPanel1);
-        }
-
-        private void AdjustPanelSize(ScrollableControl panel, TableLayoutPanel tableLayoutPanel)
-        {
-            int maxX = 0;
-            int maxY = 0;
-            foreach (Control c in tableLayoutPanel.Controls)
+            if (DialogResult.Yes == MessageBox.Show("This will reset all crate values to their game defaults. Are you sure you want to continue?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1))
             {
-                maxX = Math.Max(maxX, c.Location.X + c.Width);
-                maxY = Math.Max(maxY, c.Location.Y + c.Height);
+                ResetToDefaultValues();
             }
-            panel.AutoScrollMinSize = new Size(maxX, maxY);
+        }
+
+        private void ResetToDefaultValues()
+        {
+            RemoveDataBindings();
+            SoleSurvivor.CratesSection cratesSection = new SoleSurvivor.CratesSection();
+            cratesSection.SetDefault();
+            cratesSettings.SetValues(cratesSection);
+            AddDataBindings();
+        }
+
+        private void AddDataBindings()
+        {
+            nudAddStrength.DataBindings.Add("IntValue", cratesSettings, "AddStrength");
+            nudAddWeapon.DataBindings.Add("IntValue", cratesSettings, "AddWeapon");
+            nudAddSpeed.DataBindings.Add("IntValue", cratesSettings, "AddSpeed");
+            nudRapidReload.DataBindings.Add("IntValue", cratesSettings, "RapidReload");
+            nudAddRange.DataBindings.Add("IntValue", cratesSettings, "AddRange");
+            nudHeal.DataBindings.Add("IntValue", cratesSettings, "Heal");
+            nudBomb.DataBindings.Add("IntValue", cratesSettings, "Bomb");
+            nudStealth.DataBindings.Add("IntValue", cratesSettings, "Stealth");
+            nudTeleport.DataBindings.Add("IntValue", cratesSettings, "Teleport");
+            nudKill.DataBindings.Add("IntValue", cratesSettings, "Kill");
+            nudUncloakAll.DataBindings.Add("IntValue", cratesSettings, "UncloakAll");
+            nudReshroud.DataBindings.Add("IntValue", cratesSettings, "Reshroud");
+            nudUnshroud.DataBindings.Add("IntValue", cratesSettings, "Unshroud");
+            nudRadar.DataBindings.Add("IntValue", cratesSettings, "Radar");
+            nudArmageddon.DataBindings.Add("IntValue", cratesSettings, "Armageddon");
+            nudSuper.DataBindings.Add("IntValue", cratesSettings, "Super");
+            nudDensity.DataBindings.Add("IntValue", cratesSettings, "Density");
+            nudIonFactor.DataBindings.Add("IntValue", cratesSettings, "IonFactor");
+            nudCrateTimer.DataBindings.Add("IntValue", cratesSettings, "CrateTimer");
+        }
+
+        private void RemoveDataBindings()
+        {
+            nudAddStrength.DataBindings.Clear();
+            nudAddWeapon.DataBindings.Clear();
+            nudAddSpeed.DataBindings.Clear();
+            nudRapidReload.DataBindings.Clear();
+            nudAddRange.DataBindings.Clear();
+            nudHeal.DataBindings.Clear();
+            nudBomb.DataBindings.Clear();
+            nudStealth.DataBindings.Clear();
+            nudTeleport.DataBindings.Clear();
+            nudKill.DataBindings.Clear();
+            nudUncloakAll.DataBindings.Clear();
+            nudReshroud.DataBindings.Clear();
+            nudUnshroud.DataBindings.Clear();
+            nudRadar.DataBindings.Clear();
+            nudArmageddon.DataBindings.Clear();
+            nudSuper.DataBindings.Clear();
+            nudDensity.DataBindings.Clear();
+            nudIonFactor.DataBindings.Clear();
+            nudCrateTimer.DataBindings.Clear();
         }
     }
 }

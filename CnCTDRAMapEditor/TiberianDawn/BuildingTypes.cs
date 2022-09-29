@@ -55,8 +55,8 @@ namespace MobiusEditor.TiberianDawn
         public static readonly BuildingType V09 = new BuildingType(31, "v09", "TEXT_STRUCTURE_TITLE_CIV9", 0, 0, new bool[1, 1] { { true } }, "Neutral", new [] { TheaterTypes.Temperate, TheaterTypes.Winter });
         public static readonly BuildingType V10 = new BuildingType(32, "v10", "TEXT_STRUCTURE_TITLE_CIV10", 0, 0, new bool[1, 1] { { true } }, "Neutral", new [] { TheaterTypes.Temperate, TheaterTypes.Winter });
         public static readonly BuildingType V11 = new BuildingType(33, "v11", "TEXT_STRUCTURE_TITLE_CIV11", 0, 0, new bool[1, 1] { { true } }, "Neutral", new [] { TheaterTypes.Temperate, TheaterTypes.Winter });
-        public static readonly BuildingType V12 = new BuildingType(34, "v12", "TEXT_STRUCTURE_TITLE_CIV12", 0, 0, new bool[1, 1] { { true } }, "Neutral", new [] { TheaterTypes.Temperate });
-        public static readonly BuildingType V13 = new BuildingType(35, "v13", "TEXT_STRUCTURE_TITLE_CIV12", 0, 0, new bool[1, 1] { { true } }, "Neutral", new [] { TheaterTypes.Temperate });
+        public static readonly BuildingType V12 = new BuildingType(34, "v12", "TEXT_STRUCTURE_TITLE_CIV12", 0, 0, new bool[1, 1] { { true } }, "Neutral", new [] { TheaterTypes.Temperate, TheaterTypes.Winter });
+        public static readonly BuildingType V13 = new BuildingType(35, "v13", "TEXT_STRUCTURE_TITLE_CIV12", 0, 0, new bool[1, 1] { { true } }, "Neutral", new [] { TheaterTypes.Temperate, TheaterTypes.Winter });
         public static readonly BuildingType V14 = new BuildingType(36, "v14", "TEXT_STRUCTURE_TITLE_CIV13", 0, 0, new bool[1, 1] { { true } }, "Neutral", new [] { TheaterTypes.Temperate, TheaterTypes.Winter });
         public static readonly BuildingType V15 = new BuildingType(37, "v15", "TEXT_STRUCTURE_TITLE_CIV14", 0, 0, new bool[1, 1] { { true } }, "Neutral", new [] { TheaterTypes.Temperate, TheaterTypes.Winter });
         public static readonly BuildingType V16 = new BuildingType(38, "v16", "TEXT_STRUCTURE_TITLE_CIV15", 0, 0, new bool[1, 1] { { true } }, "Neutral", new [] { TheaterTypes.Temperate, TheaterTypes.Winter });

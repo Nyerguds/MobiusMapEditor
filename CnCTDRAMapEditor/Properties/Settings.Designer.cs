@@ -25,10 +25,28 @@ namespace MobiusEditor.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("2844969675;Tiberian_Dawn\\ConcretePavementTD")]
-        public string ModsToLoad {
+        [global::System.Configuration.DefaultSettingValueAttribute("2844969675;ConcretePavementTD")]
+        public string ModsToLoadTD {
             get {
-                return ((string)(this["ModsToLoad"]));
+                return ((string)(this["ModsToLoadTD"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string ModsToLoadRA {
+            get {
+                return ((string)(this["ModsToLoadRA"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("2844969675;ConcretePavementTD")]
+        public string ModsToLoadSS {
+            get {
+                return ((string)(this["ModsToLoadSS"]));
             }
         }
         

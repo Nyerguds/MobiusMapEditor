@@ -109,8 +109,15 @@ namespace MobiusEditor.Utility
             fps = 0;
             tiles = null;
             Tileset first = null;
-            foreach (var tileset in tilesets.Join(searchTilesets, x => x.Key, y => y, (x, y) => x.Value))
+            // Tilesets are now searched in the given order, allowing accurate defining of main tilesets and fallback tilesets.
+            //foreach (var tileset in tilesets.Join(searchTilesets, x => x.Key, y => y, (x, y) => x.Value))
+            foreach (string searchTileset in searchTilesets)
             {
+                if (!tilesets.ContainsKey(searchTileset))
+                {
+                    continue;
+                }
+                Tileset tileset = tilesets[searchTileset];
                 if (generateFallback && first == null)
                 {
                     first = tileset;

@@ -306,12 +306,7 @@ namespace MobiusEditor
                 string[] modPaths = null;
                 if (ModPaths != null)
                 {
-                    GameType modGameType = nmd.GameType;
-                    if (modGameType == GameType.SoleSurvivor)
-                    {
-                        modGameType = GameType.TiberianDawn;
-                    }
-                    ModPaths.TryGetValue(modGameType, out modPaths);
+                    ModPaths.TryGetValue(nmd.GameType, out modPaths);
                 }
                 Globals.TheTextureManager.ExpandModPaths = modPaths;
                 Globals.TheTextureManager.Reset();
@@ -896,11 +891,7 @@ namespace MobiusEditor
             {
                 case FileType.INI:
                     {
-                        gameType = File.Exists(Path.ChangeExtension(loadFilename, ".bin")) ? GameType.TiberianDawn : GameType.RedAlert;
-                        if (gameType == GameType.RedAlert && !RedAlert.GamePlugin.CheckForRAMap(loadFilename, fileType))
-                        {
-                            gameType = GameType.TiberianDawn;
-                        }
+                        gameType = RedAlert.GamePlugin.CheckForRAMap(loadFilename, fileType) ? GameType.RedAlert : GameType.TiberianDawn;
                         break;
                     }
                 case FileType.BIN:
@@ -933,9 +924,11 @@ namespace MobiusEditor
                 }
 #endif
             }
+            bool isTdMegaMap = false;
             if (gameType == GameType.TiberianDawn)
             {
-                if (SoleSurvivor.GamePlugin.CheckForSSmap(loadFilename, fileType))
+                isTdMegaMap = TiberianDawn.GamePlugin.CheckForMegamap(loadFilename, fileType);
+                if (isTdMegaMap && SoleSurvivor.GamePlugin.CheckForSSmap(loadFilename, fileType))
                 {
                     gameType = GameType.SoleSurvivor;
                 }
@@ -953,12 +946,7 @@ namespace MobiusEditor
             string[] modPaths = null;
             if (ModPaths != null)
             {
-                GameType modGameType = gameType;
-                if (modGameType == GameType.SoleSurvivor)
-                {
-                    modGameType = GameType.TiberianDawn;
-                }
-                ModPaths.TryGetValue(modGameType, out modPaths);
+                ModPaths.TryGetValue(gameType, out modPaths);
             }
             Globals.TheTextureManager.ExpandModPaths = modPaths;
             Globals.TheTextureManager.Reset();
@@ -968,19 +956,14 @@ namespace MobiusEditor
             switch (gameType)
             {
                 case GameType.TiberianDawn:
-                    {
-                        Globals.TheTeamColorManager.Reset();
-                        Globals.TheTeamColorManager.Load(@"DATA\XML\CNCTDTEAMCOLORS.XML");
-                        bool isMegaMap = TiberianDawn.GamePlugin.CheckForMegamap(loadFilename, fileType);
-                        plugin = new TiberianDawn.GamePlugin(isMegaMap, this);
-                    }
+                    Globals.TheTeamColorManager.Reset();
+                    Globals.TheTeamColorManager.Load(@"DATA\XML\CNCTDTEAMCOLORS.XML");
+                    plugin = new TiberianDawn.GamePlugin(isTdMegaMap, this);
                     break;
                 case GameType.RedAlert:
-                    {
-                        Globals.TheTeamColorManager.Reset();
-                        Globals.TheTeamColorManager.Load(@"DATA\XML\CNCRATEAMCOLORS.XML");
-                        plugin = new RedAlert.GamePlugin(this);
-                    }
+                    Globals.TheTeamColorManager.Reset();
+                    Globals.TheTeamColorManager.Load(@"DATA\XML\CNCRATEAMCOLORS.XML");
+                    plugin = new RedAlert.GamePlugin(this);
                     break;
                 case GameType.SoleSurvivor:
                     Globals.TheTeamColorManager.Reset();
@@ -1688,11 +1671,6 @@ namespace MobiusEditor
             {
                 return;
             }
-            if (!SteamworksUGC.IsInit)
-            {
-                MessageBox.Show("Steam interface is not initialized. To enable Workshop publishing, log into Steam and restart the editor.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
             if (plugin.GameType == GameType.SoleSurvivor)
             {
                 MessageBox.Show("Sole Survivor maps cannot be published to Steam; they are not usable by the C&C Remastered Collection.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -1705,6 +1683,11 @@ namespace MobiusEditor
                 //    return;
                 //}
                 MessageBox.Show("Tiberian Dawn megamaps cannot be published to Steam; they are not usable by the C&C Remastered Collection without modding, and may cause issues on the official servers.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            if (!SteamworksUGC.IsInit)
+            {
+                MessageBox.Show("Steam interface is not initialized. To enable Workshop publishing, log into Steam and restart the editor.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
             if (!PromptSaveMap())
