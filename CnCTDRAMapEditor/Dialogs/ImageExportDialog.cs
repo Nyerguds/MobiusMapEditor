@@ -83,7 +83,7 @@ namespace MobiusEditor.Dialogs
             txtScale.Select(0, 0);
             // Could make this at the moment of the call, too, but it also has a
             // system to ignore further calls if the running one isn't finished.
-            multiThreader = SimpleMulti_Threading.Make(this);
+            multiThreader = SimpleMultiThreading.Make(this);
         }
 
         private void SetSizeLabel()

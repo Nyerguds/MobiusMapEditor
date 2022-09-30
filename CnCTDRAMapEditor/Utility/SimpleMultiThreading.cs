@@ -12,7 +12,7 @@ namespace MobiusEditor.Utility
     }
     
     // For easy access
-    public static class SimpleMulti_Threading
+    public static class SimpleMultiThreading
     {
         public static SimpleMultiThreading<T> Make<T>(T attachForm) where T : Form, IHasStatusLabel
         {
