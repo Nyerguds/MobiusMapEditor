@@ -302,7 +302,6 @@ namespace MobiusEditor.Controls
             // 
             this.playersListBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left)));
-            this.playersListBox.FormattingEnabled = true;
             this.playersListBox.Location = new System.Drawing.Point(81, 232);
             this.playersListBox.Name = "playersListBox";
             this.playersListBox.SelectionMode = System.Windows.Forms.SelectionMode.MultiSimple;

@@ -90,17 +90,6 @@ namespace MobiusEditor.Controls
             Disposed += (sender, e) =>
             {
                 Object = null;
-                try
-                {
-                    lblTriggerInfo.Image = null;
-                }
-                catch { /*ignore*/}
-                try
-                {
-                    infoImage.Dispose();
-                    infoImage = null;
-                }
-                catch { /*ignore*/}
                 plugin.Map.TriggersUpdated -= Triggers_CollectionChanged;
             };
         }
@@ -403,6 +392,30 @@ namespace MobiusEditor.Controls
         {
             Control target = sender as Control;
             this.toolTip1.Hide(target);
+        }
+
+        /// <summary> 
+        /// Clean up any resources being used.
+        /// </summary>
+        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && (components != null))
+            {
+                try
+                {
+                    lblTriggerInfo.Image = null;
+                }
+                catch { /*ignore*/}
+                try
+                {
+                    infoImage.Dispose();
+                }
+                catch { /*ignore*/}
+                infoImage = null;
+                components.Dispose();
+            }
+            base.Dispose(disposing);
         }
     }
 

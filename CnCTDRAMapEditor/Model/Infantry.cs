@@ -130,6 +130,26 @@ namespace MobiusEditor.Model
             return null;
         }
 
+        /// <summary>
+        /// Gets the location of a specific object inside this infantry group's <see cref="Infantry"/> array.
+        /// Do not use Array.IndexOf: infantry implements IEquatable, meaning it would get the first object with equal stats.
+        /// </summary>
+        /// <param name="infantry">The infantry to look up.</param>
+        /// <returns>The index of the given infantry object in the group.</returns>
+        public int GetLocation(Infantry infantry)
+        {
+            int location = -1;
+            for (int i = 0; i < infantry.InfantryGroup.Infantry.Length; ++i)
+            {
+                if (ReferenceEquals(infantry.InfantryGroup.Infantry[i], infantry))
+                {
+                    location = i;
+                    break;
+                }
+            }
+            return location;
+        }
+
         private static readonly Point[] stoppingLocations = new Point[Globals.NumInfantryStops];
 
         public Rectangle OverlapBounds => new Rectangle(-1, -1, 3, 3);

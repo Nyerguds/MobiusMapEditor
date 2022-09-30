@@ -21,19 +21,6 @@ namespace MobiusEditor.Tools.Dialogs
         /// </summary>
         private System.ComponentModel.IContainer components = null;
 
-        /// <summary>
-        /// Clean up any resources being used.
-        /// </summary>
-        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing && (components != null))
-            {
-                components.Dispose();
-            }
-            base.Dispose(disposing);
-        }
-
         #region Windows Form Designer generated code
 
         /// <summary>
@@ -102,7 +89,6 @@ namespace MobiusEditor.Tools.Dialogs
             this.lblTriggerInfo.Size = new System.Drawing.Size(29, 27);
             this.lblTriggerInfo.TabIndex = 10;
             this.lblTriggerInfo.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.lblTriggerInfo.Paint += new System.Windows.Forms.PaintEventHandler(this.LblTriggerInfo_Paint);
             this.lblTriggerInfo.MouseEnter += new System.EventHandler(this.LblTriggerInfo_MouseEnter);
             this.lblTriggerInfo.MouseLeave += new System.EventHandler(this.LblTriggerInfo_MouseLeave);
             // 

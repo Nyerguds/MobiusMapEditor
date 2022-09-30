@@ -29,7 +29,7 @@ using TGASharpLib;
 namespace MobiusEditor.Model
 {
     [Flags]
-    public enum MapLayerFlag
+    public enum MapLayerFlag: int
     {
         None            = 0,
         Template        = 1 << 0,
@@ -45,14 +45,15 @@ namespace MobiusEditor.Model
 
         Boundaries      = 1 << 10,
         WaypointsIndic  = 1 << 11,
-        CellTriggers    = 1 << 12,
-        TechnoTriggers  = 1 << 13,
-        BuildingRebuild = 1 << 14,
-        BuildingFakes   = 1 << 15,
-        FootballArea    = 1 << 16,
+        FootballArea    = 1 << 12,
+        CellTriggers    = 1 << 13,
+        TechnoTriggers  = 1 << 14,
+        BuildingRebuild = 1 << 15,
+        BuildingFakes   = 1 << 16,
 
         OverlayAll = Resources | Walls | Overlay,
         Technos = Terrain | Walls | Infantry | Units | Buildings | BuildingFakes,
+        MapLayers = Terrain | Resources | Walls | Overlay | Smudge | Infantry | Units | Buildings | Waypoints,
         Indicators = Boundaries | WaypointsIndic | CellTriggers | TechnoTriggers | BuildingRebuild | BuildingFakes | FootballArea,
         All = int.MaxValue
     }

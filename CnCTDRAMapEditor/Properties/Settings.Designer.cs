@@ -71,9 +71,9 @@ namespace MobiusEditor.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("-0.5")]
-        public double ExportScale {
+        public double DefaultExportScale {
             get {
-                return ((double)(this["ExportScale"]));
+                return ((double)(this["DefaultExportScale"]));
             }
         }
         

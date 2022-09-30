@@ -374,11 +374,13 @@ These options are all enabled by default, but can be disabled if you wish. Use t
 * The trigger "Any: Cap=Win,Des=Lose" is now also seen as flag to autodetect classic single play scenarios.
 * Like the game, the editor will now fall back to Temperate graphics when not finding the Winter graphics for the Haystack buildings/overlays.
 * Fixed triggers being selectable on unbuilt buildings.
+* Improved the look of the trigger info icon on Terrain object properties and in the Celltriggers window. This was already done on other objects.
+* Added a dialog for the image export.
 
 ### Possible future features
 
 Some ideas that might get implemented in the future:
 
 * Use classic graphics, making it independent from the Remaster.
-* Clone triggers / teamtypes
-* Change a map's theater
+* Clone triggers / teamtypes.
+* Change a map's theater.

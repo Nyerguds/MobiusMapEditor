@@ -28,6 +28,7 @@ namespace MobiusEditor.Controls
 {
     public partial class TerrainProperties : UserControl
     {
+        private Bitmap infoImage;
         private bool isMockObject;
 
         public IGamePlugin Plugin { get; private set; }
@@ -54,18 +55,22 @@ namespace MobiusEditor.Controls
         public TerrainProperties()
         {
             InitializeComponent();
+            infoImage = new Bitmap(27, 27);
+            using (Graphics g = Graphics.FromImage(infoImage))
+            {
+                g.DrawIcon(SystemIcons.Information, new Rectangle(0, 0, infoImage.Width, infoImage.Height));
+            }
+            lblTriggerInfo.Image = infoImage;
+            lblTriggerInfo.ImageAlign = ContentAlignment.MiddleCenter;
         }
 
         public void Initialize(IGamePlugin plugin, bool isMockObject)
         {
             this.isMockObject = isMockObject;
-
             Plugin = plugin;
             plugin.Map.TriggersUpdated -= Triggers_CollectionChanged;
             plugin.Map.TriggersUpdated += Triggers_CollectionChanged;
-
             UpdateDataSource();
-
             Disposed += (sender, e) =>
             {
                 Terrain = null;
@@ -83,7 +88,7 @@ namespace MobiusEditor.Controls
             string selected = triggerComboBox.SelectedItem as string;
             triggerComboBox.DataSource = null;
             triggerComboBox.Items.Clear();
-            string[] items =  Plugin.Map.FilterTerrainTriggers().Select(t => t.Name).Distinct().ToArray();
+            string[] items = Plugin.Map.FilterTerrainTriggers().Select(t => t.Name).Distinct().ToArray();
             string[] filteredEvents = Plugin.Map.EventTypes.Where(ev => Plugin.Map.TerrainEventTypes.Contains(ev)).Distinct().ToArray();
             string[] filteredActions = Plugin.Map.ActionTypes.Where(ev => Plugin.Map.TerrainActionTypes.Contains(ev)).Distinct().ToArray();
             HashSet<string> allowedTriggers = new HashSet<string>(items);
@@ -135,16 +140,6 @@ namespace MobiusEditor.Controls
             }
         }
 
-        private void LblTriggerInfo_Paint(Object sender, PaintEventArgs e)
-        {
-            Control lbl = sender as Control;
-            int iconDim = (int)Math.Round(Math.Min(lbl.ClientSize.Width, lbl.ClientSize.Height) * .8f);
-            int x = (lbl.ClientSize.Width - iconDim) / 2;
-            int y = (lbl.ClientSize.Height - iconDim) / 2;
-            e.Graphics.DrawIcon(SystemIcons.Information, new Rectangle(x, y, iconDim, iconDim));
-        }
-
-
         private void LblTriggerInfo_MouseEnter(Object sender, EventArgs e)
         {
             Control target = sender as Control;
@@ -165,6 +160,30 @@ namespace MobiusEditor.Controls
         {
             Control target = sender as Control;
             this.toolTip1.Hide(target);
+        }
+
+        /// <summary> 
+        /// Clean up any resources being used.
+        /// </summary>
+        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && (components != null))
+            {
+                try
+                {
+                    lblTriggerInfo.Image = null;
+                }
+                catch { /*ignore*/}
+                try
+                {
+                    infoImage.Dispose();
+                }
+                catch { /*ignore*/}
+                infoImage = null;
+                components.Dispose();
+            }
+            base.Dispose(disposing);
         }
     }
 

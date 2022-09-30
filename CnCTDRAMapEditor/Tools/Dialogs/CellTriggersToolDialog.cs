@@ -27,28 +27,26 @@ namespace MobiusEditor.Tools.Dialogs
 {
     public partial class CellTriggersToolDialog : ToolDialog<CellTriggersTool>
     {
+        private Bitmap infoImage;
         public ComboBox TriggerCombo => triggerComboBox;
 
         public CellTriggersToolDialog(Form parentForm)
             : base(parentForm)
         {
             InitializeComponent();
+            infoImage = new Bitmap(27, 27);
+            using (Graphics g = Graphics.FromImage(infoImage))
+            {
+                g.DrawIcon(SystemIcons.Information, new Rectangle(0, 0, infoImage.Width, infoImage.Height));
+            }
+            lblTriggerInfo.Image = infoImage;
+            lblTriggerInfo.ImageAlign = ContentAlignment.MiddleCenter;
         }
 
         protected override void InitializeInternal(MapPanel mapPanel, MapLayerFlag activeLayers, ToolStripStatusLabel toolStatusLabel, ToolTip mouseToolTip, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> undoRedoList)
         {
             Tool = new CellTriggersTool(mapPanel, activeLayers, toolStatusLabel, TriggerCombo, plugin, undoRedoList);
         }
-
-        private void LblTriggerInfo_Paint(Object sender, PaintEventArgs e)
-        {
-            Control lbl = sender as Control;
-            int iconDim = (int)Math.Round(Math.Min(lbl.ClientSize.Width, lbl.ClientSize.Height) * .8f);
-            int x = (lbl.ClientSize.Width - iconDim) / 2;
-            int y = (lbl.ClientSize.Height - iconDim) / 2;
-            e.Graphics.DrawIcon(SystemIcons.Information, new Rectangle(x, y, iconDim, iconDim));
-        }
-
 
         private void LblTriggerInfo_MouseEnter(Object sender, EventArgs e)
         {
@@ -70,6 +68,30 @@ namespace MobiusEditor.Tools.Dialogs
         {
             Control target = sender as Control;
             this.toolTip1.Hide(target);
+        }
+
+        /// <summary> 
+        /// Clean up any resources being used.
+        /// </summary>
+        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && (components != null))
+            {
+                try
+                {
+                    lblTriggerInfo.Image = null;
+                }
+                catch { /*ignore*/}
+                try
+                {
+                    infoImage.Dispose();
+                }
+                catch { /*ignore*/}
+                infoImage = null;
+                components.Dispose();
+            }
+            base.Dispose(disposing);
         }
     }
 }

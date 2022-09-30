@@ -247,6 +247,18 @@
     <Compile Include="Dialogs\ErrorMessageBox.Designer.cs">
       <DependentUpon>ErrorMessageBox.cs</DependentUpon>
     </Compile>
+    <Compile Include="Dialogs\ImageExportDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialogs\ImageExportDialog.Designer.cs">
+      <DependentUpon>ImageExportDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\ImageExportedDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialogs\ImageExportedDialog.Designer.cs">
+      <DependentUpon>ImageExportedDialog.cs</DependentUpon>
+    </Compile>
     <Compile Include="Dialogs\InviteMessageBox.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -578,6 +590,7 @@
     <Compile Include="Utility\MRU.cs" />
     <Compile Include="Utility\PropertyTracker.cs" />
     <Compile Include="Event\MapRefreshEventArgs.cs" />
+    <Compile Include="Utility\SimpleMultithreading.cs" />
     <Compile Include="Utility\SteamAssist.cs" />
     <Compile Include="Utility\SteamworksUGC.cs" />
     <Compile Include="Utility\TeamColor.cs" />
@@ -633,6 +646,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Dialogs\ErrorMessageBox.resx">
       <DependentUpon>ErrorMessageBox.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\ImageExportDialog.resx">
+      <DependentUpon>ImageExportDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\ImageExportedDialog.resx">
+      <DependentUpon>ImageExportedDialog.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Dialogs\InviteMessageBox.resx">
       <DependentUpon>InviteMessageBox.cs</DependentUpon>

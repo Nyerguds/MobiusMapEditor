@@ -105,5 +105,29 @@ namespace MobiusEditor.Controls
         {
             Invalidate();
         }
+
+        /// <summary> 
+        /// Clean up any resources being used.
+        /// </summary>
+        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                if (MissingThumbnail != null)
+                {
+                    try
+                    {
+                        MissingThumbnail.Dispose();
+                    }
+                    catch
+                    {
+                        // Ignore.
+                    }
+                    MissingThumbnail = null;
+                }
+            }
+            base.Dispose(disposing);
+        }
     }
 }

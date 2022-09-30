@@ -27,8 +27,8 @@ namespace MobiusEditor
             MapSmoothScale = Properties.Settings.Default.MapScale < 0;
             PreviewTileScale = Math.Min(1, Math.Max(0.05f, Math.Abs(Properties.Settings.Default.PreviewScale)));
             PreviewSmoothScale = Properties.Settings.Default.PreviewScale < 0;
-            ExportTileScale = Math.Min(1, Math.Max(0.05f, Math.Abs(Properties.Settings.Default.ExportScale)));
-            ExportSmoothScale = Properties.Settings.Default.ExportScale < 0;
+            ExportTileScale = Math.Min(1, Math.Abs(Properties.Settings.Default.DefaultExportScale));
+            ExportSmoothScale = Properties.Settings.Default.DefaultExportScale < 0;
             UndoRedoStackSize = Properties.Settings.Default.UndoRedoStackSize;
             DisableAirUnits = Properties.Settings.Default.DisableAirUnits;
             ConvertCraters = Properties.Settings.Default.ConvertCraters;
@@ -62,10 +62,6 @@ namespace MobiusEditor
 
         public static double ExportTileScale { get; set; }
         public static bool ExportSmoothScale { get; set; }
-        public static int ExportTileWidth => Math.Max(1, (int)(OriginalTileWidth * ExportTileScale));
-        public static int ExportTileHeight => Math.Max(1, (int)(OriginalTileHeight * ExportTileScale));
-        public static Size ExportTileSize => new Size(ExportTileWidth, ExportTileHeight);
-
         public static bool DisableAirUnits;
         public static bool ConvertCraters;
         public static bool BlockingBibs;

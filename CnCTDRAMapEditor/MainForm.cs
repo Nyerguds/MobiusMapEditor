@@ -708,34 +708,9 @@ namespace MobiusEditor
             {
                 return;
             }
-            string savePath = null;
-            using (SaveFileDialog sfd = new SaveFileDialog())
+            using (ImageExportDialog imex = new ImageExportDialog(plugin, activeLayers, filename))
             {
-                sfd.AutoUpgradeEnabled = false;
-                sfd.RestoreDirectory = true;
-                sfd.AddExtension = true;
-                sfd.Filter = "PNG files (*.png)|*.png";
-                if (!string.IsNullOrEmpty(filename))
-                {
-                    sfd.InitialDirectory = Path.GetDirectoryName(filename);
-                    sfd.FileName = Path.GetFileNameWithoutExtension(filename) + ".png";
-                }
-                if (sfd.ShowDialog(this) == DialogResult.OK)
-                {
-                    savePath = sfd.FileName;
-                }
-            }
-            if (savePath != null)
-            {
-                Size size = new Size(plugin.Map.Metrics.Width * Globals.ExportTileWidth, plugin.Map.Metrics.Height * Globals.ExportTileHeight);
-                using (Bitmap pr = plugin.Map.GeneratePreview(size, plugin.GameType, ActiveLayers, Globals.ExportSmoothScale, false, false).ToBitmap())
-                {
-                    using (Graphics g = Graphics.FromImage(pr))
-                    {
-                        ViewTool.PostRenderMap(g, plugin.GameType, plugin.Map, Globals.ExportTileScale, ActiveLayers, MapLayerFlag.None);
-                    }
-                    pr.Save(savePath, ImageFormat.Png);
-                }
+                imex.ShowDialog(this);
             }
         }
 

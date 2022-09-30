@@ -922,6 +922,10 @@ namespace MobiusEditor.Dialogs
                         curErrors.Add("\"Attacked\" triggers with a House set will trigger when that House is attacked. However, this logic only works for the player's House.");
                     }
                 }
+                if (event1 == TiberianDawn.EventTypes.EVENT_DESTROYED && !noOwner && isAnd)
+                {
+                    curErrors.Add("A \"Destroyed\" trigger with a House set and repeat status \"AND\" will never work, since a reference to the trigger will be added to the House Triggers list for that House, and there is nothing that can ever trigger that instance, making it impossible to clear all objectives required for the trigger to fire.");
+                }
                 if (event1 == TiberianDawn.EventTypes.EVENT_ANY && action1 != TiberianDawn.ActionTypes.ACTION_WINLOSE)
                 {
                     curErrors.Add("The \"Any\" event will trigger on literally anything that can happen to a linked object. It should normally only be used with the \"Cap=Win/Des=Lose\" action.");

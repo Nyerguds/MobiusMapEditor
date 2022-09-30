@@ -268,8 +268,8 @@ namespace MobiusEditor.Tools
             }
             else if (selectedInfantry != null)
             {
-                var oldLocation = map.Technos[selectedInfantry.InfantryGroup].Value;
-                var oldStop = Array.IndexOf(selectedInfantry.InfantryGroup.Infantry, selectedInfantry);
+                Point oldLocation = map.Technos[selectedInfantry.InfantryGroup].Value;
+                int oldStop = selectedInfantry.InfantryGroup.GetLocation(selectedInfantry);
                 InfantryGroup infantryGroup = null;
                 var techno = map.Technos[navigationWidget.MouseCell];
                 if (techno == null)
@@ -289,7 +289,7 @@ namespace MobiusEditor.Tools
                         {
                             selectedInfantry.InfantryGroup.Infantry[oldStop] = null;
                             infantryGroup.Infantry[i] = selectedInfantry;
-                            
+
                             if (infantryGroup != selectedInfantry.InfantryGroup)
                             {
                                 mapPanel.Invalidate(map, selectedInfantry.InfantryGroup);
@@ -348,7 +348,7 @@ namespace MobiusEditor.Tools
         private void AddMoveUndoTracking(Infantry toMove, Point startLocation, int startStop)
         {
             Point? finalLocation = map.Technos[toMove.InfantryGroup].Value;
-            int finalStop = Array.IndexOf(toMove.InfantryGroup.Infantry, selectedInfantry);
+            int finalStop = selectedInfantry.InfantryGroup.GetLocation(selectedInfantry);
             if (finalLocation.HasValue && finalStop != -1 && (finalLocation.Value != startLocation || finalStop != startStop))
             {
                 bool origDirtyState = plugin.Dirty;
