@@ -209,7 +209,7 @@ namespace MobiusEditor.Tools
 
         private void MapPanel_PreRender(object sender, RenderEventArgs e)
         {
-            if ((e.Points != null) && (e.Points.Count == 0))
+            if (e.Points != null && e.Points.Count == 0)
             {
                 return;
             }

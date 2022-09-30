@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace MobiusEditor.Utility
@@ -13,15 +10,31 @@ namespace MobiusEditor.Utility
     {
         Label StatusLabel { get; set; }
     }
+    
+    // For easy access
+    public static class SimpleMulti_Threading
+    {
+        public static SimpleMultiThreading<T> Make<T>(T attachForm) where T : Form, IHasStatusLabel
+        {
+            return new SimpleMultiThreading<T>(attachForm);
+        }
+    }
 
-    public class SimpleMultithreading<T,U> where T: Form, IHasStatusLabel
+    /// <summary>
+    /// Simple multithreading for heavy operations to not freeze the UI. This just needs a form with a public
+    /// property to get and set a "busy" state label, and the type that is produced by the heavy operation.
+    /// </summary>
+    /// <typeparam name="T">Form to attach the label to.</typeparam>
+    /// <typeparam name="U">The type produced by the heavy operation. If the operation returns the type default, then it is treated as failed, and a message box is shown.</typeparam>
+    public class SimpleMultiThreading<T> where T: Form, IHasStatusLabel
     {
         public delegate void InvokeDelegateEnableControls(Boolean enabled, String processingLabel);
         public delegate DialogResult InvokeDelegateMessageBox(String message, MessageBoxButtons buttons, MessageBoxIcon icon);
+        public delegate void InvokeDelegateResult<U>(U resultObject);
         private Thread m_ProcessingThread;
         private T attachForm;
 
-        public SimpleMultithreading(T attachForm)
+        public SimpleMultiThreading(T attachForm)
         {
             this.attachForm = attachForm;
         }
@@ -31,15 +44,16 @@ namespace MobiusEditor.Utility
         /// </summary>
         /// <param name="function">The heavy processing function to run on a different thread.
         /// <param name="resultFunction">Optional function to call after <paramref name="function"/> returns a non-null result.</param>
+        /// <paramref name="resultFuncIsInvoked"/>true if the result function is Invoked on the main form.</param>
         /// <param name="enableFunction">Function to enable/disable UI controls. This should also include a call to <see cref="CreateBusyLabel"/> to create the busy status label. This function is Invoked on the main form.</param>
         /// <param name="operationType">Label to show while the operation is busy. This will be passed on as arg to <paramref name="enableFunction"/>.</param>
-        public void ExecuteThreaded(Func<U> function, Action<U> resultFunction, Action<bool, string> enableFunction, String operationType)
+        public void ExecuteThreaded<U>(Func<U> function, Action<U> resultFunction, bool resultFuncIsInvoked, Action<bool, string> enableFunction, String operationType)
         {
             if (this.m_ProcessingThread != null && this.m_ProcessingThread.IsAlive)
                 return;
             //Arguments: func returning SupportedFileType, reset palettes, reset index, reset auto-zoom, process type indication string.
-            Object[] arrParams = { function, resultFunction, enableFunction, operationType };
-            this.m_ProcessingThread = new Thread(this.ExecuteThreadedActual);
+            Object[] arrParams = { function, resultFunction, resultFuncIsInvoked, enableFunction, operationType };
+            this.m_ProcessingThread = new Thread(this.ExecuteThreadedActual<U>);
             this.m_ProcessingThread.Start(arrParams);
         }
 
@@ -57,20 +71,22 @@ namespace MobiusEditor.Utility
         ///     an <see cref="Action"/> to enable form controls, taking a parameter of type <see cref="bool"/> (whether to enable or disable controls) and <see cref="string"/> (message to show on disabled UI),
         ///     and a <see cref="string"/> to indicate the process type being executed (eg. "Saving").
         /// </param>
-        private void ExecuteThreadedActual(Object parameters)
+        private void ExecuteThreadedActual<U>(Object parameters)
         {
             Object[] arrParams = parameters as Object[];
             Func<U> func;
             Action<U> resAct;
             Action<bool, string> enableControls;
-            if (arrParams == null || arrParams.Length < 4
+            if (arrParams == null || arrParams.Length < 5
                 || ((func = arrParams[0] as Func<U>) == null)
                 || ((resAct = arrParams[1] as Action<U>) == null && arrParams[1] != null)
-                || ((enableControls = arrParams[2] as Action<bool, string>) == null))
+                || !(arrParams[2] is bool)
+                || ((enableControls = arrParams[3] as Action<bool, string>) == null))
             {
                 return;
             }
-            String operationType = arrParams[2] as String;
+            bool resActIsInvoked = (bool)arrParams[2];
+            String operationType = arrParams[4] as String;
             this.attachForm.Invoke(new InvokeDelegateEnableControls(enableControls), false, operationType);
             operationType = String.IsNullOrEmpty(operationType) ? "Operation" : operationType.Trim();
             U result = default(U);
@@ -92,9 +108,16 @@ namespace MobiusEditor.Utility
             try
             {
                 this.attachForm.Invoke(new InvokeDelegateEnableControls(enableControls), true, null);
-                if (!EqualityComparer<U>.Default.Equals(result, default(U)))
+                if (resAct != null && !EqualityComparer<U>.Default.Equals(result, default(U)))
                 {
-                    resAct?.Invoke(result);
+                    if (resActIsInvoked)
+                    {
+                        this.attachForm.Invoke(new InvokeDelegateResult<U>(resAct), result);
+                    }
+                    else
+                    {
+                        resAct(result);
+                    }
                 }
             }
             catch (InvalidOperationException) { /* ignore */ }
@@ -142,7 +165,7 @@ namespace MobiusEditor.Utility
             busyStatusLabel.BringToFront();
         }
 
-        private void RemoveBusyLabel()
+        public void RemoveBusyLabel()
         {
             Label busyStatusLabel = attachForm.StatusLabel;
             if (busyStatusLabel == null)

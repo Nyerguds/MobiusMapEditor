@@ -590,7 +590,7 @@
     <Compile Include="Utility\MRU.cs" />
     <Compile Include="Utility\PropertyTracker.cs" />
     <Compile Include="Event\MapRefreshEventArgs.cs" />
-    <Compile Include="Utility\SimpleMultithreading.cs" />
+    <Compile Include="Utility\SimpleMulti_Threading.cs" />
     <Compile Include="Utility\SteamAssist.cs" />
     <Compile Include="Utility\SteamworksUGC.cs" />
     <Compile Include="Utility\TeamColor.cs" />

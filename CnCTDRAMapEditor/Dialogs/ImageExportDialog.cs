@@ -3,27 +3,21 @@ using MobiusEditor.Model;
 using MobiusEditor.Tools;
 using MobiusEditor.Utility;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace MobiusEditor.Dialogs
 {
-    public partial class ImageExportDialog : Form
+    public partial class ImageExportDialog : Form, IHasStatusLabel
     {
         public delegate void InvokeDelegateEnableControls(Boolean enabled, String processingLabel);
         public delegate DialogResult InvokeDelegateMessageBox(String message, MessageBoxButtons buttons, MessageBoxIcon icon);
-        private Thread m_ProcessingThread;
+        private SimpleMultiThreading<ImageExportDialog> multiThreader;
         private Label m_BusyStatusLabel;
 
         private String[] MapLayerNames = {
@@ -69,6 +63,12 @@ namespace MobiusEditor.Dialogs
             set { chkSmooth.Checked = value; }
         }
 
+        public Label StatusLabel
+        {
+            get { return m_BusyStatusLabel; }
+            set { m_BusyStatusLabel = value; }
+        }
+
         private string inputFilename;
 
         public ImageExportDialog(IGamePlugin gamePlugin, MapLayerFlag layers, string filename)
@@ -81,6 +81,9 @@ namespace MobiusEditor.Dialogs
             SetSizeLabel();
             SetLayers(layers);
             txtScale.Select(0, 0);
+            // Could make this at the moment of the call, too, but it also has a
+            // system to ignore further calls if the running one isn't finished.
+            multiThreader = SimpleMulti_Threading.Make(this);
         }
 
         private void SetSizeLabel()
@@ -222,10 +225,11 @@ namespace MobiusEditor.Dialogs
                 MessageBox.Show("Could not parse scale factor!", "Error");
                 return;
             }
-            Func<String> saveOperation = () => SaveImage(gamePlugin, (GetLayers() | MapLayerFlag.Template), scale, chkSmooth.Checked, txtPath.Text);
-            Action<String> completeOperation = (s) => ShowResult(s);
-            ExecuteThreaded(saveOperation, completeOperation, "Exporting image");
-
+            MapLayerFlag layers = GetLayers() | MapLayerFlag.Template;
+            bool smooth = chkSmooth.Checked;
+            string path = txtPath.Text;
+            Func<String> saveOperation = () => SaveImage(gamePlugin, layers, scale, smooth, path);
+            multiThreader.ExecuteThreaded(saveOperation, ShowResult, true, EnableControls, "Exporting image");
         }
 
         private static String SaveImage(IGamePlugin gamePlugin, MapLayerFlag layers, double scale, bool smooth, string outputPath)
@@ -246,86 +250,11 @@ namespace MobiusEditor.Dialogs
 
         private void ShowResult(String path)
         {
-            this.Invoke((MethodInvoker) (() => 
+            using (ImageExportedDialog imexd = new ImageExportedDialog(path))
             {
-                using (ImageExportedDialog imexd = new ImageExportedDialog(path))
-                {
-                    imexd.ShowDialog(this);
-                }
-                this.DialogResult = DialogResult.OK;
-            }));
-        }
-
-        /// <summary>
-        /// Executes a threaded operation while locking the UI. 
-        /// </summary>
-        /// <param name="function">A func returning a string</param>
-        /// <param name="resetPalettes">True to reset palettes dropdown when loading the file resulting from the operation</param>
-        /// <param name="resetIndex">True to reset frames index when loading the file resulting from the operation</param>
-        /// <param name="resetZoom">True to reset auto-zoom when loading the file resulting from the operation</param>
-        /// <param name="operationType">String to indicate the process type being executed (eg. "Saving")</param>
-        private void ExecuteThreaded<T>(Func<T> function, Action<T> resultFunction, String operationType)
-        {
-            if (this.m_ProcessingThread != null && this.m_ProcessingThread.IsAlive)
-                return;
-            //Arguments: func returning SupportedFileType, reset palettes, reset index, reset auto-zoom, process type indication string.
-            Object[] arrParams = { function, resultFunction, operationType };
-            this.m_ProcessingThread = new Thread(this.ExecuteThreadedActual<T>);
-            this.m_ProcessingThread.Start(arrParams);
-        }
-
-        /// <summary>
-        /// Executes a threaded operation while locking the UI.
-        /// "parameters" must be an array of Object containing 4 items:
-        /// a func returning SupportedFileType,
-        /// boolean 'reset palettes dropdown',
-        /// boolean 'reset frames index',
-        /// boolean 'reset auto-zoom',
-        /// and a string to indicate the process type being executed (eg. "Saving").
-        /// </summary>
-        /// <param name="parameters">
-        ///     Array of Object, containing 5 items: func returning SupportedFileType, boolean 'reset palettes dropdown', boolean 'reset frames index',
-        ///     boolean 'reset auto-zoom', string to indicate the process type being executed (eg. "Saving").
-        /// </param>
-        private void ExecuteThreadedActual<T>(Object parameters)
-        {
-            Object[] arrParams = parameters as Object[];
-            Func<T> func;
-            Action<T> resAct;
-            if (arrParams == null || arrParams.Length < 3 || ((func = arrParams[0] as Func<T>) == null) || ((resAct = arrParams[1] as Action<T>) == null && arrParams[1] != null))
-            {
-                try { this.Invoke(new InvokeDelegateEnableControls(this.EnableControls), true, null); }
-                catch (InvalidOperationException) { /* ignore */ }
-                return;
+                imexd.ShowDialog(this);
             }
-            String operationType = arrParams[2] as String;
-            this.Invoke(new InvokeDelegateEnableControls(this.EnableControls), false, operationType);
-            operationType = String.IsNullOrEmpty(operationType) ? "Operation" : operationType.Trim();
-            T result = default(T);
-            try
-            {
-                // Processing code.
-                result = func();
-            }
-            catch (ThreadAbortException)
-            {
-                // Ignore. Thread is aborted.
-            }
-            catch (Exception ex)
-            {
-                String message = operationType + " failed:\n" + ex.Message + "\n" + ex.StackTrace;
-                this.Invoke(new InvokeDelegateMessageBox(this.ShowMessageBox), message, MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                this.Invoke(new InvokeDelegateEnableControls(this.EnableControls), true, null);
-            }
-            try
-            {
-                this.Invoke(new InvokeDelegateEnableControls(this.EnableControls), true, null);
-                if (!EqualityComparer<T>.Default.Equals(result, default(T)))
-                {
-                    resAct?.Invoke(result);
-                }
-            }
-            catch (InvalidOperationException) { /* ignore */ }
+            this.DialogResult = DialogResult.OK;
         }
 
         private void EnableControls(Boolean enabled, String processingLabel)
@@ -339,58 +268,12 @@ namespace MobiusEditor.Dialogs
             btnCancel.Enabled = enabled;
             if (enabled)
             {
-                RemoveBusyLabel();
+                this.multiThreader.RemoveBusyLabel();
             }
             else
             {
-                CreateBusyLabel(processingLabel);
+                this.multiThreader.CreateBusyLabel(processingLabel);
             }
         }
-
-        private DialogResult ShowMessageBox(String message, MessageBoxButtons buttons, MessageBoxIcon icon)
-        {
-            if (message == null)
-                return DialogResult.Cancel;
-            this.AllowDrop = false;
-            DialogResult result = MessageBox.Show(this, message, this.Text, buttons, icon);
-            this.AllowDrop = true;
-            return result;
-        }
-
-        private void CreateBusyLabel(string processingLabel)
-        {
-
-            // Create busy status label.
-            RemoveBusyLabel();
-            if (processingLabel == null)
-            {
-                return;
-            }
-            this.m_BusyStatusLabel = new Label();
-            this.m_BusyStatusLabel.Text = (String.IsNullOrEmpty(processingLabel) ? "Processing" : processingLabel) + "...";
-            this.m_BusyStatusLabel.TextAlign = ContentAlignment.MiddleCenter;
-            this.m_BusyStatusLabel.Font = new Font(this.m_BusyStatusLabel.Font.FontFamily, 15F, FontStyle.Regular, GraphicsUnit.Pixel, 0);
-            this.m_BusyStatusLabel.AutoSize = false;
-            this.m_BusyStatusLabel.Size = new Size(300, 100);
-            this.m_BusyStatusLabel.Anchor = AnchorStyles.None; // Always floating in the middle, even on resize.
-            this.m_BusyStatusLabel.BorderStyle = BorderStyle.FixedSingle;
-            Int32 x = (this.ClientRectangle.Width - 300) / 2;
-            Int32 y = (this.ClientRectangle.Height - 100) / 2;
-            this.m_BusyStatusLabel.Location = new Point(x, y);
-            this.Controls.Add(this.m_BusyStatusLabel);
-            this.m_BusyStatusLabel.Visible = true;
-            this.m_BusyStatusLabel.BringToFront();
-        }
-
-        private void RemoveBusyLabel()
-        {
-            if (this.m_BusyStatusLabel == null)
-                return;
-            this.Controls.Remove(this.m_BusyStatusLabel);
-            try { this.m_BusyStatusLabel.Dispose(); }
-            catch { /* ignore */ }
-            this.m_BusyStatusLabel = null;
-        }
-
     }
 }

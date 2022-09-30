@@ -347,13 +347,14 @@ namespace MobiusEditor.Tools
         {
             if (map.Technos[location] is Terrain terrain)
             {
+                Point actualLocation = map.Technos[terrain].Value;
                 mapPanel.Invalidate(map, terrain);
                 map.Technos.Remove(location);
                 bool origDirtyState = plugin.Dirty;
                 plugin.Dirty = true;
                 void undoAction(UndoRedoEventArgs e)
                 {
-                    e.Map.Technos.Add(location, terrain);
+                    e.Map.Technos.Add(actualLocation, terrain);
                     e.MapPanel.Invalidate(e.Map, terrain);
                     if (e.Plugin != null)
                     {
