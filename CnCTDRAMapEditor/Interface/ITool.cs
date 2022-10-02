@@ -13,6 +13,7 @@
 // GNU General Public License along with permitted additional restrictions 
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using MobiusEditor.Model;
+using MobiusEditor.Widgets;
 using System;
 
 namespace MobiusEditor.Interface
@@ -20,6 +21,9 @@ namespace MobiusEditor.Interface
     public interface ITool : IDisposable
     {
         MapLayerFlag Layers { get; set; }
+
+        NavigationWidget NavigationWidget { get; }
+
         void Activate();
         void Deactivate();
     }

@@ -263,7 +263,7 @@ namespace MobiusEditor
                         selectToolStripButton.PerformClick();
                         return true;
                     case OemScanCode.NumPadPlus:
-                        if (plugin != null &&  mapPanel.MapImage != null)
+                        if (plugin != null && mapPanel.MapImage != null)
                         {
                             mapPanel.IncreaseZoomStep();
                         }
@@ -274,6 +274,31 @@ namespace MobiusEditor
                             mapPanel.DecreaseZoomStep();
                         }
                         return true;
+                }
+                if (plugin != null && mapPanel.MapImage != null && activeTool != null)
+                {
+                    Point delta = Point.Empty;
+                    switch (keyData)
+                    {
+                        case Keys.Up:
+                            delta.Y -= 1;
+                            break;
+                        case Keys.Down:
+                            delta.Y += 1;
+                            break;
+                        case Keys.Left:
+                            delta.X -= 1;
+                            break;
+                        case Keys.Right:
+                            delta.X += 1;
+                            break;
+                    }
+                    if (delta != Point.Empty)
+                    {
+                        Point curPoint = mapPanel.AutoScrollPosition;
+                        SizeF zoomedCell = activeTool.NavigationWidget.ZoomedCellSize;
+                        mapPanel.AutoScrollPosition = new Point(-curPoint.X + (int)(delta.X * zoomedCell.Width), -curPoint.Y + (int)(delta.Y * zoomedCell.Width));
+                    }
                 }
             }
             else if (keyData == (Keys.Control | Keys.Z))
@@ -971,7 +996,7 @@ namespace MobiusEditor
                 url.Clear();
                 DisableAllTools();
                 RefreshUI();
-                RefreshActiveTool();
+                //RefreshActiveTool(); // done by UI refresh
                 SetTitle();
                 if (loadInfo.FileName != null)
                 {
@@ -1387,8 +1412,13 @@ namespace MobiusEditor
             {
                 toolStripButton.Checked = ActiveToolType == toolStripButton.ToolType;
             }
-            Focus();
+
+            // this somehow fixes the fact that the keyUp and keyDown events of the navigation widget don't come through.
+            mainToolStrip.Focus();
+            mapPanel.Focus();
+            // refresh for tool
             UpdateVisibleLayers();
+            // refresh to paint the actual tool's post-render layers
             mapPanel.Invalidate();
         }
 

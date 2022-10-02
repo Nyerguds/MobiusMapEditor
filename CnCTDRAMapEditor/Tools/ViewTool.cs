@@ -38,6 +38,8 @@ namespace MobiusEditor.Tools
         protected readonly UndoRedoList<UndoRedoEventArgs> url;
         protected readonly NavigationWidget navigationWidget;
 
+        public NavigationWidget NavigationWidget => navigationWidget;
+
         protected virtual Map RenderMap => map;
 
         /// <summary>

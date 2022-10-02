@@ -139,6 +139,16 @@ namespace MobiusEditor.Widgets
 
         private bool CheckIfDragging()
         {
+            /*/
+            return CheckIfDragging(false);
+        }
+        private bool CheckIfDragging(bool fromMouseMove)
+        {
+            if (!fromMouseMove)
+            {
+                System.Media.SystemSounds.Asterisk.Play();
+            }
+            //*/
             bool isDragging = IsDragging();
             if (!isDragging)
             {
@@ -168,36 +178,11 @@ namespace MobiusEditor.Widgets
 
         private void MapPanel_KeyDown(Object sender, KeyEventArgs e)
         {
-            System.Media.SystemSounds.Beep.Play();
             if (CheckIfDragging() || startScrollMouseLocation.HasValue)
             {
                 return;
             }
-            Point delta = Point.Empty;
-            switch (e.KeyCode)
-            {
-                case Keys.Up:
-                    delta.Y -= 1;
-                    break;
-                case Keys.Down:
-                    delta.Y += 1;
-                    break;
-                case Keys.Left:
-                    delta.X -= 1;
-                    break;
-                case Keys.Right:
-                    delta.X += 1;
-                    break;
-                default:
-                    return;
-            }
-            if (delta != Point.Empty)
-            {
-                Point curPoint = mapPanel.AutoScrollPosition;
-                SizeF zoomedCell = ZoomedCellSize;
-                mapPanel.AutoScrollPosition = new Point(-curPoint.X + (int)(delta.X * zoomedCell.Width), -curPoint.Y + (int)(delta.Y * zoomedCell.Width));
-            }
-        }        
+        }
 
         private void MapPanel_KeyUp(Object sender, KeyEventArgs e)
         {
@@ -279,6 +264,9 @@ namespace MobiusEditor.Widgets
             this.mapPanel.MouseUp += MapPanel_MouseUp;
             if (includeNavigation)
             {
+                // somehow, these key events don't seem to enable well; they
+                // only work after enabling/disabling at least once. No clue why.
+                // For this reason, arrow navigation was moved to MainForm.
                 (this.mapPanel as Control).KeyDown += this.MapPanel_KeyDown;
                 (this.mapPanel as Control).KeyUp += this.MapPanel_KeyUp;
             }
