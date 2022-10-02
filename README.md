@@ -377,6 +377,7 @@ These options are all enabled by default, but can be disabled if you wish. Use t
 * Added a dialog for the image export.
 * Middle mouse and space no longer make the cursor change on the map tile preview panel.
 * Added multithreading to all heavy processing functions. This means the window will no longer freeze up while loading or saving maps, but will instead have all functions disabled, while showing a little box that shows what it is doing.
+* In Celltrigger mode, if a selected trigger is already linked to objects, the trigger labels on these objects will be indicated in yellow.
 
 ### Possible future features
 
