@@ -678,6 +678,7 @@ namespace MobiusEditor.TiberianDawn
                 }
             }
             var triggersSection = ini.Sections.Extract("Triggers");
+            List<Trigger> triggers = new List<Trigger>();
             if (triggersSection != null)
             {
                 foreach (var (Key, Value) in triggersSection)
@@ -706,7 +707,7 @@ namespace MobiusEditor.TiberianDawn
                             {
                                 trigger.PersistentType = (TriggerPersistentType)int.Parse(tokens[5]);
                             }
-                            Map.Triggers.Add(trigger);
+                            triggers.Add(trigger);
                         }
                         else
                         {
@@ -721,11 +722,14 @@ namespace MobiusEditor.TiberianDawn
                     }
                 }
             }
-            HashSet<string> checkTrigs = Trigger.None.Yield().Concat(Map.Triggers.Select(t => t.Name)).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
-            HashSet<string> checkCellTrigs = Map.FilterCellTriggers().Select(t => t.Name).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
-            HashSet<string> checkUnitTrigs = Trigger.None.Yield().Concat(Map.FilterUnitTriggers().Select(t => t.Name)).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
-            HashSet<string> checkStrcTrigs = Trigger.None.Yield().Concat(Map.FilterStructureTriggers().Select(t => t.Name)).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
-            HashSet<string> checkTerrTrigs = Trigger.None.Yield().Concat(Map.FilterTerrainTriggers().Select(t => t.Name)).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+            // Sort
+            var comparer = new ExplorerComparer();
+            triggers.Sort((x, y) => comparer.Compare(x.Name, y.Name));
+            HashSet<string> checkTrigs = Trigger.None.Yield().Concat(triggers.Select(t => t.Name)).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+            HashSet<string> checkCellTrigs = Map.FilterCellTriggers(triggers).Select(t => t.Name).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+            HashSet<string> checkUnitTrigs = Trigger.None.Yield().Concat(Map.FilterUnitTriggers(triggers).Select(t => t.Name)).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+            HashSet<string> checkStrcTrigs = Trigger.None.Yield().Concat(Map.FilterStructureTriggers(triggers).Select(t => t.Name)).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+            HashSet<string> checkTerrTrigs = Trigger.None.Yield().Concat(Map.FilterTerrainTriggers(triggers).Select(t => t.Name)).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
             var terrainSection = ini.Sections.Extract("Terrain");
             if (terrainSection != null)
             {
@@ -1597,17 +1601,14 @@ namespace MobiusEditor.TiberianDawn
                 }
             }
             UpdateBasePlayerHouse();
-            // Sort
-            var comparer = new ExplorerComparer();
-            List<Trigger> reorderedTriggers = Map.Triggers.OrderBy(t => t.Name, comparer).ToList();
             // Won't trigger the automatic cleanup and notifications.
             Map.Triggers.Clear();
-            Map.Triggers.AddRange(reorderedTriggers);
+            Map.Triggers.AddRange(triggers);
             Map.TeamTypes.Sort((x, y) => comparer.Compare(x.Name, y.Name));
             extraSections = ini.Sections;
             bool switchedToSolo = !forSole && forceSoloMission && !Map.BasicSection.SoloMission
-                && ((reorderedTriggers.Any(t => t.Action1.ActionType == ActionTypes.ACTION_WIN) && reorderedTriggers.Any(t => t.Action1.ActionType == ActionTypes.ACTION_LOSE))
-                    || reorderedTriggers.Any(t => t.Event1.EventType == EventTypes.EVENT_ANY && t.Action1.ActionType == ActionTypes.ACTION_WINLOSE));
+                && ((triggers.Any(t => t.Action1.ActionType == ActionTypes.ACTION_WIN) && triggers.Any(t => t.Action1.ActionType == ActionTypes.ACTION_LOSE))
+                    || triggers.Any(t => t.Event1.EventType == EventTypes.EVENT_ANY && t.Action1.ActionType == ActionTypes.ACTION_WINLOSE));
             if (switchedToSolo)
             {
                 errors.Insert(0, "Filename detected as classic single player mission format, and win and lose trigger detected. Applying \"SoloMission\" flag.");

@@ -844,7 +844,12 @@ namespace MobiusEditor.Model
 
         public IEnumerable<Trigger> FilterCellTriggers()
         {
-            foreach (Trigger trigger in FilterTriggersByEvent(CellEventTypes).Concat(FilterTriggersByAction(CellActionTypes).Distinct()))
+            return FilterCellTriggers(this.Triggers);
+        }
+
+        public IEnumerable<Trigger> FilterCellTriggers(IEnumerable<Trigger> triggers)
+        {
+            foreach (Trigger trigger in FilterTriggersByEvent(CellEventTypes, triggers).Concat(FilterTriggersByAction(CellActionTypes).Distinct()))
             {
                 yield return trigger;
             }
@@ -852,7 +857,12 @@ namespace MobiusEditor.Model
 
         public IEnumerable<Trigger> FilterUnitTriggers()
         {
-            foreach (Trigger trigger in FilterTriggersByEvent(UnitEventTypes).Concat(FilterTriggersByAction(UnitActionTypes).Distinct()))
+            return FilterUnitTriggers(this.Triggers);
+        }
+
+        public IEnumerable<Trigger> FilterUnitTriggers(IEnumerable<Trigger> triggers)
+        {
+            foreach (Trigger trigger in FilterTriggersByEvent(UnitEventTypes, triggers).Concat(FilterTriggersByAction(UnitActionTypes).Distinct()))
             {
                 yield return trigger;
             }
@@ -860,7 +870,12 @@ namespace MobiusEditor.Model
 
         public IEnumerable<Trigger> FilterStructureTriggers()
         {
-            foreach (Trigger trigger in FilterTriggersByEvent(StructureEventTypes).Concat(FilterTriggersByAction(StructureActionTypes).Distinct()))
+            return FilterStructureTriggers(this.Triggers);
+        }
+
+        public IEnumerable<Trigger> FilterStructureTriggers(IEnumerable<Trigger> triggers)
+        {
+            foreach (Trigger trigger in FilterTriggersByEvent(StructureEventTypes, triggers).Concat(FilterTriggersByAction(StructureActionTypes).Distinct()))
             {
                 yield return trigger;
             }
@@ -868,15 +883,20 @@ namespace MobiusEditor.Model
 
         public IEnumerable<Trigger> FilterTerrainTriggers()
         {
-            foreach (Trigger trigger in FilterTriggersByEvent(TerrainEventTypes).Concat(FilterTriggersByAction(TerrainActionTypes).Distinct()))
+            return FilterTerrainTriggers(this.Triggers);
+        }
+
+        public IEnumerable<Trigger> FilterTerrainTriggers(IEnumerable<Trigger> triggers)
+        {
+            foreach (Trigger trigger in FilterTriggersByEvent(TerrainEventTypes, triggers).Concat(FilterTriggersByAction(TerrainActionTypes).Distinct()))
             {
                 yield return trigger;
             }
         }
 
-        public IEnumerable<Trigger> FilterTriggersByEvent(HashSet<String> allowedEventTypes)
+        public static IEnumerable<Trigger> FilterTriggersByEvent(HashSet<String> allowedEventTypes, IEnumerable<Trigger> triggers)
         {
-            foreach (Trigger trig in this.Triggers)
+            foreach (Trigger trig in triggers)
             {
                 if (trig.Event1 != null && allowedEventTypes.Contains(trig.Event1.EventType)
                     || ((trig.EventControl == TriggerMultiStyleType.Or || trig.EventControl == TriggerMultiStyleType.And)
@@ -922,7 +942,7 @@ namespace MobiusEditor.Model
 
         public void CleanUpCellTriggers()
         {
-            HashSet<string> placeableTrigs = FilterCellTriggers().Select(t => t.Name).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+            HashSet<string> placeableTrigs = FilterCellTriggers(this.Triggers).Select(t => t.Name).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
             List<int> cellsToClear = new List<int>();
             foreach (var item in CellTriggers)
             {
