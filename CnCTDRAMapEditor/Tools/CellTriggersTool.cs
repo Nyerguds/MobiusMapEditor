@@ -33,7 +33,7 @@ namespace MobiusEditor.Tools
         /// Layers that are not painted by the PostRenderMap function on ViewTool level because they are handled
         /// at a specific point in the PostRenderMap override by the implementing tool.
         /// </summary>
-        protected override MapLayerFlag ManuallyHandledLayers => MapLayerFlag.CellTriggers;
+        protected override MapLayerFlag ManuallyHandledLayers => MapLayerFlag.CellTriggers | MapLayerFlag.TechnoTriggers;
 
         protected override void RefreshPreviewPanel()
         {
@@ -128,15 +128,9 @@ namespace MobiusEditor.Tools
                         newVal = maxVal;
                         break;
                     case Keys.PageDown:
-                        newVal = Math.Min(curVal + 10, maxVal);
-                        break;
-                    case Keys.PageUp:
-                        newVal = Math.Max(curVal - 10, 0);
-                        break;
-                    case Keys.Down:
                         newVal = Math.Min(curVal + 1, maxVal);
                         break;
-                    case Keys.Up:
+                    case Keys.PageUp:
                         newVal = Math.Max(curVal - 1, 0);
                         break;
                 }
@@ -310,10 +304,14 @@ namespace MobiusEditor.Tools
             base.PostRenderMap(graphics);
             string selected = triggerComboBox.SelectedItem as string;
             string[] selectedRange = selected != null ? new[] { selected } : new string[] { };
+            // Normal techno triggers: under cell
+            MapRenderer.RenderAllTechnoTriggers(graphics, map, Globals.MapTileSize, Globals.MapTileScale, Layers, Color.LimeGreen, selected, true);
             MapRenderer.RenderCellTriggers(graphics, map, Globals.MapTileSize, Globals.MapTileScale, selectedRange);
             if (selected != null)
             {
                 MapRenderer.RenderCellTriggers(graphics, map, Globals.MapTileSize, Globals.MapTileScale, Color.Black, Color.Yellow, Color.Yellow, true, false, selectedRange);
+                // Selected technos: on top of cell
+                MapRenderer.RenderAllTechnoTriggers(graphics, map, Globals.MapTileSize, Globals.MapTileScale, Layers, Color.Yellow, selected, false);
             }
         }
 

@@ -55,7 +55,7 @@ namespace MobiusEditor
                     var otherAvailableToolTypes = toolTypes.Where(t => (availableToolTypes & t) != ToolType.None);
                     firstAvailableTool = otherAvailableToolTypes.Any() ? otherAvailableToolTypes.First() : ToolType.None;
                 }
-                if (activeToolType != firstAvailableTool)
+                if (activeToolType != firstAvailableTool || activeTool == null)
                 {
                     activeToolType = firstAvailableTool;
                     RefreshActiveTool();
@@ -203,28 +203,12 @@ namespace MobiusEditor
             }
         }
 
-        protected override void OnLoad(EventArgs e)
-        {
-            base.OnLoad(e);
-            RefreshUI();
-            UpdateVisibleLayers();
-            //filePublishMenuItem.Enabled = SteamworksUGC.IsInit;
-            steamUpdateTimer.Start();
-        }
-
-        protected override void OnClosed(EventArgs e)
-        {
-            base.OnClosed(e);
-            steamUpdateTimer.Stop();
-            steamUpdateTimer.Dispose();
-        }
-
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
-            OemScanCode sc = Keyboard.GetScanCode(msg);
             if ((keyData & (Keys.Shift | Keys.Control | Keys.Alt)) == Keys.None)
             {
-                switch (sc)
+                // Evaluates the scan codes directly, so this will automatically turn into a, z, e, r, t, y, etc on an azerty keyboard.
+                switch (Keyboard.GetScanCode(msg))
                 {
                     case OemScanCode.Q:
                         mapToolStripButton.PerformClick();
@@ -262,19 +246,8 @@ namespace MobiusEditor
                     case OemScanCode.H:
                         selectToolStripButton.PerformClick();
                         return true;
-                    case OemScanCode.NumPadPlus:
-                        if (plugin != null && mapPanel.MapImage != null)
-                        {
-                            mapPanel.IncreaseZoomStep();
-                        }
-                        return true;
-                    case OemScanCode.NumPadMinus:
-                        if (plugin != null && mapPanel.MapImage != null)
-                        {
-                            mapPanel.DecreaseZoomStep();
-                        }
-                        return true;
                 }
+                // Map navigation shortcuts (zoom and move the camera around)
                 if (plugin != null && mapPanel.MapImage != null && activeTool != null)
                 {
                     Point delta = Point.Empty;
@@ -292,12 +265,22 @@ namespace MobiusEditor
                         case Keys.Right:
                             delta.X += 1;
                             break;
+                        case Keys.Oemplus:
+                        case Keys.Add:
+                            mapPanel.IncreaseZoomStep();
+                            return true;
+                        case Keys.OemMinus:
+                        case Keys.Subtract:
+                            mapPanel.DecreaseZoomStep();
+                            return true;
                     }
                     if (delta != Point.Empty)
                     {
                         Point curPoint = mapPanel.AutoScrollPosition;
                         SizeF zoomedCell = activeTool.NavigationWidget.ZoomedCellSize;
+                        // autoscrollposition is WEIRD. Exposed as negative, needs to be given as positive.
                         mapPanel.AutoScrollPosition = new Point(-curPoint.X + (int)(delta.X * zoomedCell.Width), -curPoint.Y + (int)(delta.Y * zoomedCell.Width));
+                        return true;
                     }
                 }
             }
@@ -330,6 +313,23 @@ namespace MobiusEditor
         private void UndoRedo_Updated(object sender, EventArgs e)
         {
             UpdateUndoRedo();
+        }
+
+        #region listeners
+
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
+            RefreshUI();
+            UpdateVisibleLayers();
+            steamUpdateTimer.Start();
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            base.OnClosed(e);
+            steamUpdateTimer.Stop();
+            steamUpdateTimer.Dispose();
         }
 
         private void FileNewMenuItem_Click(object sender, EventArgs e)
@@ -400,25 +400,16 @@ namespace MobiusEditor
             if (string.IsNullOrEmpty(filename) || !Directory.Exists(Path.GetDirectoryName(filename)))
             {
                 fileSaveAsMenuItem.PerformClick();
+                return;
             }
-            else
+            String errors = plugin.Validate();
+            if (errors != null)
             {
-                String errors = plugin.Validate();
-                if (errors != null)
-                {
-                    MessageBox.Show(errors, "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Error, MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
-                    return;
-                }
-                var fileInfo = new FileInfo(filename);
-                if (SaveFile(fileInfo.FullName, loadedFileType))
-                {
-                    mru.Add(fileInfo);
-                }
-                else
-                {
-                    mru.Remove(fileInfo);
-                }
+                MessageBox.Show(errors, "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Error, MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
+                return;
             }
+            var fileInfo = new FileInfo(filename);
+            SaveFile(fileInfo.FullName, loadedFileType);
         }
 
         private void FileSaveAsMenuItem_Click(object sender, EventArgs e)
@@ -467,14 +458,7 @@ namespace MobiusEditor
             if (savePath != null)
             {
                 var fileInfo = new FileInfo(savePath);
-                if (SaveFile(fileInfo.FullName, FileType.INI))
-                {
-                    mru.Add(fileInfo);
-                }
-                else
-                {
-                    mru.Remove(fileInfo);
-                }
+                SaveFile(fileInfo.FullName, FileType.INI);
             }
         }
 
@@ -713,71 +697,21 @@ namespace MobiusEditor
 
         private void MapPanel_MouseMove(object sender, MouseEventArgs e)
         {
-            if (plugin != null)
+            if (plugin == null)
             {
-                var mapPoint = mapPanel.ClientToMap(e.Location);
-                var location = new Point((int)Math.Floor((double)mapPoint.X / Globals.MapTileWidth), (int)Math.Floor((double)mapPoint.Y / Globals.MapTileHeight));
-                if (plugin.Map.Metrics.GetCell(location, out int cell))
-                {
-                    var sb = new StringBuilder();
-                    sb.AppendFormat("X = {0}, Y = {1}, Cell = {2}", location.X, location.Y, cell);
-                    var template = plugin.Map.Templates[cell];
-                    var templateType = template?.Type;
-                    if (templateType != null)
-                    {
-                        sb.AppendFormat(", Template = {0} ({1})", templateType.DisplayName, template.Icon);
-                    }
-                    var smudge = plugin.Map.Smudge[cell];
-                    var smudgeType = smudge?.Type;
-                    if (smudgeType != null)
-                    {
-                        sb.AppendFormat(", Smudge = {0}", smudgeType.DisplayName);
-                    }
-                    var overlay = plugin.Map.Overlay[cell];
-                    var overlayType = overlay?.Type;
-                    if (overlayType != null)
-                    {
-                        sb.AppendFormat(", Overlay = {0}", overlayType.DisplayName);
-                    }
-                    var terrain = plugin.Map.Technos[location] as Terrain;
-                    var terrainType = terrain?.Type;
-                    if (terrainType != null)
-                    {
-                        sb.AppendFormat(", Terrain = {0}", terrainType.DisplayName);
-                    }
-                    if (plugin.Map.Technos[location] is InfantryGroup infantryGroup)
-                    {
-                        var subPixel = new Point(
-                            (mapPoint.X * Globals.PixelWidth / Globals.MapTileWidth) % Globals.PixelWidth,
-                            (mapPoint.Y * Globals.PixelHeight / Globals.MapTileHeight) % Globals.PixelHeight
-                        );
-                        InfantryStoppingType i = InfantryGroup.ClosestStoppingTypes(subPixel).First();
-                        Infantry inf = infantryGroup.Infantry[(int)i];
-                        if (inf != null)
-                        {
-                            sb.AppendFormat(", Infantry = {0} ({1})", inf.Type.DisplayName, InfantryGroup.GetStoppingTypeName(i));
-                        }
-                    }
-                    var unit = plugin.Map.Technos[location] as Unit;
-                    var unitType = unit?.Type;
-                    if (unitType != null)
-                    {
-                        sb.AppendFormat(", Unit = {0}", unitType.DisplayName);
-                    }
-                    var building = plugin.Map.Buildings[location] as Building;
-                    var buildingType = building?.Type;
-                    if (buildingType != null)
-                    {
-                        sb.AppendFormat(", Building = {0}", buildingType.DisplayName);
-                    }
-                    cellStatusLabel.Text = sb.ToString();
-                }
-                else
-                {
-                    cellStatusLabel.Text = "No cell";
-                }
+                return;
             }
+            var mapPoint = mapPanel.ClientToMap(e.Location);
+            var location = new Point((int)Math.Floor((double)mapPoint.X / Globals.MapTileWidth), (int)Math.Floor((double)mapPoint.Y / Globals.MapTileHeight));
+            var subPixel = new Point(
+                (mapPoint.X * Globals.PixelWidth / Globals.MapTileWidth) % Globals.PixelWidth,
+                (mapPoint.Y * Globals.PixelHeight / Globals.MapTileHeight) % Globals.PixelHeight
+            );
+            cellStatusLabel.Text = plugin.Map.GetCellDescription(location, subPixel);
         }
+        #endregion
+
+        #region Additional logic for listeners
 
         private void NewFile()
         {
@@ -815,7 +749,7 @@ namespace MobiusEditor
             }
             var fileInfo = new FileInfo(fileName);
             String name = fileInfo.FullName;
-            if (!GetPluginOptions(name, out FileType fileType, out GameType gameType, out bool isTdMegaMap))
+            if (!IdentifyMap(name, out FileType fileType, out GameType gameType, out bool isTdMegaMap))
             {
                 return;
             }
@@ -825,6 +759,159 @@ namespace MobiusEditor
                 ModPaths.TryGetValue(gameType, out modPaths);
             }
             multiThreader.ExecuteThreaded(() => LoadFile(name, fileType, gameType, isTdMegaMap, modPaths), PostLoad, true, LoadUnloadUi, "Loading map");
+        }
+
+        private void SaveFile(string saveFilename, FileType inputNameType)
+        {
+            // This part assumes validation is already done.
+            FileType fileType = FileType.None;
+            switch (Path.GetExtension(saveFilename).ToLower())
+            {
+                case ".ini":
+                case ".mpr":
+                    fileType = FileType.INI;
+                    break;
+                case ".bin":
+                    fileType = FileType.BIN;
+                    break;
+            }
+            if (fileType == FileType.None)
+            {
+                if (inputNameType != FileType.None)
+                {
+                    fileType = inputNameType;
+                }
+                else
+                {
+                    // Just default to ini
+                    fileType = FileType.INI;
+                }
+            }
+            // Once saved, leave it to be manually handled on steam publish.
+            if (string.IsNullOrEmpty(plugin.Map.SteamSection.Title) || plugin.Map.SteamSection.PublishedFileId == 0)
+            {
+                plugin.Map.SteamSection.Title = plugin.Map.BasicSection.Name;
+            }
+            ToolType current = ActiveToolType;
+            // Replace by multithreaded part
+            multiThreader.ExecuteThreaded(() => SaveFile(plugin, saveFilename, fileType), PostSave, true, (bl, str) => EnableDisableUi(bl, str, current), "Saving map");
+            //plugin.Save(saveFilename, fileType)
+        }
+
+        private Boolean IdentifyMap(String loadFilename, out FileType fileType, out GameType gameType, out bool isTdMegaMap)
+        {
+            fileType = FileType.None;
+            gameType = GameType.None;
+            isTdMegaMap = false;
+            try
+            {
+                if (!File.Exists(loadFilename))
+                {
+                    return false;
+                }
+            }
+            catch
+            {
+                return false;
+            }
+            switch (Path.GetExtension(loadFilename).ToLower())
+            {
+                case ".ini":
+                case ".mpr":
+                    fileType = FileType.INI;
+                    break;
+                case ".bin":
+                    fileType = FileType.BIN;
+                    break;
+#if DEVELOPER
+                case ".pgm":
+                    fileType = FileType.PGM;
+                    break;
+#endif
+            }
+            INI iniContents = null;
+            if (fileType == FileType.None)
+            {
+                long filesize = 0;
+                try
+                {
+                    filesize = new FileInfo(loadFilename).Length;
+                    iniContents = GeneralUtils.GetIniContents(loadFilename, FileType.INI);
+                    // if it gets to this point, the file is an ini document.
+                    fileType = FileType.INI;
+                }
+                catch
+                {
+                    Size tdMax = TiberianDawn.Constants.MaxSize;
+                    if (filesize == tdMax.Width * tdMax.Height * 2)
+                    {
+                        fileType = FileType.BIN;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+            }
+            string iniFile = fileType != FileType.BIN ? loadFilename : Path.ChangeExtension(loadFilename, ".ini");
+            if (iniContents == null)
+            {
+                iniContents = GeneralUtils.GetIniContents(iniFile, fileType);
+            }
+            if (iniContents == null)
+            {
+                return false;
+            }
+            switch (fileType)
+            {
+                case FileType.INI:
+                    {
+                        gameType = RedAlert.GamePlugin.CheckForRAMap(iniContents) ? GameType.RedAlert : GameType.TiberianDawn;
+                        break;
+                    }
+                case FileType.BIN:
+                    {
+                        gameType = File.Exists(iniFile) ? GameType.TiberianDawn : GameType.None;
+                        break;
+                    }
+#if DEVELOPER
+                case FileType.PGM:
+                    {
+                        try
+                        {
+                            using (var megafile = new Megafile(loadFilename))
+                            {
+                                if (megafile.Any(f => Path.GetExtension(f).ToLower() == ".mpr"))
+                                {
+                                    gameType = GameType.RedAlert;
+                                }
+                                else
+                                {
+                                    gameType = GameType.TiberianDawn;
+                                }
+                            }
+                        }
+                        catch (FileNotFoundException)
+                        {
+                            return false;
+                        }
+                        break;
+                    }
+#endif
+            }
+            if (gameType == GameType.TiberianDawn)
+            {
+                isTdMegaMap = TiberianDawn.GamePlugin.CheckForMegamap(iniContents);
+                if (isTdMegaMap && SoleSurvivor.GamePlugin.CheckForSSmap(iniContents))
+                {
+                    gameType = GameType.SoleSurvivor;
+                }
+            }
+            if (gameType == GameType.None)
+            {
+                return false;
+            }
+            return true;
         }
 
         /// <summary>
@@ -855,17 +942,27 @@ namespace MobiusEditor
         /// </summary>
         /// <param name="enableUI"></param>
         /// <param name="label"></param>
-        private void EnableDisableUi(bool enableUI, string label)
+        private void EnableDisableUi(bool enableUI, string label, ToolType storedToolType)
         {
+            fileNewMenuItem.Enabled = enableUI;
+            fileOpenMenuItem.Enabled = enableUI;
+            fileRecentFilesMenuItem.Enabled = enableUI;
+            viewMapToolStripMenuItem.Enabled = enableUI;
+            viewIndicatorsToolStripMenuItem.Enabled = enableUI;
             EnableDisableMenuItems(enableUI);
-
+            mapPanel.Enabled = enableUI;
             if (enableUI)
             {
+                RefreshUI(storedToolType);
                 multiThreader.RemoveBusyLabel();
             }
             else
             {
-                Unload();
+                ClearActiveTool();
+                foreach (var toolStripButton in viewToolStripButtons)
+                {
+                    toolStripButton.Enabled = false;
+                }
                 multiThreader.CreateBusyLabel(label);
             }
         }
@@ -965,6 +1062,23 @@ namespace MobiusEditor
             }
         }
 
+        private static (string FileName, bool SavedOk, string error) SaveFile(IGamePlugin plugin, string saveFilename, FileType fileType)
+        {
+            try
+            {
+                plugin.Save(saveFilename, fileType);
+                return (saveFilename, true, null);
+            }
+            catch (Exception ex)
+            {
+                string errorMessage = "Error loading map: " + ex.Message;
+#if DEBUG
+                errorMessage += "\n\n" + ex.StackTrace;
+#endif
+                return (saveFilename, false, errorMessage);
+            }
+        }
+
         private void PostLoad((string FileName, FileType FileType, IGamePlugin Plugin, string[] Errors) loadInfo)
         {
             string[] errors = loadInfo.Errors ?? new string[0];
@@ -994,7 +1108,7 @@ namespace MobiusEditor
                 filename = loadInfo.FileName;
                 loadedFileType = loadInfo.FileType;
                 url.Clear();
-                DisableAllTools();
+                CleanupTools();
                 RefreshUI();
                 //RefreshActiveTool(); // done by UI refresh
                 SetTitle();
@@ -1006,121 +1120,25 @@ namespace MobiusEditor
             }
         }
 
-        private Boolean GetPluginOptions(String loadFilename, out FileType fileType, out GameType gameType, out bool isTdMegaMap)
+        private void PostSave((string FileName, bool SavedOk, string Error) saveInfo)
         {
-            fileType = FileType.None;
-            gameType = GameType.None;
-            isTdMegaMap = false;
-            try
+            var fileInfo = new FileInfo(saveInfo.FileName);
+            if (saveInfo.SavedOk)
             {
-                if (!File.Exists(loadFilename))
+                if (fileInfo.Exists && fileInfo.Length > Globals.MaxMapSize)
                 {
-                    return false;
+                    MessageBox.Show(string.Format("Map file exceeds the maximum size of {0} bytes.", Globals.MaxMapSize), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
+                plugin.Dirty = false;
+                filename = saveInfo.FileName;
+                SetTitle();
+                mru.Add(fileInfo);
             }
-            catch
+            else
             {
-                return false;
+                MessageBox.Show(string.Format("Error saving {0}: {1}", saveInfo.FileName, saveInfo.Error, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error));
+                mru.Remove(fileInfo);
             }
-            switch (Path.GetExtension(loadFilename).ToLower())
-            {
-                case ".ini":
-                case ".mpr":
-                    fileType = FileType.INI;
-                    break;
-                case ".bin":
-                    fileType = FileType.BIN;
-                    break;
-#if DEVELOPER
-                case ".pgm":
-                    fileType = FileType.PGM;
-                    break;
-#endif
-            }
-            if (fileType == FileType.None)
-            {
-                long filesize = 0;
-                try
-                {
-                    filesize = new FileInfo(loadFilename).Length;
-                    var bytes = File.ReadAllBytes(loadFilename);
-                    var enc = new UTF8Encoding(false, true);
-                    var inicontents = enc.GetString(bytes);
-                    var ini = new INI();
-                    ini.Parse(inicontents);
-                    // if it gets to this point, the file is a text document.
-                    fileType = FileType.INI;
-                }
-                catch
-                {
-                    Size tdMax = TiberianDawn.Constants.MaxSize;
-                    if (filesize == tdMax.Width * tdMax.Height * 2)
-                    {
-                        fileType = FileType.BIN;
-                    }
-                    else
-                    {
-                        return false;
-                    }
-                }
-            }
-            string iniFile = fileType != FileType.BIN ? loadFilename : Path.ChangeExtension(loadFilename, ".ini");
-            INI iniContents = GeneralUtils.GetIniContents(iniFile, fileType);
-            if (iniContents == null)
-            {
-                return false;
-            }
-            switch (fileType)
-            {
-                case FileType.INI:
-                    {
-                        gameType = RedAlert.GamePlugin.CheckForRAMap(iniContents) ? GameType.RedAlert : GameType.TiberianDawn;
-                        break;
-                    }
-                case FileType.BIN:
-                    {
-
-                        gameType = File.Exists(iniFile) ? GameType.TiberianDawn : GameType.None;
-                        break;
-                    }
-#if DEVELOPER
-                case FileType.PGM:
-                    {
-                        try
-                        {
-                            using (var megafile = new Megafile(loadFilename))
-                            {
-                                if (megafile.Any(f => Path.GetExtension(f).ToLower() == ".mpr"))
-                                {
-                                    gameType = GameType.RedAlert;
-                                }
-                                else
-                                {
-                                    gameType = GameType.TiberianDawn;
-                                }
-                            }
-                        }
-                        catch (FileNotFoundException)
-                        {
-                            return false;
-                        }
-                        break;
-                    }
-#endif
-            }
-            if (gameType == GameType.TiberianDawn)
-            {
-                isTdMegaMap = TiberianDawn.GamePlugin.CheckForMegamap(iniContents);
-                if (isTdMegaMap && SoleSurvivor.GamePlugin.CheckForSSmap(iniContents))
-                {
-                    gameType = GameType.SoleSurvivor;
-                }
-            }
-            if (gameType == GameType.None)
-            {
-                return false;
-            }
-            return true;
         }
 
         /// <summary>
@@ -1134,7 +1152,7 @@ namespace MobiusEditor
                 // Disable all tools
                 ActiveToolType = ToolType.None; // Always re-defaults to map anyway, so nicer if nothing is selected during load.
                 this.ActiveControl = null;
-                DisableAllTools();
+                CleanupTools();
                 // Unlink plugin
                 IGamePlugin pl = plugin;
                 plugin = null;
@@ -1163,52 +1181,12 @@ namespace MobiusEditor
             }
         }
 
-        private bool SaveFile(string saveFilename, FileType inputNameType)
+        private void RefreshUI()
         {
-            // This part assumes validation is already done.
-            FileType fileType = FileType.None;
-            switch (Path.GetExtension(saveFilename).ToLower())
-            {
-                case ".ini":
-                case ".mpr":
-                    fileType = FileType.INI;
-                    break;
-                case ".bin":
-                    fileType = FileType.BIN;
-                    break;
-            }
-            if (fileType == FileType.None)
-            {
-                if (inputNameType == FileType.None)
-                {
-                    // Just default to ini
-                    fileType = FileType.INI;
-                }
-                else
-                {
-                    fileType = inputNameType;
-                }
-            }
-            if (string.IsNullOrEmpty(plugin.Map.SteamSection.Title))
-            {
-                plugin.Map.SteamSection.Title = plugin.Map.BasicSection.Name;
-            }
-            if (!plugin.Save(saveFilename, fileType))
-            {
-                return false;
-            }
-            var fileInfo = new FileInfo(saveFilename);
-            if (fileInfo.Exists && fileInfo.Length > Globals.MaxMapSize)
-            {
-                MessageBox.Show(string.Format("Map file exceeds the maximum size of {0} bytes.", Globals.MaxMapSize), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            plugin.Dirty = false;
-            filename = saveFilename;
-            SetTitle();
-            return true;
+            RefreshUI(this.activeToolType);
         }
 
-        private void RefreshUI()
+        private void RefreshUI(ToolType activeToolType)
         {
             // Menu items
             EnableDisableMenuItems(true);
@@ -1268,10 +1246,9 @@ namespace MobiusEditor
             viewIndicatorsBuildingFakeLabelsMenuItem.Visible = !hasPlugin || plugin.GameType == GameType.RedAlert;
             viewIndicatorsBuildingRebuildLabelsMenuItem.Visible = !hasPlugin || plugin.GameType != GameType.SoleSurvivor;
             viewIndicatorsFootballAreaMenuItem.Visible = !hasPlugin || plugin.GameType == GameType.SoleSurvivor;
-
         }
 
-        private void DisableAllTools()
+        private void CleanupTools()
         {
             // Tools
             ClearActiveTool();
@@ -1468,33 +1445,6 @@ namespace MobiusEditor
             }
         }
 
-        private void mainToolStripButton_Click(object sender, EventArgs e)
-        {
-            if (plugin == null)
-            {
-                return;
-            }
-            ActiveToolType = ((ViewToolStripButton)sender).ToolType;
-        }
-
-        private void MapPanel_DragEnter(object sender, System.Windows.Forms.DragEventArgs e)
-        {
-            if (e.Data.GetDataPresent(DataFormats.FileDrop))
-            {
-                String[] files = (String[])e.Data.GetData(DataFormats.FileDrop);
-                if (files.Length == 1)
-                    e.Effect = DragDropEffects.Copy;
-            }
-        }
-
-        private void MapPanel_DragDrop(object sender, System.Windows.Forms.DragEventArgs e)
-        {
-            String[] files = (String[])e.Data.GetData(DataFormats.FileDrop);
-            if (files.Length != 1)
-                return;
-            OpenFile(files[0], true);
-        }
-
         private void UpdateVisibleLayers()
         {
             MapLayerFlag layers = MapLayerFlag.All;
@@ -1555,6 +1505,35 @@ namespace MobiusEditor
                 layers &= ~MapLayerFlag.FootballArea;
             }
             ActiveLayers = layers;
+        }
+
+        #endregion
+
+        private void mainToolStripButton_Click(object sender, EventArgs e)
+        {
+            if (plugin == null)
+            {
+                return;
+            }
+            ActiveToolType = ((ViewToolStripButton)sender).ToolType;
+        }
+
+        private void MapPanel_DragEnter(object sender, System.Windows.Forms.DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                String[] files = (String[])e.Data.GetData(DataFormats.FileDrop);
+                if (files.Length == 1)
+                    e.Effect = DragDropEffects.Copy;
+            }
+        }
+
+        private void MapPanel_DragDrop(object sender, System.Windows.Forms.DragEventArgs e)
+        {
+            String[] files = (String[])e.Data.GetData(DataFormats.FileDrop);
+            if (files.Length != 1)
+                return;
+            OpenFile(files[0], true);
         }
 
         private void ViewMenuItem_CheckedChanged(object sender, EventArgs e)
@@ -1672,19 +1651,6 @@ namespace MobiusEditor
             }
         }
 
-        private void toolTabControl_Selected(object sender, TabControlEventArgs e)
-        {
-            if (plugin == null)
-            {
-                return;
-            }
-        }
-
-        private void developerGenerateMapPreviewMenuItem_Click(object sender, EventArgs e)
-        {
-
-        }
-
         private void developerGoToINIMenuItem_Click(object sender, EventArgs e)
         {
 #if DEVELOPER
@@ -1777,11 +1743,29 @@ namespace MobiusEditor
             {
                 return;
             }
+            // Check if we need to save.
+            ulong oldId = plugin.Map.SteamSection.PublishedFileId;
+            string oldName = plugin.Map.SteamSection.Title;
+            string oldDescription = plugin.Map.SteamSection.Description;
+            string oldPreview = plugin.Map.SteamSection.PreviewFile;
+            int oldVisibility = (int)plugin.Map.SteamSection.Visibility;
+            // Open publish dialog
+            bool wasPublished;
             using (var sd = new SteamDialog(plugin))
             {
                 sd.ShowDialog();
+                wasPublished = sd.MapWasPublished;
             }
-            fileSaveMenuItem.PerformClick();
+            // Only re-save is it was published and something actually changed.
+            if (wasPublished && (oldId != plugin.Map.SteamSection.PublishedFileId
+                || oldName != plugin.Map.SteamSection.Title
+                || oldDescription != plugin.Map.SteamSection.Description
+                || oldPreview != plugin.Map.SteamSection.PreviewFile
+                || oldVisibility != (int)plugin.Map.SteamSection.Visibility))
+            {
+                // This takes care of saving the Steam info into the map.
+                fileSaveMenuItem.PerformClick();
+            }
         }
 
         private void mainToolStrip_MouseMove(object sender, MouseEventArgs e)
@@ -1794,7 +1778,7 @@ namespace MobiusEditor
 
         private void MainForm_Shown(object sender, System.EventArgs e)
         {
-            DisableAllTools();
+            CleanupTools();
             RefreshUI();
             UpdateUndoRedo();
             if (filename != null)

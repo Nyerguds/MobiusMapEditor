@@ -210,24 +210,22 @@ namespace MobiusEditor.Tools
             {
                 switch (e.KeyCode)
                 {
-                    case (Keys.F):
+                    case Keys.F:
                         newVal = Enumerable.Range(0, map.Waypoints.Length).Cast<int?>().Where(i => (map.Waypoints[i.Value].Flag & WaypointFlag.Flare) == WaypointFlag.Flare).FirstOrDefault();
                         break;
-                    case (Keys.H):
+                    case Keys.H:
                         newVal = Enumerable.Range(0, map.Waypoints.Length).Cast<int?>().Where(i => (map.Waypoints[i.Value].Flag & WaypointFlag.Home) == WaypointFlag.Home).FirstOrDefault();
                         break;
-                    case (Keys.R):
+                    case Keys.R:
                         newVal = Enumerable.Range(0, map.Waypoints.Length).Cast<int?>().Where(i => (map.Waypoints[i.Value].Flag & WaypointFlag.Reinforce) == WaypointFlag.Reinforce).FirstOrDefault();
                         break;
-                    case (Keys.S):
+                    case Keys.S:
                         newVal = Enumerable.Range(0, map.Waypoints.Length).Cast<int?>().Where(i => (map.Waypoints[i.Value].Flag & WaypointFlag.Special) == WaypointFlag.Special).FirstOrDefault();
                         break;
                 }
             }
             else
             {
-                const int pageJump = 1;
-                const int arrJump = 0;
                 switch (e.KeyCode)
                 {
                     case Keys.Home:
@@ -237,16 +235,10 @@ namespace MobiusEditor.Tools
                         newVal = maxVal;
                         break;
                     case Keys.PageDown:
-                        newVal = Math.Min(curVal + pageJump, maxVal);
+                        newVal = Math.Min(curVal + 1, maxVal);
                         break;
                     case Keys.PageUp:
-                        newVal = Math.Max(curVal - pageJump, 0);
-                        break;
-                    case Keys.Down:
-                        newVal = Math.Min(curVal + arrJump, maxVal);
-                        break;
-                    case Keys.Up:
-                        newVal = Math.Max(curVal - arrJump, 0);
+                        newVal = Math.Max(curVal - 1, 0);
                         break;
                     case Keys.Enter:
                         JumpToWaypoint();

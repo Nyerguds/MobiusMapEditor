@@ -125,6 +125,11 @@ namespace MobiusEditor.Model
     {
         public static readonly string None = "None";
 
+        public static bool IsEmpty(string trigger)
+        {
+            return trigger == null || trigger.Equals(None, StringComparison.OrdinalIgnoreCase);
+        }
+
         public string Name { get; set; }
 
         public TriggerPersistentType PersistentType { get; set; } = TriggerPersistentType.Volatile;

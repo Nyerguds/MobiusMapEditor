@@ -1122,23 +1122,28 @@ namespace MobiusEditor.Render
 
         public static void RenderAllTechnoTriggers(Graphics graphics, Map map, Size tileSize, double tileScale, MapLayerFlag layersToRender)
         {
+            RenderAllTechnoTriggers(graphics, map, tileSize, tileScale, layersToRender, Color.LimeGreen, null, false);
+        }
+
+        public static void RenderAllTechnoTriggers(Graphics graphics, Map map, Size tileSize, double tileScale, MapLayerFlag layersToRender, Color color, string toPick, bool excludePick)
+        {
             float borderSize = Math.Max(0.5f, tileSize.Width / 60.0f);
             using (var technoTriggerBackgroundBrush = new SolidBrush(Color.FromArgb(96, Color.Black)))
-            using (var technoTriggerBrush = new SolidBrush(Color.LimeGreen))
-            using (var technoTriggerPen = new Pen(Color.LimeGreen, borderSize))
+            using (var technoTriggerBrush = new SolidBrush(color))
+            using (var technoTriggerPen = new Pen(color, borderSize))
             {
                 foreach (var (cell, techno) in map.Technos)
                 {
                     var location = new Point(cell.X * tileSize.Width, cell.Y * tileSize.Height);
                     (string trigger, Rectangle bounds)[] triggers = null;
-                    if (techno is Terrain terrain)
+                    if (techno is Terrain terrain && !Trigger.IsEmpty(terrain.Trigger))
                     {
                         if ((layersToRender & MapLayerFlag.Terrain) == MapLayerFlag.Terrain)
                         {
                             triggers = new (string, Rectangle)[] { (terrain.Trigger, new Rectangle(location, terrain.Type.GetRenderSize(tileSize))) };
                         }
                     }
-                    else if (techno is Building building)
+                    else if (techno is Building building && !Trigger.IsEmpty(building.Trigger))
                     {
                         if ((layersToRender & MapLayerFlag.Buildings) == MapLayerFlag.Buildings)
                         {
@@ -1146,7 +1151,7 @@ namespace MobiusEditor.Render
                             triggers = new (string, Rectangle)[] { (building.Trigger, new Rectangle(location, size)) };
                         }
                     }
-                    else if (techno is Unit unit)
+                    else if (techno is Unit unit && !Trigger.IsEmpty(unit.Trigger))
                     {
                         if ((layersToRender & MapLayerFlag.Units) == MapLayerFlag.Units)
                         {
@@ -1161,7 +1166,7 @@ namespace MobiusEditor.Render
                             for (var i = 0; i < infantryGroup.Infantry.Length; ++i)
                             {
                                 var infantry = infantryGroup.Infantry[i];
-                                if (infantry == null)
+                                if (infantry == null ||  Trigger.IsEmpty(infantry.Trigger))
                                 {
                                     continue;
                                 }
@@ -1199,7 +1204,9 @@ namespace MobiusEditor.Render
                             Alignment = StringAlignment.Center,
                             LineAlignment = StringAlignment.Center
                         };
-                        foreach (var (trigger, bounds) in triggers.Where(x => x.trigger != null && !x.trigger.Equals("None", StringComparison.OrdinalIgnoreCase)))
+                        foreach (var (trigger, bounds) in triggers.Where(x => toPick == null
+                        || (excludePick && !x.trigger.Equals(toPick, StringComparison.OrdinalIgnoreCase))
+                         || (!excludePick && x.trigger.Equals(toPick, StringComparison.OrdinalIgnoreCase))))
                         {
                             using (var font = graphics.GetAdjustedFont(trigger, SystemFonts.DefaultFont, bounds.Width,
                                 Math.Max(1, (int)(12 * tileScale)), Math.Max(1, (int)(24 * tileScale)), true))

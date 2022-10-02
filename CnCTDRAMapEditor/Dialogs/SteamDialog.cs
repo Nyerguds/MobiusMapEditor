@@ -33,11 +33,15 @@ namespace MobiusEditor.Dialogs
         private readonly IGamePlugin plugin;
         private readonly Timer statusUpdateTimer = new Timer();
 
+        private bool mapWasPublished = false;
+        public bool MapWasPublished => mapWasPublished;
+
+
         public SteamDialog(IGamePlugin plugin)
         {
             this.plugin = plugin;
             InitializeComponent();
-            visibilityComboBox.DataSource = new []
+            cmbVisibility.DataSource = new []
             {
                 new { Name = "Public", Value = ERemoteStoragePublishedFileVisibility.k_ERemoteStoragePublishedFileVisibilityPublic },
                 new { Name = "Friends Only", Value = ERemoteStoragePublishedFileVisibility.k_ERemoteStoragePublishedFileVisibilityFriendsOnly },
@@ -45,16 +49,22 @@ namespace MobiusEditor.Dialogs
             };
             statusUpdateTimer.Interval = 500;
             statusUpdateTimer.Tick += StatusUpdateTimer_Tick;
-            Disposed += (o, e) => { (previewTxt.Tag as Image)?.Dispose(); };
+            Disposed += (o, e) => { (txtPreview.Tag as Image)?.Dispose(); };
         }
 
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
-            titleTxt.Text = plugin.Map.SteamSection.Title;
+            if (String.IsNullOrEmpty(plugin.Map.SteamSection.Title) && !String.IsNullOrEmpty(plugin.Map.BasicSection.Name))
+            {
+                plugin.Map.SteamSection.Title = plugin.Map.BasicSection.Name;
+            }
+            lblMapTitleData.Text = plugin.Map.BasicSection.Name;
+            btnCopyFromMap.Enabled = !String.IsNullOrEmpty(lblMapTitleData.Text);
+            txtTitle.Text = plugin.Map.SteamSection.Title;
             descriptionTxt.Text = plugin.Map.SteamSection.Description;
-            previewTxt.Text = plugin.Map.SteamSection.PreviewFile;
-            visibilityComboBox.SelectedValue = plugin.Map.SteamSection.Visibility;
+            txtPreview.Text = plugin.Map.SteamSection.PreviewFile;
+            cmbVisibility.SelectedValue = plugin.Map.SteamSection.Visibility;
             btnPublishMap.SplitWidth = (plugin.Map.SteamSection.PublishedFileId != PublishedFileId_t.Invalid.m_PublishedFileId) ? MenuButton.DefaultSplitWidth : 0;
             Directory.CreateDirectory(PreviewDirectory);
             var previewPath = Path.Combine(PreviewDirectory, "Minimap.png");
@@ -71,13 +81,13 @@ namespace MobiusEditor.Dialogs
                     bm.SetResolution(96, 96);
                     bm.Save(soloBannerPath, ImageFormat.Png);
                 }
-                previewTxt.Text = soloBannerPath;
+                txtPreview.Text = soloBannerPath;
             }
             else
             {
-                previewTxt.Text = previewPath;
+                txtPreview.Text = previewPath;
             }
-            imageTooltip.SetToolTip(previewTxt, "Preview.png");
+            imageTooltip.SetToolTip(txtPreview, "Preview.png");
             statusUpdateTimer.Start();
             UpdateControls();
         }
@@ -102,6 +112,7 @@ namespace MobiusEditor.Dialogs
         protected virtual void OnPublishSuccess()
         {
             statusLbl.Text = "Done.";
+            mapWasPublished = true;
             EnableControls(true);
         }
 
@@ -113,10 +124,10 @@ namespace MobiusEditor.Dialogs
 
         private void EnableControls(bool enable)
         {
-            titleTxt.Enabled = enable;
-            visibilityComboBox.Enabled = enable;
-            previewTxt.Enabled = enable;
-            previewBtn.Enabled = enable;
+            txtTitle.Enabled = enable;
+            cmbVisibility.Enabled = enable;
+            txtPreview.Enabled = enable;
+            btnPreview.Enabled = enable;
             descriptionTxt.Enabled = enable;
             btnPublishMap.Enabled = enable;
             btnClose.Enabled = enable;
@@ -135,21 +146,21 @@ namespace MobiusEditor.Dialogs
         {
             if (string.IsNullOrEmpty(plugin.Map.BasicSection.Name))
             {
-                plugin.Map.BasicSection.Name = titleTxt.Text;
+                plugin.Map.BasicSection.Name = txtTitle.Text;
             }
             if (string.IsNullOrEmpty(plugin.Map.BasicSection.Author))
             {
                 plugin.Map.BasicSection.Author = SteamFriends.GetPersonaName();
             }
-            plugin.Map.SteamSection.PreviewFile = previewTxt.Text;
-            plugin.Map.SteamSection.Title = titleTxt.Text;
+            plugin.Map.SteamSection.PreviewFile = txtPreview.Text;
+            plugin.Map.SteamSection.Title = txtTitle.Text;
             plugin.Map.SteamSection.Description = descriptionTxt.Text;
-            plugin.Map.SteamSection.Visibility = (ERemoteStoragePublishedFileVisibility)visibilityComboBox.SelectedValue;
+            plugin.Map.SteamSection.Visibility = (ERemoteStoragePublishedFileVisibility)cmbVisibility.SelectedValue;
             var tempPath = Path.Combine(Path.GetTempPath(), "CnCRCMapEditorPublishUGC");
             Directory.CreateDirectory(tempPath);
             foreach (var file in new DirectoryInfo(tempPath).EnumerateFiles()) file.Delete();
             var pgmPath = Path.Combine(tempPath, "MAPDATA.PGM");
-            plugin.Save(pgmPath, FileType.PGM, previewTxt.Tag as Bitmap);
+            plugin.Save(pgmPath, FileType.PGM, txtPreview.Tag as Bitmap);
             var tags = new List<string>();
             switch (plugin.GameType)
             {
@@ -184,14 +195,14 @@ namespace MobiusEditor.Dialogs
                 Filter = "Preview Files (*.png)|*.png",
                 CheckFileExists = true,
             };
-            if (!string.IsNullOrEmpty(previewTxt.Text) && File.Exists(previewTxt.Text))
+            if (!string.IsNullOrEmpty(txtPreview.Text) && File.Exists(txtPreview.Text))
             {
-                ofd.InitialDirectory = Path.GetDirectoryName(previewTxt.Text);
-                ofd.FileName = Path.GetFileName(previewTxt.Text);
+                ofd.InitialDirectory = Path.GetDirectoryName(txtPreview.Text);
+                ofd.FileName = Path.GetFileName(txtPreview.Text);
             }
             if (ofd.ShowDialog() == DialogResult.OK)
             {
-                previewTxt.Text = ofd.FileName;
+                txtPreview.Text = ofd.FileName;
             }
         }
 
@@ -205,20 +216,20 @@ namespace MobiusEditor.Dialogs
         {
             try
             {
-                (previewTxt.Tag as Image)?.Dispose();
+                (txtPreview.Tag as Image)?.Dispose();
                 Bitmap preview = null;
-                if (File.Exists(previewTxt.Text))
+                if (File.Exists(txtPreview.Text))
                 {
-                    using (Bitmap b = new Bitmap(previewTxt.Text))
+                    using (Bitmap b = new Bitmap(txtPreview.Text))
                     {
                         preview = b.FitToBoundingBox(Globals.MapPreviewSize.Width, Globals.MapPreviewSize.Height, Color.Black);
                     }
                 }
-                previewTxt.Tag = preview;
+                txtPreview.Tag = preview;
             }
             catch (Exception)
             {
-                previewTxt.Tag = null;
+                txtPreview.Tag = null;
             }
             UpdateControls();
         }
@@ -230,7 +241,12 @@ namespace MobiusEditor.Dialogs
 
         private void UpdateControls()
         {
-            btnPublishMap.Enabled = (previewTxt.Tag != null) && !string.IsNullOrEmpty(descriptionTxt.Text);
+            btnPublishMap.Enabled = (txtPreview.Tag != null) && !string.IsNullOrEmpty(descriptionTxt.Text);
+        }
+
+        private void btnCopyFromMap_Click(Object sender, EventArgs e)
+        {
+            txtTitle.Text = lblMapTitleData.Text;
         }
     }
 }

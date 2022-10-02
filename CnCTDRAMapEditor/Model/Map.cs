@@ -694,6 +694,62 @@ namespace MobiusEditor.Model
             }
         }
 
+        public string GetCellDescription(Point location, Point subPixel)
+        {
+            if (!Metrics.GetCell(location, out int cell))
+            {
+                return "No cell";
+            }
+            var sb = new StringBuilder();
+            sb.AppendFormat("X = {0}, Y = {1}, Cell = {2}", location.X, location.Y, cell);
+            var template = Templates[cell];
+            var templateType = template?.Type;
+            if (templateType != null)
+            {
+                sb.AppendFormat(", Template = {0} ({1})", templateType.DisplayName, template.Icon);
+            }
+            var smudge = Smudge[cell];
+            var smudgeType = smudge?.Type;
+            if (smudgeType != null)
+            {
+                sb.AppendFormat(", Smudge = {0}", smudgeType.DisplayName);
+            }
+            var overlay = Overlay[cell];
+            var overlayType = overlay?.Type;
+            if (overlayType != null)
+            {
+                sb.AppendFormat(", Overlay = {0}", overlayType.DisplayName);
+            }
+            var terrain = Technos[location] as Terrain;
+            var terrainType = terrain?.Type;
+            if (terrainType != null)
+            {
+                sb.AppendFormat(", Terrain = {0}", terrainType.DisplayName);
+            }
+            if (Technos[location] is InfantryGroup infantryGroup)
+            {
+                InfantryStoppingType i = InfantryGroup.ClosestStoppingTypes(subPixel).First();
+                Infantry inf = infantryGroup.Infantry[(int)i];
+                if (inf != null)
+                {
+                    sb.AppendFormat(", Infantry = {0} ({1})", inf.Type.DisplayName, InfantryGroup.GetStoppingTypeName(i));
+                }
+            }
+            var unit = Technos[location] as Unit;
+            var unitType = unit?.Type;
+            if (unitType != null)
+            {
+                sb.AppendFormat(", Unit = {0}", unitType.DisplayName);
+            }
+            var building = Buildings[location] as Building;
+            var buildingType = building?.Type;
+            if (buildingType != null)
+            {
+                sb.AppendFormat(", Building = {0}", buildingType.DisplayName);
+            }
+            return sb.ToString();
+        }
+
         public HouseType GetBaseHouse(GameType gameType)
         {
             House noneHouse = HousesIncludingNone.Where(h => h.Type.ID < 0).FirstOrDefault();

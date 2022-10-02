@@ -346,8 +346,8 @@ These options are all enabled by default, but can be disabled if you wish. Use t
 * When your mouse cursor is inside the map bounds and you press [Ctrl] in Map mode to enable bounds editing mode, your cursor will now immediately change to the Move cursor, without requiring any mouse movement.
 * The status bar at the bottom will now explicitly mention the sub-position of the infantry under the mouse cursor.
 * When loading a map, if a map's file name identifies it as classic single player mission, this will no longer mark the mission as "modified" by the loading process. This will make it simpler to open classic maps for reference without getting a save prompt on close. Do note that lots of classic maps contain errors in triggers being linked to wrong objects, and the automatic fixes for that **will** still mark the map as modified.
-* Fixed issues with the editor window getting focused simply by moving the mouse over it. The main window can steal focus from the tool window, but not the other way around.
-* In Waypoints and Cell Triggers editing mode, the Up, Down, PageUp, PageDown, Home and End keys will now let you go through the dropdown items list. PageUp and PageDown will skip 10 items.
+* Fixed issues with the editor window getting focused simply by moving the mouse over it. The main window can steal focus from the tool window, but not from other applications.
+* In Waypoints and Cell Triggers editing mode, the PageUp, PageDown, Home and End keys will now let you go through the dropdown items list. PageUp and PageDown will act as normal arrow keys.
 * In Waypoints editing mode, pressing [Shift] and a key will select special waypoints: [F]lare, [H]ome, [R]einforce, [S]pecial.
 * The shortcut keys to select the different editing modes (normally Q, W, E, R, T, Y, A, S, D, F, G) now work on keyboard position, meaning they will also work in the logical way on AZERTY keyboards.
 * Fixed bug where the checked states of the Houses in the Map Settings would reset when changing the "Single-Player" checkbox.
@@ -356,26 +356,27 @@ These options are all enabled by default, but can be disabled if you wish. Use t
 * Added support for the C&C95 v1.06 briefing line split format.
 * Added Tiberian Dawn Megamap support. (Sole Survivor map type)
 * Made the editor store its dll mess in a subfolder, like the retail version does.
-* Sole Survivor is now supported as separate game type in the editor. It does not support placing buildings or crates, and its waypoints include four special crate spawning hotspots.
-* Changed waypoints to actual map objects, indicated using the green beacon graphic that was already used as icon forthe Waypoints editing mode. They can be disabled in the View menu.
+* Sole Survivor is now supported as separate game type in the editor. Its waypoints include four special crate spawning hotspots. These maps don't support owned objects (infantry, units, structures) by default, though this can be re-enabled using the "NoOwnedObjectsInSole" setting in "CnCTDRAMapEditor.exe.config". Crates are always disabled, however, and cannot be enabled.
+* Changed waypoints to actual map objects, indicated using the green beacon graphic that was already used as icon for the Waypoints editing mode. They can be disabled in the View menu.
 * Waypoint labels are now drawn at the bottom of the cell, in the same style as the building rebuild priority labels. They can be disabled in the View menu, but like the building labels, they will not be drawn if Waypoints are not enabled.
-* Multiplayer starting points are now shown as colored flags. For TD, the 7th point will use Nod's metallic blue, and for both TD and SS, the 8th has its value hardcoded as the purple from RA.
+* Multiplayer starting points are now shown as colored flags. For TD, Nod's metallic blue will be used for the 7th flag (P6). For SS, which has classic colour order configured, metallic gray is the 4th flag (TM3), and the new bright blue is the 7th (TM6). For both TD and SS, the 8th flag has its value hardcoded as the purple from RA.
 * Waypoints now show a preview in placement mode.
-* On Sole Survivor maps, there is a special "Football goal areas" indicator that shows how much area around the flag needs to be left open to be paved with concrete in Football mode.
+* On Sole Survivor maps, there is a special "Football goal areas" indicator that shows how much area around the flag needs to be left open to be paved with concrete in Football mode. These can be disabled under "View" -> "Indicators".
 * The game name of the opened map type is now shown in the title bar.
 * Changed the editor name in the title to "Mobius Map Editor".
 * Red Alert maps are now specifically detected on the presence of the "[MapPack]" section. If this is not present, and there is no .bin file, it loads as TD map without map templates.
-* Sole Survivor maps now don't support owned objects (infantry, units, structures) by default, though this can be re-enabled using the "NoOwnedObjectsInSole" setting in "CnCTDRAMapEditor.exe.config".
 * Restricted Red Alert trigger and teamtype names to the same lengths as Tiberian Dawn; 4 for triggers, 8 for Teamtypes.
 * Pressing [Enter] in Waypoints mode will now jump to the selected waypoint.
 * Fixed a bug in the overlap detection system that made it always give "<unknown>" for the overlapped cell on Terrain objects.
 * Split mods up into ModsToLoadTD, ModsToLoadRA and ModsToLoadSS.
 * The Civilian buildings V12 and V13 (haystacks) are now also available in TD Winter theater.
 * The trigger "Any: Cap=Win,Des=Lose" is now also seen as flag to autodetect classic single play scenarios.
-* Like the game, the editor will now fall back to Temperate graphics when not finding the Winter graphics for the Haystack buildings/overlays.
-* Fixed triggers being selectable on unbuilt buildings.
+* On Tiberian Dawn maps, the editor will now fall back to Temperate graphics when not finding the Winter graphics for the Haystack buildings/overlays. This happens the same way in the game, since the original igloos that were supposed to be there were sadly not remastered.
+* Fixed a situation where triggers were selectable on unbuilt buildings.
 * Improved the look of the trigger info icon on Terrain object properties and in the Celltriggers window. This was already done on other objects.
 * Added a dialog for the image export.
+* Middle mouse and space no longer make the cursor change on the map tile preview panel.
+* Added multithreading to all heavy processing functions. This means the window will no longer freeze up while loading or saving maps, but will instead have all functions disabled, while showing a little box that shows what it is doing.
 
 ### Possible future features
 
