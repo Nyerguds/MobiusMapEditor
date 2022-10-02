@@ -72,7 +72,7 @@ namespace MobiusEditor.Tools
             this.statusLbl = statusLbl;
             map = plugin.Map;
             map.BasicSection.PropertyChanged += BasicSection_PropertyChanged;
-            navigationWidget = new NavigationWidget(mapPanel, map.Metrics, Globals.MapTileSize);
+            navigationWidget = new NavigationWidget(mapPanel, map.Metrics, Globals.MapTileSize, true);
         }
 
         protected void Invalidate(bool refreshIndicatorsOnly)

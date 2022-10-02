@@ -109,6 +109,11 @@ namespace MobiusEditor.TiberianDawn
         public Image MapImage { get; protected set; }
 
         protected IFeedBackHandler feedBackHandler;
+        public IFeedBackHandler FeedBackHandler
+        {
+            get { return feedBackHandler; }
+            set { feedBackHandler = value; }
+        }
 
         bool isDirty;
         public bool Dirty
@@ -164,9 +169,9 @@ namespace MobiusEditor.TiberianDawn
             }
         }
 
-        public static bool CheckForMegamap(String path, FileType fileType)
+        public static bool CheckForMegamap(INI iniContents)
         {
-            return GeneralUtils.CheckForIniInfo(path, fileType, "Map", "Version", "1");
+            return GeneralUtils.CheckForIniInfo(iniContents, "Map", "Version", "1");
         }
 
         static GamePlugin()
@@ -174,12 +179,7 @@ namespace MobiusEditor.TiberianDawn
             fullTechnoTypes = InfantryTypes.GetTypes().Cast<ITechnoType>().Concat(UnitTypes.GetTypes(false).Cast<ITechnoType>());
         }
 
-        public GamePlugin(bool megaMap, IFeedBackHandler feedBackHandler)
-            : this(true, megaMap, feedBackHandler)
-        {
-        }
-
-        public GamePlugin()
+        protected GamePlugin()
         {
             // Readonly, so I'm splitting this off
             var movies = new List<string>();
@@ -201,11 +201,15 @@ namespace MobiusEditor.TiberianDawn
             movieTypes = movies.ToArray();
         }
 
-        public GamePlugin(bool mapImage, bool megaMap, IFeedBackHandler feedBackHandler)
+        public GamePlugin(bool megaMap)
+            : this(true, megaMap)
+        {
+        }
+
+        public GamePlugin(bool mapImage, bool megaMap)
             :this()
         {
             this.isMegaMap = megaMap;
-            this.feedBackHandler = feedBackHandler;
             var playerWaypoints = Enumerable.Range(0, multiStartPoints).Select(i => new Waypoint(string.Format("P{0}", i), Waypoint.GetFlagForMpId(i)));
             var generalWaypoints = Enumerable.Range(multiStartPoints, 25 - multiStartPoints).Select(i => new Waypoint(i.ToString()));
             var specialWaypoints = new Waypoint[] { new Waypoint("Flare", WaypointFlag.Flare), new Waypoint("Home", WaypointFlag.Home), new Waypoint("Reinf.", WaypointFlag.Reinforce) };
@@ -283,16 +287,16 @@ namespace MobiusEditor.TiberianDawn
             UpdateBasePlayerHouse();
         }
 
-        public virtual IEnumerable<string> Load(string path, FileType fileType, out bool modified)
+        public virtual IEnumerable<string> Load(string path, FileType fileType)
         {
-            return Load(path, fileType, false, out modified);
+            return Load(path, fileType, false);
         }
 
-        protected List<string> Load(string path, FileType fileType, bool forSole, out bool modified)
+        protected List<string> Load(string path, FileType fileType, bool forSole)
         {
             var ini = new INI();
             var errors = new List<string>();
-            modified = false;
+            bool modified = false;
             bool forceSingle = false;
             switch (fileType)
             {
@@ -376,6 +380,10 @@ namespace MobiusEditor.TiberianDawn
                     break;
                 default:
                     throw new NotSupportedException("Unsupported filetype.");
+            }
+            if (modified)
+            {
+                this.Dirty = true;
             }
             return errors;
         }
@@ -778,7 +786,6 @@ namespace MobiusEditor.TiberianDawn
                                 }
                                 else if (techno is Terrain terrain)
                                 {
-                                    MessageBox.Show("overlap");
                                     errors.Add(string.Format("Terrain '{0}' on cell {1} overlaps terrain '{2}' in cell {3}; skipping.", terrainType.Name, cell, terrain.Type.Name, reportCell));
                                     modified = true;
                                 }
@@ -831,6 +838,13 @@ namespace MobiusEditor.TiberianDawn
                         errors.Add(string.Format("Cell for overlay cannot be parsed. Key: '{0}', value: '{1}'; skipping.", Key, Value));
                         modified = true;
                         continue;
+                    }
+                    if (!Map.Metrics.Contains(cell))
+                    {
+                        errors.Add(string.Format("Cell for overlay is not inside the map bounds. Key: '{0}', value: '{1}'; skipping.", Key, Value));
+                        modified = true;
+                        continue;
+
                     }
                     var overlayType = Map.OverlayTypes.Where(t => t.Equals(Value)).FirstOrDefault();
                     if (overlayType != null)

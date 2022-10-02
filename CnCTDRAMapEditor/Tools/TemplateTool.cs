@@ -884,7 +884,7 @@ namespace MobiusEditor.Tools
                 }
                 templateTypeMapPanel.MapImage = selected.Thumbnail;
                 var templateTypeMetrics = new CellMetrics(selected.ThumbnailWidth, selected.ThumbnailHeight);
-                templateTypeNavigationWidget = new NavigationWidget(templateTypeMapPanel, templateTypeMetrics, Globals.OriginalTileSize);
+                templateTypeNavigationWidget = new NavigationWidget(templateTypeMapPanel, templateTypeMetrics, Globals.OriginalTileSize, false);
                 templateTypeNavigationWidget.MouseoverSize = Size.Empty;
                 templateTypeNavigationWidget.Activate();
             }
@@ -1153,37 +1153,37 @@ namespace MobiusEditor.Tools
                 var tooltipSize = new Size(textSize.Width + 6, textSize.Height + 6);
                 Point mouseCell = navigationWidget.MouseCell;
                 Point tooltipPosition = Control.MousePosition;
-                PointF zoomedCell = navigationWidget.ZoomedCellSize;
+                SizeF zoomedCell = navigationWidget.ZoomedCellSize;
                 // Corrects to nearest border; should match NavigationWidget.ClosestMouseCellBorder
                 if (showEdge != FacingType.None)
                 {
                     if (navigationWidget.ClosestMouseCellBorder.Y > mouseCell.Y)
                     {
-                        tooltipPosition.Y += (int)((Globals.PixelWidth - navigationWidget.MouseSubPixel.Y) * zoomedCell.Y / Globals.PixelWidth);
+                        tooltipPosition.Y += (int)((Globals.PixelWidth - navigationWidget.MouseSubPixel.Y) * zoomedCell.Height / Globals.PixelWidth);
                     }
                     else
                     {
-                        tooltipPosition.Y -= (int)(navigationWidget.MouseSubPixel.Y * zoomedCell.Y / Globals.PixelWidth);
+                        tooltipPosition.Y -= (int)(navigationWidget.MouseSubPixel.Y * zoomedCell.Height / Globals.PixelWidth);
                     }
                     if (navigationWidget.ClosestMouseCellBorder.X > mouseCell.X)
                     {
-                        tooltipPosition.X += (int)((Globals.PixelWidth - navigationWidget.MouseSubPixel.X) * zoomedCell.X / Globals.PixelWidth);
+                        tooltipPosition.X += (int)((Globals.PixelWidth - navigationWidget.MouseSubPixel.X) * zoomedCell.Width / Globals.PixelWidth);
                     }
                     else
                     {
-                        tooltipPosition.X -= (int)(navigationWidget.MouseSubPixel.X * zoomedCell.X / Globals.PixelWidth);
+                        tooltipPosition.X -= (int)(navigationWidget.MouseSubPixel.X * zoomedCell.Width / Globals.PixelWidth);
                     }
                     switch (showEdge)
                     {
                         case FacingType.North:
                         case FacingType.NorthEast:
                         case FacingType.NorthWest:
-                            tooltipPosition.Y += (int)zoomedCell.Y;
+                            tooltipPosition.Y += (int)zoomedCell.Height;
                             break;
                         case FacingType.South:
                         case FacingType.SouthEast:
                         case FacingType.SouthWest:
-                            tooltipPosition.Y -= (int)zoomedCell.Y;
+                            tooltipPosition.Y -= (int)zoomedCell.Height;
                             break;
                     }
                     switch (showEdge)
@@ -1191,12 +1191,12 @@ namespace MobiusEditor.Tools
                         case FacingType.SouthWest:
                         case FacingType.West:
                         case FacingType.NorthWest:
-                            tooltipPosition.X += (int)zoomedCell.X;
+                            tooltipPosition.X += (int)zoomedCell.Width;
                             break;
                         case FacingType.SouthEast:
                         case FacingType.East:
                         case FacingType.NorthEast:
-                            tooltipPosition.X -= (int)zoomedCell.X;
+                            tooltipPosition.X -= (int)zoomedCell.Width;
                             break;
                     }
                     switch (showEdge)
@@ -1213,13 +1213,13 @@ namespace MobiusEditor.Tools
                     // Always towards the center, one cell away from the mouse.
                     Point center = dragBounds.CenterPoint();
                     if (mouseCell.X < center.X)
-                        tooltipPosition.X += (int)zoomedCell.X;
+                        tooltipPosition.X += (int)zoomedCell.Width;
                     else
-                        tooltipPosition.X -= (int)zoomedCell.X + tooltipSize.Width;
+                        tooltipPosition.X -= (int)zoomedCell.Width + tooltipSize.Width;
                     if (mouseCell.Y < center.Y)
-                        tooltipPosition.Y += (int)zoomedCell.Y;
+                        tooltipPosition.Y += (int)zoomedCell.Height;
                     else
-                        tooltipPosition.Y -= (int)zoomedCell.Y + tooltipSize.Height;
+                        tooltipPosition.Y -= (int)zoomedCell.Height + tooltipSize.Height;
                 }
                 switch (showEdge)
                 {

@@ -261,7 +261,12 @@ namespace MobiusEditor.RedAlert
 
         public Image MapImage { get; private set; }
 
-        IFeedBackHandler feedBackHandler;
+        private IFeedBackHandler feedBackHandler;
+        public IFeedBackHandler FeedBackHandler
+        {
+            get { return feedBackHandler; }
+            set { feedBackHandler = value; }
+        }
 
         bool isDirty;
         public bool Dirty
@@ -331,9 +336,9 @@ namespace MobiusEditor.RedAlert
                 UpdateBuildingRules(ini, this.Map);
             }
         }
-        public static bool CheckForRAMap(String path, FileType fileType)
+        public static bool CheckForRAMap(INI contents)
         {
-            return GeneralUtils.CheckForIniInfo(path, fileType, "MapPack", null, null);
+            return GeneralUtils.CheckForIniInfo(contents, "MapPack", null, null);
         }
 
         static GamePlugin()
@@ -341,14 +346,13 @@ namespace MobiusEditor.RedAlert
             fullTechnoTypes = InfantryTypes.GetTypes().Cast<ITechnoType>().Concat(UnitTypes.GetTypes(false).Cast<ITechnoType>());
         }
 
-        public GamePlugin(IFeedBackHandler feedBackHandler)
-            : this(true, feedBackHandler)
+        public GamePlugin()
+            : this(true)
         {
         }
 
-        public GamePlugin(bool mapImage, IFeedBackHandler feedBackHandler)
+        public GamePlugin(bool mapImage)
         {
-            this.feedBackHandler = feedBackHandler;
             var playerWaypoints = Enumerable.Range(0, multiStartPoints).Select(i => new Waypoint(string.Format("P{0}", i), Waypoint.GetFlagForMpId(i)));
             var generalWaypoints = Enumerable.Range(multiStartPoints, 98 - multiStartPoints).Select(i => new Waypoint(i.ToString()));
             var specialWaypoints = new Waypoint[] { new Waypoint("Home", WaypointFlag.Home), new Waypoint("Reinf.", WaypointFlag.Reinforce), new Waypoint("Special", WaypointFlag.Special) };
@@ -441,13 +445,14 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        public IEnumerable<string> Load(string path, FileType fileType, out bool modified)
+        public IEnumerable<string> Load(string path, FileType fileType)
         {
+            bool modified = false;
             try
             {
                 isLoading = true;
                 var errors = new List<string>();
-                modified = false;
+                
                 bool forceSingle = false;
                 switch (fileType)
                 {
@@ -484,6 +489,10 @@ namespace MobiusEditor.RedAlert
                         break;
                     default:
                         throw new NotSupportedException("Unsupported filetype.");
+                }
+                if (modified)
+                {
+                    this.Dirty = true;
                 }
                 return errors;
             }

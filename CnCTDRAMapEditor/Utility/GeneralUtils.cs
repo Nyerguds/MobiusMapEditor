@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace MobiusEditor.Utility
 {
@@ -34,7 +35,7 @@ namespace MobiusEditor.Utility
     public static class GeneralUtils
     {
 
-        public static bool CheckForIniInfo(String path, FileType fileType, string section, string key, string value)
+        public static INI GetIniContents(String path, FileType fileType)
         {
             try
             {
@@ -52,7 +53,8 @@ namespace MobiusEditor.Utility
                     case FileType.PGM:
                         using (var megafile = new Megafile(path))
                         {
-                            var testIniFile = megafile.Where(p => Path.GetExtension(p).ToLower() == ".ini").FirstOrDefault();
+                            Regex ext = new Regex("^\\.((ini)|(mpr))$");
+                            var testIniFile = megafile.Where(p => ext.IsMatch(Path.GetExtension(p).ToLower())).FirstOrDefault();
                             if (testIniFile != null)
                             {
                                 using (var iniReader = new StreamReader(megafile.Open(testIniFile), enc))
@@ -65,21 +67,27 @@ namespace MobiusEditor.Utility
                 }
                 if (iniContents == null)
                 {
-                    return false;
+                    return null;
                 }
                 INI checkIni = new INI();
                 checkIni.Parse(iniContents);
-                INISection iniSection = checkIni.Sections.Extract(section);
-                if (key == null || value == null)
-                {
-                    return iniSection != null;
-                }
-                return iniSection != null && iniSection.Keys.Contains(key) && iniSection[key].Trim() == value;
+                return checkIni;
             }
             catch
             {
-                return false;
+                return null;
             }
+        }
+
+        public static bool CheckForIniInfo(INI iniContents, string section, string key, string value)
+        {
+
+            INISection iniSection = iniContents.Sections.Extract(section);
+            if (key == null || value == null)
+            {
+                return iniSection != null;
+            }
+            return iniSection != null && iniSection.Keys.Contains(key) && iniSection[key].Trim() == value;
         }
 
         public static String MakeNew4CharName(IEnumerable<string> currentList, string fallback, params string[] reservedNames)

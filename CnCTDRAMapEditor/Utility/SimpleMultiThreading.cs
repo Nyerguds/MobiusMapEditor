@@ -23,20 +23,35 @@ namespace MobiusEditor.Utility
     /// <summary>
     /// Simple multithreading for heavy operations to not freeze the UI. This just needs a form with a public
     /// property to get and set a "busy" state label, and the type that is produced by the heavy operation.
+    /// The order of operations is: controls are disabled and busy label is set, heavy operation is executed,
+    /// controls are enabled and busy label is removed, an optional extra function runs to process the returned result.
+    /// In case an error occurred, the UI is re-enabled as usual, a message box is shown with the stack trace, and the
+    /// result processing function is not called.
     /// </summary>
     /// <typeparam name="T">Form to attach the label to.</typeparam>
-    /// <typeparam name="U">The type produced by the heavy operation. If the operation returns the type default, then it is treated as failed, and a message box is shown.</typeparam>
     public class SimpleMultiThreading<T> where T: Form, IHasStatusLabel
     {
+        public String DefaultProcessingLabel { get; set; } = "Processing";
+        public BorderStyle ProcessingLabelBorder { get; set; } = BorderStyle.FixedSingle;
+
         public delegate void InvokeDelegateEnableControls(Boolean enabled, String processingLabel);
         public delegate DialogResult InvokeDelegateMessageBox(String message, MessageBoxButtons buttons, MessageBoxIcon icon);
         public delegate void InvokeDelegateResult<U>(U resultObject);
-        private Thread m_ProcessingThread;
+        private Thread processingThread;
         private T attachForm;
 
         public SimpleMultiThreading(T attachForm)
         {
             this.attachForm = attachForm;
+        }
+
+        public void AbortThreadedOperation(int timeout)
+        {
+            if (this.processingThread != null && this.processingThread.IsAlive)
+            {
+                this.processingThread.Abort();
+                this.processingThread.Join(timeout);
+            }
         }
 
         /// <summary>
@@ -47,30 +62,33 @@ namespace MobiusEditor.Utility
         /// <paramref name="resultFuncIsInvoked"/>true if the result function is Invoked on the main form.</param>
         /// <param name="enableFunction">Function to enable/disable UI controls. This should also include a call to <see cref="CreateBusyLabel"/> to create the busy status label. This function is Invoked on the main form.</param>
         /// <param name="operationType">Label to show while the operation is busy. This will be passed on as arg to <paramref name="enableFunction"/>.</param>
+        /// <typeparam name="U">Type returned by <paramref name="function"/>, and passed on to <paramref name="resultFunction"/>.</typeparam>
         public void ExecuteThreaded<U>(Func<U> function, Action<U> resultFunction, bool resultFuncIsInvoked, Action<bool, string> enableFunction, String operationType)
         {
-            if (this.m_ProcessingThread != null && this.m_ProcessingThread.IsAlive)
+            if (this.processingThread != null && this.processingThread.IsAlive)
                 return;
             //Arguments: func returning SupportedFileType, reset palettes, reset index, reset auto-zoom, process type indication string.
             Object[] arrParams = { function, resultFunction, resultFuncIsInvoked, enableFunction, operationType };
-            this.m_ProcessingThread = new Thread(this.ExecuteThreadedActual<U>);
-            this.m_ProcessingThread.Start(arrParams);
+            this.processingThread = new Thread(this.ExecuteThreadedActual<U>);
+            this.processingThread.Start(arrParams);
         }
 
         /// <summary>
-        /// Executes a threaded operation while locking the UI.
-        /// "parameters" must be an array of Object containing 4 items:
+        /// Executes a threaded operation while locking the UI. "parameters" must be an array of Object containing 5 items:
         /// a <see cref="Func{TResult}"/> to execute, returning <see cref="U"/>,
         /// an <see cref="Action"/> taking a parameter of type <see cref="U"/> to execute after successful processing (optional, can be null),
+        /// a <see cref="bool"/> indicating whether the result function is Invoked on the main form.
         /// an <see cref="Action"/> to enable form controls, taking a parameter of type <see cref="bool"/> (whether to enable or disable controls) and <see cref="string"/> (message to show on disabled UI),
         /// a <see cref="string"/> to indicate the process type being executed (eg. "Saving").
         /// </summary>
         /// <param name="parameters">
-        ///     Array of Object, containing 4 items: a <see cref="Func{TResult}"/> to execute, returning <see cref="U"/>,
-        ///     an <see cref="Action"/> taking a parameter of type <see cref="U"/> to execute after successful processing (optional, can be null),
+        ///     Array of Object, containing 4 items: a <see cref="Func{TResult}"/> to execute, returning an object of type U,
+        ///     an <see cref="Action"/> taking a parameter of type U to execute after successful processing (optional, can be null),
+        ///     a <see cref="bool"/> indicating whether the result function is Invoked on the main form.
         ///     an <see cref="Action"/> to enable form controls, taking a parameter of type <see cref="bool"/> (whether to enable or disable controls) and <see cref="string"/> (message to show on disabled UI),
         ///     and a <see cref="string"/> to indicate the process type being executed (eg. "Saving").
         /// </param>
+        /// <typeparam name="U">Type returned by the processing function, and to be pased on to the result handling function.</typeparam>
         private void ExecuteThreadedActual<U>(Object parameters)
         {
             Object[] arrParams = parameters as Object[];
@@ -86,9 +104,8 @@ namespace MobiusEditor.Utility
                 return;
             }
             bool resActIsInvoked = (bool)arrParams[2];
-            String operationType = arrParams[4] as String;
+            String operationType = (arrParams[4] as String ?? String.Empty).Trim();
             this.attachForm.Invoke(new InvokeDelegateEnableControls(enableControls), false, operationType);
-            operationType = String.IsNullOrEmpty(operationType) ? "Operation" : operationType.Trim();
             U result = default(U);
             try
             {
@@ -103,12 +120,18 @@ namespace MobiusEditor.Utility
             {
                 String message = operationType + " failed:\n" + ex.Message + "\n" + ex.StackTrace;
                 this.attachForm.Invoke(new InvokeDelegateMessageBox(this.ShowMessageBox), message, MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                this.attachForm.Invoke(new InvokeDelegateEnableControls(enableControls), true, null);
+                try
+                {
+                    this.attachForm.Invoke(new InvokeDelegateEnableControls(enableControls), true, null);
+                }
+                catch (InvalidOperationException) { /* ignore */ }
+                return;
             }
+            //this.attachForm.Invoke(new InvokeDelegateMessageBox(this.ShowMessageBox), "load done!", MessageBoxButtons.OK, MessageBoxIcon.Information);
             try
             {
                 this.attachForm.Invoke(new InvokeDelegateEnableControls(enableControls), true, null);
-                if (resAct != null && !EqualityComparer<U>.Default.Equals(result, default(U)))
+                if (resAct != null)
                 {
                     if (resActIsInvoked)
                     {
@@ -149,13 +172,13 @@ namespace MobiusEditor.Utility
             }
             // Create busy status label.
             Label busyStatusLabel = new Label();
-            busyStatusLabel.Text = (String.IsNullOrEmpty(processingLabel) ? "Processing" : processingLabel) + "...";
+            busyStatusLabel.Text = (String.IsNullOrEmpty(processingLabel) ? (DefaultProcessingLabel ?? String.Empty) : processingLabel) + "...";
             busyStatusLabel.TextAlign = ContentAlignment.MiddleCenter;
             busyStatusLabel.Font = new Font(busyStatusLabel.Font.FontFamily, 15F, FontStyle.Regular, GraphicsUnit.Pixel, 0);
             busyStatusLabel.AutoSize = false;
             busyStatusLabel.Size = new Size(300, 100);
             busyStatusLabel.Anchor = AnchorStyles.None; // Always floating in the middle, even on resize.
-            busyStatusLabel.BorderStyle = BorderStyle.FixedSingle;
+            busyStatusLabel.BorderStyle = ProcessingLabelBorder;
             Int32 x = (attachForm.ClientRectangle.Width - 300) / 2;
             Int32 y = (attachForm.ClientRectangle.Height - 100) / 2;
             busyStatusLabel.Location = new Point(x, y);

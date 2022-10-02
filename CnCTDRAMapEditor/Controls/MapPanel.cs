@@ -108,17 +108,33 @@ namespace MobiusEditor.Controls
             get => zoom;
             set
             {
-                var newZoom = Math.Max(MinZoom, Math.Min(MaxZoom, value));
-                if (zoom != newZoom)
-                {
-                    zoom = newZoom;
-
-                    var clientPosition = PointToClient(MousePosition);
-                    referencePositions = (ClientToMap(clientPosition), new SizeF(clientPosition.X / (float)ClientSize.Width, clientPosition.Y / (float)ClientSize.Height));
-
-                    UpdateCamera();
-                }
+                AdjustZoom(value, true);
             }
+        }
+
+        private void AdjustZoom(double value, bool fromMousePos)
+        {
+
+            var newZoom = Math.Max(MinZoom, Math.Min(MaxZoom, value));
+            if (zoom != newZoom)
+            {
+                zoom = newZoom;
+
+                var clientPosition = fromMousePos ? PointToClient(MousePosition) : new Point(ClientRectangle.Width / 2, ClientRectangle.Height / 2);
+                referencePositions = (ClientToMap(clientPosition), new SizeF(clientPosition.X / (float)ClientSize.Width, clientPosition.Y / (float)ClientSize.Height));
+
+                UpdateCamera();
+            }
+        }
+
+        public void IncreaseZoomStep()
+        {
+            AdjustZoom(zoom + (zoom * zoomStep), false);
+        }
+
+        public void DecreaseZoomStep()
+        {
+            AdjustZoom(zoom - (zoom * zoomStep), false);
         }
 
         private bool smoothScale = Globals.MapSmoothScale;
@@ -351,7 +367,7 @@ namespace MobiusEditor.Controls
                 var invalidPen = new Pen(Color.DarkRed);
                 foreach (var cell in invalidateCells)
                 {
-                    pe.Graphics.DrawRectangle(invalidPen, new Rectangle(cell.X * Globals.TileWidth, cell.Y * Globals.TileHeight, Globals.TileWidth, Globals.TileHeight));
+                    pe.Graphics.DrawRectangle(invalidPen, new Rectangle(cell.X * Globals.MapTileWidth, cell.Y * Globals.MapTileHeight, Globals.MapTileWidth, Globals.MapTileHeight));
                 }
             }
 #endif

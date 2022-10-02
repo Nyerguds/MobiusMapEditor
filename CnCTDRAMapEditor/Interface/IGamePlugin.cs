@@ -48,13 +48,15 @@ namespace MobiusEditor.Interface
 
         Image MapImage { get; }
 
+        IFeedBackHandler FeedBackHandler { get; set; }
+
         bool Dirty { get; set; }
 
         string ExtraIniText { get; set; }
 
         void New(string theater);
 
-        IEnumerable<string> Load(string path, FileType fileType, out bool modified);
+        IEnumerable<string> Load(string path, FileType fileType);
 
         bool Save(string path, FileType fileType);
 

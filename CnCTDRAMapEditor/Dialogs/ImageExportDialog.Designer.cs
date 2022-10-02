@@ -38,10 +38,10 @@
             this.txtPath = new System.Windows.Forms.TextBox();
             this.btnPickFile = new System.Windows.Forms.Button();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            this.btnExport = new System.Windows.Forms.Button();
-            this.btnCancel = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
+            this.btnExport = new System.Windows.Forms.Button();
+            this.btnCancel = new System.Windows.Forms.Button();
             this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -70,7 +70,7 @@
             this.txtScale.Location = new System.Drawing.Point(67, 9);
             this.txtScale.Name = "txtScale";
             this.txtScale.Size = new System.Drawing.Size(100, 20);
-            this.txtScale.TabIndex = 1;
+            this.txtScale.TabIndex = 2;
             this.txtScale.Text = "0.5";
             this.txtScale.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.txtScale.TextChanged += new System.EventHandler(this.txtScale_TextChanged);
@@ -101,7 +101,7 @@
             this.chkSmooth.Location = new System.Drawing.Point(67, 35);
             this.chkSmooth.Name = "chkSmooth";
             this.chkSmooth.Size = new System.Drawing.Size(98, 17);
-            this.chkSmooth.TabIndex = 4;
+            this.chkSmooth.TabIndex = 2;
             this.chkSmooth.Text = "Smooth scaling";
             this.chkSmooth.UseVisualStyleBackColor = true;
             // 
@@ -123,7 +123,7 @@
             this.txtPath.Name = "txtPath";
             this.txtPath.ReadOnly = true;
             this.txtPath.Size = new System.Drawing.Size(304, 20);
-            this.txtPath.TabIndex = 3;
+            this.txtPath.TabIndex = 4;
             // 
             // btnPickFile
             // 
@@ -155,28 +155,7 @@
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.Size = new System.Drawing.Size(346, 190);
-            this.tableLayoutPanel1.TabIndex = 6;
-            // 
-            // btnExport
-            // 
-            this.btnExport.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnExport.Location = new System.Drawing.Point(184, 301);
-            this.btnExport.Name = "btnExport";
-            this.btnExport.Size = new System.Drawing.Size(84, 23);
-            this.btnExport.TabIndex = 5;
-            this.btnExport.Text = "Export";
-            this.btnExport.UseVisualStyleBackColor = true;
-            this.btnExport.Click += new System.EventHandler(this.btnExport_Click);
-            // 
-            // btnCancel
-            // 
-            this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnCancel.Location = new System.Drawing.Point(274, 301);
-            this.btnCancel.Name = "btnCancel";
-            this.btnCancel.Size = new System.Drawing.Size(84, 23);
-            this.btnCancel.TabIndex = 5;
-            this.btnCancel.Text = "Cancel";
-            this.btnCancel.UseVisualStyleBackColor = true;
+            this.tableLayoutPanel1.TabIndex = 3;
             // 
             // label2
             // 
@@ -199,6 +178,28 @@
             this.label3.TabIndex = 2;
             this.label3.Text = "Indicators:";
             this.label3.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // btnExport
+            // 
+            this.btnExport.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnExport.Location = new System.Drawing.Point(184, 301);
+            this.btnExport.Name = "btnExport";
+            this.btnExport.Size = new System.Drawing.Size(84, 23);
+            this.btnExport.TabIndex = 0;
+            this.btnExport.Text = "Export";
+            this.btnExport.UseVisualStyleBackColor = true;
+            this.btnExport.Click += new System.EventHandler(this.btnExport_Click);
+            // 
+            // btnCancel
+            // 
+            this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this.btnCancel.Location = new System.Drawing.Point(274, 301);
+            this.btnCancel.Name = "btnCancel";
+            this.btnCancel.Size = new System.Drawing.Size(84, 23);
+            this.btnCancel.TabIndex = 1;
+            this.btnCancel.Text = "Cancel";
+            this.btnCancel.UseVisualStyleBackColor = true;
             // 
             // ImageExportDialog
             // 

@@ -226,6 +226,8 @@ namespace MobiusEditor.Tools
             }
             else
             {
+                const int pageJump = 1;
+                const int arrJump = 0;
                 switch (e.KeyCode)
                 {
                     case Keys.Home:
@@ -235,16 +237,16 @@ namespace MobiusEditor.Tools
                         newVal = maxVal;
                         break;
                     case Keys.PageDown:
-                        newVal = Math.Min(curVal + 10, maxVal);
+                        newVal = Math.Min(curVal + pageJump, maxVal);
                         break;
                     case Keys.PageUp:
-                        newVal = Math.Max(curVal - 10, 0);
+                        newVal = Math.Max(curVal - pageJump, 0);
                         break;
                     case Keys.Down:
-                        newVal = Math.Min(curVal + 1, maxVal);
+                        newVal = Math.Min(curVal + arrJump, maxVal);
                         break;
                     case Keys.Up:
-                        newVal = Math.Max(curVal - 1, 0);
+                        newVal = Math.Max(curVal - arrJump, 0);
                         break;
                     case Keys.Enter:
                         JumpToWaypoint();

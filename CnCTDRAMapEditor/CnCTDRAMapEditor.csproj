@@ -229,12 +229,6 @@
     <Compile Include="Controls\PlayerSettings.Designer.cs">
       <DependentUpon>PlayerSettings.cs</DependentUpon>
     </Compile>
-    <Compile Include="Controls\TypeComboBox.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Controls\TypeComboBox.Designer.cs">
-      <DependentUpon>TypeComboBox.cs</DependentUpon>
-    </Compile>
     <Compile Include="Controls\TypeListBox.cs">
       <SubType>Component</SubType>
     </Compile>

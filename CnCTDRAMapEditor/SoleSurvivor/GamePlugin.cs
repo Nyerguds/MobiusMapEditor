@@ -21,24 +21,23 @@ namespace MobiusEditor.SoleSurvivor
         public override GameType GameType => GameType.SoleSurvivor;
         public override bool IsMegaMap => true;
 
-        public GamePlugin(IFeedBackHandler feedBackHandler)
-            : this(true, feedBackHandler)
+        public static bool CheckForSSmap(INI iniContents)
         {
-        }
-
-        public static bool CheckForSSmap(string path, FileType fileType)
-        {
-            return GeneralUtils.CheckForIniInfo(path, fileType, "Crates", null, null);
+            return GeneralUtils.CheckForIniInfo(iniContents, "Crates", null, null);
         }
 
         protected CratesSection cratesSection;
         public CratesSection CratesSection => cratesSection;
 
-        public GamePlugin(bool mapImage, IFeedBackHandler feedBackHandler)
+        public GamePlugin()
+            : this(true)
+        {
+        }
+
+        public GamePlugin(bool mapImage)
             : base()
         {
             this.isMegaMap = true;
-            this.feedBackHandler = feedBackHandler;
             var crateWaypoints = Enumerable.Range(0, cratePoints).Select(i => new Waypoint(string.Format("CR{0}", i), WaypointFlag.CrateSpawn));
             var teamWaypoints = Enumerable.Range(cratePoints, teamStartPoints).Select(i => new Waypoint(string.Format("TM{0}", i - cratePoints), Waypoint.GetFlagForMpId(i - cratePoints)));
             var generalWaypoints = Enumerable.Range(cratePoints + teamStartPoints, 25 - cratePoints - teamStartPoints).Select(i => new Waypoint(i.ToString()));
@@ -126,9 +125,9 @@ namespace MobiusEditor.SoleSurvivor
             }
         }
 
-        public override IEnumerable<string> Load(string path, FileType fileType, out bool modified)
+        public override IEnumerable<string> Load(string path, FileType fileType)
         {
-            return Load(path, fileType, true, out modified);
+            return Load(path, fileType, true);
         }
 
         protected override List<string> LoadINI(INI ini, bool forceSoloMission, ref bool modified)

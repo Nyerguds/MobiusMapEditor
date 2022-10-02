@@ -78,6 +78,7 @@ namespace MobiusEditor.Widgets
         }
 
         private readonly MapPanel mapPanel;
+        private bool includeNavigation;
         public Size CellSize { get; private set; }
 
         private Size? startScrollMouseLocation;
@@ -96,26 +97,27 @@ namespace MobiusEditor.Widgets
             set => mouseoverSize = !value.IsEmpty ? new Size(value.Width | 1, value.Height | 1) : Size.Empty;
         }
 
-        public PointF ZoomedCellSize
+        public SizeF ZoomedCellSize
         {
             get
             {
                 float mapScale = mapPanel.ClientSize.Width > mapPanel.ClientSize.Height
                     ? mapPanel.ClientSize.Width / (float)mapPanel.CameraBounds.Width 
                     : mapPanel.ClientSize.Height / (float)mapPanel.CameraBounds.Height;
-                return new PointF(mapScale * mapPanel.MapImage.Width / Metrics.Width, mapScale * mapPanel.MapImage.Height / Metrics.Height);
+                return new SizeF(mapScale * mapPanel.MapImage.Width / Metrics.Width, mapScale * mapPanel.MapImage.Height / Metrics.Height);
             }
         }
 
         public event EventHandler<MouseCellChangedEventArgs> MouseCellChanged;
         public event EventHandler<MouseCellChangedEventArgs> ClosestMouseCellBorderChanged;
 
-        public NavigationWidget(MapPanel mapPanel, CellMetrics metrics, Size cellSize)
+        public NavigationWidget(MapPanel mapPanel, CellMetrics metrics, Size cellSize, bool includeNavigation)
         {
             this.mapPanel = mapPanel;
             Metrics = metrics;
             this.CellSize = cellSize;
             this.PenColor = Color.Yellow;
+            this.includeNavigation = includeNavigation;
         }
 
         public void Refresh()
@@ -125,7 +127,7 @@ namespace MobiusEditor.Widgets
 
         private bool IsDragging()
         {
-            return (Control.MouseButtons & MouseButtons.Middle) != MouseButtons.None || (GetAsyncKeyState(32) & 0x8000) != 0;
+            return includeNavigation && ((Control.MouseButtons & MouseButtons.Middle) != MouseButtons.None || (GetAsyncKeyState(32) & 0x8000) != 0);
         }
 
         private void DisableDragging()
@@ -166,7 +168,35 @@ namespace MobiusEditor.Widgets
 
         private void MapPanel_KeyDown(Object sender, KeyEventArgs e)
         {
-            CheckIfDragging();
+            System.Media.SystemSounds.Beep.Play();
+            if (CheckIfDragging() || startScrollMouseLocation.HasValue)
+            {
+                return;
+            }
+            Point delta = Point.Empty;
+            switch (e.KeyCode)
+            {
+                case Keys.Up:
+                    delta.Y -= 1;
+                    break;
+                case Keys.Down:
+                    delta.Y += 1;
+                    break;
+                case Keys.Left:
+                    delta.X -= 1;
+                    break;
+                case Keys.Right:
+                    delta.X += 1;
+                    break;
+                default:
+                    return;
+            }
+            if (delta != Point.Empty)
+            {
+                Point curPoint = mapPanel.AutoScrollPosition;
+                SizeF zoomedCell = ZoomedCellSize;
+                mapPanel.AutoScrollPosition = new Point(-curPoint.X + (int)(delta.X * zoomedCell.Width), -curPoint.Y + (int)(delta.Y * zoomedCell.Width));
+            }
         }        
 
         private void MapPanel_KeyUp(Object sender, KeyEventArgs e)
@@ -247,16 +277,22 @@ namespace MobiusEditor.Widgets
         {
             this.mapPanel.MouseDown += MapPanel_MouseDown;
             this.mapPanel.MouseUp += MapPanel_MouseUp;
-            (this.mapPanel as Control).KeyDown += this.MapPanel_KeyDown;
-            (this.mapPanel as Control).KeyUp += this.MapPanel_KeyUp;
+            if (includeNavigation)
+            {
+                (this.mapPanel as Control).KeyDown += this.MapPanel_KeyDown;
+                (this.mapPanel as Control).KeyUp += this.MapPanel_KeyUp;
+            }
             this.mapPanel.MouseMove += MapPanel_MouseMove;
         }
 
         public void Deactivate()
         {
             this.mapPanel.MouseMove -= MapPanel_MouseMove;
-            (this.mapPanel as Control).KeyDown -= this.MapPanel_KeyDown;
-            (this.mapPanel as Control).KeyUp -= this.MapPanel_KeyUp;
+            if (includeNavigation)
+            {
+                (this.mapPanel as Control).KeyDown -= this.MapPanel_KeyDown;
+                (this.mapPanel as Control).KeyUp -= this.MapPanel_KeyUp;
+            }
             this.mapPanel.MouseUp -= MapPanel_MouseUp;
             this.mapPanel.MouseDown -= MapPanel_MouseDown;
             DisableDragging();

@@ -84,7 +84,7 @@ namespace MobiusEditor
         public const int MaxTeamClasses = 5;
         public const int MaxTeamMissions = 20;
 
-        public const long MaxMapSize = 131072;
+        public const long MaxMapSize = 0x20000;
 
         public static MegafileManager TheMegafileManager;
         public static TextureManager TheTextureManager;

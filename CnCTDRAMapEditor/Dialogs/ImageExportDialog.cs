@@ -15,8 +15,6 @@ namespace MobiusEditor.Dialogs
 {
     public partial class ImageExportDialog : Form, IHasStatusLabel
     {
-        public delegate void InvokeDelegateEnableControls(Boolean enabled, String processingLabel);
-        public delegate DialogResult InvokeDelegateMessageBox(String message, MessageBoxButtons buttons, MessageBoxIcon icon);
         private SimpleMultiThreading<ImageExportDialog> multiThreader;
         private Label m_BusyStatusLabel;
 
@@ -84,6 +82,7 @@ namespace MobiusEditor.Dialogs
             // Could make this at the moment of the call, too, but it also has a
             // system to ignore further calls if the running one isn't finished.
             multiThreader = SimpleMultiThreading.Make(this);
+            multiThreader.ProcessingLabelBorder = BorderStyle.Fixed3D;
         }
 
         private void SetSizeLabel()
@@ -192,6 +191,33 @@ namespace MobiusEditor.Dialogs
 
         private void btnPickFile_Click(Object sender, EventArgs e)
         {
+            SelectPath();
+        }
+
+        private void btnExport_Click(Object sender, EventArgs e)
+        {
+            if (String.IsNullOrEmpty(txtPath.Text))
+            {
+                //MessageBox.Show("Please select a filename to export to.", "Error");
+                if (!SelectPath())
+                {
+                    return;
+                }
+            }
+            if (!Double.TryParse(txtScale.Text, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out double scale))
+            {
+                MessageBox.Show("Could not parse scale factor!", "Error");
+                return;
+            }
+            MapLayerFlag layers = GetLayers() | MapLayerFlag.Template;
+            bool smooth = chkSmooth.Checked;
+            string path = txtPath.Text;
+            Func<String> saveOperation = () => SaveImage(gamePlugin, layers, scale, smooth, path);
+            multiThreader.ExecuteThreaded(saveOperation, ShowResult, true, EnableControls, "Exporting image");
+        }
+
+        private bool SelectPath()
+        {
             using (SaveFileDialog sfd = new SaveFileDialog())
             {
                 sfd.AutoUpgradeEnabled = false;
@@ -209,27 +235,10 @@ namespace MobiusEditor.Dialogs
                 if (sfd.ShowDialog(this) == DialogResult.OK)
                 {
                     txtPath.Text = sfd.FileName;
+                    return true;
                 }
+                return false;
             }
-        }
-
-        private void btnExport_Click(Object sender, EventArgs e)
-        {
-            if (String.IsNullOrEmpty(txtPath.Text))
-            {
-                MessageBox.Show("Please select a filename to export to.", "Error");
-                return;
-            }
-            if (!Double.TryParse(txtScale.Text, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out double scale))
-            {
-                MessageBox.Show("Could not parse scale factor!", "Error");
-                return;
-            }
-            MapLayerFlag layers = GetLayers() | MapLayerFlag.Template;
-            bool smooth = chkSmooth.Checked;
-            string path = txtPath.Text;
-            Func<String> saveOperation = () => SaveImage(gamePlugin, layers, scale, smooth, path);
-            multiThreader.ExecuteThreaded(saveOperation, ShowResult, true, EnableControls, "Exporting image");
         }
 
         private static String SaveImage(IGamePlugin gamePlugin, MapLayerFlag layers, double scale, bool smooth, string outputPath)
@@ -250,6 +259,10 @@ namespace MobiusEditor.Dialogs
 
         private void ShowResult(String path)
         {
+            if (path == null)
+            {
+                MessageBox.Show("Image saving failed!", "Image Export", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
             using (ImageExportedDialog imexd = new ImageExportedDialog(path))
             {
                 imexd.ShowDialog(this);
