@@ -322,7 +322,7 @@ namespace MobiusEditor.Dialogs
                 e.CancelEdit = true;
                 MessageBox.Show(string.Format("Trigger name is longer than {0} characters.", maxLength), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            else if (Trigger.None.Equals(curName, StringComparison.InvariantCultureIgnoreCase))
+            else if (Trigger.IsEmpty(curName))
             {
                 e.CancelEdit = true;
                 MessageBox.Show(string.Format("Trigger name 'None' is reserved and cannot be used."), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);

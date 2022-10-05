@@ -183,8 +183,7 @@ namespace MobiusEditor.Tools
 
         private void SetCellTrigger(Point location)
         {
-            string trigger = triggerComboBox.SelectedItem as string;
-            if (trigger != null && !String.Equals(Trigger.None, trigger))
+            if (triggerComboBox.SelectedItem is string trigger && !Trigger.IsEmpty(trigger))
             {
                 if (map.Metrics.GetCell(location, out int cell))
                 {
@@ -194,7 +193,7 @@ namespace MobiusEditor.Tools
                         {
                             undoCellTriggers[cell] = map.CellTriggers[cell];
                         }
-                        var cellTrigger = new CellTrigger { Trigger = triggerComboBox.SelectedItem as string };
+                        var cellTrigger = new CellTrigger(trigger);
                         map.CellTriggers[cell] = cellTrigger;
                         redoCellTriggers[cell] = cellTrigger;
                         mapPanel.Invalidate();

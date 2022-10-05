@@ -1545,10 +1545,7 @@ namespace MobiusEditor.TiberianDawn
                             {
                                 if (checkCellTrigs.Contains(Value))
                                 {
-                                    Map.CellTriggers[cell] = new CellTrigger
-                                    {
-                                        Trigger = Value
-                                    };
+                                    Map.CellTriggers[cell] = new CellTrigger(Value);
                                 }
                                 else
                                 {

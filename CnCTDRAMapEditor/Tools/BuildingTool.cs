@@ -141,7 +141,7 @@ namespace MobiusEditor.Tools
             void undoAction(UndoRedoEventArgs ev)
             {
                 building.CloneDataFrom(undoBuilding);
-                if (building.Trigger == null || (!Trigger.None.Equals(building.Trigger, StringComparison.InvariantCultureIgnoreCase)
+                if (building.Trigger == null || (!Trigger.IsEmpty(building.Trigger)
                     && !ev.Map.FilterStructureTriggers().Any(tr => tr.Name.Equals(building.Trigger, StringComparison.InvariantCultureIgnoreCase))))
                 {
                     building.Trigger = Trigger.None;
@@ -155,7 +155,7 @@ namespace MobiusEditor.Tools
             void redoAction(UndoRedoEventArgs ev)
             {
                 building.CloneDataFrom(redoBuilding);
-                if (building.Trigger == null || (!Trigger.None.Equals(building.Trigger, StringComparison.InvariantCultureIgnoreCase)
+                if (building.Trigger == null || (!Trigger.IsEmpty(building.Trigger)
                     && !ev.Map.FilterStructureTriggers().Any(tr => tr.Name.Equals(building.Trigger, StringComparison.InvariantCultureIgnoreCase))))
                 {
                     building.Trigger = Trigger.None;

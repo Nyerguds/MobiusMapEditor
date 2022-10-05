@@ -32,6 +32,7 @@ namespace MobiusEditor.Dialogs
 
         private readonly IGamePlugin plugin;
         private readonly Timer statusUpdateTimer = new Timer();
+        private SimpleMultiThreading multiThreader;
 
         private bool mapWasPublished = false;
         public bool MapWasPublished => mapWasPublished;
@@ -41,12 +42,13 @@ namespace MobiusEditor.Dialogs
         {
             this.plugin = plugin;
             InitializeComponent();
-            cmbVisibility.DataSource = new []
+            cmbVisibility.DataSource = new[]
             {
                 new { Name = "Public", Value = ERemoteStoragePublishedFileVisibility.k_ERemoteStoragePublishedFileVisibilityPublic },
                 new { Name = "Friends Only", Value = ERemoteStoragePublishedFileVisibility.k_ERemoteStoragePublishedFileVisibilityFriendsOnly },
                 new { Name = "Private", Value = ERemoteStoragePublishedFileVisibility.k_ERemoteStoragePublishedFileVisibilityPrivate }
             };
+            multiThreader = new SimpleMultiThreading(this);
             statusUpdateTimer.Interval = 500;
             statusUpdateTimer.Tick += StatusUpdateTimer_Tick;
             Disposed += (o, e) => { (txtPreview.Tag as Image)?.Dispose(); };
@@ -122,6 +124,13 @@ namespace MobiusEditor.Dialogs
             EnableControls(true);
         }
 
+        private void EnableControls(bool enable, string labelText)
+        {
+            EnableControls(enable);
+            statusLbl.Text = labelText ?? String.Empty;
+        }
+
+
         private void EnableControls(bool enable)
         {
             txtTitle.Enabled = enable;
@@ -160,7 +169,29 @@ namespace MobiusEditor.Dialogs
             Directory.CreateDirectory(tempPath);
             foreach (var file in new DirectoryInfo(tempPath).EnumerateFiles()) file.Delete();
             var pgmPath = Path.Combine(tempPath, "MAPDATA.PGM");
-            plugin.Save(pgmPath, FileType.PGM, txtPreview.Tag as Bitmap);
+            multiThreader.ExecuteThreaded(() => SavePgm(tempPath, pgmPath), SaveDone, true, EnableControls, "Saving map");
+        }
+
+        private string SavePgm(string tempPath, string pgmPath)
+        {
+            try
+            {
+                plugin.Save(pgmPath, FileType.PGM, txtPreview.Tag as Bitmap);
+            }
+            catch
+            {
+                return null;
+            }
+            return tempPath;
+        }
+
+        private void SaveDone(String sendPath)
+        {
+            if (sendPath == null)
+            {
+                statusLbl.Text = "Save failed.";
+                return;
+            }
             var tags = new List<string>();
             switch (plugin.GameType)
             {
@@ -179,7 +210,7 @@ namespace MobiusEditor.Dialogs
             {
                 tags.Add("MultiPlayer");
             }
-            if (SteamworksUGC.PublishUGC(tempPath, plugin.Map.SteamSection, tags, OnPublishSuccess, OnOperationFailed))
+            if (SteamworksUGC.PublishUGC(sendPath, plugin.Map.SteamSection, tags, OnPublishSuccess, OnOperationFailed))
             {
                 statusLbl.Text = SteamworksUGC.CurrentOperation.Status;
                 EnableControls(false);

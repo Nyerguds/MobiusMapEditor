@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
@@ -10,16 +9,6 @@ namespace MobiusEditor.Utility
     {
         Label StatusLabel { get; set; }
     }
-    
-    // For easy access
-    public static class SimpleMultiThreading
-    {
-        public static SimpleMultiThreading<T> Make<T>(T attachForm) where T : Form, IHasStatusLabel
-        {
-            return new SimpleMultiThreading<T>(attachForm);
-        }
-    }
-
     /// <summary>
     /// Simple multithreading for heavy operations to not freeze the UI. This just needs a form with a public
     /// property to get and set a "busy" state label, and the type that is produced by the heavy operation.
@@ -28,8 +17,7 @@ namespace MobiusEditor.Utility
     /// In case an error occurred, the UI is re-enabled as usual, a message box is shown with the stack trace, and the
     /// result processing function is not called.
     /// </summary>
-    /// <typeparam name="T">Form to attach the label to.</typeparam>
-    public class SimpleMultiThreading<T> where T: Form, IHasStatusLabel
+    public class SimpleMultiThreading
     {
         public String DefaultProcessingLabel { get; set; } = "Processing";
         public BorderStyle ProcessingLabelBorder { get; set; } = BorderStyle.FixedSingle;
@@ -38,9 +26,9 @@ namespace MobiusEditor.Utility
         public delegate DialogResult InvokeDelegateMessageBox(String message, MessageBoxButtons buttons, MessageBoxIcon icon);
         public delegate void InvokeDelegateResult<U>(U resultObject);
         private Thread processingThread;
-        private T attachForm;
+        private Form attachForm;
 
-        public SimpleMultiThreading(T attachForm)
+        public SimpleMultiThreading(Form attachForm)
         {
             this.attachForm = attachForm;
         }
@@ -162,10 +150,10 @@ namespace MobiusEditor.Utility
         /// This should be called from the "enableFunction" when calling <see cref="ExecuteThreaded"/>.
         /// </summary>
         /// <param name="processingLabel">Processing label. Set to null to remove the label.</param>
-        public void CreateBusyLabel(string processingLabel)
+        public void CreateBusyLabel<U>(U form, string processingLabel) where U: Form, IHasStatusLabel
         {
             // Remove old busy status label if it exists.
-            RemoveBusyLabel();
+            RemoveBusyLabel(form);
             if (processingLabel == null)
             {
                 return;
@@ -179,24 +167,24 @@ namespace MobiusEditor.Utility
             busyStatusLabel.Size = new Size(300, 100);
             busyStatusLabel.Anchor = AnchorStyles.None; // Always floating in the middle, even on resize.
             busyStatusLabel.BorderStyle = ProcessingLabelBorder;
-            Int32 x = (attachForm.ClientRectangle.Width - 300) / 2;
-            Int32 y = (attachForm.ClientRectangle.Height - 100) / 2;
+            Int32 x = (form.ClientRectangle.Width - 300) / 2;
+            Int32 y = (form.ClientRectangle.Height - 100) / 2;
             busyStatusLabel.Location = new Point(x, y);
-            attachForm.Controls.Add(busyStatusLabel);
-            attachForm.StatusLabel = busyStatusLabel;
+            form.Controls.Add(busyStatusLabel);
+            form.StatusLabel = busyStatusLabel;
             busyStatusLabel.Visible = true;
             busyStatusLabel.BringToFront();
         }
 
-        public void RemoveBusyLabel()
+        public void RemoveBusyLabel<U>(U form) where U : Form, IHasStatusLabel
         {
-            Label busyStatusLabel = attachForm.StatusLabel;
+            Label busyStatusLabel = form.StatusLabel;
             if (busyStatusLabel == null)
                 return;
-            attachForm.Controls.Remove(busyStatusLabel);
+            form.Controls.Remove(busyStatusLabel);
             try { busyStatusLabel.Dispose(); }
             catch { /* ignore */ }
-            attachForm.StatusLabel = null;
+            form.StatusLabel = null;
         }
 
     }

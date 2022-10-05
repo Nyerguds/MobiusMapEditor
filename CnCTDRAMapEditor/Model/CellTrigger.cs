@@ -17,5 +17,10 @@ namespace MobiusEditor.Model
     public class CellTrigger
     {
         public string Trigger { get; set; } = Model.Trigger.None;
+
+        public CellTrigger(string trigger)
+        {
+            Trigger = trigger;
+        }
     }
 }

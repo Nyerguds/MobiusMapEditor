@@ -25,7 +25,7 @@ namespace MobiusEditor.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("2844969675;ConcretePavementTD")]
+        [global::System.Configuration.DefaultSettingValueAttribute("2844969675;GraphicsFixesTD")]
         public string ModsToLoadTD {
             get {
                 return ((string)(this["ModsToLoadTD"]));
@@ -43,7 +43,7 @@ namespace MobiusEditor.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("2844969675;ConcretePavementTD")]
+        [global::System.Configuration.DefaultSettingValueAttribute("2844969675;GraphicsFixesTD")]
         public string ModsToLoadSS {
             get {
                 return ((string)(this["ModsToLoadSS"]));

@@ -107,7 +107,7 @@ namespace MobiusEditor
 
         private readonly Timer steamUpdateTimer = new Timer();
 
-        private SimpleMultiThreading<MainForm> multiThreader;
+        private SimpleMultiThreading multiThreader;
         Label busyStatusLabel;
         public Label StatusLabel
         {
@@ -160,7 +160,7 @@ namespace MobiusEditor
             UpdateUndoRedo();
             steamUpdateTimer.Interval = 500;
             steamUpdateTimer.Tick += SteamUpdateTimer_Tick;
-            multiThreader = SimpleMultiThreading.Make(this);
+            multiThreader = new SimpleMultiThreading(this);
             multiThreader.ProcessingLabelBorder = BorderStyle.Fixed3D;
         }
 
@@ -928,12 +928,12 @@ namespace MobiusEditor
             viewIndicatorsToolStripMenuItem.Enabled = enableUI;
             if (enableUI)
             {
-                multiThreader.RemoveBusyLabel();
+                multiThreader.RemoveBusyLabel(this);
             }
             else
             {
                 Unload();
-                multiThreader.CreateBusyLabel(label);
+                multiThreader.CreateBusyLabel(this, label);
             }
         }
 
@@ -954,7 +954,7 @@ namespace MobiusEditor
             if (enableUI)
             {
                 RefreshUI(storedToolType);
-                multiThreader.RemoveBusyLabel();
+                multiThreader.RemoveBusyLabel(this);
             }
             else
             {
@@ -963,7 +963,7 @@ namespace MobiusEditor
                 {
                     toolStripButton.Enabled = false;
                 }
-                multiThreader.CreateBusyLabel(label);
+                multiThreader.CreateBusyLabel(this, label);
             }
         }
 

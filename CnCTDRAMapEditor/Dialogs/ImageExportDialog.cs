@@ -15,7 +15,7 @@ namespace MobiusEditor.Dialogs
 {
     public partial class ImageExportDialog : Form, IHasStatusLabel
     {
-        private SimpleMultiThreading<ImageExportDialog> multiThreader;
+        private SimpleMultiThreading multiThreader;
         private Label m_BusyStatusLabel;
 
         private String[] MapLayerNames = {
@@ -81,7 +81,7 @@ namespace MobiusEditor.Dialogs
             txtScale.Select(0, 0);
             // Could make this at the moment of the call, too, but it also has a
             // system to ignore further calls if the running one isn't finished.
-            multiThreader = SimpleMultiThreading.Make(this);
+            multiThreader = new SimpleMultiThreading(this);
             multiThreader.ProcessingLabelBorder = BorderStyle.Fixed3D;
         }
 
@@ -265,9 +265,12 @@ namespace MobiusEditor.Dialogs
             }
             using (ImageExportedDialog imexd = new ImageExportedDialog(path))
             {
-                imexd.ShowDialog(this);
+                if (imexd.ShowDialog(this) == DialogResult.OK)
+                {
+                    this.DialogResult = DialogResult.OK;
+                }
             }
-            this.DialogResult = DialogResult.OK;
+            
         }
 
         private void EnableControls(Boolean enabled, String processingLabel)
@@ -281,11 +284,11 @@ namespace MobiusEditor.Dialogs
             btnCancel.Enabled = enabled;
             if (enabled)
             {
-                this.multiThreader.RemoveBusyLabel();
+                this.multiThreader.RemoveBusyLabel(this);
             }
             else
             {
-                this.multiThreader.CreateBusyLabel(processingLabel);
+                this.multiThreader.CreateBusyLabel(this, processingLabel);
             }
         }
     }

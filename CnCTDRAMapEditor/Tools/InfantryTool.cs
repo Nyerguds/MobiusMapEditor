@@ -187,7 +187,7 @@ namespace MobiusEditor.Tools
             void undoAction(UndoRedoEventArgs ev)
             {
                 infantry.CloneDataFrom(undoInf);
-                if (infantry.Trigger == null || (!Trigger.None.Equals(infantry.Trigger, StringComparison.InvariantCultureIgnoreCase)
+                if (infantry.Trigger == null || (!Trigger.IsEmpty(infantry.Trigger)
                     && !ev.Map.FilterUnitTriggers().Any(tr => tr.Name.Equals(infantry.Trigger, StringComparison.InvariantCultureIgnoreCase))))
                 {
                     infantry.Trigger = Trigger.None;
@@ -201,7 +201,7 @@ namespace MobiusEditor.Tools
             void redoAction(UndoRedoEventArgs ev)
             {
                 infantry.CloneDataFrom(redoInf);
-                if (infantry.Trigger == null || (!Trigger.None.Equals(infantry.Trigger, StringComparison.InvariantCultureIgnoreCase)
+                if (infantry.Trigger == null || (!Trigger.IsEmpty(infantry.Trigger)
                     && !ev.Map.FilterUnitTriggers().Any(tr => tr.Name.Equals(infantry.Trigger, StringComparison.InvariantCultureIgnoreCase))))
                 {
                     infantry.Trigger = Trigger.None;

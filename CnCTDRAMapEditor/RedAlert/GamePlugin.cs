@@ -763,7 +763,7 @@ namespace MobiusEditor.RedAlert
             HashSet<string> checkUnitTrigs = Trigger.None.Yield().Concat(Map.FilterUnitTriggers(triggers).Select(t => t.Name)).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
             HashSet<string> checkStrcTrigs = Trigger.None.Yield().Concat(Map.FilterStructureTriggers(triggers).Select(t => t.Name)).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
             // Terrain objects in RA have no triggers
-            //HashSet<string> checkTerrTrigs = Trigger.None.Yield().Concat(Map.FilterTerrainTriggers().Select(t => t.Name)).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+            //HashSet<string> checkTerrTrigs = Trigger.None.Yield().Concat(Map.FilterTerrainTriggers(triggers).Select(t => t.Name)).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
             //MessageBox.Show("MapPack");
             var mapPackSection = ini.Sections.Extract("MapPack");
             if (mapPackSection != null)
@@ -1817,26 +1817,20 @@ namespace MobiusEditor.RedAlert
                     {
                         if (Map.Metrics.Contains(cell))
                         {
-                            if (checkTrigs.Contains(Value))
-                            {
-                                if (checkCellTrigs.Contains(Value))
-                                {
-                                    Map.CellTriggers[cell] = new CellTrigger
-                                    {
-                                        Trigger = Value
-                                    };
-                                }
-                                else
-                                {
-                                    errors.Add(string.Format("Cell trigger {0} links to trigger '{1}' which does not contain a placeable event; skipping.", cell, Value));
-                                    modified = true;
-                                }
-                            }
-                            else
+                            if (!checkTrigs.Contains(Value))
                             {
                                 errors.Add(string.Format("Cell trigger {0} links to unknown trigger '{1}'; skipping.", cell, Value));
                                 modified = true;
                             }
+                            else if (!checkCellTrigs.Contains(Value))
+                            {
+                                errors.Add(string.Format("Cell trigger {0} links to trigger '{1}' which does not contain a placeable event; skipping.", cell, Value));
+                                modified = true;
+                            }
+                            else
+                            {
+                                Map.CellTriggers[cell] = new CellTrigger(Value);
+                            }                            
                         }
                         else
                         {
