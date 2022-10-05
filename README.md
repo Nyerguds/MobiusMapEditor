@@ -47,9 +47,9 @@ The file "CnCTDRAMapEditor.exe.config" contains settings to customise the editor
 * **MaxMapTileTextureSize**: Maximum for the size of the tiles shown on the Map tool. Leave on 0 to disable.
 * **UndoRedoStackSize**: The amount of undo/redo actions stored in memory. Defaults to 50.
 
-The **ModsToLoadTD** and **ModsToLoadSS** settings will have the `ConcretePavementTD` mod set by default, to complete the incomplete TD Remastered graphics set, meaning the mod will automatically be loaded if found. Note that the editor has no way to check whether mods are enabled in the game, so that makes no difference.
+The **ModsToLoadTD** and **ModsToLoadSS** settings will have the `GraphicsFixesTD` mod set by default, to complete the incomplete TD Remastered graphics set, meaning the mod will automatically be loaded if found. Note that the editor has no way to check whether mods are enabled in the game, so that makes no difference.
 
-You can find the mod [on the Steam workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2844969675) and [on ModDB](https://www.moddb.com/games/command-conquer-remastered/addons/concretepavementtd).
+You can find the mod [on the Steam workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2844969675) and [on ModDB](https://www.moddb.com/games/command-conquer-remastered/addons/graphicsfixestd).
 
 ### Tweaks:
 
@@ -378,6 +378,7 @@ These options are all enabled by default, but can be disabled if you wish. Use t
 * Middle mouse and space no longer make the cursor change on the map tile preview panel.
 * Added multithreading to all heavy processing functions. This means the window will no longer freeze up while loading or saving maps, but will instead have all functions disabled, while showing a little box that shows what it is doing.
 * In Celltrigger mode, if a selected trigger is already linked to objects, the trigger labels on these objects will be indicated in yellow.
+* Changed references to ConcretePavementTD mod in .config file to its new name; "GraphicsFixesTD".
 
 ### Possible future features
 
