@@ -1410,25 +1410,35 @@ namespace MobiusEditor
             {
                 return;
             }
-            Rectangle bounds = toolform.DesktopBounds;
+            Size maxAllowed = Globals.MinimumClampSize;
+            Rectangle toolBounds = toolform.DesktopBounds;
+            if (maxAllowed == Size.Empty)
+            {
+                maxAllowed = toolform.Size;
+            }
+            else
+            {
+                maxAllowed = new Size(Math.Min(maxAllowed.Width, toolBounds.Width), Math.Min(maxAllowed.Height, toolBounds.Height));
+            }
             Rectangle workingArea = Screen.FromControl(toolform).WorkingArea;
-            if (bounds.Right > workingArea.Right)
+            if (toolBounds.Left + maxAllowed.Width > workingArea.Right)
             {
-                bounds.X = workingArea.Right - bounds.Width;
+                toolBounds.X = workingArea.Right - maxAllowed.Width;
             }
-            if (bounds.X < workingArea.Left)
+            if (toolBounds.X + toolBounds.Width - maxAllowed.Width < workingArea.Left)
             {
-                bounds.X = workingArea.Left;
+                toolBounds.X = workingArea.Left - toolBounds.Width + maxAllowed.Width;
             }
-            if (bounds.Bottom > workingArea.Bottom)
+            if (toolBounds.Top + maxAllowed.Height > workingArea.Bottom)
             {
-                bounds.Y = workingArea.Bottom - bounds.Height;
+                toolBounds.Y = workingArea.Bottom - maxAllowed.Height;
             }
-            if (bounds.Y < workingArea.Top)
+            // Leave this; don't allow it to disappear under the top
+            if (toolBounds.Y < workingArea.Top)
             {
-                bounds.Y = workingArea.Top;
+                toolBounds.Y = workingArea.Top;
             }
-            toolform.DesktopBounds = bounds;
+            toolform.DesktopBounds = toolBounds;
         }
 
         private void ActiveToolForm_ResizeEnd(object sender, EventArgs e)

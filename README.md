@@ -41,11 +41,12 @@ The file "CnCTDRAMapEditor.exe.config" contains settings to customise the editor
 * **ModsToLoadTD** / **ModsToLoadRA** / **ModsToLoadSS**: semicolon (or comma) separated list of mod entries for each supported game. A mod entry can either be a Steam workshop ID, or a folder name. The paths will initially be looked up in the mods folder of the respective game in the CnCRemastered\mods\ folder under your Documents folder, but the loading system will also check the Steam workshop files for a matching mod. Sole Survivor will use Tiberian Dawn mods. Note that mods can only apply graphical changes from the tileset and house color xml files; the editor can't read any data from compiled dll files. This mods system is mostly meant to apply graphical fixes to the editor.
 * **MapScale**: Scaling multiplier for the size at which assets are rendered on the map; higher means lower quality. This will make the UI more responsive. Negative values will enable smooth scaling, which gives nicer graphics but will make the UI noticeable _less_ responsive. Defaults to 0.5.
 * **PreviewScale**: Scaling multiplier for the size at which assets are rendered on the preview tools. Negative values will enable smooth scaling, but this usually doesn't look good on the upscaled preview graphics. Defaults to 1.
-* **ExportScale**: Scaling multiplier for the size at which an exported image will be generated through "Tools" → "Export As Image". Negative values will enable smooth scaling. Defaults to -0.5.
+* **DefaultExportScale**: Default scaling multiplier for the size at which an exported image will be generated through "Tools" → "Export As Image". A negative values will set it to smooth scaling. Defaults to -0.5.
 * **ObjectToolItemSizeMultiplier**: Floating-point multiplication factor for downsizing the item icons on the selection lists on the tool windows.
 * **TemplateToolTextureSizeMultiplier**: Floating-point multiplication factor for the size of tiles shown on the Map tool. This scaling is somehow done relative to the screen size; not sure.
 * **MaxMapTileTextureSize**: Maximum for the size of the tiles shown on the Map tool. Leave on 0 to disable.
 * **UndoRedoStackSize**: The amount of undo/redo actions stored in memory. Defaults to 50.
+* **MinimumClampSize**: Minimum size of the tool window that will automatically be forced to remain in the screen area. If set to 0,0, this will default to the size of the entire tool window.
 
 The **ModsToLoadTD** and **ModsToLoadSS** settings will have the `GraphicsFixesTD` mod set by default, to complete the incomplete TD Remastered graphics set, meaning the mod will automatically be loaded if found. Note that the editor has no way to check whether mods are enabled in the game, so that makes no difference.
 
@@ -378,7 +379,8 @@ These options are all enabled by default, but can be disabled if you wish. Use t
 * Middle mouse and space no longer make the cursor change on the map tile preview panel.
 * Added multithreading to all heavy processing functions. This means the window will no longer freeze up while loading or saving maps, but will instead have all functions disabled, while showing a little box that shows what it is doing.
 * In Celltrigger mode, if a selected trigger is already linked to objects, the trigger labels on these objects will be indicated in yellow.
-* Changed references to ConcretePavementTD mod in .config file to its new name; "GraphicsFixesTD".
+* Changed references to ConcretePavementTD mod in the .config file to its new name; "GraphicsFixesTD".
+* Changed tool clamping logic to only need a minimum size to remain inside the window, rather than the entire tool. This minimum can be set in the setting "MinimumClampSize" in the .config file
 
 ### Possible future features
 

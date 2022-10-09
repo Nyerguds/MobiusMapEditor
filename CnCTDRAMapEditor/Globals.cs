@@ -37,6 +37,7 @@ namespace MobiusEditor
             BoundsObstructFill = Properties.Settings.Default.BoundsObstructFill;
             FilterTheaterObjects = Properties.Settings.Default.FilterTheaterObjects;
             NoOwnedObjectsInSole = Properties.Settings.Default.NoOwnedObjectsInSole;
+            MinimumClampSize = Properties.Settings.Default.MinimumClampSize;
         }
 
         public const string TilesetsXMLPath = @"DATA\XML\TILESETS.XML";
@@ -48,27 +49,28 @@ namespace MobiusEditor
         public const int OriginalTileHeight = 128;
         public static readonly Size OriginalTileSize = new Size(OriginalTileWidth, OriginalTileHeight);
 
-        public static double MapTileScale { get; set; }
-        public static bool MapSmoothScale { get; set; }
+        public static double MapTileScale { get; private set; }
+        public static bool MapSmoothScale { get; private set; }
         public static int MapTileWidth => Math.Max(1, (int)(OriginalTileWidth * MapTileScale));
         public static int MapTileHeight => Math.Max(1, (int)(OriginalTileHeight * MapTileScale));
         public static Size MapTileSize => new Size(MapTileWidth, MapTileHeight);
 
-        public static double PreviewTileScale { get; set; }
-        public static bool PreviewSmoothScale { get; set; }
+        public static double PreviewTileScale { get; private set; }
+        public static bool PreviewSmoothScale { get; private set; }
         public static int PreviewTileWidth => Math.Max(1, (int)(OriginalTileWidth * PreviewTileScale));
         public static int PreviewTileHeight => (int)(OriginalTileHeight * PreviewTileScale);
         public static Size PreviewTileSize => new Size(PreviewTileWidth, PreviewTileHeight);
 
-        public static double ExportTileScale { get; set; }
-        public static bool ExportSmoothScale { get; set; }
-        public static bool DisableAirUnits;
-        public static bool ConvertCraters;
-        public static bool BlockingBibs;
-        public static bool ConvertRaObsoleteClear;
-        public static bool BoundsObstructFill;
-        public static bool FilterTheaterObjects;
-        public static bool NoOwnedObjectsInSole;
+        public static double ExportTileScale { get; private set; }
+        public static bool ExportSmoothScale { get; private set; }
+        public static bool DisableAirUnits { get; private set; }
+        public static bool ConvertCraters { get; private set; }
+        public static bool BlockingBibs { get; private set; }
+        public static bool ConvertRaObsoleteClear { get; private set; }
+        public static bool BoundsObstructFill { get; private set; }
+        public static bool FilterTheaterObjects { get; private set; }
+        public static bool NoOwnedObjectsInSole { get; private set; }
+        public static Size MinimumClampSize { get; private set; }
 
         public static int UndoRedoStackSize = 50;
 

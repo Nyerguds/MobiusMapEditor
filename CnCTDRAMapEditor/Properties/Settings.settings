@@ -32,6 +32,9 @@
     <Setting Name="UndoRedoStackSize" Type="System.Int32" Scope="Application">
       <Value Profile="(Default)">50</Value>
     </Setting>
+    <Setting Name="MinimumClampSize" Type="System.Drawing.Size" Scope="Application">
+      <Value Profile="(Default)">30, 30</Value>
+    </Setting>
     <Setting Name="NoMetaFilesForSinglePlay" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>
