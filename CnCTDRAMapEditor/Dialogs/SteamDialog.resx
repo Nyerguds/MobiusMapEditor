@@ -120,7 +120,7 @@
   <metadata name="publicMapContextMenuStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
-  <data name="label5.Text" xml:space="preserve">
+  <data name="lblLegal.Text" xml:space="preserve">
     <value>Respect the rights of others. Provide only content (1) that is not defamatory, obscene, offensive or indecent, (2) that is not confidential or proprietary and (3) that does not violate or infringe any third-party rights. By providing content, you grant EA all licenses needed to enable EA’s use of the content for any purpose. EA’s User Agreement applies.
 
 EA does not pre-screen, endorse or specifically support any C&amp;&amp;C mod.  Please use mods with caution and understand there may be a risk.  EA reserves the right to address any inappropriate use of our C&amp;&amp;C content.</value>

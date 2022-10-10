@@ -230,6 +230,11 @@ namespace MobiusEditor.Utility
             }
         }
 
+        public static string GetWorkshopItemURL(ulong id)
+        {
+            return string.Format("https://steamcommunity.com/sharedfiles/filedetails/?id={0}", id);
+        }
+
         public static bool IsSteamBuild => File.Exists("steam_appid.txt");
 
         private static Callback<GameLobbyJoinRequested_t> GameLobbyJoinRequested;

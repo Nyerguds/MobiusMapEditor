@@ -1971,7 +1971,52 @@ namespace MobiusEditor.TiberianDawn
                 return null;
             }
             var briefingSection = ini.Sections.Add("Briefing");
-            briefingSection["Text"] = Map.BriefingSection.Briefing.Replace(Environment.NewLine, "@");
+            String briefText = Map.BriefingSection.Briefing.Replace('\t', ' ').Trim('\r', '\n', ' ').Replace("\r\n", "\n").Replace("\r", "\n");
+            if (string.IsNullOrEmpty(briefText))
+            {
+                return null;
+            }
+            briefingSection["Text"] = briefText.Replace("\n", "@");
+            if (Globals.WriteClassicBriefing)
+            {
+                const int classicLineCutoff = 74;
+                String[] lines = briefText.Split('\n');
+                List<String> finalLines = new List<string>();
+                int last = lines.Length - 1;
+                for (int i = 0; i < lines.Length; ++i)
+                {
+                    String line = lines[i].Trim();
+                    if (i != last)
+                    {
+                        line += "##";
+                    }
+                    if (line.Length <= classicLineCutoff)
+                    {
+                        finalLines.Add(line);
+                        continue;
+                    }
+                    String[] splitLine = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    int wordIndex = 0;
+                    while (wordIndex < splitLine.Length)
+                    {
+                        StringBuilder sb = new StringBuilder();
+                        // Always allow initial word
+                        int nextLength = 0;
+                        while (nextLength < classicLineCutoff && wordIndex < splitLine.Length)
+                        {
+                            if (sb.Length > 0)
+                                sb.Append(' ');
+                            sb.Append(splitLine[wordIndex++]);
+                            nextLength = wordIndex >= splitLine.Length ? 0 : (sb.Length + 1 + splitLine[wordIndex].Length);
+                        }
+                        finalLines.Add(sb.ToString());
+                    }
+                }
+                for (int i = 0; i < finalLines.Count; ++i)
+                {
+                    briefingSection[(i + 1).ToString()] = finalLines[i];
+                }
+            }
             return briefingSection;
         }
 

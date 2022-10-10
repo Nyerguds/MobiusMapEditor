@@ -2427,8 +2427,8 @@ namespace MobiusEditor.RedAlert
             ini.Sections.Remove("Briefing");
             if (!string.IsNullOrEmpty(Map.BriefingSection.Briefing))
             {
-                var briefingSection = ini.Sections.Add("Briefing");
-                briefingSection["Text"] = Map.BriefingSection.Briefing.Replace(Environment.NewLine, "@");
+                //var briefingSection = SaveIniBriefing(ini);
+                SaveIniBriefing(ini);
             }
 
             using (var stream = new MemoryStream())
@@ -2493,6 +2493,55 @@ namespace MobiusEditor.RedAlert
                 ini.Sections.Remove("OverlayPack");
                 CompressLCWSection(ini.Sections.Add("OverlayPack"), stream.ToArray());
             }
+        }
+
+        protected INISection SaveIniBriefing(INI ini)
+        {
+            if (string.IsNullOrEmpty(Map.BriefingSection.Briefing))
+            {
+                return null;
+            }
+            var briefingSection = ini.Sections.Add("Briefing");
+            String briefText = Map.BriefingSection.Briefing.Replace('\t', ' ').Trim('\r', '\n', ' ').Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", "@");
+            if (string.IsNullOrEmpty(briefText))
+            {
+                return null;
+            }
+            briefingSection["Text"] = briefText;
+            if (Globals.WriteClassicBriefing)
+            {
+                const int classicLineCutoff = 74;
+                List<String> finalLines = new List<string>();
+                String line = briefText.Trim();
+                if (line.Length <= classicLineCutoff)
+                {
+                    finalLines.Add(line);
+                }
+                else
+                {
+                    String[] splitLine = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    int wordIndex = 0;
+                    while (wordIndex < splitLine.Length)
+                    {
+                        StringBuilder sb = new StringBuilder();
+                        // Always allow initial word
+                        int nextLength = 0;
+                        while (nextLength < classicLineCutoff && wordIndex < splitLine.Length)
+                        {
+                            if (sb.Length > 0)
+                                sb.Append(' ');
+                            sb.Append(splitLine[wordIndex++]);
+                            nextLength = wordIndex >= splitLine.Length ? 0 : (sb.Length + 1 + splitLine[wordIndex].Length);
+                        }
+                        finalLines.Add(sb.ToString());
+                    }
+                }                
+                for (int i = 0; i < finalLines.Count; ++i)
+                {
+                    briefingSection[(i + 1).ToString()] = finalLines[i];
+                }
+            }
+            return briefingSection;
         }
 
         private void SaveMapPreview(Stream stream, Boolean renderAll)

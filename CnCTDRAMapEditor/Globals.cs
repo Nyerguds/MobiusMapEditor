@@ -38,6 +38,7 @@ namespace MobiusEditor
             FilterTheaterObjects = Properties.Settings.Default.FilterTheaterObjects;
             NoOwnedObjectsInSole = Properties.Settings.Default.NoOwnedObjectsInSole;
             MinimumClampSize = Properties.Settings.Default.MinimumClampSize;
+            WriteClassicBriefing = Properties.Settings.Default.WriteClassicBriefing;
         }
 
         public const string TilesetsXMLPath = @"DATA\XML\TILESETS.XML";
@@ -63,6 +64,7 @@ namespace MobiusEditor
 
         public static double ExportTileScale { get; private set; }
         public static bool ExportSmoothScale { get; private set; }
+        public static Size MinimumClampSize { get; private set; }
         public static bool DisableAirUnits { get; private set; }
         public static bool ConvertCraters { get; private set; }
         public static bool BlockingBibs { get; private set; }
@@ -70,7 +72,7 @@ namespace MobiusEditor
         public static bool BoundsObstructFill { get; private set; }
         public static bool FilterTheaterObjects { get; private set; }
         public static bool NoOwnedObjectsInSole { get; private set; }
-        public static Size MinimumClampSize { get; private set; }
+        public static bool WriteClassicBriefing { get; private set; }
 
         public static int UndoRedoStackSize = 50;
 

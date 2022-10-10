@@ -38,7 +38,7 @@ The file "CnCTDRAMapEditor.exe.config" contains settings to customise the editor
 
 ### Editor options:
 
-* **ModsToLoadTD** / **ModsToLoadRA** / **ModsToLoadSS**: semicolon (or comma) separated list of mod entries for each supported game. A mod entry can either be a Steam workshop ID, or a folder name. The paths will initially be looked up in the mods folder of the respective game in the CnCRemastered\mods\ folder under your Documents folder, but the loading system will also check the Steam workshop files for a matching mod. Sole Survivor will use Tiberian Dawn mods. Note that mods can only apply graphical changes from the tileset and house color xml files; the editor can't read any data from compiled dll files. This mods system is mostly meant to apply graphical fixes to the editor.
+* **ModsToLoadTD** / **ModsToLoadRA** / **ModsToLoadSS**: [WIP] semicolon (or comma) separated list of mod entries for each supported game. A mod entry can either be a Steam workshop ID, or a folder name. The paths will initially be looked up in the mods folder of the respective game in the CnCRemastered\mods\ folder under your Documents folder, but the loading system will also check the Steam workshop files for a matching mod. Sole Survivor will use Tiberian Dawn mods. Note that mods can only apply graphical changes from the tileset and house color xml files; the editor can't read any data from compiled dll files. This mods system is mostly meant to apply graphical fixes to the editor.
 * **MapScale**: Scaling multiplier for the size at which assets are rendered on the map; higher means lower quality. This will make the UI more responsive. Negative values will enable smooth scaling, which gives nicer graphics but will make the UI noticeable _less_ responsive. Defaults to 0.5.
 * **PreviewScale**: Scaling multiplier for the size at which assets are rendered on the preview tools. Negative values will enable smooth scaling, but this usually doesn't look good on the upscaled preview graphics. Defaults to 1.
 * **DefaultExportScale**: Default scaling multiplier for the size at which an exported image will be generated through "Tools" → "Export As Image". A negative values will set it to smooth scaling. Defaults to -0.5.
@@ -46,7 +46,7 @@ The file "CnCTDRAMapEditor.exe.config" contains settings to customise the editor
 * **TemplateToolTextureSizeMultiplier**: Floating-point multiplication factor for the size of tiles shown on the Map tool. This scaling is somehow done relative to the screen size; not sure.
 * **MaxMapTileTextureSize**: Maximum for the size of the tiles shown on the Map tool. Leave on 0 to disable.
 * **UndoRedoStackSize**: The amount of undo/redo actions stored in memory. Defaults to 50.
-* **MinimumClampSize**: Minimum size of the tool window that will automatically be forced to remain in the screen area. If set to 0,0, this will default to the size of the entire tool window.
+* **MinimumClampSize**: [WIP] Minimum size of the tool window that will automatically be forced to remain in the screen area. If set to 0,0, this will default to the size of the entire tool window.
 
 The **ModsToLoadTD** and **ModsToLoadSS** settings will have the `GraphicsFixesTD` mod set by default, to complete the incomplete TD Remastered graphics set, meaning the mod will automatically be loaded if found. Note that the editor has no way to check whether mods are enabled in the game, so that makes no difference.
 
@@ -64,6 +64,7 @@ These options are all enabled by default, but can be disabled if you wish. Use t
 * **BoundsObstructFill**: When filling map tiles with [Ctrl]+[Shift]+[Click], the map boundary acts as border blocking the fill spread. This applies both inside and outside the border.
 * **FilterTheaterObjects**: Filter out objects that don't belong in the current map's theater. This affects both map loading, and the items visible in the placement lists. Do not turn this off unless you really know what you're doing; having theater-illegal objects on maps may cause situations that crash the game.
 * **NoOwnedObjectsInSole**: [WIP] Sole Survivor maps normally don't include placed down units, structures or infantry, so loading and saving them is disabled by default. But it seems some official maps do contain decorative civilian buildings, and old betas of the game could read those, so this option can be disabled for research purposes.
+* **WriteClassicBriefing**: [WIP] In addition to the single-line "Text=" briefing used by the Remaster, also write classic-style briefings into the ini file as "1=", "2=", etc. lines split at human-readable length. This includes the C&C95 v1.06 line break system using ## characters at the end of a line.
 
 ---
 
@@ -381,6 +382,10 @@ These options are all enabled by default, but can be disabled if you wish. Use t
 * In Celltrigger mode, if a selected trigger is already linked to objects, the trigger labels on these objects will be indicated in yellow.
 * Changed references to ConcretePavementTD mod in the .config file to its new name; "GraphicsFixesTD".
 * Changed tool clamping logic to only need a minimum size to remain inside the window, rather than the entire tool. This minimum can be set in the setting "MinimumClampSize" in the .config file
+* Steam publish dialog now has buttons to easily copy the map name and briefing from the mission.
+* Steam publish dialog description now properly supports multiline.
+* Steam publish dialog will now properly restore the location of a previously-used custom generated thumbnail.
+* in addition to the Remaster's one "Text=" line briefing, the editor now writes the classic style briefings into maps too, as "1=", "2=", etc. lines split at human-readable length.
 
 ### Possible future features
 

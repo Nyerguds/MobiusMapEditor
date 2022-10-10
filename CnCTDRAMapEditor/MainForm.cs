@@ -1094,6 +1094,7 @@ namespace MobiusEditor
             else
             {
                 this.plugin = loadInfo.Plugin;
+                plugin.FeedBackHandler = this;
                 LoadIcons(plugin);
                 if (errors.Length > 0)
                 {
@@ -1773,6 +1774,11 @@ namespace MobiusEditor
                 || oldPreview != plugin.Map.SteamSection.PreviewFile
                 || oldVisibility != (int)plugin.Map.SteamSection.Visibility))
             {
+                // Fix description
+                if (plugin.Map.SteamSection.Description.Any(ch => ch == '\r' || ch == '\n'))
+                {
+                    plugin.Map.SteamSection.Description = plugin.Map.SteamSection.Description.Replace("\r\n", "\n").Replace("\r", "\n").Replace('\n', '@'); 
+                }
                 // This takes care of saving the Steam info into the map.
                 fileSaveMenuItem.PerformClick();
             }
