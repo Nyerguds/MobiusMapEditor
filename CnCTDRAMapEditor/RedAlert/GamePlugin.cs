@@ -414,7 +414,7 @@ namespace MobiusEditor.RedAlert
                 TerrainTypes.GetTypes(), OverlayTypes.GetTypes(), SmudgeTypes.GetTypes(Globals.ConvertCraters),
                 EventTypes.GetTypes(), cellEventTypes, unitEventTypes, structureEventTypes, terrainEventTypes,
                 ActionTypes.GetTypes(), cellActionTypes, unitActionTypes, structureActionTypes, terrainActionTypes,
-                MissionTypes.GetTypes(), DirectionTypes.GetTypes(), InfantryTypes.GetTypes(), UnitTypes.GetTypes(Globals.DisableAirUnits),
+                MissionTypes.GetTypes(), DirectionTypes.GetMainTypes(), DirectionTypes.GetAllTypes(), InfantryTypes.GetTypes(), UnitTypes.GetTypes(Globals.DisableAirUnits),
                 BuildingTypes.GetTypes(), TeamMissionTypes.GetTypes(), fullTechnoTypes, waypoints, movieTypes, themeTypes)
             {
                 TiberiumOrGoldValue = 35,
@@ -1132,13 +1132,12 @@ namespace MobiusEditor.RedAlert
                             modified = true;
                             continue;
                         }
-                        var direction = (byte)((dirValue + 0x08) & ~0x0F);
                         Unit newUnit = new Unit()
                         {
                             Type = unitType,
                             House = Map.HouseTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault(),
                             Strength = strength,
-                            Direction = Map.DirectionTypes.Where(d => d.Equals(direction)).FirstOrDefault(),
+                            Direction = DirectionType.GetDirectionType(dirValue, Map.UnitDirectionTypes),
                             Mission = Map.MissionTypes.Where(t => t.Equals(tokens[5])).FirstOrDefault() ?? Map.GetDefaultMission(unitType),
                             Trigger = tokens[6]
                         };
@@ -1245,13 +1244,12 @@ namespace MobiusEditor.RedAlert
                             modified = true;
                             continue;
                         }
-                        var direction = (byte)((dirValue + 0x08) & ~0x0F);
                         Unit newUnit = new Unit()
                         {
                             Type = aircraftType,
                             House = Map.HouseTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault(),
                             Strength = strength,
-                            Direction = Map.DirectionTypes.Where(d => d.Equals(direction)).FirstOrDefault(),
+                            Direction = DirectionType.GetDirectionType(dirValue, Map.UnitDirectionTypes),
                             Mission = Map.MissionTypes.Where(t => t.Equals(tokens[5])).FirstOrDefault() ?? Map.GetDefaultMission(aircraftType)
                         };
                         if (!Map.Technos.Add(cell, newUnit))
@@ -1340,13 +1338,12 @@ namespace MobiusEditor.RedAlert
                             modified = true;
                             continue;
                         }
-                        var direction = (byte)((dirValue + 0x08) & ~0x0F);
                         Unit newShip = new Unit()
                         {
                             Type = vesselType,
                             House = Map.HouseTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault(),
                             Strength = strength,
-                            Direction = Map.DirectionTypes.Where(d => d.Equals(direction)).FirstOrDefault(),
+                            Direction = DirectionType.GetDirectionType(dirValue, Map.UnitDirectionTypes),
                             Mission = Map.MissionTypes.Where(t => t.Equals(tokens[5])).FirstOrDefault() ?? Map.GetDefaultMission(vesselType),
                             Trigger = tokens[6]
                         };
@@ -1474,7 +1471,6 @@ namespace MobiusEditor.RedAlert
                                     modified = true;
                                     continue;
                                 }
-                                var direction = (byte)((dirValue + 0x08) & ~0x0F);
                                 if (infantryGroup.Infantry[stoppingPos] == null)
                                 {
                                     if (!checkTrigs.Contains(tokens[7]))
@@ -1494,7 +1490,7 @@ namespace MobiusEditor.RedAlert
                                         Type = infantryType,
                                         House = Map.HouseTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault(),
                                         Strength = strength,
-                                        Direction = Map.DirectionTypes.Where(d => d.Equals(direction)).FirstOrDefault(),
+                                        Direction = DirectionType.GetDirectionType(dirValue, Map.UnitDirectionTypes),
                                         Mission = Map.MissionTypes.Where(t => t.Equals(tokens[5])).FirstOrDefault() ?? Map.GetDefaultMission(infantryType),
                                         Trigger = tokens[7]
                                     };
@@ -1598,7 +1594,6 @@ namespace MobiusEditor.RedAlert
                             modified = true;
                             continue;
                         }
-                        var direction = (byte)((dirValue + 0x08) & ~0x0F);
                         bool sellable = (tokens.Length > 6) && int.TryParse(tokens[6], out int sell) && sell != 0;
                         bool rebuild = (tokens.Length > 7) && int.TryParse(tokens[7], out int rebld) && rebld != 0;
                         Building newBld = new Building()
@@ -1606,7 +1601,7 @@ namespace MobiusEditor.RedAlert
                             Type = buildingType,
                             House = Map.HouseTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault(),
                             Strength = strength,
-                            Direction = Map.DirectionTypes.Where(d => d.Equals(direction)).FirstOrDefault(),
+                            Direction = DirectionType.GetDirectionType(dirValue, Map.BuildingDirectionTypes),
                             Trigger = tokens[5],
                             Sellable = sellable,
                             Rebuild = rebuild

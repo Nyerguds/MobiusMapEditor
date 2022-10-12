@@ -13,6 +13,8 @@
 // GNU General Public License along with permitted additional restrictions 
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace MobiusEditor.Model
 {
@@ -66,6 +68,19 @@ namespace MobiusEditor.Model
         public override string ToString()
         {
             return Name;
+        }
+
+        public static DirectionType GetDirectionType(int value, IEnumerable<DirectionType> directions)
+        {
+            IEnumerable<DirectionType> sortedDirections = directions.OrderBy(d => d.ID);
+            foreach (DirectionType dirType in sortedDirections)
+            {
+                if (dirType.ID >= value)
+                {
+                    return dirType;
+                }
+            }
+            return sortedDirections.FirstOrDefault();
         }
     }
 }

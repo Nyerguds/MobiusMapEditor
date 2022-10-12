@@ -163,9 +163,7 @@ namespace MobiusEditor.Controls
                 case Infantry infantry:
                     {
                         houseComboBox.Enabled = true;
-                        directionComboBox.DataSource = Plugin.Map.DirectionTypes
-                            .Where(t => t.Facing != FacingType.None)
-                            .Select(t => new TypeItem<DirectionType>(t.Name, t)).ToArray();
+                        directionComboBox.DataSource = Plugin.Map.UnitDirectionTypes.Select(t => new TypeItem<DirectionType>(t.Name, t)).ToArray();
                         missionComboBox.DataBindings.Add("SelectedItem", obj, "Mission");
                         missionLabel.Visible = missionComboBox.Visible = true;
                         basePriorityLabel.Visible = basePriorityNud.Visible = false;
@@ -177,7 +175,7 @@ namespace MobiusEditor.Controls
                 case Unit unit:
                     {
                         houseComboBox.Enabled = true;
-                        directionComboBox.DataSource = Plugin.Map.DirectionTypes.Select(t => new TypeItem<DirectionType>(t.Name, t)).ToArray();
+                        directionComboBox.DataSource = Plugin.Map.UnitDirectionTypes.Select(t => new TypeItem<DirectionType>(t.Name, t)).ToArray();
                         missionComboBox.DataBindings.Add("SelectedItem", obj, "Mission");
                         missionLabel.Visible = missionComboBox.Visible = true;
                         basePriorityLabel.Visible = basePriorityNud.Visible = false;
@@ -190,7 +188,7 @@ namespace MobiusEditor.Controls
                     {
                         houseComboBox.Enabled = building.IsPrebuilt;
                         bool directionVisible = (building.Type != null) && building.Type.HasTurret;
-                        directionComboBox.DataSource = Plugin.Map.DirectionTypes.Select(t => new TypeItem<DirectionType>(t.Name, t)).ToArray();
+                        directionComboBox.DataSource = Plugin.Map.BuildingDirectionTypes.Select(t => new TypeItem<DirectionType>(t.Name, t)).ToArray();
                         directionLabel.Visible = directionVisible;
                         directionComboBox.Visible = directionVisible;
                         missionLabel.Visible = missionComboBox.Visible = false;
@@ -308,7 +306,7 @@ namespace MobiusEditor.Controls
             if (!building.IsPrebuilt)
             {
                 building.Strength = 255;
-                building.Direction = Plugin.Map.DirectionTypes.First();
+                building.Direction = Plugin.Map..BuildingDirectionTypes.Where(d => d.Equals(FacingType.North)).First();
                 building.Trigger = Trigger.None;
                 building.Sellable = false;
                 building.Rebuild = false;

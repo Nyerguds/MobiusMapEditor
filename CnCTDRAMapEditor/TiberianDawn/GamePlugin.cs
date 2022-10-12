@@ -266,7 +266,7 @@ namespace MobiusEditor.TiberianDawn
                 TerrainTypes.GetTypes(), OverlayTypes.GetTypes(), SmudgeTypes.GetTypes(Globals.ConvertCraters),
                 EventTypes.GetTypes(), cellEventTypes, unitEventTypes, structureEventTypes, terrainEventTypes,
                 ActionTypes.GetTypes(), cellActionTypes, unitActionTypes, structureActionTypes, terrainActionTypes,
-                MissionTypes.GetTypes(), DirectionTypes.GetTypes(), InfantryTypes.GetTypes(), UnitTypes.GetTypes(Globals.DisableAirUnits),
+                MissionTypes.GetTypes(), DirectionTypes.GetMainTypes(), DirectionTypes.GetAllTypes(), InfantryTypes.GetTypes(), UnitTypes.GetTypes(Globals.DisableAirUnits),
                 BuildingTypes.GetTypes(), TeamMissionTypes.GetTypes(), fullTechnoTypes, waypoints, movieTypes, themeTypes)
             {
                 TiberiumOrGoldValue = 25
@@ -989,7 +989,6 @@ namespace MobiusEditor.TiberianDawn
                                     modified = true;
                                     continue;
                                 }
-                                var direction = (byte)((dirValue + 0x08) & ~0x0F);
                                 if (infantryGroup.Infantry[stoppingPos] == null)
                                 {
                                     if (!checkTrigs.Contains(tokens[7]))
@@ -1009,7 +1008,7 @@ namespace MobiusEditor.TiberianDawn
                                         Type = infantryType,
                                         House = Map.HouseTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault(),
                                         Strength = strength,
-                                        Direction = Map.DirectionTypes.Where(d => d.Equals(direction)).FirstOrDefault(),
+                                        Direction = DirectionType.GetDirectionType(dirValue, Map.UnitDirectionTypes),
                                         Mission = Map.MissionTypes.Where(t => t.Equals(tokens[5])).FirstOrDefault() ?? Map.GetDefaultMission(infantryType),
                                         Trigger = tokens[7]
                                     };
@@ -1107,13 +1106,12 @@ namespace MobiusEditor.TiberianDawn
                             modified = true;
                             continue;
                         }
-                        var direction = (byte)((dirValue + 0x08) & ~0x0F);
                         Unit newUnit = new Unit()
                         {
                             Type = unitType,
                             House = Map.HouseTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault(),
                             Strength = strength,
-                            Direction = Map.DirectionTypes.Where(d => d.Equals(direction)).FirstOrDefault(),
+                            Direction = DirectionType.GetDirectionType(dirValue, Map.UnitDirectionTypes),
                             Mission = Map.MissionTypes.Where(t => t.Equals(tokens[5])).FirstOrDefault() ?? Map.GetDefaultMission(unitType),
                             Trigger = tokens[6]
                         };
@@ -1225,13 +1223,12 @@ namespace MobiusEditor.TiberianDawn
                             modified = true;
                             continue;
                         }
-                        var direction = (byte)((dirValue + 0x08) & ~0x0F);
                         Unit newUnit = new Unit()
                         {
                             Type = aircraftType,
                             House = Map.HouseTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault(),
                             Strength = strength,
-                            Direction = Map.DirectionTypes.Where(d => d.Equals(direction)).FirstOrDefault(),
+                            Direction = DirectionType.GetDirectionType(dirValue, Map.UnitDirectionTypes),
                             Mission = Map.MissionTypes.Where(t => t.Equals(tokens[5])).FirstOrDefault() ?? Map.GetDefaultMission(aircraftType)
                         };
                         if (!Map.Technos.Add(cell, newUnit))
@@ -1326,13 +1323,12 @@ namespace MobiusEditor.TiberianDawn
                             modified = true;
                             continue;
                         }
-                        var direction = (byte)((dirValue + 0x08) & ~0x0F);
                         Building newBld = new Building()
                         {
                             Type = buildingType,
                             House = Map.HouseTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault(),
                             Strength = strength,
-                            Direction = Map.DirectionTypes.Where(d => d.Equals(direction)).FirstOrDefault(),
+                            Direction = DirectionType.GetDirectionType(dirValue, Map.BuildingDirectionTypes),
                             Trigger = tokens[5]
                         };
                         if (Map.Buildings.Add(cell, newBld))

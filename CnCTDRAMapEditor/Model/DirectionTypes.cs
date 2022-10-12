@@ -12,12 +12,11 @@
 // distributed with this program. You should have received a copy of the 
 // GNU General Public License along with permitted additional restrictions 
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
-using MobiusEditor.Model;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace MobiusEditor.RedAlert
+namespace MobiusEditor.Model
 {
     public static class DirectionTypes
     {
@@ -38,19 +37,26 @@ namespace MobiusEditor.RedAlert
         public static readonly DirectionType NorthWest = new DirectionType(224, "NorthWest", FacingType.NorthWest);
         public static readonly DirectionType NorthNorthWest = new DirectionType(240, "North-NorthWest");
 
-        private static DirectionType[] Types;
+        private static DirectionType[] AllTypes;
+        private static DirectionType[] MainTypes;
 
         static DirectionTypes()
         {
-            Types =
+            AllTypes =
                 (from field in typeof(DirectionTypes).GetFields(BindingFlags.Static | BindingFlags.Public)
                  where field.IsInitOnly && typeof(DirectionType).IsAssignableFrom(field.FieldType)
                  select field.GetValue(null) as DirectionType).ToArray();
+            MainTypes = AllTypes.Where(ft => ft.Facing != FacingType.None).ToArray();
         }
 
-        public static IEnumerable<DirectionType> GetTypes()
+        public static IEnumerable<DirectionType> GetAllTypes()
         {
-            return Types;
+            return AllTypes;
+        }
+
+        public static IEnumerable<DirectionType> GetMainTypes()
+        {
+            return MainTypes;
         }
     }
 }

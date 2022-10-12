@@ -91,7 +91,7 @@ namespace MobiusEditor.Tools
                 Type = infType,
                 House = map.Houses.First().Type,
                 Strength = 256,
-                Direction = map.DirectionTypes.Where(d => d.Equals(FacingType.South)).First(),
+                Direction = map.UnitDirectionTypes.Where(d => d.Equals(FacingType.South)).First(),
                 Mission = map.GetDefaultMission(infType)
             };
             mockInfantry.PropertyChanged += MockInfantry_PropertyChanged;

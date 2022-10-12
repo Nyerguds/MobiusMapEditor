@@ -105,7 +105,7 @@ namespace MobiusEditor.SoleSurvivor
                 TiberianDawn.TerrainTypes.GetTypes(), OverlayTypes.GetTypes(), TiberianDawn.SmudgeTypes.GetTypes(Globals.ConvertCraters),
                 TiberianDawn.EventTypes.GetTypes(), cellEventTypes, unitEventTypes, structureEventTypes, terrainEventTypes,
                 TiberianDawn.ActionTypes.GetTypes(), cellActionTypes, unitActionTypes, structureActionTypes, terrainActionTypes,
-                TiberianDawn.MissionTypes.GetTypes(), TiberianDawn.DirectionTypes.GetTypes(), infantry, units,
+                TiberianDawn.MissionTypes.GetTypes(), DirectionTypes.GetMainTypes(), DirectionTypes.GetAllTypes(), infantry, units,
                 buildings, TiberianDawn.TeamMissionTypes.GetTypes(), fullTechnoTypes, waypoints, movieTypes, themeTypes)
             {
                 TiberiumOrGoldValue = 25

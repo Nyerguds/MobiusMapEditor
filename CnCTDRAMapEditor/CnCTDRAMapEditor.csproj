@@ -322,6 +322,7 @@
     <Compile Include="Model\CellMetrics.cs" />
     <Compile Include="Model\CellTrigger.cs" />
     <Compile Include="Model\DirectionType.cs" />
+    <Compile Include="Model\DirectionTypes.cs" />
     <Compile Include="Model\House.cs" />
     <Compile Include="Model\HouseType.cs" />
     <Compile Include="Model\BuildingType.cs" />
@@ -360,7 +361,6 @@
     <Compile Include="RedAlert\BasicSection.cs" />
     <Compile Include="RedAlert\BuildingTypes.cs" />
     <Compile Include="RedAlert\Constants.cs" />
-    <Compile Include="RedAlert\DirectionTypes.cs" />
     <Compile Include="RedAlert\EventTypes.cs" />
     <Compile Include="RedAlert\GamePlugin.cs" />
     <Compile Include="RedAlert\House.cs" />
@@ -473,7 +473,6 @@
     <Compile Include="SoleSurvivor\CratesSection.cs" />
     <Compile Include="TiberianDawn\BasicSection.cs" />
     <Compile Include="TiberianDawn\Constants.cs" />
-    <Compile Include="TiberianDawn\DirectionTypes.cs" />
     <Compile Include="TiberianDawn\EventTypes.cs" />
     <Compile Include="TiberianDawn\GamePlugin.cs" />
     <Compile Include="TiberianDawn\House.cs" />

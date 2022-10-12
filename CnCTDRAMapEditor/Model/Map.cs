@@ -174,7 +174,9 @@ namespace MobiusEditor.Model
 
         public readonly string DefaultMissionHarvest;
 
-        public readonly List<DirectionType> DirectionTypes;
+        public readonly List<DirectionType> BuildingDirectionTypes;
+
+        public readonly List<DirectionType> UnitDirectionTypes;
 
         public readonly List<InfantryType> AllInfantryTypes;
 
@@ -303,7 +305,7 @@ namespace MobiusEditor.Model
             IEnumerable<TerrainType> terrainTypes, IEnumerable<OverlayType> overlayTypes, IEnumerable<SmudgeType> smudgeTypes,
             IEnumerable<string> eventTypes, IEnumerable<string> cellEventTypes, IEnumerable<string> unitEventTypes, IEnumerable<string> structureEventTypes, IEnumerable<string> terrainEventTypes,
             IEnumerable<string> actionTypes, IEnumerable<string> cellActionTypes, IEnumerable<string> unitActionTypes, IEnumerable<string> structureActionTypes, IEnumerable<string> terrainActionTypes,
-            IEnumerable<string> missionTypes, IEnumerable<DirectionType> directionTypes, IEnumerable<InfantryType> infantryTypes,
+            IEnumerable<string> missionTypes, IEnumerable<DirectionType> unitDirectionTypes, IEnumerable<DirectionType> buildingDirectionTypes, IEnumerable<InfantryType> infantryTypes,
             IEnumerable<UnitType> unitTypes, IEnumerable<BuildingType> buildingTypes, IEnumerable<TeamMission> teamMissionTypes,
             IEnumerable<ITechnoType> teamTechnoTypes, IEnumerable<Waypoint> waypoints, IEnumerable<string> movieTypes, IEnumerable<string> themeTypes)
         {
@@ -334,7 +336,8 @@ namespace MobiusEditor.Model
             DefaultMissionUnarmed = MissionTypes.Where(m => m.Equals("Stop")).FirstOrDefault() ?? MissionTypes.First();
             // Reverts to "stop" if there are no resources (RA indoor)
             DefaultMissionHarvest = OverlayTypes.Any(ov => ov.IsResource) ? MissionTypes.Where(m => m.Equals("Harvest")).FirstOrDefault() ?? DefaultMissionUnarmed : DefaultMissionUnarmed;
-            DirectionTypes = new List<DirectionType>(directionTypes);
+            UnitDirectionTypes = new List<DirectionType>(unitDirectionTypes);
+            BuildingDirectionTypes = new List<DirectionType>(buildingDirectionTypes);
             AllInfantryTypes = new List<InfantryType>(infantryTypes);
             AllUnitTypes = new List<UnitType>(unitTypes);
             BuildingTypes = new List<BuildingType>(buildingTypes);
@@ -415,17 +418,17 @@ namespace MobiusEditor.Model
                 terrainType.Init(Theater);
             }
             // Ignore expansion status for these; they can still be enabled later.
-            DirectionType infDir = DirectionTypes.Where(d => d.Facing == FacingType.South).First();
+            DirectionType infDir = UnitDirectionTypes.Where(d => d.Facing == FacingType.South).First();
             foreach (var infantryType in AllInfantryTypes)
             {
                 infantryType.Init(gameType, Theater, HouseTypesIncludingNone.Where(h => h.Equals(infantryType.OwnerHouse)).FirstOrDefault(), infDir);
             }
-            DirectionType unitDir = DirectionTypes.Where(d => d.Facing == FacingType.SouthWest).First();
+            DirectionType unitDir = UnitDirectionTypes.Where(d => d.Facing == FacingType.SouthWest).First();
             foreach (var unitType in AllUnitTypes)
             {
                 unitType.Init(gameType, Theater, HouseTypesIncludingNone.Where(h => h.Equals(unitType.OwnerHouse)).FirstOrDefault(), unitDir);
             }
-            DirectionType bldDir = DirectionTypes.Where(d => d.Facing == FacingType.North).First();
+            DirectionType bldDir = UnitDirectionTypes.Where(d => d.Facing == FacingType.North).First();
             foreach (var buildingType in BuildingTypes.Where(itm => itm.Theaters == null || itm.Theaters.Contains(Theater)))
             {
                 buildingType.Init(gameType, Theater, HouseTypesIncludingNone.Where(h => h.Equals(buildingType.OwnerHouse)).FirstOrDefault(), bldDir);
@@ -801,7 +804,7 @@ namespace MobiusEditor.Model
                 FlagColors, TheaterTypes, TemplateTypes, TerrainTypes, OverlayTypes, SmudgeTypes,
                 EventTypes, CellEventTypes, UnitEventTypes, StructureEventTypes, TerrainEventTypes,
                 ActionTypes, CellActionTypes, UnitActionTypes, StructureActionTypes, TerrainActionTypes,
-                MissionTypes, DirectionTypes, AllInfantryTypes, AllUnitTypes, BuildingTypes, TeamMissionTypes,
+                MissionTypes, UnitDirectionTypes, BuildingDirectionTypes, AllInfantryTypes, AllUnitTypes, BuildingTypes, TeamMissionTypes,
                 AllTeamTechnoTypes, wpPreview, MovieTypes, ThemeTypes)
             {
                 TopLeft = TopLeft,

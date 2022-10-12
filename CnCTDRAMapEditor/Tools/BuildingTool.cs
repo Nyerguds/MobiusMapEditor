@@ -86,7 +86,7 @@ namespace MobiusEditor.Tools
                 Type = buildingTypesBox.Types.First() as BuildingType,
                 House = map.Houses.First().Type,
                 Strength = 256,
-                Direction = map.DirectionTypes.Where(d => d.Equals(FacingType.North)).First()
+                Direction = map.BuildingDirectionTypes.Where(d => d.Equals(FacingType.North)).First()
             };
             mockBuilding.PropertyChanged += MockBuilding_PropertyChanged;
             this.buildingTypesBox = buildingTypesBox;
@@ -173,7 +173,7 @@ namespace MobiusEditor.Tools
         {
             if (e.PropertyName == "Type" && (mockBuilding.Type == null || !mockBuilding.Type.HasTurret))
             {
-                mockBuilding.Direction = map.DirectionTypes.Where(d => d.Equals(FacingType.North)).First();
+                mockBuilding.Direction = map.BuildingDirectionTypes.Where(d => d.Equals(FacingType.North)).First();
             }
             RefreshPreviewPanel();
         }
