@@ -306,7 +306,7 @@ namespace MobiusEditor.Controls
             if (!building.IsPrebuilt)
             {
                 building.Strength = 255;
-                building.Direction = Plugin.Map..BuildingDirectionTypes.Where(d => d.Equals(FacingType.North)).First();
+                building.Direction = Plugin.Map.BuildingDirectionTypes.Where(d => d.Equals(FacingType.North)).First();
                 building.Trigger = Trigger.None;
                 building.Sellable = false;
                 building.Rebuild = false;
