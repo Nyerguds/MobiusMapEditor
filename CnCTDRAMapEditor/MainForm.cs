@@ -637,7 +637,23 @@ namespace MobiusEditor
             }
         }
 
-        private void ToolsPowerMenuItem_Click(Object sender, EventArgs e)
+        private void ToolsStatsGameObjectsMenuItem_Click(Object sender, EventArgs e)
+        {
+            if (plugin == null)
+            {
+                return;
+            }
+            using (ErrorMessageBox emb = new ErrorMessageBox())
+            {
+                emb.Title = "Map objects";
+                emb.Message = "Map objects overview:";
+                emb.Errors = plugin.AssessMapItems();
+                emb.StartPosition = FormStartPosition.CenterParent;
+                emb.ShowDialog(this);
+            }
+        }
+
+        private void ToolsStatsPowerMenuItem_Click(Object sender, EventArgs e)
         {
             if (plugin == null)
             {
@@ -653,7 +669,7 @@ namespace MobiusEditor
             }
         }
 
-        private void ToolsStorageMenuItem_Click(Object sender, EventArgs e)
+        private void ToolsStatsStorageMenuItem_Click(Object sender, EventArgs e)
         {
             if (plugin == null)
             {
@@ -1231,8 +1247,9 @@ namespace MobiusEditor
             settingsMapSettingsMenuItem.Enabled = enable && hasPlugin;
             settingsTeamTypesMenuItem.Enabled = enable && hasPlugin;
             settingsTriggersMenuItem.Enabled = enable && hasPlugin;
-            toolsPowerMenuItem.Enabled = enable && hasPlugin;
-            toolsStorageMenuItem.Enabled = enable && hasPlugin;
+            toolsStatsGameObjectsMenuItem.Enabled = enable && hasPlugin;
+            toolsStatsPowerMenuItem.Enabled = enable && hasPlugin;
+            toolsStatsStorageMenuItem.Enabled = enable && hasPlugin;
             toolsRandomizeTilesMenuItem.Enabled = enable && hasPlugin;
             toolsExportImageMenuItem.Enabled = enable && hasPlugin;
             developerGoToINIMenuItem.Enabled = enable && hasPlugin;

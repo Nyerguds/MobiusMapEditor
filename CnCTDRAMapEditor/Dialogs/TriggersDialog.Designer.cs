@@ -88,6 +88,7 @@ namespace MobiusEditor.Dialogs
             this.addTriggerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.renameTriggerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removeTriggerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.lblTooLong = new System.Windows.Forms.Label();
             this.tableLayoutPanel1.SuspendLayout();
             this.flowLayoutPanel2.SuspendLayout();
             this.settingsPanel.SuspendLayout();
@@ -626,6 +627,7 @@ namespace MobiusEditor.Dialogs
             // 
             // pnlButtons
             // 
+            this.pnlButtons.Controls.Add(this.lblTooLong);
             this.pnlButtons.Controls.Add(this.btnCheck);
             this.pnlButtons.Controls.Add(this.btnOK);
             this.pnlButtons.Controls.Add(this.btnCancel);
@@ -637,7 +639,7 @@ namespace MobiusEditor.Dialogs
             // 
             // btnCheck
             // 
-            this.btnCheck.Location = new System.Drawing.Point(2, 2);
+            this.btnCheck.Location = new System.Drawing.Point(211, 2);
             this.btnCheck.Margin = new System.Windows.Forms.Padding(2);
             this.btnCheck.Name = "btnCheck";
             this.btnCheck.Size = new System.Drawing.Size(75, 30);
@@ -702,6 +704,17 @@ namespace MobiusEditor.Dialogs
             this.removeTriggerToolStripMenuItem.Size = new System.Drawing.Size(184, 22);
             this.removeTriggerToolStripMenuItem.Text = "&Remove Trigger (Del)";
             this.removeTriggerToolStripMenuItem.Click += new System.EventHandler(this.removeTriggerToolStripMenuItem_Click);
+            // 
+            // lblTooLong
+            // 
+            this.lblTooLong.AutoSize = true;
+            this.lblTooLong.ForeColor = System.Drawing.Color.Red;
+            this.lblTooLong.Location = new System.Drawing.Point(9, 11);
+            this.lblTooLong.Name = "lblTooLong";
+            this.lblTooLong.Size = new System.Drawing.Size(164, 13);
+            this.lblTooLong.TabIndex = 33;
+            this.lblTooLong.Text = "Trigger length exceeds maximum!";
+            this.lblTooLong.Visible = false;
             // 
             // TriggersDialog
             // 
@@ -790,5 +803,6 @@ namespace MobiusEditor.Dialogs
         private System.Windows.Forms.ToolStripMenuItem renameTriggerToolStripMenuItem;
         private System.Windows.Forms.Panel pnlButtons;
         private System.Windows.Forms.Button btnCheck;
+        private System.Windows.Forms.Label lblTooLong;
     }
 }

@@ -41,9 +41,8 @@ namespace MobiusEditor.Dialogs
         {
             this.plugin = plugin;
             this.maxTriggers = maxTriggers;
-
             InitializeComponent();
-
+            lblTooLong.Text = "Trigger length exceeds " + maxLength + " characters!";
             switch (plugin.GameType)
             {
                 case GameType.TiberianDawn:
@@ -61,7 +60,6 @@ namespace MobiusEditor.Dialogs
                     btnCheck.Visible = false;
                     break;
             }
-
             triggers = new List<Trigger>(plugin.Map.Triggers.Select(t => t.Clone()));
             backupTriggers = new List<Trigger>(plugin.Map.Triggers.Select(t => t.Clone()));
             int nrOfTriggers = Math.Min(maxTriggers, triggers.Count);
@@ -79,7 +77,6 @@ namespace MobiusEditor.Dialogs
                 }
             }
             triggersListView.EndUpdate();
-
             string[] existenceNames = Enum.GetNames(typeof(TriggerPersistentType));
             switch (plugin.GameType)
             {
@@ -123,7 +120,7 @@ namespace MobiusEditor.Dialogs
             //action1ComboBox.DataBindings.Clear();
             //action2ComboBox.DataBindings.Clear();
             teamComboBox.DataBindings.Clear();
-
+            lblTooLong.Visible = SelectedTrigger != null && SelectedTrigger.Name != null && SelectedTrigger.Name.Length > maxLength;
             if (SelectedTrigger != null)
             {
                 houseComboBox.DataBindings.Add("SelectedItem", SelectedTrigger, "House");

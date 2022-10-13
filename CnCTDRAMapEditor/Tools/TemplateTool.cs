@@ -657,6 +657,7 @@ namespace MobiusEditor.Tools
             for (int i = 0; i < mapLength; ++i)
             {
                 Point location = new Point(i / mapWidth, i % mapWidth);
+                // For grouped tiles, PickTemplate will return the Group, not the individual tile. So RandomCell is enabled on the result.
                 TemplateType cur = PickTemplate(map, location, true, out _);
                 if (cur == null || (cur.Flag & TemplateTypeFlag.RandomCell) == TemplateTypeFlag.None)
                 {

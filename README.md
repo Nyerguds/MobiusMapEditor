@@ -363,7 +363,7 @@ These options are all enabled by default, but can be disabled if you wish. Use t
 * Waypoint labels are now drawn at the bottom of the cell, in the same style as the building rebuild priority labels. They can be disabled in the View menu, but like the building labels, they will not be drawn if Waypoints are not enabled.
 * Multiplayer starting points are now shown as colored flags. For TD, Nod's metallic blue will be used for the 7th flag (P6). For SS, which has classic colour order configured, metallic gray is the 4th flag (TM3), and the new bright blue is the 7th (TM6). For both TD and SS, the 8th flag has its value hardcoded as the purple from RA.
 * Waypoints now show a preview in placement mode.
-* On Sole Survivor maps, there is a special "Football goal areas" indicator that shows how much area around the flag needs to be left open to be paved with concrete in Football mode. These can be disabled under "View" -> "Indicators".
+* On Sole Survivor maps, there is a special "Football goal areas" indicator that shows how much area around the flag needs to be left open to be paved with concrete in Football mode. These can be disabled under "View" → "Indicators".
 * The game name of the opened map type is now shown in the title bar.
 * Changed the editor name in the title to "Mobius Map Editor".
 * Red Alert maps are now specifically detected on the presence of the "[MapPack]" section. If this is not present, and there is no .bin file, it loads as TD map without map templates.
@@ -385,7 +385,10 @@ These options are all enabled by default, but can be disabled if you wish. Use t
 * Steam publish dialog now has buttons to easily copy the map name and briefing from the mission.
 * Steam publish dialog description now properly supports multiline.
 * Steam publish dialog will now properly restore the location of a previously-used custom generated thumbnail.
-* in addition to the Remaster's one "Text=" line briefing, the editor now writes the classic style briefings into maps too, as "1=", "2=", etc. lines split at human-readable length.
+* In addition to the Remaster's one "Text=" line briefing, the editor now writes the classic style briefings into maps too, as "1=", "2=", etc. lines split at human-readable length This classic-style briefing can be disabled with the setting "WriteClassicBriefing" in "CnCTDRAMapEditor.exe.config".
+* Directions for vehicles are now limited to 8, as they are in the actual game.
+* Re-enabling a building's "prebuilt" status on TD maps will now set the House to the classic opposing House, rather than always defaulting to the first item in the list.
+* Added "Tools" → "Statistics" menu to house the "Power Balance" and "Silo Storage" tools, and added a "Map Objects" tool giving an overview of used objects.
 
 ### Possible future features
 

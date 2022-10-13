@@ -2453,6 +2453,89 @@ namespace MobiusEditor.TiberianDawn
             return ok ? null : sb.ToString();
         }
 
+        public IEnumerable<string> AssessMapItems()
+        {
+            ExplorerComparer cmp = new ExplorerComparer();
+            List<string> info = new List<string>();
+            int numAircraft = Globals.DisableAirUnits ? 0 : Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsAircraft).Count();
+            int numBuildings = Map.Buildings.OfType<Building>().Where(x => x.Occupier.IsPrebuilt).Count();
+            int numInfantry = Map.Technos.OfType<InfantryGroup>().Sum(item => item.Occupier.Infantry.Count(i => i != null));
+            int numTerrain = Map.Technos.OfType<Terrain>().Count();
+            int numUnits = Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsUnit).Count();
+            info.Add("Objects overview:");
+            if (!Globals.DisableAirUnits)
+            {
+                info.Add(string.Format("Number of aircraft: {0}. Maximum: {1}.", numAircraft, Constants.MaxAircraft));
+            }
+            info.Add(string.Format("Number of structures: {0}. Maximum: {1}.", numBuildings, Constants.MaxBuildings));
+            info.Add(string.Format("Number of infantry: {0}. Maximum: {1}.", numInfantry, Constants.MaxInfantry));
+            info.Add(string.Format("Number of terrain objects: {0}. Maximum: {1}.", numTerrain, Constants.MaxTerrain));
+            info.Add(string.Format("Number of units: {0}. Maximum: {1}.", numUnits, Constants.MaxUnits));
+            info.Add(string.Format("Number of team types: {0}. Maximum: {1}.", Map.TeamTypes.Count, Constants.MaxTeams));
+            info.Add(string.Format("Number of triggers: {0}. Maximum: {1}.", Map.Triggers.Count, Constants.MaxTriggers));
+            if (Map.BasicSection.SoloMission)
+            {
+                HashSet<int> usedWaypoints = new HashSet<int>();
+                HashSet<int> setWaypoints = Enumerable.Range(0, Map.Waypoints.Length).Where(i => Map.Waypoints[i].Cell.HasValue).ToHashSet();
+                HashSet<string> usedTeams = new HashSet<string>();
+                foreach (TeamType tt in Map.TeamTypes)
+                {
+                    String teamName = tt.Name;
+                    if (tt.IsAutocreate)
+                    {
+                        usedTeams.Add(teamName);
+                    }
+                    else
+                    {
+                        foreach (Trigger tr in Map.Triggers)
+                        {
+                            if (tr.Action1.Team == teamName &&
+                                (tr.Action1.ActionType == ActionTypes.ACTION_CREATE_TEAM
+                               || tr.Action1.ActionType == ActionTypes.ACTION_DESTROY_TEAM
+                               || tr.Action1.ActionType == ActionTypes.ACTION_REINFORCEMENTS))
+                            {
+                                usedTeams.Add(teamName);
+                            }
+                        }
+                    }
+                    if (tt.Origin != -1)
+                    {
+                        usedWaypoints.Add(tt.Origin);
+                    }
+                    foreach (TeamTypeMission tm in tt.Missions)
+                    {
+                        if (tm.Mission.ArgType == TeamMissionArgType.Waypoint)
+                        {
+                            usedWaypoints.Add((int)tm.Argument);
+                        }
+                    }
+                }
+                string[] unusedTeams = Map.TeamTypes.Select(tm => tm.Name).Where(tn => !usedTeams.Contains(tn)).ToArray();
+                Array.Sort(unusedTeams, cmp);
+                String unusedTeamsStr = String.Join(", ", unusedTeams);
+                foreach (Trigger tr in Map.Triggers)
+                {
+                    if (tr.Action1.ActionType == ActionTypes.ACTION_DZ)
+                        usedWaypoints.Add(Enumerable.Range(0, Map.Waypoints.Length).Where(i => (Map.Waypoints[i].Flag & WaypointFlag.Flare) == WaypointFlag.Flare).First());
+                }
+                String unusedWaypointsStr = String.Join(", ", setWaypoints.OrderBy(w => w).Where(w => !usedWaypoints.Contains(w)).Select(w => Map.Waypoints[w].Name).ToArray());
+                String evalEmpty(String str)
+                {
+                    return String.IsNullOrEmpty(str) ? "-" : str;
+                };
+                info.Add(String.Empty);
+                info.Add("Scripting remarks:");
+                info.Add(string.Format("Unused team types: {0}", evalEmpty(unusedTeamsStr)));
+                info.Add(string.Format("Waypoints not used in teams or triggers: {0}", evalEmpty(unusedWaypointsStr)));
+            }
+            else
+            {
+                int startPoints = Map.Waypoints.Count(w => w.Cell.HasValue && (w.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart);
+                info.Add(string.Format("Number of set starting points: {0}.", startPoints));
+            }
+            return info;
+        }
+
         protected void BasicSection_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             switch (e.PropertyName)

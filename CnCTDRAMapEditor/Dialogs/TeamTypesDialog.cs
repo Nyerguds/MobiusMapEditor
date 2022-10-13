@@ -62,6 +62,7 @@ namespace MobiusEditor.Dialogs
             this.technoTypes = plugin.Map.TeamTechnoTypes;
 
             InitializeComponent();
+            lblTooLong.Text = "Teamtype length exceeds " + maxLength + " characters!";
             infoImage = new Bitmap(27, 27);
             using (Graphics g = Graphics.FromImage(infoImage))
             {
@@ -182,6 +183,7 @@ namespace MobiusEditor.Dialogs
 
             TeamType selected = SelectedTeamType;
             lastEditedTeam = selected;
+            lblTooLong.Visible = SelectedTeamType != null && SelectedTeamType.Name != null && SelectedTeamType.Name.Length > maxLength;
             if (selected != null)
             {
                 cmbHouse.DataBindings.Add("SelectedValue", selected, "House");

@@ -67,8 +67,6 @@ namespace MobiusEditor
             this.settingsTeamTypesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.settingsTriggersMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolsPowerMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolsStorageMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolsRandomizeTilesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolsExportImageMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -105,6 +103,10 @@ namespace MobiusEditor
             this.copyrightStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.mouseToolTip = new System.Windows.Forms.ToolTip(this.components);
             this.mainToolStrip = new System.Windows.Forms.ToolStrip();
+            this.statisticsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolsStatsGameObjectsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolsStatsPowerMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolsStatsStorageMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mapPanel = new MobiusEditor.Controls.MapPanel();
             this.mapToolStripButton = new MobiusEditor.Controls.ViewToolStripButton();
             this.smudgeToolStripButton = new MobiusEditor.Controls.ViewToolStripButton();
@@ -231,7 +233,7 @@ namespace MobiusEditor
             // 
             this.fileExitMenuItem.Name = "fileExitMenuItem";
             this.fileExitMenuItem.Size = new System.Drawing.Size(195, 22);
-            this.fileExitMenuItem.Text = "&Exit";
+            this.fileExitMenuItem.Text = "E&xit";
             this.fileExitMenuItem.Click += new System.EventHandler(this.FileExitMenuItem_Click);
             // 
             // editToolStripMenuItem
@@ -248,7 +250,7 @@ namespace MobiusEditor
             // 
             this.editUndoMenuItem.Name = "editUndoMenuItem";
             this.editUndoMenuItem.ShortcutKeyDisplayString = "Ctrl + Z";
-            this.editUndoMenuItem.Size = new System.Drawing.Size(165, 22);
+            this.editUndoMenuItem.Size = new System.Drawing.Size(180, 22);
             this.editUndoMenuItem.Text = "&Undo";
             this.editUndoMenuItem.Click += new System.EventHandler(this.EditUndoMenuItem_Click);
             // 
@@ -256,14 +258,14 @@ namespace MobiusEditor
             // 
             this.editRedoMenuItem.Name = "editRedoMenuItem";
             this.editRedoMenuItem.ShortcutKeyDisplayString = "Ctrl + Y";
-            this.editRedoMenuItem.Size = new System.Drawing.Size(165, 22);
+            this.editRedoMenuItem.Size = new System.Drawing.Size(180, 22);
             this.editRedoMenuItem.Text = "&Redo";
             this.editRedoMenuItem.Click += new System.EventHandler(this.EditRedoMenuItem_Click);
             // 
             // editClearUndoRedoMenuItem
             // 
             this.editClearUndoRedoMenuItem.Name = "editClearUndoRedoMenuItem";
-            this.editClearUndoRedoMenuItem.Size = new System.Drawing.Size(165, 22);
+            this.editClearUndoRedoMenuItem.Size = new System.Drawing.Size(180, 22);
             this.editClearUndoRedoMenuItem.Text = "Clear Undo/Redo";
             this.editClearUndoRedoMenuItem.Click += new System.EventHandler(this.EditClearUndoRedoMenuItem_Click);
             // 
@@ -304,34 +306,18 @@ namespace MobiusEditor
             // toolsToolStripMenuItem
             // 
             this.toolsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolsPowerMenuItem,
-            this.toolsStorageMenuItem,
+            this.statisticsToolStripMenuItem,
             this.toolsRandomizeTilesMenuItem,
             this.toolsExportImageMenuItem});
             this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
             this.toolsToolStripMenuItem.Size = new System.Drawing.Size(46, 20);
-            this.toolsToolStripMenuItem.Text = "Tools";
-            // 
-            // toolsPowerMenuItem
-            // 
-            this.toolsPowerMenuItem.Name = "toolsPowerMenuItem";
-            this.toolsPowerMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.B)));
-            this.toolsPowerMenuItem.Size = new System.Drawing.Size(204, 22);
-            this.toolsPowerMenuItem.Text = "&Power Balance...";
-            this.toolsPowerMenuItem.Click += new System.EventHandler(this.ToolsPowerMenuItem_Click);
-            // 
-            // toolsStorageMenuItem
-            // 
-            this.toolsStorageMenuItem.Name = "toolsStorageMenuItem";
-            this.toolsStorageMenuItem.Size = new System.Drawing.Size(204, 22);
-            this.toolsStorageMenuItem.Text = "Silo Storage...";
-            this.toolsStorageMenuItem.Click += new System.EventHandler(this.ToolsStorageMenuItem_Click);
+            this.toolsToolStripMenuItem.Text = "&Tools";
             // 
             // toolsRandomizeTilesMenuItem
             // 
             this.toolsRandomizeTilesMenuItem.Name = "toolsRandomizeTilesMenuItem";
             this.toolsRandomizeTilesMenuItem.Size = new System.Drawing.Size(204, 22);
-            this.toolsRandomizeTilesMenuItem.Text = "Re-randomize tiles";
+            this.toolsRandomizeTilesMenuItem.Text = "&Re-randomize tiles";
             this.toolsRandomizeTilesMenuItem.Click += new System.EventHandler(this.ToolsRandomizeTilesMenuItem_Click);
             // 
             // toolsExportImageMenuItem
@@ -364,20 +350,20 @@ namespace MobiusEditor
             this.viewMapSmudgeMenuItem,
             this.viewMapWaypointsMenuItem});
             this.viewMapToolStripMenuItem.Name = "viewMapToolStripMenuItem";
-            this.viewMapToolStripMenuItem.Size = new System.Drawing.Size(126, 22);
+            this.viewMapToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.viewMapToolStripMenuItem.Text = "&Map";
             // 
             // viewMapEnableAllMenuItem
             // 
             this.viewMapEnableAllMenuItem.Name = "viewMapEnableAllMenuItem";
-            this.viewMapEnableAllMenuItem.Size = new System.Drawing.Size(130, 22);
+            this.viewMapEnableAllMenuItem.Size = new System.Drawing.Size(180, 22);
             this.viewMapEnableAllMenuItem.Text = "Enable all";
             this.viewMapEnableAllMenuItem.Click += new System.EventHandler(this.ViewMapEnableAllMenuItem_Click);
             // 
             // viewMapDisableAllMenuItem
             // 
             this.viewMapDisableAllMenuItem.Name = "viewMapDisableAllMenuItem";
-            this.viewMapDisableAllMenuItem.Size = new System.Drawing.Size(130, 22);
+            this.viewMapDisableAllMenuItem.Size = new System.Drawing.Size(180, 22);
             this.viewMapDisableAllMenuItem.Text = "Disable all";
             this.viewMapDisableAllMenuItem.Click += new System.EventHandler(this.ViewMapDisableAllMenuItem_Click);
             // 
@@ -387,7 +373,7 @@ namespace MobiusEditor
             this.viewMapBuildingsMenuItem.CheckOnClick = true;
             this.viewMapBuildingsMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.viewMapBuildingsMenuItem.Name = "viewMapBuildingsMenuItem";
-            this.viewMapBuildingsMenuItem.Size = new System.Drawing.Size(130, 22);
+            this.viewMapBuildingsMenuItem.Size = new System.Drawing.Size(180, 22);
             this.viewMapBuildingsMenuItem.Text = "&Buildings";
             this.viewMapBuildingsMenuItem.CheckedChanged += new System.EventHandler(this.ViewMenuItem_CheckedChanged);
             // 
@@ -397,7 +383,7 @@ namespace MobiusEditor
             this.viewMapInfantryMenuItem.CheckOnClick = true;
             this.viewMapInfantryMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.viewMapInfantryMenuItem.Name = "viewMapInfantryMenuItem";
-            this.viewMapInfantryMenuItem.Size = new System.Drawing.Size(130, 22);
+            this.viewMapInfantryMenuItem.Size = new System.Drawing.Size(180, 22);
             this.viewMapInfantryMenuItem.Text = "&Infantry";
             this.viewMapInfantryMenuItem.CheckedChanged += new System.EventHandler(this.ViewMenuItem_CheckedChanged);
             // 
@@ -407,7 +393,7 @@ namespace MobiusEditor
             this.viewMapUnitsMenuItem.CheckOnClick = true;
             this.viewMapUnitsMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.viewMapUnitsMenuItem.Name = "viewMapUnitsMenuItem";
-            this.viewMapUnitsMenuItem.Size = new System.Drawing.Size(130, 22);
+            this.viewMapUnitsMenuItem.Size = new System.Drawing.Size(180, 22);
             this.viewMapUnitsMenuItem.Text = "&Units";
             this.viewMapUnitsMenuItem.CheckedChanged += new System.EventHandler(this.ViewMenuItem_CheckedChanged);
             // 
@@ -417,7 +403,7 @@ namespace MobiusEditor
             this.viewMapTerrainMenuItem.CheckOnClick = true;
             this.viewMapTerrainMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.viewMapTerrainMenuItem.Name = "viewMapTerrainMenuItem";
-            this.viewMapTerrainMenuItem.Size = new System.Drawing.Size(130, 22);
+            this.viewMapTerrainMenuItem.Size = new System.Drawing.Size(180, 22);
             this.viewMapTerrainMenuItem.Text = "&Terrain";
             this.viewMapTerrainMenuItem.CheckedChanged += new System.EventHandler(this.ViewMenuItem_CheckedChanged);
             // 
@@ -427,7 +413,7 @@ namespace MobiusEditor
             this.viewMapOverlayMenuItem.CheckOnClick = true;
             this.viewMapOverlayMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.viewMapOverlayMenuItem.Name = "viewMapOverlayMenuItem";
-            this.viewMapOverlayMenuItem.Size = new System.Drawing.Size(130, 22);
+            this.viewMapOverlayMenuItem.Size = new System.Drawing.Size(180, 22);
             this.viewMapOverlayMenuItem.Text = "&Overlay";
             this.viewMapOverlayMenuItem.CheckedChanged += new System.EventHandler(this.ViewMenuItem_CheckedChanged);
             // 
@@ -437,7 +423,7 @@ namespace MobiusEditor
             this.viewMapSmudgeMenuItem.CheckOnClick = true;
             this.viewMapSmudgeMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.viewMapSmudgeMenuItem.Name = "viewMapSmudgeMenuItem";
-            this.viewMapSmudgeMenuItem.Size = new System.Drawing.Size(130, 22);
+            this.viewMapSmudgeMenuItem.Size = new System.Drawing.Size(180, 22);
             this.viewMapSmudgeMenuItem.Text = "&Smudge";
             this.viewMapSmudgeMenuItem.CheckedChanged += new System.EventHandler(this.ViewMenuItem_CheckedChanged);
             // 
@@ -447,7 +433,7 @@ namespace MobiusEditor
             this.viewMapWaypointsMenuItem.CheckOnClick = true;
             this.viewMapWaypointsMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.viewMapWaypointsMenuItem.Name = "viewMapWaypointsMenuItem";
-            this.viewMapWaypointsMenuItem.Size = new System.Drawing.Size(130, 22);
+            this.viewMapWaypointsMenuItem.Size = new System.Drawing.Size(180, 22);
             this.viewMapWaypointsMenuItem.Text = "&Waypoints";
             this.viewMapWaypointsMenuItem.CheckedChanged += new System.EventHandler(this.ViewMenuItem_CheckedChanged);
             // 
@@ -464,7 +450,7 @@ namespace MobiusEditor
             this.viewIndicatorsBuildingRebuildLabelsMenuItem,
             this.viewIndicatorsBuildingFakeLabelsMenuItem});
             this.viewIndicatorsToolStripMenuItem.Name = "viewIndicatorsToolStripMenuItem";
-            this.viewIndicatorsToolStripMenuItem.Size = new System.Drawing.Size(126, 22);
+            this.viewIndicatorsToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.viewIndicatorsToolStripMenuItem.Text = "&Indicators";
             // 
             // viewIndicatorsEnableAllMenuItem
@@ -662,6 +648,40 @@ namespace MobiusEditor
             this.mainToolStrip.TabIndex = 3;
             this.mainToolStrip.Text = "toolStrip1";
             this.mainToolStrip.MouseMove += new System.Windows.Forms.MouseEventHandler(this.mainToolStrip_MouseMove);
+            // 
+            // statisticsToolStripMenuItem
+            // 
+            this.statisticsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolsStatsGameObjectsMenuItem,
+            this.toolsStatsPowerMenuItem,
+            this.toolsStatsStorageMenuItem});
+            this.statisticsToolStripMenuItem.Name = "statisticsToolStripMenuItem";
+            this.statisticsToolStripMenuItem.Size = new System.Drawing.Size(204, 22);
+            this.statisticsToolStripMenuItem.Text = "&Statistics";
+            // 
+            // toolsStatsGameObjectsMenuItem
+            // 
+            this.toolsStatsGameObjectsMenuItem.Name = "toolsStatsGameObjectsMenuItem";
+            this.toolsStatsGameObjectsMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.B)));
+            this.toolsStatsGameObjectsMenuItem.Size = new System.Drawing.Size(205, 22);
+            this.toolsStatsGameObjectsMenuItem.Text = "&Map Objects";
+            this.toolsStatsGameObjectsMenuItem.Click += new System.EventHandler(this.ToolsStatsGameObjectsMenuItem_Click);
+            // 
+            // toolsStatsPowerMenuItem
+            // 
+            this.toolsStatsPowerMenuItem.Name = "toolsStatsPowerMenuItem";
+            this.toolsStatsPowerMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.W)));
+            this.toolsStatsPowerMenuItem.Size = new System.Drawing.Size(205, 22);
+            this.toolsStatsPowerMenuItem.Text = "&Power Balance...";
+            this.toolsStatsPowerMenuItem.Click += new System.EventHandler(this.ToolsStatsPowerMenuItem_Click);
+            // 
+            // toolsStatsStorageMenuItem
+            // 
+            this.toolsStatsStorageMenuItem.Name = "toolsStatsStorageMenuItem";
+            this.toolsStatsStorageMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.L)));
+            this.toolsStatsStorageMenuItem.Size = new System.Drawing.Size(205, 22);
+            this.toolsStatsStorageMenuItem.Text = "&Silo Storage...";
+            this.toolsStatsStorageMenuItem.Click += new System.EventHandler(this.ToolsStatsStorageMenuItem_Click);
             // 
             // mapPanel
             // 
@@ -883,7 +903,6 @@ namespace MobiusEditor
         private System.Windows.Forms.ToolStripStatusLabel toolStatusLabel;
         private System.Windows.Forms.ToolStripStatusLabel copyrightStatusLabel;
         private System.Windows.Forms.ToolStripMenuItem toolsToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem toolsPowerMenuItem;
         private System.Windows.Forms.ToolStripMenuItem toolsExportImageMenuItem;
         private System.Windows.Forms.ToolStripMenuItem viewMapBuildingsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem viewMapUnitsMenuItem;
@@ -902,10 +921,13 @@ namespace MobiusEditor
         private System.Windows.Forms.ToolStripMenuItem viewIndicatorsWaypointsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem viewIndicatorsCellTriggersMenuItem;
         private System.Windows.Forms.ToolStripMenuItem editClearUndoRedoMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem toolsStorageMenuItem;
         private System.Windows.Forms.ToolStripMenuItem toolsRandomizeTilesMenuItem;
         private Controls.ViewToolStripButton selectToolStripButton;
         private System.Windows.Forms.ToolStripMenuItem viewIndicatorsFootballAreaMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem statisticsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem toolsStatsGameObjectsMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem toolsStatsPowerMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem toolsStatsStorageMenuItem;
     }
 }
 

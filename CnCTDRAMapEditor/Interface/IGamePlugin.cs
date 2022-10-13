@@ -63,5 +63,7 @@ namespace MobiusEditor.Interface
         bool Save(string path, FileType fileType, Bitmap customPreview);
 
         string Validate();
+
+        IEnumerable<String> AssessMapItems();
     }
 }

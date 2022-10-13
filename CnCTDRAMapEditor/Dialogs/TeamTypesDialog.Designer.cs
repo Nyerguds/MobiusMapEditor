@@ -36,7 +36,6 @@ namespace MobiusEditor.Dialogs
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.flowLayoutPanel2 = new System.Windows.Forms.FlowLayoutPanel();
             this.btnAddTeamType = new System.Windows.Forms.Button();
-            this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOK = new System.Windows.Forms.Button();
             this.settingsPanel = new System.Windows.Forms.Panel();
@@ -85,9 +84,10 @@ namespace MobiusEditor.Dialogs
             this.renameTeamTypeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removeTeamTypeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.lblTooLong = new System.Windows.Forms.Label();
+            this.panel1 = new System.Windows.Forms.Panel();
             this.tableLayoutPanel1.SuspendLayout();
             this.flowLayoutPanel2.SuspendLayout();
-            this.flowLayoutPanel1.SuspendLayout();
             this.settingsPanel.SuspendLayout();
             this.teamTypeTableLayoutPanel.SuspendLayout();
             this.tableLayoutPanel3.SuspendLayout();
@@ -101,6 +101,7 @@ namespace MobiusEditor.Dialogs
             ((System.ComponentModel.ISupportInitialize)(this.nudFear)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudRecruitPriority)).BeginInit();
             this.teamTypesContextMenuStrip.SuspendLayout();
+            this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // tableLayoutPanel1
@@ -108,8 +109,8 @@ namespace MobiusEditor.Dialogs
             this.tableLayoutPanel1.ColumnCount = 2;
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 20F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 80F));
+            this.tableLayoutPanel1.Controls.Add(this.panel1, 1, 1);
             this.tableLayoutPanel1.Controls.Add(this.flowLayoutPanel2, 0, 1);
-            this.tableLayoutPanel1.Controls.Add(this.flowLayoutPanel1, 1, 1);
             this.tableLayoutPanel1.Controls.Add(this.settingsPanel, 1, 0);
             this.tableLayoutPanel1.Controls.Add(this.teamTypesListView, 0, 0);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -144,24 +145,12 @@ namespace MobiusEditor.Dialogs
             this.btnAddTeamType.UseVisualStyleBackColor = true;
             this.btnAddTeamType.Click += new System.EventHandler(this.BtnAddTeamType_Click);
             // 
-            // flowLayoutPanel1
-            // 
-            this.flowLayoutPanel1.AutoSize = true;
-            this.flowLayoutPanel1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.flowLayoutPanel1.Controls.Add(this.btnCancel);
-            this.flowLayoutPanel1.Controls.Add(this.btnOK);
-            this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.flowLayoutPanel1.FlowDirection = System.Windows.Forms.FlowDirection.RightToLeft;
-            this.flowLayoutPanel1.Location = new System.Drawing.Point(178, 379);
-            this.flowLayoutPanel1.Name = "flowLayoutPanel1";
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(694, 34);
-            this.flowLayoutPanel1.TabIndex = 3;
-            // 
             // btnCancel
             // 
+            this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.AutoSize = true;
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(624, 2);
+            this.btnCancel.Location = new System.Drawing.Point(630, 5);
             this.btnCancel.Margin = new System.Windows.Forms.Padding(2);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(68, 30);
@@ -171,9 +160,10 @@ namespace MobiusEditor.Dialogs
             // 
             // btnOK
             // 
+            this.btnOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnOK.AutoSize = true;
             this.btnOK.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.btnOK.Location = new System.Drawing.Point(570, 2);
+            this.btnOK.Location = new System.Drawing.Point(576, 5);
             this.btnOK.Margin = new System.Windows.Forms.Padding(2);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(50, 30);
@@ -817,6 +807,29 @@ namespace MobiusEditor.Dialogs
             this.removeTeamTypeToolStripMenuItem.Text = "&Remove Team Type (Del)";
             this.removeTeamTypeToolStripMenuItem.Click += new System.EventHandler(this.RemoveTeamTypeToolStripMenuItem_Click);
             // 
+            // lblTooLong
+            // 
+            this.lblTooLong.AutoSize = true;
+            this.lblTooLong.ForeColor = System.Drawing.Color.Red;
+            this.lblTooLong.Location = new System.Drawing.Point(3, 14);
+            this.lblTooLong.Name = "lblTooLong";
+            this.lblTooLong.Size = new System.Drawing.Size(178, 13);
+            this.lblTooLong.TabIndex = 42;
+            this.lblTooLong.Text = "Teamtype length exceeds maximum!";
+            this.lblTooLong.Visible = false;
+            // 
+            // panel1
+            // 
+            this.panel1.Controls.Add(this.btnCancel);
+            this.panel1.Controls.Add(this.lblTooLong);
+            this.panel1.Controls.Add(this.btnOK);
+            this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panel1.Location = new System.Drawing.Point(175, 376);
+            this.panel1.Margin = new System.Windows.Forms.Padding(0);
+            this.panel1.Name = "panel1";
+            this.panel1.Size = new System.Drawing.Size(700, 40);
+            this.panel1.TabIndex = 43;
+            // 
             // TeamTypesDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -843,8 +856,6 @@ namespace MobiusEditor.Dialogs
             this.tableLayoutPanel1.PerformLayout();
             this.flowLayoutPanel2.ResumeLayout(false);
             this.flowLayoutPanel2.PerformLayout();
-            this.flowLayoutPanel1.ResumeLayout(false);
-            this.flowLayoutPanel1.PerformLayout();
             this.settingsPanel.ResumeLayout(false);
             this.teamTypeTableLayoutPanel.ResumeLayout(false);
             this.tableLayoutPanel3.ResumeLayout(false);
@@ -861,6 +872,8 @@ namespace MobiusEditor.Dialogs
             ((System.ComponentModel.ISupportInitialize)(this.nudFear)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudRecruitPriority)).EndInit();
             this.teamTypesContextMenuStrip.ResumeLayout(false);
+            this.panel1.ResumeLayout(false);
+            this.panel1.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -868,7 +881,6 @@ namespace MobiusEditor.Dialogs
         #endregion
 
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
-        private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnOK;
         private System.Windows.Forms.Panel settingsPanel;
@@ -919,5 +931,7 @@ namespace MobiusEditor.Dialogs
         private Label lblLine2;
         private ColumnHeader HouseColumnHeader;
         private Label lblTriggerInfo;
+        private Panel panel1;
+        private Label lblTooLong;
     }
 }

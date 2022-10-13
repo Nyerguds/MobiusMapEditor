@@ -57,7 +57,7 @@ namespace MobiusEditor.Controls
                     {
                         if (obj is Building bld)
                         {
-                            AdjustToStructurePrebuiltStatus(bld);
+                            AdjustToStructurePrebuiltStatus(bld, GetHouseComboBox());
                         }
                         obj.PropertyChanged += Obj_PropertyChanged;
                     }
@@ -254,7 +254,7 @@ namespace MobiusEditor.Controls
                             {
                                 building.IsPrebuilt = true;
                             }
-                            AdjustToStructurePrebuiltStatus(building);
+                            AdjustToStructurePrebuiltStatus(building, GetHouseComboBox());
                         }
                     }
                     break;
@@ -262,21 +262,26 @@ namespace MobiusEditor.Controls
                     {
                         if (obj is Building building)
                         {
-                            AdjustToStructurePrebuiltStatus(building);
+                            AdjustToStructurePrebuiltStatus(building, GetHouseComboBox());
                         }
                     } break;
             }
             // The undo/redo system now handles plugin dirty state.
         }
 
-        private void AdjustToStructurePrebuiltStatus(Building building)
+        private PropertiesComboBox GetHouseComboBox()
+        {
+            return houseComboBox;
+        }
+
+        private void AdjustToStructurePrebuiltStatus(Building building, PropertiesComboBox houseComboBox)
         {
             if (building.BasePriority >= 0 && !building.IsPrebuilt)
             {
                 HouseType house = Plugin.Map.GetBaseHouse(Plugin.GameType);
                 if (house.ID < 0)
                 {
-                    // Fix for changing the combobox to one only containing "None".
+                    // Fix for changing the combobox to one only contain "None".
                     houseComboBox.DataBindings.Clear();
                     houseComboBox.DataSource = house.Yield().Select(t => new TypeItem<HouseType>(t.Name, t)).ToArray();
                     houseComboBox.SelectedIndex = 0;
@@ -296,10 +301,19 @@ namespace MobiusEditor.Controls
                 if (selected != null && selected.ID < 0)
                 {
                     houseComboBox.DataBindings.Clear();
-                    var houses = Plugin.Map.Houses.Select(t => new TypeItem<HouseType>(t.Type.Name, t.Type)).ToArray();
+                    TypeItem<HouseType>[] houses = Plugin.Map.Houses.Select(t => new TypeItem<HouseType>(t.Type.Name, t.Type)).ToArray();
                     houseComboBox.DataSource = houses;
-                    building.House = houses.First().Type;
-                    houseComboBox.SelectedIndex = 0;
+                    HouseType restoredHouse = null;
+                    if (Plugin.GameType == GameType.TiberianDawn)
+                    {
+                        String opposing = TiberianDawn.HouseTypes.GetClassicOpposingPlayer(Plugin.Map.BasicSection.Player);
+                        restoredHouse = Plugin.Map.Houses.Where(h => h.Type.Equals(opposing)).FirstOrDefault()?.Type;
+                    }
+                    if (restoredHouse == null)
+                    {
+                        restoredHouse = houses.First().Type;
+                    }
+                    building.House = restoredHouse;
                     houseComboBox.DataBindings.Add("SelectedValue", obj, "House");
                 }
             }
