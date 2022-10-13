@@ -2716,7 +2716,11 @@ namespace MobiusEditor.RedAlert
                 String usedGlobalsStr = String.Join(", ", checkedGlobals.Union(alteredGlobals).OrderBy(g => g).Select(g => g.ToString()).ToArray());
                 String chGlobalsNotEdStr = String.Join(", ", checkedGlobals.Where(g => !alteredGlobals.Contains(g)).OrderBy(g => g).Select(g => g.ToString()).ToArray());
                 String edGlobalsNotChStr = String.Join(", ", alteredGlobals.Where(g => !checkedGlobals.Contains(g)).OrderBy(g => g).Select(g => g.ToString()).ToArray());
-                String unusedWaypointsStr = String.Join(", ", setWaypoints.OrderBy(w => w).Where(w => !usedWaypoints.Contains(w)).Select(w => Map.Waypoints[w].Name).ToArray());
+                WaypointFlag toIgnore = WaypointFlag.Home | WaypointFlag.Reinforce | WaypointFlag.Special;
+                String unusedWaypointsStr = String.Join(", ", setWaypoints.OrderBy(w => w)
+                    .Where(w => (Map.Waypoints[w].Flag & toIgnore) == WaypointFlag.None
+                                && !usedWaypoints.Contains(w)).Select(w => Map.Waypoints[w].Name).ToArray());
+                String unsetUsedWaypointsStr = String.Join(", ", usedWaypoints.OrderBy(w => w).Where(w => !setWaypoints.Contains(w)).Select(w => Map.Waypoints[w].Name).ToArray());
 
                 String evalEmpty(String str)
                 {
@@ -2728,7 +2732,8 @@ namespace MobiusEditor.RedAlert
                 info.Add(string.Format("Globals used: {0}", evalEmpty(usedGlobalsStr)));
                 info.Add(string.Format("Globals altered but never checked: {0}", evalEmpty(edGlobalsNotChStr)));
                 info.Add(string.Format("Globals checked but never altered: {0}", evalEmpty(chGlobalsNotEdStr)));
-                info.Add(string.Format("Waypoints not used in teams or triggers: {0}", evalEmpty(unusedWaypointsStr)));
+                info.Add(string.Format("Placed waypoints not used in teams or triggers: {0}", evalEmpty(unusedWaypointsStr)));
+                info.Add(string.Format("Empty waypoints used in teams or triggers: {0}", evalEmpty(unsetUsedWaypointsStr)));
             }
             else
             {

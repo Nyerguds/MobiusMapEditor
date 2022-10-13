@@ -56,7 +56,7 @@ namespace MobiusEditor.Controls
             this.txtBriefing.Multiline = true;
             this.txtBriefing.Name = "txtBriefing";
             this.txtBriefing.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtBriefing.Size = new System.Drawing.Size(596, 375);
+            this.txtBriefing.Size = new System.Drawing.Size(396, 399);
             this.txtBriefing.TabIndex = 1;
             // 
             // lblBriefing
@@ -65,7 +65,7 @@ namespace MobiusEditor.Controls
             this.lblBriefing.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lblBriefing.Location = new System.Drawing.Point(3, 0);
             this.lblBriefing.Name = "lblBriefing";
-            this.lblBriefing.Size = new System.Drawing.Size(594, 13);
+            this.lblBriefing.Size = new System.Drawing.Size(394, 13);
             this.lblBriefing.TabIndex = 0;
             this.lblBriefing.Text = "Enter mission briefing text here:";
             // 
@@ -81,7 +81,7 @@ namespace MobiusEditor.Controls
             this.tableLayoutPanel1.RowCount = 2;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(600, 400);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(400, 424);
             this.tableLayoutPanel1.TabIndex = 1;
             // 
             // BriefingSettings
@@ -91,7 +91,7 @@ namespace MobiusEditor.Controls
             this.Controls.Add(this.tableLayoutPanel1);
             this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "BriefingSettings";
-            this.Size = new System.Drawing.Size(600, 400);
+            this.Size = new System.Drawing.Size(400, 424);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
             this.ResumeLayout(false);

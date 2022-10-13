@@ -265,46 +265,48 @@ namespace MobiusEditor.Dialogs
                     brief = brief.Replace('\t', ' ').Trim('\r', '\n', ' ').Replace("\r\n", "\n").Replace("\r", "\n");
                     int lines = brief.Count(c => c == '\n') + 1;
                     briefLenOvfl = lines > 25;
-                    // split in lines of 40; that's more or less the average line length in the brief screen.
-                    List<String> txtLines = new List<string>();
-                    string[] briefLines = brief.Split('\n');
-                    for (int i = 0; i < briefLines.Length; ++i)
+                    if (!briefLenOvfl)
                     {
-                        String line = briefLines[i].Trim();
-                        if (line.Length <= cutoff)
+                        // split in lines of 40; that's more or less the average line length in the brief screen.
+                        List<String> txtLines = new List<string>();
+                        string[] briefLines = brief.Split('\n');
+                        for (int i = 0; i < briefLines.Length; ++i)
                         {
-                            txtLines.Add(line);
-                            continue;
-                        }
-                        String[] splitLine = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                        int wordIndex = 0;
-                        while (wordIndex < splitLine.Length)
-                        {
-                            StringBuilder sb = new StringBuilder();
-                            // Always allow initial word
-                            int nextLength = 0;
-                            while (nextLength < cutoff && wordIndex < splitLine.Length)
+                            String line = briefLines[i].Trim();
+                            if (line.Length <= cutoff)
                             {
-                                if (sb.Length > 0)
-                                    sb.Append(' ');
-                                sb.Append(splitLine[wordIndex++]);
-                                nextLength = wordIndex >= splitLine.Length ? 0 : (sb.Length + 1 + splitLine[wordIndex].Length);
+                                txtLines.Add(line);
+                                continue;
                             }
-                            txtLines.Add(sb.ToString());
+                            String[] splitLine = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                            int wordIndex = 0;
+                            while (wordIndex < splitLine.Length)
+                            {
+                                StringBuilder sb = new StringBuilder();
+                                // Always allow initial word
+                                int nextLength = 0;
+                                while (nextLength < cutoff && wordIndex < splitLine.Length)
+                                {
+                                    if (sb.Length > 0)
+                                        sb.Append(' ');
+                                    sb.Append(splitLine[wordIndex++]);
+                                    nextLength = wordIndex >= splitLine.Length ? 0 : (sb.Length + 1 + splitLine[wordIndex].Length);
+                                }
+                                txtLines.Add(sb.ToString());
+                            }
                         }
+                        briefLenSplitOvfl = txtLines.Count > 25;
                     }
-                    briefLenSplitOvfl = txtLines.Count > 25;
                     String msg = null;
-                    const String warn25Lines = "Briefings on Red Alert's briefing screen can only be 25 lines. ";
-                    const String pressCancel = " Press Cancel to go back and edit the briefing, or OK to continue.";
-
+                    const String warn25Lines = "Red Alert's briefing screen can only show 25 lines of briefing text. ";
+                    const String exceedPressCancel = "\n\nPress Cancel to go back and edit the briefing, or OK to ignore the issue and continue.";
                     if (briefLenOvfl)
                     {
-                        msg = warn25Lines + "Your current briefing exceeds that." + pressCancel;
+                        msg = warn25Lines + "Your current briefing exceeds that." + exceedPressCancel;
                     }
                     else if (briefLenSplitOvfl)
                     {
-                        msg = warn25Lines + "The lines average to about 40 characters per line, and when split that way, your current briefing exceeds that." + pressCancel;
+                        msg = warn25Lines + "The lines average to about 40 characters per line, and when split that way, your current briefing exceeds that, meaning it will most likely not display correctly in-game." + exceedPressCancel;
                     }
                     if (msg != null)
                     {

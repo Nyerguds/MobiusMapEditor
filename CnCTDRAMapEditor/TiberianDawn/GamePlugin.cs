@@ -2518,7 +2518,11 @@ namespace MobiusEditor.TiberianDawn
                     if (tr.Action1.ActionType == ActionTypes.ACTION_DZ)
                         usedWaypoints.Add(Enumerable.Range(0, Map.Waypoints.Length).Where(i => (Map.Waypoints[i].Flag & WaypointFlag.Flare) == WaypointFlag.Flare).First());
                 }
-                String unusedWaypointsStr = String.Join(", ", setWaypoints.OrderBy(w => w).Where(w => !usedWaypoints.Contains(w)).Select(w => Map.Waypoints[w].Name).ToArray());
+                WaypointFlag toIgnore = WaypointFlag.Home | WaypointFlag.Reinforce;
+                String unusedWaypointsStr = String.Join(", ", setWaypoints.OrderBy(w => w)
+                    .Where(w => (Map.Waypoints[w].Flag & toIgnore) == WaypointFlag.None
+                                && !usedWaypoints.Contains(w)).Select(w => Map.Waypoints[w].Name).ToArray());
+                String unsetUsedWaypointsStr = String.Join(", ", usedWaypoints.OrderBy(w => w).Where(w => !setWaypoints.Contains(w)).Select(w => Map.Waypoints[w].Name).ToArray());
                 String evalEmpty(String str)
                 {
                     return String.IsNullOrEmpty(str) ? "-" : str;
@@ -2526,7 +2530,8 @@ namespace MobiusEditor.TiberianDawn
                 info.Add(String.Empty);
                 info.Add("Scripting remarks:");
                 info.Add(string.Format("Unused team types: {0}", evalEmpty(unusedTeamsStr)));
-                info.Add(string.Format("Waypoints not used in teams or triggers: {0}", evalEmpty(unusedWaypointsStr)));
+                info.Add(string.Format("Placed waypoints not used in teams or triggers: {0}", evalEmpty(unusedWaypointsStr)));
+                info.Add(string.Format("Empty waypoints used in teams or triggers: {0}", evalEmpty(unsetUsedWaypointsStr)));
             }
             else
             {
