@@ -835,7 +835,7 @@ namespace MobiusEditor.RedAlert
             "Unable to build more",
             "Primary building selected",
             "M.A.D. Tank Deployed",
-            "none",
+            "None",
             "Unit lost",
             "Select target",
             "Enemy approaching",

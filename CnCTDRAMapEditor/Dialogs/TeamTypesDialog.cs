@@ -19,7 +19,6 @@ using MobiusEditor.Model;
 using MobiusEditor.Utility;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Reflection;
@@ -39,6 +38,9 @@ namespace MobiusEditor.Dialogs
         private readonly List<TeamType> teamTypes;
         private readonly List<TeamType> backupTeamTypes;
         public IEnumerable<TeamType> TeamTypes => teamTypes;
+
+        private readonly List<(String Name1, String Name2)> renameActions;
+        public List<(String Name1, String Name2)> RenameActions => renameActions;
 
         private ListViewItem SelectedItem => (teamTypesListView.SelectedItems.Count > 0) ? teamTypesListView.SelectedItems[0] : null;
 
@@ -87,6 +89,7 @@ namespace MobiusEditor.Dialogs
                     break;
             }
             teamTypes = new List<TeamType>();
+            renameActions = new List<(string Name1, string Name2)>();
             backupTeamTypes = new List<TeamType>();
             Waypoint[] wps = plugin.Map.Waypoints;
             this.wayPoints = Enumerable.Range(0, wps.Length).Select(wp => new ListItem<int>(wp, wps[wp].ToString())).ToArray();
@@ -237,10 +240,12 @@ namespace MobiusEditor.Dialogs
             {
                 var hitTest = teamTypesListView.HitTest(e.Location);
                 bool itemExists = hitTest.Item != null;
-                addTeamTypeToolStripMenuItem.Visible = true;
-                addTeamTypeToolStripMenuItem.Enabled = teamTypesListView.Items.Count < maxTeams;
-                renameTeamTypeToolStripMenuItem.Visible = itemExists;
-                removeTeamTypeToolStripMenuItem.Visible = itemExists;
+                tsmiAddTeamType.Visible = true;
+                tsmiAddTeamType.Enabled = teamTypesListView.Items.Count < maxTeams;
+                tsmiRenameTeamType.Visible = itemExists;
+                tsmiCloneTeamType.Visible = itemExists;
+                tsmiCloneTeamType.Enabled = teamTypesListView.Items.Count < maxTeams;
+                tsmiRemoveTeamType.Visible = itemExists;
                 teamTypesContextMenuStrip.Show(Cursor.Position);
             }
         }
@@ -256,6 +261,10 @@ namespace MobiusEditor.Dialogs
             else if (e.KeyData == Keys.Delete)
             {
                 RemoveTeamType();
+            }
+            else if (e.KeyData == (Keys.C | Keys.Control))
+            {
+                CloneTeamType();
             }
         }
 
@@ -277,6 +286,8 @@ namespace MobiusEditor.Dialogs
             // If user pressed ok, nevermind,just go on.
             if (this.DialogResult == DialogResult.OK)
             {
+                // Remove rename chains of newly added items.
+                RemoveNewRenames(this.renameActions, false);
                 // Remove all 0-items from teams, optimise types.
                 foreach (TeamType team in teamTypes)
                 {
@@ -285,6 +296,10 @@ namespace MobiusEditor.Dialogs
                 return;
             }
             bool hasChanges = teamTypes.Count != backupTeamTypes.Count;
+            if (!hasChanges)
+            {
+                hasChanges = RemoveNewRenames(this.renameActions, true).Count > 0;
+            }
             if (!hasChanges)
             {
                 foreach (TeamType team in teamTypes)
@@ -308,6 +323,45 @@ namespace MobiusEditor.Dialogs
                 this.DialogResult = DialogResult.None;
                 e.Cancel = true;
             }
+        }
+
+        private List<(String Name1, String Name2)> RemoveNewRenames(List<(String Name1, String Name2)> renameActions, bool clone)
+        {
+            List<(String Name1, String Name2)> renActions;
+            if (clone)
+            {
+                renActions = new List<(String Name1, String Name2)>();
+                foreach ((String name1, String name2) in renameActions)
+                {
+                    renActions.Add((name1, name2));
+                }
+            }
+            else
+            {
+                renActions = renameActions;
+            }
+            for (int i = 0; i < renActions.Count; ++i)
+            {
+                (String Name1, String Name2) foundNew = renActions[i];
+                if (foundNew.Name1 == null)
+                {
+                    renActions[i] = (Trigger.None, foundNew.Name2);
+                    String currentname = foundNew.Name2;
+                    // Follow rename chain
+                    for (int j = i + 1; j < renActions.Count; ++j)
+                    {
+                        (String Name1, String Name2) chained = renActions[j];
+                        if (!TeamType.IsEmpty(chained.Name1) && String.Equals(chained.Name1, currentname, StringComparison.OrdinalIgnoreCase))
+                        {
+                            // Remove from further searches and mark for deletion.
+                            renActions[j] = (Trigger.None, chained.Name2);
+                            currentname = chained.Name2;
+                        }
+                    }
+                }
+            }
+            renActions.RemoveAll(ren => TeamType.IsEmpty(ren.Name1));
+            return renActions;
         }
 
         private void OptimizeTeams(TeamType team)
@@ -342,18 +396,23 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        private void AddTeamTypeToolStripMenuItem_Click(object sender, EventArgs e)
+        private void TsmiAddTeamType_Click(object sender, EventArgs e)
         {
             AddTeamType();
         }
 
-        private void renameTeamTypeToolStripMenuItem_Click(object sender, EventArgs e)
+        private void TsmiRenameTeamType_Click(object sender, EventArgs e)
         {
             if (SelectedItem != null)
                 SelectedItem.BeginEdit();
         }
 
-        private void RemoveTeamTypeToolStripMenuItem_Click(object sender, EventArgs e)
+        private void TsmiCloneTeamType_Click(object sender, EventArgs e)
+        {
+            CloneTeamType();
+        }
+
+        private void TsmiRemoveTeamType_Click(object sender, EventArgs e)
         {
             RemoveTeamType();
         }
@@ -370,11 +429,42 @@ namespace MobiusEditor.Dialogs
             };
             item.SubItems.Add(teamType.House.Name);
             teamTypes.Add(teamType);
+            renameActions.Add((null, teamType.Name));
             teamTypesListView.Items.Add(item).ToolTipText = teamType.Name;
             btnAddTeamType.Enabled = teamTypes.Count < maxTeams;
             CalcListColSizes();
             item.Selected = true;
             teamTypesListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.EnsureVisible();
+            item.EnsureVisible();
+            item.BeginEdit();
+        }
+
+        private void CloneTeamType()
+        {
+            if (teamTypesListView.Items.Count >= maxTeams)
+                return;
+            ListViewItem selected = SelectedItem;
+            TeamType originTeamType = selected?.Tag as TeamType;
+            if (selected == null || originTeamType == null)
+            {
+                return;
+            }
+            string name = GeneralUtils.MakeNew4CharName(teamTypes.Select(t => t.Name), "????", TeamType.None);
+            var teamType = originTeamType.Clone();
+            teamType.Name = name;
+            var item = new ListViewItem(teamType.Name)
+            {
+                Tag = teamType
+            };
+            item.SubItems.Add(teamType.House.Name);
+            teamTypes.Add(teamType);
+            renameActions.Add((null, teamType.Name));
+            teamTypesListView.Items.Add(item).ToolTipText = teamType.Name;
+            btnAddTeamType.Enabled = teamTypes.Count < maxTeams;
+            CalcListColSizes();
+            item.Selected = true;
+            teamTypesListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.EnsureVisible();
+            item.EnsureVisible();
             item.BeginEdit();
         }
 
@@ -382,11 +472,15 @@ namespace MobiusEditor.Dialogs
         {
             ListViewItem selected = SelectedItem;
             int index = teamTypesListView.SelectedIndices.Count == 0 ? -1 : teamTypesListView.SelectedIndices[0];
-            if (selected != null)
+            TeamType teamType = selected?.Tag as TeamType;
+            if (selected == null || teamType == null || index == -1)
             {
-                teamTypes.Remove(selected.Tag as TeamType);
-                teamTypesListView.Items.Remove(selected);
+                return;
             }
+            string name = teamType.Name;
+            teamTypes.Remove(teamType);
+            renameActions.Add((name, TeamType.None));
+            teamTypesListView.Items.Remove(selected);
             if (teamTypesListView.Items.Count == index)
                 index--;
             if (index >= 0 && teamTypesListView.Items.Count > index)
@@ -424,7 +518,9 @@ namespace MobiusEditor.Dialogs
             }
             else
             {
+                String oldName = SelectedTeamType.Name;
                 SelectedTeamType.Name = curName;
+                renameActions.Add((oldName, curName));
                 teamTypesListView.Items[e.Item].ToolTipText = SelectedTeamType.Name;
             }
         }

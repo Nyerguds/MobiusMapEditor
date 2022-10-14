@@ -2367,9 +2367,9 @@ namespace MobiusEditor.RedAlert
                     nameToIndexString(Map.EventTypes, trigger.Event1.EventType),
                     nameToIndexString(Map.TeamTypes, trigger.Event1.Team),
                     trigger.Event1.Data.ToString(),
-                    nameToIndexString(Map.EventTypes, trigger.Event2.EventType),
-                    nameToIndexString(Map.TeamTypes, trigger.Event2.Team),
-                    trigger.Event2.Data.ToString(),
+                    trigger.EventControl == TriggerMultiStyleType.Only ? "0" : nameToIndexString(Map.EventTypes, trigger.Event2.EventType),
+                    trigger.EventControl == TriggerMultiStyleType.Only ? "0" : nameToIndexString(Map.TeamTypes, trigger.Event2.Team),
+                    trigger.EventControl == TriggerMultiStyleType.Only ? "0" : trigger.Event2.Data.ToString(),
                     nameToIndexString(Map.ActionTypes, trigger.Action1.ActionType),
                     nameToIndexString(Map.TeamTypes, trigger.Action1.Team),
                     nameToIndexString(Map.Triggers, trigger.Action1.Trigger),
@@ -2664,18 +2664,19 @@ namespace MobiusEditor.RedAlert
                     {
                         foreach (Trigger tr in Map.Triggers)
                         {
-                            // "else if" is just to not check both; if it's on the first one then it's already added anyway.
-                            if (tr.Action1.Team == teamName &&
-                                (tr.Action1.ActionType == ActionTypes.TACTION_CREATE_TEAM
-                               || tr.Action1.ActionType == ActionTypes.TACTION_DESTROY_TEAM
-                               || tr.Action1.ActionType == ActionTypes.TACTION_REINFORCEMENTS))
-                            {
-                                usedTeams.Add(teamName);
-                            }
-                            else if (tr.Action2.Team == teamName &&
-                                (tr.Action2.ActionType == ActionTypes.TACTION_CREATE_TEAM
-                               || tr.Action2.ActionType == ActionTypes.TACTION_DESTROY_TEAM
-                               || tr.Action2.ActionType == ActionTypes.TACTION_REINFORCEMENTS))
+                            // "else if" is just to not check all; if it's on one then it's already added anyway.
+                            if ((tr.Event1.Team == teamName &&
+                                    tr.Event1.EventType == EventTypes.TEVENT_LEAVES_MAP) ||
+                                (tr.Event2.Team == teamName && tr.EventControl != TriggerMultiStyleType.Only &&
+                                    tr.Event2.EventType == EventTypes.TEVENT_LEAVES_MAP) ||
+                                (tr.Action1.Team == teamName && (
+                                    tr.Action1.ActionType == ActionTypes.TACTION_CREATE_TEAM ||
+                                    tr.Action1.ActionType == ActionTypes.TACTION_DESTROY_TEAM ||
+                                    tr.Action1.ActionType == ActionTypes.TACTION_REINFORCEMENTS)) ||
+                                (tr.Action2.Team == teamName && (
+                                    tr.Action2.ActionType == ActionTypes.TACTION_CREATE_TEAM ||
+                                    tr.Action2.ActionType == ActionTypes.TACTION_DESTROY_TEAM ||
+                                    tr.Action2.ActionType == ActionTypes.TACTION_REINFORCEMENTS)))
                             {
                                 usedTeams.Add(teamName);
                             }
@@ -2702,8 +2703,12 @@ namespace MobiusEditor.RedAlert
                 {
                     if (tr.Event1.EventType == EventTypes.TEVENT_GLOBAL_CLEAR || tr.Event1.EventType == EventTypes.TEVENT_GLOBAL_SET)
                         checkedGlobals.Add((int)tr.Event1.Data);
-                    if (tr.Event2.EventType == EventTypes.TEVENT_GLOBAL_CLEAR || tr.Event2.EventType == EventTypes.TEVENT_GLOBAL_SET)
+                    if (tr.EventControl != TriggerMultiStyleType.Only && (tr.Event2.EventType == EventTypes.TEVENT_GLOBAL_CLEAR || tr.Event2.EventType == EventTypes.TEVENT_GLOBAL_SET))
                         checkedGlobals.Add((int)tr.Event2.Data);
+                    if (checkedGlobals.Contains(15))
+                    {
+
+                    }
                     if (tr.Action1.ActionType == ActionTypes.TACTION_CLEAR_GLOBAL || tr.Action1.ActionType == ActionTypes.TACTION_SET_GLOBAL)
                         alteredGlobals.Add((int)tr.Action1.Data);
                     if (tr.Action2.ActionType == ActionTypes.TACTION_CLEAR_GLOBAL || tr.Action2.ActionType == ActionTypes.TACTION_SET_GLOBAL)

@@ -132,6 +132,11 @@ namespace MobiusEditor.Model
     {
         public static readonly string None = "None";
 
+        public static bool IsEmpty(string teamtype)
+        {
+            return teamtype == null || teamtype.Equals(None, StringComparison.OrdinalIgnoreCase);
+        }
+
         public string Name { get; set; }
 
         public HouseType House { get; set; }

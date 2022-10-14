@@ -598,6 +598,7 @@ namespace MobiusEditor
                 if (ttd.ShowDialog(this) == DialogResult.OK)
                 {
                     plugin.Map.TeamTypes.Clear();
+                    plugin.Map.ApplyTeamTypeRenames(ttd.RenameActions);
                     plugin.Map.TeamTypes.AddRange(ttd.TeamTypes.OrderBy(t => t.Name, new ExplorerComparer()).Select(t => t.Clone()));
                     plugin.Dirty = true;
                 }
@@ -630,6 +631,16 @@ namespace MobiusEditor
                     if (Trigger.CheckForChanges(plugin.Map.Triggers.ToList(), reordered))
                     {
                         plugin.Dirty = true;
+                        plugin.Map.ApplyTriggerRenames(td.RenameActions);
+                        //if (td.RenameActions.Count != 0)
+                        //{
+                        //    if (DialogResult.OK == MessageBox.Show("Triggers were renamed. Do you wish to apply this rename to the map objects?" +
+                        //        "\nWarning: if you do this, any triggers that were deleted and then re-created will not be linked to the same objects!",
+                        //        "Triggers were renamed", MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button1))
+                        //    {
+                        //        plugin.Map.ApplyTriggerRenames(td.RenameActions);
+                        //    }
+                        //}
                         plugin.Map.Triggers = reordered;
                         RefreshUI();
                     }

@@ -81,14 +81,15 @@ namespace MobiusEditor.Dialogs
             this.triggersListView = new System.Windows.Forms.ListView();
             this.nameColumnHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.pnlButtons = new System.Windows.Forms.Panel();
+            this.lblTooLong = new System.Windows.Forms.Label();
             this.btnCheck = new System.Windows.Forms.Button();
             this.btnOK = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.triggersContextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.addTriggerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.renameTriggerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.removeTriggerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.lblTooLong = new System.Windows.Forms.Label();
+            this.tsmiAddTrigger = new System.Windows.Forms.ToolStripMenuItem();
+            this.tsmiRenameTrigger = new System.Windows.Forms.ToolStripMenuItem();
+            this.tsmiCloneTrigger = new System.Windows.Forms.ToolStripMenuItem();
+            this.tsmiRemoveTrigger = new System.Windows.Forms.ToolStripMenuItem();
             this.tableLayoutPanel1.SuspendLayout();
             this.flowLayoutPanel2.SuspendLayout();
             this.settingsPanel.SuspendLayout();
@@ -637,6 +638,17 @@ namespace MobiusEditor.Dialogs
             this.pnlButtons.Size = new System.Drawing.Size(414, 34);
             this.pnlButtons.TabIndex = 3;
             // 
+            // lblTooLong
+            // 
+            this.lblTooLong.AutoSize = true;
+            this.lblTooLong.ForeColor = System.Drawing.Color.Red;
+            this.lblTooLong.Location = new System.Drawing.Point(9, 11);
+            this.lblTooLong.Name = "lblTooLong";
+            this.lblTooLong.Size = new System.Drawing.Size(164, 13);
+            this.lblTooLong.TabIndex = 33;
+            this.lblTooLong.Text = "Trigger length exceeds maximum!";
+            this.lblTooLong.Visible = false;
+            // 
             // btnCheck
             // 
             this.btnCheck.Location = new System.Drawing.Point(211, 2);
@@ -678,43 +690,40 @@ namespace MobiusEditor.Dialogs
             // 
             this.triggersContextMenuStrip.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.triggersContextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.addTriggerToolStripMenuItem,
-            this.renameTriggerToolStripMenuItem,
-            this.removeTriggerToolStripMenuItem});
+            this.tsmiAddTrigger,
+            this.tsmiRenameTrigger,
+            this.tsmiCloneTrigger,
+            this.tsmiRemoveTrigger});
             this.triggersContextMenuStrip.Name = "teamTypesContextMenuStrip";
-            this.triggersContextMenuStrip.Size = new System.Drawing.Size(185, 70);
+            this.triggersContextMenuStrip.Size = new System.Drawing.Size(191, 92);
             // 
-            // addTriggerToolStripMenuItem
+            // tsmiAddTrigger
             // 
-            this.addTriggerToolStripMenuItem.Name = "addTriggerToolStripMenuItem";
-            this.addTriggerToolStripMenuItem.Size = new System.Drawing.Size(184, 22);
-            this.addTriggerToolStripMenuItem.Text = "&Add Trigger (Ctrl+A)";
-            this.addTriggerToolStripMenuItem.Click += new System.EventHandler(this.addTriggerToolStripMenuItem_Click);
+            this.tsmiAddTrigger.Name = "tsmiAddTrigger";
+            this.tsmiAddTrigger.Size = new System.Drawing.Size(190, 22);
+            this.tsmiAddTrigger.Text = "&Add Trigger (Ctrl+A)";
+            this.tsmiAddTrigger.Click += new System.EventHandler(this.TsmiAddTrigger_Click);
             // 
-            // renameTriggerToolStripMenuItem
+            // tsmiRenameTrigger
             // 
-            this.renameTriggerToolStripMenuItem.Name = "renameTriggerToolStripMenuItem";
-            this.renameTriggerToolStripMenuItem.Size = new System.Drawing.Size(184, 22);
-            this.renameTriggerToolStripMenuItem.Text = "Re&name Trigger (F2)";
-            this.renameTriggerToolStripMenuItem.Click += new System.EventHandler(this.renameTriggerToolStripMenuItem_Click);
+            this.tsmiRenameTrigger.Name = "tsmiRenameTrigger";
+            this.tsmiRenameTrigger.Size = new System.Drawing.Size(190, 22);
+            this.tsmiRenameTrigger.Text = "Re&name Trigger (F2)";
+            this.tsmiRenameTrigger.Click += new System.EventHandler(this.TsmiRenameTrigger_Click);
             // 
-            // removeTriggerToolStripMenuItem
+            // tsmiCloneTrigger
             // 
-            this.removeTriggerToolStripMenuItem.Name = "removeTriggerToolStripMenuItem";
-            this.removeTriggerToolStripMenuItem.Size = new System.Drawing.Size(184, 22);
-            this.removeTriggerToolStripMenuItem.Text = "&Remove Trigger (Del)";
-            this.removeTriggerToolStripMenuItem.Click += new System.EventHandler(this.removeTriggerToolStripMenuItem_Click);
+            this.tsmiCloneTrigger.Name = "tsmiCloneTrigger";
+            this.tsmiCloneTrigger.Size = new System.Drawing.Size(190, 22);
+            this.tsmiCloneTrigger.Text = "&Clone Trigger (Ctrl+C)";
+            this.tsmiCloneTrigger.Click += new System.EventHandler(this.TsmiCloneTrigger_Click);
             // 
-            // lblTooLong
+            // tsmiRemoveTrigger
             // 
-            this.lblTooLong.AutoSize = true;
-            this.lblTooLong.ForeColor = System.Drawing.Color.Red;
-            this.lblTooLong.Location = new System.Drawing.Point(9, 11);
-            this.lblTooLong.Name = "lblTooLong";
-            this.lblTooLong.Size = new System.Drawing.Size(164, 13);
-            this.lblTooLong.TabIndex = 33;
-            this.lblTooLong.Text = "Trigger length exceeds maximum!";
-            this.lblTooLong.Visible = false;
+            this.tsmiRemoveTrigger.Name = "tsmiRemoveTrigger";
+            this.tsmiRemoveTrigger.Size = new System.Drawing.Size(190, 22);
+            this.tsmiRemoveTrigger.Text = "&Remove Trigger (Del)";
+            this.tsmiRemoveTrigger.Click += new System.EventHandler(this.TsmiRemoveTrigger_Click);
             // 
             // TriggersDialog
             // 
@@ -767,8 +776,8 @@ namespace MobiusEditor.Dialogs
         private System.Windows.Forms.ListView triggersListView;
         private System.Windows.Forms.ColumnHeader nameColumnHeader;
         private System.Windows.Forms.ContextMenuStrip triggersContextMenuStrip;
-        private System.Windows.Forms.ToolStripMenuItem addTriggerToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem removeTriggerToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem tsmiAddTrigger;
+        private System.Windows.Forms.ToolStripMenuItem tsmiRemoveTrigger;
         private System.Windows.Forms.TableLayoutPanel triggersTableLayoutPanel;
         private System.Windows.Forms.Label label1;
         private MobiusEditor.Controls.ComboBoxSmartWidth houseComboBox;
@@ -800,9 +809,10 @@ namespace MobiusEditor.Dialogs
         private MobiusEditor.Controls.ComboBoxSmartWidth action2ValueComboBox;
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel2;
         private System.Windows.Forms.Button btnAdd;
-        private System.Windows.Forms.ToolStripMenuItem renameTriggerToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem tsmiRenameTrigger;
         private System.Windows.Forms.Panel pnlButtons;
         private System.Windows.Forms.Button btnCheck;
         private System.Windows.Forms.Label lblTooLong;
+        private System.Windows.Forms.ToolStripMenuItem tsmiCloneTrigger;
     }
 }

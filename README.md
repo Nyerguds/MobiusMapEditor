@@ -216,7 +216,7 @@ These options are all enabled by default, but can be disabled if you wish. Use t
 * Infantry are now positioned more accurately.
 * The terrain tool now uses a list box like all the other tools, instead of the awkward dropdown list.
 * The smudge tool now allows setting the size in the preview window, and picking craters with a different size from the map.
-* The "MapScaleFactor" and "PreviewScaleFactor" settings in the "CnCTDRAMapEditor.exe.config" file can adjust the downscaling factor for respectively the map graphics and the preview graphics. Higher values will reduce quality, but will make the editor more responsive. By default, previews in tool windows will now use higher quality graphics than the map. Setting a negative value will enable smooth scaling. (Not advised, but it's available)
+* The "MapScaleFactor" and "PreviewScaleFactor" settings in "CnCTDRAMapEditor.exe.config" can adjust the downscaling factor for respectively the map graphics and the preview graphics. Higher values will reduce quality, but will make the editor more responsive. By default, previews in tool windows will now use higher quality graphics than the map. Setting a negative value will enable smooth scaling. (Not advised, but it's available)
 * When removing a trigger, all celltriggers and objects linking to that trigger will now get their trigger cleared. Before, this only happened for structures.
 * The triggers available for linking to objects and cells are now filtered out to only those triggers with an Event (or Action, in RA) that can be linked to that object type. This will also affect the cleanup of triggers if a trigger's Event or Action was changed to something not compatible with the objects it was linked to.
 * An "Info" icon next to the trigger dropdowns in the placement tool windows will give an explanation of which trigger Events and Actions work for that type.
@@ -380,8 +380,8 @@ These options are all enabled by default, but can be disabled if you wish. Use t
 * Middle mouse and space no longer make the cursor change on the map tile preview panel.
 * Added multithreading to all heavy processing functions. This means the window will no longer freeze up while loading or saving maps, but will instead have all functions disabled, while showing a little box that shows what it is doing.
 * In Celltrigger mode, if a selected trigger is already linked to objects, the trigger labels on these objects will be indicated in yellow.
-* Changed references to ConcretePavementTD mod in the .config file to its new name; "GraphicsFixesTD".
-* Changed tool clamping logic to only need a minimum size to remain inside the window, rather than the entire tool. This minimum can be set in the setting "MinimumClampSize" in the .config file
+* Changed references to ConcretePavementTD mod in "CnCTDRAMapEditor.exe.config" to its new name; "GraphicsFixesTD".
+* Changed tool clamping logic to only need a minimum size to remain inside the window, rather than the entire tool. This minimum can be set in the setting "MinimumClampSize" in "CnCTDRAMapEditor.exe.config".
 * Steam publish dialog now has buttons to easily copy the map name and briefing from the mission.
 * Steam publish dialog description now properly supports multiline.
 * Steam publish dialog will now properly restore the location of a previously-used custom generated thumbnail.
@@ -389,6 +389,11 @@ These options are all enabled by default, but can be disabled if you wish. Use t
 * Directions for vehicles are now limited to 8, as they are in the actual game.
 * Re-enabling a building's "prebuilt" status on TD maps will now set the House to the classic opposing House, rather than always defaulting to the first item in the list.
 * Added "Tools" → "Statistics" menu to house the "Power Balance" and "Silo Storage" tools, and added a "Map Objects" tool giving an overview of used objects.
+* Renaming triggers and teamtypes will now correctly apply the renames to all things linking to them.
+* Fixed a bug on RA triggers where Event 2 was not hidden if the first opened trigger was one that should hide it.
+* Added the ability to clone triggers and teamtypes.
+* For Red Alert speech and sound triggers, the original filenames are now shown alongside the description.
+* For Red Alert text triggers, the text ID is now shown in front of the text.
 
 ### Possible future features
 

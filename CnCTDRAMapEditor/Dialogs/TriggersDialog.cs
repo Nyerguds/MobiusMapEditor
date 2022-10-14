@@ -17,7 +17,6 @@ using MobiusEditor.Model;
 using MobiusEditor.Utility;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -32,6 +31,8 @@ namespace MobiusEditor.Dialogs
         private readonly List<Trigger> backupTriggers;
         private readonly List<Trigger> triggers;
         public List<Trigger> Triggers => triggers;
+        private readonly List<(String Name1, String Name2)> renameActions;
+        public List<(String Name1, String Name2)> RenameActions => renameActions;
 
         private ListViewItem SelectedItem => (triggersListView.SelectedItems.Count > 0) ? triggersListView.SelectedItems[0] : null;
 
@@ -61,6 +62,7 @@ namespace MobiusEditor.Dialogs
                     break;
             }
             triggers = new List<Trigger>(plugin.Map.Triggers.Select(t => t.Clone()));
+            renameActions = new List<(string Name1, string Name2)>();
             backupTriggers = new List<Trigger>(plugin.Map.Triggers.Select(t => t.Clone()));
             int nrOfTriggers = Math.Min(maxTriggers, triggers.Count);
             btnAdd.Enabled = nrOfTriggers < maxTriggers;
@@ -155,8 +157,9 @@ namespace MobiusEditor.Dialogs
                         SelectedTrigger.Action2.FillDataFrom(act2);
                         break;
                 }
-
                 triggersTableLayoutPanel.Visible = true;
+                // Force this to update
+                typeComboBox_SelectedValueChanged(typeComboBox, new EventArgs());
             }
             else
             {
@@ -170,10 +173,12 @@ namespace MobiusEditor.Dialogs
             {
                 var hitTest = triggersListView.HitTest(e.Location);
                 bool itemExists = hitTest.Item != null;
-                addTriggerToolStripMenuItem.Visible = true;
-                addTriggerToolStripMenuItem.Enabled = triggersListView.Items.Count < maxTriggers;
-                renameTriggerToolStripMenuItem.Visible = itemExists;
-                removeTriggerToolStripMenuItem.Visible = itemExists;
+                tsmiAddTrigger.Visible = true;
+                tsmiAddTrigger.Enabled = triggersListView.Items.Count < maxTriggers;
+                tsmiRenameTrigger.Visible = itemExists;
+                tsmiCloneTrigger.Visible = itemExists;
+                tsmiCloneTrigger.Enabled = triggersListView.Items.Count < maxTriggers;
+                tsmiRemoveTrigger.Visible = itemExists;
                 triggersContextMenuStrip.Show(Cursor.Position);
             }
         }
@@ -189,6 +194,10 @@ namespace MobiusEditor.Dialogs
             else if (e.KeyData == Keys.Delete)
             {
                 RemoveTrigger();
+            }
+            else if (e.KeyData == (Keys.C | Keys.Control))
+            {
+                CloneTrigger();
             }
         }
 
@@ -245,8 +254,23 @@ namespace MobiusEditor.Dialogs
         {
             // If user pressed ok, nevermind,just go on.
             if (this.DialogResult == DialogResult.OK)
+            {
+                // Remove rename chains of newly added items.
+                RemoveNewRenames(renameActions, false);
+                // For safety, renames that end on the same name are not filtered out, since other items
+                // might be renamed to that name as in-between step. So simply apply them in the same order.
                 return;
-            bool hasChanges = Trigger.CheckForChanges(triggers, backupTriggers);
+            }
+            bool hasChanges = triggers.Count != backupTriggers.Count;
+            if (!hasChanges)
+            {
+                // Apply on clone to not break the rename chains of current new items, which would prevent them from being filtered out later.
+                hasChanges = RemoveNewRenames(this.renameActions, true).Count > 0;
+            }
+            if (!hasChanges)
+            {
+                hasChanges = Trigger.CheckForChanges(triggers, backupTriggers);
+            }
             if (hasChanges)
             {
                 DialogResult dr =  MessageBox.Show("Triggers have been changed! Are you sure you want to cancel?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
@@ -257,19 +281,63 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        private void addTriggerToolStripMenuItem_Click(object sender, EventArgs e)
+        private List<(String Name1, String Name2)> RemoveNewRenames(List<(String Name1, String Name2)> renameActions, bool clone)
+        {
+            List<(String Name1, String Name2)> renActions;
+            if (clone)
+            {
+                renActions = new List<(String Name1, String Name2)>();
+                foreach ((String name1, String name2) in renameActions)
+                {
+                    renActions.Add((name1, name2));
+                }
+            }
+            else
+            {
+                renActions = renameActions;
+            }
+            for (int i = 0; i < renActions.Count; ++i)
+            {
+                (String Name1, String Name2) foundNew = renActions[i];
+                if (foundNew.Name1 == null)
+                {
+                    renActions[i] = (Trigger.None, foundNew.Name2);
+                    String currentname = foundNew.Name2;
+                    // Follow rename chain
+                    for (int j = i + 1; j < renActions.Count; ++j)
+                    {
+                        (String Name1, String Name2) chained = renActions[j];
+                        if (!Trigger.IsEmpty(chained.Name1) && String.Equals(chained.Name1, currentname, StringComparison.OrdinalIgnoreCase))
+                        {
+                            // Remove from further searches and mark for deletion.
+                            renActions[j] = (Trigger.None, chained.Name2);
+                            currentname = chained.Name2;
+                        }
+                    }
+                }
+            }
+            renActions.RemoveAll(ren => Trigger.IsEmpty(ren.Name1));
+            return renActions;
+        }
+
+        private void TsmiAddTrigger_Click(object sender, EventArgs e)
         {
             AddTrigger();
         }
-
         
-        private void renameTriggerToolStripMenuItem_Click(object sender, EventArgs e)
+        private void TsmiRenameTrigger_Click(object sender, EventArgs e)
         {
             if (SelectedItem != null)
                 SelectedItem.BeginEdit();
         }
 
-        private void removeTriggerToolStripMenuItem_Click(object sender, EventArgs e)
+        private void TsmiCloneTrigger_Click(Object sender, EventArgs e)
+        {
+
+            CloneTrigger();
+        }
+
+        private void TsmiRemoveTrigger_Click(object sender, EventArgs e)
         {
             RemoveTrigger();
         }
@@ -285,9 +353,39 @@ namespace MobiusEditor.Dialogs
                 Tag = trigger
             };
             triggers.Add(trigger);
+            renameActions.Add((null, trigger.Name));
             triggersListView.Items.Add(item).ToolTipText = trigger.Name;
             btnAdd.Enabled = triggers.Count < maxTriggers;
             item.Selected = true;
+            triggersListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.EnsureVisible();
+            item.EnsureVisible();
+            item.BeginEdit();
+        }
+
+        private void CloneTrigger()
+        {
+            if (triggersListView.Items.Count >= maxTriggers)
+                return;
+            ListViewItem selected = SelectedItem;
+            Trigger originTrigger = selected?.Tag as Trigger;
+            if (selected == null || originTrigger == null)
+            {
+                return;
+            }
+            string name = GeneralUtils.MakeNew4CharName(triggers.Select(t => t.Name), "----", Trigger.None);
+            var trigger = originTrigger.Clone();
+            trigger.Name = name;
+            var item = new ListViewItem(trigger.Name)
+            {
+                Tag = trigger
+            };
+            triggers.Add(trigger);
+            renameActions.Add((null, trigger.Name));
+            triggersListView.Items.Add(item).ToolTipText = trigger.Name;
+            btnAdd.Enabled = triggers.Count < maxTriggers;
+            item.Selected = true;
+            triggersListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.EnsureVisible();
+            item.EnsureVisible();
             item.BeginEdit();
         }
 
@@ -295,11 +393,18 @@ namespace MobiusEditor.Dialogs
         {
             ListViewItem selected = SelectedItem;
             int index = triggersListView.SelectedIndices.Count == 0 ? -1 : triggersListView.SelectedIndices[0];
-            if (selected != null)
+            Trigger trigger = selected?.Tag as Trigger;
+            if (selected == null || trigger == null || index == -1)
             {
-                triggers.Remove(selected.Tag as Trigger);
-                triggersListView.Items.Remove(selected);
+                return;
             }
+            string name = trigger.Name;
+            triggers.Remove(trigger);
+            // Trigger is removed; add as "rename to None" action.
+            renameActions.Add((name, Trigger.None));
+            // Go over all triggers to clear any that have this trigger as argument
+            RenameInCurrentTriggerActions(name, Trigger.None);
+            triggersListView.Items.Remove(selected);
             if (triggersListView.Items.Count == index)
                 index--;
             if (index >= 0 && triggersListView.Items.Count > index)
@@ -336,8 +441,40 @@ namespace MobiusEditor.Dialogs
             }
             else
             {
+                String oldName = SelectedTrigger.Name;
+                // Go over all triggers to clear any that have this trigger as argument
+                RenameInCurrentTriggerActions(oldName, curName);
+                renameActions.Add((oldName, curName));
                 SelectedTrigger.Name = curName;
+                // Normally always false
+                lblTooLong.Visible = curName.Length > maxLength;
                 triggersListView.Items[e.Item].ToolTipText = SelectedTrigger.Name;
+            }
+        }
+
+        private void RenameInCurrentTriggerActions(String name, String newName)
+        {
+            // You never know if someone makes a circular trigger...
+            Trigger curr = SelectedTrigger;
+            bool updateUi = curr != null && curr.Action1.Trigger == name || curr.Action2.Trigger == name;
+            if (plugin.GameType != GameType.RedAlert)
+            {
+                return;
+            }
+            foreach (Trigger trig in triggers)
+            {
+                if (String.Equals(trig.Action1.Trigger, name, StringComparison.OrdinalIgnoreCase))
+                {
+                    trig.Action1.Trigger = newName;
+                }
+                if (String.Equals(trig.Action2.Trigger, name, StringComparison.OrdinalIgnoreCase))
+                {
+                    trig.Action2.Trigger = newName;
+                }
+            }
+            if (updateUi)
+            {
+                triggersListView_SelectedIndexChanged(triggersListView, new EventArgs());
             }
         }
 
@@ -346,7 +483,13 @@ namespace MobiusEditor.Dialogs
             if (plugin.GameType == GameType.RedAlert)
             {
                 var eventType = (TriggerMultiStyleType)typeComboBox.SelectedValue;
-                event2Label.Visible = event2ComboBox.Visible = event2Flp.Visible = eventType != TriggerMultiStyleType.Only;
+                bool hasEvent2 = eventType != TriggerMultiStyleType.Only;
+                if (!hasEvent2)
+                {
+                    // Set event to "None".
+                    event2ComboBox.SelectedIndex = 0;
+                }
+                event2Label.Visible = event2ComboBox.Visible = event2Flp.Visible = hasEvent2;
             }
         }
 
@@ -400,7 +543,7 @@ namespace MobiusEditor.Dialogs
                 if (triggerEventData == null)
                 {
                     triggerEvent.Data = 0;
-                    triggerEvent.Team = null;
+                    triggerEvent.Team = TeamType.None;
                 }
                 else
                 {
@@ -412,6 +555,21 @@ namespace MobiusEditor.Dialogs
                     case GameType.SoleSurvivor:
                         switch (triggerEvent.EventType)
                         {
+                            case TiberianDawn.EventTypes.EVENT_NONE:
+                            case TiberianDawn.EventTypes.EVENT_PLAYER_ENTERED:
+                            case TiberianDawn.EventTypes.EVENT_DISCOVERED:
+                            case TiberianDawn.EventTypes.EVENT_ATTACKED:
+                            case TiberianDawn.EventTypes.EVENT_DESTROYED:
+                            case TiberianDawn.EventTypes.EVENT_ANY:
+                            case TiberianDawn.EventTypes.EVENT_HOUSE_DISCOVERED:
+                            case TiberianDawn.EventTypes.EVENT_UNITS_DESTROYED:
+                            case TiberianDawn.EventTypes.EVENT_BUILDINGS_DESTROYED:
+                            case TiberianDawn.EventTypes.EVENT_ALL_DESTROYED:
+                            case TiberianDawn.EventTypes.EVENT_NOFACTORIES:
+                            case TiberianDawn.EventTypes.EVENT_EVAC_CIVILIAN:
+                                //triggerEvent.Data = 0;
+                                //triggerEvent.Team = TeamType.None;
+                                break;
                             case TiberianDawn.EventTypes.EVENT_TIME:
                             case TiberianDawn.EventTypes.EVENT_CREDITS:
                             case TiberianDawn.EventTypes.EVENT_NUNITS_DESTROYED:
@@ -441,6 +599,20 @@ namespace MobiusEditor.Dialogs
                     case GameType.RedAlert:
                         switch (triggerEvent.EventType)
                         {
+                            case RedAlert.EventTypes.TEVENT_NONE:
+                            case RedAlert.EventTypes.TEVENT_DISCOVERED:
+                            case RedAlert.EventTypes.TEVENT_ATTACKED:
+                            case RedAlert.EventTypes.TEVENT_DESTROYED:
+                            case RedAlert.EventTypes.TEVENT_ANY:
+                            case RedAlert.EventTypes.TEVENT_MISSION_TIMER_EXPIRED:
+                            case RedAlert.EventTypes.TEVENT_NOFACTORIES:
+                            case RedAlert.EventTypes.TEVENT_EVAC_CIVILIAN:
+                            case RedAlert.EventTypes.TEVENT_FAKES_DESTROYED:
+                            case RedAlert.EventTypes.TEVENT_ALL_BRIDGES_DESTROYED:
+                                // Special case: always blank out the info.
+                                triggerEvent.Data = 0;
+                                triggerEvent.Team = TeamType.None;
+                                break;
                             case RedAlert.EventTypes.TEVENT_LEAVES_MAP:
                                 eventValueComboBox.Visible = true;
                                 eventValueComboBox.DataSource = plugin.Map.TeamTypes.Count == 0 ? new[] { TeamType.None } : plugin.Map.TeamTypes.Select(t => t.Name).ToArray();
@@ -598,7 +770,7 @@ namespace MobiusEditor.Dialogs
                             case RedAlert.ActionTypes.TACTION_DESTROY_TEAM:
                             case RedAlert.ActionTypes.TACTION_REINFORCEMENTS:
                                 actionValueComboBox.Visible = true;
-                                actionValueComboBox.DataSource = plugin.Map.TeamTypes.Count == 0 ? new[] { TeamType.None } : plugin.Map.TeamTypes.Select(t => t.Name).ToArray();
+                                actionValueComboBox.DataSource = TeamType.None.Yield().Concat(plugin.Map.TeamTypes.Select(t => t.Name)).ToArray();
                                 actionValueComboBox.DataBindings.Add("SelectedItem", triggerAction, "Team");
                                 if (triggerActionData == null)
                                 {
@@ -636,7 +808,7 @@ namespace MobiusEditor.Dialogs
                             case RedAlert.ActionTypes.TACTION_FORCE_TRIGGER:
                             case RedAlert.ActionTypes.TACTION_DESTROY_TRIGGER:
                                 actionValueComboBox.Visible = true;
-                                actionValueComboBox.DataSource = triggers.Select(t => t.Name).OrderBy(t => t, new ExplorerComparer()).ToArray();
+                                actionValueComboBox.DataSource = Trigger.None.Yield().Concat(triggers.Select(t => t.Name).OrderBy(t => t, new ExplorerComparer())).ToArray();
                                 actionValueComboBox.DataBindings.Add("SelectedItem", triggerAction, "Trigger");
                                 if (triggerActionData == null)
                                 {
@@ -735,8 +907,8 @@ namespace MobiusEditor.Dialogs
                                 actionValueComboBox.DisplayMember = "Label";
                                 actionValueComboBox.ValueMember = "Value";
                                 var vocData = new ListItem<long>(-1, "None").Yield().Concat(
-                                    RedAlert.ActionDataTypes.VocDesc.Select((t, i) => new ListItem<long>(i, t))
-                                    .Where(t => !String.Equals(t.Label, "x", StringComparison.InvariantCultureIgnoreCase))).ToArray();
+                                    RedAlert.ActionDataTypes.VocDesc.Select((t, i) => new ListItem<long>(i, t + " (" + RedAlert.ActionDataTypes.VocNames[i] + ")"))
+                                    .Where(t => !String.Equals(RedAlert.ActionDataTypes.VocNames[t.Value], "x", StringComparison.InvariantCultureIgnoreCase))).ToArray();
                                 actionValueComboBox.DataSource = vocData;
                                 actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
                                 if (triggerActionData == null)
@@ -753,8 +925,8 @@ namespace MobiusEditor.Dialogs
                                 actionValueComboBox.DisplayMember = "Label";
                                 actionValueComboBox.ValueMember = "Value";
                                 var voxData = new ListItem<long>(-1, "None").Yield().Concat(
-                                    RedAlert.ActionDataTypes.VoxDesc.Select((t, i) => new ListItem<long>(i, t))
-                                    .Where(t => !String.Equals(t.Label, "none", StringComparison.InvariantCultureIgnoreCase))).ToArray();
+                                    RedAlert.ActionDataTypes.VoxDesc.Select((t, i) => new ListItem<long>(i, t + " (" + RedAlert.ActionDataTypes.VoxNames[i] + ")"))
+                                    .Where(t => !String.Equals(RedAlert.ActionDataTypes.VoxNames[t.Value], "none", StringComparison.InvariantCultureIgnoreCase))).ToArray();
                                 actionValueComboBox.DataSource = voxData;
                                 actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
                                 if (triggerActionData == null)
@@ -804,7 +976,7 @@ namespace MobiusEditor.Dialogs
                                 actionValueComboBox.Visible = true;
                                 actionValueComboBox.DisplayMember = "Label";
                                 actionValueComboBox.ValueMember = "Value";
-                                var txtData = RedAlert.ActionDataTypes.TextDesc.Select((t, i) => new ListItem<long>(i + 1, t)).ToArray();
+                                var txtData = RedAlert.ActionDataTypes.TextDesc.Select((t, i) => new ListItem<long>(i + 1, "[" + (i + 1).ToString("000") + "] " + t)).ToArray();
                                 actionValueComboBox.DataSource = txtData;
                                 actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
                                 if (triggerActionData == null)
@@ -994,6 +1166,5 @@ namespace MobiusEditor.Dialogs
             return null;
             // TODO
         }
-
     }
 }

@@ -28,10 +28,10 @@ namespace MobiusEditor.Model
 
     public enum TriggerMultiStyleType
     {
-        Only = 0,
-        And = 1,
-        Or = 2,
-        Linked = 3
+        Only = 0,  // E => A1 [+ A2]
+        And = 1,   // E1 && E2 => A1 [+ A2]
+        Or = 2,    // E1 || E2 => A1 [+ A2]
+        Linked = 3 // E1 => A1; E2 => A2
     }
 
     public class TriggerEvent : ICloneable, IEquatable<TriggerEvent>

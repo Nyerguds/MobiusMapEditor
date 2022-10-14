@@ -947,7 +947,7 @@ namespace MobiusEditor.Model
         {
             HashSet<string> placeableTrigs = FilterCellTriggers(this.Triggers).Select(t => t.Name).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
             List<int> cellsToClear = new List<int>();
-            foreach (var item in CellTriggers)
+            foreach ((int Cell, CellTrigger Value) item in CellTriggers)
             {
                 if (!placeableTrigs.Contains(item.Value.Trigger))
                 {
@@ -1230,6 +1230,76 @@ namespace MobiusEditor.Model
                 RemoveBibs(building);
             }
             Technos.Remove(e.Occupier);
+        }
+
+        public void ApplyTriggerRenames(List<(String Name1, String Name2)> renameActions)
+        {
+            foreach ((String name1, String name2) in renameActions)
+            {
+                if (Trigger.IsEmpty(name1))
+                {
+                    continue;
+                }
+                foreach ((Point location, Building building) in Buildings.OfType<Building>().Where(x => x.Occupier.IsPrebuilt))
+                {
+                    if (String.Equals(building.Trigger, name1, StringComparison.OrdinalIgnoreCase))
+                    {
+                        building.Trigger = name2;
+                    }
+                }
+                foreach (ITechno techno in GetAllTechnos())
+                {
+                    if (String.Equals(techno.Trigger, name1, StringComparison.OrdinalIgnoreCase))
+                    {
+                        techno.Trigger = name2;
+                    }
+                }
+                foreach ((int cell, CellTrigger value) in CellTriggers)
+                {
+                    if (String.Equals(value.Trigger, name1, StringComparison.OrdinalIgnoreCase))
+                    {
+                        value.Trigger = name2;
+                    }
+                }
+                foreach (TeamType team in TeamTypes)
+                {
+                    if (String.Equals(team.Trigger, name1, StringComparison.OrdinalIgnoreCase))
+                    {
+                        team.Trigger = name2;
+                    }
+                }
+            }
+        }
+
+
+        public void ApplyTeamTypeRenames(List<(String Name1, String Name2)> renameActions)
+        {
+            foreach ((String name1, String name2) in renameActions)
+            {
+                if (TeamType.IsEmpty(name1))
+                {
+                    continue;
+                }
+                foreach (Trigger trigger in triggers)
+                {
+                    if (String.Equals(trigger.Event1.Team, name1, StringComparison.OrdinalIgnoreCase))
+                    {
+                        trigger.Event1.Team = name2;
+                    }
+                    if (String.Equals(trigger.Event2.Team, name1, StringComparison.OrdinalIgnoreCase))
+                    {
+                        trigger.Event2.Team = name2;
+                    }
+                    if (String.Equals(trigger.Action1.Team, name1, StringComparison.OrdinalIgnoreCase))
+                    {
+                        trigger.Action1.Team = name2;
+                    }
+                    if (String.Equals(trigger.Action2.Team, name1, StringComparison.OrdinalIgnoreCase))
+                    {
+                        trigger.Action2.Team = name2;
+                    }
+                }
+            }
         }
 
         public void CleanUpTriggers()
