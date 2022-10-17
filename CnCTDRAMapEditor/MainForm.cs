@@ -713,6 +713,7 @@ namespace MobiusEditor
             }
             using (ImageExportDialog imex = new ImageExportDialog(plugin, activeLayers, filename))
             {
+                imex.StartPosition = FormStartPosition.CenterParent;
                 imex.ShowDialog(this);
             }
         }

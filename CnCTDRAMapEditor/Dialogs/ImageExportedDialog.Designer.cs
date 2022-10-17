@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             this.btnGoToFile = new System.Windows.Forms.Button();
-            this.btnClose = new System.Windows.Forms.Button();
+            this.btnDone = new System.Windows.Forms.Button();
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.lblExported = new System.Windows.Forms.Label();
             this.lblName = new System.Windows.Forms.Label();
@@ -47,16 +47,16 @@
             this.btnGoToFile.UseVisualStyleBackColor = true;
             this.btnGoToFile.Click += new System.EventHandler(this.BtnGoToFile_Click);
             // 
-            // btnClose
+            // btnDone
             // 
-            this.btnClose.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnClose.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.btnClose.Location = new System.Drawing.Point(347, 89);
-            this.btnClose.Name = "btnClose";
-            this.btnClose.Size = new System.Drawing.Size(75, 23);
-            this.btnClose.TabIndex = 1;
-            this.btnClose.Text = "Done";
-            this.btnClose.UseVisualStyleBackColor = true;
+            this.btnDone.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnDone.DialogResult = System.Windows.Forms.DialogResult.OK;
+            this.btnDone.Location = new System.Drawing.Point(347, 89);
+            this.btnDone.Name = "btnDone";
+            this.btnDone.Size = new System.Drawing.Size(75, 23);
+            this.btnDone.TabIndex = 1;
+            this.btnDone.Text = "Done";
+            this.btnDone.UseVisualStyleBackColor = true;
             // 
             // textBox1
             // 
@@ -101,14 +101,14 @@
             // 
             // ImageExportedDialog
             // 
-            this.AcceptButton = this.btnClose;
+            this.AcceptButton = this.btnDone;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnExportAgain;
             this.ClientSize = new System.Drawing.Size(434, 124);
             this.Controls.Add(this.textBox1);
             this.Controls.Add(this.btnExportAgain);
-            this.Controls.Add(this.btnClose);
+            this.Controls.Add(this.btnDone);
             this.Controls.Add(this.btnGoToFile);
             this.Controls.Add(this.lblName);
             this.Controls.Add(this.lblExported);
@@ -125,7 +125,7 @@
 
         #endregion
         private System.Windows.Forms.Button btnGoToFile;
-        private System.Windows.Forms.Button btnClose;
+        private System.Windows.Forms.Button btnDone;
         private System.Windows.Forms.TextBox textBox1;
         private System.Windows.Forms.Label lblExported;
         private System.Windows.Forms.Label lblName;

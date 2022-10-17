@@ -145,8 +145,13 @@ namespace MobiusEditor.Dialogs
 
         private void txtScale_TextChanged(Object sender, EventArgs e)
         {
+            TextBox textBox = sender as TextBox;
+            if (textBox == null)
+            {
+                return;
+            }
             String pattern = "^\\d*(\\.\\d*)?$";
-            if (Regex.IsMatch(txtScale.Text, pattern))
+            if (Regex.IsMatch(textBox.Text, pattern))
             {
                 SetSizeLabel();
                 return;
@@ -154,7 +159,7 @@ namespace MobiusEditor.Dialogs
             // something snuck in, probably with ctrl+v. Remove it.
             System.Media.SystemSounds.Beep.Play();
             StringBuilder text = new StringBuilder();
-            String txt = txtScale.Text.ToUpperInvariant();
+            String txt = textBox.Text.ToUpperInvariant();
             Int32 txtLen = txt.Length;
             Int32 firstIllegalChar = -1;
             Int32 firstDot = txt.IndexOf(".");
@@ -177,16 +182,37 @@ namespace MobiusEditor.Dialogs
             // Setting "this.Text" will trigger this function again, but that's okay, it'll immediately succeed in the regex and abort.
             if (Decimal.TryParse(filteredText, ns, NumberFormatInfo.CurrentInfo, out value))
             {
-                txtScale.Text = value.ToString(CultureInfo.InvariantCulture);
+                textBox.Text = value.ToString(CultureInfo.InvariantCulture);
             }
             else
             {
-                txtScale.Text = filteredText;
+                textBox.Text = filteredText;
             }
             if (firstIllegalChar == -1)
                 firstIllegalChar = 0;
-            txtScale.Select(firstIllegalChar, 0);
+            textBox.Select(firstIllegalChar, 0);
             SetSizeLabel();
+        }
+
+        private void BtnSetDimensions_Click(Object sender, EventArgs e)
+        {
+            double scale;
+            if (!Double.TryParse(txtScale.Text, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out scale))
+            {
+                return;
+            }
+            int curSize = gamePlugin.Map.Metrics.Width * Math.Max(1, (int)(Globals.OriginalTileWidth * scale));
+            using (ImagetExportSetSizeDialog dimdialog = new ImagetExportSetSizeDialog(curSize))
+            {
+                dimdialog.StartPosition = FormStartPosition.CenterParent;
+                if (DialogResult.OK == dimdialog.ShowDialog(this))
+                {
+                    // Can never be less than 1 pixel per cell.
+                    curSize = Math.Max(dimdialog.Dimension, gamePlugin.Map.Metrics.Width);
+                    scale = curSize / (double)(Globals.OriginalTileWidth * gamePlugin.Map.Metrics.Width);
+                    txtScale.Text = scale.ToString(CultureInfo.InvariantCulture);
+                }
+            }
         }
 
         private void btnPickFile_Click(Object sender, EventArgs e)

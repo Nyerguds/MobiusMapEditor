@@ -253,6 +253,12 @@
     <Compile Include="Dialogs\ImageExportedDialog.Designer.cs">
       <DependentUpon>ImageExportedDialog.cs</DependentUpon>
     </Compile>
+    <Compile Include="Dialogs\ImagetExportSetSizeDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialogs\ImagetExportSetSizeDialog.Designer.cs">
+      <DependentUpon>ImagetExportSetSizeDialog.cs</DependentUpon>
+    </Compile>
     <Compile Include="Dialogs\InviteMessageBox.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -645,6 +651,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Dialogs\ImageExportedDialog.resx">
       <DependentUpon>ImageExportedDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\ImagetExportSetSizeDialog.resx">
+      <DependentUpon>ImagetExportSetSizeDialog.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Dialogs\InviteMessageBox.resx">
       <DependentUpon>InviteMessageBox.cs</DependentUpon>

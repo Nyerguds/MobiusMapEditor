@@ -376,11 +376,11 @@ These options are all enabled by default, but can be disabled if you wish. Use t
 * On Tiberian Dawn maps, the editor will now fall back to Temperate graphics when not finding the Winter graphics for the Haystack buildings/overlays. This happens the same way in the game, since the original igloos that were supposed to be there were sadly not remastered.
 * Fixed a situation where triggers were selectable on unbuilt buildings.
 * Improved the look of the trigger info icon on Terrain object properties and in the Celltriggers window. This was already done on other objects.
-* Added a dialog for the image export.
+* Added a dialog for the image export where the user can slect the specific layers and set the scale factor. There is a tool to set the dimensions in pixels, but the internally used metric is the scale factor, so the final size will not always match that input.
 * Middle mouse and space no longer make the cursor change on the map tile preview panel.
 * Added multithreading to all heavy processing functions. This means the window will no longer freeze up while loading or saving maps, but will instead have all functions disabled, while showing a little box that shows what it is doing.
 * In Celltrigger mode, if a selected trigger is already linked to objects, the trigger labels on these objects will be indicated in yellow.
-* Changed references to ConcretePavementTD mod in "CnCTDRAMapEditor.exe.config" to its new name; "GraphicsFixesTD".
+* Changed references to the "ConcretePavementTD" mod in "CnCTDRAMapEditor.exe.config" to its new name; "GraphicsFixesTD".
 * Changed tool clamping logic to only need a minimum size to remain inside the window, rather than the entire tool. This minimum can be set in the setting "MinimumClampSize" in "CnCTDRAMapEditor.exe.config".
 * Steam publish dialog now has buttons to easily copy the map name and briefing from the mission.
 * Steam publish dialog description now properly supports multiline.

@@ -42,6 +42,7 @@
             this.label3 = new System.Windows.Forms.Label();
             this.btnExport = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
+            this.btnSetDimensions = new System.Windows.Forms.Button();
             this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -52,24 +53,24 @@
             this.layersListBox.Location = new System.Drawing.Point(3, 23);
             this.layersListBox.Name = "layersListBox";
             this.layersListBox.SelectionMode = System.Windows.Forms.SelectionMode.MultiSimple;
-            this.layersListBox.Size = new System.Drawing.Size(159, 164);
+            this.layersListBox.Size = new System.Drawing.Size(191, 164);
             this.layersListBox.TabIndex = 0;
             // 
             // indicatorsListBox
             // 
             this.indicatorsListBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.indicatorsListBox.FormattingEnabled = true;
-            this.indicatorsListBox.Location = new System.Drawing.Point(183, 23);
+            this.indicatorsListBox.Location = new System.Drawing.Point(215, 23);
             this.indicatorsListBox.Name = "indicatorsListBox";
             this.indicatorsListBox.SelectionMode = System.Windows.Forms.SelectionMode.MultiSimple;
-            this.indicatorsListBox.Size = new System.Drawing.Size(160, 164);
+            this.indicatorsListBox.Size = new System.Drawing.Size(192, 164);
             this.indicatorsListBox.TabIndex = 0;
             // 
             // txtScale
             // 
             this.txtScale.Location = new System.Drawing.Point(67, 9);
             this.txtScale.Name = "txtScale";
-            this.txtScale.Size = new System.Drawing.Size(100, 20);
+            this.txtScale.Size = new System.Drawing.Size(98, 20);
             this.txtScale.TabIndex = 2;
             this.txtScale.Text = "0.5";
             this.txtScale.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
@@ -87,11 +88,11 @@
             // lblSize
             // 
             this.lblSize.AutoSize = true;
-            this.lblSize.Location = new System.Drawing.Point(173, 12);
+            this.lblSize.Location = new System.Drawing.Point(171, 12);
             this.lblSize.Name = "lblSize";
-            this.lblSize.Size = new System.Drawing.Size(63, 13);
+            this.lblSize.Size = new System.Drawing.Size(105, 13);
             this.lblSize.TabIndex = 2;
-            this.lblSize.Text = "(Size: X * Y)";
+            this.lblSize.Text = "(Size: XXXX * YYYY)";
             // 
             // chkSmooth
             // 
@@ -122,13 +123,13 @@
             this.txtPath.Location = new System.Drawing.Point(14, 273);
             this.txtPath.Name = "txtPath";
             this.txtPath.ReadOnly = true;
-            this.txtPath.Size = new System.Drawing.Size(304, 20);
+            this.txtPath.Size = new System.Drawing.Size(368, 20);
             this.txtPath.TabIndex = 4;
             // 
             // btnPickFile
             // 
             this.btnPickFile.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnPickFile.Location = new System.Drawing.Point(324, 270);
+            this.btnPickFile.Location = new System.Drawing.Point(388, 270);
             this.btnPickFile.Name = "btnPickFile";
             this.btnPickFile.Size = new System.Drawing.Size(31, 23);
             this.btnPickFile.TabIndex = 5;
@@ -154,7 +155,7 @@
             this.tableLayoutPanel1.RowCount = 2;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(346, 190);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(410, 190);
             this.tableLayoutPanel1.TabIndex = 3;
             // 
             // label2
@@ -163,7 +164,7 @@
             this.label2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.label2.Location = new System.Drawing.Point(3, 0);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(159, 20);
+            this.label2.Size = new System.Drawing.Size(191, 20);
             this.label2.TabIndex = 2;
             this.label2.Text = "Map layers:";
             this.label2.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -172,9 +173,9 @@
             // 
             this.label3.AutoSize = true;
             this.label3.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label3.Location = new System.Drawing.Point(183, 0);
+            this.label3.Location = new System.Drawing.Point(215, 0);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(160, 20);
+            this.label3.Size = new System.Drawing.Size(192, 20);
             this.label3.TabIndex = 2;
             this.label3.Text = "Indicators:";
             this.label3.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -182,7 +183,7 @@
             // btnExport
             // 
             this.btnExport.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnExport.Location = new System.Drawing.Point(184, 301);
+            this.btnExport.Location = new System.Drawing.Point(248, 301);
             this.btnExport.Name = "btnExport";
             this.btnExport.Size = new System.Drawing.Size(84, 23);
             this.btnExport.TabIndex = 0;
@@ -194,12 +195,22 @@
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(274, 301);
+            this.btnCancel.Location = new System.Drawing.Point(338, 301);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(84, 23);
             this.btnCancel.TabIndex = 1;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
+            // 
+            // btnSetDimensions
+            // 
+            this.btnSetDimensions.Location = new System.Drawing.Point(324, 7);
+            this.btnSetDimensions.Name = "btnSetDimensions";
+            this.btnSetDimensions.Size = new System.Drawing.Size(98, 23);
+            this.btnSetDimensions.TabIndex = 6;
+            this.btnSetDimensions.Text = "Set dimensions...";
+            this.btnSetDimensions.UseVisualStyleBackColor = true;
+            this.btnSetDimensions.Click += new System.EventHandler(this.BtnSetDimensions_Click);
             // 
             // ImageExportDialog
             // 
@@ -207,7 +218,8 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(370, 336);
+            this.ClientSize = new System.Drawing.Size(434, 336);
+            this.Controls.Add(this.btnSetDimensions);
             this.Controls.Add(this.tableLayoutPanel1);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnExport);
@@ -246,5 +258,6 @@
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Button btnSetDimensions;
     }
 }
