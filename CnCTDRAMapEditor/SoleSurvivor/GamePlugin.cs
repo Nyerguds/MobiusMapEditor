@@ -96,9 +96,9 @@ namespace MobiusEditor.SoleSurvivor
                 }
                 flagColors[mpId] = Globals.TheTeamColorManager[house.UnitTeamColor];
             }
-            // Dark blue
+            // Multi7: the dark blue that's unused in SS because Multi4 uses BAD_UNITS instead.
             flagColors[6] = Globals.TheTeamColorManager["MULTI2"];
-            // RA Purple
+            // Multi8: RA Purple
             flagColors[7] = new TeamColor(Globals.TheTeamColorManager, flagColors[0], "MULTI8", new Vector3(0.410f, 0.100f, 0.000f));
             Map = new Map(basicSection, null, TiberianDawn.Constants.MaxSizeMega, typeof(House), houseTypes,
                 flagColors, TiberianDawn.TheaterTypes.GetTypes(), TiberianDawn.TemplateTypes.GetTypes(),
@@ -188,5 +188,10 @@ namespace MobiusEditor.SoleSurvivor
             SaveIniSmudge(ini);
         }
 
+        public override HashSet<string> GetHousesWithProduction()
+        {
+            // Not applicable. Return empty set.
+            return new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+        }
     }
 }

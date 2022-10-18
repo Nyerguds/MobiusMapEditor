@@ -65,5 +65,7 @@ namespace MobiusEditor.Interface
         string Validate();
 
         IEnumerable<String> AssessMapItems();
+
+        HashSet<string> GetHousesWithProduction();
     }
 }

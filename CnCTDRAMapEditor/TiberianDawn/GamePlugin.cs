@@ -2541,6 +2541,64 @@ namespace MobiusEditor.TiberianDawn
             return info;
         }
 
+        public virtual HashSet<string> GetHousesWithProduction()
+        {
+            HashSet<string> housesWithProd = new HashSet<string>();
+            // Tiberian Dawn logic: find AIs with construction yard and Production trigger.
+            HashSet<string> housesWithCY = new HashSet<string>();
+            foreach ((_, Building bld) in Map.Buildings.OfType<Building>().Where(b => b.Occupier.IsPrebuilt &&
+                b.Occupier.House.ID >= 0 && (b.Occupier.Type.Flag & BuildingTypeFlag.Factory) == BuildingTypeFlag.Factory))
+            {
+                housesWithCY.Add(bld.House.Name);
+            }
+            foreach ((_, Unit unit) in Map.Technos.OfType<Unit>().Where(b =>
+                "mcv".Equals(b.Occupier.Type.Name, StringComparison.InvariantCultureIgnoreCase)
+                && "Unload".Equals(b.Occupier.Mission, StringComparison.InvariantCultureIgnoreCase)))
+            {
+                housesWithCY.Add(unit.House.Name);
+            }
+            string cellTriggerHouse = HouseTypes.GetClassicOpposingPlayer(Map.BasicSection.Player);
+            foreach (var trig in Map.Triggers)
+            {
+                string triggerHouse = trig.House;
+                if (trig.Action1.ActionType == ActionTypes.ACTION_BEGIN_PRODUCTION)
+                {
+                    if (trig.Event1.EventType == EventTypes.EVENT_PLAYER_ENTERED)
+                    {
+                        // Either a cell trigger, or a building to capture. Scan for celltriggers.
+                        if (housesWithCY.Contains(cellTriggerHouse))
+                        {
+                            foreach (var item in Map.CellTriggers)
+                            {
+                                if (trig.Equals(item.Value.Trigger))
+                                {
+                                    housesWithProd.Add(cellTriggerHouse);
+                                    break;
+                                }
+                            }
+                        }
+                        // Scan for attached buildings to capture.
+                        if (housesWithCY.Contains(triggerHouse))
+                        {
+                            foreach ((_, Building bld) in Map.Buildings.OfType<Building>())
+                            {
+                                if (trig.Equals(bld.Trigger))
+                                {
+                                    housesWithProd.Add(triggerHouse);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    else if (housesWithCY.Contains(triggerHouse))
+                    {
+                        housesWithProd.Add(trig.House);
+                    }
+                }
+            }
+            return housesWithProd;
+        }
+
         protected void BasicSection_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             switch (e.PropertyName)

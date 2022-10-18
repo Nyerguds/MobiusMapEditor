@@ -105,7 +105,6 @@ namespace MobiusEditor.Tools
                     break;
                 case "ExpansionEnabled":
                     UpdateExpansionUnits();
-                    RemoveExpansionUnits();
                     break;
             }
         }
@@ -123,75 +122,6 @@ namespace MobiusEditor.Tools
         protected virtual void UpdateExpansionUnits()
         {
             // Can be overridden by sub-tools to update their object lists.
-        }
-
-        private void RemoveExpansionUnits()
-        {
-            if (map.BasicSection.ExpansionEnabled)
-            {
-                // Expansion is enabled. Nothing to do.
-                return;
-            }
-            // Technos on map
-            List<(Point, ICellOccupier)> toDelete = new List<(Point, ICellOccupier)>();
-            foreach ((Point p, ICellOccupier occup) in map.Technos)
-            {
-                if (occup is Unit un)
-                {
-                    if (un.Type.IsExpansionUnit)
-                    {
-                        toDelete.Add((p, occup));
-                    }
-                }
-                else if (occup is InfantryGroup ifg)
-                {
-                    if (ifg.Infantry.Any(inf => inf != null && inf.Type.IsExpansionUnit))
-                    {
-                        toDelete.Add((p, occup));
-                    }
-                }
-            }
-            foreach ((Point point, ICellOccupier occup) in toDelete)
-            {
-                if (occup is Unit un)
-                {
-                    mapPanel.Invalidate(map, un);
-                    map.Technos.Remove(occup);
-                }
-                else if (occup is InfantryGroup infantryGroup)
-                {
-                    Infantry[] inf = infantryGroup.Infantry;
-                    for (int i = 0; i < inf.Length; ++i)
-                    {
-                        if (inf[i] != null && (inf[i].Type.Flag & UnitTypeFlag.IsExpansionUnit) == UnitTypeFlag.IsExpansionUnit)
-                        {
-                            inf[i] = null;
-                        }
-                    }
-                    bool delGroup = inf.All(i => i == null);
-                    mapPanel.Invalidate(map, infantryGroup);
-                    if (delGroup)
-                    {
-                        map.Technos.Remove(infantryGroup);
-                    }
-                }
-            }
-            // Teamtypes
-            foreach (TeamType teamtype in map.TeamTypes)
-            {
-                List<TeamTypeClass> toRemove = new List<TeamTypeClass>();
-                foreach (TeamTypeClass ttclass in teamtype.Classes)
-                {
-                    if ((ttclass.Type is UnitType ut && ut.IsExpansionUnit) || (ttclass.Type is InfantryType it && it.IsExpansionUnit))
-                    {
-                        toRemove.Add(ttclass);
-                    }
-                }
-                foreach (TeamTypeClass ttclass in toRemove)
-                {
-                    teamtype.Classes.Remove(ttclass);
-                }
-            }
         }
 
         private void Map_RulesChanged(Object sender, MapRefreshEventArgs e)

@@ -452,7 +452,6 @@ namespace MobiusEditor.RedAlert
             {
                 isLoading = true;
                 var errors = new List<string>();
-                
                 bool forceSingle = false;
                 switch (fileType)
                 {
@@ -1285,7 +1284,7 @@ namespace MobiusEditor.RedAlert
                                 errors.Add(string.Format("Aircraft '{0}' overlaps unknown techno in cell {1}; skipping.", aircraftType.Name, cell));
                                 modified = true;
                             }
-                        }                        
+                        }
                     }
                     else
                     {
@@ -1825,7 +1824,7 @@ namespace MobiusEditor.RedAlert
                             else
                             {
                                 Map.CellTriggers[cell] = new CellTrigger(Value);
-                            }                            
+                            }
                         }
                         else
                         {
@@ -2513,7 +2512,7 @@ namespace MobiusEditor.RedAlert
                         }
                         finalLines.Add(sb.ToString());
                     }
-                }                
+                }
                 for (int i = 0; i < finalLines.Count; ++i)
                 {
                     briefingSection[(i + 1).ToString()] = finalLines[i];
@@ -2705,10 +2704,6 @@ namespace MobiusEditor.RedAlert
                         checkedGlobals.Add((int)tr.Event1.Data);
                     if (tr.EventControl != TriggerMultiStyleType.Only && (tr.Event2.EventType == EventTypes.TEVENT_GLOBAL_CLEAR || tr.Event2.EventType == EventTypes.TEVENT_GLOBAL_SET))
                         checkedGlobals.Add((int)tr.Event2.Data);
-                    if (checkedGlobals.Contains(15))
-                    {
-
-                    }
                     if (tr.Action1.ActionType == ActionTypes.TACTION_CLEAR_GLOBAL || tr.Action1.ActionType == ActionTypes.TACTION_SET_GLOBAL)
                         alteredGlobals.Add((int)tr.Action1.Data);
                     if (tr.Action2.ActionType == ActionTypes.TACTION_CLEAR_GLOBAL || tr.Action2.ActionType == ActionTypes.TACTION_SET_GLOBAL)
@@ -2750,6 +2745,18 @@ namespace MobiusEditor.RedAlert
             return info;
         }
 
+        public HashSet<string> GetHousesWithProduction()
+        {
+            HashSet<string> housesWithProd = new HashSet<string>();
+            if (Map.BasicSection.BasePlayer == null)
+            {
+                Map.BasicSection.BasePlayer = RedAlert.HouseTypes.GetBasePlayer(Map.BasicSection.Player);
+            }
+            HouseType rebuildHouse = Map.HouseTypesIncludingNone.Where(h => h.Name == Map.BasicSection.BasePlayer).FirstOrDefault();
+            housesWithProd.Add(rebuildHouse.Name);
+            return housesWithProd;
+        }
+
         private void BasicSection_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             switch (e.PropertyName)
@@ -2758,9 +2765,8 @@ namespace MobiusEditor.RedAlert
                     UpdateBasePlayerHouse();
                     break;
                 case "ExpansionEnabled":
-                    // Not here. See ViewTool.cs for the Aftermath units clearing.
-                    //UpdateExpansionUnits();
-                    if (!isLoading)
+                    bool changed = Map.RemoveExpansionUnits();
+                    if (!isLoading && changed)
                     {
                         Dirty = true;
                     }

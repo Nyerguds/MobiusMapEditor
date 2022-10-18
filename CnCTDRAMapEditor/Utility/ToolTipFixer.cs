@@ -42,6 +42,10 @@ namespace MobiusEditor.Utility
                     if (String.IsNullOrEmpty(tooltip))
                         continue;
                     ctrl.Tag = tooltip;
+                    // Avoid double bindings.
+                    ctrl.MouseHover -= ShowToolTip;
+                    ctrl.MouseLeave -= HideToolTip;
+                    // Attach listeners.
                     ctrl.MouseHover += ShowToolTip;
                     ctrl.MouseLeave += HideToolTip;
                 }

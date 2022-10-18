@@ -334,10 +334,6 @@ namespace MobiusEditor
 
         private void FileNewMenuItem_Click(object sender, EventArgs e)
         {
-            if (!PromptSaveMap())
-            {
-                return;
-            }
             NewFile();
         }
 
@@ -674,7 +670,7 @@ namespace MobiusEditor
             {
                 emb.Title = "Power usage";
                 emb.Message = "Power balance per House:";
-                emb.Errors = plugin.Map.AssessPower(plugin.GameType);
+                emb.Errors = plugin.Map.AssessPower(plugin.GetHousesWithProduction());
                 emb.StartPosition = FormStartPosition.CenterParent;
                 emb.ShowDialog(this);
             }
@@ -690,7 +686,7 @@ namespace MobiusEditor
             {
                 emb.Title = "Silo storage";
                 emb.Message = "Available silo storage per House:";
-                emb.Errors = plugin.Map.AssessStorage(plugin.GameType);
+                emb.Errors = plugin.Map.AssessStorage(plugin.GetHousesWithProduction());
                 emb.StartPosition = FormStartPosition.CenterParent;
                 emb.ShowDialog(this);
             }
