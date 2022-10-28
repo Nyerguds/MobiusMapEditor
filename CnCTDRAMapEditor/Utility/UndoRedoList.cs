@@ -17,7 +17,15 @@ using System.Collections.Generic;
 
 namespace MobiusEditor.Utility
 {
-    public class UndoRedoList<T>
+    public interface IUndoRedoEventArgs
+    {
+        /// <summary>
+        /// Allows giving a warning for large undo/redo events, and cancelling if the warning makes the user reconsider the action.
+        /// </summary>
+        bool Cancelled { get; set; }
+    }
+
+    public class UndoRedoList<T> where T: IUndoRedoEventArgs
     {
         private const int DefaultMaxUndoRedo = 50;
 
@@ -56,14 +64,11 @@ namespace MobiusEditor.Utility
             {
                 undoRedoActions.RemoveRange(undoRedoPosition, undoRedoActions.Count - undoRedoPosition);
             }
-
             undoRedoActions.Add((undo, redo));
-
             if (undoRedoActions.Count > maxUndoRedo)
             {
                 undoRedoActions.RemoveRange(0, undoRedoActions.Count - maxUndoRedo);
             }
-
             undoRedoPosition = undoRedoActions.Count;
             OnTracked();
         }
@@ -74,10 +79,16 @@ namespace MobiusEditor.Utility
             {
                 throw new InvalidOperationException();
             }
-
             undoRedoPosition--;
             undoRedoActions[undoRedoPosition].Undo(context);
-            OnUndone();
+            if (!context.Cancelled)
+            {
+                OnUndone();
+            }
+            else
+            {
+                undoRedoPosition++;
+            }
         }
 
         public void Redo(T context)
@@ -86,10 +97,12 @@ namespace MobiusEditor.Utility
             {
                 throw new InvalidOperationException();
             }
-
             undoRedoActions[undoRedoPosition].Redo(context);
-            undoRedoPosition++;
-            OnRedone();
+            if (!context.Cancelled)
+            {
+                undoRedoPosition++;
+                OnRedone();
+            }
         }
 
         protected virtual void OnTracked()

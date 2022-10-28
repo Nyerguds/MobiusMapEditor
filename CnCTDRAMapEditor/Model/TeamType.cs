@@ -66,7 +66,7 @@ namespace MobiusEditor.Model
         public int ID { get; private set; }
         public string Mission { get; private set; }
         public TeamMissionArgType ArgType { get; private set; }
-        public (int,string)[] DropdownOptions { get; private set; }
+        public (int Value, string Label)[] DropdownOptions { get; private set; }
 
         public TeamMission(int id, String mission, TeamMissionArgType argType, params (int, string)[] dropdownOptions)
         {
@@ -90,7 +90,7 @@ namespace MobiusEditor.Model
 
         public TeamMission Clone()
         {
-            return new TeamMission(this.ID, this.Mission, this.ArgType, this.DropdownOptions.Select( ddo => (ddo.Item1, ddo.Item2)).ToArray());
+            return new TeamMission(this.ID, this.Mission, this.ArgType, this.DropdownOptions.Select(ddo => (ddo.Value, ddo.Label)).ToArray());
         }
 
         object ICloneable.Clone()

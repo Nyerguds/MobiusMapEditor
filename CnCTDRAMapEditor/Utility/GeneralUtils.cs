@@ -35,6 +35,12 @@ namespace MobiusEditor.Utility
     public static class GeneralUtils
     {
 
+        /// <summary>
+        /// Returns the contents of the ini, or null if no ini content could be found in the file.
+        /// </summary>
+        /// <param name="path">Path</param>
+        /// <param name="fileType">Detected file type.</param>
+        /// <returns></returns>
         public static INI GetIniContents(String path, FileType fileType)
         {
             try
@@ -71,7 +77,7 @@ namespace MobiusEditor.Utility
                 }
                 INI checkIni = new INI();
                 checkIni.Parse(iniContents);
-                return checkIni;
+                return checkIni.Sections.Count == 0 ? null : checkIni;
             }
             catch
             {
@@ -79,10 +85,14 @@ namespace MobiusEditor.Utility
             }
         }
 
+        public static bool CheckForIniInfo(INI iniContents, string section)
+        {
+            return CheckForIniInfo(iniContents, section, null, null);
+        }
+
         public static bool CheckForIniInfo(INI iniContents, string section, string key, string value)
         {
-
-            INISection iniSection = iniContents.Sections.Extract(section);
+            INISection iniSection = iniContents[section];
             if (key == null || value == null)
             {
                 return iniSection != null;

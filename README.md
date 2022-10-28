@@ -351,7 +351,7 @@ These options are all enabled by default, but can be disabled if you wish. Use t
 * Fixed issues with the editor window getting focused simply by moving the mouse over it. The main window can steal focus from the tool window, but not from other applications.
 * In Waypoints and Cell Triggers editing mode, the PageUp, PageDown, Home and End keys will now let you go through the dropdown items list. PageUp and PageDown will act as normal arrow keys.
 * In Waypoints editing mode, pressing [Shift] and a key will select special waypoints: [F]lare, [H]ome, [R]einforce, [S]pecial.
-* The shortcut keys to select the different editing modes (normally Q, W, E, R, T, Y, A, S, D, F, G) now work on keyboard position, meaning they will also work in the logical way on AZERTY keyboards.
+* The shortcut keys to select the different editing modes (normally Q, W, E, R, T, Y, A, S, D, F, G) now work on keyboard position, meaning they will also work in the same logical way on AZERTY keyboards.
 * Fixed bug where the checked states of the Houses in the Map Settings would reset when changing the "Single-Player" checkbox.
 * The [Aftermath] section is no longer ignored in the map settings' Rules editor, so Aftermath detail settings can be added. The actual "NewUnitsEnabled" setting in this is ignored, though; toggling the expansion units can only be done in the Basic settings.
 * Undo/Redo tracking will now also undo the map's modified-status.
@@ -370,7 +370,7 @@ These options are all enabled by default, but can be disabled if you wish. Use t
 * Restricted Red Alert trigger and teamtype names to the same lengths as Tiberian Dawn; 4 for triggers, 8 for Teamtypes.
 * Pressing [Enter] in Waypoints mode will now jump to the selected waypoint.
 * Fixed a bug in the overlap detection system that made it always give "<unknown>" for the overlapped cell on Terrain objects.
-* Split mods up into ModsToLoadTD, ModsToLoadRA and ModsToLoadSS.
+* Split mods up into ModsToLoadTD, ModsToLoadRA and ModsToLoadSS. Entries in the list no longer require the game folder prefix.
 * The Civilian buildings V12 and V13 (haystacks) are now also available in TD Winter theater.
 * The trigger "Any: Cap=Win,Des=Lose" is now also seen as flag to autodetect classic single play scenarios.
 * On Tiberian Dawn maps, the editor will now fall back to Temperate graphics when not finding the Winter graphics for the Haystack buildings/overlays. This happens the same way in the game, since the original igloos that were supposed to be there were sadly not remastered.
@@ -394,6 +394,11 @@ These options are all enabled by default, but can be disabled if you wish. Use t
 * Added the ability to clone triggers and teamtypes.
 * For Red Alert speech and sound triggers, the original filenames are now shown alongside the description.
 * For Red Alert text triggers, the text ID is now shown in front of the text.
+* Trigger and teamtype editing actions are now added to the undo/redo history. They will give a warning with a message box when undoing or redoing.
+* Fixed the fact the maximum number of triggers was set to 200 for Red Alert, instead of 80.
+* Red Alert globals are now limited to 0 to 29, since that is how they are defined in the game code.
+* The editor now specifically checks for the presence of the [Basic] and [Map] sections to see whether a file is indeed a C&C map.
+* Added checks on triggers containing Events or Actions that don't have their required House/Teamtype/Trigger filled in.
 
 ### Possible future features
 

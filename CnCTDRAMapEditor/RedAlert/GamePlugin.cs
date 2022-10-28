@@ -333,12 +333,16 @@ namespace MobiusEditor.RedAlert
                     ini.Sections.Remove(house.Type.Name);
                 }
                 extraSections = ini.Sections.Count == 0 ? null : ini.Sections;
-                UpdateBuildingRules(ini, this.Map);
+                IEnumerable<string> errors = UpdateBuildingRules(ini, this.Map);
+                if (errors.Count() > 0)
+                {
+                    throw new Exception(String.Join("\n", errors));
+                }
             }
         }
         public static bool CheckForRAMap(INI contents)
         {
-            return GeneralUtils.CheckForIniInfo(contents, "MapPack", null, null);
+            return GeneralUtils.CheckForIniInfo(contents, "MapPack");
         }
 
         static GamePlugin()
@@ -506,7 +510,7 @@ namespace MobiusEditor.RedAlert
             var errors = new List<string>();
             Map.BeginUpdate();
             // Fetch some rules.ini information
-            UpdateBuildingRules(ini, this.Map);
+            errors.AddRange(UpdateBuildingRules(ini, this.Map));
             // Just gonna remove this; I assume it'll be invalid after a re-save anyway.
             ini.Sections.Extract("Digest");
             // Basic info
@@ -539,7 +543,7 @@ namespace MobiusEditor.RedAlert
             INISection aftermathSection = ini.Sections["Aftermath"];
             if (aftermathSection != null)
             {
-                var amEnabled = aftermathSection["NewUnitsEnabled"];
+                var amEnabled = aftermathSection.TryGetValue("NewUnitsEnabled");
                 aftermathEnabled = amEnabled != null && Int32.TryParse(amEnabled, out int val) && val == 1;
                 aftermathSection.Keys.Remove("NewUnitsEnabled");
                 // Remove if empty.
@@ -639,7 +643,7 @@ namespace MobiusEditor.RedAlert
                     }
                     catch (Exception ex)
                     {
-                        errors.Add(string.Format("Teamtype '{0}' has errors and can't be parsed: {1}.", Key, ex.Message));
+                        errors.Add(string.Format("Teamtype '{0}' has curErrors and can't be parsed: {1}.", Key, ex.Message));
                         modified = true;
                     }
                 }
@@ -752,11 +756,12 @@ namespace MobiusEditor.RedAlert
                     }
                     catch (Exception ex)
                     {
-                        errors.Add(string.Format("Trigger '{0}' has errors and can't be parsed: {1}.", Key, ex.Message));
+                        errors.Add(string.Format("Trigger '{0}' has curErrors and can't be parsed: {1}.", Key, ex.Message));
                         modified = true;
                     }
                 }
             }
+            //MessageBox.Show("at triggers");
             HashSet<string> checkTrigs = Trigger.None.Yield().Concat(triggers.Select(t => t.Name)).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
             HashSet<string> checkCellTrigs = Map.FilterCellTriggers(triggers).Select(t => t.Name).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
             HashSet<string> checkUnitTrigs = Trigger.None.Yield().Concat(Map.FilterUnitTriggers(triggers).Select(t => t.Name)).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
@@ -1097,7 +1102,7 @@ namespace MobiusEditor.RedAlert
                     var tokens = Value.Split(',');
                     if (tokens.Length == 7)
                     {
-                        var unitType = Map.AllUnitTypes.Where(t => t.IsUnit && t.Equals(tokens[1])).FirstOrDefault();
+                        var unitType = Map.AllUnitTypes.Where(t => t.IsGroundUnit && t.Equals(tokens[1])).FirstOrDefault();
                         if (unitType == null)
                         {
                             errors.Add(string.Format("Unit '{0}' references unknown unit.", tokens[1]));
@@ -1900,9 +1905,11 @@ namespace MobiusEditor.RedAlert
             Map.TeamTypes.Clear();
             Map.TeamTypes.AddRange(teamTypes.OrderBy(t => t.Name, comparer));
             UpdateBasePlayerHouse();
-            // Won't trigger the automatic cleanup and notifications.
+            triggers.Sort((x, y) => comparer.Compare(x.Name, y.Name));
+            errors.AddRange(CheckTriggers(triggers, true, true, true, out _));
+            // Won't trigger the notifications.
             Map.Triggers.Clear();
-            Map.Triggers.AddRange(triggers.OrderBy(t => t.Name, comparer));
+            Map.Triggers.AddRange(triggers);
             extraSections = ini.Sections;
             bool switchedToSolo = forceSoloMission && !Map.BasicSection.SoloMission
                 && (Map.Triggers.Any(t => t.Action1.ActionType == ActionTypes.TACTION_WIN) || Map.Triggers.Any(t => t.Action2.ActionType == ActionTypes.TACTION_WIN))
@@ -1916,8 +1923,9 @@ namespace MobiusEditor.RedAlert
             return errors;
         }
 
-        private void UpdateBuildingRules(INI ini, Map map)
+        private IEnumerable<string> UpdateBuildingRules(INI ini, Map map)
         {
+            List<string> errors = new List<string>();
             Dictionary<string, BuildingType> originals = BuildingTypes.GetTypes().ToDictionary(b => b.Name, StringComparer.InvariantCultureIgnoreCase);
             HashSet<Point> refreshPoints = new HashSet<Point>();
             List<(Point Location, Building Occupier)> buildings = map.Buildings.OfType<Building>()
@@ -1946,7 +1954,15 @@ namespace MobiusEditor.RedAlert
                     continue;
                 }
                 RaBuildingIniSection bld = new RaBuildingIniSection();
-                INI.ParseSection(new MapContext(map, true), bldSettings, bld);
+                try
+                {
+                    INI.ParseSection(new MapContext(map, true), bldSettings, bld);
+                }
+                catch (Exception e)
+                {
+                    errors.Add((e.Message ?? String.Empty).TrimEnd('.') + ". Rule updates for [" + bType.Name + "] are ignored.");
+                    continue;
+                }
                 if (bldSettings.Keys.Contains("Power"))
                 {
                     bType.PowerUsage = bld.Power >= 0 ? 0 : -bld.Power;
@@ -1966,6 +1982,7 @@ namespace MobiusEditor.RedAlert
                 map.Buildings.Add(p, b);
             }
             map.NotifyRulesChanges(refreshPoints);
+            return errors;
         }
 
         /// <summary>
@@ -2290,7 +2307,7 @@ namespace MobiusEditor.RedAlert
             }
             var unitsSection = ini.Sections.Add("UNITS");
             var unitIndex = 0;
-            foreach (var (location, unit) in Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsUnit))
+            foreach (var (location, unit) in Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsGroundUnit))
             {
                 var key = unitIndex.ToString("D3");
                 unitIndex++;
@@ -2568,7 +2585,7 @@ namespace MobiusEditor.RedAlert
             int numBuildings = Map.Buildings.OfType<Building>().Where(x => x.Occupier.IsPrebuilt).Count();
             int numInfantry = Map.Technos.OfType<InfantryGroup>().Sum(item => item.Occupier.Infantry.Count(i => i != null));
             int numTerrain = Map.Technos.OfType<Terrain>().Count();
-            int numUnits = Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsUnit).Count();
+            int numUnits = Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsGroundUnit).Count();
             int numVessels = Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsVessel).Count();
             int numWaypoints = Map.Waypoints.Count(w => (w.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart && w.Cell.HasValue);
             if (numAircraft > Constants.MaxAircraft)
@@ -2633,7 +2650,7 @@ namespace MobiusEditor.RedAlert
             int numBuildings = Map.Buildings.OfType<Building>().Where(x => x.Occupier.IsPrebuilt).Count();
             int numInfantry = Map.Technos.OfType<InfantryGroup>().Sum(item => item.Occupier.Infantry.Count(i => i != null));
             int numTerrain = Map.Technos.OfType<Terrain>().Count();
-            int numUnits = Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsUnit).Count();
+            int numUnits = Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsGroundUnit).Count();
             int numVessels = Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsVessel).Count();
             info.Add("Objects overview:");
             if (!Globals.DisableAirUnits)
@@ -2750,11 +2767,163 @@ namespace MobiusEditor.RedAlert
             HashSet<string> housesWithProd = new HashSet<string>();
             if (Map.BasicSection.BasePlayer == null)
             {
-                Map.BasicSection.BasePlayer = RedAlert.HouseTypes.GetBasePlayer(Map.BasicSection.Player);
+                Map.BasicSection.BasePlayer = HouseTypes.GetBasePlayer(Map.BasicSection.Player);
             }
             HouseType rebuildHouse = Map.HouseTypesIncludingNone.Where(h => h.Name == Map.BasicSection.BasePlayer).FirstOrDefault();
             housesWithProd.Add(rebuildHouse.Name);
             return housesWithProd;
+        }
+
+        public IEnumerable<string> CheckTriggers(IEnumerable<Trigger> triggers, bool includeExternalData, bool prefixNames, bool fatalOnly, out bool fatal)
+        {
+            fatal = false;
+            List<string> curErrors = new List<string>();
+            List<string> errors = new List<string>();
+            foreach (var trigger in triggers)
+            {
+                string trigName = trigger.Name;
+                String prefix = prefixNames ? trigName + ": " : String.Empty;
+                string event1 = trigger.Event1.EventType;
+                string event2 = trigger.Event2.EventType;
+                string action1 = trigger.Action1.ActionType;
+                string action2 = trigger.Action2.ActionType;
+                // Not sure which ones are truly fatal, but for now, any of these will flag it as such.
+                // Events
+                CheckEventHouse(prefix, event1, trigger.Event1.Data, curErrors, 1, ref fatal);
+                CheckEventHouse(prefix, event2, trigger.Event2.Data, curErrors, 2, ref fatal);
+                // globals checks are only for ini read, really.
+                CheckEventGlobals(prefix, event1, trigger.Event1.Data, curErrors, 1, ref fatal);
+                CheckEventGlobals(prefix, event2, trigger.Event2.Data, curErrors, 2, ref fatal);
+                CheckEventTeam(prefix, event1, trigger.Event1.Team, curErrors, 1, ref fatal);
+                CheckEventTeam(prefix, event2, trigger.Event2.Team, curErrors, 2, ref fatal);
+                // Actions
+                // globals checks are only for ini read, really.
+                CheckActionGlobals(prefix, action1, trigger.Action1.Data, curErrors, 1, ref fatal);
+                CheckActionGlobals(prefix, action2, trigger.Action2.Data, curErrors, 2, ref fatal);
+                CheckActionTeam(prefix, action1, trigger.Action1.Team, curErrors, 1, ref fatal);
+                CheckActionTeam(prefix, action2, trigger.Action2.Team, curErrors, 2, ref fatal);
+                CheckActionTrigger(prefix, action2, trigger.Action2.Trigger, curErrors, 2, ref fatal);
+                CheckActionTrigger(prefix, action1, trigger.Action1.Trigger, curErrors, 1, ref fatal);
+                if (curErrors.Count > 0)
+                {
+                    if (prefixNames)
+                    {
+                        errors.AddRange(curErrors);
+                    }
+                    else
+                    {
+                        errors.Add(trigName + ":");
+                        errors.AddRange(curErrors.Select(er => "-" + er));
+                        errors.Add(String.Empty);
+                    }
+                }
+            }
+            return errors;
+        }
+
+        private void CheckEventHouse(String prefix, String evnt, long house, List<String> errors, Int32 nr, ref bool fatal)
+        {
+            if (house > -1)
+                return;
+            switch (evnt)
+            {
+                case EventTypes.TEVENT_PLAYER_ENTERED:
+                case EventTypes.TEVENT_CROSS_HORIZONTAL:
+                case EventTypes.TEVENT_CROSS_VERTICAL:
+                case EventTypes.TEVENT_ENTERS_ZONE:
+                case EventTypes.TEVENT_LOW_POWER:
+                case EventTypes.TEVENT_SPIED:
+                case EventTypes.TEVENT_THIEVED:
+                case EventTypes.TEVENT_HOUSE_DISCOVERED:
+                case EventTypes.TEVENT_BUILDINGS_DESTROYED:
+                case EventTypes.TEVENT_UNITS_DESTROYED:
+                case EventTypes.TEVENT_ALL_DESTROYED:
+                    errors.Add(prefix + "event " + nr + ": \"" + evnt.TrimEnd('.') + "\" requires a house to be set.");
+                    fatal = true;
+                    break;
+            }
+        }
+
+        private void CheckEventGlobals(String prefix, String evnt, long data, List<string> errors, Int32 nr, ref bool fatal)
+        {
+            switch (evnt)
+            {
+                case EventTypes.TEVENT_GLOBAL_SET:
+                case EventTypes.TEVENT_GLOBAL_CLEAR:
+                    if (data < 0 || data > 29)
+                    {
+                        errors.Add(prefix + "event " + nr + ": \"Globals only go from 0 to 29.");
+                        fatal = true;
+                    }
+                    break;
+            }
+        }
+
+        private void CheckEventTeam(String prefix, String evnt, String team, List<string> errors, Int32 nr, ref bool fatal)
+        {
+            if (!TeamType.IsEmpty(team))
+                return;
+            switch (evnt)
+            {
+                case EventTypes.TEVENT_LEAVES_MAP:
+                    errors.Add(prefix + "event " + nr + ": There is no team set to leave the map.");
+                    fatal = true;
+                    break;
+            }
+        }
+
+        private void CheckActionGlobals(String prefix, String action, long data, List<string> errors, Int32 nr, ref bool fatal)
+        {
+            switch (action)
+            {
+                case ActionTypes.TACTION_SET_GLOBAL:
+                case ActionTypes.TACTION_CLEAR_GLOBAL:
+                    if (data < 0 || data > 29)
+                    {
+                        errors.Add(prefix + "action " + nr + ": \"Globals only go from 0 to 29.");
+                        fatal = true;
+                    }
+                    break;
+            }
+        }
+
+        private void CheckActionTeam(String prefix, String action, String team, List<String> errors, int nr, ref bool fatal)
+        {
+            if (!TeamType.IsEmpty(team))
+                return;
+            switch (action)
+            {
+                case ActionTypes.TACTION_REINFORCEMENTS:
+                    errors.Add(prefix + "action " + nr + ": There is no team type set to reinforce.");
+                    fatal = true;
+                    break;
+                case ActionTypes.TACTION_CREATE_TEAM:
+                    errors.Add(prefix + "action " + nr + ": There is no team type set to create.");
+                    fatal = true;
+                    break;
+                case ActionTypes.TACTION_DESTROY_TEAM:
+                    errors.Add(prefix + "action " + nr + ": There is no team type set to disband.");
+                    fatal = true;
+                    break;
+            }
+        }
+
+        private void CheckActionTrigger(String prefix, String action, String trigger, List<String> errors, Int32 nr, ref bool fatal)
+        {
+            if (!Trigger.IsEmpty(trigger))
+                return;
+
+            switch (action)
+            {
+                case ActionTypes.TACTION_FORCE_TRIGGER:
+                    errors.Add(prefix + "action " + nr + ": There is no trigger set to force.");
+                    fatal = true;
+                    break;
+                case ActionTypes.TACTION_DESTROY_TRIGGER:
+                    errors.Add(prefix + "action " + nr + ": There is no trigger set to destroy.");
+                    fatal = true;
+                    break;
+            }
         }
 
         private void BasicSection_PropertyChanged(object sender, PropertyChangedEventArgs e)

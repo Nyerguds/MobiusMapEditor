@@ -170,7 +170,7 @@ namespace MobiusEditor.Tools
             // unit = unit in its final edited form. Clone for preservation
             Unit redoUnit = unit.Clone();
             Unit undoUnit = preEdit;
-            if (redoUnit.Equals(undoUnit))
+            if (redoUnit.DataEquals(undoUnit))
             {
                 return;
             }
@@ -293,35 +293,36 @@ namespace MobiusEditor.Tools
         private void AddMoveUndoTracking(Unit toMove, Point startLocation)
         {
             Point? finalLocation = map.Technos[toMove];
-            if (finalLocation.HasValue && finalLocation.Value != startLocation)
+            if (!finalLocation.HasValue || finalLocation.Value == startLocation)
             {
-                Point endLocation = finalLocation.Value;
-                bool origDirtyState = plugin.Dirty;
-                plugin.Dirty = true;
-                void undoAction(UndoRedoEventArgs ev)
-                {
-                    ev.MapPanel.Invalidate(ev.Map, toMove);
-                    ev.Map.Technos.Remove(toMove);
-                    ev.Map.Technos.Add(startLocation, toMove);
-                    ev.MapPanel.Invalidate(ev.Map, toMove);
-                    if (ev.Plugin != null)
-                    {
-                        ev.Plugin.Dirty = origDirtyState;
-                    }
-                }
-                void redoAction(UndoRedoEventArgs ev)
-                {
-                    ev.MapPanel.Invalidate(ev.Map, toMove);
-                    ev.Map.Technos.Remove(toMove);
-                    ev.Map.Technos.Add(endLocation, toMove);
-                    ev.MapPanel.Invalidate(ev.Map, toMove);
-                    if (ev.Plugin != null)
-                    {
-                        ev.Plugin.Dirty = true;
-                    }
-                }
-                url.Track(undoAction, redoAction);
+                return;
             }
+            Point endLocation = finalLocation.Value;
+            bool origDirtyState = plugin.Dirty;
+            plugin.Dirty = true;
+            void undoAction(UndoRedoEventArgs ev)
+            {
+                ev.MapPanel.Invalidate(ev.Map, toMove);
+                ev.Map.Technos.Remove(toMove);
+                ev.Map.Technos.Add(startLocation, toMove);
+                ev.MapPanel.Invalidate(ev.Map, toMove);
+                if (ev.Plugin != null)
+                {
+                    ev.Plugin.Dirty = origDirtyState;
+                }
+            }
+            void redoAction(UndoRedoEventArgs ev)
+            {
+                ev.MapPanel.Invalidate(ev.Map, toMove);
+                ev.Map.Technos.Remove(toMove);
+                ev.Map.Technos.Add(endLocation, toMove);
+                ev.MapPanel.Invalidate(ev.Map, toMove);
+                if (ev.Plugin != null)
+                {
+                    ev.Plugin.Dirty = true;
+                }
+            }
+            url.Track(undoAction, redoAction);
         }
 
         private void MouseoverWidget_MouseCellChanged(object sender, MouseCellChangedEventArgs e)

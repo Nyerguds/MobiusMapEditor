@@ -81,6 +81,15 @@ namespace MobiusEditor.Utility
             }
         }
 
+        public string TryGetValue(string key)
+        {
+            if (!KeyValues.Contains(key))
+            {
+                return null;
+            }
+            return KeyValues[key] as string;
+        }
+
         public INIKeyValueCollection()
         {
             KeyValues = new OrderedDictionary(StringComparer.OrdinalIgnoreCase);
@@ -143,6 +152,11 @@ namespace MobiusEditor.Utility
         public string Name { get; private set; }
 
         public string this[string key] { get => Keys[key]; set => Keys[key] = value; }
+
+        public string TryGetValue(string key)
+        {
+            return Keys.TryGetValue(key);
+        }
 
         public bool Empty => Keys.Count == 0;
 

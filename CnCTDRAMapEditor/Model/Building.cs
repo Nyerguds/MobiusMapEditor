@@ -22,7 +22,7 @@ using System.Runtime.CompilerServices;
 
 namespace MobiusEditor.Model
 {
-    public class Building : ITechno, ICellOverlapper, ICellOccupier, INotifyPropertyChanged, ICloneable, IEquatable<Building>
+    public class Building : ITechno, ICellOverlapper, ICellOccupier, INotifyPropertyChanged, ICloneable
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -138,7 +138,7 @@ namespace MobiusEditor.Model
             return Clone();
         }
 
-        public Boolean Equals(Building other)
+        public Boolean DataEquals(Building other)
         {
             return this.Type == other.Type &&
                 this.House == other.House &&

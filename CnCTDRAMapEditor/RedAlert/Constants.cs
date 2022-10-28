@@ -30,6 +30,6 @@ namespace MobiusEditor.RedAlert
         public const int MaxTerrain = 500;
         public const int MaxUnits = 500;
         public const int MaxTeams = 60;
-        public const int MaxTriggers = 200;
+        public const int MaxTriggers = 80;
     }
 }

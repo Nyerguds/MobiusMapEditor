@@ -178,7 +178,7 @@ namespace MobiusEditor.Tools
             // infantry = infantry in its final edited form. Clone for preservation
             Infantry redoInf = infantry.Clone();
             Infantry undoInf = preEdit;
-            if (redoInf.Equals(undoInf))
+            if (redoInf.DataEquals(undoInf))
             {
                 return;
             }
@@ -349,79 +349,80 @@ namespace MobiusEditor.Tools
         {
             Point? finalLocation = map.Technos[toMove.InfantryGroup].Value;
             int finalStop = selectedInfantry.InfantryGroup.GetLocation(selectedInfantry);
-            if (finalLocation.HasValue && finalStop != -1 && (finalLocation.Value != startLocation || finalStop != startStop))
+            if (!finalLocation.HasValue || finalStop == -1 || (finalLocation.Value == startLocation && finalStop == startStop))
             {
-                bool origDirtyState = plugin.Dirty;
-                plugin.Dirty = true;
-                Point endLocation = finalLocation.Value;
-                void undoAction(UndoRedoEventArgs ev)
-                {
-                    InfantryGroup startGroup = ev.Map.Technos[startLocation] as InfantryGroup;
-                    InfantryGroup finalGroup = ev.Map.Technos[endLocation] as InfantryGroup;
-                    if (startGroup == finalGroup)
-                    {
-                        ev.MapPanel.Invalidate(ev.Map, startGroup);
-                        startGroup.Infantry[startStop] = toMove;
-                        startGroup.Infantry[finalStop] = null;
-                        toMove.InfantryGroup = startGroup;
-                    }
-                    else
-                    {
-                        if (startGroup == null)
-                        {
-                            startGroup = new InfantryGroup();
-                            ev.Map.Technos.Add(startLocation, startGroup);
-                        }
-                        startGroup.Infantry[startStop] = toMove;
-                        toMove.InfantryGroup = startGroup;
-                        ev.MapPanel.Invalidate(ev.Map, startGroup);
-                        finalGroup.Infantry[finalStop] = null;
-                        ev.MapPanel.Invalidate(ev.Map, finalGroup);
-                        if (finalGroup.Infantry.All(x => x == null))
-                        {
-                            ev.Map.Technos.Remove(finalGroup);
-                        }
-                    }
-                    if (ev.Plugin != null)
-                    {
-                        ev.Plugin.Dirty = origDirtyState;
-                    }
-                }
-                void redoAction(UndoRedoEventArgs ev)
-                {
-                    InfantryGroup startGroup = ev.Map.Technos[startLocation] as InfantryGroup;
-                    InfantryGroup finalGroup = ev.Map.Technos[endLocation] as InfantryGroup;
-                    if (finalGroup == startGroup)
-                    {
-                        ev.MapPanel.Invalidate(ev.Map, finalGroup);
-                        finalGroup.Infantry[startStop] = null;
-                        finalGroup.Infantry[finalStop] = toMove;
-                        toMove.InfantryGroup = finalGroup;
-                    }
-                    else
-                    {
-                        if (finalGroup == null)
-                        {
-                            finalGroup = new InfantryGroup();
-                            ev.Map.Technos.Add(endLocation, finalGroup);
-                        }
-                        finalGroup.Infantry[startStop] = toMove;
-                        toMove.InfantryGroup = finalGroup;
-                        ev.MapPanel.Invalidate(ev.Map, finalGroup);
-                        startGroup.Infantry[finalStop] = null;
-                        ev.MapPanel.Invalidate(ev.Map, startGroup);
-                        if (startGroup.Infantry.All(x => x == null))
-                        {
-                            ev.Map.Technos.Remove(startGroup);
-                        }
-                    }
-                    if (ev.Plugin != null)
-                    {
-                        ev.Plugin.Dirty = true;
-                    }
-                }
-                url.Track(undoAction, redoAction);
+                return;
             }
+            bool origDirtyState = plugin.Dirty;
+            plugin.Dirty = true;
+            Point endLocation = finalLocation.Value;
+            void undoAction(UndoRedoEventArgs ev)
+            {
+                InfantryGroup startGroup = ev.Map.Technos[startLocation] as InfantryGroup;
+                InfantryGroup finalGroup = ev.Map.Technos[endLocation] as InfantryGroup;
+                if (startGroup == finalGroup)
+                {
+                    ev.MapPanel.Invalidate(ev.Map, startGroup);
+                    startGroup.Infantry[startStop] = toMove;
+                    startGroup.Infantry[finalStop] = null;
+                    toMove.InfantryGroup = startGroup;
+                }
+                else
+                {
+                    if (startGroup == null)
+                    {
+                        startGroup = new InfantryGroup();
+                        ev.Map.Technos.Add(startLocation, startGroup);
+                    }
+                    startGroup.Infantry[startStop] = toMove;
+                    toMove.InfantryGroup = startGroup;
+                    ev.MapPanel.Invalidate(ev.Map, startGroup);
+                    finalGroup.Infantry[finalStop] = null;
+                    ev.MapPanel.Invalidate(ev.Map, finalGroup);
+                    if (finalGroup.Infantry.All(x => x == null))
+                    {
+                        ev.Map.Technos.Remove(finalGroup);
+                    }
+                }
+                if (ev.Plugin != null)
+                {
+                    ev.Plugin.Dirty = origDirtyState;
+                }
+            }
+            void redoAction(UndoRedoEventArgs ev)
+            {
+                InfantryGroup startGroup = ev.Map.Technos[startLocation] as InfantryGroup;
+                InfantryGroup finalGroup = ev.Map.Technos[endLocation] as InfantryGroup;
+                if (finalGroup == startGroup)
+                {
+                    ev.MapPanel.Invalidate(ev.Map, finalGroup);
+                    finalGroup.Infantry[startStop] = null;
+                    finalGroup.Infantry[finalStop] = toMove;
+                    toMove.InfantryGroup = finalGroup;
+                }
+                else
+                {
+                    if (finalGroup == null)
+                    {
+                        finalGroup = new InfantryGroup();
+                        ev.Map.Technos.Add(endLocation, finalGroup);
+                    }
+                    finalGroup.Infantry[startStop] = toMove;
+                    toMove.InfantryGroup = finalGroup;
+                    ev.MapPanel.Invalidate(ev.Map, finalGroup);
+                    startGroup.Infantry[finalStop] = null;
+                    ev.MapPanel.Invalidate(ev.Map, startGroup);
+                    if (startGroup.Infantry.All(x => x == null))
+                    {
+                        ev.Map.Technos.Remove(startGroup);
+                    }
+                }
+                if (ev.Plugin != null)
+                {
+                    ev.Plugin.Dirty = true;
+                }
+            }
+            url.Track(undoAction, redoAction);
         }
 
         private void MouseoverWidget_MouseCellChanged(object sender, MouseCellChangedEventArgs e)

@@ -32,7 +32,7 @@ namespace MobiusEditor.Model
         LowerRight = 4
     }
 
-    public class Infantry : ITechno, INotifyPropertyChanged, ICloneable, IEquatable<Infantry>
+    public class Infantry : ITechno, INotifyPropertyChanged, ICloneable
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -98,7 +98,7 @@ namespace MobiusEditor.Model
             return Clone();
         }
 
-        public Boolean Equals(Infantry other)
+        public Boolean DataEquals(Infantry other)
         {
             return this.Type == other.Type &&
                 this.House == other.House &&
@@ -132,7 +132,6 @@ namespace MobiusEditor.Model
 
         /// <summary>
         /// Gets the location of a specific object inside this infantry group's <see cref="Infantry"/> array.
-        /// Do not use Array.IndexOf: infantry implements IEquatable, meaning it would get the first object with equal stats.
         /// </summary>
         /// <param name="infantry">The infantry to look up.</param>
         /// <returns>The index of the given infantry object in the group.</returns>

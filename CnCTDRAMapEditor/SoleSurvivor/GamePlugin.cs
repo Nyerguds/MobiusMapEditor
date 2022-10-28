@@ -23,21 +23,21 @@ namespace MobiusEditor.SoleSurvivor
 
         public static bool CheckForSSmap(INI iniContents)
         {
-            return GeneralUtils.CheckForIniInfo(iniContents, "Crates", null, null);
+            return GeneralUtils.CheckForIniInfo(iniContents, "Crates");
         }
 
         protected CratesSection cratesSection;
         public CratesSection CratesSection => cratesSection;
 
-        public GamePlugin()
-            : this(true)
+        public GamePlugin(bool megaMap)
+            : this(true, megaMap)
         {
         }
 
-        public GamePlugin(bool mapImage)
+        public GamePlugin(bool mapImage, bool megaMap)
             : base()
         {
-            this.isMegaMap = true;
+            this.isMegaMap = megaMap;
             var crateWaypoints = Enumerable.Range(0, cratePoints).Select(i => new Waypoint(string.Format("CR{0}", i), WaypointFlag.CrateSpawn));
             var teamWaypoints = Enumerable.Range(cratePoints, teamStartPoints).Select(i => new Waypoint(string.Format("TM{0}", i - cratePoints), Waypoint.GetFlagForMpId(i - cratePoints)));
             var generalWaypoints = Enumerable.Range(cratePoints + teamStartPoints, 25 - cratePoints - teamStartPoints).Select(i => new Waypoint(i.ToString()));
@@ -47,11 +47,11 @@ namespace MobiusEditor.SoleSurvivor
             basicSection.SetDefault();
             var houseTypes = HouseTypes.GetTypes().ToList();
             basicSection.Player = HouseTypes.Admin.Name;
-            // Irrelevant for SS. Rebuilding options will be disabled in the editor.
+            // Irrelevant for Sole. Rebuilding options will be disabled in the editor.
             basicSection.BasePlayer = HouseTypes.GetBasePlayer(basicSection.Player);
+            // Specific to Sole.
             cratesSection = new CratesSection();
             cratesSection.SetDefault();
-
             // I guess we leave these to the TD defaults.
             string[] cellEventTypes = new[]
             {
@@ -100,7 +100,8 @@ namespace MobiusEditor.SoleSurvivor
             flagColors[6] = Globals.TheTeamColorManager["MULTI2"];
             // Multi8: RA Purple
             flagColors[7] = new TeamColor(Globals.TheTeamColorManager, flagColors[0], "MULTI8", new Vector3(0.410f, 0.100f, 0.000f));
-            Map = new Map(basicSection, null, TiberianDawn.Constants.MaxSizeMega, typeof(House), houseTypes,
+            Size mapSize = !megaMap ? TiberianDawn.Constants.MaxSize : TiberianDawn.Constants.MaxSizeMega;
+            Map = new Map(basicSection, null, mapSize, typeof(House), houseTypes,
                 flagColors, TiberianDawn.TheaterTypes.GetTypes(), TiberianDawn.TemplateTypes.GetTypes(),
                 TiberianDawn.TerrainTypes.GetTypes(), OverlayTypes.GetTypes(), TiberianDawn.SmudgeTypes.GetTypes(Globals.ConvertCraters),
                 TiberianDawn.EventTypes.GetTypes(), cellEventTypes, unitEventTypes, structureEventTypes, terrainEventTypes,

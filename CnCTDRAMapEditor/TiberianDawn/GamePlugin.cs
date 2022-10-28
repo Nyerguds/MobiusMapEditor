@@ -243,7 +243,6 @@ namespace MobiusEditor.TiberianDawn
             string[] unitActionTypes = { };
             string[] structureActionTypes = { };
             string[] terrainActionTypes = { };
-
             TeamColor[] flagColors = new TeamColor[8];
             foreach (HouseType house in houseTypes)
             {
@@ -256,10 +255,8 @@ namespace MobiusEditor.TiberianDawn
             }
             // Metallic light blue
             flagColors[6] = Globals.TheTeamColorManager["BAD_UNIT"];
-            // Purple
+            // RA Purple
             flagColors[7] = new TeamColor(Globals.TheTeamColorManager, flagColors[0], "MULTI8", new Vector3(0.410f, 0.100f, 0.000f));
-
-
             Size mapSize = !megaMap ? Constants.MaxSize : Constants.MaxSizeMega;
             Map = new Map(basicSection, null, mapSize, typeof(House), houseTypes,
                 flagColors, TheaterTypes.GetTypes(), TemplateTypes.GetTypes(),
@@ -725,7 +722,7 @@ namespace MobiusEditor.TiberianDawn
             // Sort
             var comparer = new ExplorerComparer();
             triggers.Sort((x, y) => comparer.Compare(x.Name, y.Name));
-            HashSet<string> checkTrigs = Trigger.None.Yield().Concat(triggers.Select(t => t.Name)).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+            Dictionary<string, string> checkTrigs = Trigger.None.Yield().Concat(triggers.Select(t => t.Name)).ToDictionary(t => t, t => t, StringComparer.InvariantCultureIgnoreCase);
             HashSet<string> checkCellTrigs = Map.FilterCellTriggers(triggers).Select(t => t.Name).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
             HashSet<string> checkUnitTrigs = Trigger.None.Yield().Concat(Map.FilterUnitTriggers(triggers).Select(t => t.Name)).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
             HashSet<string> checkStrcTrigs = Trigger.None.Yield().Concat(Map.FilterStructureTriggers(triggers).Select(t => t.Name)).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
@@ -761,7 +758,7 @@ namespace MobiusEditor.TiberianDawn
                             };
                             if (Map.Technos.Add(cell, newTerr))
                             {
-                                if (!checkTrigs.Contains(newTerr.Trigger))
+                                if (!checkTrigs.ContainsKey(newTerr.Trigger))
                                 {
                                     errors.Add(string.Format("Terrain '{0}' links to unknown trigger '{1}'; clearing trigger.", terrainType.Name, tokens[1]));
                                     modified = true;
@@ -772,6 +769,11 @@ namespace MobiusEditor.TiberianDawn
                                     errors.Add(string.Format("Terrain '{0}' links to trigger '{1}' which does not contain an event applicable to terrain; clearing trigger.", terrainType.Name, tokens[1]));
                                     modified = true;
                                     newTerr.Trigger = Trigger.None;
+                                }
+                                else
+                                {
+                                    // Adapt to same case
+                                    tokens[7] = checkTrigs[tokens[7]];
                                 }
                             }
                             else
@@ -991,7 +993,7 @@ namespace MobiusEditor.TiberianDawn
                                 }
                                 if (infantryGroup.Infantry[stoppingPos] == null)
                                 {
-                                    if (!checkTrigs.Contains(tokens[7]))
+                                    if (!checkTrigs.ContainsKey(tokens[7]))
                                     {
                                         errors.Add(string.Format("Infantry '{0}' links to unknown trigger '{1}'; clearing trigger.", infantryType.Name, tokens[7]));
                                         modified = true;
@@ -1002,6 +1004,11 @@ namespace MobiusEditor.TiberianDawn
                                         errors.Add(string.Format("Infantry '{0}' links to trigger '{1}' which does not contain an event applicable to infantry; clearing trigger.", infantryType.Name, tokens[7]));
                                         modified = true;
                                         tokens[7] = Trigger.None;
+                                    }
+                                    else
+                                    {
+                                        // Adapt to same case
+                                        tokens[7] = checkTrigs[tokens[7]];
                                     }
                                     infantryGroup.Infantry[stoppingPos] = new Infantry(infantryGroup)
                                     {
@@ -1078,7 +1085,7 @@ namespace MobiusEditor.TiberianDawn
                     var tokens = Value.Split(',');
                     if (tokens.Length == 7)
                     {
-                        var unitType = Map.UnitTypes.Where(t => t.IsUnit && t.Equals(tokens[1])).FirstOrDefault();
+                        var unitType = Map.UnitTypes.Where(t => t.IsGroundUnit && t.Equals(tokens[1])).FirstOrDefault();
                         if (unitType == null)
                         {
                             errors.Add(string.Format("Unit '{0}' references unknown unit.", tokens[1]));
@@ -1113,7 +1120,6 @@ namespace MobiusEditor.TiberianDawn
                             Strength = strength,
                             Direction = DirectionType.GetDirectionType(dirValue, Map.UnitDirectionTypes),
                             Mission = Map.MissionTypes.Where(t => t.Equals(tokens[5])).FirstOrDefault() ?? Map.GetDefaultMission(unitType),
-                            Trigger = tokens[6]
                         };
                         // "Rescue" and "Unload" both make the MCV deploy, but "Rescue" looks very strange in the editor, so we keep only one of them and convert the other.
                         if (MissionTypes.MISSION_RESCUE.Equals(tokens[5], StringComparison.InvariantCultureIgnoreCase) && newUnit.Type.Equals(UnitTypes.MCV))
@@ -1122,7 +1128,7 @@ namespace MobiusEditor.TiberianDawn
                         }
                         if (Map.Technos.Add(cell, newUnit))
                         {
-                            if (!checkTrigs.Contains(tokens[6]))
+                            if (!checkTrigs.ContainsKey(tokens[6]))
                             {
                                 errors.Add(string.Format("Unit '{0}' links to unknown trigger '{1}'; clearing trigger.", unitType.Name, newUnit.Trigger));
                                 modified = true;
@@ -1133,6 +1139,11 @@ namespace MobiusEditor.TiberianDawn
                                 errors.Add(string.Format("Unit '{0}' links to trigger '{1}' which does not contain an event applicable to units; clearing trigger.", unitType.Name, newUnit.Trigger));
                                 modified = true;
                                 newUnit.Trigger = Trigger.None;
+                            }
+                            else
+                            {
+                                // Adapt to same case
+                                newUnit.Trigger = checkTrigs[tokens[6]];
                             }
                         }
                         else
@@ -1329,11 +1340,10 @@ namespace MobiusEditor.TiberianDawn
                             House = Map.HouseTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault(),
                             Strength = strength,
                             Direction = DirectionType.GetDirectionType(dirValue, Map.BuildingDirectionTypes),
-                            Trigger = tokens[5]
                         };
                         if (Map.Buildings.Add(cell, newBld))
                         {
-                            if (!checkTrigs.Contains(tokens[5]))
+                            if (!checkTrigs.ContainsKey(tokens[5]))
                             {
                                 errors.Add(string.Format("Structure '{0}' links to unknown trigger '{1}'; clearing trigger.", buildingType.Name, tokens[5]));
                                 modified = true;
@@ -1344,6 +1354,11 @@ namespace MobiusEditor.TiberianDawn
                                 errors.Add(string.Format("Structure '{0}' links to trigger '{1}' which does not contain an event applicable to structures; clearing trigger.", buildingType.Name, tokens[5]));
                                 modified = true;
                                 newBld.Trigger = Trigger.None;
+                            }
+                            else
+                            {
+                                // Adapt to same case
+                                newBld.Trigger = checkTrigs[tokens[5]];
                             }
                         }
                         else
@@ -1537,7 +1552,7 @@ namespace MobiusEditor.TiberianDawn
                     {
                         if (Map.Metrics.Contains(cell))
                         {
-                            if (checkTrigs.Contains(Value))
+                            if (checkTrigs.ContainsKey(Value))
                             {
                                 if (checkCellTrigs.Contains(Value))
                                 {
@@ -1594,7 +1609,8 @@ namespace MobiusEditor.TiberianDawn
                 }
             }
             UpdateBasePlayerHouse();
-            // Won't trigger the automatic cleanup and notifications.
+            errors.AddRange(CheckTriggers(triggers, true, true, true, out _));
+            // Won't trigger the notifications.
             Map.Triggers.Clear();
             Map.Triggers.AddRange(triggers);
             Map.TeamTypes.Sort((x, y) => comparer.Compare(x.Name, y.Name));
@@ -2195,7 +2211,7 @@ namespace MobiusEditor.TiberianDawn
         {
             var unitsSection = ini.Sections.Add("Units");
             var unitIndex = 0;
-            foreach (var (location, unit) in Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsUnit))
+            foreach (var (location, unit) in Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsGroundUnit))
             {
                 var key = unitIndex.ToString("D3");
                 unitIndex++;
@@ -2399,7 +2415,7 @@ namespace MobiusEditor.TiberianDawn
             int numBuildings = Map.Buildings.OfType<Building>().Where(x => x.Occupier.IsPrebuilt).Count();
             int numInfantry = Map.Technos.OfType<InfantryGroup>().Sum(item => item.Occupier.Infantry.Count(i => i != null));
             int numTerrain = Map.Technos.OfType<Terrain>().Count();
-            int numUnits = Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsUnit).Count();
+            int numUnits = Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsGroundUnit).Count();
             int numWaypoints = Map.Waypoints.Count(w => (w.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart && w.Cell.HasValue);
             if (numAircraft > Constants.MaxAircraft)
             {
@@ -2461,7 +2477,7 @@ namespace MobiusEditor.TiberianDawn
             int numBuildings = Map.Buildings.OfType<Building>().Where(x => x.Occupier.IsPrebuilt).Count();
             int numInfantry = Map.Technos.OfType<InfantryGroup>().Sum(item => item.Occupier.Infantry.Count(i => i != null));
             int numTerrain = Map.Technos.OfType<Terrain>().Count();
-            int numUnits = Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsUnit).Count();
+            int numUnits = Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsGroundUnit).Count();
             info.Add("Objects overview:");
             if (!Globals.DisableAirUnits)
             {
@@ -2597,6 +2613,139 @@ namespace MobiusEditor.TiberianDawn
                 }
             }
             return housesWithProd;
+        }
+
+        public IEnumerable<string> CheckTriggers(IEnumerable<Trigger> triggers, bool includeExternalData, bool prefixNames, bool fatalOnly, out bool fatal)
+        {
+            fatal = false;
+            List<string> errors = new List<string>();
+            List<string> curErrors = new List<string>();
+            List<ITechno> mapTechnos = Map.GetAllTechnos().ToList();
+            HouseType player = Map.HouseTypes.Where(t => t.Equals(Map.BasicSection.Player)).FirstOrDefault() ?? Map.HouseTypes.First();
+
+            foreach (var trigger in triggers)
+            {
+                string team = trigger.Action1.Team;
+                string trigName = trigger.Name;
+                String prefix = prefixNames ? trigName + ": " : String.Empty;
+                string event1 = trigger.Event1.EventType;
+                string action1 = trigger.Action1.ActionType;
+                bool noOwner = Model.House.IsEmpty(trigger.House);
+                bool isPlayer = !noOwner && player.Equals(trigger.House);
+                //bool playerIsNonstandard = !player.Equals(HouseTypes.Good) && !player.Equals(HouseTypes.Bad);
+                //bool isGoodguy = String.Equals(trigger.House, HouseTypes.Good.Name, StringComparison.OrdinalIgnoreCase);
+                //bool isBadguy = String.Equals(trigger.House, HouseTypes.Bad.Name, StringComparison.OrdinalIgnoreCase);
+                bool isLinked = mapTechnos.Any(tech => String.Equals(trigName, tech.Trigger, StringComparison.OrdinalIgnoreCase));
+                //bool isLinkedToStructs = mapTechnos.Any(tech => tech is Building && String.Equals(trigName, tech.Trigger, StringComparison.OrdinalIgnoreCase));
+                //bool isLinkedToUnits = mapTechnos.Any(tech => (tech is Unit || tech is Infantry) && String.Equals(trigName, tech.Trigger, StringComparison.OrdinalIgnoreCase));
+                //bool isLinkedToTrees = mapTechnos.Any(tech => (tech is Terrain) && String.Equals(trigName, tech.Trigger, StringComparison.OrdinalIgnoreCase));
+                bool isCellTrig = Map.CellTriggers.Any(c => trigName.Equals(c.Value.Trigger, StringComparison.OrdinalIgnoreCase));
+                bool hasTeam = !TeamType.IsEmpty(trigger.Action1.Team);
+                bool isAnd = trigger.PersistentType == TriggerPersistentType.SemiPersistent;
+
+                if (event1 == EventTypes.EVENT_PLAYER_ENTERED && Model.House.IsEmpty(trigger.House))
+                {
+                    errors.Add(prefix + (fatalOnly ? String.Empty : "[FATAL] ") + "A \"Player Enters\" trigger without a House set will cause a game crash.");
+                    fatal = true;
+                }
+                if (!fatalOnly && event1 == EventTypes.EVENT_ATTACKED && !noOwner)
+                {
+                    if (isLinked && includeExternalData)
+                    {
+                        curErrors.Add(prefix + "\"Attacked\" triggers with a House set will trigger when that House is attacked. To make a trigger for checking if objects are attacked, leave the House empty.");
+                    }
+                    else if (!isPlayer)
+                    {
+                        curErrors.Add(prefix + "\"Attacked\" triggers with a House set will trigger when that House is attacked. However, this logic only works for the player's House.");
+                    }
+                }
+                if (!fatalOnly && event1 == EventTypes.EVENT_DESTROYED && !noOwner && isAnd)
+                {
+                    curErrors.Add(prefix + "A \"Destroyed\" trigger with a House set and repeat status \"AND\" will never work, since a reference to the trigger will be added to the House Triggers list for that House, and there is nothing that can ever trigger that instance, making it impossible to clear all objectives required for the trigger to fire.");
+                }
+                if (!fatalOnly && event1 == EventTypes.EVENT_ANY && action1 != ActionTypes.ACTION_WINLOSE)
+                {
+                    curErrors.Add(prefix + "The \"Any\" event will trigger on literally anything that can happen to a linked object. It should normally only be used with the \"Cap=Win/Des=Lose\" action.");
+                }
+                if (!fatalOnly && event1 == EventTypes.EVENT_NBUILDINGS_DESTROYED && trigger.Event1.Data == 0)
+                {
+                    curErrors.Add(prefix + "The amount of buildings that needs to be destroyed is 0.");
+                }
+                if (!fatalOnly && event1 == EventTypes.EVENT_NUNITS_DESTROYED && trigger.Event1.Data == 0)
+                {
+                    curErrors.Add(prefix + "The amount of units that needs to be destroyed is 0.");
+                }
+                // Action checks
+                if (!fatalOnly && action1 == ActionTypes.ACTION_AIRSTRIKE && event1 == EventTypes.EVENT_PLAYER_ENTERED && !isPlayer && isCellTrig)
+                {
+                    curErrors.Add(prefix + "This will give the Airstrike to the House that activates the Celltrigger. This will grant the AI house linked to it periodic airstrikes that will only target structure.");
+                }
+                if (!fatalOnly && action1 == ActionTypes.ACTION_WINLOSE && event1 == EventTypes.EVENT_ANY && isAnd)
+                {
+                    curErrors.Add(prefix + "\"Any\" → \"Cap=Win/Des=Lose\" triggers don't function with existence status \"And\".");
+                }
+                if (!fatalOnly && action1 == ActionTypes.ACTION_ALLOWWIN && !isPlayer)
+                {
+                    curErrors.Add(prefix + "Each \"Allow Win\" trigger increases the \"win blockage\" on a House, which prevents it from winning until they are all cleared. However, since this is put on the House specified in the trigger, \"Allow Win\" triggers only work with the player's House.");
+                }
+                if (action1 == ActionTypes.ACTION_BEGIN_PRODUCTION)
+                {
+                    if ((event1 != EventTypes.EVENT_PLAYER_ENTERED && noOwner)
+                        || (includeExternalData && event1 == EventTypes.EVENT_PLAYER_ENTERED && isLinked && !isCellTrig))
+                    {
+                        curErrors.Add(prefix + (fatalOnly ? String.Empty : "[FATAL] ") + "The House set in a \"Production\" trigger determines the House that starts production, except in case of a celltrigger. Having no House will crash the game.");
+                        fatal = true;
+                    }
+                    //else if (includeExternalData && trigger.Event1.EventType == EventTypes.EVENT_PLAYER_ENTERED && isCellTrig && playerIsNonstandard)
+                    //{
+                    //    curErrors.Add(prefix + "For a celltrigger, the House that starts production is always be the 'classic opposing House' of the player's House.");
+                    //}
+                }
+                if (!hasTeam)
+                {
+                    switch (action1)
+                    {
+                        case ActionTypes.ACTION_REINFORCEMENTS:
+                            errors.Add(prefix + (fatalOnly ? String.Empty : "[FATAL] ") + "There is no team set to reinforce.");
+                            fatal = true;
+                            break;
+                        case ActionTypes.ACTION_CREATE_TEAM:
+                            errors.Add(prefix + (fatalOnly ? String.Empty : "[FATAL] ") + "There is no team set to create.");
+                            fatal = true;
+                            break;
+                        case ActionTypes.ACTION_DESTROY_TEAM:
+                            errors.Add(prefix + (fatalOnly ? String.Empty : "[FATAL] ") + "There is no team set to disband.");
+                            fatal = true;
+                            break;
+                    }
+                }
+                if (!fatalOnly && action1 == ActionTypes.ACTION_DESTROY_XXXX && !triggers.Any(t => "XXXX".Equals(t.Name, StringComparison.InvariantCultureIgnoreCase)))
+                {
+                    curErrors.Add(prefix + "There is no trigger called 'XXXX' to destroy.");
+                }
+                if (!fatalOnly && action1 == ActionTypes.ACTION_DESTROY_YYYY && !triggers.Any(t => "YYYY".Equals(t.Name, StringComparison.InvariantCultureIgnoreCase)))
+                {
+                    curErrors.Add(prefix + "There is no trigger called 'YYYY' to destroy.");
+                }
+                if (!fatalOnly && action1 == ActionTypes.ACTION_DESTROY_ZZZZ && !triggers.Any(t => "ZZZZ".Equals(t.Name, StringComparison.InvariantCultureIgnoreCase)))
+                {
+                    curErrors.Add(prefix + "There is no trigger called 'ZZZZ' to destroy.");
+                }
+                if (curErrors.Count > 0)
+                {
+                    if (prefixNames)
+                    {
+                        errors.AddRange(curErrors);
+                    }
+                    else
+                    {
+                        errors.Add(trigName + ":");
+                        errors.AddRange(curErrors.Select(er => "-" + er));
+                        errors.Add(String.Empty);
+                    }
+                }
+            }
+            return errors;
         }
 
         protected void BasicSection_PropertyChanged(object sender, PropertyChangedEventArgs e)

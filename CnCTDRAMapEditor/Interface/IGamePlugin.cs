@@ -67,5 +67,8 @@ namespace MobiusEditor.Interface
         IEnumerable<String> AssessMapItems();
 
         HashSet<string> GetHousesWithProduction();
+
+        IEnumerable<String> CheckTriggers(IEnumerable<Trigger> triggers, bool includeExternalData, bool prefixNames, bool fatalOnly, out bool fatal);
+
     }
 }

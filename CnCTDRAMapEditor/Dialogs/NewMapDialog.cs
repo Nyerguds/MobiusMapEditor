@@ -33,12 +33,14 @@ namespace MobiusEditor.Dialogs
                     {
                         case GameType.TiberianDawn:
                             radioTD.Checked = true;
+                            chkMegamap.Checked = false;
                             break;
                         case GameType.RedAlert:
                             radioRA.Checked = true;
                             break;
                         case GameType.SoleSurvivor:
                             radioSS.Checked = true;
+                            chkMegamap.Checked = true;
                             break;
                     }
                     UpdateGameType();
@@ -89,7 +91,7 @@ namespace MobiusEditor.Dialogs
                     }
                     break;
             }
-            chkMegamap.Visible = GameType == GameType.TiberianDawn;
+            chkMegamap.Visible = GameType == GameType.TiberianDawn || GameType == GameType.SoleSurvivor;
             lblWarning.Visible = (chkMegamap.Visible && chkMegamap.Checked) || GameType == GameType.SoleSurvivor;
         }
 

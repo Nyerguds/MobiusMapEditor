@@ -265,7 +265,7 @@ namespace MobiusEditor.Model
                 triggers = value;
                 // Only an actual replacing of the list will call these, but they can be called manually after an update.
                 // A bit more manual than the whole ObservableCollection system, but a lot less cumbersome.
-                CleanUpTriggers();
+                //CleanUpTriggers();
                 NotifyTriggersUpdate();
             }
         }
@@ -852,7 +852,7 @@ namespace MobiusEditor.Model
 
         public IEnumerable<Trigger> FilterCellTriggers(IEnumerable<Trigger> triggers)
         {
-            foreach (Trigger trigger in FilterTriggersByEvent(CellEventTypes, triggers).Concat(FilterTriggersByAction(CellActionTypes).Distinct()))
+            foreach (Trigger trigger in FilterTriggersByEvent(CellEventTypes, triggers).Concat(FilterTriggersByAction(CellActionTypes, triggers).Distinct()))
             {
                 yield return trigger;
             }
@@ -865,7 +865,7 @@ namespace MobiusEditor.Model
 
         public IEnumerable<Trigger> FilterUnitTriggers(IEnumerable<Trigger> triggers)
         {
-            foreach (Trigger trigger in FilterTriggersByEvent(UnitEventTypes, triggers).Concat(FilterTriggersByAction(UnitActionTypes).Distinct()))
+            foreach (Trigger trigger in FilterTriggersByEvent(UnitEventTypes, triggers).Concat(FilterTriggersByAction(UnitActionTypes, triggers).Distinct()))
             {
                 yield return trigger;
             }
@@ -878,7 +878,7 @@ namespace MobiusEditor.Model
 
         public IEnumerable<Trigger> FilterStructureTriggers(IEnumerable<Trigger> triggers)
         {
-            foreach (Trigger trigger in FilterTriggersByEvent(StructureEventTypes, triggers).Concat(FilterTriggersByAction(StructureActionTypes).Distinct()))
+            foreach (Trigger trigger in FilterTriggersByEvent(StructureEventTypes, triggers).Concat(FilterTriggersByAction(StructureActionTypes, triggers).Distinct()))
             {
                 yield return trigger;
             }
@@ -891,7 +891,7 @@ namespace MobiusEditor.Model
 
         public IEnumerable<Trigger> FilterTerrainTriggers(IEnumerable<Trigger> triggers)
         {
-            foreach (Trigger trigger in FilterTriggersByEvent(TerrainEventTypes, triggers).Concat(FilterTriggersByAction(TerrainActionTypes).Distinct()))
+            foreach (Trigger trigger in FilterTriggersByEvent(TerrainEventTypes, triggers).Concat(FilterTriggersByAction(TerrainActionTypes, triggers).Distinct()))
             {
                 yield return trigger;
             }
@@ -930,33 +930,15 @@ namespace MobiusEditor.Model
             return hasEvents || hasActions ? tooltip.ToString() : null;
         }
 
-        public IEnumerable<Trigger> FilterTriggersByAction(HashSet<String> allowedActionTypes)
+        public IEnumerable<Trigger> FilterTriggersByAction(HashSet<String> allowedActionTypes, IEnumerable<Trigger> triggers)
         {
-            foreach (Trigger trig in this.Triggers)
+            foreach (Trigger trig in triggers)
             {
                 if (trig.Action1 != null && allowedActionTypes.Contains(trig.Action1.ActionType)
                     || (trig.Action2 != null && allowedActionTypes.Contains(trig.Action2.ActionType)))
                 {
                     yield return trig;
                 }
-            }
-        }
-
-
-        public void CleanUpCellTriggers()
-        {
-            HashSet<string> placeableTrigs = FilterCellTriggers(this.Triggers).Select(t => t.Name).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
-            List<int> cellsToClear = new List<int>();
-            foreach ((int Cell, CellTrigger Value) item in CellTriggers)
-            {
-                if (!placeableTrigs.Contains(item.Value.Trigger))
-                {
-                    cellsToClear.Add(item.Cell);
-                }
-            }
-            for (int i = 0; i < cellsToClear.Count; ++i)
-            {
-                CellTriggers[cellsToClear[i]] = null;
             }
         }
 
@@ -1318,8 +1300,20 @@ namespace MobiusEditor.Model
             return changed;
         }
 
-        public void ApplyTriggerRenames(List<(String Name1, String Name2)> renameActions)
+        /// <summary>
+        /// Applies trigger renames, and does the checks to see whether all attached objects are still valid for the trigger type they are connected to.
+        /// The undo and redo lists can be used to track these actions, with the celtrigger location keeping track of cell triggers that might get removed by this.
+        /// </summary>
+        /// <param name="renameActions">All rename actions</param>
+        /// <param name="undoList">Undo list, linking objects to their original trigger value</param>
+        /// <param name="redoList">Redo list, linking objects to their final trigger value</param>
+        /// <param name="cellTriggerLocations">Locations for all modified cell triggers</param>
+        /// <param name="newTriggers">Triggers list to use to check for trigger links to objects.</param>
+        public void ApplyTriggerChanges(List<(String Name1, String Name2)> renameActions, out Dictionary<object, string> undoList, out Dictionary<object, string> redoList, out Dictionary<CellTrigger, int> cellTriggerLocations, List<Trigger> newTriggers)
         {
+            undoList = new Dictionary<object, string>();
+            redoList = new Dictionary<object, string>();
+            cellTriggerLocations = new Dictionary<CellTrigger, int>();
             foreach ((String name1, String name2) in renameActions)
             {
                 if (Trigger.IsEmpty(name1))
@@ -1330,6 +1324,9 @@ namespace MobiusEditor.Model
                 {
                     if (String.Equals(building.Trigger, name1, StringComparison.OrdinalIgnoreCase))
                     {
+                        if (!undoList.ContainsKey(building))
+                            undoList[building] = building.Trigger;
+                        redoList[building] = name2;
                         building.Trigger = name2;
                     }
                 }
@@ -1337,26 +1334,151 @@ namespace MobiusEditor.Model
                 {
                     if (String.Equals(techno.Trigger, name1, StringComparison.OrdinalIgnoreCase))
                     {
+                        if (!undoList.ContainsKey(techno))
+                        {
+                            undoList[techno] = techno.Trigger;
+                        }
+                        redoList[techno] = name2;
                         techno.Trigger = name2;
-                    }
-                }
-                foreach ((int cell, CellTrigger value) in CellTriggers)
-                {
-                    if (String.Equals(value.Trigger, name1, StringComparison.OrdinalIgnoreCase))
-                    {
-                        value.Trigger = name2;
                     }
                 }
                 foreach (TeamType team in TeamTypes)
                 {
                     if (String.Equals(team.Trigger, name1, StringComparison.OrdinalIgnoreCase))
                     {
+                        if (!undoList.ContainsKey(team))
+                        {
+                            undoList[team] = team.Trigger;
+                        }
+                        redoList[team] = name2;
                         team.Trigger = name2;
                     }
                 }
+                foreach ((int cell, CellTrigger value) in CellTriggers)
+                {
+                    if (String.Equals(value.Trigger, name1, StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (!undoList.ContainsKey(value))
+                        {
+                            undoList[value] = value.Trigger;
+                        }
+                        redoList[value] = name2;
+                        // if name2 is "None", the post-trigger-assignment sweep will clean this up.
+                        value.Trigger = name2;
+                        if (!cellTriggerLocations.ContainsKey(value))
+                        {
+                            cellTriggerLocations[value] = cell;
+                        }
+                    }
+                }
+            }
+            this.CleanUpTriggers(newTriggers, undoList, redoList, cellTriggerLocations);
+        }
+
+        private void CleanUpTriggers(List<Trigger> triggers, Dictionary<object, string> undoList, Dictionary<object, string> redoList, Dictionary<CellTrigger, int> cellTriggerLocations)
+        {
+            // Clean techno types
+            HashSet<string> availableTriggers = triggers.Select(t => t.Name).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+            HashSet<string> availableUnitTriggers = FilterUnitTriggers(triggers).Select(t => t.Name).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+            HashSet<string> availableBuildingTriggers = FilterStructureTriggers(triggers).Select(t => t.Name).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+            HashSet<string> availableTerrainTriggers = FilterTerrainTriggers(triggers).Select(t => t.Name).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+            foreach (ITechno techno in GetAllTechnos())
+            {
+                if (techno is Infantry infantry)
+                {
+                    CheckTechnoTrigger(infantry, availableUnitTriggers, undoList, redoList);
+                }
+                else if (techno is Unit unit)
+                {
+                    CheckTechnoTrigger(unit, availableUnitTriggers, undoList, redoList);
+                }
+                else if (techno is Building building)
+                {
+                    CheckTechnoTrigger(building, availableBuildingTriggers, undoList, redoList);
+                }
+                else if (techno is Terrain terrain)
+                {
+                    CheckTechnoTrigger(terrain, availableTerrainTriggers, undoList, redoList);
+                }
+            }
+            // Clean teamtypes
+            foreach (var team in TeamTypes)
+            {
+                String trig = team.Trigger;
+                if (!Trigger.IsEmpty(trig) && !availableUnitTriggers.Contains(trig))
+                {
+                    if (undoList != null && !undoList.ContainsKey(team))
+                    {
+                        undoList.Add(team, trig);
+                    }
+                    if (redoList != null)
+                    {
+                        redoList[team] = Trigger.None;
+                    }
+                    team.Trigger = Trigger.None;
+                }
+            }
+            // Clean triggers. Not covered in undo/redo actions since it is applied on the new list directly.
+            foreach (var trig in triggers)
+            {
+                if (trig == null)
+                {
+                    continue;
+                }
+                if (trig.Action1.Trigger != Trigger.None && !availableTriggers.Contains(trig.Action1.Trigger))
+                {
+                    trig.Action1.Trigger = Trigger.None;
+                }
+                if (trig.Action2.Trigger != Trigger.None && !availableTriggers.Contains(trig.Action2.Trigger))
+                {
+                    trig.Action2.Trigger = Trigger.None;
+                }
+            }
+            CleanUpCellTriggers(triggers, undoList, redoList, cellTriggerLocations);
+        }
+
+        private void CheckTechnoTrigger(ITechno techno, HashSet<String> availableTriggers, Dictionary<object, string> undoList, Dictionary<object, string> redoList)
+        {
+            String trig = techno.Trigger;
+            if (!Trigger.IsEmpty(trig) && !availableTriggers.Contains(trig))
+            {
+                if (undoList != null && !undoList.ContainsKey(techno))
+                {
+                    undoList.Add(techno, trig);
+                }
+                if (redoList != null)
+                {
+                    redoList[techno] = Trigger.None;
+                }
+                techno.Trigger = Trigger.None;
             }
         }
 
+        private void CleanUpCellTriggers(List<Trigger> triggers, Dictionary<object, string> undoList, Dictionary<object, string> redoList, Dictionary<CellTrigger, int> cellTriggerLocations)
+        {
+            HashSet<string> placeableTrigs = FilterCellTriggers(triggers).Select(t => t.Name).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+            List<int> cellsToClear = new List<int>();
+            foreach ((int cell, CellTrigger value) in CellTriggers)
+            {
+                if (Trigger.IsEmpty(value.Trigger) || !placeableTrigs.Contains(value.Trigger))
+                {
+                    if (undoList != null && !undoList.ContainsKey(value))
+                    {
+                        undoList.Add(value, value.Trigger);
+                    }
+                    if (redoList != null)
+                    {
+                        redoList[value] = Trigger.None;
+                    }
+                    cellTriggerLocations[value] = cell;
+                    cellsToClear.Add(cell);
+                }
+            }
+            for (int i = 0; i < cellsToClear.Count; ++i)
+            {
+                CellTriggers[cellsToClear[i]] = null;
+            }
+        }
 
         public void ApplyTeamTypeRenames(List<(String Name1, String Name2)> renameActions)
         {
@@ -1385,75 +1507,6 @@ namespace MobiusEditor.Model
                         trigger.Action2.Team = name2;
                     }
                 }
-            }
-        }
-
-        public void CleanUpTriggers()
-        {
-            // Clean techno types
-            HashSet<string> availableTriggers = Triggers.Select(t => t.Name).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
-            HashSet<string> availableUnitTriggers = FilterUnitTriggers().Select(t => t.Name).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
-            HashSet<string> availableBuildingTriggers = FilterStructureTriggers().Select(t => t.Name).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
-            HashSet<string> availableTerrainTriggers = FilterTerrainTriggers().Select(t => t.Name).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
-            foreach (var (location, occupier) in Technos)
-            {
-                if (occupier is InfantryGroup infantryGroup)
-                {
-                    foreach (var inf in infantryGroup.Infantry)
-                    {
-                        if (inf != null)
-                        {
-                            CheckTriggers(inf, availableUnitTriggers);
-                        }
-                    }
-                }
-                else if (occupier is Building building)
-                {
-                    CheckTriggers(building, availableBuildingTriggers);
-                }
-                else if (occupier is Terrain terrain)
-                {
-                    CheckTriggers(terrain, availableTerrainTriggers);
-                }
-                else if (occupier is Unit unit)
-                {
-                    CheckTriggers(unit, availableUnitTriggers);
-                }
-            }
-            // Clean teamtypes
-            foreach (var team in TeamTypes)
-            {
-                String trig = team.Trigger;
-                if (trig != null && !availableUnitTriggers.Contains(trig))
-                {
-                    team.Trigger = Trigger.None;
-                }
-            }
-            // Clean triggers
-            foreach (var trig in Triggers)
-            {
-                if (trig == null)
-                {
-                    continue;
-                }
-                if (trig.Action1.Trigger != Trigger.None && !availableTriggers.Contains(trig.Action1.Trigger))
-                {
-                    trig.Action1.Trigger = Trigger.None;
-                }
-                if (trig.Action2.Trigger != Trigger.None && !availableTriggers.Contains(trig.Action2.Trigger))
-                {
-                    trig.Action2.Trigger = Trigger.None;
-                }
-            }
-            CleanUpCellTriggers();
-        }
-
-        private void CheckTriggers(ITechno techno, HashSet<String> availableTriggers)
-        {
-            String trig = techno.Trigger;
-            if (trig != null && !availableTriggers.Contains(trig))
-            {
-                techno.Trigger = Trigger.None;
             }
         }
 

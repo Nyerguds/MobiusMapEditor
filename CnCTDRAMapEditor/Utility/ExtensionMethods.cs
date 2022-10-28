@@ -52,6 +52,26 @@ namespace MobiusEditor.Utility
             }
         }
 
+        public static int CheckRange(this int value, int minValue, int maxValue, int errorValue)
+        {
+            return value < minValue || value > maxValue ? errorValue : value;
+        }
+
+        public static long CheckRange(this long value, long minValue, long maxValue, long errorValue)
+        {
+            return value < minValue || value > maxValue ? errorValue : value;
+        }
+
+        public static int Restrict(this int value, int minValue, int maxValue)
+        {
+            return Math.Max(minValue, Math.Min(value, maxValue));
+        }
+
+        public static long Restrict(this long value, long minValue, long maxValue)
+        {
+            return Math.Max(minValue, Math.Min(value, maxValue));
+        }
+
         public static void CopyTo<T>(this T data, T other)
         {
             var properties = data.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => (p.GetSetMethod() != null) && (p.GetGetMethod() != null));

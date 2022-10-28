@@ -185,6 +185,7 @@ namespace MobiusEditor.Dialogs
             this.radioRA.Name = "radioRA";
             this.radioRA.Size = new System.Drawing.Size(69, 17);
             this.radioRA.TabIndex = 1;
+            this.radioRA.TabStop = true;
             this.radioRA.Text = "Red Alert";
             this.radioRA.UseVisualStyleBackColor = true;
             this.radioRA.CheckedChanged += new System.EventHandler(this.radioGameType_CheckedChanged);
@@ -197,8 +198,10 @@ namespace MobiusEditor.Dialogs
             this.radioSS.Name = "radioSS";
             this.radioSS.Size = new System.Drawing.Size(88, 17);
             this.radioSS.TabIndex = 2;
+            this.radioSS.TabStop = true;
             this.radioSS.Text = "Sole Survivor";
             this.radioSS.UseVisualStyleBackColor = true;
+            this.radioSS.CheckedChanged += new System.EventHandler(this.radioGameType_CheckedChanged);
             // 
             // groupBox2
             // 
@@ -248,6 +251,7 @@ namespace MobiusEditor.Dialogs
             this.radioTheater2.Name = "radioTheater2";
             this.radioTheater2.Size = new System.Drawing.Size(76, 17);
             this.radioTheater2.TabIndex = 1;
+            this.radioTheater2.TabStop = true;
             this.radioTheater2.Text = "Temperate";
             this.radioTheater2.UseVisualStyleBackColor = true;
             // 

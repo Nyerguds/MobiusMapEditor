@@ -53,7 +53,7 @@ namespace MobiusEditor.Model
 
         public string OwnerHouse { get; private set; }
 
-        public bool IsUnit => !IsAircraft && !IsVessel;
+        public bool IsGroundUnit => !IsAircraft && !IsVessel;
 
         public bool IsAircraft => (ID & UnitTypeIDMask.Aircraft) != 0;
 

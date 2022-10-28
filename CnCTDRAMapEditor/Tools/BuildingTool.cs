@@ -132,7 +132,7 @@ namespace MobiusEditor.Tools
             // building = building in its final edited form. Clone for preservation
             Building redoBuilding = building.Clone();
             Building undoBuilding = preEdit;
-            if (redoBuilding.Equals(undoBuilding))
+            if (redoBuilding.DataEquals(undoBuilding))
             {
                 return;
             }
@@ -261,59 +261,60 @@ namespace MobiusEditor.Tools
         {
             Point? finalLocation = map.Technos[toMove];
             Dictionary<Point, Smudge> eaten = selectedBuildingEatenSmudge.ToDictionary(p => p.Key, p => p.Value);
-            if (finalLocation.HasValue && finalLocation.Value != selectedBuildingLocation)
+            if (!finalLocation.HasValue || finalLocation.Value == selectedBuildingLocation)
             {
-                bool origDirtyState = plugin.Dirty;
-                plugin.Dirty = true;
-                Point endLocation = finalLocation.Value;
-                void undoAction(UndoRedoEventArgs ev)
-                {
-                    ev.MapPanel.Invalidate(ev.Map, toMove);
-                    ev.Map.Buildings.Remove(toMove);
-                    if (eaten != null)
-                    {
-                        foreach (Point p in eaten.Keys)
-                        {
-                            Smudge oldSmudge = ev.Map.Smudge[p];
-                            if (oldSmudge == null || !oldSmudge.Type.IsAutoBib)
-                            {
-                                ev.Map.Smudge[p] = eaten[p];
-                                // DO NOT REMOVE THE POINTS FROM "eaten": the undo might be done again in the future.
-                            }
-                        }
-                    }
-                    ev.Map.Buildings.Add(startLocation, toMove);
-                    ev.MapPanel.Invalidate(ev.Map, toMove);
-                    if (ev.Plugin != null)
-                    {
-                        ev.Plugin.Dirty = origDirtyState;
-                    }
-                }
-                void redoAction(UndoRedoEventArgs ev)
-                {
-                    ev.MapPanel.Invalidate(ev.Map, toMove);
-                    ev.Map.Buildings.Remove(toMove);
-                    if (eaten != null)
-                    {
-                        foreach (Point p in eaten.Keys)
-                        {
-                            Smudge oldSmudge = ev.Map.Smudge[p];
-                            if (oldSmudge == null || !oldSmudge.Type.IsAutoBib)
-                            {
-                                ev.Map.Smudge[p] = eaten[p];
-                                // DO NOT REMOVE THE POINTS FROM "eaten": the undo might be done again in the future.
-                            }
-                        }
-                    }
-                    ev.Map.Buildings.Add(endLocation, toMove);
-                    ev.MapPanel.Invalidate(ev.Map, toMove);
-                    if (ev.Plugin != null)
-                    {
-                        ev.Plugin.Dirty = true;
-                    }
-                }
-                url.Track(undoAction, redoAction);
+                return;
             }
+            bool origDirtyState = plugin.Dirty;
+            plugin.Dirty = true;
+            Point endLocation = finalLocation.Value;
+            void undoAction(UndoRedoEventArgs ev)
+            {
+                ev.MapPanel.Invalidate(ev.Map, toMove);
+                ev.Map.Buildings.Remove(toMove);
+                if (eaten != null)
+                {
+                    foreach (Point p in eaten.Keys)
+                    {
+                        Smudge oldSmudge = ev.Map.Smudge[p];
+                        if (oldSmudge == null || !oldSmudge.Type.IsAutoBib)
+                        {
+                            ev.Map.Smudge[p] = eaten[p];
+                            // DO NOT REMOVE THE POINTS FROM "eaten": the undo might be done again in the future.
+                        }
+                    }
+                }
+                ev.Map.Buildings.Add(startLocation, toMove);
+                ev.MapPanel.Invalidate(ev.Map, toMove);
+                if (ev.Plugin != null)
+                {
+                    ev.Plugin.Dirty = origDirtyState;
+                }
+            }
+            void redoAction(UndoRedoEventArgs ev)
+            {
+                ev.MapPanel.Invalidate(ev.Map, toMove);
+                ev.Map.Buildings.Remove(toMove);
+                if (eaten != null)
+                {
+                    foreach (Point p in eaten.Keys)
+                    {
+                        Smudge oldSmudge = ev.Map.Smudge[p];
+                        if (oldSmudge == null || !oldSmudge.Type.IsAutoBib)
+                        {
+                            ev.Map.Smudge[p] = eaten[p];
+                            // DO NOT REMOVE THE POINTS FROM "eaten": the undo might be done again in the future.
+                        }
+                    }
+                }
+                ev.Map.Buildings.Add(endLocation, toMove);
+                ev.MapPanel.Invalidate(ev.Map, toMove);
+                if (ev.Plugin != null)
+                {
+                    ev.Plugin.Dirty = true;
+                }
+            }
+            url.Track(undoAction, redoAction);
         }
 
         private void MouseoverWidget_MouseCellChanged(object sender, MouseCellChangedEventArgs e)

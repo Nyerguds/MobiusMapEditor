@@ -96,7 +96,7 @@ namespace MobiusEditor.Controls
                     this.cmbValue.Visible = true;
                     this.cmbValue.DataSource = waypoints;
                     //this.cmbValue.Tool
-                    selectIndex = ListItem<int>.GetIndexInList((int)value, waypoints);
+                    selectIndex = ListItem.GetIndexInList((int)value, waypoints);
                     if (selectIndex == -1 && waypoints.Length > 0)
                     {
                         selectIndex = 0;
@@ -106,9 +106,9 @@ namespace MobiusEditor.Controls
                 case TeamMissionArgType.OptionsList:
                     this.numValue.Visible = false;
                     this.cmbValue.Visible = true;
-                    ListItem<int>[] items = mission.DropdownOptions.Select(tup => new ListItem<int>(tup.Item1, tup.Item2)).ToArray();
+                    ListItem<int>[] items = mission.DropdownOptions.Select(ddo => new ListItem<int>(ddo.Value, ddo.Label)).ToArray();
                     this.cmbValue.DataSource = items;
-                    selectIndex = ListItem<int>.GetIndexInList((int)value, items);
+                    selectIndex = ListItem.GetIndexInList((int)value, items);
                     if (selectIndex == -1 && items.Length > 0)
                     {
                         selectIndex = 0;

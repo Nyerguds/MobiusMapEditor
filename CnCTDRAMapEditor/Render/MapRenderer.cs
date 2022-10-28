@@ -811,8 +811,11 @@ namespace MobiusEditor.Render
 
         public static (Rectangle, Action<Graphics>) Render(GameType gameType, bool soloMission, TheaterType theater, Size tileSize, TeamColor[] flagColors, Waypoint waypoint)
         {
-            float defaultOpacity = !soloMission && (waypoint.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart ? 1.0f : 0.5f;
-            return Render(gameType, soloMission, theater, tileSize, flagColors, waypoint, defaultOpacity);
+            // Opacity is normally 0.5 for non-flag waypoint indicators, but is variable because the post-render
+            // actions of the waypoints tool will paint a fully opaque version over the currently selected waypoint.
+            //int mpId = Waypoint.GetMpIdFromFlag(waypoint.Flag);
+            //float defaultOpacity = !soloMission && mpId >= 0 && mpId < flagColors.Length ? 1.0f : 0.5f;
+            return Render(gameType, soloMission, theater, tileSize, flagColors, waypoint, 0.5f);
         }
 
         public static (Rectangle, Action<Graphics>) Render(GameType gameType, bool soloMission, TheaterType theater, Size tileSize, TeamColor[] flagColors, Waypoint waypoint, float transparencyModifier)
@@ -826,25 +829,13 @@ namespace MobiusEditor.Render
             TeamColor teamColor = null;
             Color tint = waypoint.Tint;
             float brightness = 1.0f;
-            if (!soloMission && (waypoint.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart)
+            int mpId = Waypoint.GetMpIdFromFlag(waypoint.Flag);
+            if (!soloMission && mpId >= 0 && mpId < flagColors.Length)
             {
                 tileGraphics = "flagfly";
                 // Always paint flags as opaque.
                 transparencyModifier = 1.0f;
-                int pls = (int)WaypointFlag.PlayerStart;
-                int flagId = ((int)waypoint.Flag & ~pls) / (pls << 1);
-                int mpId = 0;
-                // Find which multiplayer house number it has.
-                while (flagId > 1)
-                {
-                    flagId >>= 1;
-                    mpId++;
-                }
                 teamColor = flagColors[mpId];
-            }
-            else
-            {
-                tileGraphics = "beacon";
             }
             if (gameType == GameType.SoleSurvivor && (waypoint.Flag & WaypointFlag.CrateSpawn) == WaypointFlag.CrateSpawn)
             {

@@ -142,8 +142,12 @@ namespace MobiusEditor.Model
 
     public class House
     {
-
         public static readonly string None = "None";
+
+        public static bool IsEmpty(string house)
+        {
+            return house == null || house.Equals(None, StringComparison.OrdinalIgnoreCase);
+        }
 
         public readonly HouseType Type;
 

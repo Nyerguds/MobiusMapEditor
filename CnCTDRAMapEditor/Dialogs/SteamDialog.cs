@@ -215,7 +215,7 @@ namespace MobiusEditor.Dialogs
             INI.WriteSection(new MapContext(plugin.Map, false), ini.Sections.Add("Steam"), plugin.Map.SteamSection);
             var steamSection = ini.Sections.Extract("Steam");
             SteamSection steamCloneSection = new SteamSection();
-            INI.ParseSection(new MapContext(plugin.Map, true), steamSection, steamCloneSection);
+            INI.ParseSection(new MapContext(plugin.Map, false), steamSection, steamCloneSection);
             // Restore original description from control
             steamCloneSection.Description = txtDescription.Text;
             if (SteamworksUGC.PublishUGC(sendPath, steamCloneSection, tags, OnPublishSuccess, OnOperationFailed))

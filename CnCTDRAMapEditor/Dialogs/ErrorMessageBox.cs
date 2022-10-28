@@ -43,10 +43,15 @@ namespace MobiusEditor.Dialogs
             set { txtErrors.WordWrap = value; }
             get { return txtErrors.WordWrap; }
         }
-
         public ErrorMessageBox()
+            :this(false)
+        {
+        }
+
+        public ErrorMessageBox(bool showCancel)
         {
             InitializeComponent();
+            btnCancel.Visible = showCancel;
         }
 
         private void btnCopy_Click(object sender, EventArgs e)

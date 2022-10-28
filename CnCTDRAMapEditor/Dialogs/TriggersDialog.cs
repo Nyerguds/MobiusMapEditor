@@ -54,11 +54,9 @@ namespace MobiusEditor.Dialogs
                     typeLabel.Visible = typeComboBox.Visible = false;
                     event2Label.Visible = event2ComboBox.Visible = event2Flp.Visible = false;
                     action2Label.Visible = action2ComboBox.Visible = action2Flp.Visible = false;
-                    btnCheck.Visible = true;
                     break;
                 case GameType.RedAlert:
                     teamLabel.Visible = teamComboBox.Visible = false;
-                    btnCheck.Visible = false;
                     break;
             }
             triggers = new List<Trigger>(plugin.Map.Triggers.Select(t => t.Clone()));
@@ -255,10 +253,13 @@ namespace MobiusEditor.Dialogs
             // If user pressed ok, nevermind,just go on.
             if (this.DialogResult == DialogResult.OK)
             {
+                if (CancelForFatalErrors())
+                {
+                    e.Cancel = true;
+                    return;
+                }
                 // Remove rename chains of newly added items.
                 RemoveNewRenames(renameActions, false);
-                // For safety, renames that end on the same name are not filtered out, since other items
-                // might be renamed to that name as in-between step. So simply apply them in the same order.
                 return;
             }
             bool hasChanges = triggers.Count != backupTriggers.Count;
@@ -281,6 +282,25 @@ namespace MobiusEditor.Dialogs
             }
         }
 
+        /// <summary>
+        /// Checks if the dialog should stay open to allow the user to correct fatal errors.
+        /// </summary>
+        /// <returns>True if the triggers dialog should remain open.</returns>
+        private Boolean CancelForFatalErrors()
+        {
+            string[] errors = plugin.CheckTriggers(this.triggers, false, false, true, out bool fatal).ToArray();
+            if (!fatal)
+            {
+                return false;
+            }
+            using (ErrorMessageBox emb = new ErrorMessageBox(true))
+            {
+                emb.Title = "Triggers check";
+                emb.Errors = errors;
+                emb.UseWordWrap = true;
+                return emb.ShowDialog() == DialogResult.Cancel;
+            }
+        }
         private List<(String Name1, String Name2)> RemoveNewRenames(List<(String Name1, String Name2)> renameActions, bool clone)
         {
             List<(String Name1, String Name2)> renActions;
@@ -533,11 +553,15 @@ namespace MobiusEditor.Dialogs
         {
             eventNud.Visible = false;
             eventNud.DataBindings.Clear();
+            eventNud.Minimum = Int32.MinValue;
+            eventNud.Maximum = Int32.MaxValue;
             eventValueComboBox.Visible = false;
             eventValueComboBox.DataBindings.Clear();
             eventValueComboBox.DataSource = null;
             eventValueComboBox.DisplayMember = null;
             eventValueComboBox.ValueMember = null;
+            long data = triggerEventData == null ? 0 : triggerEventData.Data;
+            string team = triggerEventData == null ? TeamType.None : triggerEventData.Team;
             if (triggerEvent != null)
             {
                 if (triggerEventData == null)
@@ -575,22 +599,18 @@ namespace MobiusEditor.Dialogs
                             case TiberianDawn.EventTypes.EVENT_NUNITS_DESTROYED:
                             case TiberianDawn.EventTypes.EVENT_NBUILDINGS_DESTROYED:
                                 eventNud.Visible = true;
-                                eventNud.Value = triggerEventData != null ? triggerEventData.Data : 0;
+                                eventNud.Minimum = 0;
+                                eventNud.Maximum = Int32.MaxValue;
+                                eventNud.Value = data.Restrict(0, Int32.MaxValue);
                                 break;
                             case TiberianDawn.EventTypes.EVENT_BUILD:
                                 eventValueComboBox.Visible = true;
                                 eventValueComboBox.DisplayMember = "Label";
                                 eventValueComboBox.ValueMember = "Value";
-                                eventValueComboBox.DataSource = plugin.Map.BuildingTypes.Select(t => new ListItem<long>(t.ID, t.DisplayName)).ToArray();
+                                var bldData = plugin.Map.BuildingTypes.Select(t => new ListItem<long>(t.ID, t.DisplayName)).ToArray();
+                                eventValueComboBox.DataSource = bldData;
                                 eventValueComboBox.DataBindings.Add("SelectedValue", triggerEvent, "Data");
-                                if (triggerEventData == null)
-                                {
-                                    eventValueComboBox.SelectedIndex = 0;
-                                }
-                                else
-                                {
-                                    eventValueComboBox.SelectedValue = triggerEventData.Data;
-                                }
+                                eventValueComboBox.SelectedValue = ListItem.CheckInList(data, bldData);
                                 break;
                             default:
                                 break;
@@ -615,16 +635,10 @@ namespace MobiusEditor.Dialogs
                                 break;
                             case RedAlert.EventTypes.TEVENT_LEAVES_MAP:
                                 eventValueComboBox.Visible = true;
-                                eventValueComboBox.DataSource = plugin.Map.TeamTypes.Count == 0 ? new[] { TeamType.None } : plugin.Map.TeamTypes.Select(t => t.Name).ToArray();
+                                var teamData = plugin.Map.TeamTypes.Count == 0 ? new[] { TeamType.None } : plugin.Map.TeamTypes.Select(t => t.Name).ToArray();
+                                eventValueComboBox.DataSource = teamData;
                                 eventValueComboBox.DataBindings.Add("SelectedItem", triggerEvent, "Team");
-                                if (triggerEventData == null)
-                                {
-                                    eventValueComboBox.SelectedIndex = 0;
-                                }
-                                else
-                                {
-                                    eventValueComboBox.SelectedItem = triggerEventData.Team;
-                                }
+                                eventValueComboBox.SelectedItem = teamData.Contains(team, StringComparer.OrdinalIgnoreCase) ? team : TeamType.None;
                                 break;
                             case RedAlert.EventTypes.TEVENT_PLAYER_ENTERED:
                             case RedAlert.EventTypes.TEVENT_CROSS_HORIZONTAL:
@@ -640,95 +654,65 @@ namespace MobiusEditor.Dialogs
                                 eventValueComboBox.Visible = true;
                                 eventValueComboBox.DisplayMember = "Label";
                                 eventValueComboBox.ValueMember = "Value";
-                                eventValueComboBox.DataSource = new ListItem<long>(-1, House.None).Yield()
+                                var houseData = new ListItem<long>(-1, House.None).Yield()
                                     .Concat(plugin.Map.Houses.Select(t => new ListItem<long>(t.Type.ID, t.Type.Name))).ToArray();
+                                eventValueComboBox.DataSource = houseData;
                                 eventValueComboBox.DataBindings.Add("SelectedValue", triggerEvent, "Data");
-                                if (triggerEventData == null)
-                                {
-                                    eventValueComboBox.SelectedIndex = 0;
-                                }
-                                else
-                                {
-                                    eventValueComboBox.SelectedValue = triggerEventData.Data;
-                                }
+                                eventValueComboBox.SelectedValue = ListItem.CheckInList(data, houseData);                                
                                 break;
                             case RedAlert.EventTypes.TEVENT_BUILDING_EXISTS:
                             case RedAlert.EventTypes.TEVENT_BUILD:
                                 eventValueComboBox.Visible = true;
                                 eventValueComboBox.DisplayMember = "Label";
                                 eventValueComboBox.ValueMember = "Value";
-                                eventValueComboBox.DataSource = plugin.Map.BuildingTypes.Select(t => new ListItem<long>(t.ID, t.DisplayName)).ToArray();
+                                var bldData = plugin.Map.BuildingTypes.Select(t => new ListItem<long>(t.ID, t.DisplayName)).ToArray();
+                                eventValueComboBox.DataSource = bldData;
                                 eventValueComboBox.DataBindings.Add("SelectedValue", triggerEvent, "Data");
-                                if (triggerEventData == null)
-                                {
-                                    eventValueComboBox.SelectedIndex = 0;
-                                }
-                                else
-                                {
-                                    eventValueComboBox.SelectedValue = triggerEventData.Data;
-                                }
+                                eventValueComboBox.SelectedValue = ListItem.CheckInList(data, bldData);
                                 break;
                             case RedAlert.EventTypes.TEVENT_BUILD_UNIT:
                                 eventValueComboBox.Visible = true;
                                 eventValueComboBox.DisplayMember = "Label";
                                 eventValueComboBox.ValueMember = "Value";
-                                eventValueComboBox.DataSource = plugin.Map.UnitTypes.Where(t => t.IsUnit).Select(t => new ListItem<long>(t.ID, t.DisplayName)).ToArray();
+                                var unitData = plugin.Map.UnitTypes.Where(t => t.IsGroundUnit).Select(t => new ListItem<long>(t.ID, t.DisplayName)).ToArray();
+                                eventValueComboBox.DataSource = unitData;
                                 eventValueComboBox.DataBindings.Add("SelectedValue", triggerEvent, "Data");
-                                if (triggerEventData == null)
-                                {
-                                    eventValueComboBox.SelectedIndex = 0;
-                                }
-                                else
-                                {
-                                    eventValueComboBox.SelectedValue = triggerEventData.Data;
-                                }
+                                eventValueComboBox.SelectedValue = ListItem.CheckInList(data, unitData);
                                 break;
                             case RedAlert.EventTypes.TEVENT_BUILD_INFANTRY:
                                 eventValueComboBox.Visible = true;
                                 eventValueComboBox.DisplayMember = "Label";
                                 eventValueComboBox.ValueMember = "Value";
-                                eventValueComboBox.DataSource = plugin.Map.InfantryTypes.Select(t => new ListItem<long>(t.ID, t.DisplayName)).ToArray();
+                                var infData = plugin.Map.InfantryTypes.Select(t => new ListItem<long>(t.ID, t.DisplayName)).ToArray();
+                                eventValueComboBox.DataSource = infData;
                                 eventValueComboBox.DataBindings.Add("SelectedValue", triggerEvent, "Data");
-                                if (triggerEventData == null)
-                                {
-                                    eventValueComboBox.SelectedIndex = 0;
-                                }
-                                else
-                                {
-                                    eventValueComboBox.SelectedValue = triggerEventData.Data;
-                                }
+                                eventValueComboBox.SelectedValue = ListItem.CheckInList(data, infData);
                                 break;
                             case RedAlert.EventTypes.TEVENT_BUILD_AIRCRAFT:
                                 eventValueComboBox.Visible = true;
                                 eventValueComboBox.DisplayMember = "Label";
                                 eventValueComboBox.ValueMember = "Value";
-                                eventValueComboBox.DataSource = plugin.Map.TeamTechnoTypes.Where(t => (t is UnitType) && ((UnitType)t).IsAircraft)
+                                var airData = plugin.Map.TeamTechnoTypes.Where(t => (t is UnitType) && ((UnitType)t).IsAircraft)
                                     .Select(t => new ListItem<long>(t.ID, t.DisplayName)).ToArray();
+                                eventValueComboBox.DataSource = airData;
                                 eventValueComboBox.DataBindings.Add("SelectedValue", triggerEvent, "Data");
-                                if (triggerEventData == null)
-                                {
-                                    eventValueComboBox.SelectedIndex = 0;
-                                }
-                                else
-                                {
-                                    eventValueComboBox.SelectedValue = triggerEventData.Data;
-                                }
+                                eventValueComboBox.SelectedValue = ListItem.CheckInList(data, airData);
                                 break;
                             case RedAlert.EventTypes.TEVENT_NUNITS_DESTROYED:
                             case RedAlert.EventTypes.TEVENT_NBUILDINGS_DESTROYED:
                             case RedAlert.EventTypes.TEVENT_CREDITS:
                             case RedAlert.EventTypes.TEVENT_TIME:
+                                eventNud.Visible = true;
+                                eventNud.Minimum = 0;
+                                eventNud.Maximum = Int32.MaxValue;
+                                eventNud.Value = data.Restrict(0, Int32.MaxValue);
+                                break;
                             case RedAlert.EventTypes.TEVENT_GLOBAL_SET:
                             case RedAlert.EventTypes.TEVENT_GLOBAL_CLEAR:
                                 eventNud.Visible = true;
-                                if (triggerEventData == null)
-                                {
-                                    eventNud.Value = 0;
-                                }
-                                else
-                                {
-                                    eventNud.Value = triggerEventData.Data;
-                                }
+                                eventNud.Minimum = 0;
+                                eventNud.Maximum = 29;
+                                eventNud.Value = data.Restrict(0, 29);
                                 break;
                             default:
                                 break;
@@ -742,13 +726,16 @@ namespace MobiusEditor.Dialogs
         {
             actionNud.Visible = false;
             actionNud.DataBindings.Clear();
-            actionNud.Minimum = long.MinValue;
-            actionNud.Maximum = long.MaxValue;
+            actionNud.Minimum = Int32.MinValue;
+            actionNud.Maximum = Int32.MaxValue;
             actionValueComboBox.Visible = false;
             actionValueComboBox.DataBindings.Clear();
             actionValueComboBox.DataSource = null;
             actionValueComboBox.DisplayMember = null;
             actionValueComboBox.ValueMember = null;
+            long data = triggerActionData == null ? 0 : triggerActionData.Data;
+            string team = triggerActionData == null ? TeamType.None : triggerActionData.Team;
+            string trig = triggerActionData == null ? Trigger.None : triggerActionData.Trigger;
             if (triggerAction != null)
             {
                 if (triggerActionData == null)
@@ -770,19 +757,10 @@ namespace MobiusEditor.Dialogs
                             case RedAlert.ActionTypes.TACTION_DESTROY_TEAM:
                             case RedAlert.ActionTypes.TACTION_REINFORCEMENTS:
                                 actionValueComboBox.Visible = true;
-                                actionValueComboBox.DataSource = TeamType.None.Yield().Concat(plugin.Map.TeamTypes.Select(t => t.Name)).ToArray();
+                                var teamData = TeamType.None.Yield().Concat(plugin.Map.TeamTypes.Select(t => t.Name)).ToArray();
+                                actionValueComboBox.DataSource = teamData;
                                 actionValueComboBox.DataBindings.Add("SelectedItem", triggerAction, "Team");
-                                if (triggerActionData == null)
-                                {
-                                    if (actionValueComboBox.Items.Count > 0)
-                                    {
-                                        actionValueComboBox.SelectedIndex = 0;
-                                    }
-                                }
-                                else
-                                {
-                                    actionValueComboBox.SelectedItem = triggerActionData.Team;
-                                }
+                                actionValueComboBox.SelectedItem = teamData.Contains(team, StringComparer.OrdinalIgnoreCase) ? team : TeamType.None;
                                 break;
                             case RedAlert.ActionTypes.TACTION_WIN:
                             case RedAlert.ActionTypes.TACTION_LOSE:
@@ -793,31 +771,19 @@ namespace MobiusEditor.Dialogs
                                 actionValueComboBox.Visible = true;
                                 actionValueComboBox.DisplayMember = "Label";
                                 actionValueComboBox.ValueMember = "Value";
-                                actionValueComboBox.DataSource = new ListItem<long>(-1, House.None).Yield().Concat(
+                                var houseData = new ListItem<long>(-1, House.None).Yield().Concat(
                                     plugin.Map.Houses.Select(t => new ListItem<long>(t.Type.ID, t.Type.Name))).ToArray();
+                                actionValueComboBox.DataSource = houseData;
                                 actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
-                                if (triggerActionData == null)
-                                {
-                                    actionValueComboBox.SelectedIndex = 0;
-                                }
-                                else
-                                {
-                                    actionValueComboBox.SelectedValue = triggerActionData.Data;
-                                }
+                                actionValueComboBox.SelectedValue = ListItem.CheckInList(data, houseData);
                                 break;
                             case RedAlert.ActionTypes.TACTION_FORCE_TRIGGER:
                             case RedAlert.ActionTypes.TACTION_DESTROY_TRIGGER:
                                 actionValueComboBox.Visible = true;
-                                actionValueComboBox.DataSource = Trigger.None.Yield().Concat(triggers.Select(t => t.Name).OrderBy(t => t, new ExplorerComparer())).ToArray();
+                                var trigsData = Trigger.None.Yield().Concat(triggers.Select(t => t.Name).OrderBy(t => t, new ExplorerComparer())).ToArray();
+                                actionValueComboBox.DataSource = trigsData;
                                 actionValueComboBox.DataBindings.Add("SelectedItem", triggerAction, "Trigger");
-                                if (triggerActionData == null)
-                                {
-                                    actionValueComboBox.SelectedIndex = 0;
-                                }
-                                else
-                                {
-                                    actionValueComboBox.SelectedItem = triggerActionData.Trigger;
-                                }
+                                actionValueComboBox.SelectedItem = trigsData.Contains(trig, StringComparer.OrdinalIgnoreCase) ? trig : Trigger.None;
                                 break;
                             case RedAlert.ActionTypes.TACTION_DZ:
                             case RedAlert.ActionTypes.TACTION_REVEAL_SOME:
@@ -826,17 +792,11 @@ namespace MobiusEditor.Dialogs
                                 actionValueComboBox.DisplayMember = "Label";
                                 actionValueComboBox.ValueMember = "Value";
                                 Waypoint[] wps = plugin.Map.Waypoints;
-                                actionValueComboBox.DataSource = new ListItem<long>(-1, Waypoint.None).Yield().Concat(
+                                var wpsData = new ListItem<long>(-1, Waypoint.None).Yield().Concat(
                                     Enumerable.Range(0, wps.Length).Select(wp => new ListItem<long>(wp, wps[wp].ToString()))).ToArray();
+                                actionValueComboBox.DataSource = wpsData;
                                 actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
-                                if (triggerActionData == null)
-                                {
-                                    actionValueComboBox.SelectedIndex = 0;
-                                }
-                                else
-                                {
-                                    actionValueComboBox.SelectedValue = triggerActionData.Data;
-                                }
+                                actionValueComboBox.SelectedValue = ListItem.CheckInList(data, wpsData);
                                 break;
                             case RedAlert.ActionTypes.TACTION_1_SPECIAL:
                             case RedAlert.ActionTypes.TACTION_FULL_SPECIAL:
@@ -848,14 +808,7 @@ namespace MobiusEditor.Dialogs
                                     .OrderBy(t => t.Label).ToArray();
                                 actionValueComboBox.DataSource = superData;
                                 actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
-                                if (triggerActionData == null)
-                                {
-                                    actionValueComboBox.SelectedIndex = 0;
-                                }
-                                else
-                                {
-                                    actionValueComboBox.SelectedValue = triggerActionData.Data;
-                                }
+                                actionValueComboBox.SelectedValue = ListItem.CheckInList(data, superData);
                                 break;
                             case RedAlert.ActionTypes.TACTION_PLAY_MUSIC:
                                 actionValueComboBox.Visible = true;
@@ -870,14 +823,7 @@ namespace MobiusEditor.Dialogs
                                 }
                                 actionValueComboBox.DataSource = musData;
                                 actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
-                                if (triggerActionData == null)
-                                {
-                                    actionValueComboBox.SelectedIndex = 0;
-                                }
-                                else
-                                {
-                                    actionValueComboBox.SelectedValue = triggerActionData.Data;
-                                }
+                                actionValueComboBox.SelectedValue = ListItem.CheckInList(data, musData);
                                 break;
                             case RedAlert.ActionTypes.TACTION_PLAY_MOVIE:
                                 actionValueComboBox.Visible = true;
@@ -893,14 +839,7 @@ namespace MobiusEditor.Dialogs
                                 }
                                 actionValueComboBox.DataSource = movData;
                                 actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
-                                if (triggerActionData == null)
-                                {
-                                    actionValueComboBox.SelectedIndex = 0;
-                                }
-                                else
-                                {
-                                    actionValueComboBox.SelectedValue = triggerActionData.Data;
-                                }
+                                actionValueComboBox.SelectedValue = ListItem.CheckInList(data, movData);
                                 break;
                             case RedAlert.ActionTypes.TACTION_PLAY_SOUND:
                                 actionValueComboBox.Visible = true;
@@ -911,14 +850,7 @@ namespace MobiusEditor.Dialogs
                                     .Where(t => !String.Equals(RedAlert.ActionDataTypes.VocNames[t.Value], "x", StringComparison.InvariantCultureIgnoreCase))).ToArray();
                                 actionValueComboBox.DataSource = vocData;
                                 actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
-                                if (triggerActionData == null)
-                                {
-                                    actionValueComboBox.SelectedIndex = 0;
-                                }
-                                else
-                                {
-                                    actionValueComboBox.SelectedValue = triggerActionData.Data;
-                                }
+                                actionValueComboBox.SelectedValue = ListItem.CheckInList(data, vocData);
                                 break;
                             case RedAlert.ActionTypes.TACTION_PLAY_SPEECH:
                                 actionValueComboBox.Visible = true;
@@ -929,30 +861,16 @@ namespace MobiusEditor.Dialogs
                                     .Where(t => !String.Equals(RedAlert.ActionDataTypes.VoxNames[t.Value], "none", StringComparison.InvariantCultureIgnoreCase))).ToArray();
                                 actionValueComboBox.DataSource = voxData;
                                 actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
-                                if (triggerActionData == null)
-                                {
-                                    actionValueComboBox.SelectedIndex = 0;
-                                }
-                                else
-                                {
-                                    actionValueComboBox.SelectedValue = triggerActionData.Data;
-                                }
+                                actionValueComboBox.SelectedValue = ListItem.CheckInList(data, voxData);
                                 break;
                             case RedAlert.ActionTypes.TACTION_PREFERRED_TARGET:
                                 actionValueComboBox.Visible = true;
                                 actionValueComboBox.DisplayMember = "Label";
                                 actionValueComboBox.ValueMember = "Value";
-                                var quarryData = RedAlert.TeamMissionTypes.Attack.DropdownOptions.Select(t => new ListItem<long>(t.Item1, t.Item2)).ToArray();
+                                var quarryData = RedAlert.TeamMissionTypes.Attack.DropdownOptions.Select(t => new ListItem<long>(t.Value, t.Label)).ToArray();
                                 actionValueComboBox.DataSource = quarryData;
                                 actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
-                                if (triggerActionData == null)
-                                {
-                                    actionValueComboBox.SelectedIndex = 0;
-                                }
-                                else
-                                {
-                                    actionValueComboBox.SelectedValue = triggerActionData.Data;
-                                }
+                                actionValueComboBox.SelectedValue = ListItem.CheckInList(data, quarryData);
                                 break;
                             case RedAlert.ActionTypes.TACTION_BASE_BUILDING:
                                 actionValueComboBox.Visible = true;
@@ -961,16 +879,7 @@ namespace MobiusEditor.Dialogs
                                 var trueFalseData = new long[] { 0, 1 }.Select(b => new ListItem<long>(b, b == 0 ? "On" : "Off")).ToArray();
                                 actionValueComboBox.DataSource = trueFalseData;
                                 actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
-                                if (triggerActionData == null)
-                                {
-                                    actionValueComboBox.SelectedIndex = 0;
-                                }
-                                else
-                                {
-                                    if (triggerActionData.Data > 1 || triggerActionData.Data < 0)
-                                        triggerActionData.Data = 0;
-                                    actionValueComboBox.SelectedValue = triggerActionData.Data;
-                                }
+                                actionValueComboBox.SelectedValue = ListItem.CheckInList(data, trueFalseData);
                                 break;
                             case RedAlert.ActionTypes.TACTION_TEXT_TRIGGER:
                                 actionValueComboBox.Visible = true;
@@ -979,31 +888,22 @@ namespace MobiusEditor.Dialogs
                                 var txtData = RedAlert.ActionDataTypes.TextDesc.Select((t, i) => new ListItem<long>(i + 1, "[" + (i + 1).ToString("000") + "] " + t)).ToArray();
                                 actionValueComboBox.DataSource = txtData;
                                 actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
-                                if (triggerActionData == null)
-                                {
-                                    actionValueComboBox.SelectedIndex = 0;
-                                }
-                                else
-                                {
-                                    if (triggerActionData.Data < 1 || triggerActionData.Data > 209)
-                                        triggerActionData.Data = 1;
-                                    actionValueComboBox.SelectedValue = triggerActionData.Data;
-                                }
+                                actionValueComboBox.SelectedValue = ListItem.CheckInList(data, txtData);
                                 break;
                             case RedAlert.ActionTypes.TACTION_ADD_TIMER:
                             case RedAlert.ActionTypes.TACTION_SUB_TIMER:
                             case RedAlert.ActionTypes.TACTION_SET_TIMER:
+                                actionNud.Minimum = 0;
+                                actionNud.Maximum = Int32.MaxValue;
+                                actionNud.Visible = true;
+                                actionNud.Value = data.Restrict(0, Int32.MaxValue);
+                                break;
                             case RedAlert.ActionTypes.TACTION_SET_GLOBAL:
                             case RedAlert.ActionTypes.TACTION_CLEAR_GLOBAL:
+                                actionNud.Minimum = 0;
+                                actionNud.Maximum = 29;
                                 actionNud.Visible = true;
-                                if (triggerActionData == null)
-                                {
-                                    actionNud.Value = 0;
-                                }
-                                else
-                                {
-                                    actionNud.Value = triggerActionData.Data;
-                                }
+                                actionNud.Value = data.Restrict(0, 29);
                                 break;
                             default:
                                 break;
@@ -1023,15 +923,7 @@ namespace MobiusEditor.Dialogs
                     return;
                 }
             }
-            string[] errors = null;
-            if (plugin.GameType == GameType.TiberianDawn || plugin.GameType == GameType.SoleSurvivor)
-            {
-                errors = CheckTiberianDawnTriggers()?.ToArray();
-            }
-            else if (plugin.GameType == GameType.RedAlert)
-            {
-                errors = CheckRedAlertTriggers()?.ToArray();
-            }
+            string[] errors = plugin.CheckTriggers(this.triggers, true, false, false, out _)?.ToArray();
             if (errors == null || errors.Length == 0)
             {
                 MessageBox.Show("No issues were encountered.", "Triggers check", MessageBoxButtons.OK);
@@ -1045,126 +937,6 @@ namespace MobiusEditor.Dialogs
                 emb.UseWordWrap = true;
                 emb.ShowDialog();
             }
-        }
-
-        private IEnumerable<string> CheckTiberianDawnTriggers()
-        {
-            // Might need to migrate this to the plugin.
-            HouseType player = plugin.Map.HouseTypes.Where(t => t.Equals(plugin.Map.BasicSection.Player)).FirstOrDefault() ?? plugin.Map.HouseTypes.First();
-            
-            List<string> errors = new List<string>();
-            List<string> curErrors = new List<string>();
-            List<ITechno> mapTechnos = plugin.Map.GetAllTechnos().ToList();
-            foreach (Trigger trigger in this.triggers)
-            {
-                curErrors.Clear();
-                string trigName = trigger.Name;
-                string event1 = trigger.Event1.EventType;
-                string action1 = trigger.Action1.ActionType;
-                bool noOwner = House.None.EqualsOrDefaultIgnoreCase(trigger.House, House.None);
-                bool isPlayer = !noOwner && player.Equals(trigger.House);
-                //bool playerIsNonstandard = !player.Equals(TiberianDawn.HouseTypes.Good) && !player.Equals(TiberianDawn.HouseTypes.Bad);
-                //bool isGoodguy = String.Equals(trigger.House, TiberianDawn.HouseTypes.Good.Name, StringComparison.InvariantCultureIgnoreCase);
-                //bool isBadguy = String.Equals(trigger.House, TiberianDawn.HouseTypes.Bad.Name, StringComparison.InvariantCultureIgnoreCase);
-                bool isLinked = mapTechnos.Any(tech => String.Equals(trigName, tech.Trigger, StringComparison.InvariantCultureIgnoreCase));
-                //bool isLinkedToStructs = mapTechnos.Any(tech => tech is Building && String.Equals(trigName, tech.Trigger, StringComparison.InvariantCultureIgnoreCase));
-                //bool isLinkedToUnits = mapTechnos.Any(tech => (tech is Unit || tech is Infantry) && String.Equals(trigName, tech.Trigger, StringComparison.InvariantCultureIgnoreCase));
-                //bool isLinkedToTrees = mapTechnos.Any(tech => (tech is Terrain) && String.Equals(trigName, tech.Trigger, StringComparison.InvariantCultureIgnoreCase));
-                bool isCellTrig = plugin.Map.CellTriggers.Any(c => c.Value.Trigger == trigName);
-                bool hasTeam = !String.IsNullOrEmpty(trigger.Action1.Team) && trigger.Action1.Team != TeamType.None;
-                bool isAnd = trigger.PersistentType == TriggerPersistentType.SemiPersistent;
-                //bool isOr = trigger.PersistentType == TriggerPersistentType.Persistent;
-                
-                // Event checks
-                if (event1 == TiberianDawn.EventTypes.EVENT_PLAYER_ENTERED && noOwner)
-                {
-                    curErrors.Add("A \"Player Enters\" trigger without a House set will cause a game crash. If this is only used for detecting capturing, the House will not be checked, but it must still be set.");
-                }
-                if (event1 == TiberianDawn.EventTypes.EVENT_ATTACKED && !noOwner)
-                {
-                    if (isLinked)
-                    {
-                        curErrors.Add("\"Attacked\" triggers with a House set will trigger when that House is attacked. To make a trigger for checking if objects are attacked, leave the House empty.");
-                    }
-                    else if (!isPlayer)
-                    {
-                        curErrors.Add("\"Attacked\" triggers with a House set will trigger when that House is attacked. However, this logic only works for the player's House.");
-                    }
-                }
-                if (event1 == TiberianDawn.EventTypes.EVENT_DESTROYED && !noOwner && isAnd)
-                {
-                    curErrors.Add("A \"Destroyed\" trigger with a House set and repeat status \"AND\" will never work, since a reference to the trigger will be added to the House Triggers list for that House, and there is nothing that can ever trigger that instance, making it impossible to clear all objectives required for the trigger to fire.");
-                }
-                if (event1 == TiberianDawn.EventTypes.EVENT_ANY && action1 != TiberianDawn.ActionTypes.ACTION_WINLOSE)
-                {
-                    curErrors.Add("The \"Any\" event will trigger on literally anything that can happen to a linked object. It should normally only be used with the \"Cap=Win/Des=Lose\" action.");
-                }
-                if (event1 == TiberianDawn.EventTypes.EVENT_NBUILDINGS_DESTROYED && trigger.Event1.Data == 0)
-                {
-                    curErrors.Add("The amount of buildings that needs to be destroyed is 0.");
-                }
-                if (event1 == TiberianDawn.EventTypes.EVENT_NUNITS_DESTROYED && trigger.Event1.Data == 0)
-                {
-                    curErrors.Add("The amount of units that needs to be destroyed is 0.");
-                }
-                // Action checks
-                if (action1 == TiberianDawn.ActionTypes.ACTION_AIRSTRIKE && event1 == TiberianDawn.EventTypes.EVENT_PLAYER_ENTERED && !isPlayer && isCellTrig)
-                {
-                    curErrors.Add("This will give the Airstrike to the House that activates the Celltrigger. This will grant the AI house linked to it periodic airstrikes that will only target structure.");
-                }
-                if (action1 == TiberianDawn.ActionTypes.ACTION_WINLOSE && event1 == TiberianDawn.EventTypes.EVENT_ANY && isAnd)
-                {
-                    curErrors.Add("\"Any\" → \"Cap=Win/Des=Lose\" triggers don't function with existence status \"And\".");
-                }
-                if (action1 == TiberianDawn.ActionTypes.ACTION_ALLOWWIN && !isPlayer)
-                {
-                    curErrors.Add("Each \"Allow Win\" trigger increases the \"win blockage\" on a House, which prevents it from winning until they are all cleared. However, since this is put on the House specified in the trigger, \"Allow Win\" triggers nly work with the player's House.");
-                }
-                if (action1 == TiberianDawn.ActionTypes.ACTION_BEGIN_PRODUCTION)
-                {
-                    if (trigger.Event1.EventType != TiberianDawn.EventTypes.EVENT_PLAYER_ENTERED && noOwner)
-                    {
-                        curErrors.Add("The House set in a \"Production\" trigger determines the House that starts production, except in case of a celltrigger. Having no House will crash the game.");
-                    }
-                    //else if (trigger.Event1.EventType == TiberianDawn.EventTypes.EVENT_PLAYER_ENTERED && isCellTrig && playerIsNonstandard)
-                    //{
-                    //    curErrors.Add("For a celltrigger, the House that starts production is always be the 'classic opposing House' of the player's House.");
-                    //}
-                }
-                if (action1 == TiberianDawn.ActionTypes.ACTION_REINFORCEMENTS && !hasTeam)
-                {
-                    curErrors.Add("There is no team set to reinforce.");
-                }
-                if (action1 == TiberianDawn.ActionTypes.ACTION_DESTROY_TEAM && !hasTeam)
-                {
-                    curErrors.Add("There is no team set to disband.");
-                }
-                if (action1 == TiberianDawn.ActionTypes.ACTION_DESTROY_XXXX && !this.triggers.Any(t => "XXXX".Equals(t.Name, StringComparison.InvariantCultureIgnoreCase)))
-                {
-                    curErrors.Add("There is no trigger called 'XXXX' to destroy.");
-                }
-                if (action1 == TiberianDawn.ActionTypes.ACTION_DESTROY_YYYY && !this.triggers.Any(t => "YYYY".Equals(t.Name, StringComparison.InvariantCultureIgnoreCase)))
-                {
-                    curErrors.Add("There is no trigger called 'YYYY' to destroy.");
-                }
-                if (action1 == TiberianDawn.ActionTypes.ACTION_DESTROY_ZZZZ && !this.triggers.Any(t => "ZZZZ".Equals(t.Name, StringComparison.InvariantCultureIgnoreCase)))
-                {
-                    curErrors.Add("There is no trigger called 'ZZZZ' to destroy.");
-                }
-                if (curErrors.Count > 0)
-                {
-                    errors.Add(trigName.ToUpper() + ":");
-                    errors.AddRange(curErrors);
-                    errors.Add(String.Empty);
-                }
-            }
-            return errors;
-        }
-
-        private IEnumerable<string> CheckRedAlertTriggers()
-        {
-            return null;
-            // TODO
         }
     }
 }

@@ -30,6 +30,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
+using static MobiusEditor.Utility.SimpleMultiThreading;
 
 namespace MobiusEditor
 {
@@ -554,7 +555,14 @@ namespace MobiusEditor
                     }
                     if (plugin.GameType == GameType.RedAlert && !extraIniText.Equals(msd.ExtraIniText, StringComparison.InvariantCultureIgnoreCase))
                     {
-                        plugin.ExtraIniText = msd.ExtraIniText;
+                        try
+                        {
+                            plugin.ExtraIniText = msd.ExtraIniText;
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show("Errors occurred when applying rule changes:\n\n" + ex.Message, GetProgramVersionTitle());
+                        }
                         rulesChanged = true;
                         hasChanges = true;
                     }
@@ -593,9 +601,51 @@ namespace MobiusEditor
                 ttd.StartPosition = FormStartPosition.CenterParent;
                 if (ttd.ShowDialog(this) == DialogResult.OK)
                 {
+                    List<TeamType> oldTeamTypes = plugin.Map.TeamTypes.ToList();
+                    // Clone of old triggers
+                    List<Trigger> oldTriggers = plugin.Map.Triggers.Select(tr => tr.Clone()).ToList();
                     plugin.Map.TeamTypes.Clear();
                     plugin.Map.ApplyTeamTypeRenames(ttd.RenameActions);
+                    // Triggers in their new state after the rename.
+                    List<Trigger> newTriggers = plugin.Map.Triggers.Select(tr => tr.Clone()).ToList();
                     plugin.Map.TeamTypes.AddRange(ttd.TeamTypes.OrderBy(t => t.Name, new ExplorerComparer()).Select(t => t.Clone()));
+                    List<TeamType> newTeamTypes = plugin.Map.TeamTypes.ToList();
+                    bool origDirtyState = plugin.Dirty;
+                    void undoAction(UndoRedoEventArgs ev)
+                    {
+                        DialogResult dr = MessageBox.Show(this, "This will undo all teamtype editing actions you performed. Are you sure you want to continue?",
+                            "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                        if (dr == DialogResult.No)
+                        {
+                            ev.Cancelled = true;
+                            return;
+                        }
+                        if (ev.Plugin != null)
+                        {
+                            plugin.Map.TeamTypes.Clear();
+                            plugin.Map.TeamTypes.AddRange(oldTeamTypes);
+                            ev.Map.Triggers = oldTriggers;
+                            ev.Plugin.Dirty = origDirtyState;
+                        }
+                    }
+                    void redoAction(UndoRedoEventArgs ev)
+                    {
+                        DialogResult dr = MessageBox.Show(this, "This will redo all teamtype editing actions you undid. Are you sure you want to continue?",
+                            "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                        if (dr == DialogResult.No)
+                        {
+                            ev.Cancelled = true;
+                            return;
+                        }
+                        if (ev.Plugin != null)
+                        {
+                            plugin.Map.TeamTypes.Clear();
+                            plugin.Map.TeamTypes.AddRange(newTeamTypes);
+                            ev.Map.Triggers = newTriggers;
+                            ev.Plugin.Dirty = true;
+                        }
+                    }
+                    url.Track(undoAction, redoAction);
                     plugin.Dirty = true;
                 }
             }
@@ -623,22 +673,94 @@ namespace MobiusEditor
                 td.StartPosition = FormStartPosition.CenterParent;
                 if (td.ShowDialog(this) == DialogResult.OK)
                 {
-                    List<Trigger> reordered = td.Triggers.OrderBy(t => t.Name, new ExplorerComparer()).ToList();
-                    if (Trigger.CheckForChanges(plugin.Map.Triggers.ToList(), reordered))
+                    List<Trigger> newTriggers = td.Triggers.OrderBy(t => t.Name, new ExplorerComparer()).ToList();
+                    if (Trigger.CheckForChanges(plugin.Map.Triggers.ToList(), newTriggers))
                     {
+                        bool origDirtyState = plugin.Dirty;
+                        Dictionary<object, string> undoList;
+                        Dictionary<object, string> redoList;
+                        Dictionary<CellTrigger, int> cellTriggerLocations;
+                        // Applies all the rename actions, and returns lists of actual changes. Also cleans up objects that are now linked
+                        // to incorrect triggers. This action may modify the triggers in the 'newTriggers' list to clean up inconsistencies.
+                        plugin.Map.ApplyTriggerChanges(td.RenameActions, out undoList, out redoList, out cellTriggerLocations, newTriggers);
+                        // New triggers are cloned, so these are safe to take as backup.
+                        List<Trigger> oldTriggers = plugin.Map.Triggers.ToList();
+                        // This will notify tool windows to update their trigger lists.
+                        plugin.Map.Triggers = newTriggers;
                         plugin.Dirty = true;
-                        plugin.Map.ApplyTriggerRenames(td.RenameActions);
-                        //if (td.RenameActions.Count != 0)
-                        //{
-                        //    if (DialogResult.OK == MessageBox.Show("Triggers were renamed. Do you wish to apply this rename to the map objects?" +
-                        //        "\nWarning: if you do this, any triggers that were deleted and then re-created will not be linked to the same objects!",
-                        //        "Triggers were renamed", MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button1))
-                        //    {
-                        //        plugin.Map.ApplyTriggerRenames(td.RenameActions);
-                        //    }
-                        //}
-                        plugin.Map.Triggers = reordered;
-                        RefreshUI();
+                        void undoAction(UndoRedoEventArgs ev)
+                        {
+                            DialogResult dr = MessageBox.Show(this, "This will undo all trigger editing actions you performed. Are you sure you want to continue?",
+                                "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                            if (dr == DialogResult.No)
+                            {
+                                ev.Cancelled = true;
+                                return;
+                            }
+                            foreach (Object obj in undoList.Keys)
+                            {
+                                if (obj is ITechno techno)
+                                {
+                                    techno.Trigger = undoList[obj];
+                                }
+                                else if (obj is TeamType teamType)
+                                {
+                                    teamType.Trigger = undoList[obj];
+                                }
+                                else if (obj is CellTrigger celltrigger)
+                                {
+                                    celltrigger.Trigger = undoList[obj];
+                                    // In case it's removed, restore.
+                                    ev.Map.CellTriggers[cellTriggerLocations[celltrigger]] = celltrigger;
+                                }
+                            }
+                            if (ev.Plugin != null)
+                            {
+                                ev.Plugin.Map.Triggers = oldTriggers;
+                                ev.Plugin.Dirty = origDirtyState;
+                            }
+                            // Repaint map labels
+                            ev.MapPanel.Invalidate();
+                        }
+                        void redoAction(UndoRedoEventArgs ev)
+                        {
+                            DialogResult dr = MessageBox.Show(this, "This will redo all trigger editing actions you undid. Are you sure you want to continue?",
+                                "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                            if (dr == DialogResult.No)
+                            {
+                                ev.Cancelled = true;
+                                return;
+                            }
+                            foreach (Object obj in redoList.Keys)
+                            {
+                                if (obj is ITechno techno)
+                                {
+                                    techno.Trigger = redoList[obj];
+                                }
+                                else if (obj is TeamType teamType)
+                                {
+                                    teamType.Trigger = redoList[obj];
+                                }
+                                else if (obj is CellTrigger celltrigger)
+                                {
+                                    celltrigger.Trigger = redoList[obj];
+                                    if (Trigger.IsEmpty(celltrigger.Trigger))
+                                    {
+                                        ev.Map.CellTriggers[cellTriggerLocations[celltrigger]] = null;
+                                    }
+                                }
+                            }
+                            if (ev.Plugin != null)
+                            {
+                                ev.Plugin.Map.Triggers = newTriggers;
+                                ev.Plugin.Dirty = true;
+                            }
+                            // Repaint map labels
+                            ev.MapPanel.Invalidate();
+                        }
+                        url.Track(undoAction, redoAction);
+                        // No longer a full refresh, since celltriggers no longer disable when no triggers are found.
+                        mapPanel.Invalidate();
                     }
                 }
             }
@@ -775,6 +897,7 @@ namespace MobiusEditor
             String name = fileInfo.FullName;
             if (!IdentifyMap(name, out FileType fileType, out GameType gameType, out bool isTdMegaMap))
             {
+                MessageBox.Show(string.Format("Error loading {0}: {1}", fileInfo.Name, "Could not identify map type."), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
             string[] modPaths = null;
@@ -854,18 +977,27 @@ namespace MobiusEditor
 #endif
             }
             INI iniContents = null;
+            bool iniWasFetched = false;
             if (fileType == FileType.None)
             {
                 long filesize = 0;
                 try
                 {
                     filesize = new FileInfo(loadFilename).Length;
+                    iniWasFetched = true;
                     iniContents = GeneralUtils.GetIniContents(loadFilename, FileType.INI);
-                    // if it gets to this point, the file is an ini document.
-                    fileType = FileType.INI;
+                    if (iniContents != null)
+                    {
+                        fileType = FileType.INI;
+                    }
                 }
                 catch
                 {
+                    iniContents = null;
+                }
+                if (iniContents == null)
+                {
+                    // Check if it's a classic 64x64 map.
                     Size tdMax = TiberianDawn.Constants.MaxSize;
                     if (filesize == tdMax.Width * tdMax.Height * 2)
                     {
@@ -878,11 +1010,11 @@ namespace MobiusEditor
                 }
             }
             string iniFile = fileType != FileType.BIN ? loadFilename : Path.ChangeExtension(loadFilename, ".ini");
-            if (iniContents == null)
+            if (!iniWasFetched)
             {
                 iniContents = GeneralUtils.GetIniContents(iniFile, fileType);
             }
-            if (iniContents == null)
+            if (iniContents == null || !GeneralUtils.CheckForIniInfo(iniContents, "Map") || !GeneralUtils.CheckForIniInfo(iniContents, "Basic"))
             {
                 return false;
             }
@@ -926,16 +1058,12 @@ namespace MobiusEditor
             if (gameType == GameType.TiberianDawn)
             {
                 isTdMegaMap = TiberianDawn.GamePlugin.CheckForMegamap(iniContents);
-                if (isTdMegaMap && SoleSurvivor.GamePlugin.CheckForSSmap(iniContents))
+                if (SoleSurvivor.GamePlugin.CheckForSSmap(iniContents))
                 {
                     gameType = GameType.SoleSurvivor;
                 }
             }
-            if (gameType == GameType.None)
-            {
-                return false;
-            }
-            return true;
+            return gameType != GameType.None;
         }
 
         /// <summary>
@@ -1020,7 +1148,7 @@ namespace MobiusEditor
             {
                 Globals.TheTeamColorManager.Reset();
                 Globals.TheTeamColorManager.Load(@"DATA\XML\CNCTDTEAMCOLORS.XML");
-                plugin = new SoleSurvivor.GamePlugin(!noImage);
+                plugin = new SoleSurvivor.GamePlugin(!noImage, isTdMegaMap);
             }
             return plugin;
         }
@@ -1070,8 +1198,6 @@ namespace MobiusEditor
             try
             {
                 IGamePlugin plugin = LoadNewPlugin(gameType, isTdMegaMap, modPaths);
-                // Simply being flagged as single play no longer flags maps as "modified by the loading process",
-                // to make it simpler to open classic maps and examine them without getting a save prompt on close.
                 string[] errors = plugin.Load(loadFilename, fileType).ToArray();
                 return (loadFilename, fileType, plugin, errors);
             }

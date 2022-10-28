@@ -15,14 +15,17 @@
 using MobiusEditor.Controls;
 using MobiusEditor.Interface;
 using MobiusEditor.Model;
+using MobiusEditor.Utility;
 
 namespace MobiusEditor.Event
 {
-    public class UndoRedoEventArgs
+    public class UndoRedoEventArgs : IUndoRedoEventArgs
     {
         public MapPanel MapPanel { get; private set; }
 
         public IGamePlugin Plugin { get; private set; }
+
+        public bool Cancelled { get; set; }
 
         public Map Map { get; private set; }
 
@@ -31,6 +34,7 @@ namespace MobiusEditor.Event
             MapPanel = mapPanel;
             Plugin = plugin;
             Map = plugin.Map;
+            Cancelled = false;
         }
 
         public UndoRedoEventArgs(MapPanel mapPanel, Map map, IGamePlugin plugin)
@@ -38,6 +42,7 @@ namespace MobiusEditor.Event
             MapPanel = mapPanel;
             Plugin = plugin;
             Map = map;
+            Cancelled = false;
         }
     }
 }
