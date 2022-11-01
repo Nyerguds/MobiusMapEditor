@@ -753,18 +753,17 @@ namespace MobiusEditor.TiberianDawn
                             }
                             Terrain newTerr = new Terrain
                             {
-                                Type = terrainType,
-                                Trigger = tokens[1]
+                                Type = terrainType
                             };
                             if (Map.Technos.Add(cell, newTerr))
                             {
-                                if (!checkTrigs.ContainsKey(newTerr.Trigger))
+                                if (!checkTrigs.ContainsKey(tokens[1]))
                                 {
                                     errors.Add(string.Format("Terrain '{0}' links to unknown trigger '{1}'; clearing trigger.", terrainType.Name, tokens[1]));
                                     modified = true;
                                     newTerr.Trigger = Trigger.None;
                                 }
-                                else if (!checkTerrTrigs.Contains(newTerr.Trigger))
+                                else if (!checkTerrTrigs.Contains(tokens[1]))
                                 {
                                     errors.Add(string.Format("Terrain '{0}' links to trigger '{1}' which does not contain an event applicable to terrain; clearing trigger.", terrainType.Name, tokens[1]));
                                     modified = true;
@@ -773,7 +772,7 @@ namespace MobiusEditor.TiberianDawn
                                 else
                                 {
                                     // Adapt to same case
-                                    tokens[7] = checkTrigs[tokens[7]];
+                                    newTerr.Trigger = checkTrigs[tokens[1]];
                                 }
                             }
                             else
@@ -1130,13 +1129,13 @@ namespace MobiusEditor.TiberianDawn
                         {
                             if (!checkTrigs.ContainsKey(tokens[6]))
                             {
-                                errors.Add(string.Format("Unit '{0}' links to unknown trigger '{1}'; clearing trigger.", unitType.Name, newUnit.Trigger));
+                                errors.Add(string.Format("Unit '{0}' links to unknown trigger '{1}'; clearing trigger.", unitType.Name, tokens[6]));
                                 modified = true;
                                 newUnit.Trigger = Trigger.None;
                             }
                             else if (!checkUnitTrigs.Contains(tokens[6]))
                             {
-                                errors.Add(string.Format("Unit '{0}' links to trigger '{1}' which does not contain an event applicable to units; clearing trigger.", unitType.Name, newUnit.Trigger));
+                                errors.Add(string.Format("Unit '{0}' links to trigger '{1}' which does not contain an event applicable to units; clearing trigger.", unitType.Name, tokens[6]));
                                 modified = true;
                                 newUnit.Trigger = Trigger.None;
                             }
