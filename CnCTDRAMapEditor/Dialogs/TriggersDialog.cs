@@ -500,7 +500,7 @@ namespace MobiusEditor.Dialogs
 
         private void typeComboBox_SelectedValueChanged(object sender, EventArgs e)
         {
-            if (plugin.GameType == GameType.RedAlert)
+            if (plugin.GameType == GameType.RedAlert && SelectedTrigger != null)
             {
                 var eventType = (TriggerMultiStyleType)typeComboBox.SelectedValue;
                 bool hasEvent2 = eventType != TriggerMultiStyleType.Only;

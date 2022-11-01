@@ -2802,8 +2802,8 @@ namespace MobiusEditor.RedAlert
                 CheckActionGlobals(prefix, action2, trigger.Action2.Data, curErrors, 2, ref fatal);
                 CheckActionTeam(prefix, action1, trigger.Action1.Team, curErrors, 1, ref fatal);
                 CheckActionTeam(prefix, action2, trigger.Action2.Team, curErrors, 2, ref fatal);
-                CheckActionTrigger(prefix, action2, trigger.Action2.Trigger, curErrors, 2, ref fatal);
                 CheckActionTrigger(prefix, action1, trigger.Action1.Trigger, curErrors, 1, ref fatal);
+                CheckActionTrigger(prefix, action2, trigger.Action2.Trigger, curErrors, 2, ref fatal);
                 if (curErrors.Count > 0)
                 {
                     if (prefixNames)
@@ -2816,6 +2816,7 @@ namespace MobiusEditor.RedAlert
                         errors.AddRange(curErrors.Select(er => "-" + er));
                         errors.Add(String.Empty);
                     }
+                    curErrors.Clear();
                 }
             }
             return errors;

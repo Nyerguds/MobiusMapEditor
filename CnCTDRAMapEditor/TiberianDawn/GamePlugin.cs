@@ -2742,6 +2742,7 @@ namespace MobiusEditor.TiberianDawn
                         errors.AddRange(curErrors.Select(er => "-" + er));
                         errors.Add(String.Empty);
                     }
+                    curErrors.Clear();
                 }
             }
             return errors;
