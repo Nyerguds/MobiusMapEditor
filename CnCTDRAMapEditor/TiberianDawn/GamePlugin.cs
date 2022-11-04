@@ -684,8 +684,7 @@ namespace MobiusEditor.TiberianDawn
                     {
                         if (Key.Length > 4)
                         {
-                            errors.Add(string.Format("Trigger '{0}' has a name that is longer than 4 characters. This will not be corrected by the loading process, but should be addressed, since it can make the triggers fail to read correctly and link to objects and cell triggers, and might even crash the game.", Key));
-                            modified = true;
+                            errors.Add(string.Format("Trigger '{0}' has a name that is longer than 4 characters. This will not be corrected by the loading process, but should be addressed, since it can make the triggers fail to link correctly to objects and cell triggers, and might even crash the game.", Key));
                         }
                         var tokens = Value.Split(',');
                         if (tokens.Length >= 5)
@@ -1608,7 +1607,7 @@ namespace MobiusEditor.TiberianDawn
                 }
             }
             UpdateBasePlayerHouse();
-            errors.AddRange(CheckTriggers(triggers, true, true, true, out _));
+            errors.AddRange(CheckTriggers(triggers, true, true, false, out _));
             // Won't trigger the notifications.
             Map.Triggers.Clear();
             Map.Triggers.AddRange(triggers);
@@ -2462,6 +2461,19 @@ namespace MobiusEditor.TiberianDawn
                 if (Map.BasicSection.SoloMission && !homeWaypoint.Cell.HasValue)
                 {
                     sb.AppendLine().Append("Single-player maps need the Home waypoint to be placed.");
+                    ok = false;
+                }
+            }
+            if (!forSS)
+            {
+                bool fatal;
+                IEnumerable<string> triggerErr = CheckTriggers(this.Map.Triggers, true, true, true, out fatal);
+                if (fatal)
+                {
+                    foreach (var err in triggerErr)
+                    {
+                        sb.AppendLine(err);
+                    }
                     ok = false;
                 }
             }

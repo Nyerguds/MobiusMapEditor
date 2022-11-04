@@ -661,7 +661,7 @@ namespace MobiusEditor.RedAlert
                         {
                             if (Key.Length > 4)
                             {
-                                errors.Add(string.Format("Trigger '{0}' has a name that is longer than 4 characters. This will not be corrected by the loading process, but should be addressed, since it can make the triggers fail to read correctly and link to objects and cell triggers, and might even crash the game.", Key));
+                                errors.Add(string.Format("Trigger '{0}' has a name that is longer than 4 characters. This will not be corrected by the loading process, but should be addressed, since it can make the triggers fail to link correctly to objects and cell triggers, and might even crash the game.", Key));
                             }
                             var trigger = new Trigger { Name = Key };
                             trigger.PersistentType = (TriggerPersistentType)int.Parse(tokens[0]);
@@ -735,9 +735,11 @@ namespace MobiusEditor.RedAlert
                                     case ActionTypes.TACTION_PREFERRED_TARGET:
                                         a.Data &= 0xFF;
                                         break;
-                                    case ActionTypes.TACTION_TEXT_TRIGGER:
-                                        a.Data = Math.Max(1, Math.Min(209, a.Data));
-                                        break;
+                                    // This will not be changed here; instead the system will give an error about it later.
+                                    // The trigger editor automatically makes this go into bounds anyway.
+                                    //case ActionTypes.TACTION_TEXT_TRIGGER:
+                                    //    a.Data = Math.Max(1, Math.Min(209, a.Data));
+                                    //    break;
                                     default:
                                         break;
                                 }
@@ -1906,7 +1908,7 @@ namespace MobiusEditor.RedAlert
             Map.TeamTypes.AddRange(teamTypes.OrderBy(t => t.Name, comparer));
             UpdateBasePlayerHouse();
             triggers.Sort((x, y) => comparer.Compare(x.Name, y.Name));
-            errors.AddRange(CheckTriggers(triggers, true, true, true, out _));
+            errors.AddRange(CheckTriggers(triggers, true, true, false, out _));
             // Won't trigger the notifications.
             Map.Triggers.Clear();
             Map.Triggers.AddRange(triggers);
@@ -2639,6 +2641,16 @@ namespace MobiusEditor.RedAlert
                 sb.AppendLine().Append("Single-player maps need the Home waypoint to be placed.");
                 ok = false;
             }
+            bool fatal;
+            IEnumerable<string> triggerErr = CheckTriggers(this.Map.Triggers, true, true, true, out fatal);
+            if (fatal)
+            {
+                foreach (var err in triggerErr)
+                {
+                    sb.AppendLine(err);
+                }
+                ok = false;
+            }
             return ok ? null : sb.ToString();
         }
 
@@ -2787,23 +2799,27 @@ namespace MobiusEditor.RedAlert
                 string event2 = trigger.Event2.EventType;
                 string action1 = trigger.Action1.ActionType;
                 string action2 = trigger.Action2.ActionType;
-                // Not sure which ones are truly fatal, but for now, any of these will flag it as such.
+                // Not sure which ones are truly fatal.
                 // Events
-                CheckEventHouse(prefix, event1, trigger.Event1.Data, curErrors, 1, ref fatal);
-                CheckEventHouse(prefix, event2, trigger.Event2.Data, curErrors, 2, ref fatal);
+                CheckEventHouse(prefix, event1, trigger.Event1.Data, curErrors, 1, ref fatal, fatalOnly);
+                CheckEventHouse(prefix, event2, trigger.Event2.Data, curErrors, 2, ref fatal, fatalOnly);
                 // globals checks are only for ini read, really.
-                CheckEventGlobals(prefix, event1, trigger.Event1.Data, curErrors, 1, ref fatal);
-                CheckEventGlobals(prefix, event2, trigger.Event2.Data, curErrors, 2, ref fatal);
-                CheckEventTeam(prefix, event1, trigger.Event1.Team, curErrors, 1, ref fatal);
-                CheckEventTeam(prefix, event2, trigger.Event2.Team, curErrors, 2, ref fatal);
+                CheckEventGlobals(prefix, event1, trigger.Event1.Data, curErrors, 1, ref fatal, fatalOnly);
+                CheckEventGlobals(prefix, event2, trigger.Event2.Data, curErrors, 2, ref fatal, fatalOnly);
+                CheckEventTeam(prefix, event1, trigger.Event1.Team, curErrors, 1, ref fatal, fatalOnly);
+                CheckEventTeam(prefix, event2, trigger.Event2.Team, curErrors, 2, ref fatal, fatalOnly);
                 // Actions
+                CheckActionHouse(prefix, action1, trigger.Action1.Data, curErrors, 1, ref fatal, fatalOnly);
+                CheckActionHouse(prefix, action2, trigger.Action2.Data, curErrors, 2, ref fatal, fatalOnly);
+                CheckActionText(prefix, action1, trigger.Action1.Data, curErrors, 1, ref fatal, fatalOnly);
+                CheckActionText(prefix, action2, trigger.Action2.Data, curErrors, 2, ref fatal, fatalOnly);
                 // globals checks are only for ini read, really.
-                CheckActionGlobals(prefix, action1, trigger.Action1.Data, curErrors, 1, ref fatal);
-                CheckActionGlobals(prefix, action2, trigger.Action2.Data, curErrors, 2, ref fatal);
-                CheckActionTeam(prefix, action1, trigger.Action1.Team, curErrors, 1, ref fatal);
-                CheckActionTeam(prefix, action2, trigger.Action2.Team, curErrors, 2, ref fatal);
-                CheckActionTrigger(prefix, action1, trigger.Action1.Trigger, curErrors, 1, ref fatal);
-                CheckActionTrigger(prefix, action2, trigger.Action2.Trigger, curErrors, 2, ref fatal);
+                CheckActionGlobals(prefix, action1, trigger.Action1.Data, curErrors, 1, ref fatal, fatalOnly);
+                CheckActionGlobals(prefix, action2, trigger.Action2.Data, curErrors, 2, ref fatal, fatalOnly);
+                CheckActionTeam(prefix, action1, trigger.Action1.Team, curErrors, 1, ref fatal, fatalOnly);
+                CheckActionTeam(prefix, action2, trigger.Action2.Team, curErrors, 2, ref fatal, fatalOnly);
+                CheckActionTrigger(prefix, action1, trigger.Action1.Trigger, curErrors, 1, ref fatal, fatalOnly);
+                CheckActionTrigger(prefix, action2, trigger.Action2.Trigger, curErrors, 2, ref fatal, fatalOnly);
                 if (curErrors.Count > 0)
                 {
                     if (prefixNames)
@@ -2822,7 +2838,7 @@ namespace MobiusEditor.RedAlert
             return errors;
         }
 
-        private void CheckEventHouse(String prefix, String evnt, long house, List<String> errors, Int32 nr, ref bool fatal)
+        private void CheckEventHouse(String prefix, String evnt, long house, List<String> errors, Int32 nr, ref bool fatal, bool fatalOnly)
         {
             if (house > -1)
                 return;
@@ -2839,13 +2855,13 @@ namespace MobiusEditor.RedAlert
                 case EventTypes.TEVENT_BUILDINGS_DESTROYED:
                 case EventTypes.TEVENT_UNITS_DESTROYED:
                 case EventTypes.TEVENT_ALL_DESTROYED:
-                    errors.Add(prefix + "event " + nr + ": \"" + evnt.TrimEnd('.') + "\" requires a house to be set.");
+                    errors.Add(prefix + (fatalOnly ? String.Empty : "[FATAL] ") + "event " + nr + ": \"" + evnt.TrimEnd('.') + "\" requires a house to be set.");
                     fatal = true;
                     break;
             }
         }
 
-        private void CheckEventGlobals(String prefix, String evnt, long data, List<string> errors, Int32 nr, ref bool fatal)
+        private void CheckEventGlobals(String prefix, String evnt, long data, List<string> errors, Int32 nr, ref bool fatal, bool fatalOnly)
         {
             switch (evnt)
             {
@@ -2853,77 +2869,114 @@ namespace MobiusEditor.RedAlert
                 case EventTypes.TEVENT_GLOBAL_CLEAR:
                     if (data < 0 || data > 29)
                     {
-                        errors.Add(prefix + "event " + nr + ": \"Globals only go from 0 to 29.");
+                        errors.Add(prefix + (fatalOnly ? String.Empty : "[FATAL] ") + "event " + nr + ": \"Globals only go from 0 to 29.");
                         fatal = true;
                     }
                     break;
             }
         }
 
-        private void CheckEventTeam(String prefix, String evnt, String team, List<string> errors, Int32 nr, ref bool fatal)
+        private void CheckEventTeam(String prefix, String evnt, String team, List<string> errors, Int32 nr, ref bool fatal, bool fatalOnly)
         {
             if (!TeamType.IsEmpty(team))
                 return;
             switch (evnt)
             {
                 case EventTypes.TEVENT_LEAVES_MAP:
-                    errors.Add(prefix + "event " + nr + ": There is no team set to leave the map.");
+                    errors.Add(prefix + (fatalOnly ? String.Empty : "[FATAL] ") + "event " + nr + ": There is no team set to leave the map.");
                     fatal = true;
                     break;
             }
         }
 
-        private void CheckActionGlobals(String prefix, String action, long data, List<string> errors, Int32 nr, ref bool fatal)
+        private void CheckActionHouse(String prefix, String action, long house, List<String> errors, Int32 nr, ref bool fatal, bool fatalOnly)
         {
+            if (house > -1)
+                return;
             switch (action)
             {
-                case ActionTypes.TACTION_SET_GLOBAL:
-                case ActionTypes.TACTION_CLEAR_GLOBAL:
-                    if (data < 0 || data > 29)
-                    {
-                        errors.Add(prefix + "action " + nr + ": \"Globals only go from 0 to 29.");
-                        fatal = true;
-                    }
+                case ActionTypes.TACTION_WIN:
+                case ActionTypes.TACTION_LOSE:
+                case ActionTypes.TACTION_BEGIN_PRODUCTION:
+                case ActionTypes.TACTION_FIRE_SALE:
+                case ActionTypes.TACTION_AUTOCREATE:
+                case ActionTypes.TACTION_ALL_HUNT:
+                    errors.Add(prefix + (fatalOnly ? String.Empty : "[FATAL] ") + "event " + nr + ": \"" + action.TrimEnd('.') + "\" requires a house to be set.");
+                    fatal = true;
                     break;
             }
         }
 
-        private void CheckActionTeam(String prefix, String action, String team, List<String> errors, int nr, ref bool fatal)
+        private void CheckActionText(String prefix, String action, long data, List<string> errors, Int32 nr, ref bool fatal, bool fatalOnly)
+        {
+            if (!fatalOnly)
+            {
+                switch (action)
+                {
+                    case ActionTypes.TACTION_TEXT_TRIGGER:
+                        if (data < 1 || data > 209)
+                        {
+                            errors.Add(prefix + (fatalOnly ? String.Empty : "[FATAL] ") + "action " + nr + ": \"Text triggers only go from 1 to 209.");
+                            fatal = true;
+                        }
+                        break;
+                }
+            }
+        }
+
+        private void CheckActionGlobals(String prefix, String action, long data, List<string> errors, Int32 nr, ref bool fatal, bool fatalOnly)
+        {
+            if (!fatalOnly)
+            {
+                switch (action)
+                {
+                    case ActionTypes.TACTION_SET_GLOBAL:
+                    case ActionTypes.TACTION_CLEAR_GLOBAL:
+                        if (data < 0 || data > 29)
+                        {
+                            errors.Add(prefix + "action " + nr + ": \"Globals only go from 0 to 29.");
+                        }
+                        break;
+                }
+            }
+        }
+
+        private void CheckActionTeam(String prefix, String action, String team, List<String> errors, int nr, ref bool fatal, bool fatalOnly)
         {
             if (!TeamType.IsEmpty(team))
                 return;
             switch (action)
             {
                 case ActionTypes.TACTION_REINFORCEMENTS:
-                    errors.Add(prefix + "action " + nr + ": There is no team type set to reinforce.");
+                    errors.Add(prefix + (fatalOnly ? String.Empty : "[FATAL] ") + "action " + nr + ": There is no team type set to reinforce.");
                     fatal = true;
                     break;
                 case ActionTypes.TACTION_CREATE_TEAM:
-                    errors.Add(prefix + "action " + nr + ": There is no team type set to create.");
+                    errors.Add(prefix + (fatalOnly ? String.Empty : "[FATAL] ") + "action " + nr + ": There is no team type set to create.");
                     fatal = true;
                     break;
                 case ActionTypes.TACTION_DESTROY_TEAM:
-                    errors.Add(prefix + "action " + nr + ": There is no team type set to disband.");
+                    errors.Add(prefix + (fatalOnly ? String.Empty : "[FATAL] ") + "action " + nr + ": There is no team type set to disband.");
                     fatal = true;
                     break;
             }
         }
 
-        private void CheckActionTrigger(String prefix, String action, String trigger, List<String> errors, Int32 nr, ref bool fatal)
+        private void CheckActionTrigger(String prefix, String action, String trigger, List<String> errors, Int32 nr, ref bool fatal, bool fatalOnly)
         {
             if (!Trigger.IsEmpty(trigger))
                 return;
-
-            switch (action)
+            if (!fatalOnly)
             {
-                case ActionTypes.TACTION_FORCE_TRIGGER:
-                    errors.Add(prefix + "action " + nr + ": There is no trigger set to force.");
-                    fatal = true;
-                    break;
-                case ActionTypes.TACTION_DESTROY_TRIGGER:
-                    errors.Add(prefix + "action " + nr + ": There is no trigger set to destroy.");
-                    fatal = true;
-                    break;
+                switch (action)
+                {
+                    case ActionTypes.TACTION_FORCE_TRIGGER:
+                        errors.Add(prefix + "action " + nr + ": There is no trigger set to force.");
+                        break;
+                    case ActionTypes.TACTION_DESTROY_TRIGGER:
+                        errors.Add(prefix + "action " + nr + ": There is no trigger set to destroy.");
+                        break;
+                }
             }
         }
 

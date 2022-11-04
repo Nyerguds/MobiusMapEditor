@@ -1559,7 +1559,7 @@ namespace MobiusEditor.Model
                     prodHouses.Add(house.Name);
                 }
             }
-            info.Add("Production-capable Houses: " + String.Join(", ", prodHouses.ToArray()));
+            info.Add("Production-capable Houses: " + (prodHouses.Count == 0 ? "None" : String.Join(", ", prodHouses.ToArray())));
             foreach (HouseType house in HouseTypes)
             {
                 int[] housePwrAll;
@@ -1632,7 +1632,7 @@ namespace MobiusEditor.Model
                     prodHouses.Add(house.Name);
                 }
             }
-            info.Add("Production-capable Houses: " + String.Join(", ", prodHouses.ToArray()));
+            info.Add("Production-capable Houses: " + (prodHouses.Count == 0 ? "None" : String.Join(", ", prodHouses.ToArray())));
             foreach (HouseType house in HouseTypes)
             {
                 int houseStorageBuilt;
