@@ -56,12 +56,15 @@
     <Setting Name="FilterTheaterObjects" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="NoOwnedObjectsInSole" Type="System.Boolean" Scope="Application">
+    <Setting Name="WriteClassicBriefing" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>
-	<Setting Name="WriteClassicBriefing" Type="System.Boolean" Scope="Application">
+	<Setting Name="NoOwnedObjectsInSole" Type="System.Boolean" Scope="Application">
 		<Value Profile="(Default)">True</Value>
 	</Setting>
+	<Setting Name="DrawSoleTeleports" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
     <Setting Name="ShowInviteWarning" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>

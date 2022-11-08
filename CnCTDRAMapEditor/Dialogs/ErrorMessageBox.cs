@@ -52,6 +52,11 @@ namespace MobiusEditor.Dialogs
         {
             InitializeComponent();
             btnCancel.Visible = showCancel;
+            if (!showCancel)
+            {
+                // Enables "esc" for closing the form.
+                this.CancelButton = btnOK;
+            }
         }
 
         private void btnCopy_Click(object sender, EventArgs e)

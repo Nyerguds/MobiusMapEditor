@@ -28,7 +28,7 @@ Specific options about the map and the scripting elements can be found in the "S
 * "Teamtypes" will allow you to define teams that can be used in the map's scripting, or that will simply be created randomly as attack teams by the AI Houses.
 * "Triggers" will allow you to make scripts that execute on the map. Note that scripting is mostly a singleplayer thing, and is severely limited in multiplayer, especially in Tiberian Dawn.
 
-For Tiberian Dawn maps, the triggers dialog has a "Check" button that will check if any configurations in the triggers might not work, or might even cause game crashes. For more info on that, see [the TD triggers overview guide I wrote on Steam](https://steamcommunity.com/sharedfiles/filedetails/?id=2824756756). Note that this is not a scripting guide; it is an overview of what each trigger event and action will accept as inputs, and produce as output, highlighting potential issues and some workarounds. Unfortunately, I'm not very well-versed in Red Alert triggers, so there is no equivalent check function (or guide) for Red Alert.
+The triggers dialog contains a "Check" button that will check if any configurations in the triggers might not work, or might even cause game crashes. For TD, these checks are based on [the TD triggers overview guide I wrote on Steam](https://steamcommunity.com/sharedfiles/filedetails/?id=2824756756). Note that this is not a scripting guide; it is an overview of what each trigger event and action will accept as inputs, and produce as output, highlighting potential issues and some workarounds.
 
 ---
 
@@ -59,12 +59,13 @@ These options are all enabled by default, but can be disabled if you wish. Use t
 * **NoMetaFilesForSinglePlay**: Suppresses the generation of .tga and .json files for single player maps saved to disc, since they are useless clutter and unused by the game. This does not affect Steam uploads. Note that json files for single player maps will now only contain the Home waypoint.
 * **ConvertRaObsoleteClear**: Automatically clear tiles with ID 255 on RA Temperate/Snow maps, or on Interior maps if more than 80% of the area outside the map bounds is filled with it, to fix the fact old versions of RA saved that as Clear terrain. This can be disabled to research changes on old maps.
 * **BlockingBibs**: Bibs block the placement of other structures. Note that if you disable this, you should be careful not to block the build plan of rebuildable AI structures. Also, the games might have issues with walls overlaying building bibs.
-* **DisableAirUnits**: Air unit reading from maps was a disabled feature in the original games. Even though the Remaster re-enabled this, it is buggy and unpredictable, so the editor disables air units by default. Air units put on maps will spawn in the air, and will generally find a nearby building of their House to land at.
-* **ConvertCraters**: Any craters of the types CR2-CR6 placed in missions are bugged in the games, and revert to the smallest size of CR1. This filters them out and converts them to CR1 craters of the same size, and removes the other craters from the Smudge types list.
+* **DisableAirUnits**: Air unit reading from maps was a disabled feature in the original games. Even though the Remaster re-enabled this, it is buggy and unpredictable, so the editor disables air units by default. Air units put on maps will not appear on the specified cell; they will spawn in the air above it, and will generally find a nearby building of their House to land at.
+* **ConvertCraters**: Any craters of the types CR2-CR6 placed in missions are bugged in the games, and revert to the smallest size of CR1. This filters them out and converts them to CR1 craters of the specified size, and removes the other crater types from the Smudge choices list.
 * **BoundsObstructFill**: When filling map tiles with [Ctrl]+[Shift]+[Click], the map boundary acts as border blocking the fill spread. This applies both inside and outside the border.
 * **FilterTheaterObjects**: Filter out objects that don't belong in the current map's theater. This affects both map loading, and the items visible in the placement lists. Do not turn this off unless you really know what you're doing; having theater-illegal objects on maps may cause situations that crash the game.
-* **NoOwnedObjectsInSole**: [WIP] Sole Survivor maps normally don't include placed down units, structures or infantry, so loading and saving them is disabled by default. But it seems some official maps do contain decorative civilian buildings, and old betas of the game could read those, so this option can be disabled for research purposes.
 * **WriteClassicBriefing**: [WIP] In addition to the single-line "Text=" briefing used by the Remaster, also write classic-style briefings into the ini file as "1=", "2=", etc. lines split at human-readable length. This includes the C&C95 v1.06 line break system using ## characters at the end of a line.
+* **NoOwnedObjectsInSole**: [WIP] Sole Survivor maps normally don't include placed down units, structures or infantry, so loading and saving them is disabled by default. But it seems some official maps do contain decorative civilian buildings, and old betas of the game could read those, so this option can be disabled for research purposes.
+* **DrawSoleTeleports**: [WIP] On Sole Survivor maps, draw a black area with blue border over the loaded ROAD graphics to emulate the look of the in-game teleporters.
 
 ---
 
@@ -313,7 +314,7 @@ These options are all enabled by default, but can be disabled if you wish. Use t
 * Added a rules editing field for RA maps that allows editing/adding ini sections not handled by the editor. Changing building bibs, power and resource storage in this will immediately affect the editor.
 * Dragging a building's bib over smudge will no longer remove the smudge, unless it's actually placed down on it.
 * Undoing a building's placement or moving will now restore any smudge the building's bib replaced.
-* Added map template fill mode ([Ctrl]+[Shift]+[Left-Click]) and fill-clear mode ([Ctrl]+[Shift]+[Right-Click]).
+* Added map template flood fill mode ([Ctrl]+[Shift]+[Left-Click]) and flood fill clear mode ([Ctrl]+[Shift]+[Right-Click]).
 * Enabling/disabling Indicator items in the View menu no longer does a full refresh of the map, making it nearly instant.
 * Added options to re-enable aircraft and full craters list.
 * Changed all tweak options to have True as default value.
@@ -405,5 +406,4 @@ These options are all enabled by default, but can be disabled if you wish. Use t
 Some ideas that might get implemented in the future:
 
 * Use classic graphics, making it independent from the Remaster.
-* Clone triggers / teamtypes.
 * Change a map's theater.

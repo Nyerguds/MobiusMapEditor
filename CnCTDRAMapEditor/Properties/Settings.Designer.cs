@@ -188,6 +188,15 @@ namespace MobiusEditor.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool WriteClassicBriefing {
+            get {
+                return ((bool)(this["WriteClassicBriefing"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool NoOwnedObjectsInSole {
             get {
                 return ((bool)(this["NoOwnedObjectsInSole"]));
@@ -197,9 +206,9 @@ namespace MobiusEditor.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool WriteClassicBriefing {
+        public bool DrawSoleTeleports {
             get {
-                return ((bool)(this["WriteClassicBriefing"]));
+                return ((bool)(this["DrawSoleTeleports"]));
             }
         }
         

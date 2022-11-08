@@ -27,8 +27,8 @@ namespace MobiusEditor.SoleSurvivor
         public static readonly OverlayType Tiberium10 = new OverlayType(15, "ti10", OverlayTypeFlag.TiberiumOrGold, 11);
         public static readonly OverlayType Tiberium11 = new OverlayType(16, "ti11", OverlayTypeFlag.TiberiumOrGold, 11);
         public static readonly OverlayType Tiberium12 = new OverlayType(17, "ti12", OverlayTypeFlag.TiberiumOrGold, 11);
-        public static readonly OverlayType Teleport = new OverlayType(18, "road", "Teleporter", null, OverlayTypeFlag.Decoration, 1);
-        // Unusable in SS since it has the same name as ROAD.
+        public static readonly OverlayType Teleport = new OverlayType(18, "road", "Transporter", null, OverlayTypeFlag.Decoration, 1);
+        // Unusable in SS since it has the same name as ROAD. Forced to 1 anyway because football fields use it.
         public static readonly OverlayType Road = new OverlayType(19, "road", "Concrete Road", null, OverlayTypeFlag.Decoration, 1);
         // Not available to place down sadly: even the ini read for it in the game code only succeeds if 'IsGross' is enabled.
         //public static readonly OverlayType Squishy = new OverlayType(20, "SQUISH", OverlayTypeFlag.Decoration);

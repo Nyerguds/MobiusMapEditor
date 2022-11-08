@@ -323,7 +323,7 @@ namespace MobiusEditor.Render
             string name;
             if (overlay.Type.IsGem && gemTypes != null)
             {
-                name = gemTypes[new Random(randomSeed ^ topLeft.GetHashCode()).Next(tiberiumOrGoldTypes.Length)].Name;
+                name = gemTypes[new Random(randomSeed ^ topLeft.GetHashCode()).Next(gemTypes.Length)].Name;
             }
             else if (overlay.Type.IsTiberiumOrGold && tiberiumOrGoldTypes != null)
             {
@@ -342,8 +342,8 @@ namespace MobiusEditor.Render
             {
                 icon = overlay.Type.ForceTileNr == -1 ? overlay.Icon : overlay.Type.ForceTileNr;
             }
+            bool isTeleport = gameType == GameType.SoleSurvivor && overlay.Type == SoleSurvivor.OverlayTypes.Teleport && Globals.AdjustSSTeleports;
             // For Decoration types, generate dummy if not found.
-            bool isTeleport = gameType == GameType.SoleSurvivor && overlay.Type == SoleSurvivor.OverlayTypes.Teleport;
             if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, name, icon, out Tile tile, (overlay.Type.Flag & OverlayTypeFlag.Decoration) != 0, false))
             {
                 int actualTopLeftX = topLeft.X * tileSize.Width;
@@ -373,13 +373,18 @@ namespace MobiusEditor.Render
                     g.DrawImage(tile.Image, overlayBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes);
                     if (isTeleport)
                     {
-                        int blackBorderX = tileSize.Width / 16;
-                        int blackBorderY = tileSize.Height / 16;
-                        int blackWidth = tileSize.Width - blackBorderX * 2;
-                        int blackHeight = tileSize.Height - blackBorderY * 2;
+                        // Transform ROAD tile into the teleport from SS.
+                        int blackBorderX = Math.Max(1, tileSize.Width / 24);
+                        int blackBorderY = Math.Max(1, tileSize.Height / 24);
+                        int blueWidth = tileSize.Width - blackBorderX * 2;
+                        int blueHeight = tileSize.Height - blackBorderY * 2;
+                        int blackWidth = tileSize.Width - blackBorderX * 4;
+                        int blackHeight = tileSize.Height - blackBorderY * 4;
+                        using (SolidBrush blue = new SolidBrush(Color.FromArgb(92, 164, 200)))
                         using (SolidBrush black = new SolidBrush(Color.Black))
                         {
-                            g.FillRectangle(black, actualTopLeftX + blackBorderX, actualTopLeftY + blackBorderY, blackWidth, blackHeight);
+                            g.FillRectangle(blue, actualTopLeftX + blackBorderX, actualTopLeftY + blackBorderY, blueWidth, blueHeight);
+                            g.FillRectangle(black, actualTopLeftX + blackBorderX * 2, actualTopLeftY + blackBorderY * 2, blackWidth, blackHeight);
                         }
                     }
                 }

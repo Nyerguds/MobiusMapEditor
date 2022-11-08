@@ -185,8 +185,8 @@ namespace MobiusEditor.Tools
             if ((layersToRender & (MapLayerFlag.Waypoints | MapLayerFlag.FootballArea)) == (MapLayerFlag.Waypoints | MapLayerFlag.FootballArea)
                 && (manuallyHandledLayers & MapLayerFlag.WaypointsIndic) == MapLayerFlag.None && gameType == GameType.SoleSurvivor)
             {
-                MapRenderer.RenderAllFootballAreas(graphics, map, Globals.MapTileSize, Globals.MapTileScale, gameType);
-                MapRenderer.RenderFootballAreaFlags(graphics, gameType, map, Globals.MapTileSize);
+                MapRenderer.RenderAllFootballAreas(graphics, map, tileSize, tileScale, gameType);
+                MapRenderer.RenderFootballAreaFlags(graphics, gameType, map, tileSize);
             }
             if ((layersToRender & (MapLayerFlag.Waypoints | MapLayerFlag.WaypointsIndic)) == (MapLayerFlag.Waypoints | MapLayerFlag.WaypointsIndic)
                 && (manuallyHandledLayers & MapLayerFlag.WaypointsIndic) == MapLayerFlag.None)
