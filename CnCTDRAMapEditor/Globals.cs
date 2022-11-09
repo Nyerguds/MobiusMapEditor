@@ -23,6 +23,7 @@ namespace MobiusEditor
     {
         static Globals()
         {
+            MapBackColor = Color.FromArgb(255, Properties.Settings.Default.MapBackColor);
             MapTileScale = Math.Min(1, Math.Max(0.05f, Math.Abs(Properties.Settings.Default.MapScale)));
             MapSmoothScale = Properties.Settings.Default.MapScale < 0;
             PreviewTileScale = Math.Min(1, Math.Max(0.05f, Math.Abs(Properties.Settings.Default.PreviewScale)));
@@ -51,6 +52,7 @@ namespace MobiusEditor
         public const int OriginalTileHeight = 128;
         public static readonly Size OriginalTileSize = new Size(OriginalTileWidth, OriginalTileHeight);
 
+        public static Color MapBackColor { get; private set; }
         public static double MapTileScale { get; private set; }
         public static bool MapSmoothScale { get; private set; }
         public static int MapTileWidth => Math.Max(1, (int)(OriginalTileWidth * MapTileScale));

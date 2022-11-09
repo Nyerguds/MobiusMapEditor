@@ -126,8 +126,9 @@ namespace MobiusEditor
             this.filename = fileToOpen;
 
             InitializeComponent();
-            // Obey the setting.
+            // Obey the settings.
             this.mapPanel.SmoothScale = Globals.MapSmoothScale;
+            this.mapPanel.BackColor = Globals.MapBackColor;
             SetTitle();
             toolForms = new Dictionary<ToolType, IToolDialog>();
             viewToolStripButtons = new ViewToolStripButton[]
