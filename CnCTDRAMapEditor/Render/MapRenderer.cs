@@ -435,38 +435,39 @@ namespace MobiusEditor.Render
         public static (Rectangle, Action<Graphics>) Render(GameType gameType, TheaterType theater, Point topLeft, Size tileSize, double tileScale, Building building)
         {
             var tint = building.Tint;
-            var icon = 0;
+            var icon = building.Type.FrameOFfset;
             int maxIcon = 0;
-            int damageIcon = 0;
+            int damageIconOffs = 0;
             int collapseIcon = 0;
-            bool hasCollapseFrame = false;
             // In TD, damage is when BELOW the threshold. In RA, it's ON the threshold.
             int healthyMin = gameType == GameType.RedAlert ? 128 : 127;
+            bool isDamaged = building.Strength <= healthyMin;
+            bool hasCollapseFrame = false;
             // Only fetch if damaged. BuildingType.IsSingleFrame is an override for the RA mines. Everything else works with one simple logic.
-            if (building.Strength <= healthyMin && !building.Type.IsSingleFrame)
+            if (isDamaged && !building.Type.IsSingleFrame)
             {
                 maxIcon = Globals.TheTilesetManager.GetTileDataLength(theater.Tilesets, building.Type.Tilename);
                 hasCollapseFrame = (gameType == GameType.TiberianDawn || gameType == GameType.SoleSurvivor) && maxIcon > 1 && maxIcon % 2 == 1;
-                damageIcon = maxIcon / 2;
-                collapseIcon = hasCollapseFrame ? maxIcon - 1 : damageIcon;
+                damageIconOffs = maxIcon / 2;
+                collapseIcon = maxIcon - 1;
             }
             if (building.Type.HasTurret)
             {
-                icon = BodyShape[Facing32[building.Direction.ID]];
-                if (building.Strength <= healthyMin)
+                icon += BodyShape[Facing32[building.Direction.ID]];
+                if (isDamaged)
                 {
-                    icon += damageIcon;
+                    icon += damageIconOffs;
                 }
             }
             else
             {
-                if (building.Strength <= 1)
+                if (building.Strength <= 1 && hasCollapseFrame)
                 {
                     icon = collapseIcon;
                 }
-                else if (building.Strength <= healthyMin)
+                else if (isDamaged)
                 {
-                    icon = damageIcon;
+                    icon += damageIconOffs;
                 }
             }
             TeamColor tc = building.Type.CanRemap ? Globals.TheTeamColorManager[building.House.BuildingTeamColor] : null;
@@ -1309,7 +1310,7 @@ namespace MobiusEditor.Render
             RenderMapBoundaries(graphics, map.Bounds, tileSize, Color.Cyan, false);
         }
 
-        public static void RenderMapBoundaries(Graphics graphics, Rectangle bounds, Size tileSize, Color color, bool diagonals)
+        public static void RenderMapBoundaries(Graphics graphics, Rectangle bounds, Size tileSize, Color color, bool symmetryLines)
         {
             var boundsRect = Rectangle.FromLTRB(
                 bounds.Left * tileSize.Width,
@@ -1319,11 +1320,19 @@ namespace MobiusEditor.Render
             );
             using (var boundsPen = new Pen(color, Math.Max(1f, tileSize.Width / 8.0f)))
             {
-                graphics.DrawRectangle(boundsPen, boundsRect);
-                if (diagonals)
+                if (!symmetryLines)
+                {
+                    graphics.DrawRectangle(boundsPen, boundsRect);
+                }
+                else
                 {
                     graphics.DrawLine(boundsPen, new Point(boundsRect.X, boundsRect.Y), new Point(boundsRect.Right, boundsRect.Bottom));
                     graphics.DrawLine(boundsPen, new Point(boundsRect.Right, boundsRect.Y), new Point(boundsRect.X, boundsRect.Bottom));
+
+                    int halfX = boundsRect.X + boundsRect.Width / 2;
+                    int halfY = boundsRect.Y + boundsRect.Height / 2;
+                    graphics.DrawLine(boundsPen, new Point(halfX, boundsRect.Y), new Point(halfX, boundsRect.Bottom));
+                    graphics.DrawLine(boundsPen, new Point(boundsRect.X, halfY), new Point(boundsRect.Right, halfY));
                 }
             }
         }

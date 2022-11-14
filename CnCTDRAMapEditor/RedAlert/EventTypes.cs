@@ -22,21 +22,21 @@ namespace MobiusEditor.RedAlert
     {
         public const string TEVENT_NONE = "None";
         public const string TEVENT_PLAYER_ENTERED = "Entered by...";
-        public const string TEVENT_SPIED = "Spied by...";
+        public const string TEVENT_SPIED = "Spied on by anybody";
         public const string TEVENT_THIEVED = "Thieved by...";
         public const string TEVENT_DISCOVERED = "Discovered by player";
         public const string TEVENT_HOUSE_DISCOVERED = "House Discovered...";
         public const string TEVENT_ATTACKED = "Attacked by anybody";
         public const string TEVENT_DESTROYED = "Destroyed by anybody";
         public const string TEVENT_ANY = "Any Event";
-        public const string TEVENT_UNITS_DESTROYED = "Destroyed, Units, All...";
-        public const string TEVENT_BUILDINGS_DESTROYED = "Destroyed, Buildings, All...";
-        public const string TEVENT_ALL_DESTROYED = "Destroyed, All...";
+        public const string TEVENT_UNITS_DESTROYED = "All Units Destroyed...";
+        public const string TEVENT_BUILDINGS_DESTROYED = "All Buildings Destroyed...";
+        public const string TEVENT_ALL_DESTROYED = "All Destroyed...";
         public const string TEVENT_CREDITS = "Credits exceed (x100)...";
         public const string TEVENT_TIME = "Elapsed Time (1/10th min)...";
         public const string TEVENT_MISSION_TIMER_EXPIRED = "Mission Timer Expired";
-        public const string TEVENT_NBUILDINGS_DESTROYED = "Destroyed, Buildings, #...";
-        public const string TEVENT_NUNITS_DESTROYED = "# Destroyed, Units, #...";
+        public const string TEVENT_NBUILDINGS_DESTROYED = "# of Buildings Destroyed...";
+        public const string TEVENT_NUNITS_DESTROYED = "# of Units Destroyed...";
         public const string TEVENT_NOFACTORIES = "No Factories left";
         public const string TEVENT_EVAC_CIVILIAN = "Civilians Evacuated";
         public const string TEVENT_BUILD = "Build Building Type...";

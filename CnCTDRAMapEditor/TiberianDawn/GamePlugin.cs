@@ -534,7 +534,9 @@ namespace MobiusEditor.TiberianDawn
                 INI.ParseSection(new MapContext(Map, false), mapSection, Map.MapSection);
             }
             Map.MapSection.FixBounds();
-            //MessageBox.Show("graphics loaded.");
+#if DEBUG
+            //MessageBox.Show("Graphics loaded");
+#endif            
             var briefingSection = ini.Sections.Extract("Briefing");
             if (briefingSection != null)
             {
@@ -726,148 +728,6 @@ namespace MobiusEditor.TiberianDawn
             HashSet<string> checkUnitTrigs = Trigger.None.Yield().Concat(Map.FilterUnitTriggers(triggers).Select(t => t.Name)).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
             HashSet<string> checkStrcTrigs = Trigger.None.Yield().Concat(Map.FilterStructureTriggers(triggers).Select(t => t.Name)).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
             HashSet<string> checkTerrTrigs = Trigger.None.Yield().Concat(Map.FilterTerrainTriggers(triggers).Select(t => t.Name)).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
-            var terrainSection = ini.Sections.Extract("Terrain");
-            if (terrainSection != null)
-            {
-                foreach (var (Key, Value) in terrainSection)
-                {
-                    int cell;
-                    if (!int.TryParse(Key, out cell))
-                    {
-                        errors.Add(string.Format("Cell for terrain cannot be parsed. Key: '{0}', value: '{1}'; skipping.", Key, Value));
-                        modified = true;
-                        continue;
-                    }
-                    var tokens = Value.Split(',');
-                    if (tokens.Length == 2)
-                    {
-                        var terrainType = Map.TerrainTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault();
-                        if (terrainType != null)
-                        {
-                            if (Globals.FilterTheaterObjects && terrainType.Theaters != null && !terrainType.Theaters.Contains(Map.Theater))
-                            {
-                                errors.Add(string.Format("Terrain '{0}' is not available in the set theater; skipping.", terrainType.Name));
-                                modified = true;
-                                continue;
-                            }
-                            Terrain newTerr = new Terrain
-                            {
-                                Type = terrainType
-                            };
-                            if (Map.Technos.Add(cell, newTerr))
-                            {
-                                if (!checkTrigs.ContainsKey(tokens[1]))
-                                {
-                                    errors.Add(string.Format("Terrain '{0}' links to unknown trigger '{1}'; clearing trigger.", terrainType.Name, tokens[1]));
-                                    modified = true;
-                                    newTerr.Trigger = Trigger.None;
-                                }
-                                else if (!checkTerrTrigs.Contains(tokens[1]))
-                                {
-                                    errors.Add(string.Format("Terrain '{0}' links to trigger '{1}' which does not contain an event applicable to terrain; clearing trigger.", terrainType.Name, tokens[1]));
-                                    modified = true;
-                                    newTerr.Trigger = Trigger.None;
-                                }
-                                else
-                                {
-                                    // Adapt to same case
-                                    newTerr.Trigger = checkTrigs[tokens[1]];
-                                }
-                            }
-                            else
-                            {
-                                var techno = Map.FindBlockingObject(cell, terrainType, out int blockingCell);
-                                string reportCell = blockingCell == -1 ? "<unknown>" : cell.ToString();
-                                if (techno is Building building)
-                                {
-                                    errors.Add(string.Format("Terrain '{0}' on cell {1} overlaps structure '{2}' in cell {3}; skipping.", terrainType.Name, cell, building.Type.Name, reportCell));
-                                    modified = true;
-                                }
-                                else if (techno is Overlay overlay)
-                                {
-                                    errors.Add(string.Format("Terrain '{0}' on cell {1} overlaps overlay '{2}' in cell {3}; skipping.", terrainType.Name, cell, overlay.Type.Name, reportCell));
-                                    modified = true;
-                                }
-                                else if (techno is Terrain terrain)
-                                {
-                                    errors.Add(string.Format("Terrain '{0}' on cell {1} overlaps terrain '{2}' in cell {3}; skipping.", terrainType.Name, cell, terrain.Type.Name, reportCell));
-                                    modified = true;
-                                }
-                                else if (techno is InfantryGroup infantry)
-                                {
-                                    errors.Add(string.Format("Terrain '{0}' on cell {1} overlaps infantry in cell {2}; skipping.", terrainType.Name, cell, reportCell));
-                                    modified = true;
-                                }
-                                else if (techno is Unit unit)
-                                {
-                                    errors.Add(string.Format("Terrain '{0}' on cell {1} overlaps unit '{2}' in cell {3}; skipping.", terrainType.Name, cell, unit.Type.Name, reportCell));
-                                    modified = true;
-                                }
-                                else
-                                {
-                                    if (blockingCell != -1)
-                                    {
-                                        errors.Add(string.Format("Terrain '{0}' placed on cell {1} overlaps unknown techno in cell {2}; skipping.", terrainType.Name, cell, reportCell));
-                                        modified = true;
-                                    }
-                                    else
-                                    {
-                                        errors.Add(string.Format("Terrain '{0}' placed on cell {1} overlaps unknown techno; skipping.", terrainType.Name, cell));
-                                        modified = true;
-                                    }
-                                }
-                            }
-                        }
-                        else
-                        {
-                            errors.Add(string.Format("Terrain '{0}' references unknown terrain.", tokens[0]));
-                            modified = true;
-                        }
-                    }
-                    else
-                    {
-                        errors.Add(string.Format("Terrain '{0}' has wrong number of tokens (expecting 2).", Key));
-                        modified = true;
-                    }
-                }
-            }
-            var overlaySection = ini.Sections.Extract("Overlay");
-            if (overlaySection != null)
-            {
-                foreach (var (Key, Value) in overlaySection)
-                {
-                    int cell;
-                    if (!int.TryParse(Key, out cell))
-                    {
-                        errors.Add(string.Format("Cell for overlay cannot be parsed. Key: '{0}', value: '{1}'; skipping.", Key, Value));
-                        modified = true;
-                        continue;
-                    }
-                    if (!Map.Metrics.Contains(cell))
-                    {
-                        errors.Add(string.Format("Cell for overlay is not inside the map bounds. Key: '{0}', value: '{1}'; skipping.", Key, Value));
-                        modified = true;
-                        continue;
-
-                    }
-                    var overlayType = Map.OverlayTypes.Where(t => t.Equals(Value)).FirstOrDefault();
-                    if (overlayType != null)
-                    {
-                        if (Globals.FilterTheaterObjects && overlayType.Theaters != null && !overlayType.Theaters.Contains(Map.Theater))
-                        {
-                            errors.Add(string.Format("Overlay '{0}' is not available in the set theater; skipping.", overlayType.Name));
-                            modified = true;
-                            continue;
-                        }
-                        Map.Overlay[cell] = new Overlay { Type = overlayType, Icon = 0 };
-                    }
-                    else
-                    {
-                        errors.Add(string.Format("Overlay '{0}' references unknown overlay.", Value));
-                        modified = true;
-                    }
-                }
-            }
             var smudgeSection = ini.Sections.Extract("Smudge");
             if (smudgeSection != null)
             {
@@ -976,7 +836,7 @@ namespace MobiusEditor.TiberianDawn
                             int stoppingPos;
                             if (!int.TryParse(tokens[4], out stoppingPos))
                             {
-                                errors.Add(string.Format("Sub-position for infantry '{0}' cannot be parsed; value: '{1}'; skipping.", infantryType.Name, tokens[4]));
+                                errors.Add(string.Format("Sub-position for infantry '{0}' on cell {1} cannot be parsed; value: '{2}'; skipping.", infantryType.Name, cell, tokens[4]));
                                 modified = true;
                                 continue;
                             }
@@ -985,7 +845,7 @@ namespace MobiusEditor.TiberianDawn
                                 int dirValue;
                                 if (!int.TryParse(tokens[6], out dirValue))
                                 {
-                                    errors.Add(string.Format("Direction for infantry '{0}' cannot be parsed; value: '{1}'; skipping.", infantryType.Name, tokens[6]));
+                                    errors.Add(string.Format("Direction for infantry '{0}' on cell {1}, sub-position {2} cannot be parsed; value: '{3}'; skipping.", infantryType.Name, cell, stoppingPos, tokens[6]));
                                     modified = true;
                                     continue;
                                 }
@@ -993,13 +853,13 @@ namespace MobiusEditor.TiberianDawn
                                 {
                                     if (!checkTrigs.ContainsKey(tokens[7]))
                                     {
-                                        errors.Add(string.Format("Infantry '{0}' links to unknown trigger '{1}'; clearing trigger.", infantryType.Name, tokens[7]));
+                                        errors.Add(string.Format("Infantry '{0}' on cell {1}, sub-position {2} links to unknown trigger '{3}'; clearing trigger.", infantryType.Name, cell, stoppingPos, tokens[7]));
                                         modified = true;
                                         tokens[7] = Trigger.None;
                                     }
                                     else if (!checkUnitTrigs.Contains(tokens[7]))
                                     {
-                                        errors.Add(string.Format("Infantry '{0}' links to trigger '{1}' which does not contain an event applicable to infantry; clearing trigger.", infantryType.Name, tokens[7]));
+                                        errors.Add(string.Format("Infantry '{0}' on cell {1}, sub-position {2} links to trigger '{3}' which does not contain an event applicable to infantry; clearing trigger.", infantryType.Name, cell, stoppingPos, tokens[7]));
                                         modified = true;
                                         tokens[7] = Trigger.None;
                                     }
@@ -1128,13 +988,13 @@ namespace MobiusEditor.TiberianDawn
                         {
                             if (!checkTrigs.ContainsKey(tokens[6]))
                             {
-                                errors.Add(string.Format("Unit '{0}' links to unknown trigger '{1}'; clearing trigger.", unitType.Name, tokens[6]));
+                                errors.Add(string.Format("Unit '{0}' on cell {1} links to unknown trigger '{2}'; clearing trigger.", unitType.Name, cell, tokens[6]));
                                 modified = true;
                                 newUnit.Trigger = Trigger.None;
                             }
                             else if (!checkUnitTrigs.Contains(tokens[6]))
                             {
-                                errors.Add(string.Format("Unit '{0}' links to trigger '{1}' which does not contain an event applicable to units; clearing trigger.", unitType.Name, tokens[6]));
+                                errors.Add(string.Format("Unit '{0}' on cell {1} links to trigger '{2}' which does not contain an event applicable to units; clearing trigger.", unitType.Name, cell, tokens[6]));
                                 modified = true;
                                 newUnit.Trigger = Trigger.None;
                             }
@@ -1343,13 +1203,13 @@ namespace MobiusEditor.TiberianDawn
                         {
                             if (!checkTrigs.ContainsKey(tokens[5]))
                             {
-                                errors.Add(string.Format("Structure '{0}' links to unknown trigger '{1}'; clearing trigger.", buildingType.Name, tokens[5]));
+                                errors.Add(string.Format("Structure '{0}' on cell {1} links to unknown trigger '{2}'; clearing trigger.", buildingType.Name, cell, tokens[5]));
                                 modified = true;
                                 newBld.Trigger = Trigger.None;
                             }
                             else if (!checkStrcTrigs.Contains(tokens[5]))
                             {
-                                errors.Add(string.Format("Structure '{0}' links to trigger '{1}' which does not contain an event applicable to structures; clearing trigger.", buildingType.Name, tokens[5]));
+                                errors.Add(string.Format("Structure '{0}' on cell {1} links to trigger '{2}' which does not contain an event applicable to structures; clearing trigger.", buildingType.Name, cell, tokens[5]));
                                 modified = true;
                                 newBld.Trigger = Trigger.None;
                             }
@@ -1362,7 +1222,7 @@ namespace MobiusEditor.TiberianDawn
                         else
                         {
                             var techno = Map.FindBlockingObject(cell, buildingType, out int blockingCell);
-                            string reportCell = blockingCell == -1 ? "<unknown>" : cell.ToString();
+                            string reportCell = blockingCell == -1 ? "<unknown>" : blockingCell.ToString();
                             if (techno is Building building)
                             {
                                 bool onBib = false;
@@ -1497,6 +1357,148 @@ namespace MobiusEditor.TiberianDawn
                     }
                 }
             }
+            var terrainSection = ini.Sections.Extract("Terrain");
+            if (terrainSection != null)
+            {
+                foreach (var (Key, Value) in terrainSection)
+                {
+                    int cell;
+                    if (!int.TryParse(Key, out cell))
+                    {
+                        errors.Add(string.Format("Cell for terrain cannot be parsed. Key: '{0}', value: '{1}'; skipping.", Key, Value));
+                        modified = true;
+                        continue;
+                    }
+                    var tokens = Value.Split(',');
+                    if (tokens.Length == 2)
+                    {
+                        var terrainType = Map.TerrainTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault();
+                        if (terrainType != null)
+                        {
+                            if (Globals.FilterTheaterObjects && terrainType.Theaters != null && !terrainType.Theaters.Contains(Map.Theater))
+                            {
+                                errors.Add(string.Format("Terrain '{0}' is not available in the set theater; skipping.", terrainType.Name));
+                                modified = true;
+                                continue;
+                            }
+                            Terrain newTerr = new Terrain
+                            {
+                                Type = terrainType
+                            };
+                            if (Map.Technos.Add(cell, newTerr))
+                            {
+                                if (!checkTrigs.ContainsKey(tokens[1]))
+                                {
+                                    errors.Add(string.Format("Terrain '{0}' on cell {1} links to unknown trigger '{2}'; clearing trigger.", terrainType.Name, cell, tokens[1]));
+                                    modified = true;
+                                    newTerr.Trigger = Trigger.None;
+                                }
+                                else if (!checkTerrTrigs.Contains(tokens[1]))
+                                {
+                                    errors.Add(string.Format("Terrain '{0}' on cell {1} links to trigger '{2}' which does not contain an event applicable to terrain; clearing trigger.", terrainType.Name, cell, tokens[1]));
+                                    modified = true;
+                                    newTerr.Trigger = Trigger.None;
+                                }
+                                else
+                                {
+                                    // Adapt to same case
+                                    newTerr.Trigger = checkTrigs[tokens[1]];
+                                }
+                            }
+                            else
+                            {
+                                var techno = Map.FindBlockingObject(cell, terrainType, out int blockingCell);
+                                string reportCell = blockingCell == -1 ? "<unknown>" : blockingCell.ToString();
+                                if (techno is Building building)
+                                {
+                                    errors.Add(string.Format("Terrain '{0}' on cell {1} overlaps structure '{2}' in cell {3}; skipping.", terrainType.Name, cell, building.Type.Name, reportCell));
+                                    modified = true;
+                                }
+                                else if (techno is Overlay overlay)
+                                {
+                                    errors.Add(string.Format("Terrain '{0}' on cell {1} overlaps overlay '{2}' in cell {3}; skipping.", terrainType.Name, cell, overlay.Type.Name, reportCell));
+                                    modified = true;
+                                }
+                                else if (techno is Terrain terrain)
+                                {
+                                    errors.Add(string.Format("Terrain '{0}' on cell {1} overlaps terrain '{2}' in cell {3}; skipping.", terrainType.Name, cell, terrain.Type.Name, reportCell));
+                                    modified = true;
+                                }
+                                else if (techno is InfantryGroup infantry)
+                                {
+                                    errors.Add(string.Format("Terrain '{0}' on cell {1} overlaps infantry in cell {2}; skipping.", terrainType.Name, cell, reportCell));
+                                    modified = true;
+                                }
+                                else if (techno is Unit unit)
+                                {
+                                    errors.Add(string.Format("Terrain '{0}' on cell {1} overlaps unit '{2}' in cell {3}; skipping.", terrainType.Name, cell, unit.Type.Name, reportCell));
+                                    modified = true;
+                                }
+                                else
+                                {
+                                    if (blockingCell != -1)
+                                    {
+                                        errors.Add(string.Format("Terrain '{0}' placed on cell {1} overlaps unknown techno in cell {2}; skipping.", terrainType.Name, cell, reportCell));
+                                        modified = true;
+                                    }
+                                    else
+                                    {
+                                        errors.Add(string.Format("Terrain '{0}' placed on cell {1} overlaps unknown techno; skipping.", terrainType.Name, cell));
+                                        modified = true;
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            errors.Add(string.Format("Terrain '{0}' references unknown terrain.", tokens[0]));
+                            modified = true;
+                        }
+                    }
+                    else
+                    {
+                        errors.Add(string.Format("Terrain '{0}' has wrong number of tokens (expecting 2).", Key));
+                        modified = true;
+                    }
+                }
+            }
+            var overlaySection = ini.Sections.Extract("Overlay");
+            if (overlaySection != null)
+            {
+                foreach (var (Key, Value) in overlaySection)
+                {
+                    int cell;
+                    if (!int.TryParse(Key, out cell))
+                    {
+                        errors.Add(string.Format("Cell for overlay cannot be parsed. Key: '{0}', value: '{1}'; skipping.", Key, Value));
+                        modified = true;
+                        continue;
+                    }
+                    if (!Map.Metrics.Contains(cell))
+                    {
+                        errors.Add(string.Format("Cell for overlay is not inside the map bounds. Key: '{0}', value: '{1}'; skipping.", Key, Value));
+                        modified = true;
+                        continue;
+
+                    }
+                    var overlayType = Map.OverlayTypes.Where(t => t.Equals(Value)).FirstOrDefault();
+                    if (overlayType != null)
+                    {
+                        if (Globals.FilterTheaterObjects && overlayType.Theaters != null && !overlayType.Theaters.Contains(Map.Theater))
+                        {
+                            errors.Add(string.Format("Overlay '{0}' is not available in the set theater; skipping.", overlayType.Name));
+                            modified = true;
+                            continue;
+                        }
+                        Map.Overlay[cell] = new Overlay { Type = overlayType, Icon = 0 };
+                    }
+                    else
+                    {
+                        errors.Add(string.Format("Overlay '{0}' references unknown overlay.", Value));
+                        modified = true;
+                    }
+                }
+            }
             var waypointsSection = ini.Sections.Extract("Waypoints");
             if (waypointsSection != null)
             {
@@ -1607,7 +1609,7 @@ namespace MobiusEditor.TiberianDawn
                 }
             }
             UpdateBasePlayerHouse();
-            errors.AddRange(CheckTriggers(triggers, true, true, false, out _));
+            errors.AddRange(CheckTriggers(triggers, true, true, false, out _, false, out _));
             // Won't trigger the notifications.
             Map.Triggers.Clear();
             Map.Triggers.AddRange(triggers);
@@ -2467,12 +2469,12 @@ namespace MobiusEditor.TiberianDawn
             if (!forSS)
             {
                 bool fatal;
-                IEnumerable<string> triggerErr = CheckTriggers(this.Map.Triggers, true, true, true, out fatal);
+                IEnumerable<string> triggerErr = CheckTriggers(this.Map.Triggers, true, true, true, out fatal, false, out _);
                 if (fatal)
                 {
                     foreach (var err in triggerErr)
                     {
-                        sb.AppendLine(err);
+                        sb.AppendLine().Append(err);
                     }
                     ok = false;
                 }
@@ -2626,9 +2628,11 @@ namespace MobiusEditor.TiberianDawn
             return housesWithProd;
         }
 
-        public IEnumerable<string> CheckTriggers(IEnumerable<Trigger> triggers, bool includeExternalData, bool prefixNames, bool fatalOnly, out bool fatal)
+        public IEnumerable<string> CheckTriggers(IEnumerable<Trigger> triggers, bool includeExternalData, bool prefixNames, bool fatalOnly, out bool fatal, bool fix, out bool wasFixed)
         {
             fatal = false;
+            // Nothing actually auto-fixes errors on TD triggers.
+            wasFixed = false;
             List<string> errors = new List<string>();
             List<string> curErrors = new List<string>();
             List<ITechno> mapTechnos = Map.GetAllTechnos().ToList();
@@ -2638,7 +2642,7 @@ namespace MobiusEditor.TiberianDawn
             {
                 string team = trigger.Action1.Team;
                 string trigName = trigger.Name;
-                String prefix = prefixNames ? trigName + ": " : String.Empty;
+                String prefix = prefixNames ? "Trigger \"" + trigName + "\": " : String.Empty;
                 string event1 = trigger.Event1.EventType;
                 string action1 = trigger.Action1.ActionType;
                 bool noOwner = Model.House.IsEmpty(trigger.House);
@@ -2656,7 +2660,7 @@ namespace MobiusEditor.TiberianDawn
 
                 if (event1 == EventTypes.EVENT_PLAYER_ENTERED && Model.House.IsEmpty(trigger.House))
                 {
-                    errors.Add(prefix + (fatalOnly ? String.Empty : "[FATAL] ") + "A \"Player Enters\" trigger without a House set will cause a game crash.");
+                    errors.Add(prefix + (fatalOnly ? String.Empty : "[FATAL] - ") + "A \"Player Enters\" trigger without a House set will cause a game crash.");
                     fatal = true;
                 }
                 if (!fatalOnly && event1 == EventTypes.EVENT_ATTACKED && !noOwner)
@@ -2704,7 +2708,7 @@ namespace MobiusEditor.TiberianDawn
                     if ((event1 != EventTypes.EVENT_PLAYER_ENTERED && noOwner)
                         || (includeExternalData && event1 == EventTypes.EVENT_PLAYER_ENTERED && isLinked && !isCellTrig))
                     {
-                        curErrors.Add(prefix + (fatalOnly ? String.Empty : "[FATAL] ") + "The House set in a \"Production\" trigger determines the House that starts production, except in case of a celltrigger. Having no House will crash the game.");
+                        curErrors.Add(prefix + (fatalOnly ? String.Empty : "[FATAL] - ") + "The House set in a \"Production\" trigger determines the House that starts production, except in case of a celltrigger. Having no House will crash the game.");
                         fatal = true;
                     }
                     //else if (includeExternalData && trigger.Event1.EventType == EventTypes.EVENT_PLAYER_ENTERED && isCellTrig && playerIsNonstandard)
@@ -2717,15 +2721,15 @@ namespace MobiusEditor.TiberianDawn
                     switch (action1)
                     {
                         case ActionTypes.ACTION_REINFORCEMENTS:
-                            errors.Add(prefix + (fatalOnly ? String.Empty : "[FATAL] ") + "There is no team set to reinforce.");
+                            errors.Add(prefix + (fatalOnly ? String.Empty : "[FATAL] - ") + "There is no team set to reinforce.");
                             fatal = true;
                             break;
                         case ActionTypes.ACTION_CREATE_TEAM:
-                            errors.Add(prefix + (fatalOnly ? String.Empty : "[FATAL] ") + "There is no team set to create.");
+                            errors.Add(prefix + (fatalOnly ? String.Empty : "[FATAL] - ") + "There is no team set to create.");
                             fatal = true;
                             break;
                         case ActionTypes.ACTION_DESTROY_TEAM:
-                            errors.Add(prefix + (fatalOnly ? String.Empty : "[FATAL] ") + "There is no team set to disband.");
+                            errors.Add(prefix + (fatalOnly ? String.Empty : "[FATAL] - ") + "There is no team set to disband.");
                             fatal = true;
                             break;
                     }
@@ -2758,6 +2762,11 @@ namespace MobiusEditor.TiberianDawn
                 }
             }
             return errors;
+        }
+
+        public bool MapNameIsEmpty(string name)
+        {
+            return String.IsNullOrEmpty(name) || "None".Equals(name, StringComparison.OrdinalIgnoreCase);
         }
 
         protected void BasicSection_PropertyChanged(object sender, PropertyChangedEventArgs e)

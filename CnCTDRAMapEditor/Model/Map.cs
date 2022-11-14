@@ -18,7 +18,6 @@ using MobiusEditor.Render;
 using MobiusEditor.Utility;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -44,18 +43,20 @@ namespace MobiusEditor.Model
         Waypoints       = 1 << 9,
 
         Boundaries      = 1 << 10,
-        WaypointsIndic  = 1 << 11,
-        FootballArea    = 1 << 12,
-        CellTriggers    = 1 << 13,
-        TechnoTriggers  = 1 << 14,
-        BuildingRebuild = 1 << 15,
-        BuildingFakes   = 1 << 16,
+        MapSymmetry     = 1 << 11,
+        WaypointsIndic  = 1 << 12,
+        FootballArea    = 1 << 13,
+        CellTriggers    = 1 << 14,
+        TechnoTriggers  = 1 << 15,
+        BuildingRebuild = 1 << 16,
+        BuildingFakes   = 1 << 17,
 
         OverlayAll = Resources | Walls | Overlay,
         Technos = Terrain | Walls | Infantry | Units | Buildings | BuildingFakes,
         MapLayers = Terrain | Resources | Walls | Overlay | Smudge | Infantry | Units | Buildings | Waypoints,
-        Indicators = Boundaries | WaypointsIndic | CellTriggers | TechnoTriggers | BuildingRebuild | BuildingFakes | FootballArea,
-        All = int.MaxValue
+        /// <summary>Listing of layers that don't need a full map repaint.</summary>
+        Indicators = Boundaries | MapSymmetry | WaypointsIndic | CellTriggers | TechnoTriggers | BuildingRebuild | BuildingFakes | FootballArea,
+        All = Int32.MaxValue
     }
 
     public class MapContext : ITypeDescriptorContext

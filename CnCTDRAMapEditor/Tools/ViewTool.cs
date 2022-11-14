@@ -172,6 +172,11 @@ namespace MobiusEditor.Tools
 
             // Only render these if they are not in the priority layers, and not handled manually.
             // The functions themselves will take care of checking whether they are in the active layers to render.
+            if ((layersToRender & MapLayerFlag.MapSymmetry) == MapLayerFlag.MapSymmetry
+                && (manuallyHandledLayers & MapLayerFlag.MapSymmetry) == MapLayerFlag.None)
+            {
+                MapRenderer.RenderMapBoundaries(graphics, map.Bounds, tileSize, Color.Cyan, true);
+            }
             if ((layersToRender & MapLayerFlag.Boundaries) == MapLayerFlag.Boundaries
                 && (manuallyHandledLayers & MapLayerFlag.Boundaries) == MapLayerFlag.None)
             {

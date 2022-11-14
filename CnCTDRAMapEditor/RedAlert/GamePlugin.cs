@@ -536,8 +536,11 @@ namespace MobiusEditor.RedAlert
                 basic.Lose = GeneralUtils.AddRemarks(GeneralUtils.AddRemarks(basic.Lose, defVidVal, true, movieTypesRemarksOld, RemarkOld), defVidVal, true, movieTypesRemarksNew, RemarkNew);
                 basic.Lose = GeneralUtils.FilterToExisting(basic.Lose, defVidVal, true, movieTypesRa);
             }
-            Map.BasicSection.Player = Map.HouseTypes.Where(t => t.Equals(Map.BasicSection.Player)).FirstOrDefault()?.Name ?? Map.HouseTypes.First().Name;
-            Map.BasicSection.BasePlayer = HouseTypes.GetBasePlayer(Map.BasicSection.Player);
+            String plName = Map.BasicSection.Player;
+            HouseType player = Map.HouseTypes.Where(t => t.Equals(plName)).FirstOrDefault() ?? Map.HouseTypes.First();
+            plName = player.Name;
+            Map.BasicSection.Player = plName;
+            Map.BasicSection.BasePlayer = HouseTypes.GetBasePlayer(plName);
             bool aftermathEnabled = false;
             // Don't remove from extra sections.
             INISection aftermathSection = ini.Sections["Aftermath"];
@@ -559,6 +562,9 @@ namespace MobiusEditor.RedAlert
                 INI.ParseSection(new MapContext(Map, true), mapSection, Map.MapSection);
             }
             Map.MapSection.FixBounds();
+#if DEBUG
+            //MessageBox.Show("Graphics loaded");
+#endif
             // Steam info
             var steamSection = ini.Sections.Extract("Steam");
             if (steamSection != null)
@@ -607,7 +613,7 @@ namespace MobiusEditor.RedAlert
                                 {
                                     if (!aftermathEnabled && ((type is UnitType un && un.IsExpansionUnit) || (type is InfantryType it && it.IsExpansionUnit)))
                                     {
-                                        errors.Add(string.Format("Team '{0}' contains expansion unit '{0}', but expansion units not enabled; enabling expansion units.", Key, type.Name));
+                                        errors.Add(string.Format("Team '{0}' contains expansion unit '{1}', but expansion units not enabled; enabling expansion units.", Key, type.Name));
                                         Map.BasicSection.ExpansionEnabled = aftermathEnabled = true;
                                         modified = true;
                                     }
@@ -812,7 +818,8 @@ namespace MobiusEditor.RedAlert
                                                 if (!clearedOldClear)
                                                 {
                                                     errors.Add(String.Format("Use of obsolete version of 'Clear' terrain detected; clearing."));
-                                                    modified = true;
+                                                    // Not marking as modified for this.
+                                                    //modified = true;
                                                     clearedOldClear = true;
                                                 }
                                                 templateType = null;
@@ -849,7 +856,8 @@ namespace MobiusEditor.RedAlert
                             {
                                 // This is an old map. Clear any 255 tile.
                                 errors.Add(String.Format("Use of obsolete version of 'Clear' terrain detected; clearing."));
-                                modified = true;
+                                // Not marking as modified for this.
+                                //modified = true;
                                 for (var y = 0; y < height; ++y)
                                 {
                                     for (var x = 0; x < width; ++x)
@@ -898,131 +906,6 @@ namespace MobiusEditor.RedAlert
                                         template.Icon = iconValue;
                                     }
                                 }
-                            }
-                        }
-                    }
-                }
-            }
-            var terrainSection = ini.Sections.Extract("Terrain");
-            if (terrainSection != null)
-            {
-                foreach (var (Key, Value) in terrainSection)
-                {
-                    int cell;
-                    if (!int.TryParse(Key, out cell))
-                    {
-                        errors.Add(string.Format("Cell for terrain cannot be parsed. Key: '{0}', value: '{1}'; skipping.", Key, Value));
-                        modified = true;
-                        continue;
-                    }
-                    var name = Value.Split(',')[0];
-                    var terrainType = Map.TerrainTypes.Where(t => t.Equals(name)).FirstOrDefault();
-                    if (terrainType != null)
-                    {
-                        if (Globals.FilterTheaterObjects && terrainType.Theaters != null && !terrainType.Theaters.Contains(Map.Theater))
-                        {
-                            errors.Add(string.Format("Terrain '{0}' is not available in the set theater; skipping.", terrainType.Name));
-                            modified = true;
-                            continue;
-                        }
-                        Terrain newTerr = new Terrain
-                        {
-                            Type = terrainType,
-                            Trigger = Trigger.None
-                        };
-                        if (Map.Technos.Add(cell, newTerr))
-                        {
-                            //if (!checkTrigs.Contains(newTerr.Trigger))
-                            //{
-                            //    errors.Add(string.Format("Terrain '{0}' links to unknown trigger '{1}'; clearing trigger..", terrainType, newTerr.Trigger));
-                            //    modified = true;
-                            //    newTerr.Trigger = Trigger.None;
-                            //}
-                            //else if (!checkTerrTrigs.Contains(Value))
-                            //{
-                            //    errors.Add(string.Format("Terrain '{0}' links to trigger '{1}' which does not contain an event or action applicable to terrain; clearing trigger.", terrainType, newTerr.Trigger));
-                            //    modified = true;
-                            //    newTerr.Trigger = Trigger.None;
-                            //}
-                        }
-                        else
-                        {
-                            var techno = Map.FindBlockingObject(cell, terrainType, out int blockingCell);
-                            string reportCell = blockingCell == -1 ? "<unknown>" : cell.ToString();
-                            if (techno is Building building)
-                            {
-                                errors.Add(string.Format("Terrain '{0}' on cell {1} overlaps structure '{2}' in cell {3}; skipping.", terrainType.Name, cell, building.Type.Name, reportCell));
-                                modified = true;
-                            }
-                            else if (techno is Overlay overlay)
-                            {
-                                errors.Add(string.Format("Terrain '{0}' on cell {1} overlaps overlay '{2}' in cell {3}; skipping.", terrainType.Name, cell, overlay.Type.Name, reportCell));
-                                modified = true;
-                            }
-                            else if (techno is Terrain terrain)
-                            {
-                                errors.Add(string.Format("Terrain '{0}' on cell {1} overlaps terrain '{2}' in cell {3}; skipping.", terrainType.Name, cell, terrain.Type.Name, reportCell));
-                                modified = true;
-                            }
-                            else if (techno is InfantryGroup infantry)
-                            {
-                                errors.Add(string.Format("Terrain '{0}' on cell {1} overlaps infantry in cell {2}; skipping.", terrainType.Name, cell, reportCell));
-                                modified = true;
-                            }
-                            else if (techno is Unit unit)
-                            {
-                                errors.Add(string.Format("Terrain '{0}' on cell {1} overlaps unit '{2}' in cell {3}; skipping.", terrainType.Name, cell, unit.Type.Name, reportCell));
-                                modified = true;
-                            }
-                            else
-                            {
-                                if (blockingCell != -1)
-                                {
-                                    errors.Add(string.Format("Terrain '{0}' placed on cell {1} overlaps unknown techno in cell {2}; skipping.", terrainType.Name, cell, blockingCell));
-                                    modified = true;
-                                }
-                                else
-                                {
-                                    errors.Add(string.Format("Terrain '{0}' placed on cell {1} overlaps unknown techno; skipping.", terrainType.Name, cell));
-                                }
-                            }
-                        }
-                    }
-                    else
-                    {
-                        errors.Add(string.Format("Terrain '{0}' references unknown terrain.", name));
-                        modified = true;
-                    }
-                }
-            }
-            var overlayPackSection = ini.Sections.Extract("OverlayPack");
-            if (overlayPackSection != null)
-            {
-                Map.Overlay.Clear();
-                var data = DecompressLCWSection(overlayPackSection, 1, errors);
-                if (data != null)
-                {
-                    for (var i = 0; i < Map.Metrics.Length; ++i)
-                    {
-                        var overlayId = data[i];
-                        // Technically signed, so filter out negative values.
-                        if ((overlayId & 0x80) == 0)
-                        {
-                            var overlayType = Map.OverlayTypes.Where(t => t.Equals(overlayId)).FirstOrDefault();
-                            if (overlayType != null)
-                            {
-                                if (Globals.FilterTheaterObjects && overlayType.Theaters != null && !overlayType.Theaters.Contains(Map.Theater))
-                                {
-                                    errors.Add(string.Format("Overlay '{0}' is not available in the set theater; skipping.", overlayType.Name));
-                                    modified = true;
-                                    continue;
-                                }
-                                Map.Overlay[i] = new Overlay { Type = overlayType, Icon = 0 };
-                            }
-                            else
-                            {
-                                errors.Add(string.Format("Overlay ID {0} references unknown overlay.", overlayId));
-                                modified = true;
                             }
                         }
                     }
@@ -1151,13 +1034,13 @@ namespace MobiusEditor.RedAlert
                         {
                             if (!checkTrigs.Contains(tokens[6]))
                             {
-                                errors.Add(string.Format("Unit '{0}' links to unknown trigger '{1}'; clearing trigger.", unitType.Name, tokens[6]));
+                                errors.Add(string.Format("Unit '{0}' on cell {1} links to unknown trigger '{1}'; clearing trigger.", unitType.Name, cell, tokens[6]));
                                 modified = true;
                                 newUnit.Trigger = Trigger.None;
                             }
                             else if (!checkUnitTrigs.Contains(tokens[6]))
                             {
-                                errors.Add(string.Format("Unit '{0}' links to trigger '{1}' which does not contain an event or action applicable to units; clearing trigger.", unitType.Name, tokens[6]));
+                                errors.Add(string.Format("Unit '{0}' on cell {1} links to trigger '{1}' which does not contain an event or action applicable to units; clearing trigger.", unitType.Name, cell, tokens[6]));
                                 modified = true;
                                 newUnit.Trigger = Trigger.None;
                             }
@@ -1357,13 +1240,13 @@ namespace MobiusEditor.RedAlert
                         {
                             if (!checkTrigs.Contains(tokens[6]))
                             {
-                                errors.Add(string.Format("Ship '{0}' links to unknown trigger '{1}'; clearing trigger.", vesselType.Name, tokens[6]));
+                                errors.Add(string.Format("Ship '{0}' on cell {1} links to unknown trigger '{2}'; clearing trigger.", vesselType.Name, cell, tokens[6]));
                                 modified = true;
                                 newShip.Trigger = Trigger.None;
                             }
                             else if (!checkUnitTrigs.Contains(tokens[6]))
                             {
-                                errors.Add(string.Format("Ship '{0}' links to trigger '{1}' which does not contain an event or action applicable to ships; clearing trigger.", vesselType.Name, tokens[6]));
+                                errors.Add(string.Format("Ship '{0}' on cell {1} links to trigger '{2}' which does not contain an event or action applicable to ships; clearing trigger.", vesselType.Name, cell, tokens[6]));
                                 modified = true;
                                 newShip.Trigger = Trigger.None;
                             }
@@ -1464,7 +1347,7 @@ namespace MobiusEditor.RedAlert
                             int stoppingPos;
                             if (!int.TryParse(tokens[4], out stoppingPos))
                             {
-                                errors.Add(string.Format("Sub-position for infantry '{0}' cannot be parsed; value: '{1}'; skipping.", infantryType.Name, tokens[4]));
+                                errors.Add(string.Format("Sub-position for infantry '{0}' on cell {1} cannot be parsed; value: '{2}'; skipping.", infantryType.Name, cell, tokens[4]));
                                 modified = true;
                                 continue;
                             }
@@ -1473,7 +1356,7 @@ namespace MobiusEditor.RedAlert
                                 int dirValue;
                                 if (!int.TryParse(tokens[6], out dirValue))
                                 {
-                                    errors.Add(string.Format("Direction for infantry '{0}' cannot be parsed; value: '{1}'; skipping.", infantryType.Name, tokens[6]));
+                                    errors.Add(string.Format("Direction for infantry '{0}' on cell {1}, sub-position {2} cannot be parsed; value: '{3}'; skipping.", infantryType.Name, cell, stoppingPos, tokens[6]));
                                     modified = true;
                                     continue;
                                 }
@@ -1481,13 +1364,13 @@ namespace MobiusEditor.RedAlert
                                 {
                                     if (!checkTrigs.Contains(tokens[7]))
                                     {
-                                        errors.Add(string.Format("Infantry '{0}' links to unknown trigger '{1}'; clearing trigger.", infantryType.Name, tokens[7]));
+                                        errors.Add(string.Format("Infantry '{0}' on cell {1}, sub-position {2}  links to unknown trigger '{3}'; clearing trigger.", infantryType.Name, cell, stoppingPos, tokens[7]));
                                         modified = true;
                                         tokens[7] = Trigger.None;
                                     }
                                     else if (!checkUnitTrigs.Contains(tokens[7]))
                                     {
-                                        errors.Add(string.Format("Infantry '{0}' links to trigger '{1}' which does not contain an event or action applicable to infantry; clearing trigger.", infantryType.Name, tokens[7]));
+                                        errors.Add(string.Format("Infantry '{0}' on cell {1}, sub-position {2}  links to trigger '{3}' which does not contain an event or action applicable to infantry; clearing trigger.", infantryType.Name, cell, stoppingPos, tokens[7]));
                                         modified = true;
                                         tokens[7] = Trigger.None;
                                     }
@@ -1616,13 +1499,13 @@ namespace MobiusEditor.RedAlert
                         {
                             if (!checkTrigs.Contains(tokens[5]))
                             {
-                                errors.Add(string.Format("Structure '{0}' links to unknown trigger '{1}'; clearing trigger.", buildingType.Name, tokens[5]));
+                                errors.Add(string.Format("Structure '{0}' on cell {1} links to unknown trigger '{2}'; clearing trigger.", buildingType.Name, cell, tokens[5]));
                                 modified = true;
                                 newBld.Trigger = Trigger.None;
                             }
                             else if (!checkStrcTrigs.Contains(tokens[5]))
                             {
-                                errors.Add(string.Format("Structure '{0}' links to trigger '{1}' which does not contain an event or action applicable to structures; clearing trigger.", buildingType.Name, tokens[5]));
+                                errors.Add(string.Format("Structure '{0}' on cell {1} links to trigger '{2}' which does not contain an event or action applicable to structures; clearing trigger.", buildingType.Name, cell, tokens[5]));
                                 modified = true;
                                 newBld.Trigger = Trigger.None;
                             }
@@ -1630,7 +1513,7 @@ namespace MobiusEditor.RedAlert
                         else
                         {
                             var techno = Map.FindBlockingObject(cell, buildingType, out int blockingCell);
-                            string reportCell = blockingCell == -1 ? "<unknown>" : cell.ToString();
+                            string reportCell = blockingCell == -1 ? "<unknown>" : blockingCell.ToString();
                             if (techno is Building building)
                             {
                                 bool onBib = false;
@@ -1762,6 +1645,131 @@ namespace MobiusEditor.RedAlert
                     {
                         errors.Add(string.Format("Invalid base rebuild priority '{0}' (expecting integer).", Key));
                         modified = true;
+                    }
+                }
+            }
+            var terrainSection = ini.Sections.Extract("Terrain");
+            if (terrainSection != null)
+            {
+                foreach (var (Key, Value) in terrainSection)
+                {
+                    int cell;
+                    if (!int.TryParse(Key, out cell))
+                    {
+                        errors.Add(string.Format("Cell for terrain cannot be parsed. Key: '{0}', value: '{1}'; skipping.", Key, Value));
+                        modified = true;
+                        continue;
+                    }
+                    var name = Value.Split(',')[0];
+                    var terrainType = Map.TerrainTypes.Where(t => t.Equals(name)).FirstOrDefault();
+                    if (terrainType != null)
+                    {
+                        if (Globals.FilterTheaterObjects && terrainType.Theaters != null && !terrainType.Theaters.Contains(Map.Theater))
+                        {
+                            errors.Add(string.Format("Terrain '{0}' is not available in the set theater; skipping.", terrainType.Name));
+                            modified = true;
+                            continue;
+                        }
+                        Terrain newTerr = new Terrain
+                        {
+                            Type = terrainType,
+                            Trigger = Trigger.None
+                        };
+                        if (Map.Technos.Add(cell, newTerr))
+                        {
+                            //if (!checkTrigs.Contains(newTerr.Trigger))
+                            //{
+                            //    errors.Add(string.Format("Terrain '{0}' on cell {1} links to unknown trigger '{2}'; clearing trigger..", terrainType, cell, newTerr.Trigger));
+                            //    modified = true;
+                            //    newTerr.Trigger = Trigger.None;
+                            //}
+                            //else if (!checkTerrTrigs.Contains(Value))
+                            //{
+                            //    errors.Add(string.Format("Terrain '{0}' on cell {1} links to trigger '{2}' which does not contain an event or action applicable to terrain; clearing trigger.", terrainType, cell, newTerr.Trigger));
+                            //    modified = true;
+                            //    newTerr.Trigger = Trigger.None;
+                            //}
+                        }
+                        else
+                        {
+                            var techno = Map.FindBlockingObject(cell, terrainType, out int blockingCell);
+                            string reportCell = blockingCell == -1 ? "<unknown>" : blockingCell.ToString();
+                            if (techno is Building building)
+                            {
+                                errors.Add(string.Format("Terrain '{0}' on cell {1} overlaps structure '{2}' in cell {3}; skipping.", terrainType.Name, cell, building.Type.Name, reportCell));
+                                modified = true;
+                            }
+                            else if (techno is Overlay overlay)
+                            {
+                                errors.Add(string.Format("Terrain '{0}' on cell {1} overlaps overlay '{2}' in cell {3}; skipping.", terrainType.Name, cell, overlay.Type.Name, reportCell));
+                                modified = true;
+                            }
+                            else if (techno is Terrain terrain)
+                            {
+                                errors.Add(string.Format("Terrain '{0}' on cell {1} overlaps terrain '{2}' in cell {3}; skipping.", terrainType.Name, cell, terrain.Type.Name, reportCell));
+                                modified = true;
+                            }
+                            else if (techno is InfantryGroup infantry)
+                            {
+                                errors.Add(string.Format("Terrain '{0}' on cell {1} overlaps infantry in cell {2}; skipping.", terrainType.Name, cell, reportCell));
+                                modified = true;
+                            }
+                            else if (techno is Unit unit)
+                            {
+                                errors.Add(string.Format("Terrain '{0}' on cell {1} overlaps unit '{2}' in cell {3}; skipping.", terrainType.Name, cell, unit.Type.Name, reportCell));
+                                modified = true;
+                            }
+                            else
+                            {
+                                if (blockingCell != -1)
+                                {
+                                    errors.Add(string.Format("Terrain '{0}' placed on cell {1} overlaps unknown techno in cell {2}; skipping.", terrainType.Name, cell, blockingCell));
+                                    modified = true;
+                                }
+                                else
+                                {
+                                    errors.Add(string.Format("Terrain '{0}' placed on cell {1} overlaps unknown techno; skipping.", terrainType.Name, cell));
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        errors.Add(string.Format("Terrain '{0}' references unknown terrain.", name));
+                        modified = true;
+                    }
+                }
+            }
+            var overlayPackSection = ini.Sections.Extract("OverlayPack");
+            if (overlayPackSection != null)
+            {
+                Map.Overlay.Clear();
+                var data = DecompressLCWSection(overlayPackSection, 1, errors);
+                if (data != null)
+                {
+                    for (var i = 0; i < Map.Metrics.Length; ++i)
+                    {
+                        var overlayId = data[i];
+                        // Technically signed, so filter out negative values.
+                        if ((overlayId & 0x80) == 0)
+                        {
+                            var overlayType = Map.OverlayTypes.Where(t => t.Equals(overlayId)).FirstOrDefault();
+                            if (overlayType != null)
+                            {
+                                if (Globals.FilterTheaterObjects && overlayType.Theaters != null && !overlayType.Theaters.Contains(Map.Theater))
+                                {
+                                    errors.Add(string.Format("Overlay '{0}' is not available in the set theater; skipping.", overlayType.Name));
+                                    modified = true;
+                                    continue;
+                                }
+                                Map.Overlay[i] = new Overlay { Type = overlayType, Icon = 0 };
+                            }
+                            else
+                            {
+                                errors.Add(string.Format("Overlay ID {0} references unknown overlay.", overlayId));
+                                modified = true;
+                            }
+                        }
                     }
                 }
             }
@@ -1908,14 +1916,31 @@ namespace MobiusEditor.RedAlert
             Map.TeamTypes.AddRange(teamTypes.OrderBy(t => t.Name, comparer));
             UpdateBasePlayerHouse();
             triggers.Sort((x, y) => comparer.Compare(x.Name, y.Name));
-            errors.AddRange(CheckTriggers(triggers, true, true, false, out _));
+            errors.AddRange(CheckTriggers(triggers, true, true, false, out _, true, out bool wasFixed));
+            if (wasFixed)
+            {
+                modified = true;
+            }
             // Won't trigger the notifications.
             Map.Triggers.Clear();
             Map.Triggers.AddRange(triggers);
             extraSections = ini.Sections;
-            bool switchedToSolo = forceSoloMission && !Map.BasicSection.SoloMission
-                && (Map.Triggers.Any(t => t.Action1.ActionType == ActionTypes.TACTION_WIN) || Map.Triggers.Any(t => t.Action2.ActionType == ActionTypes.TACTION_WIN))
-                && (Map.Triggers.Any(t => t.Action1.ActionType == ActionTypes.TACTION_LOSE) || Map.Triggers.Any(t => t.Action2.ActionType == ActionTypes.TACTION_LOSE));
+            bool switchedToSolo = false;
+            if (forceSoloMission)
+            {
+                int playerId = player.ID;
+                bool hasWinTrigger =
+                    Map.Triggers.Any(t => t.Action1.ActionType == ActionTypes.TACTION_WIN && t.Action1.Data == playerId) ||
+                    Map.Triggers.Any(t => t.Action1.ActionType == ActionTypes.TACTION_LOSE && t.Action1.Data != playerId) ||
+                    Map.Triggers.Any(t => t.Action2.ActionType == ActionTypes.TACTION_WIN && t.Action2.Data == playerId) ||
+                    Map.Triggers.Any(t => t.Action2.ActionType == ActionTypes.TACTION_LOSE && t.Action2.Data != playerId);
+                bool hasLoseTrigger =
+                    Map.Triggers.Any(t => t.Action1.ActionType == ActionTypes.TACTION_LOSE && t.Action1.Data == playerId) ||
+                    Map.Triggers.Any(t => t.Action1.ActionType == ActionTypes.TACTION_WIN && t.Action1.Data != playerId) ||
+                    Map.Triggers.Any(t => t.Action2.ActionType == ActionTypes.TACTION_LOSE && t.Action2.Data == playerId) ||
+                    Map.Triggers.Any(t => t.Action2.ActionType == ActionTypes.TACTION_WIN && t.Action2.Data != playerId);
+                switchedToSolo = hasWinTrigger && hasLoseTrigger;
+            }
             if (switchedToSolo)
             {
                 errors.Insert(0, "Filename detected as classic single player mission format, and win and lose trigger detected. Applying \"SoloMission\" flag.");
@@ -2642,12 +2667,12 @@ namespace MobiusEditor.RedAlert
                 ok = false;
             }
             bool fatal;
-            IEnumerable<string> triggerErr = CheckTriggers(this.Map.Triggers, true, true, true, out fatal);
+            IEnumerable<string> triggerErr = CheckTriggers(this.Map.Triggers, true, true, true, out fatal, false, out bool _);
             if (fatal)
             {
                 foreach (var err in triggerErr)
                 {
-                    sb.AppendLine(err);
+                    sb.AppendLine().Append(err);
                 }
                 ok = false;
             }
@@ -2786,40 +2811,43 @@ namespace MobiusEditor.RedAlert
             return housesWithProd;
         }
 
-        public IEnumerable<string> CheckTriggers(IEnumerable<Trigger> triggers, bool includeExternalData, bool prefixNames, bool fatalOnly, out bool fatal)
+        public IEnumerable<string> CheckTriggers(IEnumerable<Trigger> triggers, bool includeExternalData, bool prefixNames, bool fatalOnly, out bool fatal, bool fix, out bool wasFixed)
         {
             fatal = false;
+            wasFixed = false;
             List<string> curErrors = new List<string>();
             List<string> errors = new List<string>();
             foreach (var trigger in triggers)
             {
                 string trigName = trigger.Name;
-                String prefix = prefixNames ? trigName + ": " : String.Empty;
+                String prefix = prefixNames ? "Trigger \"" + trigName + "\": " : String.Empty;
                 string event1 = trigger.Event1.EventType;
                 string event2 = trigger.Event2.EventType;
                 string action1 = trigger.Action1.ActionType;
                 string action2 = trigger.Action2.ActionType;
                 // Not sure which ones are truly fatal.
                 // Events
-                CheckEventHouse(prefix, event1, trigger.Event1.Data, curErrors, 1, ref fatal, fatalOnly);
-                CheckEventHouse(prefix, event2, trigger.Event2.Data, curErrors, 2, ref fatal, fatalOnly);
+                CheckEventHouse(prefix, trigger.Event1, curErrors, 1, ref fatal, fatalOnly, fix, ref wasFixed);
+                CheckEventHouse(prefix, trigger.Event2, curErrors, 2, ref fatal, fatalOnly, fix, ref wasFixed);
                 // globals checks are only for ini read, really.
-                CheckEventGlobals(prefix, event1, trigger.Event1.Data, curErrors, 1, ref fatal, fatalOnly);
-                CheckEventGlobals(prefix, event2, trigger.Event2.Data, curErrors, 2, ref fatal, fatalOnly);
-                CheckEventTeam(prefix, event1, trigger.Event1.Team, curErrors, 1, ref fatal, fatalOnly);
-                CheckEventTeam(prefix, event2, trigger.Event2.Team, curErrors, 2, ref fatal, fatalOnly);
+                CheckEventGlobals(prefix, trigger.Event1, curErrors, 1, ref fatal, fatalOnly, fix, ref wasFixed);
+                CheckEventGlobals(prefix, trigger.Event2, curErrors, 2, ref fatal, fatalOnly, fix, ref wasFixed);
+                CheckEventTeam(prefix, trigger.Event1, curErrors, 1, ref fatal, fatalOnly);
+                CheckEventTeam(prefix, trigger.Event2, curErrors, 2, ref fatal, fatalOnly);
                 // Actions
-                CheckActionHouse(prefix, action1, trigger.Action1.Data, curErrors, 1, ref fatal, fatalOnly);
-                CheckActionHouse(prefix, action2, trigger.Action2.Data, curErrors, 2, ref fatal, fatalOnly);
-                CheckActionText(prefix, action1, trigger.Action1.Data, curErrors, 1, ref fatal, fatalOnly);
-                CheckActionText(prefix, action2, trigger.Action2.Data, curErrors, 2, ref fatal, fatalOnly);
+                CheckActionHouse(prefix, trigger.Action1, curErrors, 1, ref fatal, fatalOnly, fix, ref wasFixed);
+                CheckActionHouse(prefix, trigger.Action2, curErrors, 2, ref fatal, fatalOnly, fix, ref wasFixed);
+                CheckActionText(prefix, trigger.Action1, curErrors, 1, ref fatal, fatalOnly, fix, ref wasFixed);
+                CheckActionText(prefix, trigger.Action2, curErrors, 2, ref fatal, fatalOnly, fix, ref wasFixed);
                 // globals checks are only for ini read, really.
-                CheckActionGlobals(prefix, action1, trigger.Action1.Data, curErrors, 1, ref fatal, fatalOnly);
-                CheckActionGlobals(prefix, action2, trigger.Action2.Data, curErrors, 2, ref fatal, fatalOnly);
-                CheckActionTeam(prefix, action1, trigger.Action1.Team, curErrors, 1, ref fatal, fatalOnly);
-                CheckActionTeam(prefix, action2, trigger.Action2.Team, curErrors, 2, ref fatal, fatalOnly);
-                CheckActionTrigger(prefix, action1, trigger.Action1.Trigger, curErrors, 1, ref fatal, fatalOnly);
-                CheckActionTrigger(prefix, action2, trigger.Action2.Trigger, curErrors, 2, ref fatal, fatalOnly);
+                CheckActionGlobals(prefix, trigger.Action1, curErrors, 1, ref fatal, fatalOnly, fix, ref wasFixed);
+                CheckActionGlobals(prefix, trigger.Action2, curErrors, 2, ref fatal, fatalOnly, fix, ref wasFixed);
+                CheckActionTeam(prefix, trigger.Action1, curErrors, 1, ref fatal, fatalOnly);
+                CheckActionTeam(prefix, trigger.Action2, curErrors, 2, ref fatal, fatalOnly);
+                CheckActionTrigger(prefix, trigger.Action1, curErrors, 1, ref fatal, fatalOnly);
+                CheckActionTrigger(prefix, trigger.Action2, curErrors, 2, ref fatal, fatalOnly);
+                // Specific checks go here:
+                // -celltrigger "Entered By" somehow cannot trigger fire sale? Investigate.
                 if (curErrors.Count > 0)
                 {
                     if (prefixNames)
@@ -2838,62 +2866,124 @@ namespace MobiusEditor.RedAlert
             return errors;
         }
 
-        private void CheckEventHouse(String prefix, String evnt, long house, List<String> errors, Int32 nr, ref bool fatal, bool fatalOnly)
+        private void CheckEventHouse(String prefix, TriggerEvent evnt, List<String> errors, Int32 nr, ref bool fatal, bool fatalOnly, bool fix, ref bool wasFixed)
         {
-            if (house > -1)
-                return;
-            switch (evnt)
+            int maxId = Map.Houses.Max(h => h.Type.ID);
+            long house = evnt.Data;
+            if ((house >= 0 && house <= maxId) || fatalOnly)
             {
+                return;
+            }
+            switch (evnt.EventType)
+            {
+                // celltrigger events
                 case EventTypes.TEVENT_PLAYER_ENTERED:
                 case EventTypes.TEVENT_CROSS_HORIZONTAL:
                 case EventTypes.TEVENT_CROSS_VERTICAL:
                 case EventTypes.TEVENT_ENTERS_ZONE:
-                case EventTypes.TEVENT_LOW_POWER:
-                case EventTypes.TEVENT_SPIED:
+                // trigger house event, with arg as cause
                 case EventTypes.TEVENT_THIEVED:
+                // arg house event
+                case EventTypes.TEVENT_LOW_POWER: // not fatal
                 case EventTypes.TEVENT_HOUSE_DISCOVERED:
                 case EventTypes.TEVENT_BUILDINGS_DESTROYED:
                 case EventTypes.TEVENT_UNITS_DESTROYED:
                 case EventTypes.TEVENT_ALL_DESTROYED:
-                    errors.Add(prefix + (fatalOnly ? String.Empty : "[FATAL] ") + "event " + nr + ": \"" + evnt.TrimEnd('.') + "\" requires a house to be set.");
-                    fatal = true;
-                    break;
-            }
-        }
-
-        private void CheckEventGlobals(String prefix, String evnt, long data, List<string> errors, Int32 nr, ref bool fatal, bool fatalOnly)
-        {
-            switch (evnt)
-            {
-                case EventTypes.TEVENT_GLOBAL_SET:
-                case EventTypes.TEVENT_GLOBAL_CLEAR:
-                    if (data < 0 || data > 29)
+                    if (house < -1 || house > maxId)
                     {
-                        errors.Add(prefix + (fatalOnly ? String.Empty : "[FATAL] ") + "event " + nr + ": \"Globals only go from 0 to 29.");
-                        fatal = true;
+                        errors.Add(prefix + "Event " + nr + ": \"" + evnt.EventType.TrimEnd('.') + "\" has an illegal house id.");
+                        if (fix)
+                        {
+                            evnt.Data = -1; // 'fix' to -1, so it at least has a valid UI value.
+                            wasFixed = true;
+                        }
+                    }
+                    else
+                    {
+                        errors.Add(prefix + "Event " + nr + ": \"" + evnt.EventType.TrimEnd('.') + "\" requires a house to be set.");
                     }
                     break;
             }
         }
 
-        private void CheckEventTeam(String prefix, String evnt, String team, List<string> errors, Int32 nr, ref bool fatal, bool fatalOnly)
+        private void CheckEventGlobals(String prefix, TriggerEvent evnt, List<string> errors, Int32 nr, ref bool fatal, bool fatalOnly, bool fix, ref bool wasFixed)
         {
-            if (!TeamType.IsEmpty(team))
-                return;
-            switch (evnt)
+            if (fatalOnly)
             {
-                case EventTypes.TEVENT_LEAVES_MAP:
-                    errors.Add(prefix + (fatalOnly ? String.Empty : "[FATAL] ") + "event " + nr + ": There is no team set to leave the map.");
-                    fatal = true;
+                return;
+            }
+            switch (evnt.EventType)
+            {
+                case EventTypes.TEVENT_GLOBAL_SET:
+                case EventTypes.TEVENT_GLOBAL_CLEAR:
+                    if (evnt.Data < 0 || evnt.Data > 29)
+                    {
+                        errors.Add(prefix + "Event " + nr + ": Globals only go from 0 to 29.");
+                        if (fix)
+                        {
+                            evnt.Data = evnt.Data.Restrict(0, 29);
+                            wasFixed = true;
+                        }
+                    }
                     break;
             }
         }
 
-        private void CheckActionHouse(String prefix, String action, long house, List<String> errors, Int32 nr, ref bool fatal, bool fatalOnly)
+        private void CheckEventTeam(String prefix, TriggerEvent evnt, List<string> errors, Int32 nr, ref bool fatal, bool fatalOnly)
         {
-            if (house > -1)
+            if (!TeamType.IsEmpty(evnt.Team) || fatalOnly)
+            {
                 return;
-            switch (action)
+            }
+            switch (evnt.EventType)
+            {
+                case EventTypes.TEVENT_LEAVES_MAP:
+                    errors.Add(prefix + "Event " + nr + ": There is no team set to leave the map.");
+                    break;
+            }
+        }
+
+        private void CheckActionHouse(String prefix, TriggerAction action, List<String> errors, Int32 nr, ref bool fatal, bool fatalOnly, bool fix, ref bool wasFixed)
+        {
+            if (fatalOnly)
+            {
+                return;
+            }
+            int maxId = Map.Houses.Max(h => h.Type.ID);
+            long house = action.Data;
+            string actn = action.ActionType;
+            if (house > -1 && house <= maxId)
+            {
+                // In range
+                String houseName = Map.Houses[house].Type.Name;
+                bool houseIsPlayer = houseName.Equals(Map.BasicSection.Player, StringComparison.OrdinalIgnoreCase);
+                if (!houseIsPlayer)
+                {
+                    switch (actn)
+                    {
+                        case ActionTypes.TACTION_WIN:
+                            errors.Add(prefix + "Action " + nr + ": \"" + actn.TrimEnd('.') + "\" on a House other than the player will always make you lose.");
+                            break;
+                        case ActionTypes.TACTION_LOSE:
+                            errors.Add(prefix + "Action " + nr + ": \"" + actn.TrimEnd('.') + "\" on a House other than the player will always make you win.");
+                            break;
+                    }
+                }
+                else
+                {
+                    switch (actn)
+                    {
+                        case ActionTypes.TACTION_BEGIN_PRODUCTION:
+                        case ActionTypes.TACTION_FIRE_SALE:
+                        case ActionTypes.TACTION_AUTOCREATE:
+                        case ActionTypes.TACTION_ALL_HUNT:
+                            errors.Add(prefix + "Action " + nr + ": \"" + actn.TrimEnd('.') + "\" is set to the player's House.");
+                            break;
+                    }
+                }
+                return;
+            }
+            switch (actn)
             {
                 case ActionTypes.TACTION_WIN:
                 case ActionTypes.TACTION_LOSE:
@@ -2901,83 +2991,110 @@ namespace MobiusEditor.RedAlert
                 case ActionTypes.TACTION_FIRE_SALE:
                 case ActionTypes.TACTION_AUTOCREATE:
                 case ActionTypes.TACTION_ALL_HUNT:
-                    errors.Add(prefix + (fatalOnly ? String.Empty : "[FATAL] ") + "event " + nr + ": \"" + action.TrimEnd('.') + "\" requires a house to be set.");
-                    fatal = true;
+                    if (house == -1)
+                    {
+                        errors.Add(prefix + "Action " + nr + ": \"" + actn.TrimEnd('.') + "\" requires a house to be set.");
+                    }
+                    else
+                    {
+                        errors.Add(prefix + "Action " + nr + ": \"" + actn.TrimEnd('.') + "\" has an illegal house id.");
+                        if (fix)
+                        {
+                            action.Data = -1; // 'fix' to -1, so it at least has a valid UI value.
+                            wasFixed = true;
+                        }
+                    }
                     break;
             }
         }
 
-        private void CheckActionText(String prefix, String action, long data, List<string> errors, Int32 nr, ref bool fatal, bool fatalOnly)
+        private void CheckActionText(String prefix, TriggerAction action, List<string> errors, Int32 nr, ref bool fatal, bool fatalOnly, bool fix, ref bool wasFixed)
         {
-            if (!fatalOnly)
+            switch (action.ActionType)
             {
-                switch (action)
-                {
-                    case ActionTypes.TACTION_TEXT_TRIGGER:
-                        if (data < 1 || data > 209)
+                case ActionTypes.TACTION_TEXT_TRIGGER:
+                    if (action.Data < 1 || action.Data > 209)
+                    {
+                        errors.Add(prefix + (fatalOnly ? String.Empty : "[FATAL] - ") + "Action " + nr + ": \"Text triggers only go from 1 to 209.");
+                        fatal = true;
+                        if (fix)
                         {
-                            errors.Add(prefix + (fatalOnly ? String.Empty : "[FATAL] ") + "action " + nr + ": \"Text triggers only go from 1 to 209.");
-                            fatal = true;
+                            action.Data = action.Data.Restrict(1, 209);
+                            wasFixed = true;
                         }
-                        break;
-                }
+                    }
+                    break;
             }
         }
 
-        private void CheckActionGlobals(String prefix, String action, long data, List<string> errors, Int32 nr, ref bool fatal, bool fatalOnly)
+        private void CheckActionGlobals(String prefix, TriggerAction action, List<string> errors, Int32 nr, ref bool fatal, bool fatalOnly, bool fix, ref bool wasFixed)
         {
             if (!fatalOnly)
             {
-                switch (action)
+                switch (action.ActionType)
                 {
                     case ActionTypes.TACTION_SET_GLOBAL:
                     case ActionTypes.TACTION_CLEAR_GLOBAL:
-                        if (data < 0 || data > 29)
+                        if (action.Data < 0 || action.Data > 29)
                         {
-                            errors.Add(prefix + "action " + nr + ": \"Globals only go from 0 to 29.");
+                            errors.Add(prefix + "Action " + nr + ": Globals only go from 0 to 29.");
+                            if (fix)
+                            {
+                                action.Data = action.Data.Restrict(0, 29);
+                                wasFixed = true;
+                            }
                         }
                         break;
                 }
             }
         }
 
-        private void CheckActionTeam(String prefix, String action, String team, List<String> errors, int nr, ref bool fatal, bool fatalOnly)
+        private void CheckActionTeam(String prefix, TriggerAction action, List<String> errors, int nr, ref bool fatal, bool fatalOnly)
         {
-            if (!TeamType.IsEmpty(team))
+            if (!TeamType.IsEmpty(action.Team))
                 return;
-            switch (action)
+            switch (action.ActionType)
             {
                 case ActionTypes.TACTION_REINFORCEMENTS:
-                    errors.Add(prefix + (fatalOnly ? String.Empty : "[FATAL] ") + "action " + nr + ": There is no team type set to reinforce.");
-                    fatal = true;
+                    if (fatalOnly)
+                    {
+                        errors.Add(prefix + "Action " + nr + ": There is no team type set to reinforce.");
+                    }
                     break;
                 case ActionTypes.TACTION_CREATE_TEAM:
-                    errors.Add(prefix + (fatalOnly ? String.Empty : "[FATAL] ") + "action " + nr + ": There is no team type set to create.");
+                    errors.Add(prefix + (fatalOnly ? String.Empty : "[FATAL] - ") + "Action " + nr + ": There is no team type set to create.");
                     fatal = true;
                     break;
                 case ActionTypes.TACTION_DESTROY_TEAM:
-                    errors.Add(prefix + (fatalOnly ? String.Empty : "[FATAL] ") + "action " + nr + ": There is no team type set to disband.");
-                    fatal = true;
+                    if (fatalOnly)
+                    {
+                        errors.Add(prefix + "Action " + nr + ": There is no team type set to disband.");
+                    }
                     break;
             }
         }
 
-        private void CheckActionTrigger(String prefix, String action, String trigger, List<String> errors, Int32 nr, ref bool fatal, bool fatalOnly)
+        private void CheckActionTrigger(String prefix, TriggerAction action, List<String> errors, Int32 nr, ref bool fatal, bool fatalOnly)
         {
-            if (!Trigger.IsEmpty(trigger))
+            if (!Trigger.IsEmpty(action.Trigger))
                 return;
             if (!fatalOnly)
             {
-                switch (action)
+                switch (action.ActionType)
                 {
                     case ActionTypes.TACTION_FORCE_TRIGGER:
-                        errors.Add(prefix + "action " + nr + ": There is no trigger set to force.");
+                        errors.Add(prefix + "Action " + nr + ": There is no trigger set to force.");
                         break;
                     case ActionTypes.TACTION_DESTROY_TRIGGER:
-                        errors.Add(prefix + "action " + nr + ": There is no trigger set to destroy.");
+                        errors.Add(prefix + "Action " + nr + ": There is no trigger set to destroy.");
                         break;
                 }
             }
+        }
+
+        public bool MapNameIsEmpty(string name)
+        {
+            return String.IsNullOrEmpty(name) || "<none>".Equals(name, StringComparison.OrdinalIgnoreCase);
         }
 
         private void BasicSection_PropertyChanged(object sender, PropertyChangedEventArgs e)

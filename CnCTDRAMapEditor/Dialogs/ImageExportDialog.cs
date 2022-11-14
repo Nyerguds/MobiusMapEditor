@@ -32,6 +32,7 @@ namespace MobiusEditor.Dialogs
             "Waypoints",
             // Indicators
             "Map boundaries",
+            "Map symmetry",
             "Waypoint labels",
             "Football goal areas",
             "Cell triggers",

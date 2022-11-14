@@ -23,9 +23,9 @@ namespace MobiusEditor.RedAlert
         public const string TACTION_NONE = "None";
         public const string TACTION_WIN = "Winner is...";
         public const string TACTION_LOSE = "Loser is...";
-        public const string TACTION_BEGIN_PRODUCTION = "Production Begins";
+        public const string TACTION_BEGIN_PRODUCTION = "Production Begins...";
         public const string TACTION_CREATE_TEAM = "Create Team...";
-        public const string TACTION_DESTROY_TEAM = "Destroy All Teams";
+        public const string TACTION_DESTROY_TEAM = "Destroy All Teams...";
         public const string TACTION_ALL_HUNT = "All to Hunt...";
         public const string TACTION_REINFORCEMENTS = "Reinforcement (team)...";
         public const string TACTION_DZ = "Drop Zone Flare (waypoint)...";

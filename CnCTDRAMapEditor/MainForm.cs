@@ -176,7 +176,7 @@ namespace MobiusEditor
                 return;
             }
             string mapName = plugin.Map.BasicSection.Name;
-            if (String.IsNullOrEmpty(mapName))
+            if (plugin.MapNameIsEmpty(mapName))
             {
                 if (filename != null)
                 {
@@ -1251,6 +1251,7 @@ namespace MobiusEditor
                 {
                     using (ErrorMessageBox emb = new ErrorMessageBox())
                     {
+                        emb.Title = "Error Report - " + Path.GetFileName(loadInfo.FileName);
                         emb.Errors = errors;
                         emb.StartPosition = FormStartPosition.CenterParent;
                         emb.ShowDialog(this);
@@ -1611,9 +1612,13 @@ namespace MobiusEditor
         private void UpdateVisibleLayers()
         {
             MapLayerFlag layers = MapLayerFlag.All;
-            if (!viewIndicatorsBoundariesMenuItem.Checked)
+            if (!viewBoundariesBoundariesMenuItem.Checked)
             {
                 layers &= ~MapLayerFlag.Boundaries;
+            }
+            if (!viewBoundariesMapSymmetryMenuItem.Checked)
+            {
+                layers &= ~MapLayerFlag.MapSymmetry;
             }
             if (!viewMapBuildingsMenuItem.Checked)
             {
@@ -1767,7 +1772,7 @@ namespace MobiusEditor
             {
                 // Suppress updates.
                 this.activeTool = null;
-                viewIndicatorsBoundariesMenuItem.Checked = true;
+                viewBoundariesBoundariesMenuItem.Checked = true;
                 viewIndicatorsWaypointsMenuItem.Checked = true;
                 viewIndicatorsCellTriggersMenuItem.Checked = true;
                 viewIndicatorsObjectTriggersMenuItem.Checked = true;
@@ -1794,7 +1799,6 @@ namespace MobiusEditor
             {
                 // Suppress updates.
                 this.activeTool = null;
-                viewIndicatorsBoundariesMenuItem.Checked = false;
                 viewIndicatorsWaypointsMenuItem.Checked = false;
                 viewIndicatorsCellTriggersMenuItem.Checked = false;
                 viewIndicatorsObjectTriggersMenuItem.Checked = false;

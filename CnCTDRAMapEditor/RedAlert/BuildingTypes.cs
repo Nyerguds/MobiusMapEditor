@@ -30,7 +30,7 @@ namespace MobiusEditor.RedAlert
         public static readonly BuildingType Pillbox = new BuildingType(4, "pbox", "TEXT_STRUCTURE_RA_PBOX", 0, 15, new bool[1, 1] { { true } }, "Greece");
         public static readonly BuildingType CamoPillbox = new BuildingType(5, "hbox", "TEXT_STRUCTURE_RA_HBOX", 0, 15, new bool[1, 1] { { true } }, "Greece");
         public static readonly BuildingType Command = new BuildingType(6, "dome", "TEXT_STRUCTURE_RA_DOME", 0, 40, new bool[2, 2] { { true, true }, { true, true } }, "Greece", BuildingTypeFlag.Bib);
-        public static readonly BuildingType GapGenerator = new BuildingType(7, "gap", "TEXT_STRUCTURE_RA_GAP", 60, 0, new bool[2, 1] { { false }, { true } }, "Greece");
+        public static readonly BuildingType GapGenerator = new BuildingType(7, "gap", "TEXT_STRUCTURE_RA_GAP", 60, 0, new bool[2, 1] { { false }, { true } }, "Greece", 13);
         public static readonly BuildingType Turret = new BuildingType(8, "gun", "TEXT_STRUCTURE_RA_GUN", 0, 40, new bool[1, 1] { { true } }, "Greece", BuildingTypeFlag.Turret);
         public static readonly BuildingType AAGun = new BuildingType(9, "agun", "TEXT_STRUCTURE_RA_AGUN", 0, 50, new bool[2, 1] { { false }, { true } }, "Greece", BuildingTypeFlag.Turret);
         public static readonly BuildingType FlameTurret = new BuildingType(10, "ftur", "TEXT_STRUCTURE_RA_FTUR", 0, 20, new bool[1, 1] { { true } }, "USSR");

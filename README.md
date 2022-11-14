@@ -1,6 +1,6 @@
 ﻿## Mobius Map Editor
 
-An enhanced version of the C&C Tiberian Dawn and Red Alert Map Editor based on the source code released by Electronic Arts. The goal of the project is simply to improve the usability and convenience of the map editor, fix bugs, improve and clean its code-base, enhance compatibility with different kinds of systems and enhance the editor's support for mods.
+An enhanced version of the C&C Tiberian Dawn, Sole Survivor and Red Alert Map Editor based on the source code released by Electronic Arts. The goal of the project is to improve the usability and convenience of the map editor, fix bugs, improve and clean its code-base, enhance compatibility with different kinds of systems and enhance the editor's support for mods.
 
 ### Contributing
 
@@ -38,7 +38,7 @@ The file "CnCTDRAMapEditor.exe.config" contains settings to customise the editor
 
 ### Editor options:
 
-* **ModsToLoadTD** / **ModsToLoadRA** / **ModsToLoadSS**: [WIP] semicolon (or comma) separated list of mod entries for each supported game. A mod entry can either be a Steam workshop ID, or a folder name. The paths will initially be looked up in the mods folder of the respective game in the CnCRemastered\mods\ folder under your Documents folder, but the loading system will also check the Steam workshop files for a matching mod. Sole Survivor will use Tiberian Dawn mods. Note that mods can only apply graphical changes from the tileset and house color xml files; the editor can't read any data from compiled dll files. This mods system is mostly meant to apply graphical fixes to the editor.
+* **ModsToLoadTD** / **ModsToLoadRA** / **ModsToLoadSS**: semicolon (or comma) separated list of mod entries for each supported game. A mod entry can either be a Steam workshop ID, or a folder name. The paths will initially be looked up in the mods folder of the respective game in the CnCRemastered\mods\ folder under your Documents folder, but the loading system will also check the Steam workshop files for a matching mod. Sole Survivor will use Tiberian Dawn mods. Note that mods can only apply graphical changes from the tileset and house color xml files; the editor can't read any data from compiled dll files. This mods system is mostly meant to apply graphical fixes to the editor.
 * **MapBackColor**: Background color for the map screen, as "R,G,B". This defaults to dark grey, so users can see the actual map outline on Red Alert Interior maps.
 * **MapScale**: Scaling multiplier for the size at which assets are rendered on the map; higher means lower quality. This will make the UI more responsive. Negative values will enable smooth scaling, which gives nicer graphics but will make the UI noticeable _less_ responsive. Defaults to 0.5.
 * **PreviewScale**: Scaling multiplier for the size at which assets are rendered on the preview tools. Negative values will enable smooth scaling, but this usually doesn't look good on the upscaled preview graphics. Defaults to 1.
@@ -47,7 +47,7 @@ The file "CnCTDRAMapEditor.exe.config" contains settings to customise the editor
 * **TemplateToolTextureSizeMultiplier**: Floating-point multiplication factor for the size of tiles shown on the Map tool. This scaling is somehow done relative to the screen size; not sure.
 * **MaxMapTileTextureSize**: Maximum for the size of the tiles shown on the Map tool. Leave on 0 to disable.
 * **UndoRedoStackSize**: The amount of undo/redo actions stored in memory. Defaults to 50.
-* **MinimumClampSize**: [WIP] Minimum size of the tool window that will automatically be forced to remain in the screen area. If set to 0,0, this will default to the size of the entire tool window.
+* **MinimumClampSize**: Minimum size of the tool window that will automatically be forced to remain in the screen area. If set to 0,0, this will default to the size of the entire tool window.
 
 The **ModsToLoadTD** and **ModsToLoadSS** settings will have the `GraphicsFixesTD` mod set by default, to complete the incomplete TD Remastered graphics set, meaning the mod will automatically be loaded if found. Note that the editor has no way to check whether mods are enabled in the game, so that makes no difference.
 
@@ -64,9 +64,9 @@ These options are all enabled by default, but can be disabled if you wish. Use t
 * **ConvertCraters**: Any craters of the types CR2-CR6 placed in missions are bugged in the games, and revert to the smallest size of CR1. This filters them out and converts them to CR1 craters of the specified size, and removes the other crater types from the Smudge choices list.
 * **BoundsObstructFill**: When filling map tiles with [Ctrl]+[Shift]+[Click], the map boundary acts as border blocking the fill spread. This applies both inside and outside the border.
 * **FilterTheaterObjects**: Filter out objects that don't belong in the current map's theater. This affects both map loading, and the items visible in the placement lists. Do not turn this off unless you really know what you're doing; having theater-illegal objects on maps may cause situations that crash the game.
-* **WriteClassicBriefing**: [WIP] In addition to the single-line "Text=" briefing used by the Remaster, also write classic-style briefings into the ini file as "1=", "2=", etc. lines split at human-readable length. This includes the C&C95 v1.06 line break system using ## characters at the end of a line.
-* **NoOwnedObjectsInSole**: [WIP] Sole Survivor maps normally don't include placed down units, structures or infantry, so loading and saving them is disabled by default. But it seems some official maps do contain decorative civilian buildings, and old betas of the game could read those, so this option can be disabled for research purposes.
-* **DrawSoleTeleports**: [WIP] On Sole Survivor maps, draw a black area with blue border over the loaded ROAD graphics to emulate the look of the in-game teleporters.
+* **WriteClassicBriefing**: In addition to the single-line "Text=" briefing used by the Remaster, also write classic-style briefings into the ini file as "1=", "2=", etc. lines split at human-readable length. This includes the C&C95 v1.06 line break system using ## characters at the end of a line.
+* **NoOwnedObjectsInSole**: Sole Survivor maps normally don't include placed down units, structures or infantry, so loading and saving them is disabled by default. But it seems some official maps do contain decorative civilian buildings, and old betas of the game could read those, so this option can be disabled for research purposes.
+* **DrawSoleTeleports**: On Sole Survivor maps, draw a black area with blue border over the loaded ROAD graphics to emulate the look of the in-game teleporters.
 
 ---
 
@@ -345,7 +345,7 @@ These options are all enabled by default, but can be disabled if you wish. Use t
 * Fixed a crash in the smudge restore system when you delete a smudge or building that is too close to the map edge.
 * Reduced maximum multiplayer start positions in the editor to 8, since the games apparently can't show more.
 
-#### v1.4.4.0: [WIP]
+#### v1.4.4.0:
 
 * When your mouse cursor is inside the map bounds and you press [Ctrl] in Map mode to enable bounds editing mode, your cursor will now immediately change to the Move cursor, without requiring any mouse movement.
 * The status bar at the bottom will now explicitly mention the sub-position of the infantry under the mouse cursor.
@@ -401,6 +401,12 @@ These options are all enabled by default, but can be disabled if you wish. Use t
 * Red Alert globals are now limited to 0 to 29, since that is how they are defined in the game code.
 * The editor now specifically checks for the presence of the [Basic] and [Map] sections to see whether a file is indeed a C&C map.
 * Added checks on triggers containing Events or Actions that don't have their required House/Teamtype/Trigger filled in.
+* The automatic clearing of the obsolete clear terrain in RA1 will no longer mark the map as modified.
+* Red Alert solo mission detection now correctly takes into account win and lose triggers set to non-player houses.
+* Added new indicator for "Map symmetry".
+* Fixed bug in reporting on which cell objects are overlapping.
+* When clearing a trigger from a unit or building, the error screen will now report the cell of the affected object.
+* Unit and structure reading now happens before terrain and overlay, so in the event of an overlap, the units or structures will be preserved.
 
 ### Possible future features
 

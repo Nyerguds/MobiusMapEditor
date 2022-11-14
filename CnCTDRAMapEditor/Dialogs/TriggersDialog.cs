@@ -288,7 +288,7 @@ namespace MobiusEditor.Dialogs
         /// <returns>True if the triggers dialog should remain open.</returns>
         private Boolean CancelForFatalErrors()
         {
-            string[] errors = plugin.CheckTriggers(this.triggers, false, false, true, out bool fatal).ToArray();
+            string[] errors = plugin.CheckTriggers(this.triggers, false, false, true, out bool fatal, false, out _).ToArray();
             if (!fatal)
             {
                 return false;
@@ -296,6 +296,7 @@ namespace MobiusEditor.Dialogs
             using (ErrorMessageBox emb = new ErrorMessageBox(true))
             {
                 emb.Title = "Triggers check";
+                emb.Message = "The following serious issues were encountered. Press \"OK\" to ignore, or \"Cancel\" to go back and edit them.";
                 emb.Errors = errors;
                 emb.UseWordWrap = true;
                 return emb.ShowDialog() == DialogResult.Cancel;
@@ -620,6 +621,7 @@ namespace MobiusEditor.Dialogs
                         switch (triggerEvent.EventType)
                         {
                             case RedAlert.EventTypes.TEVENT_NONE:
+                            case RedAlert.EventTypes.TEVENT_SPIED:
                             case RedAlert.EventTypes.TEVENT_DISCOVERED:
                             case RedAlert.EventTypes.TEVENT_ATTACKED:
                             case RedAlert.EventTypes.TEVENT_DESTROYED:
@@ -635,7 +637,7 @@ namespace MobiusEditor.Dialogs
                                 break;
                             case RedAlert.EventTypes.TEVENT_LEAVES_MAP:
                                 eventValueComboBox.Visible = true;
-                                var teamData = plugin.Map.TeamTypes.Count == 0 ? new[] { TeamType.None } : plugin.Map.TeamTypes.Select(t => t.Name).ToArray();
+                                var teamData = TeamType.None.Yield().Concat(plugin.Map.TeamTypes.Select(t => t.Name)).ToArray();
                                 eventValueComboBox.DataSource = teamData;
                                 eventValueComboBox.DataBindings.Add("SelectedItem", triggerEvent, "Team");
                                 eventValueComboBox.SelectedItem = teamData.Contains(team, StringComparer.OrdinalIgnoreCase) ? team : TeamType.None;
@@ -645,7 +647,6 @@ namespace MobiusEditor.Dialogs
                             case RedAlert.EventTypes.TEVENT_CROSS_VERTICAL:
                             case RedAlert.EventTypes.TEVENT_ENTERS_ZONE:
                             case RedAlert.EventTypes.TEVENT_LOW_POWER:
-                            case RedAlert.EventTypes.TEVENT_SPIED:
                             case RedAlert.EventTypes.TEVENT_THIEVED:
                             case RedAlert.EventTypes.TEVENT_HOUSE_DISCOVERED:
                             case RedAlert.EventTypes.TEVENT_BUILDINGS_DESTROYED:
@@ -923,7 +924,7 @@ namespace MobiusEditor.Dialogs
                     return;
                 }
             }
-            string[] errors = plugin.CheckTriggers(this.triggers, true, false, false, out _)?.ToArray();
+            string[] errors = plugin.CheckTriggers(this.triggers, true, false, false, out _, false, out _)?.ToArray();
             if (errors == null || errors.Length == 0)
             {
                 MessageBox.Show("No issues were encountered.", "Triggers check", MessageBoxButtons.OK);
