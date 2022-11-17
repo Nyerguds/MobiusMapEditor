@@ -211,7 +211,7 @@ Released on 05 Sep 2022 at 14:25 GMT
 * When a map is opened, the editor will load theater-specific icons into the toolstrip.
 * Resource placement is now disabled in Interior theater.
 * Map loading now checks if map objects exist in the specified theater. [NOTE: made into a setting in v1.4.3.0]
-* An image export function has been added. This will mirror the current items enabled in the "View" menu. Its size is determined by the "ExportScale" setting in "CnCTDRAMapEditor.exe.config". [NOTE: made into a full dialog in v1.4.4.0]
+* An image export function has been added. This will mirror the current items enabled in the "View" menu. Its size is determined by the "ExportScale" setting in "CnCTDRAMapEditor.exe.config". [NOTE: made into a full dialog, with the setting changed to DefaultExportScale, in v1.4.4.0]
 * Fixed a glitch that made the trigger dropdown of the opened tool stop functioning correctly after editing the triggers.
 * Template 'BRIDGE1H' in RA now shows its full available tileset. Seems this is an odd corner case where Westwood were the ones who forgot to cut it out properly, but that does make its two last tiles valid.
 * The editor will now detect when, on Red Alert maps, the obsolete tile with id 255 is used as 'clear' terrain, and will only show a single message about it. There is an "IgnoreRaObsoleteClear" setting in "CnCTDRAMapEditor.exe.config" to disable filtering out this tile, though that is only useful for research purposes.
