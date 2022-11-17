@@ -91,8 +91,8 @@ A brief overview of the added features:
 * Improved problem detection in map loading, which will always give a full list of the found issues, rather than refusing to open the map.
 * Trigger analysis to detect possible issues.
 * Map objects overview, including analysis of unused scripting objects (triggers, globals, teams, waypoints) in singleplayer maps.
-* Power balance and silo level tools, which account for buildings scripted to be built later.
-* Randomisation in Red Alert interior maps, allowing the use of previously unused alternates that exist for almost all tiles.
+* Power balance and silo level tools, which account for buildings scripted to be built later, and for rule tweaks in RA maps.
+* Tile randomisation in Red Alert interior maps, allowing the use of previously unused alternates that exist for almost all tiles.
 * Tooltips for all teamtype options.
 * Options in the main config file can disable specific editor behaviour, like disallowing overlapping bibs or theater-illegal objects.
 * Shortcuts for selecting special waypoints.
