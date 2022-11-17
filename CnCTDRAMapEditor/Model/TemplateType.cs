@@ -18,7 +18,6 @@ using MobiusEditor.Utility;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Drawing.Imaging;
 using System.Linq;
 
 namespace MobiusEditor.Model
@@ -30,8 +29,8 @@ namespace MobiusEditor.Model
         Clear        = (1 << 0),
         Water        = (1 << 1),
         RandomCell   = (1 << 2),
-        Group      = RandomCell | (1 << 3),
-        IsGrouped = (1 << 4),
+        Group        = RandomCell | (1 << 3),
+        IsGrouped    = (1 << 4),
     }
 
     public class TemplateType : IBrowsableType
