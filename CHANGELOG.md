@@ -12,7 +12,7 @@
 
 #### v1.4.0.0:
 
-Released 08 Jul 21:37 GMT
+Released on 08 Jul 2022 at 21:37 GMT
 
 * Fixed overlay height overflow bug in Rampa's new UI.
 * Fixed map tiles list duplicating every time the "Map" tool window is opened in Rampa's version.
@@ -38,7 +38,7 @@ Released 08 Jul 21:37 GMT
 
 #### v1.4.0.1:
 
-Released 13 Jul 07:35 GMT
+Released on 13 Jul 2022 at 07:35 GMT
 
 * Added "All supported types (\*.ini;\*.bin;\*.mpr)" as default filter when opening files.
 * Added Drag & Drop support for opening map files.
@@ -70,7 +70,7 @@ Released 13 Jul 07:35 GMT
 
 #### v1.4.0.2:
 
-Released 14 Jul 20:22 GMT
+Released on 14 Jul 2022 at 20:22 GMT
 
 * Fixed the bug that cleared all map templates on save in v1.4.0.1 (whoops).
 * Fixed the bug in the teamtypes list that showed the wrong context menu options on right click.
@@ -91,7 +91,7 @@ Released 14 Jul 20:22 GMT
 
 #### v1.4.0.3:
 
-Released 27 Jul 09:47 GMT
+Released on 27 Jul 2022 at 09:47 GMT
 
 * The editor now tries to automatically detect the game installation folder in Steam.
 * Fixed refresh errors in preview images when resizing tool windows.
@@ -114,7 +114,7 @@ Released 27 Jul 09:47 GMT
 
 #### v1.4.1.0:
 
-Released 20 Aug 22:37 GMT
+Released on 20 Aug 2022 at 22:37 GMT
 
 * Fixed dimensions of RA's ore mine, Snow theater ice floes and Interior theater boxes, and one of the Desert theater rocks in TD.
 * Added \*.ini to the list of possible extensions for opening RA maps. Apparently before I only added it for saving.
@@ -188,7 +188,7 @@ Released 20 Aug 22:37 GMT
 
 #### v1.4.1.1:
 
-Released 22 Aug 09:28 GMT
+Released on 22 Aug 2022 at 09:28 GMT
 
 * The Red Alert teamtype order "Guard Area" now correctly has 'time' as argument type, rather than a waypoint.
 * Added a system to detect singleplayer missions from the original games and automatically mark them as singleplayer if they conform to the classic naming scheme for singleplayer missions, and contain a Lose and Win trigger.
@@ -200,7 +200,7 @@ Released 22 Aug 09:28 GMT
 
 #### v1.4.2.0:
 
-Released 05 Sep 14:25 GMT
+Released on 05 Sep 2022 at 14:25 GMT
 
 * Menu items related to map actions will now be disabled if no map is loaded.
 * Fixed "Destroy attached object" trigger in RA not being seen as valid on units.
@@ -239,7 +239,7 @@ Released 05 Sep 14:25 GMT
 
 #### v1.4.3.0:
 
-Released 13 Sep 21:46 GMT
+Released on 13 Sep 2022 at 21:46 GMT
 
 * Fixed a bug where the default House in TD maps was set to "None", causing them to crash the game.
 * Bibs placed as the 'smudge' type now show their full size, and can be placed in ways that makes them partially overlap. As long as at least one cell of a bib exists, the bib exists.
@@ -280,7 +280,7 @@ Released 13 Sep 21:46 GMT
 
 #### v1.4.3.1:
 
-Released 14 Sep 16:52 GMT
+Released on 14 Sep 2022 at 16:52 GMT
 
 * Fixed a crash when flood-clearing with a template that crossed the map bounds.
 * When flood-clearing with a template containing cells on both sides of the map bounds, the clear operation will now ignore the map bounds.
@@ -288,14 +288,14 @@ Released 14 Sep 16:52 GMT
 
 #### v1.4.3.2:
 
-Released 14 Sep 21:20 GMT
+Released on 14 Sep 2022 at 21:20 GMT
 
 * Fixed a crash in the smudge restore system when you delete a smudge or building that is too close to the map edge.
 * Reduced maximum multiplayer start positions in the editor to 8, since the games apparently can't show more.
 
 #### v1.4.4.0:
 
-Released 14 Nov 22:25 GMT
+Released on 14 Nov 2022 at 22:25 GMT
 
 * When your mouse cursor is inside the map bounds and you press [Ctrl] in Map mode to enable bounds editing mode, your cursor will now immediately change to the Move cursor, without requiring any mouse movement.
 * The status bar at the bottom will now explicitly mention the sub-position of the infantry under the mouse cursor.
