@@ -16,7 +16,7 @@ Right now, I'm not really looking into making this a joint project. Specific bug
 
 Simply unpack the editor into a new folder on your disk somewhere. On first startup, it will automatically try to detect the folder in which the game is installed, and if it can't find it, it will show a popup asking you to locate it. Note that this autodetect only works on Steam installations of the game.
 
-For usage and configuration, see [MANUAL.md].
+For usage and configuration, see [MANUAL.md](MANUAL.md).
 
 ## Features
 
