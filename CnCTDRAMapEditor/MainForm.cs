@@ -27,6 +27,7 @@ using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
@@ -760,7 +761,7 @@ namespace MobiusEditor
                             ev.MapPanel.Invalidate();
                         }
                         url.Track(undoAction, redoAction);
-                        // No longer a full refresh, since celltriggers no longer disable when no triggers are found.
+                        // No longer a full refresh, since celltriggers function is no longer disabled when no triggers are found.
                         mapPanel.Invalidate();
                     }
                 }
@@ -1068,7 +1069,7 @@ namespace MobiusEditor
         }
 
         /// <summary>
-        /// WARNING: this EnableUI function is meant for map load, meaning it unloads the current plugin in addition to disabling all controls!
+        /// WARNING: this function is meant for map load, meaning it unloads the current plugin in addition to disabling all controls!
         /// </summary>
         /// <param name="enableUI"></param>
         /// <param name="label"></param>
@@ -1079,11 +1080,7 @@ namespace MobiusEditor
             fileRecentFilesMenuItem.Enabled = enableUI;
             viewMapToolStripMenuItem.Enabled = enableUI;
             viewIndicatorsToolStripMenuItem.Enabled = enableUI;
-            if (enableUI)
-            {
-                multiThreader.RemoveBusyLabel(this);
-            }
-            else
+            if (!enableUI)
             {
                 Unload();
                 multiThreader.CreateBusyLabel(this, label);
@@ -1107,7 +1104,6 @@ namespace MobiusEditor
             if (enableUI)
             {
                 RefreshUI(storedToolType);
-                multiThreader.RemoveBusyLabel(this);
             }
             else
             {
@@ -1136,6 +1132,8 @@ namespace MobiusEditor
             if (gameType == GameType.TiberianDawn)
             {
                 Globals.TheTeamColorManager.Reset();
+                AddTeamColorNone(Globals.TheTeamColorManager);
+                // TODO split classic and remaster team color load.
                 Globals.TheTeamColorManager.Load(@"DATA\XML\CNCTDTEAMCOLORS.XML");
                 plugin = new TiberianDawn.GamePlugin(!noImage, isTdMegaMap);
             }
@@ -1148,10 +1146,22 @@ namespace MobiusEditor
             else if (gameType == GameType.SoleSurvivor)
             {
                 Globals.TheTeamColorManager.Reset();
+                AddTeamColorNone(Globals.TheTeamColorManager);
                 Globals.TheTeamColorManager.Load(@"DATA\XML\CNCTDTEAMCOLORS.XML");
                 plugin = new SoleSurvivor.GamePlugin(!noImage, isTdMegaMap);
             }
             return plugin;
+        }
+
+        private static void AddTeamColorNone(TeamColorManager teamColorManager)
+        {
+            // Add default black for unowned.
+            var teamColorNone = new TeamColor(teamColorManager);
+            teamColorNone.Load("NONE", "BASE_TEAM",
+                Color.FromArgb(66, 255, 0), Color.FromArgb(0, 255, 56), 0,
+                new Vector3(0.30f, -1.00f, 0.00f), new Vector3(0f, 1f, 1f), new Vector2(0.0f, 0.1f),
+                new Vector3(0, 1, 1), new Vector2(0, 1), Color.FromArgb(61, 61, 59));
+            teamColorManager.AddTeamColor(teamColorNone);
         }
 
         /// <summary>
@@ -2121,6 +2131,14 @@ namespace MobiusEditor
                 Bitmap img = image.FitToBoundingBox(opaqueBounds, 24, 24, Color.Transparent);
                 theaterIcons[id] = img;
                 button.Image = img;
+            }
+        }
+
+        private void mapPanel_PostRender(Object sender, RenderEventArgs e)
+        {
+            if (!multiThreader.IsExecuting)
+            {
+                multiThreader.RemoveBusyLabel(this);
             }
         }
     }

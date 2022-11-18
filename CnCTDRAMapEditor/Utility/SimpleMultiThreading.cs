@@ -42,6 +42,11 @@ namespace MobiusEditor.Utility
             }
         }
 
+        public Boolean IsExecuting
+        {
+            get { return this.processingThread != null && this.processingThread.IsAlive; }
+        }
+
         /// <summary>
         /// Executes a threaded operation while locking the UI. 
         /// </summary>

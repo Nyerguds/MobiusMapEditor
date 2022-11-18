@@ -24,12 +24,15 @@ namespace MobiusEditor.Model
 
         public string Name { get; private set; }
 
+        public string ClassicTileset { get; private set; }
+
         public IEnumerable<string> Tilesets { get; private set; }
 
-        public TheaterType(sbyte id, string name, IEnumerable<string> tilesets)
+        public TheaterType(sbyte id, string name, string classicTileset, IEnumerable<string> tilesets)
         {
             ID = id;
             Name = name;
+            ClassicTileset = classicTileset;
             Tilesets = tilesets.Distinct();
         }
 

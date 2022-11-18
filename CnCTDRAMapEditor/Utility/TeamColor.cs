@@ -26,6 +26,12 @@ namespace MobiusEditor.Utility
 
         public string Name { get; private set; }
 
+        private byte[] classicRemap;
+        public byte[] ClassicRemap => classicRemap ?? (Variant == null ? null : teamColorManager[Variant]?.ClassicRemap);
+
+        private byte[] classicRemapStructures;
+        public byte[] ClassicRemapStructures => classicRemapStructures ?? (Variant == null ? null : teamColorManager[Variant]?.ClassicRemapStructures);
+
         private Color? lowerBounds;
         public Color LowerBounds => lowerBounds.HasValue ? lowerBounds.Value : ((Variant != null) ? teamColorManager[Variant].LowerBounds : default);
 
@@ -69,6 +75,8 @@ namespace MobiusEditor.Utility
         {
             this.Name = col.Name;
             this.Variant = col.Variant;
+            this.classicRemap = col.ClassicRemap;
+            this.classicRemapStructures = col.ClassicRemapStructures;
             this.lowerBounds = col.LowerBounds;
             this.upperBounds = col.UpperBounds;
             this.fudge = col.Fudge;
@@ -93,6 +101,14 @@ namespace MobiusEditor.Utility
             this.overallInputLevels = overallInputLevels;
             this.overallOutputLevels = overallOutputLevels;
             this.radarMapColor = radarMapColor;
+        }
+
+        public void Load(string name, string variant, byte[] classicRemap, byte[] classicRemapStructures)
+        {
+            this.Name = name;
+            this.Variant = variant;
+            this.classicRemap = classicRemap;
+            this.classicRemapStructures = classicRemapStructures;        
         }
 
         public void Load(string xml)

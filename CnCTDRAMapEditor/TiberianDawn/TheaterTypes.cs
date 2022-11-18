@@ -24,10 +24,10 @@ namespace MobiusEditor.TiberianDawn
     {
         private static readonly IEnumerable<string> commonTilesets = new string[] { "TD_Units", "TD_Structures", "TD_VFX", "Common_VFX" };
 
-        public static readonly TheaterType Desert = new TheaterType(0, "desert", "TD_Terrain_Desert".Yield().Concat(commonTilesets));
-        public static readonly TheaterType Temperate = new TheaterType(2, "temperate", "TD_Terrain_Temperate".Yield().Concat(commonTilesets));
+        public static readonly TheaterType Desert = new TheaterType(0, "desert", "desert", "TD_Terrain_Desert".Yield().Concat(commonTilesets));
+        public static readonly TheaterType Temperate = new TheaterType(2, "temperate", "temperat", "TD_Terrain_Temperate".Yield().Concat(commonTilesets));
         // Winter seems to fall back on Temperate for the Haystack graphics.
-        public static readonly TheaterType Winter = new TheaterType(2, "winter", "TD_Terrain_Winter".Yield().Concat(commonTilesets).Concat("TD_Terrain_Temperate".Yield()));
+        public static readonly TheaterType Winter = new TheaterType(2, "winter", "winter", "TD_Terrain_Winter".Yield().Concat(commonTilesets).Concat("TD_Terrain_Temperate".Yield()));
 
         private static TheaterType[] Types;
 

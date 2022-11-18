@@ -24,9 +24,9 @@ namespace MobiusEditor.RedAlert
     {
         private static readonly IEnumerable<string> commonTilesets = new string[] { "RA_Units", "RA_Structures", "RA_VFX", "Common_VFX" };
 
-        public static readonly TheaterType Temperate = new TheaterType(0, "temperate", "RA_Terrain_Temperate".Yield().Concat(commonTilesets));
-        public static readonly TheaterType Snow = new TheaterType(1, "snow", "RA_Terrain_Snow".Yield().Concat(commonTilesets));
-        public static readonly TheaterType Interior = new TheaterType(2, "interior", "RA_Terrain_Interior".Yield().Concat(commonTilesets));
+        public static readonly TheaterType Temperate = new TheaterType(0, "temperate", "temperat", "RA_Terrain_Temperate".Yield().Concat(commonTilesets));
+        public static readonly TheaterType Snow = new TheaterType(1, "snow", "snow", "RA_Terrain_Snow".Yield().Concat(commonTilesets));
+        public static readonly TheaterType Interior = new TheaterType(2, "interior", "interior", "RA_Terrain_Interior".Yield().Concat(commonTilesets));
 
         private static TheaterType[] Types;
 
