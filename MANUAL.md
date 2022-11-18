@@ -1,4 +1,6 @@
-﻿## Installation
+﻿# Mobius Map Editor - Manual
+
+## Installation
 
 **DO NOT unpack this in the C&C Remastered Collection's install folder.** It is absolutely unnecessary to overwrite any files of the installed game.
 

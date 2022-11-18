@@ -1,6 +1,6 @@
-﻿## Change log
+﻿# Mobius Map Editor - Change log
 
-### Features added by Rampastring:
+## Features added by Rampastring:
 
 * Downsized tool graphics by a user-configurable factor so you can see more placeable object types at once on sub-4K monitors.
 * Improved zoom levels.
@@ -8,9 +8,9 @@
 * Made tool windows remember their previous position upon closing and re-opening them.
 * Replaced drop-downs with list boxes in object type selection dialogs to allow switching between objects with fewer clicks.
 
-### Features and fixes by Nyerguds:
+## Features and fixes by Nyerguds:
 
-#### v1.4.0.0:
+### v1.4.0.0:
 
 Released on 08 Jul 2022 at 21:37 UTC
 
@@ -36,7 +36,7 @@ Released on 08 Jul 2022 at 21:37 UTC
 * Randomised tiberium on save, like the original WW editor does. (This is purely cosmetic; the game re-randomises it on map load.)
 * Added ability to place bibs as smudge type. They won't show their full size in the editor at the moment, though.
 
-#### v1.4.0.1:
+### v1.4.0.1:
 
 Released on 13 Jul 2022 at 07:35 UTC
 
@@ -68,7 +68,7 @@ Released on 13 Jul 2022 at 07:35 UTC
 * Trigger controls no longer jump around slightly when selecting different options.
 * Using the mouse wheel will now change the tiberium field size per 2, like a normal arrow click would.
 
-#### v1.4.0.2:
+### v1.4.0.2:
 
 Released on 14 Jul 2022 at 20:22 UTC
 
@@ -89,7 +89,7 @@ Released on 14 Jul 2022 at 20:22 UTC
 * The "clear1" tile is now explicitly shown in the tiles list. It acts as eraser.
 * Teamtype "Priority" value (recruit priority) is now capped at 15. [NOTE: reverted in v1.4.0.3]
 
-#### v1.4.0.3:
+### v1.4.0.3:
 
 Released on 27 Jul 2022 at 09:47 UTC
 
@@ -112,7 +112,7 @@ Released on 27 Jul 2022 at 09:47 UTC
 * The CONC and ROAD overlay types now show the same graphics as in-game. This is technically just a dummy graphic the game uses when not finding object graphics. The version in the editor is a reconstruction.
 * Removed limitation on placing resources on the top and bottom row of the map.
 
-#### v1.4.1.0:
+### v1.4.1.0:
 
 Released on 20 Aug 2022 at 22:37 UTC
 
@@ -186,7 +186,7 @@ Released on 20 Aug 2022 at 22:37 UTC
 * In TD maps, a building that is set to be rebuilt but is not built from the start will now show as House "None".
 * The Interior tiles "wall0002" to "wall0022" are now grouped per type into three dummy-entries "wallgroup1", "wallgroup2" and "wallgroup3", to simplify random placement of these tiles and to remove clutter from the tiles list.
 
-#### v1.4.1.1:
+### v1.4.1.1:
 
 Released on 22 Aug 2022 at 09:28 UTC
 
@@ -198,7 +198,7 @@ Released on 22 Aug 2022 at 09:28 UTC
 * Maps loaded from file are now seen as 'modified' if any issues were detected that made the editor change or discard data during the loading process.
 * The triggers check feedback (TD only) now also uses the large window used for showing the map load errors.
 
-#### v1.4.2.0:
+### v1.4.2.0:
 
 Released on 05 Sep 2022 at 14:25 UTC
 
@@ -237,7 +237,7 @@ Released on 05 Sep 2022 at 14:25 UTC
 * If the map is marked as single player scenario, the first waypoints are no longer indicated as player start positions with a "P" prefix.
 * Mods will now only be loaded for maps targeted at their respective game, meaning common assets can be overridden differently by TD and RA mods. [NOTE: mod settings split up per game in v1.4.4.0]
 
-#### v1.4.3.0:
+### v1.4.3.0:
 
 Released on 13 Sep 2022 at 21:46 GMT
 
@@ -278,7 +278,7 @@ Released on 13 Sep 2022 at 21:46 GMT
 * While holding [Ctrl] in Map mode to enable bounds editing mode, the whole bounds rectangle can now be moved by clicking inside it and dragging it around.
 * While holding [Ctrl] in Map mode to enable bounds editing mode, you will no longer select tiles when clicking.
 
-#### v1.4.3.1:
+### v1.4.3.1:
 
 Released on 14 Sep 2022 at 16:52 GMT
 
@@ -286,14 +286,14 @@ Released on 14 Sep 2022 at 16:52 GMT
 * When flood-clearing with a template containing cells on both sides of the map bounds, the clear operation will now ignore the map bounds.
 * Flood fill clear will now no longer ignore if the user has a single cell from a template selected.
 
-#### v1.4.3.2:
+### v1.4.3.2:
 
 Released on 14 Sep 2022 at 21:20 GMT
 
 * Fixed a crash in the smudge restore system when you delete a smudge or building that is too close to the map edge.
 * Reduced maximum multiplayer start positions in the editor to 8, since the games apparently can't show more.
 
-#### v1.4.4.0:
+### v1.4.4.0:
 
 Released on 14 Nov 2022 at 22:25 GMT
 
@@ -360,7 +360,7 @@ Released on 14 Nov 2022 at 22:25 GMT
 * When clearing a trigger from a unit or building, the error screen will now report the cell of the affected object.
 * Unit and structure reading now happens before terrain and overlay, so in the event of an overlap, the units or structures will be preserved.
 
-#### v1.4.4.1:
+### v1.4.4.1:
 
 --Unreleased--
 
