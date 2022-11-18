@@ -29,7 +29,7 @@ A brief overview of the added features:
 * Image export function, with adjustable scale, and choice of shown object types.
 * Sole Survivor and Tiberian Dawn megamap support.
 * Different size support for craters.
-* Mod loading support to allow filling in graphics for objects that were not remastered.
+* Mod loading support to allow applying graphics fixes, and filling in graphics for objects that were not remastered.
 * Missing objects added: bibs in Smudge, farmer fields and haystacks in buildings, and unused pavements in TD overlay.
 * The ability to enable/disable Aftermath units.
 * Vastly improved triggers and teamtypes editors, with clear descriptions and tooltips for all options.
