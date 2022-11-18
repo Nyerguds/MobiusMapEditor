@@ -364,6 +364,6 @@ Released on 14 Nov 2022 at 22:25 GMT
 
 --Unreleased--
 
-* Added igloos (haystacks) to Sole Survivor's Winter theater
+* Added igloos (haystacks) to the Overlay in Sole Survivor's Winter theater.
 * Fixed refresh bug where a ghost image of the label indicating a heavy operation remained while repainting the map. The label is now only removed after the repaint.
 
