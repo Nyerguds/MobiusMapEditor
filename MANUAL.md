@@ -8,7 +8,7 @@ Simply unpack the editor into a new folder on your disk somewhere. On first star
 
 ## Usage
 
-The creators of the map editor have chosen to build a manual into the editor, but it might not be immediately obvious. Look at the bottom bar, and it will tell you for the currently selected editing type what your mouse buttons will do, and which modifier keys will change to different placement modes. Once you hold down such a key, the bottom bar text will change, further explaining what your mouse buttons will do in this specific mode. Several types of objects can also be dragged around, and will change the bottom bar text accordingly when the mouse button is pressed down on an object.
+The creators of the map editor have chosen to build a manual into the editor, but it might not be immediately obvious. Look at the bottom bar, and it will tell you for the currently selected editing type what your mouse buttons will do, and which modifier keys will change to different editing modes. Once you hold down such a key, the bottom bar text will change, further explaining what your mouse buttons will do in this specific mode. Several types of objects can also be dragged around, and will change the bottom bar text accordingly when the mouse button is pressed down on an object.
 
 Besides that, the scroll wheel will allow zooming in and out, and holding down either the middle mouse button or the space bar will allow you to quickly drag-scroll around the map.
 
