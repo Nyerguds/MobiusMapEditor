@@ -10,8 +10,6 @@ The editor can edit maps for Command & Conquer Tiberian Dawn, Sole Survivor and 
 
 Right now, I'm not really looking into making this a joint project. Specific bug reports and suggestions are always welcome though, but post them as issues.
 
----
-
 ## Installation
 
 **DO NOT unpack this in the C&C Remastered Collection's install folder.** It is absolutely unnecessary to overwrite any files of the installed game.
