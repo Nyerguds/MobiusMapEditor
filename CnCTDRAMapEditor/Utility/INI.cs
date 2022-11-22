@@ -238,6 +238,16 @@ namespace MobiusEditor.Utility
             return this[name];
         }
 
+        public bool Replace(INISection section)
+        {
+            if (section == null || !Sections.Contains(section.Name))
+            {
+                return false;
+            }
+            Sections[section.Name] = section;
+            return true;
+        }
+
         public bool Add(INISection section)
         {
             if ((section == null) || Sections.Contains(section.Name))
@@ -355,6 +365,16 @@ namespace MobiusEditor.Utility
 
         public override string ToString()
         {
+            return this.ToString("\r\n");
+        }
+
+        public string ToString(char lineEnd)
+        {
+            return this.ToString(lineEnd.ToString());
+        }
+
+        public string ToString(string lineEnd)
+        {
             var sections = new List<string>(Sections.Count);
             foreach (var item in Sections)
             {
@@ -366,9 +386,9 @@ namespace MobiusEditor.Utility
                 {
                     lines.Add(item.ToString());
                 }
-                sections.Add(string.Join(Environment.NewLine, lines));
+                sections.Add(string.Join(lineEnd, lines));
             }
-            return string.Join(Environment.NewLine + Environment.NewLine, sections) + Environment.NewLine;
+            return string.Join(lineEnd + lineEnd, sections) + lineEnd;
         }
     }
 

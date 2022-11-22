@@ -35,7 +35,7 @@ namespace MobiusEditor.TiberianDawn
         protected bool isMegaMap = false;
 
         protected  const int multiStartPoints = 8;
-        protected  static readonly Regex SinglePlayRegex = new Regex("^SC[A-LN-Z]\\d{2}[EWX][A-EL]$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        protected  static readonly Regex SinglePlayRegex = new Regex("^SC[A-LN-Z]\\d{2}\\d?[EWX][A-EL]$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         protected static readonly Regex MovieRegex = new Regex(@"^(?:.*?\\)*(.*?)\.BK2$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         protected static readonly IEnumerable<ITechnoType> fullTechnoTypes;
@@ -295,6 +295,7 @@ namespace MobiusEditor.TiberianDawn
             var errors = new List<string>();
             bool modified = false;
             bool forceSingle = false;
+            Byte[] iniBytes;
             switch (fileType)
             {
                 case FileType.INI:
@@ -306,17 +307,10 @@ namespace MobiusEditor.TiberianDawn
                         // Should never happen; this gets filtered out in the game type detection.
                         throw new ApplicationException("Cannot find an ini file to load for " + Path.GetFileName(path) + ".");
                     }
-                    using (var iniReader = new StreamReader(iniPath))
-                    {
-                        string iniText = iniReader.ReadToEnd();
-                        if (!forSole)
-                        {
-                            iniText = FixRoad2Load(iniText);
-                        }
-                        ini.Parse(iniText);
-                        forceSingle = !forSole && SinglePlayRegex.IsMatch(Path.GetFileNameWithoutExtension(path));
-                        errors.AddRange(LoadINI(ini, forceSingle, ref modified));
-                    }
+                    iniBytes = File.ReadAllBytes(iniPath);
+                    ParseIniContent(ini, iniBytes, forSole);
+                    forceSingle = !forSole && SinglePlayRegex.IsMatch(Path.GetFileNameWithoutExtension(path));
+                    errors.AddRange(LoadINI(ini, forceSingle, ref modified));
                     if (!File.Exists(binPath))
                     {
                         errors.Add(String.Format("No .bin file found for file '{0}'. Using empty map.", Path.GetFileName(path)));
@@ -351,15 +345,11 @@ namespace MobiusEditor.TiberianDawn
                         {
                             throw new ApplicationException("Cannot find the necessary files inside the " + Path.GetFileName(path) + " archive.");
                         }
-                        using (var iniReader = new StreamReader(megafile.Open(iniFile)))
+                        using (var iniReader = new BinaryReader(megafile.Open(iniFile)))
                         using (var binReader = new BinaryReader(megafile.Open(binFile)))
                         {
-                            string iniText = iniReader.ReadToEnd();
-                            if (!forSole)
-                            {
-                                iniText = FixRoad2Load(iniText);
-                            }
-                            ini.Parse(iniText);
+                            iniBytes = iniReader.ReadAllBytes();
+                            ParseIniContent(ini, iniBytes, forSole);
                             errors.AddRange(LoadINI(ini, false, ref modified));
                             long mapLen = binReader.BaseStream.Length;
                             if ((!isMegaMap && mapLen == 0x2000) || (isMegaMap && mapLen % 4 == 0))
@@ -383,6 +373,55 @@ namespace MobiusEditor.TiberianDawn
                 this.Dirty = true;
             }
             return errors;
+        }
+
+        private void ParseIniContent(INI ini, Byte[] iniBytes, Boolean forSole)
+        {
+            Encoding encUtf8 = new UTF8Encoding(false, false);
+            Encoding encDOS = Encoding.GetEncoding(437);
+            String iniText = encDOS.GetString(iniBytes);
+            String iniTextUtf8 = encUtf8.GetString(iniBytes);
+            if (!forSole)
+            {
+                iniText = FixRoad2Load(iniText);
+            }
+            ini.Parse(iniText);
+            // Specific support for DOS-437 file but with some specific sections in UTF-8.
+            if (iniTextUtf8 != null)
+            {
+                INI utf8Ini = new INI();
+                utf8Ini.Parse(iniTextUtf8);
+                // Steam section
+                INISection steamSectionUtf8 = utf8Ini.Sections["Steam"];
+                if (steamSectionUtf8 != null)
+                {
+                    if (!ini.Sections.Replace(steamSectionUtf8))
+                    {
+                        ini.Sections.Add(steamSectionUtf8);
+                    }
+                }
+                // Name and author from Basic section
+                INISection basicSectionUtf8 = utf8Ini.Sections["Basic"];
+                INISection basicSectionDos = ini.Sections["Basic"];
+                if (basicSectionUtf8 != null && basicSectionDos != null)
+                {
+                    if (basicSectionUtf8.Keys.Contains("Name") && !basicSectionUtf8.Keys["Name"].Contains('\uFFFD'))
+                    {
+                        basicSectionDos.Keys["Name"] = basicSectionUtf8.Keys["Name"];
+                    }
+                    if (basicSectionUtf8.Keys.Contains("Author") && !basicSectionUtf8.Keys["Author"].Contains('\uFFFD'))
+                    {
+                        basicSectionDos.Keys["Author"] = basicSectionUtf8.Keys["Author"];
+                    }
+                }
+                // Remastered one-line "Text" briefing from [Briefing] section
+                INISection briefSectionUtf8 = utf8Ini.Sections["Briefing"];
+                INISection briefSectionDos = ini.Sections["Briefing"];
+                if (briefSectionUtf8 != null && briefSectionDos != null && briefSectionUtf8.Keys.Contains("Text"))
+                {
+                    briefSectionDos.Keys["Text"] = briefSectionUtf8.Keys["Text"];
+                }
+            }
         }
 
         /// <summary>
@@ -649,13 +688,13 @@ namespace MobiusEditor.TiberianDawn
                                 }
                                 else
                                 {
-                                    errors.Add(string.Format("Team '{0}' references unknown class '{1}'.", Key, missionTokens[0]));
+                                    errors.Add(string.Format("Team '{0}' references unknown orders '{1}'.", Key, missionTokens[0]));
                                     modified = true;
                                 }
                             }
                             else
                             {
-                                errors.Add(string.Format("Team '{0}' has wrong number of tokens for mission index {1} (expecting 2).", Key, i));
+                                errors.Add(string.Format("Team '{0}' has wrong number of tokens for orders index {1} (expecting 2).", Key, i));
                                 modified = true;
                             }
                         }
@@ -696,9 +735,13 @@ namespace MobiusEditor.TiberianDawn
                             trigger.Event1.EventType = tokens[0];
                             trigger.Event1.Data = long.Parse(tokens[2]);
                             trigger.Action1.ActionType = tokens[1];
-                            trigger.House = Map.HouseTypes.Where(t => t.Equals(tokens[3])).FirstOrDefault()?.Name ?? "None";
-                            if (String.IsNullOrEmpty(tokens[4]))
+                            trigger.House = Map.HouseTypes.Where(t => t.Name.Equals(tokens[3], StringComparison.OrdinalIgnoreCase)).FirstOrDefault()?.Name ?? "None";
+                            if (TeamType.IsEmpty(tokens[4]))
                                 tokens[4] = TeamType.None;
+                            else
+                            {
+                                tokens[4] = Map.TeamTypes.FirstOrDefault(tt => tt.Name.Equals(tokens[4], StringComparison.OrdinalIgnoreCase))?.Name ?? TeamType.None;
+                            }
                             trigger.Action1.Team = tokens[4];
                             trigger.PersistentType = TriggerPersistentType.Volatile;
                             if (tokens.Length >= 6)
@@ -1741,22 +1784,20 @@ namespace MobiusEditor.TiberianDawn
             }
             var iniPath = fileType == FileType.INI ? path : Path.ChangeExtension(path, ".ini");
             var binPath = fileType == FileType.BIN ? path : Path.ChangeExtension(path, ".bin");
+            Encoding dos437 = Encoding.GetEncoding(437);
+            Encoding utf8 = new UTF8Encoding(false, false);
+            byte[] linebreak = utf8.GetBytes("\r\n");
             var ini = new INI();
             switch (fileType)
             {
                 case FileType.INI:
                 case FileType.BIN:
                     SaveINI(ini, fileType, path);
-                    using (var iniWriter = new StreamWriter(iniPath))
+                    using (var iniStream = new FileStream(iniPath, FileMode.Create))
+                    using (var iniWriter = new BinaryWriter(iniStream))
                     {
-                        if (forSole)
-                        {
-                            iniWriter.Write(ini.ToString());
-                        }
-                        else
-                        {
-                            FixRoad2Save(ini, iniWriter);
-                        }
+                        String iniText = forSole ? ini.ToString("\n") : FixRoad2Save(ini, "\n");
+                        GeneralUtils.WriteMultiEncoding(iniText.Split('\n'), iniWriter, dos437, utf8, new[] { ("Steam", null), ("Briefing", "Text"), ("Basic", "Name"), ("Basic", "Author") }, linebreak);
                     }
                     using (var binStream = new FileStream(binPath, FileMode.Create))
                     using (var binWriter = new BinaryWriter(binStream))
@@ -1800,19 +1841,13 @@ namespace MobiusEditor.TiberianDawn
                     using (var binStream = new MemoryStream())
                     using (var tgaStream = new MemoryStream())
                     using (var jsonStream = new MemoryStream())
-                    using (var iniWriter = new StreamWriter(iniStream))
+                    using (var iniWriter = new BinaryWriter(iniStream))
                     using (var binWriter = new BinaryWriter(binStream))
                     using (var jsonWriter = new JsonTextWriter(new StreamWriter(jsonStream)))
                     using (var megafileBuilder = new MegafileBuilder(String.Empty, path))
                     {
-                        if (forSole)
-                        {
-                            iniWriter.Write(ini.ToString());
-                        }
-                        else
-                        {
-                            FixRoad2Save(ini, iniWriter);
-                        }
+                        String iniText = forSole ? ini.ToString() : FixRoad2Save(ini, "\n");
+                        GeneralUtils.WriteMultiEncoding(iniText.Split('\n'), iniWriter, dos437, utf8, new[] { ("Steam", null), ("Briefing", "Text"), ("Basic", "Name"), ("Basic", "Author") }, linebreak);
                         iniWriter.Flush();
                         iniStream.Position = 0;
                         if (!isMegaMap)
@@ -1860,7 +1895,7 @@ namespace MobiusEditor.TiberianDawn
         /// </summary>
         /// <param name="ini">The generated ini file</param>
         /// <param name="iniWriter">The stream writer to write the text to.</param>
-        protected void FixRoad2Save(INI ini, StreamWriter iniWriter)
+        protected String FixRoad2Save(INI ini, string lineEnd)
         {
             // ROAD's second state can only be accessed by applying ROAD overlay to the same cell twice.
             // This can be achieved by saving its Overlay line twice in the ini file. However, this is
@@ -1868,10 +1903,10 @@ namespace MobiusEditor.TiberianDawn
             // then finds the FIRST entry for each key. This means the contents of the second line never
             // get read, but those of the first are simply applied twice. For ROAD, however, this is
             // exactly what we want to achieve to unlock its second state, so the bug doesn't matter.
-
-            string roadLine = "=" + OverlayTypes.Road.Name.ToUpperInvariant() + "\r\n";
+            StringBuilder output = new StringBuilder();
+            string roadLine = "=" + OverlayTypes.Road.Name.ToUpperInvariant() + lineEnd;
             Regex roadDetect = new Regex("^\\s*(\\d+)\\s*=\\s*" + OverlayTypes.Road2.Name + "\\s*$", RegexOptions.IgnoreCase);
-            string[] iniString = ini.ToString().Replace("\r\n", "\n").Replace('\r', '\n').Split('\n');
+            string[] iniString = ini.ToString("\n").Split('\n');
             // Quick and dirty ini parser to find the correct ini section.
             bool inOverlay = false;
             for (int i = 0; i < iniString.Length; i++)
@@ -1886,15 +1921,16 @@ namespace MobiusEditor.TiberianDawn
                 {
                     string newRoad = match.Groups[1].Value + roadLine;
                     // Write twice to achieve second state. (Already contains line break.)
-                    iniWriter.Write(newRoad);
-                    iniWriter.Write(newRoad);
+                    output.Append(newRoad);
+                    output.Append(newRoad);
                 }
                 else
                 {
-                    iniWriter.Write(currLine);
-                    iniWriter.Write("\r\n");
+                    output.Append(currLine);
+                    output.Append(lineEnd);
                 }
             }
+            return output.ToString();
         }
 
         protected virtual void SaveINI(INI ini, FileType fileType, string fileName)
@@ -2690,6 +2726,13 @@ namespace MobiusEditor.TiberianDawn
                 {
                     curErrors.Add(prefix + "The amount of units that needs to be destroyed is 0.");
                 }
+                if (!fatalOnly && event1 == EventTypes.EVENT_BUILD && trigger.Event1.Data < 0 || trigger.Event1.Data > Map.BuildingTypes.Max(bld => bld.ID))
+                {
+                    curErrors.Add(prefix + "Illegal building id \"" + trigger.Event1.Data + "\" for \"Built It\" event.");
+                    trigger.Event1.Data = 0;
+                    wasFixed = true;
+                }
+
                 // Action checks
                 if (!fatalOnly && action1 == ActionTypes.ACTION_AIRSTRIKE && event1 == EventTypes.EVENT_PLAYER_ENTERED && !isPlayer && isCellTrig)
                 {

@@ -46,18 +46,19 @@ namespace MobiusEditor.Controls
             this.txtRules = new System.Windows.Forms.TextBox();
             this.lblRules = new System.Windows.Forms.Label();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this.lblTextEncoding = new System.Windows.Forms.Label();
             this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // txtRules
             // 
             this.txtRules.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.txtRules.Location = new System.Drawing.Point(2, 75);
-            this.txtRules.Margin = new System.Windows.Forms.Padding(2, 10, 2, 2);
+            this.txtRules.Location = new System.Drawing.Point(2, 97);
+            this.txtRules.Margin = new System.Windows.Forms.Padding(2);
             this.txtRules.Multiline = true;
             this.txtRules.Name = "txtRules";
             this.txtRules.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtRules.Size = new System.Drawing.Size(396, 347);
+            this.txtRules.Size = new System.Drawing.Size(396, 325);
             this.txtRules.TabIndex = 1;
             this.txtRules.Leave += new System.EventHandler(this.txtRules_Leave);
             // 
@@ -67,7 +68,8 @@ namespace MobiusEditor.Controls
             this.lblRules.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lblRules.Location = new System.Drawing.Point(3, 0);
             this.lblRules.Name = "lblRules";
-            this.lblRules.Size = new System.Drawing.Size(394, 65);
+            this.lblRules.Padding = new System.Windows.Forms.Padding(0, 0, 0, 2);
+            this.lblRules.Size = new System.Drawing.Size(394, 67);
             this.lblRules.TabIndex = 0;
             this.lblRules.Text = resources.GetString("lblRules.Text");
             // 
@@ -76,15 +78,28 @@ namespace MobiusEditor.Controls
             this.tableLayoutPanel1.ColumnCount = 1;
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.Controls.Add(this.lblRules, 0, 0);
-            this.tableLayoutPanel1.Controls.Add(this.txtRules, 0, 1);
+            this.tableLayoutPanel1.Controls.Add(this.txtRules, 0, 2);
+            this.tableLayoutPanel1.Controls.Add(this.lblTextEncoding, 0, 1);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.RowCount = 2;
+            this.tableLayoutPanel1.RowCount = 3;
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.Size = new System.Drawing.Size(400, 424);
             this.tableLayoutPanel1.TabIndex = 2;
+            // 
+            // lblTextEncoding
+            // 
+            this.lblTextEncoding.AutoSize = true;
+            this.lblTextEncoding.Location = new System.Drawing.Point(3, 67);
+            this.lblTextEncoding.Name = "lblTextEncoding";
+            this.lblTextEncoding.Padding = new System.Windows.Forms.Padding(0, 0, 0, 2);
+            this.lblTextEncoding.Size = new System.Drawing.Size(378, 28);
+            this.lblTextEncoding.TabIndex = 2;
+            this.lblTextEncoding.Text = "Note that all text here is treated as DOS content, meaning it will be loaded and " +
+    "saved using DOS-437 text encoding.";
             // 
             // RulesSettings
             // 
@@ -104,5 +119,6 @@ namespace MobiusEditor.Controls
         private System.Windows.Forms.TextBox txtRules;
         private System.Windows.Forms.Label lblRules;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
+        private System.Windows.Forms.Label lblTextEncoding;
     }
 }

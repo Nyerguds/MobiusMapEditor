@@ -45,7 +45,7 @@ namespace MobiusEditor.Utility
         {
             try
             {
-                Encoding enc = new UTF8Encoding(false, true);
+                Encoding encDOS = Encoding.GetEncoding(437);
                 String iniContents = null;
                 switch (fileType)
                 {
@@ -53,7 +53,7 @@ namespace MobiusEditor.Utility
                     case FileType.BIN:
                         String iniPath = fileType == FileType.INI ? path : Path.ChangeExtension(path, ".ini");
                         Byte[] bytes = File.ReadAllBytes(path);
-                        iniContents = enc.GetString(bytes);
+                        iniContents = encDOS.GetString(bytes);
                         break;
                     case FileType.MEG:
                     case FileType.PGM:
@@ -63,7 +63,7 @@ namespace MobiusEditor.Utility
                             var testIniFile = megafile.Where(p => ext.IsMatch(Path.GetExtension(p).ToLower())).FirstOrDefault();
                             if (testIniFile != null)
                             {
-                                using (var iniReader = new StreamReader(megafile.Open(testIniFile), enc))
+                                using (var iniReader = new StreamReader(megafile.Open(testIniFile), encDOS))
                                 {
                                     iniContents = iniReader.ReadToEnd();
                                 }
@@ -82,6 +82,94 @@ namespace MobiusEditor.Utility
             catch
             {
                 return null;
+            }
+        }
+
+        public static byte[] ReadAllBytes(this BinaryReader reader)
+        {
+            const int bufferSize = 4096;
+            using (var ms = new MemoryStream())
+            {
+                byte[] buffer = new byte[bufferSize];
+                int count;
+                while ((count = reader.Read(buffer, 0, buffer.Length)) != 0)
+                    ms.Write(buffer, 0, count);
+                return ms.ToArray();
+            }
+        }
+
+        /// <summary>
+        /// Allows writing an ini file where certain lines are differently encoded.
+        /// </summary>
+        /// <param name="iniText">ini text, as lines.</param>
+        /// <param name="iniWriter">writer to save to.</param>
+        /// <param name="normalEncoding">Default encoding to use.</param>
+        /// <param name="altEncoding">Alternate encoding to use.</param>
+        /// <param name="toAltEncode">Pairs of (section, key) indicating which lines to use the alternate encoding for. Set "key" to null to write the entire section with the alternate encoding.</param>
+        /// <param name="lineEnd">Bytes to use as line ends.</param>
+        public static void WriteMultiEncoding(string[] iniText, BinaryWriter iniWriter, Encoding normalEncoding, Encoding altEncoding,
+            (string, string)[] toAltEncode, Byte[] lineEnd)
+        {
+            Dictionary<string, bool> inSection = new Dictionary<string, bool>();
+            foreach ((string section, string key) in toAltEncode)
+            {
+                inSection[section] = false;
+            }
+            Dictionary<string, List<Regex>> toTreat = new Dictionary<String, List<Regex>>();
+            foreach ((string section, string key) in toAltEncode)
+            {
+                if (!toTreat.ContainsKey(section))
+                {
+                    toTreat[section] = key == null ? null : new List<Regex>();
+                }
+                if (toTreat[section] != null)
+                {
+                    if (key == null)
+                    {
+                        toTreat[section] = null;
+                    }
+                    else
+                    {
+                        toTreat[section].Add(new Regex("^" + Regex.Escape(key) + "\\s*=", RegexOptions.IgnoreCase));
+                    }
+                }
+            }
+            byte[] buffer;
+            for (int i = 0; i < iniText.Length; i++)
+            {
+                string currLine = iniText[i].Trim();
+                bool foundAlt = false;
+                if (currLine.Length > 0)
+                {
+                    if (currLine.StartsWith("["))
+                    {
+                        foreach (string key in toTreat.Keys)
+                        {
+                            inSection[key] = ("[" + key + "]").Equals(currLine, StringComparison.InvariantCultureIgnoreCase);
+                        }
+                    }
+                    foreach (string section in toTreat.Keys)
+                    {
+                        if (!inSection[section])
+                            continue;
+                        foundAlt = toTreat[section] == null || toTreat[section].Any(keyStr => keyStr.IsMatch(currLine));
+                        if (foundAlt)
+                            break;
+                    }
+                }
+                if (foundAlt)
+                {
+                    // Allow utf-8 name too, I guess. Not a fan, but necessary for the Remaster.
+                    buffer = altEncoding.GetBytes(currLine);
+                    iniWriter.Write(buffer, 0, buffer.Length);
+                    iniWriter.Write(lineEnd, 0, lineEnd.Length);
+                }
+                else
+                {
+                    buffer = normalEncoding.GetBytes(currLine);
+                    iniWriter.Write(buffer, 0, buffer.Length);
+                    iniWriter.Write(lineEnd, 0, lineEnd.Length);
+                }
             }
         }
 

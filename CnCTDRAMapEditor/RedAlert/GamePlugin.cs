@@ -457,12 +457,15 @@ namespace MobiusEditor.RedAlert
                 isLoading = true;
                 var errors = new List<string>();
                 bool forceSingle = false;
+                Byte[] iniBytes;
                 switch (fileType)
                 {
                     case FileType.INI:
                     case FileType.BIN:
                         {
                             var ini = new INI();
+                            iniBytes = File.ReadAllBytes(path);
+                            ParseIniContent(ini, iniBytes);
                             using (var reader = new StreamReader(path))
                             {
                                 ini.Parse(reader);
@@ -482,9 +485,10 @@ namespace MobiusEditor.RedAlert
                                     throw new ApplicationException("Cannot find the necessary file inside the " + Path.GetFileName(path) + " archive.");
                                 }
                                 var ini = new INI();
-                                using (var reader = new StreamReader(megafile.Open(mprFile)))
+                                using (var reader = new BinaryReader(megafile.Open(mprFile)))
                                 {
-                                    ini.Parse(reader);
+                                    iniBytes = reader.ReadAllBytes();
+                                    ParseIniContent(ini, iniBytes);
                                 }
                                 errors.AddRange(LoadINI(ini, false, ref modified));
                             }
@@ -502,6 +506,51 @@ namespace MobiusEditor.RedAlert
             finally
             {
                 isLoading = false;
+            }
+        }
+
+        private void ParseIniContent(INI ini, Byte[] iniBytes)
+        {
+            Encoding encUtf8 = new UTF8Encoding(false, false);
+            Encoding encDOS = Encoding.GetEncoding(437);
+            String iniText = encDOS.GetString(iniBytes);
+            String iniTextUtf8 = encUtf8.GetString(iniBytes);
+            ini.Parse(iniText);
+            // Specific support for DOS-437 file but with some specific sections in UTF-8.
+            if (iniTextUtf8 != null)
+            {
+                INI utf8Ini = new INI();
+                utf8Ini.Parse(iniTextUtf8);
+                // Steam section
+                INISection steamSectionUtf = utf8Ini.Sections["Steam"];
+                if (steamSectionUtf != null)
+                {
+                    if (!ini.Sections.Replace(steamSectionUtf))
+                    {
+                        ini.Sections.Add(steamSectionUtf);
+                    }
+                }
+                // Name and author from Basic section
+                INISection basicSectionUtf = utf8Ini.Sections["Basic"];
+                INISection basicSectionDos = ini.Sections["Basic"];
+                if (basicSectionUtf != null && basicSectionDos != null)
+                {
+                    if (basicSectionUtf.Keys.Contains("Name") && !basicSectionUtf.Keys["Name"].Contains('\uFFFD'))
+                    {
+                        basicSectionDos.Keys["Name"] = basicSectionUtf.Keys["Name"];
+                    }
+                    if (basicSectionUtf.Keys.Contains("Author") && !basicSectionUtf.Keys["Author"].Contains('\uFFFD'))
+                    {
+                        basicSectionDos.Keys["Author"] = basicSectionUtf.Keys["Author"];
+                    }
+                }
+                // Remastered one-line "Text" briefing from [Briefing] section
+                INISection briefSectionUtf = utf8Ini.Sections["Briefing"];
+                INISection briefSectionDos = ini.Sections["Briefing"];
+                if (briefSectionUtf != null && briefSectionDos != null && briefSectionUtf.Keys.Contains("Text"))
+                {
+                    briefSectionDos.Keys["Text"] = briefSectionUtf.Keys["Text"];
+                }
             }
         }
 
@@ -2065,15 +2114,20 @@ namespace MobiusEditor.RedAlert
                 MessageBox.Show(errors, "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
+            Encoding dos437 = Encoding.GetEncoding(437);
+            Encoding utf8 = new UTF8Encoding(false, false);
+            byte[] linebreak = utf8.GetBytes("\r\n");
             var ini = new INI();
             switch (fileType)
             {
                 case FileType.INI:
                 case FileType.BIN:
                     SaveINI(ini, fileType, path);
-                    using (var mprWriter = new StreamWriter(path))
+                    using (var mprStream = new FileStream(path, FileMode.Create))
+                    using (var mprWriter = new BinaryWriter(mprStream))
                     {
-                        mprWriter.Write(ini.ToString());
+                        String iniText = ini.ToString("\n");
+                        GeneralUtils.WriteMultiEncoding(iniText.Split('\n'), mprWriter, dos437, utf8, new[] { ("Steam", null), ("Briefing", "Text"), ("Basic", "Name"), ("Basic", "Author") }, linebreak);
                     }
                     if (!Map.BasicSection.SoloMission || !Properties.Settings.Default.NoMetaFilesForSinglePlay)
                     {
@@ -2099,40 +2153,38 @@ namespace MobiusEditor.RedAlert
                     break;
                 case FileType.MEG:
                 case FileType.PGM:
+                    SaveINI(ini, fileType, path);
+                    using (var mprStream = new MemoryStream())
+                    using (var tgaStream = new MemoryStream())
+                    using (var jsonStream = new MemoryStream())
+                    using (var mprWriter = new BinaryWriter(mprStream))
+                    using (var jsonWriter = new JsonTextWriter(new StreamWriter(jsonStream)))
+                    using (var megafileBuilder = new MegafileBuilder(String.Empty, path))
                     {
-                        SaveINI(ini, fileType, path);
-                        using (var iniStream = new MemoryStream())
-                        using (var tgaStream = new MemoryStream())
-                        using (var jsonStream = new MemoryStream())
-                        using (var iniWriter = new StreamWriter(iniStream))
-                        using (var jsonWriter = new JsonTextWriter(new StreamWriter(jsonStream)))
-                        using (var megafileBuilder = new MegafileBuilder(String.Empty, path))
+                        String iniText = ini.ToString("\n");
+                        GeneralUtils.WriteMultiEncoding(iniText.Split('\n'), mprWriter, dos437, utf8, new[] { ("Steam", null), ("Briefing", "Text"), ("Basic", "Name"), ("Basic", "Author") }, linebreak);
+                        mprStream.Position = 0;
+                        if (customPreview != null)
                         {
-                            iniWriter.Write(ini.ToString());
-                            iniWriter.Flush();
-                            iniStream.Position = 0;
-                            if (customPreview != null)
-                            {
-                                TGA.FromBitmap(customPreview).Save(tgaStream);
-                            }
-                            else
-                            {
-                                SaveMapPreview(tgaStream, true);
-                            }
-                            tgaStream.Position = 0;
-                            SaveJSON(jsonWriter);
-                            jsonWriter.Flush();
-                            jsonStream.Position = 0;
-                            var mprFile = Path.ChangeExtension(Path.GetFileName(path), ".mpr").ToUpper();
-                            var tgaFile = Path.ChangeExtension(Path.GetFileName(path), ".tga").ToUpper();
-                            var jsonFile = Path.ChangeExtension(Path.GetFileName(path), ".json").ToUpper();
-                            megafileBuilder.AddFile(mprFile, iniStream);
-                            megafileBuilder.AddFile(tgaFile, tgaStream);
-                            megafileBuilder.AddFile(jsonFile, jsonStream);
-                            megafileBuilder.Write();
+                            TGA.FromBitmap(customPreview).Save(tgaStream);
                         }
-                        break;
+                        else
+                        {
+                            SaveMapPreview(tgaStream, true);
+                        }
+                        tgaStream.Position = 0;
+                        SaveJSON(jsonWriter);
+                        jsonWriter.Flush();
+                        jsonStream.Position = 0;
+                        var mprFile = Path.ChangeExtension(Path.GetFileName(path), ".mpr").ToUpper();
+                        var tgaFile = Path.ChangeExtension(Path.GetFileName(path), ".tga").ToUpper();
+                        var jsonFile = Path.ChangeExtension(Path.GetFileName(path), ".json").ToUpper();
+                        megafileBuilder.AddFile(mprFile, mprStream);
+                        megafileBuilder.AddFile(tgaFile, tgaStream);
+                        megafileBuilder.AddFile(jsonFile, jsonStream);
+                        megafileBuilder.Write();
                     }
+                    break;
                 default:
                     throw new NotSupportedException();
             }

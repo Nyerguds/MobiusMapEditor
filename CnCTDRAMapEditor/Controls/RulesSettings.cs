@@ -22,10 +22,14 @@ namespace MobiusEditor.Controls
     {
         public event EventHandler TextNeedsUpdating;
 
-        public RulesSettings(string iniText)
+        public RulesSettings(string iniText, bool showRulesWarning)
         {
             InitializeComponent();
             txtRules.Text = iniText;
+            if (!showRulesWarning)
+            {
+                lblRules.Visible = false;
+            }
         }
 
         private void txtRules_Leave(Object sender, EventArgs e)

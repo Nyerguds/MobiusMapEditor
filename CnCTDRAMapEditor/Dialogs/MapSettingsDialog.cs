@@ -100,18 +100,15 @@ namespace MobiusEditor.Dialogs
             settingsTreeView.BeginUpdate();
             settingsTreeView.Nodes.Clear();
             settingsTreeView.Nodes.Add("BASIC", "Basic");
-            if (this.plugin.GameType == GameType.RedAlert)
+            if (this.plugin.GameType == GameType.RedAlert && isSoloMission)
             {
-                if (isSoloMission)
-                {
-                    settingsTreeView.Nodes.Add("SCENARIO", "Scenario");
-                }
-                settingsTreeView.Nodes.Add("RULES", "Rules");
+                settingsTreeView.Nodes.Add("SCENARIO", "Scenario");
             }
             else if (this.plugin.GameType == GameType.SoleSurvivor)
             {
                 settingsTreeView.Nodes.Add("CRATES", "Crates");
             }
+            settingsTreeView.Nodes.Add("RULES", this.plugin.GameType == GameType.RedAlert ? "Rules" : "Unmanaged INI");
             if (this.plugin.GameType != GameType.SoleSurvivor)
             {
                 settingsTreeView.Nodes.Add("BRIEFING", "Briefing");
@@ -169,7 +166,7 @@ namespace MobiusEditor.Dialogs
                     scenPanel.Dock = DockStyle.Fill;
                     break;
                 case "RULES":
-                    RulesSettings rulesPanel = new RulesSettings(ExtraIniText);
+                    RulesSettings rulesPanel = new RulesSettings(ExtraIniText, this.plugin.GameType == GameType.RedAlert);
                     rulesPanel.TextNeedsUpdating += this.RulesPanel_TextNeedsUpdating;
                     settingsPanel.Controls.Add(rulesPanel);
                     rulesPanel.Dock = DockStyle.Fill;

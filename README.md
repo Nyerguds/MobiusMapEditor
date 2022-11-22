@@ -30,16 +30,15 @@ A brief overview of the added features:
 * Sole Survivor and Tiberian Dawn megamap support.
 * Different size support for craters.
 * Mod loading support to allow applying graphics fixes, and filling in graphics for objects that were not remastered.
-* Missing objects added: bibs in Smudge, farmer fields and haystacks in buildings, and unused pavements in TD overlay.
-* The ability to enable/disable Aftermath units.
-* Vastly improved triggers and teamtypes editors, with clear descriptions and tooltips for all options.
+* Missing objects added: unused decorations and pavements in Overlay and Smudge, and farmer fields and haystacks in Buildings.
+* The ability to enable/disable the added units of Red Alert's Aftermath expansion pack.
+* Vastly improved triggers and teamtypes editors, with clear descriptions and tooltips for all options, and a Trigger analysis function to detect possible issues.
 * Improved problem detection in map loading, which will always give a full list of the found issues, rather than refusing to open the map.
 * Expanded Undo/Redo functionality to all actions in the editor.
-* Trigger analysis to detect possible issues.
 * Map objects overview, including analysis of unused scripting objects (triggers, globals, teams, waypoints) in singleplayer maps.
 * Power balance and silo level tools, which account for buildings scripted to be built later, and for rule tweaks in RA maps.
-* Tile randomisation in Red Alert interior maps, allowing the use of previously unused alternates that exist for almost all tiles.
-* Options in the main config file can disable specific editor behaviour, like disallowing overlapping bibs or theater-illegal objects.
+* Tile randomisation in Red Alert interior maps, allowing the use of previously unused alternate graphics that exist for almost all tiles.
+* Options in the editor's .config file can tweak specific editor behaviour, like disallowing overlapping bibs or theater-illegal objects.
 
 The full change log can be viewed in [CHANGELOG.md](CHANGELOG.md)
 

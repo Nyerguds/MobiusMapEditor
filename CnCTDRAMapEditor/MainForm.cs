@@ -535,7 +535,7 @@ namespace MobiusEditor
             {
                 cratesSettings = new PropertyTracker<SoleSurvivor.CratesSection>(ssPlugin.CratesSection);
             }
-            string extraIniText = (plugin.GameType == GameType.RedAlert ? plugin.ExtraIniText : String.Empty).Trim();
+            string extraIniText = plugin.ExtraIniText;
             Dictionary<House, PropertyTracker<House>> houseSettingsTrackers = plugin.Map.Houses.ToDictionary(h => h, h => new PropertyTracker<House>(h));
             using (MapSettingsDialog msd = new MapSettingsDialog(plugin, basicSettings, briefingSettings, cratesSettings, houseSettingsTrackers, extraIniText))
             {
@@ -555,7 +555,7 @@ namespace MobiusEditor
                             hasChanges = true;
                         houseSettingsTracker.Commit();
                     }
-                    if (plugin.GameType == GameType.RedAlert && !extraIniText.Equals(msd.ExtraIniText, StringComparison.InvariantCultureIgnoreCase))
+                    if (!extraIniText.Equals(msd.ExtraIniText, StringComparison.InvariantCultureIgnoreCase))
                     {
                         try
                         {
