@@ -367,4 +367,4 @@ Released on 14 Nov 2022 at 22:25 GMT
 * Added igloos (haystacks) to the Overlay in Sole Survivor's Winter theater.
 * Fixed refresh bug where a ghost image of the label indicating a heavy operation remained while repainting the map. The label is now only removed after the repaint.
 * Fixed issues with the editor not loading old missions with DOS special characters in them. Specific ini sections are now loaded and saved in specific text encodings; the maps are normally DOS-437, but its remaster-specific content supports UTF-8.
-* Fixed an issue with linking teamtype names to triggers in the editor if they had case differences.
+* Fixed an issue with TD triggers not linking to teamtypes if the teamtype reference has case differences compared to the actual Teamtype name.
