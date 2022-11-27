@@ -66,6 +66,11 @@ namespace MobiusEditor.Model
             set => tint = value;
         }
 
+        public override string ToString()
+        {
+            return Type?.Name ?? "Unknown";
+        }
+
         public Building Clone()
         {
             Building clone = new Building();

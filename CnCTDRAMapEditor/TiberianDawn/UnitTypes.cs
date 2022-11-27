@@ -13,10 +13,10 @@
 // GNU General Public License along with permitted additional restrictions 
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using System;
-using MobiusEditor.Model;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using MobiusEditor.Model;
 
 namespace MobiusEditor.TiberianDawn
 {
@@ -29,14 +29,14 @@ namespace MobiusEditor.TiberianDawn
         public static readonly UnitType FTank = new UnitType(4, "ftnk", "TEXT_UNIT_TITLE_NOD_FLAME_TANK", "Badguy", UnitTypeFlag.IsArmed);
         public static readonly UnitType Visceroid = new UnitType(5, "vice", "TEXT_UNIT_TITLE_VICE", "Special", UnitTypeFlag.IsArmed);
         public static readonly UnitType APC = new UnitType(6, "apc", "TEXT_UNIT_TITLE_GDI_APC", "Goodguy", UnitTypeFlag.IsArmed);
-        public static readonly UnitType MLRS = new UnitType(7, "msam", "TEXT_UNIT_TITLE_GDI_MRLS", "Goodguy", UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
-        public static readonly UnitType Jeep = new UnitType(8, "jeep", "TEXT_UNIT_TITLE_GDI_HUMVEE", "Goodguy", UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
-        public static readonly UnitType Buggy = new UnitType(9, "bggy", "TEXT_UNIT_TITLE_NOD_NOD_BUGGY", "Badguy", UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
+        public static readonly UnitType MLRS = new UnitType(7, "msam", "TEXT_UNIT_TITLE_GDI_MRLS", "Goodguy", Int32.MaxValue, 0, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
+        public static readonly UnitType Jeep = new UnitType(8, "jeep", "TEXT_UNIT_TITLE_GDI_HUMVEE", "Goodguy",0, -4, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
+        public static readonly UnitType Buggy = new UnitType(9, "bggy", "TEXT_UNIT_TITLE_NOD_NOD_BUGGY", "Badguy", 0, -4, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
         public static readonly UnitType Harvester = new UnitType(10, "harv", "TEXT_UNIT_TITLE_GDI_HARVESTER", "Goodguy", UnitTypeFlag.IsHarvester);
         public static readonly UnitType Arty = new UnitType(11, "arty", "TEXT_UNIT_TITLE_NOD_ARTILLERY", "Badguy", UnitTypeFlag.IsArmed);
-        public static readonly UnitType SSM = new UnitType(12, "mlrs", "TEXT_UNIT_TITLE_GDI_MLRS", "Badguy", UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
+        public static readonly UnitType SSM = new UnitType(12, "mlrs", "TEXT_UNIT_TITLE_GDI_MLRS", "Badguy", Int32.MaxValue, 0, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
         public static readonly UnitType Hover = new UnitType(13, "lst", "TEXT_UNIT_TITLE_LST", "Goodguy");
-        public static readonly UnitType MHQ = new UnitType(14, "mhq", "TEXT_UNIT_TITLE_MHQ", "Goodguy", UnitTypeFlag.HasTurret);
+        public static readonly UnitType MHQ = new UnitType(14, "mhq", "TEXT_UNIT_TITLE_MHQ", "Goodguy", 0, -4, UnitTypeFlag.HasTurret);
         public static readonly UnitType GunBoat = new UnitType(15, "boat", "TEXT_UNIT_TITLE_WAKE", "Goodguy", UnitTypeFlag.IsArmed);
         public static readonly UnitType MCV = new UnitType(16, "mcv", "TEXT_UNIT_TITLE_GDI_MCV", "Goodguy");
         public static readonly UnitType Bike = new UnitType(17, "bike", "TEXT_UNIT_TITLE_NOD_RECON_BIKE", "Badguy", UnitTypeFlag.IsArmed);
@@ -45,9 +45,9 @@ namespace MobiusEditor.TiberianDawn
         public static readonly UnitType Rapt = new UnitType(20, "rapt", "TEXT_UNIT_TITLE_RAPT", "Special", UnitTypeFlag.IsArmed);
         public static readonly UnitType Steg = new UnitType(21, "steg", "TEXT_UNIT_TITLE_STEG", "Special", UnitTypeFlag.IsArmed);
 
-        public static readonly UnitType Tran = new UnitType(0 | UnitTypeIDMask.Aircraft, "tran", "TEXT_UNIT_TITLE_GDI_TRANSPORT", "Goodguy");
+        public static readonly UnitType Tran = new UnitType(0 | UnitTypeIDMask.Aircraft, "tran", "TEXT_UNIT_TITLE_GDI_TRANSPORT", "Goodguy", "LROTOR", "RROTOR", 1, -2, UnitTypeFlag.HasTurret | UnitTypeFlag.HasDoubleTurret);
         public static readonly UnitType A10 = new UnitType(1 | UnitTypeIDMask.Aircraft, "a10", "TEXT_UNIT_TITLE_A10", "Goodguy", UnitTypeFlag.IsArmed | UnitTypeFlag.IsFixedWing);
-        public static readonly UnitType Heli = new UnitType(2 | UnitTypeIDMask.Aircraft, "heli", "TEXT_UNIT_TITLE_NOD_HELICOPTER", "Badguy", UnitTypeFlag.IsArmed);
+        public static readonly UnitType Heli = new UnitType(2 | UnitTypeIDMask.Aircraft, "heli", "TEXT_UNIT_TITLE_NOD_HELICOPTER", "Badguy", "LROTOR", null, 0, -2, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
         public static readonly UnitType C17 = new UnitType(3 | UnitTypeIDMask.Aircraft, "c17", "TEXT_UNIT_TITLE_C17", "Badguy", UnitTypeFlag.IsFixedWing);
         public static readonly UnitType Orca = new UnitType(4 | UnitTypeIDMask.Aircraft, "orca", "TEXT_UNIT_TITLE_GDI_ORCA", "Goodguy", UnitTypeFlag.IsArmed);
 

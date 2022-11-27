@@ -23,12 +23,13 @@ namespace MobiusEditor.Model
     [Flags]
     public enum UnitTypeFlag
     {
-        None          = 0,
-        HasTurret     = 1 << 0,
-        IsFixedWing   = 1 << 1,
-        IsArmed       = 1 << 2,
-        IsHarvester   = 1 << 3,
-        IsExpansionUnit = 1 << 4,
+        None            = 0,
+        IsFixedWing     = 1 << 0,
+        HasTurret       = 1 << 1,
+        HasDoubleTurret = 1 << 2,
+        IsArmed         = 1 << 3,
+        IsHarvester     = 1 << 4,
+        IsExpansionUnit = 1 << 5,
     }
 
     public static class UnitTypeIDMask
@@ -40,35 +41,25 @@ namespace MobiusEditor.Model
     public class UnitType : ICellOverlapper, ICellOccupier, ITechnoType, IBrowsableType
     {
         public sbyte ID { get; private set; }
-
         public string Name { get; private set; }
-
         public string DisplayName { get; private set; }
-
+        public string Turret { get; private set; }
+        public string SecondTurret { get; private set; }
+        public int TurretOffset { get; private set; }
+        public int TurretY { get; private set; }
         public UnitTypeFlag Flag { get; private set; }
-
         public Rectangle OverlapBounds => new Rectangle(-1, -1, 3, 3);
-
         public bool[,] OccupyMask => new bool[1, 1] { { true } };
-
         public string OwnerHouse { get; private set; }
-
         public bool IsGroundUnit => !IsAircraft && !IsVessel;
-
         public bool IsAircraft => (ID & UnitTypeIDMask.Aircraft) != 0;
-
         public bool IsVessel => (ID & UnitTypeIDMask.Vessel) != 0;
-
         public bool HasTurret => (Flag & UnitTypeFlag.HasTurret) == UnitTypeFlag.HasTurret;
-
+        public bool HasDoubleTurret => (Flag & UnitTypeFlag.HasDoubleTurret) == UnitTypeFlag.HasDoubleTurret;
         public bool IsFixedWing => (Flag & UnitTypeFlag.IsFixedWing) == UnitTypeFlag.IsFixedWing;
-
         public bool IsArmed => (Flag & UnitTypeFlag.IsArmed) == UnitTypeFlag.IsArmed;
-
         public bool IsHarvester => (Flag & UnitTypeFlag.IsHarvester) == UnitTypeFlag.IsHarvester;
-
         public bool IsExpansionUnit => (Flag & UnitTypeFlag.IsExpansionUnit) == UnitTypeFlag.IsExpansionUnit;
-
         private Size _RenderSize;
 
         public Size GetRenderSize(Size cellSize)
@@ -79,22 +70,37 @@ namespace MobiusEditor.Model
 
         public Bitmap Thumbnail { get; set; }
 
-        public UnitType(sbyte id, string name, string textId, string ownerHouse, UnitTypeFlag flags) //bool hasTurret, bool isFixedWing, bool isArmed, bool isHarvester)
+        public UnitType(sbyte id, string name, string textId, string ownerHouse, string turret, string turret2, int turrOffset, int turrY, UnitTypeFlag flags) //bool hasTurret, bool isFixedWing, bool isArmed, bool isHarvester)
         {
             ID = id;
             Name = name;
             DisplayName = Globals.TheGameTextManager[textId] + " (" + Name.ToUpperInvariant() + ")";
             OwnerHouse = ownerHouse;
+            bool hasTurret = ((flags & UnitTypeFlag.HasTurret) == UnitTypeFlag.HasTurret);
+            Turret = hasTurret ? turret : null;
+            SecondTurret = hasTurret && ((flags & UnitTypeFlag.HasDoubleTurret) == UnitTypeFlag.HasDoubleTurret) ? turret2 : null;
+            TurretOffset = turrOffset;
+            TurretY = turrY;
             Flag = flags;
         }
 
+        public UnitType(sbyte id, string name, string textId, string ownerHouse, int turrOffset, int turrY, UnitTypeFlag flags) //bool hasTurret, bool isFixedWing, bool isArmed, bool isHarvester)
+             : this(id, name, textId, ownerHouse, null, null, turrOffset, turrY, flags)
+        {
+        }
+
+        public UnitType(sbyte id, string name, string textId, string ownerHouse, UnitTypeFlag flags) //bool hasTurret, bool isFixedWing, bool isArmed, bool isHarvester)
+             : this(id, name, textId, ownerHouse, null, null, 0, 0, flags)
+        {
+        }
+
         public UnitType(sbyte id, string name, string textId, string ownerHouse)
-            : this(id, name, textId, ownerHouse, UnitTypeFlag.None)
+            : this(id, name, textId, ownerHouse, null, null, 0, 0, UnitTypeFlag.None)
         {
         }
 
         public UnitType(sbyte id, string name, string textId)
-            : this(id, name, textId, null, UnitTypeFlag.None)
+            : this(id, name, textId, null, null, null, 0, 0, UnitTypeFlag.None)
         {
         }
 

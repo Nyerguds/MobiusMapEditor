@@ -175,7 +175,8 @@ namespace MobiusEditor.Utility
             }
         }
 
-        public static Font GetAdjustedFont(this Graphics graphics, string text, Font originalFont, int width, int minSize, int maxSize, bool smallestOnFail)
+        public static Font GetAdjustedFont(this Graphics graphics, string text, Font originalFont, int fitWidth, int fitHeight,
+            int minSize, int maxSize, StringFormat stringFormat, bool smallestOnFail)
         {
             if (minSize > maxSize)
             {
@@ -183,9 +184,10 @@ namespace MobiusEditor.Utility
             }
             for (var size = maxSize; size >= minSize; --size)
             {
-                var font = new Font(originalFont.Name, size, originalFont.Style);
-                var textSize = graphics.MeasureString(text, font);
-                if (width > Convert.ToInt32(textSize.Width))
+                Font font = new Font(originalFont.Name, size, originalFont.Style);
+                int linesFilled;
+                SizeF textSize = graphics.MeasureString(text, font, new SizeF(fitWidth, fitHeight), stringFormat, out _, out linesFilled);
+                if (linesFilled == 1 && Convert.ToInt32(textSize.Width) < fitWidth && Convert.ToInt32(textSize.Width) < fitHeight)
                 {
                     return font;
                 }

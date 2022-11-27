@@ -731,18 +731,67 @@ namespace MobiusEditor.TiberianDawn
                         if (tokens.Length >= 5)
                         {
                             var trigger = new Trigger { Name = Key };
-
-                            trigger.Event1.EventType = tokens[0];
-                            trigger.Event1.Data = long.Parse(tokens[2]);
-                            trigger.Action1.ActionType = tokens[1];
-                            trigger.House = Map.HouseTypes.Where(t => t.Name.Equals(tokens[3], StringComparison.OrdinalIgnoreCase)).FirstOrDefault()?.Name ?? "None";
-                            if (TeamType.IsEmpty(tokens[4]))
-                                tokens[4] = TeamType.None;
+                            string eventType = tokens[0];
+                            if (EventTypes.EVENT_NONE.Equals(eventType, StringComparison.OrdinalIgnoreCase))
+                            {
+                                eventType = EventTypes.EVENT_NONE;
+                            }
                             else
                             {
-                                tokens[4] = Map.TeamTypes.FirstOrDefault(tt => tt.Name.Equals(tokens[4], StringComparison.OrdinalIgnoreCase))?.Name ?? TeamType.None;
+                                eventType = EventTypes.GetTypes().FirstOrDefault(evt => evt.Equals(eventType, StringComparison.OrdinalIgnoreCase)) ?? EventTypes.EVENT_NONE;
+                                if (EventTypes.EVENT_NONE.Equals(eventType, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    errors.Add(string.Format("Trigger '{0}' references unknown event '{1}'. Reverted to 'None'.", Key, tokens[0]));
+                                    modified = true;
+                                }
                             }
-                            trigger.Action1.Team = tokens[4];
+                            trigger.Event1.EventType = eventType;
+                            string actionType = tokens[1];
+                            if (EventTypes.EVENT_NONE.Equals(actionType, StringComparison.OrdinalIgnoreCase))
+                            {
+                                actionType = EventTypes.EVENT_NONE;
+                            }
+                            else
+                            {
+                                actionType = ActionTypes.GetTypes().FirstOrDefault(act => act.Equals(actionType, StringComparison.OrdinalIgnoreCase)) ?? ActionTypes.ACTION_NONE;
+                                if (ActionTypes.ACTION_NONE.Equals(eventType, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    errors.Add(string.Format("Trigger '{0}' references unknown event '{1}'. Reverted to 'None'.", Key, tokens[4]));
+                                    modified = true;
+                                }
+                            }
+                            trigger.Action1.ActionType = actionType;
+                            trigger.Event1.Data = long.Parse(tokens[2]);
+                            string house = tokens[3];
+                            if (Model.House.IsEmpty(house))
+                            {
+                                house = Model.House.None;
+                            }
+                            else
+                            {
+                                house = Map.HouseTypes.FirstOrDefault(t => t.Name.Equals(house, StringComparison.OrdinalIgnoreCase))?.Name ?? Model.House.None;
+                                if (Model.House.IsEmpty(house))
+                                {
+                                    errors.Add(string.Format("Trigger '{0}' references unknown House '{1}'. Reverted to 'None'.", Key, tokens[4]));
+                                    modified = true;
+                                }
+                            }
+                            trigger.House = house;
+                            String team = tokens[4];
+                            if (TeamType.IsEmpty(tokens[4]))
+                            {
+                                team = TeamType.None;
+                            }
+                            else
+                            {
+                                team = Map.TeamTypes.FirstOrDefault(tt => tt.Name.Equals(tokens[4], StringComparison.OrdinalIgnoreCase))?.Name ?? TeamType.None;
+                                if (TeamType.IsEmpty(tokens[4]))
+                                {
+                                    errors.Add(string.Format("Trigger '{0}' references unknown teamtype '{1}'. Reverted to 'None'.", Key, tokens[4]));
+                                    modified = true;
+                                }
+                            }
+                            trigger.Action1.Team = team;
                             trigger.PersistentType = TriggerPersistentType.Volatile;
                             if (tokens.Length >= 6)
                             {
@@ -2726,7 +2775,7 @@ namespace MobiusEditor.TiberianDawn
                 {
                     curErrors.Add(prefix + "The amount of units that needs to be destroyed is 0.");
                 }
-                if (!fatalOnly && event1 == EventTypes.EVENT_BUILD && trigger.Event1.Data < 0 || trigger.Event1.Data > Map.BuildingTypes.Max(bld => bld.ID))
+                if (!fatalOnly && event1 == EventTypes.EVENT_BUILD && (trigger.Event1.Data < 0 || trigger.Event1.Data > Map.BuildingTypes.Max(bld => bld.ID)))
                 {
                     curErrors.Add(prefix + "Illegal building id \"" + trigger.Event1.Data + "\" for \"Built It\" event.");
                     trigger.Event1.Data = 0;

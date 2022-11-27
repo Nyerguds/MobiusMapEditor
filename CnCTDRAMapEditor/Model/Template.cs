@@ -26,5 +26,10 @@ namespace MobiusEditor.Model
         public Size OverlapSize => new Size(1, 1);
 
         public bool[,] OccupyMask => new bool[1, 1] { { true } };
+
+        public override string ToString()
+        {
+            return (Type?.Name ?? "Unknown") + "[" + Icon + "]";
+        }
     }
 }

@@ -23,6 +23,8 @@ namespace MobiusEditor.Interface
         string DisplayName { get; }
 
         bool IsArmed { get; }
+        
+        bool IsAircraft { get; }
 
         bool IsHarvester { get; }
     }

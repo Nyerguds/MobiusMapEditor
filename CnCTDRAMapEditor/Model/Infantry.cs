@@ -63,6 +63,11 @@ namespace MobiusEditor.Model
             InfantryGroup = infantryGroup;
         }
 
+        public override string ToString()
+        {
+            return Type?.Name ?? "Unknown";
+        }
+
         public Infantry Clone()
         {
             Infantry clone = new Infantry(InfantryGroup);

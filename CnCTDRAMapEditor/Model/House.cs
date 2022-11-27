@@ -149,6 +149,11 @@ namespace MobiusEditor.Model
             return house == null || house.Equals(None, StringComparison.OrdinalIgnoreCase);
         }
 
+        public override string ToString()
+        {
+            return Type?.Name ?? "Unknown";
+        }
+
         public readonly HouseType Type;
 
         [NonSerializedINIKey]

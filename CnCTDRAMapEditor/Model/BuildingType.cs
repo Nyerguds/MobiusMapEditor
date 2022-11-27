@@ -31,6 +31,7 @@ namespace MobiusEditor.Model
         Turret      = (1 << 3),
         SingleFrame = (1 << 4),
         NoRemap     = (1 << 5),
+        Flat        = (1 << 6),
     }
 
     public class BuildingType : ICellOverlapper, ICellOccupier, ITechnoType, IBrowsableType
@@ -85,11 +86,16 @@ namespace MobiusEditor.Model
         public Bitmap Thumbnail { get; set; }
         public bool IsArmed => false; // Not actually true, but irrelevant for practical purposes; their Mission is not set in the ini file.
         public bool IsHarvester => false;
+        public bool IsAircraft => false;
 
         public bool IsFake => (Flag & BuildingTypeFlag.Fake) == BuildingTypeFlag.Fake;
         public bool HasTurret => (Flag & BuildingTypeFlag.Turret) == BuildingTypeFlag.Turret;
         public bool IsSingleFrame => (Flag & BuildingTypeFlag.SingleFrame) == BuildingTypeFlag.SingleFrame;
         public bool CanRemap => (Flag & BuildingTypeFlag.NoRemap) != BuildingTypeFlag.NoRemap;
+        /// <summary>
+        /// Indicates buildings that have pieces sticking out at the top that should not overlap the objects on these cells.
+        /// </summary>
+        public bool IsFlat => (Flag & BuildingTypeFlag.Flat) == BuildingTypeFlag.Flat;
 
         public BuildingType(sbyte id, string name, string textId, int powerProd, int powerUse, int storage, bool[,] occupyMask, string ownerHouse, TheaterType[] theaters, string factoryOverlay, BuildingTypeFlag flag, int frameOffset)
         {

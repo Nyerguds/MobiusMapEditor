@@ -34,6 +34,8 @@ namespace MobiusEditor.Model
 
         public bool IsArmed => (Flag & UnitTypeFlag.IsArmed) == UnitTypeFlag.IsArmed;
 
+        public bool IsAircraft => false;
+
         public bool IsExpansionUnit => (Flag & UnitTypeFlag.IsExpansionUnit) == UnitTypeFlag.IsExpansionUnit;
 
         public bool IsHarvester => false;

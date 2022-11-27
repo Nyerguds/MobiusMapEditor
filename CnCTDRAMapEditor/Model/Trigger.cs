@@ -208,7 +208,6 @@ namespace MobiusEditor.Model
             return Clone();
         }
 
-
         public static Boolean CheckForChanges(List<Trigger> list1, List<Trigger> list2)
         {
             // Might need to migrate this to the map.

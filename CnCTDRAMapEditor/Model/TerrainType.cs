@@ -43,7 +43,7 @@ namespace MobiusEditor.Model
         public String GraphicsSource { get; private set; }
 
         public bool IsArmed => false;
-
+        public bool IsAircraft => false;
         public bool IsHarvester => false;
 
         public Size GetRenderSize(Size cellSize)

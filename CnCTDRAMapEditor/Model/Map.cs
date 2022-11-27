@@ -173,6 +173,8 @@ namespace MobiusEditor.Model
 
         public readonly string DefaultMissionUnarmed;
 
+        public readonly string DefaultMissionAircraft;
+
         public readonly string DefaultMissionHarvest;
 
         public readonly List<DirectionType> BuildingDirectionTypes;
@@ -337,6 +339,8 @@ namespace MobiusEditor.Model
             DefaultMissionUnarmed = MissionTypes.Where(m => m.Equals("Stop")).FirstOrDefault() ?? MissionTypes.First();
             // Reverts to "stop" if there are no resources (RA indoor)
             DefaultMissionHarvest = OverlayTypes.Any(ov => ov.IsResource) ? MissionTypes.Where(m => m.Equals("Harvest")).FirstOrDefault() ?? DefaultMissionUnarmed : DefaultMissionUnarmed;
+            // In TD, at lease, only Unload will make them stay on the spot as expected.
+            DefaultMissionAircraft = MissionTypes.Where(m => m.Equals("Unload")).FirstOrDefault() ?? MissionTypes.First();
             UnitDirectionTypes = new List<DirectionType>(unitDirectionTypes);
             BuildingDirectionTypes = new List<DirectionType>(buildingDirectionTypes);
             AllInfantryTypes = new List<InfantryType>(infantryTypes);
@@ -716,7 +720,7 @@ namespace MobiusEditor.Model
             var smudgeType = smudge?.Type;
             if (smudgeType != null)
             {
-                sb.AppendFormat(", Smudge = {0}", smudgeType.DisplayName);
+                sb.AppendFormat(", Smudge = {0}{1}", smudgeType.DisplayName, smudgeType.IsAutoBib ? " (Attached)" : String.Empty);
             }
             var overlay = Overlay[cell];
             var overlayType = overlay?.Type;
@@ -975,11 +979,15 @@ namespace MobiusEditor.Model
             {
                 return DefaultMissionHarvest;
             }
+            if (techno.IsAircraft)
+            {
+                return DefaultMissionAircraft;
+            }
             if (!techno.IsArmed)
             {
                 return DefaultMissionUnarmed;
             }
-            if (currentMission == DefaultMissionHarvest || currentMission == DefaultMissionUnarmed)
+            if (currentMission == DefaultMissionHarvest || currentMission == DefaultMissionAircraft || currentMission == DefaultMissionUnarmed)
             {
                 return DefaultMissionArmed;
             }

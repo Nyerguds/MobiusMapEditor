@@ -62,7 +62,65 @@ namespace MobiusEditor.Render
             0,31,30,29,28,27,26,25,24,23,22,21,20,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1
         };
 
-        private static readonly Point[] TurretAdjust = new Point[]
+        /// <summary>
+        /// Cosine table. Technically signed bytes , but stored as 00-FF for simplicity.
+        /// </summary>
+        private static byte[] CosTable = {
+            0x00, 0x03, 0x06, 0x09, 0x0c, 0x0f, 0x12, 0x15, 0x18, 0x1b, 0x1e, 0x21, 0x24, 0x27, 0x2a, 0x2d,
+            0x30, 0x33, 0x36, 0x39, 0x3b, 0x3e, 0x41, 0x43, 0x46, 0x49, 0x4b, 0x4e, 0x50, 0x52, 0x55, 0x57,
+            0x59, 0x5b, 0x5e, 0x60, 0x62, 0x64, 0x65, 0x67, 0x69, 0x6b, 0x6c, 0x6e, 0x6f, 0x71, 0x72, 0x74,
+            0x75, 0x76, 0x77, 0x78, 0x79, 0x7a, 0x7b, 0x7b, 0x7c, 0x7d, 0x7d, 0x7e, 0x7e, 0x7e, 0x7e, 0x7e,
+
+            0x7f, 0x7e, 0x7e, 0x7e, 0x7e, 0x7e, 0x7d, 0x7d, 0x7c, 0x7b, 0x7b, 0x7a, 0x79, 0x78, 0x77, 0x76,
+            0x75, 0x74, 0x72, 0x71, 0x70, 0x6e, 0x6c, 0x6b, 0x69, 0x67, 0x66, 0x64, 0x62, 0x60, 0x5e, 0x5b,
+            0x59, 0x57, 0x55, 0x52, 0x50, 0x4e, 0x4b, 0x49, 0x46, 0x43, 0x41, 0x3e, 0x3b, 0x39, 0x36, 0x33,
+            0x30, 0x2d, 0x2a, 0x27, 0x24, 0x21, 0x1e, 0x1b, 0x18, 0x15, 0x12, 0x0f, 0x0c, 0x09, 0x06, 0x03,
+
+            0x00, 0xfd, 0xfa, 0xf7, 0xf4, 0xf1, 0xee, 0xeb, 0xe8, 0xe5, 0xe2, 0xdf, 0xdc, 0xd9, 0xd6, 0xd3,
+            0xd0, 0xcd, 0xca, 0xc7, 0xc5, 0xc2, 0xbf, 0xbd, 0xba, 0xb7, 0xb5, 0xb2, 0xb0, 0xae, 0xab, 0xa9,
+            0xa7, 0xa5, 0xa2, 0xa0, 0x9e, 0x9c, 0x9a, 0x99, 0x97, 0x95, 0x94, 0x92, 0x91, 0x8f, 0x8e, 0x8c,
+            0x8b, 0x8a, 0x89, 0x88, 0x87, 0x86, 0x85, 0x85, 0x84, 0x83, 0x83, 0x82, 0x82, 0x82, 0x82, 0x82,
+
+            0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x83, 0x83, 0x84, 0x85, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8a,
+            0x8b, 0x8c, 0x8e, 0x8f, 0x90, 0x92, 0x94, 0x95, 0x97, 0x99, 0x9a, 0x9c, 0x9e, 0xa0, 0xa2, 0xa5,
+            0xa7, 0xa9, 0xab, 0xae, 0xb0, 0xb2, 0xb5, 0xb7, 0xba, 0xbd, 0xbf, 0xc2, 0xc5, 0xc7, 0xca, 0xcd,
+            0xd0, 0xd3, 0xd6, 0xd9, 0xdc, 0xdf, 0xe2, 0xe5, 0xe8, 0xeb, 0xee, 0xf1, 0xf4, 0xf7, 0xfa, 0xfd,
+        };
+
+        /// <summary>
+        /// Sine table. Technically signed bytes , but stored as 00-FF for simplicity.
+        /// </summary>
+        private static byte[] SinTable = {
+            0x7f, 0x7e, 0x7e, 0x7e, 0x7e, 0x7e, 0x7d, 0x7d, 0x7c, 0x7b, 0x7b, 0x7a, 0x79, 0x78, 0x77, 0x76,
+            0x75, 0x74, 0x72, 0x71, 0x70, 0x6e, 0x6c, 0x6b, 0x69, 0x67, 0x66, 0x64, 0x62, 0x60, 0x5e, 0x5b,
+            0x59, 0x57, 0x55, 0x52, 0x50, 0x4e, 0x4b, 0x49, 0x46, 0x43, 0x41, 0x3e, 0x3b, 0x39, 0x36, 0x33,
+            0x30, 0x2d, 0x2a, 0x27, 0x24, 0x21, 0x1e, 0x1b, 0x18, 0x15, 0x12, 0x0f, 0x0c, 0x09, 0x06, 0x03,
+
+            0x00, 0xfd, 0xfa, 0xf7, 0xf4, 0xf1, 0xee, 0xeb, 0xe8, 0xe5, 0xe2, 0xdf, 0xdc, 0xd9, 0xd6, 0xd3,
+            0xd0, 0xcd, 0xca, 0xc7, 0xc5, 0xc2, 0xbf, 0xbd, 0xba, 0xb7, 0xb5, 0xb2, 0xb0, 0xae, 0xab, 0xa9,
+            0xa7, 0xa5, 0xa2, 0xa0, 0x9e, 0x9c, 0x9a, 0x99, 0x97, 0x95, 0x94, 0x92, 0x91, 0x8f, 0x8e, 0x8c,
+            0x8b, 0x8a, 0x89, 0x88, 0x87, 0x86, 0x85, 0x85, 0x84, 0x83, 0x83, 0x82, 0x82, 0x82, 0x82, 0x82,
+
+            0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x83, 0x83, 0x84, 0x85, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8a,
+            0x8b, 0x8c, 0x8e, 0x8f, 0x90, 0x92, 0x94, 0x95, 0x97, 0x99, 0x9a, 0x9c, 0x9e, 0xa0, 0xa2, 0xa5,
+            0xa7, 0xa9, 0xab, 0xae, 0xb0, 0xb2, 0xb5, 0xb7, 0xba, 0xbd, 0xbf, 0xc2, 0xc5, 0xc7, 0xca, 0xcd,
+            0xd0, 0xd3, 0xd6, 0xd9, 0xdc, 0xdf, 0xe2, 0xe5, 0xe8, 0xeb, 0xee, 0xf1, 0xf4, 0xf7, 0xfa, 0xfd,
+
+            0x00, 0x03, 0x06, 0x09, 0x0c, 0x0f, 0x12, 0x15, 0x18, 0x1b, 0x1e, 0x21, 0x24, 0x27, 0x2a, 0x2d,
+            0x30, 0x33, 0x36, 0x39, 0x3b, 0x3e, 0x41, 0x43, 0x46, 0x49, 0x4b, 0x4e, 0x50, 0x52, 0x55, 0x57,
+            0x59, 0x5b, 0x5e, 0x60, 0x62, 0x64, 0x65, 0x67, 0x69, 0x6b, 0x6c, 0x6e, 0x6f, 0x71, 0x72, 0x74,
+            0x75, 0x76, 0x77, 0x78, 0x79, 0x7a, 0x7b, 0x7b, 0x7c, 0x7d, 0x7d, 0x7e, 0x7e, 0x7e, 0x7e, 0x7e,
+        };
+
+        private static void MovePoint(ref int x, ref int y, byte dir, int distance, int perspectiveDivider)
+        {
+            x += ((sbyte)CosTable[dir] * distance) >> 7;
+            y += -(((sbyte)SinTable[dir] * distance / perspectiveDivider) >> 7);
+        }
+
+        private static readonly short[] HeliDistanceAdjust = { 8, 9, 10, 9, 8, 9, 10, 9 };
+
+        private static readonly Point[] BackTurretAdjust = new Point[]
         {
             new Point(1, 2),    // N
             new Point(-1, 1),
@@ -110,7 +168,8 @@ namespace MobiusEditor.Render
             var tileSize = new Size(Math.Max(1, (int)(Globals.OriginalTileWidth * tileScale)), Math.Max(1, (int)(Globals.OriginalTileHeight * tileScale)));
             var tiberiumOrGoldTypes = map.OverlayTypes.Where(t => t.IsTiberiumOrGold).Select(t => t).ToArray();
             var gemTypes = map.OverlayTypes.Where(t => t.IsGem).ToArray();
-            var overlappingRenderList = new List<(Rectangle, Action<Graphics>)>();
+            // paint position, paint action, true if flat.
+            var overlappingRenderList = new List<(Rectangle, Action<Graphics>, bool)>();
             Func<IEnumerable<Point>> renderLocations = null;
             if (locations != null)
             {
@@ -258,7 +317,14 @@ namespace MobiusEditor.Render
                     overlappingRenderList.Add(Render(gameType, map.Theater, topLeft, tileSize, unit));
                 }
             }
-            foreach (var (location, renderer) in overlappingRenderList.Where(x => !x.Item1.IsEmpty).OrderBy(x => x.Item1.Bottom))
+            // Paint flat items (like the repair bay)
+            //.OrderBy(x => x.Item1.Bottom) --> .OrderBy(x => x.Item1.CenterPoint().Y)
+            foreach (var (location, renderer, flat) in overlappingRenderList.Where(x => !x.Item1.IsEmpty && x.Item3).OrderBy(x => x.Item1.CenterPoint().Y))
+            {
+                renderer(graphics);
+            }
+            // Paint all the rest
+            foreach (var (location, renderer, flat) in overlappingRenderList.Where(x => !x.Item1.IsEmpty && !x.Item3).OrderBy(x => x.Item1.CenterPoint().Y))
             {
                 renderer(graphics);
             }
@@ -397,13 +463,13 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static (Rectangle, Action<Graphics>) Render(GameType gameType, TheaterType theater, Point topLeft, Size tileSize, double tileScale, Terrain terrain)
+        public static (Rectangle, Action<Graphics>, bool) Render(GameType gameType, TheaterType theater, Point topLeft, Size tileSize, double tileScale, Terrain terrain)
         {
             string tileName = terrain.Type.GraphicsSource;
             if (!Globals.TheTilesetManager.GetTileData(theater.Tilesets, tileName, terrain.Type.DisplayIcon, out Tile tile))
             {
                 Debug.Print(string.Format("Terrain {0} ({1}) not found", tileName, terrain.Type.DisplayIcon));
-                return (Rectangle.Empty, (g) => { });
+                return (Rectangle.Empty, (g) => { }, false);
             }
             var tint = terrain.Tint;
             var imageAttributes = new ImageAttributes();
@@ -429,10 +495,10 @@ namespace MobiusEditor.Render
             {
                 g.DrawImage(tile.Image, paintBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes);
             }
-            return (terrainBounds, render);
+            return (terrainBounds, render, false);
         }
 
-        public static (Rectangle, Action<Graphics>) Render(GameType gameType, TheaterType theater, Point topLeft, Size tileSize, double tileScale, Building building)
+        public static (Rectangle, Action<Graphics>, bool) Render(GameType gameType, TheaterType theater, Point topLeft, Size tileSize, double tileScale, Building building)
         {
             var tint = building.Tint;
             var icon = building.Type.FrameOFfset;
@@ -527,16 +593,17 @@ namespace MobiusEditor.Render
                         g.DrawImage(tile.Image, paintBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes);
                     }
                 }
-                return (buildingBounds, render);
+                // "is flat" is for buildings that have pieces sticking out at the top that should not overlap objects on these cells.
+                return (buildingBounds, render, building.Type.IsFlat);
             }
             else
             {
                 Debug.Print(string.Format("Building {0} ({1}) not found", building.Type.Name, icon));
-                return (Rectangle.Empty, (g) => { });
+                return (Rectangle.Empty, (g) => { }, false);
             }
         }
 
-        public static (Rectangle, Action<Graphics>) Render(TheaterType theater, Point topLeft, Size tileSize, Infantry infantry, InfantryStoppingType infantryStoppingType)
+        public static (Rectangle, Action<Graphics>, bool) Render(TheaterType theater, Point topLeft, Size tileSize, Infantry infantry, InfantryStoppingType infantryStoppingType)
         {
             var icon = HumanShape[Facing32[infantry.Direction.ID]];
             string teamColor = infantry.House?.UnitTeamColor;
@@ -598,18 +665,18 @@ namespace MobiusEditor.Render
                     }
                     g.DrawImage(tile.Image, renderBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes);
                 }
-                return (virtualBounds, render);
+                return (virtualBounds, render, false);
             }
             else
             {
                 Debug.Print(string.Format("Infantry {0} ({1}) not found", infantry.Type.Name, icon));
-                return (Rectangle.Empty, (g) => { });
+                return (Rectangle.Empty, (g) => { }, false);
             }
         }
 
-        public static (Rectangle, Action<Graphics>) Render(GameType gameType, TheaterType theater, Point topLeft, Size tileSize, Unit unit)
+        public static (Rectangle, Action<Graphics>, bool) Render(GameType gameType, TheaterType theater, Point topLeft, Size tileSize, Unit unit)
         {
-            int icon = 0;
+            int icon = -1;
             if (gameType == GameType.TiberianDawn || gameType == GameType.SoleSurvivor)
             {
                 if ((unit.Type == TiberianDawn.UnitTypes.Tric) ||
@@ -625,34 +692,23 @@ namespace MobiusEditor.Render
                 {
                     icon = 0;
                 }
-                else
+                else if (unit.Type == TiberianDawn.UnitTypes.GunBoat)
                 {
                     icon = BodyShape[Facing32[unit.Direction.ID]];
-                    if (unit.Type == TiberianDawn.UnitTypes.GunBoat)
-                    {
-                        // East facing is not actually possible to set in missions. This is just the turret facing.
-                        // In TD, damage is when BELOW the threshold. In RA, it's ON the threshold.
-                        if (unit.Strength < 128)
-                            icon += 32;
-                        if (unit.Strength < 64)
-                            icon += 32;
-                    }
+                    // East facing is not actually possible to set in missions. This is just the turret facing.
+                    // In TD, damage is when BELOW the threshold. In RA, it's ON the threshold.
+                    if (unit.Strength < 128)
+                        icon += 32;
+                    if (unit.Strength < 64)
+                        icon += 32;
                 }
+                
             }
             else if (gameType == GameType.RedAlert)
             {
-                if (unit.Type.IsAircraft)
+                if (unit.Type.IsAircraft && unit.Type.IsFixedWing)
                 {
-                    if ((unit.Type == RedAlert.UnitTypes.Tran) ||
-                        (unit.Type == RedAlert.UnitTypes.Heli) ||
-                        (unit.Type == RedAlert.UnitTypes.Hind))
-                    {
-                        icon = BodyShape[Facing32[unit.Direction.ID]];
-                    }
-                    else
-                    {
-                        icon = BodyShape[Facing16[unit.Direction.ID] * 2] / 2;
-                    }
+                    icon = BodyShape[Facing16[unit.Direction.ID] * 2] / 2;
                 }
                 else if (unit.Type.IsVessel)
                 {
@@ -663,24 +719,21 @@ namespace MobiusEditor.Render
                     }
                     else
                     {
-                        icon = BodyShape[Facing16[unit.Direction.ID] * 2] >> 1;
+                        icon = BodyShape[Facing16[unit.Direction.ID] * 2] / 2;
                     }
                 }
-                else
-                {
-                    if ((unit.Type == RedAlert.UnitTypes.Ant1) ||
+                else if ((unit.Type == RedAlert.UnitTypes.Ant1) ||
                         (unit.Type == RedAlert.UnitTypes.Ant2) ||
                         (unit.Type == RedAlert.UnitTypes.Ant3))
-                    {
-                        icon = ((BodyShape[Facing32[unit.Direction.ID]] + 2) / 4) & 0x07;
-                    }
-                    else
-                    {
-                        icon = BodyShape[Facing32[unit.Direction.ID]];
-                    }
+                {
+                    icon = ((BodyShape[Facing32[unit.Direction.ID]] + 2) / 4) & 0x07;
                 }
             }
-
+            // Default behaviour for 32-frame units.
+            if (icon == -1)
+            {
+                icon = BodyShape[Facing32[unit.Direction.ID]];
+            }
             string teamColor = null;
             if (unit.House != null)
             {
@@ -689,130 +742,173 @@ namespace MobiusEditor.Render
                     teamColor = unit.House.UnitTeamColor;
                 }
             }
-
-            if (Globals.TheTilesetManager.GetTeamColorTileData(theater.Tilesets, unit.Type.Name, icon, Globals.TheTeamColorManager[teamColor], out Tile tile))
+            if (!Globals.TheTilesetManager.GetTeamColorTileData(theater.Tilesets, unit.Type.Name, icon, Globals.TheTeamColorManager[teamColor], out Tile tile))
             {
-                var location =
-                    new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height) +
-                    new Size(tileSize.Width / 2, tileSize.Height / 2);
-                var renderSize = unit.Type.GetRenderSize(tileSize);
-                var renderBounds = new Rectangle(location - new Size(renderSize.Width / 2, renderSize.Height / 2), renderSize);
-                Tile turretTile = null;
-                if (unit.Type.HasTurret)
+                Debug.Print(string.Format("Unit {0} ({1}) not found", unit.Type.Name, icon));
+                return (Rectangle.Empty, (g) => { }, false);
+            }
+            var location =
+                new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height) +
+                new Size(tileSize.Width / 2, tileSize.Height / 2);
+            var renderSize = unit.Type.GetRenderSize(tileSize);
+            var renderRect = new Rectangle(new Point(0, 0), renderSize);
+            var renderBounds = new Rectangle(location - new Size(renderSize.Width / 2, renderSize.Height / 2), renderSize);
+            Tile turretTile = null;
+            Tile turret2Tile = null;
+            if (unit.Type.HasTurret)
+            {
+                string turretName = unit.Type.Turret ?? unit.Type.Name;
+                string turret2Name = unit.Type.HasDoubleTurret ? unit.Type.SecondTurret ?? unit.Type.Turret ?? unit.Type.Name : null;
+                int turretIcon = unit.Type.Name.Equals(turretName, StringComparison.OrdinalIgnoreCase) ? icon + 32 : icon;
+                int turret2Icon = unit.Type.Name.Equals(turret2Name, StringComparison.OrdinalIgnoreCase) ? icon + 32 : icon;
+                if (gameType == GameType.RedAlert)
                 {
-                    var turretName = unit.Type.Name;
-                    var turretIcon = icon + 32;
-                    if (gameType == GameType.RedAlert)
+                    if (unit.Type == RedAlert.UnitTypes.Phase)
                     {
-                        if (unit.Type == RedAlert.UnitTypes.Phase)
-                        {
-                            turretIcon += 6;
-                        }
-                        else if (unit.Type == RedAlert.UnitTypes.MGG)
-                        {
-                            int mggIcon = icon / 2;
-                            if (mggIcon >= 8)
-                                mggIcon -= 8;
-                            turretIcon = 32 + mggIcon;
-                        }
-                        else if (unit.Type == RedAlert.UnitTypes.Tesla)
-                        {
-                            turretIcon = 32;
-                        }
+                        // Compensate for unload frames.
+                        turretIcon += 6;
                     }
-                    if (unit.Type.IsVessel)
+                    else if (unit.Type == RedAlert.UnitTypes.MGG)
                     {
-                        // Might implement this properly later.
-                        turretName = null;
-#if false && TODO
-                        if (unit.Type == RedAlert.UnitTypes.Cruiser)
-                        {
-                            turretName = "TURR";
-                        }
-                        else if (unit.Type == RedAlert.UnitTypes.Destroyer)
-                        {
-                            turretName = "SSAM";
-                        }
-                        else if (unit.Type == RedAlert.UnitTypes.PTBoat)
-                        {
-                            turretName = "MGUN";
-                        }
-#endif
-                        turretIcon = BodyShape[Facing32[unit.Direction.ID]];
+                        // 16-frame rotation, but saved as 8 frames because the other 8 are identical.
+                        turretIcon = 32 + ((icon / 2) & 7);
                     }
-                    if (turretName != null)
-                        Globals.TheTilesetManager.GetTeamColorTileData(theater.Tilesets, turretName, turretIcon, Globals.TheTeamColorManager[teamColor], out turretTile);
+                    else if (unit.Type == RedAlert.UnitTypes.Tesla)
+                    {
+                        // Fixed turret frame.
+                        turretIcon = 32;
+                    }
                 }
-
-                var tint = unit.Tint;
-                void render(Graphics g)
+                if (unit.Type.IsVessel)
                 {
-                    var imageAttributes = new ImageAttributes();
-                    if (tint != Color.White)
+                    // Ships have 32-frame turrets on a 16-frame body.
+                    turretIcon = BodyShape[Facing32[unit.Direction.ID]];
+                    turret2Icon = BodyShape[Facing32[unit.Direction.ID]];
+                }
+                else if (unit.Type.IsAircraft)
+                {
+                    int getRotorIcon(string turrName, int dir, int turrIcon)
                     {
-                        var colorMatrix = new ColorMatrix(new float[][]
+                        // Bit-wise ToUpper() for ASCII ;)
+                        if (!String.IsNullOrEmpty(turrName) && (turrName[0] & 0xDF) == 'L')
                         {
+                            turrIcon = (dir >> 5) % 2 == 1 ? 9 : 5;
+                        }
+                        if (!String.IsNullOrEmpty(turrName) && (turrName[0] & 0xDF) == 'R')
+                        {
+                            turrIcon = (dir >> 5) % 2 == 1 ? 8 : 4;
+                        }
+                        return turrIcon;
+                    }
+                    turretIcon = getRotorIcon(turretName, unit.Direction.ID, turretIcon);
+                    turret2Icon = getRotorIcon(turret2Name, unit.Direction.ID, turret2Icon);
+                }
+                if (turretName != null)
+                    Globals.TheTilesetManager.GetTeamColorTileData(theater.Tilesets, turretName, turretIcon, Globals.TheTeamColorManager[teamColor], out turretTile);
+                if (turret2Name != null)
+                    Globals.TheTilesetManager.GetTeamColorTileData(theater.Tilesets, turret2Name, turret2Icon, Globals.TheTeamColorManager[teamColor], out turret2Tile);
+            }
+            var tint = unit.Tint;
+            void render(Graphics g)
+            {
+                var imageAttributes = new ImageAttributes();
+                if (tint != Color.White)
+                {
+                    var colorMatrix = new ColorMatrix(new float[][]
+                    {
                             new float[] {tint.R / 255.0f, 0, 0, 0, 0},
                             new float[] {0, tint.G / 255.0f, 0, 0, 0},
                             new float[] {0, 0, tint.B / 255.0f, 0, 0},
                             new float[] {0, 0, 0, tint.A / 255.0f, 0},
                             new float[] {0, 0, 0, 0, 1},
-                        }
-                        );
-                        imageAttributes.SetColorMatrix(colorMatrix);
                     }
-                    g.DrawImage(tile.Image, renderBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes);
-                    if (turretTile != null)
-                    {
-                        Point turretAdjust = Point.Empty;
-                        if (gameType == GameType.RedAlert)
-                        {
-                            if (unit.Type.IsVessel)
-                            {
-                                // TODO
-                            }
-                            else if (unit.Type == RedAlert.UnitTypes.Jeep)
-                            {
-                                turretAdjust.Y = -4;
-                            }
-                            else if (unit.Type == RedAlert.UnitTypes.MGG)
-                            {
-                                turretAdjust = TurretAdjust[Facing32[unit.Direction.ID]];
-                            }
-                            else if (unit.Type == RedAlert.UnitTypes.MRJammer)
-                            {
-                                turretAdjust.Y = -5;
-                            }
-                        }
-                        else if (gameType == GameType.TiberianDawn || gameType == GameType.SoleSurvivor)
-                        {
-                            if (unit.Type == TiberianDawn.UnitTypes.Jeep ||
-                                unit.Type == TiberianDawn.UnitTypes.Buggy ||
-                                unit.Type == TiberianDawn.UnitTypes.MHQ)
-                            {
-                                turretAdjust.Y = -4;
-                            }
-                            else if (unit.Type == TiberianDawn.UnitTypes.SSM ||
-                                     unit.Type == TiberianDawn.UnitTypes.MLRS)
-                            {
-                                turretAdjust = TurretAdjust[Facing32[unit.Direction.ID]];
-                            }
-                        }
-                        var turretBounds = renderBounds;
-                        turretBounds.Offset(
-                            turretAdjust.X * tileSize.Width / Globals.PixelWidth,
-                            turretAdjust.Y * tileSize.Height / Globals.PixelHeight
-                        );
-                        g.DrawImage(turretTile.Image, turretBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes);
-                    }
+                    );
+                    imageAttributes.SetColorMatrix(colorMatrix);
                 }
-                return (renderBounds, render);
+                // Combine body and turret to one image, then paint it. This is done because it might be semitransparent.
+                using (Bitmap unitBm = new Bitmap(renderBounds.Width, renderBounds.Height))
+                {
+                    using (Graphics unitG = Graphics.FromImage(unitBm))
+                    {
+                        if (tile != null) {
+                            unitG.DrawImage(tile.Image, renderRect, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel);
+                        }
+                        if (unit.Type.HasTurret)
+                        {
+                            Point turretAdjust = Point.Empty;
+                            Point turret2Adjust = Point.Empty;
+
+                            if (unit.Type.TurretOffset == Int32.MaxValue)
+                            {
+                                // Special case: MaxValue indicates the turret oFfset is determined by the TurretAdjustOffset table.
+                                turretAdjust = BackTurretAdjust[Facing32[unit.Direction.ID]];
+                                if (unit.Type.HasDoubleTurret)
+                                {
+                                    // Never actually used for 2 turrets.
+                                    turret2Adjust = BackTurretAdjust[Facing32[(byte)((unit.Direction.ID + DirectionTypes.South.ID) & 0xFF)]];
+                                }
+                            }
+                            else if (unit.Type.TurretOffset != 0)
+                            {
+                                // Used by ships and by the transport helicopter.
+                                int distance = unit.Type.TurretOffset;
+                                int face = (unit.Direction.ID >> 5) & 7;
+                                if (unit.Type.IsAircraft)
+                                {
+                                    // Stretch distance is given by a table.
+                                    distance *= HeliDistanceAdjust[face];
+                                }
+
+                                int x = 0;
+                                int y = 0;
+                                // For vessels, perspective stretch is simply done as '/ 2'.
+                                int perspectiveDivide = unit.Type.IsVessel ? 2 : 1;
+                                MovePoint(ref x, ref y, unit.Direction.ID, distance, perspectiveDivide);
+                                turretAdjust.X = x;
+                                turretAdjust.Y = y;
+                                if (unit.Type.HasDoubleTurret)
+                                {
+                                    x = 0;
+                                    y = 0;
+                                    MovePoint(ref x, ref y, (byte)((unit.Direction.ID + DirectionTypes.South.ID) & 0xFF), distance, perspectiveDivide);
+                                    turret2Adjust.X = x;
+                                    turret2Adjust.Y = y;
+                                }
+                            }
+                            // Adjust Y-offset.
+                            turretAdjust.Y += unit.Type.TurretY;
+                            if (unit.Type.HasDoubleTurret)
+                            {
+                                turret2Adjust.Y += unit.Type.TurretY;
+                            }                            
+                            Point center = new Point(renderBounds.Width / 2, renderBounds.Height / 2);
+                            if (turretTile != null) {
+                                Size turretSize = turretTile.Image.Size;
+                                var turretRenderSize = new Size(turretSize.Width * tileSize.Width / Globals.OriginalTileWidth, turretSize.Height * tileSize.Height / Globals.OriginalTileHeight);
+                                var turretBounds = new Rectangle(center - new Size(turretRenderSize.Width / 2, turretRenderSize.Height / 2), turretRenderSize);
+                                turretBounds.Offset(
+                                    turretAdjust.X * tileSize.Width / Globals.PixelWidth,
+                                    turretAdjust.Y * tileSize.Height / Globals.PixelHeight
+                                );
+                                unitG.DrawImage(turretTile.Image, turretBounds, 0, 0, turretTile.Image.Width, turretTile.Image.Height, GraphicsUnit.Pixel); 
+                            }
+                            if (unit.Type.HasDoubleTurret && turret2Tile != null)
+                            {
+                                Size turret2Size = turret2Tile.Image.Size;
+                                var turret2RenderSize = new Size(turret2Size.Width * tileSize.Width / Globals.OriginalTileWidth, turret2Size.Height * tileSize.Height / Globals.OriginalTileHeight);
+                                var turret2Bounds = new Rectangle(center - new Size(turret2RenderSize.Width / 2, turret2RenderSize.Height / 2), turret2RenderSize);
+                                turret2Bounds.Offset(
+                                    turret2Adjust.X * tileSize.Width / Globals.PixelWidth,
+                                    turret2Adjust.Y * tileSize.Height / Globals.PixelHeight
+                                );
+                                unitG.DrawImage(turret2Tile.Image, turret2Bounds, 0, 0, turret2Tile.Image.Width, turret2Tile.Image.Height, GraphicsUnit.Pixel);
+                            }
+                        }
+                    }
+                    g.DrawImage(unitBm, renderBounds, 0,0, renderBounds.Width, renderBounds.Height, GraphicsUnit.Pixel, imageAttributes);
+                }
             }
-            else
-            {
-                Debug.Print(string.Format("Unit {0} ({1}) not found", unit.Type.Name, icon));
-                return (Rectangle.Empty, (g) => { });
-            }
+            return (renderBounds, render, false);
         }
 
         public static (Rectangle, Action<Graphics>) Render(GameType gameType, bool soloMission, TheaterType theater, Size tileSize, TeamColor[] flagColors, Waypoint waypoint)
@@ -836,53 +932,63 @@ namespace MobiusEditor.Render
             Color tint = waypoint.Tint;
             float brightness = 1.0f;
             int mpId = Waypoint.GetMpIdFromFlag(waypoint.Flag);
+            int icon = 0;
+            bool defaultIcon = true;
             if (!soloMission && mpId >= 0 && mpId < flagColors.Length)
             {
+                defaultIcon = false;
                 tileGraphics = "flagfly";
                 // Always paint flags as opaque.
                 transparencyModifier = 1.0f;
                 teamColor = flagColors[mpId];
+                icon = 0;
             }
             if (gameType == GameType.SoleSurvivor && (waypoint.Flag & WaypointFlag.CrateSpawn) == WaypointFlag.CrateSpawn)
             {
+                defaultIcon = false;
                 tileGraphics = "scrate";
+                icon = 0;
                 //tint = Color.FromArgb(waypoint.Tint.A, Color.Green);
                 //brightness = 1.5f;
             }
-            int icon = 0;
-            if (Globals.TheTilesetManager.GetTeamColorTileData(theater.Tilesets, tileGraphics, icon, teamColor, out Tile tile, true, true))
+            bool gotIcon = Globals.TheTilesetManager.GetTeamColorTileData(theater.Tilesets, tileGraphics, icon, teamColor, out Tile tile, true, true);
+            if (!gotIcon && defaultIcon)
             {
-                var location = new Point(point.X * tileSize.Width, point.Y * tileSize.Height);
-                var renderSize = tileSize;
-                //Rectangle renderBounds = RenderBounds(tile.Image.Size, new Size(1, 1), tileSize);
-                Rectangle renderBounds = GeneralUtils.GetBoundingBoxCenter(tile.OpaqueBounds.Width, tile.OpaqueBounds.Height, tileSize.Width, tileSize.Height);
-                renderBounds.X += location.X;
-                renderBounds.Y += location.Y;
-                void render(Graphics g)
+                // Beacon only exists in remastered graphics. Get fallback.
+                tileGraphics = "armor";
+                icon = 6;
+                gotIcon = Globals.TheTilesetManager.GetTeamColorTileData(theater.Tilesets, tileGraphics, icon, teamColor, out tile, true, true);
+            }
+            if (!gotIcon)
+            {
+                Debug.Print(string.Format("Waypoint graphics {0} ({1}) not found", tileGraphics, icon));
+                return (Rectangle.Empty, (g) => { });
+            }
+            var location = new Point(point.X * tileSize.Width, point.Y * tileSize.Height);
+            var renderSize = tileSize;
+            //Rectangle renderBounds = RenderBounds(tile.Image.Size, new Size(1, 1), tileSize);
+            Rectangle renderBounds = GeneralUtils.GetBoundingBoxCenter(tile.OpaqueBounds.Width, tile.OpaqueBounds.Height, tileSize.Width, tileSize.Height);
+            renderBounds.X += location.X;
+            renderBounds.Y += location.Y;
+            void render(Graphics g)
+            {
+                var imageAttributes = new ImageAttributes();
+                // Waypoints get drawn as semitransparent, so always execute this.
+                if (tint != Color.White || brightness != 1.0 || transparencyModifier != 1.0)
                 {
-                    var imageAttributes = new ImageAttributes();
-                    // Waypoints get drawn as semitransparent, so always execute this.
-                    if (tint != Color.White || brightness != 1.0 || transparencyModifier != 1.0)
+                    var colorMatrix = new ColorMatrix(new float[][]
                     {
-                        var colorMatrix = new ColorMatrix(new float[][]
-                        {
                             new float[] {tint.R * brightness / 255.0f, 0, 0, 0, 0},
                             new float[] {0, tint.G * brightness / 255.0f, 0, 0, 0},
                             new float[] {0, 0, tint.B * brightness / 255.0f, 0, 0},
                             new float[] {0, 0, 0, (tint.A * transparencyModifier) / 255.0f, 0},
                             new float[] {0, 0, 0, 0, 1},
-                        });
-                        imageAttributes.SetColorMatrix(colorMatrix);
-                    }
-                    g.DrawImage(tile.Image, renderBounds, 0, 0, tile.OpaqueBounds.Width, tile.OpaqueBounds.Height, GraphicsUnit.Pixel, imageAttributes);
+                    });
+                    imageAttributes.SetColorMatrix(colorMatrix);
                 }
-                return (renderBounds, render);
+                g.DrawImage(tile.Image, renderBounds, 0, 0, tile.OpaqueBounds.Width, tile.OpaqueBounds.Height, GraphicsUnit.Pixel, imageAttributes);
             }
-            else
-            {
-                Debug.Print(string.Format("Waypoint graphics {0} ({1}) not found", tileGraphics, icon));
-                return (Rectangle.Empty, (g) => { });
-            }
+            return (renderBounds, render);
         }
 
         public static void RenderAllBoundsFromCell<T>(Graphics graphics, Size tileSize, IEnumerable<(int, T)> renderList, CellMetrics metrics)
@@ -1066,8 +1172,8 @@ namespace MobiusEditor.Render
                 using (var fakeBackgroundBrush = new SolidBrush(Color.FromArgb((forPreview ? 128 : 256) * 2 / 3, Color.Black)))
                 using (var fakeTextBrush = new SolidBrush(Color.FromArgb(forPreview ? building.Tint.A : 255, Color.White)))
                 {
-                    using (var font = graphics.GetAdjustedFont(fakeText, SystemFonts.DefaultFont, buildingBounds.Width,
-                        Math.Max(1, (int)(12 * tileScale)), Math.Max(1, (int)(24 * tileScale)), true))
+                    using (var font = graphics.GetAdjustedFont(fakeText, SystemFonts.DefaultFont, buildingBounds.Width, buildingBounds.Height,
+                        Math.Max(1, (int)(12 * tileScale)), Math.Max(1, (int)(24 * tileScale)), stringFormat, true))
                     {
                         var textBounds = graphics.MeasureString(fakeText, font, buildingBounds.Width, stringFormat);
                         var backgroundBounds = new RectangleF(buildingBounds.Location, textBounds);
@@ -1104,8 +1210,8 @@ namespace MobiusEditor.Render
                 using (var baseBackgroundBrush = new SolidBrush(Color.FromArgb((forPreview ? 128 : 256) * 2 / 3, Color.Black)))
                 using (var baseTextBrush = new SolidBrush(Color.FromArgb(forPreview ? 128 : 255, Color.Red)))
                 {
-                    using (var font = graphics.GetAdjustedFont(priText, SystemFonts.DefaultFont, buildingBounds.Width,
-                        Math.Max(1, (int)(12 * tileScale)), Math.Max(1, (int)(24 * tileScale)), true))
+                    using (var font = graphics.GetAdjustedFont(priText, SystemFonts.DefaultFont, buildingBounds.Width, buildingBounds.Height,
+                        Math.Max(1, (int)(12 * tileScale)), Math.Max(1, (int)(24 * tileScale)), stringFormat, true))
                     {
                         var textBounds = graphics.MeasureString(priText, font, buildingBounds.Width, stringFormat);
                         var backgroundBounds = new RectangleF(buildingBounds.Location, textBounds);
@@ -1205,8 +1311,8 @@ namespace MobiusEditor.Render
                         || (excludePick && !x.trigger.Equals(toPick, StringComparison.OrdinalIgnoreCase))
                          || (!excludePick && x.trigger.Equals(toPick, StringComparison.OrdinalIgnoreCase))))
                         {
-                            using (var font = graphics.GetAdjustedFont(trigger, SystemFonts.DefaultFont, bounds.Width,
-                                Math.Max(1, (int)(12 * tileScale)), Math.Max(1, (int)(24 * tileScale)), true))
+                            using (var font = graphics.GetAdjustedFont(trigger, SystemFonts.DefaultFont, bounds.Width, bounds.Height,
+                                Math.Max(1, (int)(12 * tileScale)), Math.Max(1, (int)(24 * tileScale)), stringFormat, true))
                             {
                                 var textBounds = graphics.MeasureString(trigger, font, bounds.Width, stringFormat);
                                 var backgroundBounds = new RectangleF(bounds.Location, textBounds);
@@ -1251,12 +1357,12 @@ namespace MobiusEditor.Render
             using (var baseBackgroundBrush = new SolidBrush(Color.FromArgb(forPreview ? 64 : 128, Color.Black)))
             using (var baseTextBrush = new SolidBrush(Color.FromArgb(forPreview ? 128 : 255, textColor)))
             {
-                using (var font = graphics.GetAdjustedFont(wpText, SystemFonts.DefaultFont, paintBounds.Width,
-                    Math.Max(1, (int)(12 * tileScale)), Math.Max(1, (int)(30 * tileScale)), true))
+                using (var font = graphics.GetAdjustedFont(wpText, SystemFonts.DefaultFont, paintBounds.Width, paintBounds.Height,
+                    Math.Max(1, (int)(12 * tileScale)), Math.Max(1, (int)(55 * tileScale)), stringFormat, true))
                 {
                     var textBounds = graphics.MeasureString(wpText, font, paintBounds.Width, stringFormat);
                     var backgroundBounds = new RectangleF(paintBounds.Location, textBounds);
-                    backgroundBounds.Offset((paintBounds.Width - textBounds.Width) / 2.0f, paintBounds.Height - textBounds.Height);
+                    backgroundBounds.Offset((paintBounds.Width - textBounds.Width) / 2.0f, (paintBounds.Height - textBounds.Height) / 2.0f);
                     graphics.FillRectangle(baseBackgroundBrush, backgroundBounds);
                     graphics.DrawString(wpText, font, baseTextBrush, backgroundBounds, stringFormat);
                 }
@@ -1296,8 +1402,8 @@ namespace MobiusEditor.Render
                         LineAlignment = StringAlignment.Center
                     };
                     var text = cellTrigger.Trigger;
-                    using (var font = graphics.GetAdjustedFont(text, SystemFonts.DefaultFont, textBounds.Width,
-                        Math.Max(1, (int)(24 * tileScale)), Math.Max(1, (int)(48 * tileScale)), true))
+                    using (var font = graphics.GetAdjustedFont(text, SystemFonts.DefaultFont, textBounds.Width, textBounds.Height,
+                        Math.Max(1, (int)(24 * tileScale)), Math.Max(1, (int)(48 * tileScale)), stringFormat, true))
                     {
                         graphics.DrawString(text.ToString(), font, cellTriggersBrush, textBounds, stringFormat);
                     }

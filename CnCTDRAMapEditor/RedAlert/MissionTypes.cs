@@ -37,7 +37,7 @@ namespace MobiusEditor.RedAlert
             "Stop",
             //"Ambush",
             "Hunt",
-            //"Unload",
+            "Unload",
             //"Sabotage",
             //"Construction",
             //"Selling",

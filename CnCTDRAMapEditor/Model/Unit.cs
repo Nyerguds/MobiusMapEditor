@@ -49,6 +49,11 @@ namespace MobiusEditor.Model
 
         public Color Tint { get; set; } = Color.White;
 
+        public override string ToString()
+        {
+            return Type?.Name ?? "Unknown";
+        }
+
         public Unit Clone()
         {
             Unit clone = new Unit();

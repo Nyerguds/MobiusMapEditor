@@ -47,6 +47,11 @@ namespace MobiusEditor.Model
 
         protected void OnPropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
+        public override string ToString()
+        {
+            return Type?.Name ?? "Unknown";
+        }
+
         object ICloneable.Clone()
         {
             return Clone();

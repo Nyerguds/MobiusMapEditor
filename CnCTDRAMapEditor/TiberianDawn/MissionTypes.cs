@@ -61,7 +61,7 @@ namespace MobiusEditor.TiberianDawn
             MISSION_HUNT,
             //MISSION_TIMED_HUNT,
             MISSION_UNLOAD,
-            MISSION_SABOTAGE,
+            //MISSION_SABOTAGE,
             //MISSION_CONSTRUCTION,
             //MISSION_SELLING,
             //MISSION_REPAIR,

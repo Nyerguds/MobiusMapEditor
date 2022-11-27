@@ -43,6 +43,11 @@ namespace MobiusEditor.Model
 
         public Color Tint { get; set; } = Color.White;
 
+        public override string ToString()
+        {
+            return Type?.Name ?? "Unknown";
+        }
+
         public Terrain Clone()
         {
             Terrain clone = new Terrain();

@@ -47,7 +47,7 @@ namespace MobiusEditor.RedAlert
         public static readonly BuildingType Barracks = new BuildingType(21, "barr", "TEXT_STRUCTURE_RA_BARR", 0, 20, new bool[2, 2] { { true, true }, { true, true } }, "USSR", BuildingTypeFlag.Bib);
         public static readonly BuildingType Tent = new BuildingType(22, "tent", "TEXT_STRUCTURE_RA_TENT", 0, 20, new bool[2, 2] { { true, true }, { true, true } }, "Greece", BuildingTypeFlag.Bib);
         public static readonly BuildingType Kennel = new BuildingType(23, "kenn", "TEXT_STRUCTURE_RA_KENN", 0, 10, new bool[1, 1] { { true } }, "USSR");
-        public static readonly BuildingType Repair = new BuildingType(24, "fix", "TEXT_STRUCTURE_RA_FIX", 0, 30, new bool[3, 3] { { false, true, false }, { true, true, true }, { false, true, false } }, "Greece");
+        public static readonly BuildingType Repair = new BuildingType(24, "fix", "TEXT_STRUCTURE_RA_FIX", 0, 30, new bool[3, 3] { { false, true, false }, { true, true, true }, { false, true, false } }, "Greece", BuildingTypeFlag.Flat);
         public static readonly BuildingType BioLab = new BuildingType(25, "bio", "TEXT_STRUCTURE_RA_BIO", 0, 40, new bool[2, 2] { { true, true }, { true, true } }, "Greece", BuildingTypeFlag.Bib);
         public static readonly BuildingType Mission = new BuildingType(26, "miss", "TEXT_STRUCTURE_RA_MISS", 0, 0, new bool[2, 3] { { true, true, true }, { true, true, true } }, "Greece", BuildingTypeFlag.Bib);
         public static readonly BuildingType ShipYard = new BuildingType(27, "syrd", "TEXT_STRUCTURE_RA_SYRD", 0, 30, new bool[3, 3] { { true, true, true }, { true, true, true }, { true, true, true } }, "Greece");

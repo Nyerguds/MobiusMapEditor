@@ -347,13 +347,8 @@ namespace MobiusEditor
                 return;
             }
 
-#if DEVELOPER
             var pgmFilter = "|PGM files (*.pgm)|*.pgm";
-            string allSupported = "All supported types (*.ini;*.bin;*.mpr;*.pgm)|*.ini;*.bin;*.mpr;*.pmg";
-#else
-            var pgmFilter = string.Empty;
-            string allSupported = "All supported types (*.ini;*.bin;*.mpr)|*.ini;*.bin;*.mpr";
-#endif
+            string allSupported = "All supported types (*.ini;*.bin;*.mpr;*.pgm)|*.ini;*.bin;*.mpr;*.pgm";
             String selectedFileName = null;
             using (OpenFileDialog ofd = new OpenFileDialog())
             {
@@ -972,11 +967,9 @@ namespace MobiusEditor
                 case ".bin":
                     fileType = FileType.BIN;
                     break;
-#if DEVELOPER
                 case ".pgm":
                     fileType = FileType.PGM;
                     break;
-#endif
             }
             INI iniContents = null;
             bool iniWasFetched = false;
@@ -1032,7 +1025,6 @@ namespace MobiusEditor
                         gameType = File.Exists(iniFile) ? GameType.TiberianDawn : GameType.None;
                         break;
                     }
-#if DEVELOPER
                 case FileType.PGM:
                     {
                         try
@@ -1055,7 +1047,6 @@ namespace MobiusEditor
                         }
                         break;
                     }
-#endif
             }
             if (gameType == GameType.TiberianDawn)
             {
@@ -1243,6 +1234,7 @@ namespace MobiusEditor
         private void PostLoad((string FileName, FileType FileType, IGamePlugin Plugin, string[] Errors) loadInfo)
         {
             string[] errors = loadInfo.Errors ?? new string[0];
+            // Plugin set to null indicates a fatal processing error where no map was loaded at all.
             if (loadInfo.Plugin == null)
             {
                 if (loadInfo.FileName != null)
@@ -1250,6 +1242,8 @@ namespace MobiusEditor
                     var fileInfo = new FileInfo(loadInfo.FileName);
                     mru.Remove(fileInfo);
                 }
+                // In case of actual error, remove label.
+                multiThreader.RemoveBusyLabel(this);
                 MessageBox.Show(string.Format("Error loading {0}: {1}", loadInfo.FileName ?? "new map", String.Join("\n", errors)), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             else
@@ -2079,7 +2073,12 @@ namespace MobiusEditor
                                         && (ov.Theaters == null || ov.Theaters.Contains(plugin.Map.Theater))).OrderBy(ov => ov.ID).FirstOrDefault();
             OverlayType wall = plugin.Map.OverlayTypes.Where(ov => (ov.Flag & OverlayTypeFlag.Wall) == OverlayTypeFlag.Wall
                                         && (ov.Theaters == null || ov.Theaters.Contains(plugin.Map.Theater))).OrderBy(ov => ov.ID).FirstOrDefault();
-            Globals.TheTilesetManager.GetTileData(plugin.Map.Theater.Tilesets, "beacon", 0, out Tile waypoint, false, true);
+            bool gotBeacon = Globals.TheTilesetManager.GetTileData(plugin.Map.Theater.Tilesets, "beacon", 0, out Tile waypoint, false, true);
+            if (!gotBeacon)
+            {
+                // Beacon only exists in rematered graphics. Get fallback.
+                Globals.TheTilesetManager.GetTileData(plugin.Map.Theater.Tilesets, "armor", 6, out waypoint, false, true);
+            }
             Globals.TheTilesetManager.GetTileData(plugin.Map.Theater.Tilesets, "mine", 3, out Tile cellTrigger, false, true);
             LoadNewIcon(mapToolStripButton, templateTile?.Image, plugin, 0);
             LoadNewIcon(smudgeToolStripButton, smudge?.Thumbnail, plugin, 1);

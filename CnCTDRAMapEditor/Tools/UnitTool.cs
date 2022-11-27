@@ -79,7 +79,7 @@ namespace MobiusEditor.Tools
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
             previewMap = map;
-            List<UnitType> unitTypes = plugin.Map.UnitTypes.Where(t => !t.IsFixedWing).OrderBy(t => t.ID).ToList();
+            List<UnitType> unitTypes = plugin.Map.UnitTypes.OrderBy(t => t.ID).ToList();
             UnitType unitType = unitTypes.First();
             mockUnit = new Unit()
             {
@@ -108,7 +108,7 @@ namespace MobiusEditor.Tools
             int selectedIndex = unitTypesBox.SelectedIndex;
             UnitType selected = unitTypesBox.SelectedValue as UnitType;
             unitTypesBox.SelectedIndexChanged -= UnitTypeComboBox_SelectedIndexChanged;
-            List<UnitType> updatedTypes = plugin.Map.UnitTypes.Where(t => !t.IsFixedWing).OrderBy(t => t.ID).ToList();
+            List<UnitType> updatedTypes = plugin.Map.UnitTypes.OrderBy(t => t.ID).ToList();
             if (!updatedTypes.Contains(selected))
             {
                 // Find nearest existing.

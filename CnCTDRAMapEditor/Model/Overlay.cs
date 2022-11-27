@@ -33,5 +33,10 @@ namespace MobiusEditor.Model
             get { return tint ?? Type.Tint; }
             set { tint = value; }
         }
+
+        public override string ToString()
+        {
+            return Type?.Name ?? "Unknown";
+        }
     }
 }
