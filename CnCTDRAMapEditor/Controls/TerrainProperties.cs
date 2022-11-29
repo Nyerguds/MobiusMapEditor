@@ -93,7 +93,7 @@ namespace MobiusEditor.Controls
             string[] filteredActions = Plugin.Map.ActionTypes.Where(ev => Plugin.Map.TerrainActionTypes.Contains(ev)).Distinct().ToArray();
             HashSet<string> allowedTriggers = new HashSet<string>(items);
             items = Trigger.None.Yield().Concat(Plugin.Map.Triggers.Select(t => t.Name).Where(t => allowedTriggers.Contains(t)).Distinct()).ToArray();
-            int selectIndex = selected == null ? 0 : Enumerable.Range(0, items.Length).FirstOrDefault(x => String.Equals(items[x], selected, StringComparison.InvariantCultureIgnoreCase));
+            int selectIndex = selected == null ? 0 : Enumerable.Range(0, items.Length).FirstOrDefault(x => String.Equals(items[x], selected, StringComparison.OrdinalIgnoreCase));
             triggerComboBox.DataSource = items;
             triggerComboBox.SelectedIndex = selectIndex;
             triggerToolTip = Map.MakeAllowedTriggersToolTip(filteredEvents, filteredActions);

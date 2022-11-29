@@ -581,6 +581,7 @@
     <Compile Include="Utility\GeneralUtils.cs" />
     <Compile Include="Utility\GenericBooleanTypeConverter.cs" />
     <Compile Include="Utility\INI.cs" />
+    <Compile Include="Utility\INITools.cs" />
     <Compile Include="Utility\Keyboard.cs" />
     <Compile Include="Utility\ListItem.cs" />
     <Compile Include="Utility\Megafile.cs" />

@@ -117,7 +117,7 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="lblRules.Text" xml:space="preserve">
-    <value>The text below shows all INI sections not managed by the editor. Add any rule changes you need. Sections managed by the editor ([Basic], [Units], [Trigs] etc.) will be ignored. Rule changes will be applied in the editor. [Aftermath] can be added, but its "NewUnitsEnabled" option is managed by the editor (in "Basic") and will be ignored here.</value>
+  <data name="lblDosContent.Text" xml:space="preserve">
+    <value>The text below shows all INI content not managed by the editor. Sections that contain lists of data, like units, triggers, waypoints etc will be ignored when added here, as will any specific ini keys managed by the editor. Note that this text is treated as DOS content; special characters will be loaded and saved using DOS-437 text encoding.</value>
   </data>
 </root>

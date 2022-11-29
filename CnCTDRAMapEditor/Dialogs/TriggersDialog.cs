@@ -274,7 +274,7 @@ namespace MobiusEditor.Dialogs
             }
             if (hasChanges)
             {
-                DialogResult dr =  MessageBox.Show("Triggers have been changed! Are you sure you want to cancel?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                DialogResult dr =  MessageBox.Show(this, "Triggers have been changed! Are you sure you want to cancel?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
                 if (dr == DialogResult.Yes)
                     return;
                 this.DialogResult = DialogResult.None;
@@ -443,22 +443,22 @@ namespace MobiusEditor.Dialogs
             else if (curName.Length > maxLength)
             {
                 e.CancelEdit = true;
-                MessageBox.Show(string.Format("Trigger name is longer than {0} characters.", maxLength), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this, string.Format("Trigger name is longer than {0} characters.", maxLength), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             else if (Trigger.IsEmpty(curName))
             {
                 e.CancelEdit = true;
-                MessageBox.Show(string.Format("Trigger name 'None' is reserved and cannot be used."), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this, string.Format("Trigger name '{0}' is reserved and cannot be used.", Trigger.None), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            else if (!INIHelpers.IsValidKey(curName))
+            else if (!INITools.IsValidKey(curName))
             {
                 e.CancelEdit = true;
-                MessageBox.Show(string.Format("Trigger name '{0}' contains illegal characters. This format only supports simple ASCII, and cannot contain '=', '[' or ']'.", curName), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this, string.Format("Trigger name '{0}' contains illegal characters. This format only supports simple ASCII, and cannot contain '=', '[' or ']'.", curName), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            else if (triggers.Where(t => (t != SelectedTrigger) && t.Name.Equals(curName, StringComparison.InvariantCultureIgnoreCase)).Any())
+            else if (triggers.Where(t => (t != SelectedTrigger) && t.Name.Equals(curName, StringComparison.OrdinalIgnoreCase)).Any())
             {
                 e.CancelEdit = true;
-                MessageBox.Show(string.Format("Trigger with name '{0}' already exists.", curName.ToUpperInvariant()), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this, string.Format("Trigger with name '{0}' already exists.", curName.ToUpperInvariant()), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             else
             {
@@ -830,8 +830,9 @@ namespace MobiusEditor.Dialogs
                                 actionValueComboBox.Visible = true;
                                 actionValueComboBox.DisplayMember = "Label";
                                 actionValueComboBox.ValueMember = "Value";
+                                ExplorerComparer sorter = new ExplorerComparer();
                                 // First video is the "None" entry; expose as -1.
-                                var movData = plugin.Map.MovieTypes.Select((t, i) => new ListItem<long>(i - 1, t)).OrderBy(t => t.Label, new ExplorerComparer()).ToList();
+                                var movData = plugin.Map.MovieTypes.Select((t, i) => new ListItem<long>(i - 1, t)).OrderBy(t => t.Label, sorter).ToList();
                                 var movDefItem = movData.Where(t => t.Value == -1).FirstOrDefault();
                                 if (movDefItem != null)
                                 {
@@ -848,7 +849,7 @@ namespace MobiusEditor.Dialogs
                                 actionValueComboBox.ValueMember = "Value";
                                 var vocData = new ListItem<long>(-1, "None").Yield().Concat(
                                     RedAlert.ActionDataTypes.VocDesc.Select((t, i) => new ListItem<long>(i, t + " (" + RedAlert.ActionDataTypes.VocNames[i] + ")"))
-                                    .Where(t => !String.Equals(RedAlert.ActionDataTypes.VocNames[t.Value], "x", StringComparison.InvariantCultureIgnoreCase))).ToArray();
+                                    .Where(t => !String.Equals(RedAlert.ActionDataTypes.VocNames[t.Value], "x", StringComparison.OrdinalIgnoreCase))).ToArray();
                                 actionValueComboBox.DataSource = vocData;
                                 actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
                                 actionValueComboBox.SelectedValue = ListItem.CheckInList(data, vocData);
@@ -859,7 +860,7 @@ namespace MobiusEditor.Dialogs
                                 actionValueComboBox.ValueMember = "Value";
                                 var voxData = new ListItem<long>(-1, "None").Yield().Concat(
                                     RedAlert.ActionDataTypes.VoxDesc.Select((t, i) => new ListItem<long>(i, t + " (" + RedAlert.ActionDataTypes.VoxNames[i] + ")"))
-                                    .Where(t => !String.Equals(RedAlert.ActionDataTypes.VoxNames[t.Value], "none", StringComparison.InvariantCultureIgnoreCase))).ToArray();
+                                    .Where(t => !String.Equals(RedAlert.ActionDataTypes.VoxNames[t.Value], "none", StringComparison.OrdinalIgnoreCase))).ToArray();
                                 actionValueComboBox.DataSource = voxData;
                                 actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
                                 actionValueComboBox.SelectedValue = ListItem.CheckInList(data, voxData);
@@ -918,7 +919,7 @@ namespace MobiusEditor.Dialogs
         {
             if (Trigger.CheckForChanges(triggers, backupTriggers))
             {
-                DialogResult dr = MessageBox.Show("Warning! There are changes in the triggers. This function works best if the triggers match the state of the currently edited map. Are you sure you want to continue?", "Triggers check", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                DialogResult dr = MessageBox.Show(this, "Warning! There are changes in the triggers. This function works best if the triggers match the state of the currently edited map. Are you sure you want to continue?", "Triggers check", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
                 if (dr == DialogResult.No)
                 {
                     return;
@@ -927,7 +928,7 @@ namespace MobiusEditor.Dialogs
             string[] errors = plugin.CheckTriggers(this.triggers, true, false, false, out _, false, out _)?.ToArray();
             if (errors == null || errors.Length == 0)
             {
-                MessageBox.Show("No issues were encountered.", "Triggers check", MessageBoxButtons.OK);
+                MessageBox.Show(this, "No issues were encountered.", "Triggers check", MessageBoxButtons.OK);
                 return;
             }
             using (ErrorMessageBox emb = new ErrorMessageBox())

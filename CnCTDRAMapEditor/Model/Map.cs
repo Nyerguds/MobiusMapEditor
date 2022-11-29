@@ -169,12 +169,15 @@ namespace MobiusEditor.Model
 
         public readonly string[] MissionTypes;
 
+        private const string defaultMission = "Guard";
+        private readonly string inputMissionArmed;
+        private readonly string inputMissionUnarmed;
+        private readonly string inputMissionAircraft;
+        private readonly string inputMissionHarvest;
+
         public readonly string DefaultMissionArmed;
-
         public readonly string DefaultMissionUnarmed;
-
         public readonly string DefaultMissionAircraft;
-
         public readonly string DefaultMissionHarvest;
 
         public readonly List<DirectionType> BuildingDirectionTypes;
@@ -279,8 +282,9 @@ namespace MobiusEditor.Model
 
         public House[] HousesIncludingNone;
 
+        public string MovieEmpty;
         public readonly List<string> MovieTypes;
-
+        public readonly string ThemeEmpty;
         public readonly List<string> ThemeTypes;
 
         public int TiberiumOrGoldValue { get; set; }
@@ -308,9 +312,10 @@ namespace MobiusEditor.Model
             IEnumerable<TerrainType> terrainTypes, IEnumerable<OverlayType> overlayTypes, IEnumerable<SmudgeType> smudgeTypes,
             IEnumerable<string> eventTypes, IEnumerable<string> cellEventTypes, IEnumerable<string> unitEventTypes, IEnumerable<string> structureEventTypes, IEnumerable<string> terrainEventTypes,
             IEnumerable<string> actionTypes, IEnumerable<string> cellActionTypes, IEnumerable<string> unitActionTypes, IEnumerable<string> structureActionTypes, IEnumerable<string> terrainActionTypes,
-            IEnumerable<string> missionTypes, IEnumerable<DirectionType> unitDirectionTypes, IEnumerable<DirectionType> buildingDirectionTypes, IEnumerable<InfantryType> infantryTypes,
-            IEnumerable<UnitType> unitTypes, IEnumerable<BuildingType> buildingTypes, IEnumerable<TeamMission> teamMissionTypes,
-            IEnumerable<ITechnoType> teamTechnoTypes, IEnumerable<Waypoint> waypoints, IEnumerable<string> movieTypes, IEnumerable<string> themeTypes)
+            IEnumerable<string> missionTypes, string armedMission, string unarmedMission, string harvestMission, string aircraftMission,
+            IEnumerable<DirectionType> unitDirectionTypes, IEnumerable<DirectionType> buildingDirectionTypes, IEnumerable<InfantryType> infantryTypes,
+            IEnumerable<UnitType> unitTypes, IEnumerable<BuildingType> buildingTypes, IEnumerable<TeamMission> teamMissionTypes,IEnumerable<ITechnoType> teamTechnoTypes,
+            IEnumerable<Waypoint> waypoints, IEnumerable<string> movieTypes, string emptyMovie, IEnumerable<string> themeTypes, string emptyTheme)
         {
             MapSection = new MapSection(cellSize);
             BasicSection = basicSection;
@@ -324,23 +329,28 @@ namespace MobiusEditor.Model
             OverlayTypes = new List<OverlayType>(overlayTypes);
             SmudgeTypes = new List<SmudgeType>(smudgeTypes);
             EventTypes = eventTypes.ToArray();
-            CellEventTypes = cellEventTypes.ToHashSet(StringComparer.InvariantCultureIgnoreCase);
-            UnitEventTypes = unitEventTypes.ToHashSet(StringComparer.InvariantCultureIgnoreCase);
-            StructureEventTypes = structureEventTypes.ToHashSet(StringComparer.InvariantCultureIgnoreCase);
-            TerrainEventTypes = terrainEventTypes.ToHashSet(StringComparer.InvariantCultureIgnoreCase);
-            CellActionTypes = cellActionTypes.ToHashSet(StringComparer.InvariantCultureIgnoreCase);
-            UnitActionTypes = unitActionTypes.ToHashSet(StringComparer.InvariantCultureIgnoreCase);
-            StructureActionTypes = structureActionTypes.ToHashSet(StringComparer.InvariantCultureIgnoreCase);
-            TerrainActionTypes = terrainActionTypes.ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+            CellEventTypes = cellEventTypes.ToHashSet(StringComparer.OrdinalIgnoreCase);
+            UnitEventTypes = unitEventTypes.ToHashSet(StringComparer.OrdinalIgnoreCase);
+            StructureEventTypes = structureEventTypes.ToHashSet(StringComparer.OrdinalIgnoreCase);
+            TerrainEventTypes = terrainEventTypes.ToHashSet(StringComparer.OrdinalIgnoreCase);
+            CellActionTypes = cellActionTypes.ToHashSet(StringComparer.OrdinalIgnoreCase);
+            UnitActionTypes = unitActionTypes.ToHashSet(StringComparer.OrdinalIgnoreCase);
+            StructureActionTypes = structureActionTypes.ToHashSet(StringComparer.OrdinalIgnoreCase);
+            TerrainActionTypes = terrainActionTypes.ToHashSet(StringComparer.OrdinalIgnoreCase);
 
             ActionTypes = actionTypes.ToArray();
             MissionTypes = missionTypes.ToArray();
-            DefaultMissionArmed = MissionTypes.Where(m => m.Equals("Guard")).FirstOrDefault() ?? MissionTypes.First();
-            DefaultMissionUnarmed = MissionTypes.Where(m => m.Equals("Stop")).FirstOrDefault() ?? MissionTypes.First();
-            // Reverts to "stop" if there are no resources (RA indoor)
-            DefaultMissionHarvest = OverlayTypes.Any(ov => ov.IsResource) ? MissionTypes.Where(m => m.Equals("Harvest")).FirstOrDefault() ?? DefaultMissionUnarmed : DefaultMissionUnarmed;
-            // In TD, at lease, only Unload will make them stay on the spot as expected.
-            DefaultMissionAircraft = MissionTypes.Where(m => m.Equals("Unload")).FirstOrDefault() ?? MissionTypes.First();
+            string defMission = MissionTypes.Where(m => m.Equals(defaultMission, StringComparison.OrdinalIgnoreCase)).FirstOrDefault() ?? MissionTypes.First();
+            inputMissionArmed = armedMission;
+            inputMissionUnarmed = unarmedMission;
+            inputMissionAircraft = harvestMission;
+            inputMissionHarvest = aircraftMission;
+            DefaultMissionArmed = MissionTypes.Where(m => m.Equals(armedMission, StringComparison.OrdinalIgnoreCase)).FirstOrDefault() ?? defMission;
+            DefaultMissionUnarmed = MissionTypes.Where(m => m.Equals(unarmedMission, StringComparison.OrdinalIgnoreCase)).FirstOrDefault() ?? defMission;
+            // Reverts to "Stop" if there are no resources (RA indoor)
+            DefaultMissionHarvest = OverlayTypes.Any(ov => ov.IsResource) ? MissionTypes.Where(m => m.Equals(harvestMission, StringComparison.OrdinalIgnoreCase)).FirstOrDefault() ?? DefaultMissionUnarmed : DefaultMissionUnarmed;
+            // Only "Unload" will make them stay on the spot as expected.
+            DefaultMissionAircraft = MissionTypes.Where(m => m.Equals(aircraftMission, StringComparison.OrdinalIgnoreCase)).FirstOrDefault() ?? defMission;
             UnitDirectionTypes = new List<DirectionType>(unitDirectionTypes);
             BuildingDirectionTypes = new List<DirectionType>(buildingDirectionTypes);
             AllInfantryTypes = new List<InfantryType>(infantryTypes);
@@ -348,7 +358,9 @@ namespace MobiusEditor.Model
             BuildingTypes = new List<BuildingType>(buildingTypes);
             TeamMissionTypes = teamMissionTypes.ToArray();
             AllTeamTechnoTypes = new List<ITechnoType>(teamTechnoTypes);
+            MovieEmpty = emptyMovie;
             MovieTypes = new List<string>(movieTypes);
+            ThemeEmpty = emptyTheme;
             ThemeTypes = new List<string>(themeTypes);
 
             Metrics = new CellMetrics(cellSize);
@@ -803,14 +815,15 @@ namespace MobiusEditor.Model
             Waypoint[] wpPreview = new Waypoint[Waypoints.Length + 1];
             Array.Copy(Waypoints, wpPreview, Waypoints.Length);
             wpPreview[Waypoints.Length] = new Waypoint("", null);
-            // This is a shallow clone; the map is new, but the placed content all still reference the original objects.
+            // This is a shallow clone; the map is new, but the placed contents all still reference the original objects.
             // These shallow copies are used for map preview during editing, where dummy objects can be added without any issue.
             var map = new Map(BasicSection, Theater, Metrics.Size, HouseType, HouseTypesIncludingNone,
                 FlagColors, TheaterTypes, TemplateTypes, TerrainTypes, OverlayTypes, SmudgeTypes,
                 EventTypes, CellEventTypes, UnitEventTypes, StructureEventTypes, TerrainEventTypes,
                 ActionTypes, CellActionTypes, UnitActionTypes, StructureActionTypes, TerrainActionTypes,
-                MissionTypes, UnitDirectionTypes, BuildingDirectionTypes, AllInfantryTypes, AllUnitTypes, BuildingTypes, TeamMissionTypes,
-                AllTeamTechnoTypes, wpPreview, MovieTypes, ThemeTypes)
+                MissionTypes, inputMissionArmed, inputMissionUnarmed, inputMissionHarvest, inputMissionAircraft,
+                UnitDirectionTypes, BuildingDirectionTypes, AllInfantryTypes, AllUnitTypes, BuildingTypes, TeamMissionTypes,
+                AllTeamTechnoTypes, wpPreview, MovieTypes, MovieEmpty, ThemeTypes, ThemeEmpty)
             {
                 TopLeft = TopLeft,
                 Size = Size
@@ -1387,10 +1400,10 @@ namespace MobiusEditor.Model
         private void CleanUpTriggers(List<Trigger> triggers, Dictionary<object, string> undoList, Dictionary<object, string> redoList, Dictionary<CellTrigger, int> cellTriggerLocations)
         {
             // Clean techno types
-            HashSet<string> availableTriggers = triggers.Select(t => t.Name).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
-            HashSet<string> availableUnitTriggers = FilterUnitTriggers(triggers).Select(t => t.Name).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
-            HashSet<string> availableBuildingTriggers = FilterStructureTriggers(triggers).Select(t => t.Name).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
-            HashSet<string> availableTerrainTriggers = FilterTerrainTriggers(triggers).Select(t => t.Name).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+            HashSet<string> availableTriggers = triggers.Select(t => t.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            HashSet<string> availableUnitTriggers = FilterUnitTriggers(triggers).Select(t => t.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            HashSet<string> availableBuildingTriggers = FilterStructureTriggers(triggers).Select(t => t.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            HashSet<string> availableTerrainTriggers = FilterTerrainTriggers(triggers).Select(t => t.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
             foreach (ITechno techno in GetAllTechnos())
             {
                 if (techno is Infantry infantry)
@@ -1465,7 +1478,7 @@ namespace MobiusEditor.Model
 
         private void CleanUpCellTriggers(List<Trigger> triggers, Dictionary<object, string> undoList, Dictionary<object, string> redoList, Dictionary<CellTrigger, int> cellTriggerLocations)
         {
-            HashSet<string> placeableTrigs = FilterCellTriggers(triggers).Select(t => t.Name).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+            HashSet<string> placeableTrigs = FilterCellTriggers(triggers).Select(t => t.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
             List<int> cellsToClear = new List<int>();
             foreach ((int cell, CellTrigger value) in CellTriggers)
             {

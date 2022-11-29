@@ -79,5 +79,9 @@ namespace MobiusEditor.RedAlert
         [DefaultValue(false)]
         public bool TruckCrate { get => truckCrate; set => SetField(ref truckCrate, value); }
 
+        private int newINIFormat;
+        [DefaultValue(3)]
+        public int NewINIFormat { get => newINIFormat; set => SetField(ref newINIFormat, value); }
+
     }
 }

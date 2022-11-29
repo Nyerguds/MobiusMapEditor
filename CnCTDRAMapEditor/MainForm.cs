@@ -30,6 +30,7 @@ using System.Linq;
 using System.Numerics;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using static MobiusEditor.Utility.SimpleMultiThreading;
 
@@ -526,11 +527,13 @@ namespace MobiusEditor
             PropertyTracker<BasicSection> basicSettings = new PropertyTracker<BasicSection>(plugin.Map.BasicSection);
             PropertyTracker<BriefingSection> briefingSettings = new PropertyTracker<BriefingSection>(plugin.Map.BriefingSection);
             PropertyTracker<SoleSurvivor.CratesSection> cratesSettings = null;
-            if (plugin is SoleSurvivor.GamePlugin ssPlugin)
+            if (plugin.GameType == GameType.SoleSurvivor && plugin is SoleSurvivor.GamePlugin ssPlugin)
             {
                 cratesSettings = new PropertyTracker<SoleSurvivor.CratesSection>(ssPlugin.CratesSection);
             }
             string extraIniText = plugin.ExtraIniText;
+            if (extraIniText.Trim('\r', '\n').Length == 0)
+                extraIniText = String.Empty;
             Dictionary<House, PropertyTracker<House>> houseSettingsTrackers = plugin.Map.Houses.ToDictionary(h => h, h => new PropertyTracker<House>(h));
             using (MapSettingsDialog msd = new MapSettingsDialog(plugin, basicSettings, briefingSettings, cratesSettings, houseSettingsTrackers, extraIniText))
             {
@@ -550,17 +553,26 @@ namespace MobiusEditor
                             hasChanges = true;
                         houseSettingsTracker.Commit();
                     }
-                    if (!extraIniText.Equals(msd.ExtraIniText, StringComparison.InvariantCultureIgnoreCase))
+                    // Combine diacritics into their characters, and remove characters not included in DOS-437.
+                    string normalised = (msd.ExtraIniText ?? String.Empty).Normalize(NormalizationForm.FormC);
+                    Encoding dos437 = Encoding.GetEncoding(437);
+                    // DOS chars excluding specials at the start and end. Explicitly add tab, then the normal range from 32 to 254.
+                    HashSet<Char> dos437chars = String.Concat("\t".Yield().Concat(Enumerable.Range(32, 256 - 32 - 1).Select(i => dos437.GetString(new Byte[] { (byte)i })))).ToHashSet();
+                    normalised = new String(normalised.Where(ch => dos437chars.Contains(ch)).ToArray());
+                    // Ignore trivial line changes. This will not detect any irrelevant but non-trivial changes like swapping lines, though.
+                    String checkTextNew = Regex.Replace(normalised, "[\\r\\n]+", "\n").Trim('\n');
+                    String checkTextOrig = Regex.Replace(extraIniText ?? String.Empty, "[\\r\\n]+", "\n").Trim('\n');
+                    if (!checkTextOrig.Equals(checkTextNew, StringComparison.OrdinalIgnoreCase))
                     {
                         try
                         {
-                            plugin.ExtraIniText = msd.ExtraIniText;
+                            plugin.ExtraIniText = normalised;
                         }
                         catch (Exception ex)
                         {
                             MessageBox.Show("Errors occurred when applying rule changes:\n\n" + ex.Message, GetProgramVersionTitle());
                         }
-                        rulesChanged = true;
+                        rulesChanged = plugin.GameType == GameType.RedAlert;
                         hasChanges = true;
                     }
                     plugin.Dirty = hasChanges;
@@ -1009,7 +1021,7 @@ namespace MobiusEditor
             {
                 iniContents = GeneralUtils.GetIniContents(iniFile, fileType);
             }
-            if (iniContents == null || !GeneralUtils.CheckForIniInfo(iniContents, "Map") || !GeneralUtils.CheckForIniInfo(iniContents, "Basic"))
+            if (iniContents == null || !INITools.CheckForIniInfo(iniContents, "Map") || !INITools.CheckForIniInfo(iniContents, "Basic"))
             {
                 return false;
             }

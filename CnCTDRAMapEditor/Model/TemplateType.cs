@@ -92,7 +92,7 @@ namespace MobiusEditor.Model
             ThumbnailHeight = IconHeight;
             Theaters = theaters;
             Flag = flag;
-            MaskOverrides = new Dictionary<string, bool[,]>(StringComparer.InvariantCultureIgnoreCase);
+            MaskOverrides = new Dictionary<string, bool[,]>(StringComparer.OrdinalIgnoreCase);
             GroupTiles = new string[0];
         }
 

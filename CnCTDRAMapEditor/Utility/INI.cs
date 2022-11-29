@@ -44,17 +44,6 @@ namespace MobiusEditor.Utility
             }
             return string.Empty;
         };
-
-        public static bool IsValidKey(String iniKey, params string[] reservedNames)
-        {
-            foreach (string name in reservedNames) {
-                if (name.Equals(iniKey, StringComparison.InvariantCultureIgnoreCase))
-                {
-                    return false;
-                }
-            }
-            return iniKey.All(c => c > ' ' && c <= '~' && c != '=' && c != '[' && c != ']');
-        }
     }
 
     public class INIKeyValueCollection : IEnumerable<(string Key, string Value)>, IEnumerable
@@ -591,6 +580,20 @@ namespace MobiusEditor.Utility
                         property.SetValue(data, converter.ConvertFromString(context, section[property.Name]));
                     }
                 }
+            }
+        }
+
+        public static void RemoveHandledKeys<T>(INISection section, T data)
+        {
+            var propertyDescriptors = TypeDescriptor.GetProperties(data);
+            var properties = data.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => p.GetSetMethod() != null);
+            foreach (var property in properties)
+            {
+                if (property.GetCustomAttribute<NonSerializedINIKeyAttribute>() != null)
+                {
+                    continue;
+                }
+                section.Keys.Remove(property.Name);
             }
         }
 

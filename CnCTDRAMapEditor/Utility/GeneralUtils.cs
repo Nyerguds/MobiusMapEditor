@@ -173,21 +173,6 @@ namespace MobiusEditor.Utility
             }
         }
 
-        public static bool CheckForIniInfo(INI iniContents, string section)
-        {
-            return CheckForIniInfo(iniContents, section, null, null);
-        }
-
-        public static bool CheckForIniInfo(INI iniContents, string section, string key, string value)
-        {
-            INISection iniSection = iniContents[section];
-            if (key == null || value == null)
-            {
-                return iniSection != null;
-            }
-            return iniSection != null && iniSection.Keys.Contains(key) && iniSection[key].Trim() == value;
-        }
-
         public static String MakeNew4CharName(IEnumerable<string> currentList, string fallback, params string[] reservedNames)
         {
             string name = string.Empty;
@@ -201,7 +186,7 @@ namespace MobiusEditor.Utility
                         for (int l = 'a'; l <= 'z'; ++l)
                         {
                             name = String.Concat((char)i, (char)j, (char)k, (char)l);
-                            if (!currentList.Contains(name, StringComparer.InvariantCultureIgnoreCase) && !reservedNames.Contains(name, StringComparer.InvariantCultureIgnoreCase))
+                            if (!currentList.Contains(name, StringComparer.InvariantCultureIgnoreCase) && !reservedNames.Contains(name, StringComparer.OrdinalIgnoreCase))
                             {
                                 return name;
                             }

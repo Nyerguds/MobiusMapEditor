@@ -40,9 +40,125 @@ namespace MobiusEditor.TiberianDawn
 
         protected static readonly IEnumerable<ITechnoType> fullTechnoTypes;
 
-        protected const string defVidVal = "x";
+        protected const string movieEmpty = "x";
         protected readonly IEnumerable<string> movieTypes;
 
+        protected static readonly IEnumerable<string> movieTypesTD = new string[]
+        {
+            "AIRSTRK",
+            "AKIRA",
+            "BANNER",
+            "BANR_NOD",
+            "BCANYON",
+            "BKGROUND",
+            "BLACKOUT",
+            "BODYBAGS",
+            "BOMBAWAY",
+            "BOMBFLEE",
+            "BURDET1",
+            "BURDET2",
+            "CC2TEASE",
+            "CONSYARD",
+            "DESFLEES",
+            "DESKILL",
+            "DESOLAT",
+            "DESSWEEP",
+            "DINO",
+            "FLAG",
+            "FLYY",
+            "FORESTKL",
+            "GAMEOVER",
+            "GDI1",
+            "GDI2",
+            "GDI3",
+            "GDI4A",
+            "GDI4B",
+            "GDI5",
+            "GDI6",
+            "GDI7",
+            "GDI8A",
+            "GDI8B",
+            "GDI9",
+            "GDI10",
+            "GDI11",
+            "GDI12",
+            "GDI13",
+            "GDI14",
+            "GDI15",
+            "GDI3LOSE",
+            "GDIEND1",
+            "GDIEND2",
+            "GDIFINA",
+            "GDIFINB",
+            "GDILOSE",
+            "GENERIC",
+            "GUNBOAT",
+            "HELLVALY",
+            "INFERNO",
+            "INSITES",
+            "INTRO2",
+            "IONTEST",
+            "KANEPRE",
+            "LANDING",
+            "LOGO",
+            "NAPALM",
+            "NITEJUMP",
+            "NOD1",
+            "NOD2",
+            "NOD3",
+            "NOD4A",
+            "NOD4B",
+            "NOD5",
+            "NOD6",
+            "NOD7A",
+            "NOD7B",
+            "NOD8",
+            "NOD9",
+            "NOD10A",
+            "NOD10B",
+            "NOD11",
+            "NOD12",
+            "NOD13",
+            "NOD1PRE",
+            "NODEND1",
+            "NODEND2",
+            "NODEND3",
+            "NODEND4",
+            "NODFINAL",
+            "NODFLEES",
+            "NODLOSE",
+            "NODSWEEP",
+            "NUKE",
+            "OBEL",
+            "PARATROP",
+            "PINTLE",
+            "PLANECRA",
+            "PODIUM",
+            "REFINT",
+            "REFINERY",
+            "RETRO",
+            "SABOTAGE",
+            "SAMDIE",
+            "SAMSITE",
+            "SEIGE",
+            "SETHPRE",
+            "SIZZLE",
+            "SIZZLE2",
+            "SPYCRASH",
+            "STEALTH",
+            "SUNDIAL",
+            "TANKGO",
+            "TANKKILL",
+            "TBRINFO1",
+            "TBRINFO2",
+            "TBRINFO3",
+            "TIBERFX",
+            "TRAILER",
+            "TRTKIL_D",
+            "TURTKILL",
+            "VISOR",
+        };
+        
         protected static readonly IEnumerable<string> movieTypesAdditional = new string[]
         {
             "BODYBAGS (Classic only)",
@@ -53,6 +169,8 @@ namespace MobiusEditor.TiberianDawn
             "TRAILER (Classic only)",
             "TRTKIL_D (Classic only)",
         };
+
+        protected const string themeEmpty = "No Theme";
 
         protected static readonly IEnumerable<string> themeTypes = new string[]
         {
@@ -98,6 +216,7 @@ namespace MobiusEditor.TiberianDawn
             "NOD_MAP1",
             "OUTTAKES"
         };
+
         public virtual string Name => "Tiberian Dawn";
 
         public virtual GameType GameType => GameType.TiberianDawn;
@@ -145,8 +264,8 @@ namespace MobiusEditor.TiberianDawn
                     return;
                 }
                 // Remove any sections known and handled / disallowed by the editor.
-                ini.Sections.Remove("Basic");
-                ini.Sections.Remove("Map");
+                INITools.ClearDataFrom(ini, "Basic", (BasicSection)Map.BasicSection);
+                INITools.ClearDataFrom(ini, "Map", Map.MapSection);
                 ini.Sections.Remove("Briefing");
                 ini.Sections.Remove("Steam");
                 ini.Sections.Remove("TeamTypes");
@@ -163,7 +282,7 @@ namespace MobiusEditor.TiberianDawn
                 ini.Sections.Remove("CellTriggers");
                 foreach (var house in Map.Houses)
                 {
-                    ini.Sections.Remove(house.Type.Name);
+                    INITools.ClearDataFrom(ini, house.Type.Name, (House)house);
                 }
                 extraSections = ini.Sections.Count == 0 ? null : ini.Sections;
             }
@@ -171,7 +290,7 @@ namespace MobiusEditor.TiberianDawn
 
         public static bool CheckForMegamap(INI iniContents)
         {
-            return GeneralUtils.CheckForIniInfo(iniContents, "Map", "Version", "1");
+            return INITools.CheckForIniInfo(iniContents, "Map", "Version", "1");
         }
 
         static GamePlugin()
@@ -194,10 +313,22 @@ namespace MobiusEditor.TiberianDawn
                     }
                 }
             }
-            movies.AddRange(movieTypesAdditional);
+            // Preparation for decoupling from remaster files.
+            if (movies.Count == 0)
+            {
+                movies.AddRange(movieTypesTD);
+            }
+            foreach (string mov in movieTypesAdditional)
+            {
+                string movName = GeneralUtils.TrimRemarks(mov, true, ';', '(');
+                if (movies.FirstOrDefault(m => m.Equals(movName, StringComparison.OrdinalIgnoreCase)) == null)
+                {
+                    movies.Add(mov);
+                }
+            }
             movies = movies.Distinct().ToList();
             movies.Sort(new ExplorerComparer());
-            movies.Insert(0, defVidVal);
+            movies.Insert(0, movieEmpty);
             movieTypes = movies.ToArray();
         }
 
@@ -263,8 +394,10 @@ namespace MobiusEditor.TiberianDawn
                 TerrainTypes.GetTypes(), OverlayTypes.GetTypes(), SmudgeTypes.GetTypes(Globals.ConvertCraters),
                 EventTypes.GetTypes(), cellEventTypes, unitEventTypes, structureEventTypes, terrainEventTypes,
                 ActionTypes.GetTypes(), cellActionTypes, unitActionTypes, structureActionTypes, terrainActionTypes,
-                MissionTypes.GetTypes(), DirectionTypes.GetMainTypes(), DirectionTypes.GetAllTypes(), InfantryTypes.GetTypes(), UnitTypes.GetTypes(Globals.DisableAirUnits),
-                BuildingTypes.GetTypes(), TeamMissionTypes.GetTypes(), fullTechnoTypes, waypoints, movieTypes, themeTypes)
+                MissionTypes.GetTypes(), MissionTypes.MISSION_GUARD, MissionTypes.MISSION_STOP, MissionTypes.MISSION_HARVEST,
+                MissionTypes.MISSION_UNLOAD, DirectionTypes.GetMainTypes(), DirectionTypes.GetAllTypes(), InfantryTypes.GetTypes(),
+                UnitTypes.GetTypes(Globals.DisableAirUnits), BuildingTypes.GetTypes(), TeamMissionTypes.GetTypes(),
+                fullTechnoTypes, waypoints, movieTypes, movieEmpty, themeTypes, themeEmpty)
             {
                 TiberiumOrGoldValue = 25
             };
@@ -377,9 +510,9 @@ namespace MobiusEditor.TiberianDawn
 
         private void ParseIniContent(INI ini, Byte[] iniBytes, Boolean forSole)
         {
-            Encoding encUtf8 = new UTF8Encoding(false, false);
             Encoding encDOS = Encoding.GetEncoding(437);
             String iniText = encDOS.GetString(iniBytes);
+            Encoding encUtf8 = new UTF8Encoding(false, false);
             String iniTextUtf8 = encUtf8.GetString(iniBytes);
             if (!forSole)
             {
@@ -480,7 +613,7 @@ namespace MobiusEditor.TiberianDawn
             }
             // Only process the ini if any of the detected lines have a found amount of more than one. If references to literal ROAD2 are found,
             // also process the ini so they can be removed; we do not want those to be accepted as valid type by the editor.
-            if (foundAmounts.All(k => k.Value == 1) && !cellTypes.Values.Contains(OverlayTypes.Road2.Name, StringComparer.InvariantCultureIgnoreCase)) 
+            if (foundAmounts.All(k => k.Value == 1) && !cellTypes.Values.Contains(OverlayTypes.Road2.Name, StringComparer.OrdinalIgnoreCase)) 
             {
                 return iniText;
             }
@@ -549,29 +682,27 @@ namespace MobiusEditor.TiberianDawn
         {
             var errors = new List<string>();
             Map.BeginUpdate();
-            var basicSection = ini.Sections.Extract("Basic");
+            BasicSection basic = (BasicSection)Map.BasicSection;
+            INISection basicSection = INITools.ParseAndLeaveRemainder(ini, "Basic", Map.BasicSection, new MapContext(Map, false));
             if (basicSection != null)
             {
-                INI.ParseSection(new MapContext(Map, false), basicSection, Map.BasicSection);
                 char[] cutfrom = { ';', '(' };
                 string[] toAddRem = movieTypesAdditional.Select(vid => GeneralUtils.TrimRemarks(vid, true, cutfrom)).ToArray();
-                Model.BasicSection basic = Map.BasicSection;
                 const string remark = " (Classic only)";
-                basic.Intro = GeneralUtils.AddRemarks(basic.Intro, defVidVal, true, toAddRem, remark);
-                basic.Brief = GeneralUtils.AddRemarks(basic.Brief, defVidVal, true, toAddRem, remark);
-                basic.Action = GeneralUtils.AddRemarks(basic.Action, defVidVal, true, toAddRem, remark);
-                basic.Win = GeneralUtils.AddRemarks(basic.Win, defVidVal, true, toAddRem, remark);
-                basic.Win2 = GeneralUtils.AddRemarks(basic.Win2, defVidVal, true, toAddRem, remark);
-                basic.Win3 = GeneralUtils.AddRemarks(basic.Win3, defVidVal, true, toAddRem, remark);
-                basic.Win4 = GeneralUtils.AddRemarks(basic.Win4, defVidVal, true, toAddRem, remark);
-                basic.Lose = GeneralUtils.AddRemarks(basic.Lose, defVidVal, true, toAddRem, remark);
+                basic.Intro = GeneralUtils.AddRemarks(basic.Intro, movieEmpty, true, toAddRem, remark);
+                basic.Brief = GeneralUtils.AddRemarks(basic.Brief, movieEmpty, true, toAddRem, remark);
+                basic.Action = GeneralUtils.AddRemarks(basic.Action, movieEmpty, true, toAddRem, remark);
+                basic.Win = GeneralUtils.AddRemarks(basic.Win, movieEmpty, true, toAddRem, remark);
+                basic.Win2 = GeneralUtils.AddRemarks(basic.Win2, movieEmpty, true, toAddRem, remark);
+                basic.Win3 = GeneralUtils.AddRemarks(basic.Win3, movieEmpty, true, toAddRem, remark);
+                basic.Win4 = GeneralUtils.AddRemarks(basic.Win4, movieEmpty, true, toAddRem, remark);
+                basic.Lose = GeneralUtils.AddRemarks(basic.Lose, movieEmpty, true, toAddRem, remark);
             }
             Map.BasicSection.Player = Map.HouseTypes.Where(t => t.Equals(Map.BasicSection.Player)).FirstOrDefault()?.Name ?? Map.HouseTypes.First().Name;
-            var mapSection = ini.Sections.Extract("Map");
-            if (mapSection != null)
-            {
-                INI.ParseSection(new MapContext(Map, false), mapSection, Map.MapSection);
-            }
+            INISection mapSection = INITools.ParseAndLeaveRemainder(ini, "Map", Map.MapSection, new MapContext(Map, false));
+            // Also clear megamap indicator.
+            if (mapSection.Keys.Remove("Version") && mapSection.Keys.Count == 0)
+                ini.Sections.Remove(mapSection.Name);
             Map.MapSection.FixBounds();
 #if DEBUG
             //MessageBox.Show("Graphics loaded");
@@ -591,7 +722,7 @@ namespace MobiusEditor.TiberianDawn
                     bool addSpace = false;
                     while (briefingSection.Keys.Contains(lineStr = line.ToString()))
                     {
-                        String briefLine = briefingSection[lineStr].Trim();
+                        String briefLine = briefingSection[lineStr].TrimStart();
                         // C&C95 v1.06 line break format.
                         bool hasBreak = briefLine.EndsWith("##");
                         if (hasBreak)
@@ -602,7 +733,7 @@ namespace MobiusEditor.TiberianDawn
                         {
                             briefLines.Append(" ");
                         }
-                        briefLines.Append(briefLine);
+                        briefLines.Append(briefLine.TrimEnd());
                         if (hasBreak)
                         {
                             briefLines.AppendLine();
@@ -611,7 +742,6 @@ namespace MobiusEditor.TiberianDawn
                         line++;
                     }
                     Map.BriefingSection.Briefing = briefLines.ToString();
-                    //Map.BriefingSection.Briefing = string.Join(" ", briefingSection.Keys.Select(k => k.Value)).Replace("@", Environment.NewLine);
                 }
             }
             var steamSection = ini.Sections.Extract("Steam");
@@ -815,11 +945,11 @@ namespace MobiusEditor.TiberianDawn
             // Sort
             var comparer = new ExplorerComparer();
             triggers.Sort((x, y) => comparer.Compare(x.Name, y.Name));
-            Dictionary<string, string> checkTrigs = Trigger.None.Yield().Concat(triggers.Select(t => t.Name)).ToDictionary(t => t, t => t, StringComparer.InvariantCultureIgnoreCase);
-            HashSet<string> checkCellTrigs = Map.FilterCellTriggers(triggers).Select(t => t.Name).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
-            HashSet<string> checkUnitTrigs = Trigger.None.Yield().Concat(Map.FilterUnitTriggers(triggers).Select(t => t.Name)).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
-            HashSet<string> checkStrcTrigs = Trigger.None.Yield().Concat(Map.FilterStructureTriggers(triggers).Select(t => t.Name)).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
-            HashSet<string> checkTerrTrigs = Trigger.None.Yield().Concat(Map.FilterTerrainTriggers(triggers).Select(t => t.Name)).ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+            Dictionary<string, string> checkTrigs = Trigger.None.Yield().Concat(triggers.Select(t => t.Name)).ToDictionary(t => t, t => t, StringComparer.OrdinalIgnoreCase);
+            HashSet<string> checkCellTrigs = Map.FilterCellTriggers(triggers).Select(t => t.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            HashSet<string> checkUnitTrigs = Trigger.None.Yield().Concat(Map.FilterUnitTriggers(triggers).Select(t => t.Name)).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            HashSet<string> checkStrcTrigs = Trigger.None.Yield().Concat(Map.FilterStructureTriggers(triggers).Select(t => t.Name)).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            HashSet<string> checkTerrTrigs = Trigger.None.Yield().Concat(Map.FilterTerrainTriggers(triggers).Select(t => t.Name)).ToHashSet(StringComparer.OrdinalIgnoreCase);
             var smudgeSection = ini.Sections.Extract("Smudge");
             if (smudgeSection != null)
             {
@@ -1069,7 +1199,7 @@ namespace MobiusEditor.TiberianDawn
                             House = Map.HouseTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault(),
                             Strength = strength,
                             Direction = DirectionType.GetDirectionType(dirValue, Map.UnitDirectionTypes),
-                            Mission = Map.MissionTypes.Where(t => t.Equals(tokens[5])).FirstOrDefault() ?? Map.GetDefaultMission(unitType),
+                            Mission = Map.MissionTypes.Where(t => t.Equals(tokens[5], StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault() ?? Map.GetDefaultMission(unitType),
                         };
                         // "Rescue" and "Unload" both make the MCV deploy, but "Rescue" looks very strange in the editor, so we keep only one of them and convert the other.
                         if (MissionTypes.MISSION_RESCUE.Equals(tokens[5], StringComparison.InvariantCultureIgnoreCase) && newUnit.Type.Equals(UnitTypes.MCV))
@@ -1685,20 +1815,9 @@ namespace MobiusEditor.TiberianDawn
                 {
                     continue;
                 }
-                var houseSection = ini.Sections.Extract(house.Type.Name);
-                if (houseSection != null)
-                {
-                    INI.ParseSection(new MapContext(Map, false), houseSection, house);
-                    house.Enabled = true;
-                    string correctedEdge;
-                    if (!correctedEdges.TryGetValue(house.Edge, out correctedEdge))
-                        correctedEdge = defaultEdge;
-                    house.Edge = correctedEdge;
-                }
-                else
-                {
-                    house.Enabled = false;
-                }
+                House gameHouse = (House)house;
+                INISection houseSection = INITools.ParseAndLeaveRemainder(ini, gameHouse.Type.Name, gameHouse, new MapContext(Map, false));
+                gameHouse.Enabled = houseSection != null;
             }
             UpdateBasePlayerHouse();
             errors.AddRange(CheckTriggers(triggers, true, true, false, out _, false, out _));
@@ -1707,7 +1826,7 @@ namespace MobiusEditor.TiberianDawn
             Map.Triggers.AddRange(triggers);
             Map.TeamTypes.Sort((x, y) => comparer.Compare(x.Name, y.Name));
             extraSections = ini.Sections;
-            bool switchedToSolo = !forSole && forceSoloMission && !Map.BasicSection.SoloMission
+            bool switchedToSolo = !forSole && forceSoloMission && !basic.SoloMission
                 && ((triggers.Any(t => t.Action1.ActionType == ActionTypes.ACTION_WIN) && triggers.Any(t => t.Action1.ActionType == ActionTypes.ACTION_LOSE))
                     || triggers.Any(t => t.Event1.EventType == EventTypes.EVENT_ANY && t.Action1.ActionType == ActionTypes.ACTION_WINLOSE));
             if (switchedToSolo)
@@ -2009,7 +2128,7 @@ namespace MobiusEditor.TiberianDawn
 
         protected INISection SaveIniBasic(INI ini, string fileName)
         {
-            Model.BasicSection basic = Map.BasicSection;
+            BasicSection basic = (BasicSection)Map.BasicSection;
             char[] cutfrom = { ';', '(' };
             basic.Intro = GeneralUtils.TrimRemarks(basic.Intro, true, cutfrom);
             basic.Brief = GeneralUtils.TrimRemarks(basic.Brief, true, cutfrom);
@@ -2033,15 +2152,14 @@ namespace MobiusEditor.TiberianDawn
                 }
                 basic.Name = String.Join(" ", name);
             }
-            INISection basicSection = ini.Sections.Add("Basic");
-            INI.WriteSection(new MapContext(Map, false), basicSection, Map.BasicSection);
+            INISection basicSection = INITools.FillAndReAdd(ini, "Basic", (BasicSection)Map.BasicSection, new MapContext(Map, false), true);
             return basicSection;
         }
 
         protected INISection SaveIniMap(INI ini)
         {
             Map.MapSection.FixBounds();
-            INISection mapSection = ini.Sections.Add("Map");
+            INISection mapSection = INITools.FillAndReAdd(ini, "Map", Map.MapSection, new MapContext(Map, false), true);
             if (isMegaMap)
             {
                 mapSection["Version"] = "1";
@@ -2347,13 +2465,17 @@ namespace MobiusEditor.TiberianDawn
             List<INISection> houseSections = new List<INISection>();
             foreach (var house in Map.Houses)
             {
-                if ((house.Type.ID < 0) || !house.Enabled)
+                if (house.Type.ID < 0)
                 {
                     continue;
                 }
-                INISection houseSection = ini.Sections.Add(house.Type.Name);
-                INI.WriteSection(new MapContext(Map, false), houseSection, house);
-                houseSections.Add(houseSection);
+                House gameHouse = (House)house;
+                bool enabled = house.Enabled;
+                INISection houseSection = INITools.FillAndReAdd(ini, gameHouse.Type.Name, gameHouse, new MapContext(Map, false), enabled);
+                if (houseSection != null)
+                {
+                    houseSections.Add(houseSection);
+                }
             }
             return houseSections;
         }

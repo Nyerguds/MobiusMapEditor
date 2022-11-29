@@ -4,11 +4,8 @@ using MobiusEditor.Utility;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
 using System.Linq;
 using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MobiusEditor.SoleSurvivor
 {
@@ -17,13 +14,34 @@ namespace MobiusEditor.SoleSurvivor
 
         protected const int cratePoints = 4;
         protected const int teamStartPoints = 8;
+
+        protected static readonly IEnumerable<string> movieTypesSole = new string[]
+        {
+            "WESTLOGO",
+        };
+        
+        protected static readonly IEnumerable<string> themeTypesSole = new string[]
+        {
+            "No Theme",
+            "WORKREMX",
+            "CRSHNVOX",
+            "DEPTHCHG",
+            "DRILL",
+            "HELLNVOX",
+            "IRONFIST",
+            "MERCY98",
+            "MUDREMX",
+            "CREEPING",
+            "MAP1",
+        };
+
         public override String Name => "Sole Survivor";
         public override GameType GameType => GameType.SoleSurvivor;
         public override bool IsMegaMap => true;
 
         public static bool CheckForSSmap(INI iniContents)
         {
-            return GeneralUtils.CheckForIniInfo(iniContents, "Crates");
+            return INITools.CheckForIniInfo(iniContents, "Crates");
         }
 
         protected CratesSection cratesSection;
@@ -100,14 +118,19 @@ namespace MobiusEditor.SoleSurvivor
             flagColors[6] = Globals.TheTeamColorManager["MULTI2"];
             // Multi8: RA Purple
             flagColors[7] = new TeamColor(Globals.TheTeamColorManager, flagColors[0], "MULTI8", new Vector3(0.410f, 0.100f, 0.000f));
+            List<String> movies = movieTypesTD.Concat(movieTypesSole).ToList();
+            ExplorerComparer sorter = new ExplorerComparer();
+            movies.Sort(sorter);
             Size mapSize = !megaMap ? TiberianDawn.Constants.MaxSize : TiberianDawn.Constants.MaxSizeMega;
             Map = new Map(basicSection, null, mapSize, typeof(House), houseTypes,
                 flagColors, TiberianDawn.TheaterTypes.GetTypes(), TiberianDawn.TemplateTypes.GetTypes(),
                 TiberianDawn.TerrainTypes.GetTypes(), OverlayTypes.GetTypes(), TiberianDawn.SmudgeTypes.GetTypes(Globals.ConvertCraters),
                 TiberianDawn.EventTypes.GetTypes(), cellEventTypes, unitEventTypes, structureEventTypes, terrainEventTypes,
                 TiberianDawn.ActionTypes.GetTypes(), cellActionTypes, unitActionTypes, structureActionTypes, terrainActionTypes,
-                TiberianDawn.MissionTypes.GetTypes(), DirectionTypes.GetMainTypes(), DirectionTypes.GetAllTypes(), infantry, units,
-                buildings, TiberianDawn.TeamMissionTypes.GetTypes(), fullTechnoTypes, waypoints, movieTypes, themeTypes)
+                TiberianDawn.MissionTypes.GetTypes(), TiberianDawn.MissionTypes.MISSION_GUARD, TiberianDawn.MissionTypes.MISSION_STOP,
+                TiberianDawn.MissionTypes.MISSION_HARVEST, TiberianDawn.MissionTypes.MISSION_UNLOAD, DirectionTypes.GetMainTypes(),
+                DirectionTypes.GetAllTypes(), infantry, units, buildings, TiberianDawn.TeamMissionTypes.GetTypes(), fullTechnoTypes,
+                waypoints, movies, movieEmpty, themeTypesSole, themeEmpty)
             {
                 TiberiumOrGoldValue = 25
             };
@@ -137,7 +160,14 @@ namespace MobiusEditor.SoleSurvivor
             var cratesIniSection = extraSections.Extract("Crates");
             if (cratesIniSection != null)
             {
-                INI.ParseSection(new MapContext(Map, false), cratesIniSection, this.cratesSection);
+                try
+                {
+                    INI.ParseSection(new MapContext(Map, false), cratesIniSection, this.cratesSection);
+                }
+                catch (Exception ex)
+                {
+                    errors.Add("Parsing of [Crates] section failed: " + ex.Message);
+                }
             }
             return errors;
         }
@@ -192,7 +222,7 @@ namespace MobiusEditor.SoleSurvivor
         public override HashSet<string> GetHousesWithProduction()
         {
             // Not applicable. Return empty set.
-            return new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+            return new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         }
     }
 }

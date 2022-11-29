@@ -78,7 +78,6 @@ namespace MobiusEditor.Tools
             }
         }
 
-
         private void MouseoverWidget_MouseCellChanged(object sender, MouseCellChangedEventArgs e)
         {
             if (placementMode)

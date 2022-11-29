@@ -57,7 +57,7 @@ namespace MobiusEditor.TiberianDawn
             MISSION_AREA_GUARD,
             //MISSION_RETURN,
             MISSION_STOP,
-            //MISSION_AMBUSH,
+            MISSION_AMBUSH,
             MISSION_HUNT,
             //MISSION_TIMED_HUNT,
             MISSION_UNLOAD,

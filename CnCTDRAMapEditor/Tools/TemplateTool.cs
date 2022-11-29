@@ -488,7 +488,7 @@ namespace MobiusEditor.Tools
                 {
                     string owningType = toFind.GroupTiles[0];
                     TemplateType group = map.TemplateTypes.Where(t => t.Name.Equals(owningType, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
-                    templatesToFind.UnionWith(map.TemplateTypes.Where(t => group.GroupTiles.Contains(t.Name, StringComparer.InvariantCultureIgnoreCase)));
+                    templatesToFind.UnionWith(map.TemplateTypes.Where(t => group.GroupTiles.Contains(t.Name, StringComparer.OrdinalIgnoreCase)));
                 }
                 else
                 {
@@ -517,7 +517,7 @@ namespace MobiusEditor.Tools
                     {
                         string owningType = tp.GroupTiles[0];
                         TemplateType group = map.TemplateTypes.Where(t => t.Name.Equals(owningType, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
-                        templatesToFind.UnionWith(map.TemplateTypes.Where(t => group.GroupTiles.Contains(t.Name, StringComparer.InvariantCultureIgnoreCase)));
+                        templatesToFind.UnionWith(map.TemplateTypes.Where(t => group.GroupTiles.Contains(t.Name, StringComparer.OrdinalIgnoreCase)));
                     }
                     else
                     {

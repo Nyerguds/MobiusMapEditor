@@ -18,33 +18,57 @@ namespace MobiusEditor.RedAlert
 {
     public static class MissionTypes
     {
+        public const string MISSION_SLEEP = "Sleep";
+        public const string MISSION_ATTACK = "Attack";
+        public const string MISSION_MOVE = "Move";
+        public const string MISSION_QMOVE = "QMove";
+        public const string MISSION_RETREAT = "Retreat";
+        public const string MISSION_STICKY = "Sticky";
+        public const string MISSION_GUARD = "Guard";
+        public const string MISSION_ENTER = "Enter";
+        public const string MISSION_CAPTURE = "Capture";
+        public const string MISSION_HARVEST = "Harvest";
+        public const string MISSION_AREAGUARD = "Area Guard";
+        public const string MISSION_RETURN = "Return";
+        public const string MISSION_STOP = "Stop";
+        public const string MISSION_AMBUSH = "Ambush";
+        public const string MISSION_HUNT = "Hunt";
+        public const string MISSION_UNLOAD = "Unload";
+        public const string MISSION_SABOTAGE = "Sabotage";
+        public const string MISSION_CONSTRUCTION = "Construction";
+        public const string MISSION_SELLING = "Selling";
+        public const string MISSION_REPAIR = "Repair";
+        public const string MISSION_RESCUE = "Rescue";
+        public const string MISSION_MISSILE = "Missile";
+        public const string MISSION_HARMLESS = "Harmless";
+
         private static readonly string[] Types = new string[]
         {
             // Nyerguds upgrade: Removed irrelevant types for preplaced units.
             // Note that TeamTypes use a separate list, defined in the TeamMissionTypes class.
-            "Sleep",
-            //"Attack",
-            //"Move",
-            //"QMove",
-            //"Retreat",
-            "Sticky",
-            "Guard",
-            //"Enter",
-            //"Capture",
-            "Harvest",
-            "Area Guard",
-            "Return",
-            "Stop",
-            //"Ambush",
-            "Hunt",
-            "Unload",
-            //"Sabotage",
-            //"Construction",
-            //"Selling",
-            //"Repair",
-            //"Rescue",
-            //"Missile",
-            "Harmless"
+            MISSION_SLEEP,
+            //MISSION_ATTACK,
+            //MISSION_MOVE,
+            //MISSION_QMOVE,
+            //MISSION_RETREAT,
+            MISSION_STICKY,
+            MISSION_GUARD,
+            //MISSION_ENTER,
+            //MISSION_CAPTURE,
+            MISSION_HARVEST,
+            MISSION_AREAGUARD,
+            MISSION_RETURN,
+            MISSION_STOP,
+            MISSION_AMBUSH,
+            MISSION_HUNT,
+            MISSION_UNLOAD,
+            //MISSION_SABOTAGE,
+            //MISSION_CONSTRUCTION,
+            //MISSION_SELLING,
+            //MISSION_REPAIR,
+            //MISSION_RESCUE,
+            //MISSION_MISSILE,
+            MISSION_HARMLESS,
         };
 
         public static IEnumerable<string> GetTypes()

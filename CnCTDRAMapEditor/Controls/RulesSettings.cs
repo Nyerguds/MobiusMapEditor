@@ -28,7 +28,7 @@ namespace MobiusEditor.Controls
             txtRules.Text = iniText;
             if (!showRulesWarning)
             {
-                lblRules.Visible = false;
+                lblRaRules.Visible = false;
             }
         }
 

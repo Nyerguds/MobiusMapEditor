@@ -1378,10 +1378,13 @@ namespace MobiusEditor.Render
         {
             float borderSize = Math.Max(0.5f, tileSize.Width / 60.0f);
             float thickBorderSize = Math.Max(1f, tileSize.Width / 20.0f);
-            HashSet<String> specifiedSet = new HashSet<String>(specified, StringComparer.InvariantCultureIgnoreCase);
-            using (var cellTriggersBackgroundBrush = new SolidBrush(Color.FromArgb(96, fillColor)))
-            using (var cellTriggersBrush = new SolidBrush(Color.FromArgb(128, textColor)))
-            using (var cellTriggerPen = new Pen(borderColor, thickborder ? thickBorderSize : borderSize))
+            HashSet<String> specifiedSet = new HashSet<String>(specified, StringComparer.OrdinalIgnoreCase);
+            using (SolidBrush prevCellTriggersBackgroundBrush = new SolidBrush(Color.FromArgb(48, fillColor)))
+            using (SolidBrush prevCellTriggersBrush = new SolidBrush(Color.FromArgb(64, textColor)))
+            using (Pen prevCellTriggerPen = new Pen(Color.FromArgb(128, borderColor), thickborder ? thickBorderSize : borderSize))
+            using (SolidBrush cellTriggersBackgroundBrush = new SolidBrush(Color.FromArgb(96, fillColor)))
+            using (SolidBrush cellTriggersBrush = new SolidBrush(Color.FromArgb(128, textColor)))
+            using (Pen cellTriggerPen = new Pen(borderColor, thickborder ? thickBorderSize : borderSize))
             {
                 foreach (var (cell, cellTrigger) in map.CellTriggers)
                 {
@@ -1394,8 +1397,9 @@ namespace MobiusEditor.Render
                     var y = cell / map.Metrics.Width;
                     var location = new Point(x * tileSize.Width, y * tileSize.Height);
                     var textBounds = new Rectangle(location, tileSize);
-                    graphics.FillRectangle(cellTriggersBackgroundBrush, textBounds);
-                    graphics.DrawRectangle(cellTriggerPen, textBounds);
+                    bool isPreview = cellTrigger.Tint.A != 255;
+                    graphics.FillRectangle(isPreview ? prevCellTriggersBackgroundBrush : cellTriggersBackgroundBrush, textBounds);
+                    graphics.DrawRectangle(isPreview ? prevCellTriggerPen : cellTriggerPen, textBounds);
                     StringFormat stringFormat = new StringFormat
                     {
                         Alignment = StringAlignment.Center,
@@ -1405,7 +1409,7 @@ namespace MobiusEditor.Render
                     using (var font = graphics.GetAdjustedFont(text, SystemFonts.DefaultFont, textBounds.Width, textBounds.Height,
                         Math.Max(1, (int)(24 * tileScale)), Math.Max(1, (int)(48 * tileScale)), stringFormat, true))
                     {
-                        graphics.DrawString(text.ToString(), font, cellTriggersBrush, textBounds, stringFormat);
+                        graphics.DrawString(text.ToString(), font, isPreview ? prevCellTriggersBrush : cellTriggersBrush, textBounds, stringFormat);
                     }
                 }
             }

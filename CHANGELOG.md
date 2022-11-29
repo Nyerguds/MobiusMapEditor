@@ -365,14 +365,17 @@ Released on 14 Nov 2022 at 22:25 GMT
 --Unreleased--
 
 * Added igloos (haystacks) to the Overlay in Sole Survivor's Winter theater.
-* Fixed refresh bug where a ghost image of the label indicating a heavy operation remained while repainting the map. The label is now only removed after the repaint.
-* Fixed issues with the editor not loading old missions with DOS special characters in them. Specific ini sections are now loaded and saved in specific text encodings; the maps are normally DOS-437, but its remaster-specific content supports UTF-8.
+* Fixed refresh bug where a ghost image of the label indicating a heavy operation remained while repainting the map. The label is now only removed after the following map repaint.
+* Fixed issues with the editor not loading old missions with DOS special characters in them. Specific ini sections are now loaded and saved in specific text encodings; the maps are normally DOS-437, but their remaster-specific contents support UTF-8.
 * Fixed an issue with TD triggers not linking to teamtypes if the teamtype reference has case differences compared to the actual Teamtype name.
 * Added turrets to RA ships, and rotors to helicopters.
-* When air units are enabled to be placed down, this no longer excludes winged airplanes.
+* When air units are enabled to be placed down, this no longer excludes winged airplanes. They'll just fly off the map, but that could be used for its cinematic effect in missions.
 * Added the ability to open .pgm archives, to easily check the contents of packed workshop maps. Export to this format is not supported, though.
 * Restored some of the "useless" orders possible to set on preplaced units; it turns out "Unload" on air units is the only order that makes them land on the intended spot.
 * The drawing order of overlapping objects is now based on the center of the graphics, rather than the bottom, which means buildings or trees will no longer overlap objects placed on their lower but unoccupied cells.
 * Repair Facilities are now treated as flat buildings, meaning they won't overlap things placed on their top cells.
 * Increased the size of waypoint labels.
 * When holding the mouse over a bib, the status bar will now also show if it is attached to a building.
+* The "Rules" section in the map settings has been renamed to "INI Rules & Tweaks", and is now also available for TD.
+* Custom ini keys that are added to the [Basic] and [Map] sections, and to any of the House sections, are now preserved, and editable in the "INI Rules & Tweaks" section. This will allow passive support for modded features.
+* Added a preview mode to Celltriggers.

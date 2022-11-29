@@ -24,6 +24,7 @@ using System.Drawing;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
 namespace MobiusEditor.Dialogs
@@ -108,7 +109,7 @@ namespace MobiusEditor.Dialogs
             {
                 settingsTreeView.Nodes.Add("CRATES", "Crates");
             }
-            settingsTreeView.Nodes.Add("RULES", this.plugin.GameType == GameType.RedAlert ? "Rules" : "Unmanaged INI");
+            settingsTreeView.Nodes.Add("RULES", "INI Rules && Tweaks");
             if (this.plugin.GameType != GameType.SoleSurvivor)
             {
                 settingsTreeView.Nodes.Add("BRIEFING", "Briefing");
@@ -317,8 +318,16 @@ namespace MobiusEditor.Dialogs
 
                 }
             }
-            // Check if RA rules were changed.
-            bool rulesChanged = plugin.GameType == GameType.RedAlert && !(this.ExtraIniText ?? String.Empty).Equals(originalExtraIniText);
+            // Combine diacritics into their characters, and remove characters not included in DOS-437.
+            string normalised = (this.ExtraIniText ?? String.Empty).Normalize(NormalizationForm.FormC);
+            Encoding dos437 = Encoding.GetEncoding(437);
+            // DOS chars excluding specials at the start and end. Explicitly add tab, then the normal range from 32 to 254.
+            HashSet<Char> dos437chars = String.Concat("\t".Yield().Concat(Enumerable.Range(32, 256 - 32 - 1).Select(i => dos437.GetString(new Byte[] { (byte)i })))).ToHashSet();
+            normalised = new String(normalised.Where(ch => dos437chars.Contains(ch)).ToArray());
+            // Check if RA rules were changed. Ignore trivial line changes. This will not detect any irrelevant but non-trivial changes like swapping lines, though.
+            String checkTextNew = Regex.Replace(normalised, "[\\r\\n]+", "\n").Trim('\n');
+            String checkTextOrig = Regex.Replace(originalExtraIniText ?? String.Empty, "[\\r\\n]+", "\n").Trim('\n');
+            bool rulesChanged = plugin.GameType == GameType.RedAlert && !checkTextOrig.Equals(checkTextNew, StringComparison.OrdinalIgnoreCase);
             // Check if RA expansion units were disabled.
             bool expansionWarn = plugin.GameType == GameType.RedAlert && expansionWasEnabled
                                     && basicSettingsTracker.TryGetMember("ExpansionEnabled", out object res) && (res is bool expOn) && !expOn;

@@ -317,7 +317,7 @@ namespace MobiusEditor.Dialogs
             }
             if (hasChanges)
             {
-                DialogResult dr = MessageBox.Show("Teams have been changed! Are you sure you want to cancel?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                DialogResult dr = MessageBox.Show(this, "Teams have been changed! Are you sure you want to cancel?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
                 if (dr == DialogResult.Yes)
                     return;
                 this.DialogResult = DialogResult.None;
@@ -499,22 +499,22 @@ namespace MobiusEditor.Dialogs
             else if (curName.Length > maxLength)
             {
                 e.CancelEdit = true;
-                MessageBox.Show(string.Format("Team name is longer than {0} characters.", maxLength), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this, string.Format("Team name is longer than {0} characters.", maxLength), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            else if (TeamType.None.Equals(curName, StringComparison.InvariantCultureIgnoreCase))
+            else if (TeamType.IsEmpty(curName))
             {
                 e.CancelEdit = true;
-                MessageBox.Show(string.Format("Team name 'None' is reserved and cannot be used."), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this, string.Format("Team name '{0}' is reserved and cannot be used.", TeamType.None), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            else if (!INIHelpers.IsValidKey(curName))
+            else if (!INITools.IsValidKey(curName))
             {
                 e.CancelEdit = true;
-                MessageBox.Show(string.Format("Team name '{0}' contains illegal characters. This format only supports simple ASCII, and cannot contain '=', '[' or ']'.", curName), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this, string.Format("Team name '{0}' contains illegal characters. This format only supports simple ASCII, and cannot contain '=', '[' or ']'.", curName.ToUpperInvariant()), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            else if (teamTypes.Where(t => (t != SelectedTeamType) && t.Name.Equals(curName, StringComparison.InvariantCultureIgnoreCase)).Any())
+            else if (teamTypes.Where(t => (t != SelectedTeamType) && t.Name.Equals(curName, StringComparison.OrdinalIgnoreCase)).Any())
             {
                 e.CancelEdit = true;
-                MessageBox.Show(string.Format("Team with name '{0}' already exists.", curName.ToUpperInvariant()), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this, string.Format("Team with name '{0}' already exists.", curName.ToUpperInvariant()), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             else
             {

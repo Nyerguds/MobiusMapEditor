@@ -45,6 +45,8 @@ namespace MobiusEditor.Tools
         private readonly Dictionary<int, CellTrigger> undoCellTriggers = new Dictionary<int, CellTrigger>();
         private readonly Dictionary<int, CellTrigger> redoCellTriggers = new Dictionary<int, CellTrigger>();
 
+        private Map previewMap;
+        protected override Map RenderMap => previewMap;
         private bool placementMode;
 
         public string TriggerToolTip { get; set; }
@@ -52,6 +54,7 @@ namespace MobiusEditor.Tools
         public CellTriggersTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, ComboBox triggerCombo, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> url)
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
+            previewMap = map;
             this.triggerComboBox = triggerCombo;
             UpdateDataSource();
         }
@@ -178,46 +181,48 @@ namespace MobiusEditor.Tools
                 {
                     RemoveCellTrigger(e.NewCell);
                 }
+                mapPanel.Invalidate(map, e.NewCell);
             }
         }
 
         private void SetCellTrigger(Point location)
         {
-            if (triggerComboBox.SelectedItem is string trigger && !Trigger.IsEmpty(trigger))
+            if (!(triggerComboBox.SelectedItem is string trigger) || Trigger.IsEmpty(trigger))
             {
-                if (map.Metrics.GetCell(location, out int cell))
-                {
-                    if (map.CellTriggers[cell] == null)
-                    {
-                        if (!undoCellTriggers.ContainsKey(cell))
-                        {
-                            undoCellTriggers[cell] = map.CellTriggers[cell];
-                        }
-                        var cellTrigger = new CellTrigger(trigger);
-                        map.CellTriggers[cell] = cellTrigger;
-                        redoCellTriggers[cell] = cellTrigger;
-                        mapPanel.Invalidate();
-                    }
-                }
+                return;
             }
+            if (!map.Metrics.GetCell(location, out int cell) || map.CellTriggers[cell] != null)
+            {
+                return;
+            }
+            if (!undoCellTriggers.ContainsKey(cell))
+            {
+                undoCellTriggers[cell] = map.CellTriggers[cell];
+            }
+            var cellTrigger = new CellTrigger(trigger);
+            map.CellTriggers[cell] = cellTrigger;
+            redoCellTriggers[cell] = cellTrigger;
+            mapPanel.Invalidate(map, navigationWidget.MouseCell);
         }
 
         private void RemoveCellTrigger(Point location)
         {
-            if (map.Metrics.GetCell(location, out int cell))
+            if (!map.Metrics.GetCell(location, out int cell))
             {
-                var cellTrigger = map.CellTriggers[cell];
-                if (cellTrigger != null)
-                {
-                    if (!undoCellTriggers.ContainsKey(cell))
-                    {
-                        undoCellTriggers[cell] = map.CellTriggers[cell];
-                    }
-                    map.CellTriggers[cell] = null;
-                    redoCellTriggers[cell] = null;
-                    mapPanel.Invalidate();
-                }
+                return;
             }
+            var cellTrigger = map.CellTriggers[cell];
+            if (cellTrigger == null)
+            {
+                return;
+            }
+            if (!undoCellTriggers.ContainsKey(cell))
+            {
+                undoCellTriggers[cell] = map.CellTriggers[cell];
+            }
+            map.CellTriggers[cell] = null;
+            redoCellTriggers[cell] = null;
+            mapPanel.Invalidate(map, navigationWidget.MouseCell);
         }
 
         private void EnterPlacementMode()
@@ -227,6 +232,7 @@ namespace MobiusEditor.Tools
                 return;
             }
             placementMode = true;
+            mapPanel.Invalidate(map, navigationWidget.MouseCell);
             UpdateStatus();
         }
 
@@ -237,6 +243,7 @@ namespace MobiusEditor.Tools
                 return;
             }
             placementMode = false;
+            mapPanel.Invalidate(map, navigationWidget.MouseCell);
             UpdateStatus();
         }
 
@@ -265,8 +272,8 @@ namespace MobiusEditor.Tools
                     CellTrigger cellTrig = kv.Value;
                     bool isValid = cellTrig == null || valid.Any(t => t.Name.Equals(cellTrig.Trigger, StringComparison.InvariantCultureIgnoreCase));
                     e.Map.CellTriggers[kv.Key] = isValid ? cellTrig : null;
+                    e.MapPanel.Invalidate(map, kv.Key);
                 }
-                e.MapPanel.Invalidate();
                 if (e.Plugin != null)
                 {
                     e.Plugin.Dirty = origDirtyState;
@@ -281,8 +288,8 @@ namespace MobiusEditor.Tools
                     CellTrigger cellTrig = kv.Value;
                     bool isValid = cellTrig == null || valid.Any(t => t.Name.Equals(cellTrig.Trigger, StringComparison.InvariantCultureIgnoreCase));
                     e.Map.CellTriggers[kv.Key] = isValid ? cellTrig : null;
+                    e.MapPanel.Invalidate(map, kv.Key);
                 }
-                e.MapPanel.Invalidate();
                 if (e.Plugin != null)
                 {
                     e.Plugin.Dirty = true;
@@ -295,20 +302,50 @@ namespace MobiusEditor.Tools
 
         private void TriggerCombo_SelectedIndexChanged(System.Object sender, System.EventArgs e)
         {
-            mapPanel.Invalidate();
+            mapPanel.Invalidate(map, navigationWidget.MouseCell);
+        }
+
+        protected override void PreRenderMap()
+        {
+            base.PreRenderMap();
+            previewMap = map.Clone();
+            if (!placementMode)
+            {
+                return;
+            }
+            string selected = triggerComboBox.SelectedItem as string;
+            if (selected == null || Trigger.IsEmpty(selected))
+            {
+                return;
+            }
+            var location = navigationWidget.MouseCell;
+            if (!previewMap.Metrics.GetCell(location, out int cell))
+            {
+                return;
+            }
+            CellTrigger celltr = previewMap.CellTriggers[location];
+            if (celltr == null)
+            {
+                previewMap.CellTriggers[location] = new CellTrigger(selected);
+                // Tint is not actually used; a lower alpha just indicates that it is a preview item.
+                previewMap.CellTriggers[location].Tint = Color.FromArgb(128, Color.White);
+            }
         }
 
         protected override void PostRenderMap(Graphics graphics)
         {
             base.PostRenderMap(graphics);
             string selected = triggerComboBox.SelectedItem as string;
+            if (selected != null && Trigger.IsEmpty(selected))
+                selected = null;
             string[] selectedRange = selected != null ? new[] { selected } : new string[] { };
             // Normal techno triggers: under cell
             MapRenderer.RenderAllTechnoTriggers(graphics, map, Globals.MapTileSize, Globals.MapTileScale, Layers, Color.LimeGreen, selected, true);
             MapRenderer.RenderCellTriggers(graphics, map, Globals.MapTileSize, Globals.MapTileScale, selectedRange);
             if (selected != null)
             {
-                MapRenderer.RenderCellTriggers(graphics, map, Globals.MapTileSize, Globals.MapTileScale, Color.Black, Color.Yellow, Color.Yellow, true, false, selectedRange);
+                // Only use preview map if in placement mode.
+                MapRenderer.RenderCellTriggers(graphics, placementMode ? previewMap : map, Globals.MapTileSize, Globals.MapTileScale, Color.Black, Color.Yellow, Color.Yellow, true, false, selectedRange);
                 // Selected technos: on top of cell
                 MapRenderer.RenderAllTechnoTriggers(graphics, map, Globals.MapTileSize, Globals.MapTileScale, Layers, Color.Yellow, selected, false);
             }
