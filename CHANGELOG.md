@@ -378,4 +378,4 @@ Unreleased
 * When holding the mouse over a bib, the status bar will now also show if it is attached to a building.
 * The "Rules" section in the map settings has been renamed to "INI Rules & Tweaks", and is now also available for TD.
 * Custom ini keys that are added to the [Basic] and [Map] sections, and to any of the House sections, are now preserved, and editable in the "INI Rules & Tweaks" section. This will allow passive support for modded features.
-* Added a preview mode to Celltriggers.
+* Previews are now shown for Celltrigger placement.
