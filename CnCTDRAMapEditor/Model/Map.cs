@@ -185,7 +185,6 @@ namespace MobiusEditor.Model
         public readonly List<DirectionType> UnitDirectionTypes;
 
         public readonly List<InfantryType> AllInfantryTypes;
-
         public List<InfantryType> InfantryTypes
         {
             get
@@ -1027,7 +1026,12 @@ namespace MobiusEditor.Model
                         {
                             if (mask[y, x])
                             {
-                                Metrics.GetCell(new Point(p.X + x, p.Y + y), out int targetCell);
+                                if (!Metrics.GetCell(new Point(p.X + x, p.Y + y), out int targetCell))
+                                {
+                                    blockingCell = -1;
+                                    return null;
+                                }
+                                
                                 ICellOccupier techno = Technos[targetCell];
                                 ICellOccupier b = Buildings[targetCell];
                                 if (techno != null || b != null)
@@ -1048,7 +1052,11 @@ namespace MobiusEditor.Model
                     {
                         if (mask[y, x])
                         {
-                            Metrics.GetCell(new Point(p.X + x, p.Y + y), out int targetCell);
+                            if (!Metrics.GetCell(new Point(p.X + x, p.Y + y), out int targetCell))
+                            {
+                                blockingCell = -1;
+                                return null;
+                            }
                             ICellOccupier techno = Technos[targetCell];
                             ICellOccupier b = Buildings[targetCell];
                             if (techno != null || b != null)

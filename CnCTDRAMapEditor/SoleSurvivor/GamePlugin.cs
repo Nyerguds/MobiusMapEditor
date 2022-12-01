@@ -122,7 +122,7 @@ namespace MobiusEditor.SoleSurvivor
             ExplorerComparer sorter = new ExplorerComparer();
             movies.Sort(sorter);
             Size mapSize = !megaMap ? TiberianDawn.Constants.MaxSize : TiberianDawn.Constants.MaxSizeMega;
-            Map = new Map(basicSection, null, mapSize, typeof(House), houseTypes,
+            Map = new Map(basicSection, null, mapSize, typeof(TiberianDawn.House), houseTypes,
                 flagColors, TiberianDawn.TheaterTypes.GetTypes(), TiberianDawn.TemplateTypes.GetTypes(),
                 TiberianDawn.TerrainTypes.GetTypes(), OverlayTypes.GetTypes(), TiberianDawn.SmudgeTypes.GetTypes(Globals.ConvertCraters),
                 TiberianDawn.EventTypes.GetTypes(), cellEventTypes, unitEventTypes, structureEventTypes, terrainEventTypes,
@@ -205,11 +205,14 @@ namespace MobiusEditor.SoleSurvivor
             SaveIniTriggers(ini, true);
             SaveIniHouses(ini);
             //SaveIniBriefing(ini);
-            SaveIniUnits(ini);
-            SaveIniAircraft(ini);
-            SaveIniBase(ini, true);
-            SaveIniInfantry(ini);
-            SaveIniStructures(ini);
+            if (!Globals.NoOwnedObjectsInSole)
+            {
+                SaveIniBase(ini, true);
+                SaveIniInfantry(ini);
+                SaveIniUnits(ini);
+                SaveIniStructures(ini);
+                SaveIniAircraft(ini);
+            }
             SaveINITerrain(ini);
             SaveIniOverlay(ini);
             if (overlayBackup != null)

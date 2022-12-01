@@ -1019,7 +1019,7 @@ namespace MobiusEditor.TiberianDawn
                 }
             }
             var infantrySection = ini.Sections.Extract("Infantry");
-            if (infantrySection != null)
+            if (infantrySection != null && (!forSole || !Globals.NoOwnedObjectsInSole))
             {
                 foreach (var (Key, Value) in infantrySection)
                 {
@@ -1158,7 +1158,7 @@ namespace MobiusEditor.TiberianDawn
                 }
             }
             var unitsSection = ini.Sections.Extract("Units");
-            if (unitsSection != null)
+            if (unitsSection != null && (!forSole || !Globals.NoOwnedObjectsInSole))
             {
                 foreach (var (Key, Value) in unitsSection)
                 {
@@ -1279,7 +1279,7 @@ namespace MobiusEditor.TiberianDawn
             // Classic game does not support this, so I'm leaving this out by default.
             // It is always extracted, so it doesn't end up with the "extra sections"
             var aircraftSection = ini.Sections.Extract("Aircraft");
-            if (!Globals.DisableAirUnits && aircraftSection != null)
+            if (!Globals.DisableAirUnits && aircraftSection != null && (!forSole || !Globals.NoOwnedObjectsInSole))
             {
                 foreach (var (Key, Value) in aircraftSection)
                 {
@@ -1373,7 +1373,7 @@ namespace MobiusEditor.TiberianDawn
                 }
             }
             var structuresSection = ini.Sections.Extract("Structures");
-            if (structuresSection != null && !forSole)
+            if (structuresSection != null && (!forSole || !Globals.NoOwnedObjectsInSole))
             {
                 foreach (var (Key, Value) in structuresSection)
                 {
@@ -1494,7 +1494,7 @@ namespace MobiusEditor.TiberianDawn
                                 }
                                 else
                                 {
-                                    errors.Add(string.Format("Structure '{0}' placed on cell {1} overlaps unknown techno; skipping.", buildingType.Name, cell));
+                                    errors.Add(string.Format("Structure '{0}' placed on cell {1} crosses outside the map bounds; skipping.", buildingType.Name, cell));
                                     modified = true;
                                 }
                             }
@@ -1516,7 +1516,7 @@ namespace MobiusEditor.TiberianDawn
                 }
             }
             var baseSection = ini.Sections.Extract("Base");
-            if (baseSection != null && !forSole)
+            if (baseSection != null && (!forSole || !Globals.NoOwnedObjectsInSole))
             {
                 foreach (var (Key, Value) in baseSection)
                 {
@@ -1665,7 +1665,7 @@ namespace MobiusEditor.TiberianDawn
                                     }
                                     else
                                     {
-                                        errors.Add(string.Format("Terrain '{0}' placed on cell {1} overlaps unknown techno; skipping.", terrainType.Name, cell));
+                                        errors.Add(string.Format("Terrain '{0}' placed on cell {1} crosses outside the map bounds; skipping.", terrainType.Name, cell));
                                         modified = true;
                                     }
                                 }

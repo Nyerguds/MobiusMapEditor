@@ -1151,12 +1151,18 @@ namespace MobiusEditor.RedAlert
                     var tokens = Value.Split(',');
                     if (tokens.Length == 6)
                     {
-                        var aircraftType = Map.UnitTypes.Where(t => t.IsAircraft && t.Equals(tokens[1])).FirstOrDefault();
+                        var aircraftType = Map.AllUnitTypes.Where(t => t.IsAircraft && t.Equals(tokens[1])).FirstOrDefault();
                         if (aircraftType == null)
                         {
                             errors.Add(string.Format("Aircraft '{0}' references unknown aircraft.", tokens[1]));
                             modified = true;
                             continue;
+                        }
+                        if (!aftermathEnabled && aircraftType.IsExpansionUnit)
+                        {
+                            errors.Add(string.Format("Expansion unit '{0}' encountered, but expansion units not enabled; enabling expansion units.", aircraftType.Name));
+                            modified = true;
+                            Map.BasicSection.ExpansionEnabled = aftermathEnabled = true;
                         }
                         int strength;
                         if (!int.TryParse(tokens[2], out strength))
@@ -1245,12 +1251,18 @@ namespace MobiusEditor.RedAlert
                     var tokens = Value.Split(',');
                     if (tokens.Length == 7)
                     {
-                        var vesselType = Map.UnitTypes.Where(t => t.IsVessel && t.Equals(tokens[1])).FirstOrDefault();
+                        var vesselType = Map.AllUnitTypes.Where(t => t.IsVessel && t.Equals(tokens[1])).FirstOrDefault();
                         if (vesselType == null)
                         {
                             errors.Add(string.Format("Ship '{0}' references unknown ship.", tokens[1]));
                             modified = true;
                             continue;
+                        }
+                        if (!aftermathEnabled && vesselType.IsExpansionUnit)
+                        {
+                            errors.Add(string.Format("Expansion unit '{0}' encountered, but expansion units not enabled; enabling expansion units.", vesselType.Name));
+                            modified = true;
+                            Map.BasicSection.ExpansionEnabled = aftermathEnabled = true;
                         }
                         int strength;
                         if (!int.TryParse(tokens[2], out strength))
@@ -1355,7 +1367,7 @@ namespace MobiusEditor.RedAlert
                     var tokens = Value.Split(',');
                     if (tokens.Length == 8)
                     {
-                        var infantryType = Map.InfantryTypes.Where(t => t.Equals(tokens[1])).FirstOrDefault();
+                        var infantryType = Map.AllInfantryTypes.Where(t => t.Equals(tokens[1])).FirstOrDefault();
                         if (infantryType == null)
                         {
                             errors.Add(string.Format("Infantry '{0}' references unknown infantry.", tokens[1]));
@@ -1609,7 +1621,7 @@ namespace MobiusEditor.RedAlert
                                 }
                                 else
                                 {
-                                    errors.Add(string.Format("Structure '{0}' placed on cell {1} overlaps unknown techno; skipping.", buildingType.Name, cell));
+                                    errors.Add(string.Format("Structure '{0}' placed on cell {1} crosses outside the map bounds; skipping.", buildingType.Name, cell));
                                     modified = true;
                                 }
                             }
@@ -1774,7 +1786,7 @@ namespace MobiusEditor.RedAlert
                                 }
                                 else
                                 {
-                                    errors.Add(string.Format("Terrain '{0}' placed on cell {1} overlaps unknown techno; skipping.", terrainType.Name, cell));
+                                    errors.Add(string.Format("Terrain '{0}' placed on cell {1} crosses outside the map bounds; skipping.", terrainType.Name, cell));
                                 }
                             }
                         }
