@@ -379,6 +379,6 @@ Unreleased
 * The "Rules" section in the map settings has been renamed to "INI Rules & Tweaks", and is now also available for TD.
 * Custom ini keys that are added to the [Basic] and [Map] sections, and to any of the House sections, are now preserved, and editable in the "INI Rules & Tweaks" section. This will allow passive support for modded features.
 * Previews are now shown for Celltrigger placement.
-* Fixed errors in the detection of expansion units on maps.
+* Fixed errors in the detection of Aftermath expansion units on maps.
 * Fixed collision detection of multi-cell objects to detect crossing outside the map.
 * Fixed the NoOwnedObjectsInSole option to also correctly toggle loading and saving of these objects.

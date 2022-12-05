@@ -557,7 +557,7 @@ namespace MobiusEditor
                     string normalised = (msd.ExtraIniText ?? String.Empty).Normalize(NormalizationForm.FormC);
                     Encoding dos437 = Encoding.GetEncoding(437);
                     // DOS chars excluding specials at the start and end. Explicitly add tab, then the normal range from 32 to 254.
-                    HashSet<Char> dos437chars = String.Concat("\t".Yield().Concat(Enumerable.Range(32, 256 - 32 - 1).Select(i => dos437.GetString(new Byte[] { (byte)i })))).ToHashSet();
+                    HashSet<Char> dos437chars = ("\t\r\n" + String.Concat(Enumerable.Range(32, 256 - 32 - 1).Select(i => dos437.GetString(new Byte[] { (byte)i })))).ToHashSet();
                     normalised = new String(normalised.Where(ch => dos437chars.Contains(ch)).ToArray());
                     // Ignore trivial line changes. This will not detect any irrelevant but non-trivial changes like swapping lines, though.
                     String checkTextNew = Regex.Replace(normalised, "[\\r\\n]+", "\n").Trim('\n');
