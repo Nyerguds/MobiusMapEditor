@@ -322,7 +322,7 @@ Released on 14 Nov 2022 at 22:25 GMT
 * Red Alert maps are now specifically detected on the presence of the "[MapPack]" section. If this is not present, and there is no .bin file, it loads as TD map without map templates.
 * Restricted Red Alert trigger and teamtype names to the same lengths as Tiberian Dawn; 4 for triggers, 8 for Teamtypes.
 * Pressing [Enter] in Waypoints mode will now jump to the selected waypoint.
-* Fixed a bug in the overlap detection system that made it always give "<unknown>" for the overlapped cell on Terrain objects.
+* Fixed a bug in the overlap detection system that made it always give "&lt;unknown&gt;" for the overlapped cell on Terrain objects.
 * Split mods up into ModsToLoadTD, ModsToLoadRA and ModsToLoadSS. Entries in the list no longer require the game folder prefix.
 * The Civilian buildings V12 and V13 (haystacks) are now also available in TD Winter theater.
 * The trigger "Any: Cap=Win,Des=Lose" is now also seen as flag to autodetect classic single play scenarios.
