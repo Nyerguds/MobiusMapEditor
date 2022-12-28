@@ -2738,17 +2738,19 @@ namespace MobiusEditor.RedAlert
             int numUnits = Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsGroundUnit).Count();
             int numVessels = Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsVessel).Count();
             info.Add("Objects overview:");
+
+            const String maximums = "Number of {0}: {1}. Maximum: {2}.";
             if (!Globals.DisableAirUnits)
             {
-                info.Add(string.Format("Number of aircraft: {0}. Maximum: {1}.", numAircraft, Constants.MaxAircraft));
+                info.Add(string.Format(maximums, "aircraft", numAircraft, Constants.MaxAircraft));
             }
-            info.Add(string.Format("Number of structures: {0}. Maximum: {1}.", numBuildings, Constants.MaxBuildings));
-            info.Add(string.Format("Number of infantry: {0}. Maximum: {1}.", numInfantry, Constants.MaxInfantry));
-            info.Add(string.Format("Number of terrain objects: {0}. Maximum: {1}.", numTerrain, Constants.MaxTerrain));
-            info.Add(string.Format("Number of units: {0}. Maximum: {1}.", numUnits, Constants.MaxUnits));
-            info.Add(string.Format("Number of ships: {0}. Maximum: {1}.", numVessels, Constants.MaxVessels));
-            info.Add(string.Format("Number of team types: {0}. Maximum: {1}.", Map.TeamTypes.Count, Constants.MaxTeams));
-            info.Add(string.Format("Number of triggers: {0}. Maximum: {1}.", Map.Triggers.Count, Constants.MaxTriggers));
+            info.Add(string.Format(maximums, "structures", numBuildings, Constants.MaxBuildings));
+            info.Add(string.Format(maximums, "infantry", numInfantry, Constants.MaxInfantry));
+            info.Add(string.Format(maximums, "terrain objects", numTerrain, Constants.MaxTerrain));
+            info.Add(string.Format(maximums, "units", numUnits, Constants.MaxUnits));
+            info.Add(string.Format(maximums, "ships", numVessels, Constants.MaxVessels));
+            info.Add(string.Format(maximums, "team types", Map.TeamTypes.Count, Constants.MaxTeams));
+            info.Add(string.Format(maximums, "triggers", Map.Triggers.Count, Constants.MaxTriggers));
             if (Map.BasicSection.SoloMission)
             {
                 HashSet<int> usedWaypoints = new HashSet<int>();

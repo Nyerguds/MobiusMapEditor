@@ -32,7 +32,6 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
-using static MobiusEditor.Utility.SimpleMultiThreading;
 
 namespace MobiusEditor
 {
@@ -111,12 +110,7 @@ namespace MobiusEditor
         private readonly Timer steamUpdateTimer = new Timer();
 
         private SimpleMultiThreading multiThreader;
-        Label busyStatusLabel;
-        public Label StatusLabel
-        {
-            get { return busyStatusLabel; }
-            set { busyStatusLabel = value; }
-        }
+        public Label StatusLabel { get; set; }
 
         static MainForm()
         {
@@ -155,6 +149,7 @@ namespace MobiusEditor
                 toolStripButton.MouseMove += mainToolStrip_MouseMove;
             }
 #if !DEVELOPER
+            fileExportMenuItem.Enabled = false;
             fileExportMenuItem.Visible = false;
             developerToolStripMenuItem.Visible = false;
 #endif
@@ -459,6 +454,7 @@ namespace MobiusEditor
 
         private void FileExportMenuItem_Click(object sender, EventArgs e)
         {
+#if DEVELOPER
             if (plugin == null)
             {
                 return;
@@ -485,6 +481,7 @@ namespace MobiusEditor
             {
                 plugin.Save(savePath, FileType.MEG);
             }
+#endif
         }
 
         private void FileExitMenuItem_Click(object sender, EventArgs e)
@@ -864,9 +861,9 @@ namespace MobiusEditor
             );
             cellStatusLabel.Text = plugin.Map.GetCellDescription(location, subPixel);
         }
-        #endregion
+#endregion
 
-        #region Additional logic for listeners
+#region Additional logic for listeners
 
         private void NewFile()
         {
@@ -1392,7 +1389,9 @@ namespace MobiusEditor
             fileSaveMenuItem.Enabled = enable && hasPlugin;
             fileSaveAsMenuItem.Enabled = enable && hasPlugin;
             filePublishMenuItem.Enabled = enable && hasPlugin;
+#if DEVELOPER
             fileExportMenuItem.Enabled = enable && hasPlugin;
+#endif
             editUndoMenuItem.Enabled = enable && hasPlugin && url.CanUndo;
             editRedoMenuItem.Enabled = enable && hasPlugin && url.CanRedo;
             editClearUndoRedoMenuItem.Enabled = enable && hasPlugin && url.CanUndo || url.CanRedo;
@@ -1404,10 +1403,11 @@ namespace MobiusEditor
             toolsStatsStorageMenuItem.Enabled = enable && hasPlugin;
             toolsRandomizeTilesMenuItem.Enabled = enable && hasPlugin;
             toolsExportImageMenuItem.Enabled = enable && hasPlugin;
+#if DEVELOPER
             developerGoToINIMenuItem.Enabled = enable && hasPlugin;
             developerDebugToolStripMenuItem.Enabled = enable && hasPlugin;
             developerGenerateMapPreviewDirectoryMenuItem.Enabled = enable && hasPlugin;
-
+#endif
             viewMapToolStripMenuItem.Enabled = enable;
             viewIndicatorsToolStripMenuItem.Enabled = enable;
 
@@ -1691,7 +1691,7 @@ namespace MobiusEditor
             ActiveLayers = layers;
         }
 
-        #endregion
+#endregion
 
         private void mainToolStripButton_Click(object sender, EventArgs e)
         {
@@ -2147,6 +2147,7 @@ namespace MobiusEditor
 
         private void mapPanel_PostRender(Object sender, RenderEventArgs e)
         {
+            // Only clear this after all rendering is complete.
             if (!multiThreader.IsExecuting)
             {
                 multiThreader.RemoveBusyLabel(this);

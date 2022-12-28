@@ -16,6 +16,8 @@ Right now, I'm not really looking into making this a joint project. Specific bug
 
 Simply unpack the editor into a new folder on your disk somewhere. On first startup, it will automatically try to detect the folder in which the game is installed, and if it can't find it, it will show a popup asking you to locate it. Note that this autodetect only works on Steam installations of the game.
 
+It is advised to install the `GraphicsFixesTD` mod, to complete errors and missing bits in the TD Remastered graphics. The editor will use this mod automatically when it is installed, even if it is not enabled inside the game. You can find it [on the Steam workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2844969675) and [on ModDB](https://www.moddb.com/games/command-conquer-remastered/addons/graphicsfixestd).
+
 For usage and configuration, see [MANUAL.md](MANUAL.md).
 
 ## Features
@@ -46,5 +48,6 @@ The full change log can be viewed in [CHANGELOG.md](CHANGELOG.md)
 
 Some ideas that might get implemented in the future:
 
+* A copy & paste function.
 * Use classic graphics, making it independent from the Remaster.
-* Change a map's theater.
+* Ability to change a map's theater.

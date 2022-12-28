@@ -43,6 +43,7 @@
             this.btnExport = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnSetDimensions = new System.Windows.Forms.Button();
+            this.chkBoundsOnly = new System.Windows.Forms.CheckBox();
             this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -53,7 +54,7 @@
             this.layersListBox.Location = new System.Drawing.Point(3, 23);
             this.layersListBox.Name = "layersListBox";
             this.layersListBox.SelectionMode = System.Windows.Forms.SelectionMode.MultiSimple;
-            this.layersListBox.Size = new System.Drawing.Size(191, 164);
+            this.layersListBox.Size = new System.Drawing.Size(191, 180);
             this.layersListBox.TabIndex = 0;
             // 
             // indicatorsListBox
@@ -63,7 +64,7 @@
             this.indicatorsListBox.Location = new System.Drawing.Point(215, 23);
             this.indicatorsListBox.Name = "indicatorsListBox";
             this.indicatorsListBox.SelectionMode = System.Windows.Forms.SelectionMode.MultiSimple;
-            this.indicatorsListBox.Size = new System.Drawing.Size(192, 164);
+            this.indicatorsListBox.Size = new System.Drawing.Size(192, 180);
             this.indicatorsListBox.TabIndex = 0;
             // 
             // txtScale
@@ -110,7 +111,7 @@
             // 
             this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(11, 252);
+            this.label1.Location = new System.Drawing.Point(11, 291);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(84, 13);
             this.label1.TabIndex = 2;
@@ -120,7 +121,7 @@
             // 
             this.txtPath.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtPath.Location = new System.Drawing.Point(14, 273);
+            this.txtPath.Location = new System.Drawing.Point(14, 312);
             this.txtPath.Name = "txtPath";
             this.txtPath.ReadOnly = true;
             this.txtPath.Size = new System.Drawing.Size(368, 20);
@@ -129,7 +130,7 @@
             // btnPickFile
             // 
             this.btnPickFile.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnPickFile.Location = new System.Drawing.Point(388, 270);
+            this.btnPickFile.Location = new System.Drawing.Point(388, 309);
             this.btnPickFile.Name = "btnPickFile";
             this.btnPickFile.Size = new System.Drawing.Size(31, 23);
             this.btnPickFile.TabIndex = 5;
@@ -150,12 +151,12 @@
             this.tableLayoutPanel1.Controls.Add(this.indicatorsListBox, 2, 1);
             this.tableLayoutPanel1.Controls.Add(this.label2, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.label3, 2, 0);
-            this.tableLayoutPanel1.Location = new System.Drawing.Point(12, 58);
+            this.tableLayoutPanel1.Location = new System.Drawing.Point(12, 81);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 2;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(410, 190);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(410, 206);
             this.tableLayoutPanel1.TabIndex = 3;
             // 
             // label2
@@ -183,7 +184,7 @@
             // btnExport
             // 
             this.btnExport.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnExport.Location = new System.Drawing.Point(248, 301);
+            this.btnExport.Location = new System.Drawing.Point(248, 340);
             this.btnExport.Name = "btnExport";
             this.btnExport.Size = new System.Drawing.Size(84, 23);
             this.btnExport.TabIndex = 0;
@@ -195,7 +196,7 @@
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(338, 301);
+            this.btnCancel.Location = new System.Drawing.Point(338, 340);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(84, 23);
             this.btnCancel.TabIndex = 1;
@@ -212,18 +213,29 @@
             this.btnSetDimensions.UseVisualStyleBackColor = true;
             this.btnSetDimensions.Click += new System.EventHandler(this.BtnSetDimensions_Click);
             // 
+            // chkBoundsOnly
+            // 
+            this.chkBoundsOnly.AutoSize = true;
+            this.chkBoundsOnly.Location = new System.Drawing.Point(67, 58);
+            this.chkBoundsOnly.Name = "chkBoundsOnly";
+            this.chkBoundsOnly.Size = new System.Drawing.Size(194, 17);
+            this.chkBoundsOnly.TabIndex = 2;
+            this.chkBoundsOnly.Text = "Only export map area inside bounds";
+            this.chkBoundsOnly.UseVisualStyleBackColor = true;
+            // 
             // ImageExportDialog
             // 
             this.AcceptButton = this.btnExport;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(434, 336);
+            this.ClientSize = new System.Drawing.Size(434, 375);
             this.Controls.Add(this.btnSetDimensions);
             this.Controls.Add(this.tableLayoutPanel1);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnExport);
             this.Controls.Add(this.btnPickFile);
+            this.Controls.Add(this.chkBoundsOnly);
             this.Controls.Add(this.chkSmooth);
             this.Controls.Add(this.txtPath);
             this.Controls.Add(this.lblSize);
@@ -259,5 +271,6 @@
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Button btnSetDimensions;
+        private System.Windows.Forms.CheckBox chkBoundsOnly;
     }
 }

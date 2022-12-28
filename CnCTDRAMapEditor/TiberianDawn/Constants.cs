@@ -31,5 +31,13 @@ namespace MobiusEditor.TiberianDawn
         public const int MaxUnits = 500;
         public const int MaxTeams = 60;
         public const int MaxTriggers = 80;
+
+        public const int MaxAircraftClassic = 30;
+        public const int MaxBuildingsClassic = 300;
+        public const int MaxInfantryClassic = 300;
+        public const int MaxTerrainClassic = 300;
+        public const int MaxUnitsClassic = 300;
+        public const int MaxTeamsClassic = 40;
+        public const int MaxTriggersClassic = 40;
     }
 }

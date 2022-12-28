@@ -16,7 +16,7 @@ namespace MobiusEditor.Dialogs
     public partial class ImageExportDialog : Form, IHasStatusLabel
     {
         private SimpleMultiThreading multiThreader;
-        private Label m_BusyStatusLabel;
+        private string boundsLabel;
 
         private String[] MapLayerNames = {
             // Map layers
@@ -62,21 +62,21 @@ namespace MobiusEditor.Dialogs
             set { chkSmooth.Checked = value; }
         }
 
-        public Label StatusLabel
-        {
-            get { return m_BusyStatusLabel; }
-            set { m_BusyStatusLabel = value; }
-        }
+        public Label StatusLabel { get; set; }
 
         private string inputFilename;
 
         public ImageExportDialog(IGamePlugin gamePlugin, MapLayerFlag layers, string filename)
         {
             InitializeComponent();
+            // Store to adapt later
+            this.boundsLabel = chkBoundsOnly.Text;
             this.gamePlugin = gamePlugin;
             inputFilename = filename;
             txtScale.Text = Globals.ExportTileScale.ToString(CultureInfo.InvariantCulture);
             chkSmooth.Checked = Globals.ExportSmoothScale;
+            // For multiplayer maps, default to only exporting the bounds.
+            chkBoundsOnly.Checked = !gamePlugin.Map.BasicSection.SoloMission;
             SetSizeLabel();
             SetLayers(layers);
             txtScale.Select(0, 0);
@@ -90,9 +90,14 @@ namespace MobiusEditor.Dialogs
         {
             if (Double.TryParse(txtScale.Text, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out double scale))
             {
-                int width = gamePlugin.Map.Metrics.Width * Math.Max(1, (int)(Globals.OriginalTileWidth * scale));
-                int height = gamePlugin.Map.Metrics.Height * Math.Max(1, (int)(Globals.OriginalTileHeight * scale));
+                int scaleWidth = Math.Max(1, (int)(Globals.OriginalTileWidth * scale));
+                int scaleHeight = Math.Max(1, (int)(Globals.OriginalTileHeight * scale));
+                int width = gamePlugin.Map.Metrics.Width * scaleWidth;
+                int height = gamePlugin.Map.Metrics.Height * scaleHeight;
                 lblSize.Text = String.Format("(Size: {0}×{1})", width, height);
+                int boundsWidth = gamePlugin.Map.Bounds.Width * scaleWidth;
+                int boundsHeight = gamePlugin.Map.Bounds.Height * scaleHeight;
+                chkBoundsOnly.Text = boundsLabel + String.Format(" ({0}×{1})", boundsWidth, boundsHeight);
             }
         }
 
@@ -238,8 +243,9 @@ namespace MobiusEditor.Dialogs
             }
             MapLayerFlag layers = GetLayers() | MapLayerFlag.Template;
             bool smooth = chkSmooth.Checked;
+            bool inBounds = chkBoundsOnly.Checked;
             string path = txtPath.Text;
-            Func<String> saveOperation = () => SaveImage(gamePlugin, layers, scale, smooth, path);
+            Func<String> saveOperation = () => SaveImage(gamePlugin, layers, scale, smooth, inBounds, path);
             multiThreader.ExecuteThreaded(saveOperation, ShowResult, true, EnableControls, "Exporting image");
         }
 
@@ -268,18 +274,34 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        private static String SaveImage(IGamePlugin gamePlugin, MapLayerFlag layers, double scale, bool smooth, string outputPath)
+        private static String SaveImage(IGamePlugin gamePlugin, MapLayerFlag layers, double scale, bool smooth, bool inBounds, string outputPath)
         {
             int tileWidth = Math.Max(1, (int)(Globals.OriginalTileWidth * scale));
             int tileHeight = Math.Max(1, (int)(Globals.OriginalTileHeight * scale));
-            Size size = new Size(gamePlugin.Map.Metrics.Width * tileWidth, gamePlugin.Map.Metrics.Height * tileHeight);
-            using (Bitmap pr = gamePlugin.Map.GeneratePreview(size, gamePlugin.GameType, layers, smooth, false, false).ToBitmap())
+            int fullWidth = gamePlugin.Map.Metrics.Width;
+            int fullHeight = gamePlugin.Map.Metrics.Height;
+            int width = inBounds ? gamePlugin.Map.Bounds.Width : fullWidth;
+            int height = inBounds ? gamePlugin.Map.Bounds.Height : fullHeight;
+            Size fullSize = new Size(fullWidth * tileWidth, fullHeight * tileHeight);
+            Size size = new Size(width * tileWidth, height * tileHeight);
+            using (Bitmap exportImage = gamePlugin.Map.GeneratePreview(size, gamePlugin.GameType, layers, smooth, inBounds, false).ToBitmap())
             {
-                using (Graphics g = Graphics.FromImage(pr))
+                if ((layers & MapLayerFlag.Indicators) != MapLayerFlag.None)
                 {
-                    ViewTool.PostRenderMap(g, gamePlugin.GameType, gamePlugin.Map, scale, layers, MapLayerFlag.None);
+                    // Draw on new transparent layer, then paint over image.
+                    using (Graphics gExportImage = Graphics.FromImage(exportImage))
+                    using (Bitmap overlaysImage = new Bitmap(fullSize.Width, fullSize.Height))
+                    {
+                        using (Graphics gOverlaysImage = Graphics.FromImage(overlaysImage))
+                        {
+                            ViewTool.PostRenderMap(gOverlaysImage, gamePlugin.GameType, gamePlugin.Map, scale, layers, MapLayerFlag.None);
+                        }
+                        Rectangle fullRect = new Rectangle(new Point(0, 0), size);
+                        Rectangle boundsRect = inBounds ? new Rectangle(new Point(gamePlugin.Map.Bounds.X * tileWidth, gamePlugin.Map.Bounds.Y * tileHeight), size) : fullRect;
+                        gExportImage.DrawImage(overlaysImage, fullRect, boundsRect, GraphicsUnit.Pixel);
+                    }
                 }
-                pr.Save(outputPath, ImageFormat.Png);
+                exportImage.Save(outputPath, ImageFormat.Png);
             }
             return outputPath;
         }

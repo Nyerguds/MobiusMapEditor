@@ -1080,17 +1080,17 @@ namespace MobiusEditor.Model
         public TGA GeneratePreview(Size previewSize, GameType gameType, MapLayerFlag toRender, bool smooth, bool crop, bool sharpen)
         {
             Rectangle mapBounds;
-            HashSet<Point> locations;
+            HashSet<Point> locations = Metrics.Bounds.Points().ToHashSet();;
             if (crop)
             {
                 mapBounds = new Rectangle(Bounds.Left * Globals.OriginalTileWidth, Bounds.Top * Globals.OriginalTileHeight,
                     Bounds.Width * Globals.OriginalTileWidth, Bounds.Height * Globals.OriginalTileHeight);
-                locations = Bounds.Points().ToHashSet();
+                //locations = Bounds.Points().ToHashSet();
             }
             else
             {
                 mapBounds = new Rectangle(0, 0, Metrics.Width * Globals.OriginalTileWidth, Metrics.Height * Globals.OriginalTileHeight);
-                locations = Metrics.Bounds.Points().ToHashSet();
+                //locations
             }
             var previewScale = Math.Min(previewSize.Width / (float)mapBounds.Width, previewSize.Height / (float)mapBounds.Height);
             var scaledSize = new Size((int)(previewSize.Width / previewScale), (int)(previewSize.Height / previewScale));
