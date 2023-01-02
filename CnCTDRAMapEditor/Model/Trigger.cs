@@ -38,6 +38,11 @@ namespace MobiusEditor.Model
     {
         public static readonly string None = "None";
 
+        public static bool IsEmpty(string teamtype)
+        {
+            return teamtype == null || teamtype.Equals(None, StringComparison.OrdinalIgnoreCase);
+        }
+
         public string EventType { get; set; } = None;
 
         public string Team { get; set; } = TeamType.None;
@@ -78,6 +83,11 @@ namespace MobiusEditor.Model
     public class TriggerAction : ICloneable, IEquatable<TriggerAction>
     {
         public static readonly string None = "None";
+
+        public static bool IsEmpty(string teamtype)
+        {
+            return teamtype == null || teamtype.Equals(None, StringComparison.OrdinalIgnoreCase);
+        }
 
         public string ActionType { get; set; } = None;
 

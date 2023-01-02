@@ -35,6 +35,33 @@ namespace MobiusEditor.Utility
             return -1;
         }
 
+        public static int GetIndexInListByLabel<T>(String label, ListItem<T>[] items)
+        {
+            int len = items.Length;
+            for (Int32 i = 0; i < len; ++i)
+            {
+                ListItem<T> item = items[i];
+                if (item != null && item.Label.Equals(label))
+                {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        public static int GetIndexInDropdownByLabel<T>(String label, ComboBox dropdown)
+        {
+            for (Int32 i = 0; i < dropdown.Items.Count; ++i)
+            {
+                ListItem<T> item = dropdown.Items[i] as ListItem<T>;
+                if (item != null && item.Label.Equals(label))
+                {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
         /// <summary>
         /// If the value exists in the given list, this returns the value itself. Otherwise it returns the first value in the list.
         /// </summary>

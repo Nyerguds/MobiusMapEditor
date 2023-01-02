@@ -17,6 +17,7 @@ using MobiusEditor.Model;
 using MobiusEditor.Utility;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -27,7 +28,18 @@ namespace MobiusEditor.Dialogs
         private const int maxLength = 4;
         private readonly IGamePlugin plugin;
         private readonly int maxTriggers;
+        private string[] persistenceNamesTd = new string[] { "No", "And", "Or" };
+        private string[] persistenceNamesRa = new string[] { "Temporary", "Semi-Constant", "Constant" };
+        private string[] persistenceNames;
+        private string[] typeNames = new string[]
+        {
+                "E => A1 [+ A2]",
+                "E1 && E2 => A1 [+ A2]",
+                "E1 || E2 => A1 [+ A2]",
+                "E1 => A1; E2 => A2",
+        };
 
+        private TriggerFilter triggerFilter;
         private readonly List<Trigger> backupTriggers;
         private readonly List<Trigger> triggers;
         public List<Trigger> Triggers => triggers;
@@ -43,12 +55,13 @@ namespace MobiusEditor.Dialogs
             this.plugin = plugin;
             this.maxTriggers = maxTriggers;
             InitializeComponent();
+            SetTriggerFilter(new TriggerFilter(plugin));
             lblTooLong.Text = "Trigger length exceeds " + maxLength + " characters!";
             switch (plugin.GameType)
             {
                 case GameType.TiberianDawn:
                 case GameType.SoleSurvivor:
-                    existenceLabel.Text = "Loop";
+                    persistenceLabel.Text = "Loop";
                     event1Label.Text = "Event";
                     action1Label.Text = "Action";
                     typeLabel.Visible = typeComboBox.Visible = false;
@@ -63,44 +76,31 @@ namespace MobiusEditor.Dialogs
             renameActions = new List<(string Name1, string Name2)>();
             backupTriggers = new List<Trigger>(plugin.Map.Triggers.Select(t => t.Clone()));
             int nrOfTriggers = Math.Min(maxTriggers, triggers.Count);
-            btnAdd.Enabled = nrOfTriggers < maxTriggers;
-            triggersListView.BeginUpdate();
+            if (triggers.Count > maxTriggers)
             {
-                for (int i = 0; i < nrOfTriggers; ++i)
-                {
-                    Trigger trigger = triggers[i];
-                    var item = new ListViewItem(trigger.Name)
-                    {
-                        Tag = trigger
-                    };
-                    triggersListView.Items.Add(item).ToolTipText = trigger.Name;
-                }
+                Trigger[] trigArr = triggers.ToArray();
+                Trigger[] trigCut = new Trigger[nrOfTriggers];
+                Array.Copy(trigArr, trigCut, nrOfTriggers);
+                triggers = new List<Trigger>(trigCut);
             }
-            triggersListView.EndUpdate();
-            string[] existenceNames = Enum.GetNames(typeof(TriggerPersistentType));
+            btnAdd.Enabled = nrOfTriggers < maxTriggers;
+            RefreshTriggers();
+            persistenceNames = Enum.GetNames(typeof(TriggerPersistentType));
             switch (plugin.GameType)
             {
                 case GameType.TiberianDawn:
                 case GameType.SoleSurvivor:
-                    existenceNames = new string[] { "No", "And", "Or" };
+                    persistenceNames = persistenceNamesTd;
                     break;
                 case GameType.RedAlert:
-                    existenceNames = new string[] { "Temporary", "Semi-Constant", "Constant" };
+                    persistenceNames = persistenceNamesRa;
                     break;
             }
-            string[] typeNames = new string[]
-            {
-                "E => A1 [+ A2]",
-                "E1 && E2 => A1 [+ A2]",
-                "E1 || E2 => A1 [+ A2]",
-                "E1 => A1; E2 => A2",
-            };
             houseComboBox.DataSource = House.None.Yield().Concat(plugin.Map.Houses.Select(t => t.Type.Name)).ToArray();
-            existenceComboBox.DataSource = Enum.GetValues(typeof(TriggerPersistentType)).Cast<TriggerPersistentType>()
-                .Select(v => new ListItem<TriggerPersistentType>(v, existenceNames[(int)v])).ToArray();
+            persistenceComboBox.DataSource = Enum.GetValues(typeof(TriggerPersistentType)).Cast<TriggerPersistentType>()
+                .Select(v => new ListItem<TriggerPersistentType>(v, persistenceNames[(int)v])).ToArray();
             typeComboBox.DataSource = Enum.GetValues(typeof(TriggerMultiStyleType)).Cast<TriggerMultiStyleType>()
-                .Select(v => new ListItem<TriggerMultiStyleType>(v, typeNames[(int)v]))
-                .ToArray();
+                .Select(v => new ListItem<TriggerMultiStyleType>(v, typeNames[(int)v])).ToArray();
             event1ComboBox.DataSource = plugin.Map.EventTypes.Where(t => !string.IsNullOrEmpty(t)).ToArray();
             event2ComboBox.DataSource = plugin.Map.EventTypes.Where(t => !string.IsNullOrEmpty(t)).ToArray();
             action1ComboBox.DataSource = plugin.Map.ActionTypes.Where(t => !string.IsNullOrEmpty(t)).ToArray();
@@ -109,10 +109,37 @@ namespace MobiusEditor.Dialogs
             triggersTableLayoutPanel.Visible = false;
         }
 
+        private void RefreshTriggers()
+        {
+            bool hasFilter = this.triggerFilter != null && !this.triggerFilter.IsEmpty;
+            triggersListView.BeginUpdate();
+            triggersListView.Items.Clear();
+            {
+                foreach (Trigger trigger in triggers)
+                {
+                    if (hasFilter && !this.triggerFilter.MatchesFilter(trigger))
+                    {
+                        continue;
+                    }
+                    var item = new ListViewItem(trigger.Name)
+                    {
+                        Tag = trigger
+                    };
+                    triggersListView.Items.Add(item).ToolTipText = trigger.Name;
+                }
+            }
+            triggersListView.EndUpdate();
+        }
+
         private void triggersListView_SelectedIndexChanged(object sender, EventArgs e)
         {
+            RefreshListSelection();
+        }
+
+        private void RefreshListSelection()
+        {
             houseComboBox.DataBindings.Clear();
-            existenceComboBox.DataBindings.Clear();
+            persistenceComboBox.DataBindings.Clear();
             typeComboBox.DataBindings.Clear();
             // no longer managed by data bindings; too many weird race conditions.
             //event1ComboBox.DataBindings.Clear();
@@ -124,7 +151,7 @@ namespace MobiusEditor.Dialogs
             if (SelectedTrigger != null)
             {
                 houseComboBox.DataBindings.Add("SelectedItem", SelectedTrigger, "House");
-                existenceComboBox.DataBindings.Add("SelectedValue", SelectedTrigger, "PersistentType");
+                persistenceComboBox.DataBindings.Add("SelectedValue", SelectedTrigger, "PersistentType");
                 // Set event 1
                 TriggerEvent evt1 = SelectedTrigger.Event1.Clone();
                 event1ComboBox.SelectedItem = SelectedTrigger.Event1.EventType;
@@ -243,11 +270,16 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        private void btnAdd_Click(object sender, EventArgs e)
+        private void BtnAdd_Click(object sender, EventArgs e)
         {
             AddTrigger();
         }
-                
+
+        private void BtnSetFilter_Click(object sender, EventArgs e)
+        {
+            ChangeFilter();
+        }
+
         private void TriggersDialog_FormClosing(object sender, FormClosingEventArgs e)
         {
             // If user pressed ok, nevermind,just go on.
@@ -363,8 +395,54 @@ namespace MobiusEditor.Dialogs
             RemoveTrigger();
         }
 
+        private void ChangeFilter()
+        {
+            Trigger selectedItem = SelectedTrigger;
+            using (TriggerFilterDialog tfd = new TriggerFilterDialog(plugin, this.persistenceLabel.Text, persistenceNames, typeNames))
+            {
+                tfd.Filter = this.triggerFilter;
+                tfd.StartPosition = FormStartPosition.CenterParent;
+                if (tfd.ShowDialog() == DialogResult.OK)
+                {
+                    SetTriggerFilter(tfd.Filter);
+                    RefreshTriggers();
+                    bool selected = false;
+                    if (selectedItem != null)
+                    {
+                        for (Int32 i = 0; i < triggersListView.Items.Count; ++i)
+                        {
+                            if (triggersListView.Items[i].Tag == selectedItem)
+                            {
+                                triggersListView.Items[i].Selected = true;
+                                triggersListView.Select();
+                                selected = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (!selected)
+                    {
+                        RefreshListSelection();
+                    }
+                }
+            }
+        }
+
+        private void SetTriggerFilter(TriggerFilter triggerFilter)
+        {
+            this.triggerFilter = triggerFilter;
+            String filter = triggerFilter.ToString(persistenceLabel.Text[0], persistenceNames, typeNames);
+            this.lblFilterDetails.Text = String.Format("{0}{1}", triggerFilter.IsEmpty ? "No filters selected." : "Active filters: ", filter);
+            this.lblFilterDetails.ForeColor = triggerFilter.IsEmpty ? SystemColors.ControlText : Color.Red;
+        }
+
         private void AddTrigger()
         {
+            if (this.triggerFilter != null && !this.triggerFilter.IsEmpty)
+            {
+                MessageBox.Show("New triggers cannot be added while a filter is active. Reset the filter first.");
+                return;
+            }
             if (triggersListView.Items.Count >= maxTriggers)
                 return;
             string name = GeneralUtils.MakeNew4CharName(triggers.Select(t => t.Name), "????", Trigger.None);

@@ -283,6 +283,12 @@
     <Compile Include="Dialogs\SteamDialog.Designer.cs">
       <DependentUpon>SteamDialog.cs</DependentUpon>
     </Compile>
+    <Compile Include="Dialogs\TriggerFilterDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialogs\TriggerFilterDialog.Designer.cs">
+      <DependentUpon>TriggerFilterDialog.cs</DependentUpon>
+    </Compile>
     <Compile Include="Dialogs\TriggersDialog.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -351,6 +357,7 @@
     <Compile Include="Model\TheaterType.cs" />
     <Compile Include="Model\Trigger.cs" />
     <Compile Include="Model\InfantryType.cs" />
+    <Compile Include="Model\TriggerFilter.cs" />
     <Compile Include="Model\TypeItem.cs" />
     <Compile Include="Model\Unit.cs" />
     <Compile Include="Model\UnitType.cs" />
@@ -667,6 +674,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Dialogs\SteamDialog.resx">
       <DependentUpon>SteamDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\TriggerFilterDialog.resx">
+      <DependentUpon>TriggerFilterDialog.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Dialogs\TriggersDialog.resx">
       <DependentUpon>TriggersDialog.cs</DependentUpon>
