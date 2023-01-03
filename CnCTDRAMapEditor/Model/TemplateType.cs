@@ -25,12 +25,13 @@ namespace MobiusEditor.Model
     [Flags]
     public enum TemplateTypeFlag
     {
-        None         = 0,
-        Clear        = (1 << 0),
-        Water        = (1 << 1),
-        RandomCell   = (1 << 2),
-        Group        = RandomCell | (1 << 3),
-        IsGrouped    = (1 << 4),
+        None           = 0,
+        Clear          = (1 << 0),
+        Water          = (1 << 1),
+        RandomCell     = (1 << 2),
+        Group          = RandomCell | (1 << 3),
+        IsGrouped      = (1 << 4),
+        HasEquivalents = (1 << 5),
     }
 
     public class TemplateType : IBrowsableType
@@ -47,9 +48,9 @@ namespace MobiusEditor.Model
 
         public Size IconSize => new Size(IconWidth, IconHeight);
 
-        public int ThumbnailWidth { get; private set; }
+        public int ThumbnailIconWidth { get; private set; }
 
-        public int ThumbnailHeight { get; private set; }
+        public int ThumbnailIconHeight { get; private set; }
 
         public Size ThumbnailSize => new Size(IconWidth, IconHeight);
 
@@ -66,8 +67,8 @@ namespace MobiusEditor.Model
         public Dictionary<string, bool[,]> MaskOverrides { get; private set; }
 
         /// <summary>
-        /// This gets filled in by template types with the 'Group' flag. On template types with the 'IsGrouped' tag, it should be
-        /// filled in with a single item containing the name of the group template they belong to.
+        /// On template types with the 'Group' flag, this needs to contains the list of all the tiles that are part of the group.
+        /// On template types with the 'IsGrouped' flag, it must be filled in with a single item containing the name of the group template they belong to.
         /// </summary>
         public string[] GroupTiles { get; private set; }
 
@@ -88,8 +89,8 @@ namespace MobiusEditor.Model
             IconWidth = iconWidth;
             IconHeight = iconHeight;
             NumIcons = IconWidth * IconHeight;
-            ThumbnailWidth = IconWidth;
-            ThumbnailHeight = IconHeight;
+            ThumbnailIconWidth = IconWidth;
+            ThumbnailIconHeight = IconHeight;
             Theaters = theaters;
             Flag = flag;
             MaskOverrides = new Dictionary<string, bool[,]>(StringComparer.OrdinalIgnoreCase);
@@ -125,16 +126,17 @@ namespace MobiusEditor.Model
                         if (!String.IsNullOrEmpty(maskOverride))
                         {
                             mask = new bool[iconHeight, iconWidth];
-                            int icon = 0;
+                            int charIndex = 0;
                             for (var y = 0; y < IconHeight; ++y)
                             {
-                                for (var x = 0; x < IconWidth; ++x, ++icon)
+                                for (var x = 0; x < IconWidth; ++x, ++charIndex)
                                 {
-                                    while (icon < maskOverride.Length && maskOverride[icon] == ' ')
+                                    // The format allows whitespace for clarity. Skip without consequence.
+                                    while (charIndex < maskOverride.Length && maskOverride[charIndex] == ' ')
                                     {
-                                        icon++;
+                                        charIndex++;
                                     }
-                                    mask[y, x] = icon < maskOverride.Length && maskOverride[icon] != '0';
+                                    mask[y, x] = charIndex < maskOverride.Length && maskOverride[charIndex] != '0';
                                 }
                             }
                         }
@@ -288,9 +290,9 @@ namespace MobiusEditor.Model
                     loopHeight = numIcons / loopWidth + (numIcons % loopWidth == 0 ? 0 : 1);
                 }
             }
-            // To not have to redo the calculation on random times.
-            ThumbnailWidth = loopWidth;
-            ThumbnailHeight = loopHeight;
+            // To avoid having to redo the calculations on random tiles.
+            ThumbnailIconWidth = loopWidth;
+            ThumbnailIconHeight = loopHeight;
             var thumbnail = new Bitmap(loopWidth * size.Width, loopHeight * size.Height);
             bool found = mask[0, 0];
             using (var g = Graphics.FromImage(thumbnail))

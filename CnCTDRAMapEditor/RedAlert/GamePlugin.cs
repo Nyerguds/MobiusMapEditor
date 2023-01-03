@@ -336,7 +336,7 @@ namespace MobiusEditor.RedAlert
                     INITools.ClearDataFrom(ini, house.Type.Name, (House)house);
                 }
                 extraSections = ini.Sections.Count == 0 ? null : ini.Sections;
-                IEnumerable<string> errors = UpdateBuildingRules(ini, this.Map);
+                IEnumerable<string> errors = UpdateRules(ini, this.Map);
                 if (errors.Count() > 0)
                 {
                     throw new Exception(String.Join("\n", errors));
@@ -426,8 +426,8 @@ namespace MobiusEditor.RedAlert
                 UnitTypes.GetTypes(Globals.DisableAirUnits), BuildingTypes.GetTypes(), TeamMissionTypes.GetTypes(),
                 fullTechnoTypes, waypoints, movieTypes, movieEmpty, themeTypes, themeEmpty)
             {
-                TiberiumOrGoldValue = 35,
-                GemValue = 110
+                TiberiumOrGoldValue = 25,
+                GemValue = 50
             };
             Map.BasicSection.PropertyChanged += BasicSection_PropertyChanged;
             Map.MapSection.PropertyChanged += MapSection_PropertyChanged;
@@ -1805,22 +1805,39 @@ namespace MobiusEditor.RedAlert
                 var data = DecompressLCWSection(overlayPackSection, 1, errors);
                 if (data != null)
                 {
+                    int secondRow = Map.Metrics.Width;
+                    int lastRow = Map.Metrics.Length - Map.Metrics.Width;
                     for (var i = 0; i < Map.Metrics.Length; ++i)
                     {
                         var overlayId = data[i];
-                        // Technically signed, so filter out negative values.
-                        if ((overlayId & 0x80) == 0)
+                        // Technically signed, so filter out negative values. This makes it skip over empty entries without error, since they should be FF.
+                        if ((overlayId & 0x80) != 0)
                         {
-                            var overlayType = Map.OverlayTypes.Where(t => t.Equals(overlayId)).FirstOrDefault();
-                            if (overlayType != null)
+                            continue;
+                        }
+                        var overlayType = Map.OverlayTypes.Where(t => t.Equals(overlayId)).FirstOrDefault();
+                        if (overlayType != null)
+                        {
+                            if (i < secondRow || i >= lastRow)
                             {
-                                if (Globals.FilterTheaterObjects && overlayType.Theaters != null && !overlayType.Theaters.Contains(Map.Theater))
-                                {
-                                    errors.Add(string.Format("Overlay '{0}' is not available in the set theater; skipping.", overlayType.Name));
-                                    modified = true;
-                                    continue;
-                                }
-                                Map.Overlay[i] = new Overlay { Type = overlayType, Icon = 0 };
+                                errors.Add(string.Format("Overlay can not be placed on the first and last lines of the map. Cell: '{0}', Type: '{1}'; skipping.", i, overlayType.Name));
+                                modified = true;
+                                continue;
+                            }
+                            if (Globals.FilterTheaterObjects && overlayType.Theaters != null && !overlayType.Theaters.Contains(Map.Theater))
+                            {
+                                errors.Add(string.Format("Overlay '{0}' is not available in the set theater; skipping.", overlayType.Name));
+                                modified = true;
+                                continue;
+                            }
+                            Map.Overlay[i] = new Overlay { Type = overlayType, Icon = 0 };
+                        }
+                        else
+                        {
+                            if (i < secondRow || i >= lastRow)
+                            {
+                                errors.Add(string.Format("Overlay can not be placed on the first and last lines of the map. Cell: '{0}', Id: '{1}' (unknown); skipping.", i, overlayId));
+                                modified = true;
                             }
                             else
                             {
@@ -1999,6 +2016,52 @@ namespace MobiusEditor.RedAlert
             }
             Map.EndUpdate();
             return errors;
+        }
+
+        private IEnumerable<string> UpdateRules(INI ini, Map map)
+        {
+            List<string> errors = new List<string>();
+            errors.AddRange(UpdateGeneralRules(ini, this.Map));
+            errors.AddRange(UpdateBuildingRules(ini, this.Map));
+            return errors;
+        }
+
+        private IEnumerable<string> UpdateGeneralRules(INI ini, Map map)
+        {
+            List<string> errors = new List<string>();
+            int? goldVal = GetIntRulesValue(ini, "General", "GoldValue", errors);
+            if (goldVal.HasValue)
+            {
+                this.Map.TiberiumOrGoldValue = goldVal.Value;
+            }
+            int? gemVal = GetIntRulesValue(ini, "General", "GemValue", errors);
+            if (gemVal.HasValue)
+            {
+                this.Map.GemValue = gemVal.Value;
+            }
+            return errors;
+        }
+
+        private int? GetIntRulesValue(INI ini, String sec, String key, List<string> errors)
+        {
+            INISection section = ini.Sections[sec];
+            if (section == null)
+            {
+                return null;
+            }
+            var valStr = section.TryGetValue(key);
+            if (valStr != null)
+            {
+                try
+                {
+                    return Int32.Parse(valStr);
+                }
+                catch
+                {
+                    errors.Add(String.Format("Bad value for \"{0}\" rule in section [{1}]. Needs an integer number.", key, sec));
+                }
+            }
+            return null;
         }
 
         private IEnumerable<string> UpdateBuildingRules(INI ini, Map map)
@@ -2521,7 +2584,6 @@ namespace MobiusEditor.RedAlert
                             }
                         }
                     }
-
                     for (var y = 0; y < Map.Metrics.Height; ++y)
                     {
                         for (var x = 0; x < Map.Metrics.Width; ++x)
@@ -2558,7 +2620,6 @@ namespace MobiusEditor.RedAlert
                         }
                     }
                 }
-
                 ini.Sections.Remove("OverlayPack");
                 CompressLCWSection(ini.Sections.Add("OverlayPack"), stream.ToArray());
             }

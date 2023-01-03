@@ -28,9 +28,9 @@ namespace MobiusEditor.Dialogs
         private const int maxLength = 4;
         private readonly IGamePlugin plugin;
         private readonly int maxTriggers;
-        private string[] persistenceNamesTd = new string[] { "No", "And", "Or" };
-        private string[] persistenceNamesRa = new string[] { "Temporary", "Semi-Constant", "Constant" };
-        private string[] persistenceNames;
+        //private string[] persistenceNamesTd = new string[] { "No", "And", "Or" };
+        //private string[] persistenceNamesRa = new string[] { "Temporary", "Semi-Constant", "Constant" };
+        private string[] persistenceNames = new string[] { "On first one", "When all sprung", "On each one" };
         private string[] typeNames = new string[]
         {
                 "E => A1 [+ A2]",
@@ -61,7 +61,7 @@ namespace MobiusEditor.Dialogs
             {
                 case GameType.TiberianDawn:
                 case GameType.SoleSurvivor:
-                    persistenceLabel.Text = "Loop";
+                    //persistenceLabel.Text = "Loop";
                     event1Label.Text = "Event";
                     action1Label.Text = "Action";
                     typeLabel.Visible = typeComboBox.Visible = false;
@@ -85,7 +85,8 @@ namespace MobiusEditor.Dialogs
             }
             btnAdd.Enabled = nrOfTriggers < maxTriggers;
             RefreshTriggers();
-            persistenceNames = Enum.GetNames(typeof(TriggerPersistentType));
+            //persistenceNames = Enum.GetNames(typeof(TriggerPersistentType));
+            /*
             switch (plugin.GameType)
             {
                 case GameType.TiberianDawn:
@@ -96,6 +97,7 @@ namespace MobiusEditor.Dialogs
                     persistenceNames = persistenceNamesRa;
                     break;
             }
+            */
             houseComboBox.DataSource = House.None.Yield().Concat(plugin.Map.Houses.Select(t => t.Type.Name)).ToArray();
             persistenceComboBox.DataSource = Enum.GetValues(typeof(TriggerPersistentType)).Cast<TriggerPersistentType>()
                 .Select(v => new ListItem<TriggerPersistentType>(v, persistenceNames[(int)v])).ToArray();

@@ -23,22 +23,22 @@ namespace MobiusEditor.Tools.Dialogs
 {
     public partial class ResourcesToolDialog : ToolDialog<ResourcesTool>
     {
-        public Label TotalResourcesLbl => totalResourcesLbl;
+        public Label TotalResourcesLbl => lblResTotalVal;
+        public Label BoundsResourcesLbl => lblResBoundsVal;
 
-        public NumericUpDown ResourceBrushSizeNud => resourceBrushSizeNud;
+        public NumericUpDown ResourceBrushSizeNud => nudBrushSize;
 
-        public CheckBox GemsCheckBox => gemsCheckBox;
+        public CheckBox GemsCheckBox => chkGems;
 
         public ResourcesToolDialog(Form parentForm)
             : base(parentForm)
         {
             InitializeComponent();
         }
-
         protected override void InitializeInternal(MapPanel mapPanel, MapLayerFlag activeLayers, ToolStripStatusLabel toolStatusLabel,
             ToolTip mouseToolTip, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> undoRedoList)
         {
-            Tool = new ResourcesTool(mapPanel, activeLayers, toolStatusLabel, TotalResourcesLbl, 
+            Tool = new ResourcesTool(mapPanel, activeLayers, toolStatusLabel, TotalResourcesLbl, BoundsResourcesLbl,
                 ResourceBrushSizeNud, GemsCheckBox, plugin, undoRedoList);
         }
     }

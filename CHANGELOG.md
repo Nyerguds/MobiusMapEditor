@@ -360,7 +360,7 @@ Released on 14 Nov 2022 at 22:25 GMT
 * When clearing a trigger from a unit or building, the error screen will now report the cell of the affected object.
 * Unit and structure reading now happens before terrain and overlay, so in the event of an overlap, the units or structures will be preserved.
 
-### v1.4.4.1:
+### v1.4.5.0:
 
 Unreleased
 
@@ -385,3 +385,9 @@ Unreleased
 * Added option in image export to only export the map bounds. This is enabled by default for multiplayer maps.
 * The Map Objects Statistics tool now shows the classic game limits for TD maps. (RA has no changes in these.)
 * Disabled the ability to export to .meg type via the menu shortcut when the editor is not compiled in developer mode.
+* Removed confusion on the "Loop" / "Existence" setting in triggers by renaming it to "Springs", with choices "On first one", "When all sprung", "On each one".
+* Added trigger filter tool, with search criteria for house, spring type, multi-event type, event, action, teamtype and global.
+* Deselecting the selected tile in the Map tool by clicking in the blank space will now properly show that that reverts the selection to Clear terrain.
+* The total map resources value on the resource placement tool will now be calculated correctly.
+* The resource placement tool will now specifically show a value for the total map resources accessible inside the map bounds.
+* Reinstated the restriction on placing overlay on the first and last row on the map, to correctly emulate the fact the games do not place overlay there.

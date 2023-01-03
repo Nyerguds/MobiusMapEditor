@@ -80,6 +80,19 @@ namespace MobiusEditor.Tools
             get => selectedTemplateType;
             set
             {
+                bool wasNull = value == null;
+                if (wasNull)
+                {
+                    // Get clear terrain from list entries.
+                    foreach (ListViewItem item in templateTypeListView.Items)
+                    {
+                        if (item.Tag is TemplateType tt && tt.Flag == TemplateTypeFlag.Clear)
+                        {
+                            value = tt;
+                            break;
+                        }
+                    }
+                }
                 if (selectedTemplateType != value)
                 {
                     if ((placementMode || fillMode) && (selectedTemplateType != null))
@@ -95,13 +108,16 @@ namespace MobiusEditor.Tools
                     selectedTemplateType = value;
                     templateTypeListView.BeginUpdate();
                     templateTypeListView.SelectedIndexChanged -= TemplateTypeListView_SelectedIndexChanged;
-                    foreach (ListViewItem item in templateTypeListView.Items)
+                    if (!wasNull)
                     {
-                        item.Selected = item.Tag == selectedTemplateType;
-                    }
-                    if (templateTypeListView.SelectedIndices.Count > 0)
-                    {
-                        templateTypeListView.EnsureVisible(templateTypeListView.SelectedIndices[0]);
+                        foreach (ListViewItem item in templateTypeListView.Items)
+                        {
+                            item.Selected = item.Tag == selectedTemplateType;
+                        }
+                        if (templateTypeListView.SelectedIndices.Count > 0)
+                        {
+                            templateTypeListView.EnsureVisible(templateTypeListView.SelectedIndices[0]);
+                        }
                     }
                     templateTypeListView.SelectedIndexChanged += TemplateTypeListView_SelectedIndexChanged;
                     templateTypeListView.EndUpdate();
@@ -255,8 +271,10 @@ namespace MobiusEditor.Tools
                 return;
             }
             var templateTypeMouseCell = templateTypeNavigationWidget.MouseCell;
-            int width = selected.ThumbnailWidth;
-            int height = selected.ThumbnailHeight;
+            // Generated thumbnail may differ from internal IconHeight and IconWidth on groups and randomisable 1x1s,
+            // so use the specifically-saved icon sizes of the generated thumbnail.
+            int width = selected.ThumbnailIconWidth;
+            int height = selected.ThumbnailIconHeight;
             int x = templateTypeMouseCell.X;
             int y = templateTypeMouseCell.Y;
             if ((x >= 0) && (x < width))
@@ -292,8 +310,8 @@ namespace MobiusEditor.Tools
             bool isRandom = (selected.Flag & TemplateTypeFlag.RandomCell) != TemplateTypeFlag.None && selected.NumIcons > 1;
             if (SelectedIcon.HasValue || isRandom)
             {
-                int width = selected.ThumbnailWidth;
-                int height = selected.ThumbnailHeight;
+                int width = selected.ThumbnailIconWidth;
+                int height = selected.ThumbnailIconHeight;
                 int panelWidth = templateTypeMapPanel.ClientSize.Width;
                 int panelHeight = templateTypeMapPanel.ClientSize.Height;
                 int iconWidth = width;
@@ -895,7 +913,7 @@ namespace MobiusEditor.Tools
                     selected.Init(plugin.Map.Theater, true);
                 }
                 templateTypeMapPanel.MapImage = selected.Thumbnail;
-                var templateTypeMetrics = new CellMetrics(selected.ThumbnailWidth, selected.ThumbnailHeight);
+                var templateTypeMetrics = new CellMetrics(selected.ThumbnailIconWidth, selected.ThumbnailIconHeight);
                 templateTypeNavigationWidget = new NavigationWidget(templateTypeMapPanel, templateTypeMetrics, Globals.OriginalTileSize, false);
                 templateTypeNavigationWidget.MouseoverSize = Size.Empty;
                 templateTypeNavigationWidget.Activate();
@@ -933,7 +951,7 @@ namespace MobiusEditor.Tools
                     {
                         undoTemplates[cell] = map.Templates[location];
                     }
-                    var icon = (SelectedIcon.Value.Y * selected.ThumbnailWidth) + SelectedIcon.Value.X;
+                    var icon = (SelectedIcon.Value.Y * selected.ThumbnailIconWidth) + SelectedIcon.Value.X;
                     TemplateType placeType = selected;
                     if (isGroup)
                     {
@@ -1298,7 +1316,7 @@ namespace MobiusEditor.Tools
                     {
                         icon = template?.Icon ?? 0;
                     }
-                    int width = selected.ThumbnailWidth;
+                    int width = selected.ThumbnailIconWidth;
                     selectedIcon = new Point(icon % width, icon / width);
                 }
                 else
@@ -1514,7 +1532,7 @@ namespace MobiusEditor.Tools
             {
                 if (previewMap.Metrics.GetCell(location, out int cell))
                 {
-                    var icon = (SelectedIcon.Value.Y * selected.ThumbnailWidth) + SelectedIcon.Value.X;
+                    var icon = (SelectedIcon.Value.Y * selected.ThumbnailIconWidth) + SelectedIcon.Value.X;
                     previewMap.Templates[cell] = new Template { Type = selected, Icon = icon };
                 }
             }

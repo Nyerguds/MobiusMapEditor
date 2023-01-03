@@ -287,23 +287,85 @@ namespace MobiusEditor.Model
         public readonly List<string> ThemeTypes;
 
         public int TiberiumOrGoldValue { get; set; }
-
         public int GemValue { get; set; }
 
         public int TotalResources
         {
             get
             {
-                int totalResources = 0;
-                foreach (var (cell, value) in Overlay)
+                return GetTotalResourcesSimple();
+            }
+        }
+
+        public int ResourcesInBounds
+        {
+            get
+            {
+                return GetTotalResources(true);
+            }
+        }
+
+        /// <summary>
+        /// Returns the combined value of all resources placed on the map. 
+        /// Relies on the currently set graphics stage of the resource cells to calculate their value.
+        /// </summary>
+        /// <returns>The combined value of all resources on the map.</returns>
+        private int GetTotalResourcesSimple()
+        {
+            int totalResources = 0;
+            foreach (var (cell, value) in Overlay)
+            {
+                if (value.Type.IsResource)
                 {
-                    if (value.Type.IsResource)
+                    totalResources += value.Type.IsGem ? value.Icon * GemValue * 4 + GemValue * 3 : value.Icon * TiberiumOrGoldValue;
+                }
+            }
+            return totalResources;
+        }
+
+        /// <summary>
+        /// Returns the combined value of all resources placed on the map. Can be specified to only calculate inside the set map bounds.
+        /// This method does not rely on the set icon, but recalculates the density of all resource cells.
+        /// </summary>
+        /// <param name="inBounds">Specifically calculate only resources inside the set map bounds.</param>
+        /// <returns>The combined value of all resources on the map.</returns>
+        private int GetTotalResources(bool inBounds)
+        {
+            int[] gold_adj = { 0, 1, 3, 4, 6, 7, 8, 10, 11 };
+            int[] gem_adj = { 0, 0, 0, 1, 1, 1, 2, 2, 2 };
+            int totalResources = 0;
+            foreach (var (cell, value) in Overlay)
+            {
+                Point point;
+                if (!value.Type.IsResource || !Metrics.GetLocation(cell, out point))
+                {
+                    continue;
+                }
+                if (inBounds && !this.Bounds.Contains(point))
+                {
+                    continue;
+                }
+                int adj = 0;
+                foreach (FacingType facing in CellMetrics.AdjacentFacings)
+                {
+                    Overlay ovl;
+                    if (Metrics.Adjacent(point, facing, out Point adjPoint)
+                        && (ovl = Overlay[adjPoint]) != null && ovl.Type.IsResource)
                     {
-                        totalResources += (value.Icon + 1) * (value.Type.IsGem ? GemValue : TiberiumOrGoldValue);
+                        if (inBounds && !this.Bounds.Contains(adjPoint))
+                        {
+                            continue;
+                        }
+                        adj++;
                     }
                 }
-                return totalResources;
+                int thickness = value.Type.IsGem ? gem_adj[adj] : gold_adj[adj];
+                // Harvesting has a bug where the final stage returns a value of 0. In case this is fixed, this is the calculation:
+                //totalResources += value.Type.IsGem ? (thickness + 1) * GemValue * 4 : (thickness + 1) * TiberiumOrGoldValue;
+                // Harvesting one gem stage fills one bail, plus 3 extra bails. Last stage is 0 (due to a bug), but still gets the extra bails.
+                totalResources += value.Type.IsGem ? thickness * GemValue * 4 + GemValue * 3 : thickness * TiberiumOrGoldValue;
             }
+            return totalResources;
         }
 
         public Map(BasicSection basicSection, TheaterType theater, Size cellSize, Type houseType, IEnumerable<HouseType> houseTypes,
@@ -737,7 +799,14 @@ namespace MobiusEditor.Model
             var overlayType = overlay?.Type;
             if (overlayType != null)
             {
-                sb.AppendFormat(", Overlay = {0}", overlayType.DisplayName);
+                if (overlayType.IsResource)
+                {
+                    sb.AppendFormat(", Resource = {0} Stage {1}", overlayType.DisplayName, overlay.Icon);
+                }
+                else
+                {
+                    sb.AppendFormat(", Overlay = {0}", overlayType.DisplayName);
+                }
             }
             var terrain = Technos[location] as Terrain;
             var terrainType = terrain?.Type;

@@ -36,6 +36,7 @@ namespace MobiusEditor.Tools
         protected override MapLayerFlag ManuallyHandledLayers => MapLayerFlag.None;
 
         private readonly Label totalResourcesLbl;
+        private readonly Label boundsResourcesLbl;
         private readonly NumericUpDown brushSizeNud;
         private readonly CheckBox gemsCheckBox;
 
@@ -45,10 +46,12 @@ namespace MobiusEditor.Tools
         private readonly Dictionary<int, Overlay> undoOverlays = new Dictionary<int, Overlay>();
         private readonly Dictionary<int, Overlay> redoOverlays = new Dictionary<int, Overlay>();
 
-        public ResourcesTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, Label totalResourcesLbl, NumericUpDown brushSizeNud, CheckBox gemsCheckBox, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> url)
+        public ResourcesTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, Label totalResourcesLbl, Label boundsResourcesLbl,
+            NumericUpDown brushSizeNud, CheckBox gemsCheckBox, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> url)
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
             this.totalResourcesLbl = totalResourcesLbl;
+            this.boundsResourcesLbl = boundsResourcesLbl;
             this.brushSizeNud = brushSizeNud;
             this.gemsCheckBox = gemsCheckBox;
             this.brushSizeNud.ValueChanged += BrushSizeNud_ValueChanged;
@@ -161,34 +164,33 @@ namespace MobiusEditor.Tools
 
         private void AddResource(Point location)
         {
+            var resourceType = gemsCheckBox.Checked ?
+                map.OverlayTypes.Where(t => t.IsGem).FirstOrDefault() :
+                map.OverlayTypes.Where(t => t.IsTiberiumOrGold).FirstOrDefault();
+            if (resourceType == null)
+            {
+                return;
+            }
             Rectangle rectangle = new Rectangle(location, new Size(1, 1));
             rectangle.Inflate(navigationWidget.MouseoverSize.Width / 2, navigationWidget.MouseoverSize.Height / 2);
             foreach (var subLocation in rectangle.Points())
             {
-                /*/
-                if ((subLocation.Y == 0) || (subLocation.Y == (map.Metrics.Height - 1))
-                    || (subLocation.X == 0) || (subLocation.X == (map.Metrics.Width - 1)))
+                // Can't place overlay on top and bottom row, for some odd reason.
+                if (subLocation.Y == 0 || subLocation.Y == map.Metrics.Height - 1)
                 {
                     continue;
                 }
-                //*/
                 if (map.Metrics.GetCell(subLocation, out int cell))
                 {
                     if (map.Overlay[cell] == null)
                     {
-                        var resourceType = gemsCheckBox.Checked ?
-                            map.OverlayTypes.Where(t => t.IsGem).FirstOrDefault() :
-                            map.OverlayTypes.Where(t => t.IsTiberiumOrGold).FirstOrDefault();
-                        if (resourceType != null)
+                        if (!undoOverlays.ContainsKey(cell))
                         {
-                            if (!undoOverlays.ContainsKey(cell))
-                            {
-                                undoOverlays[cell] = map.Overlay[cell];
-                            }
-                            var overlay = new Overlay { Type = resourceType, Icon = 0 };
-                            map.Overlay[cell] = overlay;
-                            redoOverlays[cell] = overlay;
+                            undoOverlays[cell] = map.Overlay[cell];
                         }
+                        var overlay = new Overlay { Type = resourceType, Icon = 0 };
+                        map.Overlay[cell] = overlay;
+                        redoOverlays[cell] = overlay;
                     }
                 }
             }
@@ -293,7 +295,7 @@ namespace MobiusEditor.Tools
         private void Update()
         {
             totalResourcesLbl.Text = map.TotalResources.ToString();
-
+            boundsResourcesLbl.Text = map.ResourcesInBounds.ToString();
             if (map.OverlayTypes.Any(t => t.IsGem))
             {
                 gemsCheckBox.Visible = true;

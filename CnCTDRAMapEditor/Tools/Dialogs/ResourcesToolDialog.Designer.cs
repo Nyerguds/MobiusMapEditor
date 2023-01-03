@@ -43,13 +43,15 @@ namespace MobiusEditor.Tools.Dialogs
         private void InitializeComponent()
         {
             this.tableLayoutPanel6 = new System.Windows.Forms.TableLayoutPanel();
-            this.label10 = new System.Windows.Forms.Label();
-            this.totalResourcesLbl = new System.Windows.Forms.Label();
-            this.gemsCheckBox = new System.Windows.Forms.CheckBox();
-            this.resourceBrushSizeNud = new MobiusEditor.Controls.EnhNumericUpDown();
-            this.label1 = new System.Windows.Forms.Label();
+            this.lblResTotal = new System.Windows.Forms.Label();
+            this.lblResTotalVal = new System.Windows.Forms.Label();
+            this.chkGems = new System.Windows.Forms.CheckBox();
+            this.nudBrushSize = new MobiusEditor.Controls.EnhNumericUpDown();
+            this.lblBrushSize = new System.Windows.Forms.Label();
+            this.lblResBounds = new System.Windows.Forms.Label();
+            this.lblResBoundsVal = new System.Windows.Forms.Label();
             this.tableLayoutPanel6.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.resourceBrushSizeNud)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudBrushSize)).BeginInit();
             this.SuspendLayout();
             // 
             // tableLayoutPanel6
@@ -57,99 +59,139 @@ namespace MobiusEditor.Tools.Dialogs
             this.tableLayoutPanel6.ColumnCount = 2;
             this.tableLayoutPanel6.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tableLayoutPanel6.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
-            this.tableLayoutPanel6.Controls.Add(this.label10, 0, 0);
-            this.tableLayoutPanel6.Controls.Add(this.totalResourcesLbl, 1, 0);
-            this.tableLayoutPanel6.Controls.Add(this.gemsCheckBox, 0, 3);
-            this.tableLayoutPanel6.Controls.Add(this.resourceBrushSizeNud, 1, 2);
-            this.tableLayoutPanel6.Controls.Add(this.label1, 0, 2);
+            this.tableLayoutPanel6.Controls.Add(this.lblResTotal, 0, 0);
+            this.tableLayoutPanel6.Controls.Add(this.lblResTotalVal, 1, 0);
+            this.tableLayoutPanel6.Controls.Add(this.chkGems, 0, 4);
+            this.tableLayoutPanel6.Controls.Add(this.nudBrushSize, 1, 3);
+            this.tableLayoutPanel6.Controls.Add(this.lblBrushSize, 0, 3);
+            this.tableLayoutPanel6.Controls.Add(this.lblResBounds, 0, 1);
+            this.tableLayoutPanel6.Controls.Add(this.lblResBoundsVal, 1, 1);
             this.tableLayoutPanel6.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel6.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel6.Name = "tableLayoutPanel6";
-            this.tableLayoutPanel6.RowCount = 4;
+            this.tableLayoutPanel6.RowCount = 5;
             this.tableLayoutPanel6.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tableLayoutPanel6.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.tableLayoutPanel6.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel6.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel6.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel6.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel6.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel6.Size = new System.Drawing.Size(196, 67);
+            this.tableLayoutPanel6.Size = new System.Drawing.Size(241, 90);
             this.tableLayoutPanel6.TabIndex = 1;
             // 
-            // label10
+            // lblResTotal
             // 
-            this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(3, 0);
-            this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(88, 13);
-            this.label10.TabIndex = 0;
-            this.label10.Text = "Total Resources:";
+            this.lblResTotal.AutoSize = true;
+            this.lblResTotal.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblResTotal.Location = new System.Drawing.Point(3, 0);
+            this.lblResTotal.Name = "lblResTotal";
+            this.lblResTotal.Padding = new System.Windows.Forms.Padding(0, 2, 0, 2);
+            this.lblResTotal.Size = new System.Drawing.Size(130, 17);
+            this.lblResTotal.TabIndex = 0;
+            this.lblResTotal.Text = "Total Resources:";
             // 
-            // totalResourcesLbl
+            // lblResTotalVal
             // 
-            this.totalResourcesLbl.AutoSize = true;
-            this.totalResourcesLbl.Location = new System.Drawing.Point(97, 0);
-            this.totalResourcesLbl.Name = "totalResourcesLbl";
-            this.totalResourcesLbl.Size = new System.Drawing.Size(13, 13);
-            this.totalResourcesLbl.TabIndex = 1;
-            this.totalResourcesLbl.Text = "0";
+            this.lblResTotalVal.AutoSize = true;
+            this.lblResTotalVal.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblResTotalVal.Location = new System.Drawing.Point(139, 0);
+            this.lblResTotalVal.Name = "lblResTotalVal";
+            this.lblResTotalVal.Padding = new System.Windows.Forms.Padding(0, 2, 0, 2);
+            this.lblResTotalVal.Size = new System.Drawing.Size(99, 17);
+            this.lblResTotalVal.TabIndex = 1;
+            this.lblResTotalVal.Text = "0";
             // 
-            // gemsCheckBox
+            // chkGems
             // 
-            this.gemsCheckBox.AutoSize = true;
-            this.tableLayoutPanel6.SetColumnSpan(this.gemsCheckBox, 2);
-            this.gemsCheckBox.Location = new System.Drawing.Point(3, 42);
-            this.gemsCheckBox.Name = "gemsCheckBox";
-            this.gemsCheckBox.Size = new System.Drawing.Size(53, 17);
-            this.gemsCheckBox.TabIndex = 2;
-            this.gemsCheckBox.Text = "Gems";
-            this.gemsCheckBox.UseVisualStyleBackColor = true;
+            this.chkGems.AutoSize = true;
+            this.tableLayoutPanel6.SetColumnSpan(this.chkGems, 2);
+            this.chkGems.Location = new System.Drawing.Point(3, 66);
+            this.chkGems.Name = "chkGems";
+            this.chkGems.Padding = new System.Windows.Forms.Padding(0, 2, 0, 2);
+            this.chkGems.Size = new System.Drawing.Size(53, 21);
+            this.chkGems.TabIndex = 2;
+            this.chkGems.Text = "Gems";
+            this.chkGems.UseVisualStyleBackColor = true;
             // 
-            // resourceBrushSizeNud
+            // nudBrushSize
             // 
-            this.resourceBrushSizeNud.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.nudBrushSize.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.resourceBrushSizeNud.Increment = new decimal(new int[] {
+            this.nudBrushSize.EnteredValue = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.nudBrushSize.Increment = new decimal(new int[] {
             2,
             0,
             0,
             0});
-            this.resourceBrushSizeNud.MouseWheelIncrement = 2;
-            this.resourceBrushSizeNud.Location = new System.Drawing.Point(97, 16);
-            this.resourceBrushSizeNud.Maximum = new decimal(new int[] {
+            this.nudBrushSize.IntValue = 1;
+            this.nudBrushSize.Location = new System.Drawing.Point(139, 40);
+            this.nudBrushSize.Maximum = new decimal(new int[] {
             9,
             0,
             0,
             0});
-            this.resourceBrushSizeNud.Minimum = new decimal(new int[] {
+            this.nudBrushSize.Minimum = new decimal(new int[] {
             1,
             0,
             0,
             0});
-            this.resourceBrushSizeNud.Name = "resourceBrushSizeNud";
-            this.resourceBrushSizeNud.Size = new System.Drawing.Size(99, 20);
-            this.resourceBrushSizeNud.TabIndex = 3;
-            this.resourceBrushSizeNud.Value = new decimal(new int[] {
+            this.nudBrushSize.MouseWheelIncrement = 2;
+            this.nudBrushSize.Name = "nudBrushSize";
+            this.nudBrushSize.SelectedText = "";
+            this.nudBrushSize.SelectionLength = 0;
+            this.nudBrushSize.SelectionStart = 0;
+            this.nudBrushSize.Size = new System.Drawing.Size(99, 20);
+            this.nudBrushSize.TabIndex = 3;
+            this.nudBrushSize.Value = new decimal(new int[] {
             1,
             0,
             0,
             0});
             // 
-            // label1
+            // lblBrushSize
             // 
-            this.label1.AutoSize = true;
-            this.label1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label1.Location = new System.Drawing.Point(3, 13);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(88, 26);
-            this.label1.TabIndex = 4;
-            this.label1.Text = "Brush Size";
-            this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.lblBrushSize.AutoSize = true;
+            this.lblBrushSize.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblBrushSize.Location = new System.Drawing.Point(3, 37);
+            this.lblBrushSize.Name = "lblBrushSize";
+            this.lblBrushSize.Padding = new System.Windows.Forms.Padding(0, 2, 0, 2);
+            this.lblBrushSize.Size = new System.Drawing.Size(130, 26);
+            this.lblBrushSize.TabIndex = 4;
+            this.lblBrushSize.Text = "Brush Size";
+            this.lblBrushSize.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // lblResBounds
+            // 
+            this.lblResBounds.AutoSize = true;
+            this.lblResBounds.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblResBounds.Location = new System.Drawing.Point(3, 17);
+            this.lblResBounds.Name = "lblResBounds";
+            this.lblResBounds.Padding = new System.Windows.Forms.Padding(0, 2, 0, 2);
+            this.lblResBounds.Size = new System.Drawing.Size(130, 20);
+            this.lblResBounds.TabIndex = 4;
+            this.lblResBounds.Text = "Resources in map bounds";
+            this.lblResBounds.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // lblResBoundsVal
+            // 
+            this.lblResBoundsVal.AutoSize = true;
+            this.lblResBoundsVal.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblResBoundsVal.Location = new System.Drawing.Point(139, 17);
+            this.lblResBoundsVal.Name = "lblResBoundsVal";
+            this.lblResBoundsVal.Padding = new System.Windows.Forms.Padding(0, 2, 0, 2);
+            this.lblResBoundsVal.Size = new System.Drawing.Size(99, 20);
+            this.lblResBoundsVal.TabIndex = 1;
+            this.lblResBoundsVal.Text = "0";
             // 
             // ResourcesToolDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(196, 67);
+            this.ClientSize = new System.Drawing.Size(241, 90);
             this.ControlBox = false;
             this.Controls.Add(this.tableLayoutPanel6);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;
@@ -163,7 +205,7 @@ namespace MobiusEditor.Tools.Dialogs
             this.Text = "Resources";
             this.tableLayoutPanel6.ResumeLayout(false);
             this.tableLayoutPanel6.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.resourceBrushSizeNud)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudBrushSize)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -171,10 +213,12 @@ namespace MobiusEditor.Tools.Dialogs
         #endregion
 
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel6;
-        private System.Windows.Forms.Label label10;
-        private System.Windows.Forms.Label totalResourcesLbl;
-        private System.Windows.Forms.CheckBox gemsCheckBox;
-        private MobiusEditor.Controls.EnhNumericUpDown resourceBrushSizeNud;
-        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label lblResTotal;
+        private System.Windows.Forms.Label lblResTotalVal;
+        private System.Windows.Forms.CheckBox chkGems;
+        private MobiusEditor.Controls.EnhNumericUpDown nudBrushSize;
+        private System.Windows.Forms.Label lblBrushSize;
+        private System.Windows.Forms.Label lblResBounds;
+        private System.Windows.Forms.Label lblResBoundsVal;
     }
 }

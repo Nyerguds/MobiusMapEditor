@@ -1687,6 +1687,7 @@ namespace MobiusEditor.TiberianDawn
             var overlaySection = ini.Sections.Extract("Overlay");
             if (overlaySection != null)
             {
+                int lastLine = Map.Metrics.Height - 1;
                 foreach (var (Key, Value) in overlaySection)
                 {
                     int cell;
@@ -1696,12 +1697,17 @@ namespace MobiusEditor.TiberianDawn
                         modified = true;
                         continue;
                     }
-                    if (!Map.Metrics.Contains(cell))
+                    if (!Map.Metrics.GetLocation(cell, out Point point))
                     {
                         errors.Add(string.Format("Cell for overlay is not inside the map bounds. Key: '{0}', value: '{1}'; skipping.", Key, Value));
                         modified = true;
                         continue;
-
+                    }
+                    if (point.Y == 0 || point.Y == lastLine)
+                    {
+                        errors.Add(string.Format("Overlay can not be placed on the first and or last lines of the map. Key: '{0}', value: '{1}'; skipping.", Key, Value));
+                        modified = true;
+                        continue;
                     }
                     var overlayType = Map.OverlayTypes.Where(t => t.Equals(Value)).FirstOrDefault();
                     if (overlayType != null)
@@ -2865,10 +2871,12 @@ namespace MobiusEditor.TiberianDawn
                 bool isCellTrig = Map.CellTriggers.Any(c => trigName.Equals(c.Value.Trigger, StringComparison.OrdinalIgnoreCase));
                 bool hasTeam = !TeamType.IsEmpty(trigger.Action1.Team);
                 bool isAnd = trigger.PersistentType == TriggerPersistentType.SemiPersistent;
+                // If this is null but hasTeam is true, something went wrong internally. Should never happen.
+                TeamType teamObj = !hasTeam ? null : Map.TeamTypes.Where(tt => tt.Name == team).FirstOrDefault();
 
                 if (event1 == EventTypes.EVENT_PLAYER_ENTERED && Model.House.IsEmpty(trigger.House))
                 {
-                    errors.Add(prefix + (fatalOnly ? String.Empty : "[FATAL] - ") + "A \"Player Enters\" trigger without a House set will cause a game crash.");
+                    curErrors.Add(prefix + (fatalOnly ? String.Empty : "[FATAL] - ") + "A \"Player Enters\" trigger without a House set will cause a game crash.");
                     fatal = true;
                 }
                 if (!fatalOnly && event1 == EventTypes.EVENT_ATTACKED && !noOwner)
@@ -2936,19 +2944,33 @@ namespace MobiusEditor.TiberianDawn
                     switch (action1)
                     {
                         case ActionTypes.ACTION_REINFORCEMENTS:
-                            errors.Add(prefix + (fatalOnly ? String.Empty : "[FATAL] - ") + "There is no team set to reinforce.");
+                            curErrors.Add(prefix + (fatalOnly ? String.Empty : "[FATAL] - ") + "There is no team set to reinforce.");
                             fatal = true;
                             break;
                         case ActionTypes.ACTION_CREATE_TEAM:
-                            errors.Add(prefix + (fatalOnly ? String.Empty : "[FATAL] - ") + "There is no team set to create.");
+                            curErrors.Add(prefix + (fatalOnly ? String.Empty : "[FATAL] - ") + "There is no team set to create.");
                             fatal = true;
                             break;
                         case ActionTypes.ACTION_DESTROY_TEAM:
-                            errors.Add(prefix + (fatalOnly ? String.Empty : "[FATAL] - ") + "There is no team set to disband.");
+                            curErrors.Add(prefix + (fatalOnly ? String.Empty : "[FATAL] - ") + "There is no team set to disband.");
                             fatal = true;
                             break;
                     }
                 }
+                /*/
+                // Pending inclusion. Need more research. In general, though, this is probably wrong.
+                if (!fatalOnly && hasTeam && action1 == ActionTypes.ACTION_CREATE_TEAM)
+                {
+                    foreach (TeamTypeClass cl in teamObj.Classes)
+                    {
+                        if (cl.Type.IsAircraft)
+                        {
+                            curErrors.Add(prefix + "Teams with air units can't be created using \"Create Team\".");
+                            break;
+                        }
+                    }
+                }
+                //*/
                 if (!fatalOnly && action1 == ActionTypes.ACTION_DESTROY_XXXX && !triggers.Any(t => "XXXX".Equals(t.Name, StringComparison.InvariantCultureIgnoreCase)))
                 {
                     curErrors.Add(prefix + "There is no trigger called 'XXXX' to destroy.");

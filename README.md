@@ -48,6 +48,7 @@ The full change log can be viewed in [CHANGELOG.md](CHANGELOG.md)
 
 Some ideas that might get implemented in the future:
 
+* A function to place random equivalent tiles.
+* The ability to change a map's theater.
 * A copy & paste function.
 * Use classic graphics, making it independent from the Remaster.
-* Ability to change a map's theater.

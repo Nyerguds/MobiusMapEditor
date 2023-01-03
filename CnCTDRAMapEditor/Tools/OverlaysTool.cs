@@ -166,21 +166,24 @@ namespace MobiusEditor.Tools
 
         private void AddOverlay(Point location)
         {
+            OverlayType selected = SelectedOverlayType;
+            // Can't place overlay on top and bottom row, for some odd reason.
+            if (selected == null || location.Y == 0 || location.Y == map.Metrics.Height - 1)
+            {
+                return;
+            }
             if (map.Metrics.GetCell(location, out int cell))
             {
-                if (SelectedOverlayType != null)
+                var overlay = new Overlay { Type = selected, Icon = 0 };
+                if (map.Overlay[location] == null)
                 {
-                    var overlay = new Overlay { Type = SelectedOverlayType, Icon = 0 };
-                    if (map.Overlay[location] == null)
+                    if (!undoOverlays.ContainsKey(cell))
                     {
-                        if (!undoOverlays.ContainsKey(cell))
-                        {
-                            undoOverlays[cell] = map.Overlay[cell];
-                        }
-                        map.Overlay[cell] = overlay;
-                        redoOverlays[cell] = overlay;
-                        mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1));
+                        undoOverlays[cell] = map.Overlay[cell];
                     }
+                    map.Overlay[cell] = overlay;
+                    redoOverlays[cell] = overlay;
+                    mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1));
                 }
             }
         }
