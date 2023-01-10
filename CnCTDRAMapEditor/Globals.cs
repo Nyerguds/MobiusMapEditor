@@ -41,6 +41,7 @@ namespace MobiusEditor
             WriteClassicBriefing = Properties.Settings.Default.WriteClassicBriefing;
             NoOwnedObjectsInSole = Properties.Settings.Default.NoOwnedObjectsInSole;
             AdjustSSTeleports = Properties.Settings.Default.DrawSoleTeleports;
+            TileDragProtect = true;
         }
 
         public const string TilesetsXMLPath = @"DATA\XML\TILESETS.XML";
@@ -51,6 +52,9 @@ namespace MobiusEditor
         public const int OriginalTileWidth = 128;
         public const int OriginalTileHeight = 128;
         public static readonly Size OriginalTileSize = new Size(OriginalTileWidth, OriginalTileHeight);
+
+        public const int PixelWidth = 24;
+        public const int PixelHeight = 24;
 
         public static Color MapBackColor { get; private set; }
         public static double MapTileScale { get; private set; }
@@ -68,6 +72,7 @@ namespace MobiusEditor
         public static double ExportTileScale { get; private set; }
         public static bool ExportSmoothScale { get; private set; }
         public static Size MinimumClampSize { get; private set; }
+        public static int UndoRedoStackSize { get; private set; }
         public static bool DisableAirUnits { get; private set; }
         public static bool ConvertCraters { get; private set; }
         public static bool BlockingBibs { get; private set; }
@@ -78,10 +83,8 @@ namespace MobiusEditor
         public static bool WriteClassicBriefing { get; private set; }
         public static bool AdjustSSTeleports { get; private set; }
 
-        public static int UndoRedoStackSize = 50;
+        public static bool TileDragProtect { get; set; }
 
-        public const int PixelWidth = 24;
-        public const int PixelHeight = 24;
 
         public static readonly Size MapPreviewSize = new Size(512, 512);
         public static readonly Size WorkshopPreviewSize = new Size(512, 512);

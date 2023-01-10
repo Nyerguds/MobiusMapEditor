@@ -442,7 +442,7 @@ namespace MobiusEditor.RedAlert
             try
             {
                 isLoading = true;
-                Map.Theater = Map.TheaterTypes.Where(t => t.Equals(theater)).FirstOrDefault() ?? TheaterTypes.Temperate;
+                Map.Theater = Map.TheaterTypes.Where(t => t.Equals(theater)).FirstOrDefault() ?? Map.TheaterTypes.FirstOrDefault() ?? TheaterTypes.Temperate;
                 Map.TopLeft = new Point(1, 1);
                 Map.Size = Map.Metrics.Size - new Size(2, 2);
                 Map.BasicSection.Player = Map.HouseTypes.FirstOrDefault()?.Name;
@@ -2310,7 +2310,7 @@ namespace MobiusEditor.RedAlert
                     // Very very rough APA title casing :)
                     if (word.Length > 3)
                     {
-                        name[i] = word[0].ToString().ToUpper() + word.Substring(1).ToLowerInvariant();
+                        name[i] = word[0].ToString().ToUpperInvariant() + word.Substring(1).ToLowerInvariant();
                     }
                 }
                 basic.Name = String.Join(" ", name);
@@ -2327,7 +2327,7 @@ namespace MobiusEditor.RedAlert
             Dictionary<int, Smudge> resolvedSmudge = new Dictionary<int, Smudge>();
             foreach (var (cell, smudge) in Map.Smudge.Where(item => !item.Value.Type.IsAutoBib))
             {
-                int actualCell = SmudgeType.GetCellFromIcon(smudge, cell, this.Map.Metrics);
+                int actualCell = smudge.GetPlacementOrigin(cell, this.Map.Metrics);
                 if (!resolvedSmudge.ContainsKey(actualCell))
                 {
                     resolvedSmudge[actualCell] = smudge;

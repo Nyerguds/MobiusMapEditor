@@ -75,5 +75,36 @@ namespace MobiusEditor.Model
         {
             return this.Type == other.Type && this.Icon == other.Icon;
         }
+
+        /// <summary>
+        /// Calculates the point at which the smudge's origin point is
+        /// placed, if the current icon is placed on the given point.
+        /// </summary>
+        /// <param name="cell">Point of the current smudge object.</param>
+        /// <returns>The point where icon 0 of this smudge is located.</returns>
+        public Point GetPlacementOrigin(Point point)
+        {
+            if (!this.Type.IsMultiCell)
+                return point;
+            int x = this.Icon % this.Type.Size.Width;
+            int y = this.Icon / this.Type.Size.Width;
+            return new Point(point.X - x, point.Y - y);
+        }
+
+        /// <summary>
+        /// Calculates the cell at which the smudge's origin point is
+        /// placed, if the current icon is placed on the given cell.
+        /// </summary>
+        /// <param name="cell">Cell of the current smudge object.</param>
+        /// <param name="metrics">Cell metrics used to calculate cell numbers.</param>
+        /// <returns>The cell where icon 0 of this smudge is located.</returns>
+        public Int32 GetPlacementOrigin(int cell, CellMetrics metrics)
+        {
+            if (!this.Type.IsMultiCell)
+                return cell;
+            int x = this.Icon % this.Type.Size.Width;
+            int y = this.Icon / this.Type.Size.Width;
+            return cell - x - metrics.Width * y;
+        }
     }
 }

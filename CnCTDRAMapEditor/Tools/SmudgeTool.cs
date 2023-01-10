@@ -116,7 +116,7 @@ namespace MobiusEditor.Tools
                 if (map.Smudge[cell] is Smudge smudge && !smudge.Type.IsAutoBib)
                 {
                     selectedSmudge = smudge;
-                    selectedSmudgePoint = SmudgeType.GetPointFromIcon(smudge, mousePoint);
+                    selectedSmudgePoint = smudge.GetPlacementOrigin(mousePoint);
                     Smudge preEdit = smudge.Clone();
                     selectedSmudgeProperties?.Close();
                     selectedSmudgeProperties = new SmudgePropertiesPopup(plugin, smudge);
@@ -378,7 +378,7 @@ namespace MobiusEditor.Tools
                 {
                     continue;
                 }
-                Point baseLocation = SmudgeType.GetPointFromIcon(smudge, loc);
+                Point baseLocation = smudge.GetPlacementOrigin(loc);
                 int curIcon = 0;
                 Point removeLocation = baseLocation;
                 Size size = smudgeType.Size;
@@ -425,7 +425,7 @@ namespace MobiusEditor.Tools
                     {
                         continue;
                     }
-                    Point fixBase = SmudgeType.GetPointFromIcon(toFix, p);
+                    Point fixBase = toFix.GetPlacementOrigin(p);
                     if (new Rectangle(fixBase, toFixType.Size).Contains(loc))
                     {
                         Smudge fixSmudge = toFix.Clone();
@@ -457,7 +457,7 @@ namespace MobiusEditor.Tools
                 {
                     continue;
                 }
-                Point checkBase = SmudgeType.GetPointFromIcon(toCheck, p);
+                Point checkBase = toCheck.GetPlacementOrigin(p);
                 if (loc == checkBase)
                 {
                     found.Add(p);

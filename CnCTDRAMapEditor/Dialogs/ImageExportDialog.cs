@@ -325,7 +325,9 @@ namespace MobiusEditor.Dialogs
         private void EnableControls(Boolean enabled, String processingLabel)
         {
             txtScale.Enabled = enabled;
+            btnSetDimensions.Enabled = enabled;
             chkSmooth.Enabled = enabled;
+            chkBoundsOnly.Enabled = enabled;
             layersListBox.Enabled = enabled;
             indicatorsListBox.Enabled = enabled;
             btnPickFile.Enabled = enabled;

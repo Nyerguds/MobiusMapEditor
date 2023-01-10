@@ -198,13 +198,13 @@ namespace MobiusEditor
                 // Lookup by Steam ID
                 if (numbersOnly.IsMatch(modDef))
                 {
-                    addonModPath = SteamAssist.TryGetSteamModFolder(gameId, modDef, null, contentFile); // addonModName);
+                    addonModPath = SteamAssist.TryGetSteamWorkshopFolder(gameId, modDef, contentFile, null);
                     if (addonModPath != null)
                     {
                         if (CheckAddonPathModType(addonModPath, contentFile, modregex))
                         {
                             modPaths.Add(addonModPath);
-                        }                        
+                        }
                     }
                     // don't bother checking more on a numbers-only entry.
                     continue;

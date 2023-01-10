@@ -194,23 +194,5 @@ namespace MobiusEditor.Model
             }
             return bibType;
         }
-
-        public static Point GetPointFromIcon(Smudge smudge, Point point)
-        {
-            if (!smudge.Type.IsMultiCell)
-                return point;
-            int x = smudge.Icon % smudge.Type.Size.Width;
-            int y = smudge.Icon / smudge.Type.Size.Width;
-            return new Point(point.X - x, point.Y - y);
-        }
-
-        public static Int32 GetCellFromIcon(Smudge smudge, int cell,  CellMetrics metrics)
-        {
-            if (!smudge.Type.IsMultiCell)
-                return cell;
-            int x = smudge.Icon % smudge.Type.Size.Width;
-            int y = smudge.Icon / smudge.Type.Size.Width;
-            return cell - x - metrics.Width * y;
-        }
     }
 }

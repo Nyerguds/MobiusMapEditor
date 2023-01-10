@@ -25,10 +25,12 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -122,6 +124,8 @@ namespace MobiusEditor
             this.filename = fileToOpen;
 
             InitializeComponent();
+            // Just to be sure this is synced.
+            Globals.TileDragProtect = settingsSafeTileDraggingToolStripMenuItem.Checked;
             // Obey the settings.
             this.mapPanel.SmoothScale = Globals.MapSmoothScale;
             this.mapPanel.BackColor = Globals.MapBackColor;
@@ -146,7 +150,7 @@ namespace MobiusEditor
             mru.FileSelected += Mru_FileSelected;
             foreach (ToolStripButton toolStripButton in mainToolStrip.Items)
             {
-                toolStripButton.MouseMove += mainToolStrip_MouseMove;
+                toolStripButton.MouseMove += MainToolStrip_MouseMove;
             }
 #if !DEVELOPER
             fileExportMenuItem.Enabled = false;
@@ -333,7 +337,12 @@ namespace MobiusEditor
 
         private void FileNewMenuItem_Click(object sender, EventArgs e)
         {
-            NewFile();
+            NewFile(false);
+        }
+
+        private void FileNewFromImageMenuItem_Click(object sender, EventArgs e)
+        {
+            NewFile(true);
         }
 
         private void FileOpenMenuItem_Click(object sender, EventArgs e)
@@ -772,6 +781,14 @@ namespace MobiusEditor
             }
         }
 
+        private void SettingsSafeTileDraggingToolStripMenuItem_Click(Object sender, EventArgs e)
+        {
+            if (sender is ToolStripMenuItem tsmi)
+            {
+                Globals.TileDragProtect = tsmi.Checked;
+            }
+        }
+
         private void ToolsStatsGameObjectsMenuItem_Click(Object sender, EventArgs e)
         {
             if (plugin == null)
@@ -865,7 +882,7 @@ namespace MobiusEditor
 
 #region Additional logic for listeners
 
-        private void NewFile()
+        private void NewFile(bool withImage)
         {
             if (!PromptSaveMap())
             {
@@ -884,13 +901,31 @@ namespace MobiusEditor
                 isTdMegaMap = nmd.MegaMap;
                 theater = nmd.TheaterName;
             }
+            string imagePath = null;
+            if (withImage)
+            {
+                using (OpenFileDialog ofd = new OpenFileDialog())
+                {
+                    ofd.AutoUpgradeEnabled = false;
+                    ofd.RestoreDirectory = true;
+                    ofd.Filter = "Image Files (*.png, *.bmp, *.gif)|*.png;*.bmp;*.gif|All Files (*.*)|*.*";
+                    if (ofd.ShowDialog() != DialogResult.OK)
+                    {
+                        return;
+                    }
+                    imagePath = ofd.FileName;
+                }
+            }
             string[] modPaths = null;
             if (ModPaths != null)
             {
                 ModPaths.TryGetValue(gameType, out modPaths);
             }
             Unload();
-            multiThreader.ExecuteThreaded(() => NewFile(gameType, theater, isTdMegaMap, modPaths), PostLoad, true, LoadUnloadUi, "Loading new map");
+            String loading = "Loading new map";
+            if (withImage)
+                loading += " from image";
+            multiThreader.ExecuteThreaded(() => NewFile(gameType, imagePath, theater, isTdMegaMap, modPaths), PostLoad, true, LoadUnloadUi, loading);
         }
 
         private void OpenFile(String fileName, bool askSave)
@@ -1172,26 +1207,70 @@ namespace MobiusEditor
         /// <param name="isTdMegaMap"></param>
         /// <param name="modPaths"></param>
         /// <returns></returns>
-        private static (string FileName, FileType FileType, IGamePlugin Plugin, string[] Errors) NewFile(GameType gameType, string theater, bool isTdMegaMap, string[] modPaths)
+        private static MapLoadInfo NewFile(GameType gameType, String imagePath, string theater, bool isTdMegaMap, string[] modPaths)
         {
+            int imageWidth = 0;
+            int imageHeight = 0;
+            Int32[] imageData = null;
+            if (imagePath != null)
+            {
+                try
+                {
+                    using (Bitmap bm = new Bitmap(imagePath))
+                    {
+                        imageWidth = bm.Width;
+                        imageHeight = bm.Height;
+                        imageData = new Int32[imageWidth * imageHeight];
+                        BitmapData sourceData = bm.LockBits(new Rectangle(0, 0, imageWidth, imageHeight), ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+                        Marshal.Copy(sourceData.Scan0, imageData, 0, imageData.Length);
+                        bm.UnlockBits(sourceData);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    List<string> errorMessage = new List<string>();
+                    errorMessage.Add("Error loading image: " + ex.Message);
+#if DEBUG
+                    errorMessage.Add(ex.StackTrace);
+#endif
+                    return new MapLoadInfo(null, FileType.None, null, errorMessage.ToArray());
+                }
+            }
             try
             {
                 IGamePlugin plugin = LoadNewPlugin(gameType, isTdMegaMap, modPaths);
+                // This initialises the theater
                 plugin.New(theater);
                 if (SteamworksUGC.IsInit)
                 {
                     plugin.Map.BasicSection.Author = SteamFriends.GetPersonaName();
                 }
-                return (null, FileType.None, plugin, null);
+                if (imageData != null)
+                {
+                    // TODO add actual dialog here to assign colours to tiles.
+                    Dictionary<int, string> types = new Dictionary<int, string>();
+                    types.Add(Color.Black.ToArgb(), null);
+                    string fillType = "W1:0";
+                    //MessageBox.Show("Filling map templates from image.");
+                    plugin.Map.SetMapTemplatesRaw(imageData, imageWidth, imageHeight, types, fillType);
+                }
+                return new MapLoadInfo(null, FileType.None, plugin, null);
             }
             catch (Exception ex)
             {
                 List<string> errorMessage = new List<string>();
-                errorMessage.Add("Error loading map: " + ex.Message);
+                if (ex is ArgumentException argex)
+                {
+                    errorMessage.Add(GeneralUtils.RecoverArgExceptionMessage(argex, false));
+                }
+                else
+                {
+                    errorMessage.Add(ex.Message);
+                }
 #if DEBUG
                 errorMessage.Add(ex.StackTrace);
 #endif
-                return (null, FileType.None, null, errorMessage.ToArray());
+                return new MapLoadInfo(null, FileType.None, null, errorMessage.ToArray());
             }
         }
 
@@ -1204,22 +1283,29 @@ namespace MobiusEditor
         /// <param name="isTdMegaMap"></param>
         /// <param name="modPaths"></param>
         /// <returns></returns>
-        private static (string, FileType, IGamePlugin, string[]) LoadFile(string loadFilename, FileType fileType, GameType gameType, bool isTdMegaMap, string[] modPaths)
+        private static MapLoadInfo LoadFile(string loadFilename, FileType fileType, GameType gameType, bool isTdMegaMap, string[] modPaths)
         {
             try
             {
                 IGamePlugin plugin = LoadNewPlugin(gameType, isTdMegaMap, modPaths);
                 string[] errors = plugin.Load(loadFilename, fileType).ToArray();
-                return (loadFilename, fileType, plugin, errors);
+                return new MapLoadInfo(loadFilename, fileType, plugin, errors);
             }
             catch (Exception ex)
             {
                 List<string> errorMessage = new List<string>();
-                errorMessage.Add("Error loading map: " + ex.Message);
+                if (ex is ArgumentException argex)
+                {
+                    errorMessage.Add(GeneralUtils.RecoverArgExceptionMessage(argex, false));
+                }
+                else
+                {
+                    errorMessage.Add(ex.Message);
+                }
 #if DEBUG
                 errorMessage.Add(ex.StackTrace);
 #endif
-                return (loadFilename, fileType, null, errorMessage.ToArray());
+                return new MapLoadInfo(loadFilename, fileType, null, errorMessage.ToArray());
             }
         }
 
@@ -1240,7 +1326,7 @@ namespace MobiusEditor
             }
         }
 
-        private void PostLoad((string FileName, FileType FileType, IGamePlugin Plugin, string[] Errors) loadInfo)
+        private void PostLoad(MapLoadInfo loadInfo)
         {
             string[] errors = loadInfo.Errors ?? new string[0];
             // Plugin set to null indicates a fatal processing error where no map was loaded at all.
@@ -1834,7 +1920,7 @@ namespace MobiusEditor
             }
         }
 
-        private void developerGoToINIMenuItem_Click(object sender, EventArgs e)
+        private void DeveloperGoToINIMenuItem_Click(object sender, EventArgs e)
         {
 #if DEVELOPER
             if ((plugin == null) || string.IsNullOrEmpty(filename))
@@ -1858,7 +1944,7 @@ namespace MobiusEditor
 #endif
         }
 
-        private void developerGenerateMapPreviewDirectoryMenuItem_Click(object sender, EventArgs e)
+        private void DeveloperGenerateMapPreviewDirectoryMenuItem_Click(object sender, EventArgs e)
         {
 #if DEVELOPER
             FolderBrowserDialog fbd = new FolderBrowserDialog
@@ -1881,14 +1967,14 @@ namespace MobiusEditor
 #endif
         }
 
-        private void developerDebugShowOverlapCellsMenuItem_CheckedChanged(object sender, EventArgs e)
+        private void DeveloperDebugShowOverlapCellsMenuItem_CheckedChanged(object sender, EventArgs e)
         {
 #if DEVELOPER
             Globals.Developer.ShowOverlapCells = developerDebugShowOverlapCellsMenuItem.Checked;
 #endif
         }
 
-        private void filePublishMenuItem_Click(object sender, EventArgs e)
+        private void FilePublishMenuItem_Click(object sender, EventArgs e)
         {
             if (plugin == null)
             {
@@ -1956,7 +2042,7 @@ namespace MobiusEditor
             }
         }
 
-        private void mainToolStrip_MouseMove(object sender, MouseEventArgs e)
+        private void MainToolStrip_MouseMove(object sender, MouseEventArgs e)
         {
             if (Form.ActiveForm != null)
             {

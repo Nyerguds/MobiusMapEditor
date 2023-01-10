@@ -6,6 +6,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -276,6 +277,35 @@ namespace MobiusEditor.Utility
             int offsetX = maxIsW ? 0 : (maxWidth - width) / 2;
             int offsetY = maxIsW ? (maxHeight - height) / 2 : 0;
             return new Rectangle(offsetX, offsetY, width, height);
+        }
+
+        /// <summary>
+        /// ArgumentException messes with the Message property, and dumps its own extra (localised) bit of
+        /// text with the argument onto the end of the message. This uses serialisation to retrieve the 
+        /// original internal message of the exception without added junk.
+        /// </summary>
+        /// <param name="argex">The ArgumentException to retrieve the message from</param>
+        /// <param name="fallback">True to construct a fallback message if the error message is empty.</param>
+        /// <returns>The actual message given when the ArgumentException was created.</returns>
+        public static String RecoverArgExceptionMessage(ArgumentException argex, Boolean fallback)
+        {
+            if (argex == null)
+                return null;
+            SerializationInfo info = new SerializationInfo(typeof(ArgumentException), new FormatterConverter());
+            argex.GetObjectData(info, new StreamingContext(StreamingContextStates.Clone));
+            String message = info.GetString("Message");
+            if (!String.IsNullOrEmpty(message))
+                return message;
+            if (!fallback)
+                return String.Empty;
+            // Fallback: if no message, provide basic info.
+            if (String.IsNullOrEmpty(argex.ParamName))
+                return String.Empty;
+            if (argex is ArgumentNullException)
+                return String.Format("\"{0}\" is null.", argex.ParamName);
+            if (argex is ArgumentOutOfRangeException)
+                return String.Format("\"{0}\" out of range.", argex.ParamName);
+            return argex.ParamName;
         }
     }
 }

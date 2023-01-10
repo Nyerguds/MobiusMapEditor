@@ -926,8 +926,33 @@ namespace MobiusEditor.Tools
 
         private void SetTemplate(Point location, bool skipInvalidate)
         {
+            // If dragging a multi-tile template, only place a new one if nothing overlaps with prevoously-placed tiles from the same drag operation.
+            if (SelectedIcon == null && Globals.TileDragProtect)
+            {
+                TemplateType selected = SelectedTemplateType;
+                for (int y = 0, icon = 0; y < selected.IconHeight; ++y)
+                {
+                    for (var x = 0; x < selected.IconWidth; ++x, ++icon)
+                    {
+                        if (selected.IconMask != null && !selected.IconMask[y, x])
+                        {
+                            continue;
+                        }
+                        var subLocation = new Point(location.X + x, location.Y + y);
+                        if (map.Metrics.GetCell(subLocation, out int cell))
+                        {
+                            if (redoTemplates.ContainsKey(cell) &&
+                                redoTemplates[cell] != null && redoTemplates[cell].Type.ID == SelectedTemplateType.ID)
+                            {
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
             Dictionary<int, Template> addedRedoTemplates = new Dictionary<int, Template>();
             SetTemplate(map, SelectedTemplateType, location, SelectedIcon, undoTemplates, addedRedoTemplates, random);
+            // Merge with main redoTemplates list.
             addedRedoTemplates.ToList().ForEach(kv => redoTemplates[kv.Key] = kv.Value);
             if (!skipInvalidate)
             {

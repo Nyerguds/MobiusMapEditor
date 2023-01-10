@@ -23,6 +23,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using TGASharpLib;
 
 namespace MobiusEditor.Model
@@ -772,6 +773,80 @@ namespace MobiusEditor.Model
                     }
                 }
                 overlay.Icon = (int)icon;
+            }
+        }
+
+        public void SetMapTemplatesRaw(int[] data, int width, int height, Dictionary<int,string> types, string fillType)
+        {
+            int maxY = Math.Min(this.Metrics.Height, height);
+            int maxX = Math.Min(this.Metrics.Width, width);
+            Dictionary<int, TemplateType> replaceTypes = new Dictionary<int, TemplateType>();
+            Dictionary<int, int> replaceIcons = new Dictionary<int, int>();
+            Regex tileNr = new Regex("^([^:]+):(\\d+)$");
+            void SplitTileInfo(string tileType, out TemplateType tile, out int tileIcon, string context)
+            {
+                tileIcon = 0;
+                tile = null;
+                if (tileType != null)
+                {
+                    Match m = tileNr.Match(tileType);
+                    if (m.Success)
+                    {
+                        tileType = m.Groups[1].Value;
+                        tileIcon = Int32.Parse(m.Groups[2].Value);
+                    }
+                    tile = this.TemplateTypes.Where(t => String.Equals(tileType, t.Name, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+                    if (tile == null)
+                    {
+                        throw new ArgumentException(String.Format("Cannot find tile type '{0}'!", tileType), context);
+                    }
+                    else if (!tile.Theaters.Contains(this.Theater))
+                    {
+                        throw new ArgumentException(String.Format("Tile type '{0}' does not exist in theater {1}.", tileType, Theater.Name), context);
+                    }
+                }
+            }
+            int fillIcon;
+            TemplateType fillTile;
+            SplitTileInfo(fillType, out fillTile, out fillIcon, "fillType");
+            foreach (KeyValuePair<int, string> kvp in types)
+            {
+                string tileType = kvp.Value;
+                int tileIcon = 0;
+                TemplateType tile;
+                SplitTileInfo(tileType, out tile, out tileIcon, "types");
+                replaceTypes[kvp.Key] = tile;
+                if (tile != null && tileIcon > 0 && tileIcon < tile.NumIcons && tileIcon < tile.NumIcons && 
+                    tile.IconMask[tileIcon / tile.IconWidth, tileIcon % tile.IconWidth])
+                {
+                    replaceIcons[kvp.Key] = tileIcon;
+                }
+            }            
+            this.Templates.Clear();
+            int lineOffset = 0;
+            for (int y = 0; y < maxY; ++y)
+            {
+                int offset = lineOffset;
+                for (int x = 0; x < maxX; ++x)
+                {
+                    int col = data[offset];
+                    TemplateType curr;
+                    if (replaceTypes.TryGetValue(col, out curr))
+                    {
+                        // If clear terrain, don't bother doing anything; this started with a map clear.
+                        if (curr != null)
+                        {
+                            int icon = replaceIcons.ContainsKey(col) ? replaceIcons[col] : 0;
+                            this.Templates[y, x] = curr == null ? null : new Template { Type = curr, Icon = icon };
+                        }
+                    }
+                    else if (fillTile != null)
+                    {
+                        this.Templates[y, x] = new Template { Type = fillTile, Icon = fillIcon };
+                    }
+                    offset++;
+                }
+                lineOffset +=width;
             }
         }
 

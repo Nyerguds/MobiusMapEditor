@@ -9,7 +9,8 @@ using System.Drawing.Imaging;
 namespace MobiusEditor.Utility
 {
     /// <summary>
-    /// Blob detection class. Originally written for StackOverflow question https://stackoverflow.com/q/50277978/395685 but not posted there since it's a homework question.
+    /// Blob detection class, written by Maarten Meuris, aka Nyerguds, and released under the WTFPL.
+    /// Originally written for StackOverflow question https://stackoverflow.com/q/50277978/395685 but not posted there since it's a homework question.
     /// Answer link is https://stackoverflow.com/a/50282882/395685
     /// </summary>
     public static class BlobDetection

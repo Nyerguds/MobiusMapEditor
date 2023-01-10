@@ -50,9 +50,9 @@ namespace MobiusEditor.Utility
         /// <summary>
         /// Executes a threaded operation while locking the UI. 
         /// </summary>
-        /// <param name="function">The heavy processing function to run on a different thread.
+        /// <param name="function">The heavy processing function to run on a different thread.</param>
         /// <param name="resultFunction">Optional function to call after <paramref name="function"/> returns a non-null result.</param>
-        /// <paramref name="resultFuncIsInvoked"/>true if the result function is Invoked on the main form.</param>
+        /// <param name="resultFuncIsInvoked">true if <paramref name="resultFunction"/> is Invoked on the main form.</param>
         /// <param name="enableFunction">Function to enable/disable UI controls. This should also include a call to <see cref="CreateBusyLabel"/> to create the busy status label. This function is Invoked on the main form.</param>
         /// <param name="operationType">Label to show while the operation is busy. This will be passed on as arg to <paramref name="enableFunction"/>.</param>
         /// <typeparam name="U">Type returned by <paramref name="function"/>, and passed on to <paramref name="resultFunction"/>.</typeparam>

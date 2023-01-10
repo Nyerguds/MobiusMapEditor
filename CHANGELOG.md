@@ -391,3 +391,5 @@ Unreleased
 * The total map resources value on the resource placement tool will now be calculated correctly.
 * The resource placement tool will now specifically show a value for the total map resources accessible inside the map bounds.
 * Reinstated the restriction on placing overlay on the first and last row on the map, to correctly emulate the fact the games do not place overlay there.
+* Implemented a "new map from image" feature. This is currently hardcoded to fill anything but black with tile "W1", but that might be expanded later.
+* Added option that allows drag-placing a line of tileset pieces without overwriting most of the placed content on each new moved cell.
