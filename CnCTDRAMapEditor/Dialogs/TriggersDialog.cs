@@ -28,15 +28,16 @@ namespace MobiusEditor.Dialogs
         private const int maxLength = 4;
         private readonly IGamePlugin plugin;
         private readonly int maxTriggers;
+        // what even is this shit srsly. Replaced by something more human readable.
         //private string[] persistenceNamesTd = new string[] { "No", "And", "Or" };
         //private string[] persistenceNamesRa = new string[] { "Temporary", "Semi-Constant", "Constant" };
-        private string[] persistenceNames = new string[] { "On first one", "When all sprung", "On each one" };
+        private string[] persistenceNames = new string[] { "On first triggering", "When all linked objects are triggered", "On each triggering" };
         private string[] typeNames = new string[]
         {
-                "E => A1 [+ A2]",
-                "E1 && E2 => A1 [+ A2]",
-                "E1 || E2 => A1 [+ A2]",
-                "E1 => A1; E2 => A2",
+                "Event => Action1 [+ Action2]",
+                "Event1 AND Event2 => Action1 [+ Action2]",
+                "Event1 OR Event2 => Action1 [+ Action2]",
+                "Event1 => Action1; Event2 => Action2",
         };
 
         private TriggerFilter triggerFilter;

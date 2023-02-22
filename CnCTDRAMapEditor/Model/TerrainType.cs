@@ -44,6 +44,7 @@ namespace MobiusEditor.Model
 
         public bool IsArmed => false;
         public bool IsAircraft => false;
+        public bool IsFixedWing => false;
         public bool IsHarvester => false;
 
         public Size GetRenderSize(Size cellSize)

@@ -47,7 +47,8 @@ namespace MobiusEditor.Widgets
             set
             {
                 currentCursor = value;
-                Cursor.Current = IsDragging() ? Cursors.SizeAll : currentCursor;
+                if (mapPanel != null)
+                    mapPanel.Cursor = IsDragging() ? Cursors.SizeAll : currentCursor;
             }
         }
 
@@ -87,6 +88,8 @@ namespace MobiusEditor.Widgets
         public CellMetrics Metrics { get; private set; }
 
         public Point MouseCell { get; private set; }
+        public Point ActualMouseCell { get; private set; }
+        public bool MouseInBounds { get; private set; }
         public Point ClosestMouseCellBorder { get; private set; }
         public Point MouseSubPixel { get; private set; }
 
@@ -134,7 +137,8 @@ namespace MobiusEditor.Widgets
         {
             startScrollMouseLocation = null;
             startScrollFromLocation = null;
-            Cursor.Current = currentCursor;
+            if (mapPanel != null)
+                mapPanel.Cursor = currentCursor;
         }
 
         private bool CheckIfDragging()
@@ -159,7 +163,8 @@ namespace MobiusEditor.Widgets
             {
                 startScrollMouseLocation = (Size)mapPanel.PointToClient(Control.MousePosition);
                 startScrollFromLocation = mapPanel.AutoScrollPosition;
-                Cursor.Current = Cursors.SizeAll;
+                if (mapPanel != null) 
+                    mapPanel.Cursor = Cursors.SizeAll;
                 // Only return true if already dragging, not when initialising.
                 return false;
             }
@@ -198,7 +203,8 @@ namespace MobiusEditor.Widgets
         {
             if (CheckIfDragging() && startScrollMouseLocation.HasValue && startScrollFromLocation.HasValue)
             {
-                Cursor.Current = Cursors.SizeAll;
+                if (mapPanel != null)
+                    mapPanel.Cursor = Cursors.SizeAll;
                 Point delta = location - startScrollMouseLocation.Value;
                 if (!delta.IsEmpty)
                 {
@@ -222,11 +228,16 @@ namespace MobiusEditor.Widgets
             }
             bool mouseCellChanged = MouseCell != newMouseCell;
             bool closestChanged = ClosestMouseCellBorder != newClosestMouseCellBorder;
-            if (mouseCellChanged && Metrics.Contains(newMouseCell))
+            if (mouseCellChanged)
             {
-                var oldCell = MouseCell;
-                MouseCell = newMouseCell;
-                MouseCellChanged?.Invoke(this, new MouseCellChangedEventArgs(oldCell, MouseCell, Control.MouseButtons));
+                bool mouseInBounds = Metrics.Contains(newMouseCell);
+                this.MouseInBounds = mouseInBounds;
+                if (mouseInBounds) {
+                    var oldCell = MouseCell;
+                    MouseCell = newMouseCell;
+                    MouseCellChanged?.Invoke(this, new MouseCellChangedEventArgs(oldCell, MouseCell, Control.MouseButtons));
+                }
+                ActualMouseCell = newMouseCell;
             }
             // This excludes the outer border, but that's okay; it's not allowed for border dragging anyway.
             if (closestChanged && Metrics.Contains(newClosestMouseCellBorder) && newClosestMouseCellBorder.X > 0 && newClosestMouseCellBorder.Y > 0)

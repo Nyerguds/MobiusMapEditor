@@ -264,7 +264,7 @@ namespace MobiusEditor.Model
             var oldImage = Thumbnail;
             var size = new Size(Globals.PreviewTileWidth, Globals.PreviewTileHeight);
             var mask = new bool[IconHeight, IconWidth];
-            int loopWidth = IconWidth;
+            int loopWidth = ThumbnailIconWidth;
             int loopHeight = IconHeight;
             bool isRandom = (Flag & TemplateTypeFlag.RandomCell) != TemplateTypeFlag.None;
             bool isGroup = (Flag & TemplateTypeFlag.Group) == TemplateTypeFlag.Group;
@@ -358,6 +358,55 @@ namespace MobiusEditor.Model
                 try { oldImage.Dispose(); }
                 catch { /* ignore */ }
             }
+        }
+
+        public int GetIconIndex(Point point)
+        {
+            if (!IsValidIcon(point))
+            {
+                return -1;
+            }
+            return point.Y * ThumbnailIconWidth + point.X;
+        }
+
+        public Point? GetIconPoint(int icon)
+        {
+            if (icon < 0 || icon > NumIcons)
+            {
+                return null;
+            }
+            return new Point(icon % ThumbnailIconWidth, icon / ThumbnailIconWidth);
+        }
+
+        public bool IsValidIcon(Point point)
+        {
+            bool isRandom = (Flag & TemplateTypeFlag.RandomCell) != TemplateTypeFlag.None;
+            if (point.X < 0 || point.Y < 0)
+            {
+                return false;
+            }
+            if (point.X >= ThumbnailIconWidth || point.X >= ThumbnailIconWidth)
+            {
+                return false;
+            }
+            return isRandom || IconMask[point.Y, point.X];
+        }
+
+        public Point GetFirstValidIcon()
+        {
+            bool isRandom = (Flag & TemplateTypeFlag.RandomCell) != TemplateTypeFlag.None;
+            for (int y = 0; y < ThumbnailIconHeight; ++y)
+            {
+                for (int x = 0; x < ThumbnailIconWidth; ++x)
+                {
+                    if (isRandom || IconMask[y, x])
+                    {
+                        return new Point(x, y);
+                    }
+                }
+            }
+            // Should never happen.
+            return new Point(0, 0);
         }
     }
 }

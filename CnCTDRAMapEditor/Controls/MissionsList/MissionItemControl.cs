@@ -136,6 +136,7 @@ namespace MobiusEditor.Controls
             }
             if (tooltip != null)
             {
+                tooltip.SetToolTip(cmbMission, mission.Tooltip);
                 tooltip.SetToolTip(cmbValue, null);
                 tooltip.SetToolTip(numValue, null);
                 switch (mission.ArgType)

@@ -36,7 +36,7 @@ namespace MobiusEditor.RedAlert
         public static readonly TeamMission SetGlobal = new TeamMission(12, "Set Global...", TeamMissionArgType.GlobalNumber);
         public static readonly TeamMission Invulnerable = new TeamMission(13, "Invulnerable", TeamMissionArgType.None);
         public static readonly TeamMission Load = new TeamMission(14, "Load onto Transport", TeamMissionArgType.None);
-        public static readonly TeamMission Spy = new TeamMission(15, "Spy on Building...", TeamMissionArgType.Waypoint);
+        public static readonly TeamMission Spy = new TeamMission(15, "Spy at Location...", TeamMissionArgType.Waypoint, "Chronotanks can use this to chronoshift.");
         public static readonly TeamMission Patrol = new TeamMission(16, "Patrol to...", TeamMissionArgType.Waypoint);
 
         private static readonly TeamMission[] Types;

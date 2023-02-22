@@ -514,6 +514,7 @@ namespace MobiusEditor.TiberianDawn
             String iniText = encDOS.GetString(iniBytes);
             Encoding encUtf8 = new UTF8Encoding(false, false);
             String iniTextUtf8 = encUtf8.GetString(iniBytes);
+            // Sole Survivor does not have 2-stage ROAD; ROAD acts as teleporter in Sole.
             if (!forSole)
             {
                 iniText = FixRoad2Load(iniText);
@@ -966,7 +967,7 @@ namespace MobiusEditor.TiberianDawn
                     if (tokens.Length == 3)
                     {
                         // Craters other than cr1 don't work right in the game. Replace them by stage-0 cr1.
-                        bool badCrater = Globals.ConvertCraters && SmudgeTypes.GetBadCraterRegex().IsMatch(tokens[0]);
+                        bool badCrater = Globals.ConvertCraters && SmudgeTypes.BadCraters.IsMatch(tokens[0]);
                         var smudgeType = badCrater ? SmudgeTypes.Crater1 : Map.SmudgeTypes.Where(t => t.Equals(tokens[0]) && !t.IsAutoBib).FirstOrDefault();
                         if (smudgeType != null)
                         {
@@ -1970,6 +1971,7 @@ namespace MobiusEditor.TiberianDawn
                     using (var iniStream = new FileStream(iniPath, FileMode.Create))
                     using (var iniWriter = new BinaryWriter(iniStream))
                     {
+                        // Use '\n' in proprocessing for simplicity. WriteMultiEncoding will use full line breaks.
                         String iniText = forSole ? ini.ToString("\n") : FixRoad2Save(ini, "\n");
                         GeneralUtils.WriteMultiEncoding(iniText.Split('\n'), iniWriter, dos437, utf8, new[] { ("Steam", null), ("Briefing", "Text"), ("Basic", "Name"), ("Basic", "Author") }, linebreak);
                     }

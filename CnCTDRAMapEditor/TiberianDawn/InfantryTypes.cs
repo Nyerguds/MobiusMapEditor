@@ -27,7 +27,7 @@ namespace MobiusEditor.TiberianDawn
         public static readonly InfantryType E4 = new InfantryType(3, "e4", "TEXT_UNIT_TITLE_NOD_FLAMETHROWER", "Badguy", UnitTypeFlag.IsArmed);
         public static readonly InfantryType E5 = new InfantryType(4, "e5", "TEXT_UNIT_TITLE_NOD_CHEM_WARRIOR", "Badguy", UnitTypeFlag.IsArmed);
         public static readonly InfantryType E7 = new InfantryType(5, "e6", "TEXT_UNIT_TITLE_GDI_ENGINEER", "Goodguy");
-        public static readonly InfantryType Commando = new InfantryType(6, "rmbo", "TEXT_UNIT_TITLE_GDI_COMMANDO", "Goodguy");
+        public static readonly InfantryType Commando = new InfantryType(6, "rmbo", "TEXT_UNIT_TITLE_GDI_COMMANDO", "Goodguy", UnitTypeFlag.IsArmed);
         public static readonly InfantryType C1 = new InfantryType(7, "c1", "TEXT_UNIT_TITLE_CIV1", "Neutral", UnitTypeFlag.IsArmed);
         public static readonly InfantryType C2 = new InfantryType(8, "c2", "TEXT_UNIT_TITLE_CIV2", "Neutral");
         public static readonly InfantryType C3 = new InfantryType(9, "c3", "TEXT_UNIT_TITLE_CIV3", "Neutral");

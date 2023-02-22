@@ -133,7 +133,7 @@ namespace MobiusEditor.Controls
             this.missionLabel.Name = "missionLabel";
             this.missionLabel.Size = new System.Drawing.Size(74, 27);
             this.missionLabel.TabIndex = 3;
-            this.missionLabel.Text = "Mission";
+            this.missionLabel.Text = "Orders";
             this.missionLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // label5

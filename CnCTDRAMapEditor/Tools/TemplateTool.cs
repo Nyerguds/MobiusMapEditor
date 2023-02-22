@@ -185,7 +185,7 @@ namespace MobiusEditor.Tools
                 .OrderBy(t => t.Name, expl)
                 .GroupBy(t => templateCategory(t)).OrderBy(g => g.Key, expl);
             var templateTypeImages = templateTypes.SelectMany(g => g).Select(t => t.Thumbnail);
-            var clear = plugin.Map.TemplateTypes.Where(t => (t.Flag & TemplateTypeFlag.Clear) == TemplateTypeFlag.Clear).FirstOrDefault();
+            TemplateType clear = plugin.Map.TemplateTypes.Where(t => (t.Flag & TemplateTypeFlag.Clear) == TemplateTypeFlag.Clear).FirstOrDefault();
             Screen screen = Screen.FromHandle(mapPanel.Handle) ?? Screen.PrimaryScreen;
             int maxSize = Properties.Settings.Default.MaxMapTileTextureSize;
             if (maxSize == 0)
@@ -234,6 +234,7 @@ namespace MobiusEditor.Tools
             this.templateTypeListView.SelectedIndexChanged += TemplateTypeListView_SelectedIndexChanged;
             this.templateTypeMapPanel = templateTypeMapPanel;
             this.templateTypeMapPanel.MouseDown += TemplateTypeMapPanel_MouseDown;
+            this.templateTypeMapPanel.MouseMove += TemplateTypeMapPanel_MouseMove;
             this.templateTypeMapPanel.PostRender += TemplateTypeMapPanel_PostRender;
             this.templateTypeMapPanel.BackColor = Color.Black;
             this.templateTypeMapPanel.MaxZoom = 1;
@@ -253,6 +254,14 @@ namespace MobiusEditor.Tools
                 dragStartBounds = null;
                 UpdateTooltip();
                 mapPanel.Invalidate();
+            }
+        }
+
+        private void TemplateTypeMapPanel_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left)
+            {
+                TemplateTypeMapPanel_MouseDown(sender, e);
             }
         }
 
@@ -438,7 +447,7 @@ namespace MobiusEditor.Tools
             {
                 if (Control.MouseButtons == MouseButtons.Left)
                 {
-                    dragEdge = DetectDragEdge();
+                    dragEdge = DetectDragEdge(false);
                     Point startPoint = navigationWidget.MouseCell;
                     dragStartPoint = map.Bounds.Contains(startPoint) ? (Point?)startPoint : null;
                     dragStartBounds = dragBounds;
@@ -742,7 +751,7 @@ namespace MobiusEditor.Tools
             var cursor = Cursors.Default;
             if (boundsMode)
             {
-                switch (dragEdge != FacingType.None ? dragEdge : DetectDragEdge())
+                switch (dragEdge != FacingType.None ? dragEdge : DetectDragEdge(dragStartPoint.HasValue))
                 {
                     case FacingType.North:
                     case FacingType.South:
@@ -768,7 +777,7 @@ namespace MobiusEditor.Tools
                         break;
                 }
                 // NavigationWidget manages all mouse cursor changes, so tools don't conflict with each other.
-                if (navigationWidget.CurrentCursor != cursor)
+                if (navigationWidget.CurrentCursor != cursor && navigationWidget.MouseInBounds)
                 {
                     navigationWidget.CurrentCursor = cursor;
                     UpdateTooltip();
@@ -1200,7 +1209,7 @@ namespace MobiusEditor.Tools
 
         private void UpdateTooltip()
         {
-            FacingType showEdge = dragEdge != FacingType.None ? dragEdge : DetectDragEdge();
+            FacingType showEdge = dragEdge != FacingType.None ? dragEdge : DetectDragEdge(dragStartPoint.HasValue);
             if (boundsMode && (showEdge != FacingType.None || (dragStartPoint.HasValue && dragStartBounds.HasValue)))
             {
                 var tooltip = string.Format("X = {0}\nY = {1}\nWidth = {2}\nHeight = {3}", dragBounds.Left, dragBounds.Top, dragBounds.Width, dragBounds.Height);
@@ -1352,7 +1361,7 @@ namespace MobiusEditor.Tools
             return picked;
         }
 
-        private FacingType DetectDragEdge()
+        private FacingType DetectDragEdge(Boolean isDragging)
         {
             var mouseCell = navigationWidget.ClosestMouseCellBorder;
             var realMouseCell = navigationWidget.MouseCell;
@@ -1372,6 +1381,8 @@ namespace MobiusEditor.Tools
                               && (realMouseCell.X < dragBounds.X + dragBounds.Width || realMouseCell.X == dragBounds.X + dragBounds.Width && navigationWidget.MouseSubPixel.X <= nearEnough);
             bool inBoundsY = (realMouseCell.Y >= dragBounds.Y || realMouseCell.Y == dragBounds.Y - 1 && navigationWidget.MouseSubPixel.Y >= nearEnoughTopLeft)
                               && (realMouseCell.Y < dragBounds.Y + dragBounds.Height || realMouseCell.Y == dragBounds.Y + dragBounds.Height && navigationWidget.MouseSubPixel.Y <= nearEnough);
+            if (!isDragging && (!inBoundsX || !inBoundsY))
+                return FacingType.None;
             bool topEdge = mouseCell.Y == dragBounds.Top && mousePixelDistanceY <= nearEnough && inBoundsX;
             bool bottomEdge = mouseCell.Y == dragBounds.Bottom && mousePixelDistanceY <= nearEnough && inBoundsX;
             bool leftEdge = mouseCell.X == dragBounds.Left && mousePixelDistanceX <= nearEnough && inBoundsY;
@@ -1675,6 +1686,7 @@ namespace MobiusEditor.Tools
                     this.templateTypeListView.SelectedIndexChanged -= TemplateTypeListView_SelectedIndexChanged;
                     this.templateTypeNavigationWidget?.Dispose();
                     this.templateTypeMapPanel.MouseDown -= TemplateTypeMapPanel_MouseDown;
+                    this.templateTypeMapPanel.MouseMove -= TemplateTypeMapPanel_MouseMove;
                     this.templateTypeMapPanel.PostRender -= TemplateTypeMapPanel_PostRender;
                     foreach (Image img in this.templateTypeListView.LargeImageList.Images)
                     {

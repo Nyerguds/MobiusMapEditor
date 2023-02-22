@@ -66,12 +66,14 @@ namespace MobiusEditor.Model
         public int ID { get; private set; }
         public string Mission { get; private set; }
         public TeamMissionArgType ArgType { get; private set; }
+        public string Tooltip { get; private set; }
         public (int Value, string Label)[] DropdownOptions { get; private set; }
 
-        public TeamMission(int id, String mission, TeamMissionArgType argType, params (int, string)[] dropdownOptions)
+        public TeamMission(int id, string mission, TeamMissionArgType argType, string tooltip, params (int, string)[] dropdownOptions)
         {
             this.ID = id;
             this.Mission = mission;
+            this.Tooltip = String.IsNullOrEmpty(tooltip) ? null : tooltip;
             this.ArgType = argType;
             if (dropdownOptions == null)
             {
@@ -83,6 +85,11 @@ namespace MobiusEditor.Model
             }
         }
 
+        public TeamMission(int id, string mission, TeamMissionArgType argType, params (int, string)[] dropdownOptions)
+            : this(id, mission, argType, null, dropdownOptions)
+        {
+        }
+
         public Boolean Equals(TeamMission other)
         {
             return Mission == other.Mission;
@@ -90,7 +97,7 @@ namespace MobiusEditor.Model
 
         public TeamMission Clone()
         {
-            return new TeamMission(this.ID, this.Mission, this.ArgType, this.DropdownOptions.Select(ddo => (ddo.Value, ddo.Label)).ToArray());
+            return new TeamMission(this.ID, this.Mission, this.ArgType, this.Tooltip, this.DropdownOptions.Select(ddo => (ddo.Value, ddo.Label)).ToArray());
         }
 
         object ICloneable.Clone()

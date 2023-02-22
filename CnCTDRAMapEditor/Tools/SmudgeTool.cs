@@ -106,7 +106,7 @@ namespace MobiusEditor.Tools
 
         private void MapPanel_MouseDoubleClick(object sender, MouseEventArgs e)
         {
-            if (Control.ModifierKeys != Keys.None)
+            if (Control.ModifierKeys != Keys.None || e.Button != MouseButtons.Left)
             {
                 return;
             }

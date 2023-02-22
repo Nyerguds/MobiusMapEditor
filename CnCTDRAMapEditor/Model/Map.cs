@@ -87,6 +87,8 @@ namespace MobiusEditor.Model
 
     public class Map : ICloneable
     {
+        private static Regex tileInfoSplitRegex = new Regex("^([^:]+):(\\d+)$", RegexOptions.Compiled);
+
         private int updateCount = 0;
         private bool updating = false;
         private IDictionary<MapLayerFlag, ISet<Point>> invalidateLayers = new Dictionary<MapLayerFlag, ISet<Point>>();
@@ -776,60 +778,60 @@ namespace MobiusEditor.Model
             }
         }
 
-        public void SetMapTemplatesRaw(int[] data, int width, int height, Dictionary<int,string> types, string fillType)
+        public void SetMapTemplatesRaw(byte[] data, int width, int height, Dictionary<int,string> types, string fillType)
         {
             int maxY = Math.Min(this.Metrics.Height, height);
             int maxX = Math.Min(this.Metrics.Width, width);
             Dictionary<int, TemplateType> replaceTypes = new Dictionary<int, TemplateType>();
             Dictionary<int, int> replaceIcons = new Dictionary<int, int>();
-            Regex tileNr = new Regex("^([^:]+):(\\d+)$");
-            void SplitTileInfo(string tileType, out TemplateType tile, out int tileIcon, string context)
-            {
-                tileIcon = 0;
-                tile = null;
-                if (tileType != null)
-                {
-                    Match m = tileNr.Match(tileType);
-                    if (m.Success)
-                    {
-                        tileType = m.Groups[1].Value;
-                        tileIcon = Int32.Parse(m.Groups[2].Value);
-                    }
-                    tile = this.TemplateTypes.Where(t => String.Equals(tileType, t.Name, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
-                    if (tile == null)
-                    {
-                        throw new ArgumentException(String.Format("Cannot find tile type '{0}'!", tileType), context);
-                    }
-                    else if (!tile.Theaters.Contains(this.Theater))
-                    {
-                        throw new ArgumentException(String.Format("Tile type '{0}' does not exist in theater {1}.", tileType, Theater.Name), context);
-                    }
-                }
-            }
             int fillIcon;
             TemplateType fillTile;
-            SplitTileInfo(fillType, out fillTile, out fillIcon, "fillType");
+            SplitTileInfo(fillType, out fillTile, out fillIcon, "fillType", false);
+            if (fillTile != null)
+            {
+                Point? fillPoint = fillTile.GetIconPoint(fillIcon);
+                if (!fillPoint.HasValue || !fillTile.IsValidIcon(fillPoint.Value))
+                {
+                    fillIcon = fillTile.GetIconIndex(fillTile.GetFirstValidIcon());
+                }
+            }
             foreach (KeyValuePair<int, string> kvp in types)
             {
                 string tileType = kvp.Value;
-                int tileIcon = 0;
+                int tileIcon;
                 TemplateType tile;
-                SplitTileInfo(tileType, out tile, out tileIcon, "types");
+                SplitTileInfo(tileType, out tile, out tileIcon, "types", false);
                 replaceTypes[kvp.Key] = tile;
-                if (tile != null && tileIcon > 0 && tileIcon < tile.NumIcons && tileIcon < tile.NumIcons && 
-                    tile.IconMask[tileIcon / tile.IconWidth, tileIcon % tile.IconWidth])
+                if (tile != null)
                 {
+                    if ((tile.Flag & TemplateTypeFlag.Group) == TemplateTypeFlag.Group)
+                    {
+                        tile = tileIcon >= tile.GroupTiles.Length ?
+                            null : this.TemplateTypes.Where(t => t.Name == tile.GroupTiles[tileIcon]).FirstOrDefault();
+                        replaceTypes[kvp.Key] = tile;
+                        tileIcon = 0;
+                    }
+                    else
+                    {
+                        Point? tilePoint = tile.GetIconPoint(tileIcon);
+                        if (!tilePoint.HasValue || !tile.IsValidIcon(tilePoint.Value))
+                        {
+                            tileIcon = fillTile.GetIconIndex(fillTile.GetFirstValidIcon());
+                        }
+                    }
                     replaceIcons[kvp.Key] = tileIcon;
                 }
-            }            
+            }
             this.Templates.Clear();
             int lineOffset = 0;
+            int stride = width * 4;
             for (int y = 0; y < maxY; ++y)
             {
                 int offset = lineOffset;
                 for (int x = 0; x < maxX; ++x)
                 {
-                    int col = data[offset];
+                    // ARGB = [BB GG RR AA]
+                    int col = 0xFF << 24 | data[offset + 2] << 16 | data[offset + 1] << 8 | data[offset];
                     TemplateType curr;
                     if (replaceTypes.TryGetValue(col, out curr))
                     {
@@ -844,9 +846,44 @@ namespace MobiusEditor.Model
                     {
                         this.Templates[y, x] = new Template { Type = fillTile, Icon = fillIcon };
                     }
-                    offset++;
+                    offset+=4;
                 }
-                lineOffset +=width;
+                lineOffset += stride;
+            }
+        }
+
+        public void SplitTileInfo(string tileType, out TemplateType tile, out int tileIcon, string context, bool safe)
+        {
+            tileIcon = 0;
+            tile = null;
+            if (tileType == null)
+            {
+                return;
+            }
+            Match m = tileInfoSplitRegex.Match(tileType);
+            if (m.Success)
+            {
+                tileType = m.Groups[1].Value;
+                tileIcon = Int32.Parse(m.Groups[2].Value);
+            }
+            tile = this.TemplateTypes.Where(t => String.Equals(tileType, t.Name, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+            if (tile == null)
+            {
+                if (!safe)
+                {
+                    throw new ArgumentException(String.Format("Cannot find tile type '{0}'!", tileType), context);
+                }
+            }
+            else if (!tile.Theaters.Contains(this.Theater))
+            {
+                if (!safe)
+                {
+                    throw new ArgumentException(String.Format("Tile type '{0}' does not exist in theater {1}.", tileType, Theater.Name), context);
+                }
+                else
+                {
+                    tile = null;
+                }
             }
         }
 
@@ -1135,14 +1172,16 @@ namespace MobiusEditor.Model
             {
                 return DefaultMissionHarvest;
             }
-            if (techno.IsAircraft)
+            if (techno.IsAircraft && !techno.IsFixedWing)
             {
+                // Ground-landable aircraft. Default order should be 'Unload' to make it land on the spot it spawned on.
                 return DefaultMissionAircraft;
             }
             if (!techno.IsArmed)
             {
                 return DefaultMissionUnarmed;
             }
+            // Automatically switch from other default missions to the general 'Guard' one, but don't change custom-picked mission like 'Hunt4.
             if (currentMission == DefaultMissionHarvest || currentMission == DefaultMissionAircraft || currentMission == DefaultMissionUnarmed)
             {
                 return DefaultMissionArmed;

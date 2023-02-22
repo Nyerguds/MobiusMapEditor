@@ -17,15 +17,11 @@ namespace MobiusEditor.Interface
     public interface ITechnoType
     {
         sbyte ID { get; }
-
         string Name { get; }
-
         string DisplayName { get; }
-
         bool IsArmed { get; }
-        
         bool IsAircraft { get; }
-
+        bool IsFixedWing { get; }
         bool IsHarvester { get; }
     }
 }

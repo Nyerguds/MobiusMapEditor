@@ -46,7 +46,7 @@ namespace MobiusEditor.TiberianDawn
         public static readonly SmudgeType Bib3 = new SmudgeType(17, "bib3", new Size(2, 2), SmudgeTypeFlag.Bib3);
 
         private static SmudgeType[] Types;
-        private static Regex BadCraters;
+        public static Regex BadCraters { get; private set; }
 
         static SmudgeTypes()
         {
@@ -55,11 +55,6 @@ namespace MobiusEditor.TiberianDawn
                 (from field in typeof(SmudgeTypes).GetFields(BindingFlags.Static | BindingFlags.Public)
                  where field.IsInitOnly && typeof(SmudgeType).IsAssignableFrom(field.FieldType)
                  select field.GetValue(null) as SmudgeType).ToArray();
-        }
-
-        public static Regex GetBadCraterRegex()
-        {
-            return BadCraters;
         }
 
         public static IEnumerable<SmudgeType> GetTypes(bool singleCrater)

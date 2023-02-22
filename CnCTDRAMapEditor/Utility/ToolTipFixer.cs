@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Windows.Forms;
 
 namespace MobiusEditor.Utility
@@ -95,6 +96,40 @@ namespace MobiusEditor.Utility
             }
             attachedControls.Clear();
             this.tooltip = null;
+        }
+
+        /// <summary>
+        /// Call this on a listbox's MouseMove event.
+        /// </summary>
+        /// <param name="lbSender"></param>
+        /// <param name="formMousePosition"></param>
+        /// <param name="tooltip"></param>
+        /// <param name="itemDescriptions"></param>
+        /// <param name="defaultVal"></param>
+        public static void ToolTipForListBox(ListBox lbSender, Point formMousePosition, ToolTip tooltip, Dictionary<string, string> itemDescriptions, string defaultVal)
+        {
+            if (lbSender == null || tooltip == null || itemDescriptions == null)
+                return;
+            //Point formMousePosition = lbSender.FindForm().MousePosition;
+            Point listBoxClientAreaPosition = lbSender.PointToClient(formMousePosition);
+            int hoveredIndex = lbSender.IndexFromPoint(listBoxClientAreaPosition);
+            string hoveredItem = hoveredIndex == -1 ? null : lbSender.Items[hoveredIndex] as String;
+            if (hoveredItem == null)
+            {
+                tooltip.Active = false;
+                tooltip.Tag = null;
+                tooltip.SetToolTip(lbSender, null);
+            }
+            else
+            {
+                if (tooltip.Tag as String == hoveredItem)
+                    return;
+                string toolTipText = itemDescriptions.TryGetValue(hoveredItem, out toolTipText) ? toolTipText : defaultVal;
+                tooltip.Active = false;
+                tooltip.SetToolTip(lbSender, toolTipText);
+                tooltip.Active = true;
+                tooltip.Tag = hoveredItem;
+            }
         }
     }
 }

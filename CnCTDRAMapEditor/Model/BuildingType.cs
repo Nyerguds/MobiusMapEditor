@@ -87,6 +87,7 @@ namespace MobiusEditor.Model
         public bool IsArmed => false; // Not actually true, but irrelevant for practical purposes; their Mission is not set in the ini file.
         public bool IsHarvester => false;
         public bool IsAircraft => false;
+        public bool IsFixedWing => false;
 
         public bool IsFake => (Flag & BuildingTypeFlag.Fake) == BuildingTypeFlag.Fake;
         public bool HasTurret => (Flag & BuildingTypeFlag.Turret) == BuildingTypeFlag.Turret;

@@ -102,14 +102,17 @@ namespace MobiusEditor.Utility
         /// <summary>
         /// Allows writing an ini file where certain lines are differently encoded.
         /// </summary>
-        /// <param name="iniText">ini text, as lines.</param>
-        /// <param name="iniWriter">writer to save to.</param>
+        /// <param name="iniText">The ini text, as string array.</param>
+        /// <param name="writer">BinaryWriter to save to.</param>
         /// <param name="normalEncoding">Default encoding to use.</param>
         /// <param name="altEncoding">Alternate encoding to use.</param>
-        /// <param name="toAltEncode">Pairs of (section, key) indicating which lines to use the alternate encoding for. Set "key" to null to write the entire section with the alternate encoding.</param>
-        /// <param name="lineEnd">Bytes to use as line ends.</param>
-        public static void WriteMultiEncoding(string[] iniText, BinaryWriter iniWriter, Encoding normalEncoding, Encoding altEncoding,
-            (string, string)[] toAltEncode, Byte[] lineEnd)
+        /// <param name="toAltEncode">
+        /// Pairs of (section, key) indicating which lines to use the alternate encoding for.
+        /// Set "key" to null to write the entire section with the alternate encoding.
+        /// </param>
+        /// <param name="lineEnd">Bytes to use as line ends when writing the data to the writer.</param>
+        public static void WriteMultiEncoding(string[] iniText, BinaryWriter writer, Encoding normalEncoding,
+            Encoding altEncoding, (string, string)[] toAltEncode, Byte[] lineEnd)
         {
             Dictionary<string, bool> inSection = new Dictionary<string, bool>();
             foreach ((string section, string key) in toAltEncode)
@@ -123,6 +126,7 @@ namespace MobiusEditor.Utility
                 {
                     toTreat[section] = key == null ? null : new List<Regex>();
                 }
+                // Any null item in the mapping will clear this and cause it to treat the whole section as alt encoded.
                 if (toTreat[section] != null)
                 {
                     if (key == null)
@@ -160,16 +164,15 @@ namespace MobiusEditor.Utility
                 }
                 if (foundAlt)
                 {
-                    // Allow utf-8 name too, I guess. Not a fan, but necessary for the Remaster.
                     buffer = altEncoding.GetBytes(currLine);
-                    iniWriter.Write(buffer, 0, buffer.Length);
-                    iniWriter.Write(lineEnd, 0, lineEnd.Length);
+                    writer.Write(buffer, 0, buffer.Length);
+                    writer.Write(lineEnd, 0, lineEnd.Length);
                 }
                 else
                 {
                     buffer = normalEncoding.GetBytes(currLine);
-                    iniWriter.Write(buffer, 0, buffer.Length);
-                    iniWriter.Write(lineEnd, 0, lineEnd.Length);
+                    writer.Write(buffer, 0, buffer.Length);
+                    writer.Write(lineEnd, 0, lineEnd.Length);
                 }
             }
         }

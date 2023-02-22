@@ -39,6 +39,9 @@ namespace MobiusEditor
 {
     public partial class MainForm : Form, IFeedBackHandler, IHasStatusLabel
     {
+
+        public delegate Object FunctionInvoker();
+
         public Dictionary<GameType, string[]> ModPaths { get; set; }
 
         private Dictionary<int, Bitmap> theaterIcons = new Dictionary<int, Bitmap>();
@@ -925,7 +928,7 @@ namespace MobiusEditor
             String loading = "Loading new map";
             if (withImage)
                 loading += " from image";
-            multiThreader.ExecuteThreaded(() => NewFile(gameType, imagePath, theater, isTdMegaMap, modPaths), PostLoad, true, LoadUnloadUi, loading);
+            multiThreader.ExecuteThreaded(() => NewFile(gameType, imagePath, theater, isTdMegaMap, modPaths, this), PostLoad, true, LoadUnloadUi, loading);
         }
 
         private void OpenFile(String fileName, bool askSave)
@@ -1111,6 +1114,7 @@ namespace MobiusEditor
         private void LoadUnloadUi(bool enableUI, string label)
         {
             fileNewMenuItem.Enabled = enableUI;
+            fileNewFromImageMenuItem.Enabled = enableUI;
             fileOpenMenuItem.Enabled = enableUI;
             fileRecentFilesMenuItem.Enabled = enableUI;
             viewMapToolStripMenuItem.Enabled = enableUI;
@@ -1130,6 +1134,7 @@ namespace MobiusEditor
         private void EnableDisableUi(bool enableUI, string label, ToolType storedToolType)
         {
             fileNewMenuItem.Enabled = enableUI;
+            fileNewFromImageMenuItem.Enabled = enableUI;
             fileOpenMenuItem.Enabled = enableUI;
             fileRecentFilesMenuItem.Enabled = enableUI;
             viewMapToolStripMenuItem.Enabled = enableUI;
@@ -1207,11 +1212,11 @@ namespace MobiusEditor
         /// <param name="isTdMegaMap"></param>
         /// <param name="modPaths"></param>
         /// <returns></returns>
-        private static MapLoadInfo NewFile(GameType gameType, String imagePath, string theater, bool isTdMegaMap, string[] modPaths)
+        private static MapLoadInfo NewFile(GameType gameType, String imagePath, string theater, bool isTdMegaMap, string[] modPaths, MainForm showTarget)
         {
             int imageWidth = 0;
             int imageHeight = 0;
-            Int32[] imageData = null;
+            Byte[] imageData = null;
             if (imagePath != null)
             {
                 try
@@ -1220,10 +1225,7 @@ namespace MobiusEditor
                     {
                         imageWidth = bm.Width;
                         imageHeight = bm.Height;
-                        imageData = new Int32[imageWidth * imageHeight];
-                        BitmapData sourceData = bm.LockBits(new Rectangle(0, 0, imageWidth, imageHeight), ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
-                        Marshal.Copy(sourceData.Scan0, imageData, 0, imageData.Length);
-                        bm.UnlockBits(sourceData);
+                        imageData = ImageUtils.GetImageData(bm, PixelFormat.Format32bppArgb);
                     }
                 }
                 catch (Exception ex)
@@ -1247,12 +1249,13 @@ namespace MobiusEditor
                 }
                 if (imageData != null)
                 {
-                    // TODO add actual dialog here to assign colours to tiles.
-                    Dictionary<int, string> types = new Dictionary<int, string>();
-                    types.Add(Color.Black.ToArgb(), null);
-                    string fillType = "W1:0";
-                    //MessageBox.Show("Filling map templates from image.");
-                    plugin.Map.SetMapTemplatesRaw(imageData, imageWidth, imageHeight, types, fillType);
+                    Dictionary<int, string> types = (Dictionary<int, string>) showTarget
+                        .Invoke((FunctionInvoker)(() => ShowNewFromImageDialog(plugin, imageWidth, imageHeight, imageData, showTarget)));
+                    if (types == null)
+                    {
+                        return null;
+                    }
+                    plugin.Map.SetMapTemplatesRaw(imageData, imageWidth, imageHeight, types, null);
                 }
                 return new MapLoadInfo(null, FileType.None, plugin, null);
             }
@@ -1271,6 +1274,22 @@ namespace MobiusEditor
                 errorMessage.Add(ex.StackTrace);
 #endif
                 return new MapLoadInfo(null, FileType.None, null, errorMessage.ToArray());
+            }
+        }
+
+        private static Dictionary<int, string> ShowNewFromImageDialog(IGamePlugin plugin, int imageWidth, int imageHeight, byte[] imageData, MainForm showTarget)
+        {
+            Color[] mostCommon = ImageUtils.FindMostCommonColors(2, imageData, imageWidth, imageHeight, imageWidth * 4);
+            Dictionary<int, string> mappings = new Dictionary<int, string>();
+            if (mostCommon.Length > 0)
+                mappings.Add(mostCommon[0].ToArgb(), "CLEAR1");
+            if (mostCommon.Length > 1)
+                mappings.Add(mostCommon[1].ToArgb(), plugin.Map.Theater.Name == RedAlert.TheaterTypes.Interior.Name ? "GFLR0001:0" : "W1:0");
+            using (NewFromImageDialog nfi = new NewFromImageDialog(plugin, imageWidth, imageHeight, imageData, mappings))
+            {
+                if (nfi.ShowDialog(showTarget) == DialogResult.Cancel)
+                    return null;
+                return nfi.Mappings;
             }
         }
 
@@ -1328,6 +1347,12 @@ namespace MobiusEditor
 
         private void PostLoad(MapLoadInfo loadInfo)
         {
+            if (loadInfo == null)
+            {
+                // Absolute abort
+                multiThreader.RemoveBusyLabel(this);
+                return;
+            }
             string[] errors = loadInfo.Errors ?? new string[0];
             // Plugin set to null indicates a fatal processing error where no map was loaded at all.
             if (loadInfo.Plugin == null)
@@ -1449,7 +1474,7 @@ namespace MobiusEditor
                 TheaterType th = plugin.Map.Theater;
                 availableToolTypes |= ToolType.Waypoint;
                 if (plugin.Map.TemplateTypes.Any(t => t.Theaters == null || t.Theaters.Contains(th))) availableToolTypes |= ToolType.Map;
-                if (plugin.Map.SmudgeTypes.Any()) availableToolTypes |= ToolType.Smudge;
+                if (plugin.Map.SmudgeTypes.Any(t => !Globals.FilterTheaterObjects || t.Theaters == null || t.Theaters.Contains(th))) availableToolTypes |= ToolType.Smudge;
                 if (plugin.Map.OverlayTypes.Any(t => t.IsPlaceable && (!Globals.FilterTheaterObjects || t.Theaters == null || t.Theaters.Contains(th)))) availableToolTypes |= ToolType.Overlay;
                 if (plugin.Map.TerrainTypes.Any(t => !Globals.FilterTheaterObjects || t.Theaters == null || t.Theaters.Contains(th))) availableToolTypes |= ToolType.Terrain;
                 if (plugin.Map.InfantryTypes.Any()) availableToolTypes |= ToolType.Infantry;
