@@ -394,8 +394,9 @@ Unreleased
 * Implemented a "new map from image" feature. This is currently hardcoded to fill anything but black with tile "W1", but that might be expanded later.
 * Drag-placing a line of tileset pieces will now tile them without overwriting most of the placed content on each new moved cell.
 * Red Alert Interior Theater no longer allows placing down Smudge types.
-* Doubleclicking on map objects with mouse buttons other than the left one will no longer open the object properties.
+* Double-clicking on map objects with mouse buttons other than the left one will no longer open the object properties.
 * Fixed bug treating the Commando as unarmed unit, defaulting its orders to "Stop" instead of "Guard". (Not that this has any effect in-game.)
 * Fixed map-related panels (such as the main map and the preview showing the template to place) affecting the mouse cursor on a global scale rather than only inside their own panel.
 * Fixed cursor changing when in bounds-editing mode but the cursor is outside the valid map area.
 * On the Map tool, selection of the specific sub-cell now responds correctly when holding down the mouse and dragging to different cells.
+* Added "New from image" function in the "File" menu.
