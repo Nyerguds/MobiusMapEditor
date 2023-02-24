@@ -30,7 +30,7 @@ using TGASharpLib;
 
 namespace MobiusEditor.TiberianDawn
 {
-    public class GamePlugin : IGamePlugin
+    public class GamePluginTD : IGamePlugin
     {
         protected bool isMegaMap = false;
 
@@ -293,12 +293,12 @@ namespace MobiusEditor.TiberianDawn
             return INITools.CheckForIniInfo(iniContents, "Map", "Version", "1");
         }
 
-        static GamePlugin()
+        static GamePluginTD()
         {
             fullTechnoTypes = InfantryTypes.GetTypes().Cast<ITechnoType>().Concat(UnitTypes.GetTypes(false).Cast<ITechnoType>());
         }
 
-        protected GamePlugin()
+        protected GamePluginTD()
         {
             // Readonly, so I'm splitting this off
             var movies = new List<string>();
@@ -332,12 +332,12 @@ namespace MobiusEditor.TiberianDawn
             movieTypes = movies.ToArray();
         }
 
-        public GamePlugin(bool megaMap)
+        public GamePluginTD(bool megaMap)
             : this(true, megaMap)
         {
         }
 
-        public GamePlugin(bool mapImage, bool megaMap)
+        public GamePluginTD(bool mapImage, bool megaMap)
             :this()
         {
             this.isMegaMap = megaMap;
@@ -2622,7 +2622,7 @@ namespace MobiusEditor.TiberianDawn
             return Validate(false);
         }
 
-        protected String Validate(bool forSS)
+        protected String Validate(bool forSole)
         {
             StringBuilder sb = new StringBuilder("Error(s) during map validation:");
             bool ok = true;
@@ -2632,43 +2632,49 @@ namespace MobiusEditor.TiberianDawn
             int numTerrain = Map.Technos.OfType<Terrain>().Count();
             int numUnits = Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsGroundUnit).Count();
             int numWaypoints = Map.Waypoints.Count(w => (w.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart && w.Cell.HasValue);
-            if (numAircraft > Constants.MaxAircraft)
+            int maxAir = forSole && !Globals.ExpandSoleLimits ? Constants.MaxAircraftClassic : Constants.MaxAircraft;
+            int maxBld = forSole && !Globals.ExpandSoleLimits ? Constants.MaxBuildingsClassic : Constants.MaxBuildings;
+            int maxInf = forSole && !Globals.ExpandSoleLimits ? Constants.MaxInfantryClassic : Constants.MaxInfantry;
+            int maxTer = forSole && !Globals.ExpandSoleLimits ? Constants.MaxTerrainClassic : Constants.MaxTerrain;
+            int maxUni = forSole && !Globals.ExpandSoleLimits ? Constants.MaxUnitsClassic : Constants.MaxUnits;
+            
+            if (!Globals.DisableAirUnits && numAircraft > maxAir && (!forSole || !Globals.NoOwnedObjectsInSole))
             {
-                sb.AppendLine().Append(string.Format("Maximum number of aircraft exceeded ({0} > {1})", numAircraft, Constants.MaxAircraft));
+                sb.AppendLine().Append(string.Format("Maximum number of aircraft exceeded ({0} > {1})", numAircraft, maxAir));
                 ok = false;
             }
-            if (numBuildings > Constants.MaxBuildings)
+            if (numBuildings > maxBld && (!forSole || !Globals.NoOwnedObjectsInSole))
             {
-                sb.AppendLine().Append(string.Format("Maximum number of structures exceeded ({0} > {1})", numBuildings, Constants.MaxBuildings));
+                sb.AppendLine().Append(string.Format("Maximum number of structures exceeded ({0} > {1})", numBuildings, maxBld));
                 ok = false;
             }
-            if (numInfantry > Constants.MaxInfantry)
+            if (numInfantry > maxInf && (!forSole || !Globals.NoOwnedObjectsInSole))
             {
-                sb.AppendLine().Append(string.Format("Maximum number of infantry exceeded ({0} > {1})", numInfantry, Constants.MaxInfantry));
+                sb.AppendLine().Append(string.Format("Maximum number of infantry exceeded ({0} > {1})", numInfantry, maxInf));
                 ok = false;
             }
-            if (numTerrain > Constants.MaxTerrain)
+            if (numTerrain > maxTer)
             {
-                sb.AppendLine().Append(string.Format("Maximum number of terrain objects exceeded ({0} > {1})", numTerrain, Constants.MaxTerrain));
+                sb.AppendLine().Append(string.Format("Maximum number of terrain objects exceeded ({0} > {1})", numTerrain, maxTer));
                 ok = false;
             }
-            if (numUnits > Constants.MaxUnits)
+            if (numUnits > maxUni && (!forSole || !Globals.NoOwnedObjectsInSole))
             {
-                sb.AppendLine().Append(string.Format("Maximum number of units exceeded ({0} > {1})", numUnits, Constants.MaxUnits));
+                sb.AppendLine().Append(string.Format("Maximum number of units exceeded ({0} > {1})", numUnits, maxUni));
                 ok = false;
             }
-            if (Map.TeamTypes.Count > Constants.MaxTeams)
+            if (!forSole)
             {
-                sb.AppendLine().Append(string.Format("Maximum number of team types exceeded ({0} > {1})", Map.TeamTypes.Count, Constants.MaxTeams));
-                ok = false;
-            }
-            if (Map.Triggers.Count > Constants.MaxTriggers)
-            {
-                sb.AppendLine().Append(string.Format("Maximum number of triggers exceeded ({0} > {1})", Map.Triggers.Count, Constants.MaxTriggers));
-                ok = false;
-            }
-            if (!forSS)
-            {
+                if (Map.TeamTypes.Count > Constants.MaxTeams)
+                {
+                    sb.AppendLine().Append(string.Format("Maximum number of team types exceeded ({0} > {1})", Map.TeamTypes.Count, Constants.MaxTeams));
+                    ok = false;
+                }
+                if (Map.Triggers.Count > Constants.MaxTriggers)
+                {
+                    sb.AppendLine().Append(string.Format("Maximum number of triggers exceeded ({0} > {1})", Map.Triggers.Count, Constants.MaxTriggers));
+                    ok = false;
+                }
                 if (!Map.BasicSection.SoloMission && (numWaypoints < 2))
                 {
                     sb.AppendLine().Append("Skirmish/Multiplayer maps need at least 2 waypoints for player starting locations.");
@@ -2680,9 +2686,6 @@ namespace MobiusEditor.TiberianDawn
                     sb.AppendLine().Append("Single-player maps need the Home waypoint to be placed.");
                     ok = false;
                 }
-            }
-            if (!forSS)
-            {
                 bool fatal;
                 IEnumerable<string> triggerErr = CheckTriggers(this.Map.Triggers, true, true, true, out fatal, false, out _);
                 if (fatal)
@@ -2697,7 +2700,7 @@ namespace MobiusEditor.TiberianDawn
             return ok ? null : sb.ToString();
         }
 
-        public IEnumerable<string> AssessMapItems()
+        public virtual IEnumerable<string> AssessMapItems()
         {
             ExplorerComparer cmp = new ExplorerComparer();
             List<string> info = new List<string>();

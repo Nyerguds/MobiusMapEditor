@@ -294,7 +294,7 @@ namespace MobiusEditor.Dialogs
                     {
                         using (Graphics gOverlaysImage = Graphics.FromImage(overlaysImage))
                         {
-                            ViewTool.PostRenderMap(gOverlaysImage, gamePlugin.GameType, gamePlugin.Map, scale, layers, MapLayerFlag.None);
+                            ViewTool.PostRenderMap(gOverlaysImage, gamePlugin.GameType, gamePlugin.Map, scale, layers, MapLayerFlag.None, false);
                         }
                         Rectangle fullRect = new Rectangle(new Point(0, 0), size);
                         Rectangle boundsRect = inBounds ? new Rectangle(new Point(gamePlugin.Map.Bounds.X * tileWidth, gamePlugin.Map.Bounds.Y * tileHeight), size) : fullRect;

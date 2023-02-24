@@ -45,6 +45,11 @@ namespace MobiusEditor.Tools
 
         private bool placementMode;
 
+        protected override Boolean InPlacementMode
+        {
+            get { return placementMode || selectedUnitLocation.HasValue; }
+        }
+
         private readonly Unit mockUnit;
 
         private Unit selectedUnit;
@@ -150,6 +155,7 @@ namespace MobiusEditor.Tools
                 if (map.Technos[cell] is Unit unit)
                 {
                     selectedUnit = null;
+                    selectedUnitLocation = null;
                     Unit preEdit = unit.Clone();
                     selectedObjectProperties?.Close();
                     selectedObjectProperties = new ObjectPropertiesPopup(objectProperties.Plugin, unit);
@@ -286,6 +292,7 @@ namespace MobiusEditor.Tools
                 AddMoveUndoTracking(selectedUnit, selectedUnitLocation.Value);
                 selectedUnit = null;
                 selectedUnitLocation = null;
+                mapPanel.Invalidate();
                 UpdateStatus();
             }
         }
@@ -467,10 +474,11 @@ namespace MobiusEditor.Tools
             if (map.Metrics.GetCell(location, out int cell))
             {
                 Unit selected = map.Technos[cell] as Unit;
-                Point selectedLocation = selected != null ? map.Technos[selected].Value : Point.Empty;
+                Point? selectedLocation = selected != null ? map.Technos[selected] : null;
                 selectedUnit = selected;
                 selectedUnitLocation = selectedLocation;
             }
+            mapPanel.Invalidate();
             UpdateStatus();
         }
 

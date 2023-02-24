@@ -127,8 +127,10 @@ namespace MobiusEditor
             this.filename = fileToOpen;
 
             InitializeComponent();
-            // Just to be sure this is synced.
-            Globals.TileDragProtect = settingsSafeTileDraggingToolStripMenuItem.Checked;
+            // Loaded from global settings.
+            toolsOptionsSafeDraggingMenuItem.Checked = Globals.TileDragProtect;
+            toolsOptionsPlacementGridMenuItem.Checked = Globals.ShowPlacementGrid;
+            viewMapGridMenuItem.Checked = Globals.ShowMapGrid;
             // Obey the settings.
             this.mapPanel.SmoothScale = Globals.MapSmoothScale;
             this.mapPanel.BackColor = Globals.MapBackColor;
@@ -340,12 +342,12 @@ namespace MobiusEditor
 
         private void FileNewMenuItem_Click(object sender, EventArgs e)
         {
-            NewFile(false);
+            NewFile(false, null, false);
         }
 
         private void FileNewFromImageMenuItem_Click(object sender, EventArgs e)
         {
-            NewFile(true);
+            NewFile(true, null, false);
         }
 
         private void FileOpenMenuItem_Click(object sender, EventArgs e)
@@ -536,7 +538,7 @@ namespace MobiusEditor
             PropertyTracker<BasicSection> basicSettings = new PropertyTracker<BasicSection>(plugin.Map.BasicSection);
             PropertyTracker<BriefingSection> briefingSettings = new PropertyTracker<BriefingSection>(plugin.Map.BriefingSection);
             PropertyTracker<SoleSurvivor.CratesSection> cratesSettings = null;
-            if (plugin.GameType == GameType.SoleSurvivor && plugin is SoleSurvivor.GamePlugin ssPlugin)
+            if (plugin.GameType == GameType.SoleSurvivor && plugin is SoleSurvivor.GamePluginSS ssPlugin)
             {
                 cratesSettings = new PropertyTracker<SoleSurvivor.CratesSection>(ssPlugin.CratesSection);
             }
@@ -784,11 +786,19 @@ namespace MobiusEditor
             }
         }
 
-        private void SettingsSafeTileDraggingToolStripMenuItem_Click(Object sender, EventArgs e)
+        private void ToolsOptionsSafeDraggingMenuItem_CheckedChanged(Object sender, EventArgs e)
         {
             if (sender is ToolStripMenuItem tsmi)
             {
                 Globals.TileDragProtect = tsmi.Checked;
+            }
+        }
+
+        private void ToolsOptionsPlacementGridMenuItem_CheckedChanged(Object sender, EventArgs e)
+        {
+            if (sender is ToolStripMenuItem tsmi)
+            {
+                Globals.ShowPlacementGrid = tsmi.Checked;
             }
         }
 
@@ -885,16 +895,16 @@ namespace MobiusEditor
 
 #region Additional logic for listeners
 
-        private void NewFile(bool withImage)
+        private void NewFile(bool withImage, string imagePath, bool skipPrompt)
         {
-            if (!PromptSaveMap())
+            if (!skipPrompt && !PromptSaveMap())
             {
                 return;
             }
             GameType gameType = GameType.None;
             string theater = null;
             bool isTdMegaMap = false;
-            using (NewMapDialog nmd = new NewMapDialog())
+            using (NewMapDialog nmd = new NewMapDialog(withImage))
             {
                 if (nmd.ShowDialog() != DialogResult.OK)
                 {
@@ -904,8 +914,7 @@ namespace MobiusEditor
                 isTdMegaMap = nmd.MegaMap;
                 theater = nmd.TheaterName;
             }
-            string imagePath = null;
-            if (withImage)
+            if (withImage && imagePath == null)
             {
                 using (OpenFileDialog ofd = new OpenFileDialog())
                 {
@@ -941,6 +950,27 @@ namespace MobiusEditor
             String name = fileInfo.FullName;
             if (!IdentifyMap(name, out FileType fileType, out GameType gameType, out bool isTdMegaMap))
             {
+                string extension = Path.GetExtension(name).TrimStart('.');
+                if ("PNG".Equals(extension, StringComparison.OrdinalIgnoreCase)
+                    || "BMP".Equals(extension, StringComparison.OrdinalIgnoreCase)
+                    || "GIF".Equals(extension, StringComparison.OrdinalIgnoreCase)
+                    || "TIF".Equals(extension, StringComparison.OrdinalIgnoreCase)
+                    || "TIFF".Equals(extension, StringComparison.OrdinalIgnoreCase))
+                {
+                    try
+                    {
+                        using (Bitmap bm = new Bitmap(name))
+                        {
+                            // Don't need to do anything except open this to confirm it's supported
+                        }
+                        NewFile(true, name, true);
+                        return;
+                    }
+                    catch
+                    {
+                        // Ignore and just fall through.
+                    }
+                }
                 MessageBox.Show(string.Format("Error loading {0}: {1}", fileInfo.Name, "Could not identify map type."), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
@@ -1064,7 +1094,7 @@ namespace MobiusEditor
             {
                 case FileType.INI:
                     {
-                        gameType = RedAlert.GamePlugin.CheckForRAMap(iniContents) ? GameType.RedAlert : GameType.TiberianDawn;
+                        gameType = RedAlert.GamePluginRA.CheckForRAMap(iniContents) ? GameType.RedAlert : GameType.TiberianDawn;
                         break;
                     }
                 case FileType.BIN:
@@ -1097,8 +1127,8 @@ namespace MobiusEditor
             }
             if (gameType == GameType.TiberianDawn)
             {
-                isTdMegaMap = TiberianDawn.GamePlugin.CheckForMegamap(iniContents);
-                if (SoleSurvivor.GamePlugin.CheckForSSmap(iniContents))
+                isTdMegaMap = TiberianDawn.GamePluginTD.CheckForMegamap(iniContents);
+                if (SoleSurvivor.GamePluginSS.CheckForSSmap(iniContents))
                 {
                     gameType = GameType.SoleSurvivor;
                 }
@@ -1117,7 +1147,7 @@ namespace MobiusEditor
             fileNewFromImageMenuItem.Enabled = enableUI;
             fileOpenMenuItem.Enabled = enableUI;
             fileRecentFilesMenuItem.Enabled = enableUI;
-            viewMapToolStripMenuItem.Enabled = enableUI;
+            viewLayersToolStripMenuItem.Enabled = enableUI;
             viewIndicatorsToolStripMenuItem.Enabled = enableUI;
             if (!enableUI)
             {
@@ -1137,7 +1167,7 @@ namespace MobiusEditor
             fileNewFromImageMenuItem.Enabled = enableUI;
             fileOpenMenuItem.Enabled = enableUI;
             fileRecentFilesMenuItem.Enabled = enableUI;
-            viewMapToolStripMenuItem.Enabled = enableUI;
+            viewLayersToolStripMenuItem.Enabled = enableUI;
             viewIndicatorsToolStripMenuItem.Enabled = enableUI;
             EnableDisableMenuItems(enableUI);
             mapPanel.Enabled = enableUI;
@@ -1175,20 +1205,20 @@ namespace MobiusEditor
                 AddTeamColorNone(Globals.TheTeamColorManager);
                 // TODO split classic and remaster team color load.
                 Globals.TheTeamColorManager.Load(@"DATA\XML\CNCTDTEAMCOLORS.XML");
-                plugin = new TiberianDawn.GamePlugin(!noImage, isTdMegaMap);
+                plugin = new TiberianDawn.GamePluginTD(!noImage, isTdMegaMap);
             }
             else if (gameType == GameType.RedAlert)
             {
                 Globals.TheTeamColorManager.Reset();
                 Globals.TheTeamColorManager.Load(@"DATA\XML\CNCRATEAMCOLORS.XML");
-                plugin = new RedAlert.GamePlugin(!noImage);
+                plugin = new RedAlert.GamePluginRA(!noImage);
             }
             else if (gameType == GameType.SoleSurvivor)
             {
                 Globals.TheTeamColorManager.Reset();
                 AddTeamColorNone(Globals.TheTeamColorManager);
                 Globals.TheTeamColorManager.Load(@"DATA\XML\CNCTDTEAMCOLORS.XML");
-                plugin = new SoleSurvivor.GamePlugin(!noImage, isTdMegaMap);
+                plugin = new SoleSurvivor.GamePluginSS(!noImage, isTdMegaMap);
             }
             return plugin;
         }
@@ -1281,10 +1311,11 @@ namespace MobiusEditor
         {
             Color[] mostCommon = ImageUtils.FindMostCommonColors(2, imageData, imageWidth, imageHeight, imageWidth * 4);
             Dictionary<int, string> mappings = new Dictionary<int, string>();
+            // This is ignored in the mappings, but eh. Everything unmapped defaults to clear since that's what the map is initialised with.
             if (mostCommon.Length > 0)
                 mappings.Add(mostCommon[0].ToArgb(), "CLEAR1");
             if (mostCommon.Length > 1)
-                mappings.Add(mostCommon[1].ToArgb(), plugin.Map.Theater.Name == RedAlert.TheaterTypes.Interior.Name ? "GFLR0001:0" : "W1:0");
+                mappings.Add(mostCommon[1].ToArgb(), plugin.Map.Theater.Name == RedAlert.TheaterTypes.Interior.Name ? "FLOR0001:0" : "W1:0");
             using (NewFromImageDialog nfi = new NewFromImageDialog(plugin, imageWidth, imageHeight, imageData, mappings))
             {
                 if (nfi.ShowDialog(showTarget) == DialogResult.Cancel)
@@ -1519,11 +1550,11 @@ namespace MobiusEditor
             developerDebugToolStripMenuItem.Enabled = enable && hasPlugin;
             developerGenerateMapPreviewDirectoryMenuItem.Enabled = enable && hasPlugin;
 #endif
-            viewMapToolStripMenuItem.Enabled = enable;
+            viewLayersToolStripMenuItem.Enabled = enable;
             viewIndicatorsToolStripMenuItem.Enabled = enable;
 
             // Special rules per game.
-            viewMapBuildingsMenuItem.Visible = !hasPlugin || plugin.GameType != GameType.SoleSurvivor;
+            viewLayersBuildingsMenuItem.Visible = !hasPlugin || plugin.GameType != GameType.SoleSurvivor;
             viewIndicatorsBuildingFakeLabelsMenuItem.Visible = !hasPlugin || plugin.GameType == GameType.RedAlert;
             viewIndicatorsBuildingRebuildLabelsMenuItem.Visible = !hasPlugin || plugin.GameType != GameType.SoleSurvivor;
             viewIndicatorsFootballAreaMenuItem.Visible = !hasPlugin || plugin.GameType == GameType.SoleSurvivor;
@@ -1739,39 +1770,43 @@ namespace MobiusEditor
         private void UpdateVisibleLayers()
         {
             MapLayerFlag layers = MapLayerFlag.All;
-            if (!viewBoundariesBoundariesMenuItem.Checked)
+            if (!viewMapBoundariesMenuItem.Checked)
             {
                 layers &= ~MapLayerFlag.Boundaries;
             }
-            if (!viewBoundariesMapSymmetryMenuItem.Checked)
+            if (!viewMapSymmetryMenuItem.Checked)
             {
                 layers &= ~MapLayerFlag.MapSymmetry;
             }
-            if (!viewMapBuildingsMenuItem.Checked)
+            if (!viewMapGridMenuItem.Checked)
+            {
+                layers &= ~MapLayerFlag.MapGrid;
+            }
+            if (!viewLayersBuildingsMenuItem.Checked)
             {
                 layers &= ~MapLayerFlag.Buildings;
             }
-            if (!viewMapUnitsMenuItem.Checked)
+            if (!viewLayersUnitsMenuItem.Checked)
             {
                 layers &= ~MapLayerFlag.Units;
             }
-            if (!viewMapInfantryMenuItem.Checked)
+            if (!viewLayersInfantryMenuItem.Checked)
             {
                 layers &= ~MapLayerFlag.Infantry;
             }
-            if (!viewMapTerrainMenuItem.Checked)
+            if (!viewLayersTerrainMenuItem.Checked)
             {
                 layers &= ~MapLayerFlag.Terrain;
             }
-            if (!viewMapOverlayMenuItem.Checked)
+            if (!viewLayersOverlayMenuItem.Checked)
             {
                 layers &= ~MapLayerFlag.OverlayAll;
             }
-            if (!viewMapSmudgeMenuItem.Checked)
+            if (!viewLayersSmudgeMenuItem.Checked)
             {
                 layers &= ~MapLayerFlag.Smudge;
             }
-            if (!viewMapWaypointsMenuItem.Checked)
+            if (!viewLayersWaypointsMenuItem.Checked)
             {
                 layers &= ~MapLayerFlag.Waypoints;
             }
@@ -1843,13 +1878,13 @@ namespace MobiusEditor
             {
                 // Suppress updates.
                 this.activeTool = null;
-                viewMapBuildingsMenuItem.Checked = true;
-                viewMapUnitsMenuItem.Checked = true;
-                viewMapInfantryMenuItem.Checked = true;
-                viewMapTerrainMenuItem.Checked = true;
-                viewMapOverlayMenuItem.Checked = true;
-                viewMapSmudgeMenuItem.Checked = true;
-                viewMapWaypointsMenuItem.Checked = true;
+                viewLayersBuildingsMenuItem.Checked = true;
+                viewLayersUnitsMenuItem.Checked = true;
+                viewLayersInfantryMenuItem.Checked = true;
+                viewLayersTerrainMenuItem.Checked = true;
+                viewLayersOverlayMenuItem.Checked = true;
+                viewLayersSmudgeMenuItem.Checked = true;
+                viewLayersWaypointsMenuItem.Checked = true;
             }
             finally
             {
@@ -1871,13 +1906,13 @@ namespace MobiusEditor
             {
                 // Suppress updates.
                 this.activeTool = null;
-                viewMapBuildingsMenuItem.Checked = false;
-                viewMapUnitsMenuItem.Checked = false;
-                viewMapInfantryMenuItem.Checked = false;
-                viewMapTerrainMenuItem.Checked = false;
-                viewMapOverlayMenuItem.Checked = false;
-                viewMapSmudgeMenuItem.Checked = false;
-                viewMapWaypointsMenuItem.Checked = false;
+                viewLayersBuildingsMenuItem.Checked = false;
+                viewLayersUnitsMenuItem.Checked = false;
+                viewLayersInfantryMenuItem.Checked = false;
+                viewLayersTerrainMenuItem.Checked = false;
+                viewLayersOverlayMenuItem.Checked = false;
+                viewLayersSmudgeMenuItem.Checked = false;
+                viewLayersWaypointsMenuItem.Checked = false;
             }
             finally
             {
@@ -1899,7 +1934,7 @@ namespace MobiusEditor
             {
                 // Suppress updates.
                 this.activeTool = null;
-                viewBoundariesBoundariesMenuItem.Checked = true;
+                viewMapBoundariesMenuItem.Checked = true;
                 viewIndicatorsWaypointsMenuItem.Checked = true;
                 viewIndicatorsCellTriggersMenuItem.Checked = true;
                 viewIndicatorsObjectTriggersMenuItem.Checked = true;
@@ -2173,29 +2208,37 @@ namespace MobiusEditor
         private void LoadIcons(IGamePlugin plugin)
         {
             TemplateType template = plugin.Map.TemplateTypes.Where(tt => (tt.Flag & TemplateTypeFlag.Clear) != TemplateTypeFlag.Clear && tt.IconWidth == 1 && tt.IconHeight == 1
-                                        && (tt.Theaters == null || tt.Theaters.Contains(plugin.Map.Theater))).OrderBy(tt => tt.Name).FirstOrDefault();
+                && (tt.Theaters == null || tt.Theaters.Contains(plugin.Map.Theater)))
+                .OrderBy(tt => tt.Name).FirstOrDefault();
             Tile templateTile = null;
-            if (template != null) Globals.TheTilesetManager.GetTileData(plugin.Map.Theater.Tilesets, template.Name, 0, out templateTile, false, true);
-            SmudgeType smudge = plugin.Map.SmudgeTypes.Where(sm => !sm.IsAutoBib && sm.Icons == 1 && sm.Size.Width == 1 && sm.Size.Height == 1
-                                        && (sm.Theaters == null || sm.Theaters.Contains(plugin.Map.Theater))).OrderBy(sm => sm.ID).FirstOrDefault();
-            OverlayType overlay = plugin.Map.OverlayTypes.Where(ov => (ov.Flag & OverlayTypeFlag.Crate) == OverlayTypeFlag.Crate
-                                        && (ov.Theaters == null || ov.Theaters.Contains(plugin.Map.Theater))).OrderBy(ov => ov.ID).FirstOrDefault();
+            if (template != null)
+            {
+                Globals.TheTilesetManager.GetTileData(plugin.Map.Theater.Tilesets, template.Name, template.GetIconIndex(template.GetFirstValidIcon()), out templateTile, false, true);
+            }
+            // For the following, check if the thumbnail was initialised.
+            SmudgeType smudge = plugin.Map.SmudgeTypes.Where(sm => !sm.IsAutoBib && sm.Icons == 1 && sm.Size.Width == 1 && sm.Size.Height == 1 && sm.Thumbnail != null
+                && (!Globals.FilterTheaterObjects || sm.Theaters == null || sm.Theaters.Contains(plugin.Map.Theater)))
+                .OrderBy(sm => sm.ID).FirstOrDefault();
+            OverlayType overlay = plugin.Map.OverlayTypes.Where(ov => (ov.Flag & OverlayTypeFlag.Crate) == OverlayTypeFlag.Crate && ov.Thumbnail != null
+                && (!Globals.FilterTheaterObjects || ov.Theaters == null || ov.Theaters.Contains(plugin.Map.Theater)))
+                .OrderBy(ov => ov.ID).FirstOrDefault();
             if (overlay == null)
             {
-                overlay = plugin.Map.OverlayTypes.Where(ov => (ov.Flag & OverlayTypeFlag.Flag) == OverlayTypeFlag.Flag
-                                            && (ov.Theaters == null || ov.Theaters.Contains(plugin.Map.Theater))).OrderBy(ov => ov.ID).FirstOrDefault();
+                overlay = plugin.Map.OverlayTypes.Where(ov => (ov.Flag & OverlayTypeFlag.Flag) == OverlayTypeFlag.Flag && ov.Thumbnail != null
+                    && (!Globals.FilterTheaterObjects || ov.Theaters == null || ov.Theaters.Contains(plugin.Map.Theater)))
+                    .OrderBy(ov => ov.ID).FirstOrDefault();
             }
-            Tile overlayTile = null;
-            if (overlay != null) Globals.TheTilesetManager.GetTileData(plugin.Map.Theater.Tilesets, overlay.Name, 0, out overlayTile, false, true);
-            TerrainType terrain = plugin.Map.TerrainTypes.Where(tr => tr.Theaters == null || tr.Theaters.Contains(plugin.Map.Theater)).OrderBy(tr => tr.ID).FirstOrDefault(); ;
+            TerrainType terrain = plugin.Map.TerrainTypes.Where(tr => tr.Thumbnail != null &&
+                (!Globals.FilterTheaterObjects || tr.Theaters == null || tr.Theaters.Contains(plugin.Map.Theater)))
+                .OrderBy(tr => tr.ID).FirstOrDefault();
             InfantryType infantry = plugin.Map.InfantryTypes.FirstOrDefault();
             UnitType unit = plugin.Map.UnitTypes.FirstOrDefault();
             BuildingType building = plugin.Map.BuildingTypes.Where(bl => bl.Size.Width == 2 && bl.Size.Height == 2
-                                        && (bl.Theaters == null || bl.Theaters.Contains(plugin.Map.Theater))).OrderBy(bl => bl.ID).FirstOrDefault();
+                                        && (!Globals.FilterTheaterObjects || bl.Theaters == null || bl.Theaters.Contains(plugin.Map.Theater))).OrderBy(bl => bl.ID).FirstOrDefault();
             OverlayType resource = plugin.Map.OverlayTypes.Where(ov => (ov.Flag & OverlayTypeFlag.TiberiumOrGold) == OverlayTypeFlag.TiberiumOrGold
-                                        && (ov.Theaters == null || ov.Theaters.Contains(plugin.Map.Theater))).OrderBy(ov => ov.ID).FirstOrDefault();
+                                        && (!Globals.FilterTheaterObjects || ov.Theaters == null || ov.Theaters.Contains(plugin.Map.Theater))).OrderBy(ov => ov.ID).FirstOrDefault();
             OverlayType wall = plugin.Map.OverlayTypes.Where(ov => (ov.Flag & OverlayTypeFlag.Wall) == OverlayTypeFlag.Wall
-                                        && (ov.Theaters == null || ov.Theaters.Contains(plugin.Map.Theater))).OrderBy(ov => ov.ID).FirstOrDefault();
+                                        && (!Globals.FilterTheaterObjects || ov.Theaters == null || ov.Theaters.Contains(plugin.Map.Theater))).OrderBy(ov => ov.ID).FirstOrDefault();
             bool gotBeacon = Globals.TheTilesetManager.GetTileData(plugin.Map.Theater.Tilesets, "beacon", 0, out Tile waypoint, false, true);
             if (!gotBeacon)
             {
@@ -2205,7 +2248,8 @@ namespace MobiusEditor
             Globals.TheTilesetManager.GetTileData(plugin.Map.Theater.Tilesets, "mine", 3, out Tile cellTrigger, false, true);
             LoadNewIcon(mapToolStripButton, templateTile?.Image, plugin, 0);
             LoadNewIcon(smudgeToolStripButton, smudge?.Thumbnail, plugin, 1);
-            LoadNewIcon(overlayToolStripButton, overlayTile?.Image, plugin, 2);
+            //LoadNewIcon(overlayToolStripButton, overlayTile?.Image, plugin, 2);
+            LoadNewIcon(overlayToolStripButton, overlay?.Thumbnail, plugin, 2);
             LoadNewIcon(terrainToolStripButton, terrain?.Thumbnail, plugin, 3);
             LoadNewIcon(infantryToolStripButton, infantry?.Thumbnail, plugin, 4);
             LoadNewIcon(unitToolStripButton, unit?.Thumbnail, plugin, 5);
@@ -2229,6 +2273,11 @@ namespace MobiusEditor
 
         private void LoadNewIcon(ViewToolStripButton button, Bitmap image, IGamePlugin plugin, int index, bool crop)
         {
+            if (button.Tag == null && button.Image != null)
+            {
+                // Backup default image
+                button.Tag = button.Image;
+            }
             if (image == null || plugin == null)
             {
                 if (button.Tag is Image img)
@@ -2238,11 +2287,6 @@ namespace MobiusEditor
                 return;
             }
             int id = ((int)plugin.GameType) << 8 | Enumerable.Range(0, plugin.Map.TheaterTypes.Count).FirstOrDefault(i => plugin.Map.TheaterTypes[i].Equals(plugin.Map.Theater)) << 4 | index;
-            if (button.Tag == null)
-            {
-                // Backup default image
-                button.Tag = button.Image;
-            }
             if (theaterIcons.TryGetValue(id, out Bitmap bm))
             {
                 button.Image = bm;
@@ -2250,6 +2294,14 @@ namespace MobiusEditor
             else
             {
                 Rectangle opaqueBounds = crop ? TextureManager.CalculateOpaqueBounds(image) : new Rectangle(0, 0, image.Width, image.Height);
+                if (opaqueBounds.IsEmpty)
+                {
+                    if (button.Tag is Image tagImg)
+                    {
+                        button.Image = tagImg;
+                    }
+                    return;
+                }
                 Bitmap img = image.FitToBoundingBox(opaqueBounds, 24, 24, Color.Transparent);
                 theaterIcons[id] = img;
                 button.Image = img;

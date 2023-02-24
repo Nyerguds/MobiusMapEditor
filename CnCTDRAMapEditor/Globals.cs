@@ -23,12 +23,13 @@ namespace MobiusEditor
     {
         static Globals()
         {
+            double minScale = 1.0 / Math.Min(OriginalTileWidth, OriginalTileHeight);
             MapBackColor = Color.FromArgb(255, Properties.Settings.Default.MapBackColor);
-            MapTileScale = Math.Min(1, Math.Max(0.05f, Math.Abs(Properties.Settings.Default.MapScale)));
+            MapTileScale = Math.Min(1, Math.Max(minScale, Math.Abs(Properties.Settings.Default.MapScale)));
             MapSmoothScale = Properties.Settings.Default.MapScale < 0;
-            PreviewTileScale = Math.Min(1, Math.Max(0.05f, Math.Abs(Properties.Settings.Default.PreviewScale)));
+            PreviewTileScale = Math.Min(1, Math.Max(minScale, Math.Abs(Properties.Settings.Default.PreviewScale)));
             PreviewSmoothScale = Properties.Settings.Default.PreviewScale < 0;
-            ExportTileScale = Math.Min(1, Math.Abs(Properties.Settings.Default.DefaultExportScale));
+            ExportTileScale = Math.Min(1, Math.Max(minScale, Math.Abs(Properties.Settings.Default.DefaultExportScale)));
             ExportSmoothScale = Properties.Settings.Default.DefaultExportScale < 0;
             UndoRedoStackSize = Properties.Settings.Default.UndoRedoStackSize;
             DisableAirUnits = Properties.Settings.Default.DisableAirUnits;
@@ -40,8 +41,12 @@ namespace MobiusEditor
             MinimumClampSize = Properties.Settings.Default.MinimumClampSize;
             WriteClassicBriefing = Properties.Settings.Default.WriteClassicBriefing;
             NoOwnedObjectsInSole = Properties.Settings.Default.NoOwnedObjectsInSole;
-            AdjustSSTeleports = Properties.Settings.Default.DrawSoleTeleports;
-            TileDragProtect = true;
+            AdjustSoleTeleports = Properties.Settings.Default.DrawSoleTeleports;
+            ExpandSoleLimits = !Properties.Settings.Default.RestrictSoleLimits;
+            MapGridColor = Properties.Settings.Default.MapGridColor;
+            ShowMapGrid = Properties.Settings.Default.DefaultShowMapGrid;
+            TileDragProtect = Properties.Settings.Default.DefaultTileDragProtect;
+            ShowPlacementGrid = Properties.Settings.Default.DefaultShowPlacementGrid;
         }
 
         public const string TilesetsXMLPath = @"DATA\XML\TILESETS.XML";
@@ -80,10 +85,15 @@ namespace MobiusEditor
         public static bool BoundsObstructFill { get; private set; }
         public static bool FilterTheaterObjects { get; private set; }
         public static bool NoOwnedObjectsInSole { get; private set; }
+        public static bool ExpandSoleLimits { get; private set; }
         public static bool WriteClassicBriefing { get; private set; }
-        public static bool AdjustSSTeleports { get; private set; }
+        public static bool AdjustSoleTeleports { get; private set; }
+
+        public static bool ShowMapGrid { get; set; }
+        public static Color MapGridColor { get; private set; }
 
         public static bool TileDragProtect { get; set; }
+        public static bool ShowPlacementGrid { get; set; }
 
 
         public static readonly Size MapPreviewSize = new Size(512, 512);

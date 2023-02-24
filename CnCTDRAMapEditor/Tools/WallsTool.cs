@@ -46,6 +46,11 @@ namespace MobiusEditor.Tools
 
         private bool placementMode;
 
+        protected override Boolean InPlacementMode
+        {
+            get { return placementMode; }
+        }
+
         private OverlayType selectedWallType;
         private OverlayType SelectedWallType
         {

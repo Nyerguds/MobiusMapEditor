@@ -49,6 +49,11 @@ namespace MobiusEditor.Tools
         protected override Map RenderMap => previewMap;
         private bool placementMode;
 
+        protected override Boolean InPlacementMode
+        {
+            get { return placementMode; }
+        }
+
         public string TriggerToolTip { get; set; }
 
         public CellTriggersTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, ComboBox triggerCombo, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> url)

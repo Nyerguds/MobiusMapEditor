@@ -66,11 +66,11 @@ namespace MobiusEditor.Tools.Dialogs
             this.tableLayoutPanel1.Controls.Add(this.tableLayoutPanel2, 1, 0);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
-            this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(4);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 1;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(565, 582);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(580, 484);
             this.tableLayoutPanel1.TabIndex = 0;
             //
             // tableLayoutPanel2
@@ -80,13 +80,13 @@ namespace MobiusEditor.Tools.Dialogs
             this.tableLayoutPanel2.Controls.Add(this.objectTypeMapPanel, 0, 0);
             this.tableLayoutPanel2.Controls.Add(this.objectProperties, 0, 1);
             this.tableLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel2.Location = new System.Drawing.Point(0, 0);
-            this.tableLayoutPanel2.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.tableLayoutPanel2.Location = new System.Drawing.Point(294, 4);
+            this.tableLayoutPanel2.Margin = new System.Windows.Forms.Padding(4);
             this.tableLayoutPanel2.Name = "tableLayoutPanel2";
             this.tableLayoutPanel2.RowCount = 2;
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel2.Size = new System.Drawing.Size(365, 582);
+            this.tableLayoutPanel2.Size = new System.Drawing.Size(282, 476);
             this.tableLayoutPanel2.TabIndex = 0;
             // 
             // objectTypeMapPanel
@@ -94,17 +94,17 @@ namespace MobiusEditor.Tools.Dialogs
             this.objectTypeMapPanel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.objectTypeMapPanel.Location = new System.Drawing.Point(4, 35);
+            this.objectTypeMapPanel.Location = new System.Drawing.Point(4, 4);
             this.objectTypeMapPanel.MapImage = null;
-            this.objectTypeMapPanel.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
-            this.objectTypeMapPanel.MaxZoom = 8;
-            this.objectTypeMapPanel.MinZoom = 1;
+            this.objectTypeMapPanel.Margin = new System.Windows.Forms.Padding(4);
+            this.objectTypeMapPanel.MaxZoom = 8D;
+            this.objectTypeMapPanel.MinZoom = 1D;
             this.objectTypeMapPanel.Name = "objectTypeMapPanel";
             this.objectTypeMapPanel.SmoothScale = false;
-            this.objectTypeMapPanel.Size = new System.Drawing.Size(357, 272);
+            this.objectTypeMapPanel.Size = new System.Drawing.Size(274, 272);
             this.objectTypeMapPanel.TabIndex = 3;
-            this.objectTypeMapPanel.Zoom = 1;
-            this.objectTypeMapPanel.ZoomStep = 1;
+            this.objectTypeMapPanel.Zoom = 1D;
+            this.objectTypeMapPanel.ZoomStep = 1D;
             //
             // objectTypeListBox
             //
@@ -113,31 +113,31 @@ namespace MobiusEditor.Tools.Dialogs
             this.objectTypeListBox.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawVariable;
             this.objectTypeListBox.FormattingEnabled = true;
             this.objectTypeListBox.Location = new System.Drawing.Point(4, 4);
-            this.objectTypeListBox.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.objectTypeListBox.Margin = new System.Windows.Forms.Padding(4);
             this.objectTypeListBox.MissingThumbnail = ((System.Drawing.Image)(resources.GetObject("objectTypeListBox.MissingThumbnail")));
             this.objectTypeListBox.Name = "objectTypeListBox";
-            this.objectTypeListBox.Size = new System.Drawing.Size(200, 582);
+            this.objectTypeListBox.Size = new System.Drawing.Size(282, 476);
             this.objectTypeListBox.TabIndex = 2;
             this.objectTypeListBox.ValueMember = "Type";
             // 
             // objectProperties
             // 
             this.objectProperties.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.objectProperties.Location = new System.Drawing.Point(5, 316);
-            this.objectProperties.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
+            this.objectProperties.Location = new System.Drawing.Point(5, 285);
+            this.objectProperties.Margin = new System.Windows.Forms.Padding(5);
             this.objectProperties.MinimumSize = new System.Drawing.Size(230, 213);
             this.objectProperties.Name = "objectProperties";
             this.objectProperties.Object = null;
-            this.objectProperties.Size = new System.Drawing.Size(355, 261);
+            this.objectProperties.Size = new System.Drawing.Size(272, 261);
             this.objectProperties.TabIndex = 4;
             // 
             // ObjectToolDialog
             // 
-            this.ClientSize = new System.Drawing.Size(580, 400);
+            this.ClientSize = new System.Drawing.Size(580, 484);
             this.ControlBox = false;
             this.Controls.Add(this.tableLayoutPanel1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;
-            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.Margin = new System.Windows.Forms.Padding(4);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.MinimumSize = new System.Drawing.Size(500, 500);

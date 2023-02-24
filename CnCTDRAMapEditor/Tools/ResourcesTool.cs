@@ -43,6 +43,11 @@ namespace MobiusEditor.Tools
         private bool placementMode;
         private bool additivePlacement;
 
+        protected override Boolean InPlacementMode
+        {
+            get { return placementMode || (Control.ModifierKeys & Keys.Shift) == Keys.Shift; }
+        }
+
         private readonly Dictionary<int, Overlay> undoOverlays = new Dictionary<int, Overlay>();
         private readonly Dictionary<int, Overlay> redoOverlays = new Dictionary<int, Overlay>();
 
@@ -78,6 +83,15 @@ namespace MobiusEditor.Tools
             }
         }
 
+
+        private void ResourcesTool_KeyUpDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.ShiftKey && sender is MapPanel mp)
+            {
+                mp.Invalidate();
+            }
+        }
+
         private void ResourceTool_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.OemOpenBrackets)
@@ -89,6 +103,10 @@ namespace MobiusEditor.Tools
             {
                 brushSizeNud.UpButton();
                 mapPanel.Invalidate();
+            }
+            else
+            {
+                ResourcesTool_KeyUpDown(sender, e);
             }
         }
 
@@ -241,6 +259,7 @@ namespace MobiusEditor.Tools
                 return;
             }
             placementMode = false;
+            mapPanel.Invalidate();
             UpdateStatus();
         }
 
@@ -339,6 +358,7 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseUp += MapPanel_MouseUp;
             this.mapPanel.MouseLeave += MapPanel_MouseLeave;
             (this.mapPanel as Control).KeyDown += ResourceTool_KeyDown;
+            (this.mapPanel as Control).KeyUp += ResourcesTool_KeyUpDown;
             navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
             url.Undone += Url_UndoRedo;
             url.Redone += Url_UndoRedo;
@@ -353,6 +373,7 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseUp -= MapPanel_MouseUp;
             this.mapPanel.MouseLeave -= MapPanel_MouseLeave;
             (this.mapPanel as Control).KeyDown -= ResourceTool_KeyDown;
+            (this.mapPanel as Control).KeyUp -= ResourcesTool_KeyUpDown;
             navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;
             url.Undone -= Url_UndoRedo;
             url.Redone -= Url_UndoRedo;

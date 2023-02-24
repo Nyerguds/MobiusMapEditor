@@ -45,18 +45,19 @@ namespace MobiusEditor.Model
 
         Boundaries      = 1 << 10,
         MapSymmetry     = 1 << 11,
-        WaypointsIndic  = 1 << 12,
-        FootballArea    = 1 << 13,
-        CellTriggers    = 1 << 14,
-        TechnoTriggers  = 1 << 15,
-        BuildingRebuild = 1 << 16,
-        BuildingFakes   = 1 << 17,
+        MapGrid         = 1 << 12,
+        WaypointsIndic  = 1 << 13,
+        FootballArea    = 1 << 14,
+        CellTriggers    = 1 << 15,
+        TechnoTriggers  = 1 << 16,
+        BuildingRebuild = 1 << 17,
+        BuildingFakes   = 1 << 18,
 
         OverlayAll = Resources | Walls | Overlay,
         Technos = Terrain | Walls | Infantry | Units | Buildings | BuildingFakes,
         MapLayers = Terrain | Resources | Walls | Overlay | Smudge | Infantry | Units | Buildings | Waypoints,
         /// <summary>Listing of layers that don't need a full map repaint.</summary>
-        Indicators = Boundaries | MapSymmetry | WaypointsIndic | CellTriggers | TechnoTriggers | BuildingRebuild | BuildingFakes | FootballArea,
+        Indicators = Boundaries | MapSymmetry | MapGrid| WaypointsIndic | CellTriggers | TechnoTriggers | BuildingRebuild | BuildingFakes | FootballArea,
         All = Int32.MaxValue
     }
 
@@ -486,15 +487,15 @@ namespace MobiusEditor.Model
             {
                 templateType.Init(Theater);
             }
-            foreach (var smudgeType in SmudgeTypes.Where(itm => itm.Theaters == null || itm.Theaters.Contains(Theater)))
+            foreach (var smudgeType in SmudgeTypes.Where(itm => !Globals.FilterTheaterObjects || itm.Theaters == null || itm.Theaters.Contains(Theater)))
             {
                 smudgeType.Init(Theater);
             }
-            foreach (var overlayType in OverlayTypes.Where(itm => itm.Theaters == null || itm.Theaters.Contains(Theater)))
+            foreach (var overlayType in OverlayTypes.Where(itm => !Globals.FilterTheaterObjects || itm.Theaters == null || itm.Theaters.Contains(Theater)))
             {
                 overlayType.Init(gameType, Theater);
             }
-            foreach (var terrainType in TerrainTypes.Where(itm => itm.Theaters == null || itm.Theaters.Contains(Theater)))
+            foreach (var terrainType in TerrainTypes.Where(itm => !Globals.FilterTheaterObjects || itm.Theaters == null || itm.Theaters.Contains(Theater)))
             {
                 terrainType.Init(Theater);
             }
@@ -510,7 +511,7 @@ namespace MobiusEditor.Model
                 unitType.Init(gameType, Theater, HouseTypesIncludingNone.Where(h => h.Equals(unitType.OwnerHouse)).FirstOrDefault(), unitDir);
             }
             DirectionType bldDir = UnitDirectionTypes.Where(d => d.Facing == FacingType.North).First();
-            foreach (var buildingType in BuildingTypes.Where(itm => itm.Theaters == null || itm.Theaters.Contains(Theater)))
+            foreach (var buildingType in BuildingTypes.Where(itm => !Globals.FilterTheaterObjects || itm.Theaters == null || itm.Theaters.Contains(Theater)))
             {
                 buildingType.Init(gameType, Theater, HouseTypesIncludingNone.Where(h => h.Equals(buildingType.OwnerHouse)).FirstOrDefault(), bldDir);
             }

@@ -43,6 +43,11 @@ namespace MobiusEditor.Tools
 
         private bool placementMode;
 
+        protected override Boolean InPlacementMode
+        {
+            get { return placementMode; }
+        }
+
         public WaypointsTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, ComboBox waypointCombo, Button jumpToButton,
             IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> url)
             : base(mapPanel, layers, statusLbl, plugin, url)

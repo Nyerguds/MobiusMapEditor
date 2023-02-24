@@ -323,6 +323,7 @@ namespace MobiusEditor.Controls
             this.Controls.Add(this.tableLayoutPanel1);
             this.Name = "ObjectProperties";
             this.Size = new System.Drawing.Size(230, 240);
+            this.Load += this.ObjectProperties_Load;
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.strengthNud)).EndInit();

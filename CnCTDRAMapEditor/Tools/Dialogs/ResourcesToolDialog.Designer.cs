@@ -43,13 +43,13 @@ namespace MobiusEditor.Tools.Dialogs
         private void InitializeComponent()
         {
             this.tableLayoutPanel6 = new System.Windows.Forms.TableLayoutPanel();
+            this.lblResBounds = new System.Windows.Forms.Label();
+            this.lblResBoundsVal = new System.Windows.Forms.Label();
             this.lblResTotal = new System.Windows.Forms.Label();
             this.lblResTotalVal = new System.Windows.Forms.Label();
             this.chkGems = new System.Windows.Forms.CheckBox();
             this.nudBrushSize = new MobiusEditor.Controls.EnhNumericUpDown();
             this.lblBrushSize = new System.Windows.Forms.Label();
-            this.lblResBounds = new System.Windows.Forms.Label();
-            this.lblResBoundsVal = new System.Windows.Forms.Label();
             this.tableLayoutPanel6.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.nudBrushSize)).BeginInit();
             this.SuspendLayout();
@@ -59,13 +59,13 @@ namespace MobiusEditor.Tools.Dialogs
             this.tableLayoutPanel6.ColumnCount = 2;
             this.tableLayoutPanel6.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tableLayoutPanel6.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
-            this.tableLayoutPanel6.Controls.Add(this.lblResTotal, 0, 0);
-            this.tableLayoutPanel6.Controls.Add(this.lblResTotalVal, 1, 0);
+            this.tableLayoutPanel6.Controls.Add(this.lblResBounds, 0, 0);
+            this.tableLayoutPanel6.Controls.Add(this.lblResBoundsVal, 1, 0);
             this.tableLayoutPanel6.Controls.Add(this.chkGems, 0, 4);
             this.tableLayoutPanel6.Controls.Add(this.nudBrushSize, 1, 3);
             this.tableLayoutPanel6.Controls.Add(this.lblBrushSize, 0, 3);
-            this.tableLayoutPanel6.Controls.Add(this.lblResBounds, 0, 1);
-            this.tableLayoutPanel6.Controls.Add(this.lblResBoundsVal, 1, 1);
+            this.tableLayoutPanel6.Controls.Add(this.lblResTotal, 0, 1);
+            this.tableLayoutPanel6.Controls.Add(this.lblResTotalVal, 1, 1);
             this.tableLayoutPanel6.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel6.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel6.Name = "tableLayoutPanel6";
@@ -213,12 +213,12 @@ namespace MobiusEditor.Tools.Dialogs
         #endregion
 
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel6;
+        private System.Windows.Forms.Label lblResBounds;
+        private System.Windows.Forms.Label lblResBoundsVal;
         private System.Windows.Forms.Label lblResTotal;
         private System.Windows.Forms.Label lblResTotalVal;
         private System.Windows.Forms.CheckBox chkGems;
         private MobiusEditor.Controls.EnhNumericUpDown nudBrushSize;
         private System.Windows.Forms.Label lblBrushSize;
-        private System.Windows.Forms.Label lblResBounds;
-        private System.Windows.Forms.Label lblResBoundsVal;
     }
 }

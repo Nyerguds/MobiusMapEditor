@@ -391,12 +391,19 @@ Unreleased
 * The total map resources value on the resource placement tool will now be calculated correctly.
 * The resource placement tool will now specifically show a value for the total map resources accessible inside the map bounds.
 * Reinstated the restriction on placing overlay on the first and last row on the map, to correctly emulate the fact the games do not place overlay there.
-* Implemented a "new map from image" feature. This is currently hardcoded to fill anything but black with tile "W1", but that might be expanded later.
+* Added "New map from image" feature in the "File" menu, so the rough layout of a map can be designed in an image editor. Each colour in the image can be assigned to a tile.
 * Drag-placing a line of tileset pieces will now tile them without overwriting most of the placed content on each new moved cell.
 * Red Alert Interior Theater no longer allows placing down Smudge types.
 * Double-clicking on map objects with mouse buttons other than the left one will no longer open the object properties.
 * Fixed bug treating the Commando as unarmed unit, defaulting its orders to "Stop" instead of "Guard". (Not that this has any effect in-game.)
-* Fixed map-related panels (such as the main map and the preview showing the template to place) affecting the mouse cursor on a global scale rather than only inside their own panel.
-* Fixed cursor changing when in bounds-editing mode but the cursor is outside the valid map area.
+* Fixed map panels (such as the main map and the preview showing the template to place) affecting the mouse cursor on a global scale rather than only inside their own panel.
+* Fixed bug that made the cursor change when in map bounds editing mode but the cursor is outside the valid map area.
 * On the Map tool, selection of the specific sub-cell now responds correctly when holding down the mouse and dragging to different cells.
-* Added "New from image" function in the "File" menu.
+* Being in placement mode, or dragging around objects, will now show a placement grid. In Resources mode, where holding down Shift is not required for placement, holding Shift will also show the grid.
+* Fixed bug in Smudge mode where clicking on a crater selects the crater's maximum size in the placement template.
+* Fixed bug in Smudge mode where the automatic restoring of partially deleted bibs was restricted to the map bounds instead of the full map size.
+* Added correct map objects overview and save validation for Sole Survivor, which does not use the expanded Remastered maximum values.
+* Added more options in the settings file, and reordered the settings in the settings file and manual file.
+* Fixed bugs that occurred when disabling the theater-filtering of items.
+* Pressing Alt+F4 to close the editor will now also work when a tool window is selected.
+* The tool windows for infantry, units and structures will now optimally use the available space.

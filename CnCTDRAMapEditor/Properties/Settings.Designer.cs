@@ -52,6 +52,51 @@ namespace MobiusEditor.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool DefaultTileDragProtect {
+            get {
+                return ((bool)(this["DefaultTileDragProtect"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool DefaultShowPlacementGrid {
+            get {
+                return ((bool)(this["DefaultShowPlacementGrid"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool DefaultShowMapGrid {
+            get {
+                return ((bool)(this["DefaultShowMapGrid"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("-0.5")]
+        public double DefaultExportScale {
+            get {
+                return ((double)(this["DefaultExportScale"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("64, 0, 0, 255")]
+        public global::System.Drawing.Color MapGridColor {
+            get {
+                return ((global::System.Drawing.Color)(this["MapGridColor"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("32, 32, 32")]
         public global::System.Drawing.Color MapBackColor {
             get {
@@ -74,15 +119,6 @@ namespace MobiusEditor.Properties {
         public double PreviewScale {
             get {
                 return ((double)(this["PreviewScale"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("-0.5")]
-        public double DefaultExportScale {
-            get {
-                return ((double)(this["DefaultExportScale"]));
             }
         }
         
@@ -218,6 +254,15 @@ namespace MobiusEditor.Properties {
         public bool DrawSoleTeleports {
             get {
                 return ((bool)(this["DrawSoleTeleports"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool RestrictSoleLimits {
+            get {
+                return ((bool)(this["RestrictSoleLimits"]));
             }
         }
         

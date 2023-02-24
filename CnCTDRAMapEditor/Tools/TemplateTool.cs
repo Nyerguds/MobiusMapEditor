@@ -65,6 +65,11 @@ namespace MobiusEditor.Tools
 
         private bool placementMode;
 
+        protected override Boolean InPlacementMode
+        {
+            get { return placementMode; }
+        }
+
         private bool boundsMode;
         private Rectangle dragBounds;
         private FacingType dragEdge = FacingType.None;

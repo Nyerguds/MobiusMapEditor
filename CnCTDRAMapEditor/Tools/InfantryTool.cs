@@ -45,6 +45,11 @@ namespace MobiusEditor.Tools
 
         private bool placementMode;
 
+        protected override Boolean InPlacementMode
+        {
+            get { return placementMode || selectedInfantryLocation.HasValue; }
+        }
+
         private readonly Infantry mockInfantry;
 
         private Infantry selectedInfantry;
@@ -157,6 +162,7 @@ namespace MobiusEditor.Tools
                     if (infantryGroup.Infantry[i] is Infantry infantry)
                     {
                         selectedInfantry = null;
+                        selectedInfantryLocation = null;
                         Infantry preEdit = infantry.Clone();
                         selectedObjectProperties?.Close();
                         selectedObjectProperties = new ObjectPropertiesPopup(objectProperties.Plugin, infantry);
@@ -341,6 +347,7 @@ namespace MobiusEditor.Tools
                 selectedInfantry = null;
                 selectedInfantryLocation = null;
                 selectedInfantryStop = -1;
+                mapPanel.Invalidate();
                 UpdateStatus();
             }
         }
@@ -652,6 +659,7 @@ namespace MobiusEditor.Tools
                     }
                 }
             }
+            mapPanel.Invalidate();
             UpdateStatus();
         }
 

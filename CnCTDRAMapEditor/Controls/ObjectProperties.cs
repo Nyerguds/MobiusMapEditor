@@ -14,17 +14,14 @@
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using MobiusEditor.Interface;
 using MobiusEditor.Model;
-using MobiusEditor.Render;
 using MobiusEditor.Utility;
 using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Windows.Forms;
 
 namespace MobiusEditor.Controls
@@ -76,6 +73,13 @@ namespace MobiusEditor.Controls
             }
             lblTriggerInfo.Image = infoImage;
             lblTriggerInfo.ImageAlign = ContentAlignment.MiddleCenter;
+        }
+
+        private void ObjectProperties_Load(Object sender, EventArgs e)
+        {
+            // Fix for the fact the resize in the very first Rebind() call never works correctly,
+            // because the UI is not initialised yet at that point.
+            this.Height = tableLayoutPanel1.PreferredSize.Height;
         }
 
         public void Initialize(IGamePlugin plugin, bool isMockObject)
@@ -203,7 +207,8 @@ namespace MobiusEditor.Controls
                                     prebuiltCheckBox.DataBindings.Add("Checked", obj, "IsPrebuilt");
                                     sellableCheckBox.Visible = false;
                                     rebuildCheckBox.Visible = false;
-                                } break;
+                                }
+                                break;
                             case GameType.RedAlert:
                                 {
                                     basePriorityLabel.Visible = basePriorityNud.Visible = true;
@@ -229,6 +234,8 @@ namespace MobiusEditor.Controls
                     }
                     break;
             }
+            // Collapse control to minimum required height.
+            this.Height = tableLayoutPanel1.PreferredSize.Height;
             houseComboBox.DataBindings.Add("SelectedValue", obj, "House");
             strengthNud.DataBindings.Add("Value", obj, "Strength");
             directionComboBox.DataBindings.Add("SelectedValue", obj, "Direction");

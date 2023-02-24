@@ -1,5 +1,6 @@
 ﻿using MobiusEditor.Interface;
 using MobiusEditor.Model;
+using MobiusEditor.TiberianDawn;
 using MobiusEditor.Utility;
 using System;
 using System.Collections.Generic;
@@ -9,7 +10,7 @@ using System.Numerics;
 
 namespace MobiusEditor.SoleSurvivor
 {
-    public class GamePlugin : TiberianDawn.GamePlugin
+    public class GamePluginSS : TiberianDawn.GamePluginTD
     {
 
         protected const int cratePoints = 4;
@@ -47,12 +48,12 @@ namespace MobiusEditor.SoleSurvivor
         protected CratesSection cratesSection;
         public CratesSection CratesSection => cratesSection;
 
-        public GamePlugin(bool megaMap)
+        public GamePluginSS(bool megaMap)
             : this(true, megaMap)
         {
         }
 
-        public GamePlugin(bool mapImage, bool megaMap)
+        public GamePluginSS(bool mapImage, bool megaMap)
             : base()
         {
             this.isMegaMap = megaMap;
@@ -136,7 +137,7 @@ namespace MobiusEditor.SoleSurvivor
             };
             Map.MapSection.PropertyChanged += MapSection_PropertyChanged;
             // Clean up this mess.
-            foreach (House house in Map.Houses)
+            foreach (Model.House house in Map.Houses)
             {
                 if (house.Type.ID >= HouseTypes.Multi1.ID)
                 {
@@ -226,6 +227,37 @@ namespace MobiusEditor.SoleSurvivor
         {
             // Not applicable. Return empty set.
             return new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        }
+
+        public override IEnumerable<string> AssessMapItems()
+        {
+            ExplorerComparer cmp = new ExplorerComparer();
+            List<string> info = new List<string>();
+            int numAircraft = Globals.DisableAirUnits ? 0 : Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsAircraft).Count();
+            int numBuildings = Map.Buildings.OfType<Building>().Where(x => x.Occupier.IsPrebuilt).Count();
+            int numInfantry = Map.Technos.OfType<InfantryGroup>().Sum(item => item.Occupier.Infantry.Count(i => i != null));
+            int numTerrain = Map.Technos.OfType<Terrain>().Count();
+            int numUnits = Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsGroundUnit).Count();
+            const String maximums = "Number of {0}: {1}. Maximum: {2}.";
+            if (!Globals.NoOwnedObjectsInSole)
+            {
+                if (!Globals.DisableAirUnits)
+                {
+                    info.Add(string.Format(maximums, "aircraft", numAircraft, Globals.ExpandSoleLimits ? Constants.MaxAircraft : Constants.MaxAircraftClassic));
+                }
+                info.Add(string.Format(maximums, "structures", numBuildings, Globals.ExpandSoleLimits ? Constants.MaxBuildings : Constants.MaxBuildingsClassic));
+                info.Add(string.Format(maximums, "infantry", numInfantry, Globals.ExpandSoleLimits ? Constants.MaxInfantry : Constants.MaxInfantryClassic));
+            }
+            info.Add(string.Format(maximums, "terrain objects", numTerrain, Globals.ExpandSoleLimits ? Constants.MaxTerrain : Constants.MaxTerrainClassic));
+            if (!Globals.NoOwnedObjectsInSole)
+            {
+                info.Add(string.Format(maximums, "units", numUnits, Globals.ExpandSoleLimits ? Constants.MaxUnits : Constants.MaxUnitsClassic));
+            }
+            //info.Add(string.Format(maximums, "team types", Map.TeamTypes.Count, Globals.ExpandSoleLimits ? Constants.MaxTeams : Constants.MaxTeamsClassic));
+            //info.Add(string.Format(maximums, "triggers", Map.Triggers.Count, Globals.ExpandSoleLimits ? Constants.MaxTriggers : Constants.MaxTriggersClassic));
+            int startPoints = Map.Waypoints.Count(w => w.Cell.HasValue && (w.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart);
+            info.Add(string.Format("Number of set starting points: {0}.", startPoints));
+            return info;
         }
     }
 }

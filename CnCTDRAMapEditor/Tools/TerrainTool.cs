@@ -45,6 +45,11 @@ namespace MobiusEditor.Tools
 
         private bool placementMode;
 
+        protected override Boolean InPlacementMode
+        {
+            get { return placementMode || selectedTerrainLocation.HasValue; }
+        }
+
         private readonly Terrain mockTerrain;
 
         private Terrain selectedTerrain;
@@ -111,6 +116,8 @@ namespace MobiusEditor.Tools
                 if (map.Technos[cell] is Terrain terrain)
                 {
                     selectedTerrain = null;
+                    selectedTerrainLocation = null;
+                    selectedTerrainPivot = Point.Empty;
                     selectedTerrainProperties?.Close();
                     // only TD supports triggers ("Attacked" type) on terrain types.
                     if (plugin.GameType == GameType.TiberianDawn)
@@ -228,6 +235,7 @@ namespace MobiusEditor.Tools
                 selectedTerrain = null;
                 selectedTerrainLocation = null;
                 selectedTerrainPivot = Point.Empty;
+                mapPanel.Invalidate();
                 UpdateStatus();
             }
         }
@@ -421,15 +429,15 @@ namespace MobiusEditor.Tools
             selectedTerrain = null;
             selectedTerrainLocation = null;
             selectedTerrainPivot = Point.Empty;
-            if (map.Metrics.GetCell(location, out int cell))
+            if (map.Metrics.GetCell(location, out int cell) && map.Technos[cell] is Terrain selected && selected != null)
             {
-                Terrain selected = map.Technos[cell] as Terrain;
-                Point selectedLocation = selected != null ? map.Technos[selected].Value : Point.Empty;
-                Point selectedPivot = selected != null ? location - (Size)selectedLocation : Point.Empty;
+                Point? selectedLocation = map.Technos[selected];
+                Point selectedPivot = location - (Size)selectedLocation;
                 selectedTerrain = selected;
                 selectedTerrainLocation = selectedLocation;
                 selectedTerrainPivot = selectedPivot;
             }
+            mapPanel.Invalidate();
             UpdateStatus();
         }
 

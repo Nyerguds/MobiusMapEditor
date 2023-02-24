@@ -555,6 +555,7 @@ namespace MobiusEditor.Utility
 
         private static Rectangle CalculateOpaqueBounds(byte[] data, int width, int height, int bytespp, int stride)
         {
+            // Modified this function to result in (0,0,0,0) when the image is empty, rather than retaining the full size.
             int lineWidth = width * bytespp;
             bool isTransparentRow(int y)
             {
@@ -569,19 +570,21 @@ namespace MobiusEditor.Utility
                 return true;
             }
             var opaqueBounds = new Rectangle(0, 0, width, height);
-            for (int y = 0; y < height; ++y)
+            for (int y = height - 1; y >= 0; --y)
             {
                 if (!isTransparentRow(y))
                 {
-                    opaqueBounds.Offset(0, y);
                     break;
                 }
+                opaqueBounds.Height = y;
             }
-            for (int y = height; y > 0; --y)
+            int endHeight = opaqueBounds.Height;
+            for (int y = 0; y < endHeight; ++y)
             {
-                if (!isTransparentRow(y - 1))
+                if (!isTransparentRow(y))
                 {
-                    opaqueBounds.Height = y - opaqueBounds.Top;
+                    opaqueBounds.Y = y;
+                    opaqueBounds.Height = endHeight - y;
                     break;
                 }
             }
@@ -597,19 +600,21 @@ namespace MobiusEditor.Utility
                 }
                 return true;
             }
-            for (int x = 0; x < width; ++x)
+            for (int x = width - 1; x >= 0; --x)
             {
                 if (!isTransparentColumn(x))
                 {
-                    opaqueBounds.Offset(x, 0);
                     break;
                 }
+                opaqueBounds.Width = x;
             }
-            for (int x = width; x > 0; --x)
+            int endWidth = opaqueBounds.Width;
+            for (int x = 0; x < endWidth; ++x)
             {
-                if (!isTransparentColumn(x - 1))
+                if (!isTransparentColumn(x))
                 {
-                    opaqueBounds.Width = x - opaqueBounds.Left;
+                    opaqueBounds.X = x;
+                    opaqueBounds.Width = endWidth - x;
                     break;
                 }
             }

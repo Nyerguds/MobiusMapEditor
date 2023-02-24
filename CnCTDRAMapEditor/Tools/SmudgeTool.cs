@@ -45,6 +45,11 @@ namespace MobiusEditor.Tools
 
         private bool placementMode;
 
+        protected override Boolean InPlacementMode
+        {
+            get { return placementMode; }
+        }
+
         private readonly Smudge mockSmudge;
 
         private Smudge selectedSmudge;
@@ -227,6 +232,10 @@ namespace MobiusEditor.Tools
             else if (placementMode && (Control.ModifierKeys == Keys.None))
             {
                 ExitPlacementMode();
+            }
+            else if ((e.Button == MouseButtons.Left) || (e.Button == MouseButtons.Right))
+            {
+                PickSmudge(navigationWidget.MouseCell);
             }
         }
 
@@ -417,7 +426,7 @@ namespace MobiusEditor.Tools
             {
                 // scan smudges from bottom to top, right to left, to find if any cell from a nearby smudge should occupy this location.
                 Rectangle scanRect = new Rectangle(loc.X - maxW + 1, loc.Y - maxH + 1, maxW * 2 - 1, maxH * 2 - 1);
-                foreach (Point p in scanRect.Points().Where(p => map.Bounds.Contains(p)).OrderByDescending(p => p.X).ThenByDescending(p => p.Y))
+                foreach (Point p in scanRect.Points().Where(p => map.Metrics.Bounds.Contains(p)).OrderByDescending(p => p.X).ThenByDescending(p => p.Y))
                 {
                     Smudge toFix = map.Smudge[p];
                     SmudgeType toFixType = toFix?.Type;
@@ -522,7 +531,7 @@ namespace MobiusEditor.Tools
                     {
                         mockSmudge.Icon = 0;
                         SelectedSmudgeType = picked;
-                        mockSmudge.Icon = Math.Max(smudge.Type.Icons - 1, picked.IsMultiCell ? 0 : smudge.Icon);
+                        mockSmudge.Icon = Math.Min(smudge.Type.Icons - 1, picked.IsMultiCell ? 0 : smudge.Icon);
                     }
                 }
             }

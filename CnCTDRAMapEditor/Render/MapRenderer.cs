@@ -408,7 +408,7 @@ namespace MobiusEditor.Render
             {
                 icon = overlay.Type.ForceTileNr == -1 ? overlay.Icon : overlay.Type.ForceTileNr;
             }
-            bool isTeleport = gameType == GameType.SoleSurvivor && overlay.Type == SoleSurvivor.OverlayTypes.Teleport && Globals.AdjustSSTeleports;
+            bool isTeleport = gameType == GameType.SoleSurvivor && overlay.Type == SoleSurvivor.OverlayTypes.Teleport && Globals.AdjustSoleTeleports;
             // For Decoration types, generate dummy if not found.
             if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, name, icon, out Tile tile, (overlay.Type.Flag & OverlayTypeFlag.Decoration) != 0, false))
             {
@@ -1446,6 +1446,28 @@ namespace MobiusEditor.Render
                 }
             }
         }
+
+        public static void RenderMapGrid(Graphics graphics, Rectangle bounds, Size tileSize, Color color)
+        {
+            using (var gridPen = new Pen(color, Math.Max(1f, tileSize.Width / 16.0f)))
+            {
+                int leftBound = bounds.Left * tileSize.Width;
+                int rightBound = bounds.Right * tileSize.Width;
+                for (int y = bounds.Top + 1; y < bounds.Bottom; ++y)
+                {
+                    int ymul = y * tileSize.Height;
+                    graphics.DrawLine(gridPen, new Point(leftBound, ymul), new Point(rightBound, ymul));
+                }
+                int topBound = bounds.Top * tileSize.Height;
+                int bottomBound = bounds.Bottom * tileSize.Height;
+                for (int x = bounds.Left + 1; x < bounds.Right; ++x)
+                {
+                    int xmul = x * tileSize.Height;
+                    graphics.DrawLine(gridPen, new Point(xmul, topBound), new Point(xmul, bottomBound));
+                }
+            }
+        }
+
 
         public static void SetRenderSettings(Graphics g, Boolean smooth)
         {

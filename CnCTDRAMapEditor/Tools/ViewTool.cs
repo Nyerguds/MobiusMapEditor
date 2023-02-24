@@ -161,17 +161,25 @@ namespace MobiusEditor.Tools
 
         protected virtual void PreRenderMap() { }
 
+        protected abstract bool InPlacementMode { get; }
+
         protected virtual void PostRenderMap(Graphics graphics)
         {
-            PostRenderMap(graphics, this.plugin.GameType, this.map, Globals.MapTileScale, Layers, ManuallyHandledLayers);
+            PostRenderMap(graphics, this.plugin.GameType, this.map, Globals.MapTileScale, Layers, ManuallyHandledLayers, this.InPlacementMode);
         }
 
-        public static void PostRenderMap(Graphics graphics, GameType gameType, Map map, double tileScale, MapLayerFlag layersToRender, MapLayerFlag manuallyHandledLayers)
+        public static void PostRenderMap(Graphics graphics, GameType gameType, Map map, double tileScale, MapLayerFlag layersToRender, MapLayerFlag manuallyHandledLayers, bool inPlacementMode)
         {
             Size tileSize = new Size(Math.Max(1, (int)(Globals.OriginalTileWidth * tileScale)), Math.Max(1, (int)(Globals.OriginalTileHeight * tileScale)));
 
             // Only render these if they are not in the priority layers, and not handled manually.
             // The functions themselves will take care of checking whether they are in the active layers to render.
+            if ((Globals.ShowPlacementGrid && inPlacementMode) ||
+                (layersToRender & MapLayerFlag.MapGrid) == MapLayerFlag.MapGrid
+                && (manuallyHandledLayers & MapLayerFlag.MapGrid) == MapLayerFlag.None)
+            {
+                MapRenderer.RenderMapGrid(graphics, map.Bounds, tileSize, Globals.MapGridColor);
+            }
             if ((layersToRender & MapLayerFlag.MapSymmetry) == MapLayerFlag.MapSymmetry
                 && (manuallyHandledLayers & MapLayerFlag.MapSymmetry) == MapLayerFlag.None)
             {

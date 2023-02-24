@@ -45,6 +45,11 @@ namespace MobiusEditor.Tools
 
         private bool placementMode;
 
+        protected override Boolean InPlacementMode
+        {
+            get { return placementMode || selectedBuildingLocation.HasValue; }
+        }
+
         private readonly Building mockBuilding;
 
         private Building selectedBuilding;
@@ -111,6 +116,7 @@ namespace MobiusEditor.Tools
                 if (map.Technos[cell] is Building building)
                 {
                     selectedBuilding = null;
+                    selectedBuildingLocation = null;
                     selectedBuildingPivot = Point.Empty;
                     Building preEdit = building.Clone();
                     selectedObjectProperties?.Close();
@@ -253,6 +259,7 @@ namespace MobiusEditor.Tools
                 selectedBuilding = null;
                 selectedBuildingLocation = null;
                 selectedBuildingPivot = Point.Empty;
+                mapPanel.Invalidate();
                 UpdateStatus();
             }
         }
@@ -642,6 +649,7 @@ namespace MobiusEditor.Tools
                 selectedBuildingLocation = selectedLocation;
                 selectedBuildingPivot = selectedPivot;
             }
+            mapPanel.Invalidate();
             UpdateStatus();
         }
 

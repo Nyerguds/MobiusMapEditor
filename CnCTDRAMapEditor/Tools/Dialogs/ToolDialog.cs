@@ -19,9 +19,11 @@ namespace MobiusEditor.Tools.Dialogs
         private PropertyInfo defaultPositionPropertySettingInfo;
         private Point? startLocation;
         private Rectangle? parentBounds;
+        Form parentForm;
 
         public ToolDialog(Form parentForm)
         {
+            this.parentForm = parentForm;
             defaultPositionPropertySettingInfo = Properties.Settings.Default.GetType().GetProperty(GetType().Name + "DefaultPosition");
             if (defaultPositionPropertySettingInfo != null)
             {
@@ -97,8 +99,15 @@ namespace MobiusEditor.Tools.Dialogs
         
         private void ObjectToolDialog_FormClosing(System.Object sender, FormClosingEventArgs e)
         {
-            // Prevents users from closing the form with Alt+F4
-            e.Cancel = e.CloseReason == CloseReason.UserClosing;
+            // Prevent users from closing the form with Alt+F4, and pass the request to close through to the parent form.
+            if (e.CloseReason == CloseReason.UserClosing)
+            {
+                e.Cancel = true;
+                if (parentForm != null)
+                {
+                    parentForm.Close();
+                }
+            }
         }
 
         protected override void OnClosed(EventArgs e)

@@ -385,7 +385,7 @@
     <Compile Include="RedAlert\BuildingTypes.cs" />
     <Compile Include="RedAlert\Constants.cs" />
     <Compile Include="RedAlert\EventTypes.cs" />
-    <Compile Include="RedAlert\GamePlugin.cs" />
+    <Compile Include="RedAlert\GamePluginRA.cs" />
     <Compile Include="RedAlert\House.cs" />
     <Compile Include="RedAlert\HouseTypes.cs" />
     <Compile Include="RedAlert\InfantryTypes.cs" />
@@ -399,7 +399,7 @@
     <Compile Include="RedAlert\UnitTypes.cs" />
     <Compile Include="Render\MapRenderer.cs" />
     <Compile Include="Settings.cs" />
-    <Compile Include="SoleSurvivor\GamePlugin.cs" />
+    <Compile Include="SoleSurvivor\GamePluginSS.cs" />
     <Compile Include="SoleSurvivor\OverlayTypes.cs" />
     <Compile Include="Steamworks.NET\autogen\isteamapplist.cs" />
     <Compile Include="Steamworks.NET\autogen\isteamapps.cs" />
@@ -497,7 +497,7 @@
     <Compile Include="TiberianDawn\BasicSection.cs" />
     <Compile Include="TiberianDawn\Constants.cs" />
     <Compile Include="TiberianDawn\EventTypes.cs" />
-    <Compile Include="TiberianDawn\GamePlugin.cs" />
+    <Compile Include="TiberianDawn\GamePluginTD.cs" />
     <Compile Include="TiberianDawn\House.cs" />
     <Compile Include="SoleSurvivor\HouseTypes.cs" />
     <Compile Include="TiberianDawn\HouseTypes.cs" />

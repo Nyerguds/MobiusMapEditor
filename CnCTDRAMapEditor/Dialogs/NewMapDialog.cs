@@ -67,9 +67,13 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        public NewMapDialog()
+        public NewMapDialog(bool fromImage)
         {
             InitializeComponent();
+            if (fromImage)
+            {
+                this.Text = "New Map From Image";
+            }
         }
 
         private void UpdateGameType()

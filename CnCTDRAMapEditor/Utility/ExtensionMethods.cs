@@ -242,7 +242,10 @@ namespace MobiusEditor.Utility
                 {
                     g.Clear(clearColor);
                 }
-                g.DrawImage(image, resized, cutout, GraphicsUnit.Pixel);
+                if (cutout.Width > 0 && cutout.Height > 0)
+                {
+                    g.DrawImage(image, resized, cutout, GraphicsUnit.Pixel);
+                }
                 g.Flush();
             }
             return newImg;

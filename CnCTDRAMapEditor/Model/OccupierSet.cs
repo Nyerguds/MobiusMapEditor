@@ -79,7 +79,7 @@ namespace MobiusEditor.Model
 
         public T this[int cell] => metrics.GetLocation(cell, out Point location) ? this[location] : null;
 
-        public Point? this[T occupier] => occupiers.ContainsKey(occupier) ? occupiers[occupier] : default;
+        public Point? this[T occupier] => occupiers.ContainsKey(occupier) ? occupiers[occupier] : (Point?)null;
 
         public IEnumerable<T> Occupiers => occupiers.Keys;
 

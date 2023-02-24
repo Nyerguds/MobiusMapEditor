@@ -29,7 +29,7 @@ using TGASharpLib;
 
 namespace MobiusEditor.RedAlert
 {
-    class GamePlugin : IGamePlugin
+    class GamePluginRA : IGamePlugin
     {
         private const int multiStartPoints = 8;
         private readonly IEnumerable<string> movieTypes;
@@ -348,17 +348,17 @@ namespace MobiusEditor.RedAlert
             return INITools.CheckForIniInfo(contents, "MapPack");
         }
 
-        static GamePlugin()
+        static GamePluginRA()
         {
             fullTechnoTypes = InfantryTypes.GetTypes().Cast<ITechnoType>().Concat(UnitTypes.GetTypes(false).Cast<ITechnoType>());
         }
 
-        public GamePlugin()
+        public GamePluginRA()
             : this(true)
         {
         }
 
-        public GamePlugin(bool mapImage)
+        public GamePluginRA(bool mapImage)
         {
             var playerWaypoints = Enumerable.Range(0, multiStartPoints).Select(i => new Waypoint(string.Format("P{0}", i), Waypoint.GetFlagForMpId(i)));
             var generalWaypoints = Enumerable.Range(multiStartPoints, 98 - multiStartPoints).Select(i => new Waypoint(i.ToString()));
