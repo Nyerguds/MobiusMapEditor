@@ -450,7 +450,7 @@ namespace MobiusEditor.Tools
         {
             if (boundsMode)
             {
-                if (Control.MouseButtons == MouseButtons.Left)
+                if (e.Button == MouseButtons.Left)
                 {
                     dragEdge = DetectDragEdge(false);
                     Point startPoint = navigationWidget.MouseCell;
@@ -792,7 +792,7 @@ namespace MobiusEditor.Tools
 
         private void MouseoverWidget_ClosestMouseCellBorderChanged(object sender, MouseCellChangedEventArgs e)
         {
-            if (dragEdge == FacingType.None || Control.MouseButtons != MouseButtons.Left)
+            if (dragEdge == FacingType.None || e.MouseButtons != MouseButtons.Left)
             {
                 return;
             }
@@ -851,7 +851,7 @@ namespace MobiusEditor.Tools
 
         private void MouseoverWidget_MouseCellChanged(object sender, MouseCellChangedEventArgs e)
         {
-            Point mouseCell = navigationWidget.MouseCell;
+            Point mouseCell = e.NewCell;
             if (boundsMode)
             {
                 if (dragEdge == FacingType.None && dragStartPoint.HasValue && dragStartBounds.HasValue)
@@ -869,9 +869,9 @@ namespace MobiusEditor.Tools
             mouseTooltip.Hide(mapPanel);
             if (!placementMode && !fillMode)
             {
-                if ((Control.MouseButtons == MouseButtons.Left) || (Control.MouseButtons == MouseButtons.Right))
+                if ((e.MouseButtons == MouseButtons.Left) || (e.MouseButtons == MouseButtons.Right))
                 {
-                    PickTemplate(mouseCell, Control.MouseButtons == MouseButtons.Left);
+                    PickTemplate(mouseCell, e.MouseButtons == MouseButtons.Left);
                 }
                 return;
             }
@@ -879,8 +879,8 @@ namespace MobiusEditor.Tools
             // Fill mode is not handled in drag-click. It is a single-click operation.
             if (placementMode)
             {
-                HandlePlace(Control.MouseButtons);
-            }            
+                HandlePlace(e.MouseButtons);
+            }
             // Handle refresh necessary for normal mouse movement of preview template.
             TemplateType selected = SelectedTemplateType;
             if (selected == null)

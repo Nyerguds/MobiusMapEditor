@@ -36,7 +36,7 @@ namespace MobiusEditor.Controls
             InitializeComponent();
 
             edgeComboBox.Items.Clear();
-            edgeComboBox.Items.AddRange(Globals.Edges.ToArray());
+            edgeComboBox.Items.AddRange(Globals.MapEdges.ToArray());
 
             creditsNud.DataBindings.Add("Value", houseSettingsTracker, "Credits");
             maxBuildingsNud.DataBindings.Add("Value", houseSettingsTracker, "MaxBuilding");

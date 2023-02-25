@@ -102,7 +102,7 @@ namespace MobiusEditor.Tools
                     RemoveCellTrigger(navigationWidget.MouseCell);
                 }
             }
-            else if ((e.Button == MouseButtons.Left) || (e.Button == MouseButtons.Right))
+            else if (e.Button == MouseButtons.Left || e.Button == MouseButtons.Right)
             {
                 PickCellTrigger(navigationWidget.MouseCell);
             }
@@ -187,6 +187,10 @@ namespace MobiusEditor.Tools
                     RemoveCellTrigger(e.NewCell);
                 }
                 mapPanel.Invalidate(map, e.NewCell);
+            }
+            else if (e.MouseButtons == MouseButtons.Left || e.MouseButtons == MouseButtons.Right)
+            {
+                PickCellTrigger(e.NewCell);
             }
         }
 

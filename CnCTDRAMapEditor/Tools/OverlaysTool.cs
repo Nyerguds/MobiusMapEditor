@@ -167,6 +167,10 @@ namespace MobiusEditor.Tools
                     mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(e.NewCell, new Size(1, 1)), 1, 1));
                 }
             }
+            else if ((e.MouseButtons == MouseButtons.Left) || (e.MouseButtons == MouseButtons.Right))
+            {
+                PickOverlay(e.NewCell);
+            }
         }
 
         private void AddOverlay(Point location)

@@ -233,10 +233,6 @@ namespace MobiusEditor.Tools
             {
                 ExitPlacementMode();
             }
-            else if ((e.Button == MouseButtons.Left) || (e.Button == MouseButtons.Right))
-            {
-                PickSmudge(navigationWidget.MouseCell);
-            }
         }
 
         private void MouseoverWidget_MouseCellChanged(object sender, MouseCellChangedEventArgs e)
@@ -249,6 +245,10 @@ namespace MobiusEditor.Tools
                     mapPanel.Invalidate(map, new Rectangle(e.OldCell, selected.Size));
                     mapPanel.Invalidate(map, new Rectangle(e.NewCell, selected.Size));
                 }
+            }
+            else if ((e.MouseButtons == MouseButtons.Left) || (e.MouseButtons == MouseButtons.Right))
+            {
+                PickSmudge(e.NewCell);
             }
         }
 

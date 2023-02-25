@@ -1813,9 +1813,9 @@ namespace MobiusEditor.TiberianDawn
                 }
             }
             Dictionary<string, string> correctedEdges = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            foreach (var edge in Globals.Edges)
+            foreach (var edge in Globals.MapEdges)
                 correctedEdges.Add(edge, edge);
-            string defaultEdge = Globals.Edges.FirstOrDefault() ?? string.Empty;
+            string defaultEdge = Globals.MapEdges.FirstOrDefault() ?? string.Empty;
             foreach (var house in Map.Houses)
             {
                 if (house.Type.ID < 0)
@@ -1988,7 +1988,7 @@ namespace MobiusEditor.TiberianDawn
                         }
                     }
                     // None of this junk for Sole Survivor.
-                    if (!forSole && (!Map.BasicSection.SoloMission || !Properties.Settings.Default.NoMetaFilesForSinglePlay))
+                    if (!forSole && (!Map.BasicSection.SoloMission || !Globals.NoMetaFilesForSinglePlay))
                     {
                         var tgaPath = Path.ChangeExtension(path, ".tga");
                         var jsonPath = Path.ChangeExtension(path, ".json");

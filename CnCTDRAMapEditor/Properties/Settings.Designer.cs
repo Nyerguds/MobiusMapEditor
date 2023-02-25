@@ -124,10 +124,10 @@ namespace MobiusEditor.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public int MaxMapTileTextureSize {
+        [global::System.Configuration.DefaultSettingValueAttribute("0.3")]
+        public double ObjectToolItemSizeMultiplier {
             get {
-                return ((int)(this["MaxMapTileTextureSize"]));
+                return ((double)(this["ObjectToolItemSizeMultiplier"]));
             }
         }
         
@@ -142,10 +142,10 @@ namespace MobiusEditor.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0.3")]
-        public double ObjectToolItemSizeMultiplier {
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int MaxMapTileTextureSize {
             get {
-                return ((double)(this["ObjectToolItemSizeMultiplier"]));
+                return ((int)(this["MaxMapTileTextureSize"]));
             }
         }
         
@@ -236,6 +236,15 @@ namespace MobiusEditor.Properties {
         public bool WriteClassicBriefing {
             get {
                 return ((bool)(this["WriteClassicBriefing"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool ApplyHarvestBug {
+            get {
+                return ((bool)(this["ApplyHarvestBug"]));
             }
         }
         

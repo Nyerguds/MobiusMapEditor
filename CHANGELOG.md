@@ -385,23 +385,25 @@ Unreleased
 * Added option in image export to only export the map bounds. This is enabled by default for multiplayer maps.
 * The Map Objects Statistics tool now shows the classic game limits for TD maps. (RA has no changes in these.)
 * Disabled the ability to export to .meg type via the menu shortcut when the editor is not compiled in developer mode.
-* Removed confusion on the "Loop" / "Existence" setting in triggers by renaming it to "Springs", with choices "On first one", "When all sprung", "On each one".
-* Added trigger filter tool, with search criteria for house, spring type, multi-event type, event, action, teamtype and global.
+* Removed confusion on the Loop / Existence / Persistence setting in triggers, by renaming it to "Executes", with choices "On first triggering", "When all linked objects are triggered", and "On each triggering".
+* Red Alert's multi-event types for triggers are now written out in full rather than using programmming symbols like '||' and '&&'.
+* Added trigger filter tool, with search criteria for house, execute type, multi-event type, event, action, teamtype and global.
 * Deselecting the selected tile in the Map tool by clicking in the blank space will now properly show that that reverts the selection to Clear terrain.
-* The total map resources value on the resource placement tool will now be calculated correctly.
+* The total map resources value on the resource placement tool will now be calculated correctly (including the game bug that makes the last harvested stage never give any money).
 * The resource placement tool will now specifically show a value for the total map resources accessible inside the map bounds.
 * Reinstated the restriction on placing overlay on the first and last row on the map, to correctly emulate the fact the games do not place overlay there.
-* Added "New map from image" feature in the "File" menu, so the rough layout of a map can be designed in an image editor. Each colour in the image can be assigned to a tile.
-* Drag-placing a line of tileset pieces will now tile them without overwriting most of the placed content on each new moved cell.
+* Added "New map from image" feature, so the rough layout of a map can be designed in an image editor. Each colour in the image can be assigned to a tile.
+* A new "Safe tile dragging" feature ensures that drag-placing a line of tileset pieces will now tile them without overwriting most of the placed content on each new moved cell.
 * Red Alert Interior Theater no longer allows placing down Smudge types.
 * Double-clicking on map objects with mouse buttons other than the left one will no longer open the object properties.
 * Fixed bug treating the Commando as unarmed unit, defaulting its orders to "Stop" instead of "Guard". (Not that this has any effect in-game.)
 * Fixed map panels (such as the main map and the preview showing the template to place) affecting the mouse cursor on a global scale rather than only inside their own panel.
 * Fixed bug that made the cursor change when in map bounds editing mode but the cursor is outside the valid map area.
-* On the Map tool, selection of the specific sub-cell now responds correctly when holding down the mouse and dragging to different cells.
+* On the Map tool, selection of the specific sub-cell now responds correctly when holding down the mouse button and dragging to different cells.
+* All picking of objects on the map (usually right-click) now responds correctly when holding down the mouse button and dragging to different cells.
 * Being in placement mode, or dragging around objects, will now show a placement grid. In Resources mode, where holding down Shift is not required for placement, holding Shift will also show the grid.
-* Fixed bug in Smudge mode where clicking on a crater selects the crater's maximum size in the placement template.
-* Fixed bug in Smudge mode where the automatic restoring of partially deleted bibs was restricted to the map bounds instead of the full map size.
+* Fixed bug in Smudge mode where clicking on a crater always selects the crater's maximum size in the placement template.
+* Fixed bug in Smudge mode where the automatic restoring of partially deleted bibs only worked inside the map bounds.
 * Added correct map objects overview and save validation for Sole Survivor, which does not use the expanded Remastered maximum values.
 * Added more options in the settings file, and reordered the settings in the settings file and manual file.
 * Fixed bugs that occurred when disabling the theater-filtering of items.

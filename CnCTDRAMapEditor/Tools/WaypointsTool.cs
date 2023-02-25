@@ -77,7 +77,7 @@ namespace MobiusEditor.Tools
                     RemoveWaypoint(navigationWidget.MouseCell);
                 }
             }
-            else if ((e.Button == MouseButtons.Left) || (e.Button == MouseButtons.Right))
+            else if (e.Button == MouseButtons.Left || e.Button == MouseButtons.Right)
             {
                 PickWaypoint(navigationWidget.MouseCell, e.Button == MouseButtons.Right);
             }
@@ -99,6 +99,10 @@ namespace MobiusEditor.Tools
                 }
                 mapPanel.Invalidate(map, e.OldCell);
                 mapPanel.Invalidate(map, e.NewCell);
+            }
+            else if (e.MouseButtons == MouseButtons.Left || e.MouseButtons == MouseButtons.Right)
+            {
+                PickWaypoint(e.NewCell, e.MouseButtons == MouseButtons.Right);
             }
         }
 

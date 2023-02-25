@@ -166,6 +166,10 @@ namespace MobiusEditor.Tools
                     mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(e.NewCell, new Size(1, 1)), 1, 1));
                 }
             }
+            else if (e.MouseButtons == MouseButtons.Right)
+            {
+                PickWall(e.NewCell);
+            }
         }
 
         private void AddWall(Point location)

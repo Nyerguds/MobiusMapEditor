@@ -297,7 +297,7 @@ namespace MobiusEditor.Model
         {
             get
             {
-                return GetTotalResourcesSimple();
+                return GetTotalResources(false);
             }
         }
 
@@ -307,24 +307,6 @@ namespace MobiusEditor.Model
             {
                 return GetTotalResources(true);
             }
-        }
-
-        /// <summary>
-        /// Returns the combined value of all resources placed on the map. 
-        /// Relies on the currently set graphics stage of the resource cells to calculate their value.
-        /// </summary>
-        /// <returns>The combined value of all resources on the map.</returns>
-        private int GetTotalResourcesSimple()
-        {
-            int totalResources = 0;
-            foreach (var (cell, value) in Overlay)
-            {
-                if (value.Type.IsResource)
-                {
-                    totalResources += value.Type.IsGem ? value.Icon * GemValue * 4 + GemValue * 3 : value.Icon * TiberiumOrGoldValue;
-                }
-            }
-            return totalResources;
         }
 
         /// <summary>
@@ -367,7 +349,15 @@ namespace MobiusEditor.Model
                 // Harvesting has a bug where the final stage returns a value of 0. In case this is fixed, this is the calculation:
                 //totalResources += value.Type.IsGem ? (thickness + 1) * GemValue * 4 : (thickness + 1) * TiberiumOrGoldValue;
                 // Harvesting one gem stage fills one bail, plus 3 extra bails. Last stage is 0 (due to a bug), but still gets the extra bails.
-                totalResources += value.Type.IsGem ? thickness * GemValue * 4 + GemValue * 3 : thickness * TiberiumOrGoldValue;
+                if (Globals.ApplyHarvestBug)
+                {
+                    totalResources += value.Type.IsGem ? thickness * GemValue * 4 + GemValue * 3 : thickness * TiberiumOrGoldValue;
+                }
+                else
+                {
+                    // Fixed logic, in case it is repaired in the code.
+                    totalResources += (thickness + 1) * (value.Type.IsGem ? GemValue * 4 : TiberiumOrGoldValue);
+                }
             }
             return totalResources;
         }

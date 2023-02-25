@@ -24,29 +24,33 @@ namespace MobiusEditor
         static Globals()
         {
             double minScale = 1.0 / Math.Min(OriginalTileWidth, OriginalTileHeight);
+
+            TileDragProtect = Properties.Settings.Default.DefaultTileDragProtect;
+            ShowPlacementGrid = Properties.Settings.Default.DefaultShowPlacementGrid;
+            ShowMapGrid = Properties.Settings.Default.DefaultShowMapGrid;
+            ExportTileScale = Math.Min(1, Math.Max(minScale, Math.Abs(Properties.Settings.Default.DefaultExportScale)));
+            ExportSmoothScale = Properties.Settings.Default.DefaultExportScale < 0;
+            MapGridColor = Properties.Settings.Default.MapGridColor;
             MapBackColor = Color.FromArgb(255, Properties.Settings.Default.MapBackColor);
+
             MapTileScale = Math.Min(1, Math.Max(minScale, Math.Abs(Properties.Settings.Default.MapScale)));
             MapSmoothScale = Properties.Settings.Default.MapScale < 0;
             PreviewTileScale = Math.Min(1, Math.Max(minScale, Math.Abs(Properties.Settings.Default.PreviewScale)));
             PreviewSmoothScale = Properties.Settings.Default.PreviewScale < 0;
-            ExportTileScale = Math.Min(1, Math.Max(minScale, Math.Abs(Properties.Settings.Default.DefaultExportScale)));
-            ExportSmoothScale = Properties.Settings.Default.DefaultExportScale < 0;
             UndoRedoStackSize = Properties.Settings.Default.UndoRedoStackSize;
+            MinimumClampSize = Properties.Settings.Default.MinimumClampSize;
+            NoMetaFilesForSinglePlay = Properties.Settings.Default.NoMetaFilesForSinglePlay;
+            ConvertRaObsoleteClear = Properties.Settings.Default.ConvertRaObsoleteClear;
+            BlockingBibs = Properties.Settings.Default.BlockingBibs;
             DisableAirUnits = Properties.Settings.Default.DisableAirUnits;
             ConvertCraters = Properties.Settings.Default.ConvertCraters;
-            BlockingBibs = Properties.Settings.Default.BlockingBibs;
-            ConvertRaObsoleteClear = Properties.Settings.Default.ConvertRaObsoleteClear;
             BoundsObstructFill = Properties.Settings.Default.BoundsObstructFill;
             FilterTheaterObjects = Properties.Settings.Default.FilterTheaterObjects;
-            MinimumClampSize = Properties.Settings.Default.MinimumClampSize;
             WriteClassicBriefing = Properties.Settings.Default.WriteClassicBriefing;
+            ApplyHarvestBug = Properties.Settings.Default.ApplyHarvestBug;
             NoOwnedObjectsInSole = Properties.Settings.Default.NoOwnedObjectsInSole;
             AdjustSoleTeleports = Properties.Settings.Default.DrawSoleTeleports;
             ExpandSoleLimits = !Properties.Settings.Default.RestrictSoleLimits;
-            MapGridColor = Properties.Settings.Default.MapGridColor;
-            ShowMapGrid = Properties.Settings.Default.DefaultShowMapGrid;
-            TileDragProtect = Properties.Settings.Default.DefaultTileDragProtect;
-            ShowPlacementGrid = Properties.Settings.Default.DefaultShowPlacementGrid;
         }
 
         public const string TilesetsXMLPath = @"DATA\XML\TILESETS.XML";
@@ -61,7 +65,14 @@ namespace MobiusEditor
         public const int PixelWidth = 24;
         public const int PixelHeight = 24;
 
+        public static bool TileDragProtect { get; set; }
+        public static bool ShowPlacementGrid { get; set; }
+        public static bool ShowMapGrid { get; set; }
+        public static double ExportTileScale { get; private set; }
+        public static bool ExportSmoothScale { get; private set; }
+        public static Color MapGridColor { get; private set; }
         public static Color MapBackColor { get; private set; }
+
         public static double MapTileScale { get; private set; }
         public static bool MapSmoothScale { get; private set; }
         public static int MapTileWidth => Math.Max(1, (int)(OriginalTileWidth * MapTileScale));
@@ -74,32 +85,25 @@ namespace MobiusEditor
         public static int PreviewTileHeight => (int)(OriginalTileHeight * PreviewTileScale);
         public static Size PreviewTileSize => new Size(PreviewTileWidth, PreviewTileHeight);
 
-        public static double ExportTileScale { get; private set; }
-        public static bool ExportSmoothScale { get; private set; }
-        public static Size MinimumClampSize { get; private set; }
         public static int UndoRedoStackSize { get; private set; }
+        public static Size MinimumClampSize { get; private set; }
+        public static bool NoMetaFilesForSinglePlay { get; private set; }
+        public static bool ConvertRaObsoleteClear { get; private set; }
+        public static bool BlockingBibs { get; private set; }
         public static bool DisableAirUnits { get; private set; }
         public static bool ConvertCraters { get; private set; }
-        public static bool BlockingBibs { get; private set; }
-        public static bool ConvertRaObsoleteClear { get; private set; }
         public static bool BoundsObstructFill { get; private set; }
         public static bool FilterTheaterObjects { get; private set; }
-        public static bool NoOwnedObjectsInSole { get; private set; }
-        public static bool ExpandSoleLimits { get; private set; }
         public static bool WriteClassicBriefing { get; private set; }
+        public static bool ApplyHarvestBug { get; private set; }
+        public static bool NoOwnedObjectsInSole { get; private set; }
         public static bool AdjustSoleTeleports { get; private set; }
-
-        public static bool ShowMapGrid { get; set; }
-        public static Color MapGridColor { get; private set; }
-
-        public static bool TileDragProtect { get; set; }
-        public static bool ShowPlacementGrid { get; set; }
-
+        public static bool ExpandSoleLimits { get; private set; }
 
         public static readonly Size MapPreviewSize = new Size(512, 512);
         public static readonly Size WorkshopPreviewSize = new Size(512, 512);
 
-        public static readonly string[] Edges = new string[] { "North", "East", "South", "West" };
+        public static readonly string[] MapEdges = new string[] { "North", "East", "South", "West" };
         public const int NumInfantryStops = 5;
 
         public const int MaxTeamClasses = 5;

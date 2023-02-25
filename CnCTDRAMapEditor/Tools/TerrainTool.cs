@@ -312,6 +312,10 @@ namespace MobiusEditor.Tools
                     map.Technos.Add(oldLocation, toMove);
                 }
             }
+            else if (e.MouseButtons == MouseButtons.Right)
+            {
+                PickTerrain(e.NewCell);
+            }
         }
 
         private void AddTerrain(Point location)

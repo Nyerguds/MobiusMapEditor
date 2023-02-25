@@ -356,6 +356,10 @@ namespace MobiusEditor.Tools
                     map.Technos.Add(oldLocation, selectedUnit);
                 }
             }
+            else if (e.MouseButtons == MouseButtons.Right)
+            {
+                PickUnit(e.NewCell);
+            }
         }
 
         private void AddUnit(Point location)

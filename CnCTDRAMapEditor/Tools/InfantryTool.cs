@@ -314,6 +314,10 @@ namespace MobiusEditor.Tools
                     }
                 }
             }
+            else if (e.Button == MouseButtons.Right)
+            {
+                PickInfantry(navigationWidget.MouseCell);
+            }
         }
 
         private void MapPanel_MouseDown(object sender, MouseEventArgs e)

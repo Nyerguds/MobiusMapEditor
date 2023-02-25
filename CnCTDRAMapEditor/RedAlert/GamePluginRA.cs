@@ -2194,7 +2194,7 @@ namespace MobiusEditor.RedAlert
                         String iniText = ini.ToString("\n");
                         GeneralUtils.WriteMultiEncoding(iniText.Split('\n'), mprWriter, dos437, utf8, new[] { ("Steam", null), ("Briefing", "Text"), ("Basic", "Name"), ("Basic", "Author") }, linebreak);
                     }
-                    if (!Map.BasicSection.SoloMission || !Properties.Settings.Default.NoMetaFilesForSinglePlay)
+                    if (!Map.BasicSection.SoloMission || !Globals.NoMetaFilesForSinglePlay)
                     {
                         var tgaPath = Path.ChangeExtension(path, ".tga");
                         var jsonPath = Path.ChangeExtension(path, ".json");

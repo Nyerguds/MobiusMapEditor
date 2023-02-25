@@ -398,6 +398,10 @@ namespace MobiusEditor.Tools
                 }
                 mapPanel.Invalidate(map, refreshList.Keys);
             }
+            else if (e.MouseButtons == MouseButtons.Right)
+            {
+                PickBuilding(e.NewCell);
+            }
         }
 
         private void AddBuilding(Point location)
