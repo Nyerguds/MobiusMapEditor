@@ -47,13 +47,15 @@ namespace MobiusEditor.Tools
 
         protected override Boolean InPlacementMode
         {
-            get { return placementMode || selectedUnitLocation.HasValue; }
+            get { return placementMode || startedDragging; }
         }
 
         private readonly Unit mockUnit;
 
         private Unit selectedUnit;
         private Point? selectedUnitLocation;
+        private bool startedDragging;
+
         private ObjectPropertiesPopup selectedObjectProperties;
 
         private UnitType selectedUnitType;
@@ -156,6 +158,8 @@ namespace MobiusEditor.Tools
                 {
                     selectedUnit = null;
                     selectedUnitLocation = null;
+                    startedDragging = false;
+                    mapPanel.Invalidate();
                     Unit preEdit = unit.Clone();
                     selectedObjectProperties?.Close();
                     selectedObjectProperties = new ObjectPropertiesPopup(objectProperties.Plugin, unit);
@@ -292,6 +296,7 @@ namespace MobiusEditor.Tools
                 AddMoveUndoTracking(selectedUnit, selectedUnitLocation.Value);
                 selectedUnit = null;
                 selectedUnitLocation = null;
+                startedDragging = false;
                 mapPanel.Invalidate();
                 UpdateStatus();
             }
@@ -344,16 +349,21 @@ namespace MobiusEditor.Tools
             }
             else if (selectedUnit != null)
             {
-                var oldLocation = map.Technos[selectedUnit].Value;
-                mapPanel.Invalidate(map, selectedUnit);
-                map.Technos.Remove(selectedUnit);
-                if (map.Technos.Add(e.NewCell, selectedUnit))
+                if (!startedDragging && selectedUnitLocation.HasValue && selectedUnitLocation.Value != e.NewCell)
                 {
-                    mapPanel.Invalidate(map, selectedUnit);
+                    startedDragging = true;
+                }
+                Unit toMove = selectedUnit;
+                var oldLocation = map.Technos[toMove].Value;
+                mapPanel.Invalidate(map, toMove);
+                map.Technos.Remove(toMove);
+                if (map.Technos.Add(e.NewCell, toMove))
+                {
+                    mapPanel.Invalidate(map, toMove);
                 }
                 else
                 {
-                    map.Technos.Add(oldLocation, selectedUnit);
+                    map.Technos.Add(oldLocation, toMove);
                 }
             }
             else if (e.MouseButtons == MouseButtons.Right)
@@ -364,34 +374,42 @@ namespace MobiusEditor.Tools
 
         private void AddUnit(Point location)
         {
-            if (SelectedUnitType != null)
+            if (!map.Metrics.Contains(location))
             {
-                var unit = mockUnit.Clone();
-                if (map.Technos.Add(location, unit))
+                return;
+            }
+            if (SelectedUnitType == null)
+            {
+                return;
+            }
+            selectedUnit = null;
+            selectedUnitLocation = null;
+            startedDragging = false;
+            var unit = mockUnit.Clone();
+            if (map.Technos.Add(location, unit))
+            {
+                bool origDirtyState = plugin.Dirty;
+                plugin.Dirty = true;
+                mapPanel.Invalidate(map, unit);
+                void undoAction(UndoRedoEventArgs e)
                 {
-                    bool origDirtyState = plugin.Dirty;
-                    plugin.Dirty = true;
-                    mapPanel.Invalidate(map, unit);
-                    void undoAction(UndoRedoEventArgs e)
+                    e.MapPanel.Invalidate(e.Map, unit);
+                    e.Map.Technos.Remove(unit);
+                    if (e.Plugin != null)
                     {
-                        e.MapPanel.Invalidate(e.Map, unit);
-                        e.Map.Technos.Remove(unit);
-                        if (e.Plugin != null)
-                        {
-                            e.Plugin.Dirty = origDirtyState;
-                        }
+                        e.Plugin.Dirty = origDirtyState;
                     }
-                    void redoAction(UndoRedoEventArgs e)
-                    {
-                        e.Map.Technos.Add(location, unit);
-                        e.MapPanel.Invalidate(e.Map, unit);
-                        if (e.Plugin != null)
-                        {
-                            e.Plugin.Dirty = true;
-                        }
-                    }
-                    url.Track(undoAction, redoAction);
                 }
+                void redoAction(UndoRedoEventArgs e)
+                {
+                    e.Map.Technos.Add(location, unit);
+                    e.MapPanel.Invalidate(e.Map, unit);
+                    if (e.Plugin != null)
+                    {
+                        e.Plugin.Dirty = true;
+                    }
+                }
+                url.Track(undoAction, redoAction);
             }
         }
 
@@ -475,6 +493,7 @@ namespace MobiusEditor.Tools
         {
             selectedUnit = null;
             selectedUnitLocation = null;
+            startedDragging = false;
             if (map.Metrics.GetCell(location, out int cell))
             {
                 Unit selected = map.Technos[cell] as Unit;

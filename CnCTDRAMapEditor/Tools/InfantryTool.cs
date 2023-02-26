@@ -47,7 +47,7 @@ namespace MobiusEditor.Tools
 
         protected override Boolean InPlacementMode
         {
-            get { return placementMode || selectedInfantryLocation.HasValue; }
+            get { return placementMode || startedDragging; }
         }
 
         private readonly Infantry mockInfantry;
@@ -55,6 +55,7 @@ namespace MobiusEditor.Tools
         private Infantry selectedInfantry;
         private Point? selectedInfantryLocation;
         private int selectedInfantryStop = -1;
+        private bool startedDragging;
         private ObjectPropertiesPopup selectedObjectProperties;
 
         private InfantryType selectedInfantryType;
@@ -163,6 +164,9 @@ namespace MobiusEditor.Tools
                     {
                         selectedInfantry = null;
                         selectedInfantryLocation = null;
+                        selectedInfantryStop = -1;
+                        startedDragging = false;
+                        mapPanel.Invalidate();
                         Infantry preEdit = infantry.Clone();
                         selectedObjectProperties?.Close();
                         selectedObjectProperties = new ObjectPropertiesPopup(objectProperties.Plugin, infantry);
@@ -274,14 +278,19 @@ namespace MobiusEditor.Tools
             }
             else if (selectedInfantry != null)
             {
+                Point curCell = navigationWidget.MouseCell;
                 Point oldLocation = map.Technos[selectedInfantry.InfantryGroup].Value;
+                if (!startedDragging && selectedInfantryLocation.HasValue && selectedInfantryLocation.Value != curCell)
+                {
+                    startedDragging = true;
+                }
                 int oldStop = selectedInfantry.InfantryGroup.GetLocation(selectedInfantry);
                 InfantryGroup infantryGroup = null;
-                var techno = map.Technos[navigationWidget.MouseCell];
+                var techno = map.Technos[curCell];
                 if (techno == null)
                 {
                     infantryGroup = new InfantryGroup();
-                    map.Technos.Add(navigationWidget.MouseCell, infantryGroup);
+                    map.Technos.Add(curCell, infantryGroup);
                 }
                 else if (techno is InfantryGroup)
                 {
@@ -309,6 +318,10 @@ namespace MobiusEditor.Tools
                         }
                         if (infantryGroup == selectedInfantry.InfantryGroup)
                         {
+                            if (!startedDragging && selectedInfantryStop != i)
+                            {
+                                startedDragging = true;
+                            }
                             break;
                         }
                     }
@@ -351,6 +364,7 @@ namespace MobiusEditor.Tools
                 selectedInfantry = null;
                 selectedInfantryLocation = null;
                 selectedInfantryStop = -1;
+                startedDragging = false;
                 mapPanel.Invalidate();
                 UpdateStatus();
             }
@@ -450,14 +464,18 @@ namespace MobiusEditor.Tools
 
         private void AddInfantry(Point location)
         {
-            if (SelectedInfantryType == null)
-            {
-                return;
-            }
             if (!map.Metrics.GetCell(location, out int cell))
             {
                 return;
             }
+            if (SelectedInfantryType == null)
+            {
+                return;
+            }
+            selectedInfantry = null;
+            selectedInfantryLocation = null;
+            selectedInfantryStop = -1;
+            startedDragging = false;
             InfantryGroup infantryGroup = null;
             var techno = map.Technos[cell];
             if (techno == null)

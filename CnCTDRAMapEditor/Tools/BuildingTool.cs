@@ -47,7 +47,7 @@ namespace MobiusEditor.Tools
 
         protected override Boolean InPlacementMode
         {
-            get { return placementMode || selectedBuildingLocation.HasValue; }
+            get { return placementMode || startedDragging; }
         }
 
         private readonly Building mockBuilding;
@@ -56,6 +56,8 @@ namespace MobiusEditor.Tools
         private Point? selectedBuildingLocation;
         private Dictionary<Point, Smudge> selectedBuildingEatenSmudge;
         private Point selectedBuildingPivot;
+        private bool startedDragging;
+
         private ObjectPropertiesPopup selectedObjectProperties;
 
         private BuildingType selectedBuildingType;
@@ -118,6 +120,8 @@ namespace MobiusEditor.Tools
                     selectedBuilding = null;
                     selectedBuildingLocation = null;
                     selectedBuildingPivot = Point.Empty;
+                    startedDragging = false;
+                    mapPanel.Invalidate();
                     Building preEdit = building.Clone();
                     selectedObjectProperties?.Close();
                     selectedObjectProperties = new ObjectPropertiesPopup(objectProperties.Plugin, building);
@@ -259,6 +263,7 @@ namespace MobiusEditor.Tools
                 selectedBuilding = null;
                 selectedBuildingLocation = null;
                 selectedBuildingPivot = Point.Empty;
+                startedDragging = false;
                 mapPanel.Invalidate();
                 UpdateStatus();
             }
@@ -336,6 +341,11 @@ namespace MobiusEditor.Tools
             }
             else if (selectedBuilding != null)
             {
+                if (!startedDragging && selectedBuildingLocation.HasValue
+                    && new Point(selectedBuildingLocation.Value.X + selectedBuildingPivot.X, selectedBuildingLocation.Value.Y + selectedBuildingPivot.Y) != e.NewCell)
+                {
+                    startedDragging = true;
+                }
                 Building toMove = selectedBuilding;
                 var oldLocation = map.Technos[toMove].Value;
                 var newLocation = new Point(Math.Max(0, e.NewCell.X - selectedBuildingPivot.X), Math.Max(0, e.NewCell.Y - selectedBuildingPivot.Y));
@@ -406,10 +416,18 @@ namespace MobiusEditor.Tools
 
         private void AddBuilding(Point location)
         {
+            if (!map.Metrics.Contains(location))
+            {
+                return;
+            }
             if (SelectedBuildingType == null)
             {
                 return;
             }
+            selectedBuilding = null;
+            selectedBuildingLocation = null;
+            selectedBuildingPivot = Point.Empty;
+            startedDragging = false;
             var building = mockBuilding.Clone();
             if (!map.Technos.CanAdd(location, building, building.Type.BaseOccupyMask))
             {
@@ -430,9 +448,6 @@ namespace MobiusEditor.Tools
                     }
                 }
             }
-            selectedBuilding = null;
-            selectedBuildingLocation = null;
-            selectedBuildingPivot = Point.Empty;
             if (map.Buildings.Add(location, building))
             {
                 Building[] baseBuildings = null;
@@ -643,6 +658,7 @@ namespace MobiusEditor.Tools
             selectedBuilding = null;
             selectedBuildingLocation = null;
             selectedBuildingPivot = Point.Empty;
+            startedDragging = false;
             if (map.Metrics.GetCell(location, out int cell))
             {
                 Building selected = map.Buildings[cell] as Building;

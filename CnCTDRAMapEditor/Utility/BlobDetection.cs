@@ -52,22 +52,22 @@ namespace MobiusEditor.Utility
             image.UnlockBits(sourceData);
             // Binarization: get brightness
             Single[,] brightness = new Single[height, width];
-            Int32 offset = 0;
+            Int32 lineOffset = 0;
             for (Int32 y = 0; y < height; ++y)
             {
                 // use stride to get the start offset of each line
-                Int32 usedOffset = offset;
+                Int32 offset = lineOffset;
                 for (Int32 x = 0; x < width; ++x)
                 {
                     // get colour
-                    Byte blu = data[usedOffset + 0];
-                    Byte grn = data[usedOffset + 1];
-                    Byte red = data[usedOffset + 2];
+                    Byte blu = data[offset + 0];
+                    Byte grn = data[offset + 1];
+                    Byte red = data[offset + 2];
                     Color c = Color.FromArgb(red, grn, blu);
                     brightness[y, x] = c.GetBrightness();
-                    usedOffset += 4;
+                    offset += 4;
                 }
-                offset += stride;
+                lineOffset += stride;
             }
             Func<Single[,], Int32, Int32, Boolean> clearsThreshold;
             if (detectDark)
@@ -111,7 +111,7 @@ namespace MobiusEditor.Utility
 
         /// <summary>
         /// Detects a list of all blobs in the image, and merges any with bounds that intersect with each other according to the 'mergeThreshold' parameter.
-        /// Returns the result as Boolean[,] array.
+        /// Returns the results as Boolean[,] arrays.
         /// </summary>
         /// <typeparam name="T">Type of the list to detect equal neighbours in.</typeparam>
         /// <param name="data">Image data array. It is processed as one pixel per coordinate.</param>
@@ -164,7 +164,7 @@ namespace MobiusEditor.Utility
         public static List<List<Point>> FindBlobs<T>(T data, Int32 width, Int32 height, Func<T, Int32, Int32, Boolean> clearsThreshold, Boolean allEightEdges, Boolean getEdgesOnly, out List<Boolean[,]> inBlobs, out Boolean[,] inAnyBlob)
         {
             List<List<Point>> blobs = new List<List<Point>>();
-            inAnyBlob = new Boolean[height,width];
+            inAnyBlob = new Boolean[height, width];
             inBlobs = new List<Boolean[,]>();
             for (Int32 y = 0; y < height; ++y)
             {
@@ -392,7 +392,7 @@ namespace MobiusEditor.Utility
         }
 
         /// <summary>
-        /// Gets the list of neighbouring points around one point in an image.
+        /// Gets the list of neighbouring points around one point in an image that are inside the full image bounds.
         /// </summary>
         /// <param name="x">X-coordinate of the point to get neighbours of.</param>
         /// <param name="y">Y-coordinate of the point to get neighbours of.</param>

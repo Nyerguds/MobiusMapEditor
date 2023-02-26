@@ -47,7 +47,7 @@ namespace MobiusEditor.Tools
 
         protected override Boolean InPlacementMode
         {
-            get { return placementMode || selectedTerrainLocation.HasValue; }
+            get { return placementMode || startedDragging; }
         }
 
         private readonly Terrain mockTerrain;
@@ -55,9 +55,11 @@ namespace MobiusEditor.Tools
         private Terrain selectedTerrain;
         private Point? selectedTerrainLocation;
         private Point selectedTerrainPivot;
+        private bool startedDragging;
+
+        private TerrainPropertiesPopup selectedTerrainProperties;
 
         private TerrainType selectedTerrainType;
-        private TerrainPropertiesPopup selectedTerrainProperties;
         private TerrainType SelectedTerrainType
         {
             get => selectedTerrainType;
@@ -118,6 +120,8 @@ namespace MobiusEditor.Tools
                     selectedTerrain = null;
                     selectedTerrainLocation = null;
                     selectedTerrainPivot = Point.Empty;
+                    startedDragging = false;
+                    mapPanel.Invalidate();
                     selectedTerrainProperties?.Close();
                     // only TD supports triggers ("Attacked" type) on terrain types.
                     if (plugin.GameType == GameType.TiberianDawn)
@@ -235,6 +239,7 @@ namespace MobiusEditor.Tools
                 selectedTerrain = null;
                 selectedTerrainLocation = null;
                 selectedTerrainPivot = Point.Empty;
+                startedDragging = false;
                 mapPanel.Invalidate();
                 UpdateStatus();
             }
@@ -298,6 +303,11 @@ namespace MobiusEditor.Tools
             }
             else if (selectedTerrain != null)
             {
+                if (!startedDragging && selectedTerrainLocation.HasValue
+                    && new Point(selectedTerrainLocation.Value.X + selectedTerrainPivot.X, selectedTerrainLocation.Value.Y + selectedTerrainPivot.Y) != e.NewCell)
+                {
+                    startedDragging = true;
+                }
                 Terrain toMove = selectedTerrain;
                 var oldLocation = map.Technos[toMove].Value;
                 var newLocation = new Point(Math.Max(0, e.NewCell.X - selectedTerrainPivot.X), Math.Max(0, e.NewCell.Y - selectedTerrainPivot.Y));
@@ -324,34 +334,39 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-            if (SelectedTerrainType != null)
+            if (SelectedTerrainType == null)
             {
-                var terrain = mockTerrain.Clone();
-                if (map.Technos.Add(location, terrain))
+                return;
+            }
+            selectedTerrain = null;
+            selectedTerrainLocation = null;
+            selectedTerrainPivot = Point.Empty;
+            startedDragging = false;
+            var terrain = mockTerrain.Clone();
+            if (map.Technos.Add(location, terrain))
+            {
+                bool origDirtyState = plugin.Dirty;
+                plugin.Dirty = true;
+                mapPanel.Invalidate(map, terrain);
+                void undoAction(UndoRedoEventArgs e)
                 {
-                    bool origDirtyState = plugin.Dirty;
-                    plugin.Dirty = true;
-                    mapPanel.Invalidate(map, terrain);
-                    void undoAction(UndoRedoEventArgs e)
+                    e.MapPanel.Invalidate(e.Map, location);
+                    e.Map.Technos.Remove(terrain);
+                    if (e.Plugin != null)
                     {
-                        e.MapPanel.Invalidate(e.Map, location);
-                        e.Map.Technos.Remove(terrain);
-                        if (e.Plugin != null)
-                        {
-                            e.Plugin.Dirty = origDirtyState;
-                        }
+                        e.Plugin.Dirty = origDirtyState;
                     }
-                    void redoAction(UndoRedoEventArgs e)
-                    {
-                        e.Map.Technos.Add(location, terrain);
-                        e.MapPanel.Invalidate(e.Map, location);
-                        if (e.Plugin != null)
-                        {
-                            e.Plugin.Dirty = true;
-                        }
-                    }
-                    url.Track(undoAction, redoAction);
                 }
+                void redoAction(UndoRedoEventArgs e)
+                {
+                    e.Map.Technos.Add(location, terrain);
+                    e.MapPanel.Invalidate(e.Map, location);
+                    if (e.Plugin != null)
+                    {
+                        e.Plugin.Dirty = true;
+                    }
+                }
+                url.Track(undoAction, redoAction);
             }
         }
 
@@ -433,6 +448,7 @@ namespace MobiusEditor.Tools
             selectedTerrain = null;
             selectedTerrainLocation = null;
             selectedTerrainPivot = Point.Empty;
+            startedDragging = false;
             if (map.Metrics.GetCell(location, out int cell) && map.Technos[cell] is Terrain selected && selected != null)
             {
                 Point? selectedLocation = map.Technos[selected];

@@ -294,13 +294,17 @@ namespace MobiusEditor.Utility
         public static Color[] FindMostCommonColors(int amount, byte[] imageData, int width, int height, int stride)
         {
             // Store colour frequencies in a dictionary.
+            if (amount < 0)
+                amount = Int32.MaxValue;
             Dictionary<Color, Int32> colorFreq = new Dictionary<Color, Int32>();
+            Int32 lineStart = 0;
             for (Int32 y = 0; y < height; ++y)
             {
                 // Reset offset on every line, since stride is not guaranteed to always be width * pixel size.
-                Int32 inputOffs = y * stride;
-                //Final offset = y * line length in bytes + x * pixel length in bytes.
-                //To avoid recalculating that offset each time we just increase it with the pixel size at the end of each x iteration.
+                Int32 inputOffs = lineStart;
+                //Final offset = y * linelength + x * pixellength.
+                // To avoid recalculating that offset each time we just increase it with the pixel size at the end of each x iteration,
+                // and increase the line start with the stride at the end of each y iteration.
                 for (Int32 x = 0; x < width; ++x)
                 {
                     //Get colour components out. "ARGB" is actually the order in the final integer which is read as little-endian, so the real order is BGRA.
@@ -318,6 +322,7 @@ namespace MobiusEditor.Utility
                     // Increase the offset by the pixel width. For 32bpp ARGB, each pixel is 4 bytes.
                     inputOffs += 4;
                 }
+                lineStart += stride;
             }
             // Get the maximum value in the dictionary values
             return colorFreq.OrderByDescending(kvp => kvp.Value).Select(kvp => kvp.Key).Take(amount).ToArray();

@@ -906,7 +906,8 @@ namespace MobiusEditor
             bool isTdMegaMap = false;
             using (NewMapDialog nmd = new NewMapDialog(withImage))
             {
-                if (nmd.ShowDialog() != DialogResult.OK)
+                nmd.StartPosition = FormStartPosition.CenterParent;
+                if (nmd.ShowDialog(this) != DialogResult.OK)
                 {
                     return;
                 }
@@ -951,6 +952,7 @@ namespace MobiusEditor
             if (!IdentifyMap(name, out FileType fileType, out GameType gameType, out bool isTdMegaMap))
             {
                 string extension = Path.GetExtension(name).TrimStart('.');
+                // No point in supporting jpeg here; the mapping needs distinct colours without fades.
                 if ("PNG".Equals(extension, StringComparison.OrdinalIgnoreCase)
                     || "BMP".Equals(extension, StringComparison.OrdinalIgnoreCase)
                     || "GIF".Equals(extension, StringComparison.OrdinalIgnoreCase)
