@@ -11,6 +11,9 @@
     <Setting Name="ModsToLoadSS" Type="System.String" Scope="Application">
       <Value Profile="(Default)">2844969675;GraphicsFixesTD</Value>
     </Setting>
+    <Setting Name="DefaultBoundsObstructFill" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
     <Setting Name="DefaultTileDragProtect" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>
@@ -63,9 +66,6 @@
       <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="ConvertCraters" Type="System.Boolean" Scope="Application">
-      <Value Profile="(Default)">True</Value>
-    </Setting>
-    <Setting Name="BoundsObstructFill" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="FilterTheaterObjects" Type="System.Boolean" Scope="Application">

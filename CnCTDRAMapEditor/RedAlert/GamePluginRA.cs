@@ -32,6 +32,9 @@ namespace MobiusEditor.RedAlert
     class GamePluginRA : IGamePlugin
     {
         private const int multiStartPoints = 8;
+
+        private const int DefaultGoldValue = 25;
+        private const int DefaultGemValue = 50;
         private readonly IEnumerable<string> movieTypes;
         private bool isLoading = false;
 
@@ -426,8 +429,8 @@ namespace MobiusEditor.RedAlert
                 UnitTypes.GetTypes(Globals.DisableAirUnits), BuildingTypes.GetTypes(), TeamMissionTypes.GetTypes(),
                 fullTechnoTypes, waypoints, movieTypes, movieEmpty, themeTypes, themeEmpty)
             {
-                TiberiumOrGoldValue = 25,
-                GemValue = 50
+                TiberiumOrGoldValue = DefaultGoldValue,
+                GemValue = DefaultGemValue
             };
             Map.BasicSection.PropertyChanged += BasicSection_PropertyChanged;
             Map.MapSection.PropertyChanged += MapSection_PropertyChanged;
@@ -2021,8 +2024,8 @@ namespace MobiusEditor.RedAlert
         private IEnumerable<string> UpdateRules(INI ini, Map map)
         {
             List<string> errors = new List<string>();
-            errors.AddRange(UpdateGeneralRules(ini, this.Map));
-            errors.AddRange(UpdateBuildingRules(ini, this.Map));
+            errors.AddRange(UpdateGeneralRules(ini, map));
+            errors.AddRange(UpdateBuildingRules(ini, map));
             return errors;
         }
 
@@ -2030,15 +2033,9 @@ namespace MobiusEditor.RedAlert
         {
             List<string> errors = new List<string>();
             int? goldVal = GetIntRulesValue(ini, "General", "GoldValue", errors);
-            if (goldVal.HasValue)
-            {
-                this.Map.TiberiumOrGoldValue = goldVal.Value;
-            }
+            map.TiberiumOrGoldValue = goldVal ?? DefaultGoldValue;
             int? gemVal = GetIntRulesValue(ini, "General", "GemValue", errors);
-            if (gemVal.HasValue)
-            {
-                this.Map.GemValue = gemVal.Value;
-            }
+            map.GemValue = gemVal ?? DefaultGemValue;
             return errors;
         }
 
@@ -2064,7 +2061,7 @@ namespace MobiusEditor.RedAlert
             return null;
         }
 
-        private IEnumerable<string> UpdateBuildingRules(INI ini, Map map)
+        private static IEnumerable<string> UpdateBuildingRules(INI ini, Map map)
         {
             List<string> errors = new List<string>();
             Dictionary<string, BuildingType> originals = BuildingTypes.GetTypes().ToDictionary(b => b.Name, StringComparer.OrdinalIgnoreCase);
@@ -2134,7 +2131,7 @@ namespace MobiusEditor.RedAlert
         /// <param name="bType">Building type</param>
         /// <param name="hasBib">true if the new setting says the building will have a bib.</param>
         /// <returns>The points of and directly around any removed walls.</returns>
-        private IEnumerable<Point> ChangeBib(Map map, IEnumerable<(Point Location, Building Occupier)> buildings, BuildingType bType, Boolean hasBib)
+        private static IEnumerable<Point> ChangeBib(Map map, IEnumerable<(Point Location, Building Occupier)> buildings, BuildingType bType, Boolean hasBib)
         {
             HashSet<Point> changed = new HashSet<Point>();
             if (bType.HasBib == hasBib)

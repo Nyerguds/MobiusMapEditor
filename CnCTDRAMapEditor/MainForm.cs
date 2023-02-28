@@ -128,6 +128,7 @@ namespace MobiusEditor
 
             InitializeComponent();
             // Loaded from global settings.
+            toolsOptionsBoundsObstructFillMenuItem.Checked = Globals.BoundsObstructFill;
             toolsOptionsSafeDraggingMenuItem.Checked = Globals.TileDragProtect;
             toolsOptionsPlacementGridMenuItem.Checked = Globals.ShowPlacementGrid;
             viewMapGridMenuItem.Checked = Globals.ShowMapGrid;
@@ -783,6 +784,14 @@ namespace MobiusEditor
                         mapPanel.Invalidate();
                     }
                 }
+            }
+        }
+
+        private void ToolsOptionsBoundsObstructFillMenuItem_Click(Object sender, EventArgs e)
+        {
+            if (sender is ToolStripMenuItem tsmi)
+            {
+                Globals.BoundsObstructFill = tsmi.Checked;
             }
         }
 

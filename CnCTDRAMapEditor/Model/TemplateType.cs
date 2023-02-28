@@ -69,8 +69,21 @@ namespace MobiusEditor.Model
         /// <summary>
         /// On template types with the 'Group' flag, this needs to contains the list of all the tiles that are part of the group.
         /// On template types with the 'IsGrouped' flag, it must be filled in with a single item containing the name of the group template they belong to.
+        /// On templates with the 'HasEquivalents' flag, this lists all the equivalent tiles.
         /// </summary>
         public string[] GroupTiles { get; private set; }
+
+        /// <summary>
+        /// If 'HasEquivalents' flag is active, the equivalents might not all be the same dimensions.
+        /// This gives the full bounds this tile should act like when used as equivalent.
+        /// </summary>
+        public Size EquivalentBounds { get; private set; } = Size.Empty;
+
+        /// <summary>
+        /// If 'HasEquivalents' flag is active, the equivalents might not all be the same dimensions.
+        /// This gives the offset inside the EquivalentBounds this tile should be placed on when used as equivalent.
+        /// </summary>
+        public Point EquivalentOffset { get; private set; } = Point.Empty;
 
         /// <summary>
         /// Creates a TemplateType object.
@@ -107,49 +120,47 @@ namespace MobiusEditor.Model
         /// <param name="theaters">Theaters that contain this tile.</param>
         /// <param name="flag">Indicates special terrain types.</param>
         /// <param name="maskOverrides">Mask override for tiles that contain too many graphics in the Remaster. Indices with '0' are removed from the tiles. Spaces are ignored and can be added for visual separation.</param>
-        public TemplateType(ushort id, string name, int iconWidth, int iconHeight, TheaterType[] theaters, TemplateTypeFlag flag, params String[] maskOverrides)
+        public TemplateType(ushort id, string name, int iconWidth, int iconHeight, TheaterType[] theaters, TemplateTypeFlag flag, string[] maskOverrides)
             : this(id, name, iconWidth, iconHeight, theaters, flag)
         {
             bool isRandom = NumIcons == 1 && (flag & TemplateTypeFlag.RandomCell) != TemplateTypeFlag.None;
             // Mask override for tiles that contain too many graphics in the Remaster. Indices with '0' are removed from the tiles.
             // Spaces are ignored and can be added for visual separation.
-            if (maskOverrides.Length > 0)
+            if (maskOverrides != null && maskOverrides.Length > 0 && !isRandom)
             {
-                if (!isRandom)
+                bool forAll = theaters == null || maskOverrides.Length != theaters.Length;
+                for (int i = 0; i < maskOverrides.Length; i++)
                 {
-                    bool forAll = theaters == null || maskOverrides.Length != theaters.Length;
-                    for (Int32 i = 0; i < maskOverrides.Length; i++)
+                    string maskOverride = maskOverrides[i];
+                    string theater = forAll ? String.Empty : theaters[i].Name;
+                    bool[,] mask = null;
+                    if (!String.IsNullOrEmpty(maskOverride))
                     {
-                        string maskOverride = maskOverrides[i];
-                        string theater = forAll ? String.Empty : theaters[i].Name;
-                        bool[,] mask = null;
-                        if (!String.IsNullOrEmpty(maskOverride))
+                        mask = new bool[iconHeight, iconWidth];
+                        int charIndex = 0;
+                        for (int y = 0; y < IconHeight; ++y)
                         {
-                            mask = new bool[iconHeight, iconWidth];
-                            int charIndex = 0;
-                            for (var y = 0; y < IconHeight; ++y)
+                            for (int x = 0; x < IconWidth; ++x, ++charIndex)
                             {
-                                for (var x = 0; x < IconWidth; ++x, ++charIndex)
+                                // The format allows whitespace for clarity. Skip without consequence.
+                                while (charIndex < maskOverride.Length && maskOverride[charIndex] == ' ')
                                 {
-                                    // The format allows whitespace for clarity. Skip without consequence.
-                                    while (charIndex < maskOverride.Length && maskOverride[charIndex] == ' ')
-                                    {
-                                        charIndex++;
-                                    }
-                                    mask[y, x] = charIndex < maskOverride.Length && maskOverride[charIndex] != '0';
+                                    charIndex++;
                                 }
+                                mask[y, x] = charIndex < maskOverride.Length && maskOverride[charIndex] != '0';
                             }
                         }
-                        if (mask != null)
-                        {
-                            MaskOverrides[theater] = mask;
-                        }
-                        if (forAll)
-                        {
-                            break;
-                        }
+                    }
+                    if (mask != null)
+                    {
+                        MaskOverrides[theater] = mask;
+                    }
+                    if (forAll)
+                    {
+                        break;
                     }
                 }
+                
             }
         }
 
@@ -160,7 +171,7 @@ namespace MobiusEditor.Model
         /// <param name="name">Name of the associated graphics.</param>
         /// <param name="theaters">Theaters that contain this tile.</param>
         /// <param name="groupName">Name of the group entry it belongs to.</param>
-        public TemplateType(ushort id, string name, TheaterType[] theaters, String groupName)
+        public TemplateType(ushort id, string name, TheaterType[] theaters, string groupName)
             : this(id, name, 1, 1, theaters, TemplateTypeFlag.IsGrouped)
         {
             GroupTiles = new string[] { groupName };
@@ -174,7 +185,7 @@ namespace MobiusEditor.Model
         /// <param name="theaters">Theaters that contain this tile.</param>
         /// <param name="asGroup">True to create this tile as group for containing other 1x1 types. Needs 'containedTiles' to be filled in.</param>
         /// <param name="containedTiles">The tiles contained in this group entry.</param>
-        public TemplateType(ushort id, string name, TheaterType[] theaters, bool asGroup, params String[] containedTiles)
+        public TemplateType(ushort id, string name, TheaterType[] theaters, bool asGroup, string[] containedTiles)
             : this(id, name, 1, 1, theaters, asGroup ? TemplateTypeFlag.Group : TemplateTypeFlag.RandomCell)
         {
             if (asGroup)
@@ -191,9 +202,65 @@ namespace MobiusEditor.Model
         /// <param name="iconWidth">Width in cells.</param>
         /// <param name="iconHeight">Height in cells.</param>
         /// <param name="theaters">Theaters that contain this tile.</param>
+        /// <param name="flag">Indicates special terrain types.</param>
+        /// <param name="maskOverrides">Mask override for tiles that contain too many graphics in the Remaster. Indices with '0' are removed from the tiles. Spaces are ignored and can be added for visual separation.</param>
+        /// <param name="equivalentBounds"></param>
+        /// <param name="equivalentOffset"></param>
+        /// <param name="equivalentTiles"></param>
+        public TemplateType(ushort id, string name, int iconWidth, int iconHeight, TheaterType[] theaters, string[] maskOverrides, Size equivalentBounds, Point equivalentOffset, string[] equivalentTiles)
+            : this(id, name, iconWidth, iconHeight, theaters, TemplateTypeFlag.None, maskOverrides)
+        {
+            this.EquivalentBounds = equivalentBounds == Size.Empty ? new Size(iconWidth, iconHeight) : equivalentBounds;
+            this.EquivalentOffset = equivalentOffset;
+            List<String> equivs = equivalentTiles == null ? null : equivalentTiles.Distinct(StringComparer.OrdinalIgnoreCase).Where(t => t != null && !t.Equals(name, StringComparison.OrdinalIgnoreCase)).ToList();
+            if (equivs != null && equivs.Count > 0)
+            {
+                equivs.Add(name);
+                this.Flag = TemplateTypeFlag.HasEquivalents;
+            }
+            this.GroupTiles = equivs == null ? new string[0] : equivs.ToArray();
+        }
+
+        /// <summary>
+        /// Creates a TemplateType object.
+        /// </summary>
+        /// <param name="id">Numeric id in the game map data.</param>
+        /// <param name="name">Name of the associated graphics.</param>
+        /// <param name="iconWidth">Width in cells.</param>
+        /// <param name="iconHeight">Height in cells.</param>
+        /// <param name="theaters">Theaters that contain this tile.</param>
+        /// <param name="flag">Indicates special terrain types.</param>
+        /// <param name="maskOverrides">Mask override for tiles that contain too many graphics in the Remaster. Indices with '0' are removed from the tiles. Spaces are ignored and can be added for visual separation.</param>
+        public TemplateType(ushort id, string name, int iconWidth, int iconHeight, TheaterType[] theaters, String maskOverrides, String[] equivalentTiles)
+            : this(id, name, iconWidth, iconHeight, theaters, maskOverrides == null ? null : new[] { maskOverrides }, Size.Empty, Point.Empty, equivalentTiles)
+        {
+        }
+
+
+        /// <summary>
+        /// Creates a TemplateType object.
+        /// </summary>
+        /// <param name="id">Numeric id in the game map data.</param>
+        /// <param name="name">Name of the associated graphics.</param>
+        /// <param name="iconWidth">Width in cells.</param>
+        /// <param name="iconHeight">Height in cells.</param>
+        /// <param name="theaters">Theaters that contain this tile.</param>
         /// <param name="maskOverride">Mask override for tiles that contain too many graphics in the Remaster. Indices with '0' are removed from the tiles. Spaces are ignored and can be added for visual separation.</param>
-        public TemplateType(ushort id, string name, int iconWidth, int iconHeight, TheaterType[] theaters, params String[] maskOverride)
+        public TemplateType(ushort id, string name, int iconWidth, int iconHeight, TheaterType[] theaters, String[] maskOverride)
             : this(id, name, iconWidth, iconHeight, theaters, TemplateTypeFlag.None, maskOverride)
+        {
+        }
+        /// <summary>
+        /// Creates a TemplateType object.
+        /// </summary>
+        /// <param name="id">Numeric id in the game map data.</param>
+        /// <param name="name">Name of the associated graphics.</param>
+        /// <param name="iconWidth">Width in cells.</param>
+        /// <param name="iconHeight">Height in cells.</param>
+        /// <param name="theaters">Theaters that contain this tile.</param>
+        /// <param name="maskOverride">Mask override for tiles that contain too many graphics in the Remaster. Indices with '0' are removed from the tiles. Spaces are ignored and can be added for visual separation.</param>
+        public TemplateType(ushort id, string name, int iconWidth, int iconHeight, TheaterType[] theaters, String maskOverride)
+            : this(id, name, iconWidth, iconHeight, theaters, TemplateTypeFlag.None, maskOverride == null ? null : new string[] { maskOverride })
         {
         }
 

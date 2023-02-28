@@ -53,6 +53,15 @@ namespace MobiusEditor.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool DefaultBoundsObstructFill {
+            get {
+                return ((bool)(this["DefaultBoundsObstructFill"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool DefaultTileDragProtect {
             get {
                 return ((bool)(this["DefaultTileDragProtect"]));
@@ -209,15 +218,6 @@ namespace MobiusEditor.Properties {
         public bool ConvertCraters {
             get {
                 return ((bool)(this["ConvertCraters"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool BoundsObstructFill {
-            get {
-                return ((bool)(this["BoundsObstructFill"]));
             }
         }
         

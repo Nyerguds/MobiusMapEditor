@@ -26,7 +26,9 @@ namespace MobiusEditor
             double minScale = 1.0 / Math.Min(OriginalTileWidth, OriginalTileHeight);
 
             TileDragProtect = Properties.Settings.Default.DefaultTileDragProtect;
+            TileDragAlternate = true; // Properties.Settings.Default.TileDragAlternate;
             ShowPlacementGrid = Properties.Settings.Default.DefaultShowPlacementGrid;
+            BoundsObstructFill = Properties.Settings.Default.DefaultBoundsObstructFill;
             ShowMapGrid = Properties.Settings.Default.DefaultShowMapGrid;
             ExportTileScale = Math.Min(1, Math.Max(minScale, Math.Abs(Properties.Settings.Default.DefaultExportScale)));
             ExportSmoothScale = Properties.Settings.Default.DefaultExportScale < 0;
@@ -44,7 +46,6 @@ namespace MobiusEditor
             BlockingBibs = Properties.Settings.Default.BlockingBibs;
             DisableAirUnits = Properties.Settings.Default.DisableAirUnits;
             ConvertCraters = Properties.Settings.Default.ConvertCraters;
-            BoundsObstructFill = Properties.Settings.Default.BoundsObstructFill;
             FilterTheaterObjects = Properties.Settings.Default.FilterTheaterObjects;
             WriteClassicBriefing = Properties.Settings.Default.WriteClassicBriefing;
             ApplyHarvestBug = Properties.Settings.Default.ApplyHarvestBug;
@@ -66,8 +67,11 @@ namespace MobiusEditor
         public const int PixelHeight = 24;
 
         public static bool TileDragProtect { get; set; }
+        public static bool TileDragAlternate { get; set; }        
         public static bool ShowPlacementGrid { get; set; }
+        public static bool BoundsObstructFill { get; set; }
         public static bool ShowMapGrid { get; set; }
+
         public static double ExportTileScale { get; private set; }
         public static bool ExportSmoothScale { get; private set; }
         public static Color MapGridColor { get; private set; }
@@ -92,7 +96,6 @@ namespace MobiusEditor
         public static bool BlockingBibs { get; private set; }
         public static bool DisableAirUnits { get; private set; }
         public static bool ConvertCraters { get; private set; }
-        public static bool BoundsObstructFill { get; private set; }
         public static bool FilterTheaterObjects { get; private set; }
         public static bool WriteClassicBriefing { get; private set; }
         public static bool ApplyHarvestBug { get; private set; }

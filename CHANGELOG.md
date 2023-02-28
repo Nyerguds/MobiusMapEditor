@@ -386,7 +386,7 @@ Unreleased
 * The Map Objects Statistics tool now shows the classic game limits for TD maps. (RA has no changes in these.)
 * Disabled the ability to export to .meg type via the menu shortcut when the editor is not compiled in developer mode.
 * Removed confusion on the Loop / Existence / Persistence setting in triggers, by renaming it to "Executes", with choices "On first triggering", "When all linked objects are triggered", and "On each triggering".
-* Red Alert's multi-event types for triggers are now written out in full rather than using programmming symbols like '||' and '&&'.
+* Red Alert's multi-event types for triggers are now written out in full rather than using programming symbols like '||' and '&&'.
 * Added trigger filter tool, with search criteria for house, execute type, multi-event type, event, action, teamtype and global.
 * Deselecting the selected tile in the Map tool by clicking in the blank space will now properly show that that reverts the selection to Clear terrain.
 * The total map resources value on the resource placement tool will now be calculated correctly (including the game bug that makes the last harvested stage never give any money).
@@ -409,3 +409,4 @@ Unreleased
 * Fixed bugs that occurred when disabling the theater-filtering of items.
 * Pressing Alt+F4 to close the editor will now also work when a tool window is selected.
 * The tool windows for infantry, units and structures will now optimally use the available space.
+* Added option to randomise drag-placed map tileset blocks using equivalent tileset blocks.

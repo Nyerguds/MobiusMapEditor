@@ -59,6 +59,7 @@ namespace MobiusEditor.Tools
 
         private readonly Dictionary<int, Template> undoTemplates = new Dictionary<int, Template>();
         private readonly Dictionary<int, Template> redoTemplates = new Dictionary<int, Template>();
+        private String lastPlaced;
 
         private Map previewMap;
         protected override Map RenderMap => previewMap;
@@ -941,31 +942,52 @@ namespace MobiusEditor.Tools
         private void SetTemplate(Point location, bool skipInvalidate)
         {
             // If dragging a multi-tile template, only place a new one if nothing overlaps with prevoously-placed tiles from the same drag operation.
+            TemplateType selected = SelectedTemplateType;
+            bool[,] selectedMask = selected.IconMask;
             if (SelectedIcon == null && Globals.TileDragProtect)
             {
-                TemplateType selected = SelectedTemplateType;
                 for (int y = 0, icon = 0; y < selected.IconHeight; ++y)
                 {
                     for (var x = 0; x < selected.IconWidth; ++x, ++icon)
                     {
-                        if (selected.IconMask != null && !selected.IconMask[y, x])
+                        if (selectedMask != null && !selectedMask[y, x])
                         {
                             continue;
                         }
                         var subLocation = new Point(location.X + x, location.Y + y);
-                        if (map.Metrics.GetCell(subLocation, out int cell))
+                        if (map.Metrics.GetCell(subLocation, out int cell) && redoTemplates.ContainsKey(cell))
                         {
-                            if (redoTemplates.ContainsKey(cell) &&
-                                redoTemplates[cell] != null && redoTemplates[cell].Type.ID == SelectedTemplateType.ID)
-                            {
-                                return;
-                            }
+                            return;
                         }
+                    }
+                }
+                // Consider placing an alternate if something is already placed, and the selected tile has alternates.
+                if (Globals.TileDragAlternate && redoTemplates.Count > 0
+                    && ((selected.Flag & TemplateTypeFlag.HasEquivalents) == TemplateTypeFlag.HasEquivalents)
+                    && selected.GroupTiles != null && selected.GroupTiles.Length > 0)
+                {
+                    // Remove last-placed from possible placed tiles so each new placed one is unique.
+                    List<String> alts = selected.GroupTiles.Where(x => x != null && !x.Equals(lastPlaced, StringComparison.OrdinalIgnoreCase)).ToList();
+                    // If there is only one alternate, just randomise between both, to avoid getting a repeating alternating pattern.
+                    if (alts.Count == 1)
+                    {
+                        alts.Add(selected.Name);
+                    }
+                    int entry = random.Next(0, alts.Count);
+                    String tile = alts[entry];
+                    TemplateType newtile = this.map.TemplateTypes.FirstOrDefault(tt => tile.Equals(tt.Name, StringComparison.OrdinalIgnoreCase));
+                    if (newtile != null)
+                    {
+                        // Adjust to offsets.
+                        location = new Point(location.X - selected.EquivalentOffset.X + newtile.EquivalentOffset.X,
+                                            location.Y - selected.EquivalentOffset.Y + newtile.EquivalentOffset.Y);
+                        selected = newtile;
                     }
                 }
             }
             Dictionary<int, Template> addedRedoTemplates = new Dictionary<int, Template>();
-            SetTemplate(map, SelectedTemplateType, location, SelectedIcon, undoTemplates, addedRedoTemplates, random);
+            SetTemplate(map, selected, location, SelectedIcon, undoTemplates, addedRedoTemplates, random);
+            lastPlaced = selected.Name;
             // Merge with main redoTemplates list.
             addedRedoTemplates.ToList().ForEach(kv => redoTemplates[kv.Key] = kv.Value);
             if (!skipInvalidate)
