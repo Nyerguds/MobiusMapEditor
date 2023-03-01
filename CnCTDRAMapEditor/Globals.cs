@@ -25,11 +25,13 @@ namespace MobiusEditor
         {
             double minScale = 1.0 / Math.Min(OriginalTileWidth, OriginalTileHeight);
 
-            TileDragProtect = Properties.Settings.Default.DefaultTileDragProtect;
-            TileDragAlternate = true; // Properties.Settings.Default.TileDragAlternate;
-            ShowPlacementGrid = Properties.Settings.Default.DefaultShowPlacementGrid;
             BoundsObstructFill = Properties.Settings.Default.DefaultBoundsObstructFill;
+            TileDragProtect = Properties.Settings.Default.DefaultTileDragProtect;
+            TileDragRandomize = Properties.Settings.Default.DefaultTileDragRandomize;
+            ShowPlacementGrid = Properties.Settings.Default.DefaultShowPlacementGrid;
+            CratesOnTop = Properties.Settings.Default.DefaultCratesOnTop;
             ShowMapGrid = Properties.Settings.Default.DefaultShowMapGrid;
+
             ExportTileScale = Math.Min(1, Math.Max(minScale, Math.Abs(Properties.Settings.Default.DefaultExportScale)));
             ExportSmoothScale = Properties.Settings.Default.DefaultExportScale < 0;
             MapGridColor = Properties.Settings.Default.MapGridColor;
@@ -66,10 +68,11 @@ namespace MobiusEditor
         public const int PixelWidth = 24;
         public const int PixelHeight = 24;
 
-        public static bool TileDragProtect { get; set; }
-        public static bool TileDragAlternate { get; set; }        
-        public static bool ShowPlacementGrid { get; set; }
         public static bool BoundsObstructFill { get; set; }
+        public static bool TileDragProtect { get; set; }
+        public static bool TileDragRandomize { get; set; }
+        public static bool ShowPlacementGrid { get; set; }
+        public static bool CratesOnTop { get; set; }
         public static bool ShowMapGrid { get; set; }
 
         public static double ExportTileScale { get; private set; }

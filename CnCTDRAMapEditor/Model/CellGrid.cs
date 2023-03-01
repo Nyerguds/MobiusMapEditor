@@ -92,7 +92,6 @@ namespace MobiusEditor.Model
         public CellGrid(CellMetrics metrics)
         {
             this.metrics = metrics;
-
             cells = new T[metrics.Height, metrics.Width];
         }
 

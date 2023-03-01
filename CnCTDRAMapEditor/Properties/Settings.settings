@@ -17,7 +17,13 @@
     <Setting Name="DefaultTileDragProtect" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>
+    <Setting Name="DefaultTileDragRandomize" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
     <Setting Name="DefaultShowPlacementGrid" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="DefaultCratesOnTop" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="DefaultShowMapGrid" Type="System.Boolean" Scope="Application">

@@ -34,12 +34,12 @@
             // lstTemplates
             // 
             this.lstTemplates.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left)));
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.lstTemplates.Enabled = false;
             this.lstTemplates.FormattingEnabled = true;
-            this.lstTemplates.Location = new System.Drawing.Point(274, 30);
+            this.lstTemplates.Location = new System.Drawing.Point(274, 38);
             this.lstTemplates.Name = "lstTemplates";
-            this.lstTemplates.Size = new System.Drawing.Size(184, 290);
+            this.lstTemplates.Size = new System.Drawing.Size(184, 251);
             this.lstTemplates.TabIndex = 2;
             this.lstTemplates.SelectedIndexChanged += new System.EventHandler(this.lstTemplates_SelectedIndexChanged);
             // 
@@ -48,9 +48,9 @@
             this.lstMappings.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.lstMappings.FormattingEnabled = true;
-            this.lstMappings.Location = new System.Drawing.Point(740, 30);
+            this.lstMappings.Location = new System.Drawing.Point(726, 38);
             this.lstMappings.Name = "lstMappings";
-            this.lstMappings.Size = new System.Drawing.Size(184, 290);
+            this.lstMappings.Size = new System.Drawing.Size(184, 264);
             this.lstMappings.TabIndex = 2;
             this.lstMappings.SelectedIndexChanged += new System.EventHandler(this.lstMappings_SelectedIndexChanged);
             this.lstMappings.MouseDown += new System.Windows.Forms.MouseEventHandler(this.lstMappings_MouseDown);
@@ -59,7 +59,7 @@
             // 
             this.lblColor.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.lblColor.AutoSize = true;
-            this.lblColor.Location = new System.Drawing.Point(12, 299);
+            this.lblColor.Location = new System.Drawing.Point(15, 313);
             this.lblColor.Name = "lblColor";
             this.lblColor.Size = new System.Drawing.Size(78, 13);
             this.lblColor.TabIndex = 8;
@@ -68,7 +68,7 @@
             // lblColorVal
             // 
             this.lblColorVal.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.lblColorVal.Location = new System.Drawing.Point(96, 295);
+            this.lblColorVal.Location = new System.Drawing.Point(99, 309);
             this.lblColorVal.Name = "lblColorVal";
             this.lblColorVal.Size = new System.Drawing.Size(91, 21);
             this.lblColorVal.TabIndex = 8;
@@ -77,45 +77,48 @@
             // 
             // lblMappings
             // 
+            this.lblMappings.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.lblMappings.AutoSize = true;
-            this.lblMappings.Location = new System.Drawing.Point(740, 9);
+            this.lblMappings.Location = new System.Drawing.Point(725, 9);
             this.lblMappings.Name = "lblMappings";
-            this.lblMappings.Size = new System.Drawing.Size(56, 13);
+            this.lblMappings.Size = new System.Drawing.Size(154, 26);
             this.lblMappings.TabIndex = 8;
-            this.lblMappings.Text = "Mappings:";
+            this.lblMappings.Text = "Mappings:\r\nClick to select existing mapping";
             // 
             // lblImage
             // 
             this.lblImage.AutoSize = true;
             this.lblImage.Location = new System.Drawing.Point(12, 9);
             this.lblImage.Name = "lblImage";
-            this.lblImage.Size = new System.Drawing.Size(39, 13);
+            this.lblImage.Size = new System.Drawing.Size(99, 26);
             this.lblImage.TabIndex = 9;
-            this.lblImage.Text = "Image:";
+            this.lblImage.Text = "Image:\r\nClick to select color";
             // 
             // lblTemplates
             // 
+            this.lblTemplates.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.lblTemplates.AutoSize = true;
             this.lblTemplates.Location = new System.Drawing.Point(271, 9);
             this.lblTemplates.Name = "lblTemplates";
-            this.lblTemplates.Size = new System.Drawing.Size(59, 13);
+            this.lblTemplates.Size = new System.Drawing.Size(146, 26);
             this.lblTemplates.TabIndex = 9;
-            this.lblTemplates.Text = "Templates:";
+            this.lblTemplates.Text = "Templates:\r\nClick to map color to template";
             // 
             // label1
             // 
+            this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.label1.AutoSize = true;
             this.label1.Location = new System.Drawing.Point(461, 9);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(32, 13);
+            this.label1.Size = new System.Drawing.Size(139, 26);
             this.label1.TabIndex = 9;
-            this.label1.Text = "Tiles:";
+            this.label1.Text = "Tiles:\r\nClick to map to specific icon";
             // 
             // btnOk
             // 
             this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnOk.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.btnOk.Location = new System.Drawing.Point(765, 333);
+            this.btnOk.Location = new System.Drawing.Point(754, 308);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(75, 23);
             this.btnOk.TabIndex = 10;
@@ -126,7 +129,7 @@
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(846, 333);
+            this.btnCancel.Location = new System.Drawing.Point(835, 308);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 10;
@@ -135,8 +138,8 @@
             // 
             // btnChooseColor
             // 
-            this.btnChooseColor.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.btnChooseColor.Location = new System.Drawing.Point(193, 294);
+            this.btnChooseColor.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnChooseColor.Location = new System.Drawing.Point(196, 308);
             this.btnChooseColor.Name = "btnChooseColor";
             this.btnChooseColor.Size = new System.Drawing.Size(75, 23);
             this.btnChooseColor.TabIndex = 10;
@@ -145,16 +148,15 @@
             // 
             // templateTypeMapPanel
             // 
-            this.templateTypeMapPanel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
+            this.templateTypeMapPanel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.templateTypeMapPanel.Enabled = false;
-            this.templateTypeMapPanel.Location = new System.Drawing.Point(464, 30);
+            this.templateTypeMapPanel.Location = new System.Drawing.Point(464, 38);
             this.templateTypeMapPanel.MapImage = null;
             this.templateTypeMapPanel.MaxZoom = 8D;
             this.templateTypeMapPanel.MinZoom = 1D;
             this.templateTypeMapPanel.Name = "templateTypeMapPanel";
-            this.templateTypeMapPanel.Size = new System.Drawing.Size(270, 290);
+            this.templateTypeMapPanel.Size = new System.Drawing.Size(256, 256);
             this.templateTypeMapPanel.SmoothScale = false;
             this.templateTypeMapPanel.TabIndex = 7;
             this.templateTypeMapPanel.Zoom = 1D;
@@ -165,11 +167,12 @@
             // 
             // picZoom
             // 
-            this.picZoom.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left)));
+            this.picZoom.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.picZoom.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.picZoom.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.picZoom.Location = new System.Drawing.Point(12, 30);
+            this.picZoom.Location = new System.Drawing.Point(15, 38);
             this.picZoom.Name = "picZoom";
             this.picZoom.Size = new System.Drawing.Size(256, 256);
             this.picZoom.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
@@ -184,8 +187,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(933, 368);
-            this.ControlBox = false;
+            this.ClientSize = new System.Drawing.Size(934, 341);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnChooseColor);
             this.Controls.Add(this.btnOk);
@@ -199,6 +201,8 @@
             this.Controls.Add(this.lstMappings);
             this.Controls.Add(this.lstTemplates);
             this.Controls.Add(this.picZoom);
+            this.Icon = global::MobiusEditor.Properties.Resources.GameIcon00;
+            this.MinimizeBox = false;
             this.Name = "NewFromImageDialog";
             this.Text = "Map colors to tiles";
             ((System.ComponentModel.ISupportInitialize)(this.picZoom)).EndInit();

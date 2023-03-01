@@ -57,7 +57,7 @@ namespace MobiusEditor.Model
         Technos = Terrain | Walls | Infantry | Units | Buildings | BuildingFakes,
         MapLayers = Terrain | Resources | Walls | Overlay | Smudge | Infantry | Units | Buildings | Waypoints,
         /// <summary>Listing of layers that don't need a full map repaint.</summary>
-        Indicators = Boundaries | MapSymmetry | MapGrid| WaypointsIndic | CellTriggers | TechnoTriggers | BuildingRebuild | BuildingFakes | FootballArea,
+        Indicators = Boundaries | MapSymmetry | MapGrid | WaypointsIndic | CellTriggers | TechnoTriggers | BuildingRebuild | BuildingFakes | FootballArea,
         All = Int32.MaxValue
     }
 

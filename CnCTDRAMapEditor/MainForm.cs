@@ -787,7 +787,7 @@ namespace MobiusEditor
             }
         }
 
-        private void ToolsOptionsBoundsObstructFillMenuItem_Click(Object sender, EventArgs e)
+        private void ToolsOptionsBoundsObstructFillMenuItem_CheckedChanged(Object sender, EventArgs e)
         {
             if (sender is ToolStripMenuItem tsmi)
             {
@@ -803,11 +803,33 @@ namespace MobiusEditor
             }
         }
 
+        private void ToolsOptionsRandomizeDragPlaceMenuItem_CheckedChanged(Object sender, EventArgs e)
+        {
+            if (sender is ToolStripMenuItem tsmi)
+            {
+                Globals.TileDragRandomize = tsmi.Checked;
+            }
+        }
+
         private void ToolsOptionsPlacementGridMenuItem_CheckedChanged(Object sender, EventArgs e)
         {
             if (sender is ToolStripMenuItem tsmi)
             {
                 Globals.ShowPlacementGrid = tsmi.Checked;
+            }
+        }
+
+        private void ToolsOptionsCratesOnTopMenuItem_CheckedChanged(Object sender, EventArgs e)
+        {
+            if (sender is ToolStripMenuItem tsmi)
+            {
+                Globals.CratesOnTop = tsmi.Checked;
+            }
+            if (plugin != null)
+            {
+                Map map = plugin.Map;
+                CellMetrics cm = map.Metrics;
+                mapPanel.Invalidate(map, map.Overlay.Select(ov => cm.GetLocation(ov.Cell)).Where(c => c.HasValue).Cast<Point>());
             }
         }
 

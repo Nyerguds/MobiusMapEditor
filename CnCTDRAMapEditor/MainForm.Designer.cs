@@ -75,6 +75,7 @@ namespace MobiusEditor
             this.optionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolsOptionsBoundsObstructFillMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolsOptionsSafeDraggingMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolsOptionsRandomizeDragPlaceMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolsOptionsPlacementGridMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolsRandomizeTilesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolsExportImageMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -115,7 +116,6 @@ namespace MobiusEditor
             this.copyrightStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.mouseToolTip = new System.Windows.Forms.ToolTip(this.components);
             this.mainToolStrip = new System.Windows.Forms.ToolStrip();
-            this.mapPanel = new MobiusEditor.Controls.MapPanel();
             this.mapToolStripButton = new MobiusEditor.Controls.ViewToolStripButton();
             this.smudgeToolStripButton = new MobiusEditor.Controls.ViewToolStripButton();
             this.overlayToolStripButton = new MobiusEditor.Controls.ViewToolStripButton();
@@ -128,6 +128,8 @@ namespace MobiusEditor
             this.waypointsToolStripButton = new MobiusEditor.Controls.ViewToolStripButton();
             this.cellTriggersToolStripButton = new MobiusEditor.Controls.ViewToolStripButton();
             this.selectToolStripButton = new MobiusEditor.Controls.ViewToolStripButton();
+            this.mapPanel = new MobiusEditor.Controls.MapPanel();
+            this.toolsOptionsCratesOnTopMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mainMenuStrip.SuspendLayout();
             this.mainStatusStrip.SuspendLayout();
             this.mainToolStrip.SuspendLayout();
@@ -346,7 +348,7 @@ namespace MobiusEditor
             this.toolsStatsGameObjectsMenuItem.Name = "toolsStatsGameObjectsMenuItem";
             this.toolsStatsGameObjectsMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.B)));
             this.toolsStatsGameObjectsMenuItem.Size = new System.Drawing.Size(205, 22);
-            this.toolsStatsGameObjectsMenuItem.Text = "&Map Objects";
+            this.toolsStatsGameObjectsMenuItem.Text = "&Map Objects...";
             this.toolsStatsGameObjectsMenuItem.Click += new System.EventHandler(this.ToolsStatsGameObjectsMenuItem_Click);
             // 
             // toolsStatsPowerMenuItem
@@ -370,7 +372,9 @@ namespace MobiusEditor
             this.optionsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolsOptionsBoundsObstructFillMenuItem,
             this.toolsOptionsSafeDraggingMenuItem,
-            this.toolsOptionsPlacementGridMenuItem});
+            this.toolsOptionsRandomizeDragPlaceMenuItem,
+            this.toolsOptionsPlacementGridMenuItem,
+            this.toolsOptionsCratesOnTopMenuItem});
             this.optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
             this.optionsToolStripMenuItem.Size = new System.Drawing.Size(204, 22);
             this.optionsToolStripMenuItem.Text = "Options";
@@ -383,7 +387,7 @@ namespace MobiusEditor
             this.toolsOptionsBoundsObstructFillMenuItem.Name = "toolsOptionsBoundsObstructFillMenuItem";
             this.toolsOptionsBoundsObstructFillMenuItem.Size = new System.Drawing.Size(279, 22);
             this.toolsOptionsBoundsObstructFillMenuItem.Text = "Map bounds obstruct flood fill";
-            this.toolsOptionsBoundsObstructFillMenuItem.Click += new System.EventHandler(this.ToolsOptionsBoundsObstructFillMenuItem_Click);
+            this.toolsOptionsBoundsObstructFillMenuItem.Click += new System.EventHandler(this.ToolsOptionsBoundsObstructFillMenuItem_CheckedChanged);
             // 
             // toolsOptionsSafeDraggingMenuItem
             // 
@@ -394,6 +398,16 @@ namespace MobiusEditor
             this.toolsOptionsSafeDraggingMenuItem.Size = new System.Drawing.Size(279, 22);
             this.toolsOptionsSafeDraggingMenuItem.Text = "Drag-place map tiles without smearing";
             this.toolsOptionsSafeDraggingMenuItem.CheckStateChanged += new System.EventHandler(this.ToolsOptionsSafeDraggingMenuItem_CheckedChanged);
+            // 
+            // toolsOptionsRandomizeDragPlaceMenuItem
+            // 
+            this.toolsOptionsRandomizeDragPlaceMenuItem.Checked = true;
+            this.toolsOptionsRandomizeDragPlaceMenuItem.CheckOnClick = true;
+            this.toolsOptionsRandomizeDragPlaceMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.toolsOptionsRandomizeDragPlaceMenuItem.Name = "toolsOptionsRandomizeDragPlaceMenuItem";
+            this.toolsOptionsRandomizeDragPlaceMenuItem.Size = new System.Drawing.Size(279, 22);
+            this.toolsOptionsRandomizeDragPlaceMenuItem.Text = "Randomize drag-placed map tiles";
+            this.toolsOptionsRandomizeDragPlaceMenuItem.CheckStateChanged += new System.EventHandler(this.ToolsOptionsRandomizeDragPlaceMenuItem_CheckedChanged);
             // 
             // toolsOptionsPlacementGridMenuItem
             // 
@@ -767,27 +781,6 @@ namespace MobiusEditor
             this.mainToolStrip.Text = "toolStrip1";
             this.mainToolStrip.MouseMove += new System.Windows.Forms.MouseEventHandler(this.MainToolStrip_MouseMove);
             // 
-            // mapPanel
-            // 
-            this.mapPanel.AllowDrop = true;
-            this.mapPanel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(32)))), ((int)(((byte)(32)))), ((int)(((byte)(32)))));
-            this.mapPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.mapPanel.FocusOnMouseEnter = true;
-            this.mapPanel.Location = new System.Drawing.Point(0, 55);
-            this.mapPanel.MapImage = null;
-            this.mapPanel.MaxZoom = 8D;
-            this.mapPanel.MinZoom = 1D;
-            this.mapPanel.Name = "mapPanel";
-            this.mapPanel.Size = new System.Drawing.Size(1008, 484);
-            this.mapPanel.SmoothScale = false;
-            this.mapPanel.TabIndex = 4;
-            this.mapPanel.Zoom = 1D;
-            this.mapPanel.ZoomStep = 1D;
-            this.mapPanel.PostRender += new System.EventHandler<MobiusEditor.Event.RenderEventArgs>(this.mapPanel_PostRender);
-            this.mapPanel.DragDrop += new System.Windows.Forms.DragEventHandler(this.MapPanel_DragDrop);
-            this.mapPanel.DragEnter += new System.Windows.Forms.DragEventHandler(this.MapPanel_DragEnter);
-            this.mapPanel.MouseMove += new System.Windows.Forms.MouseEventHandler(this.MapPanel_MouseMove);
-            // 
             // mapToolStripButton
             // 
             this.mapToolStripButton.Image = ((System.Drawing.Image)(resources.GetObject("mapToolStripButton.Image")));
@@ -909,6 +902,37 @@ namespace MobiusEditor
             this.selectToolStripButton.Visible = false;
             this.selectToolStripButton.Click += new System.EventHandler(this.mainToolStripButton_Click);
             // 
+            // mapPanel
+            // 
+            this.mapPanel.AllowDrop = true;
+            this.mapPanel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(32)))), ((int)(((byte)(32)))), ((int)(((byte)(32)))));
+            this.mapPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.mapPanel.FocusOnMouseEnter = true;
+            this.mapPanel.Location = new System.Drawing.Point(0, 55);
+            this.mapPanel.MapImage = null;
+            this.mapPanel.MaxZoom = 8D;
+            this.mapPanel.MinZoom = 1D;
+            this.mapPanel.Name = "mapPanel";
+            this.mapPanel.Size = new System.Drawing.Size(1008, 484);
+            this.mapPanel.SmoothScale = false;
+            this.mapPanel.TabIndex = 4;
+            this.mapPanel.Zoom = 1D;
+            this.mapPanel.ZoomStep = 1D;
+            this.mapPanel.PostRender += new System.EventHandler<MobiusEditor.Event.RenderEventArgs>(this.mapPanel_PostRender);
+            this.mapPanel.DragDrop += new System.Windows.Forms.DragEventHandler(this.MapPanel_DragDrop);
+            this.mapPanel.DragEnter += new System.Windows.Forms.DragEventHandler(this.MapPanel_DragEnter);
+            this.mapPanel.MouseMove += new System.Windows.Forms.MouseEventHandler(this.MapPanel_MouseMove);
+            // 
+            // toolsOptionsCratesOnTopMenuItem
+            // 
+            this.toolsOptionsCratesOnTopMenuItem.Checked = true;
+            this.toolsOptionsCratesOnTopMenuItem.CheckOnClick = true;
+            this.toolsOptionsCratesOnTopMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.toolsOptionsCratesOnTopMenuItem.Name = "toolsOptionsCratesOnTopMenuItem";
+            this.toolsOptionsCratesOnTopMenuItem.Size = new System.Drawing.Size(279, 22);
+            this.toolsOptionsCratesOnTopMenuItem.Text = "Show crates on top of other objects";
+            this.toolsOptionsCratesOnTopMenuItem.CheckedChanged += new System.EventHandler(this.ToolsOptionsCratesOnTopMenuItem_CheckedChanged);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -918,7 +942,7 @@ namespace MobiusEditor
             this.Controls.Add(this.mainToolStrip);
             this.Controls.Add(this.mainStatusStrip);
             this.Controls.Add(this.mainMenuStrip);
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.Icon = global::MobiusEditor.Properties.Resources.GameIcon00;
             this.KeyPreview = true;
             this.MainMenuStrip = this.mainMenuStrip;
             this.Name = "MainForm";
@@ -1021,6 +1045,8 @@ namespace MobiusEditor
         private System.Windows.Forms.ToolStripMenuItem toolsOptionsSafeDraggingMenuItem;
         private System.Windows.Forms.ToolStripMenuItem toolsOptionsPlacementGridMenuItem;
         private System.Windows.Forms.ToolStripMenuItem toolsOptionsBoundsObstructFillMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem toolsOptionsRandomizeDragPlaceMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem toolsOptionsCratesOnTopMenuItem;
     }
 }
 

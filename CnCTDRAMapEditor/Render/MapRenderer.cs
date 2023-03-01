@@ -248,18 +248,24 @@ namespace MobiusEditor.Render
 
             if ((layers & MapLayerFlag.OverlayAll) != MapLayerFlag.None)
             {
-                foreach (var topLeft in renderLocations())
+                foreach (var location in renderLocations())
                 {
-                    var overlay = map.Overlay[topLeft];
+                    var overlay = map.Overlay[location];
                     if (overlay == null)
                     {
                         continue;
                     }
-                    if ((overlay.Type.IsResource && ((layers & MapLayerFlag.Resources) != MapLayerFlag.None)) ||
-                        (overlay.Type.IsWall && ((layers & MapLayerFlag.Walls) != MapLayerFlag.None)) ||
-                        ((layers & MapLayerFlag.Overlay) != MapLayerFlag.None))
+                    bool paintAsCrate = overlay.Type.IsCrate && (layers & MapLayerFlag.Overlay) != MapLayerFlag.None;
+                    if (Globals.CratesOnTop && paintAsCrate)
                     {
-                        Render(gameType, map.Theater, tiberiumOrGoldTypes, gemTypes, topLeft, tileSize, tileScale, overlay).Item2(graphics);
+                        // Crates are skipped; paint them after the rest.
+                        continue;
+                    }
+                    bool paintAsWall = overlay.Type.IsWall && (layers & MapLayerFlag.Walls) != MapLayerFlag.None;
+                    bool paintAsResource = overlay.Type.IsResource && (layers & MapLayerFlag.Resources) != MapLayerFlag.None;
+                    if (paintAsWall || paintAsResource || (layers & MapLayerFlag.Overlay) != MapLayerFlag.None)
+                    {
+                        Render(gameType, map.Theater, tiberiumOrGoldTypes, gemTypes, location, tileSize, tileScale, overlay).Item2(graphics);
                     }
                 }
             }
@@ -327,6 +333,19 @@ namespace MobiusEditor.Render
             {
                 renderer(graphics);
             }
+            if (Globals.CratesOnTop && (layers & MapLayerFlag.Overlay) != MapLayerFlag.None)
+            {
+                foreach (var topLeft in renderLocations())
+                {
+                    var overlay = map.Overlay[topLeft];
+                    if (overlay == null || !overlay.Type.IsCrate)
+                    {
+                        continue;
+                    }
+                    Render(gameType, map.Theater, tiberiumOrGoldTypes, gemTypes, topLeft, tileSize, tileScale, overlay).Item2(graphics);
+                }
+            }
+
             if ((layers & MapLayerFlag.Waypoints) != MapLayerFlag.None)
             {
                 // todo avoid overlapping waypoints of the same type?
@@ -386,30 +405,23 @@ namespace MobiusEditor.Render
         public static (Rectangle, Action<Graphics>) Render(GameType gameType, TheaterType theater, OverlayType[] tiberiumOrGoldTypes, OverlayType[] gemTypes, Point topLeft, Size tileSize, double tileScale, Overlay overlay)
         {
             string name;
-            if (overlay.Type.IsGem && gemTypes != null)
+            OverlayType ovtype = overlay.Type;
+            if (ovtype.IsGem && gemTypes != null)
             {
                 name = gemTypes[new Random(randomSeed ^ topLeft.GetHashCode()).Next(gemTypes.Length)].Name;
             }
-            else if (overlay.Type.IsTiberiumOrGold && tiberiumOrGoldTypes != null)
+            else if (ovtype.IsTiberiumOrGold && tiberiumOrGoldTypes != null)
             {
                 name = tiberiumOrGoldTypes[new Random(randomSeed ^ topLeft.GetHashCode()).Next(tiberiumOrGoldTypes.Length)].Name;
             }
             else
             {
-                name = overlay.Type.GraphicsSource;
+                name = ovtype.GraphicsSource;
             }
-            int icon;
-            if (overlay.Type.IsConcrete || overlay.Type.IsResource || overlay.Type.IsWall)
-            {
-                icon = overlay.Icon;
-            }
-            else
-            {
-                icon = overlay.Type.ForceTileNr == -1 ? overlay.Icon : overlay.Type.ForceTileNr;
-            }
-            bool isTeleport = gameType == GameType.SoleSurvivor && overlay.Type == SoleSurvivor.OverlayTypes.Teleport && Globals.AdjustSoleTeleports;
+            int icon = ovtype.IsConcrete || ovtype.IsResource || ovtype.IsWall || ovtype.ForceTileNr == -1 ? overlay.Icon : ovtype.ForceTileNr;
+            bool isTeleport = gameType == GameType.SoleSurvivor && ovtype == SoleSurvivor.OverlayTypes.Teleport && Globals.AdjustSoleTeleports;
             // For Decoration types, generate dummy if not found.
-            if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, name, icon, out Tile tile, (overlay.Type.Flag & OverlayTypeFlag.Decoration) != 0, false))
+            if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, name, icon, out Tile tile, (ovtype.Flag & OverlayTypeFlag.Pavement) != 0, false))
             {
                 int actualTopLeftX = topLeft.X * tileSize.Width;
                 int actualTopLeftY = topLeft.Y * tileSize.Height;
@@ -1466,7 +1478,6 @@ namespace MobiusEditor.Render
                 }
             }
         }
-
 
         public static void SetRenderSettings(Graphics g, Boolean smooth)
         {

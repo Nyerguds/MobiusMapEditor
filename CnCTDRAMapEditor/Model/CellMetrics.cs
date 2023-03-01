@@ -64,6 +64,16 @@ namespace MobiusEditor.Model
             return Contains(cell);
         }
 
+        public int? GetCell(Point location)
+        {
+            return Contains(location) ? (location.Y * Width) + location.X : (int?)null;
+        }
+
+        public Point? GetLocation(int cell)
+        {
+            return Contains(cell) ? new Point(cell % Width, cell / Width) : (Point?)null;
+        }
+
         public bool Adjacent(Point location, FacingType facing, out Point adjacent)
         {
             adjacent = location;

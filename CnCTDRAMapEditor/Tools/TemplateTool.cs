@@ -962,7 +962,7 @@ namespace MobiusEditor.Tools
                     }
                 }
                 // Consider placing an alternate if something is already placed, and the selected tile has alternates.
-                if (Globals.TileDragAlternate && redoTemplates.Count > 0
+                if (Globals.TileDragRandomize && redoTemplates.Count > 0
                     && ((selected.Flag & TemplateTypeFlag.HasEquivalents) == TemplateTypeFlag.HasEquivalents)
                     && selected.GroupTiles != null && selected.GroupTiles.Length > 0)
                 {

@@ -24,15 +24,15 @@ namespace MobiusEditor.Model
     [Flags]
     public enum OverlayTypeFlag
     {
-        // Nyerguds upgrade: Added decoration and concrete types.
         None            = 0,
         TiberiumOrGold  = (1 << 0),
         Gems            = (1 << 1),
         Wall            = (1 << 2),
         Crate           = (1 << 3),
         Flag            = (1 << 4),
-        Decoration      = (1 << 5),
+        Pavement        = (1 << 5),
         Concrete        = (1 << 6),
+        Solid           = (1 << 7),
     }
 
     public class OverlayType : ICellOccupier, IBrowsableType
@@ -64,7 +64,7 @@ namespace MobiusEditor.Model
 
         public bool IsWall => (Flag & OverlayTypeFlag.Wall) != OverlayTypeFlag.None;
 
-        public bool IsDecoration => (Flag & OverlayTypeFlag.Decoration) != OverlayTypeFlag.None;
+        public bool IsPavement => (Flag & OverlayTypeFlag.Pavement) != OverlayTypeFlag.None;
 
         public bool IsConcrete => (Flag & OverlayTypeFlag.Concrete) != OverlayTypeFlag.None;
 
@@ -75,7 +75,7 @@ namespace MobiusEditor.Model
         public Color Tint { get; set; } = Color.White;
 
         // No reason not to allow placing decorations and flag pedestal.
-        public bool IsPlaceable => (Flag & (OverlayTypeFlag.Crate | OverlayTypeFlag.Decoration | OverlayTypeFlag.Flag | OverlayTypeFlag.Concrete)) != OverlayTypeFlag.None;
+        public bool IsPlaceable => (Flag & (OverlayTypeFlag.Crate | OverlayTypeFlag.Pavement | OverlayTypeFlag.Solid)) != OverlayTypeFlag.None;
 
         public OverlayType(sbyte id, string name, string textId, TheaterType[] theaters, OverlayTypeFlag flag, String graphicsSource, int forceTileNr, Color tint)
         {
@@ -109,23 +109,8 @@ namespace MobiusEditor.Model
         {
         }
 
-        public OverlayType(sbyte id, string name, string textId, TheaterType[] theaters)
-            : this(id, name, textId, theaters, OverlayTypeFlag.Decoration)
-        {
-        }
-
-        public OverlayType(sbyte id, string name, OverlayTypeFlag flag)
-            : this(id, name, name, null, flag)
-        {
-        }
-
         public OverlayType(sbyte id, string name, OverlayTypeFlag flag, int forceTileNr)
             : this(id, name, name, null, flag, null, forceTileNr, Color.White)
-        {
-        }
-
-        public OverlayType(sbyte id, string name, string textId)
-            : this(id, name, textId, null, OverlayTypeFlag.None)
         {
         }
 
