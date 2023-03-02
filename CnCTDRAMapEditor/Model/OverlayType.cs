@@ -74,8 +74,10 @@ namespace MobiusEditor.Model
 
         public Color Tint { get; set; } = Color.White;
 
-        // No reason not to allow placing decorations and flag pedestal.
-        public bool IsPlaceable => (Flag & (OverlayTypeFlag.Crate | OverlayTypeFlag.Pavement | OverlayTypeFlag.Solid)) != OverlayTypeFlag.None;
+        /// <summary>
+        /// Defines that it is placeable under the "overlay" category (and not resource or wall)
+        /// </summary>
+        public bool IsOverlay => (Flag & (OverlayTypeFlag.Wall | OverlayTypeFlag.TiberiumOrGold | OverlayTypeFlag.Gems)) == OverlayTypeFlag.None;
 
         public OverlayType(sbyte id, string name, string textId, TheaterType[] theaters, OverlayTypeFlag flag, String graphicsSource, int forceTileNr, Color tint)
         {

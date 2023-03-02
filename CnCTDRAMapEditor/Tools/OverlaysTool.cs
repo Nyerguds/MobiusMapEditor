@@ -202,7 +202,7 @@ namespace MobiusEditor.Tools
             if (map.Metrics.GetCell(location, out int cell))
             {
                 var overlay = map.Overlay[cell];
-                if (overlay?.Type.IsPlaceable ?? false)
+                if (overlay?.Type.IsOverlay ?? false)
                 {
                     if (!undoOverlays.ContainsKey(cell))
                     {
@@ -293,7 +293,7 @@ namespace MobiusEditor.Tools
             {
                 var overlay = map.Overlay[cell];
                 // Nyerguds fix: this should use the same filter as the list fill! Crashed on resources.
-                if ((overlay != null) && overlay.Type.IsPlaceable)
+                if ((overlay != null) && overlay.Type.IsOverlay)
                 {
                     SelectedOverlayType = overlay.Type;
                 }
@@ -381,7 +381,7 @@ namespace MobiusEditor.Tools
         protected override void PostRenderMap(Graphics graphics)
         {
             base.PostRenderMap(graphics);
-            MapRenderer.RenderAllBoundsFromCell(graphics, Globals.MapTileSize, previewMap.Overlay.Where(x => x.Value.Type.IsPlaceable), previewMap.Metrics);
+            MapRenderer.RenderAllBoundsFromCell(graphics, Globals.MapTileSize, previewMap.Overlay.Where(x => x.Value.Type.IsOverlay), previewMap.Metrics);
         }
 
         public override void Activate()

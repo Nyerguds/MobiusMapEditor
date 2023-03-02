@@ -243,15 +243,15 @@ namespace MobiusEditor.SoleSurvivor
             {
                 if (!Globals.DisableAirUnits)
                 {
-                    info.Add(string.Format(maximums, "aircraft", numAircraft, Globals.ExpandSoleLimits ? Constants.MaxAircraft : Constants.MaxAircraftClassic));
+                    info.Add(string.Format(maximums, "aircraft", numAircraft, Globals.RestrictSoleLimits ? Constants.MaxAircraftClassic : Constants.MaxAircraft));
                 }
-                info.Add(string.Format(maximums, "structures", numBuildings, Globals.ExpandSoleLimits ? Constants.MaxBuildings : Constants.MaxBuildingsClassic));
-                info.Add(string.Format(maximums, "infantry", numInfantry, Globals.ExpandSoleLimits ? Constants.MaxInfantry : Constants.MaxInfantryClassic));
+                info.Add(string.Format(maximums, "structures", numBuildings, Globals.RestrictSoleLimits ? Constants.MaxBuildingsClassic : Constants.MaxBuildings));
+                info.Add(string.Format(maximums, "infantry", numInfantry, Globals.RestrictSoleLimits ? Constants.MaxInfantryClassic : Constants.MaxInfantry));
             }
-            info.Add(string.Format(maximums, "terrain objects", numTerrain, Globals.ExpandSoleLimits ? Constants.MaxTerrain : Constants.MaxTerrainClassic));
+            info.Add(string.Format(maximums, "terrain objects", numTerrain, Globals.RestrictSoleLimits ? Constants.MaxTerrainClassic : Constants.MaxTerrain));
             if (!Globals.NoOwnedObjectsInSole)
             {
-                info.Add(string.Format(maximums, "units", numUnits, Globals.ExpandSoleLimits ? Constants.MaxUnits : Constants.MaxUnitsClassic));
+                info.Add(string.Format(maximums, "units", numUnits, Globals.RestrictSoleLimits ? Constants.MaxUnitsClassic : Constants.MaxUnits));
             }
             //info.Add(string.Format(maximums, "team types", Map.TeamTypes.Count, Globals.ExpandSoleLimits ? Constants.MaxTeams : Constants.MaxTeamsClassic));
             //info.Add(string.Format(maximums, "triggers", Map.Triggers.Count, Globals.ExpandSoleLimits ? Constants.MaxTriggers : Constants.MaxTriggersClassic));

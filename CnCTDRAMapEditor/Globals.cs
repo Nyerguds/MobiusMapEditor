@@ -24,25 +24,26 @@ namespace MobiusEditor
         static Globals()
         {
             double minScale = 1.0 / Math.Min(OriginalTileWidth, OriginalTileHeight);
-
+            // Defaults
             BoundsObstructFill = Properties.Settings.Default.DefaultBoundsObstructFill;
             TileDragProtect = Properties.Settings.Default.DefaultTileDragProtect;
             TileDragRandomize = Properties.Settings.Default.DefaultTileDragRandomize;
             ShowPlacementGrid = Properties.Settings.Default.DefaultShowPlacementGrid;
             CratesOnTop = Properties.Settings.Default.DefaultCratesOnTop;
             ShowMapGrid = Properties.Settings.Default.DefaultShowMapGrid;
-
             ExportTileScale = Math.Min(1, Math.Max(minScale, Math.Abs(Properties.Settings.Default.DefaultExportScale)));
             ExportSmoothScale = Properties.Settings.Default.DefaultExportScale < 0;
+            // Fine tuning
             MapGridColor = Properties.Settings.Default.MapGridColor;
             MapBackColor = Color.FromArgb(255, Properties.Settings.Default.MapBackColor);
-
             MapTileScale = Math.Min(1, Math.Max(minScale, Math.Abs(Properties.Settings.Default.MapScale)));
             MapSmoothScale = Properties.Settings.Default.MapScale < 0;
             PreviewTileScale = Math.Min(1, Math.Max(minScale, Math.Abs(Properties.Settings.Default.PreviewScale)));
             PreviewSmoothScale = Properties.Settings.Default.PreviewScale < 0;
             UndoRedoStackSize = Properties.Settings.Default.UndoRedoStackSize;
             MinimumClampSize = Properties.Settings.Default.MinimumClampSize;
+            // Behavior tweaks
+            Ignore106Scripting = Properties.Settings.Default.Ignore106Scripting;
             NoMetaFilesForSinglePlay = Properties.Settings.Default.NoMetaFilesForSinglePlay;
             ConvertRaObsoleteClear = Properties.Settings.Default.ConvertRaObsoleteClear;
             BlockingBibs = Properties.Settings.Default.BlockingBibs;
@@ -53,7 +54,7 @@ namespace MobiusEditor
             ApplyHarvestBug = Properties.Settings.Default.ApplyHarvestBug;
             NoOwnedObjectsInSole = Properties.Settings.Default.NoOwnedObjectsInSole;
             AdjustSoleTeleports = Properties.Settings.Default.DrawSoleTeleports;
-            ExpandSoleLimits = !Properties.Settings.Default.RestrictSoleLimits;
+            RestrictSoleLimits = Properties.Settings.Default.RestrictSoleLimits;
         }
 
         public const string TilesetsXMLPath = @"DATA\XML\TILESETS.XML";
@@ -74,6 +75,7 @@ namespace MobiusEditor
         public static bool ShowPlacementGrid { get; set; }
         public static bool CratesOnTop { get; set; }
         public static bool ShowMapGrid { get; set; }
+        public static bool Ignore106Scripting { get; set; }
 
         public static double ExportTileScale { get; private set; }
         public static bool ExportSmoothScale { get; private set; }
@@ -104,7 +106,7 @@ namespace MobiusEditor
         public static bool ApplyHarvestBug { get; private set; }
         public static bool NoOwnedObjectsInSole { get; private set; }
         public static bool AdjustSoleTeleports { get; private set; }
-        public static bool ExpandSoleLimits { get; private set; }
+        public static bool RestrictSoleLimits { get; private set; }
 
         public static readonly Size MapPreviewSize = new Size(512, 512);
         public static readonly Size WorkshopPreviewSize = new Size(512, 512);

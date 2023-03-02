@@ -920,16 +920,16 @@ namespace MobiusEditor.RedAlert
                                 }
                             }
                         }
-                        for (var y = 0; y < height; ++y)
+                        for (int y = 0; y < height; ++y)
                         {
-                            for (var x = 0; x < width; ++x)
+                            for (int x = 0; x < width; ++x)
                             {
-                                var iconValue = reader.ReadByte();
-                                var template = Map.Templates[y, x];
+                                Byte iconValue = reader.ReadByte();
+                                Template template = Map.Templates[y, x];
                                 // Prevent loading of illegal tiles.
                                 if (template != null)
                                 {
-                                    var templateType = template.Type;
+                                    TemplateType templateType = template.Type;
                                     bool isRandom = (templateType.Flag & TemplateTypeFlag.RandomCell) != TemplateTypeFlag.None;
                                     bool tileOk = false;
                                     if (iconValue >= templateType.NumIcons)
@@ -939,7 +939,18 @@ namespace MobiusEditor.RedAlert
                                     }
                                     else if (!isRandom && templateType.IconMask != null && !templateType.IconMask[iconValue / templateType.IconWidth, iconValue % templateType.IconWidth])
                                     {
-                                        errors.Add(String.Format("Template '{0}' at cell [{1},{2}] has an icon set ({3}) that is not part of its placeable cells; clearing.", templateType.Name.ToUpper(), x, y, iconValue));
+                                        // Attempt to automatically correct known errors like the bridges
+                                        if (FixCorruptTiles(template, iconValue, out byte newIcon, out string type))
+                                        {
+                                            tileOk = true;
+                                            errors.Add(String.Format("Template '{0}' at cell [{1},{2}], icon {3} is an illegal {4} tile; fixing.", templateType.Name.ToUpper(), x, y, iconValue, type));
+                                            // Only adapt this after adding the old icon value in the message.
+                                            iconValue = newIcon;
+                                        }
+                                        else
+                                        {
+                                            errors.Add(String.Format("Template '{0}' at cell [{1},{2}] has an icon set ({3}) that is not part of its placeable cells; clearing.", templateType.Name.ToUpper(), x, y, iconValue));
+                                        }
                                         modified = true;
                                     }
                                     else if (templateType != TemplateTypes.Clear)
@@ -2019,6 +2030,101 @@ namespace MobiusEditor.RedAlert
             }
             Map.EndUpdate();
             return errors;
+        }
+
+        private Boolean FixCorruptTiles(Template template, byte iconValue, out byte newIconValue, out string type)
+        {
+            TemplateType templateType = template.Type;
+            bool isFixed = false;
+            type = null;
+            newIconValue = iconValue;
+            const string bridgeType = "bridge";
+            const string shoreType = "shore";
+            if (templateType == TemplateTypes.Bridge1x)
+            {
+                type = bridgeType;
+                templateType = TemplateTypes.Bridge1;
+                // Shift up one line
+                newIconValue -= 5;
+                isFixed = true;
+                
+            }
+            else if (templateType == TemplateTypes.Bridge1)
+            {
+                type = bridgeType;
+                templateType = TemplateTypes.Bridge1x;
+                // Shift down one line
+                newIconValue += 5;
+                isFixed = true;
+            }
+            else if (templateType == TemplateTypes.Bridge2x)
+            {
+                type = bridgeType;
+                templateType = TemplateTypes.Bridge2;
+                // Shift up one line
+                newIconValue -= 5;
+                isFixed = true;
+            }
+            else if (templateType == TemplateTypes.Bridge2)
+            {
+                type = bridgeType;
+                templateType = TemplateTypes.Bridge2x;
+                // Shift down one line
+                newIconValue += 5;
+                isFixed = true;
+            }
+            else if (templateType == TemplateTypes.Bridge1a)
+            {
+                type = bridgeType;
+                templateType = TemplateTypes.Bridge1ax;
+                isFixed = true;
+            }
+            else if (templateType == TemplateTypes.Bridge1ax)
+            {
+                type = bridgeType;
+                templateType = TemplateTypes.Bridge1a;
+                // Align to new width
+                if (newIconValue >= 5)
+                    newIconValue--;
+                if (newIconValue >= 10)
+                    newIconValue--;
+                isFixed = true;
+            }
+            else if (templateType == TemplateTypes.Bridge2a)
+            {
+                type = bridgeType;
+                templateType = TemplateTypes.Bridge2ax;
+                // Shift up two lines
+                newIconValue -= 10;
+                isFixed = true;
+            }
+            else if (templateType == TemplateTypes.Bridge2ax)
+            {
+                type = bridgeType;
+                templateType = TemplateTypes.Bridge2a;
+                // Shift down two lines
+                newIconValue += 10;
+                isFixed = true;
+            }
+            else if (templateType == TemplateTypes.ShoreCliff32)
+            {
+                type = shoreType;
+                // Reset to water
+                templateType = TemplateTypes.Water;
+                newIconValue = 0;
+                isFixed = true;
+            }
+            else if (templateType == TemplateTypes.Shore42)
+            {
+                type = shoreType;
+                // Reset to water
+                templateType = TemplateTypes.Water;
+                newIconValue = 0;
+                isFixed = true;
+            }
+            template.Type = templateType;
+            return isFixed && newIconValue >= 0 && newIconValue < templateType.NumIcons
+                && (templateType.IconMask == null || templateType.IconMask[newIconValue / templateType.IconWidth, newIconValue % templateType.IconWidth]);
         }
 
         private IEnumerable<string> UpdateRules(INI ini, Map map)

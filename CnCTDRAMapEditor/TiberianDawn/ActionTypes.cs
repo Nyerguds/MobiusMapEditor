@@ -35,6 +35,9 @@ namespace MobiusEditor.TiberianDawn
         public const string ACTION_DESTROY_XXXX = "Dstry Trig 'XXXX'";
         public const string ACTION_DESTROY_YYYY = "Dstry Trig 'YYYY'";
         public const string ACTION_DESTROY_ZZZZ = "Dstry Trig 'ZZZZ'";
+        public const string ACTION_DESTROY_UUUU = "Dstry Trig 'UUUU'";
+        public const string ACTION_DESTROY_VVVV = "Dstry Trig 'VVVV'";
+        public const string ACTION_DESTROY_WWWW = "Dstry Trig 'WWWW'";
         public const string ACTION_AUTOCREATE = "Autocreate";
         public const string ACTION_WINLOSE = "Cap=Win/Des=Lose";
         public const string ACTION_ALLOWWIN = "Allow Win";
@@ -43,10 +46,17 @@ namespace MobiusEditor.TiberianDawn
 
         static ActionTypes()
         {
-            Types =
+            List<string> types=
                 (from field in typeof(ActionTypes).GetFields(BindingFlags.Static | BindingFlags.Public)
                  where field.IsLiteral && !field.IsInitOnly && typeof(string).IsAssignableFrom(field.FieldType)
-                 select field.GetValue(null) as string).ToArray();
+                 select field.GetValue(null) as string).ToList();
+            if (Globals.Ignore106Scripting)
+            {
+                types.Remove(ACTION_DESTROY_UUUU);
+                types.Remove(ACTION_DESTROY_VVVV);
+                types.Remove(ACTION_DESTROY_WWWW);
+            }
+            Types = types.ToArray();
         }
 
         public static IEnumerable<string> GetTypes()

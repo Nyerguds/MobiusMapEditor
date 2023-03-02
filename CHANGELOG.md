@@ -410,3 +410,7 @@ Unreleased
 * Pressing Alt+F4 to close the editor will now also work when a tool window is selected.
 * The tool windows for infantry, units and structures will now optimally use the available space.
 * Added option to randomise drag-placed map tileset blocks using equivalent tileset blocks.
+* Added logic to always draw crates on top of other objects.
+* Added automatic logic for Red Alert maps to fix corrupted tiles such as the "indestructible" bridges, rather than just clearing them.
+* Skipping over disabled sections in the ini (like the Aircraft) now adds errors and marks the map as modified.
+* Added detection for incorrect use of the "Allow Win" action in Tiberian Dawn.

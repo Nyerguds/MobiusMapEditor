@@ -207,6 +207,24 @@ namespace MobiusEditor.Model
         /// <param name="equivalentBounds"></param>
         /// <param name="equivalentOffset"></param>
         /// <param name="equivalentTiles"></param>
+        public TemplateType(ushort id, string name, int iconWidth, int iconHeight, TheaterType[] theaters, string maskOverrides, Size equivalentBounds, Point equivalentOffset, string[] equivalentTiles)
+            : this(id, name, iconWidth, iconHeight, theaters, maskOverrides == null ? null : new[] { maskOverrides }, equivalentBounds, equivalentOffset, equivalentTiles)
+        {
+
+        }
+        /// <summary>
+        /// Creates a TemplateType object.
+        /// </summary>
+        /// <param name="id">Numeric id in the game map data.</param>
+        /// <param name="name">Name of the associated graphics.</param>
+        /// <param name="iconWidth">Width in cells.</param>
+        /// <param name="iconHeight">Height in cells.</param>
+        /// <param name="theaters">Theaters that contain this tile.</param>
+        /// <param name="flag">Indicates special terrain types.</param>
+        /// <param name="maskOverrides">Mask override for tiles that contain too many graphics in the Remaster. Indices with '0' are removed from the tiles. Spaces are ignored and can be added for visual separation.</param>
+        /// <param name="equivalentBounds"></param>
+        /// <param name="equivalentOffset"></param>
+        /// <param name="equivalentTiles"></param>
         public TemplateType(ushort id, string name, int iconWidth, int iconHeight, TheaterType[] theaters, string[] maskOverrides, Size equivalentBounds, Point equivalentOffset, string[] equivalentTiles)
             : this(id, name, iconWidth, iconHeight, theaters, TemplateTypeFlag.None, maskOverrides)
         {

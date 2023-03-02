@@ -255,15 +255,15 @@ namespace MobiusEditor.Render
                     {
                         continue;
                     }
-                    bool paintAsCrate = overlay.Type.IsCrate && (layers & MapLayerFlag.Overlay) != MapLayerFlag.None;
-                    if (Globals.CratesOnTop && paintAsCrate)
+                    if (Globals.CratesOnTop && overlay.Type.IsCrate && (layers & MapLayerFlag.Overlay) != MapLayerFlag.None)
                     {
-                        // Crates are skipped; paint them after the rest.
+                        // if "CratesOnTop" logic is active, crates are skipped here and painted afterwards.
                         continue;
                     }
                     bool paintAsWall = overlay.Type.IsWall && (layers & MapLayerFlag.Walls) != MapLayerFlag.None;
                     bool paintAsResource = overlay.Type.IsResource && (layers & MapLayerFlag.Resources) != MapLayerFlag.None;
-                    if (paintAsWall || paintAsResource || (layers & MapLayerFlag.Overlay) != MapLayerFlag.None)
+                    bool paintAsOverlay = overlay.Type.IsOverlay && (layers & MapLayerFlag.Overlay) != MapLayerFlag.None;
+                    if (paintAsWall || paintAsResource || paintAsOverlay)
                     {
                         Render(gameType, map.Theater, tiberiumOrGoldTypes, gemTypes, location, tileSize, tileScale, overlay).Item2(graphics);
                     }

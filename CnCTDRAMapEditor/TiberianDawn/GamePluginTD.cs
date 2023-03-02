@@ -707,7 +707,8 @@ namespace MobiusEditor.TiberianDawn
             Map.MapSection.FixBounds();
 #if DEBUG
             //MessageBox.Show("Graphics loaded");
-#endif            
+#endif
+            bool skipSoleStuff = forSole && Globals.NoOwnedObjectsInSole;
             var briefingSection = ini.Sections.Extract("Briefing");
             if (briefingSection != null)
             {
@@ -1020,10 +1021,18 @@ namespace MobiusEditor.TiberianDawn
                 }
             }
             var infantrySection = ini.Sections.Extract("Infantry");
-            if (infantrySection != null && (!forSole || !Globals.NoOwnedObjectsInSole))
+            if (infantrySection != null)
             {
                 foreach (var (Key, Value) in infantrySection)
                 {
+                    if (skipSoleStuff)
+                    {
+                        int amount = infantrySection.Count();
+                        bool isOne = amount == 1;
+                        errors.Add(string.Format("Owned objects in Sole Survivor are disabled. {0} [Infantry] {1} skipped.", amount, isOne ? "entry was" : "entries were"));
+                        modified = true;
+                        break;
+                    }
                     var tokens = Value.Split(',');
                     if (tokens.Length == 8)
                     {
@@ -1159,10 +1168,18 @@ namespace MobiusEditor.TiberianDawn
                 }
             }
             var unitsSection = ini.Sections.Extract("Units");
-            if (unitsSection != null && (!forSole || !Globals.NoOwnedObjectsInSole))
+            if (unitsSection != null)
             {
                 foreach (var (Key, Value) in unitsSection)
                 {
+                    if (skipSoleStuff)
+                    {
+                        int amount = unitsSection.Count();
+                        bool isOne = amount == 1;
+                        errors.Add(string.Format("Owned objects in Sole Survivor are disabled. {0} [Units] {1} skipped.", amount, isOne ? "entry was" : "entries were"));
+                        modified = true;
+                        break;
+                    }
                     var tokens = Value.Split(',');
                     if (tokens.Length == 7)
                     {
@@ -1280,10 +1297,19 @@ namespace MobiusEditor.TiberianDawn
             // Classic game does not support this, so I'm leaving this out by default.
             // It is always extracted, so it doesn't end up with the "extra sections"
             var aircraftSection = ini.Sections.Extract("Aircraft");
-            if (!Globals.DisableAirUnits && aircraftSection != null && (!forSole || !Globals.NoOwnedObjectsInSole))
+            if (aircraftSection != null)
             {
                 foreach (var (Key, Value) in aircraftSection)
                 {
+                    if (Globals.DisableAirUnits || skipSoleStuff)
+                    {
+                        int amount = aircraftSection.Count();
+                        bool isOne = amount == 1;
+                        String disabledObj = Globals.DisableAirUnits ? "Aircraft" : "Owned objects in Sole Survivor";
+                        errors.Add(string.Format("{0} are disabled. {1} [Aircraft] {2} skipped.", disabledObj, amount, isOne ? "entry was" : "entries were"));
+                        modified = true;
+                        break;
+                    }
                     var tokens = Value.Split(',');
                     if (tokens.Length == 6)
                     {
@@ -1374,10 +1400,18 @@ namespace MobiusEditor.TiberianDawn
                 }
             }
             var structuresSection = ini.Sections.Extract("Structures");
-            if (structuresSection != null && (!forSole || !Globals.NoOwnedObjectsInSole))
+            if (structuresSection != null)
             {
                 foreach (var (Key, Value) in structuresSection)
                 {
+                    if (skipSoleStuff)
+                    {
+                        int amount = structuresSection.Count();
+                        bool isOne = amount == 1;
+                        errors.Add(string.Format("Owned objects in Sole Survivor are disabled. {0} [Structures] {1} skipped.", amount, isOne ? "entry was" : "entries were"));
+                        modified = true;
+                        break;
+                    }
                     var tokens = Value.Split(',');
                     if (tokens.Length == 6)
                     {
@@ -1517,10 +1551,21 @@ namespace MobiusEditor.TiberianDawn
                 }
             }
             var baseSection = ini.Sections.Extract("Base");
-            if (baseSection != null && (!forSole || !Globals.NoOwnedObjectsInSole))
+            if (baseSection != null)
             {
                 foreach (var (Key, Value) in baseSection)
                 {
+                    if (skipSoleStuff)
+                    {
+                        int amount = baseSection.Where(i => !"Count".Equals(i.Key, StringComparison.OrdinalIgnoreCase)).Count();
+                        if (amount > 0)
+                        {
+                            bool isOne = amount == 1;
+                            errors.Add(string.Format("Owned objects in Sole Survivor are disabled. {0} [Base] {1} skipped.", amount, isOne ? "entry was" : "entries were"));
+                            modified = true;
+                            break;
+                        }
+                    }
                     if (int.TryParse(Key, out int priority))
                     {
                         var tokens = Value.Split(',');
@@ -2632,23 +2677,24 @@ namespace MobiusEditor.TiberianDawn
             int numTerrain = Map.Technos.OfType<Terrain>().Count();
             int numUnits = Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsGroundUnit).Count();
             int numWaypoints = Map.Waypoints.Count(w => (w.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart && w.Cell.HasValue);
-            int maxAir = forSole && !Globals.ExpandSoleLimits ? Constants.MaxAircraftClassic : Constants.MaxAircraft;
-            int maxBld = forSole && !Globals.ExpandSoleLimits ? Constants.MaxBuildingsClassic : Constants.MaxBuildings;
-            int maxInf = forSole && !Globals.ExpandSoleLimits ? Constants.MaxInfantryClassic : Constants.MaxInfantry;
-            int maxTer = forSole && !Globals.ExpandSoleLimits ? Constants.MaxTerrainClassic : Constants.MaxTerrain;
-            int maxUni = forSole && !Globals.ExpandSoleLimits ? Constants.MaxUnitsClassic : Constants.MaxUnits;
-            
-            if (!Globals.DisableAirUnits && numAircraft > maxAir && (!forSole || !Globals.NoOwnedObjectsInSole))
+            bool classicSole = forSole && Globals.RestrictSoleLimits;
+            int maxAir = classicSole ? Constants.MaxAircraftClassic : Constants.MaxAircraft;
+            int maxBld = classicSole ? Constants.MaxBuildingsClassic : Constants.MaxBuildings;
+            int maxInf = classicSole ? Constants.MaxInfantryClassic : Constants.MaxInfantry;
+            int maxTer = classicSole ? Constants.MaxTerrainClassic : Constants.MaxTerrain;
+            int maxUni = classicSole ? Constants.MaxUnitsClassic : Constants.MaxUnits;
+            bool noSoleSkip = !forSole || !Globals.NoOwnedObjectsInSole;
+            if (!Globals.DisableAirUnits && numAircraft > maxAir && noSoleSkip)
             {
                 sb.AppendLine().Append(string.Format("Maximum number of aircraft exceeded ({0} > {1})", numAircraft, maxAir));
                 ok = false;
             }
-            if (numBuildings > maxBld && (!forSole || !Globals.NoOwnedObjectsInSole))
+            if (numBuildings > maxBld && noSoleSkip)
             {
                 sb.AppendLine().Append(string.Format("Maximum number of structures exceeded ({0} > {1})", numBuildings, maxBld));
                 ok = false;
             }
-            if (numInfantry > maxInf && (!forSole || !Globals.NoOwnedObjectsInSole))
+            if (numInfantry > maxInf && noSoleSkip)
             {
                 sb.AppendLine().Append(string.Format("Maximum number of infantry exceeded ({0} > {1})", numInfantry, maxInf));
                 ok = false;
@@ -2658,7 +2704,7 @@ namespace MobiusEditor.TiberianDawn
                 sb.AppendLine().Append(string.Format("Maximum number of terrain objects exceeded ({0} > {1})", numTerrain, maxTer));
                 ok = false;
             }
-            if (numUnits > maxUni && (!forSole || !Globals.NoOwnedObjectsInSole))
+            if (numUnits > maxUni && noSoleSkip)
             {
                 sb.AppendLine().Append(string.Format("Maximum number of units exceeded ({0} > {1})", numUnits, maxUni));
                 ok = false;
@@ -2856,7 +2902,43 @@ namespace MobiusEditor.TiberianDawn
             List<string> curErrors = new List<string>();
             List<ITechno> mapTechnos = Map.GetAllTechnos().ToList();
             HouseType player = Map.HouseTypes.Where(t => t.Equals(Map.BasicSection.Player)).FirstOrDefault() ?? Map.HouseTypes.First();
-
+            bool delXExists = false;
+            bool delYExists = false;
+            bool delZExists = false;
+            bool delUExists = false;
+            bool delVExists = false;
+            bool delWExists = false;
+            foreach (var trigger in triggers)
+            {
+                String actionType = trigger.Action1.ActionType;
+                if (actionType == ActionTypes.ACTION_DESTROY_XXXX)
+                {
+                    delXExists = true;
+                }
+                if (actionType == ActionTypes.ACTION_DESTROY_YYYY)
+                {
+                    delYExists = true;
+                }
+                if (actionType == ActionTypes.ACTION_DESTROY_ZZZZ)
+                {
+                    delZExists = true;
+                }
+                if (!Globals.Ignore106Scripting)
+                {
+                    if (actionType == ActionTypes.ACTION_DESTROY_UUUU)
+                    {
+                        delUExists = true;
+                    }
+                    if (actionType == ActionTypes.ACTION_DESTROY_VVVV)
+                    {
+                        delVExists = true;
+                    }
+                    if (actionType == ActionTypes.ACTION_DESTROY_WWWW)
+                    {
+                        delWExists = true;
+                    }
+                }
+            }
             foreach (var trigger in triggers)
             {
                 string team = trigger.Action1.Team;
@@ -2876,6 +2958,16 @@ namespace MobiusEditor.TiberianDawn
                 bool isCellTrig = Map.CellTriggers.Any(c => trigName.Equals(c.Value.Trigger, StringComparison.OrdinalIgnoreCase));
                 bool hasTeam = !TeamType.IsEmpty(trigger.Action1.Team);
                 bool isAnd = trigger.PersistentType == TriggerPersistentType.SemiPersistent;
+                bool isLoop = trigger.PersistentType == TriggerPersistentType.Persistent;
+                bool isDestroyableX = "xxxx".Equals(trigName, StringComparison.OrdinalIgnoreCase);
+                bool isDestroyableY = "yyyy".Equals(trigName, StringComparison.OrdinalIgnoreCase);
+                bool isDestroyableZ = "zzzz".Equals(trigName, StringComparison.OrdinalIgnoreCase);
+                bool isDestroyableU = !Globals.Ignore106Scripting && "uuuu".Equals(trigName, StringComparison.OrdinalIgnoreCase);
+                bool isDestroyableV = !Globals.Ignore106Scripting && "vvvv".Equals(trigName, StringComparison.OrdinalIgnoreCase);
+                bool isDestroyableW = !Globals.Ignore106Scripting && "wwww".Equals(trigName, StringComparison.OrdinalIgnoreCase);
+                bool isDestroyable = (isDestroyableX && delXExists) || (isDestroyableY && delYExists) || (isDestroyableZ && delZExists)
+                     || (isDestroyableU && delUExists) || (isDestroyableV && delVExists) || (isDestroyableW && delWExists);
+
                 // If this is null but hasTeam is true, something went wrong internally. Should never happen.
                 TeamType teamObj = !hasTeam ? null : Map.TeamTypes.Where(tt => tt.Name == team).FirstOrDefault();
 
@@ -2930,6 +3022,10 @@ namespace MobiusEditor.TiberianDawn
                 if (!fatalOnly && action1 == ActionTypes.ACTION_ALLOWWIN && !isPlayer)
                 {
                     curErrors.Add(prefix + "Each \"Allow Win\" trigger increases the \"win blockage\" on a House, which prevents it from winning until they are all cleared. However, since this is put on the House specified in the trigger, \"Allow Win\" triggers only work with the player's House.");
+                }
+                if (!fatalOnly && action1 == ActionTypes.ACTION_ALLOWWIN && isLoop && !isDestroyable)
+                {
+                    curErrors.Add(prefix + "Each \"Allow Win\" trigger increases the \"win blockage\" on a House, which prevents it from winning until they are all cleared. The blockage is only cleared when the trigger is removed, which only happens either when it can no longer trigger, or when it is explicitly removed by a \"Destroy Trigger\" action. Since this trigger is set to execute \"on each triggering\", it will loop indefinitely and never be removed.");
                 }
                 if (action1 == ActionTypes.ACTION_BEGIN_PRODUCTION)
                 {
