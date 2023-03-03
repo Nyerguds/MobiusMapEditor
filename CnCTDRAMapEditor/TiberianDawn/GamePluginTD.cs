@@ -809,14 +809,20 @@ namespace MobiusEditor.TiberianDawn
                             var missionTokens = tokens[0].Split(':'); tokens.RemoveAt(0);
                             if (missionTokens.Length == 2)
                             {
-                                TeamMission mission;
                                 // fix mission case sensitivity issues.
+                                TeamMission mission;
                                 teamMissionTypes.TryGetValue(missionTokens[0], out mission);
-                                byte count;
-                                byte.TryParse(missionTokens[1], out count);
                                 if (mission != null)
                                 {
-                                    teamType.Missions.Add(new TeamTypeMission { Mission = mission, Argument = count });
+                                    if (Int32.TryParse(missionTokens[1], out int arg))
+                                    {
+                                        teamType.Missions.Add(new TeamTypeMission { Mission = mission, Argument = arg });
+                                    }
+                                    else
+                                    {
+                                        errors.Add(string.Format("Team '{0}', orders index {1} ('{2}') has an incorrect value '{4}'.", Key, i, mission, missionTokens[1]));
+                                        modified = true;
+                                    }
                                 }
                                 else
                                 {

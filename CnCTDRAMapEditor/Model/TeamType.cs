@@ -110,7 +110,7 @@ namespace MobiusEditor.Model
     {
         public TeamMission Mission { get; set; }
 
-        public long Argument { get; set; }
+        public int Argument { get; set; }
 
         public TeamTypeMission Clone()
         {

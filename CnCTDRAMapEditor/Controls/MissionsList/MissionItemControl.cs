@@ -65,7 +65,7 @@ namespace MobiusEditor.Controls
                 this.m_Loading = true;
                 this.Info = info;
                 TeamMission mission = info != null ? info.Mission : defaultMission;
-                long value = info != null ? info.Argument : 0;
+                int value = info != null ? info.Argument : 0;
                 this.cmbMission.Text = mission.Mission;
                 UpdateValueControl(mission, value);
             }
@@ -80,7 +80,7 @@ namespace MobiusEditor.Controls
             this.cmbMission.Select();
         }
 
-        private void UpdateValueControl(TeamMission mission, long value)
+        private void UpdateValueControl(TeamMission mission, int value)
         {
             int selectIndex;
             switch (mission.ArgType)
@@ -96,7 +96,7 @@ namespace MobiusEditor.Controls
                     this.cmbValue.Visible = true;
                     this.cmbValue.DataSource = waypoints;
                     //this.cmbValue.Tool
-                    selectIndex = ListItem.GetIndexInList((int)value, waypoints);
+                    selectIndex = ListItem.GetIndexInList(value, waypoints);
                     if (selectIndex == -1 && waypoints.Length > 0)
                     {
                         selectIndex = 0;
@@ -108,7 +108,7 @@ namespace MobiusEditor.Controls
                     this.cmbValue.Visible = true;
                     ListItem<int>[] items = mission.DropdownOptions.Select(ddo => new ListItem<int>(ddo.Value, ddo.Label)).ToArray();
                     this.cmbValue.DataSource = items;
-                    selectIndex = ListItem.GetIndexInList((int)value, items);
+                    selectIndex = ListItem.GetIndexInList(value, items);
                     if (selectIndex == -1 && items.Length > 0)
                     {
                         selectIndex = 0;
@@ -181,7 +181,7 @@ namespace MobiusEditor.Controls
             if (mission != null)
             {
                 this.Info.Mission = mission;
-                long value = -1;
+                int value = -1;
                 if (mission.ArgType == currentType && (currentType == TeamMissionArgType.Time || currentType == TeamMissionArgType.Waypoint))
                 {
                     value = Info.Argument;
@@ -196,7 +196,7 @@ namespace MobiusEditor.Controls
             {
                 return;
             }
-            this.Info.Argument = (Int64)this.numValue.Value;
+            this.Info.Argument = (int)this.numValue.Value;
             if (this.m_Controller != null)
                 this.m_Controller.UpdateControlInfo(this.Info);
         }

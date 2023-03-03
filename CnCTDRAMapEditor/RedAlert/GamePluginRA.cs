@@ -620,9 +620,9 @@ namespace MobiusEditor.RedAlert
             {
                 INI.ParseSection(new MapContext(Map, true), steamSection, Map.SteamSection);
             }
-            T indexToType<T>(IList<T> list, string index)
+            T indexToType<T>(IList<T> list, string index, bool defnull)
             {
-                return (int.TryParse(index, out int result) && (result >= 0) && (result < list.Count)) ? list[result] : list.First();
+                return (int.TryParse(index, out int result) && (result >= 0) && (result < list.Count)) ? list[result] : (defnull ? default(T) : list.First());
             }
             var teamTypesSection = ini.Sections.Extract("TeamTypes");
             List<TeamType> teamTypes = new List<TeamType>();
@@ -686,11 +686,28 @@ namespace MobiusEditor.RedAlert
                             var missionTokens = tokens[0].Split(':'); tokens.RemoveAt(0);
                             if (missionTokens.Length == 2)
                             {
-                                teamType.Missions.Add(new TeamTypeMission { Mission = indexToType(Map.TeamMissionTypes, missionTokens[0]), Argument = int.Parse(missionTokens[1]) });
+                                TeamMission mission = indexToType(Map.TeamMissionTypes, missionTokens[0], true);
+                                if (mission != null)
+                                {
+                                    if (Int32.TryParse(missionTokens[1], out int arg))
+                                    {
+                                        teamType.Missions.Add(new TeamTypeMission { Mission = mission, Argument = arg });
+                                    }
+                                    else
+                                    {
+                                        errors.Add(string.Format("Team '{0}', orders index {1} ('{2}') has an incorrect value '{4}'.", Key, i, mission, missionTokens[1]));
+                                        modified = true;
+                                    }
+                                }
+                                else
+                                {
+                                    errors.Add(string.Format("Team '{0}' references unknown orders id '{1}'.", Key, missionTokens[0]));
+                                    modified = true;
+                                }
                             }
                             else
                             {
-                                errors.Add(string.Format("Team '{0}' has wrong number of tokens for mission index {1} (expecting 2).", Key, i));
+                                errors.Add(string.Format("Team '{0}' has wrong number of tokens for orders index {1} (expecting 2).", Key, i));
                                 modified = true;
                             }
                         }
@@ -698,7 +715,7 @@ namespace MobiusEditor.RedAlert
                     }
                     catch (Exception ex)
                     {
-                        errors.Add(string.Format("Teamtype '{0}' has curErrors and can't be parsed: {1}.", Key, ex.Message));
+                        errors.Add(string.Format("Teamtype '{0}' has errors and can't be parsed: {1}.", Key, ex.Message));
                         modified = true;
                     }
                 }
@@ -722,17 +739,17 @@ namespace MobiusEditor.RedAlert
                             trigger.PersistentType = (TriggerPersistentType)int.Parse(tokens[0]);
                             trigger.House = Map.HouseTypes.Where(t => t.Equals(sbyte.Parse(tokens[1]))).FirstOrDefault()?.Name ?? House.None;
                             trigger.EventControl = (TriggerMultiStyleType)int.Parse(tokens[2]);
-                            trigger.Event1.EventType = indexToType(Map.EventTypes, tokens[4]);
+                            trigger.Event1.EventType = indexToType(Map.EventTypes, tokens[4], false);
                             trigger.Event1.Team = tokens[5];
                             trigger.Event1.Data = long.Parse(tokens[6]);
-                            trigger.Event2.EventType = indexToType(Map.EventTypes, tokens[7]);
+                            trigger.Event2.EventType = indexToType(Map.EventTypes, tokens[7], false);
                             trigger.Event2.Team = tokens[8];
                             trigger.Event2.Data = long.Parse(tokens[9]);
-                            trigger.Action1.ActionType = indexToType(Map.ActionTypes, tokens[10]);
+                            trigger.Action1.ActionType = indexToType(Map.ActionTypes, tokens[10], false);
                             trigger.Action1.Team = tokens[11];
                             trigger.Action1.Trigger = tokens[12];
                             trigger.Action1.Data = long.Parse(tokens[13]);
-                            trigger.Action2.ActionType = indexToType(Map.ActionTypes, tokens[14]);
+                            trigger.Action2.ActionType = indexToType(Map.ActionTypes, tokens[14], false);
                             trigger.Action2.Team = tokens[15];
                             trigger.Action2.Trigger = tokens[16];
                             trigger.Action2.Data = long.Parse(tokens[17]);
