@@ -54,38 +54,101 @@ namespace MobiusEditor.Model
 
         public Bitmap Thumbnail { get; set; }
 
-        public TerrainType(sbyte id, string name, TheaterType[] theaters, bool[,] occupyMask, String graphicsSource, int displayIcon, TemplateTypeFlag templateType)
+        /// <summary>
+        /// Creates a new TerrainType object.
+        /// </summary>
+        /// <param name="id">id</param>
+        /// <param name="name">Name</param>
+        /// <param name="theaters">Theaters in which this appears. Null means all.</param>
+        /// <param name="width">Width of the terrain object, in cells.</param>
+        /// <param name="height">Height of the terrain object, in cells.</param>
+        /// <param name="occupyMask">String indicating the occupied cells. Spaces are ignored, '0' means unoccupied, any other value means occupied. A null value indicates it is fully occupied.</param>
+        /// <param name="graphicsSource">Override for the graphics source. If null, the name is used.</param>
+        /// <param name="displayIcon">Override for the frame to display. Normally 0.</param>
+        /// <param name="templateType">Terrain type this should be placed down on. Currently unused.</param>
+        public TerrainType(sbyte id, string name, TheaterType[] theaters, int width, int height, string occupyMask, String graphicsSource, int displayIcon, TemplateTypeFlag templateType)
         {
             ID = id;
             Name = name;
             Theaters = theaters;
-            OccupyMask = occupyMask;
+            OccupyMask = GeneralUtils.GetMaskFromString(width, height, occupyMask);
             DisplayIcon = displayIcon;
             GraphicsSource = graphicsSource == null ? name : graphicsSource;
             TemplateType = templateType;
         }
 
-        public TerrainType(sbyte id, string name, TheaterType[] theaters, bool[,] occupyMask, String graphicsSource, int displayIcon)
-            : this(id, name, theaters, occupyMask, graphicsSource, displayIcon, TemplateTypeFlag.None)
-        {
-        }
-        public TerrainType(sbyte id, string name, TheaterType[] theaters, bool[,] occupyMask, String graphicsSource)
-            : this(id, name, theaters, occupyMask, graphicsSource, 0, TemplateTypeFlag.None)
-        {
-        }
-
-        public TerrainType(sbyte id, string name, TheaterType[] theaters, bool[,] occupyMask, int displayIcon)
-            : this(id, name, theaters, occupyMask, null, displayIcon, TemplateTypeFlag.None)
-        {
-        }
-
-        public TerrainType(sbyte id, string name, TheaterType[] theaters, bool[,] occupyMask, TemplateTypeFlag templateType)
-            : this(id, name, theaters, occupyMask, null, 0, templateType)
+        /// <summary>
+        /// Creates a new TerrainType object.
+        /// </summary>
+        /// <param name="id">id</param>
+        /// <param name="name">Name</param>
+        /// <param name="theaters">Theaters in which this appears. Null means all.</param>
+        /// <param name="width">Width of the terrain object, in cells.</param>
+        /// <param name="height">Height of the terrain object, in cells.</param>
+        /// <param name="occupyMask">String indicating the occupied cells. Spaces are ignored, '0' means unoccupied, any other value means occupied. A null value indicates it is fully occupied.</param>
+        /// <param name="graphicsSource">Override for the graphics source. If null, the name is used.</param>
+        /// <param name="displayIcon">Override for the frame to display. Normally 0.</param>
+        public TerrainType(sbyte id, string name, TheaterType[] theaters, int width, int height, string occupyMask, String graphicsSource, int displayIcon)
+            : this(id, name, theaters, width, height, occupyMask, graphicsSource, displayIcon, TemplateTypeFlag.None)
         {
         }
 
-        public TerrainType(sbyte id, string name, TheaterType[] theaters, bool[,] occupyMask)
-            : this(id, name, theaters, occupyMask, null, 0, TemplateTypeFlag.None)
+        /// <summary>
+        /// Creates a new TerrainType object.
+        /// </summary>
+        /// <param name="id">id</param>
+        /// <param name="name">Name</param>
+        /// <param name="theaters">Theaters in which this appears. Null means all.</param>
+        /// <param name="width">Width of the terrain object, in cells.</param>
+        /// <param name="height">Height of the terrain object, in cells.</param>
+        /// <param name="occupyMask">String indicating the occupied cells. Spaces are ignored, '0' means unoccupied, any other value means occupied. A null value indicates it is fully occupied.</param>
+        /// <param name="graphicsSource">Override for the graphics source. If null, the name is used.</param>
+        public TerrainType(sbyte id, string name, TheaterType[] theaters, int width, int height, string occupyMask, String graphicsSource)
+            : this(id, name, theaters, width, height, occupyMask, graphicsSource, 0, TemplateTypeFlag.None)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new TerrainType object.
+        /// </summary>
+        /// <param name="id">id</param>
+        /// <param name="name">Name</param>
+        /// <param name="theaters">Theaters in which this appears. Null means all.</param>
+        /// <param name="width">Width of the terrain object, in cells.</param>
+        /// <param name="height">Height of the terrain object, in cells.</param>
+        /// <param name="occupyMask">String indicating the occupied cells. Spaces are ignored, '0' means unoccupied, any other value means occupied. A null value indicates it is fully occupied.</param>
+        /// <param name="displayIcon">Override for the frame to display. Normally 0.</param>
+        public TerrainType(sbyte id, string name, TheaterType[] theaters, int width, int height, string occupyMask, int displayIcon)
+            : this(id, name, theaters, width, height, occupyMask, null, displayIcon, TemplateTypeFlag.None)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new TerrainType object.
+        /// </summary>
+        /// <param name="id">id</param>
+        /// <param name="name">Name</param>
+        /// <param name="theaters">Theaters in which this appears. Null means all.</param>
+        /// <param name="width">Width of the terrain object, in cells.</param>
+        /// <param name="height">Height of the terrain object, in cells.</param>
+        /// <param name="occupyMask">String indicating the occupied cells. Spaces are ignored, '0' means unoccupied, any other value means occupied. A null value indicates it is fully occupied.</param>
+        /// <param name="templateType">Terrain type this should be placed down on. Currently unused.</param>
+        public TerrainType(sbyte id, string name, TheaterType[] theaters, int width, int height, string occupyMask, TemplateTypeFlag templateType)
+            : this(id, name, theaters, width, height, occupyMask, null, 0, templateType)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new TerrainType object.
+        /// </summary>
+        /// <param name="id">id</param>
+        /// <param name="name">Name</param>
+        /// <param name="theaters">Theaters in which this appears. Null means all.</param>
+        /// <param name="width">Width of the terrain object, in cells.</param>
+        /// <param name="height">Height of the terrain object, in cells.</param>
+        /// <param name="occupyMask">String indicating the occupied cells. Spaces are ignored, '0' means unoccupied, any other value means occupied. A null value indicates it is fully occupied.</param>
+        public TerrainType(sbyte id, string name, TheaterType[] theaters, int width, int height, string occupyMask)
+            : this(id, name, theaters, width, height, occupyMask, null, 0, TemplateTypeFlag.None)
         {
         }
 

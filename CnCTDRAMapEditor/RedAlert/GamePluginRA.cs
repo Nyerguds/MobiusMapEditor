@@ -1674,65 +1674,88 @@ namespace MobiusEditor.RedAlert
                 }
             }
             var baseSection = ini.Sections.Extract("Base");
+            String baseCountStr = baseSection != null ? baseSection.TryGetValue("Count") : null;
+            String basePlayerStr = baseSection != null ? baseSection.TryGetValue("Player") : null;
+            HouseType basePlayer = Map.HouseTypes.First();
+            if (basePlayerStr != null)
+            {
+                HouseType basePlayerLookup = Map.HouseTypes.Where(t => t.Equals(basePlayerStr)).FirstOrDefault();
+                if (basePlayerLookup != null)
+                {
+                    basePlayer = basePlayerLookup;
+                }
+            }
+            Map.BasicSection.BasePlayer = basePlayer.Name;
             if (baseSection != null)
             {
-                foreach (var (Key, Value) in baseSection)
+                if (!Int32.TryParse(baseCountStr, out int baseCount))
                 {
-                    if (Key.Equals("Player", StringComparison.OrdinalIgnoreCase))
+                    errors.Add(string.Format("Base count '{0}' is not a valid integer.", baseCountStr));
+                    modified = true;
+                }
+                else
+                {
+                    baseSection.Keys.Remove("Count");
+                    baseSection.Keys.Remove("Player");
+                    int curPriorityVal = 0;
+                    for (int i = 0; i < baseCount; i++)
                     {
-                        Map.BasicSection.BasePlayer = Map.HouseTypes.Where(t => t.Equals(Value)).FirstOrDefault()?.Name ?? Map.HouseTypes.First().Name;
-                    }
-                    else if (int.TryParse(Key, out int priority))
-                    {
-                        var tokens = Value.Split(',');
-                        if (tokens.Length == 2)
+                        string key = i.ToString("D3");
+                        string value = baseSection.TryGetValue(key);
+                        if (value == null)
                         {
-                            var buildingType = Map.BuildingTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault();
-                            if (buildingType == null)
-                            {
-                                errors.Add(string.Format("Base rebuild entry {0} references unknown structure '{1}'.", priority, tokens[0]));
-                                modified = true;
-                                continue;
-                            }
-                            if (Globals.FilterTheaterObjects && buildingType.Theaters != null && !buildingType.Theaters.Contains(Map.Theater))
-                            {
-                                errors.Add(string.Format("Base rebuild entry {0} references structure '{1}' which is not available in the set theater; skipping.", priority, buildingType.Name));
-                                modified = true;
-                                continue;
-                            }
-                            int cell;
-                            if (!int.TryParse(tokens[1], out cell))
-                            {
-                                errors.Add(string.Format("Cell for base rebuild entry '{0}' cannot be parsed; value: '{1}'; skipping.", buildingType.Name, tokens[1]));
-                                modified = true;
-                                continue;
-                            }
-                            Map.Metrics.GetLocation(cell, out Point location);
-                            if (Map.Buildings.OfType<Building>().Where(x => x.Location == location).FirstOrDefault().Occupier is Building building)
-                            {
-                                building.BasePriority = priority;
-                            }
-                            else
-                            {
-                                Map.Buildings.Add(cell, new Building()
-                                {
-                                    Type = buildingType,
-                                    Strength = 256,
-                                    Direction = DirectionTypes.North,
-                                    BasePriority = priority,
-                                    IsPrebuilt = false
-                                });
-                            }
+                            continue;
+                        }
+                        baseSection.Keys.Remove(key);
+                        var tokens = value.Split(',');
+                        if (tokens.Length != 2)
+                        {
+                            errors.Add(string.Format("Base rebuild entry {0} has wrong number of tokens (expecting 2).", key));
+                            modified = true;
+                            continue;
+                        }
+                        var buildingType = Map.BuildingTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault();
+                        if (buildingType == null)
+                        {
+                            errors.Add(string.Format("Base rebuild entry {0} references unknown structure '{1}'.", key, tokens[0]));
+                            modified = true;
+                            continue;
+                        }
+                        if (Globals.FilterTheaterObjects && buildingType.Theaters != null && !buildingType.Theaters.Contains(Map.Theater))
+                        {
+                            errors.Add(string.Format("Base rebuild entry {0} references structure '{1}' which is not available in the set theater; skipping.", key, buildingType.Name));
+                            modified = true;
+                            continue;
+                        }
+                        int cell;
+                        if (!int.TryParse(tokens[1], out cell))
+                        {
+                            errors.Add(string.Format("Cell for base rebuild entry '{0}', structure '{1}' cannot be parsed; value: '{2}'; skipping.", key, buildingType.Name, tokens[1]));
+                            modified = true;
+                            continue;
+                        }
+                        Map.Metrics.GetLocation(cell, out Point location);
+                        if (Map.Buildings.OfType<Building>().Where(x => x.Location == location).FirstOrDefault().Occupier is Building building)
+                        {
+                            building.BasePriority = curPriorityVal;
                         }
                         else
                         {
-                            errors.Add(string.Format("Base rebuild entry {0} has wrong number of tokens (expecting 2).", priority));
-                            modified = true;
+                            Map.Buildings.Add(cell, new Building()
+                            {
+                                Type = buildingType,
+                                House = basePlayer,
+                                Strength = 256,
+                                Direction = DirectionTypes.North,
+                                BasePriority = curPriorityVal,
+                                IsPrebuilt = false
+                            });
                         }
+                        curPriorityVal++;
                     }
-                    else if (!Key.Equals("Count", StringComparison.CurrentCultureIgnoreCase))
+                    foreach (var (Key, Value) in baseSection)
                     {
-                        errors.Add(string.Format("Invalid base rebuild priority '{0}' (expecting integer).", Key));
+                        errors.Add(string.Format("Invalid base rebuild priority entry '{0}={1}'.", Key, Value));
                         modified = true;
                     }
                 }

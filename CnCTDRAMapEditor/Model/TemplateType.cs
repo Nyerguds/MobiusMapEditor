@@ -136,20 +136,7 @@ namespace MobiusEditor.Model
                     bool[,] mask = null;
                     if (!String.IsNullOrEmpty(maskOverride))
                     {
-                        mask = new bool[iconHeight, iconWidth];
-                        int charIndex = 0;
-                        for (int y = 0; y < IconHeight; ++y)
-                        {
-                            for (int x = 0; x < IconWidth; ++x, ++charIndex)
-                            {
-                                // The format allows whitespace for clarity. Skip without consequence.
-                                while (charIndex < maskOverride.Length && maskOverride[charIndex] == ' ')
-                                {
-                                    charIndex++;
-                                }
-                                mask[y, x] = charIndex < maskOverride.Length && maskOverride[charIndex] != '0';
-                            }
-                        }
+                        mask = GeneralUtils.GetMaskFromString(iconWidth, iconHeight, maskOverride);
                     }
                     if (mask != null)
                     {

@@ -25,7 +25,7 @@ namespace MobiusEditor.Utility
     public class ExplorerComparer : IComparer<string>
     {
         [DllImport("shlwapi.dll", CharSet = CharSet.Unicode, ExactSpelling = true)]
-        static extern int StrCmpLogicalW(String x, String y);
+        static extern int StrCmpLogicalW(string x, string y);
 
         public int Compare(string x, string y)
         {
@@ -42,7 +42,7 @@ namespace MobiusEditor.Utility
         /// <param name="path">Path</param>
         /// <param name="fileType">Detected file type.</param>
         /// <returns></returns>
-        public static INI GetIniContents(String path, FileType fileType)
+        public static INI GetIniContents(string path, FileType fileType)
         {
             try
             {
@@ -52,7 +52,7 @@ namespace MobiusEditor.Utility
                 {
                     case FileType.INI:
                     case FileType.BIN:
-                        String iniPath = fileType == FileType.INI ? path : Path.ChangeExtension(path, ".ini");
+                        string iniPath = fileType == FileType.INI ? path : Path.ChangeExtension(path, ".ini");
                         Byte[] bytes = File.ReadAllBytes(path);
                         iniContents = encDOS.GetString(bytes);
                         break;
@@ -119,7 +119,7 @@ namespace MobiusEditor.Utility
             {
                 inSection[section] = false;
             }
-            Dictionary<string, List<Regex>> toTreat = new Dictionary<String, List<Regex>>();
+            Dictionary<string, List<Regex>> toTreat = new Dictionary<string, List<Regex>>();
             foreach ((string section, string key) in toAltEncode)
             {
                 if (!toTreat.ContainsKey(section))
@@ -177,7 +177,7 @@ namespace MobiusEditor.Utility
             }
         }
 
-        public static String MakeNew4CharName(IEnumerable<string> currentList, string fallback, params string[] reservedNames)
+        public static string MakeNew4CharName(IEnumerable<string> currentList, string fallback, params string[] reservedNames)
         {
             string name = string.Empty;
             // generate names in a way that will never run out before some maximum is reached.
@@ -290,13 +290,13 @@ namespace MobiusEditor.Utility
         /// <param name="argex">The ArgumentException to retrieve the message from</param>
         /// <param name="fallback">True to construct a fallback message if the error message is empty.</param>
         /// <returns>The actual message given when the ArgumentException was created.</returns>
-        public static String RecoverArgExceptionMessage(ArgumentException argex, Boolean fallback)
+        public static string RecoverArgExceptionMessage(ArgumentException argex, Boolean fallback)
         {
             if (argex == null)
                 return null;
             SerializationInfo info = new SerializationInfo(typeof(ArgumentException), new FormatterConverter());
             argex.GetObjectData(info, new StreamingContext(StreamingContextStates.Clone));
-            String message = info.GetString("Message");
+            string message = info.GetString("Message");
             if (!String.IsNullOrEmpty(message))
                 return message;
             if (!fallback)
@@ -310,5 +310,51 @@ namespace MobiusEditor.Utility
                 return String.Format("\"{0}\" out of range.", argex.ParamName);
             return argex.ParamName;
         }
+
+        public static bool[,] GetMaskFromString(int width, int height, string maskString)
+        {
+            bool[,] mask = new bool[height, width];
+            if (String.IsNullOrWhiteSpace(maskString))
+            {
+                mask.Clear(true);
+                return mask;
+            }
+            int charIndex = 0;
+            for (int y = 0; y < height; ++y)
+            {
+                for (int x = 0; x < width; ++x, ++charIndex)
+                {
+                    // The format allows whitespace for clarity. Skip without consequence.
+                    while (charIndex < maskString.Length && maskString[charIndex] == ' ')
+                    {
+                        charIndex++;
+                    }
+                    mask[y, x] = charIndex < maskString.Length && maskString[charIndex] != '0';
+                }
+            }
+            return mask;
+        }
+
+        public static string GetStringFromMask(bool[,] mask)
+        {
+            int baseMaskY = mask.GetLength(0);
+            int baseMaskX = mask.GetLength(1);
+            StringBuilder occupyMask = new StringBuilder();
+            int lastY = baseMaskY - 1;
+            for (var y = 0; y < baseMaskY; ++y)
+            {
+                for (var x = 0; x < baseMaskX; ++x)
+                {
+                    occupyMask.Append(mask[y, x] ? 1 : 0);
+                }
+                // Not really needed, but eh, it's prettier.
+                if (y < lastY)
+                {
+                    occupyMask.Append(" ");
+                }
+            }
+            return occupyMask.ToString();
+        }
+
     }
 }

@@ -251,7 +251,6 @@ namespace MobiusEditor.Dialogs
                 return;
             }
             // Check for RA briefing overflow.
-
             if (plugin.GameType == GameType.RedAlert)
             {
                 briefingSettingsTracker.TryGetMember("Briefing", out object brf);
@@ -315,7 +314,6 @@ namespace MobiusEditor.Dialogs
                             return;
                         }
                     }
-
                 }
             }
             // Combine diacritics into their characters, and remove characters not included in DOS-437.
@@ -324,7 +322,8 @@ namespace MobiusEditor.Dialogs
             // DOS chars excluding specials at the start and end. Explicitly add tab, then the normal range from 32 to 254.
             HashSet<Char> dos437chars = ("\t\r\n" + String.Concat(Enumerable.Range(32, 256 - 32 - 1).Select(i => dos437.GetString(new Byte[] { (byte)i })))).ToHashSet();
             normalised = new String(normalised.Where(ch => dos437chars.Contains(ch)).ToArray());
-            // Check if RA rules were changed. Ignore trivial line changes. This will not detect any irrelevant but non-trivial changes like swapping lines, though.
+            // Check if rules were changed. Ignore trivial line changes. This will not detect any irrelevant but non-trivial changes like swapping lines, though.
+            // This is specifically about RA rules. TD has no changes that require any kind of refresh on the map.
             String checkTextNew = Regex.Replace(normalised, "[\\r\\n]+", "\n").Trim('\n');
             String checkTextOrig = Regex.Replace(originalExtraIniText ?? String.Empty, "[\\r\\n]+", "\n").Trim('\n');
             bool rulesChanged = plugin.GameType == GameType.RedAlert && !checkTextOrig.Equals(checkTextNew, StringComparison.OrdinalIgnoreCase);

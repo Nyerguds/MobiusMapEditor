@@ -154,6 +154,27 @@ namespace MobiusEditor.Utility
             yield return item;
         }
 
+        public static void Clear<T>(this T[] array, T clearElement)
+        {
+            for (int i = 0; i < array.Length; ++i)
+            {
+                array[i] = clearElement;
+            }
+        }
+
+        public static void Clear<T>(this T[,] array, T clearElement)
+        {
+            int yMax = array.GetLength(0);
+            int xMax = array.GetLength(1);
+            for (int y = 0; y < yMax; ++y)
+            {
+                for (int x = 0; x < xMax; ++x)
+                {
+                    array[y,x] = clearElement;
+                }
+            }
+        }
+
         public static HashSet<T> ToHashSet<T>(this IEnumerable<T> source, IEqualityComparer<T> comparer = null)
         {
             return new HashSet<T>(source, comparer);
