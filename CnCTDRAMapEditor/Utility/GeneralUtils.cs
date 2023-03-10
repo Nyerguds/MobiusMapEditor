@@ -356,5 +356,48 @@ namespace MobiusEditor.Utility
             return occupyMask.ToString();
         }
 
+        public static String ReplaceLinebreaks(String input, char replacement)
+        {
+            return input
+                .Replace("\r\n", "\n")
+                .Replace("\r", "\n")
+                .Replace("\\", "\\\\")
+                .Replace("" + replacement, "\\" + replacement)
+                .Replace('\n', replacement);
+        }
+
+        public static String RestoreLinebreaks(String input, char replacement, String lineBreak)
+        {
+            // Just in case the line breaks aren't '\n' as they should be.
+            input = Regex.Replace(input, "[\r\n]*", "", RegexOptions.None);
+            StringBuilder sb = new StringBuilder();
+            int len = input.Length;
+            for (int i = 0; i < len; ++i)
+            {
+                char c = input[i];
+                if (c == replacement)
+                {
+                    // Replace escaped line break with real one.
+                    sb.Append(lineBreak);
+                    continue;
+                }
+                else if (c == '\\')
+                {
+                    // Skip escape character.
+                    i++;
+                    if (i >= len)
+                    {
+                        // Must be broken; escape character as last character of the whole string.
+                        sb.Append(c);
+                        break;
+                    }
+                    // Add just the escaped character.
+                    c = input[i];
+                }
+                sb.Append(c);
+            }
+            return sb.ToString();
+        }
+
     }
 }

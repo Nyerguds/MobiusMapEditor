@@ -403,10 +403,10 @@ namespace MobiusEditor
 
         private void FileSaveMenuItem_Click(object sender, EventArgs e)
         {
-            SaveAction(null);
+            SaveAction(false, null);
         }
 
-        private void SaveAction(Action afterSaveDone)
+        private void SaveAction(bool dontResavePreview, Action afterSaveDone)
         {
             if (plugin == null)
             {
@@ -425,7 +425,7 @@ namespace MobiusEditor
                 return;
             }
             var fileInfo = new FileInfo(filename);
-            SaveChosenFile(fileInfo.FullName, loadedFileType, afterSaveDone);
+            SaveChosenFile(fileInfo.FullName, loadedFileType, dontResavePreview, afterSaveDone);
         }
 
         private void FileSaveAsMenuItem_Click(object sender, EventArgs e)
@@ -484,7 +484,7 @@ namespace MobiusEditor
             else
             {
                 var fileInfo = new FileInfo(savePath);
-                SaveChosenFile(fileInfo.FullName, FileType.INI, afterSaveDone);
+                SaveChosenFile(fileInfo.FullName, FileType.INI, false, afterSaveDone);
             }
         }
 
@@ -1067,7 +1067,7 @@ namespace MobiusEditor
                 "Loading map");
         }
 
-        private void SaveChosenFile(string saveFilename, FileType inputNameType, Action afterSaveDone)
+        private void SaveChosenFile(string saveFilename, FileType inputNameType, bool dontResavePreview, Action afterSaveDone)
         {
             // This part assumes validation is already done.
             FileType fileType = FileType.None;
@@ -1101,7 +1101,7 @@ namespace MobiusEditor
             ToolType current = ActiveToolType;
             // Different multithreader, so save prompt can start a map load.
             saveMultiThreader.ExecuteThreaded(
-                () => SaveFile(plugin, saveFilename, fileType),
+                () => SaveFile(plugin, saveFilename, fileType, dontResavePreview),
                 (si) => PostSave(si, afterSaveDone), true,
                 (bl, str) => EnableDisableUi(bl, str, current, saveMultiThreader),
                 "Saving map");
@@ -1447,11 +1447,11 @@ namespace MobiusEditor
             }
         }
 
-        private static (string FileName, bool SavedOk, string error) SaveFile(IGamePlugin plugin, string saveFilename, FileType fileType)
+        private static (string FileName, bool SavedOk, string error) SaveFile(IGamePlugin plugin, string saveFilename, FileType fileType, bool dontResavePreview)
         {
             try
             {
-                plugin.Save(saveFilename, fileType);
+                plugin.Save(saveFilename, fileType, null, dontResavePreview);
                 return (saveFilename, true, null);
             }
             catch (Exception ex)
@@ -2182,13 +2182,9 @@ namespace MobiusEditor
                 || oldPreview != plugin.Map.SteamSection.PreviewFile
                 || oldVisibility != (int)plugin.Map.SteamSection.Visibility))
             {
-                // Fix description
-                if (plugin.Map.SteamSection.Description.Any(ch => ch == '\r' || ch == '\n'))
-                {
-                    plugin.Map.SteamSection.Description = plugin.Map.SteamSection.Description.Replace("\r\n", "\n").Replace("\r", "\n").Replace('\n', '@'); 
-                }
                 // This takes care of saving the Steam info into the map.
-                SaveAction(null);
+                // This specific overload only saves the map, without resaving the preview.
+                SaveAction(true, null);
             }
         }
 
@@ -2291,7 +2287,7 @@ namespace MobiusEditor
                             }
                             else
                             {
-                                SaveAction(nextAction);
+                                SaveAction(false, nextAction);
                             }
                             // Cancel current operation, since stuff after multithreading will take care of the operation.
                             return false;

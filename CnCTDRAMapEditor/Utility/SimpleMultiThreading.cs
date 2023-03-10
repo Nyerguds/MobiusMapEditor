@@ -40,13 +40,14 @@ namespace MobiusEditor.Utility
             this.attachForm = attachForm;
         }
 
-        public void AbortThreadedOperation(int timeout)
+        public bool AbortThreadedOperation(int timeout)
         {
-            if (this.processingThread != null && this.processingThread.IsAlive)
+            if (this.processingThread == null || !this.processingThread.IsAlive)
             {
-                this.processingThread.Abort();
-                this.processingThread.Join(timeout);
+                return true;
             }
+            this.processingThread.Abort();
+            return this.processingThread.Join(timeout);
         }
 
         public Boolean IsExecuting

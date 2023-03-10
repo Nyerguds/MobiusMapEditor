@@ -23,6 +23,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Reflection;
 using System.Windows.Forms;
 
 namespace MobiusEditor.Dialogs
@@ -30,12 +31,15 @@ namespace MobiusEditor.Dialogs
     public partial class SteamDialog : Form
     {
         private static readonly string PreviewDirectory = Path.Combine(Path.GetTempPath(), "CnCRCMapEditor");
+        private static readonly string PublishTempDirectory = Path.Combine(Path.GetTempPath(), "CnCRCMapEditorPublishUGC");
         private string defaultPreview;
 
         private readonly IGamePlugin plugin;
         private readonly Timer statusUpdateTimer = new Timer();
         private SimpleMultiThreading multiThreader;
 
+        private bool isPublishing = false;
+        SteamSection steamCloneSection = null;
         private bool mapWasPublished = false;
         public bool MapWasPublished => mapWasPublished;
 
@@ -66,13 +70,35 @@ namespace MobiusEditor.Dialogs
             lblMapTitleData.Text = plugin.Map.BasicSection.Name;
             btnCopyFromMap.Enabled = !String.IsNullOrEmpty(lblMapTitleData.Text);
             txtTitle.Text = plugin.Map.SteamSection.Title ?? String.Empty;
-            txtDescription.Text = (plugin.Map.SteamSection.Description ?? String.Empty).Replace("@@", Environment.NewLine);
+            string description = plugin.Map.SteamSection.Description ?? String.Empty;
+            txtDescription.Text = GeneralUtils.RestoreLinebreaks(description, '@', Environment.NewLine);
             txtPreview.Text = plugin.Map.SteamSection.PreviewFile ?? String.Empty;
             cmbVisibility.SelectedValue = plugin.Map.SteamSection.Visibility;
-            btnPublishMap.SplitWidth = (plugin.Map.SteamSection.PublishedFileId != PublishedFileId_t.Invalid.m_PublishedFileId) ? MenuButton.DefaultSplitWidth : 0;
+            UpdatePublishButton();
             btnFromBriefing.Enabled = plugin.Map.BasicSection.SoloMission;
+            FixSizeAndLocation(800, 500);
             statusUpdateTimer.Start();
-            UpdateControls();
+        }
+
+        private void FixSizeAndLocation(Int32 width, Int32 height)
+        {
+            // For some reason, setting the form's default size larger than the minimum size
+            // makes the UI mess up when manually resizing it to a smaller size after it is shown.
+            // So instead it is initialised with the minimum size, and resized and repositioned
+            // after it is initialised, which fixes the issue.
+            Size oldSize = this.Size;
+            int offsX = (width - oldSize.Width) / 2;
+            int offsY = (height - oldSize.Height) / 2;
+            this.Size = new Size(width, height);
+            Point curLoc = this.Location;
+            this.Location = new Point(Math.Max(0, curLoc.X - offsX), Math.Max(0, curLoc.Y - offsY));
+        }
+
+        private void UpdatePublishButton()
+        {
+            bool isPublished = plugin.Map.SteamSection.PublishedFileId != PublishedFileId_t.Invalid.m_PublishedFileId;
+            btnPublishMap.SplitWidth = isPublished ? MenuButton.DefaultSplitWidth : 0;
+            btnGoToSteam.Text = "&Go to " + (isPublished ? "published item" : "Steam Workshop");
         }
 
         private void StatusUpdateTimer_Tick(object sender, EventArgs e)
@@ -87,21 +113,28 @@ namespace MobiusEditor.Dialogs
         protected override void OnClosed(EventArgs e)
         {
             base.OnClosed(e);
-
             statusUpdateTimer.Stop();
             statusUpdateTimer.Dispose();
         }
 
         protected virtual void OnPublishSuccess()
         {
-            lblStatus.Text = "Done.";
+            lblStatus.Text = "Map published.";
+            isPublishing = false;
+            if (steamCloneSection != null)
+            {
+                plugin.Map.SteamSection.PublishedFileId = steamCloneSection.PublishedFileId;
+                steamCloneSection = null;
+            }
             mapWasPublished = true;
+            UpdatePublishButton();
             EnableControls(true);
         }
 
         protected virtual void OnOperationFailed(string status)
         {
             lblStatus.Text = status;
+            isPublishing = false;
             EnableControls(true);
         }
 
@@ -110,7 +143,6 @@ namespace MobiusEditor.Dialogs
             EnableControls(enable);
             lblStatus.Text = labelText ?? String.Empty;
         }
-
 
         private void EnableControls(bool enable)
         {
@@ -129,7 +161,8 @@ namespace MobiusEditor.Dialogs
             btnFromBriefing.Enabled = enable && plugin != null && plugin.Map.BasicSection.SoloMission;
             txtDescription.Enabled = enable;
             btnPublishMap.Enabled = enable;
-            btnClose.Enabled = enable;
+            btnGoToSteam.Enabled = enable;
+            btnClose.Enabled = !isPublishing || enable;
             lblLegal.Enabled = enable;
         }
 
@@ -153,6 +186,21 @@ namespace MobiusEditor.Dialogs
 
         private void btnPublishMap_Click(object sender, EventArgs e)
         {
+            if (string.IsNullOrEmpty(txtTitle.Text))
+            {
+                MessageBox.Show(this, "Steam Title is required.");
+                return;
+            }
+            if (string.IsNullOrEmpty(txtDescription.Text))
+            {
+                MessageBox.Show("Description is required.");
+                return;
+            }
+            if (txtPreview.Tag == null)
+            {
+                MessageBox.Show("Preview image is required.");
+                return;
+            }
             if (string.IsNullOrEmpty(plugin.Map.BasicSection.Name))
             {
                 plugin.Map.BasicSection.Name = txtTitle.Text;
@@ -163,20 +211,22 @@ namespace MobiusEditor.Dialogs
             }
             plugin.Map.SteamSection.PreviewFile = txtPreview.Text;
             plugin.Map.SteamSection.Title = txtTitle.Text;
-            plugin.Map.SteamSection.Description = txtDescription.Text.Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", "@@");
+            plugin.Map.SteamSection.Description = GeneralUtils.ReplaceLinebreaks(txtDescription.Text, '@');
             plugin.Map.SteamSection.Visibility = (ERemoteStoragePublishedFileVisibility)cmbVisibility.SelectedValue;
-            var tempPath = Path.Combine(Path.GetTempPath(), "CnCRCMapEditorPublishUGC");
-            Directory.CreateDirectory(tempPath);
-            foreach (var file in new DirectoryInfo(tempPath).EnumerateFiles()) file.Delete();
-            var pgmPath = Path.Combine(tempPath, "MAPDATA.PGM");
-            multiThreader.ExecuteThreaded(() => SavePgm(tempPath, pgmPath), SaveDone, true, EnableControls, "Saving map");
+            Directory.CreateDirectory(PublishTempDirectory);
+            foreach (var file in new DirectoryInfo(PublishTempDirectory).EnumerateFiles())
+            {
+                file.Delete();
+            }
+            var pgmPath = Path.Combine(PublishTempDirectory, "MAPDATA.PGM");
+            multiThreader.ExecuteThreaded(() => SavePgm(PublishTempDirectory, pgmPath), SaveDone, true, EnableControls, "Saving map");
         }
 
         private string SavePgm(string tempPath, string pgmPath)
         {
             try
             {
-                plugin.Save(pgmPath, FileType.PGM, txtPreview.Tag as Bitmap);
+                plugin.Save(pgmPath, FileType.PGM, txtPreview.Tag as Bitmap, false);
             }
             catch
             {
@@ -214,12 +264,13 @@ namespace MobiusEditor.Dialogs
             INI ini = new INI();
             INI.WriteSection(new MapContext(plugin.Map, false), ini.Sections.Add("Steam"), plugin.Map.SteamSection);
             var steamSection = ini.Sections.Extract("Steam");
-            SteamSection steamCloneSection = new SteamSection();
+            steamCloneSection = new SteamSection();
             INI.ParseSection(new MapContext(plugin.Map, false), steamSection, steamCloneSection);
-            // Restore original description from control
+            // Restore original description from control, with actual line breaks instead of '@' replacements.
             steamCloneSection.Description = txtDescription.Text;
             if (SteamworksUGC.PublishUGC(sendPath, steamCloneSection, tags, OnPublishSuccess, OnOperationFailed))
             {
+                isPublishing = true;
                 lblStatus.Text = SteamworksUGC.CurrentOperation.Status;
                 EnableControls(false);
             }
@@ -248,10 +299,16 @@ namespace MobiusEditor.Dialogs
         private void publishAsNewToolStripMenuItem_Click(object sender, EventArgs e)
         {
             plugin.Map.SteamSection.PublishedFileId = PublishedFileId_t.Invalid.m_PublishedFileId;
-            btnPublishMap.PerformClick();
+            UpdatePublishButton();
+            btnPublishMap_Click(btnPublishMap, new EventArgs());
         }
 
-        private void previewTxt_TextChanged(object sender, EventArgs e)
+        private void TxtPreview_TextChanged(object sender, EventArgs e)
+        {
+            refreshPreviewImage();
+        }
+
+        private void refreshPreviewImage()
         {
             try
             {
@@ -270,17 +327,6 @@ namespace MobiusEditor.Dialogs
             {
                 txtPreview.Tag = null;
             }
-            UpdateControls();
-        }
-
-        private void descriptionTxt_TextChanged(object sender, EventArgs e)
-        {
-            UpdateControls();
-        }
-
-        private void UpdateControls()
-        {
-            btnPublishMap.Enabled = (txtPreview.Tag != null) && !string.IsNullOrEmpty(txtDescription.Text);
         }
 
         private void BtnCopyFromMap_Click(Object sender, EventArgs e)
@@ -300,7 +346,7 @@ namespace MobiusEditor.Dialogs
 
         private void SteamDialog_Shown(Object sender, EventArgs e)
         {
-            multiThreader.ExecuteThreaded(() => GeneratePreviews(plugin), HandleGeneratedPreview, true, EnableControls, "Generating previews");
+            multiThreader.ExecuteThreaded(() => GeneratePreviews(plugin), HandleGeneratedPreview, true, EnableControls, "Generating map previews");
         }
 
         private String GeneratePreviews(IGamePlugin plugin)
@@ -338,8 +384,78 @@ namespace MobiusEditor.Dialogs
             {
                 txtPreview.Text = defaultPreview;
             }
-            imageTooltip.SetToolTip(txtPreview, "Preview.png");
+            if (txtPreview.Tag == null)
+            {
+                refreshPreviewImage();
+            }
         }
 
+        private void SteamDialog_FormClosing(Object sender, FormClosingEventArgs e)
+        {
+            if (multiThreader.IsExecuting)
+            {
+                multiThreader.AbortThreadedOperation(5000);
+            }
+            DirectoryInfo previewDir = new DirectoryInfo(PreviewDirectory);
+            if (previewDir.Exists)
+            {
+                foreach (var file in previewDir.EnumerateFiles())
+                {
+                    try { file.Delete(); }
+                    catch { /* ignore */}
+                }
+                try { previewDir.Delete(); }
+                catch { /* ignore */}
+            }           
+            DirectoryInfo publishDir = new DirectoryInfo(PublishTempDirectory);
+            if (publishDir.Exists)
+            {
+                foreach (var file in publishDir.EnumerateFiles())
+                {
+                    try { file.Delete(); }
+                    catch { /* ignore */}
+                }
+                try { publishDir.Delete(); }
+                catch { /* ignore */}
+            }
+        }
+
+        private void btnClose_Click(Object sender, EventArgs e)
+        {
+            if (!multiThreader.IsExecuting && !isPublishing)
+            {
+                return;
+            }
+            String operation = lblStatus.Text;
+            DialogResult dr = MessageBox.Show("The following operation is currently in progress:\n\n" + operation + "\n\nAre you sure you want to abort?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2);
+            if (dr == DialogResult.No)
+            {
+                this.DialogResult = DialogResult.None;
+            }
+        }
+
+        private void TxtPreview_MouseEnter(Object sender, EventArgs e)
+        {
+            if (!String.IsNullOrEmpty(txtPreview.Text) && txtPreview.Tag != null)
+            {
+                Point resPoint = txtPreview.PointToScreen(new Point(0, txtPreview.Height));
+                ShowToolTip(txtPreview, resPoint, Path.GetFileName(txtPreview.Text));
+            }
+        }
+
+        private void TxtPreview_MouseLeave(Object sender, EventArgs e)
+        {
+            this.imageTooltip.Hide(txtPreview);
+        }
+
+        private void ShowToolTip(Control target, Point resPoint, string message)
+        {
+            if (target == null || message == null)
+            {
+                this.imageTooltip.Hide(target);
+                return;
+            }
+            imageTooltip.SetToolExt(target, message, ImageTooltip.TipInfoType.Absolute, resPoint);
+        }
     }
 }

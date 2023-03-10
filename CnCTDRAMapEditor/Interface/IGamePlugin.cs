@@ -60,7 +60,7 @@ namespace MobiusEditor.Interface
 
         bool Save(string path, FileType fileType);
 
-        bool Save(string path, FileType fileType, Bitmap customPreview);
+        bool Save(string path, FileType fileType, Bitmap customPreview, bool dontResavePreview);
 
         string Validate();
 

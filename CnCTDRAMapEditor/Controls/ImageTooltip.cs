@@ -14,6 +14,7 @@
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using System;
 using System.Drawing;
+using System.Reflection;
 using System.Windows.Forms;
 
 namespace MobiusEditor.Controls
@@ -21,7 +22,6 @@ namespace MobiusEditor.Controls
     public partial class ImageTooltip : ToolTip
     {
         public Size MaxSize { get; set; } = Size.Empty;
-
         public ImageTooltip()
         {
             InitializeComponent();
@@ -29,6 +29,25 @@ namespace MobiusEditor.Controls
             OwnerDraw = true;
             Popup += ImageTooltip_Popup;
             Draw += ImageTooltip_Draw;
+        }
+
+        [Flags]
+        public enum TipInfoType
+        {
+            None = 0x0,
+            Auto = 0x1,
+            Absolute = 0x2,
+            SemiAbsolute = 0x4
+        }
+
+        public void SetToolExt(IWin32Window win, string text, TipInfoType type, Point position)
+        {
+            // private void SetTool(IWin32Window win, string text, TipInfo.Type type, Point position)
+            MethodInfo setTool = typeof(ToolTip).GetMethod("SetTool", BindingFlags.Instance | BindingFlags.NonPublic);
+            if (setTool != null)
+            {
+                setTool.Invoke(this, new object[] { win, text, (Int32)type, position });
+            }
         }
 
         private void ImageTooltip_Popup(object sender, PopupEventArgs e)

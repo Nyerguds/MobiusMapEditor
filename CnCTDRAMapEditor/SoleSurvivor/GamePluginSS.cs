@@ -173,9 +173,9 @@ namespace MobiusEditor.SoleSurvivor
             return errors;
         }
 
-        public override bool Save(string path, FileType fileType, Bitmap customPreview)
+        public override bool Save(string path, FileType fileType, Bitmap customPreview, bool dontResavePreview)
         {
-            return Save(path, fileType, true, customPreview);
+            return Save(path, fileType, true, customPreview, dontResavePreview);
         }
 
         protected override void SaveINI(INI ini, FileType fileType, string fileName)

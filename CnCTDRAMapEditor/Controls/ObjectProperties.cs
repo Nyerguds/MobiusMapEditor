@@ -389,7 +389,7 @@ namespace MobiusEditor.Controls
             {
                 tooltip = triggerToolTip;
             }
-            ShowToolTip( target, tooltip);
+            ShowToolTip(target, tooltip);
         }
         
         private void ShowToolTip(Control target, string message) {

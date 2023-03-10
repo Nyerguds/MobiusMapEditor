@@ -2007,15 +2007,15 @@ namespace MobiusEditor.TiberianDawn
 
         public bool Save(string path, FileType fileType)
         {
-            return Save(path, fileType, null);
+            return Save(path, fileType, null, false);
         }
 
-        public virtual bool Save(string path, FileType fileType, Bitmap customPreview)
+        public virtual bool Save(string path, FileType fileType, Bitmap customPreview, bool dontResavePreview)
         {
-            return Save(path, fileType, false, customPreview);
+            return Save(path, fileType, false, customPreview, dontResavePreview);
         }
 
-        public bool Save(string path, FileType fileType, bool forSole, Bitmap customPreview)
+        public bool Save(string path, FileType fileType, bool forSole, Bitmap customPreview, bool dontResavePreview)
         {
             String errors = Validate(forSole);
             if (errors != null)
@@ -2058,15 +2058,19 @@ namespace MobiusEditor.TiberianDawn
                     {
                         var tgaPath = Path.ChangeExtension(path, ".tga");
                         var jsonPath = Path.ChangeExtension(path, ".json");
-                        using (var tgaStream = new FileStream(tgaPath, FileMode.Create))
+                        if (!File.Exists(tgaPath) || !dontResavePreview)
                         {
-                            if (customPreview != null)
+
+                            using (var tgaStream = new FileStream(tgaPath, FileMode.Create))
                             {
-                                TGA.FromBitmap(customPreview).Save(tgaStream);
-                            }
-                            else
-                            {
-                                SaveMapPreview(tgaStream, true);
+                                if (customPreview != null)
+                                {
+                                    TGA.FromBitmap(customPreview).Save(tgaStream);
+                                }
+                                else
+                                {
+                                    SaveMapPreview(tgaStream, true);
+                                }
                             }
                         }
                         using (var jsonStream = new FileStream(jsonPath, FileMode.Create))

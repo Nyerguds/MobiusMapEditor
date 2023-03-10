@@ -414,3 +414,15 @@ Unreleased
 * Added automatic logic for Red Alert maps to fix corrupted tiles such as the "indestructible" bridges, rather than just clearing them.
 * Skipping over disabled sections in the ini (like the Aircraft) now adds errors and marks the map as modified.
 * Added detection for incorrect use of the "Allow Win" action in Tiberian Dawn.
+* Fixed reading of [Base] entries; it should loop over all 3-digit integers up to the "Count" value, not parse the keys as integers.
+* Fixed triggers list corrupting on the Terrain tool.
+* Fixed trigger not showing on the preview for placing down a Terrain object.
+* The trigger on the placement preview of a Unit, Building, Infantry or Terrain object is now shown as semitransparent.
+* Choosing to save on a save prompt will now no longer abort the action that prompted the save prompt; it will be remembered and executed after the save is done.
+* Fixed saving of Steam publish ID in the map publishing process.
+* Map preview in the Steam Publish dialog will now consistently show when hovering over the preview path text field.
+* The preview path text field in the Steam Publish dialog is now read-only.
+* Fixed saving of '@' characters in the Steam workshop item description.
+* The map save after the Steam publish will no longer re-generate the thumbnail, making it much faster.
+* Steam publish will now clean up all generated temporary files.
+
