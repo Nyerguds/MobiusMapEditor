@@ -368,8 +368,8 @@ namespace MobiusEditor.Utility
 
         public static String RestoreLinebreaks(String input, char replacement, String lineBreak)
         {
-            // Just in case the line breaks aren't '\n' as they should be.
-            input = Regex.Replace(input, "[\r\n]*", "", RegexOptions.None);
+            // Ensure there are no line breaks in the original string.
+            input = Regex.Replace(input, "[\\r\\n]+", "", RegexOptions.None);
             StringBuilder sb = new StringBuilder();
             int len = input.Length;
             for (int i = 0; i < len; ++i)
