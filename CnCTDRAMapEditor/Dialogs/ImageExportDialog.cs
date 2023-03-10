@@ -336,7 +336,7 @@ namespace MobiusEditor.Dialogs
             btnCancel.Enabled = enabled;
             if (enabled)
             {
-                this.multiThreader.RemoveBusyLabel(this);
+                SimpleMultiThreading.RemoveBusyLabel(this);
             }
             else
             {

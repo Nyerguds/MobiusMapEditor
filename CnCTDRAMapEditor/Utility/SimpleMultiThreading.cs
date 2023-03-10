@@ -186,7 +186,7 @@ namespace MobiusEditor.Utility
             busyStatusLabel.BringToFront();
         }
 
-        public void RemoveBusyLabel<U>(U form) where U : Form, IHasStatusLabel
+        public static void RemoveBusyLabel<U>(U form) where U : Form, IHasStatusLabel
         {
             Label busyStatusLabel = form.StatusLabel;
             if (busyStatusLabel == null)

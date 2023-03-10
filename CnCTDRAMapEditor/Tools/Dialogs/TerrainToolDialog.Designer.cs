@@ -16,7 +16,7 @@ using MobiusEditor.Interface;
 
 namespace MobiusEditor.Tools.Dialogs
 {
-    partial class TerrainToolDialog : ToolDialog<TerrainTool>
+    partial class TerrainToolDialog
     {
         /// <summary>
         /// Required designer variable.

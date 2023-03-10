@@ -2955,7 +2955,15 @@ namespace MobiusEditor.RedAlert
             info.Add(string.Format(maximums, "ships", numVessels, Constants.MaxVessels));
             info.Add(string.Format(maximums, "team types", Map.TeamTypes.Count, Constants.MaxTeams));
             info.Add(string.Format(maximums, "triggers", Map.Triggers.Count, Constants.MaxTriggers));
-            if (Map.BasicSection.SoloMission)
+            if (!Map.BasicSection.SoloMission)
+            {
+                info.Add(String.Empty);
+                info.Add("Multiplayer info:");
+                int startPoints = Map.Waypoints.Count(w => w.Cell.HasValue && (w.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart);
+                info.Add(string.Format("Number of set starting points: {0}.", startPoints));
+            }
+            const bool assessScripting = true;
+            if (assessScripting)
             {
                 HashSet<int> usedWaypoints = new HashSet<int>();
                 HashSet<int> setWaypoints = Enumerable.Range(0, Map.Waypoints.Length).Where(i => Map.Waypoints[i].Cell.HasValue).ToHashSet();
@@ -3042,13 +3050,6 @@ namespace MobiusEditor.RedAlert
                 info.Add(string.Format("Globals checked but never altered: {0}", evalEmpty(chGlobalsNotEdStr)));
                 info.Add(string.Format("Placed waypoints not used in teams or triggers: {0}", evalEmpty(unusedWaypointsStr)));
                 info.Add(string.Format("Empty waypoints used in teams or triggers: {0}", evalEmpty(unsetUsedWaypointsStr)));
-            }
-            else
-            {
-                info.Add(String.Empty);
-                info.Add("Multiplayer info:");
-                int startPoints = Map.Waypoints.Count(w => w.Cell.HasValue && (w.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart);
-                info.Add(string.Format("Number of set starting points: {0}.", startPoints));
             }
             return info;
         }

@@ -42,13 +42,11 @@ namespace MobiusEditor.Controls
             set
             {
                 if (terrain == value)
+                {
                     return;
-                if (terrain != null)
-                    terrain.PropertyChanged -= Obj_PropertyChanged;
+                }
                 terrain = value;
-                if (terrain != null)
-                    terrain.PropertyChanged += Obj_PropertyChanged;
-                Rebind();
+                UpdateDataSource();
             }
         }
 
@@ -73,7 +71,6 @@ namespace MobiusEditor.Controls
             UpdateDataSource();
             Disposed += (sender, e) =>
             {
-                Terrain = null;
                 plugin.Map.TriggersUpdated -= Triggers_CollectionChanged;
             };
         }
@@ -85,43 +82,25 @@ namespace MobiusEditor.Controls
 
         private void UpdateDataSource()
         {
-            string selected = triggerComboBox.SelectedItem as string;
+            string selected = terrain != null ? terrain.Trigger : triggerComboBox.SelectedItem as string;
+            triggerComboBox.DataBindings.Clear();
             triggerComboBox.DataSource = null;
             triggerComboBox.Items.Clear();
             string[] items = Plugin.Map.FilterTerrainTriggers().Select(t => t.Name).Distinct().ToArray();
             string[] filteredEvents = Plugin.Map.EventTypes.Where(ev => Plugin.Map.TerrainEventTypes.Contains(ev)).Distinct().ToArray();
             string[] filteredActions = Plugin.Map.ActionTypes.Where(ev => Plugin.Map.TerrainActionTypes.Contains(ev)).Distinct().ToArray();
-            HashSet<string> allowedTriggers = new HashSet<string>(items);
+            HashSet<string> allowedTriggers = new HashSet<string>(items, StringComparer.OrdinalIgnoreCase);
             items = Trigger.None.Yield().Concat(Plugin.Map.Triggers.Select(t => t.Name).Where(t => allowedTriggers.Contains(t)).Distinct()).ToArray();
-            int selectIndex = selected == null ? 0 : Enumerable.Range(0, items.Length).FirstOrDefault(x => String.Equals(items[x], selected, StringComparison.OrdinalIgnoreCase));
+            int selectIndex = String.IsNullOrEmpty(selected) ? 0 : Enumerable.Range(0, items.Length).FirstOrDefault(x => String.Equals(items[x], selected, StringComparison.OrdinalIgnoreCase));
             triggerComboBox.DataSource = items;
+            if (terrain != null)
+            {
+                // Ensure that the object's trigger is in the list.
+                terrain.Trigger = items[selectIndex];
+                triggerComboBox.DataBindings.Add("SelectedItem", terrain, "Trigger");
+            }
             triggerComboBox.SelectedIndex = selectIndex;
             triggerToolTip = Map.MakeAllowedTriggersToolTip(filteredEvents, filteredActions);
-        }
-
-        private void Rebind()
-        {
-            triggerComboBox.DataBindings.Clear();
-
-            if (terrain == null)
-            {
-                return;
-            }
-            UpdateDataSource();
-            triggerComboBox.DataBindings.Add("SelectedItem", terrain, "Trigger");
-        }
-
-        private void Obj_PropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            switch (e.PropertyName)
-            {
-                case "Type":
-                    {
-                        Rebind();
-                    }
-                    break;
-            }
-            // The undo/redo system now handles plugin dirty state.
         }
 
         private void comboBox_SelectedValueChanged(object sender, EventArgs e)

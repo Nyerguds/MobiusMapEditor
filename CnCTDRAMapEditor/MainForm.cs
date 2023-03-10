@@ -114,7 +114,8 @@ namespace MobiusEditor
 
         private readonly Timer steamUpdateTimer = new Timer();
 
-        private SimpleMultiThreading multiThreader;
+        private SimpleMultiThreading loadMultiThreader;
+        private SimpleMultiThreading saveMultiThreader;
         public Label StatusLabel { get; set; }
 
         static MainForm()
@@ -169,8 +170,10 @@ namespace MobiusEditor
             UpdateUndoRedo();
             steamUpdateTimer.Interval = 500;
             steamUpdateTimer.Tick += SteamUpdateTimer_Tick;
-            multiThreader = new SimpleMultiThreading(this);
-            multiThreader.ProcessingLabelBorder = BorderStyle.Fixed3D;
+            loadMultiThreader = new SimpleMultiThreading(this);
+            loadMultiThreader.ProcessingLabelBorder = BorderStyle.Fixed3D;
+            saveMultiThreader = new SimpleMultiThreading(this);
+            saveMultiThreader.ProcessingLabelBorder = BorderStyle.Fixed3D;
         }
 
         private void SetTitle()
@@ -343,21 +346,21 @@ namespace MobiusEditor
 
         private void FileNewMenuItem_Click(object sender, EventArgs e)
         {
-            NewFile(false, null, false);
+            NewFileAsk(false, null, false);
         }
 
         private void FileNewFromImageMenuItem_Click(object sender, EventArgs e)
         {
-            NewFile(true, null, false);
+            NewFileAsk(true, null, false);
         }
 
         private void FileOpenMenuItem_Click(object sender, EventArgs e)
         {
-            if (!PromptSaveMap())
-            {
-                return;
-            }
+            PromptSaveMap(OpenFile, false);
+        }
 
+        private void OpenFile()
+        {
             var pgmFilter = "|PGM files (*.pgm)|*.pgm";
             string allSupported = "All supported types (*.ini;*.bin;*.mpr;*.pgm)|*.ini;*.bin;*.mpr;*.pgm";
             String selectedFileName = null;
@@ -392,19 +395,25 @@ namespace MobiusEditor
             }
             if (selectedFileName != null)
             {
-                OpenFile(selectedFileName, false);
+                OpenFile(selectedFileName);
             }
         }
 
         private void FileSaveMenuItem_Click(object sender, EventArgs e)
         {
+            SaveAction(null);
+        }
+
+        private void SaveAction(Action afterSaveDone)
+        {
             if (plugin == null)
             {
+                afterSaveDone?.Invoke();
                 return;
             }
             if (string.IsNullOrEmpty(filename) || !Directory.Exists(Path.GetDirectoryName(filename)))
             {
-                fileSaveAsMenuItem.PerformClick();
+                SaveAsAction(afterSaveDone);
                 return;
             }
             String errors = plugin.Validate();
@@ -414,13 +423,19 @@ namespace MobiusEditor
                 return;
             }
             var fileInfo = new FileInfo(filename);
-            SaveFile(fileInfo.FullName, loadedFileType);
+            SaveChosenFile(fileInfo.FullName, loadedFileType, afterSaveDone);
         }
 
         private void FileSaveAsMenuItem_Click(object sender, EventArgs e)
         {
+            SaveAsAction(null);
+        }
+
+        private void SaveAsAction(Action afterSaveDone)
+        {
             if (plugin == null)
             {
+                afterSaveDone?.Invoke();
                 return;
             }
             String errors = plugin.Validate();
@@ -460,10 +475,14 @@ namespace MobiusEditor
                     savePath = sfd.FileName;
                 }
             }
-            if (savePath != null)
+            if (savePath == null)
+            {
+                afterSaveDone?.Invoke();
+            }
+            else
             {
                 var fileInfo = new FileInfo(savePath);
-                SaveFile(fileInfo.FullName, FileType.INI);
+                SaveChosenFile(fileInfo.FullName, FileType.INI, afterSaveDone);
             }
         }
 
@@ -905,7 +924,16 @@ namespace MobiusEditor
 
         private void Mru_FileSelected(object sender, FileInfo e)
         {
-            OpenFile(e.FullName, true);
+            if (File.Exists(e.FullName))
+            {
+                OpenFileAsk(e.FullName, false);
+            }
+            else
+            {
+                MessageBox.Show(string.Format("Error loading {0}: the file was not found.", e.Name), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                mru.Remove(e);
+            }
+            
         }
 
         private void MapPanel_MouseMove(object sender, MouseEventArgs e)
@@ -922,16 +950,23 @@ namespace MobiusEditor
             );
             cellStatusLabel.Text = plugin.Map.GetCellDescription(location, subPixel);
         }
-#endregion
+        #endregion
 
-#region Additional logic for listeners
+        #region Additional logic for listeners
 
-        private void NewFile(bool withImage, string imagePath, bool skipPrompt)
+        private void NewFileAsk(bool withImage, string imagePath, bool skipPrompt)
         {
-            if (!skipPrompt && !PromptSaveMap())
+            if (skipPrompt)
             {
-                return;
+                NewFile(withImage, imagePath);
             }
+            else {
+                PromptSaveMap(() => NewFile(withImage, imagePath), false);
+            }
+        }
+
+        private void NewFile(bool withImage, string imagePath)
+        {
             GameType gameType = GameType.None;
             string theater = null;
             bool isTdMegaMap = false;
@@ -969,15 +1004,26 @@ namespace MobiusEditor
             String loading = "Loading new map";
             if (withImage)
                 loading += " from image";
-            multiThreader.ExecuteThreaded(() => NewFile(gameType, imagePath, theater, isTdMegaMap, modPaths, this), PostLoad, true, LoadUnloadUi, loading);
+            loadMultiThreader.ExecuteThreaded(
+                () => NewFile(gameType, imagePath, theater, isTdMegaMap, modPaths, this),
+                PostLoad, true,
+                (e, l) => LoadUnloadUi(e, l, loadMultiThreader),
+                loading);
         }
 
-        private void OpenFile(String fileName, bool askSave)
+        private void OpenFileAsk(String fileName, bool skipPrompt)
         {
-            if (askSave && !PromptSaveMap())
+            if (skipPrompt)
             {
-                return;
+                OpenFile(fileName);
             }
+            else
+            {
+                PromptSaveMap(() => OpenFile(fileName), false);
+            }
+        }
+        private void OpenFile(String fileName)
+        {
             var fileInfo = new FileInfo(fileName);
             String name = fileInfo.FullName;
             if (!IdentifyMap(name, out FileType fileType, out GameType gameType, out bool isTdMegaMap))
@@ -996,7 +1042,7 @@ namespace MobiusEditor
                         {
                             // Don't need to do anything except open this to confirm it's supported
                         }
-                        NewFile(true, name, true);
+                        NewFileAsk(true, name, true);
                         return;
                     }
                     catch
@@ -1012,10 +1058,14 @@ namespace MobiusEditor
             {
                 ModPaths.TryGetValue(gameType, out modPaths);
             }
-            multiThreader.ExecuteThreaded(() => LoadFile(name, fileType, gameType, isTdMegaMap, modPaths), PostLoad, true, LoadUnloadUi, "Loading map");
+            loadMultiThreader.ExecuteThreaded(
+                () => LoadFile(name, fileType, gameType, isTdMegaMap, modPaths),
+                PostLoad, true,
+                (e,l) => LoadUnloadUi(e, l, loadMultiThreader),
+                "Loading map");
         }
 
-        private void SaveFile(string saveFilename, FileType inputNameType)
+        private void SaveChosenFile(string saveFilename, FileType inputNameType, Action afterSaveDone)
         {
             // This part assumes validation is already done.
             FileType fileType = FileType.None;
@@ -1047,9 +1097,12 @@ namespace MobiusEditor
                 plugin.Map.SteamSection.Title = plugin.Map.BasicSection.Name;
             }
             ToolType current = ActiveToolType;
-            // Replace by multithreaded part
-            multiThreader.ExecuteThreaded(() => SaveFile(plugin, saveFilename, fileType), PostSave, true, (bl, str) => EnableDisableUi(bl, str, current), "Saving map");
-            //plugin.Save(saveFilename, fileType)
+            // Different multithreader, so save prompt can start a map load.
+            saveMultiThreader.ExecuteThreaded(
+                () => SaveFile(plugin, saveFilename, fileType),
+                (si) => PostSave(si, afterSaveDone), true,
+                (bl, str) => EnableDisableUi(bl, str, current, saveMultiThreader),
+                "Saving map");
         }
 
         private Boolean IdentifyMap(String loadFilename, out FileType fileType, out GameType gameType, out bool isTdMegaMap)
@@ -1174,7 +1227,7 @@ namespace MobiusEditor
         /// </summary>
         /// <param name="enableUI"></param>
         /// <param name="label"></param>
-        private void LoadUnloadUi(bool enableUI, string label)
+        private void LoadUnloadUi(bool enableUI, string label, SimpleMultiThreading currentMultiThreader)
         {
             fileNewMenuItem.Enabled = enableUI;
             fileNewFromImageMenuItem.Enabled = enableUI;
@@ -1185,7 +1238,7 @@ namespace MobiusEditor
             if (!enableUI)
             {
                 Unload();
-                multiThreader.CreateBusyLabel(this, label);
+                currentMultiThreader.CreateBusyLabel(this, label);
             }
         }
 
@@ -1194,7 +1247,7 @@ namespace MobiusEditor
         /// </summary>
         /// <param name="enableUI"></param>
         /// <param name="label"></param>
-        private void EnableDisableUi(bool enableUI, string label, ToolType storedToolType)
+        private void EnableDisableUi(bool enableUI, string label, ToolType storedToolType, SimpleMultiThreading currentMultiThreader)
         {
             fileNewMenuItem.Enabled = enableUI;
             fileNewFromImageMenuItem.Enabled = enableUI;
@@ -1215,7 +1268,7 @@ namespace MobiusEditor
                 {
                     toolStripButton.Enabled = false;
                 }
-                multiThreader.CreateBusyLabel(this, label);
+                currentMultiThreader.CreateBusyLabel(this, label);
             }
         }
 
@@ -1414,7 +1467,7 @@ namespace MobiusEditor
             if (loadInfo == null)
             {
                 // Absolute abort
-                multiThreader.RemoveBusyLabel(this);
+                SimpleMultiThreading.RemoveBusyLabel(this);
                 return;
             }
             string[] errors = loadInfo.Errors ?? new string[0];
@@ -1427,7 +1480,7 @@ namespace MobiusEditor
                     mru.Remove(fileInfo);
                 }
                 // In case of actual error, remove label.
-                multiThreader.RemoveBusyLabel(this);
+                SimpleMultiThreading.RemoveBusyLabel(this);
                 MessageBox.Show(string.Format("Error loading {0}: {1}", loadInfo.FileName ?? "new map", String.Join("\n", errors)), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             else
@@ -1461,7 +1514,7 @@ namespace MobiusEditor
             }
         }
 
-        private void PostSave((string FileName, bool SavedOk, string Error) saveInfo)
+        private void PostSave((string FileName, bool SavedOk, string Error) saveInfo, Action afterSaveDone)
         {
             var fileInfo = new FileInfo(saveInfo.FileName);
             if (saveInfo.SavedOk)
@@ -1474,6 +1527,7 @@ namespace MobiusEditor
                 filename = saveInfo.FileName;
                 SetTitle();
                 mru.Add(fileInfo);
+                afterSaveDone?.Invoke();
             }
             else
             {
@@ -1896,7 +1950,7 @@ namespace MobiusEditor
             String[] files = (String[])e.Data.GetData(DataFormats.FileDrop);
             if (files.Length != 1)
                 return;
-            OpenFile(files[0], true);
+            OpenFileAsk(files[0], false);
         }
 
         private void ViewMenuItem_CheckedChanged(object sender, EventArgs e)
@@ -2092,10 +2146,11 @@ namespace MobiusEditor
                 MessageBox.Show("Steam interface is not initialized. To enable Workshop publishing, log into Steam and restart the editor.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-            if (!PromptSaveMap())
-            {
-                return;
-            }
+            PromptSaveMap(ShowPublishDialog, false);
+        }
+
+        private void ShowPublishDialog()
+        {
             if (plugin.Dirty)
             {
                 MessageBox.Show("Map must be saved before publishing.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -2131,7 +2186,7 @@ namespace MobiusEditor
                     plugin.Map.SteamSection.Description = plugin.Map.SteamSection.Description.Replace("\r\n", "\n").Replace("\r", "\n").Replace('\n', '@'); 
                 }
                 // This takes care of saving the Steam info into the map.
-                fileSaveMenuItem.PerformClick();
+                SaveAction(null);
             }
         }
 
@@ -2149,20 +2204,28 @@ namespace MobiusEditor
             RefreshUI();
             UpdateUndoRedo();
             if (filename != null)
-                this.OpenFile(filename, false);
+                this.OpenFileAsk(filename, true);
         }
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            e.Cancel = !PromptSaveMap();
-            if (e.Cancel)
+            // Form.Close() after the save will re-trigger this FormClosing event handler, but the
+            // plugin will not be dirty, so it will just succeed and go on to the CleanupOnClose() call.
+            // Also note, if the save fails for some reason, Form.Close() is never called.
+            Boolean abort = !PromptSaveMap(this.Close, true);
+            e.Cancel = abort;
+            if (!abort)
             {
-                return;
+                CleanupOnClose();
             }
+        }
+
+        private void CleanupOnClose()
+        {
             // If loading, abort. Wait for confirmation of abort before continuing the unloading.
-            if (multiThreader != null)
+            if (loadMultiThreader != null)
             {
-                multiThreader.AbortThreadedOperation(5000);
+                loadMultiThreader.AbortThreadedOperation(5000);
             }
             // Restore default icons, then dispose custom ones.
             // Form dispose should take care of the default ones.
@@ -2196,9 +2259,14 @@ namespace MobiusEditor
             }
         }
 
-        private bool PromptSaveMap()
+        /// <summary>
+        /// Returns false if the action in progress should be considered aborted.
+        /// </summary>
+        /// <param name="nextAction">Action to perform after the check. If this is after the save, the function will still return false.</param>ormcl
+        /// <param name="onlyAfterSave">Only perform nextAction after a save operation, not when the user pressed "no".</param>
+        /// <returns>false if the action was aborted.</returns>
+        private bool PromptSaveMap(Action nextAction, bool onlyAfterSave)
         {
-            bool cancel = false;
             if (plugin?.Dirty ?? false)
             {
                 var message = string.IsNullOrEmpty(filename) ? "Save new map?" : string.Format("Save map '{0}'?", filename);
@@ -2213,24 +2281,30 @@ namespace MobiusEditor
                                 MessageBox.Show(errors, "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                                 return false;
                             }
+                            // Need to change this: should start multithreaded operation, and then perform the original asked operation.
+                            // toPerformAfterSave
                             if (string.IsNullOrEmpty(filename))
                             {
-                                fileSaveAsMenuItem.PerformClick();
+                                SaveAsAction(nextAction);
                             }
                             else
                             {
-                                fileSaveMenuItem.PerformClick();
+                                SaveAction(nextAction);
                             }
+                            // Cancel current operation, since stuff after multithreading will take care of the operation.
+                            return false;
                         }
-                        break;
                     case DialogResult.No:
                         break;
                     case DialogResult.Cancel:
-                        cancel = true;
-                        break;
+                        return false;
                 }
+            }            
+            if (!onlyAfterSave && nextAction != null)
+            {
+                nextAction();
             }
-            return !cancel;
+            return true;
         }
 
         public void UpdateStatus()
@@ -2344,9 +2418,9 @@ namespace MobiusEditor
         private void mapPanel_PostRender(Object sender, RenderEventArgs e)
         {
             // Only clear this after all rendering is complete.
-            if (!multiThreader.IsExecuting)
+            if (!loadMultiThreader.IsExecuting && !saveMultiThreader.IsExecuting)
             {
-                multiThreader.RemoveBusyLabel(this);
+                SimpleMultiThreading.RemoveBusyLabel(this);
             }
         }
     }

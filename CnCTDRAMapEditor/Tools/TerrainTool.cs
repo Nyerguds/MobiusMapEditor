@@ -527,12 +527,13 @@ namespace MobiusEditor.Tools
             var location = navigationWidget.MouseCell;
             if (previewMap.Metrics.Contains(location))
             {
-                var terrain = new Terrain
+                var terrain = mockTerrain.Clone();
+                terrain.Tint = Color.FromArgb(128, Color.White);
+                //previewMap.Technos.Add(location, terrain);
+                if (previewMap.Technos.CanAdd(location, terrain, terrain.Type.OccupyMask) && previewMap.Buildings.Add(location, terrain))
                 {
-                    Type = SelectedTerrainType,
-                    Tint = Color.FromArgb(128, Color.White)
-                };
-                previewMap.Technos.Add(location, terrain);
+                    mapPanel.Invalidate(previewMap, terrain);
+                }
             }
         }
 
@@ -542,7 +543,7 @@ namespace MobiusEditor.Tools
             MapRenderer.RenderAllOccupierBounds(graphics, Globals.MapTileSize, previewMap.Technos.OfType<Terrain>());
             if ((Layers & MapLayerFlag.TechnoTriggers) == MapLayerFlag.TechnoTriggers)
             {
-                MapRenderer.RenderAllTechnoTriggers(graphics, map, Globals.MapTileSize, Globals.MapTileScale, Layers);
+                MapRenderer.RenderAllTechnoTriggers(graphics, previewMap, Globals.MapTileSize, Globals.MapTileScale, Layers);
             }
         }
 

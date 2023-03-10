@@ -761,18 +761,20 @@ namespace MobiusEditor.Tools
         {
             base.PreRenderMap();
             previewMap = map.Clone();
-            if (placementMode)
+            if (!placementMode)
             {
-                var location = navigationWidget.MouseCell;
-                if (SelectedBuildingType != null)
-                {
-                    var building = mockBuilding.Clone();
-                    building.Tint = Color.FromArgb(128, Color.White);
-                    if (previewMap.Technos.CanAdd(location, building, building.Type.BaseOccupyMask) && previewMap.Buildings.Add(location, building))
-                    {
-                        mapPanel.Invalidate(previewMap, building);
-                    }
-                }
+                return;
+            }
+            if (SelectedBuildingType == null)
+            {
+                return;
+            }
+            var location = navigationWidget.MouseCell;
+            var building = mockBuilding.Clone();
+            building.Tint = Color.FromArgb(128, Color.White);
+            if (previewMap.Technos.CanAdd(location, building, building.Type.BaseOccupyMask) && previewMap.Buildings.Add(location, building))
+            {
+                mapPanel.Invalidate(previewMap, building);
             }
         }
 

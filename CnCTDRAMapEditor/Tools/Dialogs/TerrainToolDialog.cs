@@ -49,5 +49,6 @@ namespace MobiusEditor.Tools.Dialogs
             Tool = new TerrainTool(mapPanel, activeLayers, toolStatusLabel, TerrainTypeListBox,
                 TerrainTypeMapPanel, TerrainProperties, plugin, undoRedoList);
         }
+
     }
 }

@@ -353,6 +353,7 @@ namespace MobiusEditor.TiberianDawn
             string[] cellEventTypes = new[]
             {
                 EventTypes.EVENT_PLAYER_ENTERED,
+                EventTypes.EVENT_ANY,
                 EventTypes.EVENT_NONE
             };
             string[] unitEventTypes =
@@ -2787,7 +2788,15 @@ namespace MobiusEditor.TiberianDawn
             info.Add(string.Format(maximums, "units", numUnits, Constants.MaxUnits, Constants.MaxUnitsClassic));
             info.Add(string.Format(maximums, "team types", Map.TeamTypes.Count, Constants.MaxTeams, Constants.MaxTeamsClassic));
             info.Add(string.Format(maximums, "triggers", Map.Triggers.Count, Constants.MaxTriggers, Constants.MaxTriggersClassic));
-            if (Map.BasicSection.SoloMission)
+            if (!Map.BasicSection.SoloMission)
+            {
+                info.Add(String.Empty);
+                info.Add("Multiplayer info:");
+                int startPoints = Map.Waypoints.Count(w => w.Cell.HasValue && (w.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart);
+                info.Add(string.Format("Number of set starting points: {0}.", startPoints));
+            }
+            const bool assessScripting = true;
+            if (assessScripting)
             {
                 HashSet<int> usedWaypoints = new HashSet<int>();
                 HashSet<int> setWaypoints = Enumerable.Range(0, Map.Waypoints.Length).Where(i => Map.Waypoints[i].Cell.HasValue).ToHashSet();
@@ -2846,11 +2855,6 @@ namespace MobiusEditor.TiberianDawn
                 info.Add(string.Format("Unused team types: {0}", evalEmpty(unusedTeamsStr)));
                 info.Add(string.Format("Placed waypoints not used in teams or triggers: {0}", evalEmpty(unusedWaypointsStr)));
                 info.Add(string.Format("Empty waypoints used in teams or triggers: {0}", evalEmpty(unsetUsedWaypointsStr)));
-            }
-            else
-            {
-                int startPoints = Map.Waypoints.Count(w => w.Cell.HasValue && (w.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart);
-                info.Add(string.Format("Number of set starting points: {0}.", startPoints));
             }
             return info;
         }

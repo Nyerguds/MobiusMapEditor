@@ -1242,19 +1242,15 @@ namespace MobiusEditor.Render
         public static void RenderAllTechnoTriggers(Graphics graphics, Map map, Size tileSize, double tileScale, MapLayerFlag layersToRender, Color color, string toPick, bool excludePick)
         {
             float borderSize = Math.Max(0.5f, tileSize.Width / 60.0f);
-            using (var technoTriggerBackgroundBrush = new SolidBrush(Color.FromArgb(96, Color.Black)))
-            using (var technoTriggerBrush = new SolidBrush(color))
-            using (var technoTriggerPen = new Pen(color, borderSize))
-            {
                 foreach (var (cell, techno) in map.Technos)
                 {
                     var location = new Point(cell.X * tileSize.Width, cell.Y * tileSize.Height);
-                    (string trigger, Rectangle bounds)[] triggers = null;
+                    (string trigger, Rectangle bounds, int alpha)[] triggers = null;
                     if (techno is Terrain terrain && !Trigger.IsEmpty(terrain.Trigger))
                     {
                         if ((layersToRender & MapLayerFlag.Terrain) == MapLayerFlag.Terrain)
                         {
-                            triggers = new (string, Rectangle)[] { (terrain.Trigger, new Rectangle(location, terrain.Type.GetRenderSize(tileSize))) };
+                            triggers = new (string, Rectangle, int)[] { (terrain.Trigger, new Rectangle(location, terrain.Type.GetRenderSize(tileSize)), terrain.Tint.A) };
                         }
                     }
                     else if (techno is Building building && !Trigger.IsEmpty(building.Trigger))
@@ -1262,21 +1258,21 @@ namespace MobiusEditor.Render
                         if ((layersToRender & MapLayerFlag.Buildings) == MapLayerFlag.Buildings)
                         {
                             var size = new Size(building.Type.Size.Width * tileSize.Width, building.Type.Size.Height * tileSize.Height);
-                            triggers = new (string, Rectangle)[] { (building.Trigger, new Rectangle(location, size)) };
+                            triggers = new (string, Rectangle, int)[] { (building.Trigger, new Rectangle(location, size), building.Tint.A) };
                         }
                     }
                     else if (techno is Unit unit && !Trigger.IsEmpty(unit.Trigger))
                     {
                         if ((layersToRender & MapLayerFlag.Units) == MapLayerFlag.Units)
                         {
-                            triggers = new (string, Rectangle)[] { (unit.Trigger, new Rectangle(location, tileSize)) };
+                            triggers = new (string, Rectangle, int)[] { (unit.Trigger, new Rectangle(location, tileSize), unit.Tint.A) };
                         }
                     }
                     else if (techno is InfantryGroup infantryGroup)
                     {
                         if ((layersToRender & MapLayerFlag.Infantry) == MapLayerFlag.Infantry)
                         {
-                            List<(string, Rectangle)> infantryTriggers = new List<(string, Rectangle)>();
+                            List<(string, Rectangle, int)> infantryTriggers = new List<(string, Rectangle, int)>();
                             for (var i = 0; i < infantryGroup.Infantry.Length; ++i)
                             {
                                 var infantry = infantryGroup.Infantry[i];
@@ -1306,32 +1302,35 @@ namespace MobiusEditor.Render
                                         break;
                                 }
                                 var bounds = new Rectangle(location + offset, size);
-                                infantryTriggers.Add((infantry.Trigger, bounds));
+                                infantryTriggers.Add((infantry.Trigger, bounds, infantry.Tint.A));
                             }
                             triggers = infantryTriggers.ToArray();
                         }
                     }
-                    if (triggers != null)
+                if (triggers != null)
+                {
+                    StringFormat stringFormat = new StringFormat
                     {
-                        StringFormat stringFormat = new StringFormat
+                        Alignment = StringAlignment.Center,
+                        LineAlignment = StringAlignment.Center
+                    };
+                    foreach (var (trigger, bounds, alpha) in triggers.Where(x => toPick == null
+                    || (excludePick && !x.trigger.Equals(toPick, StringComparison.OrdinalIgnoreCase))
+                     || (!excludePick && x.trigger.Equals(toPick, StringComparison.OrdinalIgnoreCase))))
+                    {
+                        Color alphaColor = Color.FromArgb(alpha, color);
+                        using (var technoTriggerBackgroundBrush = new SolidBrush(Color.FromArgb(96 * alpha / 256, Color.Black)))
+                        using (var technoTriggerBrush = new SolidBrush(alphaColor))
+                        using (var technoTriggerPen = new Pen(alphaColor, borderSize))
+                        using (var font = graphics.GetAdjustedFont(trigger, SystemFonts.DefaultFont, bounds.Width, bounds.Height,
+                            Math.Max(1, (int)(12 * tileScale)), Math.Max(1, (int)(24 * tileScale)), stringFormat, true))
                         {
-                            Alignment = StringAlignment.Center,
-                            LineAlignment = StringAlignment.Center
-                        };
-                        foreach (var (trigger, bounds) in triggers.Where(x => toPick == null
-                        || (excludePick && !x.trigger.Equals(toPick, StringComparison.OrdinalIgnoreCase))
-                         || (!excludePick && x.trigger.Equals(toPick, StringComparison.OrdinalIgnoreCase))))
-                        {
-                            using (var font = graphics.GetAdjustedFont(trigger, SystemFonts.DefaultFont, bounds.Width, bounds.Height,
-                                Math.Max(1, (int)(12 * tileScale)), Math.Max(1, (int)(24 * tileScale)), stringFormat, true))
-                            {
-                                var textBounds = graphics.MeasureString(trigger, font, bounds.Width, stringFormat);
-                                var backgroundBounds = new RectangleF(bounds.Location, textBounds);
-                                backgroundBounds.Offset((bounds.Width - textBounds.Width) / 2.0f, (bounds.Height - textBounds.Height) / 2.0f);
-                                graphics.FillRectangle(technoTriggerBackgroundBrush, backgroundBounds);
-                                graphics.DrawRectangle(technoTriggerPen, Rectangle.Round(backgroundBounds));
-                                graphics.DrawString(trigger, font, technoTriggerBrush, bounds, stringFormat);
-                            }
+                            var textBounds = graphics.MeasureString(trigger, font, bounds.Width, stringFormat);
+                            var backgroundBounds = new RectangleF(bounds.Location, textBounds);
+                            backgroundBounds.Offset((bounds.Width - textBounds.Width) / 2.0f, (bounds.Height - textBounds.Height) / 2.0f);
+                            graphics.FillRectangle(technoTriggerBackgroundBrush, backgroundBounds);
+                            graphics.DrawRectangle(technoTriggerPen, Rectangle.Round(backgroundBounds));
+                            graphics.DrawString(trigger, font, technoTriggerBrush, bounds, stringFormat);
                         }
                     }
                 }
