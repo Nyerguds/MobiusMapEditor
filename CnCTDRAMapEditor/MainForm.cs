@@ -361,6 +361,8 @@ namespace MobiusEditor
 
         private void OpenFile()
         {
+            // Always remove the label when showing an Open File dialog.
+            SimpleMultiThreading.RemoveBusyLabel(this);
             var pgmFilter = "|PGM files (*.pgm)|*.pgm";
             string allSupported = "All supported types (*.ini;*.bin;*.mpr;*.pgm)|*.ini;*.bin;*.mpr;*.pgm";
             String selectedFileName = null;
