@@ -198,7 +198,7 @@ namespace MobiusEditor.Model
                 theaters = new TheaterType[thLen];
                 Array.Copy(Theaters, theaters, thLen);
             }
-            BuildingType newBld = new BuildingType(ID, Tilename, DisplayName, PowerProduction, PowerUsage, Storage, baseMaskY, baseMaskX, occupyMask, OwnerHouse, theaters, FactoryOverlay, Flag, FrameOFfset);
+            BuildingType newBld = new BuildingType(ID, Tilename, DisplayName, PowerProduction, PowerUsage, Storage, baseMaskX, baseMaskY, occupyMask, OwnerHouse, theaters, FactoryOverlay, Flag, FrameOFfset);
             // to fix the name of fake buildings
             newBld.DisplayName = DisplayName;
             return newBld;
