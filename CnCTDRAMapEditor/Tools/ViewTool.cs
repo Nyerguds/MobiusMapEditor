@@ -165,10 +165,10 @@ namespace MobiusEditor.Tools
 
         protected virtual void PostRenderMap(Graphics graphics)
         {
-            PostRenderMap(graphics, this.plugin.GameType, this.map, Globals.MapTileScale, Layers, ManuallyHandledLayers, this.InPlacementMode);
+            PostRenderMap(graphics, this.plugin, this.map, Globals.MapTileScale, Layers, ManuallyHandledLayers, this.InPlacementMode);
         }
 
-        public static void PostRenderMap(Graphics graphics, GameType gameType, Map map, double tileScale, MapLayerFlag layersToRender, MapLayerFlag manuallyHandledLayers, bool inPlacementMode)
+        public static void PostRenderMap(Graphics graphics, IGamePlugin plugin, Map map, double tileScale, MapLayerFlag layersToRender, MapLayerFlag manuallyHandledLayers, bool inPlacementMode)
         {
             Size tileSize = new Size(Math.Max(1, (int)(Globals.OriginalTileWidth * tileScale)), Math.Max(1, (int)(Globals.OriginalTileHeight * tileScale)));
 
@@ -196,10 +196,20 @@ namespace MobiusEditor.Tools
                 MapRenderer.RenderCellTriggers(graphics, map, tileSize, tileScale);
             }
             if ((layersToRender & (MapLayerFlag.Waypoints | MapLayerFlag.FootballArea)) == (MapLayerFlag.Waypoints | MapLayerFlag.FootballArea)
-                && (manuallyHandledLayers & MapLayerFlag.WaypointsIndic) == MapLayerFlag.None && gameType == GameType.SoleSurvivor)
+                && (manuallyHandledLayers & MapLayerFlag.WaypointsIndic) == MapLayerFlag.None && plugin.GameType == GameType.SoleSurvivor)
             {
-                MapRenderer.RenderAllFootballAreas(graphics, map, tileSize, tileScale, gameType);
-                MapRenderer.RenderFootballAreaFlags(graphics, gameType, map, tileSize);
+                MapRenderer.RenderAllFootballAreas(graphics, map, tileSize, tileScale, plugin.GameType);
+                MapRenderer.RenderFootballAreaFlags(graphics, plugin.GameType, map, tileSize);
+            }
+            if ((layersToRender & (MapLayerFlag.Buildings | MapLayerFlag.GapRadius)) == (MapLayerFlag.Buildings | MapLayerFlag.GapRadius)
+                && (manuallyHandledLayers & MapLayerFlag.GapRadius) == MapLayerFlag.None)
+            {
+                MapRenderer.RenderAllGapRadiuses(graphics, map, Globals.MapTileSize, Color.Red, map.GapRadius, true);
+            }
+            if ((layersToRender & (MapLayerFlag.Waypoints | MapLayerFlag.WaypointRadius)) == (MapLayerFlag.Waypoints | MapLayerFlag.WaypointRadius)
+                && (manuallyHandledLayers & MapLayerFlag.WaypointRadius) == MapLayerFlag.None)
+            {
+                MapRenderer.RenderAllWayPointRevealRadiuses(graphics, plugin, map, Globals.MapTileSize, null);
             }
             if ((layersToRender & (MapLayerFlag.Waypoints | MapLayerFlag.WaypointsIndic)) == (MapLayerFlag.Waypoints | MapLayerFlag.WaypointsIndic)
                 && (manuallyHandledLayers & MapLayerFlag.WaypointsIndic) == MapLayerFlag.None)

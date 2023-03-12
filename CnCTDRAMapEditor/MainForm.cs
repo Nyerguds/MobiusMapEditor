@@ -1406,6 +1406,7 @@ namespace MobiusEditor
                 mappings.Add(mostCommon[1].ToArgb(), plugin.Map.Theater.Name == RedAlert.TheaterTypes.Interior.Name ? "FLOR0001:0" : "W1:0");
             using (NewFromImageDialog nfi = new NewFromImageDialog(plugin, imageWidth, imageHeight, imageData, mappings))
             {
+                nfi.StartPosition = FormStartPosition.CenterParent;
                 if (nfi.ShowDialog(showTarget) == DialogResult.Cancel)
                     return null;
                 return nfi.Mappings;
@@ -1645,6 +1646,7 @@ namespace MobiusEditor
             // Special rules per game.
             viewLayersBuildingsMenuItem.Visible = !hasPlugin || plugin.GameType != GameType.SoleSurvivor;
             viewIndicatorsBuildingFakeLabelsMenuItem.Visible = !hasPlugin || plugin.GameType == GameType.RedAlert;
+            viewIndicatorsBuildingGapRadiusMenuItem.Visible = !hasPlugin || plugin.GameType == GameType.RedAlert;
             viewIndicatorsBuildingRebuildLabelsMenuItem.Visible = !hasPlugin || plugin.GameType != GameType.SoleSurvivor;
             viewIndicatorsFootballAreaMenuItem.Visible = !hasPlugin || plugin.GameType == GameType.SoleSurvivor;
         }
@@ -1922,6 +1924,14 @@ namespace MobiusEditor
             if (!viewIndicatorsFootballAreaMenuItem.Checked)
             {
                 layers &= ~MapLayerFlag.FootballArea;
+            }
+            if (!viewIndicatorsWaypointRevealRadiusMenuItem.Checked)
+            {
+                layers &= ~MapLayerFlag.WaypointRadius;
+            }
+            if (!viewIndicatorsBuildingGapRadiusMenuItem.Checked)
+            {
+                layers &= ~MapLayerFlag.GapRadius;
             }
             ActiveLayers = layers;
         }
@@ -2398,7 +2408,7 @@ namespace MobiusEditor
             }
             else
             {
-                Rectangle opaqueBounds = crop ? TextureManager.CalculateOpaqueBounds(image) : new Rectangle(0, 0, image.Width, image.Height);
+                Rectangle opaqueBounds = crop ? ImageUtils.CalculateOpaqueBounds(image) : new Rectangle(0, 0, image.Width, image.Height);
                 if (opaqueBounds.IsEmpty)
                 {
                     if (button.Tag is Image tagImg)

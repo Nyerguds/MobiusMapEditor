@@ -168,6 +168,7 @@ namespace MobiusEditor.Controls
             0,
             0,
             0});
+            this.strengthNud.IntValue = 256;
             this.strengthNud.Location = new System.Drawing.Point(83, 30);
             this.strengthNud.Maximum = new decimal(new int[] {
             256,
@@ -238,6 +239,7 @@ namespace MobiusEditor.Controls
             0,
             0,
             0});
+            this.basePriorityNud.IntValue = 0;
             this.basePriorityNud.Location = new System.Drawing.Point(82, 136);
             this.basePriorityNud.Margin = new System.Windows.Forms.Padding(2);
             this.basePriorityNud.Maximum = new decimal(new int[] {
@@ -323,7 +325,8 @@ namespace MobiusEditor.Controls
             this.Controls.Add(this.tableLayoutPanel1);
             this.Name = "ObjectProperties";
             this.Size = new System.Drawing.Size(230, 240);
-            this.Load += this.ObjectProperties_Load;
+            this.Load += new System.EventHandler(ObjectProperties_Load);
+            this.Resize += new System.EventHandler(this.ObjectProperties_Resize);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.strengthNud)).EndInit();

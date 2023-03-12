@@ -27,6 +27,7 @@ namespace MobiusEditor.Dialogs
         private Color? _selectedColor;
         private TemplateType _selectedTemplate;
         private Point? _selectedIcon;
+        private int[] customColors { get; set; }
 
         private Color? SelectedColor
         {
@@ -629,6 +630,22 @@ namespace MobiusEditor.Dialogs
                 {
                     lb.ClearSelected();
                     SelectedColor = null;
+                }
+            }
+        }
+
+        private void btnChooseColor_Click(Object sender, EventArgs e)
+        {
+            using (ColorDialog cdl = new ColorDialog())
+            {
+                cdl.Color = Color.Black;
+                cdl.FullOpen = true;
+                cdl.CustomColors = this.customColors;
+                DialogResult res = cdl.ShowDialog();
+                this.customColors = cdl.CustomColors;
+                if (res == DialogResult.OK || res == DialogResult.Yes)
+                {
+                    SelectedColor = cdl.Color;
                 }
             }
         }

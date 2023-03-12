@@ -52,12 +52,15 @@ namespace MobiusEditor.Model
         TechnoTriggers  = 1 << 16,
         BuildingRebuild = 1 << 17,
         BuildingFakes   = 1 << 18,
+        GapRadius       = 1 << 19,
+        WaypointRadius  = 1 << 20,
 
         OverlayAll = Resources | Walls | Overlay,
         Technos = Terrain | Walls | Infantry | Units | Buildings | BuildingFakes,
         MapLayers = Terrain | Resources | Walls | Overlay | Smudge | Infantry | Units | Buildings | Waypoints,
         /// <summary>Listing of layers that don't need a full map repaint.</summary>
-        Indicators = Boundaries | MapSymmetry | MapGrid | WaypointsIndic | CellTriggers | TechnoTriggers | BuildingRebuild | BuildingFakes | FootballArea,
+        Indicators = Boundaries | MapSymmetry | MapGrid | WaypointsIndic | FootballArea | CellTriggers
+            | TechnoTriggers | BuildingRebuild | BuildingFakes | GapRadius | WaypointRadius,
         All = Int32.MaxValue
     }
 
@@ -255,6 +258,10 @@ namespace MobiusEditor.Model
                 WaypointsUpdated(this, new EventArgs());
         }
 
+        public int DropZoneRadius { get; set; }
+
+        public int GapRadius { get; set; }
+
         public readonly CellGrid<CellTrigger> CellTriggers;
 
         public event EventHandler<EventArgs> TriggersUpdated;
@@ -370,7 +377,7 @@ namespace MobiusEditor.Model
             IEnumerable<string> missionTypes, string armedMission, string unarmedMission, string harvestMission, string aircraftMission,
             IEnumerable<DirectionType> unitDirectionTypes, IEnumerable<DirectionType> buildingDirectionTypes, IEnumerable<InfantryType> infantryTypes,
             IEnumerable<UnitType> unitTypes, IEnumerable<BuildingType> buildingTypes, IEnumerable<TeamMission> teamMissionTypes,IEnumerable<ITechnoType> teamTechnoTypes,
-            IEnumerable<Waypoint> waypoints, IEnumerable<string> movieTypes, string emptyMovie, IEnumerable<string> themeTypes, string emptyTheme)
+            IEnumerable<Waypoint> waypoints, int dropZoneRadius, int gapRadius, IEnumerable<string> movieTypes, string emptyMovie, IEnumerable<string> themeTypes, string emptyTheme)
         {
             MapSection = new MapSection(cellSize);
             BasicSection = basicSection;
@@ -435,6 +442,8 @@ namespace MobiusEditor.Model
                 // Deep clone, with current metric to allow showing waypoints as cell coordinates.
                 Waypoints[i] = new Waypoint(Waypoints[i].Name, Waypoints[i].Flag, Metrics, Waypoints[i].Cell);
             }
+            DropZoneRadius = dropZoneRadius;
+            GapRadius = gapRadius;
             CellTriggers = new CellGrid<CellTrigger>(Metrics);
 
             MapSection.SetDefault();
@@ -981,11 +990,14 @@ namespace MobiusEditor.Model
             }
         }
 
-        public Map Clone()
+        public Map Clone(bool forPreview)
         {
-            Waypoint[] wpPreview = new Waypoint[Waypoints.Length + 1];
+            Waypoint[] wpPreview = new Waypoint[Waypoints.Length + (forPreview ? 1 : 0)];
             Array.Copy(Waypoints, wpPreview, Waypoints.Length);
-            wpPreview[Waypoints.Length] = new Waypoint("", null);
+            if (forPreview)
+            {
+                wpPreview[Waypoints.Length] = new Waypoint("", null);
+            }
             // This is a shallow clone; the map is new, but the placed contents all still reference the original objects.
             // These shallow copies are used for map preview during editing, where dummy objects can be added without any issue.
             var map = new Map(BasicSection, Theater, Metrics.Size, HouseType, HouseTypesIncludingNone,
@@ -994,7 +1006,7 @@ namespace MobiusEditor.Model
                 ActionTypes, CellActionTypes, UnitActionTypes, StructureActionTypes, TerrainActionTypes,
                 MissionTypes, inputMissionArmed, inputMissionUnarmed, inputMissionHarvest, inputMissionAircraft,
                 UnitDirectionTypes, BuildingDirectionTypes, AllInfantryTypes, AllUnitTypes, BuildingTypes, TeamMissionTypes,
-                AllTeamTechnoTypes, wpPreview, MovieTypes, MovieEmpty, ThemeTypes, ThemeEmpty)
+                AllTeamTechnoTypes, wpPreview, DropZoneRadius, GapRadius, MovieTypes, MovieEmpty, ThemeTypes, ThemeEmpty)
             {
                 TopLeft = TopLeft,
                 Size = Size
@@ -1313,7 +1325,7 @@ namespace MobiusEditor.Model
 
         object ICloneable.Clone()
         {
-            return Clone();
+            return Clone(false);
         }
 
         private void Overlay_CellChanged(object sender, CellChangedEventArgs<Overlay> e)

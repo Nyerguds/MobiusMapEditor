@@ -12,8 +12,11 @@
 // distributed with this program. You should have received a copy of the 
 // GNU General Public License along with permitted additional restrictions 
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
+using System;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.Numerics;
+using System.Runtime.InteropServices;
 using System.Xml;
 
 namespace MobiusEditor.Utility
@@ -216,6 +219,128 @@ namespace MobiusEditor.Utility
             this.overallInputLevels = this.OverallInputLevels;
             this.overallOutputLevels = this.OverallOutputLevels;
             this.radarMapColor = this.RadarMapColor;
+        }
+
+        public static Color GetTeamColor(TeamColor tc)
+        {
+            // Makes a 1x1 green pixel image, and applies the recolor operation to it.
+            using (Bitmap bitmap = new Bitmap(1, 1, PixelFormat.Format32bppArgb))
+            {
+                bitmap.SetPixel(0, 0, Color.FromArgb(0x00,0xFF, 0x00));
+                if (tc != null)
+                {
+                    tc.ApplyToImage(bitmap, out _);
+                }
+                return bitmap.GetPixel(0, 0);
+            }
+        }
+
+        public void ApplyToImage(Bitmap image)
+        {
+            ApplyToImage(image, out _);
+        }
+
+        public void ApplyToImage(Bitmap image, out Rectangle opaqueBounds)
+        {
+            BitmapData data = null;
+            try
+            {
+                data = image.LockBits(new Rectangle(0, 0, image.Width, image.Height), ImageLockMode.ReadWrite, image.PixelFormat);
+                var bytesPerPixel = Image.GetPixelFormatSize(data.PixelFormat) / 8;
+                var bytes = new byte[data.Stride * data.Height];
+                Marshal.Copy(data.Scan0, bytes, 0, bytes.Length);
+                int width = data.Width;
+                int height = data.Height;
+                int stride = data.Stride;
+                opaqueBounds = ImageUtils.CalculateOpaqueBounds(bytes, width, height, bytesPerPixel, stride);
+                ApplyToImage(bytes, width, height, bytesPerPixel, stride, opaqueBounds);
+                Marshal.Copy(bytes, 0, data.Scan0, bytes.Length);
+            }
+            finally
+            {
+                if (data != null)
+                {
+                    image.UnlockBits(data);
+                }
+            }
+        }
+
+        public void ApplyToImage(Byte[] bytes, int width, int height, int bytesPerPixel, int stride, Rectangle? opaqueBounds)
+        {
+            Rectangle bounds = opaqueBounds ?? new Rectangle(0, 0, width, height);
+            float frac(float x) => x - (int)x;
+            float lerp(float x, float y, float t) => (x * (1.0f - t)) + (y * t);
+            float saturate(float x) => Math.Max(0.0f, Math.Min(1.0f, x));
+                // Precalculate some stuff.
+                var lowerHue = this.LowerBounds.GetHue() / 360.0f;
+                var upperHue = this.UpperBounds.GetHue() / 360.0f;
+                var lowerHueFudge = lowerHue - this.Fudge;
+                var upperHueFudge = upperHue + this.Fudge;
+                var hueError = (upperHueFudge - lowerHueFudge) / (upperHue - lowerHue);
+                var hueShift = this.HSVShift.X;
+                var satShift = this.HSVShift.Y;
+                var valShift = this.HSVShift.Z;
+                // Optimisation: since we got the opaque bounds calculated anyway, might as well use them and only process what's inside.
+                int lineStart = bounds.Top * stride;
+            for (int y = bounds.Top; y < bounds.Bottom; y++)
+            {
+                int addr = lineStart + bounds.Left * bytesPerPixel;
+                for (int x = bounds.Left; x < width; ++x)
+                {
+                    var pixel = Color.FromArgb(bytes[addr + 2], bytes[addr + 1], bytes[addr + 0]);
+                    (float r, float g, float b) = (pixel.R.ToLinear(), pixel.G.ToLinear(), pixel.B.ToLinear());
+                    (float x, float y, float z, float w) K = (0.0f, -1.0f / 3.0f, 2.0f / 3.0f, -1.0f);
+                    (float x, float y, float z, float w) p = (g >= b) ? (g, b, K.x, K.y) : (b, g, K.w, K.z);
+                    (float x, float y, float z, float w) q = (r >= p.x) ? (r, p.y, p.z, p.x) : (p.x, p.y, p.w, r);
+                    (float d, float e) = (q.x - Math.Min(q.w, q.y), 1e-10f);
+                    (float hue, float saturation, float value) = (Math.Abs(q.z + (q.w - q.y) / (6.0f * d + e)), d / (q.x + e), q.x);
+                    // Processing the pixels that fall in the hue range to change
+                    if ((hue >= lowerHue) && (hue <= upperHue))
+                    {
+                        hue = (hue * hueError) + hueShift;
+                        saturation += satShift;
+                        value += valShift;
+                        (float x, float y, float z, float w) L = (1.0f, 2.0f / 3.0f, 1.0f / 3.0f, 3.0f);
+                        (float x, float y, float z) m = (
+                            Math.Abs(frac(hue + L.x) * 6.0f - L.w),
+                            Math.Abs(frac(hue + L.y) * 6.0f - L.w),
+                            Math.Abs(frac(hue + L.z) * 6.0f - L.w)
+                        );
+                        r = value * lerp(L.x, saturate(m.x - L.x), saturation);
+                        g = value * lerp(L.x, saturate(m.y - L.x), saturation);
+                        b = value * lerp(L.x, saturate(m.z - L.x), saturation);
+                        (float x, float y, float z) n = (
+                            Math.Min(1.0f, Math.Max(0.0f, r - this.InputLevels.X) / (this.InputLevels.Z - this.InputLevels.X)),
+                            Math.Min(1.0f, Math.Max(0.0f, g - this.InputLevels.X) / (this.InputLevels.Z - this.InputLevels.X)),
+                            Math.Min(1.0f, Math.Max(0.0f, b - this.InputLevels.X) / (this.InputLevels.Z - this.InputLevels.X))
+                        );
+                        n.x = (float)Math.Pow(n.x, this.InputLevels.Y);
+                        n.y = (float)Math.Pow(n.y, this.InputLevels.Y);
+                        n.z = (float)Math.Pow(n.z, this.InputLevels.Y);
+                        r = lerp(this.OutputLevels.X, this.OutputLevels.Y, n.x);
+                        g = lerp(this.OutputLevels.X, this.OutputLevels.Y, n.y);
+                        b = lerp(this.OutputLevels.X, this.OutputLevels.Y, n.z);
+                    }
+                    // post-processing the overall levels
+                    (float x, float y, float z) n2 = (
+                        Math.Min(1.0f, Math.Max(0.0f, r - this.OverallInputLevels.X) / (this.OverallInputLevels.Z - this.OverallInputLevels.X)),
+                        Math.Min(1.0f, Math.Max(0.0f, g - this.OverallInputLevels.X) / (this.OverallInputLevels.Z - this.OverallInputLevels.X)),
+                        Math.Min(1.0f, Math.Max(0.0f, b - this.OverallInputLevels.X) / (this.OverallInputLevels.Z - this.OverallInputLevels.X))
+                    );
+                    n2.x = (float)Math.Pow(n2.x, this.OverallInputLevels.Y);
+                    n2.y = (float)Math.Pow(n2.y, this.OverallInputLevels.Y);
+                    n2.z = (float)Math.Pow(n2.z, this.OverallInputLevels.Y);
+                    r = lerp(this.OverallOutputLevels.X, this.OverallOutputLevels.Y, n2.x);
+                    g = lerp(this.OverallOutputLevels.X, this.OverallOutputLevels.Y, n2.y);
+                    b = lerp(this.OverallOutputLevels.X, this.OverallOutputLevels.Y, n2.z);
+                    bytes[addr + 2] = (byte)(r.ToSRGB() * 255.0f);
+                    bytes[addr + 1] = (byte)(g.ToSRGB() * 255.0f);
+                    bytes[addr + 0] = (byte)(b.ToSRGB() * 255.0f);
+                    // go to next pixel
+                    addr += bytesPerPixel;
+                }
+                lineStart += stride;
+            }
         }
     }
 }

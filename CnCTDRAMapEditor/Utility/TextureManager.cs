@@ -313,106 +313,15 @@ namespace MobiusEditor.Utility
             result.bitmap = new Bitmap(result.bitmap);
             if (teamColor != null)
             {
-                float frac(float x) => x - (int)x;
-                float lerp(float x, float y, float t) => (x * (1.0f - t)) + (y * t);
-                float saturate(float x) => Math.Max(0.0f, Math.Min(1.0f, x));
-                BitmapData data = null;
-                try
-                {
-                    data = result.bitmap.LockBits(new Rectangle(0, 0, result.bitmap.Width, result.bitmap.Height), ImageLockMode.ReadWrite, result.bitmap.PixelFormat);
-                    var bpp = Image.GetPixelFormatSize(data.PixelFormat) / 8;
-                    var bytes = new byte[data.Stride * data.Height];
-                    Marshal.Copy(data.Scan0, bytes, 0, bytes.Length);
-                    int width = data.Width;
-                    int height = data.Height;
-                    int stride = data.Stride;
-                    Rectangle opaqueBounds = CalculateOpaqueBounds(bytes, data.Width, data.Height, bpp, data.Stride);
-                    result.opaqueBounds = opaqueBounds;
-                    // Precalculate some stuff.
-                    var lowerHue = teamColor.LowerBounds.GetHue() / 360.0f;
-                    var upperHue = teamColor.UpperBounds.GetHue() / 360.0f;
-                    var lowerHueFudge = lowerHue - teamColor.Fudge;
-                    var upperHueFudge = upperHue + teamColor.Fudge;
-                    var hueError = (upperHueFudge - lowerHueFudge) / (upperHue - lowerHue);
-                    var hueShift = teamColor.HSVShift.X;
-                    var satShift = teamColor.HSVShift.Y;
-                    var valShift = teamColor.HSVShift.Z;
-                    // Optimisation: since we got the opaque bounds calculated anyway, might as well use them and only process what's inside.
-                    int lineStart = opaqueBounds.Top * stride;
-                    for (int y = opaqueBounds.Top; y < opaqueBounds.Bottom; y++)
-                    {
-                        int addr = lineStart + opaqueBounds.Left * bpp;
-                        for (int x = opaqueBounds.Left; x < width; ++x)
-                        {
-                            var pixel = Color.FromArgb(bytes[addr + 2], bytes[addr + 1], bytes[addr + 0]);
-                            (float r, float g, float b) = (pixel.R.ToLinear(), pixel.G.ToLinear(), pixel.B.ToLinear());
-                            (float x, float y, float z, float w) K = (0.0f, -1.0f / 3.0f, 2.0f / 3.0f, -1.0f);
-                            (float x, float y, float z, float w) p = (g >= b) ? (g, b, K.x, K.y) : (b, g, K.w, K.z);
-                            (float x, float y, float z, float w) q = (r >= p.x) ? (r, p.y, p.z, p.x) : (p.x, p.y, p.w, r);
-                            (float d, float e) = (q.x - Math.Min(q.w, q.y), 1e-10f);
-                            (float hue, float saturation, float value) = (Math.Abs(q.z + (q.w - q.y) / (6.0f * d + e)), d / (q.x + e), q.x);
-                            // Processing the pixels that fall in the hue range to change
-                            if ((hue >= lowerHue) && (hue <= upperHue))
-                            {
-                                hue = (hue * hueError) + hueShift;
-                                saturation += satShift;
-                                value += valShift;
-                                (float x, float y, float z, float w) L = (1.0f, 2.0f / 3.0f, 1.0f / 3.0f, 3.0f);
-                                (float x, float y, float z) m = (
-                                    Math.Abs(frac(hue + L.x) * 6.0f - L.w),
-                                    Math.Abs(frac(hue + L.y) * 6.0f - L.w),
-                                    Math.Abs(frac(hue + L.z) * 6.0f - L.w)
-                                );
-                                r = value * lerp(L.x, saturate(m.x - L.x), saturation);
-                                g = value * lerp(L.x, saturate(m.y - L.x), saturation);
-                                b = value * lerp(L.x, saturate(m.z - L.x), saturation);
-                                (float x, float y, float z) n = (
-                                    Math.Min(1.0f, Math.Max(0.0f, r - teamColor.InputLevels.X) / (teamColor.InputLevels.Z - teamColor.InputLevels.X)),
-                                    Math.Min(1.0f, Math.Max(0.0f, g - teamColor.InputLevels.X) / (teamColor.InputLevels.Z - teamColor.InputLevels.X)),
-                                    Math.Min(1.0f, Math.Max(0.0f, b - teamColor.InputLevels.X) / (teamColor.InputLevels.Z - teamColor.InputLevels.X))
-                                );
-                                n.x = (float)Math.Pow(n.x, teamColor.InputLevels.Y);
-                                n.y = (float)Math.Pow(n.y, teamColor.InputLevels.Y);
-                                n.z = (float)Math.Pow(n.z, teamColor.InputLevels.Y);
-                                r = lerp(teamColor.OutputLevels.X, teamColor.OutputLevels.Y, n.x);
-                                g = lerp(teamColor.OutputLevels.X, teamColor.OutputLevels.Y, n.y);
-                                b = lerp(teamColor.OutputLevels.X, teamColor.OutputLevels.Y, n.z);
-                            }
-                            // post-processing the overall levels
-                            (float x, float y, float z) n2 = (
-                                Math.Min(1.0f, Math.Max(0.0f, r - teamColor.OverallInputLevels.X) / (teamColor.OverallInputLevels.Z - teamColor.OverallInputLevels.X)),
-                                Math.Min(1.0f, Math.Max(0.0f, g - teamColor.OverallInputLevels.X) / (teamColor.OverallInputLevels.Z - teamColor.OverallInputLevels.X)),
-                                Math.Min(1.0f, Math.Max(0.0f, b - teamColor.OverallInputLevels.X) / (teamColor.OverallInputLevels.Z - teamColor.OverallInputLevels.X))
-                            );
-                            n2.x = (float)Math.Pow(n2.x, teamColor.OverallInputLevels.Y);
-                            n2.y = (float)Math.Pow(n2.y, teamColor.OverallInputLevels.Y);
-                            n2.z = (float)Math.Pow(n2.z, teamColor.OverallInputLevels.Y);
-                            r = lerp(teamColor.OverallOutputLevels.X, teamColor.OverallOutputLevels.Y, n2.x);
-                            g = lerp(teamColor.OverallOutputLevels.X, teamColor.OverallOutputLevels.Y, n2.y);
-                            b = lerp(teamColor.OverallOutputLevels.X, teamColor.OverallOutputLevels.Y, n2.z);
-                            bytes[addr + 2] = (byte)(r.ToSRGB() * 255.0f);
-                            bytes[addr + 1] = (byte)(g.ToSRGB() * 255.0f);
-                            bytes[addr + 0] = (byte)(b.ToSRGB() * 255.0f);
-                            // go to next pixel
-                            addr += bpp;
-                        }
-                        lineStart += stride;
-                    }
-                    Marshal.Copy(bytes, 0, data.Scan0, bytes.Length);
-                }
-                finally
-                {
-                    if (data != null)
-                    {
-                        result.bitmap.UnlockBits(data);
-                    }
-                }
+                Rectangle opaqueBounds;
+                teamColor.ApplyToImage(result.bitmap, out opaqueBounds);
+                result.opaqueBounds = opaqueBounds;
                 // EXPERIMENTAL: might be better not to cache this?
                 //teamColorTextures[(filename, teamColor)] = (new Bitmap(result.bitmap), result.opaqueBounds);
             }
             else
             {
-                result.opaqueBounds = CalculateOpaqueBounds(result.bitmap);
+                result.opaqueBounds = ImageUtils.CalculateOpaqueBounds(result.bitmap);
             }
             return result;
         }
@@ -551,94 +460,6 @@ namespace MobiusEditor.Utility
                 processedMissingTexture = true;
             }
             return (bm, r);
-        }
-
-        private static Rectangle CalculateOpaqueBounds(byte[] data, int width, int height, int bytespp, int stride)
-        {
-            // Modified this function to result in (0,0,0,0) when the image is empty, rather than retaining the full size.
-            int lineWidth = width * bytespp;
-            bool isTransparentRow(int y)
-            {
-                var start = y * stride;
-                for (var i = bytespp - 1; i < lineWidth; i += bytespp)
-                {
-                    if (data[start + i] != 0)
-                    {
-                        return false;
-                    }
-                }
-                return true;
-            }
-            var opaqueBounds = new Rectangle(0, 0, width, height);
-            for (int y = height - 1; y >= 0; --y)
-            {
-                if (!isTransparentRow(y))
-                {
-                    break;
-                }
-                opaqueBounds.Height = y;
-            }
-            int endHeight = opaqueBounds.Height;
-            for (int y = 0; y < endHeight; ++y)
-            {
-                if (!isTransparentRow(y))
-                {
-                    opaqueBounds.Y = y;
-                    opaqueBounds.Height = endHeight - y;
-                    break;
-                }
-            }
-            bool isTransparentColumn(int x)
-            {
-                var start = (x * bytespp) + (bytespp - 1);
-                for (var y = opaqueBounds.Top; y < opaqueBounds.Bottom; ++y)
-                {
-                    if (data[start + (y * stride)] != 0)
-                    {
-                        return false;
-                    }
-                }
-                return true;
-            }
-            for (int x = width - 1; x >= 0; --x)
-            {
-                if (!isTransparentColumn(x))
-                {
-                    break;
-                }
-                opaqueBounds.Width = x;
-            }
-            int endWidth = opaqueBounds.Width;
-            for (int x = 0; x < endWidth; ++x)
-            {
-                if (!isTransparentColumn(x))
-                {
-                    opaqueBounds.X = x;
-                    opaqueBounds.Width = endWidth - x;
-                    break;
-                }
-            }
-            return opaqueBounds;
-        }
-
-        public static Rectangle CalculateOpaqueBounds(Bitmap bitmap)
-        {
-            BitmapData data = null;
-            try
-            {
-                data = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height), ImageLockMode.ReadWrite, bitmap.PixelFormat);
-                var bpp = Image.GetPixelFormatSize(data.PixelFormat) / 8;
-                var bytes = new byte[data.Stride * data.Height];
-                Marshal.Copy(data.Scan0, bytes, 0, bytes.Length);
-                return CalculateOpaqueBounds(bytes, data.Width, data.Height, bpp, data.Stride);
-            }
-            finally
-            {
-                if (data != null)
-                {
-                    bitmap.UnlockBits(data);
-                }
-            }
         }
     }
 }

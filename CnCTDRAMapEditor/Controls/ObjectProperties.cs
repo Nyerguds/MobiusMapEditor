@@ -30,6 +30,9 @@ namespace MobiusEditor.Controls
     {
         private Bitmap infoImage;
         private bool isMockObject;
+        private HouseType originalHouse;
+        private String originalTrigger;
+        private int originalStrength;
 
         public IGamePlugin Plugin { get; private set; }
 
@@ -79,7 +82,16 @@ namespace MobiusEditor.Controls
         {
             // Fix for the fact the resize in the very first Rebind() call never works correctly,
             // because the UI is not initialised yet at that point.
-            this.Height = tableLayoutPanel1.PreferredSize.Height;
+            //this.Height = tableLayoutPanel1.PreferredSize.Height;
+        }
+
+        private void ObjectProperties_Resize(Object sender, EventArgs e)
+        {
+            //int prefH = tableLayoutPanel1.PreferredSize.Height + 10;
+            //if (this.Height != prefH)
+            //{
+            //    this.Height = prefH;
+            //}
         }
 
         public void Initialize(IGamePlugin plugin, bool isMockObject)
@@ -269,9 +281,22 @@ namespace MobiusEditor.Controls
                     {
                         if (obj is Building building)
                         {
+                            if (!building.IsPrebuilt)
+                            {
+                                originalHouse = building.House;
+                                originalTrigger = building.Trigger;
+                                originalStrength = building.Strength;
+                            }
                             AdjustToStructurePrebuiltStatus(building, GetHouseComboBox());
+                            if (building.IsPrebuilt)
+                            {
+                                if (originalHouse != null) building.House = originalHouse;
+                                if (originalTrigger != null) building.Trigger = originalTrigger;
+                                if (originalStrength != 0) building.Strength = originalStrength;
+                            }
                         }
-                    } break;
+                    }
+                    break;
             }
             // The undo/redo system now handles plugin dirty state.
         }
@@ -326,7 +351,7 @@ namespace MobiusEditor.Controls
             }
             if (!building.IsPrebuilt)
             {
-                building.Strength = 255;
+                building.Strength = 256;
                 building.Direction = Plugin.Map.BuildingDirectionTypes.Where(d => d.Equals(FacingType.North)).First();
                 building.Trigger = Trigger.None;
                 building.Sellable = false;
@@ -441,7 +466,6 @@ namespace MobiusEditor.Controls
     public class ObjectPropertiesPopup : ToolStripDropDown
     {
         private readonly ToolStripControlHost host;
-
         public ObjectProperties ObjectProperties { get; private set; }
 
         public ObjectPropertiesPopup(IGamePlugin plugin, INotifyPropertyChanged obj)
@@ -450,13 +474,16 @@ namespace MobiusEditor.Controls
             ObjectProperties.Initialize(plugin, false);
             ObjectProperties.Object = obj;
             host = new ToolStripControlHost(ObjectProperties);
+            // Fix for the fact the popup got a different font and that made it an incorrect size.
+            this.Font = ObjectProperties.Font;
             Padding = Margin = host.Padding = host.Margin = Padding.Empty;
             MinimumSize = ObjectProperties.MinimumSize;
             ObjectProperties.MinimumSize = ObjectProperties.Size;
             MaximumSize = ObjectProperties.MaximumSize;
             ObjectProperties.MaximumSize = ObjectProperties.Size;
-            Size = ObjectProperties.Size;
             Items.Add(host);
+            ObjectProperties.Size = ObjectProperties.PreferredSize;
+            Size = ObjectProperties.Size;
             ObjectProperties.Disposed += (sender, e) =>
             {
                 ObjectProperties = null;

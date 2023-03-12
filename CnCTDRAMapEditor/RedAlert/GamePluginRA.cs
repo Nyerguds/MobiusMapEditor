@@ -35,6 +35,8 @@ namespace MobiusEditor.RedAlert
 
         private const int DefaultGoldValue = 25;
         private const int DefaultGemValue = 50;
+        private const int DefaultDropZoneRadius = 4;
+        private const int DefaultGapRadius = 10;
         private readonly IEnumerable<string> movieTypes;
         private bool isLoading = false;
 
@@ -427,7 +429,7 @@ namespace MobiusEditor.RedAlert
                 MissionTypes.GetTypes(), MissionTypes.MISSION_GUARD, MissionTypes.MISSION_STOP, MissionTypes.MISSION_HARVEST,
                 MissionTypes.MISSION_UNLOAD, DirectionTypes.GetMainTypes(), DirectionTypes.GetAllTypes(), InfantryTypes.GetTypes(),
                 UnitTypes.GetTypes(Globals.DisableAirUnits), BuildingTypes.GetTypes(), TeamMissionTypes.GetTypes(),
-                fullTechnoTypes, waypoints, movieTypes, movieEmpty, themeTypes, themeEmpty)
+                fullTechnoTypes, waypoints, DefaultDropZoneRadius, DefaultGapRadius, movieTypes, movieEmpty, themeTypes, themeEmpty)
             {
                 TiberiumOrGoldValue = DefaultGoldValue,
                 GemValue = DefaultGemValue
@@ -571,7 +573,6 @@ namespace MobiusEditor.RedAlert
             INISection basicSection = INITools.ParseAndLeaveRemainder(ini, "Basic", basic, new MapContext(Map, true));
             if (basicSection != null)
             {
-                
                 basic.Intro = GeneralUtils.AddRemarks(GeneralUtils.AddRemarks(basic.Intro, movieEmpty, true, movieTypesRemarksOld, RemarkOld), movieEmpty, true, movieTypesRemarksNew, RemarkNew);
                 basic.Intro = GeneralUtils.FilterToExisting(basic.Intro, movieEmpty, true, movieTypesRa);
                 basic.Brief = GeneralUtils.AddRemarks(GeneralUtils.AddRemarks(basic.Brief, movieEmpty, true, movieTypesRemarksOld, RemarkOld), movieEmpty, true, movieTypesRemarksNew, RemarkNew);
@@ -2087,7 +2088,6 @@ namespace MobiusEditor.RedAlert
                 // Shift up one line
                 newIconValue -= 5;
                 isFixed = true;
-                
             }
             else if (templateType == TemplateTypes.Bridge1)
             {
@@ -2182,6 +2182,10 @@ namespace MobiusEditor.RedAlert
             map.TiberiumOrGoldValue = goldVal ?? DefaultGoldValue;
             int? gemVal = GetIntRulesValue(ini, "General", "GemValue", errors);
             map.GemValue = gemVal ?? DefaultGemValue;
+            int? radius = GetIntRulesValue(ini, "General", "DropZoneRadius", errors);
+            map.DropZoneRadius = radius ?? DefaultDropZoneRadius;
+            int? gapRadius = GetIntRulesValue(ini, "General", "GapRadius", errors);
+            map.GapRadius = gapRadius ?? DefaultGapRadius;
             return errors;
         }
 
@@ -2659,10 +2663,10 @@ namespace MobiusEditor.RedAlert
                     continue;
                 }
 
-                var action2TypeIndex = nameToIndex(Map.ActionTypes, trigger.Action2.ActionType);
-                var actionControl = (action2TypeIndex > 0) ? TriggerMultiStyleType.And : TriggerMultiStyleType.Only;
+                int action2TypeIndex = nameToIndex(Map.ActionTypes, trigger.Action2.ActionType);
+                TriggerMultiStyleType actionControl = (action2TypeIndex > 0) ? TriggerMultiStyleType.And : TriggerMultiStyleType.Only;
 
-                var tokens = new List<string>
+                List<string> tokens = new List<string>
                 {
                     ((int)trigger.PersistentType).ToString(),
                     !string.IsNullOrEmpty(trigger.House) ? (Map.HouseTypes.Where(h => h.Equals(trigger.House)).FirstOrDefault()?.ID.ToString() ?? "-1") : "-1",
@@ -3067,6 +3071,28 @@ namespace MobiusEditor.RedAlert
             HouseType rebuildHouse = Map.HouseTypesIncludingNone.Where(h => h.Name == Map.BasicSection.BasePlayer).FirstOrDefault();
             housesWithProd.Add(rebuildHouse.Name);
             return housesWithProd;
+        }
+
+        public int[] GetFlareRadiusForWaypoints(Map map, bool forLargeReveal)
+        {
+            Waypoint[] waypoints = map.Waypoints;
+            int length = waypoints.Length;
+            int[] flareRadius = new int[length];
+            for (int i = 0; i < length; i++)
+            {
+                string actionType = forLargeReveal ? ActionTypes.TACTION_REVEAL_SOME : ActionTypes.TACTION_DZ;
+                foreach (Trigger trigger in map.Triggers)
+                {
+                    if ((actionType.Equals(trigger.Action1.ActionType, StringComparison.OrdinalIgnoreCase)
+                        && trigger.Action1.Data == i)
+                        || (actionType.Equals(trigger.Action2.ActionType, StringComparison.OrdinalIgnoreCase)
+                        && trigger.Action2.Data == i))
+                    {
+                        flareRadius[i] = forLargeReveal ? map.GapRadius : map.DropZoneRadius;
+                    }
+                }
+            }
+            return flareRadius;
         }
 
         public IEnumerable<string> CheckTriggers(IEnumerable<Trigger> triggers, bool includeExternalData, bool prefixNames, bool fatalOnly, out bool fatal, bool fix, out bool wasFixed)

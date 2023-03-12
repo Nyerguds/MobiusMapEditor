@@ -327,5 +327,94 @@ namespace MobiusEditor.Utility
             // Get the maximum value in the dictionary values
             return colorFreq.OrderByDescending(kvp => kvp.Value).Select(kvp => kvp.Key).Take(amount).ToArray();
         }
+
+        public static Rectangle CalculateOpaqueBounds(Bitmap bitmap)
+        {
+            BitmapData data = null;
+            try
+            {
+                data = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height), ImageLockMode.ReadWrite, bitmap.PixelFormat);
+                var bpp = Image.GetPixelFormatSize(data.PixelFormat) / 8;
+                var bytes = new byte[data.Stride * data.Height];
+                Marshal.Copy(data.Scan0, bytes, 0, bytes.Length);
+                return ImageUtils.CalculateOpaqueBounds(bytes, data.Width, data.Height, bpp, data.Stride);
+            }
+            finally
+            {
+                if (data != null)
+                {
+                    bitmap.UnlockBits(data);
+                }
+            }
+        }
+
+        public static Rectangle CalculateOpaqueBounds(byte[] data, int width, int height, int bytespp, int stride)
+        {
+            // Modified this function to result in (0,0,0,0) when the image is empty, rather than retaining the full size.
+            int lineWidth = width * bytespp;
+            bool isTransparentRow(int y)
+            {
+                var start = y * stride;
+                for (var i = bytespp - 1; i < lineWidth; i += bytespp)
+                {
+                    if (data[start + i] != 0)
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            }
+            var opaqueBounds = new Rectangle(0, 0, width, height);
+            for (int y = height - 1; y >= 0; --y)
+            {
+                if (!isTransparentRow(y))
+                {
+                    break;
+                }
+                opaqueBounds.Height = y;
+            }
+            int endHeight = opaqueBounds.Height;
+            for (int y = 0; y < endHeight; ++y)
+            {
+                if (!isTransparentRow(y))
+                {
+                    opaqueBounds.Y = y;
+                    opaqueBounds.Height = endHeight - y;
+                    break;
+                }
+            }
+            bool isTransparentColumn(int x)
+            {
+                var start = (x * bytespp) + (bytespp - 1);
+                for (var y = opaqueBounds.Top; y < opaqueBounds.Bottom; ++y)
+                {
+                    if (data[start + (y * stride)] != 0)
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            }
+            for (int x = width - 1; x >= 0; --x)
+            {
+                if (!isTransparentColumn(x))
+                {
+                    break;
+                }
+                opaqueBounds.Width = x;
+            }
+            int endWidth = opaqueBounds.Width;
+            for (int x = 0; x < endWidth; ++x)
+            {
+                if (!isTransparentColumn(x))
+                {
+                    opaqueBounds.X = x;
+                    opaqueBounds.Width = endWidth - x;
+                    break;
+                }
+            }
+            return opaqueBounds;
+        }
+
     }
 }

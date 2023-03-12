@@ -68,7 +68,10 @@ namespace MobiusEditor.Interface
 
         HashSet<string> GetHousesWithProduction();
 
+        int[] GetFlareRadiusForWaypoints(Map map, bool forLargeReveal);
+
         IEnumerable<String> CheckTriggers(IEnumerable<Trigger> triggers, bool includeExternalData, bool prefixNames, bool fatalOnly, out bool fatal, bool fix, out bool wasFixed);
+
 
         bool MapNameIsEmpty(string name);
     }

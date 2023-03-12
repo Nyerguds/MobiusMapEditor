@@ -1167,6 +1167,10 @@ namespace MobiusEditor.Render
 
         public static void RenderFakeBuildingLabel(Graphics graphics, Building building, Point topLeft, Size tileSize, double tileScale, Boolean forPreview)
         {
+            if (!building.Type.IsFake)
+            {
+                return;
+            }
             var stringFormat = new StringFormat
             {
                 Alignment = StringAlignment.Center,
@@ -1177,20 +1181,17 @@ namespace MobiusEditor.Render
                 new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height),
                 new Size(maxSize.Width * tileSize.Width, maxSize.Height * tileSize.Height)
             );
-            if (building.Type.IsFake)
+            string fakeText = Globals.TheGameTextManager["TEXT_UI_FAKE"];
+            using (var fakeBackgroundBrush = new SolidBrush(Color.FromArgb((forPreview ? 128 : 256) * 2 / 3, Color.Black)))
+            using (var fakeTextBrush = new SolidBrush(Color.FromArgb(forPreview ? building.Tint.A : 255, Color.White)))
             {
-                string fakeText = Globals.TheGameTextManager["TEXT_UI_FAKE"];
-                using (var fakeBackgroundBrush = new SolidBrush(Color.FromArgb((forPreview ? 128 : 256) * 2 / 3, Color.Black)))
-                using (var fakeTextBrush = new SolidBrush(Color.FromArgb(forPreview ? building.Tint.A : 255, Color.White)))
+                using (var font = graphics.GetAdjustedFont(fakeText, SystemFonts.DefaultFont, buildingBounds.Width, buildingBounds.Height,
+                    Math.Max(1, (int)(12 * tileScale)), Math.Max(1, (int)(24 * tileScale)), stringFormat, true))
                 {
-                    using (var font = graphics.GetAdjustedFont(fakeText, SystemFonts.DefaultFont, buildingBounds.Width, buildingBounds.Height,
-                        Math.Max(1, (int)(12 * tileScale)), Math.Max(1, (int)(24 * tileScale)), stringFormat, true))
-                    {
-                        var textBounds = graphics.MeasureString(fakeText, font, buildingBounds.Width, stringFormat);
-                        var backgroundBounds = new RectangleF(buildingBounds.Location, textBounds);
-                        graphics.FillRectangle(fakeBackgroundBrush, backgroundBounds);
-                        graphics.DrawString(fakeText, font, fakeTextBrush, backgroundBounds, stringFormat);
-                    }
+                    var textBounds = graphics.MeasureString(fakeText, font, buildingBounds.Width, stringFormat);
+                    var backgroundBounds = new RectangleF(buildingBounds.Location, textBounds);
+                    graphics.FillRectangle(fakeBackgroundBrush, backgroundBounds);
+                    graphics.DrawString(fakeText, font, fakeTextBrush, backgroundBounds, stringFormat);
                 }
             }
         }
@@ -1375,6 +1376,150 @@ namespace MobiusEditor.Render
                     backgroundBounds.Offset((paintBounds.Width - textBounds.Width) / 2.0f, (paintBounds.Height - textBounds.Height) / 2.0f);
                     graphics.FillRectangle(baseBackgroundBrush, backgroundBounds);
                     graphics.DrawString(wpText, font, baseTextBrush, backgroundBounds, stringFormat);
+                }
+            }
+        }
+
+        public static void RenderAllGapRadiuses(Graphics graphics, Map map, Size tileSize, Color circleColor, double revealRadius, bool includeDiags)
+        {
+            foreach (var (topLeft, building) in map.Buildings.OfType<Building>()
+                .Where(b => (b.Occupier.Type.Flag & BuildingTypeFlag.ShowGapRadius) != BuildingTypeFlag.None))
+            {
+                TeamColor tc = building.Type.CanRemap ? Globals.TheTeamColorManager[building.House.BuildingTeamColor] : null;
+                circleColor = TeamColor.GetTeamColor(tc);
+
+                bool[,] cells = building.Type.BaseOccupyMask;
+                int maskY = cells.GetLength(0);
+                int maskX = cells.GetLength(1);
+                /*
+                // Accurate calculation. Unused because the game is dumb.
+                int minX = maskX;
+                int maxX = 0;
+                int minY = maskY;
+                int maxY = 0;
+                bool hasAny = false;
+                for (var y = 0; y < maskY; ++y)
+                {
+                    for (var x = 0; x < maskX; ++x)
+                    {
+                        if (cells[y, x])
+                        {
+                            hasAny = true;
+                            minX = Math.Min(minX, x);
+                            maxX = Math.Max(maxX, x);
+                            minY = Math.Min(minY, y);
+                            maxY = Math.Max(maxY, y);
+                        }
+                    }
+                }
+                if (!hasAny)
+                {
+                    minX = 0;
+                    maxX = 0;
+                    minY = 0;
+                    maxY = 0;
+                }
+                int left = (topLeft.X + minX) * tileSize.Width;
+                int top = (topLeft.Y + minY) * tileSize.Height;
+                int width = (maxX - minX + 1) * tileSize.Width;
+                int height = (maxY - minY + 1) * tileSize.Height;
+                Rectangle circleBounds = new Rectangle(left + width / 2 - diamX / 2, top + height / 2 - diamY / 2, diamX, diamY);
+                */
+                int diamX = (int)((revealRadius * 2 + 1) * tileSize.Width);
+                int radX = diamX / 2;
+                int diamY = (int)((revealRadius * 2 + 1) * tileSize.Height);
+                int radY = diamY / 2;
+                int centerX = (topLeft.X + (maskX - 1) / 2) * tileSize.Width + tileSize.Width / 2;
+                int centerY = (topLeft.Y + (maskY - 1) / 2) * tileSize.Height + tileSize.Height / 2;
+                Rectangle circleBounds = new Rectangle(centerX - radX, centerY - radY, diamX, diamY);
+
+                Color alphacorr = Color.FromArgb(building.Tint.A * 128 / 256, circleColor);
+                if (includeDiags)
+                {
+                    double sinDistance = Math.Sin(Math.PI * 45 / 180.0);
+                    float penSize = Math.Max(1.0f, tileSize.Width / 16.0f);
+                    using (Pen linePen = new Pen(alphacorr, penSize))
+                    {
+                        linePen.DashPattern = new float[] { 1.0F, 4.0F, 6.0F, 4.0F };
+                        int sinX = (int)(radX * sinDistance);
+                        int sinY = (int)(radY * sinDistance);
+                        Point center = new Point(centerX, centerY);
+                        graphics.DrawLine(linePen, center, new Point(centerX, centerY - radY));
+                        graphics.DrawLine(linePen, center, new Point(centerX - sinX, centerY + sinY));
+                        graphics.DrawLine(linePen, center, new Point(centerX + radX, centerY));
+                        graphics.DrawLine(linePen, center, new Point(centerX + sinX, centerY + sinX));
+                        graphics.DrawLine(linePen, center, new Point(centerX, centerY + radY));
+                        graphics.DrawLine(linePen, center, new Point(centerX + sinX, centerY - sinY));
+                        graphics.DrawLine(linePen, center, new Point(centerX - radX, centerY));
+                        graphics.DrawLine(linePen, center, new Point(centerX - sinX, centerY - sinY));
+                        // Versions without dash pattern.
+                        //graphics.DrawLine(linePen, new Point(centerX - sinX, centerY - sinX), new Point(centerX + sinX, centerY + sinX));
+                        //graphics.DrawLine(linePen, new Point(centerX + sinX, centerY - sinX), new Point(centerX - sinX, centerY + sinX));
+                        //graphics.DrawLine(linePen, new Point(centerX - radX, centerY), new Point(centerX + radX, centerY));
+                        //graphics.DrawLine(linePen, new Point(centerX, centerY - radY), new Point(centerX, centerY + radY));
+                    }
+                }
+                DrawDottedCircle(graphics, circleBounds, tileSize, alphacorr, true, -1.25f, 2.5f);
+            }
+        }
+
+        public static void RenderAllWayPointRevealRadiuses(Graphics graphics, IGamePlugin plugin, Map map, Size tileSize, Waypoint selectedItem)
+        {
+            int[] wpReveal1 = plugin.GetFlareRadiusForWaypoints(map, false);
+            int[] wpReveal2 = plugin.GetFlareRadiusForWaypoints(map, true);
+            for (int i = 0; i < map.Waypoints.Length; i++)
+            {
+                Waypoint cur = map.Waypoints[i];
+                Point? p = cur?.Point;
+                if (p.HasValue)
+                {
+                    bool isSelected = selectedItem == cur;
+                    Color drawColor = isSelected ? Color.Yellow : Color.Orange;
+                    if (wpReveal1[i] != 0)
+                    {
+                        RenderWayPointRevealRadius(graphics, map, tileSize, drawColor, isSelected, false, wpReveal1[i], cur);
+                    }
+                    if (wpReveal2[i] != 0)
+                    {
+                        RenderWayPointRevealRadius(graphics, map, tileSize, drawColor, isSelected, false, wpReveal2[i], cur);
+                    }
+                }
+            }
+        }
+
+        public static void RenderWayPointRevealRadius(Graphics graphics, Map map, Size tileSize, Color circleColor, bool thickborder, bool forPreview, double revealRadius, Waypoint waypoint)
+        {
+            if (waypoint.Cell.HasValue && map.Metrics.GetLocation(waypoint.Cell.Value, out Point cellPoint))
+            {
+                double diam = revealRadius * 2 + 1;
+                Rectangle circleBounds = new Rectangle(
+                    (int)(cellPoint.X * tileSize.Width - revealRadius * tileSize.Width),
+                    (int)(cellPoint.Y * tileSize.Width - revealRadius * tileSize.Height),
+                    (int)(diam * tileSize.Width),
+                    (int)(diam * tileSize.Height));
+                DrawDottedCircle(graphics, circleBounds, tileSize, Color.FromArgb(forPreview ? 64 : 128, circleColor), thickborder, 1.25f, 2.5f);
+            }
+        }
+
+        public static void DrawCircle(Graphics graphics, Rectangle circleBounds, Size tileSize, Color circleColor, bool thickborder)
+        {
+            float penSize = Math.Max(1f, tileSize.Width / (thickborder ? 16.0f : 32.0f));
+            using (Pen circlePen = new Pen(circleColor, penSize))
+            {
+                graphics.DrawEllipse(circlePen, circleBounds);
+            }
+        }
+
+        public static void DrawDottedCircle(Graphics graphics, Rectangle circleBounds, Size tileSize, Color circleColor, bool thickborder, float startAngle, float drawAngle)
+        {
+            float penSize = Math.Max(1f, tileSize.Width / (thickborder ? 16.0f : 32.0f));
+            using (Pen circlePen = new Pen(circleColor, penSize))
+            {
+                drawAngle = Math.Abs(drawAngle);
+                float endPoint = 360f + startAngle - drawAngle;
+                for (float i = startAngle; i <= endPoint; i += drawAngle * 2)
+                {
+                    graphics.DrawArc(circlePen, circleBounds, i, drawAngle);
                 }
             }
         }

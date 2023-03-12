@@ -425,4 +425,6 @@ Unreleased
 * Fixed saving of '@' characters in the Steam workshop item description.
 * The map save after the Steam publish will no longer re-generate the thumbnail, making it much faster.
 * Steam publish will now clean up all generated temporary files.
-
+* Fixed issue with object property popups being the wrong size because their font was different than expected.
+* When unchecking the Prebuilt status of a building and then re-checking it, the original values for the building's other properties will be restored. This does not work if the changes were confirmed by closing the popup. This property-restoring also works on the selection window template.
+* Added indicators for reveal radiuses around waypoints, and shroud radiuses around Gap Generators.

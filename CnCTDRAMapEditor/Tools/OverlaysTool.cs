@@ -360,7 +360,7 @@ namespace MobiusEditor.Tools
         protected override void PreRenderMap()
         {
             base.PreRenderMap();
-            previewMap = map.Clone();
+            previewMap = map.Clone(true);
             if (placementMode)
             {
                 var location = navigationWidget.MouseCell;

@@ -33,7 +33,7 @@ namespace MobiusEditor.Tools
         /// Layers that are not painted by the PostRenderMap function on ViewTool level because they are handled
         /// at a specific point in the PostRenderMap override by the implementing tool.
         /// </summary>
-        protected override MapLayerFlag ManuallyHandledLayers => MapLayerFlag.WaypointsIndic | MapLayerFlag.TechnoTriggers;
+        protected override MapLayerFlag ManuallyHandledLayers => MapLayerFlag.WaypointsIndic | MapLayerFlag.TechnoTriggers | MapLayerFlag.WaypointRadius;
 
         private readonly ComboBox waypointCombo;
         private readonly Button jumpToButton;
@@ -434,11 +434,12 @@ namespace MobiusEditor.Tools
         protected override void PreRenderMap()
         {
             base.PreRenderMap();
-            previewMap = map.Clone();
+            previewMap = map.Clone(true);
             if (!placementMode)
             {
                 return;
             }
+            // Add placement mode dummy in extra slot provided for this purpose on cloned maps.
             int selectedIndex = waypointCombo.SelectedIndex;
             if (selectedIndex == -1)
             {
@@ -480,6 +481,7 @@ namespace MobiusEditor.Tools
             MapRenderer.RenderAllTechnoTriggers(graphics, plugin.Map, Globals.MapTileSize, Globals.MapTileScale, Layers);
             MapRenderer.RenderAllBoundsFromCell(graphics, Globals.MapTileSize,
                 map.Waypoints.Where(wp => wp != selected && wp.Cell.HasValue).Select(wp => wp.Cell.Value), map.Metrics, Color.Orange);
+            MapRenderer.RenderAllWayPointRevealRadiuses(graphics, plugin, map, Globals.MapTileSize, selected);
             MapRenderer.RenderWayPointIndicators(graphics, map, Globals.MapTileSize, Globals.MapTileScale, Color.LightGreen, false, true, selectedRange);
             if (selected != null)
             {
@@ -496,6 +498,16 @@ namespace MobiusEditor.Tools
                 if (dummySelected != null && (selected == null || selected.Cell != dummySelected.Cell))
                 {
                     MapRenderer.RenderWayPointIndicators(graphics, map, Globals.MapTileSize, Globals.MapTileScale, Color.Yellow, true, false, new[] { dummySelected });
+                    int[] wpReveal1 = plugin.GetFlareRadiusForWaypoints(map, false);
+                    int[] wpReveal2 = plugin.GetFlareRadiusForWaypoints(map, true);
+                    if (wpReveal1[selectedIndex] != 0)
+                    {
+                        MapRenderer.RenderWayPointRevealRadius(graphics, map, Globals.MapTileSize, Color.Yellow, true, true, wpReveal1[selectedIndex], dummySelected);
+                    }
+                    if (wpReveal2[selectedIndex] != 0)
+                    {
+                        MapRenderer.RenderWayPointRevealRadius(graphics, map, Globals.MapTileSize, Color.Yellow, true, true, wpReveal2[selectedIndex], dummySelected);
+                    }
                 }
             }
         }

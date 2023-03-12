@@ -24,14 +24,15 @@ namespace MobiusEditor.Model
     [Flags]
     public enum BuildingTypeFlag
     {
-        None        = 0,
-        Factory     = (1 << 0),
-        Bib         = (1 << 1),
-        Fake        = (1 << 2),
-        Turret      = (1 << 3),
-        SingleFrame = (1 << 4),
-        NoRemap     = (1 << 5),
-        Flat        = (1 << 6),
+        None          = 0,
+        Factory       = (1 << 0),
+        Bib           = (1 << 1),
+        Fake          = (1 << 2),
+        Turret        = (1 << 3),
+        SingleFrame   = (1 << 4),
+        NoRemap       = (1 << 5),
+        Flat          = (1 << 6),
+        ShowGapRadius = (1 << 7),
     }
 
     public class BuildingType : ICellOverlapper, ICellOccupier, ITechnoType, IBrowsableType
@@ -58,7 +59,7 @@ namespace MobiusEditor.Model
 
         public bool[,] OccupyMask { get; private set; }
 
-        // Actual footprint of the building, without bibs involved.
+        /// <summary>Actual footprint of the building, without bibs involved.</summary>
         public bool[,] BaseOccupyMask { get; private set; }
 
         public Size Size { get; private set; }
@@ -132,8 +133,8 @@ namespace MobiusEditor.Model
         {
         }
 
-        public BuildingType(sbyte id, string name, string textId, int powerProd, int powerUse, int width, int height, string occupyMask, string ownerHouse, int frameOffset)
-            : this(id, name, textId, powerProd, powerUse, 0, width, height, occupyMask, ownerHouse, null, null, BuildingTypeFlag.None, frameOffset)
+        public BuildingType(sbyte id, string name, string textId, int powerProd, int powerUse, int width, int height, string occupyMask, string ownerHouse, int frameOffset, BuildingTypeFlag flag)
+            : this(id, name, textId, powerProd, powerUse, 0, width, height, occupyMask, ownerHouse, null, null, flag, frameOffset)
         {
         }
 

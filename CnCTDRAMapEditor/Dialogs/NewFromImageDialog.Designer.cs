@@ -145,6 +145,7 @@
             this.btnChooseColor.TabIndex = 10;
             this.btnChooseColor.Text = "Choose";
             this.btnChooseColor.UseVisualStyleBackColor = true;
+            this.btnChooseColor.Click += new System.EventHandler(this.btnChooseColor_Click);
             // 
             // templateTypeMapPanel
             // 

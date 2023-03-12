@@ -41,7 +41,7 @@ namespace MobiusEditor.Tools
         /// Layers that are not painted by the PostRenderMap function on ViewTool level because they are handled
         /// at a specific point in the PostRenderMap override by the implementing tool.
         /// </summary>
-        protected override MapLayerFlag ManuallyHandledLayers => MapLayerFlag.TechnoTriggers | MapLayerFlag.BuildingRebuild | MapLayerFlag.BuildingFakes;
+        protected override MapLayerFlag ManuallyHandledLayers => MapLayerFlag.TechnoTriggers | MapLayerFlag.BuildingRebuild | MapLayerFlag.BuildingFakes | MapLayerFlag.GapRadius;
 
         private bool placementMode;
 
@@ -760,7 +760,7 @@ namespace MobiusEditor.Tools
         protected override void PreRenderMap()
         {
             base.PreRenderMap();
-            previewMap = map.Clone();
+            previewMap = map.Clone(true);
             if (!placementMode)
             {
                 return;
@@ -784,6 +784,10 @@ namespace MobiusEditor.Tools
             MapRenderer.RenderAllOccupierBounds(graphics, Globals.MapTileSize, previewMap.Buildings.OfType<Building>());
             if ((Layers & MapLayerFlag.Buildings) == MapLayerFlag.Buildings)
             {
+                if ((Layers & MapLayerFlag.GapRadius) == MapLayerFlag.GapRadius)
+                {
+                    MapRenderer.RenderAllGapRadiuses(graphics, previewMap, Globals.MapTileSize, Color.Red, map.GapRadius, true);
+                }
                 if ((Layers & MapLayerFlag.BuildingFakes) == MapLayerFlag.BuildingFakes)
                 {
                     MapRenderer.RenderAllFakeBuildingLabels(graphics, previewMap, Globals.MapTileSize, Globals.MapTileScale);
@@ -795,7 +799,7 @@ namespace MobiusEditor.Tools
                 if ((Layers & MapLayerFlag.TechnoTriggers) == MapLayerFlag.TechnoTriggers)
                 {
                     MapRenderer.RenderAllTechnoTriggers(graphics, previewMap, Globals.MapTileSize, Globals.MapTileScale, Layers);
-                }
+                }             
             }
         }
 

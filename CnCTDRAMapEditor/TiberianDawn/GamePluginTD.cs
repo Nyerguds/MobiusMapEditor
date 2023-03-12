@@ -398,7 +398,7 @@ namespace MobiusEditor.TiberianDawn
                 MissionTypes.GetTypes(), MissionTypes.MISSION_GUARD, MissionTypes.MISSION_STOP, MissionTypes.MISSION_HARVEST,
                 MissionTypes.MISSION_UNLOAD, DirectionTypes.GetMainTypes(), DirectionTypes.GetAllTypes(), InfantryTypes.GetTypes(),
                 UnitTypes.GetTypes(Globals.DisableAirUnits), BuildingTypes.GetTypes(), TeamMissionTypes.GetTypes(),
-                fullTechnoTypes, waypoints, movieTypes, movieEmpty, themeTypes, themeEmpty)
+                fullTechnoTypes, waypoints, 4, 0, movieTypes, movieEmpty, themeTypes, themeEmpty)
             {
                 TiberiumOrGoldValue = 25
             };
@@ -2919,6 +2919,25 @@ namespace MobiusEditor.TiberianDawn
                 }
             }
             return housesWithProd;
+        }
+
+        public int[] GetFlareRadiusForWaypoints(Map map, bool forLargeReveal)
+        {
+            Waypoint[] waypoints = map.Waypoints;
+            int length = waypoints.Length;
+            int[] flareRadius = new int[length];
+            if (!forLargeReveal)
+            {
+                for (int i = 0; i < length; i++)
+                {
+                    Waypoint waypoint = waypoints[i];
+                    if (waypoint != null && waypoint.Cell.HasValue && (waypoint.Flag & WaypointFlag.Flare) != WaypointFlag.None)
+                    {
+                        flareRadius[i] = Map.DropZoneRadius;
+                    }
+                }
+            }
+            return flareRadius;
         }
 
         public IEnumerable<string> CheckTriggers(IEnumerable<Trigger> triggers, bool includeExternalData, bool prefixNames, bool fatalOnly, out bool fatal, bool fix, out bool wasFixed)
