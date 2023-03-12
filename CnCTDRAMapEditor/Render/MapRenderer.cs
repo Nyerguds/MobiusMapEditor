@@ -1380,86 +1380,84 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static void RenderAllGapRadiuses(Graphics graphics, Map map, Size tileSize, Color circleColor, double revealRadius, bool includeDiags)
+        public static void RenderAllBuildingGapRadiuses(Graphics graphics, Map map, Size tileSize, double revealRadius)
         {
             foreach (var (topLeft, building) in map.Buildings.OfType<Building>()
-                .Where(b => (b.Occupier.Type.Flag & BuildingTypeFlag.ShowGapRadius) != BuildingTypeFlag.None))
+                .Where(b => (b.Occupier.Type.Flag & BuildingTypeFlag.IsGapGenerator) != BuildingTypeFlag.None))
             {
                 TeamColor tc = building.Type.CanRemap ? Globals.TheTeamColorManager[building.House.BuildingTeamColor] : null;
-                circleColor = TeamColor.GetTeamColor(tc);
+                Color circleColor = TeamColor.GetTeamColor(tc);
 
                 bool[,] cells = building.Type.BaseOccupyMask;
                 int maskY = cells.GetLength(0);
                 int maskX = cells.GetLength(1);
-                /*
-                // Accurate calculation. Unused because the game is dumb.
-                int minX = maskX;
-                int maxX = 0;
-                int minY = maskY;
-                int maxY = 0;
-                bool hasAny = false;
-                for (var y = 0; y < maskY; ++y)
-                {
-                    for (var x = 0; x < maskX; ++x)
-                    {
-                        if (cells[y, x])
-                        {
-                            hasAny = true;
-                            minX = Math.Min(minX, x);
-                            maxX = Math.Max(maxX, x);
-                            minY = Math.Min(minY, y);
-                            maxY = Math.Max(maxY, y);
-                        }
-                    }
-                }
-                if (!hasAny)
-                {
-                    minX = 0;
-                    maxX = 0;
-                    minY = 0;
-                    maxY = 0;
-                }
-                int left = (topLeft.X + minX) * tileSize.Width;
-                int top = (topLeft.Y + minY) * tileSize.Height;
-                int width = (maxX - minX + 1) * tileSize.Width;
-                int height = (maxY - minY + 1) * tileSize.Height;
-                Rectangle circleBounds = new Rectangle(left + width / 2 - diamX / 2, top + height / 2 - diamY / 2, diamX, diamY);
-                */
-                int diamX = (int)((revealRadius * 2 + 1) * tileSize.Width);
-                int radX = diamX / 2;
-                int diamY = (int)((revealRadius * 2 + 1) * tileSize.Height);
-                int radY = diamY / 2;
-                int centerX = (topLeft.X + (maskX - 1) / 2) * tileSize.Width + tileSize.Width / 2;
-                int centerY = (topLeft.Y + (maskY - 1) / 2) * tileSize.Height + tileSize.Height / 2;
-                Rectangle circleBounds = new Rectangle(centerX - radX, centerY - radY, diamX, diamY);
+                Rectangle circleBounds = GeneralUtils.GetBoxFromCenterCell(topLeft, maskX, maskY, revealRadius, revealRadius, tileSize, out int centerX, out int centerY);
 
                 Color alphacorr = Color.FromArgb(building.Tint.A * 128 / 256, circleColor);
-                if (includeDiags)
-                {
-                    double sinDistance = Math.Sin(Math.PI * 45 / 180.0);
-                    float penSize = Math.Max(1.0f, tileSize.Width / 16.0f);
-                    using (Pen linePen = new Pen(alphacorr, penSize))
-                    {
-                        linePen.DashPattern = new float[] { 1.0F, 4.0F, 6.0F, 4.0F };
-                        int sinX = (int)(radX * sinDistance);
-                        int sinY = (int)(radY * sinDistance);
-                        Point center = new Point(centerX, centerY);
-                        graphics.DrawLine(linePen, center, new Point(centerX, centerY - radY));
-                        graphics.DrawLine(linePen, center, new Point(centerX - sinX, centerY + sinY));
-                        graphics.DrawLine(linePen, center, new Point(centerX + radX, centerY));
-                        graphics.DrawLine(linePen, center, new Point(centerX + sinX, centerY + sinX));
-                        graphics.DrawLine(linePen, center, new Point(centerX, centerY + radY));
-                        graphics.DrawLine(linePen, center, new Point(centerX + sinX, centerY - sinY));
-                        graphics.DrawLine(linePen, center, new Point(centerX - radX, centerY));
-                        graphics.DrawLine(linePen, center, new Point(centerX - sinX, centerY - sinY));
-                        // Versions without dash pattern.
-                        //graphics.DrawLine(linePen, new Point(centerX - sinX, centerY - sinX), new Point(centerX + sinX, centerY + sinX));
-                        //graphics.DrawLine(linePen, new Point(centerX + sinX, centerY - sinX), new Point(centerX - sinX, centerY + sinX));
-                        //graphics.DrawLine(linePen, new Point(centerX - radX, centerY), new Point(centerX + radX, centerY));
-                        //graphics.DrawLine(linePen, new Point(centerX, centerY - radY), new Point(centerX, centerY + radY));
-                    }
-                }
+                Point center = new Point(centerX, centerY);
+                RenderCircleDiagonals(graphics, tileSize, alphacorr, revealRadius, revealRadius, center);
                 DrawDottedCircle(graphics, circleBounds, tileSize, alphacorr, true, -1.25f, 2.5f);
+            }
+        }
+
+        public static void RenderAllUnitGapRadiuses(Graphics graphics, Map map, Size tileSize, double jamRadius)
+        {
+            foreach (var (topLeft, unit) in map.Technos.OfType<Unit>()
+                .Where(b => (b.Occupier.Type.Flag & (UnitTypeFlag.IsGapGenerator | UnitTypeFlag.IsJammer)) != UnitTypeFlag.None))
+            {
+
+                string teamColor = null;
+                if (!unit.House.OverrideTeamColors.TryGetValue(unit.Type.Name, out teamColor))
+                {
+                    teamColor = unit.House.UnitTeamColor;
+                }
+                TeamColor tc = Globals.TheTeamColorManager[unit.House.UnitTeamColor];
+                Color circleColor = TeamColor.GetTeamColor(tc);
+                Color alphacorr = Color.FromArgb(unit.Tint.A * 128 / 256, circleColor);
+                if ((unit.Type.Flag & UnitTypeFlag.IsJammer) == UnitTypeFlag.IsJammer)
+                {
+                    // uses map's Gap Generator range.
+                    Rectangle circleBounds = GeneralUtils.GetBoxFromCenterCell(topLeft, 1, 1, jamRadius, jamRadius, tileSize, out int centerX, out int centerY);
+                    Point center = new Point(centerX, centerY);
+                    RenderCircleDiagonals(graphics, tileSize, alphacorr, jamRadius, jamRadius, center);
+                    DrawDottedCircle(graphics, circleBounds, tileSize, alphacorr, true, -1.25f, 2.5f);
+                }
+                if ((unit.Type.Flag & UnitTypeFlag.IsGapGenerator) == UnitTypeFlag.IsGapGenerator)
+                {
+                    // uses specific 5x7 circle around the unit cell
+                    int radiusX = 2;
+                    int radiusY = 3;
+                    Rectangle circleBounds = GeneralUtils.GetBoxFromCenterCell(topLeft, 1, 1, radiusX, radiusY, tileSize, out int centerX, out int centerY);
+                    Point center = new Point(centerX, centerY);
+                    RenderCircleDiagonals(graphics, tileSize, alphacorr, radiusX, radiusY, center);
+                    DrawDottedCircle(graphics, circleBounds, tileSize, alphacorr, true, -1.25f, 2.5f);
+                }
+            }
+        }
+
+        private static void RenderCircleDiagonals(Graphics graphics, Size tileSize, Color paintColor, double radiusX, double radiusY, Point center)
+        {
+
+            float penSize = Math.Max(1.0f, tileSize.Width / 16.0f);
+            using (Pen linePen = new Pen(paintColor, penSize))
+            {
+                linePen.DashPattern = new float[] { 1.0F, 4.0F, 6.0F, 4.0F };
+                linePen.DashCap = DashCap.Round;
+                int diamX = (int)((radiusX * 2 + 1) * tileSize.Width);
+                int radX = diamX / 2;
+                int diamY = (int)((radiusY * 2 + 1) * tileSize.Height);
+                int radY = diamY / 2;
+                double sinDistance = Math.Sin(Math.PI * 45 / 180.0);
+                int sinX = (int)(radX * sinDistance);
+                int sinY = (int)(radY * sinDistance);
+                graphics.DrawLine(linePen, center, new Point(center.X, center.Y - radY));
+                graphics.DrawLine(linePen, center, new Point(center.X - sinX, center.Y + sinY));
+                graphics.DrawLine(linePen, center, new Point(center.X + radX, center.Y));
+                graphics.DrawLine(linePen, center, new Point(center.X + sinX, center.Y + sinX));
+                graphics.DrawLine(linePen, center, new Point(center.X, center.Y + radY));
+                graphics.DrawLine(linePen, center, new Point(center.X + sinX, center.Y - sinY));
+                graphics.DrawLine(linePen, center, new Point(center.X - radX, center.Y));
+                graphics.DrawLine(linePen, center, new Point(center.X - sinX, center.Y - sinY));
             }
         }
 

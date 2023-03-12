@@ -781,12 +781,17 @@ namespace MobiusEditor.Tools
         protected override void PostRenderMap(Graphics graphics)
         {
             base.PostRenderMap(graphics);
+            // Since we manually handle GapRadius painting, need to do the Units ones too.
+            if ((Layers & (MapLayerFlag.Units | MapLayerFlag.GapRadius)) == (MapLayerFlag.Units | MapLayerFlag.GapRadius))
+            {
+                MapRenderer.RenderAllUnitGapRadiuses(graphics, previewMap, Globals.MapTileSize, map.RadarJamRadius);
+            }
             MapRenderer.RenderAllOccupierBounds(graphics, Globals.MapTileSize, previewMap.Buildings.OfType<Building>());
             if ((Layers & MapLayerFlag.Buildings) == MapLayerFlag.Buildings)
             {
                 if ((Layers & MapLayerFlag.GapRadius) == MapLayerFlag.GapRadius)
                 {
-                    MapRenderer.RenderAllGapRadiuses(graphics, previewMap, Globals.MapTileSize, Color.Red, map.GapRadius, true);
+                    MapRenderer.RenderAllBuildingGapRadiuses(graphics, previewMap, Globals.MapTileSize, map.GapRadius);
                 }
                 if ((Layers & MapLayerFlag.BuildingFakes) == MapLayerFlag.BuildingFakes)
                 {

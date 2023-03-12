@@ -34,7 +34,7 @@ namespace MobiusEditor.Tools
         /// Layers that are not painted by the PostRenderMap function on ViewTool level because they are handled
         /// at a specific point in the PostRenderMap override by the implementing tool.
         /// </summary>
-        protected override MapLayerFlag ManuallyHandledLayers => MapLayerFlag.TechnoTriggers;
+        protected override MapLayerFlag ManuallyHandledLayers => MapLayerFlag.TechnoTriggers | MapLayerFlag.GapRadius;
 
         private readonly TypeListBox unitTypesBox;
         private readonly MapPanel unitTypeMapPanel;
@@ -566,10 +566,22 @@ namespace MobiusEditor.Tools
         protected override void PostRenderMap(Graphics graphics)
         {
             base.PostRenderMap(graphics);
-            MapRenderer.RenderAllBoundsFromPoint(graphics, Globals.MapTileSize, previewMap.Technos.OfType<Unit>());
-            if ((Layers & (MapLayerFlag.Units | MapLayerFlag.TechnoTriggers)) == (MapLayerFlag.Units | MapLayerFlag.TechnoTriggers))
+            // Since we manually handle GapRadius painting, need to do the Buildings ones too.
+            if ((Layers & (MapLayerFlag.Buildings | MapLayerFlag.GapRadius)) == (MapLayerFlag.Buildings | MapLayerFlag.GapRadius))
             {
-                MapRenderer.RenderAllTechnoTriggers(graphics, previewMap, Globals.MapTileSize, Globals.MapTileScale, Layers);
+                MapRenderer.RenderAllBuildingGapRadiuses(graphics, previewMap, Globals.MapTileSize, map.GapRadius);
+            }
+            MapRenderer.RenderAllBoundsFromPoint(graphics, Globals.MapTileSize, previewMap.Technos.OfType<Unit>());
+            if ((Layers & MapLayerFlag.Units) == MapLayerFlag.Units)
+            {
+                if ((Layers & MapLayerFlag.TechnoTriggers) == MapLayerFlag.TechnoTriggers)
+                {
+                    MapRenderer.RenderAllTechnoTriggers(graphics, previewMap, Globals.MapTileSize, Globals.MapTileScale, Layers);
+                }
+                if ((Layers & MapLayerFlag.GapRadius) == MapLayerFlag.GapRadius)
+                {
+                    MapRenderer.RenderAllUnitGapRadiuses(graphics, previewMap, Globals.MapTileSize, map.RadarJamRadius);
+                }
             }
         }
 

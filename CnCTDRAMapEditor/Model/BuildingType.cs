@@ -24,15 +24,15 @@ namespace MobiusEditor.Model
     [Flags]
     public enum BuildingTypeFlag
     {
-        None          = 0,
-        Factory       = (1 << 0),
-        Bib           = (1 << 1),
-        Fake          = (1 << 2),
-        Turret        = (1 << 3),
-        SingleFrame   = (1 << 4),
-        NoRemap       = (1 << 5),
-        Flat          = (1 << 6),
-        ShowGapRadius = (1 << 7),
+        None           = 0,
+        Factory        = (1 << 0),
+        Bib            = (1 << 1),
+        Fake           = (1 << 2),
+        Turret         = (1 << 3),
+        SingleFrame    = (1 << 4),
+        NoRemap        = (1 << 5),
+        Flat           = (1 << 6),
+        IsGapGenerator = (1 << 7),
     }
 
     public class BuildingType : ICellOverlapper, ICellOccupier, ITechnoType, IBrowsableType

@@ -93,7 +93,7 @@ namespace MobiusEditor.TiberianDawn
         public static readonly TemplateType Shore32 = new TemplateType(51, "sh32", 3, 3, new[] { TheaterTypes.Temperate, TheaterTypes.Winter });
         public static readonly TemplateType Shore33 = new TemplateType(52, "sh33", 3, 3, new[] { TheaterTypes.Temperate, TheaterTypes.Winter });
         public static readonly TemplateType Shore20 = new TemplateType(53, "sh20", 4, 1, new[] { TheaterTypes.Desert }, null, ShoresWaterSouthDes4);
-        public static readonly TemplateType Shore21 = new TemplateType(54, "sh21", 3, 1, new[] { TheaterTypes.Desert }, (string)null, new Size(3, 2), new Point(0, 1), ShoresWaterSouthDes3);
+        public static readonly TemplateType Shore21 = new TemplateType(54, "sh21", 3, 1, new[] { TheaterTypes.Desert }, (string)null, new Point(0, 1), ShoresWaterSouthDes3);
         public static readonly TemplateType Shore22 = new TemplateType(55, "sh22", 6, 2, new[] { TheaterTypes.Desert }, "011100 111111");
         public static readonly TemplateType Shore23 = new TemplateType(56, "sh23", 2, 2, new[] { TheaterTypes.Desert });
         public static readonly TemplateType Brush1 = new TemplateType(57, "br1", 1, 1, new[] { TheaterTypes.Desert });
@@ -141,9 +141,9 @@ namespace MobiusEditor.TiberianDawn
         public static readonly TemplateType Road7 = new TemplateType(99, "d07", 3, 2, new[] { TheaterTypes.Winter, TheaterTypes.Desert, TheaterTypes.Temperate }, "111 011", RoadNorthSouth);
         public static readonly TemplateType Road8 = new TemplateType(100, "d08", 3, 2, new[] { TheaterTypes.Winter, TheaterTypes.Desert, TheaterTypes.Temperate }, "010 111", RoadNorthSouth);
         public static readonly TemplateType Road9 = new TemplateType(101, "d09", 4, 3, new[] { TheaterTypes.Winter, TheaterTypes.Desert, TheaterTypes.Temperate }, "1111 1111 0011", RoadEastWest4);
-        public static readonly TemplateType Road10 = new TemplateType(102, "d10", 4, 2, new[] { TheaterTypes.Winter, TheaterTypes.Desert, TheaterTypes.Temperate }, "1100 1111", new Size(4, 3), Point.Empty, RoadEastWest4);
+        public static readonly TemplateType Road10 = new TemplateType(102, "d10", 4, 2, new[] { TheaterTypes.Winter, TheaterTypes.Desert, TheaterTypes.Temperate }, "1100 1111", Point.Empty, RoadEastWest4);
         public static readonly TemplateType Road11 = new TemplateType(103, "d11", 2, 3, new[] { TheaterTypes.Winter, TheaterTypes.Desert, TheaterTypes.Temperate }, "01 11 10", RoadEastWest2);
-        public static readonly TemplateType Road12 = new TemplateType(104, "d12", 2, 2, new[] { TheaterTypes.Winter, TheaterTypes.Desert, TheaterTypes.Temperate }, "10 11" , new Size(2, 3), Point.Empty, RoadEastWest2);
+        public static readonly TemplateType Road12 = new TemplateType(104, "d12", 2, 2, new[] { TheaterTypes.Winter, TheaterTypes.Desert, TheaterTypes.Temperate }, "10 11" , Point.Empty, RoadEastWest2);
         public static readonly TemplateType Road13 = new TemplateType(105, "d13", 4, 3, new[] { TheaterTypes.Winter, TheaterTypes.Desert, TheaterTypes.Temperate }, "1110 1111 0011");
         public static readonly TemplateType Road14 = new TemplateType(106, "d14", 3, 3, new[] { TheaterTypes.Winter, TheaterTypes.Desert, TheaterTypes.Temperate }, "011 111 111");
         public static readonly TemplateType Road15 = new TemplateType(107, "d15", 3, 3, new[] { TheaterTypes.Winter, TheaterTypes.Desert, TheaterTypes.Temperate }, "111 111 110");
@@ -192,8 +192,8 @@ namespace MobiusEditor.TiberianDawn
         public static readonly TemplateType River15 = new TemplateType(150, "rv15", 4, 3, new[] { TheaterTypes.Desert }, null, RiverEastWest4);
         public static readonly TemplateType River16 = new TemplateType(151, "rv16", 6, 4, new[] { TheaterTypes.Desert }, "001111 011111 111111 111100");
         public static readonly TemplateType River17 = new TemplateType(152, "rv17", 6, 5, new[] { TheaterTypes.Desert }, "111100 111110 111111 111111 001111");
-        public static readonly TemplateType River18 = new TemplateType(153, "rv18", 4, 4, new[] { TheaterTypes.Desert }, "1111 1110 1110 1110", new Size(5, 4), new Point(1, 0), RiverNorthSouth4);
-        public static readonly TemplateType River19 = new TemplateType(154, "rv19", 4, 4, new[] { TheaterTypes.Desert }, "0111 0111 1111 1111", new Size(5, 4), Point.Empty, RiverNorthSouth4);
+        public static readonly TemplateType River18 = new TemplateType(153, "rv18", 4, 4, new[] { TheaterTypes.Desert }, "1111 1110 1110 1110", new Point(1, 0), RiverNorthSouth4);
+        public static readonly TemplateType River19 = new TemplateType(154, "rv19", 4, 4, new[] { TheaterTypes.Desert }, "0111 0111 1111 1111", Point.Empty, RiverNorthSouth4);
         public static readonly TemplateType River20 = new TemplateType(155, "rv20", 6, 8, new[] { TheaterTypes.Desert }, "001111 011110 111110 111110 111110 111100 111100 111100");
         public static readonly TemplateType River21 = new TemplateType(156, "rv21", 5, 8, new[] { TheaterTypes.Desert }, "11110 11110 01110 01111 01111 00111 00111 00011");
         public static readonly TemplateType River22 = new TemplateType(157, "rv22", 3, 3, new[] { TheaterTypes.Desert }, "011 111 111");
@@ -216,7 +216,7 @@ namespace MobiusEditor.TiberianDawn
         public static readonly TemplateType Shore25 = new TemplateType(174, "sh25", 3, 2, new[] { TheaterTypes.Desert }, null, ShoresWaterNorthDes);
         public static readonly TemplateType Shore26 = new TemplateType(175, "sh26", 3, 2, new[] { TheaterTypes.Desert }, "111 011", ShoresWaterNorthDes);
         public static readonly TemplateType Shore27 = new TemplateType(176, "sh27", 4, 1, new[] { TheaterTypes.Desert });
-        public static readonly TemplateType Shore28 = new TemplateType(177, "sh28", 3, 1, new[] { TheaterTypes.Desert }, (string)null, new Size(3, 2), Point.Empty, ShoresWaterNorthDes);
+        public static readonly TemplateType Shore28 = new TemplateType(177, "sh28", 3, 1, new[] { TheaterTypes.Desert }, (string)null,  Point.Empty, ShoresWaterNorthDes);
         public static readonly TemplateType Shore29 = new TemplateType(178, "sh29", 6, 2, new[] { TheaterTypes.Desert }, "111111 011100");
         public static readonly TemplateType Shore30 = new TemplateType(179, "sh30", 2, 2, new[] { TheaterTypes.Desert }, "11 10");
         public static readonly TemplateType Shore31 = new TemplateType(180, "sh31", 3, 3, new[] { TheaterTypes.Desert });

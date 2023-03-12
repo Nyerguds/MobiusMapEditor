@@ -37,6 +37,7 @@ namespace MobiusEditor.RedAlert
         private const int DefaultGemValue = 50;
         private const int DefaultDropZoneRadius = 4;
         private const int DefaultGapRadius = 10;
+        private const int DefaultJamRadius = 15;
         private readonly IEnumerable<string> movieTypes;
         private bool isLoading = false;
 
@@ -429,7 +430,7 @@ namespace MobiusEditor.RedAlert
                 MissionTypes.GetTypes(), MissionTypes.MISSION_GUARD, MissionTypes.MISSION_STOP, MissionTypes.MISSION_HARVEST,
                 MissionTypes.MISSION_UNLOAD, DirectionTypes.GetMainTypes(), DirectionTypes.GetAllTypes(), InfantryTypes.GetTypes(),
                 UnitTypes.GetTypes(Globals.DisableAirUnits), BuildingTypes.GetTypes(), TeamMissionTypes.GetTypes(),
-                fullTechnoTypes, waypoints, DefaultDropZoneRadius, DefaultGapRadius, movieTypes, movieEmpty, themeTypes, themeEmpty)
+                fullTechnoTypes, waypoints, DefaultDropZoneRadius, DefaultGapRadius, DefaultJamRadius, movieTypes, movieEmpty, themeTypes, themeEmpty)
             {
                 TiberiumOrGoldValue = DefaultGoldValue,
                 GemValue = DefaultGemValue
@@ -2186,6 +2187,8 @@ namespace MobiusEditor.RedAlert
             map.DropZoneRadius = radius ?? DefaultDropZoneRadius;
             int? gapRadius = GetIntRulesValue(ini, "General", "GapRadius", errors);
             map.GapRadius = gapRadius ?? DefaultGapRadius;
+            int? jamRadius = GetIntRulesValue(ini, "General", "RadarJamRadius", errors);
+            map.RadarJamRadius = jamRadius ?? DefaultJamRadius;
             return errors;
         }
 

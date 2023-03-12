@@ -282,6 +282,22 @@ namespace MobiusEditor.Utility
             return new Rectangle(offsetX, offsetY, width, height);
         }
 
+        public static Rectangle GetBoxFromCenterCell(Point cell, int cellsWide, int cellsHigh, double radiusX, double radiusY, Size tileSize)
+        {
+            return GetBoxFromCenterCell(cell, cellsWide, cellsHigh, radiusX, radiusY, tileSize, out _, out _);
+        }
+
+        public static Rectangle GetBoxFromCenterCell(Point cell, int cellsWide, int cellsHigh, double radiusX, double radiusY, Size tileSize, out int centerX, out int centerY)
+        {
+            int diamX = (int)((radiusX * 2 + 1) * tileSize.Width);
+            int radX = diamX / 2;
+            int diamY = (int)((radiusY * 2 + 1) * tileSize.Height);
+            int radY = diamY / 2;
+            centerX = (cell.X + (cellsWide - 1) / 2) * tileSize.Width + tileSize.Width / 2;
+            centerY = (cell.Y + (cellsHigh - 1) / 2) * tileSize.Height + tileSize.Height / 2;
+            return new Rectangle(centerX - radX, centerY - radY, diamX, diamY);
+        }
+
         /// <summary>
         /// ArgumentException messes with the Message property, and dumps its own extra (localised) bit of
         /// text with the argument onto the end of the message. This uses serialisation to retrieve the 

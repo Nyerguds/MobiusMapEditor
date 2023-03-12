@@ -944,7 +944,7 @@ namespace MobiusEditor
             this.viewIndicatorsBuildingGapRadiusMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.viewIndicatorsBuildingGapRadiusMenuItem.Name = "viewIndicatorsBuildingGapRadiusMenuItem";
             this.viewIndicatorsBuildingGapRadiusMenuItem.Size = new System.Drawing.Size(207, 22);
-            this.viewIndicatorsBuildingGapRadiusMenuItem.Text = "Gap generator radiuses";
+            this.viewIndicatorsBuildingGapRadiusMenuItem.Text = "Jam/gap radiuses";
             this.viewIndicatorsBuildingGapRadiusMenuItem.CheckedChanged += new System.EventHandler(this.ViewMenuItem_CheckedChanged);
             // 
             // viewIndicatorsWaypointRevealRadiusMenuItem

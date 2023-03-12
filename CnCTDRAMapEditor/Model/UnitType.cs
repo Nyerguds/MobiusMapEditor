@@ -30,6 +30,8 @@ namespace MobiusEditor.Model
         IsArmed         = 1 << 3,
         IsHarvester     = 1 << 4,
         IsExpansionUnit = 1 << 5,
+        IsGapGenerator  = 1 << 6,
+        IsJammer        = 1 << 7,
     }
 
     public static class UnitTypeIDMask

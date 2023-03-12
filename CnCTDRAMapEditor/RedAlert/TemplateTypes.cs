@@ -230,9 +230,9 @@ namespace MobiusEditor.RedAlert
         public static readonly TemplateType Road07 = new TemplateType(179, "d07", 3, 2, new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, "111 011", RoadNorthSouth);
         public static readonly TemplateType Road08 = new TemplateType(180, "d08", 3, 2, new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, "010 111", RoadNorthSouth);
         public static readonly TemplateType Road09 = new TemplateType(181, "d09", 4, 3, new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, "1111 1111 0011", RoadEastWest4);
-        public static readonly TemplateType Road10 = new TemplateType(182, "d10", 4, 2, new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, "1100 1111", new Size(4, 3), Point.Empty, RoadEastWest4);
+        public static readonly TemplateType Road10 = new TemplateType(182, "d10", 4, 2, new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, "1100 1111", Point.Empty, RoadEastWest4);
         public static readonly TemplateType Road11 = new TemplateType(183, "d11", 2, 3, new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, "01 11 10", RoadEastWest2);
-        public static readonly TemplateType Road12 = new TemplateType(184, "d12", 2, 2, new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, "10 11", new Size(2, 3), Point.Empty, RoadEastWest2);
+        public static readonly TemplateType Road12 = new TemplateType(184, "d12", 2, 2, new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, "10 11", Point.Empty, RoadEastWest2);
         public static readonly TemplateType Road13 = new TemplateType(185, "d13", 4, 3, new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, "1110 1111 0011");
         public static readonly TemplateType Road14 = new TemplateType(186, "d14", 3, 3, new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, "011 111 111");
         public static readonly TemplateType Road15 = new TemplateType(187, "d15", 3, 3, new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, "111 111 110");

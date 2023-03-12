@@ -40,8 +40,8 @@ namespace MobiusEditor.Dialogs
             "Object triggers",
             "Building rebuild priorities",
             "Building 'fake' labels",
-            "Gap Generator radius",
-            "Waypoint reveal radius",
+            "Jam / gap radiuses",
+            "Waypoint reveal radiuses",
         };
 
         IGamePlugin gamePlugin;
@@ -113,6 +113,7 @@ namespace MobiusEditor.Dialogs
             {
                 MapLayerFlag mlf = (MapLayerFlag)(1 << i);
                 if (gamePlugin.GameType != GameType.RedAlert && mlf == MapLayerFlag.BuildingFakes
+                    || gamePlugin.GameType != GameType.RedAlert && mlf == MapLayerFlag.GapRadius
                     || gamePlugin.GameType != GameType.SoleSurvivor && mlf == MapLayerFlag.FootballArea)
                 {
                     continue;

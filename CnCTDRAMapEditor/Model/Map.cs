@@ -262,6 +262,8 @@ namespace MobiusEditor.Model
 
         public int GapRadius { get; set; }
 
+        public int RadarJamRadius { get; set; }
+
         public readonly CellGrid<CellTrigger> CellTriggers;
 
         public event EventHandler<EventArgs> TriggersUpdated;
@@ -377,7 +379,7 @@ namespace MobiusEditor.Model
             IEnumerable<string> missionTypes, string armedMission, string unarmedMission, string harvestMission, string aircraftMission,
             IEnumerable<DirectionType> unitDirectionTypes, IEnumerable<DirectionType> buildingDirectionTypes, IEnumerable<InfantryType> infantryTypes,
             IEnumerable<UnitType> unitTypes, IEnumerable<BuildingType> buildingTypes, IEnumerable<TeamMission> teamMissionTypes,IEnumerable<ITechnoType> teamTechnoTypes,
-            IEnumerable<Waypoint> waypoints, int dropZoneRadius, int gapRadius, IEnumerable<string> movieTypes, string emptyMovie, IEnumerable<string> themeTypes, string emptyTheme)
+            IEnumerable<Waypoint> waypoints, int dropZoneRadius, int gapRadius, int jamRadius, IEnumerable<string> movieTypes, string emptyMovie, IEnumerable<string> themeTypes, string emptyTheme)
         {
             MapSection = new MapSection(cellSize);
             BasicSection = basicSection;
@@ -444,6 +446,7 @@ namespace MobiusEditor.Model
             }
             DropZoneRadius = dropZoneRadius;
             GapRadius = gapRadius;
+            RadarJamRadius = jamRadius;
             CellTriggers = new CellGrid<CellTrigger>(Metrics);
 
             MapSection.SetDefault();
@@ -1006,7 +1009,7 @@ namespace MobiusEditor.Model
                 ActionTypes, CellActionTypes, UnitActionTypes, StructureActionTypes, TerrainActionTypes,
                 MissionTypes, inputMissionArmed, inputMissionUnarmed, inputMissionHarvest, inputMissionAircraft,
                 UnitDirectionTypes, BuildingDirectionTypes, AllInfantryTypes, AllUnitTypes, BuildingTypes, TeamMissionTypes,
-                AllTeamTechnoTypes, wpPreview, DropZoneRadius, GapRadius, MovieTypes, MovieEmpty, ThemeTypes, ThemeEmpty)
+                AllTeamTechnoTypes, wpPreview, DropZoneRadius, GapRadius, RadarJamRadius, MovieTypes, MovieEmpty, ThemeTypes, ThemeEmpty)
             {
                 TopLeft = TopLeft,
                 Size = Size

@@ -131,7 +131,7 @@ namespace MobiusEditor.SoleSurvivor
                 TiberianDawn.MissionTypes.GetTypes(), TiberianDawn.MissionTypes.MISSION_GUARD, TiberianDawn.MissionTypes.MISSION_STOP,
                 TiberianDawn.MissionTypes.MISSION_HARVEST, TiberianDawn.MissionTypes.MISSION_UNLOAD, DirectionTypes.GetMainTypes(),
                 DirectionTypes.GetAllTypes(), infantry, units, buildings, TiberianDawn.TeamMissionTypes.GetTypes(), fullTechnoTypes,
-                waypoints, 4, 0, movies, movieEmpty, themeTypesSole, themeEmpty)
+                waypoints, 4, 0, 0, movies, movieEmpty, themeTypesSole, themeEmpty)
             {
                 TiberiumOrGoldValue = 25
             };

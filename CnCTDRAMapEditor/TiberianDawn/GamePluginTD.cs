@@ -398,7 +398,7 @@ namespace MobiusEditor.TiberianDawn
                 MissionTypes.GetTypes(), MissionTypes.MISSION_GUARD, MissionTypes.MISSION_STOP, MissionTypes.MISSION_HARVEST,
                 MissionTypes.MISSION_UNLOAD, DirectionTypes.GetMainTypes(), DirectionTypes.GetAllTypes(), InfantryTypes.GetTypes(),
                 UnitTypes.GetTypes(Globals.DisableAirUnits), BuildingTypes.GetTypes(), TeamMissionTypes.GetTypes(),
-                fullTechnoTypes, waypoints, 4, 0, movieTypes, movieEmpty, themeTypes, themeEmpty)
+                fullTechnoTypes, waypoints, 4, 0, 0, movieTypes, movieEmpty, themeTypes, themeEmpty)
             {
                 TiberiumOrGoldValue = 25
             };

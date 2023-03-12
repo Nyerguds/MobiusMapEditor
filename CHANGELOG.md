@@ -427,4 +427,4 @@ Unreleased
 * Steam publish will now clean up all generated temporary files.
 * Fixed issue with object property popups not properly showing all options because their font was different than expected, making the contents too large for the popup.
 * When unchecking the Prebuilt status of a building and then re-checking it, the original values for the building's other properties will be restored. This does not work if the changes were confirmed by closing the popup. This property-restoring also works on the selection window template.
-* Added indicators for reveal radiuses around waypoints, and shroud radiuses around Gap Generators.
+* Added indicators for reveal radiuses around waypoints, and shroud / jam radiuses around Gap Generators, Mobile Gap Generators, Radar Jappens and Tesla Tanks.

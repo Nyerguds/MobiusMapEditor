@@ -75,13 +75,7 @@ namespace MobiusEditor.Model
 
         /// <summary>
         /// If 'HasEquivalents' flag is active, the equivalents might not all be the same dimensions.
-        /// This gives the full bounds this tile should act like when used as equivalent.
-        /// </summary>
-        public Size EquivalentBounds { get; private set; } = Size.Empty;
-
-        /// <summary>
-        /// If 'HasEquivalents' flag is active, the equivalents might not all be the same dimensions.
-        /// This gives the offset inside the EquivalentBounds this tile should be placed on when used as equivalent.
+        /// This gives the offset this tile should be placed on when used as equivalent.
         /// </summary>
         public Point EquivalentOffset { get; private set; } = Point.Empty;
 
@@ -189,13 +183,11 @@ namespace MobiusEditor.Model
         /// <param name="iconWidth">Width in cells.</param>
         /// <param name="iconHeight">Height in cells.</param>
         /// <param name="theaters">Theaters that contain this tile.</param>
-        /// <param name="flag">Indicates special terrain types.</param>
         /// <param name="maskOverrides">Mask override for tiles that contain too many graphics in the Remaster. Indices with '0' are removed from the tiles. Spaces are ignored and can be added for visual separation.</param>
-        /// <param name="equivalentBounds"></param>
         /// <param name="equivalentOffset"></param>
         /// <param name="equivalentTiles"></param>
-        public TemplateType(ushort id, string name, int iconWidth, int iconHeight, TheaterType[] theaters, string maskOverrides, Size equivalentBounds, Point equivalentOffset, string[] equivalentTiles)
-            : this(id, name, iconWidth, iconHeight, theaters, maskOverrides == null ? null : new[] { maskOverrides }, equivalentBounds, equivalentOffset, equivalentTiles)
+        public TemplateType(ushort id, string name, int iconWidth, int iconHeight, TheaterType[] theaters, string maskOverrides, Point equivalentOffset, string[] equivalentTiles)
+            : this(id, name, iconWidth, iconHeight, theaters, maskOverrides == null ? null : new[] { maskOverrides }, equivalentOffset, equivalentTiles)
         {
 
         }
@@ -207,20 +199,18 @@ namespace MobiusEditor.Model
         /// <param name="iconWidth">Width in cells.</param>
         /// <param name="iconHeight">Height in cells.</param>
         /// <param name="theaters">Theaters that contain this tile.</param>
-        /// <param name="flag">Indicates special terrain types.</param>
         /// <param name="maskOverrides">Mask override for tiles that contain too many graphics in the Remaster. Indices with '0' are removed from the tiles. Spaces are ignored and can be added for visual separation.</param>
-        /// <param name="equivalentBounds"></param>
         /// <param name="equivalentOffset"></param>
         /// <param name="equivalentTiles"></param>
-        public TemplateType(ushort id, string name, int iconWidth, int iconHeight, TheaterType[] theaters, string[] maskOverrides, Size equivalentBounds, Point equivalentOffset, string[] equivalentTiles)
+        public TemplateType(ushort id, string name, int iconWidth, int iconHeight, TheaterType[] theaters, string[] maskOverrides, Point equivalentOffset, string[] equivalentTiles)
             : this(id, name, iconWidth, iconHeight, theaters, TemplateTypeFlag.None, maskOverrides)
         {
-            this.EquivalentBounds = equivalentBounds == Size.Empty ? new Size(iconWidth, iconHeight) : equivalentBounds;
-            this.EquivalentOffset = equivalentOffset;
-            List<String> equivs = equivalentTiles == null ? null : equivalentTiles.Distinct(StringComparer.OrdinalIgnoreCase).Where(t => t != null && !t.Equals(name, StringComparison.OrdinalIgnoreCase)).ToList();
+            // prevent list with only the item itself from being accepted
+            List<string> equivs = equivalentTiles == null ? null : equivalentTiles.Distinct(StringComparer.OrdinalIgnoreCase).Where(t => t != null && !t.Equals(name, StringComparison.OrdinalIgnoreCase)).ToList();
             if (equivs != null && equivs.Count > 0)
             {
                 equivs.Add(name);
+                this.EquivalentOffset = equivalentOffset;
                 this.Flag = TemplateTypeFlag.HasEquivalents;
             }
             this.GroupTiles = equivs == null ? new string[0] : equivs.ToArray();
@@ -234,10 +224,9 @@ namespace MobiusEditor.Model
         /// <param name="iconWidth">Width in cells.</param>
         /// <param name="iconHeight">Height in cells.</param>
         /// <param name="theaters">Theaters that contain this tile.</param>
-        /// <param name="flag">Indicates special terrain types.</param>
         /// <param name="maskOverrides">Mask override for tiles that contain too many graphics in the Remaster. Indices with '0' are removed from the tiles. Spaces are ignored and can be added for visual separation.</param>
         public TemplateType(ushort id, string name, int iconWidth, int iconHeight, TheaterType[] theaters, String maskOverrides, String[] equivalentTiles)
-            : this(id, name, iconWidth, iconHeight, theaters, maskOverrides == null ? null : new[] { maskOverrides }, Size.Empty, Point.Empty, equivalentTiles)
+            : this(id, name, iconWidth, iconHeight, theaters, maskOverrides == null ? null : new[] { maskOverrides }, Point.Empty, equivalentTiles)
         {
         }
 
