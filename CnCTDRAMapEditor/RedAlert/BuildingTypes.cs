@@ -25,7 +25,7 @@ namespace MobiusEditor.RedAlert
     {
         public static readonly BuildingType AdvancedTech = new BuildingType(0, "atek", "TEXT_STRUCTURE_RA_ATEK", 0, 200, 2, 2, null, "Greece", BuildingTypeFlag.Bib);
         public static readonly BuildingType IronCurtain = new BuildingType(1, "iron", "TEXT_STRUCTURE_RA_IRON", 0, 200, 2, 2, "00 11", "USSR");
-        public static readonly BuildingType Weapon = new BuildingType(2, "weap", "TEXT_STRUCTURE_RA_WEAP", 0, 30, 3, 2, null, "Greece", "weap2", BuildingTypeFlag.Bib);
+        public static readonly BuildingType Weapon = new BuildingType(2, "weap", "TEXT_STRUCTURE_RA_WEAP", 0, 30, 3, 2, null, "Greece", "weap2", null, BuildingTypeFlag.Bib);
         public static readonly BuildingType Chronosphere = new BuildingType(3, "pdox", "TEXT_STRUCTURE_RA_PDOX", 0, 200, 2, 2, null, "Greece");
         public static readonly BuildingType Pillbox = new BuildingType(4, "pbox", "TEXT_STRUCTURE_RA_PBOX", 0, 15, 1, 1, null, "Greece");
         public static readonly BuildingType CamoPillbox = new BuildingType(5, "hbox", "TEXT_STRUCTURE_RA_HBOX", 0, 15, 1, 1, null, "Greece");
@@ -55,11 +55,11 @@ namespace MobiusEditor.RedAlert
         public static readonly BuildingType MissileSilo = new BuildingType(29, "mslo", "TEXT_STRUCTURE_RA_MSLO", 0, 100, 2, 1, null, "Greece", new[] { TheaterTypes.Temperate, TheaterTypes.Snow });
         public static readonly BuildingType ForwardCom = new BuildingType(30, "fcom", "TEXT_STRUCTURE_RA_FCOM", 0, 200, 2, 2, "00 11", "USSR", BuildingTypeFlag.Bib);
         public static readonly BuildingType Tesla = new BuildingType(31, "tsla", "TEXT_STRUCTURE_RA_TSLA", 0, 150, 1, 2, "0 1", "USSR");
-        public static readonly BuildingType FakeWeapon = new BuildingType(32, "weap", "TEXT_STRUCTURE_RA_WEAF", 0, 2, 3, 2, null, "Greece", "weap2", BuildingTypeFlag.Bib | BuildingTypeFlag.Fake);
-        public static readonly BuildingType FakeConst = new BuildingType(33, "fact", "TEXT_STRUCTURE_RA_FACF", 0, 2, 3, 3, null, "Greece", BuildingTypeFlag.Bib | BuildingTypeFlag.Fake);
-        public static readonly BuildingType FakeShipYard = new BuildingType(34, "syrd", "TEXT_STRUCTURE_RA_SYRF", 0, 2, 3, 3, null, "Greece", BuildingTypeFlag.Fake);
-        public static readonly BuildingType FakeSubPen = new BuildingType(35, "spen", "TEXT_STRUCTURE_RA_SPEF", 0, 2, 3, 3, null, "USSR", BuildingTypeFlag.Fake);
-        public static readonly BuildingType FakeCommand = new BuildingType(36, "dome", "TEXT_STRUCTURE_RA_DOMF", 0, 2, 2, 2, null, "Greece", BuildingTypeFlag.Bib | BuildingTypeFlag.Fake);
+        public static readonly BuildingType FakeWeapon = new BuildingType(32, "weaf", "TEXT_STRUCTURE_RA_WEAF", 0, 2, 3, 2, null, "Greece", "weap2", "weap", BuildingTypeFlag.Bib | BuildingTypeFlag.Fake);
+        public static readonly BuildingType FakeConst = new BuildingType(33, "facf", "TEXT_STRUCTURE_RA_FACF", 0, 2, 3, 3, null, "Greece", "fact", BuildingTypeFlag.Bib | BuildingTypeFlag.Fake);
+        public static readonly BuildingType FakeShipYard = new BuildingType(34, "syrf", "TEXT_STRUCTURE_RA_SYRF", 0, 2, 3, 3, null, "Greece", "syrd", BuildingTypeFlag.Fake);
+        public static readonly BuildingType FakeSubPen = new BuildingType(35, "spef", "TEXT_STRUCTURE_RA_SPEF", 0, 2, 3, 3, null, "USSR", "spen", BuildingTypeFlag.Fake);
+        public static readonly BuildingType FakeCommand = new BuildingType(36, "domf", "TEXT_STRUCTURE_RA_DOMF", 0, 2, 2, 2, null, "Greece", "dome", BuildingTypeFlag.Bib | BuildingTypeFlag.Fake);
         public static readonly BuildingType AVMine = new BuildingType(43, "minv", "TEXT_STRUCTURE_RA_MINV", 0, 0, 1, 1, null, "Greece", BuildingTypeFlag.SingleFrame);
         public static readonly BuildingType APMine = new BuildingType(44, "minp", "TEXT_STRUCTURE_RA_MINP", 0, 0, 1, 1, null, "Greece", BuildingTypeFlag.SingleFrame);
         public static readonly BuildingType V01 = new BuildingType(45, "v01", "TEXT_STRUCTURE_TITLE_CIV1", 0, 0, 2, 2, "00 11", "Neutral", new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, BuildingTypeFlag.NoRemap);

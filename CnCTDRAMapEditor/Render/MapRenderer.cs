@@ -523,7 +523,7 @@ namespace MobiusEditor.Render
             // Only fetch if damaged. BuildingType.IsSingleFrame is an override for the RA mines. Everything else works with one simple logic.
             if (isDamaged && !building.Type.IsSingleFrame)
             {
-                maxIcon = Globals.TheTilesetManager.GetTileDataLength(theater.Tilesets, building.Type.Tilename);
+                maxIcon = Globals.TheTilesetManager.GetTileDataLength(theater.Tilesets, building.Type.GraphicsSource);
                 hasCollapseFrame = (gameType == GameType.TiberianDawn || gameType == GameType.SoleSurvivor) && maxIcon > 1 && maxIcon % 2 == 1;
                 damageIconOffs = maxIcon / 2;
                 collapseIcon = maxIcon - 1;
@@ -548,7 +548,7 @@ namespace MobiusEditor.Render
                 }
             }
             TeamColor tc = building.Type.CanRemap ? Globals.TheTeamColorManager[building.House.BuildingTeamColor] : null;
-            if (Globals.TheTilesetManager.GetTeamColorTileData(theater.Tilesets, building.Type.Tilename, icon, tc, out Tile tile))
+            if (Globals.TheTilesetManager.GetTeamColorTileData(theater.Tilesets, building.Type.GraphicsSource, icon, tc, out Tile tile))
             {
                 var location = new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height);
                 var maxSize = new Size(building.Type.Size.Width * tileSize.Width, building.Type.Size.Height * tileSize.Height);
@@ -1380,27 +1380,25 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static void RenderAllBuildingGapRadiuses(Graphics graphics, Map map, Size tileSize, double revealRadius)
+        public static void RenderAllBuildingEffectRadiuses(Graphics graphics, Map map, Size tileSize, double revealRadius)
         {
             foreach (var (topLeft, building) in map.Buildings.OfType<Building>()
                 .Where(b => (b.Occupier.Type.Flag & BuildingTypeFlag.IsGapGenerator) != BuildingTypeFlag.None))
             {
                 TeamColor tc = building.Type.CanRemap ? Globals.TheTeamColorManager[building.House.BuildingTeamColor] : null;
-                Color circleColor = TeamColor.GetTeamColor(tc);
+                Color circleColor = TeamColor.GetTeamColorLazy(tc);
 
                 bool[,] cells = building.Type.BaseOccupyMask;
                 int maskY = cells.GetLength(0);
                 int maskX = cells.GetLength(1);
-                Rectangle circleBounds = GeneralUtils.GetBoxFromCenterCell(topLeft, maskX, maskY, revealRadius, revealRadius, tileSize, out int centerX, out int centerY);
-
+                Rectangle circleBounds = GeneralUtils.GetBoxFromCenterCell(topLeft, maskX, maskY, revealRadius, revealRadius, tileSize, out Point center);
                 Color alphacorr = Color.FromArgb(building.Tint.A * 128 / 256, circleColor);
-                Point center = new Point(centerX, centerY);
                 RenderCircleDiagonals(graphics, tileSize, alphacorr, revealRadius, revealRadius, center);
-                DrawDottedCircle(graphics, circleBounds, tileSize, alphacorr, true, -1.25f, 2.5f);
+                DrawDashesCircle(graphics, circleBounds, tileSize, alphacorr, true, -1.25f, 2.5f);
             }
         }
 
-        public static void RenderAllUnitGapRadiuses(Graphics graphics, Map map, Size tileSize, double jamRadius)
+        public static void RenderAllUnitEffectRadiuses(Graphics graphics, Map map, Size tileSize, int jamRadius)
         {
             foreach (var (topLeft, unit) in map.Technos.OfType<Unit>()
                 .Where(b => (b.Occupier.Type.Flag & (UnitTypeFlag.IsGapGenerator | UnitTypeFlag.IsJammer)) != UnitTypeFlag.None))
@@ -1412,25 +1410,23 @@ namespace MobiusEditor.Render
                     teamColor = unit.House.UnitTeamColor;
                 }
                 TeamColor tc = Globals.TheTeamColorManager[unit.House.UnitTeamColor];
-                Color circleColor = TeamColor.GetTeamColor(tc);
+                Color circleColor = TeamColor.GetTeamColorLazy(tc);
                 Color alphacorr = Color.FromArgb(unit.Tint.A * 128 / 256, circleColor);
                 if ((unit.Type.Flag & UnitTypeFlag.IsJammer) == UnitTypeFlag.IsJammer)
                 {
                     // uses map's Gap Generator range.
-                    Rectangle circleBounds = GeneralUtils.GetBoxFromCenterCell(topLeft, 1, 1, jamRadius, jamRadius, tileSize, out int centerX, out int centerY);
-                    Point center = new Point(centerX, centerY);
+                    Rectangle circleBounds = GeneralUtils.GetBoxFromCenterCell(topLeft, 1, 1, jamRadius, jamRadius, tileSize, out Point center);
                     RenderCircleDiagonals(graphics, tileSize, alphacorr, jamRadius, jamRadius, center);
-                    DrawDottedCircle(graphics, circleBounds, tileSize, alphacorr, true, -1.25f, 2.5f);
+                    DrawDashesCircle(graphics, circleBounds, tileSize, alphacorr, true, -1.25f, 2.5f);
                 }
                 if ((unit.Type.Flag & UnitTypeFlag.IsGapGenerator) == UnitTypeFlag.IsGapGenerator)
                 {
                     // uses specific 5x7 circle around the unit cell
                     int radiusX = 2;
                     int radiusY = 3;
-                    Rectangle circleBounds = GeneralUtils.GetBoxFromCenterCell(topLeft, 1, 1, radiusX, radiusY, tileSize, out int centerX, out int centerY);
-                    Point center = new Point(centerX, centerY);
+                    Rectangle circleBounds = GeneralUtils.GetBoxFromCenterCell(topLeft, 1, 1, radiusX, radiusY, tileSize, out Point center);
                     RenderCircleDiagonals(graphics, tileSize, alphacorr, radiusX, radiusY, center);
-                    DrawDottedCircle(graphics, circleBounds, tileSize, alphacorr, true, -1.25f, 2.5f);
+                    DrawDashesCircle(graphics, circleBounds, tileSize, alphacorr, true, -1.25f, 2.5f);
                 }
             }
         }
@@ -1495,7 +1491,7 @@ namespace MobiusEditor.Render
                     (int)(cellPoint.Y * tileSize.Width - revealRadius * tileSize.Height),
                     (int)(diam * tileSize.Width),
                     (int)(diam * tileSize.Height));
-                DrawDottedCircle(graphics, circleBounds, tileSize, Color.FromArgb(forPreview ? 64 : 128, circleColor), thickborder, 1.25f, 2.5f);
+                DrawDashesCircle(graphics, circleBounds, tileSize, Color.FromArgb(forPreview ? 64 : 128, circleColor), thickborder, 1.25f, 2.5f);
             }
         }
 
@@ -1508,7 +1504,7 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static void DrawDottedCircle(Graphics graphics, Rectangle circleBounds, Size tileSize, Color circleColor, bool thickborder, float startAngle, float drawAngle)
+        public static void DrawDashesCircle(Graphics graphics, Rectangle circleBounds, Size tileSize, Color circleColor, bool thickborder, float startAngle, float drawAngle)
         {
             float penSize = Math.Max(1f, tileSize.Width / (thickborder ? 16.0f : 32.0f));
             using (Pen circlePen = new Pen(circleColor, penSize))

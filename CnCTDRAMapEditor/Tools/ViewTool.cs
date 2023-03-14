@@ -204,12 +204,12 @@ namespace MobiusEditor.Tools
             if ((layersToRender & (MapLayerFlag.Buildings | MapLayerFlag.GapRadius)) == (MapLayerFlag.Buildings | MapLayerFlag.GapRadius)
                 && (manuallyHandledLayers & MapLayerFlag.GapRadius) == MapLayerFlag.None)
             {
-                MapRenderer.RenderAllBuildingGapRadiuses(graphics, map, Globals.MapTileSize, map.GapRadius);
+                MapRenderer.RenderAllBuildingEffectRadiuses(graphics, map, Globals.MapTileSize, map.GapRadius);
             }
             if ((layersToRender & (MapLayerFlag.Units | MapLayerFlag.GapRadius)) == (MapLayerFlag.Units | MapLayerFlag.GapRadius)
                 && (manuallyHandledLayers & MapLayerFlag.GapRadius) == MapLayerFlag.None)
             {
-                MapRenderer.RenderAllUnitGapRadiuses(graphics, map, Globals.MapTileSize, map.RadarJamRadius);
+                MapRenderer.RenderAllUnitEffectRadiuses(graphics, map, Globals.MapTileSize, map.RadarJamRadius);
             }
             if ((layersToRender & (MapLayerFlag.Waypoints | MapLayerFlag.WaypointRadius)) == (MapLayerFlag.Waypoints | MapLayerFlag.WaypointRadius)
                 && (manuallyHandledLayers & MapLayerFlag.WaypointRadius) == MapLayerFlag.None)

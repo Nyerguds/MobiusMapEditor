@@ -282,20 +282,48 @@ namespace MobiusEditor.Utility
             return new Rectangle(offsetX, offsetY, width, height);
         }
 
+        /// <summary>
+        /// Gets the actual bounds box to use on an image, based on a cell number, a size in cells, a cell-based radius to extend
+        /// from the center cell, and the tile size. Note that this calculates a deliberately rounded-down "center cell", as the game
+        /// does it, and then centers the box on that cell, so this does not necessarily match the actual center of the building.
+        /// </summary>
+        /// <param name="cell">The top left cell of the object</param>
+        /// <param name="cellsWide">How wide the object is, in cells. Should be at least 1.</param>
+        /// <param name="cellsHigh">How high the object is, in cells. Should be at least 1.</param>
+        /// <param name="radiusX">Cell radius in X-direction from the center of the object.</param>
+        /// <param name="radiusY">Cell radius in Y-direction from the center of the object.</param>
+        /// <param name="tileSize">Tile size to translate cells to actual dimensions.</param>
+        /// <returns>Bounds for the radius around the object.</returns>
         public static Rectangle GetBoxFromCenterCell(Point cell, int cellsWide, int cellsHigh, double radiusX, double radiusY, Size tileSize)
         {
-            return GetBoxFromCenterCell(cell, cellsWide, cellsHigh, radiusX, radiusY, tileSize, out _, out _);
+            return GetBoxFromCenterCell(cell, cellsWide, cellsHigh, radiusX, radiusY, tileSize, out _);
         }
 
-        public static Rectangle GetBoxFromCenterCell(Point cell, int cellsWide, int cellsHigh, double radiusX, double radiusY, Size tileSize, out int centerX, out int centerY)
+        /// <summary>
+        /// Gets the actual bounds box to use on an image, based on a cell number, a size in cells, a cell-based radius to extend
+        /// from the center cell, and the tile size. Note that this calculates a deliberately rounded-down "center cell", as the game
+        /// does it, and then centers the box on that cell, so this does not necessarily match the actual center of the building.
+        /// </summary>
+        /// <param name="cell">The top left cell of the object</param>
+        /// <param name="cellsWide">How wide the object is, in cells. Should be at least 1.</param>
+        /// <param name="cellsHigh">How high the object is, in cells. Should be at least 1.</param>
+        /// <param name="radiusX">Cell radius in X-direction from the center of the object.</param>
+        /// <param name="radiusY">Cell radius in Y-direction from the center of the object.</param>
+        /// <param name="tileSize">Tile size to translate cells to actual dimensions.</param>
+        /// <param name="center">Output parameter giving the center coordinates.</param>
+        /// <returns>Bounds for the radius around the object.</returns>
+        public static Rectangle GetBoxFromCenterCell(Point cell, int cellsWide, int cellsHigh, double radiusX, double radiusY, Size tileSize, out Point center)
         {
-            int diamX = (int)((radiusX * 2 + 1) * tileSize.Width);
-            int radX = diamX / 2;
-            int diamY = (int)((radiusY * 2 + 1) * tileSize.Height);
-            int radY = diamY / 2;
-            centerX = (cell.X + (cellsWide - 1) / 2) * tileSize.Width + tileSize.Width / 2;
-            centerY = (cell.Y + (cellsHigh - 1) / 2) * tileSize.Height + tileSize.Height / 2;
-            return new Rectangle(centerX - radX, centerY - radY, diamX, diamY);
+            cellsWide = Math.Max(1, Math.Abs(cellsWide));
+            cellsHigh = Math.Max(1, Math.Abs(cellsHigh));
+            int realDiamX = (int)((radiusX * 2 + 1) * tileSize.Width);
+            int realRadX = realDiamX / 2;
+            int realDiamY = (int)((radiusY * 2 + 1) * tileSize.Height);
+            int realRadY = realDiamY / 2;
+            int centerX = (cell.X + (cellsWide - 1) / 2) * tileSize.Width + tileSize.Width / 2;
+            int centerY = (cell.Y + (cellsHigh - 1) / 2) * tileSize.Height + tileSize.Height / 2;
+            center = new Point(centerX, centerY);
+            return new Rectangle(centerX - realRadX, centerY - realRadY, realDiamX, realDiamY);
         }
 
         /// <summary>

@@ -21,7 +21,7 @@ namespace MobiusEditor.TiberianDawn
 {
     public static class BuildingTypes
     {
-        public static readonly BuildingType Weapon = new BuildingType(0, "weap", "TEXT_STRUCTURE_TITLE_GDI_WEAPONS_FACTORY", 0, 30, 3, 3, "000 111 111", "Goodguy", "weap2", BuildingTypeFlag.Bib);
+        public static readonly BuildingType Weapon = new BuildingType(0, "weap", "TEXT_STRUCTURE_TITLE_GDI_WEAPONS_FACTORY", 0, 30, 3, 3, "000 111 111", "Goodguy", "weap2", null, BuildingTypeFlag.Bib);
         public static readonly BuildingType GTower = new BuildingType(1, "gtwr", "TEXT_STRUCTURE_TITLE_GDI_GUARD_TOWER", 0, 10, 1, 1, null, "Goodguy");
         public static readonly BuildingType ATower = new BuildingType(2, "atwr", "TEXT_STRUCTURE_TITLE_GDI_ADV_GUARD_TOWER", 0, 20, 1, 2, "0 1", "Goodguy");
         public static readonly BuildingType Obelisk = new BuildingType(3, "obli", "TEXT_STRUCTURE_TITLE_NOD_OBELISK", 0, 150, 1, 2, "0 1", "Badguy");

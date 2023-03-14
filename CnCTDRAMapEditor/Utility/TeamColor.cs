@@ -23,6 +23,7 @@ namespace MobiusEditor.Utility
 {
     public class TeamColor
     {
+        private static readonly Color RemapBaseColor = Color.FromArgb(0x00, 0xFF, 0x00);
         private readonly TeamColorManager teamColorManager;
 
         public string Variant { get; private set; }
@@ -61,6 +62,17 @@ namespace MobiusEditor.Utility
 
         private Color? radarMapColor;
         public Color RadarMapColor => radarMapColor.HasValue ? radarMapColor.Value : ((Variant != null) ? teamColorManager[Variant].RadarMapColor : default);
+
+        private Color? baseColor;
+        public Color BaseColor
+        {
+            get
+            {
+                if (!baseColor.HasValue)
+                    baseColor = GetTeamColor(this);
+                return baseColor.Value;
+            }
+        }
 
         public TeamColor(TeamColorManager teamColorManager)
         {
@@ -221,15 +233,24 @@ namespace MobiusEditor.Utility
             this.radarMapColor = this.RadarMapColor;
         }
 
+        public static Color GetTeamColorLazy(TeamColor tc)
+        {
+            if (tc == null)
+            {
+                return RemapBaseColor;
+            }
+            return tc.BaseColor;
+        }
+
         public static Color GetTeamColor(TeamColor tc)
         {
             // Makes a 1x1 green pixel image, and applies the recolor operation to it.
             using (Bitmap bitmap = new Bitmap(1, 1, PixelFormat.Format32bppArgb))
             {
-                bitmap.SetPixel(0, 0, Color.FromArgb(0x00,0xFF, 0x00));
+                bitmap.SetPixel(0, 0, RemapBaseColor);
                 if (tc != null)
                 {
-                    tc.ApplyToImage(bitmap, out _);
+                    tc.ApplyToImage(bitmap);
                 }
                 return bitmap.GetPixel(0, 0);
             }
