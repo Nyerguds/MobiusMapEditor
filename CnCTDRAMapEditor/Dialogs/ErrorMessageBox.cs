@@ -55,7 +55,7 @@ namespace MobiusEditor.Dialogs
             if (!showCancel)
             {
                 // Enables "esc" for closing the form.
-                this.CancelButton = btnOK;
+                this.CancelButton = btnOk;
             }
         }
 

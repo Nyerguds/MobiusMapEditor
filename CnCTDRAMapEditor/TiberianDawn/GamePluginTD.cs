@@ -2955,35 +2955,29 @@ namespace MobiusEditor.TiberianDawn
             bool delUExists = false;
             bool delVExists = false;
             bool delWExists = false;
+            bool xxxxExists = false;
+            bool yyyyExists = false;
+            bool zzzzExists = false;
+            bool uuuuExists = false;
+            bool vvvvExists = false;
+            bool wwwwExists = false;
             foreach (var trigger in triggers)
             {
                 String actionType = trigger.Action1.ActionType;
-                if (actionType == ActionTypes.ACTION_DESTROY_XXXX)
-                {
-                    delXExists = true;
-                }
-                if (actionType == ActionTypes.ACTION_DESTROY_YYYY)
-                {
-                    delYExists = true;
-                }
-                if (actionType == ActionTypes.ACTION_DESTROY_ZZZZ)
-                {
-                    delZExists = true;
-                }
+                if (String.Equals(trigger.Name, "XXXX", StringComparison.OrdinalIgnoreCase)) xxxxExists = true;
+                if (String.Equals(trigger.Name, "YYYY", StringComparison.OrdinalIgnoreCase)) yyyyExists = true;
+                if (String.Equals(trigger.Name, "ZZZZ", StringComparison.OrdinalIgnoreCase)) zzzzExists = true;
+                if (actionType == ActionTypes.ACTION_DESTROY_XXXX) delXExists = true;
+                if (actionType == ActionTypes.ACTION_DESTROY_YYYY) delYExists = true;
+                if (actionType == ActionTypes.ACTION_DESTROY_ZZZZ) delZExists = true;                
                 if (!Globals.Ignore106Scripting)
                 {
-                    if (actionType == ActionTypes.ACTION_DESTROY_UUUU)
-                    {
-                        delUExists = true;
-                    }
-                    if (actionType == ActionTypes.ACTION_DESTROY_VVVV)
-                    {
-                        delVExists = true;
-                    }
-                    if (actionType == ActionTypes.ACTION_DESTROY_WWWW)
-                    {
-                        delWExists = true;
-                    }
+                    if (String.Equals(trigger.Name, "UUUU", StringComparison.OrdinalIgnoreCase)) uuuuExists = true;
+                    if (String.Equals(trigger.Name, "VVVV", StringComparison.OrdinalIgnoreCase)) vvvvExists = true;
+                    if (String.Equals(trigger.Name, "WWWW", StringComparison.OrdinalIgnoreCase)) wwwwExists = true;
+                    if (actionType == ActionTypes.ACTION_DESTROY_UUUU) delUExists = true;
+                    if (actionType == ActionTypes.ACTION_DESTROY_VVVV) delVExists = true;
+                    if (actionType == ActionTypes.ACTION_DESTROY_WWWW) delWExists = true;
                 }
             }
             foreach (var trigger in triggers)
@@ -3119,17 +3113,32 @@ namespace MobiusEditor.TiberianDawn
                     }
                 }
                 //*/
-                if (!fatalOnly && action1 == ActionTypes.ACTION_DESTROY_XXXX && !triggers.Any(t => "XXXX".Equals(t.Name, StringComparison.InvariantCultureIgnoreCase)))
+                if (!fatalOnly && action1 == ActionTypes.ACTION_DESTROY_XXXX && !xxxxExists)
                 {
                     curErrors.Add(prefix + "There is no trigger called 'XXXX' to destroy.");
                 }
-                if (!fatalOnly && action1 == ActionTypes.ACTION_DESTROY_YYYY && !triggers.Any(t => "YYYY".Equals(t.Name, StringComparison.InvariantCultureIgnoreCase)))
+                if (!fatalOnly && action1 == ActionTypes.ACTION_DESTROY_YYYY && !yyyyExists)
                 {
                     curErrors.Add(prefix + "There is no trigger called 'YYYY' to destroy.");
                 }
-                if (!fatalOnly && action1 == ActionTypes.ACTION_DESTROY_ZZZZ && !triggers.Any(t => "ZZZZ".Equals(t.Name, StringComparison.InvariantCultureIgnoreCase)))
+                if (!fatalOnly && action1 == ActionTypes.ACTION_DESTROY_ZZZZ && !zzzzExists)
                 {
                     curErrors.Add(prefix + "There is no trigger called 'ZZZZ' to destroy.");
+                }
+                if (!Globals.Ignore106Scripting)
+                {
+                    if (!fatalOnly && action1 == ActionTypes.ACTION_DESTROY_UUUU && !uuuuExists)
+                    {
+                        curErrors.Add(prefix + "There is no trigger called 'UUUU' to destroy.");
+                    }
+                    if (!fatalOnly && action1 == ActionTypes.ACTION_DESTROY_VVVV && !vvvvExists)
+                    {
+                        curErrors.Add(prefix + "There is no trigger called 'VVVV' to destroy.");
+                    }
+                    if (!fatalOnly && action1 == ActionTypes.ACTION_DESTROY_WWWW && !wwwwExists)
+                    {
+                        curErrors.Add(prefix + "There is no trigger called 'WWWW' to destroy.");
+                    }
                 }
                 if (curErrors.Count > 0)
                 {
