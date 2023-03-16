@@ -127,6 +127,28 @@ namespace MobiusEditor.Controls
             }
         }
 
+        public void JumpToPosition(CellMetrics metrics, Rectangle position)
+        {
+            JumpToPosition(metrics, position.Location, position.Width, position.Height);
+        }
+
+        public void JumpToPosition(CellMetrics metrics, Point cellPoint, int cellsWidth, int cellsHeight)
+        {
+            int scaleFull = Math.Min(this.ClientRectangle.Width, this.ClientRectangle.Height);
+            bool isWidth = scaleFull == this.ClientRectangle.Width;
+            double mapSize = isWidth ? metrics.Width : metrics.Height;
+            // pixels per tile at zoom level 1.
+            // Technically can't handle non-square cells, but, if anyone messes with that they have more problems than this function.
+            double basicTileSize = scaleFull / mapSize;
+            // Convert cell position to actual position on image.
+            int cellX = (int)Math.Round(basicTileSize * this.Zoom * (cellPoint.X + (cellsWidth / 2.0d)));
+            int cellY = (int)Math.Round(basicTileSize * this.Zoom * (cellPoint.Y + (cellsHeight / 2.0d)));
+            // Get location to use to center the waypoint on the screen.
+            int x = cellX - this.ClientRectangle.Width / 2;
+            int y = cellY - this.ClientRectangle.Height / 2;
+            this.AutoScrollPosition = new Point(x, y);
+        }
+
         public void IncreaseZoomStep()
         {
             AdjustZoom(zoom + (zoom * zoomStep), false);

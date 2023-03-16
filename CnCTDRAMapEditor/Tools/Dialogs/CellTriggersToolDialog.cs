@@ -29,6 +29,7 @@ namespace MobiusEditor.Tools.Dialogs
     {
         private Bitmap infoImage;
         public ComboBox TriggerCombo => triggerComboBox;
+        public Button BtnJumpTo => btnJumpTo;
 
         public CellTriggersToolDialog(Form parentForm)
             : base(parentForm)
@@ -45,7 +46,7 @@ namespace MobiusEditor.Tools.Dialogs
 
         protected override void InitializeInternal(MapPanel mapPanel, MapLayerFlag activeLayers, ToolStripStatusLabel toolStatusLabel, ToolTip mouseToolTip, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> undoRedoList)
         {
-            Tool = new CellTriggersTool(mapPanel, activeLayers, toolStatusLabel, TriggerCombo, plugin, undoRedoList);
+            Tool = new CellTriggersTool(mapPanel, activeLayers, toolStatusLabel, TriggerCombo, BtnJumpTo, plugin, undoRedoList);
         }
 
         private void LblTriggerInfo_MouseEnter(Object sender, EventArgs e)

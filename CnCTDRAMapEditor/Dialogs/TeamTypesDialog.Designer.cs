@@ -48,13 +48,11 @@ namespace MobiusEditor.Dialogs
             this.lblTeams = new System.Windows.Forms.Label();
             this.btnAddTeam = new System.Windows.Forms.Button();
             this.pnlTeamsScroll = new System.Windows.Forms.Panel();
-            this.tilTeams = new MobiusEditor.Controls.TeamItemsList();
             this.pnlOrders = new System.Windows.Forms.Panel();
             this.lblLine2 = new System.Windows.Forms.Label();
             this.lblOrders = new System.Windows.Forms.Label();
             this.btnAddMission = new System.Windows.Forms.Button();
             this.pnlMissionsScroll = new System.Windows.Forms.Panel();
-            this.milMissions = new MobiusEditor.Controls.MissionItemsList();
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
             this.lblHouse = new System.Windows.Forms.Label();
             this.cmbHouse = new System.Windows.Forms.ComboBox();
@@ -68,15 +66,11 @@ namespace MobiusEditor.Dialogs
             this.lblInitNum = new System.Windows.Forms.Label();
             this.lblMaxAllowed = new System.Windows.Forms.Label();
             this.lblFear = new System.Windows.Forms.Label();
-            this.nudInitNum = new MobiusEditor.Controls.EnhNumericUpDown();
-            this.maxAllowedNud = new MobiusEditor.Controls.EnhNumericUpDown();
-            this.nudFear = new MobiusEditor.Controls.EnhNumericUpDown();
             this.lblWaypoint = new System.Windows.Forms.Label();
             this.lblTrigger = new System.Windows.Forms.Label();
             this.cmbWaypoint = new System.Windows.Forms.ComboBox();
             this.cmbTrigger = new System.Windows.Forms.ComboBox();
             this.lblPriority = new System.Windows.Forms.Label();
-            this.nudRecruitPriority = new MobiusEditor.Controls.EnhNumericUpDown();
             this.lblTriggerInfo = new System.Windows.Forms.Label();
             this.teamTypesListView = new System.Windows.Forms.ListView();
             this.nameColumnHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -87,6 +81,12 @@ namespace MobiusEditor.Dialogs
             this.tsmiCloneTeamType = new System.Windows.Forms.ToolStripMenuItem();
             this.tsmiRemoveTeamType = new System.Windows.Forms.ToolStripMenuItem();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.tilTeams = new MobiusEditor.Controls.TeamItemsList();
+            this.milMissions = new MobiusEditor.Controls.MissionItemsList();
+            this.nudInitNum = new MobiusEditor.Controls.EnhNumericUpDown();
+            this.maxAllowedNud = new MobiusEditor.Controls.EnhNumericUpDown();
+            this.nudFear = new MobiusEditor.Controls.EnhNumericUpDown();
+            this.nudRecruitPriority = new MobiusEditor.Controls.EnhNumericUpDown();
             this.tableLayoutPanel1.SuspendLayout();
             this.panel1.SuspendLayout();
             this.flowLayoutPanel2.SuspendLayout();
@@ -98,11 +98,11 @@ namespace MobiusEditor.Dialogs
             this.pnlOrders.SuspendLayout();
             this.pnlMissionsScroll.SuspendLayout();
             this.tableLayoutPanel2.SuspendLayout();
+            this.teamTypesContextMenuStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.nudInitNum)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.maxAllowedNud)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudFear)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudRecruitPriority)).BeginInit();
-            this.teamTypesContextMenuStrip.SuspendLayout();
             this.SuspendLayout();
             // 
             // tableLayoutPanel1
@@ -295,16 +295,6 @@ namespace MobiusEditor.Dialogs
             this.pnlTeamsScroll.Size = new System.Drawing.Size(201, 319);
             this.pnlTeamsScroll.TabIndex = 1;
             // 
-            // tilTeams
-            // 
-            this.tilTeams.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.tilTeams.Location = new System.Drawing.Point(0, 0);
-            this.tilTeams.Margin = new System.Windows.Forms.Padding(0);
-            this.tilTeams.Name = "tilTeams";
-            this.tilTeams.Size = new System.Drawing.Size(201, 150);
-            this.tilTeams.TabIndex = 1;
-            // 
             // pnlOrders
             // 
             this.pnlOrders.Controls.Add(this.lblLine2);
@@ -362,16 +352,6 @@ namespace MobiusEditor.Dialogs
             this.pnlMissionsScroll.Name = "pnlMissionsScroll";
             this.pnlMissionsScroll.Size = new System.Drawing.Size(251, 321);
             this.pnlMissionsScroll.TabIndex = 0;
-            // 
-            // milMissions
-            // 
-            this.milMissions.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.milMissions.Location = new System.Drawing.Point(0, 0);
-            this.milMissions.Margin = new System.Windows.Forms.Padding(0);
-            this.milMissions.Name = "milMissions";
-            this.milMissions.Size = new System.Drawing.Size(251, 150);
-            this.milMissions.TabIndex = 1;
             // 
             // tableLayoutPanel2
             // 
@@ -592,78 +572,6 @@ namespace MobiusEditor.Dialogs
             this.lblFear.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.toolTip1.SetToolTip(this.lblFear, "Fear level of this team. No known effect.");
             // 
-            // nudInitNum
-            // 
-            this.tableLayoutPanel2.SetColumnSpan(this.nudInitNum, 2);
-            this.nudInitNum.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.nudInitNum.EnteredValue = new decimal(new int[] {
-            0,
-            0,
-            0,
-            0});
-            this.nudInitNum.IntValue = 0;
-            this.nudInitNum.Location = new System.Drawing.Point(85, 198);
-            this.nudInitNum.Margin = new System.Windows.Forms.Padding(2);
-            this.nudInitNum.Maximum = new decimal(new int[] {
-            255,
-            0,
-            0,
-            0});
-            this.nudInitNum.Name = "nudInitNum";
-            this.nudInitNum.SelectedText = "";
-            this.nudInitNum.SelectionLength = 0;
-            this.nudInitNum.SelectionStart = 0;
-            this.nudInitNum.Size = new System.Drawing.Size(113, 20);
-            this.nudInitNum.TabIndex = 19;
-            // 
-            // maxAllowedNud
-            // 
-            this.tableLayoutPanel2.SetColumnSpan(this.maxAllowedNud, 2);
-            this.maxAllowedNud.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.maxAllowedNud.EnteredValue = new decimal(new int[] {
-            0,
-            0,
-            0,
-            0});
-            this.maxAllowedNud.IntValue = 0;
-            this.maxAllowedNud.Location = new System.Drawing.Point(85, 222);
-            this.maxAllowedNud.Margin = new System.Windows.Forms.Padding(2);
-            this.maxAllowedNud.Maximum = new decimal(new int[] {
-            255,
-            0,
-            0,
-            0});
-            this.maxAllowedNud.Name = "maxAllowedNud";
-            this.maxAllowedNud.SelectedText = "";
-            this.maxAllowedNud.SelectionLength = 0;
-            this.maxAllowedNud.SelectionStart = 0;
-            this.maxAllowedNud.Size = new System.Drawing.Size(113, 20);
-            this.maxAllowedNud.TabIndex = 20;
-            // 
-            // nudFear
-            // 
-            this.tableLayoutPanel2.SetColumnSpan(this.nudFear, 2);
-            this.nudFear.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.nudFear.EnteredValue = new decimal(new int[] {
-            0,
-            0,
-            0,
-            0});
-            this.nudFear.IntValue = 0;
-            this.nudFear.Location = new System.Drawing.Point(85, 246);
-            this.nudFear.Margin = new System.Windows.Forms.Padding(2);
-            this.nudFear.Maximum = new decimal(new int[] {
-            255,
-            0,
-            0,
-            0});
-            this.nudFear.Name = "nudFear";
-            this.nudFear.SelectedText = "";
-            this.nudFear.SelectionLength = 0;
-            this.nudFear.SelectionStart = 0;
-            this.nudFear.Size = new System.Drawing.Size(113, 20);
-            this.nudFear.TabIndex = 21;
-            // 
             // lblWaypoint
             // 
             this.lblWaypoint.AutoSize = true;
@@ -723,35 +631,6 @@ namespace MobiusEditor.Dialogs
             this.lblPriority.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.toolTip1.SetToolTip(this.lblPriority, "Priority given the team for recruiting purposes; higher\r\npriority means it can st" +
         "eal members from other teams.");
-            // 
-            // nudRecruitPriority
-            // 
-            this.tableLayoutPanel2.SetColumnSpan(this.nudRecruitPriority, 2);
-            this.nudRecruitPriority.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.nudRecruitPriority.EnteredValue = new decimal(new int[] {
-            0,
-            0,
-            0,
-            0});
-            this.nudRecruitPriority.IntValue = 0;
-            this.nudRecruitPriority.Location = new System.Drawing.Point(85, 174);
-            this.nudRecruitPriority.Margin = new System.Windows.Forms.Padding(2);
-            this.nudRecruitPriority.Maximum = new decimal(new int[] {
-            2147483647,
-            0,
-            0,
-            0});
-            this.nudRecruitPriority.Minimum = new decimal(new int[] {
-            -2147483648,
-            0,
-            0,
-            -2147483648});
-            this.nudRecruitPriority.Name = "nudRecruitPriority";
-            this.nudRecruitPriority.SelectedText = "";
-            this.nudRecruitPriority.SelectionLength = 0;
-            this.nudRecruitPriority.SelectionStart = 0;
-            this.nudRecruitPriority.Size = new System.Drawing.Size(113, 20);
-            this.nudRecruitPriority.TabIndex = 18;
             // 
             // lblTriggerInfo
             // 
@@ -839,6 +718,127 @@ namespace MobiusEditor.Dialogs
             this.tsmiRemoveTeamType.Text = "&Remove Team Type (Del)";
             this.tsmiRemoveTeamType.Click += new System.EventHandler(this.TsmiRemoveTeamType_Click);
             // 
+            // tilTeams
+            // 
+            this.tilTeams.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.tilTeams.Location = new System.Drawing.Point(0, 0);
+            this.tilTeams.Margin = new System.Windows.Forms.Padding(0);
+            this.tilTeams.Name = "tilTeams";
+            this.tilTeams.Size = new System.Drawing.Size(201, 150);
+            this.tilTeams.TabIndex = 1;
+            // 
+            // milMissions
+            // 
+            this.milMissions.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.milMissions.Location = new System.Drawing.Point(0, 0);
+            this.milMissions.Margin = new System.Windows.Forms.Padding(0);
+            this.milMissions.Name = "milMissions";
+            this.milMissions.Size = new System.Drawing.Size(251, 150);
+            this.milMissions.TabIndex = 1;
+            // 
+            // nudInitNum
+            // 
+            this.tableLayoutPanel2.SetColumnSpan(this.nudInitNum, 2);
+            this.nudInitNum.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.nudInitNum.EnteredValue = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
+            this.nudInitNum.IntValue = 0;
+            this.nudInitNum.Location = new System.Drawing.Point(85, 198);
+            this.nudInitNum.Margin = new System.Windows.Forms.Padding(2);
+            this.nudInitNum.Maximum = new decimal(new int[] {
+            255,
+            0,
+            0,
+            0});
+            this.nudInitNum.Name = "nudInitNum";
+            this.nudInitNum.SelectedText = "";
+            this.nudInitNum.SelectionLength = 0;
+            this.nudInitNum.SelectionStart = 0;
+            this.nudInitNum.Size = new System.Drawing.Size(113, 20);
+            this.nudInitNum.TabIndex = 19;
+            // 
+            // maxAllowedNud
+            // 
+            this.tableLayoutPanel2.SetColumnSpan(this.maxAllowedNud, 2);
+            this.maxAllowedNud.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.maxAllowedNud.EnteredValue = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
+            this.maxAllowedNud.IntValue = 0;
+            this.maxAllowedNud.Location = new System.Drawing.Point(85, 222);
+            this.maxAllowedNud.Margin = new System.Windows.Forms.Padding(2);
+            this.maxAllowedNud.Maximum = new decimal(new int[] {
+            255,
+            0,
+            0,
+            0});
+            this.maxAllowedNud.Name = "maxAllowedNud";
+            this.maxAllowedNud.SelectedText = "";
+            this.maxAllowedNud.SelectionLength = 0;
+            this.maxAllowedNud.SelectionStart = 0;
+            this.maxAllowedNud.Size = new System.Drawing.Size(113, 20);
+            this.maxAllowedNud.TabIndex = 20;
+            // 
+            // nudFear
+            // 
+            this.tableLayoutPanel2.SetColumnSpan(this.nudFear, 2);
+            this.nudFear.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.nudFear.EnteredValue = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
+            this.nudFear.IntValue = 0;
+            this.nudFear.Location = new System.Drawing.Point(85, 246);
+            this.nudFear.Margin = new System.Windows.Forms.Padding(2);
+            this.nudFear.Maximum = new decimal(new int[] {
+            255,
+            0,
+            0,
+            0});
+            this.nudFear.Name = "nudFear";
+            this.nudFear.SelectedText = "";
+            this.nudFear.SelectionLength = 0;
+            this.nudFear.SelectionStart = 0;
+            this.nudFear.Size = new System.Drawing.Size(113, 20);
+            this.nudFear.TabIndex = 21;
+            // 
+            // nudRecruitPriority
+            // 
+            this.tableLayoutPanel2.SetColumnSpan(this.nudRecruitPriority, 2);
+            this.nudRecruitPriority.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.nudRecruitPriority.EnteredValue = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
+            this.nudRecruitPriority.IntValue = 0;
+            this.nudRecruitPriority.Location = new System.Drawing.Point(85, 174);
+            this.nudRecruitPriority.Margin = new System.Windows.Forms.Padding(2);
+            this.nudRecruitPriority.Maximum = new decimal(new int[] {
+            2147483647,
+            0,
+            0,
+            0});
+            this.nudRecruitPriority.Minimum = new decimal(new int[] {
+            -2147483648,
+            0,
+            0,
+            -2147483648});
+            this.nudRecruitPriority.Name = "nudRecruitPriority";
+            this.nudRecruitPriority.SelectedText = "";
+            this.nudRecruitPriority.SelectionLength = 0;
+            this.nudRecruitPriority.SelectionStart = 0;
+            this.nudRecruitPriority.Size = new System.Drawing.Size(113, 20);
+            this.nudRecruitPriority.TabIndex = 18;
+            // 
             // TeamTypesDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -878,11 +878,11 @@ namespace MobiusEditor.Dialogs
             this.pnlMissionsScroll.ResumeLayout(false);
             this.tableLayoutPanel2.ResumeLayout(false);
             this.tableLayoutPanel2.PerformLayout();
+            this.teamTypesContextMenuStrip.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.nudInitNum)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.maxAllowedNud)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudFear)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudRecruitPriority)).EndInit();
-            this.teamTypesContextMenuStrip.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }

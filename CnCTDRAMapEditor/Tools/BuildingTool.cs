@@ -41,7 +41,7 @@ namespace MobiusEditor.Tools
         /// Layers that are not painted by the PostRenderMap function on ViewTool level because they are handled
         /// at a specific point in the PostRenderMap override by the implementing tool.
         /// </summary>
-        protected override MapLayerFlag ManuallyHandledLayers => MapLayerFlag.TechnoTriggers | MapLayerFlag.BuildingRebuild | MapLayerFlag.BuildingFakes | MapLayerFlag.GapRadius;
+        protected override MapLayerFlag ManuallyHandledLayers => MapLayerFlag.TechnoTriggers | MapLayerFlag.BuildingRebuild | MapLayerFlag.BuildingFakes | MapLayerFlag.EffectRadius;
 
         private bool placementMode;
 
@@ -127,6 +127,7 @@ namespace MobiusEditor.Tools
                     selectedObjectProperties = new ObjectPropertiesPopup(objectProperties.Plugin, building);
                     selectedObjectProperties.Closed += (cs, ce) =>
                     {
+                        selectedObjectProperties = null;
                         navigationWidget.Refresh();
                         AddPropertiesUndoRedo(building, preEdit);
                     };
@@ -782,16 +783,40 @@ namespace MobiusEditor.Tools
         {
             base.PostRenderMap(graphics);
             // Since we manually handle GapRadius painting, need to do the Units ones too.
-            if ((Layers & (MapLayerFlag.Units | MapLayerFlag.GapRadius)) == (MapLayerFlag.Units | MapLayerFlag.GapRadius))
+            if ((Layers & (MapLayerFlag.Units | MapLayerFlag.EffectRadius)) == (MapLayerFlag.Units | MapLayerFlag.EffectRadius))
             {
                 MapRenderer.RenderAllUnitEffectRadiuses(graphics, previewMap, Globals.MapTileSize, map.RadarJamRadius);
             }
             MapRenderer.RenderAllOccupierBounds(graphics, Globals.MapTileSize, previewMap.Buildings.OfType<Building>());
             if ((Layers & MapLayerFlag.Buildings) == MapLayerFlag.Buildings)
             {
-                if ((Layers & MapLayerFlag.GapRadius) == MapLayerFlag.GapRadius)
+                if ((Layers & MapLayerFlag.EffectRadius) == MapLayerFlag.EffectRadius)
                 {
                     MapRenderer.RenderAllBuildingEffectRadiuses(graphics, previewMap, Globals.MapTileSize, map.GapRadius);
+                }
+                else if (placementMode)
+                {
+                    (Point p, Building b) = previewMap.Technos.OfType<Building>().Where(t => t.Occupier.Tint.A != 255).FirstOrDefault();
+                    if (b != null)
+                    {
+                        MapRenderer.RenderBuildingEffectRadius(graphics, Globals.MapTileSize, map.GapRadius, b, p);
+                    }
+                }
+                else if (selectedBuilding != null && selectedBuildingLocation.HasValue)
+                {
+                    Point? loc = map.Buildings[selectedBuilding];
+                    if (loc.HasValue)
+                    {
+                        MapRenderer.RenderBuildingEffectRadius(graphics, Globals.MapTileSize, map.GapRadius, selectedBuilding, loc.Value);
+                    }
+                }
+                else if (selectedObjectProperties?.ObjectProperties?.Object is Building bl)
+                {
+                    Point? loc = map.Buildings[bl];
+                    if (loc.HasValue)
+                    {
+                        MapRenderer.RenderBuildingEffectRadius(graphics, Globals.MapTileSize, map.GapRadius, bl, loc.Value);
+                    }
                 }
                 if ((Layers & MapLayerFlag.BuildingFakes) == MapLayerFlag.BuildingFakes)
                 {
@@ -804,13 +829,14 @@ namespace MobiusEditor.Tools
                 if ((Layers & MapLayerFlag.TechnoTriggers) == MapLayerFlag.TechnoTriggers)
                 {
                     MapRenderer.RenderAllTechnoTriggers(graphics, previewMap, Globals.MapTileSize, Globals.MapTileScale, Layers);
-                }             
+                }
             }
         }
 
         public override void Activate()
         {
             base.Activate();
+            this.Deactivate(true);
             this.mapPanel.MouseDown += MapPanel_MouseDown;
             this.mapPanel.MouseUp += MapPanel_MouseUp;
             this.mapPanel.MouseDoubleClick += MapPanel_MouseDoubleClick;
@@ -819,20 +845,29 @@ namespace MobiusEditor.Tools
             (this.mapPanel as Control).KeyDown += BuildingTool_KeyDown;
             (this.mapPanel as Control).KeyUp += BuildingTool_KeyUp;
             this.navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
-            UpdateStatus();
+            this.UpdateStatus();
         }
+
         public override void Deactivate()
         {
-            ExitPlacementMode();
-            base.Deactivate();
-            mapPanel.MouseDown -= MapPanel_MouseDown;
-            mapPanel.MouseUp -= MapPanel_MouseUp;
-            mapPanel.MouseDoubleClick -= MapPanel_MouseDoubleClick;
-            mapPanel.MouseMove -= MapPanel_MouseMove;
-            mapPanel.MouseLeave -= MapPanel_MouseLeave;
-            (mapPanel as Control).KeyDown -= BuildingTool_KeyDown;
-            (mapPanel as Control).KeyUp -= BuildingTool_KeyUp;
-            navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;
+            this.Deactivate(false);
+        }
+
+        public void Deactivate(bool forActivate)
+        {
+            if (!forActivate)
+            {
+                this.ExitPlacementMode();
+                base.Deactivate();
+            }
+            this.mapPanel.MouseDown -= MapPanel_MouseDown;
+            this.mapPanel.MouseUp -= MapPanel_MouseUp;
+            this.mapPanel.MouseDoubleClick -= MapPanel_MouseDoubleClick;
+            this.mapPanel.MouseMove -= MapPanel_MouseMove;
+            this.mapPanel.MouseLeave -= MapPanel_MouseLeave;
+            (this.mapPanel as Control).KeyDown -= BuildingTool_KeyDown;
+            (this.mapPanel as Control).KeyUp -= BuildingTool_KeyUp;
+            this.navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;
         }
 
         #region IDisposable Support
@@ -844,8 +879,10 @@ namespace MobiusEditor.Tools
             {
                 if (disposing)
                 {
-                    Deactivate();
+                    selectedObjectProperties?.Close();
+                    selectedObjectProperties = null;
                     buildingTypesBox.SelectedIndexChanged -= BuildingTypeComboBox_SelectedIndexChanged;
+                    Deactivate();
                 }
                 disposedValue = true;
             }

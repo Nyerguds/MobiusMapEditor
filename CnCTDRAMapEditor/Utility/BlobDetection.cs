@@ -137,6 +137,57 @@ namespace MobiusEditor.Utility
         /// <param name="data">Image data array. It is processed as one pixel per coordinate.</param>
         /// <param name="width">Image width.</param>
         /// <param name="height">Image height.</param>
+        /// <param name="toCheck">List of points to check.</param>
+        /// <param name="clearsThreshold">Function to check if the pixel at the given coordinates clears the threshold. Should be of the format (imgData, yVal, xVal) => Boolean.</param>
+        /// <param name="allEightEdges">When scanning for pixels to add to the blob, scan all eight surrounding pixels rather than just top, left, bottom, right.</param>
+        /// <param name="getEdgesOnly">True to make the lists in 'blobs' only contain the edge points of the blobs. The 'inBlobs' items will still have all points marked.</param>
+        public static List<List<Point>> FindBlobs<T>(T data, Int32 width, Int32 height, Point[] toCheck, Func<T, Int32, Int32, Boolean> clearsThreshold, Boolean allEightEdges, Boolean getEdgesOnly)
+        {
+            List<Boolean[,]> inBlobs;
+            Boolean[,] fullBlobs;
+            List<List<Point>> blobs = FindBlobs(data, width, height, toCheck, clearsThreshold, allEightEdges, getEdgesOnly, out inBlobs, out fullBlobs);
+            return blobs;
+        }
+
+        /// <summary>
+        /// Detects a list of all blobs in the image, returning both the blobs and the boolean representations of the blobs. Does no merging.
+        /// </summary>
+        /// <typeparam name="T">Type of the list to detect equal neighbours in.</typeparam>
+        /// <param name="data">Image data array. It is processed as one pixel per coordinate.</param>
+        /// <param name="width">Image width.</param>
+        /// <param name="height">Image height.</param>
+        /// <param name="toCheck">List of points to check.</param>
+        /// <param name="clearsThreshold">Function to check if the pixel at the given coordinates clears the threshold. Should be of the format (imgData, yVal, xVal) => Boolean.</param>
+        /// <param name="allEightEdges">When scanning for pixels to add to the blob, scan all eight surrounding pixels rather than just top, left, bottom, right.</param>
+        /// <param name="getEdgesOnly">True to make the lists in 'blobs' only contain the edge points of the blobs. The 'inBlobs' items will still have all points marked.</param>
+        /// <param name="inBlobs">Output parameter for receiving the blobs as boolean[,] arrays.</param>
+        /// <param name="inAnyBlob">Output parameter for receiving all points in all the blobs as single boolean[,] array.</param>
+        /// <returns>The list of blobs, as list of list of points</returns>
+        public static List<List<Point>> FindBlobs<T>(T data, Int32 width, Int32 height, Point[] toCheck, Func<T, Int32, Int32, Boolean> clearsThreshold, Boolean allEightEdges, Boolean getEdgesOnly, out List<Boolean[,]> inBlobs, out Boolean[,] inAnyBlob)
+        {
+            List<List<Point>> blobs = new List<List<Point>>();
+            inAnyBlob = new Boolean[height, width];
+            inBlobs = new List<Boolean[,]>();
+            for (Int32 p = 0; p < toCheck.Length; ++p)
+            {
+                Point pt = toCheck[p];
+                Boolean[,] inBlob;
+                List<Point> newBlob = MakeBlobForPoint(pt.X, pt.Y, data, width, height, clearsThreshold, allEightEdges, getEdgesOnly, inAnyBlob, out inBlob);
+                if (newBlob == null)
+                    continue;
+                blobs.Add(newBlob);
+                inBlobs.Add(inBlob);
+            }
+            return blobs;
+        }
+
+        /// <summary>
+        /// Detects a list of all blobs in the image. Does no merging.
+        /// </summary>
+        /// <typeparam name="T">Type of the list to detect equal neighbours in.</typeparam>
+        /// <param name="data">Image data array. It is processed as one pixel per coordinate.</param>
+        /// <param name="width">Image width.</param>
+        /// <param name="height">Image height.</param>
         /// <param name="clearsThreshold">Function to check if the pixel at the given coordinates clears the threshold. Should be of the format (imgData, yVal, xVal) => Boolean.</param>
         /// <param name="allEightEdges">When scanning for pixels to add to the blob, scan all eight surrounding pixels rather than just top, left, bottom, right.</param>
         /// <param name="getEdgesOnly">True to make the lists in 'blobs' only contain the edge points of the blobs. The 'inBlobs' items will still have all points marked.</param>

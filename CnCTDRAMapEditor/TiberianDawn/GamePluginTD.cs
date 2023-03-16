@@ -2921,7 +2921,7 @@ namespace MobiusEditor.TiberianDawn
             return housesWithProd;
         }
 
-        public int[] GetFlareRadiusForWaypoints(Map map, bool forLargeReveal)
+        public int[] GetRevealRadiusForWaypoints(Map map, bool forLargeReveal)
         {
             Waypoint[] waypoints = map.Waypoints;
             int length = waypoints.Length;
@@ -3068,11 +3068,11 @@ namespace MobiusEditor.TiberianDawn
                 }
                 if (!fatalOnly && action1 == ActionTypes.ACTION_ALLOWWIN && !isPlayer)
                 {
-                    curErrors.Add(prefix + "Each \"Allow Win\" trigger increases the \"win blockage\" on a House, which prevents it from winning until they are all cleared. However, since this is put on the House specified in the trigger, \"Allow Win\" triggers only work with the player's House.");
+                    curErrors.Add(prefix + "Each \"Allow Win\" trigger increases the \"win blockage\" on the House specified in the trigger, which prevents that house from winning until they are all cleared. However, since only the player can be blocked from winning, such triggers only work when they are linked to the player's House.");
                 }
                 if (!fatalOnly && action1 == ActionTypes.ACTION_ALLOWWIN && isLoop && !isDestroyable)
                 {
-                    curErrors.Add(prefix + "Each \"Allow Win\" trigger increases the \"win blockage\" on a House, which prevents it from winning until they are all cleared. The blockage is only cleared when the trigger is removed, which only happens either when it can no longer trigger, or when it is explicitly removed by a \"Destroy Trigger\" action. Since this trigger is set to execute \"on each triggering\", it will loop indefinitely and never be removed.");
+                    curErrors.Add(prefix + "Each \"Allow Win\" trigger increases the \"win blockage\" on the House specified in the trigger, which prevents that house from winning until they are all cleared. The blockage is only cleared when the trigger is removed, which only happens either when it can no longer trigger, or when it is explicitly removed by a \"Destroy Trigger\" action. Since this trigger is set to execute \"on each triggering\", it will loop indefinitely and will never be removed.");
                 }
                 if (action1 == ActionTypes.ACTION_BEGIN_PRODUCTION)
                 {

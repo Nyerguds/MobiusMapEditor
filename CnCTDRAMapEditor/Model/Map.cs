@@ -52,7 +52,7 @@ namespace MobiusEditor.Model
         TechnoTriggers  = 1 << 16,
         BuildingRebuild = 1 << 17,
         BuildingFakes   = 1 << 18,
-        GapRadius       = 1 << 19,
+        EffectRadius    = 1 << 19,
         WaypointRadius  = 1 << 20,
 
         OverlayAll = Resources | Walls | Overlay,
@@ -60,7 +60,7 @@ namespace MobiusEditor.Model
         MapLayers = Terrain | Resources | Walls | Overlay | Smudge | Infantry | Units | Buildings | Waypoints,
         /// <summary>Listing of layers that don't need a full map repaint.</summary>
         Indicators = Boundaries | MapSymmetry | MapGrid | WaypointsIndic | FootballArea | CellTriggers
-            | TechnoTriggers | BuildingRebuild | BuildingFakes | GapRadius | WaypointRadius,
+            | TechnoTriggers | BuildingRebuild | BuildingFakes | EffectRadius | WaypointRadius,
         All = Int32.MaxValue
     }
 

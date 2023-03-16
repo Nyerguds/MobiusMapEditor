@@ -344,27 +344,36 @@ namespace MobiusEditor.Tools
         public override void Activate()
         {
             base.Activate();
+            this.Deactivate(true);
             this.mapPanel.MouseDown += MapPanel_MouseDown;
             this.mapPanel.MouseUp += MapPanel_MouseUp;
             this.mapPanel.MouseMove += MapPanel_MouseMove;
             this.mapPanel.MouseLeave += MapPanel_MouseLeave;
             (this.mapPanel as Control).KeyDown += WallTool_KeyDown;
             (this.mapPanel as Control).KeyUp += WallTool_KeyUp;
-            navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
-            UpdateStatus();
+            this.navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
+            this.UpdateStatus();
         }
 
         public override void Deactivate()
         {
-            ExitPlacementMode();
-            base.Deactivate();
+            this.Deactivate(false);
+        }
+
+        public void Deactivate(bool forActivate)
+        {
+            if (!forActivate)
+            {
+                this.ExitPlacementMode();
+                base.Deactivate();
+            }
             this.mapPanel.MouseDown -= MapPanel_MouseDown;
             this.mapPanel.MouseUp -= MapPanel_MouseUp;
             this.mapPanel.MouseMove -= MapPanel_MouseMove;
             this.mapPanel.MouseLeave -= MapPanel_MouseLeave;
             (this.mapPanel as Control).KeyDown -= WallTool_KeyDown;
             (this.mapPanel as Control).KeyUp -= WallTool_KeyUp;
-            navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;
+            this.navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;
         }
 
         #region IDisposable Support
@@ -376,8 +385,8 @@ namespace MobiusEditor.Tools
             {
                 if (disposing)
                 {
-                    Deactivate();
                     wallTypeComboBox.SelectedIndexChanged -= WallTypeComboBox_SelectedIndexChanged;
+                    Deactivate();
                 }
                 disposedValue = true;
             }

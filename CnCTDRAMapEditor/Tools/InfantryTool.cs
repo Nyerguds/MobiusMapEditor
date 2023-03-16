@@ -172,6 +172,7 @@ namespace MobiusEditor.Tools
                         selectedObjectProperties = new ObjectPropertiesPopup(objectProperties.Plugin, infantry);
                         selectedObjectProperties.Closed += (cs, ce) =>
                         {
+                            selectedObjectProperties = null;
                             navigationWidget.Refresh();
                             AddPropertiesUndoRedo(infantry, preEdit);
                         };
@@ -781,6 +782,7 @@ namespace MobiusEditor.Tools
         public override void Activate()
         {
             base.Activate();
+            this.Deactivate(true);
             this.mapPanel.MouseDown += MapPanel_MouseDown;
             this.mapPanel.MouseUp += MapPanel_MouseUp;
             this.mapPanel.MouseDoubleClick += MapPanel_MouseDoubleClick;
@@ -788,14 +790,22 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseLeave += MapPanel_MouseLeave;
             (this.mapPanel as Control).KeyDown += InfantryTool_KeyDown;
             (this.mapPanel as Control).KeyUp += InfantryTool_KeyUp;
-            navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
-            UpdateStatus();
+            this.navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
+            this.UpdateStatus();
         }
 
         public override void Deactivate()
         {
-            ExitPlacementMode();
-            base.Deactivate();
+            this.Deactivate(false);
+        }
+
+        public void Deactivate(bool forActivate)
+        {
+            if (!forActivate)
+            {
+                this.ExitPlacementMode();
+                base.Deactivate();
+            }
             this.mapPanel.MouseDown -= MapPanel_MouseDown;
             this.mapPanel.MouseUp -= MapPanel_MouseUp;
             this.mapPanel.MouseDoubleClick -= MapPanel_MouseDoubleClick;
@@ -803,8 +813,7 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseLeave -= MapPanel_MouseLeave;
             (this.mapPanel as Control).KeyDown -= InfantryTool_KeyDown;
             (this.mapPanel as Control).KeyUp -= InfantryTool_KeyUp;
-
-            navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;
+            this.navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;
         }
 
         #region IDisposable Support
@@ -816,8 +825,10 @@ namespace MobiusEditor.Tools
             {
                 if (disposing)
                 {
-                    Deactivate();
+                    selectedObjectProperties?.Close();
+                    selectedObjectProperties = null;
                     infantryTypesBox.SelectedIndexChanged -= InfantryTypeComboBox_SelectedIndexChanged;
+                    Deactivate();
                 }
                 disposedValue = true;
             }

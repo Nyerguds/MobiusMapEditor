@@ -3076,7 +3076,7 @@ namespace MobiusEditor.RedAlert
             return housesWithProd;
         }
 
-        public int[] GetFlareRadiusForWaypoints(Map map, bool forLargeReveal)
+        public int[] GetRevealRadiusForWaypoints(Map map, bool forLargeReveal)
         {
             Waypoint[] waypoints = map.Waypoints;
             int length = waypoints.Length;

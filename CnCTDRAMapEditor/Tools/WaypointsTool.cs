@@ -417,18 +417,7 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-            int scaleFull = Math.Min(mapPanel.ClientRectangle.Width, mapPanel.ClientRectangle.Height);
-            bool isWidth = scaleFull == mapPanel.ClientRectangle.Width;
-            double mapSize = isWidth ? map.Metrics.Width : map.Metrics.Height;
-            // pixels per tile at zoom level 1.
-            double basicTileSize = scaleFull / mapSize;
-            // Convert cell position to actual position on image.
-            int cellX = (int)Math.Round(basicTileSize * mapPanel.Zoom * (cellPoint.X + 0.5));
-            int cellY = (int)Math.Round(basicTileSize * mapPanel.Zoom * (cellPoint.Y + 0.5));
-            // Get location to use to center the waypoint on the screen.
-            int x = cellX - mapPanel.ClientRectangle.Width / 2;
-            int y = cellY - mapPanel.ClientRectangle.Height / 2;
-            mapPanel.AutoScrollPosition = new Point(x, y);
+            mapPanel.JumpToPosition(map.Metrics, cellPoint, 1, 1);
         }
 
         protected override void PreRenderMap()
@@ -481,7 +470,9 @@ namespace MobiusEditor.Tools
             MapRenderer.RenderAllTechnoTriggers(graphics, plugin.Map, Globals.MapTileSize, Globals.MapTileScale, Layers);
             MapRenderer.RenderAllBoundsFromCell(graphics, Globals.MapTileSize,
                 map.Waypoints.Where(wp => wp != selected && wp.Cell.HasValue).Select(wp => wp.Cell.Value), map.Metrics, Color.Orange);
-            MapRenderer.RenderAllWayPointRevealRadiuses(graphics, plugin, map, Globals.MapTileSize, selected);
+            // For TD, always render reveal waypoint.
+            bool renderAll = plugin.GameType != GameType.RedAlert || (Layers & MapLayerFlag.WaypointRadius) == MapLayerFlag.WaypointRadius;
+            MapRenderer.RenderAllWayPointRevealRadiuses(graphics, plugin, map, Globals.MapTileSize, selected, !renderAll);
             MapRenderer.RenderWayPointIndicators(graphics, map, Globals.MapTileSize, Globals.MapTileScale, Color.LightGreen, false, true, selectedRange);
             if (selected != null)
             {
@@ -498,15 +489,16 @@ namespace MobiusEditor.Tools
                 if (dummySelected != null && (selected == null || selected.Cell != dummySelected.Cell))
                 {
                     MapRenderer.RenderWayPointIndicators(graphics, map, Globals.MapTileSize, Globals.MapTileScale, Color.Yellow, true, false, new[] { dummySelected });
-                    int[] wpReveal1 = plugin.GetFlareRadiusForWaypoints(map, false);
-                    int[] wpReveal2 = plugin.GetFlareRadiusForWaypoints(map, true);
+                    // Need to do this manually since it's an extra waypoint not normally on the list, and it uses the radius data of the original waypoint to place.
+                    int[] wpReveal1 = plugin.GetRevealRadiusForWaypoints(map, false);
+                    int[] wpReveal2 = plugin.GetRevealRadiusForWaypoints(map, true);
                     if (wpReveal1[selectedIndex] != 0)
                     {
-                        MapRenderer.RenderWayPointRevealRadius(graphics, map, Globals.MapTileSize, Color.Yellow, true, true, wpReveal1[selectedIndex], dummySelected);
+                        MapRenderer.RenderWayPointRevealRadius(graphics, map.Metrics, Globals.MapTileSize, Color.Yellow, true, true, wpReveal1[selectedIndex], dummySelected);
                     }
                     if (wpReveal2[selectedIndex] != 0)
                     {
-                        MapRenderer.RenderWayPointRevealRadius(graphics, map, Globals.MapTileSize, Color.Yellow, true, true, wpReveal2[selectedIndex], dummySelected);
+                        MapRenderer.RenderWayPointRevealRadius(graphics, map.Metrics, Globals.MapTileSize, Color.Yellow, true, true, wpReveal2[selectedIndex], dummySelected);
                     }
                 }
             }
@@ -563,24 +555,35 @@ namespace MobiusEditor.Tools
         public override void Activate()
         {
             base.Activate();
+            Deactivate(true);
             (this.mapPanel as Control).KeyDown += WaypointsTool_KeyDown;
             (this.mapPanel as Control).KeyUp += WaypointsTool_KeyUp;
             this.mapPanel.MouseDown += MapPanel_MouseDown;
             this.mapPanel.MouseMove += MapPanel_MouseMove;
             this.mapPanel.MouseLeave += MapPanel_MouseLeave;
             this.map.WaypointsUpdated += this.Map_WaypointsUpdated;
+            navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
         }
 
         public override void Deactivate()
         {
-            ExitPlacementMode();
-            base.Deactivate();
+            Deactivate(false);
+        }
+
+        public void Deactivate(bool forActivate)
+        {
+            if (!forActivate)
+            {
+                ExitPlacementMode();
+                base.Deactivate();
+            }
             this.map.WaypointsUpdated -= this.Map_WaypointsUpdated;
             this.mapPanel.MouseDown -= MapPanel_MouseDown;
             this.mapPanel.MouseMove -= MapPanel_MouseMove;
             this.mapPanel.MouseLeave -= MapPanel_MouseLeave;
             (this.mapPanel as Control).KeyDown -= WaypointsTool_KeyDown;
             (this.mapPanel as Control).KeyUp -= WaypointsTool_KeyUp;
+            navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;
         }
 
         #region IDisposable Support
@@ -594,7 +597,6 @@ namespace MobiusEditor.Tools
                 {
                     this.jumpToButton.Click -= JumpToButton_Click;
                     this.waypointCombo.SelectedIndexChanged -= this.WaypointCombo_SelectedIndexChanged;
-                    navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;
                     Deactivate();
                 }
                 disposedValue = true;

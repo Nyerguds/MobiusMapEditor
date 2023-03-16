@@ -578,7 +578,7 @@ namespace MobiusEditor.Dialogs
             {
                 if (SelectedTeamType.Classes.Count <= Globals.MaxTeamClasses)
                 {
-                    TeamTypeClass newItem = new TeamTypeClass() { Type = defaultTeam, Count = 0 };
+                    TeamTypeClass newItem = new TeamTypeClass() { Type = defaultTeam, Count = 1 };
                     SelectedTeamType.Classes.Add(newItem);
                     teamItemInfo = new TeamItemInfo(null, SelectedTeamType.Classes, technoTypes);
                     tilTeams.Populate(teamItemInfo, this);

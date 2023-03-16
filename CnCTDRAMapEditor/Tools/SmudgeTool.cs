@@ -100,7 +100,6 @@ namespace MobiusEditor.Tools
             this.smudgeTypeMapPanel.SmoothScale = Globals.PreviewSmoothScale;
             this.smudgeProperties = smudgeProperties;
             this.smudgeProperties.Smudge = mockSmudge;
-            navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
             SelectedSmudgeType = smudgeTypeListBox.Types.First() as SmudgeType;
         }
 
@@ -652,25 +651,36 @@ namespace MobiusEditor.Tools
         public override void Activate()
         {
             base.Activate();
+            this.Deactivate(true);
             this.mapPanel.MouseDown += MapPanel_MouseDown;
             this.mapPanel.MouseMove += MapPanel_MouseMove;
             this.mapPanel.MouseDoubleClick += MapPanel_MouseDoubleClick;
             this.mapPanel.MouseLeave += MapPanel_MouseLeave;
             (this.mapPanel as Control).KeyDown += SmudgeTool_KeyDown;
             (this.mapPanel as Control).KeyUp += SmudgeTool_KeyUp;
-            UpdateStatus();
+            navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
+            this.UpdateStatus();
         }
 
         public override void Deactivate()
         {
-            ExitPlacementMode();
-            base.Deactivate();
+            this.Deactivate(false);
+        }
+
+        public void Deactivate(bool forActivate)
+        {
+            if (!forActivate)
+            {
+                ExitPlacementMode();
+                base.Deactivate();
+            }
             this.mapPanel.MouseDown -= MapPanel_MouseDown;
             this.mapPanel.MouseMove -= MapPanel_MouseMove;
             this.mapPanel.MouseDoubleClick -= MapPanel_MouseDoubleClick;
             this.mapPanel.MouseLeave -= MapPanel_MouseLeave;
             (this.mapPanel as Control).KeyDown -= SmudgeTool_KeyDown;
             (this.mapPanel as Control).KeyUp -= SmudgeTool_KeyUp;
+            this.navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;
         }
 
         #region IDisposable Support
@@ -684,7 +694,6 @@ namespace MobiusEditor.Tools
                 {
                     Deactivate();
                     smudgeTypeListBox.SelectedIndexChanged -= SmudgeTypeComboBox_SelectedIndexChanged;
-                    navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;
                 }
                 disposedValue = true;
             }

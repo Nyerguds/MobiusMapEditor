@@ -201,13 +201,13 @@ namespace MobiusEditor.Tools
                 MapRenderer.RenderAllFootballAreas(graphics, map, tileSize, tileScale, plugin.GameType);
                 MapRenderer.RenderFootballAreaFlags(graphics, plugin.GameType, map, tileSize);
             }
-            if ((layersToRender & (MapLayerFlag.Buildings | MapLayerFlag.GapRadius)) == (MapLayerFlag.Buildings | MapLayerFlag.GapRadius)
-                && (manuallyHandledLayers & MapLayerFlag.GapRadius) == MapLayerFlag.None)
+            if ((layersToRender & (MapLayerFlag.Buildings | MapLayerFlag.EffectRadius)) == (MapLayerFlag.Buildings | MapLayerFlag.EffectRadius)
+                && (manuallyHandledLayers & MapLayerFlag.EffectRadius) == MapLayerFlag.None)
             {
                 MapRenderer.RenderAllBuildingEffectRadiuses(graphics, map, Globals.MapTileSize, map.GapRadius);
             }
-            if ((layersToRender & (MapLayerFlag.Units | MapLayerFlag.GapRadius)) == (MapLayerFlag.Units | MapLayerFlag.GapRadius)
-                && (manuallyHandledLayers & MapLayerFlag.GapRadius) == MapLayerFlag.None)
+            if ((layersToRender & (MapLayerFlag.Units | MapLayerFlag.EffectRadius)) == (MapLayerFlag.Units | MapLayerFlag.EffectRadius)
+                && (manuallyHandledLayers & MapLayerFlag.EffectRadius) == MapLayerFlag.None)
             {
                 MapRenderer.RenderAllUnitEffectRadiuses(graphics, map, Globals.MapTileSize, map.RadarJamRadius);
             }
@@ -265,7 +265,6 @@ namespace MobiusEditor.Tools
             this.mapPanel.PostRender -= MapPanel_PostRender;
             this.map.RulesChanged -= this.Map_RulesChanged;
             this.map.MapContentsChanged -= this.Map_MapContentsChanged;
-
         }
 
         #region IDisposable Support

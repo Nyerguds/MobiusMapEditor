@@ -96,7 +96,7 @@ namespace MobiusEditor.Tools.Dialogs
             this.btnJumpTo.Name = "btnJumpTo";
             this.btnJumpTo.Size = new System.Drawing.Size(136, 23);
             this.btnJumpTo.TabIndex = 2;
-            this.btnJumpTo.Text = "Jump to...";
+            this.btnJumpTo.Text = "Jump to";
             this.btnJumpTo.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.btnJumpTo.UseVisualStyleBackColor = true;
             // 

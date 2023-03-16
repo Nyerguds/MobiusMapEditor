@@ -64,6 +64,11 @@ namespace MobiusEditor.Dialogs
             Clipboard.SetText(txtErrors.Text);
         }
 
+        private void btnWordWrap_Click(Object sender, EventArgs e)
+        {
+            txtErrors.WordWrap = !txtErrors.WordWrap;
+        }
+
         private void ErrorMessageBox_Shown(Object sender, EventArgs e)
         {
             txtErrors.SelectionLength = 0;

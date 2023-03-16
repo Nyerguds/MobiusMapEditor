@@ -132,7 +132,7 @@ namespace MobiusEditor
             toolsOptionsBoundsObstructFillMenuItem.Checked = Globals.BoundsObstructFill;
             toolsOptionsSafeDraggingMenuItem.Checked = Globals.TileDragProtect;
             toolsOptionsPlacementGridMenuItem.Checked = Globals.ShowPlacementGrid;
-            viewMapGridMenuItem.Checked = Globals.ShowMapGrid;
+            viewExtraIndicatorsMapGridMenuItem.Checked = Globals.ShowMapGrid;
             // Obey the settings.
             this.mapPanel.SmoothScale = Globals.MapSmoothScale;
             this.mapPanel.BackColor = Globals.MapBackColor;
@@ -1646,7 +1646,7 @@ namespace MobiusEditor
             // Special rules per game.
             viewLayersBuildingsMenuItem.Visible = !hasPlugin || plugin.GameType != GameType.SoleSurvivor;
             viewIndicatorsBuildingFakeLabelsMenuItem.Visible = !hasPlugin || plugin.GameType == GameType.RedAlert;
-            viewIndicatorsBuildingGapRadiusMenuItem.Visible = !hasPlugin || plugin.GameType == GameType.RedAlert;
+            viewExtraIndicatorsEffectAreaRadiusMenuItem.Visible = !hasPlugin || plugin.GameType == GameType.RedAlert;
             viewIndicatorsBuildingRebuildLabelsMenuItem.Visible = !hasPlugin || plugin.GameType != GameType.SoleSurvivor;
             viewIndicatorsFootballAreaMenuItem.Visible = !hasPlugin || plugin.GameType == GameType.SoleSurvivor;
         }
@@ -1861,15 +1861,15 @@ namespace MobiusEditor
         private void UpdateVisibleLayers()
         {
             MapLayerFlag layers = MapLayerFlag.All;
-            if (!viewMapBoundariesMenuItem.Checked)
+            if (!viewExtraIndicatorsMapBoundariesMenuItem.Checked)
             {
                 layers &= ~MapLayerFlag.Boundaries;
             }
-            if (!viewMapSymmetryMenuItem.Checked)
+            if (!viewExtraIndicatorsMapSymmetryMenuItem.Checked)
             {
                 layers &= ~MapLayerFlag.MapSymmetry;
             }
-            if (!viewMapGridMenuItem.Checked)
+            if (!viewExtraIndicatorsMapGridMenuItem.Checked)
             {
                 layers &= ~MapLayerFlag.MapGrid;
             }
@@ -1925,13 +1925,13 @@ namespace MobiusEditor
             {
                 layers &= ~MapLayerFlag.FootballArea;
             }
-            if (!viewIndicatorsWaypointRevealRadiusMenuItem.Checked)
+            if (!viewExtraIndicatorsWaypointRevealRadiusMenuItem.Checked)
             {
                 layers &= ~MapLayerFlag.WaypointRadius;
             }
-            if (!viewIndicatorsBuildingGapRadiusMenuItem.Checked)
+            if (!viewExtraIndicatorsEffectAreaRadiusMenuItem.Checked)
             {
-                layers &= ~MapLayerFlag.GapRadius;
+                layers &= ~MapLayerFlag.EffectRadius;
             }
             ActiveLayers = layers;
         }
@@ -1970,20 +1970,14 @@ namespace MobiusEditor
             UpdateVisibleLayers();
         }
 
-        private void ViewMapEnableAllMenuItem_Click(object sender, EventArgs e)
+        private void ViewLayersEnableAllMenuItem_Click(object sender, EventArgs e)
         {
             ITool activeTool = this.activeTool;
             try
             {
                 // Suppress updates.
                 this.activeTool = null;
-                viewLayersBuildingsMenuItem.Checked = true;
-                viewLayersUnitsMenuItem.Checked = true;
-                viewLayersInfantryMenuItem.Checked = true;
-                viewLayersTerrainMenuItem.Checked = true;
-                viewLayersOverlayMenuItem.Checked = true;
-                viewLayersSmudgeMenuItem.Checked = true;
-                viewLayersWaypointsMenuItem.Checked = true;
+                SwitchBaseLayers(true);
             }
             finally
             {
@@ -1998,20 +1992,14 @@ namespace MobiusEditor
             }
         }
 
-        private void ViewMapDisableAllMenuItem_Click(object sender, EventArgs e)
+        private void ViewLayersDisableAllMenuItem_Click(object sender, EventArgs e)
         {
             ITool activeTool = this.activeTool;
             try
             {
                 // Suppress updates.
                 this.activeTool = null;
-                viewLayersBuildingsMenuItem.Checked = false;
-                viewLayersUnitsMenuItem.Checked = false;
-                viewLayersInfantryMenuItem.Checked = false;
-                viewLayersTerrainMenuItem.Checked = false;
-                viewLayersOverlayMenuItem.Checked = false;
-                viewLayersSmudgeMenuItem.Checked = false;
-                viewLayersWaypointsMenuItem.Checked = false;
+                SwitchBaseLayers(false);
             }
             finally
             {
@@ -2024,6 +2012,17 @@ namespace MobiusEditor
                 // Set with refresh
                 ActiveLayers = layerBackup;
             }
+        }
+
+        private void SwitchBaseLayers(bool enabled)
+        {
+            viewLayersBuildingsMenuItem.Checked = enabled;
+            viewLayersInfantryMenuItem.Checked = enabled;
+            viewLayersUnitsMenuItem.Checked = enabled;
+            viewLayersTerrainMenuItem.Checked = enabled;
+            viewLayersOverlayMenuItem.Checked = enabled;
+            viewLayersSmudgeMenuItem.Checked = enabled;
+            viewLayersWaypointsMenuItem.Checked = enabled;
         }
 
         private void ViewIndicatorsEnableAllToolStripMenuItem_Click(Object sender, EventArgs e)
@@ -2033,12 +2032,7 @@ namespace MobiusEditor
             {
                 // Suppress updates.
                 this.activeTool = null;
-                viewMapBoundariesMenuItem.Checked = true;
-                viewIndicatorsWaypointsMenuItem.Checked = true;
-                viewIndicatorsCellTriggersMenuItem.Checked = true;
-                viewIndicatorsObjectTriggersMenuItem.Checked = true;
-                viewIndicatorsBuildingFakeLabelsMenuItem.Checked = true;
-                viewIndicatorsBuildingRebuildLabelsMenuItem.Checked = true;
+                SwitcbIndicatorLayers(true);
             }
             finally
             {
@@ -2060,11 +2054,8 @@ namespace MobiusEditor
             {
                 // Suppress updates.
                 this.activeTool = null;
-                viewIndicatorsWaypointsMenuItem.Checked = false;
-                viewIndicatorsCellTriggersMenuItem.Checked = false;
-                viewIndicatorsObjectTriggersMenuItem.Checked = false;
-                viewIndicatorsBuildingFakeLabelsMenuItem.Checked = false;
-                viewIndicatorsBuildingRebuildLabelsMenuItem.Checked = false;
+                SwitcbIndicatorLayers(false);
+
             }
             finally
             {
@@ -2077,6 +2068,16 @@ namespace MobiusEditor
                 // Set with refresh
                 ActiveLayers = layerBackup;
             }
+        }
+
+        private void SwitcbIndicatorLayers(bool enable)
+        {
+            viewIndicatorsWaypointsMenuItem.Checked = enable;
+            viewIndicatorsFootballAreaMenuItem.Checked = enable;
+            viewIndicatorsCellTriggersMenuItem.Checked = enable;
+            viewIndicatorsObjectTriggersMenuItem.Checked = enable;
+            viewIndicatorsBuildingRebuildLabelsMenuItem.Checked = enable;
+            viewIndicatorsBuildingFakeLabelsMenuItem.Checked = enable;
         }
 
         private void DeveloperGoToINIMenuItem_Click(object sender, EventArgs e)

@@ -143,7 +143,7 @@ Released on 20 Aug 2022 at 22:37 UTC
 * Removed Aircraft section handling. Aircraft were never able to be pre-placed in the original game, and the re-enabled sections in the Remasters have issues; aircraft will still spawn in the air and fly somewhere close. [NOTE: made into a setting in v1.4.3.0]
 * Like walls, overlay placement and removing can now be dragged to affect multiple cells.
 * All waypoint will now be shown with their coordinates.
-* Added "Jump to..." button on the waypoints tool. This will only have any effect when zoomed in.
+* Added "Jump to" button on the waypoints tool. This will only have any effect when zoomed in.
 * Clicking overlapping waypoints multiple times will cycle to the next one in the list on each click. Right-clicking will cycle backwards.
 * When deleting overlapping waypoints, if the currently selected waypoint is one of them, that one will be deleted first.
 * Map indicators will now be painted in this order: map boundaries, celltriggers, waypoints, building labels, object triggers. The later ones will be on top and thus most visible.
@@ -415,16 +415,19 @@ Unreleased
 * Skipping over disabled sections in the ini (like the Aircraft) now adds errors and marks the map as modified.
 * Added detection for incorrect use of the "Allow Win" action in Tiberian Dawn.
 * Fixed reading of [Base] entries; it should loop over all 3-digit integers up to the "Count" value, not parse the keys as integers.
-* Fixed triggers list corrupting on the Terrain tool.
+* Fixed triggers list corrupting on the Terrain tool when editing the triggers after the Terrain tool had already been loaded.
 * Fixed trigger not showing on the preview for placing down a Terrain object.
 * The trigger on the placement preview of a Unit, Building, Infantry or Terrain object is now shown as semitransparent.
 * Choosing to save on a save prompt will now no longer abort the action that prompted the save prompt; it will be remembered and executed after the save is done.
 * Fixed saving of Steam publish ID in the map publishing process.
-* Map preview in the Steam Publish dialog will now consistently show when hovering over the preview path text field.
 * The preview path text field in the Steam Publish dialog is now read-only.
+* The map preview in the Steam Publish dialog will now consistently show when hovering over the preview path text field.
 * Fixed saving of '@' characters in the Steam workshop item description.
 * The map save after the Steam publish will no longer re-generate the thumbnail, making it much faster.
-* Steam publish will now clean up all generated temporary files.
-* Fixed issue with object property popups not properly showing all options because their font was different than expected, making the contents too large for the popup.
-* When unchecking the Prebuilt status of a building and then re-checking it, the original values for the building's other properties will be restored. This does not work if the changes were confirmed by closing the popup. This property-restoring also works on the selection window template.
-* Added indicators for reveal radiuses around waypoints, and shroud / jam radiuses around Gap Generators, Mobile Gap Generators, Radar Jappens and Tesla Tanks.
+* The Steam publish operation will now clean up all generated temporary files.
+* Fixed the issue where the object property popup does not properly show all options. This was caused by it using a different font.
+* When unchecking the Prebuilt status of a building and then re-checking it, the original values for the building's other properties (owner, strength, trigger...) will be restored. This does not work if the changes were confirmed by closing the popup. This property-restoring also works on the selection window template.
+* Added indicators for reveal radiuses around waypoints, and shroud / jam radiuses around Gap Generators, Mobile Gap Generators, Radar Jammers and Tesla Tanks. Unless specifically enabled in the "View -> Extra Indications" menu, these will only be shown when manipulating the objects directly; while placing, moving, and editing properties.
+* Added "Jump to next usage" button on celltriggers, which, when pressed multiple times, will cycle the viewed map location through all different placed-down clusters of the selected celltrigger.
+* Added Word Wrap button to the error message dialog.
+* When a new unit type is added to a Teamtype, its amount will now default to 1.

@@ -46,9 +46,10 @@ namespace MobiusEditor.Dialogs
             this.lblMessage = new System.Windows.Forms.Label();
             this.txtErrors = new System.Windows.Forms.TextBox();
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
+            this.btnCancel = new System.Windows.Forms.Button();
             this.btnOK = new System.Windows.Forms.Button();
             this.btnCopy = new System.Windows.Forms.Button();
-            this.btnCancel = new System.Windows.Forms.Button();
+            this.btnWordWrap = new System.Windows.Forms.Button();
             this.tableLayoutPanel1.SuspendLayout();
             this.flowLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
@@ -98,12 +99,23 @@ namespace MobiusEditor.Dialogs
             this.flowLayoutPanel1.Controls.Add(this.btnCancel);
             this.flowLayoutPanel1.Controls.Add(this.btnOK);
             this.flowLayoutPanel1.Controls.Add(this.btnCopy);
+            this.flowLayoutPanel1.Controls.Add(this.btnWordWrap);
             this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.flowLayoutPanel1.FlowDirection = System.Windows.Forms.FlowDirection.RightToLeft;
             this.flowLayoutPanel1.Location = new System.Drawing.Point(3, 329);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
             this.flowLayoutPanel1.Size = new System.Drawing.Size(678, 29);
             this.flowLayoutPanel1.TabIndex = 1;
+            // 
+            // btnCancel
+            // 
+            this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this.btnCancel.Location = new System.Drawing.Point(600, 3);
+            this.btnCancel.Name = "btnCancel";
+            this.btnCancel.Size = new System.Drawing.Size(75, 23);
+            this.btnCancel.TabIndex = 0;
+            this.btnCancel.Text = "&Cancel";
+            this.btnCancel.UseVisualStyleBackColor = true;
             // 
             // btnOK
             // 
@@ -125,15 +137,15 @@ namespace MobiusEditor.Dialogs
             this.btnCopy.UseVisualStyleBackColor = true;
             this.btnCopy.Click += new System.EventHandler(this.btnCopy_Click);
             // 
-            // btnCancel
+            // btnWordWrap
             // 
-            this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(600, 3);
-            this.btnCancel.Name = "btnCancel";
-            this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 0;
-            this.btnCancel.Text = "&Cancel";
-            this.btnCancel.UseVisualStyleBackColor = true;
+            this.btnWordWrap.Location = new System.Drawing.Point(285, 3);
+            this.btnWordWrap.Name = "btnWordWrap";
+            this.btnWordWrap.Size = new System.Drawing.Size(111, 23);
+            this.btnWordWrap.TabIndex = 1;
+            this.btnWordWrap.Text = "Toggle &Word Wrap";
+            this.btnWordWrap.UseVisualStyleBackColor = true;
+            this.btnWordWrap.Click += new System.EventHandler(this.btnWordWrap_Click);
             // 
             // ErrorMessageBox
             // 
@@ -168,5 +180,6 @@ namespace MobiusEditor.Dialogs
         private System.Windows.Forms.Button btnOK;
         private System.Windows.Forms.Button btnCopy;
         private System.Windows.Forms.Button btnCancel;
+        private System.Windows.Forms.Button btnWordWrap;
     }
 }

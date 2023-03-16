@@ -98,7 +98,6 @@ namespace MobiusEditor.Tools
             this.terrainProperties = terrainProperties;
             this.terrainProperties.Terrain = mockTerrain;
             this.terrainProperties.Visible = plugin.Map.TerrainEventTypes.Count > 0;
-            navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
             SelectedTerrainType = terrainTypeComboBox.Types.First() as TerrainType;
         }
 
@@ -550,6 +549,7 @@ namespace MobiusEditor.Tools
         public override void Activate()
         {
             base.Activate();
+            this.Deactivate(true);
             this.mapPanel.MouseDown += MapPanel_MouseDown;
             this.mapPanel.MouseMove += MapPanel_MouseMove;
             this.mapPanel.MouseUp += MapPanel_MouseUp;
@@ -557,13 +557,22 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseLeave += MapPanel_MouseLeave;
             (this.mapPanel as Control).KeyDown += TerrainTool_KeyDown;
             (this.mapPanel as Control).KeyUp += TerrainTool_KeyUp;
-            UpdateStatus();
+            this.UpdateStatus();
+            this.navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
         }
 
         public override void Deactivate()
         {
-            ExitPlacementMode();
-            base.Deactivate();
+            this.Deactivate(false);
+        }
+
+        public void Deactivate(bool forActivate)
+        {
+            if (!forActivate)
+            {
+                this.ExitPlacementMode();
+                base.Deactivate();
+            }
             this.mapPanel.MouseDown -= MapPanel_MouseDown;
             this.mapPanel.MouseMove -= MapPanel_MouseMove;
             this.mapPanel.MouseUp -= MapPanel_MouseUp;
@@ -571,6 +580,7 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseLeave -= MapPanel_MouseLeave;
             (this.mapPanel as Control).KeyDown -= TerrainTool_KeyDown;
             (this.mapPanel as Control).KeyUp -= TerrainTool_KeyUp;
+            this.navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;
         }
 
         #region IDisposable Support
@@ -582,10 +592,10 @@ namespace MobiusEditor.Tools
             {
                 if (disposing)
                 {
-                    Deactivate();
                     selectedTerrainProperties?.Close();
+                    selectedTerrainProperties = null;
                     terrainTypeListBox.SelectedIndexChanged -= TerrainTypeCombo_SelectedIndexChanged;
-                    navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;
+                    Deactivate();
                 }
                 disposedValue = true;
             }

@@ -113,7 +113,7 @@ namespace MobiusEditor.Dialogs
             {
                 MapLayerFlag mlf = (MapLayerFlag)(1 << i);
                 if (gamePlugin.GameType != GameType.RedAlert && mlf == MapLayerFlag.BuildingFakes
-                    || gamePlugin.GameType != GameType.RedAlert && mlf == MapLayerFlag.GapRadius
+                    || gamePlugin.GameType != GameType.RedAlert && mlf == MapLayerFlag.EffectRadius
                     || gamePlugin.GameType != GameType.SoleSurvivor && mlf == MapLayerFlag.FootballArea)
                 {
                     continue;

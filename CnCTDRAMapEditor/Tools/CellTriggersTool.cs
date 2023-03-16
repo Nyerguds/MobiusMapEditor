@@ -41,6 +41,11 @@ namespace MobiusEditor.Tools
         }
 
         private readonly ComboBox triggerComboBox;
+        private readonly Button jumpToButton;
+
+        private Dictionary<string, Rectangle[]> cellTrigBlobCenters = new Dictionary<string, Rectangle[]>();
+        private string currentCellTrig;
+        private int currentCellTrigIndex;
 
         private readonly Dictionary<int, CellTrigger> undoCellTriggers = new Dictionary<int, CellTrigger>();
         private readonly Dictionary<int, CellTrigger> redoCellTriggers = new Dictionary<int, CellTrigger>();
@@ -56,12 +61,16 @@ namespace MobiusEditor.Tools
 
         public string TriggerToolTip { get; set; }
 
-        public CellTriggersTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, ComboBox triggerCombo, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> url)
+        public CellTriggersTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, ComboBox triggerCombo, Button jumpToButton,
+            IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> url)
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
             previewMap = map;
+            this.jumpToButton = jumpToButton;
+            this.jumpToButton.Click += JumpToButton_Click;
             this.triggerComboBox = triggerCombo;
             UpdateDataSource();
+            this.triggerComboBox.SelectedIndexChanged += this.TriggerCombo_SelectedIndexChanged;
         }
 
         private void Triggers_CollectionChanged(object sender, EventArgs e)
@@ -74,19 +83,81 @@ namespace MobiusEditor.Tools
             string selected = triggerComboBox.SelectedItem as string;
             triggerComboBox.DataSource = null;
             triggerComboBox.Items.Clear();
-            string[] items = plugin.Map.FilterCellTriggers().Select(t => t.Name).Distinct().ToArray();
             string[] filteredEvents = plugin.Map.EventTypes.Where(ev => plugin.Map.CellEventTypes.Contains(ev)).Distinct().ToArray();
             string[] filteredActions = plugin.Map.ActionTypes.Where(ev => plugin.Map.CellActionTypes.Contains(ev)).Distinct().ToArray();
-            bool hasItems = items.Length > 0;
-            if (!hasItems)
-            {
-                items = new[] { Trigger.None };
-            }
+            bool hasItems;
+            string[] items = GetItems(out hasItems);
+            UpdateBlobsList(items, null);
             int selectIndex = selected == null ? 0 : Enumerable.Range(0, items.Length).FirstOrDefault(x => String.Equals(items[x], selected, StringComparison.InvariantCultureIgnoreCase));
             triggerComboBox.DataSource = items;
             triggerComboBox.SelectedIndex = selectIndex;
             triggerComboBox.Enabled = hasItems;
             TriggerToolTip = Map.MakeAllowedTriggersToolTip(filteredEvents, filteredActions);
+        }
+
+        private String[] GetItems(out bool hasItems)
+        {
+            string[] items = plugin.Map.FilterCellTriggers().Select(t => t.Name).Distinct().ToArray();
+            hasItems = items.Length > 0;
+            if (!hasItems)
+            {
+                items = new[] { Trigger.None };
+            }
+            return items;
+        }
+
+        /// <summary>
+        /// Upodates the blob lists. If items is not given, it takes the current map state. If updateItem is given, only that one will be updated in the list.
+        /// </summary>
+        /// <param name="items">Optional list of items, for optimisation to avoid an extra fetch action.</param>
+        /// <param name="updateItem">Optional item to update. Leave empty to update all.</param>
+        private void UpdateBlobsList(string[] items, string updateItem)
+        {
+            currentCellTrigIndex = 0;
+            if (items == null)
+            {
+                bool hasItems;
+                items = GetItems(out hasItems);
+            }
+            if (updateItem != null)
+            {
+                if (items.Where(t => t.Equals(updateItem, StringComparison.OrdinalIgnoreCase)).Count() == 0)
+                {
+                    // Item to update was not found; abort.
+                    return;
+                }
+                // Only process the one item.
+                items = new string[] { updateItem };
+            }            
+            if (updateItem == null)
+            {
+                // No item given: refresh all.
+                cellTrigBlobCenters.Clear();
+            }
+            int height = map.Metrics.Height;
+            int width = map.Metrics.Width;
+            foreach (String trig in items)
+            {
+                bool[,] cellTrigs = new bool[height, width];
+                List<Point> points = new List<Point>();
+                foreach ((int cell, CellTrigger value) in map.CellTriggers)
+                {
+                    if (trig.Equals(value.Trigger, StringComparison.OrdinalIgnoreCase) && map.Metrics.GetLocation(cell, out Point loc))
+                    {
+                        points.Add(loc);
+                        cellTrigs[loc.Y, loc.X] = true;
+                    }
+                }
+                Func<bool[,], int, int, bool> clearsThreshold = (imgData, yVal, xVal) => imgData[yVal, xVal];
+                List<List<Point>> blobs = BlobDetection.FindBlobs(cellTrigs, width, height, points.ToArray(), clearsThreshold, true, true);
+                List<Rectangle> curBlobBounds = blobs.Where(b => b.Count > 0).Select(BlobDetection.GetBlobBounds).ToList();
+                if (updateItem != null)
+                {
+                    cellTrigBlobCenters[updateItem] = curBlobBounds.ToArray();
+                    break;
+                }
+                cellTrigBlobCenters[trig] = curBlobBounds.ToArray();
+            }
         }
 
         private void MapPanel_MouseDown(object sender, MouseEventArgs e)
@@ -110,7 +181,7 @@ namespace MobiusEditor.Tools
 
         private void MapPanel_MouseUp(object sender, MouseEventArgs e)
         {
-            if ((undoCellTriggers.Count > 0) || (redoCellTriggers.Count > 0))
+            if (undoCellTriggers.Count > 0 || redoCellTriggers.Count > 0)
             {
                 CommitChange();
             }
@@ -140,6 +211,9 @@ namespace MobiusEditor.Tools
                         break;
                     case Keys.PageUp:
                         newVal = Math.Max(curVal - 1, 0);
+                        break;
+                    case Keys.Enter:
+                        JumpToNextBlob();
                         break;
                 }
                 if (curVal != newVal)
@@ -263,7 +337,24 @@ namespace MobiusEditor.Tools
                 var cellTrigger = map.CellTriggers[cell];
                 if (cellTrigger != null)
                 {
-                    triggerComboBox.SelectedItem = cellTrigger.Trigger;
+                    String trigger = cellTrigger.Trigger;
+                    triggerComboBox.SelectedItem = trigger;
+                    if (cellTrigBlobCenters.TryGetValue(trigger, out Rectangle[] locations))
+                    {
+                        currentCellTrig = cellTrigger.Trigger;
+                        currentCellTrigIndex = 0;
+                        // If found, make sure clicking the "jump to next use" button
+                        // will go to the blob after the currently clicked one.
+                        for (Int32 i = 0; i < locations.Length; ++i)
+                        {
+                            Rectangle triggerLocation = locations[i];
+                            if (triggerLocation.Contains(location))
+                            {
+                                currentCellTrigIndex = i + 1;
+                                break;
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -273,6 +364,8 @@ namespace MobiusEditor.Tools
             bool origDirtyState = plugin.Dirty;
             plugin.Dirty = true;
             var undoCellTriggers2 = new Dictionary<int, CellTrigger>(undoCellTriggers);
+            String selected = triggerComboBox.SelectedItem.ToString();
+            UpdateBlobsList(null, selected);
             void undoAction(UndoRedoEventArgs e)
             {
                 List<Trigger> valid = e.Map.FilterCellTriggers().ToList();
@@ -286,6 +379,10 @@ namespace MobiusEditor.Tools
                 if (e.Plugin != null)
                 {
                     e.Plugin.Dirty = origDirtyState;
+                }
+                if (selected != null)
+                {
+                    UpdateBlobsList(null, selected);
                 }
             }
             var redoCellTriggers2 = new Dictionary<int, CellTrigger>(redoCellTriggers);
@@ -303,6 +400,10 @@ namespace MobiusEditor.Tools
                 {
                     e.Plugin.Dirty = true;
                 }
+                if (selected != null)
+                {
+                    UpdateBlobsList(null, selected);
+                }
             }
             undoCellTriggers.Clear();
             redoCellTriggers.Clear();
@@ -311,7 +412,38 @@ namespace MobiusEditor.Tools
 
         private void TriggerCombo_SelectedIndexChanged(System.Object sender, System.EventArgs e)
         {
+            String selected = triggerComboBox.SelectedItem.ToString();
+            jumpToButton.Enabled = cellTrigBlobCenters.TryGetValue(selected, out Rectangle[] locations) && locations != null && locations.Length > 0;
             mapPanel.Invalidate(map, navigationWidget.MouseCell);
+        }
+
+        private void JumpToButton_Click(Object sender, EventArgs e)
+        {
+            JumpToNextBlob();
+        }
+
+        private void JumpToNextBlob()
+        {
+            String selected = triggerComboBox.SelectedItem.ToString();
+            if (!String.Equals(currentCellTrig, selected, StringComparison.OrdinalIgnoreCase))
+            {
+                currentCellTrigIndex = 0;
+                currentCellTrig = selected;
+            }
+            if (cellTrigBlobCenters.TryGetValue(selected, out Rectangle[] locations))
+            {
+                if (locations == null || locations.Length == 0)
+                {
+                    return;
+                }
+                if (currentCellTrigIndex >= locations.Length)
+                {
+                    currentCellTrigIndex = 0;
+                }
+                Rectangle location = locations[currentCellTrigIndex];
+                mapPanel.JumpToPosition(map.Metrics, location);
+                currentCellTrigIndex++;
+            }
         }
 
         protected override void PreRenderMap()
@@ -375,8 +507,8 @@ namespace MobiusEditor.Tools
         public override void Activate()
         {
             base.Activate();
+            Deactivate(true);
             plugin.Map.TriggersUpdated += Triggers_CollectionChanged;
-            this.triggerComboBox.SelectedIndexChanged += this.TriggerCombo_SelectedIndexChanged;
             this.mapPanel.MouseDown += MapPanel_MouseDown;
             this.mapPanel.MouseUp += MapPanel_MouseUp;
             this.mapPanel.MouseMove += MapPanel_MouseMove;
@@ -389,10 +521,17 @@ namespace MobiusEditor.Tools
 
         public override void Deactivate()
         {
-            ExitPlacementMode();
-            base.Deactivate();
+            Deactivate(false);
+        }
+
+        public void Deactivate(bool forActivate)
+        {
+            if (!forActivate)
+            {
+                ExitPlacementMode();
+                base.Deactivate();
+            }
             plugin.Map.TriggersUpdated -= Triggers_CollectionChanged;
-            this.triggerComboBox.SelectedIndexChanged -= this.TriggerCombo_SelectedIndexChanged;
             this.mapPanel.MouseDown -= MapPanel_MouseDown;
             this.mapPanel.MouseUp -= MapPanel_MouseUp;
             this.mapPanel.MouseMove -= MapPanel_MouseMove;
@@ -411,6 +550,7 @@ namespace MobiusEditor.Tools
             {
                 if (disposing)
                 {
+                    this.triggerComboBox.SelectedIndexChanged -= this.TriggerCombo_SelectedIndexChanged;
                     Deactivate();
                 }
                 disposedValue = true;

@@ -1668,36 +1668,45 @@ namespace MobiusEditor.Tools
         public override void Activate()
         {
             base.Activate();
+            this.Deactivate(true);
             this.mapPanel.MouseDown += MapPanel_MouseDown;
             this.mapPanel.MouseUp += MapPanel_MouseUp;
             this.mapPanel.MouseMove += MapPanel_MouseMove;
             this.mapPanel.MouseLeave += MapPanel_MouseLeave;
             (this.mapPanel as Control).KeyDown += TemplateTool_KeyDown;
             (this.mapPanel as Control).KeyUp += TemplateTool_KeyUp;
-            navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
-            navigationWidget.ClosestMouseCellBorderChanged += MouseoverWidget_ClosestMouseCellBorderChanged;
-            templateTypeNavigationWidget?.Activate();
-            url.Undone += Url_UndoRedoDone;
-            url.Redone += Url_UndoRedoDone;
-            UpdateStatus();
+            this.navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
+            this.navigationWidget.ClosestMouseCellBorderChanged += MouseoverWidget_ClosestMouseCellBorderChanged;
+            this.templateTypeNavigationWidget?.Activate();
+            this.url.Undone += Url_UndoRedoDone;
+            this.url.Redone += Url_UndoRedoDone;
+            this.UpdateStatus();
         }
 
         public override void Deactivate()
         {
-            ExitAllModes();
-            base.Deactivate();
-            mapPanel.MouseDown -= MapPanel_MouseDown;
-            mapPanel.MouseUp -= MapPanel_MouseUp;
-            mapPanel.MouseMove -= MapPanel_MouseMove;
-            mapPanel.MouseLeave -= MapPanel_MouseLeave;
-            (mapPanel as Control).KeyDown -= TemplateTool_KeyDown;
-            (mapPanel as Control).KeyUp -= TemplateTool_KeyUp;
-            navigationWidget.CurrentCursor = Cursors.Default;
-            navigationWidget.ClosestMouseCellBorderChanged -= MouseoverWidget_ClosestMouseCellBorderChanged;
-            navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;
-            templateTypeNavigationWidget?.Deactivate();
-            url.Undone -= Url_UndoRedoDone;
-            url.Redone -= Url_UndoRedoDone;
+            this.Deactivate(false);
+        }
+
+        public void Deactivate(bool forActivate)
+        {
+            if (!forActivate)
+            {
+                this.ExitAllModes();
+                base.Deactivate();
+            }
+            this.mapPanel.MouseDown -= MapPanel_MouseDown;
+            this.mapPanel.MouseUp -= MapPanel_MouseUp;
+            this.mapPanel.MouseMove -= MapPanel_MouseMove;
+            this.mapPanel.MouseLeave -= MapPanel_MouseLeave;
+            (this.mapPanel as Control).KeyDown -= TemplateTool_KeyDown;
+            (this.mapPanel as Control).KeyUp -= TemplateTool_KeyUp;
+            this.navigationWidget.CurrentCursor = Cursors.Default;
+            this.navigationWidget.ClosestMouseCellBorderChanged -= MouseoverWidget_ClosestMouseCellBorderChanged;
+            this.navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;
+            this.templateTypeNavigationWidget?.Deactivate();
+            this.url.Undone -= Url_UndoRedoDone;
+            this.url.Redone -= Url_UndoRedoDone;
         }
 
         #region IDisposable Support

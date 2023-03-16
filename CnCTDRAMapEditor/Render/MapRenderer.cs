@@ -1380,22 +1380,30 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static void RenderAllBuildingEffectRadiuses(Graphics graphics, Map map, Size tileSize, double revealRadius)
+        public static void RenderAllBuildingEffectRadiuses(Graphics graphics, Map map, Size tileSize, int effectRadius)
         {
             foreach (var (topLeft, building) in map.Buildings.OfType<Building>()
                 .Where(b => (b.Occupier.Type.Flag & BuildingTypeFlag.IsGapGenerator) != BuildingTypeFlag.None))
             {
-                TeamColor tc = building.Type.CanRemap ? Globals.TheTeamColorManager[building.House.BuildingTeamColor] : null;
-                Color circleColor = TeamColor.GetTeamColorLazy(tc);
-
-                bool[,] cells = building.Type.BaseOccupyMask;
-                int maskY = cells.GetLength(0);
-                int maskX = cells.GetLength(1);
-                Rectangle circleBounds = GeneralUtils.GetBoxFromCenterCell(topLeft, maskX, maskY, revealRadius, revealRadius, tileSize, out Point center);
-                Color alphacorr = Color.FromArgb(building.Tint.A * 128 / 256, circleColor);
-                RenderCircleDiagonals(graphics, tileSize, alphacorr, revealRadius, revealRadius, center);
-                DrawDashesCircle(graphics, circleBounds, tileSize, alphacorr, true, -1.25f, 2.5f);
+                RenderBuildingEffectRadius(graphics, tileSize, effectRadius, building, topLeft);
             }
+        }
+
+        public static void RenderBuildingEffectRadius(Graphics graphics, Size tileSize, int effectRadius, Building building, Point topLeft)
+        {
+            if ((building.Type.Flag & BuildingTypeFlag.IsGapGenerator) != BuildingTypeFlag.IsGapGenerator)
+            {
+                return;
+            }
+            TeamColor tc = building.Type.CanRemap ? Globals.TheTeamColorManager[building.House.BuildingTeamColor] : null;
+            Color circleColor = TeamColor.GetTeamColorLazy(tc);
+            bool[,] cells = building.Type.BaseOccupyMask;
+            int maskY = cells.GetLength(0);
+            int maskX = cells.GetLength(1);
+            Rectangle circleBounds = GeneralUtils.GetBoxFromCenterCell(topLeft, maskX, maskY, effectRadius, effectRadius, tileSize, out Point center);
+            Color alphacorr = Color.FromArgb(building.Tint.A * 128 / 256, circleColor);
+            RenderCircleDiagonals(graphics, tileSize, alphacorr, effectRadius, effectRadius, center);
+            DrawDashesCircle(graphics, circleBounds, tileSize, alphacorr, true, -1.25f, 2.5f);
         }
 
         public static void RenderAllUnitEffectRadiuses(Graphics graphics, Map map, Size tileSize, int jamRadius)
@@ -1403,31 +1411,41 @@ namespace MobiusEditor.Render
             foreach (var (topLeft, unit) in map.Technos.OfType<Unit>()
                 .Where(b => (b.Occupier.Type.Flag & (UnitTypeFlag.IsGapGenerator | UnitTypeFlag.IsJammer)) != UnitTypeFlag.None))
             {
+                RenderUnitEffectRadius(graphics, tileSize, jamRadius, unit, topLeft);
+            }
+        }
 
-                string teamColor = null;
-                if (!unit.House.OverrideTeamColors.TryGetValue(unit.Type.Name, out teamColor))
-                {
-                    teamColor = unit.House.UnitTeamColor;
-                }
-                TeamColor tc = Globals.TheTeamColorManager[unit.House.UnitTeamColor];
-                Color circleColor = TeamColor.GetTeamColorLazy(tc);
-                Color alphacorr = Color.FromArgb(unit.Tint.A * 128 / 256, circleColor);
-                if ((unit.Type.Flag & UnitTypeFlag.IsJammer) == UnitTypeFlag.IsJammer)
-                {
-                    // uses map's Gap Generator range.
-                    Rectangle circleBounds = GeneralUtils.GetBoxFromCenterCell(topLeft, 1, 1, jamRadius, jamRadius, tileSize, out Point center);
-                    RenderCircleDiagonals(graphics, tileSize, alphacorr, jamRadius, jamRadius, center);
-                    DrawDashesCircle(graphics, circleBounds, tileSize, alphacorr, true, -1.25f, 2.5f);
-                }
-                if ((unit.Type.Flag & UnitTypeFlag.IsGapGenerator) == UnitTypeFlag.IsGapGenerator)
-                {
-                    // uses specific 5x7 circle around the unit cell
-                    int radiusX = 2;
-                    int radiusY = 3;
-                    Rectangle circleBounds = GeneralUtils.GetBoxFromCenterCell(topLeft, 1, 1, radiusX, radiusY, tileSize, out Point center);
-                    RenderCircleDiagonals(graphics, tileSize, alphacorr, radiusX, radiusY, center);
-                    DrawDashesCircle(graphics, circleBounds, tileSize, alphacorr, true, -1.25f, 2.5f);
-                }
+        public static void RenderUnitEffectRadius(Graphics graphics, Size tileSize, int jamRadius, Unit unit, Point cell)
+        {
+            bool isJammer = (unit.Type.Flag & UnitTypeFlag.IsJammer) == UnitTypeFlag.IsJammer;
+            bool isGapGen = (unit.Type.Flag & UnitTypeFlag.IsGapGenerator) == UnitTypeFlag.IsGapGenerator;
+            if (!isJammer && !isGapGen)
+            {
+                return;
+            }
+            String teamColor;
+            if (!unit.House.OverrideTeamColors.TryGetValue(unit.Type.Name, out teamColor))
+            {
+                teamColor = unit.House.UnitTeamColor;
+            }
+            TeamColor tc = Globals.TheTeamColorManager[teamColor];
+            Color circleColor = TeamColor.GetTeamColorLazy(tc);
+            Color alphacorr = Color.FromArgb(unit.Tint.A * 128 / 256, circleColor);
+            if (isJammer)
+            {
+                // uses map's Gap Generator range.
+                Rectangle circleBounds = GeneralUtils.GetBoxFromCenterCell(cell, 1, 1, jamRadius, jamRadius, tileSize, out Point center);
+                RenderCircleDiagonals(graphics, tileSize, alphacorr, jamRadius, jamRadius, center);
+                DrawDashesCircle(graphics, circleBounds, tileSize, alphacorr, true, -1.25f, 2.5f);
+            }
+            if (isGapGen)
+            {
+                // uses specific 5x7 circle around the unit cell
+                int radiusX = 2;
+                int radiusY = 3;
+                Rectangle circleBounds = GeneralUtils.GetBoxFromCenterCell(cell, 1, 1, radiusX, radiusY, tileSize, out Point center);
+                RenderCircleDiagonals(graphics, tileSize, alphacorr, radiusX, radiusY, center);
+                DrawDashesCircle(graphics, circleBounds, tileSize, alphacorr, true, -1.25f, 2.5f);
             }
         }
 
@@ -1459,31 +1477,41 @@ namespace MobiusEditor.Render
 
         public static void RenderAllWayPointRevealRadiuses(Graphics graphics, IGamePlugin plugin, Map map, Size tileSize, Waypoint selectedItem)
         {
-            int[] wpReveal1 = plugin.GetFlareRadiusForWaypoints(map, false);
-            int[] wpReveal2 = plugin.GetFlareRadiusForWaypoints(map, true);
-            for (int i = 0; i < map.Waypoints.Length; i++)
+            RenderAllWayPointRevealRadiuses(graphics, plugin, map, tileSize, selectedItem, false);
+        }
+
+        public static void RenderAllWayPointRevealRadiuses(Graphics graphics, IGamePlugin plugin, Map map, Size tileSize, Waypoint selectedItem, bool onlySelected)
+        {
+            int[] wpReveal1 = plugin.GetRevealRadiusForWaypoints(map, false);
+            int[] wpReveal2 = plugin.GetRevealRadiusForWaypoints(map, true);
+            Waypoint[] allWaypoints = map.Waypoints;
+            for (int i = 0; i < allWaypoints.Length; i++)
             {
-                Waypoint cur = map.Waypoints[i];
+                Waypoint cur = allWaypoints[i];
+                bool isSelected = selectedItem != null && selectedItem == cur;
+                if (onlySelected && !isSelected)
+                {
+                    continue;
+                }
                 Point? p = cur?.Point;
                 if (p.HasValue)
                 {
-                    bool isSelected = selectedItem == cur;
                     Color drawColor = isSelected ? Color.Yellow : Color.Orange;
                     if (wpReveal1[i] != 0)
                     {
-                        RenderWayPointRevealRadius(graphics, map, tileSize, drawColor, isSelected, false, wpReveal1[i], cur);
+                        RenderWayPointRevealRadius(graphics, map.Metrics, tileSize, drawColor, isSelected, false, wpReveal1[i], cur);
                     }
                     if (wpReveal2[i] != 0)
                     {
-                        RenderWayPointRevealRadius(graphics, map, tileSize, drawColor, isSelected, false, wpReveal2[i], cur);
+                        RenderWayPointRevealRadius(graphics, map.Metrics, tileSize, drawColor, isSelected, false, wpReveal2[i], cur);
                     }
                 }
             }
         }
 
-        public static void RenderWayPointRevealRadius(Graphics graphics, Map map, Size tileSize, Color circleColor, bool thickborder, bool forPreview, double revealRadius, Waypoint waypoint)
+        public static void RenderWayPointRevealRadius(Graphics graphics, CellMetrics metrics, Size tileSize, Color circleColor, bool thickborder, bool forPreview, double revealRadius, Waypoint waypoint)
         {
-            if (waypoint.Cell.HasValue && map.Metrics.GetLocation(waypoint.Cell.Value, out Point cellPoint))
+            if (waypoint.Cell.HasValue && metrics.GetLocation(waypoint.Cell.Value, out Point cellPoint))
             {
                 double diam = revealRadius * 2 + 1;
                 Rectangle circleBounds = new Rectangle(

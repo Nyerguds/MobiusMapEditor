@@ -354,29 +354,38 @@ namespace MobiusEditor.Tools
         public override void Activate()
         {
             base.Activate();
+            this.Deactivate(true);
             this.mapPanel.MouseDown += MapPanel_MouseDown;
             this.mapPanel.MouseUp += MapPanel_MouseUp;
             this.mapPanel.MouseLeave += MapPanel_MouseLeave;
             (this.mapPanel as Control).KeyDown += ResourceTool_KeyDown;
             (this.mapPanel as Control).KeyUp += ResourcesTool_KeyUpDown;
-            navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
-            url.Undone += Url_UndoRedo;
-            url.Redone += Url_UndoRedo;
-            UpdateStatus();
+            this.navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
+            this.url.Undone += Url_UndoRedo;
+            this.url.Redone += Url_UndoRedo;
+            this.UpdateStatus();
         }
 
         public override void Deactivate()
         {
-            ExitPlacementMode();
-            base.Deactivate();
+            this.Deactivate(false);
+        }
+
+        public void Deactivate(bool forActivate)
+        {
+            if (!forActivate)
+            {
+                ExitPlacementMode();
+                base.Deactivate();
+            }
             this.mapPanel.MouseDown -= MapPanel_MouseDown;
             this.mapPanel.MouseUp -= MapPanel_MouseUp;
             this.mapPanel.MouseLeave -= MapPanel_MouseLeave;
             (this.mapPanel as Control).KeyDown -= ResourceTool_KeyDown;
             (this.mapPanel as Control).KeyUp -= ResourcesTool_KeyUpDown;
-            navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;
-            url.Undone -= Url_UndoRedo;
-            url.Redone -= Url_UndoRedo;
+            this.navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;
+            this.url.Undone -= Url_UndoRedo;
+            this.url.Redone -= Url_UndoRedo;
         }
 
         #region IDisposable Support
