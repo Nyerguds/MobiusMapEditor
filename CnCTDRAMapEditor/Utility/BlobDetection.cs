@@ -131,7 +131,7 @@ namespace MobiusEditor.Utility
         }
 
         /// <summary>
-        /// Detects a list of all blobs in the image. Does no merging.
+        /// Detects a list of all blobs connected to the points in the toCheck list. Does no merging.
         /// </summary>
         /// <typeparam name="T">Type of the list to detect equal neighbours in.</typeparam>
         /// <param name="data">Image data array. It is processed as one pixel per coordinate.</param>
@@ -150,7 +150,7 @@ namespace MobiusEditor.Utility
         }
 
         /// <summary>
-        /// Detects a list of all blobs in the image, returning both the blobs and the boolean representations of the blobs. Does no merging.
+        /// Detects a list of all blobs connected to the points in the toCheck list. Does no merging.
         /// </summary>
         /// <typeparam name="T">Type of the list to detect equal neighbours in.</typeparam>
         /// <param name="data">Image data array. It is processed as one pixel per coordinate.</param>

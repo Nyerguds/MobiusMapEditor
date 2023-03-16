@@ -1861,7 +1861,7 @@ namespace MobiusEditor
         private void UpdateVisibleLayers()
         {
             MapLayerFlag layers = MapLayerFlag.All;
-            if (!viewExtraIndicatorsMapBoundariesMenuItem.Checked)
+            if (!viewIndicatorsMapBoundariesMenuItem.Checked)
             {
                 layers &= ~MapLayerFlag.Boundaries;
             }
@@ -2032,7 +2032,7 @@ namespace MobiusEditor
             {
                 // Suppress updates.
                 this.activeTool = null;
-                SwitcbIndicatorLayers(true);
+                SwitchIndicatorLayers(true);
             }
             finally
             {
@@ -2054,7 +2054,7 @@ namespace MobiusEditor
             {
                 // Suppress updates.
                 this.activeTool = null;
-                SwitcbIndicatorLayers(false);
+                SwitchIndicatorLayers(false);
 
             }
             finally
@@ -2070,8 +2070,9 @@ namespace MobiusEditor
             }
         }
 
-        private void SwitcbIndicatorLayers(bool enable)
+        private void SwitchIndicatorLayers(bool enable)
         {
+            viewIndicatorsMapBoundariesMenuItem.Checked = enable;
             viewIndicatorsWaypointsMenuItem.Checked = enable;
             viewIndicatorsFootballAreaMenuItem.Checked = enable;
             viewIndicatorsCellTriggersMenuItem.Checked = enable;

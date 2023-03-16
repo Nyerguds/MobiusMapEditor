@@ -148,8 +148,8 @@ namespace MobiusEditor.Tools
                         cellTrigs[loc.Y, loc.X] = true;
                     }
                 }
-                Func<bool[,], int, int, bool> clearsThreshold = (imgData, yVal, xVal) => imgData[yVal, xVal];
-                List<List<Point>> blobs = BlobDetection.FindBlobs(cellTrigs, width, height, points.ToArray(), clearsThreshold, true, true);
+                Func<bool[,], int, int, bool> isCelltrigger = (mapdata, yVal, xVal) => mapdata[yVal, xVal];
+                List<List<Point>> blobs = BlobDetection.FindBlobs(cellTrigs, width, height, points.ToArray(), isCelltrigger, true, true);
                 List<Rectangle> curBlobBounds = blobs.Where(b => b.Count > 0).Select(BlobDetection.GetBlobBounds).ToList();
                 if (updateItem != null)
                 {
