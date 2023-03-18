@@ -364,7 +364,7 @@ namespace MobiusEditor.Tools
             bool origDirtyState = plugin.Dirty;
             plugin.Dirty = true;
             var undoCellTriggers2 = new Dictionary<int, CellTrigger>(undoCellTriggers);
-            String selected = triggerComboBox.SelectedItem.ToString();
+            string selected = triggerComboBox.SelectedItem as string ?? String.Empty;
             UpdateBlobsList(null, selected);
             void undoAction(UndoRedoEventArgs e)
             {
@@ -412,9 +412,15 @@ namespace MobiusEditor.Tools
 
         private void TriggerCombo_SelectedIndexChanged(System.Object sender, System.EventArgs e)
         {
-            String selected = triggerComboBox.SelectedItem.ToString();
-            jumpToButton.Enabled = cellTrigBlobCenters.TryGetValue(selected, out Rectangle[] locations) && locations != null && locations.Length > 0;
-            mapPanel.Invalidate(map, navigationWidget.MouseCell);
+            string selected = triggerComboBox.SelectedItem as string;
+            jumpToButton.Enabled = selected != null && cellTrigBlobCenters.TryGetValue(selected, out Rectangle[] locations) && locations != null && locations.Length > 0;
+            if (placementMode)
+            {
+                // An invalidate without cells won't call PreRenderMap, and will thus
+                // not add the dummy to the clone map. So we call it manually.
+                PreRenderMap();
+                mapPanel.Invalidate();
+            }
         }
 
         private void JumpToButton_Click(Object sender, EventArgs e)
@@ -424,7 +430,7 @@ namespace MobiusEditor.Tools
 
         private void JumpToNextBlob()
         {
-            String selected = triggerComboBox.SelectedItem.ToString();
+            string selected = triggerComboBox.SelectedItem as string;
             if (!String.Equals(currentCellTrig, selected, StringComparison.OrdinalIgnoreCase))
             {
                 currentCellTrigIndex = 0;
@@ -441,7 +447,7 @@ namespace MobiusEditor.Tools
                     currentCellTrigIndex = 0;
                 }
                 Rectangle location = locations[currentCellTrigIndex];
-                mapPanel.JumpToPosition(map.Metrics, location);
+                mapPanel.JumpToPosition(map.Metrics, location, false);
                 currentCellTrigIndex++;
             }
         }

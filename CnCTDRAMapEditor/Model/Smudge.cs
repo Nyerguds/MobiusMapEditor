@@ -33,6 +33,7 @@ namespace MobiusEditor.Model
         public Color Tint { get; set; } = Color.White;
 
         public Rectangle OverlapBounds => new Rectangle(Point.Empty, Type.Size);
+        public bool[,] OpaqueMask => new bool[1, 1] { { true } };
 
         protected bool SetField<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
         {

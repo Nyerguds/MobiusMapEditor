@@ -226,7 +226,7 @@ namespace MobiusEditor.Tools
             if ((layersToRender & (MapLayerFlag.Waypoints | MapLayerFlag.CrateOutlines)) == (MapLayerFlag.Waypoints | MapLayerFlag.CrateOutlines)
                 && (manuallyHandledLayers & MapLayerFlag.CrateOutlines) == MapLayerFlag.None)
             {
-                MapRenderer.RenderAllCrateOutlines(graphics, map, tileSize, tileScale);
+                MapRenderer.RenderAllCrateOutlines(graphics, map, tileSize, tileScale, !Globals.OutlineAllCrates);
             }
             if ((Globals.ShowPlacementGrid && inPlacementMode) ||
                 (layersToRender & MapLayerFlag.MapGrid) == MapLayerFlag.MapGrid

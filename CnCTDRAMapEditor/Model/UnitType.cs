@@ -51,6 +51,7 @@ namespace MobiusEditor.Model
         public int TurretY { get; private set; }
         public UnitTypeFlag Flag { get; private set; }
         public Rectangle OverlapBounds => new Rectangle(-1, -1, 3, 3);
+        public bool[,] OpaqueMask => new bool[1, 1] { { true } };
         public bool[,] OccupyMask => new bool[1, 1] { { true } };
         public string OwnerHouse { get; private set; }
         public bool IsGroundUnit => !IsAircraft && !IsVessel;

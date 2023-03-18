@@ -432,5 +432,8 @@ Unreleased
 * Added Word Wrap button to the error message dialog.
 * When a new unit type is added to a Teamtype, its amount will now default to 1.
 * Optimised the repaint process when enabling or disabling layers.
-* Added "Crate outlines" under "View" → "Indicators".
+* Added "Outlines on overlapped crates" option under "View" → "Indicators". An extra option "Tools" → "Options" → "Show crate outline indicators on all crates" will make it ignore the "overlapped" requirement and show on all crates.
 * Fixed issues with videos sometimes not being saved / loaded for Red Alert. missions.
+* When loading a map, the editor will zoom in and reposition to exactly show the map bounds area with a 1-cell border around it. This behaviour is controlled by the "ZoomToBoundsOnLoad" setting.
+* Items are now sorted by map cell number when saved, and capitalised like they are in original maps.
+* Waypoints in Tiberian Dawn maps are now saved as they were in classic maps, with all waypoints listed last to first, ands the unused ones filled in with '-1'.

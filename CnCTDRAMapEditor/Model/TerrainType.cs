@@ -29,6 +29,7 @@ namespace MobiusEditor.Model
         public string DisplayName => Name;
 
         public Rectangle OverlapBounds => new Rectangle(Point.Empty, Size);
+        public bool[,] OpaqueMask { get; private set; }
 
         public bool[,] OccupyMask { get; private set; }
 
@@ -177,7 +178,7 @@ namespace MobiusEditor.Model
 
         public override string ToString()
         {
-            return Name;
+            return (Name ?? String.Empty).ToUpperInvariant();
         }
 
         public void Init(TheaterType theater)
@@ -196,6 +197,7 @@ namespace MobiusEditor.Model
                     g.DrawImage(tile.Image, overlayBounds);
                 }
                 Thumbnail = th;
+                OpaqueMask = GeneralUtils.FindOpaqueCells(th, Size, 10, 25, 0x80);
             }
             else
             {

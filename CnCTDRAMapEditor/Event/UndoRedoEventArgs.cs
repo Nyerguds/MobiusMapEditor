@@ -33,7 +33,7 @@ namespace MobiusEditor.Event
         {
             MapPanel = mapPanel;
             Plugin = plugin;
-            Map = plugin.Map;
+            Map = plugin?.Map;
             Cancelled = false;
         }
 

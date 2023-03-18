@@ -30,6 +30,7 @@ namespace MobiusEditor.Model
         public BuildingType Type { get => type; set => SetField(ref type, value); }
 
         public Rectangle OverlapBounds => Type.OverlapBounds;
+        public bool[,] OpaqueMask => Type.OpaqueMask;
 
         public bool[,] OccupyMask => Type.OccupyMask;
 

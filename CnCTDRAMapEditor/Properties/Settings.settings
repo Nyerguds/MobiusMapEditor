@@ -23,6 +23,9 @@
     <Setting Name="DefaultShowPlacementGrid" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>
+    <Setting Name="DefaultOutlineAllCrates" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
     <Setting Name="DefaultCratesOnTop" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>
@@ -31,6 +34,9 @@
     </Setting>
     <Setting Name="DefaultExportScale" Type="System.Double" Scope="Application">
       <Value Profile="(Default)">-0.5</Value>
+    </Setting>
+    <Setting Name="ZoomToBoundsOnLoad" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="MapGridColor" Type="System.Drawing.Color" Scope="Application">
       <Value Profile="(Default)">64, 0, 0, 255</Value>

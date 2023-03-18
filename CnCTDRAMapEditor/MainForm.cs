@@ -97,6 +97,7 @@ namespace MobiusEditor
         private IGamePlugin plugin;
         private FileType loadedFileType;
         private string filename;
+        private bool jumpToBounds;
 
         private readonly MRU mru;
 
@@ -121,7 +122,10 @@ namespace MobiusEditor
             // Loaded from global settings.
             toolsOptionsBoundsObstructFillMenuItem.Checked = Globals.BoundsObstructFill;
             toolsOptionsSafeDraggingMenuItem.Checked = Globals.TileDragProtect;
+            toolsOptionsRandomizeDragPlaceMenuItem.Checked = Globals.TileDragRandomize;
             toolsOptionsPlacementGridMenuItem.Checked = Globals.ShowPlacementGrid;
+            toolsOptionsOutlineAllCratesMenuItem.Checked = Globals.OutlineAllCrates;
+            toolsOptionsCratesOnTopMenuItem.Checked = Globals.CratesOnTop;
             viewExtraIndicatorsMapGridMenuItem.Checked = Globals.ShowMapGrid;
             // Obey the settings.
             this.mapPanel.SmoothScale = Globals.MapSmoothScale;
@@ -847,6 +851,15 @@ namespace MobiusEditor
             }
         }
 
+        private void toolsOptionsOutlineAllCratesMenuItem_Click(Object sender, EventArgs e)
+        {
+            if (sender is ToolStripMenuItem tsmi)
+            {
+                Globals.OutlineAllCrates = tsmi.Checked;
+            }
+            mapPanel.Invalidate();
+        }
+
         private void ToolsStatsGameObjectsMenuItem_Click(Object sender, EventArgs e)
         {
             if (plugin == null)
@@ -1496,6 +1509,7 @@ namespace MobiusEditor
                 }
                 mapPanel.MapImage = plugin.MapImage;
                 filename = loadInfo.FileName;
+                this.jumpToBounds = Globals.ZoomToBoundsOnLoad;
                 loadedFileType = loadInfo.FileType;
                 url.Clear();
                 CleanupTools();
@@ -1972,90 +1986,32 @@ namespace MobiusEditor
 
         private void ViewLayersEnableAllMenuItem_Click(object sender, EventArgs e)
         {
-            ITool activeTool = this.activeTool;
-            try
-            {
-                // Suppress updates.
-                this.activeTool = null;
-                SwitchBaseLayers(true);
-            }
-            finally
-            {
-                // Re-enable tool, force refresh.
-                MapLayerFlag layerBackup = this.activeLayers;
-                // Clear without refresh
-                this.activeLayers = MapLayerFlag.None;
-                // Restore tool
-                this.activeTool = activeTool;
-                // Set with refresh
-                ActiveLayers = layerBackup;
-            }
+            EnableDisableLayersCategory(true, true);
         }
 
         private void ViewLayersDisableAllMenuItem_Click(object sender, EventArgs e)
         {
-            ITool activeTool = this.activeTool;
-            try
-            {
-                // Suppress updates.
-                this.activeTool = null;
-                SwitchBaseLayers(false);
-            }
-            finally
-            {
-                // Re-enable tool, force refresh.
-                MapLayerFlag layerBackup = this.activeLayers;
-                // Clear without refresh
-                this.activeLayers = MapLayerFlag.None;
-                // Restore tool
-                this.activeTool = activeTool;
-                // Set with refresh
-                ActiveLayers = layerBackup;
-            }
-        }
-
-        private void SwitchBaseLayers(bool enabled)
-        {
-            viewLayersBuildingsMenuItem.Checked = enabled;
-            viewLayersInfantryMenuItem.Checked = enabled;
-            viewLayersUnitsMenuItem.Checked = enabled;
-            viewLayersTerrainMenuItem.Checked = enabled;
-            viewLayersOverlayMenuItem.Checked = enabled;
-            viewLayersSmudgeMenuItem.Checked = enabled;
-            viewLayersWaypointsMenuItem.Checked = enabled;
+            EnableDisableLayersCategory(true, false);
         }
 
         private void ViewIndicatorsEnableAllToolStripMenuItem_Click(Object sender, EventArgs e)
         {
-            ITool activeTool = this.activeTool;
-            try
-            {
-                // Suppress updates.
-                this.activeTool = null;
-                SwitchIndicatorLayers(true);
-            }
-            finally
-            {
-                // Re-enable tool, force refresh.
-                MapLayerFlag layerBackup = this.activeLayers;
-                // Clear without refresh
-                this.activeLayers = MapLayerFlag.None;
-                // Restore tool
-                this.activeTool = activeTool;
-                // Set with refresh
-                ActiveLayers = layerBackup;
-            }
+            EnableDisableLayersCategory(false, true);
         }
 
         private void ViewIndicatorsDisableAllToolStripMenuItem_Click(Object sender, EventArgs e)
         {
+            EnableDisableLayersCategory(false, false);
+        }
+
+        private void EnableDisableLayersCategory(bool baseLayers, bool enabled)
+        {
             ITool activeTool = this.activeTool;
             try
             {
                 // Suppress updates.
                 this.activeTool = null;
-                SwitchIndicatorLayers(false);
-
+                SwitchLayers(baseLayers, enabled);
             }
             finally
             {
@@ -2070,15 +2026,30 @@ namespace MobiusEditor
             }
         }
 
-        private void SwitchIndicatorLayers(bool enable)
+
+        private void SwitchLayers(bool baseLayers, bool enabled)
         {
-            viewIndicatorsMapBoundariesMenuItem.Checked = enable;
-            viewIndicatorsWaypointsMenuItem.Checked = enable;
-            viewIndicatorsFootballAreaMenuItem.Checked = enable;
-            viewIndicatorsCellTriggersMenuItem.Checked = enable;
-            viewIndicatorsObjectTriggersMenuItem.Checked = enable;
-            viewIndicatorsBuildingRebuildLabelsMenuItem.Checked = enable;
-            viewIndicatorsBuildingFakeLabelsMenuItem.Checked = enable;
+            if (baseLayers)
+            {
+                viewLayersBuildingsMenuItem.Checked = enabled;
+                viewLayersInfantryMenuItem.Checked = enabled;
+                viewLayersUnitsMenuItem.Checked = enabled;
+                viewLayersTerrainMenuItem.Checked = enabled;
+                viewLayersOverlayMenuItem.Checked = enabled;
+                viewLayersSmudgeMenuItem.Checked = enabled;
+                viewLayersWaypointsMenuItem.Checked = enabled;
+            }
+            else
+            {
+                viewIndicatorsMapBoundariesMenuItem.Checked = enabled;
+                viewIndicatorsWaypointsMenuItem.Checked = enabled;
+                viewIndicatorsFootballAreaMenuItem.Checked = enabled;
+                viewIndicatorsCellTriggersMenuItem.Checked = enabled;
+                viewIndicatorsObjectTriggersMenuItem.Checked = enabled;
+                viewIndicatorsBuildingRebuildLabelsMenuItem.Checked = enabled;
+                viewIndicatorsBuildingFakeLabelsMenuItem.Checked = enabled;
+                viewIndicatorsCrateOutlinesMenuItem.Checked = enabled;
+            }
         }
 
         private void DeveloperGoToINIMenuItem_Click(object sender, EventArgs e)
@@ -2431,6 +2402,16 @@ namespace MobiusEditor
             if (!loadMultiThreader.IsExecuting && !saveMultiThreader.IsExecuting)
             {
                 SimpleMultiThreading.RemoveBusyLabel(this);
+                if (jumpToBounds)
+                {
+                    jumpToBounds = false;
+                    if (plugin != null && plugin.Map != null && mapPanel.MapImage != null)
+                    {
+                        Rectangle rect = plugin.Map.Bounds;
+                        rect.Inflate(1,1);
+                        mapPanel.JumpToPosition(plugin.Map.Metrics, rect, true);
+                    }
+                }
             }
         }
     }

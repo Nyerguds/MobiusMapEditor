@@ -157,7 +157,8 @@ namespace MobiusEditor.Model
         private static readonly Point[] stoppingLocations = new Point[Globals.NumInfantryStops];
 
         public Rectangle OverlapBounds => new Rectangle(-1, -1, 3, 3);
-
+        public bool[,] OpaqueMask => new bool[1, 1] { { true } };
+        
         public bool[,] OccupyMask => new bool[1, 1] { { true } };
 
         public readonly Infantry[] Infantry = new Infantry[Globals.NumInfantryStops];

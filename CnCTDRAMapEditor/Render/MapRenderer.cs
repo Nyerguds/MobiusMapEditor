@@ -1099,41 +1099,105 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static void RenderAllCrateOutlines(Graphics g, Map map, Size tileSize, double tileScale)
+        public static void RenderAllCrateOutlines(Graphics g, Map map, Size tileSize, double tileScale, bool onlyIfBehindObjects)
         {
-            // Optimised to only get the paint areas once per graphic.
-            Dictionary<string, Region> paintAreas = new Dictionary<string, Region>();
+            // Optimised to only get the paint area once per crate type.
+            // Sadly can't easily be cached because everything in this class is static.
+            Dictionary<string, RegionData> paintAreas = new Dictionary<string, RegionData>();
             float outlineThickness = 0.05f;
             byte alphaThreshold = 0x40;
             //double lumThreshold = 0.01d;
             foreach (var (cell, overlay) in map.Overlay)
             {
                 OverlayType ovlt = overlay.Type;
-                if ((ovlt.Flag & OverlayTypeFlag.Crate) != OverlayTypeFlag.None && map.Metrics.GetLocation(cell, out Point location))
+                Size cellSize = new Size(1, 1);
+                if ((ovlt.Flag & OverlayTypeFlag.Crate) == OverlayTypeFlag.None
+                    || !map.Metrics.GetLocation(cell, out Point location))
                 {
-                    Color outlineCol = Color.FromArgb(0xA0, Color.Red);
-                    if ((ovlt.Flag & OverlayTypeFlag.Crate) == OverlayTypeFlag.WoodCrate) outlineCol = Color.FromArgb(0xA0, 0xFF, 0xC0, 0x40);
-                    if ((ovlt.Flag & OverlayTypeFlag.Crate) == OverlayTypeFlag.SteelCrate) outlineCol = Color.FromArgb(0xA0, Color.White);
+                    continue;
+                }
+                if (onlyIfBehindObjects && !IsOverlapped(map, location))
+                {
+                    continue;
+                }
+                Color outlineCol = Color.FromArgb(0xA0, Color.Red);
+                if ((ovlt.Flag & OverlayTypeFlag.Crate) == OverlayTypeFlag.WoodCrate) outlineCol = Color.FromArgb(0xA0, 0xFF, 0xC0, 0x40);
+                if ((ovlt.Flag & OverlayTypeFlag.Crate) == OverlayTypeFlag.SteelCrate) outlineCol = Color.FromArgb(0xA0, Color.White);
 
-                    Region paintAreaRel;
-                    if (!paintAreas.TryGetValue(ovlt.Name, out paintAreaRel))
-                    {
-                        paintAreaRel = GetOverlayOutline(map.Theater, location, tileSize, tileScale, overlay, outlineThickness, alphaThreshold, true);
-                        paintAreas[ovlt.Name] = paintAreaRel;
-                    }
-                    int actualTopLeftX = location.X * tileSize.Width;
-                    int actualTopLeftY = location.Y * tileSize.Height;
-                    Region paintArea = new Region(paintAreaRel.GetRegionData());
-                    paintArea.Translate(actualTopLeftX, actualTopLeftY);
+                RegionData paintAreaRel;
+                if (!paintAreas.TryGetValue(ovlt.Name, out paintAreaRel))
+                {
+                    paintAreaRel = GetOverlayOutline(map.Theater, location, tileSize, tileScale, overlay, outlineThickness, alphaThreshold, true);
+                    paintAreas[ovlt.Name] = paintAreaRel;
+                }
+                int actualTopLeftX = location.X * tileSize.Width;
+                int actualTopLeftY = location.Y * tileSize.Height;
+                if (paintAreaRel != null)
+                {
+                    using (Region paintArea = new Region(paintAreaRel))
                     using (Brush brush = new SolidBrush(outlineCol))
                     {
+                        paintArea.Translate(actualTopLeftX, actualTopLeftY);
                         g.FillRegion(brush, paintArea);
                     }
                 }
             }
         }
 
-        public static Region GetOverlayOutline(TheaterType theater, Point topLeft, Size tileSize, double tileScale, Overlay overlay, float outline, byte alphaThreshold, bool relative)
+        private static Boolean IsOverlapped(Map map,  Point location)
+        {
+            ICellOccupier techno = map.Technos[location];
+            // Single-cell occupier. Always pass.
+            if (techno is Unit || techno is InfantryGroup)
+            {
+                return true;
+            }
+            // Logic for multi-cell occupiers; buildings and terrain.
+            // Return true if either an occupied cell, or overlayed by graphics deemed opaque.
+            ISet<ICellOverlapper> technos = map.Overlappers.OverlappersAt(location);
+            if (technos.Count == 0)
+            {
+                return false;
+            }
+            foreach (ICellOverlapper ovl in technos)
+            {
+                Building bld = ovl as Building;
+                if (bld == null && !(ovl is Terrain))
+                {
+                    continue;
+                }
+                ICellOccupier occ = ovl as ICellOccupier;
+                bool[,] opaqueMask = ovl.OpaqueMask;
+                int maskY = opaqueMask.GetLength(0);
+                int maskX = opaqueMask.GetLength(1);
+                Point? pt = map.Technos[occ];
+                if (!pt.HasValue)
+                {
+                    continue;
+                }
+                // Get list of points, find current point in the list.
+                Rectangle boundsRect = new Rectangle(pt.Value, new Size(maskX, maskY));
+                List<Point> pts = boundsRect.Points().OrderBy(p => p.Y).ThenBy(p => p.X).ToList();
+                int index = pts.IndexOf(location);
+                if (index == -1)
+                {
+                    continue;
+                }
+                // For buildings, need to specifically take the mask without bib attached.
+                bool[,] occupyMask = bld != null ? bld.Type.BaseOccupyMask : occ.OccupyMask;
+                // Trick to convert 2-dimensional arrays to linear format.
+                bool[] occupyArr = occupyMask.Cast<bool>().ToArray();
+                bool[] opaqueArr = opaqueMask.Cast<bool>().ToArray();
+                // If either part of the occupied cells, or obscured from view by graphics, return true.
+                if (occupyArr[index] || opaqueArr[index])
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public static RegionData GetOverlayOutline(TheaterType theater, Point topLeft, Size tileSize, double tileScale, Overlay overlay, float outline, byte alphaThreshold, bool relative)
         {
             OverlayType ovtype = overlay.Type;
             string name = ovtype.GraphicsSource;
@@ -1141,9 +1205,7 @@ namespace MobiusEditor.Render
             // For Decoration types, generate dummy if not found.
             if (!Globals.TheTilesetManager.GetTileData(theater.Tilesets, name, icon, out Tile tile, (ovtype.Flag & OverlayTypeFlag.Pavement) != 0, false))
             {
-                Region rg = new Region();
-                rg.MakeEmpty();
-                return rg;
+                return null;
             }
             int actualTopLeftX = relative ? 0 : topLeft.X * tileSize.Width;
             int actualTopLeftY = relative ? 0 : topLeft.Y * tileSize.Height;
@@ -1216,15 +1278,18 @@ namespace MobiusEditor.Render
                 {
                     drawPoints.Remove(p);
                 }
-                Region r = new Region();
-                r.MakeEmpty();
-                Size pixelSize = new Size(1, 1);
-                foreach (Point p in drawPoints)
+                RegionData rData;
+                using (Region r = new Region())
                 {
-                    r.Union(new Rectangle(p, pixelSize));
+                    r.MakeEmpty();
+                    Size pixelSize = new Size(1, 1);
+                    foreach (Point p in drawPoints)
+                    {
+                        r.Union(new Rectangle(p, pixelSize));
+                    }
+                    rData = r.GetRegionData();
                 }
-                return r;
-                //return drawPoints.Select(p => new Rectangle(p, pixelSize)).ToArray();
+                return rData;
             }
         }
 

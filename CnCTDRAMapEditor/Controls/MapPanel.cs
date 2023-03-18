@@ -127,12 +127,12 @@ namespace MobiusEditor.Controls
             }
         }
 
-        public void JumpToPosition(CellMetrics metrics, Rectangle position)
+        public void JumpToPosition(CellMetrics metrics, Rectangle position, bool zoom)
         {
-            JumpToPosition(metrics, position.Location, position.Width, position.Height);
+            JumpToPosition(metrics, position.Location, position.Width, position.Height, zoom);
         }
 
-        public void JumpToPosition(CellMetrics metrics, Point cellPoint, int cellsWidth, int cellsHeight)
+        public void JumpToPosition(CellMetrics metrics, Point cellPoint, int cellsWidth, int cellsHeight, bool doZoom)
         {
             int scaleFull = Math.Min(this.ClientRectangle.Width, this.ClientRectangle.Height);
             bool isWidth = scaleFull == this.ClientRectangle.Width;
@@ -140,10 +140,16 @@ namespace MobiusEditor.Controls
             // pixels per tile at zoom level 1.
             // Technically can't handle non-square cells, but, if anyone messes with that they have more problems than this function.
             double basicTileSize = scaleFull / mapSize;
+            double zoom = this.Zoom;
+            if (doZoom)
+            {
+                zoom = Math.Min(this.maxZoom, isWidth? ((double)metrics.Width / cellsWidth) : ((double)metrics.Height / cellsHeight));
+                this.Zoom = zoom;
+            }
             // Convert cell position to actual position on image.
-            int cellX = (int)Math.Round(basicTileSize * this.Zoom * (cellPoint.X + (cellsWidth / 2.0d)));
-            int cellY = (int)Math.Round(basicTileSize * this.Zoom * (cellPoint.Y + (cellsHeight / 2.0d)));
-            // Get location to use to center the waypoint on the screen.
+            int cellX = (int)Math.Round(basicTileSize * zoom * (cellPoint.X + (cellsWidth / 2.0d)));
+            int cellY = (int)Math.Round(basicTileSize * zoom * (cellPoint.Y + (cellsHeight / 2.0d)));
+            // Get location to use to center the chosen rectangle on the screen.
             int x = cellX - this.ClientRectangle.Width / 2;
             int y = cellY - this.ClientRectangle.Height / 2;
             this.AutoScrollPosition = new Point(x, y);

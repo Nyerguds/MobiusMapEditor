@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -398,6 +399,54 @@ namespace MobiusEditor.Utility
                 }
             }
             return occupyMask.ToString();
+        }
+
+        public static Boolean[,] FindOpaqueCells(Bitmap image, Size size, int maxPercentage, int borderPercentage, int minAlpha)
+        {
+            int width = image.Width;
+            int height = image.Height;
+            Boolean[,] cellEvaluation = new bool[size.Height, size.Width];
+            int fullCellWidth = width / size.Width;
+            int fullCellHeight = height / size.Height;
+            int cellBorderX = fullCellWidth * borderPercentage / 100;
+            int cellBorderY = fullCellHeight * borderPercentage / 100;
+            int usedCellWidth = fullCellWidth - cellBorderX * 2;
+            int usedCellHeight = fullCellHeight - cellBorderY * 2;
+            for (int y = 0; y < size.Height; ++y)
+            {
+                for (int x = 0; x < size.Width; ++x)
+                {
+                    Rectangle cellRect = new Rectangle(fullCellHeight * x + cellBorderX, fullCellHeight * y + cellBorderY, usedCellWidth, usedCellHeight);
+                    int cellWidth = cellRect.Width;
+                    int cellHeight = cellRect.Height;
+                    int cellPixels = cellWidth * cellHeight;
+                    int threshold = cellPixels * maxPercentage / 100;
+                    int stride;
+                    Byte[] data = ImageUtils.GetImageData(image, out stride, ref cellRect, PixelFormat.Format32bppArgb, true);
+                    int opaquePixels = 0;
+                    int lineAddr = 0;
+                    for (int cellY = 0; cellY < cellWidth; ++cellY)
+                    {
+                        int addr = lineAddr;
+                        for (int cellX = 0; cellX < cellHeight; ++cellX)
+                        {
+                            if (data[addr + 3] > minAlpha)
+                            {
+                                opaquePixels++;
+                                if (opaquePixels > threshold)
+                                {
+                                    cellY = cellHeight;
+                                    break;
+                                }
+                            }
+                            addr += 4;
+                        }
+                        lineAddr += stride;
+                    }
+                    cellEvaluation[y, x] = opaquePixels > threshold;
+                }
+            }
+            return cellEvaluation;
         }
 
         public static String ReplaceLinebreaks(String input, char replacement)

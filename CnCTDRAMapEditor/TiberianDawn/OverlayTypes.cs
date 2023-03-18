@@ -43,7 +43,7 @@ namespace MobiusEditor.TiberianDawn
         public static readonly OverlayType Tiberium12 = new OverlayType(17, "ti12", OverlayTypeFlag.TiberiumOrGold, 11);
         public static readonly OverlayType Road = new OverlayType(18, "road", "Concrete Road", OverlayTypeFlag.Pavement);
         // Dummy type to be transformed to two ROAD-lines in the ini.
-        public static readonly OverlayType Road2 = new OverlayType(99, "roadfullslab", "Concrete Road (full)", null, OverlayTypeFlag.Pavement, "road", 1);
+        public static readonly OverlayType Road2 = new OverlayType(19, "roadfullslab", "Concrete Road (full)", null, OverlayTypeFlag.Pavement, "road", 1);
         // Not available to place down sadly: even the ini read for it in the game code only succeeds if 'IsGross' is enabled.
         //public static readonly OverlayType Squishy = new OverlayType(19, "SQUISH", OverlayTypeFlag.Pavement);
         public static readonly OverlayType V12 = new OverlayType(20, "v12", "TEXT_STRUCTURE_TITLE_CIV12", new[] { TheaterTypes.Temperate, TheaterTypes.Winter }, OverlayTypeFlag.Solid);

@@ -90,7 +90,6 @@ namespace MobiusEditor.Model
                     break;
                 }
             }
-
             return rectangleSet.SelectMany(x => x.Points()).ToHashSet();
         }
 
@@ -99,6 +98,21 @@ namespace MobiusEditor.Model
         public ISet<Point> Overlaps(IEnumerable<Point> points) => Overlaps(points.Select(p => new Rectangle(p, new Size(1, 1))));
 
         public ISet<Point> Overlaps(Point point) => Overlaps(point.Yield());
+
+        public ISet<T> OverlappersAt(IEnumerable<Rectangle> rectangles)
+        {
+            HashSet<T> foundOverlappers = new HashSet<T>();
+            T[] overlap = overlappers.Where(x => rectangles.Any(y => x.Value.IntersectsWith(y))).Select(x => x.Key).ToArray();
+            foundOverlappers.UnionWith(overlap);
+            return foundOverlappers;
+        }
+
+        public ISet<T> OverlappersAt(Rectangle rectangle) => OverlappersAt(rectangle.Yield());
+
+        public ISet<T> OverlappersAt(IEnumerable<Point> points) => OverlappersAt(points.Select(p => new Rectangle(p, new Size(1, 1))));
+
+        public ISet<T> OverlappersAt(Point point) => OverlappersAt(point.Yield());
+
 
         public IEnumerable<(Point Location, U Overlapper)> OfType<U>() where U : T => this.Where(i => i.Overlapper is U).Select(i => (i.Location, (U)i.Overlapper));
 

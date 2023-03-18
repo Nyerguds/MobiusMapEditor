@@ -89,6 +89,15 @@ namespace MobiusEditor.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool DefaultOutlineAllCrates {
+            get {
+                return ((bool)(this["DefaultOutlineAllCrates"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool DefaultCratesOnTop {
             get {
                 return ((bool)(this["DefaultCratesOnTop"]));
@@ -110,6 +119,15 @@ namespace MobiusEditor.Properties {
         public double DefaultExportScale {
             get {
                 return ((double)(this["DefaultExportScale"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool ZoomToBoundsOnLoad {
+            get {
+                return ((bool)(this["ZoomToBoundsOnLoad"]));
             }
         }
         

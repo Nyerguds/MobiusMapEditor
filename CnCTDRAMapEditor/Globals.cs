@@ -29,11 +29,13 @@ namespace MobiusEditor
             TileDragProtect = Properties.Settings.Default.DefaultTileDragProtect;
             TileDragRandomize = Properties.Settings.Default.DefaultTileDragRandomize;
             ShowPlacementGrid = Properties.Settings.Default.DefaultShowPlacementGrid;
+            OutlineAllCrates = Properties.Settings.Default.DefaultOutlineAllCrates;
             CratesOnTop = Properties.Settings.Default.DefaultCratesOnTop;
             ShowMapGrid = Properties.Settings.Default.DefaultShowMapGrid;
             ExportTileScale = Math.Min(1, Math.Max(minScale, Math.Abs(Properties.Settings.Default.DefaultExportScale)));
             ExportSmoothScale = Properties.Settings.Default.DefaultExportScale < 0;
             // Fine tuning
+            ZoomToBoundsOnLoad = Properties.Settings.Default.ZoomToBoundsOnLoad;
             MapGridColor = Properties.Settings.Default.MapGridColor;
             MapBackColor = Color.FromArgb(255, Properties.Settings.Default.MapBackColor);
             MapTileScale = Math.Min(1, Math.Max(minScale, Math.Abs(Properties.Settings.Default.MapScale)));
@@ -74,11 +76,12 @@ namespace MobiusEditor
         public static bool TileDragRandomize { get; set; }
         public static bool ShowPlacementGrid { get; set; }
         public static bool CratesOnTop { get; set; }
+        public static bool OutlineAllCrates { get; set; }
         public static bool ShowMapGrid { get; set; }
-        public static bool Ignore106Scripting { get; set; }
-
         public static double ExportTileScale { get; private set; }
         public static bool ExportSmoothScale { get; private set; }
+
+        public static bool ZoomToBoundsOnLoad { get; private set; }
         public static Color MapGridColor { get; private set; }
         public static Color MapBackColor { get; private set; }
 
@@ -96,6 +99,7 @@ namespace MobiusEditor
 
         public static int UndoRedoStackSize { get; private set; }
         public static Size MinimumClampSize { get; private set; }
+        public static bool Ignore106Scripting { get; private set; }
         public static bool NoMetaFilesForSinglePlay { get; private set; }
         public static bool ConvertRaObsoleteClear { get; private set; }
         public static bool BlockingBibs { get; private set; }
@@ -107,6 +111,7 @@ namespace MobiusEditor
         public static bool NoOwnedObjectsInSole { get; private set; }
         public static bool AdjustSoleTeleports { get; private set; }
         public static bool RestrictSoleLimits { get; private set; }
+
 
         public static readonly Size MapPreviewSize = new Size(512, 512);
         public static readonly Size WorkshopPreviewSize = new Size(512, 512);

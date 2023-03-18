@@ -29,6 +29,7 @@ namespace MobiusEditor.Model
         public TerrainType Type { get => type; set => SetField(ref type, value); }
 
         public Rectangle OverlapBounds => Type.OverlapBounds;
+        public bool[,] OpaqueMask => Type.OpaqueMask;
 
         public bool[,] OccupyMask => Type.OccupyMask;
 

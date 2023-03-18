@@ -383,7 +383,7 @@ namespace MobiusEditor.Tools
             base.PostRenderMap(graphics);
             if ((Layers & MapLayerFlag.CrateOutlines) == MapLayerFlag.CrateOutlines)
             {
-                MapRenderer.RenderAllCrateOutlines(graphics, previewMap, Globals.MapTileSize, Globals.MapTileScale);
+                MapRenderer.RenderAllCrateOutlines(graphics, previewMap, Globals.MapTileSize, Globals.MapTileScale, false);
             }
             MapRenderer.RenderAllBoundsFromCell(graphics, Globals.MapTileSize, previewMap.Overlay.Where(x => x.Value.Type.IsOverlay), previewMap.Metrics);
         }

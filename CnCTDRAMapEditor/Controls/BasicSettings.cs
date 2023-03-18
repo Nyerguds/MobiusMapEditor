@@ -57,15 +57,7 @@ namespace MobiusEditor.Controls
             percentLabel.Visible = false;
             playerComboBox.DataBindings.Add("SelectedItem", basicSection, "Player");
             authorTxt.DataBindings.Add("Text", basicSection, "Author");
-            themeComboBox.DataBindings.Add("Text", basicSection, "Theme");
-            introComboBox.DataBindings.Add("Text", basicSection, "Intro");
-            briefComboBox.DataBindings.Add("Text", basicSection, "Brief");
-            actionComboBox.DataBindings.Add("Text", basicSection, "Action");
-            winComboBox.DataBindings.Add("Text", basicSection, "Win");
-            win2ComboBox.DataBindings.Add("Text", basicSection, "Win2");
-            win3ComboBox.DataBindings.Add("Text", basicSection, "Win3");
-            win4ComboBox.DataBindings.Add("Text", basicSection, "Win4");
-            loseComboBox.DataBindings.Add("Text", basicSection, "Lose");
+            themeComboBox.DataBindings.Add("SelectedItem", basicSection, "Theme");
             switch (plugin.GameType)
             {
                 case GameType.TiberianDawn:
@@ -82,6 +74,14 @@ namespace MobiusEditor.Controls
                     win3ComboBox.DropDownStyle = ComboBoxStyle.DropDown;
                     win4ComboBox.DropDownStyle = ComboBoxStyle.DropDown;
                     loseComboBox.DropDownStyle = ComboBoxStyle.DropDown;
+                    introComboBox.DataBindings.Add("Text", basicSection, "Intro");
+                    briefComboBox.DataBindings.Add("Text", basicSection, "Brief");
+                    actionComboBox.DataBindings.Add("Text", basicSection, "Action");
+                    winComboBox.DataBindings.Add("Text", basicSection, "Win");
+                    win2ComboBox.DataBindings.Add("Text", basicSection, "Win2");
+                    win3ComboBox.DataBindings.Add("Text", basicSection, "Win3");
+                    win4ComboBox.DataBindings.Add("Text", basicSection, "Win4");
+                    loseComboBox.DataBindings.Add("Text", basicSection, "Lose");
                     CheckSinglePlayerOptions();
                     break;
                 case GameType.RedAlert:
@@ -90,6 +90,14 @@ namespace MobiusEditor.Controls
                     buildLevelNud.Visible = buildLevelLabel.Visible = false;
                     baseComboBox.DataBindings.Add("SelectedItem", basicSection, "BasePlayer");
                     hasExpansionUnitsCheckBox.DataBindings.Add("Checked", basicSection, "ExpansionEnabled");
+                    introComboBox.DataBindings.Add("SelectedItem", basicSection, "Intro");
+                    briefComboBox.DataBindings.Add("SelectedItem", basicSection, "Brief");
+                    actionComboBox.DataBindings.Add("SelectedItem", basicSection, "Action");
+                    winComboBox.DataBindings.Add("SelectedItem", basicSection, "Win");
+                    win2ComboBox.DataBindings.Add("SelectedItem", basicSection, "Win2");
+                    win3ComboBox.DataBindings.Add("SelectedItem", basicSection, "Win3");
+                    win4ComboBox.DataBindings.Add("SelectedItem", basicSection, "Win4");
+                    loseComboBox.DataBindings.Add("SelectedItem", basicSection, "Lose");
                     CheckSinglePlayerOptions();
                     break;
                 case GameType.SoleSurvivor:
@@ -101,13 +109,18 @@ namespace MobiusEditor.Controls
                     briefComboBox.DropDownStyle = ComboBoxStyle.DropDown;
                     actionComboBox.DropDownStyle = ComboBoxStyle.DropDown;
                     winComboBox.DropDownStyle = ComboBoxStyle.DropDown;
+                    introComboBox.DataBindings.Add("Text", basicSection, "Intro");
+                    briefComboBox.DataBindings.Add("Text", basicSection, "Brief");
+                    actionComboBox.DataBindings.Add("Text", basicSection, "Action");
+                    winComboBox.DataBindings.Add("Text", basicSection, "Win");
+                    loseComboBox.DataBindings.Add("Text", basicSection, "Lose");
                     // Irrelevant for SS; it's all classic.
                     lblCarryoverClassic.Visible = false;
                     lblThemeClassic.Visible = false;
                     // Disable these. Labels and stuff too.
                     win2Label.Visible = win2ComboBox.Visible = lblWin2Remaster.Visible = false;
                     win3Label.Visible = win3ComboBox.Visible = lblWin3Remaster.Visible = false;
-                    win4Label.Visible = win4ComboBox.Visible = lblWin4Remaster.Visible = false;                    
+                    win4Label.Visible = win4ComboBox.Visible = lblWin4Remaster.Visible = false;
                     break;
             }
         }

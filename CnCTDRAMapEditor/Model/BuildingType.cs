@@ -56,6 +56,7 @@ namespace MobiusEditor.Model
         public int Storage { get; set; }
 
         public Rectangle OverlapBounds => new Rectangle(Point.Empty, new Size(OccupyMask.GetLength(1), OccupyMask.GetLength(0)));
+        public bool[,] OpaqueMask { get; private set; }
 
         public bool[,] OccupyMask { get; private set; }
 
@@ -241,7 +242,7 @@ namespace MobiusEditor.Model
 
         public override string ToString()
         {
-            return Name;
+            return (Name ?? String.Empty).ToUpperInvariant();
         }
 
         public void Init(GameType gameType, TheaterType theater, HouseType house, DirectionType direction)
@@ -254,12 +255,11 @@ namespace MobiusEditor.Model
                 Strength = 256,
                 Direction = direction
             };
-
             var render = MapRenderer.Render(gameType, theater, Point.Empty, Globals.PreviewTileSize, Globals.PreviewTileScale, mockBuilding);
             if (!render.Item1.IsEmpty)
             {
-                var buildingPreview = new Bitmap(render.Item1.Width, render.Item1.Height);
-                using (var g = Graphics.FromImage(buildingPreview))
+                var th = new Bitmap(render.Item1.Width, render.Item1.Height);
+                using (var g = Graphics.FromImage(th))
                 {
                     MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
                     render.Item2(g);
@@ -268,7 +268,8 @@ namespace MobiusEditor.Model
                         MapRenderer.RenderFakeBuildingLabel(g, mockBuilding, Point.Empty, Globals.PreviewTileSize, Globals.PreviewTileScale, false);
                     }
                 }
-                Thumbnail = buildingPreview;
+                Thumbnail = th;
+                OpaqueMask = GeneralUtils.FindOpaqueCells(th, Size, 10, 25, 0x80);
             }
             else
             {

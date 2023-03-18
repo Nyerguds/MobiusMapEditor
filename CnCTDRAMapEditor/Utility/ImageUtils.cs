@@ -88,7 +88,8 @@ namespace MobiusEditor.Utility
         {
             if (sourceImage == null)
                 throw new ArgumentNullException("sourceImage", "Source image is null!");
-            return GetImageDataInternal(sourceImage, out stride, sourceImage.PixelFormat, collapseStride);
+            Rectangle rect = new Rectangle(0, 0, sourceImage.Width, sourceImage.Height);
+            return GetImageDataInternal(sourceImage, out stride, ref rect, sourceImage.PixelFormat, collapseStride);
         }
 
         /// <summary>
@@ -124,52 +125,95 @@ namespace MobiusEditor.Utility
         /// </remarks>
         public static Byte[] GetImageData(Bitmap sourceImage, out Int32 stride, PixelFormat desiredPixelFormat, Boolean collapseStride)
         {
+            Rectangle rect = new Rectangle(0, 0, sourceImage.Width, sourceImage.Height);
+            return GetImageData(sourceImage, out stride, ref rect, desiredPixelFormat, collapseStride);
+        }
+
+        /// <summary>
+        /// Gets the raw bytes from an image, in the desired <see cref="System.Drawing.Imaging.PixelFormat">PixelFormat</see>.
+        /// </summary>
+        /// <param name="sourceImage">The image to get the bytes from.</param>
+        /// <param name="stride">Stride of the retrieved image data.</param>
+        /// <param name="desiredPixelFormat">PixelFormat in which the data needs to be retrieved. Use <paramref name="sourceImage"/>.PixelFormat for no conversion.</param>
+        /// <param name="collapseStride">Collapse the stride to the minimum required for the image data.</param>
+        /// <returns>The raw bytes of the image.</returns>
+        /// <remarks>
+        ///   Note that <paramref name="desiredPixelFormat"/> has limitations when it comes to indexed formats:
+        ///   giving an indexed pixel format if the sourceImage is an indexed image with a lower bpp will throw an exception, since GDI+ does not support that,
+        ///   and if you give an indexed pixel format and the source is non-indexed, the colors will be matched to the standard Windows palette for that format.
+        /// </remarks>
+        public static Byte[] GetImageData(Bitmap sourceImage, out Int32 stride, ref Rectangle area, PixelFormat desiredPixelFormat, Boolean collapseStride)
+        {
             if (sourceImage == null)
                 throw new ArgumentNullException("sourceImage", "Source image is null!");
             PixelFormat sourcePf = sourceImage.PixelFormat;
             if (sourcePf != desiredPixelFormat && (sourcePf & PixelFormat.Indexed) != 0 && (desiredPixelFormat & PixelFormat.Indexed) != 0
                 && Image.GetPixelFormatSize(sourcePf) > Image.GetPixelFormatSize(desiredPixelFormat))
                 throw new ArgumentException("Cannot convert from a higher to a lower indexed pixel format! Use ConvertTo8Bit / ConvertFrom8Bit instead!", "desiredPixelFormat");
-            return GetImageDataInternal(sourceImage, out stride, desiredPixelFormat, collapseStride);
+            return GetImageDataInternal(sourceImage, out stride, ref area, desiredPixelFormat, collapseStride);
         }
 
-        private static Byte[] GetImageDataInternal(Bitmap sourceImage, out Int32 stride, PixelFormat desiredPixelFormat, Boolean collapseStride)
+        private static Byte[] GetImageDataInternal(Bitmap sourceImage, out Int32 stride, ref Rectangle area, PixelFormat desiredPixelFormat, Boolean collapseStride)
         {
-            Int32 width = sourceImage.Width;
-            Int32 height = sourceImage.Height;
-            BitmapData sourceData = sourceImage.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.ReadOnly, desiredPixelFormat);
-            stride = sourceData.Stride;
+            Int32 imageWidth = sourceImage.Width;
+            Int32 imageHeight = sourceImage.Height;
+            bool useArea = area.X > 0 || area.Y > 0 || area.Width != imageWidth || area.Height != imageHeight;
+            if (useArea)
+            {
+                collapseStride = true;
+                area.Width = Math.Min(Math.Max(0, imageWidth - area.X), area.Width);
+                area.Height = Math.Min(Math.Max(0, imageHeight - area.Y), area.Height);
+                if (area.Width == 0 || area.Height == 0)
+                {
+                    stride = 0;
+                    return new byte[0];
+                }
+            }
             Byte[] data;
-            Int32 actualDataWidth;
-            Int32 pixelFormatSize = Image.GetPixelFormatSize(desiredPixelFormat);
-            if (collapseStride && (actualDataWidth = ((Image.GetPixelFormatSize(desiredPixelFormat) * width) + 7) / 8) != stride)
+            BitmapData sourceData = null;
+            try
             {
-                Int64 sourcePos = sourceData.Scan0.ToInt64();
-                Int32 destPos = 0;
-                data = new Byte[actualDataWidth * height];
-                Byte clearMask = 0xFF;
-                if (pixelFormatSize < 8 && (width % 8) != 0)
+                Int32 width = imageWidth;
+                Int32 height = imageHeight;
+                sourceData = sourceImage.LockBits(area, ImageLockMode.ReadOnly, desiredPixelFormat);
+                stride = sourceData.Stride;
+                Int32 pixelFormatSize = Image.GetPixelFormatSize(desiredPixelFormat);
+                Int32 actualDataWidth = ((Image.GetPixelFormatSize(desiredPixelFormat) * width) + 7) / 8;
+                if (collapseStride && (useArea || actualDataWidth != stride))
                 {
-                    int lastByteRemainder = width % 8;
-                    clearMask = (Byte)(~((pixelFormatSize == 1 ? (0xFF >> lastByteRemainder) : (0xFF << lastByteRemainder)) & 0xFF));
+                    Int64 sourcePos = sourceData.Scan0.ToInt64();
+                    Int32 destPos = 0;
+                    data = new Byte[actualDataWidth * height];
+                    Byte clearMask = 0xFF;
+                    if (pixelFormatSize < 8 && (width % 8) != 0)
+                    {
+                        int lastByteRemainder = width % 8;
+                        clearMask = (Byte)(~((pixelFormatSize == 1 ? (0xFF >> lastByteRemainder) : (0xFF << lastByteRemainder)) & 0xFF));
+                    }
+                    for (Int32 y = 0; y < height; ++y)
+                    {
+                        Marshal.Copy(new IntPtr(sourcePos), data, destPos, actualDataWidth);
+                        sourcePos += stride;
+                        destPos += actualDataWidth;
+                        if (clearMask != 0xFF)
+                            data[destPos - 1] &= clearMask;
+                    }
+                    stride = actualDataWidth;
                 }
-                for (Int32 y = 0; y < height; ++y)
+                else
                 {
-                    Marshal.Copy(new IntPtr(sourcePos), data, destPos, actualDataWidth);
-                    sourcePos += stride;
-                    destPos += actualDataWidth;
-                    if (clearMask != 0xFF)
-                        data[destPos - 1] &= clearMask;
+                    data = new Byte[stride * height];
+                    Marshal.Copy(sourceData.Scan0, data, 0, data.Length);
                 }
-                stride = actualDataWidth;
+                return data;
             }
-            else
+            finally
             {
-                data = new Byte[stride * height];
-                Marshal.Copy(sourceData.Scan0, data, 0, data.Length);
+                if (sourceData != null)
+                {
+                    sourceImage.UnlockBits(sourceData);
+                }
             }
-            sourceImage.UnlockBits(sourceData);
-            return data;
         }
 
         /// <summary>

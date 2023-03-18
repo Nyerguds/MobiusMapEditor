@@ -19,5 +19,6 @@ namespace MobiusEditor.Interface
     public interface ICellOverlapper
     {
         Rectangle OverlapBounds { get; }
+        bool[,] OpaqueMask { get; }
     }
 }
