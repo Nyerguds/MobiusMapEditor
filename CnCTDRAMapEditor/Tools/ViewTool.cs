@@ -57,9 +57,8 @@ namespace MobiusEditor.Tools
                 if (layers != value)
                 {
                     MapLayerFlag modifiedBits = layers ^ value;
-                    bool refreshIndicatorsOnly = (modifiedBits & ~MapLayerFlag.Indicators) == 0;
                     layers = value;
-                    Invalidate(refreshIndicatorsOnly);
+                    Invalidate(modifiedBits);
                     RefreshPreviewPanel();
                 }
             }
@@ -77,16 +76,66 @@ namespace MobiusEditor.Tools
             navigationWidget = new NavigationWidget(mapPanel, map.Metrics, Globals.MapTileSize, true);
         }
 
-        protected void Invalidate(bool refreshIndicatorsOnly)
+        protected void Invalidate(MapLayerFlag modifiedBits)
         {
+            bool refreshIndicatorsOnly = (modifiedBits & ~MapLayerFlag.Indicators) == 0;
             if (refreshIndicatorsOnly)
             {
                 mapPanel.Invalidate();
             }
-            else
+            else if ((modifiedBits & MapLayerFlag.Template) != MapLayerFlag.None)
             {
                 // Full repaint.
                 mapPanel.Invalidate(RenderMap);
+            }
+            else
+            {
+                // Filter the objects of the layers that have been toggled.
+                HashSet<Point> points = new HashSet<Point>();
+                CellMetrics metr = map.Metrics;
+                if ((modifiedBits & MapLayerFlag.Technos) != MapLayerFlag.None)
+                {
+                    // TODO maybe actually filter this out per type?
+                    foreach (var (Location, Overlapper) in RenderMap.Overlappers)
+                    {
+                        points.UnionWith(new Rectangle(
+                            Location.X + Overlapper.OverlapBounds.X,
+                            Location.Y + Overlapper.OverlapBounds.Y,
+                            Overlapper.OverlapBounds.Width,
+                            Overlapper.OverlapBounds.Height).Points());
+                    }
+                }
+                if ((modifiedBits & MapLayerFlag.OverlayAll) != MapLayerFlag.None)
+                {
+                    foreach (var (Cell, _) in RenderMap.Overlay)
+                    {
+                        if (metr.GetLocation(Cell, out Point pt))
+                        {
+                            points.Add(pt);
+                        }
+                    }
+                }
+                if ((modifiedBits & MapLayerFlag.Smudge) != MapLayerFlag.None)
+                {
+                    foreach (var (Cell, _) in RenderMap.Smudge)
+                    {
+                        if (metr.GetLocation(Cell, out Point pt))
+                        {
+                            points.Add(pt);
+                        }
+                    }
+                }
+                if ((modifiedBits & MapLayerFlag.Waypoints) != MapLayerFlag.None)
+                {
+                    foreach (Waypoint wp in RenderMap.Waypoints)
+                    {
+                        if (wp.Cell.HasValue && metr.GetLocation(wp.Cell.Value, out Point pt))
+                        {
+                            points.Add(pt);
+                        }
+                    }
+                }
+                mapPanel.Invalidate(RenderMap, points);
             }
         }
 
@@ -174,6 +223,11 @@ namespace MobiusEditor.Tools
 
             // Only render these if they are not in the priority layers, and not handled manually.
             // The functions themselves will take care of checking whether they are in the active layers to render.
+            if ((layersToRender & (MapLayerFlag.Waypoints | MapLayerFlag.CrateOutlines)) == (MapLayerFlag.Waypoints | MapLayerFlag.CrateOutlines)
+                && (manuallyHandledLayers & MapLayerFlag.CrateOutlines) == MapLayerFlag.None)
+            {
+                MapRenderer.RenderAllCrateOutlines(graphics, map, tileSize, tileScale);
+            }
             if ((Globals.ShowPlacementGrid && inPlacementMode) ||
                 (layersToRender & MapLayerFlag.MapGrid) == MapLayerFlag.MapGrid
                 && (manuallyHandledLayers & MapLayerFlag.MapGrid) == MapLayerFlag.None)

@@ -54,8 +54,8 @@ namespace MobiusEditor.TiberianDawn
         public static readonly OverlayType V17 = new OverlayType(25, "v17", "TEXT_STRUCTURE_TITLE_CIV16", new[] { TheaterTypes.Temperate, TheaterTypes.Winter }, OverlayTypeFlag.Solid);
         public static readonly OverlayType V18 = new OverlayType(26, "v18", "TEXT_STRUCTURE_TITLE_CIV17", new[] { TheaterTypes.Temperate, TheaterTypes.Winter }, OverlayTypeFlag.Solid);
         public static readonly OverlayType FlagSpot = new OverlayType(27, "fpls", "TEXT_CF_ONHOVER_SPOT", OverlayTypeFlag.Flag | OverlayTypeFlag.Pavement);
-        public static readonly OverlayType WoodCrate = new OverlayType(28, "wcrate", "Wooden Crate", OverlayTypeFlag.Crate);
-        public static readonly OverlayType SteelCrate = new OverlayType(29, "scrate", "Steel Crate", OverlayTypeFlag.Crate);
+        public static readonly OverlayType WoodCrate = new OverlayType(28, "wcrate", "Wooden Crate", OverlayTypeFlag.WoodCrate);
+        public static readonly OverlayType SteelCrate = new OverlayType(29, "scrate", "Steel Crate", OverlayTypeFlag.SteelCrate);
 
         private static OverlayType[] Types;
 

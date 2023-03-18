@@ -18,32 +18,6 @@ namespace MobiusEditor.Dialogs
         private SimpleMultiThreading multiThreader;
         private string boundsLabel;
 
-        private String[] MapLayerNames = {
-            // Map layers
-            "Template",
-            "Terrain",
-            "Resources",
-            "Walls",
-            "Overlay",
-            "Smudge",
-            "Infantry",
-            "Units",
-            "Buildings",
-            "Waypoints",
-            // Indicators
-            "Map boundaries",
-            "Map symmetry",
-            "Map grid",
-            "Waypoint labels",
-            "Football goal areas",
-            "Cell triggers",
-            "Object triggers",
-            "Building rebuild priorities",
-            "Building 'fake' labels",
-            "Jam / gap radiuses",
-            "Waypoint reveal radiuses",
-        };
-
         IGamePlugin gamePlugin;
 
         private MapLayerFlag renderLayers;
@@ -108,17 +82,24 @@ namespace MobiusEditor.Dialogs
         {
             layersListBox.Items.Clear();
             indicatorsListBox.Items.Clear();
-            int len = MapLayerNames.Length;
+            String[] names = Map.MapLayerNames;
+            int len = names.Length;
             for (int i = 1; i < len; ++i)
             {
+                // Special rules per game. These should be kept identical to those in MainForm.EnableDisableMenuItems
                 MapLayerFlag mlf = (MapLayerFlag)(1 << i);
                 if (gamePlugin.GameType != GameType.RedAlert && mlf == MapLayerFlag.BuildingFakes
-                    || gamePlugin.GameType != GameType.RedAlert && mlf == MapLayerFlag.EffectRadius
-                    || gamePlugin.GameType != GameType.SoleSurvivor && mlf == MapLayerFlag.FootballArea)
+                 || gamePlugin.GameType != GameType.RedAlert && mlf == MapLayerFlag.EffectRadius
+                 || gamePlugin.GameType == GameType.SoleSurvivor && mlf == MapLayerFlag.Buildings && Globals.NoOwnedObjectsInSole
+                 || gamePlugin.GameType == GameType.SoleSurvivor && mlf == MapLayerFlag.Units && Globals.NoOwnedObjectsInSole
+                 || gamePlugin.GameType == GameType.SoleSurvivor && mlf == MapLayerFlag.Infantry && Globals.NoOwnedObjectsInSole
+                 || gamePlugin.GameType == GameType.SoleSurvivor && mlf == MapLayerFlag.BuildingRebuild
+                 || gamePlugin.GameType != GameType.SoleSurvivor && mlf == MapLayerFlag.FootballArea
+                 || gamePlugin.GameType == GameType.SoleSurvivor && mlf == MapLayerFlag.CrateOutlines)
                 {
                     continue;
                 }
-                ListItem<MapLayerFlag> mli = new ListItem<MapLayerFlag>(mlf, MapLayerNames[i]);
+                ListItem<MapLayerFlag> mli = new ListItem<MapLayerFlag>(mlf, names[i]);
                 int index;
                 if ((MapLayerFlag.MapLayers & mlf) != MapLayerFlag.None)
                 {
@@ -130,7 +111,7 @@ namespace MobiusEditor.Dialogs
                 }
                 if ((MapLayerFlag.Indicators & mlf) != MapLayerFlag.None)
                 {
-                    index = indicatorsListBox.Items.Add(new ListItem<MapLayerFlag>(mlf, MapLayerNames[i]));
+                    index = indicatorsListBox.Items.Add(new ListItem<MapLayerFlag>(mlf, names[i]));
                     if ((layers & mlf) != MapLayerFlag.None)
                     {
                         indicatorsListBox.SetSelected(index, true);

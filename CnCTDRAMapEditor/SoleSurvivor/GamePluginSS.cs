@@ -173,6 +173,17 @@ namespace MobiusEditor.SoleSurvivor
             return errors;
         }
 
+        public override void New(string theater)
+        {
+            // Nothing changed here.
+            base.New(theater);
+        }
+
+        public override bool Save(string path, FileType fileType)
+        {
+            return Save(path, fileType, null, false);
+        }
+
         public override bool Save(string path, FileType fileType, Bitmap customPreview, bool dontResavePreview)
         {
             return Save(path, fileType, true, customPreview, dontResavePreview);
@@ -223,6 +234,11 @@ namespace MobiusEditor.SoleSurvivor
             SaveIniSmudge(ini);
         }
 
+        public override String Validate()
+        {
+            return Validate(true);
+        }
+
         public override HashSet<string> GetHousesWithProduction()
         {
             // Not applicable. Return empty set.
@@ -258,6 +274,12 @@ namespace MobiusEditor.SoleSurvivor
             int startPoints = Map.Waypoints.Count(w => w.Cell.HasValue && (w.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart);
             info.Add(string.Format("Number of set starting points: {0}.", startPoints));
             return info;
+        }
+
+        public override Boolean EvaluateBriefing(string briefing, out string message)
+        {
+            message = null;
+            return true;
         }
     }
 }

@@ -378,7 +378,7 @@ namespace MobiusEditor.RedAlert
             }
             movies.Insert(0, movieEmpty);
             movieTypes = movies.ToArray();
-            var basicSection = new BasicSection();
+            BasicSection basicSection = new BasicSection();
             basicSection.SetDefault();
             var houseTypes = HouseTypes.GetTypes();
             basicSection.Player = houseTypes.First().Name;
@@ -574,22 +574,29 @@ namespace MobiusEditor.RedAlert
             INISection basicSection = INITools.ParseAndLeaveRemainder(ini, "Basic", basic, new MapContext(Map, true));
             if (basicSection != null)
             {
+                var movies = new List<string>(movieTypesRa);
+                for (int i = 0; i < movies.Count; ++i)
+                {
+                    string vidName = GeneralUtils.AddRemarks(movies[i], movieEmpty, true, movieTypesRemarksOld, RemarkOld);
+                    movies[i] = GeneralUtils.AddRemarks(vidName, movieEmpty, true, movieTypesRemarksNew, RemarkNew);
+                }
+                movies.Insert(0, movieEmpty);
                 basic.Intro = GeneralUtils.AddRemarks(GeneralUtils.AddRemarks(basic.Intro, movieEmpty, true, movieTypesRemarksOld, RemarkOld), movieEmpty, true, movieTypesRemarksNew, RemarkNew);
-                basic.Intro = GeneralUtils.FilterToExisting(basic.Intro, movieEmpty, true, movieTypesRa);
+                basic.Intro = GeneralUtils.FilterToExisting(basic.Intro, movieEmpty, true, movies);
                 basic.Brief = GeneralUtils.AddRemarks(GeneralUtils.AddRemarks(basic.Brief, movieEmpty, true, movieTypesRemarksOld, RemarkOld), movieEmpty, true, movieTypesRemarksNew, RemarkNew);
-                basic.Brief = GeneralUtils.FilterToExisting(basic.Brief, movieEmpty, true, movieTypesRa);
+                basic.Brief = GeneralUtils.FilterToExisting(basic.Brief, movieEmpty, true, movies);
                 basic.Action = GeneralUtils.AddRemarks(GeneralUtils.AddRemarks(basic.Action, movieEmpty, true, movieTypesRemarksOld, RemarkOld), movieEmpty, true, movieTypesRemarksNew, RemarkNew);
-                basic.Action = GeneralUtils.FilterToExisting(basic.Action, movieEmpty, true, movieTypesRa);
+                basic.Action = GeneralUtils.FilterToExisting(basic.Action, movieEmpty, true, movies);
                 basic.Win = GeneralUtils.AddRemarks(GeneralUtils.AddRemarks(basic.Win, movieEmpty, true, movieTypesRemarksOld, RemarkOld), movieEmpty, true, movieTypesRemarksNew, RemarkNew);
-                basic.Win = GeneralUtils.FilterToExisting(basic.Win, movieEmpty, true, movieTypesRa);
+                basic.Win = GeneralUtils.FilterToExisting(basic.Win, movieEmpty, true, movies);
                 basic.Win2 = GeneralUtils.AddRemarks(GeneralUtils.AddRemarks(basic.Win2, movieEmpty, true, movieTypesRemarksOld, RemarkOld), movieEmpty, true, movieTypesRemarksNew, RemarkNew);
-                basic.Win2 = GeneralUtils.FilterToExisting(basic.Win2, movieEmpty, true, movieTypesRa);
+                basic.Win2 = GeneralUtils.FilterToExisting(basic.Win2, movieEmpty, true, movies);
                 basic.Win3 = GeneralUtils.AddRemarks(GeneralUtils.AddRemarks(basic.Win3, movieEmpty, true, movieTypesRemarksOld, RemarkOld), movieEmpty, true, movieTypesRemarksNew, RemarkNew);
-                basic.Win3 = GeneralUtils.FilterToExisting(basic.Win3, movieEmpty, true, movieTypesRa);
+                basic.Win3 = GeneralUtils.FilterToExisting(basic.Win3, movieEmpty, true, movies);
                 basic.Win4 = GeneralUtils.AddRemarks(GeneralUtils.AddRemarks(basic.Win4, movieEmpty, true, movieTypesRemarksOld, RemarkOld), movieEmpty, true, movieTypesRemarksNew, RemarkNew);
-                basic.Win4 = GeneralUtils.FilterToExisting(basic.Win4, movieEmpty, true, movieTypesRa);
+                basic.Win4 = GeneralUtils.FilterToExisting(basic.Win4, movieEmpty, true, movies);
                 basic.Lose = GeneralUtils.AddRemarks(GeneralUtils.AddRemarks(basic.Lose, movieEmpty, true, movieTypesRemarksOld, RemarkOld), movieEmpty, true, movieTypesRemarksNew, RemarkNew);
-                basic.Lose = GeneralUtils.FilterToExisting(basic.Lose, movieEmpty, true, movieTypesRa);
+                basic.Lose = GeneralUtils.FilterToExisting(basic.Lose, movieEmpty, true, movies);
             }
             String plName = Map.BasicSection.Player;
             HouseType player = Map.HouseTypes.Where(t => t.Equals(plName)).FirstOrDefault() ?? Map.HouseTypes.First();
@@ -697,7 +704,7 @@ namespace MobiusEditor.RedAlert
                                     }
                                     else
                                     {
-                                        errors.Add(string.Format("Team '{0}', orders index {1} ('{2}') has an incorrect value '{4}'.", Key, i, mission, missionTokens[1]));
+                                        errors.Add(string.Format("Team '{0}', orders index {1} ('{2}') has an incorrect value '{3}'.", Key, i, mission, missionTokens[1]));
                                         modified = true;
                                     }
                                 }
@@ -2478,7 +2485,7 @@ namespace MobiusEditor.RedAlert
             var smudgeSection = ini.Sections.Add("SMUDGE");
             // Flatten multi-cell bibs
             Dictionary<int, Smudge> resolvedSmudge = new Dictionary<int, Smudge>();
-            foreach (var (cell, smudge) in Map.Smudge.Where(item => !item.Value.Type.IsAutoBib))
+            foreach (var (cell, smudge) in Map.Smudge.Where(item => !item.Value.Type.IsAutoBib).OrderBy(s => s.Cell))
             {
                 int actualCell = smudge.GetPlacementOrigin(cell, this.Map.Metrics);
                 if (!resolvedSmudge.ContainsKey(actualCell))
@@ -2489,16 +2496,18 @@ namespace MobiusEditor.RedAlert
             foreach (int cell in resolvedSmudge.Keys.OrderBy(c => c))
             {
                 Smudge smudge = resolvedSmudge[cell];
-                smudgeSection[cell.ToString()] = string.Format("{0},{1},{2}", smudge.Type.Name.ToUpper(), cell, Math.Min(smudge.Type.Icons - 1, smudge.Icon));
+                smudgeSection[cell.ToString()] = string.Format("{0},{1},{2}", smudge.Type.Name.ToUpperInvariant(), cell, Math.Min(smudge.Type.Icons - 1, smudge.Icon));
             }
             var terrainSection = ini.Sections.Add("TERRAIN");
-            foreach (var (location, terrain) in Map.Technos.OfType<Terrain>())
+            foreach (var (location, terrain) in Map.Technos.OfType<Terrain>().OrderBy(t => Map.Metrics.GetCell(t.Location)))
             {
-                Map.Metrics.GetCell(location, out int cell);
-                terrainSection[cell.ToString()] = terrain.Type.Name.ToUpper();
+                if (Map.Metrics.GetCell(location, out int cell))
+                {
+                    terrainSection[cell.ToString()] = terrain.Type.Name.ToUpperInvariant();
+                }
             }
             var cellTriggersSection = ini.Sections.Add("CellTriggers");
-            foreach (var (cell, cellTrigger) in Map.CellTriggers)
+            foreach (var (cell, cellTrigger) in Map.CellTriggers.OrderBy(t => t.Cell))
             {
                 cellTriggersSection[cell.ToString()] = cellTrigger.Trigger;
             }
@@ -2509,10 +2518,10 @@ namespace MobiusEditor.RedAlert
             }
             string nameToIndexString<T>(IList<T> list, string name) => nameToIndex(list, name).ToString();
             var teamTypesSection = ini.Sections.Add("TeamTypes");
-            foreach (var teamType in Map.TeamTypes)
+            foreach (var teamType in Map.TeamTypes.OrderBy(t => t.Name.ToUpperInvariant()))
             {
                 var classes = teamType.Classes
-                    .Select(c => string.Format("{0}:{1}", c.Type.Name.ToUpper(), c.Count))
+                    .Select(c => string.Format("{0}:{1}", c.Type.Name.ToUpperInvariant(), c.Count))
                     .ToArray();
                 var missions = teamType.Missions
                     .Select(m => string.Format("{0}:{1}", m.Mission.ID, m.Argument))
@@ -2539,24 +2548,22 @@ namespace MobiusEditor.RedAlert
                 };
                 teamTypesSection[teamType.Name] = string.Join(",", tokens.Where(t => !string.IsNullOrEmpty(t)));
             }
-            var infantrySection = ini.Sections.Add("INFANTRY");
-            var infantryIndex = 0;
-            foreach (var (location, infantryGroup) in Map.Technos.OfType<InfantryGroup>())
+            INISection infantrySection = ini.Sections.Add("INFANTRY");
+            int infantryIndex = 0;
+            foreach (var (location, infantryGroup) in Map.Technos.OfType<InfantryGroup>().OrderBy(i => Map.Metrics.GetCell(i.Location)))
             {
                 for (var i = 0; i < infantryGroup.Infantry.Length; ++i)
                 {
-                    var infantry = infantryGroup.Infantry[i];
-                    if (infantry == null)
+                    Infantry infantry = infantryGroup.Infantry[i];
+                    if (infantry == null || !Map.Metrics.GetCell(location, out int cell))
                     {
                         continue;
                     }
-                    var key = infantryIndex.ToString("D3");
+                    string key = infantryIndex.ToString("D3");
                     infantryIndex++;
-
-                    Map.Metrics.GetCell(location, out int cell);
                     infantrySection[key] = string.Format("{0},{1},{2},{3},{4},{5},{6},{7}",
                         infantry.House.Name,
-                        infantry.Type.Name,
+                        infantry.Type.Name.ToUpperInvariant(),
                         infantry.Strength,
                         cell,
                         i,
@@ -2566,17 +2573,19 @@ namespace MobiusEditor.RedAlert
                     );
                 }
             }
-            var structuresSection = ini.Sections.Add("STRUCTURES");
-            var structureIndex = 0;
-            foreach (var (location, building) in Map.Buildings.OfType<Building>().Where(x => x.Occupier.IsPrebuilt))
+            INISection structuresSection = ini.Sections.Add("STRUCTURES");
+            int structureIndex = 0;
+            foreach (var (location, building) in Map.Buildings.OfType<Building>().Where(x => x.Occupier.IsPrebuilt).OrderBy(b => Map.Metrics.GetCell(b.Location)))
             {
-                var key = structureIndex.ToString("D3");
+                if (!Map.Metrics.GetCell(location, out int cell))
+                {
+                    continue;
+                }
+                string key = structureIndex.ToString("D3");
                 structureIndex++;
-
-                Map.Metrics.GetCell(location, out int cell);
                 structuresSection[key] = string.Format("{0},{1},{2},{3},{4},{5},{6},{7}",
                     building.House.Name,
-                    building.Type.Name,
+                    building.Type.Name.ToUpperInvariant(),
                     building.Strength,
                     cell,
                     building.Direction.ID,
@@ -2585,33 +2594,37 @@ namespace MobiusEditor.RedAlert
                     building.Rebuild ? 1 : 0
                 );
             }
-            var baseSection = ini.Sections.Add("Base");
+            INISection baseSection = ini.Sections.Add("Base");
             var baseBuildings = Map.Buildings.OfType<Building>().Where(x => x.Occupier.BasePriority >= 0).OrderBy(x => x.Occupier.BasePriority).ToArray();
             baseSection["Player"] = Map.BasicSection.BasePlayer;
             baseSection["Count"] = baseBuildings.Length.ToString();
-            var baseIndex = 0;
+            int baseIndex = 0;
             foreach (var (location, building) in baseBuildings)
             {
-                var key = baseIndex.ToString("D3");
+                if (!Map.Metrics.GetCell(location, out int cell))
+                {
+                    continue;
+                }
+                string key = baseIndex.ToString("D3");
                 baseIndex++;
-
-                Map.Metrics.GetCell(location, out int cell);
                 baseSection[key] = string.Format("{0},{1}",
-                    building.Type.Name.ToUpper(),
+                    building.Type.Name.ToUpperInvariant(),
                     cell
                 );
             }
-            var unitsSection = ini.Sections.Add("UNITS");
-            var unitIndex = 0;
-            foreach (var (location, unit) in Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsGroundUnit))
+            INISection unitsSection = ini.Sections.Add("UNITS");
+            int unitIndex = 0;
+            foreach (var (location, unit) in Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsGroundUnit).OrderBy(u => Map.Metrics.GetCell(u.Location)))
             {
-                var key = unitIndex.ToString("D3");
+                if (!Map.Metrics.GetCell(location, out int cell))
+                {
+                    continue;
+                }
+                string key = unitIndex.ToString("D3");
                 unitIndex++;
-
-                Map.Metrics.GetCell(location, out int cell);
                 unitsSection[key] = string.Format("{0},{1},{2},{3},{4},{5},{6}",
                     unit.House.Name,
-                    unit.Type.Name,
+                    unit.Type.Name.ToUpperInvariant(),
                     unit.Strength,
                     cell,
                     unit.Direction.ID,
@@ -2622,17 +2635,19 @@ namespace MobiusEditor.RedAlert
             // Classic game does not support this, so it's disabled by default.
             if (!Globals.DisableAirUnits)
             {
-                var aircraftSection = ini.Sections.Add("AIRCRAFT");
-                var aircraftIndex = 0;
-                foreach (var (location, aircraft) in Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsAircraft))
+                INISection aircraftSection = ini.Sections.Add("AIRCRAFT");
+                int aircraftIndex = 0;
+                foreach (var (location, aircraft) in Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsAircraft).OrderBy(u => Map.Metrics.GetCell(u.Location)))
                 {
-                    var key = aircraftIndex.ToString("D3");
+                    if (!Map.Metrics.GetCell(location, out int cell))
+                    {
+                        continue;
+                    }
+                    string key = aircraftIndex.ToString("D3");
                     aircraftIndex++;
-
-                    Map.Metrics.GetCell(location, out int cell);
                     aircraftSection[key] = string.Format("{0},{1},{2},{3},{4},{5}",
                         aircraft.House.Name,
-                        aircraft.Type.Name,
+                        aircraft.Type.Name.ToUpperInvariant(),
                         aircraft.Strength,
                         cell,
                         aircraft.Direction.ID,
@@ -2640,17 +2655,19 @@ namespace MobiusEditor.RedAlert
                     );
                 }
             }
-            var shipsSection = ini.Sections.Add("SHIPS");
-            var shipsIndex = 0;
-            foreach (var (location, ship) in Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsVessel))
+            INISection shipsSection = ini.Sections.Add("SHIPS");
+            int shipsIndex = 0;
+            foreach (var (location, ship) in Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsVessel).OrderBy(u => Map.Metrics.GetCell(u.Location)))
             {
-                var key = shipsIndex.ToString("D3");
+                if (!Map.Metrics.GetCell(location, out int cell))
+                {
+                    continue;
+                }
+                string key = shipsIndex.ToString("D3");
                 shipsIndex++;
-
-                Map.Metrics.GetCell(location, out int cell);
                 shipsSection[key] = string.Format("{0},{1},{2},{3},{4},{5},{6}",
                     ship.House.Name,
-                    ship.Type.Name,
+                    ship.Type.Name.ToUpperInvariant(),
                     ship.Strength,
                     cell,
                     ship.Direction.ID,
@@ -2715,7 +2732,6 @@ namespace MobiusEditor.RedAlert
             ini.Sections.Remove("Briefing");
             if (!string.IsNullOrEmpty(Map.BriefingSection.Briefing))
             {
-                //var briefingSection = SaveIniBriefing(ini);
                 SaveIniBriefing(ini);
             }
             using (var stream = new MemoryStream())
@@ -3382,6 +3398,59 @@ namespace MobiusEditor.RedAlert
         public bool MapNameIsEmpty(string name)
         {
             return String.IsNullOrEmpty(name) || "<none>".Equals(name, StringComparison.OrdinalIgnoreCase);
+        }
+
+        public bool EvaluateBriefing(string briefing, out string message)
+        {
+            bool briefLenOvfl = false;
+            bool briefLenSplitOvfl = false;
+            const int cutoff = 40;
+            string brief = briefing.Replace('\t', ' ').Trim('\r', '\n', ' ').Replace("\r\n", "\n").Replace("\r", "\n");
+            int lines = brief.Count(c => c == '\n') + 1;
+            briefLenOvfl = lines > 25;
+            if (!briefLenOvfl)
+            {
+                // split in lines of 40; that's more or less the average line length in the brief screen.
+                List<String> txtLines = new List<string>();
+                string[] briefLines = brief.Split('\n');
+                for (int i = 0; i < briefLines.Length; ++i)
+                {
+                    String line = briefLines[i].Trim();
+                    if (line.Length <= cutoff)
+                    {
+                        txtLines.Add(line);
+                        continue;
+                    }
+                    String[] splitLine = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    int wordIndex = 0;
+                    while (wordIndex < splitLine.Length)
+                    {
+                        StringBuilder sb = new StringBuilder();
+                        // Always allow initial word
+                        int nextLength = 0;
+                        while (nextLength < cutoff && wordIndex < splitLine.Length)
+                        {
+                            if (sb.Length > 0)
+                                sb.Append(' ');
+                            sb.Append(splitLine[wordIndex++]);
+                            nextLength = wordIndex >= splitLine.Length ? 0 : (sb.Length + 1 + splitLine[wordIndex].Length);
+                        }
+                        txtLines.Add(sb.ToString());
+                    }
+                }
+                briefLenSplitOvfl = txtLines.Count > 25;
+            }
+            const String warn25Lines = "Red Alert's briefing screen can only show 25 lines of briefing text. ";
+            message = null;
+            if (briefLenOvfl)
+            {
+                message = warn25Lines + "Your current briefing exceeds that.";
+            }
+            else if (briefLenSplitOvfl)
+            {
+                message = warn25Lines + "The lines average to about 40 characters per line, and when split that way, your current briefing exceeds that, meaning it will most likely not display correctly in-game.";
+            }
+            return message != null;
         }
 
         private void BasicSection_PropertyChanged(object sender, PropertyChangedEventArgs e)

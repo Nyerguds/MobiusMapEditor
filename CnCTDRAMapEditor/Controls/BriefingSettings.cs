@@ -21,11 +21,20 @@ namespace MobiusEditor.Controls
 {
     public partial class BriefingSettings : UserControl
     {
+        IGamePlugin plugin;
+        string lenText;
         public BriefingSettings(IGamePlugin plugin, PropertyTracker<BriefingSection> briefingSection)
         {
             InitializeComponent();
-
+            this.plugin = plugin;
+            lenText = lblLength.Text;
             txtBriefing.DataBindings.Add("Text", briefingSection, "Briefing");
+        }
+
+        private void txtBriefing_TextChanged(System.Object sender, System.EventArgs e)
+        {
+            string briefing = txtBriefing.Text.Replace('\t', ' ').Trim('\r', '\n', ' ').Replace("\r\n", "\n").Replace("\r", "\n");
+            lblLength.Text = lenText.Trim() + " " + briefing.Length;
         }
     }
 }

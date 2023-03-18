@@ -28,11 +28,13 @@ namespace MobiusEditor.Model
         TiberiumOrGold  = (1 << 0),
         Gems            = (1 << 1),
         Wall            = (1 << 2),
-        Crate           = (1 << 3),
-        Flag            = (1 << 4),
-        Pavement        = (1 << 5),
-        Concrete        = (1 << 6),
-        Solid           = (1 << 7),
+        WoodCrate       = (1 << 3),
+        SteelCrate      = (1 << 4),
+        Flag            = (1 << 5),
+        Pavement        = (1 << 6),
+        Concrete        = (1 << 7),
+        Solid           = (1 << 8),
+        Crate = WoodCrate | SteelCrate,
     }
 
     public class OverlayType : ICellOccupier, IBrowsableType

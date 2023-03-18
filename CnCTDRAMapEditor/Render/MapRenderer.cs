@@ -1099,6 +1099,135 @@ namespace MobiusEditor.Render
             }
         }
 
+        public static void RenderAllCrateOutlines(Graphics g, Map map, Size tileSize, double tileScale)
+        {
+            // Optimised to only get the paint areas once per graphic.
+            Dictionary<string, Region> paintAreas = new Dictionary<string, Region>();
+            float outlineThickness = 0.05f;
+            byte alphaThreshold = 0x40;
+            //double lumThreshold = 0.01d;
+            foreach (var (cell, overlay) in map.Overlay)
+            {
+                OverlayType ovlt = overlay.Type;
+                if ((ovlt.Flag & OverlayTypeFlag.Crate) != OverlayTypeFlag.None && map.Metrics.GetLocation(cell, out Point location))
+                {
+                    Color outlineCol = Color.FromArgb(0xA0, Color.Red);
+                    if ((ovlt.Flag & OverlayTypeFlag.Crate) == OverlayTypeFlag.WoodCrate) outlineCol = Color.FromArgb(0xA0, 0xFF, 0xC0, 0x40);
+                    if ((ovlt.Flag & OverlayTypeFlag.Crate) == OverlayTypeFlag.SteelCrate) outlineCol = Color.FromArgb(0xA0, Color.White);
+
+                    Region paintAreaRel;
+                    if (!paintAreas.TryGetValue(ovlt.Name, out paintAreaRel))
+                    {
+                        paintAreaRel = GetOverlayOutline(map.Theater, location, tileSize, tileScale, overlay, outlineThickness, alphaThreshold, true);
+                        paintAreas[ovlt.Name] = paintAreaRel;
+                    }
+                    int actualTopLeftX = location.X * tileSize.Width;
+                    int actualTopLeftY = location.Y * tileSize.Height;
+                    Region paintArea = new Region(paintAreaRel.GetRegionData());
+                    paintArea.Translate(actualTopLeftX, actualTopLeftY);
+                    using (Brush brush = new SolidBrush(outlineCol))
+                    {
+                        g.FillRegion(brush, paintArea);
+                    }
+                }
+            }
+        }
+
+        public static Region GetOverlayOutline(TheaterType theater, Point topLeft, Size tileSize, double tileScale, Overlay overlay, float outline, byte alphaThreshold, bool relative)
+        {
+            OverlayType ovtype = overlay.Type;
+            string name = ovtype.GraphicsSource;
+            int icon = ovtype.IsConcrete || ovtype.IsResource || ovtype.IsWall || ovtype.ForceTileNr == -1 ? overlay.Icon : ovtype.ForceTileNr;
+            // For Decoration types, generate dummy if not found.
+            if (!Globals.TheTilesetManager.GetTileData(theater.Tilesets, name, icon, out Tile tile, (ovtype.Flag & OverlayTypeFlag.Pavement) != 0, false))
+            {
+                Region rg = new Region();
+                rg.MakeEmpty();
+                return rg;
+            }
+            int actualTopLeftX = relative ? 0 : topLeft.X * tileSize.Width;
+            int actualTopLeftY = relative ? 0 : topLeft.Y * tileSize.Height;
+            Rectangle relOverlayBounds = RenderBounds(tile.Image.Size, new Size(1, 1), tileScale);
+            Rectangle overlayBounds = new Rectangle(relative ? 0 : actualTopLeftX, relative ? 0 : actualTopLeftY, tileSize.Width, tileSize.Height);
+            Size maxSize = new Size(Globals.OriginalTileWidth, Globals.OriginalTileHeight);
+            int actualOutlineX = (int)Math.Max(1, outline * tileSize.Width);
+            int actualOutlineY = (int)Math.Max(1, outline * tileSize.Height);
+            using (Bitmap bm = new Bitmap(tileSize.Width, tileSize.Height, PixelFormat.Format32bppArgb))
+            {
+                using (Graphics g2 = Graphics.FromImage(bm))
+                {
+                    g2.DrawImage(tile.Image, relOverlayBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel);
+                }
+                Byte[] imgData = ImageUtils.GetImageData(bm, out int stride, PixelFormat.Format32bppArgb, true);
+
+                bool isOpaqueAndNotBlack(byte[] mapdata, int yVal, int xVal)
+                {
+                    int address = yVal * stride + xVal * 4;
+                    // Check alpha
+                    if (mapdata[address + 3] < alphaThreshold)
+                    {
+                        return false;
+                    }
+                    // Check brightness to exclude shadow
+                    byte red = mapdata[address + 2];
+                    byte grn = mapdata[address + 1];
+                    byte blu = mapdata[address + 0];
+                    // Integer method.
+                    int redBalanced = red * red * 2126;
+                    int grnBalanced = grn * grn * 7152;
+                    int bluBalanced = blu * blu * 0722;
+                    int lum = (redBalanced + grnBalanced + bluBalanced) / 255 / 255;
+                    // The integer division will automatically reduce anything near-black
+                    // to zero, so actually checking against a threshold is unnecessary.
+                    return lum > 0; // lum > lumThresholdSq * 1000
+
+                    // Floating point method
+                    //double redF = red / 255.0;
+                    //double grnF = grn / 255.0;
+                    //double bluF = blu / 255.0;
+                    //double lum = 0.2126d * redF * redF + 0.7152d * grnF * grnF + 0.0722d * bluF * bluF;
+                    //return lum >= lumThresholdSq;
+                };
+
+                //Func<byte[], int, int, bool> isOpaque_ = (mapdata, yVal, xVal) => mapdata[yVal * stride + xVal * 4 + 3] >= alphaThreshold;
+                List<List<Point>> blobs = BlobDetection.FindBlobs(imgData, tileSize.Width, tileSize.Height, isOpaqueAndNotBlack, true, false);
+                List<Point> allblobs = new List<Point>();
+                foreach (List<Point> blob in blobs)
+                {
+                    foreach (Point p in blob)
+                    {
+                        allblobs.Add(p);
+                    }
+                }
+                HashSet<Point> drawPoints = new HashSet<Point>();
+                HashSet<Point> removePoints = new HashSet<Point>();
+                foreach (Point p in allblobs)
+                {
+                    Rectangle rect = new Rectangle(p.X + actualTopLeftX, p.Y + actualTopLeftY, 1, 1);
+                    removePoints.UnionWith(rect.Points());
+                    rect.Inflate(actualOutlineX, actualOutlineY);
+                    rect.Intersect(overlayBounds);
+                    if (!rect.IsEmpty)
+                    {
+                        drawPoints.UnionWith(rect.Points());
+                    }
+                }
+                foreach (Point p in removePoints)
+                {
+                    drawPoints.Remove(p);
+                }
+                Region r = new Region();
+                r.MakeEmpty();
+                Size pixelSize = new Size(1, 1);
+                foreach (Point p in drawPoints)
+                {
+                    r.Union(new Rectangle(p, pixelSize));
+                }
+                return r;
+                //return drawPoints.Select(p => new Rectangle(p, pixelSize)).ToArray();
+            }
+        }
+
         public static void RenderAllFootballAreas(Graphics graphics, Map map, Size tileSize, double tileScale, GameType gameType)
         {
             // probably wouldn't work anyway; SS "road" would not be initialised.

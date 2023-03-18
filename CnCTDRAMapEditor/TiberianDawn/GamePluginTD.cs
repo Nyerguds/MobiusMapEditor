@@ -34,8 +34,9 @@ namespace MobiusEditor.TiberianDawn
     {
         protected bool isMegaMap = false;
 
-        protected  const int multiStartPoints = 8;
-        protected  static readonly Regex SinglePlayRegex = new Regex("^SC[A-LN-Z]\\d{2}\\d?[EWX][A-EL]$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        protected const int maxBriefLengthClassic = 510;
+        protected const int multiStartPoints = 8;
+        protected static readonly Regex SinglePlayRegex = new Regex("^SC[A-LN-Z]\\d{2}\\d?[EWX][A-EL]$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         protected static readonly Regex MovieRegex = new Regex(@"^(?:.*?\\)*(.*?)\.BK2$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         protected static readonly IEnumerable<ITechnoType> fullTechnoTypes;
@@ -223,26 +224,26 @@ namespace MobiusEditor.TiberianDawn
 
         public virtual bool IsMegaMap => isMegaMap;
 
-        public Map Map { get; protected set; }
+        public virtual Map Map { get; protected set; }
 
-        public Image MapImage { get; protected set; }
+        public virtual Image MapImage { get; protected set; }
 
         protected IFeedBackHandler feedBackHandler;
-        public IFeedBackHandler FeedBackHandler
+        public virtual IFeedBackHandler FeedBackHandler
         {
             get { return feedBackHandler; }
             set { feedBackHandler = value; }
         }
 
         bool isDirty;
-        public bool Dirty
+        public virtual bool Dirty
         {
             get { return isDirty; }
             set { isDirty = value; feedBackHandler?.UpdateStatus(); }
         }
 
         protected INISectionCollection extraSections;
-        public String ExtraIniText
+        public virtual String ExtraIniText
         {
             get
             {
@@ -410,7 +411,7 @@ namespace MobiusEditor.TiberianDawn
             }
         }
 
-        public void New(string theater)
+        public virtual void New(string theater)
         {
             Map.Theater = Map.TheaterTypes.Where(t => t.Equals(theater)).FirstOrDefault() ?? Map.TheaterTypes.FirstOrDefault() ?? TheaterTypes.Desert;
             Map.TopLeft = new Point(1, 1);
@@ -815,19 +816,18 @@ namespace MobiusEditor.TiberianDawn
                                 teamMissionTypes.TryGetValue(missionTokens[0], out mission);
                                 if (mission != null)
                                 {
-                                    if (Int32.TryParse(missionTokens[1], out int arg))
+                                    // I'll allow any value for Attack Tarcom; you never know.
+                                    if (!Int32.TryParse(missionTokens[1], out int arg) || (mission != TeamMissionTypes.AttackTarcom && arg < 0))
                                     {
-                                        teamType.Missions.Add(new TeamTypeMission { Mission = mission, Argument = arg });
-                                    }
-                                    else
-                                    {
-                                        errors.Add(string.Format("Team '{0}', orders index {1} ('{2}') has an incorrect value '{4}'.", Key, i, mission, missionTokens[1]));
+                                        errors.Add(string.Format("Team '{0}', orders index {1} ('{2}') has an incorrect value '{3}'. Reverting to 0.", Key, i, mission.Mission, missionTokens[1]));
                                         modified = true;
+                                        arg = 0;
                                     }
+                                    teamType.Missions.Add(new TeamTypeMission { Mission = mission, Argument = arg });
                                 }
                                 else
                                 {
-                                    errors.Add(string.Format("Team '{0}' references unknown orders '{1}'.", Key, missionTokens[0]));
+                                    errors.Add(string.Format("Team '{0}' references unknown orders '{1}'. Orders ignored.", Key, missionTokens[0]));
                                     modified = true;
                                 }
                             }
@@ -2005,7 +2005,7 @@ namespace MobiusEditor.TiberianDawn
             return templateType;
         }
 
-        public bool Save(string path, FileType fileType)
+        public virtual bool Save(string path, FileType fileType)
         {
             return Save(path, fileType, null, false);
         }
@@ -2263,7 +2263,7 @@ namespace MobiusEditor.TiberianDawn
             {
                 return null;
             }
-            var briefingSection = ini.Sections.Add("Briefing");
+            INISection briefingSection = ini.Sections.Add("Briefing");
             String briefText = Map.BriefingSection.Briefing.Replace('\t', ' ').Trim('\r', '\n', ' ').Replace("\r\n", "\n").Replace("\r", "\n");
             if (string.IsNullOrEmpty(briefText))
             {
@@ -2273,6 +2273,10 @@ namespace MobiusEditor.TiberianDawn
             if (Globals.WriteClassicBriefing)
             {
                 const int classicLineCutoff = 74;
+                if (briefText.Length > maxBriefLengthClassic)
+                {
+                    briefText = briefText.Substring(0, maxBriefLengthClassic);
+                }
                 String[] lines = briefText.Split('\n');
                 List<String> finalLines = new List<string>();
                 int last = lines.Length - 1;
@@ -2319,8 +2323,8 @@ namespace MobiusEditor.TiberianDawn
             {
                 return null;
             }
-            var cellTriggersSection = ini.Sections.Add("CellTriggers");
-            foreach (var (cell, cellTrigger) in Map.CellTriggers)
+            INISection cellTriggersSection = ini.Sections.Add("CellTriggers");
+            foreach (var (cell, cellTrigger) in Map.CellTriggers.OrderBy(t => t.Cell))
             {
                 cellTriggersSection[cell.ToString()] = cellTrigger.Trigger;
             }
@@ -2333,16 +2337,16 @@ namespace MobiusEditor.TiberianDawn
             {
                 return null;
             }
-            var teamTypesSection = ini.Sections.Add("TeamTypes");
-            foreach (var teamType in Map.TeamTypes)
+            INISection teamTypesSection = ini.Sections.Add("TeamTypes");
+            foreach (TeamType teamType in Map.TeamTypes.OrderBy(t => t.Name.ToUpperInvariant()))
             {
-                var classes = teamType.Classes
+                string[] classes = teamType.Classes
                     .Select(c => string.Format("{0}:{1}", c.Type.Name.ToUpperInvariant(), c.Count))
                     .ToArray();
-                var missions = teamType.Missions
+                string[] missions = teamType.Missions
                     .Select(m => string.Format("{0}:{1}", m.Mission.Mission, m.Argument))
                     .ToArray();
-                var tokens = new List<string>
+                List<string> tokens = new List<string>
                 {
                     teamType.House.Name,
                     teamType.IsRoundAbout ? "1" : "0",
@@ -2372,20 +2376,20 @@ namespace MobiusEditor.TiberianDawn
             {
                 return null;
             }
-            var triggersSection = ini.Sections.Add("Triggers");
-            foreach (var trigger in Map.Triggers)
+            INISection triggersSection = ini.Sections.Add("Triggers");
+            foreach (Trigger trigger in Map.Triggers.OrderBy(t => t.Name.ToUpperInvariant()))
             {
                 if (string.IsNullOrEmpty(trigger.Name))
                 {
                     continue;
                 }
-                var tokens = new List<string>
+                List<string> tokens = new List<string>
                 {
                     trigger.Event1.EventType,
                     trigger.Action1.ActionType,
                     trigger.Event1.Data.ToString(),
-                    String.IsNullOrEmpty(trigger.House) ? House.None : trigger.House,
-                    String.IsNullOrEmpty(trigger.Action1.Team) ? TeamType.None : trigger.Action1.Team,
+                    string.IsNullOrEmpty(trigger.House) ? House.None : trigger.House,
+                    string.IsNullOrEmpty(trigger.Action1.Team) ? TeamType.None : trigger.Action1.Team,
                     ((int)trigger.PersistentType).ToString()
                 };
                 triggersSection[trigger.Name] = string.Join(",", tokens);
@@ -2395,69 +2399,64 @@ namespace MobiusEditor.TiberianDawn
 
         protected INISection SaveIniWaypoints(INI ini)
         {
-            var waypointsSection = ini.Sections.Add("Waypoints");
-            for (var i = 0; i < Map.Waypoints.Length; ++i)
+            INISection waypointsSection = ini.Sections.Add("Waypoints");
+            for (int i = Map.Waypoints.Length - 1; i >= 0; --i)
             {
-                var waypoint = Map.Waypoints[i];
-                if (waypoint.Cell.HasValue)
-                {
-                    waypointsSection[i.ToString()] = waypoint.Cell.Value.ToString();
-                }
+                Waypoint waypoint = Map.Waypoints[i];
+                waypointsSection[i.ToString()] = waypoint.Cell.GetValueOrDefault(-1).ToString();
             }
             return waypointsSection;
         }
 
         protected INISection SaveIniBase(INI ini, bool dummy)
         {
-            var baseSection = ini.Sections.Add("Base");
-            if (!dummy)
-            {
-                var baseBuildings = Map.Buildings.OfType<Building>().Where(x => x.Occupier.BasePriority >= 0).OrderByDescending(x => x.Occupier.BasePriority).ToArray();
-                var baseIndex = baseBuildings.Length - 1;
-                foreach (var (location, building) in baseBuildings)
-                {
-                    var key = baseIndex.ToString("D3");
-                    baseIndex--;
-
-                    baseSection[key] = string.Format("{0},{1}",
-                        building.Type.Name.ToUpper(),
-                        ((location.Y & 0x7F) << 24) | ((location.X & 0x7F) << 8)
-                    );
-                }
-                baseSection["Count"] = baseBuildings.Length.ToString();
-            }
-            else
+            INISection baseSection = ini.Sections.Add("Base");
+            if (dummy)
             {
                 baseSection["Count"] = "0";
+                return baseSection;
             }
+            var baseBuildings = Map.Buildings.OfType<Building>().Where(x => x.Occupier.BasePriority >= 0).OrderByDescending(x => x.Occupier.BasePriority).ToArray();
+            int baseIndex = baseBuildings.Length - 1;
+            foreach (var (location, building) in baseBuildings)
+            {
+                string key = baseIndex.ToString("D3");
+                baseIndex--;
+                baseSection[key] = string.Format("{0},{1}",
+                    building.Type.Name.ToUpperInvariant(),
+                    ((location.Y & 0x7F) << 24) | ((location.X & 0x7F) << 8)
+                );
+            }
+            baseSection["Count"] = baseBuildings.Length.ToString();
             return baseSection;
         }
 
         protected INISection SaveIniInfantry(INI ini)
         {
-            var infantrySection = ini.Sections.Add("Infantry");
-            var infantryIndex = 0;
-            foreach (var (location, infantryGroup) in Map.Technos.OfType<InfantryGroup>())
+            INISection infantrySection = ini.Sections.Add("Infantry");
+            int infantryIndex = 0;
+            foreach (var (location, infantryGroup) in Map.Technos.OfType<InfantryGroup>().OrderBy(i => Map.Metrics.GetCell(i.Location)))
             {
-                for (var i = 0; i < infantryGroup.Infantry.Length; ++i)
+                for (int i = 0; i < infantryGroup.Infantry.Length; ++i)
                 {
-                    var infantry = infantryGroup.Infantry[i];
+                    Infantry infantry = infantryGroup.Infantry[i];
                     if (infantry == null)
                     {
                         continue;
                     }
-
-                    var key = infantryIndex.ToString("D3");
+                    if (!Map.Metrics.GetCell(location, out int cell))
+                    {
+                        continue;
+                    }
+                    string key = infantryIndex.ToString("D3");
                     infantryIndex++;
-
-                    Map.Metrics.GetCell(location, out int cell);
                     infantrySection[key] = string.Format("{0},{1},{2},{3},{4},{5},{6},{7}",
                         infantry.House.Name,
-                        infantry.Type.Name,
+                        infantry.Type.Name.ToUpperInvariant(),
                         infantry.Strength,
                         cell,
                         i,
-                        String.IsNullOrEmpty(infantry.Mission) ? "Guard" : infantry.Mission,
+                        string.IsNullOrEmpty(infantry.Mission) ? "Guard" : infantry.Mission,
                         infantry.Direction.ID,
                         infantry.Trigger
                     );
@@ -2468,43 +2467,47 @@ namespace MobiusEditor.TiberianDawn
 
         protected INISection SaveIniStructures(INI ini)
         {
-            var structuresSection = ini.Sections.Add("Structures");
-            var structureIndex = 0;
-            foreach (var (location, building) in Map.Buildings.OfType<Building>().Where(x => x.Occupier.IsPrebuilt))
+            INISection structuresSection = ini.Sections.Add("Structures");
+            int structureIndex = 0;
+            foreach (var (location, building) in Map.Buildings.OfType<Building>().Where(b => b.Occupier.IsPrebuilt).OrderBy(b => Map.Metrics.GetCell(b.Location)))
             {
-                var key = structureIndex.ToString("D3");
+                if (!Map.Metrics.GetCell(location, out int cell))
+                {
+                    continue;
+                }
+                string key = structureIndex.ToString("D3");
                 structureIndex++;
-
-                Map.Metrics.GetCell(location, out int cell);
                 structuresSection[key] = string.Format("{0},{1},{2},{3},{4},{5}",
                     building.House.Name,
-                    building.Type.Name,
+                    building.Type.Name.ToUpperInvariant(),
                     building.Strength,
                     cell,
                     building.Direction.ID,
                     building.Trigger
                 );
-            }            
+            }
             return structuresSection;
         }
 
         protected INISection SaveIniUnits(INI ini)
         {
-            var unitsSection = ini.Sections.Add("Units");
-            var unitIndex = 0;
-            foreach (var (location, unit) in Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsGroundUnit))
+            INISection unitsSection = ini.Sections.Add("Units");
+            int unitIndex = 0;
+            foreach (var (location, unit) in Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsGroundUnit).OrderBy(u => Map.Metrics.GetCell(u.Location)))
             {
-                var key = unitIndex.ToString("D3");
+                if (!Map.Metrics.GetCell(location, out int cell))
+                {
+                    continue;
+                }
+                string key = unitIndex.ToString("D3");
                 unitIndex++;
-
-                Map.Metrics.GetCell(location, out int cell);
                 unitsSection[key] = string.Format("{0},{1},{2},{3},{4},{5},{6}",
                     unit.House.Name,
-                    unit.Type.Name,
+                    unit.Type.Name.ToUpperInvariant(),
                     unit.Strength,
                     cell,
                     unit.Direction.ID,
-                    String.IsNullOrEmpty(unit.Mission) ? "Guard" : unit.Mission,
+                    string.IsNullOrEmpty(unit.Mission) ? "Guard" : unit.Mission,
                     unit.Trigger
                 );
             }
@@ -2518,21 +2521,23 @@ namespace MobiusEditor.TiberianDawn
             {
                 return null;
             }
-            var aircraftSection = ini.Sections.Add("Aircraft");
+            INISection aircraftSection = ini.Sections.Add("Aircraft");
             var aircraftIndex = 0;
-            foreach (var (location, aircraft) in Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsAircraft))
+            foreach (var (location, aircraft) in Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsAircraft).OrderBy(u => Map.Metrics.GetCell(u.Location)))
             {
-                var key = aircraftIndex.ToString("D3");
+                if (!Map.Metrics.GetCell(location, out int cell))
+                {
+                    continue;
+                }
+                string key = aircraftIndex.ToString("D3");
                 aircraftIndex++;
-
-                Map.Metrics.GetCell(location, out int cell);
                 aircraftSection[key] = string.Format("{0},{1},{2},{3},{4},{5}",
                     aircraft.House.Name,
-                    aircraft.Type.Name,
+                    aircraft.Type.Name.ToUpperInvariant(),
                     aircraft.Strength,
                     cell,
                     aircraft.Direction.ID,
-                    String.IsNullOrEmpty(aircraft.Mission) ? "Guard" : aircraft.Mission
+                    string.IsNullOrEmpty(aircraft.Mission) ? "Guard" : aircraft.Mission
                 );
             }
             return aircraftSection;
@@ -2541,12 +2546,8 @@ namespace MobiusEditor.TiberianDawn
         protected IEnumerable<INISection> SaveIniHouses(INI ini)
         {
             List<INISection> houseSections = new List<INISection>();
-            foreach (var house in Map.Houses)
+            foreach (var house in Map.Houses.Where(h => h.Type.ID >= 0).OrderBy(h => h.Type.ID))
             {
-                if (house.Type.ID < 0)
-                {
-                    continue;
-                }
                 House gameHouse = (House)house;
                 bool enabled = house.Enabled;
                 INISection houseSection = INITools.FillAndReAdd(ini, gameHouse.Type.Name, gameHouse, new MapContext(Map, false), enabled);
@@ -2563,7 +2564,7 @@ namespace MobiusEditor.TiberianDawn
             var overlaySection = ini.Sections.Add("Overlay");
             Regex tiberium = new Regex("TI([0-9]|(1[0-2]))", RegexOptions.IgnoreCase);
             Random rd = new Random();
-            foreach (var (cell, overlay) in Map.Overlay)
+            foreach (var (cell, overlay) in Map.Overlay.OrderBy(o => o.Cell))
             {
                 string overlayName = overlay.Type.Name;
                 if (tiberium.IsMatch(overlayName))
@@ -2578,7 +2579,7 @@ namespace MobiusEditor.TiberianDawn
             var smudgeSection = ini.Sections.Add("Smudge");
             // Flatten multi-cell bibs
             Dictionary<int, Smudge> resolvedSmudge = new Dictionary<int, Smudge>();
-            foreach (var (cell, smudge) in Map.Smudge.Where(item => !item.Value.Type.IsAutoBib))
+            foreach (var (cell, smudge) in Map.Smudge.Where(item => !item.Value.Type.IsAutoBib).OrderBy(s => s.Cell))
             {
                 int actualCell = smudge.GetPlacementOrigin(cell, this.Map.Metrics);
                 if (!resolvedSmudge.ContainsKey(actualCell))
@@ -2589,7 +2590,7 @@ namespace MobiusEditor.TiberianDawn
             foreach (int cell in resolvedSmudge.Keys.OrderBy(c => c))
             {
                 Smudge smudge = resolvedSmudge[cell];
-                smudgeSection[cell.ToString()] = string.Format("{0},{1},{2}", smudge.Type.Name.ToUpper(), cell, Math.Min(smudge.Type.Icons - 1, smudge.Icon));
+                smudgeSection[cell.ToString()] = string.Format("{0},{1},{2}", smudge.Type.Name.ToUpperInvariant(), cell, Math.Min(smudge.Type.Icons - 1, smudge.Icon));
             }
             return smudgeSection;
         }
@@ -2597,10 +2598,12 @@ namespace MobiusEditor.TiberianDawn
         protected INISection SaveINITerrain(INI ini)
         {
             var terrainSection = ini.Sections.Add("Terrain");
-            foreach (var (location, terrain) in Map.Technos.OfType<Terrain>())
+            foreach (var (location, terrain) in Map.Technos.OfType<Terrain>().OrderBy(t => Map.Metrics.GetCell(t.Location)))
             {
-                Map.Metrics.GetCell(location, out int cell);
-                terrainSection[cell.ToString()] = string.Format("{0},{1}", terrain.Type.Name, terrain.Trigger);
+                if (Map.Metrics.GetCell(location, out int cell))
+                {
+                    terrainSection[cell.ToString()] = string.Format("{0},{1}", terrain.Type.Name.ToUpperInvariant(), terrain.Trigger);
+                }
             }
             return terrainSection;
         }
@@ -2687,7 +2690,7 @@ namespace MobiusEditor.TiberianDawn
             writer.WriteEndObject();
         }
 
-        public String Validate()
+        public virtual String Validate()
         {
             return Validate(false);
         }
@@ -2921,7 +2924,7 @@ namespace MobiusEditor.TiberianDawn
             return housesWithProd;
         }
 
-        public int[] GetRevealRadiusForWaypoints(Map map, bool forLargeReveal)
+        public virtual int[] GetRevealRadiusForWaypoints(Map map, bool forLargeReveal)
         {
             Waypoint[] waypoints = map.Waypoints;
             int length = waypoints.Length;
@@ -2940,7 +2943,7 @@ namespace MobiusEditor.TiberianDawn
             return flareRadius;
         }
 
-        public IEnumerable<string> CheckTriggers(IEnumerable<Trigger> triggers, bool includeExternalData, bool prefixNames, bool fatalOnly, out bool fatal, bool fix, out bool wasFixed)
+        public virtual IEnumerable<string> CheckTriggers(IEnumerable<Trigger> triggers, bool includeExternalData, bool prefixNames, bool fatalOnly, out bool fatal, bool fix, out bool wasFixed)
         {
             fatal = false;
             // Nothing actually auto-fixes errors on TD triggers.
@@ -3158,9 +3161,24 @@ namespace MobiusEditor.TiberianDawn
             return errors;
         }
 
-        public bool MapNameIsEmpty(string name)
+        public virtual bool MapNameIsEmpty(string name)
         {
             return String.IsNullOrEmpty(name) || "None".Equals(name, StringComparison.OrdinalIgnoreCase);
+        }
+
+        public virtual bool EvaluateBriefing(string briefing, out string message)
+        {
+            message = null;
+            if (!Globals.WriteClassicBriefing)
+            {
+                return true;
+            }
+            string brief = briefing.Replace('\t', ' ').Trim('\r', '\n', ' ').Replace("\r\n", "\r").Replace("\n", "\r");
+            if (brief.Length > maxBriefLengthClassic)
+            {
+                message = "Classic Tiberian Dawn briefings cannot exceed " + maxBriefLengthClassic + " characters. This includes line breaks.\n\nThis will not affect the mission when playing in the Remastr, but the briefing will be truncated when playing in the original game.";
+            }
+            return message == null;
         }
 
         protected void BasicSection_PropertyChanged(object sender, PropertyChangedEventArgs e)

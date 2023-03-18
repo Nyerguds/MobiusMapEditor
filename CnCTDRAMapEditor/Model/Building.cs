@@ -93,9 +93,9 @@ namespace MobiusEditor.Model
             Tint = other.tint;
         }
 
-        public Dictionary<Point, Smudge> GetBib(Point location, List<SmudgeType> smudgeTypes, Boolean ignoreActualStatus = false)
+        public Dictionary<Point, Smudge> GetBib(Point location, List<SmudgeType> smudgeTypes)
         {
-            if (!Type.HasBib && !ignoreActualStatus)
+            if (!Type.HasBib)
             {
                 return null;
             }

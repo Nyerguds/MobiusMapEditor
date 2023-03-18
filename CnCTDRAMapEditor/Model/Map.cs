@@ -28,20 +28,21 @@ using TGASharpLib;
 
 namespace MobiusEditor.Model
 {
+    // Keep this list synchronised with Map.MapLayerNames
     [Flags]
     public enum MapLayerFlag: int
     {
         None            = 0,
-        Template        = 1 << 0,
-        Terrain         = 1 << 1,
-        Resources       = 1 << 2,
-        Walls           = 1 << 3,
-        Overlay         = 1 << 4,
-        Smudge          = 1 << 5,
-        Infantry        = 1 << 6,
-        Units           = 1 << 7,
-        Buildings       = 1 << 8,
-        Waypoints       = 1 << 9,
+        Template        = 1 << 00,
+        Terrain         = 1 << 01,
+        Infantry        = 1 << 02,
+        Units           = 1 << 03,
+        Buildings       = 1 << 04,
+        Overlay         = 1 << 05,
+        Walls           = 1 << 06,
+        Resources       = 1 << 07,
+        Smudge          = 1 << 08,
+        Waypoints       = 1 << 09,
 
         Boundaries      = 1 << 10,
         MapSymmetry     = 1 << 11,
@@ -54,14 +55,20 @@ namespace MobiusEditor.Model
         BuildingFakes   = 1 << 18,
         EffectRadius    = 1 << 19,
         WaypointRadius  = 1 << 20,
+        CrateOutlines   = 1 << 21,
 
         OverlayAll = Resources | Walls | Overlay,
-        Technos = Terrain | Walls | Infantry | Units | Buildings | BuildingFakes,
+        Technos = Terrain | Infantry | Units | Buildings,
         MapLayers = Terrain | Resources | Walls | Overlay | Smudge | Infantry | Units | Buildings | Waypoints,
         /// <summary>Listing of layers that don't need a full map repaint.</summary>
         Indicators = Boundaries | MapSymmetry | MapGrid | WaypointsIndic | FootballArea | CellTriggers
-            | TechnoTriggers | BuildingRebuild | BuildingFakes | EffectRadius | WaypointRadius,
+            | TechnoTriggers | BuildingRebuild | BuildingFakes | EffectRadius | WaypointRadius | CrateOutlines,
         All = Int32.MaxValue
+    }
+
+    public class TriggersChangedEventArgs : EventArgs
+    {
+
     }
 
     public class MapContext : ITypeDescriptorContext
@@ -91,6 +98,34 @@ namespace MobiusEditor.Model
 
     public class Map : ICloneable
     {
+        // Keep this list synchronised with the MapLayerFlag enum
+        public static String[] MapLayerNames = {
+            // Map layers
+            "Template",
+            "Terrain",
+            "Infantry",
+            "Units",
+            "Buildings",
+            "Overlay",
+            "Walls",
+            "Resources",
+            "Smudge",
+            "Waypoints",
+            // Indicators
+            "Map boundaries",
+            "Map symmetry",
+            "Map grid",
+            "Waypoint labels",
+            "Football goal areas",
+            "Cell triggers",
+            "Object triggers",
+            "Building rebuild priorities",
+            "Building 'fake' labels",
+            "Jam / gap radiuses",
+            "Waypoint reveal radiuses",
+            "Crate outlines"
+        };
+
         private static Regex tileInfoSplitRegex = new Regex("^([^:]+):(\\d+)$", RegexOptions.Compiled);
 
         private int updateCount = 0;

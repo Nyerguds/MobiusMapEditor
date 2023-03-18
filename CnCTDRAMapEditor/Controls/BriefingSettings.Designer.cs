@@ -45,6 +45,7 @@ namespace MobiusEditor.Controls
             this.txtBriefing = new System.Windows.Forms.TextBox();
             this.lblBriefing = new System.Windows.Forms.Label();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this.lblLength = new System.Windows.Forms.Label();
             this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -56,8 +57,9 @@ namespace MobiusEditor.Controls
             this.txtBriefing.Multiline = true;
             this.txtBriefing.Name = "txtBriefing";
             this.txtBriefing.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtBriefing.Size = new System.Drawing.Size(396, 399);
+            this.txtBriefing.Size = new System.Drawing.Size(396, 386);
             this.txtBriefing.TabIndex = 1;
+            this.txtBriefing.TextChanged += new System.EventHandler(this.txtBriefing_TextChanged);
             // 
             // lblBriefing
             // 
@@ -73,16 +75,28 @@ namespace MobiusEditor.Controls
             // 
             this.tableLayoutPanel1.ColumnCount = 1;
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel1.Controls.Add(this.lblLength, 0, 2);
             this.tableLayoutPanel1.Controls.Add(this.lblBriefing, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.txtBriefing, 0, 1);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.RowCount = 2;
+            this.tableLayoutPanel1.RowCount = 3;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.Size = new System.Drawing.Size(400, 424);
             this.tableLayoutPanel1.TabIndex = 1;
+            // 
+            // lblLength
+            // 
+            this.lblLength.AutoSize = true;
+            this.lblLength.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblLength.Location = new System.Drawing.Point(3, 411);
+            this.lblLength.Name = "lblLength";
+            this.lblLength.Size = new System.Drawing.Size(394, 13);
+            this.lblLength.TabIndex = 2;
+            this.lblLength.Text = "Length:";
             // 
             // BriefingSettings
             // 
@@ -103,5 +117,6 @@ namespace MobiusEditor.Controls
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.TextBox txtBriefing;
         private System.Windows.Forms.Label lblBriefing;
+        private System.Windows.Forms.Label lblLength;
     }
 }

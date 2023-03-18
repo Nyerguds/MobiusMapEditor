@@ -427,7 +427,10 @@ Unreleased
 * The Steam publish operation will now clean up all generated temporary files.
 * Fixed the issue where the object property popup does not properly show all options. This was caused by it using a different font.
 * When unchecking the Prebuilt status of a building and then re-checking it, the original values for the building's other properties (owner, strength, trigger...) will be restored. This does not work if the changes were confirmed by closing the popup. This property-restoring also works on the selection window template.
-* Added indicators for reveal radiuses around waypoints, and shroud / jam radiuses around Gap Generators, Mobile Gap Generators, Radar Jammers and Tesla Tanks. Unless specifically enabled in the "View -> Extra Indications" menu, these will only be shown when manipulating the objects directly; while placing them, moving them, and editing their properties.
+* Added indicators for reveal radiuses around waypoints, and shroud / jam radiuses around Gap Generators, Mobile Gap Generators, Radar Jammers and Tesla Tanks. Unless specifically enabled in the "View → "Extra Indications" menu, these will only be shown when manipulating the objects directly; while placing them, moving them, and editing their properties.
 * Added "Jump to next usage" button on celltriggers, which, when pressed multiple times, will cycle the viewed map location through all different placed-down clusters of the selected celltrigger.
 * Added Word Wrap button to the error message dialog.
 * When a new unit type is added to a Teamtype, its amount will now default to 1.
+* Optimised the repaint process when enabling or disabling layers.
+* Added "Crate outlines" under "View" → "Indicators".
+* Fixed issues with videos sometimes not being saved / loaded for Red Alert. missions.

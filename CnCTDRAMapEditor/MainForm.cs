@@ -81,17 +81,7 @@ namespace MobiusEditor
                     activeLayers = value;
                     if (activeTool != null)
                     {
-                        MapLayerFlag active = activeLayers;
-                        // Save some processing by just always removing these.
-                        if (plugin.GameType != GameType.SoleSurvivor)
-                        {
-                            active &= ~MapLayerFlag.FootballArea;
-                        }
-                        else if (plugin.GameType != GameType.RedAlert)
-                        {
-                            active &= ~MapLayerFlag.BuildingFakes;
-                        }
-                        activeTool.Layers = active;
+                        activeTool.Layers = activeLayers;
                     }
                 }
             }
@@ -664,9 +654,9 @@ namespace MobiusEditor
                         }
                         if (ev.Plugin != null)
                         {
-                            plugin.Map.TeamTypes.Clear();
-                            plugin.Map.TeamTypes.AddRange(oldTeamTypes);
                             ev.Map.Triggers = oldTriggers;
+                            ev.Map.TeamTypes.Clear();
+                            ev.Map.TeamTypes.AddRange(oldTeamTypes);
                             ev.Plugin.Dirty = origDirtyState;
                         }
                     }
@@ -681,8 +671,8 @@ namespace MobiusEditor
                         }
                         if (ev.Plugin != null)
                         {
-                            plugin.Map.TeamTypes.Clear();
-                            plugin.Map.TeamTypes.AddRange(newTeamTypes);
+                            ev.Map.TeamTypes.Clear();
+                            ev.Map.TeamTypes.AddRange(newTeamTypes);
                             ev.Map.Triggers = newTriggers;
                             ev.Plugin.Dirty = true;
                         }
@@ -753,16 +743,19 @@ namespace MobiusEditor
                                 {
                                     celltrigger.Trigger = undoList[obj];
                                     // In case it's removed, restore.
-                                    ev.Map.CellTriggers[cellTriggerLocations[celltrigger]] = celltrigger;
+                                    if (ev.Map != null)
+                                    {
+                                        ev.Map.CellTriggers[cellTriggerLocations[celltrigger]] = celltrigger;
+                                    }
                                 }
                             }
                             if (ev.Plugin != null)
                             {
-                                ev.Plugin.Map.Triggers = oldTriggers;
+                                ev.Map.Triggers = oldTriggers;
                                 ev.Plugin.Dirty = origDirtyState;
                             }
                             // Repaint map labels
-                            ev.MapPanel.Invalidate();
+                            ev.MapPanel?.Invalidate();
                         }
                         void redoAction(UndoRedoEventArgs ev)
                         {
@@ -786,7 +779,7 @@ namespace MobiusEditor
                                 else if (obj is CellTrigger celltrigger)
                                 {
                                     celltrigger.Trigger = redoList[obj];
-                                    if (Trigger.IsEmpty(celltrigger.Trigger))
+                                    if (Trigger.IsEmpty(celltrigger.Trigger) && ev.Map != null)
                                     {
                                         ev.Map.CellTriggers[cellTriggerLocations[celltrigger]] = null;
                                     }
@@ -794,11 +787,11 @@ namespace MobiusEditor
                             }
                             if (ev.Plugin != null)
                             {
-                                ev.Plugin.Map.Triggers = newTriggers;
+                                ev.Map.Triggers = newTriggers;
                                 ev.Plugin.Dirty = true;
                             }
                             // Repaint map labels
-                            ev.MapPanel.Invalidate();
+                            ev.MapPanel?.Invalidate();
                         }
                         url.Track(undoAction, redoAction);
                         // No longer a full refresh, since celltriggers function is no longer disabled when no triggers are found.
@@ -1643,12 +1636,15 @@ namespace MobiusEditor
             viewLayersToolStripMenuItem.Enabled = enable;
             viewIndicatorsToolStripMenuItem.Enabled = enable;
 
-            // Special rules per game.
-            viewLayersBuildingsMenuItem.Visible = !hasPlugin || plugin.GameType != GameType.SoleSurvivor;
+            // Special rules per game. These should be kept identical to those in ImageExportDialog.SetLayers
             viewIndicatorsBuildingFakeLabelsMenuItem.Visible = !hasPlugin || plugin.GameType == GameType.RedAlert;
             viewExtraIndicatorsEffectAreaRadiusMenuItem.Visible = !hasPlugin || plugin.GameType == GameType.RedAlert;
+            viewLayersBuildingsMenuItem.Visible = !hasPlugin || plugin.GameType != GameType.SoleSurvivor || !Globals.NoOwnedObjectsInSole;
+            viewLayersUnitsMenuItem.Visible = !hasPlugin || plugin.GameType != GameType.SoleSurvivor || !Globals.NoOwnedObjectsInSole;
+            viewLayersInfantryMenuItem.Visible = !hasPlugin || plugin.GameType != GameType.SoleSurvivor || !Globals.NoOwnedObjectsInSole;
             viewIndicatorsBuildingRebuildLabelsMenuItem.Visible = !hasPlugin || plugin.GameType != GameType.SoleSurvivor;
             viewIndicatorsFootballAreaMenuItem.Visible = !hasPlugin || plugin.GameType == GameType.SoleSurvivor;
+            viewIndicatorsCrateOutlinesMenuItem.Visible = !hasPlugin || plugin.GameType != GameType.SoleSurvivor;
         }
 
         private void CleanupTools()
@@ -1932,6 +1928,10 @@ namespace MobiusEditor
             if (!viewExtraIndicatorsEffectAreaRadiusMenuItem.Checked)
             {
                 layers &= ~MapLayerFlag.EffectRadius;
+            }
+            if (!viewIndicatorsCrateOutlinesMenuItem.Checked)
+            {
+                layers &= ~MapLayerFlag.CrateOutlines;
             }
             ActiveLayers = layers;
         }
@@ -2336,7 +2336,7 @@ namespace MobiusEditor
             SmudgeType smudge = plugin.Map.SmudgeTypes.Where(sm => !sm.IsAutoBib && sm.Icons == 1 && sm.Size.Width == 1 && sm.Size.Height == 1 && sm.Thumbnail != null
                 && (!Globals.FilterTheaterObjects || sm.Theaters == null || sm.Theaters.Contains(plugin.Map.Theater)))
                 .OrderBy(sm => sm.ID).FirstOrDefault();
-            OverlayType overlay = plugin.Map.OverlayTypes.Where(ov => (ov.Flag & OverlayTypeFlag.Crate) == OverlayTypeFlag.Crate && ov.Thumbnail != null
+            OverlayType overlay = plugin.Map.OverlayTypes.Where(ov => (ov.Flag & OverlayTypeFlag.Crate) != OverlayTypeFlag.None && ov.Thumbnail != null
                 && (!Globals.FilterTheaterObjects || ov.Theaters == null || ov.Theaters.Contains(plugin.Map.Theater)))
                 .OrderBy(ov => ov.ID).FirstOrDefault();
             if (overlay == null)

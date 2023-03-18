@@ -72,7 +72,8 @@ namespace MobiusEditor.Interface
 
         IEnumerable<String> CheckTriggers(IEnumerable<Trigger> triggers, bool includeExternalData, bool prefixNames, bool fatalOnly, out bool fatal, bool fix, out bool wasFixed);
 
-
         bool MapNameIsEmpty(string name);
+
+        Boolean EvaluateBriefing(string briefing, out string message);
     }
 }

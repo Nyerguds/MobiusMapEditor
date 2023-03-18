@@ -135,17 +135,18 @@ namespace MobiusEditor.Dialogs
             List<Control> oldControls = new List<Control>();
             foreach (Control ctrl in settingsPanel.Controls)
             {
-                oldControls.Add(ctrl);
-            }
-            settingsPanel.Controls.Clear();
-            // Cleanup.
-            foreach (Control ctrl in settingsPanel.Controls)
-            {
                 if (ctrl is RulesSettings ruleSet)
                 {
                     ruleSet.TextNeedsUpdating -= this.RulesPanel_TextNeedsUpdating;
                 }
-                ctrl.Dispose();
+                oldControls.Add(ctrl);
+            }
+            settingsPanel.Controls.Clear();
+            // Cleanup.
+            foreach (Control ctrl in oldControls)
+            {
+                try { ctrl.Dispose(); }
+                catch { /* ignore */ }
             }
             this.currentSelection = settingsTreeView.SelectedNode?.Name;
             switch (settingsTreeView.SelectedNode.Name)
@@ -184,7 +185,7 @@ namespace MobiusEditor.Dialogs
                         PlayerSettings playerPanel = new PlayerSettings(plugin, houseSettingsTrackers[player]);
                         settingsPanel.Controls.Add(playerPanel);
                         playerPanel.Dock = DockStyle.Fill;
-                    }                    
+                    }
                     break;
             }
         }
@@ -250,69 +251,17 @@ namespace MobiusEditor.Dialogs
             {
                 return;
             }
-            // Check for RA briefing overflow.
-            if (plugin.GameType == GameType.RedAlert)
+            briefingSettingsTracker.TryGetMember("Briefing", out object brf);
+            if (brf is String brief)
             {
-                briefingSettingsTracker.TryGetMember("Briefing", out object brf);
-                if (brf is String brief)
+                if (!plugin.EvaluateBriefing(brief, out String message) && !String.IsNullOrEmpty(message))
                 {
-                    bool briefLenOvfl = false;
-                    bool briefLenSplitOvfl = false;
-                    const int cutoff = 40;
-                    brief = brief.Replace('\t', ' ').Trim('\r', '\n', ' ').Replace("\r\n", "\n").Replace("\r", "\n");
-                    int lines = brief.Count(c => c == '\n') + 1;
-                    briefLenOvfl = lines > 25;
-                    if (!briefLenOvfl)
+                    message += "\n\nPress Cancel to go back and edit the briefing, or OK to ignore the issue and continue.";
+                    DialogResult dres = MessageBox.Show(message, "Warning", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1);
+                    if (dres != DialogResult.OK)
                     {
-                        // split in lines of 40; that's more or less the average line length in the brief screen.
-                        List<String> txtLines = new List<string>();
-                        string[] briefLines = brief.Split('\n');
-                        for (int i = 0; i < briefLines.Length; ++i)
-                        {
-                            String line = briefLines[i].Trim();
-                            if (line.Length <= cutoff)
-                            {
-                                txtLines.Add(line);
-                                continue;
-                            }
-                            String[] splitLine = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                            int wordIndex = 0;
-                            while (wordIndex < splitLine.Length)
-                            {
-                                StringBuilder sb = new StringBuilder();
-                                // Always allow initial word
-                                int nextLength = 0;
-                                while (nextLength < cutoff && wordIndex < splitLine.Length)
-                                {
-                                    if (sb.Length > 0)
-                                        sb.Append(' ');
-                                    sb.Append(splitLine[wordIndex++]);
-                                    nextLength = wordIndex >= splitLine.Length ? 0 : (sb.Length + 1 + splitLine[wordIndex].Length);
-                                }
-                                txtLines.Add(sb.ToString());
-                            }
-                        }
-                        briefLenSplitOvfl = txtLines.Count > 25;
-                    }
-                    String msg = null;
-                    const String warn25Lines = "Red Alert's briefing screen can only show 25 lines of briefing text. ";
-                    const String exceedPressCancel = "\n\nPress Cancel to go back and edit the briefing, or OK to ignore the issue and continue.";
-                    if (briefLenOvfl)
-                    {
-                        msg = warn25Lines + "Your current briefing exceeds that." + exceedPressCancel;
-                    }
-                    else if (briefLenSplitOvfl)
-                    {
-                        msg = warn25Lines + "The lines average to about 40 characters per line, and when split that way, your current briefing exceeds that, meaning it will most likely not display correctly in-game." + exceedPressCancel;
-                    }
-                    if (msg != null)
-                    {
-                        DialogResult dres = MessageBox.Show(msg, "Warning", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1);
-                        if (dres != DialogResult.OK)
-                        {
-                            e.Cancel = true;
-                            return;
-                        }
+                        e.Cancel = true;
+                        return;
                     }
                 }
             }
