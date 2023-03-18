@@ -436,4 +436,4 @@ Unreleased
 * Fixed issues with videos sometimes not being saved / loaded for Red Alert. missions.
 * When loading a map, the editor will zoom in and reposition to exactly show the map bounds area with a 1-cell border around it. This behaviour is controlled by the "ZoomToBoundsOnLoad" setting.
 * Items are now sorted by map cell number when saved, and capitalised like they are in original maps.
-* Waypoints in Tiberian Dawn maps are now saved as they were in classic maps, with all waypoints listed last to first, ands the unused ones filled in with '-1'.
+* Waypoints in Tiberian Dawn maps are now saved as they were in classic maps, with all waypoints listed last to first, and the unused ones filled in with '-1'.
