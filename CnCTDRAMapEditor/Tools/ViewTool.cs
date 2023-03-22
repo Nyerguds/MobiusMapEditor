@@ -93,17 +93,21 @@ namespace MobiusEditor.Tools
                 // Filter the objects of the layers that have been toggled.
                 HashSet<Point> points = new HashSet<Point>();
                 CellMetrics metr = map.Metrics;
-                if ((modifiedBits & MapLayerFlag.Technos) != MapLayerFlag.None)
+                if ((modifiedBits & MapLayerFlag.Terrain) != MapLayerFlag.None)
                 {
-                    // TODO maybe actually filter this out per type?
-                    foreach (var (Location, Overlapper) in RenderMap.Overlappers)
-                    {
-                        points.UnionWith(new Rectangle(
-                            Location.X + Overlapper.OverlapBounds.X,
-                            Location.Y + Overlapper.OverlapBounds.Y,
-                            Overlapper.OverlapBounds.Width,
-                            Overlapper.OverlapBounds.Height).Points());
-                    }
+                    AddOverlapperPoints<Terrain>(points);
+                }
+                if ((modifiedBits & MapLayerFlag.Infantry) != MapLayerFlag.None)
+                {
+                    AddOverlapperPoints<InfantryGroup>(points);
+                }
+                if ((modifiedBits & MapLayerFlag.Units) != MapLayerFlag.None)
+                {
+                    AddOverlapperPoints<Unit>(points);
+                }
+                if ((modifiedBits & MapLayerFlag.Buildings) != MapLayerFlag.None)
+                {
+                    AddOverlapperPoints<Building>(points);
                 }
                 if ((modifiedBits & MapLayerFlag.OverlayAll) != MapLayerFlag.None)
                 {
@@ -136,6 +140,18 @@ namespace MobiusEditor.Tools
                     }
                 }
                 mapPanel.Invalidate(RenderMap, points);
+            }
+        }
+
+        private void AddOverlapperPoints<T>(HashSet<Point> points) where T: ICellOverlapper
+        {
+            foreach (var (Location, Overlapper) in RenderMap.Overlappers.OfType<T>())
+            {
+                points.UnionWith(new Rectangle(
+                    Location.X + Overlapper.OverlapBounds.X,
+                    Location.Y + Overlapper.OverlapBounds.Y,
+                    Overlapper.OverlapBounds.Width,
+                    Overlapper.OverlapBounds.Height).Points());
             }
         }
 
