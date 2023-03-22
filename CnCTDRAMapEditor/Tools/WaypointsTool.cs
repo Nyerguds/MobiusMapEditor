@@ -417,7 +417,7 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-            mapPanel.JumpToPosition(map.Metrics, cellPoint, 1, 1, false);
+            mapPanel.JumpToPosition(map.Metrics, cellPoint, false);
         }
 
         protected override void PreRenderMap()

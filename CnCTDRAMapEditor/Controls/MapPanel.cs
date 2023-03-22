@@ -127,12 +127,38 @@ namespace MobiusEditor.Controls
             }
         }
 
-        public void JumpToPosition(CellMetrics metrics, Rectangle position, bool zoom)
+        /// <summary>
+        /// Jump to the specified location on the map.
+        /// </summary>
+        /// <param name="metrics">Cellmetrics of the map, to know the full size.</param>
+        /// <param name="position">Rectangle to jump to.</param>
+        /// <param name="doZoom">True to zoom in as far as possible to the chosen area.</param>
+        public void JumpToPosition(CellMetrics metrics, Rectangle position, bool doZoom)
         {
-            JumpToPosition(metrics, position.Location, position.Width, position.Height, zoom);
+            JumpToPosition(metrics, position.X, position.Y, position.Width, position.Height, doZoom);
         }
 
-        public void JumpToPosition(CellMetrics metrics, Point cellPoint, int cellsWidth, int cellsHeight, bool doZoom)
+        /// <summary>
+        /// Jump to the specified location on the map.
+        /// </summary>
+        /// <param name="metrics">Cellmetrics of the map, to know the full size.</param>
+        /// <param name="location">Cell to jump to.</param>
+        /// <param name="doZoom">True to zoom in as far as possible to the chosen area.</param>
+        public void JumpToPosition(CellMetrics metrics, Point location, bool doZoom)
+        {
+            JumpToPosition(metrics, location.X, location.Y, 1, 1, doZoom);
+        }
+
+        /// <summary>
+        /// Jump to the specified location on the map.
+        /// </summary>
+        /// <param name="metrics">Cellmetrics of the map, to know the full size.</param>
+        /// <param name="cellPointX">X-coordinate of the top left point to jump to</param>
+        /// <param name="cellPointY">Y-coordinate of the top left point to jump to</param>
+        /// <param name="cellsWidth">Width in cells of the area to center on.</param>
+        /// <param name="cellsHeight">Height in cells of the area to center on.</param>
+        /// <param name="doZoom">True to zoom in as far as possible to the chosen area.</param>
+        public void JumpToPosition(CellMetrics metrics, int cellPointX, int cellPointY, int cellsWidth, int cellsHeight, bool doZoom)
         {
             int scaleFull = Math.Min(this.ClientRectangle.Width, this.ClientRectangle.Height);
             bool isWidth = scaleFull == this.ClientRectangle.Width;
@@ -147,8 +173,8 @@ namespace MobiusEditor.Controls
                 this.Zoom = zoom;
             }
             // Convert cell position to actual position on image.
-            int cellX = (int)Math.Round(basicTileSize * zoom * (cellPoint.X + (cellsWidth / 2.0d)));
-            int cellY = (int)Math.Round(basicTileSize * zoom * (cellPoint.Y + (cellsHeight / 2.0d)));
+            int cellX = (int)Math.Round(basicTileSize * zoom * (cellPointX + (cellsWidth / 2.0d)));
+            int cellY = (int)Math.Round(basicTileSize * zoom * (cellPointY + (cellsHeight / 2.0d)));
             // Get location to use to center the chosen rectangle on the screen.
             int x = cellX - this.ClientRectangle.Width / 2;
             int y = cellY - this.ClientRectangle.Height / 2;

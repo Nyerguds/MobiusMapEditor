@@ -178,19 +178,19 @@ namespace MobiusEditor.Utility
                 sourceData = sourceImage.LockBits(area, ImageLockMode.ReadOnly, desiredPixelFormat);
                 stride = sourceData.Stride;
                 Int32 pixelFormatSize = Image.GetPixelFormatSize(desiredPixelFormat);
-                Int32 actualDataWidth = ((Image.GetPixelFormatSize(desiredPixelFormat) * width) + 7) / 8;
+                Int32 actualDataWidth = ((Image.GetPixelFormatSize(desiredPixelFormat) * area.Width) + 7) / 8;
                 if (collapseStride && (useArea || actualDataWidth != stride))
                 {
                     Int64 sourcePos = sourceData.Scan0.ToInt64();
                     Int32 destPos = 0;
-                    data = new Byte[actualDataWidth * height];
+                    data = new Byte[actualDataWidth * area.Height];
                     Byte clearMask = 0xFF;
                     if (pixelFormatSize < 8 && (width % 8) != 0)
                     {
                         int lastByteRemainder = width % 8;
                         clearMask = (Byte)(~((pixelFormatSize == 1 ? (0xFF >> lastByteRemainder) : (0xFF << lastByteRemainder)) & 0xFF));
                     }
-                    for (Int32 y = 0; y < height; ++y)
+                    for (Int32 y = 0; y < area.Height; ++y)
                     {
                         Marshal.Copy(new IntPtr(sourcePos), data, destPos, actualDataWidth);
                         sourcePos += stride;
