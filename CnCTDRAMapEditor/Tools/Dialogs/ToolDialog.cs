@@ -60,8 +60,9 @@ namespace MobiusEditor.Tools.Dialogs
             // Fixed error: this creates a new Tool internally but never disposed the old one, resulting in lingering event bindings.
             if (this.Tool != null)
             {
-                this.Tool.Dispose();
+                T tool = this.Tool;
                 this.Tool = default(T);
+                tool.Dispose();
             }
             InitializeInternal(mapPanel, activeLayers, toolStatusLabel, mouseToolTip, plugin, undoRedoList);
         }

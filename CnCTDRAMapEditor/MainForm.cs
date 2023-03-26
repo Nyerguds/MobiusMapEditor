@@ -97,6 +97,7 @@ namespace MobiusEditor
         private IGamePlugin plugin;
         private FileType loadedFileType;
         private string filename;
+        private readonly object jumpToBounds_lock = new Object();
         private bool jumpToBounds;
 
         private readonly MRU mru;
@@ -1509,7 +1510,10 @@ namespace MobiusEditor
                 }
                 mapPanel.MapImage = plugin.MapImage;
                 filename = loadInfo.FileName;
-                this.jumpToBounds = Globals.ZoomToBoundsOnLoad;
+                lock (jumpToBounds_lock)
+                {
+                    this.jumpToBounds = Globals.ZoomToBoundsOnLoad;
+                }
                 loadedFileType = loadInfo.FileType;
                 url.Clear();
                 CleanupTools();
@@ -2402,14 +2406,26 @@ namespace MobiusEditor
             if (!loadMultiThreader.IsExecuting && !saveMultiThreader.IsExecuting)
             {
                 SimpleMultiThreading.RemoveBusyLabel(this);
-                if (jumpToBounds)
+                bool performJump = false;
+                lock (jumpToBounds_lock)
                 {
-                    jumpToBounds = false;
+                    if (jumpToBounds)
+                    {
+                        jumpToBounds = false;
+                        performJump = true;
+                    }
+                }
+                if (performJump)
+                {
+                    //MessageBox.Show("jumping");
                     if (plugin != null && plugin.Map != null && mapPanel.MapImage != null)
                     {
                         Rectangle rect = plugin.Map.Bounds;
-                        rect.Inflate(1,1);
-                        mapPanel.JumpToPosition(plugin.Map.Metrics, rect, true);
+                        rect.Inflate(1, 1);
+                        if (plugin.Map.Metrics.Bounds != rect)
+                        {
+                            mapPanel.JumpToPosition(plugin.Map.Metrics, rect, true);
+                        }
                     }
                 }
             }

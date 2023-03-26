@@ -160,6 +160,11 @@ namespace MobiusEditor.Controls
         /// <param name="doZoom">True to zoom in as far as possible to the chosen area.</param>
         public void JumpToPosition(CellMetrics metrics, int cellPointX, int cellPointY, int cellsWidth, int cellsHeight, bool doZoom)
         {
+            if (doZoom)
+            {
+                // Ensure scrollbars; otherwise, ClientRectangle values are wrong.
+                this.Zoom = this.maxZoom;
+            }
             int scaleFull = Math.Min(this.ClientRectangle.Width, this.ClientRectangle.Height);
             bool isWidth = scaleFull == this.ClientRectangle.Width;
             double mapSize = isWidth ? metrics.Width : metrics.Height;

@@ -1740,22 +1740,45 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static void RenderCellTriggers(Graphics graphics, Map map, Size tileSize, double tileScale, params String[] specifiedToExclude)
+        public static void RenderCellTriggersSoft(Graphics graphics, Map map, Size tileSize, double tileScale, params String[] specifiedToExclude)
         {
-            RenderCellTriggers(graphics, map, tileSize, tileScale, Color.Black, Color.White, Color.White, false, true, specifiedToExclude);
+            RenderCellTriggers(graphics, map, tileSize, tileScale, Color.Black, Color.White, Color.White, 0.75f, false, true, specifiedToExclude);
         }
 
-        public static void RenderCellTriggers(Graphics graphics, Map map, Size tileSize, double tileScale, Color fillColor, Color borderColor, Color textColor, bool thickborder, bool excludeSpecified, params String[] specified)
+        public static void RenderCellTriggersHard(Graphics graphics, Map map, Size tileSize, double tileScale, params String[] specifiedToExclude)
         {
+            RenderCellTriggers(graphics, map, tileSize, tileScale, Color.Black, Color.White, Color.White, 1, false, true, specifiedToExclude);
+        }
+
+        public static void RenderCellTriggersSelected(Graphics graphics, Map map, Size tileSize, double tileScale, params String[] specifiedToDraw)
+        {
+            RenderCellTriggers(graphics, map, tileSize, tileScale, Color.Black, Color.Yellow, Color.Yellow, 1, true, false, specifiedToDraw);
+        }
+
+        public static void RenderCellTriggers(Graphics graphics, Map map, Size tileSize, double tileScale, Color fillColor, Color borderColor, Color textColor, double alphaAdjust, bool thickborder, bool excludeSpecified, params String[] specified)
+        {
+            Color ApplyAlpha(Color col, int baseAlpha, double alphaMul)
+            {
+                return Color.FromArgb(Math.Max(0, Math.Min(0xFF, (int)Math.Round(baseAlpha * alphaMul, MidpointRounding.AwayFromZero))), col);
+            };
+            // Actual balance is fixed; border is 1, text is 1/2, background is 3/8. The original alpha inside the given colours is ignored.
+            fillColor = ApplyAlpha(fillColor, 0x60, alphaAdjust);
+            borderColor = ApplyAlpha(borderColor, 0x100, alphaAdjust);
+            textColor = ApplyAlpha(textColor, 0x80, alphaAdjust);
+            Color previewFillColor = ApplyAlpha(fillColor, 0x60, alphaAdjust / 2);
+            Color previewBorderColor = ApplyAlpha(borderColor, 0x100, alphaAdjust / 2);
+            Color previewTextColor = ApplyAlpha(textColor, 0x80, alphaAdjust / 2);
+
             float borderSize = Math.Max(0.5f, tileSize.Width / 60.0f);
             float thickBorderSize = Math.Max(1f, tileSize.Width / 20.0f);
             HashSet<String> specifiedSet = new HashSet<String>(specified, StringComparer.OrdinalIgnoreCase);
-            using (SolidBrush prevCellTriggersBackgroundBrush = new SolidBrush(Color.FromArgb(48, fillColor)))
-            using (SolidBrush prevCellTriggersBrush = new SolidBrush(Color.FromArgb(64, textColor)))
-            using (Pen prevCellTriggerPen = new Pen(Color.FromArgb(128, borderColor), thickborder ? thickBorderSize : borderSize))
-            using (SolidBrush cellTriggersBackgroundBrush = new SolidBrush(Color.FromArgb(96, fillColor)))
-            using (SolidBrush cellTriggersBrush = new SolidBrush(Color.FromArgb(128, textColor)))
+
+            using (SolidBrush prevCellTriggersBackgroundBrush = new SolidBrush(previewFillColor))
+            using (Pen prevCellTriggerPen = new Pen(previewBorderColor, thickborder ? thickBorderSize : borderSize))
+            using (SolidBrush prevCellTriggersBrush = new SolidBrush(previewTextColor))
+            using (SolidBrush cellTriggersBackgroundBrush = new SolidBrush(fillColor))
             using (Pen cellTriggerPen = new Pen(borderColor, thickborder ? thickBorderSize : borderSize))
+            using (SolidBrush cellTriggersBrush = new SolidBrush(textColor))
             {
                 foreach (var (cell, cellTrigger) in map.CellTriggers)
                 {

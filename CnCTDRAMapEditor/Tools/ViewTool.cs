@@ -85,7 +85,7 @@ namespace MobiusEditor.Tools
             }
             else if ((modifiedBits & MapLayerFlag.Template) != MapLayerFlag.None)
             {
-                // Full repaint.
+                // Full repaint. Normally only done on initial load.
                 mapPanel.Invalidate(RenderMap);
             }
             else
@@ -93,21 +93,33 @@ namespace MobiusEditor.Tools
                 // Filter the objects of the layers that have been toggled.
                 HashSet<Point> points = new HashSet<Point>();
                 CellMetrics metr = map.Metrics;
-                if ((modifiedBits & MapLayerFlag.Terrain) != MapLayerFlag.None)
+                if ((modifiedBits & MapLayerFlag.Technos) == MapLayerFlag.Technos)
                 {
-                    AddOverlapperPoints<Terrain>(points);
+                    // All of them; don't filter.
+                    foreach (var (Location, Overlapper) in RenderMap.Overlappers)
+                    {
+                        AddOverlapperPoints(Overlapper, Location, points);
+                    }
                 }
-                if ((modifiedBits & MapLayerFlag.Infantry) != MapLayerFlag.None)
+                else
                 {
-                    AddOverlapperPoints<InfantryGroup>(points);
-                }
-                if ((modifiedBits & MapLayerFlag.Units) != MapLayerFlag.None)
-                {
-                    AddOverlapperPoints<Unit>(points);
-                }
-                if ((modifiedBits & MapLayerFlag.Buildings) != MapLayerFlag.None)
-                {
-                    AddOverlapperPoints<Building>(points);
+                    // Specific filters per type.
+                    if ((modifiedBits & MapLayerFlag.Terrain) != MapLayerFlag.None)
+                    {
+                        AddOverlapperTypePoints<Terrain>(points);
+                    }
+                    if ((modifiedBits & MapLayerFlag.Infantry) != MapLayerFlag.None)
+                    {
+                        AddOverlapperTypePoints<InfantryGroup>(points);
+                    }
+                    if ((modifiedBits & MapLayerFlag.Units) != MapLayerFlag.None)
+                    {
+                        AddOverlapperTypePoints<Unit>(points);
+                    }
+                    if ((modifiedBits & MapLayerFlag.Buildings) != MapLayerFlag.None)
+                    {
+                        AddOverlapperTypePoints<Building>(points);
+                    }
                 }
                 if ((modifiedBits & MapLayerFlag.OverlayAll) != MapLayerFlag.None)
                 {
@@ -143,16 +155,21 @@ namespace MobiusEditor.Tools
             }
         }
 
-        private void AddOverlapperPoints<T>(HashSet<Point> points) where T: ICellOverlapper
+        private void AddOverlapperTypePoints<T>(HashSet<Point> points) where T: ICellOverlapper
         {
             foreach (var (Location, Overlapper) in RenderMap.Overlappers.OfType<T>())
             {
-                points.UnionWith(new Rectangle(
-                    Location.X + Overlapper.OverlapBounds.X,
-                    Location.Y + Overlapper.OverlapBounds.Y,
-                    Overlapper.OverlapBounds.Width,
-                    Overlapper.OverlapBounds.Height).Points());
+                AddOverlapperPoints(Overlapper, Location, points);
             }
+        }
+
+        private void AddOverlapperPoints(ICellOverlapper overlapper, Point location, HashSet<Point> points)
+        {
+            points.UnionWith(new Rectangle(
+                location.X + overlapper.OverlapBounds.X,
+                location.Y + overlapper.OverlapBounds.Y,
+                overlapper.OverlapBounds.Width,
+                overlapper.OverlapBounds.Height).Points());
         }
 
         private void BasicSection_PropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -263,7 +280,7 @@ namespace MobiusEditor.Tools
             if ((layersToRender & MapLayerFlag.CellTriggers) == MapLayerFlag.CellTriggers
                 && (manuallyHandledLayers & MapLayerFlag.CellTriggers) == MapLayerFlag.None)
             {
-                MapRenderer.RenderCellTriggers(graphics, map, tileSize, tileScale);
+                MapRenderer.RenderCellTriggersSoft(graphics, map, tileSize, tileScale);
             }
             if ((layersToRender & (MapLayerFlag.Waypoints | MapLayerFlag.FootballArea)) == (MapLayerFlag.Waypoints | MapLayerFlag.FootballArea)
                 && (manuallyHandledLayers & MapLayerFlag.WaypointsIndic) == MapLayerFlag.None && plugin.GameType == GameType.SoleSurvivor)
@@ -274,17 +291,17 @@ namespace MobiusEditor.Tools
             if ((layersToRender & (MapLayerFlag.Buildings | MapLayerFlag.EffectRadius)) == (MapLayerFlag.Buildings | MapLayerFlag.EffectRadius)
                 && (manuallyHandledLayers & MapLayerFlag.EffectRadius) == MapLayerFlag.None)
             {
-                MapRenderer.RenderAllBuildingEffectRadiuses(graphics, map, Globals.MapTileSize, map.GapRadius);
+                MapRenderer.RenderAllBuildingEffectRadiuses(graphics, map, tileSize, map.GapRadius);
             }
             if ((layersToRender & (MapLayerFlag.Units | MapLayerFlag.EffectRadius)) == (MapLayerFlag.Units | MapLayerFlag.EffectRadius)
                 && (manuallyHandledLayers & MapLayerFlag.EffectRadius) == MapLayerFlag.None)
             {
-                MapRenderer.RenderAllUnitEffectRadiuses(graphics, map, Globals.MapTileSize, map.RadarJamRadius);
+                MapRenderer.RenderAllUnitEffectRadiuses(graphics, map, tileSize, map.RadarJamRadius);
             }
             if ((layersToRender & (MapLayerFlag.Waypoints | MapLayerFlag.WaypointRadius)) == (MapLayerFlag.Waypoints | MapLayerFlag.WaypointRadius)
                 && (manuallyHandledLayers & MapLayerFlag.WaypointRadius) == MapLayerFlag.None)
             {
-                MapRenderer.RenderAllWayPointRevealRadiuses(graphics, plugin, map, Globals.MapTileSize, null);
+                MapRenderer.RenderAllWayPointRevealRadiuses(graphics, plugin, map, tileSize, null);
             }
             if ((layersToRender & (MapLayerFlag.Waypoints | MapLayerFlag.WaypointsIndic)) == (MapLayerFlag.Waypoints | MapLayerFlag.WaypointsIndic)
                 && (manuallyHandledLayers & MapLayerFlag.WaypointsIndic) == MapLayerFlag.None)

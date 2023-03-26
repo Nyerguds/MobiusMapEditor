@@ -334,6 +334,8 @@ namespace MobiusEditor.Utility
             }
             using (var archive = new ZipArchive(fileStream, ZipArchiveMode.Read))
             {
+                // For some reason, accessing Entries (which triggers the initial read) throws
+                // ungodly amounts of internal ArgumentException that really slow down debugging.
                 foreach (var entry in archive.Entries)
                 {
                     if (name != Path.GetFileNameWithoutExtension(entry.Name))

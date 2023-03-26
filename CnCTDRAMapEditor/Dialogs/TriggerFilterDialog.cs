@@ -36,10 +36,17 @@ namespace MobiusEditor.Dialogs
             isRA = this.plugin.GameType == GameType.RedAlert;
             InitializeComponent();
             this.chkPersistenceType.Text = persistenceLabel;
+            int subtractedHeight = 0;
             chkEventControl.Visible = this.isRA;
             cmbEventControl.Visible = this.isRA;
+            if(!this.isRA) subtractedHeight += Math.Max(chkEventControl.Height, cmbEventControl.Height);
+            chkWaypoint.Visible = this.isRA;
+            cmbWaypoint.Visible = this.isRA;
+            if (!this.isRA) subtractedHeight += Math.Max(chkWaypoint.Height, cmbWaypoint.Height);
             chkGlobal.Visible = this.isRA;
             nudGlobal.Visible = this.isRA;
+            if (!this.isRA) subtractedHeight += Math.Max(chkGlobal.Height, nudGlobal.Height);
+            this.Height -= subtractedHeight;
         }
 
         private void SetFilterInfo(TriggerFilter filter)

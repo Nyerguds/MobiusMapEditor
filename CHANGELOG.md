@@ -412,7 +412,7 @@ Unreleased
 * Added option to randomise drag-placed map tileset blocks using equivalent tileset blocks.
 * Added logic to always draw crates on top of other objects.
 * Added automatic logic for Red Alert maps to fix corrupted tiles such as the "indestructible" bridges, rather than just clearing them.
-* Skipping over disabled sections in the ini (like the Aircraft) now adds errors and marks the map as modified.
+* Skipping over disabled sections in the ini (like the Aircraft) now adds a remark to the errors list and marks the map as modified, to alert the user that data will be lost on re-save.
 * Added detection for incorrect use of the "Allow Win" action in Tiberian Dawn.
 * Fixed reading of [Base] entries; it should loop over all 3-digit integers up to the "Count" value, not parse the keys as integers.
 * Fixed triggers list corrupting on the Terrain tool when editing the triggers after the Terrain tool had already been loaded.
@@ -433,7 +433,9 @@ Unreleased
 * When a new unit type is added to a Teamtype, its amount will now default to 1.
 * Optimised the repaint process when enabling or disabling layers.
 * Added "Outlines on overlapped crates" option under "View" → "Indicators". An extra option "Tools" → "Options" → "Show crate outline indicators on all crates" will make it ignore the "overlapped" requirement and show on all crates.
-* Fixed issues with videos sometimes not being saved / loaded for Red Alert. missions.
+* Fixed issues with videos sometimes not being saved / loaded for Red Alert missions.
 * When loading a map, the editor will zoom in and reposition to exactly show the map bounds area with a 1-cell border around it. This behaviour is controlled by the "ZoomToBoundsOnLoad" setting.
 * Items are now sorted by map cell number when saved, and capitalised like they are in original maps.
 * Waypoints in Tiberian Dawn maps are now saved as they were in classic maps, with all waypoints listed last to first, and the unused ones filled in with '-1'.
+* Optimised the redrawing when enabling/disabling layers in "View" → "Layers".
+* Celltriggers are now slightly more transparent when outside Celltrigger editing mode.

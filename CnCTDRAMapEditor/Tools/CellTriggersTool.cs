@@ -67,7 +67,6 @@ namespace MobiusEditor.Tools
         {
             previewMap = map;
             this.jumpToButton = jumpToButton;
-            this.jumpToButton.Click += JumpToButton_Click;
             this.triggerComboBox = triggerCombo;
             UpdateDataSource();
             this.triggerComboBox.SelectedIndexChanged += this.TriggerCombo_SelectedIndexChanged;
@@ -419,8 +418,8 @@ namespace MobiusEditor.Tools
                 // An invalidate without cells won't call PreRenderMap, and will thus
                 // not add the dummy to the clone map. So we call it manually.
                 PreRenderMap();
-                mapPanel.Invalidate();
             }
+            mapPanel.Invalidate();
         }
 
         private void JumpToButton_Click(Object sender, EventArgs e)
@@ -488,11 +487,11 @@ namespace MobiusEditor.Tools
             string[] selectedRange = selected != null ? new[] { selected } : new string[] { };
             // Normal techno triggers: under cell
             MapRenderer.RenderAllTechnoTriggers(graphics, map, Globals.MapTileSize, Globals.MapTileScale, Layers, Color.LimeGreen, selected, true);
-            MapRenderer.RenderCellTriggers(graphics, map, Globals.MapTileSize, Globals.MapTileScale, selectedRange);
+            MapRenderer.RenderCellTriggersHard(graphics, map, Globals.MapTileSize, Globals.MapTileScale, selectedRange);
             if (selected != null)
             {
                 // Only use preview map if in placement mode.
-                MapRenderer.RenderCellTriggers(graphics, placementMode ? previewMap : map, Globals.MapTileSize, Globals.MapTileScale, Color.Black, Color.Yellow, Color.Yellow, true, false, selectedRange);
+                MapRenderer.RenderCellTriggersSelected(graphics, placementMode ? previewMap : map, Globals.MapTileSize, Globals.MapTileScale, selectedRange);
                 // Selected technos: on top of cell
                 MapRenderer.RenderAllTechnoTriggers(graphics, map, Globals.MapTileSize, Globals.MapTileScale, Layers, Color.Yellow, selected, false);
             }
@@ -514,6 +513,7 @@ namespace MobiusEditor.Tools
         {
             base.Activate();
             Deactivate(true);
+            this.jumpToButton.Click += JumpToButton_Click;
             plugin.Map.TriggersUpdated += Triggers_CollectionChanged;
             this.mapPanel.MouseDown += MapPanel_MouseDown;
             this.mapPanel.MouseUp += MapPanel_MouseUp;
@@ -537,6 +537,7 @@ namespace MobiusEditor.Tools
                 ExitPlacementMode();
                 base.Deactivate();
             }
+            this.jumpToButton.Click -= JumpToButton_Click;
             plugin.Map.TriggersUpdated -= Triggers_CollectionChanged;
             this.mapPanel.MouseDown -= MapPanel_MouseDown;
             this.mapPanel.MouseUp -= MapPanel_MouseUp;
