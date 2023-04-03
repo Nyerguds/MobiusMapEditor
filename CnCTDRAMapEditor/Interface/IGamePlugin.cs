@@ -64,13 +64,13 @@ namespace MobiusEditor.Interface
 
         string Validate();
 
-        IEnumerable<String> AssessMapItems();
+        IEnumerable<string> AssessMapItems();
 
         HashSet<string> GetHousesWithProduction();
 
         int[] GetRevealRadiusForWaypoints(Map map, bool forLargeReveal);
 
-        IEnumerable<String> CheckTriggers(IEnumerable<Trigger> triggers, bool includeExternalData, bool prefixNames, bool fatalOnly, out bool fatal, bool fix, out bool wasFixed);
+        IEnumerable<string> CheckTriggers(IEnumerable<Trigger> triggers, bool includeExternalData, bool prefixNames, bool fatalOnly, out bool fatal, bool fix, out bool wasFixed);
 
         bool MapNameIsEmpty(string name);
 

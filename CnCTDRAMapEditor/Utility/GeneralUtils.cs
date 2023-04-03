@@ -48,7 +48,7 @@ namespace MobiusEditor.Utility
             try
             {
                 Encoding encDOS = Encoding.GetEncoding(437);
-                String iniContents = null;
+                string iniContents = null;
                 switch (fileType)
                 {
                     case FileType.INI:
@@ -449,7 +449,7 @@ namespace MobiusEditor.Utility
             return cellEvaluation;
         }
 
-        public static String ReplaceLinebreaks(String input, char replacement)
+        public static string ReplaceLinebreaks(string input, char replacement)
         {
             return input
                 .Replace("\r\n", "\n")
@@ -459,7 +459,7 @@ namespace MobiusEditor.Utility
                 .Replace('\n', replacement);
         }
 
-        public static String RestoreLinebreaks(String input, char replacement, String lineBreak)
+        public static string RestoreLinebreaks(string input, char replacement, string lineBreak)
         {
             // Ensure there are no line breaks in the original string.
             input = Regex.Replace(input, "[\\r\\n]+", "", RegexOptions.None);

@@ -362,7 +362,7 @@ Released on 14 Nov 2022 at 22:25 GMT
 
 ### v1.4.5.0:
 
-Unreleased
+Released on 03 Apr 2023 at 19:20 GMT
 
 * Added igloos (haystacks) to the Overlay in Sole Survivor's Winter theater.
 * Fixed refresh bug where a ghost image of the label indicating a heavy operation remained while repainting the map. The label is now only removed after the following map repaint.
@@ -439,3 +439,5 @@ Unreleased
 * Waypoints in Tiberian Dawn maps are now saved as they were in classic maps, with all waypoints listed last to first, and the unused ones filled in with '-1'.
 * Optimised the redrawing when enabling/disabling layers in "View" → "Layers".
 * Celltriggers are now slightly more transparent when outside Celltrigger editing mode.
+* Added character count to the briefing screen. if WriteClassicBriefing is enabled a warning wil be given if the amount exceeds the maximum the classic game can handle. If the warning is ignored, the classic briefing will truncated on the maximum it can handle, to prevent game crashes.
+* Fixed line split in Red Alert's classic briefing, to also obey the classic internal maximum, and to correctly split on line break @ characters.

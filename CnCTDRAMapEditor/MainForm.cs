@@ -502,7 +502,7 @@ namespace MobiusEditor
                 sfd.AutoUpgradeEnabled = false;
                 sfd.RestoreDirectory = true;
 
-                sfd.Filter = "MEG files (*.meg)|*.meg";
+                sfd.Filter = "PGM files (*.pgm)|*.pgm";
                 if (sfd.ShowDialog(this) == DialogResult.OK)
                 {
                     savePath = sfd.FileName;
@@ -1142,6 +1142,9 @@ namespace MobiusEditor
                 case ".pgm":
                     fileType = FileType.PGM;
                     break;
+                case ".meg":
+                    fileType = FileType.MEG;
+                    break;
             }
             INI iniContents = null;
             bool iniWasFetched = false;
@@ -1508,13 +1511,22 @@ namespace MobiusEditor
                         emb.ShowDialog(this);
                     }
                 }
+#if !DEVELOPER
+                // Don't allow re-save as PGM; act as if this is a new map.
+                if (loadInfo.FileType == FileType.PGM || loadInfo.FileType == FileType.MEG)
+                {
+                    bool isRA = loadInfo.Plugin.GameType == GameType.RedAlert;
+                    loadInfo.FileType = FileType.INI;
+                    loadInfo.FileName = null;
+                }
+#endif
                 mapPanel.MapImage = plugin.MapImage;
                 filename = loadInfo.FileName;
+                loadedFileType = loadInfo.FileType;
                 lock (jumpToBounds_lock)
                 {
                     this.jumpToBounds = Globals.ZoomToBoundsOnLoad;
                 }
-                loadedFileType = loadInfo.FileType;
                 url.Clear();
                 CleanupTools();
                 RefreshUI();
@@ -2252,6 +2264,12 @@ namespace MobiusEditor
         /// <returns>false if the action was aborted.</returns>
         private bool PromptSaveMap(Action nextAction, bool onlyAfterSave)
         {
+#if !DEVELOPER
+            if (loadedFileType == FileType.PGM || loadedFileType == FileType.MEG)
+            {
+                return true;
+            }
+#endif
             if (plugin?.Dirty ?? false)
             {
                 var message = string.IsNullOrEmpty(filename) ? "Save new map?" : string.Format("Save map '{0}'?", filename);

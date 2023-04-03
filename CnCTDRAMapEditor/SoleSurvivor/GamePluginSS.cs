@@ -10,7 +10,7 @@ using System.Numerics;
 
 namespace MobiusEditor.SoleSurvivor
 {
-    public class GamePluginSS : TiberianDawn.GamePluginTD
+    public class GamePluginSS : GamePluginTD
     {
 
         protected const int cratePoints = 4;
@@ -36,7 +36,7 @@ namespace MobiusEditor.SoleSurvivor
             "MAP1",
         };
 
-        public override String Name => "Sole Survivor";
+        public override string Name => "Sole Survivor";
         public override GameType GameType => GameType.SoleSurvivor;
         public override bool IsMegaMap => true;
 
@@ -57,14 +57,14 @@ namespace MobiusEditor.SoleSurvivor
             : base()
         {
             this.isMegaMap = megaMap;
-            var crateWaypoints = Enumerable.Range(0, cratePoints).Select(i => new Waypoint(string.Format("CR{0}", i), WaypointFlag.CrateSpawn));
-            var teamWaypoints = Enumerable.Range(cratePoints, teamStartPoints).Select(i => new Waypoint(string.Format("TM{0}", i - cratePoints), Waypoint.GetFlagForMpId(i - cratePoints)));
-            var generalWaypoints = Enumerable.Range(cratePoints + teamStartPoints, 25 - cratePoints - teamStartPoints).Select(i => new Waypoint(i.ToString()));
-            var specialWaypoints = new Waypoint[] { new Waypoint("Flare", WaypointFlag.Flare), new Waypoint("Home", WaypointFlag.Home), new Waypoint("Reinf.", WaypointFlag.Reinforce) };
+            IEnumerable<Waypoint> crateWaypoints = Enumerable.Range(0, cratePoints).Select(i => new Waypoint(string.Format("CR{0}", i), WaypointFlag.CrateSpawn));
+            IEnumerable<Waypoint> teamWaypoints = Enumerable.Range(cratePoints, teamStartPoints).Select(i => new Waypoint(string.Format("TM{0}", i - cratePoints), Waypoint.GetFlagForMpId(i - cratePoints)));
+            IEnumerable<Waypoint> generalWaypoints = Enumerable.Range(cratePoints + teamStartPoints, 25 - cratePoints - teamStartPoints).Select(i => new Waypoint(i.ToString()));
+            Waypoint[] specialWaypoints = new Waypoint[] { new Waypoint("Flare", WaypointFlag.Flare), new Waypoint("Home", WaypointFlag.Home), new Waypoint("Reinf.", WaypointFlag.Reinforce) };
             Waypoint[] waypoints = crateWaypoints.Concat(teamWaypoints).Concat(generalWaypoints).Concat(specialWaypoints).ToArray();
-            var basicSection = new TiberianDawn.BasicSection();
+            TiberianDawn.BasicSection basicSection = new TiberianDawn.BasicSection();
             basicSection.SetDefault();
-            var houseTypes = HouseTypes.GetTypes().ToList();
+            List<HouseType> houseTypes = HouseTypes.GetTypes().ToList();
             basicSection.Player = HouseTypes.Admin.Name;
             // Irrelevant for Sole. Rebuilding options will be disabled in the editor.
             basicSection.BasePlayer = HouseTypes.GetBasePlayer(basicSection.Player);
@@ -119,7 +119,7 @@ namespace MobiusEditor.SoleSurvivor
             flagColors[6] = Globals.TheTeamColorManager["MULTI2"];
             // Multi8: RA Purple
             flagColors[7] = new TeamColor(Globals.TheTeamColorManager, flagColors[0], "MULTI8", new Vector3(0.410f, 0.100f, 0.000f));
-            List<String> movies = movieTypesTD.Concat(movieTypesSole).ToList();
+            List<string> movies = movieTypesTD.Concat(movieTypesSole).ToList();
             ExplorerComparer sorter = new ExplorerComparer();
             movies.Sort(sorter);
             Size mapSize = !megaMap ? TiberianDawn.Constants.MaxSize : TiberianDawn.Constants.MaxSizeMega;
@@ -158,7 +158,7 @@ namespace MobiusEditor.SoleSurvivor
         protected override List<string> LoadINI(INI ini, bool forceSoloMission, ref bool modified)
         {
             List<string> errors = LoadINI(ini, forceSoloMission, true, ref modified);
-            var cratesIniSection = extraSections.Extract("Crates");
+            INISection cratesIniSection = extraSections.Extract("Crates");
             if (cratesIniSection != null)
             {
                 try
@@ -234,7 +234,7 @@ namespace MobiusEditor.SoleSurvivor
             SaveIniSmudge(ini);
         }
 
-        public override String Validate()
+        public override string Validate()
         {
             return Validate(true);
         }
@@ -254,7 +254,7 @@ namespace MobiusEditor.SoleSurvivor
             int numInfantry = Map.Technos.OfType<InfantryGroup>().Sum(item => item.Occupier.Infantry.Count(i => i != null));
             int numTerrain = Map.Technos.OfType<Terrain>().Count();
             int numUnits = Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsGroundUnit).Count();
-            const String maximums = "Number of {0}: {1}. Maximum: {2}.";
+            const string maximums = "Number of {0}: {1}. Maximum: {2}.";
             if (!Globals.NoOwnedObjectsInSole)
             {
                 if (!Globals.DisableAirUnits)

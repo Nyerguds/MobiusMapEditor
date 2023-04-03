@@ -35,6 +35,7 @@ namespace MobiusEditor.TiberianDawn
         protected bool isMegaMap = false;
 
         protected const int maxBriefLengthClassic = 510;
+        protected const int briefLineCutoffClassic = 74;
         protected const int multiStartPoints = 8;
         protected static readonly Regex SinglePlayRegex = new Regex("^SC[A-LN-Z]\\d{2}\\d?[EWX][A-EL]$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         protected static readonly Regex MovieRegex = new Regex(@"^(?:.*?\\)*(.*?)\.BK2$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
@@ -243,7 +244,7 @@ namespace MobiusEditor.TiberianDawn
         }
 
         protected INISectionCollection extraSections;
-        public virtual String ExtraIniText
+        public virtual string ExtraIniText
         {
             get
             {
@@ -281,7 +282,7 @@ namespace MobiusEditor.TiberianDawn
                 ini.Sections.Remove("Base");
                 ini.Sections.Remove("Waypoints");
                 ini.Sections.Remove("CellTriggers");
-                foreach (var house in Map.Houses)
+                foreach (Model.House house in Map.Houses)
                 {
                     INITools.ClearDataFrom(ini, house.Type.Name, (House)house);
                 }
@@ -302,12 +303,12 @@ namespace MobiusEditor.TiberianDawn
         protected GamePluginTD()
         {
             // Readonly, so I'm splitting this off
-            var movies = new List<string>();
-            using (var megafile = new Megafile(Path.Combine(Globals.MegafilePath, "MOVIES_TD.MEG")))
+            List<string> movies = new List<string>();
+            using (Megafile megafile = new Megafile(Path.Combine(Globals.MegafilePath, "MOVIES_TD.MEG")))
             {
-                foreach (var filename in megafile)
+                foreach (string filename in megafile)
                 {
-                    var m = MovieRegex.Match(filename);
+                    Match m = MovieRegex.Match(filename);
                     if (m.Success)
                     {
                         movies.Add(m.Groups[1].ToString());
@@ -342,13 +343,13 @@ namespace MobiusEditor.TiberianDawn
             :this()
         {
             this.isMegaMap = megaMap;
-            var playerWaypoints = Enumerable.Range(0, multiStartPoints).Select(i => new Waypoint(string.Format("P{0}", i), Waypoint.GetFlagForMpId(i)));
-            var generalWaypoints = Enumerable.Range(multiStartPoints, 25 - multiStartPoints).Select(i => new Waypoint(i.ToString()));
-            var specialWaypoints = new Waypoint[] { new Waypoint("Flare", WaypointFlag.Flare), new Waypoint("Home", WaypointFlag.Home), new Waypoint("Reinf.", WaypointFlag.Reinforce) };
+            IEnumerable<Waypoint> playerWaypoints = Enumerable.Range(0, multiStartPoints).Select(i => new Waypoint(string.Format("P{0}", i), Waypoint.GetFlagForMpId(i)));
+            IEnumerable<Waypoint> generalWaypoints = Enumerable.Range(multiStartPoints, 25 - multiStartPoints).Select(i => new Waypoint(i.ToString()));
+            Waypoint[] specialWaypoints = new Waypoint[] { new Waypoint("Flare", WaypointFlag.Flare), new Waypoint("Home", WaypointFlag.Home), new Waypoint("Reinf.", WaypointFlag.Reinforce) };
             Waypoint[] waypoints = playerWaypoints.Concat(generalWaypoints).Concat(specialWaypoints).ToArray();
-            var basicSection = new BasicSection();
+            BasicSection basicSection = new BasicSection();
             basicSection.SetDefault();
-            var houseTypes = HouseTypes.GetTypes();
+            IEnumerable<HouseType> houseTypes = HouseTypes.GetTypes();
             basicSection.Player = houseTypes.Where(h => h.ID > -1).First().Name;
             basicSection.BasePlayer = HouseTypes.GetBasePlayer(basicSection.Player);
             string[] cellEventTypes = new[]
@@ -426,8 +427,8 @@ namespace MobiusEditor.TiberianDawn
 
         protected List<string> Load(string path, FileType fileType, bool forSole)
         {
-            var ini = new INI();
-            var errors = new List<string>();
+            INI ini = new INI();
+            List<string> errors = new List<string>();
             bool modified = false;
             bool forceSingle = false;
             Byte[] iniBytes;
@@ -435,8 +436,8 @@ namespace MobiusEditor.TiberianDawn
             {
                 case FileType.INI:
                 case FileType.BIN:
-                    var iniPath = fileType == FileType.INI ? path : Path.ChangeExtension(path, ".ini");
-                    var binPath = fileType == FileType.BIN ? path : Path.ChangeExtension(path, ".bin");
+                    string iniPath = fileType == FileType.INI ? path : Path.ChangeExtension(path, ".ini");
+                    string binPath = fileType == FileType.BIN ? path : Path.ChangeExtension(path, ".bin");
                     if (!File.Exists(iniPath))
                     {
                         // Should never happen; this gets filtered out in the game type detection.
@@ -454,7 +455,7 @@ namespace MobiusEditor.TiberianDawn
                     }
                     else
                     {
-                        using (var binReader = new BinaryReader(new FileStream(binPath, FileMode.Open, FileAccess.Read)))
+                        using (BinaryReader binReader = new BinaryReader(new FileStream(binPath, FileMode.Open, FileAccess.Read)))
                         {
                             long mapLen = binReader.BaseStream.Length;
                             if ((!isMegaMap && mapLen == 0x2000) || (isMegaMap && mapLen % 4 == 0))
@@ -472,16 +473,16 @@ namespace MobiusEditor.TiberianDawn
                     break;
                 case FileType.MEG:
                 case FileType.PGM:
-                    using (var megafile = new Megafile(path))
+                    using (Megafile megafile = new Megafile(path))
                     {
-                        var iniFile = megafile.Where(p => Path.GetExtension(p).ToLower() == ".ini").FirstOrDefault();
-                        var binFile = megafile.Where(p => Path.GetExtension(p).ToLower() == ".bin").FirstOrDefault();
+                        string iniFile = megafile.Where(p => Path.GetExtension(p).ToLower() == ".ini").FirstOrDefault();
+                        string binFile = megafile.Where(p => Path.GetExtension(p).ToLower() == ".bin").FirstOrDefault();
                         if (iniFile == null || binFile == null)
                         {
                             throw new ApplicationException("Cannot find the necessary files inside the " + Path.GetFileName(path) + " archive.");
                         }
-                        using (var iniReader = new BinaryReader(megafile.Open(iniFile)))
-                        using (var binReader = new BinaryReader(megafile.Open(binFile)))
+                        using (BinaryReader iniReader = new BinaryReader(megafile.Open(iniFile)))
+                        using (BinaryReader binReader = new BinaryReader(megafile.Open(binFile)))
                         {
                             iniBytes = iniReader.ReadAllBytes();
                             ParseIniContent(ini, iniBytes, forSole);
@@ -513,9 +514,9 @@ namespace MobiusEditor.TiberianDawn
         private void ParseIniContent(INI ini, Byte[] iniBytes, Boolean forSole)
         {
             Encoding encDOS = Encoding.GetEncoding(437);
-            String iniText = encDOS.GetString(iniBytes);
+            string iniText = encDOS.GetString(iniBytes);
             Encoding encUtf8 = new UTF8Encoding(false, false);
-            String iniTextUtf8 = encUtf8.GetString(iniBytes);
+            string iniTextUtf8 = encUtf8.GetString(iniBytes);
             // Sole Survivor does not have 2-stage ROAD; ROAD acts as teleporter in Sole.
             if (!forSole)
             {
@@ -566,7 +567,7 @@ namespace MobiusEditor.TiberianDawn
         /// </summary>
         /// <param name="iniReader">Stream reader to read from.</param>
         /// <returns>The ini file as string, with all double ROAD overlay lines replaced by the dummy Road2 type.</returns>
-        protected string FixRoad2Load(String iniText)
+        protected string FixRoad2Load(string iniText)
         {
             // ROAD's second state can only be accessed by applying ROAD overlay to the same cell twice.
             // This can be achieved by saving its Overlay line twice in the ini file. However, this is
@@ -683,7 +684,7 @@ namespace MobiusEditor.TiberianDawn
 
         protected List<string> LoadINI(INI ini, bool forceSoloMission, bool forSole, ref bool modified)
         {
-            var errors = new List<string>();
+            List<string> errors = new List<string>();
             Map.BeginUpdate();
             BasicSection basic = (BasicSection)Map.BasicSection;
             INISection basicSection = INITools.ParseAndLeaveRemainder(ini, "Basic", Map.BasicSection, new MapContext(Map, false));
@@ -711,7 +712,7 @@ namespace MobiusEditor.TiberianDawn
             //MessageBox.Show("Graphics loaded");
 #endif
             bool skipSoleStuff = forSole && Globals.NoOwnedObjectsInSole;
-            var briefingSection = ini.Sections.Extract("Briefing");
+            INISection briefingSection = ini.Sections.Extract("Briefing");
             if (briefingSection != null)
             {
                 if (briefingSection.Keys.Contains("Text"))
@@ -722,11 +723,11 @@ namespace MobiusEditor.TiberianDawn
                 {
                     StringBuilder briefLines = new StringBuilder();
                     int line = 1;
-                    String lineStr;
+                    string lineStr;
                     bool addSpace = false;
                     while (briefingSection.Keys.Contains(lineStr = line.ToString()))
                     {
-                        String briefLine = briefingSection[lineStr].TrimStart();
+                        string briefLine = briefingSection[lineStr].TrimStart();
                         // C&C95 v1.06 line break format.
                         bool hasBreak = briefLine.EndsWith("##");
                         if (hasBreak)
@@ -748,12 +749,12 @@ namespace MobiusEditor.TiberianDawn
                     Map.BriefingSection.Briefing = briefLines.ToString();
                 }
             }
-            var steamSection = ini.Sections.Extract("Steam");
+            INISection steamSection = ini.Sections.Extract("Steam");
             if (steamSection != null)
             {
                 INI.ParseSection(new MapContext(Map, false), steamSection, Map.SteamSection);
             }
-            var teamTypesSection = ini.Sections.Extract("TeamTypes");
+            INISection teamTypesSection = ini.Sections.Extract("TeamTypes");
             // Make case insensitive dictionary of teamtype missions.
             Dictionary<string, TeamMission> teamMissionTypes = Enumerable.ToDictionary(TeamMissionTypes.GetTypes(), t => t.Mission, StringComparer.OrdinalIgnoreCase);
             if (teamTypesSection != null)
@@ -767,8 +768,8 @@ namespace MobiusEditor.TiberianDawn
                             errors.Add(string.Format("TeamType '{0}' has a name that is longer than 8 characters. This will not be corrected by the loading process, but should be addressed, since it can make the teams fail to read correctly, and might even crash the game.", Key));
                             modified = true;
                         }
-                        var teamType = new TeamType { Name = Key };
-                        var tokens = Value.Split(',').ToList();
+                        TeamType teamType = new TeamType { Name = Key };
+                        List<string> tokens = Value.Split(',').ToList();
                         teamType.House = Map.HouseTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault(); tokens.RemoveAt(0);
                         teamType.IsRoundAbout = int.Parse(tokens[0]) != 0; tokens.RemoveAt(0);
                         teamType.IsLearning = int.Parse(tokens[0]) != 0; tokens.RemoveAt(0);
@@ -779,13 +780,13 @@ namespace MobiusEditor.TiberianDawn
                         teamType.MaxAllowed = byte.Parse(tokens[0]); tokens.RemoveAt(0);
                         teamType.InitNum = byte.Parse(tokens[0]); tokens.RemoveAt(0);
                         teamType.Fear = byte.Parse(tokens[0]); tokens.RemoveAt(0);
-                        var numClasses = int.Parse(tokens[0]); tokens.RemoveAt(0);
+                        int numClasses = int.Parse(tokens[0]); tokens.RemoveAt(0);
                         for (int i = 0; i < Math.Min(Globals.MaxTeamClasses, numClasses); ++i)
                         {
-                            var classTokens = tokens[0].Split(':'); tokens.RemoveAt(0);
+                            string[] classTokens = tokens[0].Split(':'); tokens.RemoveAt(0);
                             if (classTokens.Length == 2)
                             {
-                                var type = fullTechnoTypes.Where(t => t.Name.Equals(classTokens[0], StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+                                ITechnoType type = fullTechnoTypes.Where(t => t.Name.Equals(classTokens[0], StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
                                 byte count;
                                 if (!byte.TryParse(classTokens[1], out count))
                                     count = 1;
@@ -805,10 +806,10 @@ namespace MobiusEditor.TiberianDawn
                                 modified = true;
                             }
                         }
-                        var numMissions = int.Parse(tokens[0]); tokens.RemoveAt(0);
+                        int numMissions = int.Parse(tokens[0]); tokens.RemoveAt(0);
                         for (int i = 0; i < Math.Min(Globals.MaxTeamMissions, numMissions); ++i)
                         {
-                            var missionTokens = tokens[0].Split(':'); tokens.RemoveAt(0);
+                            string[] missionTokens = tokens[0].Split(':'); tokens.RemoveAt(0);
                             if (missionTokens.Length == 2)
                             {
                                 // fix mission case sensitivity issues.
@@ -854,7 +855,7 @@ namespace MobiusEditor.TiberianDawn
                     }
                 }
             }
-            var triggersSection = ini.Sections.Extract("Triggers");
+            INISection triggersSection = ini.Sections.Extract("Triggers");
             List<Trigger> triggers = new List<Trigger>();
             if (triggersSection != null)
             {
@@ -866,10 +867,10 @@ namespace MobiusEditor.TiberianDawn
                         {
                             errors.Add(string.Format("Trigger '{0}' has a name that is longer than 4 characters. This will not be corrected by the loading process, but should be addressed, since it can make the triggers fail to link correctly to objects and cell triggers, and might even crash the game.", Key));
                         }
-                        var tokens = Value.Split(',');
+                        string[] tokens = Value.Split(',');
                         if (tokens.Length >= 5)
                         {
-                            var trigger = new Trigger { Name = Key };
+                            Trigger trigger = new Trigger { Name = Key };
                             string eventType = tokens[0];
                             if (EventTypes.EVENT_NONE.Equals(eventType, StringComparison.OrdinalIgnoreCase))
                             {
@@ -916,7 +917,7 @@ namespace MobiusEditor.TiberianDawn
                                 }
                             }
                             trigger.House = house;
-                            String team = tokens[4];
+                            string team = tokens[4];
                             if (TeamType.IsEmpty(tokens[4]))
                             {
                                 team = TeamType.None;
@@ -952,14 +953,14 @@ namespace MobiusEditor.TiberianDawn
                 }
             }
             // Sort
-            var comparer = new ExplorerComparer();
+            ExplorerComparer comparer = new ExplorerComparer();
             triggers.Sort((x, y) => comparer.Compare(x.Name, y.Name));
             Dictionary<string, string> checkTrigs = Trigger.None.Yield().Concat(triggers.Select(t => t.Name)).ToDictionary(t => t, t => t, StringComparer.OrdinalIgnoreCase);
             HashSet<string> checkCellTrigs = Map.FilterCellTriggers(triggers).Select(t => t.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
             HashSet<string> checkUnitTrigs = Trigger.None.Yield().Concat(Map.FilterUnitTriggers(triggers).Select(t => t.Name)).ToHashSet(StringComparer.OrdinalIgnoreCase);
             HashSet<string> checkStrcTrigs = Trigger.None.Yield().Concat(Map.FilterStructureTriggers(triggers).Select(t => t.Name)).ToHashSet(StringComparer.OrdinalIgnoreCase);
             HashSet<string> checkTerrTrigs = Trigger.None.Yield().Concat(Map.FilterTerrainTriggers(triggers).Select(t => t.Name)).ToHashSet(StringComparer.OrdinalIgnoreCase);
-            var smudgeSection = ini.Sections.Extract("Smudge");
+            INISection smudgeSection = ini.Sections.Extract("Smudge");
             if (smudgeSection != null)
             {
                 foreach (var (Key, Value) in smudgeSection)
@@ -971,12 +972,12 @@ namespace MobiusEditor.TiberianDawn
                         modified = true;
                         continue;
                     }
-                    var tokens = Value.Split(',');
+                    string[] tokens = Value.Split(',');
                     if (tokens.Length == 3)
                     {
                         // Craters other than cr1 don't work right in the game. Replace them by stage-0 cr1.
                         bool badCrater = Globals.ConvertCraters && SmudgeTypes.BadCraters.IsMatch(tokens[0]);
-                        var smudgeType = badCrater ? SmudgeTypes.Crater1 : Map.SmudgeTypes.Where(t => t.Equals(tokens[0]) && !t.IsAutoBib).FirstOrDefault();
+                        SmudgeType smudgeType = badCrater ? SmudgeTypes.Crater1 : Map.SmudgeTypes.Where(t => t.Equals(tokens[0]) && !t.IsAutoBib).FirstOrDefault();
                         if (smudgeType != null)
                         {
                             if (Globals.FilterTheaterObjects && smudgeType.Theaters != null && !smudgeType.Theaters.Contains(Map.Theater))
@@ -1027,7 +1028,7 @@ namespace MobiusEditor.TiberianDawn
                     }
                 }
             }
-            var infantrySection = ini.Sections.Extract("Infantry");
+            INISection infantrySection = ini.Sections.Extract("Infantry");
             if (infantrySection != null)
             {
                 foreach (var (Key, Value) in infantrySection)
@@ -1040,10 +1041,10 @@ namespace MobiusEditor.TiberianDawn
                         modified = true;
                         break;
                     }
-                    var tokens = Value.Split(',');
+                    string[] tokens = Value.Split(',');
                     if (tokens.Length == 8)
                     {
-                        var infantryType = Map.InfantryTypes.Where(t => t.Equals(tokens[1])).FirstOrDefault();
+                        InfantryType infantryType = Map.InfantryTypes.Where(t => t.Equals(tokens[1])).FirstOrDefault();
                         if (infantryType == null)
                         {
                             errors.Add(string.Format("Infantry '{0}' references unknown infantry.", tokens[1]));
@@ -1064,7 +1065,7 @@ namespace MobiusEditor.TiberianDawn
                             modified = true;
                             continue;
                         }
-                        var infantryGroup = Map.Technos[cell] as InfantryGroup;
+                        InfantryGroup infantryGroup = Map.Technos[cell] as InfantryGroup;
                         if ((infantryGroup == null) && (Map.Technos[cell] == null))
                         {
                             infantryGroup = new InfantryGroup();
@@ -1131,7 +1132,7 @@ namespace MobiusEditor.TiberianDawn
                         }
                         else
                         {
-                            var techno = Map.Technos[cell];
+                            ICellOccupier techno = Map.Technos[cell];
                             if (techno is Building building)
                             {
                                 errors.Add(string.Format("Infantry '{0}' overlaps structure '{1}' in cell {2}; skipping.", infantryType.Name, building.Type.Name, cell));
@@ -1174,7 +1175,7 @@ namespace MobiusEditor.TiberianDawn
                     }
                 }
             }
-            var unitsSection = ini.Sections.Extract("Units");
+            INISection unitsSection = ini.Sections.Extract("Units");
             if (unitsSection != null)
             {
                 foreach (var (Key, Value) in unitsSection)
@@ -1187,10 +1188,10 @@ namespace MobiusEditor.TiberianDawn
                         modified = true;
                         break;
                     }
-                    var tokens = Value.Split(',');
+                    string[] tokens = Value.Split(',');
                     if (tokens.Length == 7)
                     {
-                        var unitType = Map.UnitTypes.Where(t => t.IsGroundUnit && t.Equals(tokens[1])).FirstOrDefault();
+                        UnitType unitType = Map.UnitTypes.Where(t => t.IsGroundUnit && t.Equals(tokens[1])).FirstOrDefault();
                         if (unitType == null)
                         {
                             errors.Add(string.Format("Unit '{0}' references unknown unit.", tokens[1]));
@@ -1253,7 +1254,7 @@ namespace MobiusEditor.TiberianDawn
                         }
                         else
                         {
-                            var techno = Map.Technos[cell];
+                            ICellOccupier techno = Map.Technos[cell];
                             if (techno is Building building)
                             {
                                 errors.Add(string.Format("Unit '{0}' overlaps structure '{1}' in cell {2}; skipping.", unitType.Name, building.Type.Name, cell));
@@ -1303,7 +1304,7 @@ namespace MobiusEditor.TiberianDawn
             }
             // Classic game does not support this, so I'm leaving this out by default.
             // It is always extracted, so it doesn't end up with the "extra sections"
-            var aircraftSection = ini.Sections.Extract("Aircraft");
+            INISection aircraftSection = ini.Sections.Extract("Aircraft");
             if (aircraftSection != null)
             {
                 foreach (var (Key, Value) in aircraftSection)
@@ -1312,15 +1313,15 @@ namespace MobiusEditor.TiberianDawn
                     {
                         int amount = aircraftSection.Count();
                         bool isOne = amount == 1;
-                        String disabledObj = skipSoleStuff ? "Owned objects in Sole Survivor" : "Aircraft";
+                        string disabledObj = skipSoleStuff ? "Owned objects in Sole Survivor" : "Aircraft";
                         errors.Add(string.Format("{0} are disabled. {1} [Aircraft] {2} skipped.", disabledObj, amount, isOne ? "entry was" : "entries were"));
                         modified = true;
                         break;
                     }
-                    var tokens = Value.Split(',');
+                    string[] tokens = Value.Split(',');
                     if (tokens.Length == 6)
                     {
-                        var aircraftType = Map.UnitTypes.Where(t => t.IsAircraft && t.Equals(tokens[1])).FirstOrDefault();
+                        UnitType aircraftType = Map.UnitTypes.Where(t => t.IsAircraft && t.Equals(tokens[1])).FirstOrDefault();
                         if (aircraftType == null)
                         {
                             errors.Add(string.Format("Aircraft '{0}' references unknown aircraft.", tokens[1]));
@@ -1358,7 +1359,7 @@ namespace MobiusEditor.TiberianDawn
                         };
                         if (!Map.Technos.Add(cell, newUnit))
                         {
-                            var techno = Map.Technos[cell];
+                            ICellOccupier techno = Map.Technos[cell];
                             if (techno is Building building)
                             {
                                 errors.Add(string.Format("Aircraft '{0}' overlaps structure '{1}' in cell {2}; skipping.", aircraftType.Name, building.Type.Name, cell));
@@ -1406,7 +1407,7 @@ namespace MobiusEditor.TiberianDawn
                     }
                 }
             }
-            var structuresSection = ini.Sections.Extract("Structures");
+            INISection structuresSection = ini.Sections.Extract("Structures");
             if (structuresSection != null)
             {
                 foreach (var (Key, Value) in structuresSection)
@@ -1419,10 +1420,10 @@ namespace MobiusEditor.TiberianDawn
                         modified = true;
                         break;
                     }
-                    var tokens = Value.Split(',');
+                    string[] tokens = Value.Split(',');
                     if (tokens.Length == 6)
                     {
-                        var buildingType = Map.BuildingTypes.Where(t => t.Equals(tokens[1])).FirstOrDefault();
+                        BuildingType buildingType = Map.BuildingTypes.Where(t => t.Equals(tokens[1])).FirstOrDefault();
                         if (buildingType == null)
                         {
                             errors.Add(string.Format("Structure '{0}' references unknown structure.", tokens[1]));
@@ -1485,7 +1486,7 @@ namespace MobiusEditor.TiberianDawn
                         }
                         else
                         {
-                            var techno = Map.FindBlockingObject(cell, buildingType, out int blockingCell);
+                            ICellOccupier techno = Map.FindBlockingObject(cell, buildingType, out int blockingCell);
                             string reportCell = blockingCell == -1 ? "<unknown>" : blockingCell.ToString();
                             if (techno is Building building)
                             {
@@ -1558,7 +1559,7 @@ namespace MobiusEditor.TiberianDawn
                 }
             }
             INISection baseSection = ini.Sections.Extract("Base");
-            String baseCountStr = baseSection != null ? baseSection.TryGetValue("Count") : null;
+            string baseCountStr = baseSection != null ? baseSection.TryGetValue("Count") : null;
             if (baseSection != null)
             {
                 baseSection.Keys.Remove("Count");
@@ -1592,14 +1593,14 @@ namespace MobiusEditor.TiberianDawn
                             continue;
                         }
                         baseSection.Keys.Remove(key);
-                        var tokens = value.Split(',');
+                        string[] tokens = value.Split(',');
                         if (tokens.Length != 2)
                         {
                             errors.Add(string.Format("Base rebuild entry {0} has wrong number of tokens (expecting 2).", key));
                             modified = true;
                             continue;
                         }
-                        var buildingType = Map.BuildingTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault();
+                        BuildingType buildingType = Map.BuildingTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault();
                         if (buildingType == null)
                         {
                             errors.Add(string.Format("Base rebuild entry {0} references unknown structure '{1}'.", key, tokens[0]));
@@ -1646,7 +1647,7 @@ namespace MobiusEditor.TiberianDawn
                     }
                 }
             }
-            var terrainSection = ini.Sections.Extract("Terrain");
+            INISection terrainSection = ini.Sections.Extract("Terrain");
             if (terrainSection != null)
             {
                 foreach (var (Key, Value) in terrainSection)
@@ -1658,10 +1659,10 @@ namespace MobiusEditor.TiberianDawn
                         modified = true;
                         continue;
                     }
-                    var tokens = Value.Split(',');
+                    string[] tokens = Value.Split(',');
                     if (tokens.Length == 2)
                     {
-                        var terrainType = Map.TerrainTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault();
+                        TerrainType terrainType = Map.TerrainTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault();
                         if (terrainType != null)
                         {
                             if (Globals.FilterTheaterObjects && terrainType.Theaters != null && !terrainType.Theaters.Contains(Map.Theater))
@@ -1696,7 +1697,7 @@ namespace MobiusEditor.TiberianDawn
                             }
                             else
                             {
-                                var techno = Map.FindBlockingObject(cell, terrainType, out int blockingCell);
+                                ICellOccupier techno = Map.FindBlockingObject(cell, terrainType, out int blockingCell);
                                 string reportCell = blockingCell == -1 ? "<unknown>" : blockingCell.ToString();
                                 if (techno is Building building)
                                 {
@@ -1751,7 +1752,7 @@ namespace MobiusEditor.TiberianDawn
                     }
                 }
             }
-            var overlaySection = ini.Sections.Extract("Overlay");
+            INISection overlaySection = ini.Sections.Extract("Overlay");
             if (overlaySection != null)
             {
                 int lastLine = Map.Metrics.Height - 1;
@@ -1776,7 +1777,7 @@ namespace MobiusEditor.TiberianDawn
                         modified = true;
                         continue;
                     }
-                    var overlayType = Map.OverlayTypes.Where(t => t.Equals(Value)).FirstOrDefault();
+                    OverlayType overlayType = Map.OverlayTypes.Where(t => t.Equals(Value)).FirstOrDefault();
                     if (overlayType != null)
                     {
                         if (Globals.FilterTheaterObjects && overlayType.Theaters != null && !overlayType.Theaters.Contains(Map.Theater))
@@ -1794,7 +1795,7 @@ namespace MobiusEditor.TiberianDawn
                     }
                 }
             }
-            var waypointsSection = ini.Sections.Extract("Waypoints");
+            INISection waypointsSection = ini.Sections.Extract("Waypoints");
             if (waypointsSection != null)
             {
                 foreach (var (Key, Value) in waypointsSection)
@@ -1838,7 +1839,7 @@ namespace MobiusEditor.TiberianDawn
                     }
                 }
             }
-            var cellTriggersSection = ini.Sections.Extract("CellTriggers");
+            INISection cellTriggersSection = ini.Sections.Extract("CellTriggers");
             if (cellTriggersSection != null)
             {
                 foreach (var (Key, Value) in cellTriggersSection)
@@ -1879,10 +1880,10 @@ namespace MobiusEditor.TiberianDawn
                 }
             }
             Dictionary<string, string> correctedEdges = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            foreach (var edge in Globals.MapEdges)
+            foreach (string edge in Globals.MapEdges)
                 correctedEdges.Add(edge, edge);
             string defaultEdge = Globals.MapEdges.FirstOrDefault() ?? string.Empty;
-            foreach (var house in Map.Houses)
+            foreach (Model.House house in Map.Houses)
             {
                 if (house.Type.ID < 0)
                 {
@@ -1913,14 +1914,14 @@ namespace MobiusEditor.TiberianDawn
 
         protected IEnumerable<string> LoadBinaryClassic(BinaryReader reader, ref bool modified)
         {
-            var errors = new List<string>();
+            List<string> errors = new List<string>();
             Map.Templates.Clear();
-            for (var y = 0; y < Map.Metrics.Height; ++y)
+            for (int y = 0; y < Map.Metrics.Height; ++y)
             {
-                for (var x = 0; x < Map.Metrics.Width; ++x)
+                for (int x = 0; x < Map.Metrics.Width; ++x)
                 {
-                    var typeValue = reader.ReadByte();
-                    var iconValue = reader.ReadByte();
+                    byte typeValue = reader.ReadByte();
+                    byte iconValue = reader.ReadByte();
                     TemplateType templateType = ChecKTemplateType(typeValue, iconValue, x, y, errors, ref modified);
                     Map.Templates[y, x] = (templateType != null) ? new Template { Type = templateType, Icon = iconValue } : null;
                 }
@@ -1930,7 +1931,7 @@ namespace MobiusEditor.TiberianDawn
 
         protected IEnumerable<string> LoadBinaryMega(BinaryReader reader, ref bool modified)
         {
-            var errors = new List<string>();
+            List<string> errors = new List<string>();
             Map.Templates.Clear();
             long dataLen = reader.BaseStream.Length;
             int mapLen = Map.Metrics.Length;
@@ -2017,32 +2018,32 @@ namespace MobiusEditor.TiberianDawn
 
         public bool Save(string path, FileType fileType, bool forSole, Bitmap customPreview, bool dontResavePreview)
         {
-            String errors = Validate(forSole);
+            string errors = Validate(forSole);
             if (errors != null)
             {
                 MessageBox.Show(errors, "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
-            var iniPath = fileType == FileType.INI ? path : Path.ChangeExtension(path, ".ini");
-            var binPath = fileType == FileType.BIN ? path : Path.ChangeExtension(path, ".bin");
+            string iniPath = fileType == FileType.INI ? path : Path.ChangeExtension(path, ".ini");
+            string binPath = fileType == FileType.BIN ? path : Path.ChangeExtension(path, ".bin");
             Encoding dos437 = Encoding.GetEncoding(437);
             Encoding utf8 = new UTF8Encoding(false, false);
             byte[] linebreak = utf8.GetBytes("\r\n");
-            var ini = new INI();
+            INI ini = new INI();
             switch (fileType)
             {
                 case FileType.INI:
                 case FileType.BIN:
                     SaveINI(ini, fileType, path);
-                    using (var iniStream = new FileStream(iniPath, FileMode.Create))
-                    using (var iniWriter = new BinaryWriter(iniStream))
+                    using (FileStream iniStream = new FileStream(iniPath, FileMode.Create))
+                    using (BinaryWriter iniWriter = new BinaryWriter(iniStream))
                     {
                         // Use '\n' in proprocessing for simplicity. WriteMultiEncoding will use full line breaks.
-                        String iniText = forSole ? ini.ToString("\n") : FixRoad2Save(ini, "\n");
+                        string iniText = forSole ? ini.ToString("\n") : FixRoad2Save(ini, "\n");
                         GeneralUtils.WriteMultiEncoding(iniText.Split('\n'), iniWriter, dos437, utf8, new[] { ("Steam", null), ("Briefing", "Text"), ("Basic", "Name"), ("Basic", "Author") }, linebreak);
                     }
-                    using (var binStream = new FileStream(binPath, FileMode.Create))
-                    using (var binWriter = new BinaryWriter(binStream))
+                    using (FileStream binStream = new FileStream(binPath, FileMode.Create))
+                    using (BinaryWriter binWriter = new BinaryWriter(binStream))
                     {
                         if (!isMegaMap)
                         {
@@ -2056,12 +2057,12 @@ namespace MobiusEditor.TiberianDawn
                     // None of this junk for Sole Survivor.
                     if (!forSole && (!Map.BasicSection.SoloMission || !Globals.NoMetaFilesForSinglePlay))
                     {
-                        var tgaPath = Path.ChangeExtension(path, ".tga");
-                        var jsonPath = Path.ChangeExtension(path, ".json");
+                        string tgaPath = Path.ChangeExtension(path, ".tga");
+                        string jsonPath = Path.ChangeExtension(path, ".json");
                         if (!File.Exists(tgaPath) || !dontResavePreview)
                         {
 
-                            using (var tgaStream = new FileStream(tgaPath, FileMode.Create))
+                            using (FileStream tgaStream = new FileStream(tgaPath, FileMode.Create))
                             {
                                 if (customPreview != null)
                                 {
@@ -2073,8 +2074,8 @@ namespace MobiusEditor.TiberianDawn
                                 }
                             }
                         }
-                        using (var jsonStream = new FileStream(jsonPath, FileMode.Create))
-                        using (var jsonWriter = new JsonTextWriter(new StreamWriter(jsonStream)))
+                        using (FileStream jsonStream = new FileStream(jsonPath, FileMode.Create))
+                        using (JsonTextWriter jsonWriter = new JsonTextWriter(new StreamWriter(jsonStream)))
                         {
                             SaveJSON(jsonWriter);
                         }
@@ -2083,16 +2084,16 @@ namespace MobiusEditor.TiberianDawn
                 case FileType.MEG:
                 case FileType.PGM:
                     SaveINI(ini, fileType, path);
-                    using (var iniStream = new MemoryStream())
-                    using (var binStream = new MemoryStream())
-                    using (var tgaStream = new MemoryStream())
-                    using (var jsonStream = new MemoryStream())
-                    using (var iniWriter = new BinaryWriter(iniStream))
-                    using (var binWriter = new BinaryWriter(binStream))
-                    using (var jsonWriter = new JsonTextWriter(new StreamWriter(jsonStream)))
-                    using (var megafileBuilder = new MegafileBuilder(String.Empty, path))
+                    using (MemoryStream iniStream = new MemoryStream())
+                    using (MemoryStream binStream = new MemoryStream())
+                    using (MemoryStream tgaStream = new MemoryStream())
+                    using (MemoryStream jsonStream = new MemoryStream())
+                    using (BinaryWriter iniWriter = new BinaryWriter(iniStream))
+                    using (BinaryWriter binWriter = new BinaryWriter(binStream))
+                    using (JsonTextWriter jsonWriter = new JsonTextWriter(new StreamWriter(jsonStream)))
+                    using (MegafileBuilder megafileBuilder = new MegafileBuilder(String.Empty, path))
                     {
-                        String iniText = forSole ? ini.ToString() : FixRoad2Save(ini, "\n");
+                        string iniText = forSole ? ini.ToString() : FixRoad2Save(ini, "\n");
                         GeneralUtils.WriteMultiEncoding(iniText.Split('\n'), iniWriter, dos437, utf8, new[] { ("Steam", null), ("Briefing", "Text"), ("Basic", "Name"), ("Basic", "Author") }, linebreak);
                         iniWriter.Flush();
                         iniStream.Position = 0;
@@ -2118,10 +2119,10 @@ namespace MobiusEditor.TiberianDawn
                         SaveJSON(jsonWriter);
                         jsonWriter.Flush();
                         jsonStream.Position = 0;
-                        var iniFile = Path.ChangeExtension(Path.GetFileName(path), ".ini").ToUpper();
-                        var binFile = Path.ChangeExtension(Path.GetFileName(path), ".bin").ToUpper();
-                        var tgaFile = Path.ChangeExtension(Path.GetFileName(path), ".tga").ToUpper();
-                        var jsonFile = Path.ChangeExtension(Path.GetFileName(path), ".json").ToUpper();
+                        string iniFile = Path.ChangeExtension(Path.GetFileName(path), ".ini").ToUpper();
+                        string binFile = Path.ChangeExtension(Path.GetFileName(path), ".bin").ToUpper();
+                        string tgaFile = Path.ChangeExtension(Path.GetFileName(path), ".tga").ToUpper();
+                        string jsonFile = Path.ChangeExtension(Path.GetFileName(path), ".json").ToUpper();
                         megafileBuilder.AddFile(iniFile, iniStream);
                         megafileBuilder.AddFile(binFile, binStream);
                         megafileBuilder.AddFile(tgaFile, tgaStream);
@@ -2141,7 +2142,7 @@ namespace MobiusEditor.TiberianDawn
         /// </summary>
         /// <param name="ini">The generated ini file</param>
         /// <param name="iniWriter">The stream writer to write the text to.</param>
-        protected String FixRoad2Save(INI ini, string lineEnd)
+        protected string FixRoad2Save(INI ini, string lineEnd)
         {
             // ROAD's second state can only be accessed by applying ROAD overlay to the same cell twice.
             // This can be achieved by saving its Overlay line twice in the ini file. However, this is
@@ -2221,7 +2222,7 @@ namespace MobiusEditor.TiberianDawn
                 string[] name = Path.GetFileNameWithoutExtension(fileName).Split(new[] { ' ', '_' }, StringSplitOptions.RemoveEmptyEntries);
                 for (Int32 i = 0; i < name.Length; i++)
                 {
-                    String word = name[i];
+                    string word = name[i];
                     // Very very rough APA title casing :)
                     if (word.Length > 3)
                     {
@@ -2264,7 +2265,9 @@ namespace MobiusEditor.TiberianDawn
                 return null;
             }
             INISection briefingSection = ini.Sections.Add("Briefing");
-            String briefText = Map.BriefingSection.Briefing.Replace('\t', ' ').Trim('\r', '\n', ' ').Replace("\r\n", "\n").Replace("\r", "\n");
+            string briefText = Map.BriefingSection.Briefing.Replace('\t', ' ').Trim('\r', '\n', ' ').Replace("\r\n", "\n").Replace("\r", "\n");
+            // Remove duplicate spaces
+            briefText = Regex.Replace(briefText, " +", " ");
             if (string.IsNullOrEmpty(briefText))
             {
                 return null;
@@ -2272,34 +2275,34 @@ namespace MobiusEditor.TiberianDawn
             briefingSection["Text"] = briefText.Replace("\n", "@");
             if (Globals.WriteClassicBriefing)
             {
-                const int classicLineCutoff = 74;
+                
                 if (briefText.Length > maxBriefLengthClassic)
                 {
                     briefText = briefText.Substring(0, maxBriefLengthClassic);
                 }
-                String[] lines = briefText.Split('\n');
-                List<String> finalLines = new List<string>();
+                string[] lines = briefText.Split('\n');
+                List<string> finalLines = new List<string>();
                 int last = lines.Length - 1;
                 for (int i = 0; i < lines.Length; ++i)
                 {
-                    String line = lines[i].Trim();
+                    string line = lines[i].Trim();
                     if (i != last)
                     {
                         line += "##";
                     }
-                    if (line.Length <= classicLineCutoff)
+                    if (line.Length <= briefLineCutoffClassic)
                     {
                         finalLines.Add(line);
                         continue;
                     }
-                    String[] splitLine = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    string[] splitLine = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                     int wordIndex = 0;
                     while (wordIndex < splitLine.Length)
                     {
                         StringBuilder sb = new StringBuilder();
                         // Always allow initial word
                         int nextLength = 0;
-                        while (nextLength < classicLineCutoff && wordIndex < splitLine.Length)
+                        while (nextLength < briefLineCutoffClassic && wordIndex < splitLine.Length)
                         {
                             if (sb.Length > 0)
                                 sb.Append(' ');
@@ -2522,7 +2525,7 @@ namespace MobiusEditor.TiberianDawn
                 return null;
             }
             INISection aircraftSection = ini.Sections.Add("Aircraft");
-            var aircraftIndex = 0;
+            int aircraftIndex = 0;
             foreach (var (location, aircraft) in Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsAircraft).OrderBy(u => Map.Metrics.GetCell(u.Location)))
             {
                 if (!Map.Metrics.GetCell(location, out int cell))
@@ -2546,7 +2549,7 @@ namespace MobiusEditor.TiberianDawn
         protected IEnumerable<INISection> SaveIniHouses(INI ini)
         {
             List<INISection> houseSections = new List<INISection>();
-            foreach (var house in Map.Houses.Where(h => h.Type.ID >= 0).OrderBy(h => h.Type.ID))
+            foreach (Model.House house in Map.Houses.Where(h => h.Type.ID >= 0).OrderBy(h => h.Type.ID))
             {
                 House gameHouse = (House)house;
                 bool enabled = house.Enabled;
@@ -2561,7 +2564,7 @@ namespace MobiusEditor.TiberianDawn
 
         protected INISection SaveIniOverlay(INI ini)
         {
-            var overlaySection = ini.Sections.Add("Overlay");
+            INISection overlaySection = ini.Sections.Add("Overlay");
             Regex tiberium = new Regex("TI([0-9]|(1[0-2]))", RegexOptions.IgnoreCase);
             Random rd = new Random();
             foreach (var (cell, overlay) in Map.Overlay.OrderBy(o => o.Cell))
@@ -2576,7 +2579,7 @@ namespace MobiusEditor.TiberianDawn
 
         protected INISection SaveIniSmudge(INI ini)
         {
-            var smudgeSection = ini.Sections.Add("Smudge");
+            INISection smudgeSection = ini.Sections.Add("Smudge");
             // Flatten multi-cell bibs
             Dictionary<int, Smudge> resolvedSmudge = new Dictionary<int, Smudge>();
             foreach (var (cell, smudge) in Map.Smudge.Where(item => !item.Value.Type.IsAutoBib).OrderBy(s => s.Cell))
@@ -2597,7 +2600,7 @@ namespace MobiusEditor.TiberianDawn
 
         protected INISection SaveINITerrain(INI ini)
         {
-            var terrainSection = ini.Sections.Add("Terrain");
+            INISection terrainSection = ini.Sections.Add("Terrain");
             foreach (var (location, terrain) in Map.Technos.OfType<Terrain>().OrderBy(t => Map.Metrics.GetCell(t.Location)))
             {
                 if (Map.Metrics.GetCell(location, out int cell))
@@ -2610,11 +2613,11 @@ namespace MobiusEditor.TiberianDawn
 
         protected void SaveBinaryClassic(BinaryWriter writer)
         {
-            for (var y = 0; y < Map.Metrics.Height; ++y)
+            for (int y = 0; y < Map.Metrics.Height; ++y)
             {
-                for (var x = 0; x < Map.Metrics.Width; ++x)
+                for (int x = 0; x < Map.Metrics.Width; ++x)
                 {
-                    var template = Map.Templates[y, x];
+                    Template template = Map.Templates[y, x];
                     if (template != null && (template.Type.Flag & TemplateTypeFlag.Clear) == 0)
                     {
                         writer.Write((byte)template.Type.ID);
@@ -2633,11 +2636,11 @@ namespace MobiusEditor.TiberianDawn
         {
             int height = Map.Metrics.Height;
             int width = Map.Metrics.Width;
-            for (var y = 0; y < height; ++y)
+            for (int y = 0; y < height; ++y)
             {
-                for (var x = 0; x < width; ++x)
+                for (int x = 0; x < width; ++x)
                 {
-                    var template = Map.Templates[y, x];
+                    Template template = Map.Templates[y, x];
                     if (template == null || (template.Type.Flag & TemplateTypeFlag.Clear) != 0)
                     {
                         continue;
@@ -2673,7 +2676,7 @@ namespace MobiusEditor.TiberianDawn
             writer.WriteStartArray();
             if (!Map.BasicSection.SoloMission)
             {
-                foreach (var waypoint in Map.Waypoints.Where(w => (w.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart && w.Cell.HasValue))
+                foreach (Waypoint waypoint in Map.Waypoints.Where(w => (w.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart && w.Cell.HasValue))
                 {
                     writer.WriteValue(waypoint.Cell.Value);
                 }
@@ -2681,7 +2684,7 @@ namespace MobiusEditor.TiberianDawn
             else
             {
                 // Probably useless, but better than the player start points.
-                foreach (var waypoint in Map.Waypoints.Where(w => (w.Flag & WaypointFlag.Home) == WaypointFlag.Home && w.Cell.HasValue))
+                foreach (Waypoint waypoint in Map.Waypoints.Where(w => (w.Flag & WaypointFlag.Home) == WaypointFlag.Home && w.Cell.HasValue))
                 {
                     writer.WriteValue(waypoint.Cell.Value);
                 }
@@ -2690,12 +2693,12 @@ namespace MobiusEditor.TiberianDawn
             writer.WriteEndObject();
         }
 
-        public virtual String Validate()
+        public virtual string Validate()
         {
             return Validate(false);
         }
 
-        protected String Validate(bool forSole)
+        protected string Validate(bool forSole)
         {
             StringBuilder sb = new StringBuilder("Error(s) during map validation:");
             bool ok = true;
@@ -2754,7 +2757,7 @@ namespace MobiusEditor.TiberianDawn
                     sb.AppendLine().Append("Skirmish/Multiplayer maps need at least 2 waypoints for player starting locations.");
                     ok = false;
                 }
-                var homeWaypoint = Map.Waypoints.Where(w => (w.Flag & WaypointFlag.Home) == WaypointFlag.Home).FirstOrDefault();
+                Waypoint homeWaypoint = Map.Waypoints.Where(w => (w.Flag & WaypointFlag.Home) == WaypointFlag.Home).FirstOrDefault();
                 if (Map.BasicSection.SoloMission && !homeWaypoint.Cell.HasValue)
                 {
                     sb.AppendLine().Append("Single-player maps need the Home waypoint to be placed.");
@@ -2764,7 +2767,7 @@ namespace MobiusEditor.TiberianDawn
                 IEnumerable<string> triggerErr = CheckTriggers(this.Map.Triggers, true, true, true, out fatal, false, out _);
                 if (fatal)
                 {
-                    foreach (var err in triggerErr)
+                    foreach (string err in triggerErr)
                     {
                         sb.AppendLine().Append(err);
                     }
@@ -2784,23 +2787,23 @@ namespace MobiusEditor.TiberianDawn
             int numTerrain = Map.Technos.OfType<Terrain>().Count();
             int numUnits = Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsGroundUnit).Count();
             info.Add("Objects overview:");
-            const String maximums = "Number of {0}: {1}. Maximum: {2}. Classic maximum: {3}.";
+            const string maximums = "Number of {0}: {1}. Maximum: {2}. Classic maximum: {3}.";
             if (!Globals.DisableAirUnits)
             {
-                info.Add(string.Format(maximums, "aircraft", numAircraft, Constants.MaxAircraft, Constants.MaxAircraftClassic));
+                info.Add(String.Format(maximums, "aircraft", numAircraft, Constants.MaxAircraft, Constants.MaxAircraftClassic));
             }
-            info.Add(string.Format(maximums, "structures", numBuildings, Constants.MaxBuildings, Constants.MaxBuildingsClassic));
-            info.Add(string.Format(maximums, "infantry", numInfantry, Constants.MaxInfantry, Constants.MaxInfantryClassic));
-            info.Add(string.Format(maximums, "terrain objects", numTerrain, Constants.MaxTerrain, Constants.MaxTerrainClassic));
-            info.Add(string.Format(maximums, "units", numUnits, Constants.MaxUnits, Constants.MaxUnitsClassic));
-            info.Add(string.Format(maximums, "team types", Map.TeamTypes.Count, Constants.MaxTeams, Constants.MaxTeamsClassic));
-            info.Add(string.Format(maximums, "triggers", Map.Triggers.Count, Constants.MaxTriggers, Constants.MaxTriggersClassic));
+            info.Add(String.Format(maximums, "structures", numBuildings, Constants.MaxBuildings, Constants.MaxBuildingsClassic));
+            info.Add(String.Format(maximums, "infantry", numInfantry, Constants.MaxInfantry, Constants.MaxInfantryClassic));
+            info.Add(String.Format(maximums, "terrain objects", numTerrain, Constants.MaxTerrain, Constants.MaxTerrainClassic));
+            info.Add(String.Format(maximums, "units", numUnits, Constants.MaxUnits, Constants.MaxUnitsClassic));
+            info.Add(String.Format(maximums, "team types", Map.TeamTypes.Count, Constants.MaxTeams, Constants.MaxTeamsClassic));
+            info.Add(String.Format(maximums, "triggers", Map.Triggers.Count, Constants.MaxTriggers, Constants.MaxTriggersClassic));
             if (!Map.BasicSection.SoloMission)
             {
                 info.Add(String.Empty);
                 info.Add("Multiplayer info:");
                 int startPoints = Map.Waypoints.Count(w => w.Cell.HasValue && (w.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart);
-                info.Add(string.Format("Number of set starting points: {0}.", startPoints));
+                info.Add(String.Format("Number of set starting points: {0}.", startPoints));
             }
             const bool assessScripting = true;
             if (assessScripting)
@@ -2810,7 +2813,7 @@ namespace MobiusEditor.TiberianDawn
                 HashSet<string> usedTeams = new HashSet<string>();
                 foreach (TeamType tt in Map.TeamTypes)
                 {
-                    String teamName = tt.Name;
+                    string teamName = tt.Name;
                     if (tt.IsAutocreate)
                     {
                         usedTeams.Add(teamName);
@@ -2842,18 +2845,18 @@ namespace MobiusEditor.TiberianDawn
                 }
                 string[] unusedTeams = Map.TeamTypes.Select(tm => tm.Name).Where(tn => !usedTeams.Contains(tn)).ToArray();
                 Array.Sort(unusedTeams, cmp);
-                String unusedTeamsStr = String.Join(", ", unusedTeams);
+                string unusedTeamsStr = String.Join(", ", unusedTeams);
                 foreach (Trigger tr in Map.Triggers)
                 {
                     if (tr.Action1.ActionType == ActionTypes.ACTION_DZ)
                         usedWaypoints.Add(Enumerable.Range(0, Map.Waypoints.Length).Where(i => (Map.Waypoints[i].Flag & WaypointFlag.Flare) == WaypointFlag.Flare).First());
                 }
                 WaypointFlag toIgnore = WaypointFlag.Home | WaypointFlag.Reinforce;
-                String unusedWaypointsStr = String.Join(", ", setWaypoints.OrderBy(w => w)
+                string unusedWaypointsStr = String.Join(", ", setWaypoints.OrderBy(w => w)
                     .Where(w => (Map.Waypoints[w].Flag & toIgnore) == WaypointFlag.None
                                 && !usedWaypoints.Contains(w)).Select(w => Map.Waypoints[w].Name).ToArray());
-                String unsetUsedWaypointsStr = String.Join(", ", usedWaypoints.OrderBy(w => w).Where(w => !setWaypoints.Contains(w)).Select(w => Map.Waypoints[w].Name).ToArray());
-                String evalEmpty(String str)
+                string unsetUsedWaypointsStr = String.Join(", ", usedWaypoints.OrderBy(w => w).Where(w => !setWaypoints.Contains(w)).Select(w => Map.Waypoints[w].Name).ToArray());
+                string evalEmpty(string str)
                 {
                     return String.IsNullOrEmpty(str) ? "-" : str;
                 };
@@ -2883,7 +2886,7 @@ namespace MobiusEditor.TiberianDawn
                 housesWithCY.Add(unit.House.Name);
             }
             string cellTriggerHouse = HouseTypes.GetClassicOpposingPlayer(Map.BasicSection.Player);
-            foreach (var trig in Map.Triggers)
+            foreach (Trigger trig in Map.Triggers)
             {
                 string triggerHouse = trig.House;
                 if (trig.Action1.ActionType == ActionTypes.ACTION_BEGIN_PRODUCTION)
@@ -2964,9 +2967,9 @@ namespace MobiusEditor.TiberianDawn
             bool uuuuExists = false;
             bool vvvvExists = false;
             bool wwwwExists = false;
-            foreach (var trigger in triggers)
+            foreach (Trigger trigger in triggers)
             {
-                String actionType = trigger.Action1.ActionType;
+                string actionType = trigger.Action1.ActionType;
                 if (String.Equals(trigger.Name, "XXXX", StringComparison.OrdinalIgnoreCase)) xxxxExists = true;
                 if (String.Equals(trigger.Name, "YYYY", StringComparison.OrdinalIgnoreCase)) yyyyExists = true;
                 if (String.Equals(trigger.Name, "ZZZZ", StringComparison.OrdinalIgnoreCase)) zzzzExists = true;
@@ -2983,11 +2986,11 @@ namespace MobiusEditor.TiberianDawn
                     if (actionType == ActionTypes.ACTION_DESTROY_WWWW) delWExists = true;
                 }
             }
-            foreach (var trigger in triggers)
+            foreach (Trigger trigger in triggers)
             {
                 string team = trigger.Action1.Team;
                 string trigName = trigger.Name;
-                String prefix = prefixNames ? "Trigger \"" + trigName + "\": " : String.Empty;
+                string prefix = prefixNames ? "Trigger \"" + trigName + "\": " : String.Empty;
                 string event1 = trigger.Event1.EventType;
                 string action1 = trigger.Action1.ActionType;
                 bool noOwner = Model.House.IsEmpty(trigger.House);
@@ -3173,10 +3176,12 @@ namespace MobiusEditor.TiberianDawn
             {
                 return true;
             }
-            string brief = briefing.Replace('\t', ' ').Trim('\r', '\n', ' ').Replace("\r\n", "\r").Replace("\n", "\r");
-            if (brief.Length > maxBriefLengthClassic)
+            string briefText = briefing.Replace('\t', ' ').Trim('\r', '\n', ' ').Replace("\r\n", "\r").Replace("\n", "\r");
+            // Remove duplicate spaces
+            briefText = Regex.Replace(briefText, " +", " ");
+            if (briefText.Length > maxBriefLengthClassic)
             {
-                message = "Classic Tiberian Dawn briefings cannot exceed " + maxBriefLengthClassic + " characters. This includes line breaks.\n\nThis will not affect the mission when playing in the Remastr, but the briefing will be truncated when playing in the original game.";
+                message = "Classic Tiberian Dawn briefings cannot exceed " + maxBriefLengthClassic + " characters. This includes line breaks.\n\nThis will not affect the mission when playing in the Remaster, but the briefing will be truncated when playing in the original game.";
             }
             return message == null;
         }
@@ -3207,7 +3212,7 @@ namespace MobiusEditor.TiberianDawn
         protected void UpdateBasePlayerHouse()
         {
             Map.BasicSection.BasePlayer = HouseTypes.GetBasePlayer(Map.BasicSection.Player);
-            var basePlayer = Map.HouseTypesIncludingNone.Where(h => h.Equals(Map.BasicSection.BasePlayer)).FirstOrDefault() ?? Map.HouseTypes.First();
+            HouseType basePlayer = Map.HouseTypesIncludingNone.Where(h => h.Equals(Map.BasicSection.BasePlayer)).FirstOrDefault() ?? Map.HouseTypes.First();
             // Not really needed now BasePlayer House is always "None", but whatever.
             foreach (var (_, building) in Map.Buildings.OfType<Building>())
             {
