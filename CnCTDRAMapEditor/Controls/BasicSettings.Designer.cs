@@ -474,50 +474,41 @@ namespace MobiusEditor.Controls
             // buildLevelNud
             // 
             this.buildLevelNud.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.buildLevelNud.EnteredValue = new decimal(new int[] {
+            this.buildLevelNud.Location = new System.Drawing.Point(103, 3);
+            this.buildLevelNud.Name = "buildLevelNud";
+            this.buildLevelNud.Size = new System.Drawing.Size(194, 20);
+            this.buildLevelNud.TabIndex = 1;
+            this.buildLevelNud.Value = new decimal(new int[] {
             0,
             0,
             0,
             0});
-            this.buildLevelNud.Location = new System.Drawing.Point(103, 3);
-            this.buildLevelNud.Name = "buildLevelNud";
-            this.buildLevelNud.SelectedText = "";
-            this.buildLevelNud.SelectionLength = 0;
-            this.buildLevelNud.SelectionStart = 0;
-            this.buildLevelNud.Size = new System.Drawing.Size(194, 20);
-            this.buildLevelNud.TabIndex = 1;
             // 
             // percentNud
             // 
             this.percentNud.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.percentNud.EnteredValue = new decimal(new int[] {
+            this.percentNud.Location = new System.Drawing.Point(103, 81);
+            this.percentNud.Name = "percentNud";
+            this.percentNud.Size = new System.Drawing.Size(194, 20);
+            this.percentNud.TabIndex = 7;
+            this.percentNud.Value = new decimal(new int[] {
             0,
             0,
             0,
             0});
-            this.percentNud.Location = new System.Drawing.Point(103, 81);
-            this.percentNud.Name = "percentNud";
-            this.percentNud.SelectedText = "";
-            this.percentNud.SelectionLength = 0;
-            this.percentNud.SelectionStart = 0;
-            this.percentNud.Size = new System.Drawing.Size(194, 20);
-            this.percentNud.TabIndex = 7;
             // 
             // carryOverMoneyNud
             // 
             this.carryOverMoneyNud.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.carryOverMoneyNud.EnteredValue = new decimal(new int[] {
+            this.carryOverMoneyNud.Location = new System.Drawing.Point(103, 29);
+            this.carryOverMoneyNud.Name = "carryOverMoneyNud";
+            this.carryOverMoneyNud.Size = new System.Drawing.Size(194, 20);
+            this.carryOverMoneyNud.TabIndex = 3;
+            this.carryOverMoneyNud.Value = new decimal(new int[] {
             0,
             0,
             0,
             0});
-            this.carryOverMoneyNud.Location = new System.Drawing.Point(103, 29);
-            this.carryOverMoneyNud.Name = "carryOverMoneyNud";
-            this.carryOverMoneyNud.SelectedText = "";
-            this.carryOverMoneyNud.SelectionLength = 0;
-            this.carryOverMoneyNud.SelectionStart = 0;
-            this.carryOverMoneyNud.Size = new System.Drawing.Size(194, 20);
-            this.carryOverMoneyNud.TabIndex = 3;
             // 
             // authorLabel
             // 

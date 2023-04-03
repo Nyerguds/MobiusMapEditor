@@ -39,36 +39,89 @@ namespace MobiusEditor.Controls
         [Category("Data")]
         [DefaultValue(true)]
         [Description("True to make focus loss cause validation on EnteredValue.")]
-        public Boolean FocusLossValidatesEnter { get { return this._UpDownValidatesEnter; } set { this._UpDownValidatesEnter = value; } }
+        public Boolean FocusLossValidatesEnter { get { return this._FocusLossValidatesEnter; } set { this._FocusLossValidatesEnter = value; } }
 
-        /// <summary>
-        /// Last validated entered value.
-        /// </summary>
-        [Category("Data")]
-        [DefaultValue(0)]
-        [Description("The last validated value of the EnhNumericUpDownControl.")]
-        public Decimal EnteredValue
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public decimal CurrentInternalValue
         {
-            get { return this.Constrain(this._EnteredValue);  }
+            get
+            {
+                FieldInfo val = typeof(NumericUpDown).GetField("currentValue", BindingFlags.Instance | BindingFlags.NonPublic);
+                return (decimal)val.GetValue(this);
+            }
             set
             {
-                this.Value = this.Constrain(value);
-                this.ValidateValue();
+                // Sets the value without triggering the "OnValueChanged" event.
+                if (!IsInitalising)
+                {
+                    if (value < Minimum || value > Maximum)
+                    {
+                        // Let the system take care of the 'out of range' exception.
+                        this.Value = value;
+                    }
+                    Type numUpDownType = typeof(NumericUpDown);
+                    FieldInfo val = numUpDownType.GetField("currentValue", BindingFlags.Instance | BindingFlags.NonPublic);
+                    val.SetValue(this, value);
+                    FieldInfo valChanged = numUpDownType.GetField("currentValueChanged", BindingFlags.Instance | BindingFlags.NonPublic);
+                    valChanged.SetValue(this, true);
+                    UpdateEditText();
+                }
+
             }
         }
 
+        /// <summary>As annoying side effect of the fact NumericUpDown implements ISupportInitialize, this needs to be accessible, but isn't.</summary>
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        protected Boolean IsInitalising
+        {
+            get
+            {
+                Type numUpDownType = typeof(NumericUpDown);
+                FieldInfo init = numUpDownType.GetField("initializing", BindingFlags.Instance | BindingFlags.NonPublic);
+                return init != null && (Boolean)init.GetValue(this);
+            }
+        }
+
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Int32 IntValue
         {
             get { return (Int32)this.Value; }
-            set
-            {
-                this.Value = this.Constrain(value);
-            }
+            set { this.Value = this.Constrain(value); }
         }
 
-        private Decimal _EnteredValue;
+        /// <summary>Gets or sets the starting point of text selected in the text box.</summary>
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public Int32 SelectionStart
+        {
+            get { return this._TextBox.SelectionStart; }
+            set { this._TextBox.SelectionStart = value; }
+        }
+
+        /// <summary>Gets or sets the number of characters selected in the text box.</summary>
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public Int32 SelectionLength
+        {
+            get { return this._TextBox.SelectionLength; }
+            set { this._TextBox.SelectionLength = value; }
+        }
+
+        /// <summary>Gets or sets a value indicating the currently selected text in the control.</summary>
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public String SelectedText
+        {
+            get { return this._TextBox.SelectedText; }
+            set { this._TextBox.SelectedText = value; }
+        }
+
         private Boolean _ScrollValidatesEnter = true;
         private Boolean _UpDownValidatesEnter = true;
+        private Boolean _FocusLossValidatesEnter = true;
         private TextBox _TextBox;
 
         public EnhNumericUpDown()
@@ -87,25 +140,40 @@ namespace MobiusEditor.Controls
 
         public TextBox TextBox { get { return this._TextBox; } }
 
+        // Private function extracted from base
+        protected string GetNumberText(decimal num)
+        {
+            if (Hexadecimal)
+            {
+                return ((long)num).ToString("X", CultureInfo.InvariantCulture);
+            }
+            return num.ToString((ThousandsSeparator ? "N" : "F") + DecimalPlaces.ToString(CultureInfo.CurrentCulture), CultureInfo.CurrentCulture);
+        }
+
         protected override void OnTextChanged(EventArgs e)
         {
-            Boolean allowminus = this.Minimum < 0;
+            if (IsInitalising)
+            {
+                return;
+            }
+            Boolean allowMinus = this.Minimum < 0;
             Boolean allowHex = this.Hexadecimal;
-            String pattern = (allowminus ? "-?" : String.Empty) + (allowHex ? "[A-F0-9]*" : "\\d*");
-            if (Regex.IsMatch(this.Text, "^" + pattern + "$", RegexOptions.IgnoreCase) && !"-".Equals(this.Text))
+            String curText = this.Text;
+            String pattern = (allowMinus ? "-?" : String.Empty) + (allowHex ? "[A-F0-9]*" : "\\d*");
+            if (Regex.IsMatch(curText, "^" + pattern + "$", RegexOptions.IgnoreCase)) // && !"-".Equals(curText))
                 return;
             // something snuck in, probably with ctrl+v. Remove it.
             System.Media.SystemSounds.Beep.Play();
             StringBuilder text = new StringBuilder();
-            String txt = this.Text.ToUpperInvariant();
+            String txt = curText.ToUpperInvariant();
             Int32 txtLen = txt.Length;
             Int32 firstIllegalChar = -1;
             for (Int32 i = 0; i < txtLen; ++i)
             {
                 Char c = txt[i];
-                Boolean isNumRange = (c >= '0' && c <= '9');
-                Boolean isAllowedHexRange = allowHex && (c >= 'A' && c <= 'F');
-                Boolean isAllowedMinus = (i == 0 && c == '-');
+                Boolean isNumRange = c >= '0' && c <= '9';
+                Boolean isAllowedHexRange = allowHex && c >= 'A' && c <= 'F';
+                Boolean isAllowedMinus = allowMinus && i == 0 && c == '-';
                 if (!isNumRange && !isAllowedHexRange && !isAllowedMinus)
                 {
                     if (firstIllegalChar == -1)
@@ -121,7 +189,7 @@ namespace MobiusEditor.Controls
             if (Decimal.TryParse(filteredText, ns, NumberFormatInfo.CurrentInfo, out value))
             {
                 value = Math.Max((Int32)this.Minimum, Math.Min(this.Maximum, value));
-                this.Text = value.ToString(CultureInfo.InvariantCulture);
+                this.Text = GetNumberText(value);
             }
             else
             {
@@ -132,27 +200,6 @@ namespace MobiusEditor.Controls
             this.Select(firstIllegalChar, 0);
         }
 
-        /// <summary>Gets or sets the starting point of text selected in the text box.</summary>
-        public Int32 SelectionStart
-        {
-            get { return this._TextBox.SelectionStart; }
-            set { this._TextBox.SelectionStart = value; }
-        }
-
-        /// <summary>Gets or sets the number of characters selected in the text box.</summary>
-        public Int32 SelectionLength
-        {
-            get { return this._TextBox.SelectionLength; }
-            set { this._TextBox.SelectionLength = value; }
-        }
-
-        /// <summary>Gets or sets a value indicating the currently selected text in the control.</summary>
-        public String SelectedText
-        {
-            get { return this._TextBox.SelectedText; }
-            set { this._TextBox.SelectedText = value; }
-        }
-
         public void SelectAll()
         {
             this._TextBox.SelectionStart = 0;
@@ -161,70 +208,83 @@ namespace MobiusEditor.Controls
 
         protected override void OnMouseWheel(MouseEventArgs e)
         {
+            if (this.ReadOnly)
+            {
+                return;
+            }
+            Decimal oldval = this.CurrentInternalValue;
             HandledMouseEventArgs hme = e as HandledMouseEventArgs;
             if (hme != null)
                 hme.Handled = true;
             Int32 delta = e.Delta;
-            Int32 scroll = this.MouseWheelIncrement;
-            // Negative increment is perfectly allowed, but will simply be handled as opposite direction scrolling.
-            if (scroll < 0)
+            if (delta == 0)
             {
-                delta = -delta;
+                return;
+            }
+            Int32 scroll = this.MouseWheelIncrement;
+            if (delta < 0)
+            {
                 scroll = -scroll;
             }
-            UpDownAction action;
-            if (delta > 0)
+            // Negative increment is perfectly allowed, but will simply be handled as opposite direction scrolling.
+            if (this.MouseWheelIncrement < 0)
             {
-                Decimal value = this.Value + scroll;
-                this.Value = Math.Min(this.Maximum, value);
-                action = UpDownAction.Up;
+                delta = -delta;
             }
-            else if (delta < 0)
+            decimal oldValue = this.Value;
+            decimal newValue = this.Constrain(oldValue + scroll);
+            if (oldValue != newValue)
             {
-                Decimal value = this.Value - scroll;
-                this.Value = Math.Max(this.Minimum, value);
-                action = UpDownAction.Down;
+                this.Value = newValue;
+                UpDownAction action = delta > 0 ? UpDownAction.Up : UpDownAction.Down;
+                if (this.ScrollValidatesEnter)
+                    this.ValidateValue(oldval);
+                if (this.ValueUpDown != null)
+                    this.ValueUpDown(this, new UpDownEventArgs(action, this.MouseWheelIncrement, true));
             }
-            else
-                return;
-            if (this.ScrollValidatesEnter)
-                this.ValidateValue();
-            if (this.ValueUpDown != null)
-                this.ValueUpDown(this, new UpDownEventArgs(action, scroll, true));
         }
 
         protected override void OnLostFocus(EventArgs e)
         {
+            if (this.ReadOnly)
+            {
+                return;
+            }
             if (this.FocusLossValidatesEnter)
             {
-                this.Text = this.Text;
-                this.ValidateValue();
+                Decimal oldval = this.CurrentInternalValue;
+                this.ValidateValue(oldval);
             }
         }
 
         private void CheckKeyPress(Object sender, KeyEventArgs e)
         {
+            if (this.ReadOnly)
+            {
+                return;
+            }
             if (e.KeyCode == Keys.Enter)
             {
-                e.SuppressKeyPress = this.ValidateValue();
+                Decimal oldval = this.CurrentInternalValue;
+                e.SuppressKeyPress = this.ValidateValue(oldval);
             }
         }
 
-        private Boolean ValidateValue()
+        private Boolean ValidateValue(decimal oldValue)
         {
-            Decimal oldval = this._EnteredValue;
-            this._EnteredValue = this.Value;
+            base.ValidateEditText();
+            decimal newVal = this.Value;
             if (this.ValueEntered != null)
-                this.ValueEntered(this, new ValueEnteredEventArgs(oldval));
+                this.ValueEntered(this, new ValueEnteredEventArgs(oldValue, newVal));
             return true;
         }
 
         public Decimal Constrain(Decimal value)
         {
-            if (value < this.Minimum)
-                value = this.Minimum;
-            else if (value > this.Maximum)
+            if (value > this.Maximum)
                 value = this.Maximum;
+            else if (value < this.Minimum)
+                value = this.Minimum;
             return value;
         }
 
@@ -233,11 +293,14 @@ namespace MobiusEditor.Controls
         /// </summary>
         public override void DownButton()
         {
+            if (this.ReadOnly)
+            {
+                return;
+            }
+            Decimal oldval = this.CurrentInternalValue;
             base.DownButton();
-            //Decimal value = this.Value;
-            //this.Value = Math.Max(this.Minimum, value);
             if (this.UpDownValidatesEnter)
-                this.ValidateValue();
+                this.ValidateValue(oldval);
             if (this.ValueUpDown != null)
                 this.ValueUpDown(this, new UpDownEventArgs(UpDownAction.Down));
         }
@@ -247,45 +310,28 @@ namespace MobiusEditor.Controls
         /// </summary>
         public override void UpButton()
         {
+            if (this.ReadOnly)
+            {
+                return;
+            }
+            Decimal oldval = this.CurrentInternalValue;
             base.UpButton();
-            //Decimal value = this.Value;
-            //this.Value = Math.Min(this.Maximum, value);
             if (this.UpDownValidatesEnter)
-                this.ValidateValue();
+                this.ValidateValue(oldval);
             if (this.ValueUpDown != null)
                 this.ValueUpDown(this, new UpDownEventArgs(UpDownAction.Up));
-        }
-
-        // Sets the value without triggering the "OnValueChanged" event.
-        protected void SetInternalValue(Int32 value)
-        {
-            Type numUpDownType = this.GetType();
-            FieldInfo init = numUpDownType.GetField("initializing");
-            Boolean initializing = (Boolean)init.GetValue(this);
-
-            if (!initializing && ((value < Minimum) || (value > Maximum)))
-            {
-                // Let the system take care of the 'out of range' exception.
-                this.Value = value;
-            }
-            else
-            {
-                FieldInfo val = numUpDownType.GetField("currentValue");
-                val.SetValue(this, value);
-                FieldInfo valChanged = numUpDownType.GetField("currentValueChanged");
-                valChanged.SetValue(this, true);
-                UpdateEditText();
-            }
         }
     }
 
     public class ValueEnteredEventArgs : EventArgs
     {
-        public Decimal Oldvalue;
+        public Decimal Oldvalue { get; set; }
+        public Decimal Newvalue { get; set; }
 
-        public ValueEnteredEventArgs(Decimal oldvalue)
+        public ValueEnteredEventArgs(Decimal oldvalue, Decimal newvalue)
         {
             this.Oldvalue = oldvalue;
+            this.Newvalue = newvalue;
         }
     }
 

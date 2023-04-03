@@ -117,17 +117,11 @@ namespace MobiusEditor.Tools.Dialogs
             // 
             this.nudBrushSize.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.nudBrushSize.EnteredValue = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
             this.nudBrushSize.Increment = new decimal(new int[] {
             2,
             0,
             0,
             0});
-            this.nudBrushSize.IntValue = 1;
             this.nudBrushSize.Location = new System.Drawing.Point(139, 40);
             this.nudBrushSize.Maximum = new decimal(new int[] {
             9,
@@ -141,9 +135,6 @@ namespace MobiusEditor.Tools.Dialogs
             0});
             this.nudBrushSize.MouseWheelIncrement = 2;
             this.nudBrushSize.Name = "nudBrushSize";
-            this.nudBrushSize.SelectedText = "";
-            this.nudBrushSize.SelectionLength = 0;
-            this.nudBrushSize.SelectionStart = 0;
             this.nudBrushSize.Size = new System.Drawing.Size(99, 20);
             this.nudBrushSize.TabIndex = 3;
             this.nudBrushSize.Value = new decimal(new int[] {

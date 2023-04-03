@@ -82,96 +82,85 @@ namespace MobiusEditor.Controls
 
         private void UpdateValueControl(TeamMission mission, int value)
         {
-            int selectIndex;
+            if (tooltip != null)
+            {
+                tooltip.SetToolTip(cmbMission, mission.Tooltip);
+                tooltip.SetToolTip(this.numValue, null);
+                tooltip.SetToolTip(this.cmbValue, null);
+            }
             switch (mission.ArgType)
             {
                 case TeamMissionArgType.None:
+                default:
                     this.numValue.Visible = false;
                     this.cmbValue.Visible = false;
                     if (this.Info != null)
                         this.Info.Argument = 0;
                     break;
+                case TeamMissionArgType.Number:
+                    SetUpNumValue(0, Int32.MaxValue, 1, value, this.tooltip, "Number");
+                    break;
+                case TeamMissionArgType.Time:
+                    SetUpNumValue(0, Int32.MaxValue, 10, value, this.tooltip, "Time in 1/10th min");
+                    break;
                 case TeamMissionArgType.Waypoint:
-                    this.numValue.Visible = false;
-                    this.cmbValue.Visible = true;
-                    this.cmbValue.DataSource = waypoints;
-                    //this.cmbValue.Tool
-                    selectIndex = ListItem.GetIndexInList(value, waypoints);
-                    if (selectIndex == -1 && waypoints.Length > 0)
-                    {
-                        selectIndex = 0;
-                    }
-                    cmbValue.SelectedIndex = selectIndex;
+                    SetUpCmbValue(waypoints, value, tooltip, "Waypoint");
                     break;
                 case TeamMissionArgType.OptionsList:
-                    this.numValue.Visible = false;
-                    this.cmbValue.Visible = true;
                     ListItem<int>[] items = mission.DropdownOptions.Select(ddo => new ListItem<int>(ddo.Value, ddo.Label)).ToArray();
-                    this.cmbValue.DataSource = items;
-                    selectIndex = ListItem.GetIndexInList(value, items);
-                    if (selectIndex == -1 && items.Length > 0)
-                    {
-                        selectIndex = 0;
-                    }
-                    cmbValue.SelectedIndex = selectIndex;
+                    SetUpCmbValue(items, value, tooltip, null);
                     break;
                 case TeamMissionArgType.MapCell:
-                    this.numValue.Value = this.numValue.Minimum;
-                    this.numValue.Minimum = 0;
-                    this.numValue.Maximum = mapSize - 1;
-                    this.numValue.Visible = true;
-                    this.numValue.Value = numValue.Constrain(value);
-                    this.cmbValue.Visible = false;
+                    SetUpNumValue(0, mapSize - 1, 1, value, this.tooltip, "Map cell");
                     break;
-                default:
-                    // Number, time, global, tarcom
-                    // Might split this up for tooltips later.
-                    this.numValue.Value = this.numValue.Minimum;
-                    this.numValue.Minimum = 0;
-                    this.numValue.Maximum = Int32.MaxValue;
-                    this.numValue.Visible = true;
-                    this.numValue.Value = numValue.Constrain(value);
-                    this.cmbValue.Visible = false;
+                case TeamMissionArgType.OrderNumber:
+                    SetUpNumValue(0, Int32.MaxValue, 1, value, this.tooltip, "0-based index in this orders list");
                     break;
-            }
-            if (tooltip != null)
-            {
-                tooltip.SetToolTip(cmbMission, mission.Tooltip);
-                tooltip.SetToolTip(cmbValue, null);
-                tooltip.SetToolTip(numValue, null);
-                switch (mission.ArgType)
-                {
-                    case TeamMissionArgType.None:
-                        break;
-                    case TeamMissionArgType.Number:
-                        tooltip.SetToolTip(numValue, "number");
-                        break;
-                    case TeamMissionArgType.Time:
-                        tooltip.SetToolTip(numValue, "Time in 1/10th min");
-                        break;
-                    case TeamMissionArgType.Waypoint:
-                        tooltip.SetToolTip(cmbValue, "Waypoint");
-                        break;
-                    case TeamMissionArgType.OptionsList:
-                        break;
-                    case TeamMissionArgType.MapCell:
-                        tooltip.SetToolTip(numValue, "Map cell");
-                        break;
-                    case TeamMissionArgType.OrderNumber:
-                        tooltip.SetToolTip(numValue, "0-based index in this orders list");
-                        break;
-                    case TeamMissionArgType.GlobalNumber:
-                        tooltip.SetToolTip(cmbValue, "Global to set");
-                        break;
-                    case TeamMissionArgType.Tarcom:
-                        tooltip.SetToolTip(numValue, "Tarcom");
-                        break;
-                }
+                case TeamMissionArgType.GlobalNumber:
+                    SetUpNumValue(0, 29, 1, value, this.tooltip, "Global to set");
+                    break;
+                case TeamMissionArgType.Tarcom:
+                    SetUpNumValue(0, Int32.MaxValue, 1, value, this.tooltip, "Tarcom");
+                    break;
             }
             currentType = mission.ArgType;
         }
 
-        private void cmbMission_SelectedIndexChanged(Object sender, EventArgs e)
+        private void SetUpNumValue(int min, int max, int mouseWheelIncrement, int curValue, ToolTip tooltip, String tooltipText)
+        {
+            this.cmbValue.Visible = false;
+            this.numValue.Visible = true;
+            this.numValue.Value = this.numValue.Minimum;
+            this.numValue.Minimum = min;
+            this.numValue.Maximum = max;
+            this.numValue.MouseWheelIncrement = mouseWheelIncrement;
+            this.numValue.Value = numValue.Constrain(curValue);
+            if (tooltip != null)
+            {
+                tooltip.SetToolTip(this.numValue, tooltipText);
+                tooltip.SetToolTip(this.cmbValue, null);
+            }
+        }
+
+        private void SetUpCmbValue(ListItem<int>[] items, int value, ToolTip tooltip, String tooltipText)
+        {
+            this.numValue.Visible = false;
+            this.cmbValue.Visible = true;
+            this.cmbValue.DataSource = items;
+            int selectIndex = ListItem.GetIndexInList(value, items);
+            if (selectIndex == -1 && items.Length > 0)
+            {
+                selectIndex = 0;
+            }
+            this.cmbValue.SelectedIndex = selectIndex;
+            if (tooltip != null)
+            {
+                tooltip.SetToolTip(this.cmbValue, tooltipText);
+                tooltip.SetToolTip(this.numValue, null);
+            }
+        }
+
+        private void CmbMission_SelectedIndexChanged(Object sender, EventArgs e)
         {
             if (this.m_Loading || this.Info == null)
             {
@@ -190,7 +179,7 @@ namespace MobiusEditor.Controls
             }
         }
 
-        private void numAmount_ValueChanged(Object sender, EventArgs e)
+        private void NumValue_ValueChanged(Object sender, EventArgs e)
         {
             if (this.m_Loading || this.Info == null || !this.numValue.Visible)
             {
@@ -201,7 +190,7 @@ namespace MobiusEditor.Controls
                 this.m_Controller.UpdateControlInfo(this.Info);
         }
 
-        private void cmbValue_SelectedIndexChanged(Object sender, EventArgs e)
+        private void CmbValue_SelectedIndexChanged(Object sender, EventArgs e)
         {
             if (this.m_Loading || this.Info == null || !this.cmbValue.Visible)
             {
@@ -217,7 +206,7 @@ namespace MobiusEditor.Controls
                 this.m_Controller.UpdateControlInfo(this.Info);
         }
 
-        private void btnRemove_Click(Object sender, EventArgs e)
+        private void BtnRemove_Click(Object sender, EventArgs e)
         {
             if (this.m_Loading || this.Info == null)
             {

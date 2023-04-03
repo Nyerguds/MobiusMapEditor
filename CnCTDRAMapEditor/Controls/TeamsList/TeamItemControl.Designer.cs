@@ -73,11 +73,6 @@
             // numAmount
             // 
             this.numAmount.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this.numAmount.EnteredValue = new decimal(new int[] {
-            0,
-            0,
-            0,
-            0});
             this.numAmount.Location = new System.Drawing.Point(2, 1);
             this.numAmount.Margin = new System.Windows.Forms.Padding(2);
             this.numAmount.Maximum = new decimal(new int[] {
@@ -86,11 +81,13 @@
             0,
             0});
             this.numAmount.Name = "numAmount";
-            this.numAmount.SelectedText = "";
-            this.numAmount.SelectionLength = 0;
-            this.numAmount.SelectionStart = 0;
             this.numAmount.Size = new System.Drawing.Size(80, 20);
             this.numAmount.TabIndex = 2;
+            this.numAmount.Value = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
             this.numAmount.ValueChanged += new System.EventHandler(this.numAmount_ValueChanged);
             // 
             // panel1

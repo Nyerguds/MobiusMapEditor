@@ -17,6 +17,7 @@ namespace MobiusEditor.Model
         public bool FilterEventType { get; set; }
         public bool FilterActionType { get; set; }
         public bool FilterTeamType { get; set; }
+        public bool FilterWaypoint { get; set; }
         public bool FilterGlobal { get; set; }
         public string House { get; set; }
         public TriggerPersistentType PersistenceType { get; set; } = TriggerPersistentType.Volatile;
@@ -24,6 +25,7 @@ namespace MobiusEditor.Model
         public string EventType { get; set; } = TriggerEvent.None;
         public string ActionType { get; set; } = TriggerAction.None;
         public string TeamType { get; set; } = Model.TeamType.None;
+        public int Waypoint { get; set; }
         public int Global { get; set; }
 
         public bool IsEmpty
@@ -36,6 +38,7 @@ namespace MobiusEditor.Model
                        !this.FilterEventType &&
                        !this.FilterActionType &&
                        !this.FilterTeamType &&
+                       !this.FilterWaypoint &&
                        !this.FilterGlobal;
             }
         }
@@ -109,27 +112,34 @@ namespace MobiusEditor.Model
             if (FilterTeamType)
             {
                 bool filterMatch = false;
-                bool isEmpty = Model.TeamType.IsEmpty(this.TeamType);
                 if (!isRA)
                 {
-                    if ((isEmpty && Model.TeamType.IsEmpty(trigger.Action1.Team)) || trigger.Action1.Team == TeamType)
+                    if (IsTeamMatch(trigger.Action1.Team, TeamType))
                         filterMatch = true;
                 }
                 else
                 {
-                    if (IsRATeamEvent(trigger.Event1.EventType) && 
-                        ((isEmpty && Model.TeamType.IsEmpty(trigger.Event1.Team)) || trigger.Event1.Team == TeamType))
+                    if (IsRATeamEvent(trigger.Event1.EventType) && IsTeamMatch(trigger.Event1.Team, this.TeamType))
                         filterMatch = true;
-                    if (trigger.EventControl != TriggerMultiStyleType.Only && IsRATeamEvent(trigger.Event2.EventType) &&
-                        ((isEmpty && Model.TeamType.IsEmpty(trigger.Event2.Team)) || trigger.Event2.Team == TeamType))
+                    if (trigger.EventControl != TriggerMultiStyleType.Only && IsRATeamEvent(trigger.Event2.EventType) && IsTeamMatch(trigger.Event2.Team, this.TeamType))
                         filterMatch = true;
-                    if (IsRATeamAction(trigger.Action1.ActionType) &&
-                        ((isEmpty && Model.TeamType.IsEmpty(trigger.Action1.Team)) || trigger.Action1.Team == TeamType))
+                    if (IsRATeamAction(trigger.Action1.ActionType) && IsTeamMatch(trigger.Action1.Team, this.TeamType))
                         filterMatch = true;
-                    if (IsRATeamAction(trigger.Action2.ActionType) &&
-                        ((isEmpty && Model.TeamType.IsEmpty(trigger.Action2.Team)) || trigger.Action2.Team == TeamType))
+                    if (IsRATeamAction(trigger.Action2.ActionType) && IsTeamMatch(trigger.Action2.Team, this.TeamType))
                         filterMatch = true;
                 }
+                if (!filterMatch)
+                {
+                    return false;
+                }
+            }
+            if (FilterWaypoint && isRA)
+            {
+                bool filterMatch = false;
+                if (IsRAWaypointAction(trigger.Action1.ActionType) && trigger.Action1.Data == Waypoint)
+                    filterMatch = true;
+                if (IsRAWaypointAction(trigger.Action2.ActionType) && trigger.Action2.Data == Waypoint)
+                    filterMatch = true;
                 if (!filterMatch)
                 {
                     return false;
@@ -138,21 +148,13 @@ namespace MobiusEditor.Model
             if (FilterGlobal && isRA)
             {
                 bool filterMatch = false;
-                if ((trigger.Event1.EventType == RedAlert.EventTypes.TEVENT_GLOBAL_SET ||
-                    trigger.Event1.EventType == RedAlert.EventTypes.TEVENT_GLOBAL_CLEAR)
-                    && trigger.Event1.Data == Global)
+                if (IsRAGlobalEvent(trigger.Event1.EventType) && trigger.Event1.Data == Global)
                     filterMatch = true;
-                if ((trigger.Event2.EventType == RedAlert.EventTypes.TEVENT_GLOBAL_SET ||
-                    trigger.Event2.EventType == RedAlert.EventTypes.TEVENT_GLOBAL_CLEAR)
-                    && trigger.Event2.Data == Global)
+                if (trigger.EventControl != TriggerMultiStyleType.Only && IsRAGlobalEvent(trigger.Event2.EventType) && trigger.Event2.Data == Global)
                     filterMatch = true;
-                if ((trigger.Action1.ActionType == RedAlert.ActionTypes.TACTION_SET_GLOBAL ||
-                    trigger.Action1.ActionType == RedAlert.ActionTypes.TACTION_CLEAR_GLOBAL)
-                    && trigger.Action1.Data == Global)
+                if (IsRAGlobalAction(trigger.Action1.ActionType) && trigger.Action1.Data == Global)
                     filterMatch = true;
-                if ((trigger.Action2.ActionType == RedAlert.ActionTypes.TACTION_SET_GLOBAL ||
-                    trigger.Action2.ActionType == RedAlert.ActionTypes.TACTION_CLEAR_GLOBAL)
-                    && trigger.Action2.Data == Global)
+                if (IsRAGlobalAction(trigger.Action2.ActionType) && trigger.Action2.Data == Global)
                     filterMatch = true;
                 if (!filterMatch)
                 {
@@ -160,6 +162,11 @@ namespace MobiusEditor.Model
                 }
             }
             return true;
+        }
+
+        private Boolean IsTeamMatch(String trigTeam, String filterTeam)
+        {
+            return (Model.TeamType.IsEmpty(filterTeam) && Model.TeamType.IsEmpty(trigTeam)) || trigTeam == filterTeam;
         }
 
         private Boolean IsRAHouseEvent(String eventType)
@@ -212,6 +219,39 @@ namespace MobiusEditor.Model
             }
             return false;
         }
+        private Boolean IsRAGlobalEvent(String eventType)
+        {
+            switch (eventType)
+            {
+                case RedAlert.EventTypes.TEVENT_GLOBAL_SET:
+                case RedAlert.EventTypes.TEVENT_GLOBAL_CLEAR:
+                    return true;
+            }
+            return false;
+        }
+
+        private Boolean IsRAGlobalAction(String actionType)
+        {
+            switch (actionType)
+            {
+                case RedAlert.ActionTypes.TACTION_SET_GLOBAL :
+                case RedAlert.ActionTypes.TACTION_CLEAR_GLOBAL:
+                    return true;
+            }
+            return false;
+        }
+
+        private Boolean IsRAWaypointAction(String actionType)
+        {
+            switch (actionType)
+            {
+                case RedAlert.ActionTypes.TACTION_DZ:
+                case RedAlert.ActionTypes.TACTION_REVEAL_SOME:
+                case RedAlert.ActionTypes.TACTION_REVEAL_ZONE:
+                    return true;
+            }
+            return false;
+        }
 
         public override String ToString()
         {
@@ -244,6 +284,10 @@ namespace MobiusEditor.Model
             if (this.FilterTeamType)
             {
                 sb.Add("T:" + this.TeamType);
+            }
+            if (this.FilterWaypoint)
+            {
+                sb.Add("W:" + this.Waypoint);
             }
             if (this.FilterGlobal)
             {

@@ -429,12 +429,6 @@ namespace MobiusEditor.Dialogs
             // 
             // event1Nud
             // 
-            this.event1Nud.EnteredValue = new decimal(new int[] {
-            0,
-            0,
-            0,
-            0});
-            this.event1Nud.IntValue = 0;
             this.event1Nud.Location = new System.Drawing.Point(2, 2);
             this.event1Nud.Margin = new System.Windows.Forms.Padding(2, 2, 2, 3);
             this.event1Nud.Maximum = new decimal(new int[] {
@@ -448,11 +442,13 @@ namespace MobiusEditor.Dialogs
             0,
             -2147483648});
             this.event1Nud.Name = "event1Nud";
-            this.event1Nud.SelectedText = "";
-            this.event1Nud.SelectionLength = 0;
-            this.event1Nud.SelectionStart = 0;
             this.event1Nud.Size = new System.Drawing.Size(95, 20);
             this.event1Nud.TabIndex = 0;
+            this.event1Nud.Value = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
             this.event1Nud.ValueChanged += new System.EventHandler(this.Event1Nud_ValueChanged);
             // 
             // event1ValueComboBox
@@ -480,12 +476,6 @@ namespace MobiusEditor.Dialogs
             // 
             // event2Nud
             // 
-            this.event2Nud.EnteredValue = new decimal(new int[] {
-            0,
-            0,
-            0,
-            0});
-            this.event2Nud.IntValue = 0;
             this.event2Nud.Location = new System.Drawing.Point(2, 2);
             this.event2Nud.Margin = new System.Windows.Forms.Padding(2, 2, 2, 3);
             this.event2Nud.Maximum = new decimal(new int[] {
@@ -499,11 +489,13 @@ namespace MobiusEditor.Dialogs
             0,
             -2147483648});
             this.event2Nud.Name = "event2Nud";
-            this.event2Nud.SelectedText = "";
-            this.event2Nud.SelectionLength = 0;
-            this.event2Nud.SelectionStart = 0;
             this.event2Nud.Size = new System.Drawing.Size(95, 20);
             this.event2Nud.TabIndex = 0;
+            this.event2Nud.Value = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
             this.event2Nud.ValueChanged += new System.EventHandler(this.Event2Nud_ValueChanged);
             // 
             // event2ValueComboBox
@@ -531,12 +523,6 @@ namespace MobiusEditor.Dialogs
             // 
             // action1Nud
             // 
-            this.action1Nud.EnteredValue = new decimal(new int[] {
-            0,
-            0,
-            0,
-            0});
-            this.action1Nud.IntValue = 0;
             this.action1Nud.Location = new System.Drawing.Point(2, 2);
             this.action1Nud.Margin = new System.Windows.Forms.Padding(2, 2, 2, 3);
             this.action1Nud.Maximum = new decimal(new int[] {
@@ -550,11 +536,13 @@ namespace MobiusEditor.Dialogs
             0,
             -2147483648});
             this.action1Nud.Name = "action1Nud";
-            this.action1Nud.SelectedText = "";
-            this.action1Nud.SelectionLength = 0;
-            this.action1Nud.SelectionStart = 0;
             this.action1Nud.Size = new System.Drawing.Size(95, 20);
             this.action1Nud.TabIndex = 0;
+            this.action1Nud.Value = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
             this.action1Nud.ValueChanged += new System.EventHandler(this.Action1Nud_ValueChanged);
             // 
             // action1ValueComboBox
@@ -582,12 +570,6 @@ namespace MobiusEditor.Dialogs
             // 
             // action2Nud
             // 
-            this.action2Nud.EnteredValue = new decimal(new int[] {
-            0,
-            0,
-            0,
-            0});
-            this.action2Nud.IntValue = 0;
             this.action2Nud.Location = new System.Drawing.Point(2, 2);
             this.action2Nud.Margin = new System.Windows.Forms.Padding(2, 2, 2, 3);
             this.action2Nud.Maximum = new decimal(new int[] {
@@ -601,12 +583,14 @@ namespace MobiusEditor.Dialogs
             0,
             -2147483648});
             this.action2Nud.Name = "action2Nud";
-            this.action2Nud.SelectedText = "";
-            this.action2Nud.SelectionLength = 0;
-            this.action2Nud.SelectionStart = 0;
             this.action2Nud.Size = new System.Drawing.Size(95, 20);
             this.action2Nud.TabIndex = 0;
             this.action2Nud.ValueChanged += new System.EventHandler(this.Action2Nud_ValueChanged);
+            this.action2Nud.Value = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
             // 
             // action2ValueComboBox
             // 

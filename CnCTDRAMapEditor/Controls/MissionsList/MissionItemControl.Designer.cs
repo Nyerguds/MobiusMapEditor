@@ -75,11 +75,6 @@
             // numValue
             // 
             this.numValue.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this.numValue.EnteredValue = new decimal(new int[] {
-            0,
-            0,
-            0,
-            0});
             this.numValue.Location = new System.Drawing.Point(2, 1);
             this.numValue.Margin = new System.Windows.Forms.Padding(0);
             this.numValue.Maximum = new decimal(new int[] {
@@ -88,12 +83,14 @@
             0,
             0});
             this.numValue.Name = "numValue";
-            this.numValue.SelectedText = "";
-            this.numValue.SelectionLength = 0;
-            this.numValue.SelectionStart = 0;
             this.numValue.Size = new System.Drawing.Size(121, 20);
             this.numValue.TabIndex = 2;
-            this.numValue.ValueChanged += new System.EventHandler(this.numAmount_ValueChanged);
+            this.numValue.Value = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
+            this.numValue.ValueChanged += new System.EventHandler(this.NumValue_ValueChanged);
             // 
             // cmbValue
             // 
@@ -106,7 +103,7 @@
             this.cmbValue.Size = new System.Drawing.Size(121, 21);
             this.cmbValue.TabIndex = 3;
             this.cmbValue.Visible = false;
-            this.cmbValue.SelectedIndexChanged += new System.EventHandler(this.cmbValue_SelectedIndexChanged);
+            this.cmbValue.SelectedIndexChanged += new System.EventHandler(this.CmbValue_SelectedIndexChanged);
             // 
             // panel1
             // 
@@ -128,7 +125,7 @@
             this.cmbMission.Name = "cmbMission";
             this.cmbMission.Size = new System.Drawing.Size(146, 21);
             this.cmbMission.TabIndex = 1;
-            this.cmbMission.SelectedIndexChanged += new System.EventHandler(this.cmbMission_SelectedIndexChanged);
+            this.cmbMission.SelectedIndexChanged += new System.EventHandler(this.CmbMission_SelectedIndexChanged);
             // 
             // panel3
             // 
@@ -150,7 +147,7 @@
             this.btnRemove.TabIndex = 0;
             this.btnRemove.Text = "x";
             this.btnRemove.UseVisualStyleBackColor = true;
-            this.btnRemove.Click += new System.EventHandler(this.btnRemove_Click);
+            this.btnRemove.Click += new System.EventHandler(this.BtnRemove_Click);
             // 
             // MissionItemControl
             // 

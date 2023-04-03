@@ -3,6 +3,7 @@ using MobiusEditor.Model;
 using MobiusEditor.Utility;
 using System;
 using System.Data;
+using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -33,20 +34,9 @@ namespace MobiusEditor.Dialogs
             this.persistenceNames = persistenceNames;
             this.eventControlNames = eventControlNames;
             this.plugin = plugin;
-            isRA = this.plugin.GameType == GameType.RedAlert;
+            this.isRA = this.plugin.GameType == GameType.RedAlert;
             InitializeComponent();
             this.chkPersistenceType.Text = persistenceLabel;
-            int subtractedHeight = 0;
-            chkEventControl.Visible = this.isRA;
-            cmbEventControl.Visible = this.isRA;
-            if(!this.isRA) subtractedHeight += Math.Max(chkEventControl.Height, cmbEventControl.Height);
-            chkWaypoint.Visible = this.isRA;
-            cmbWaypoint.Visible = this.isRA;
-            if (!this.isRA) subtractedHeight += Math.Max(chkWaypoint.Height, cmbWaypoint.Height);
-            chkGlobal.Visible = this.isRA;
-            nudGlobal.Visible = this.isRA;
-            if (!this.isRA) subtractedHeight += Math.Max(chkGlobal.Height, nudGlobal.Height);
-            this.Height -= subtractedHeight;
         }
 
         private void SetFilterInfo(TriggerFilter filter)
@@ -87,6 +77,11 @@ namespace MobiusEditor.Dialogs
             }
             if (isRA)
             {
+                chkWaypoint.Checked = filter.FilterWaypoint;
+                if (chkWaypoint.Checked)
+                {
+                    cmbWaypoint.SelectedIndex = (filter.Waypoint + 1).Restrict(0, plugin.Map.Waypoints.Length);
+                }
                 chkGlobal.Checked = filter.FilterGlobal;
                 if (chkGlobal.Checked)
                 {
@@ -102,6 +97,7 @@ namespace MobiusEditor.Dialogs
             chkEventType.Checked = false;
             chkActionType.Checked = false;
             chkTeamType.Checked = false;
+            chkWaypoint.Checked = false;
             chkGlobal.Checked = false;
         }
 
@@ -173,6 +169,19 @@ namespace MobiusEditor.Dialogs
             }
         }
 
+        private void ChkWaypoint_CheckedChanged(Object sender, EventArgs e)
+        {
+            cmbWaypoint.DataSource = null;
+            if (isRA)
+            {
+                cmbWaypoint.Enabled = chkWaypoint.Checked;
+                if (chkWaypoint.Checked)
+                {
+                    cmbWaypoint.DataSource = Waypoint.None.Yield().Concat(plugin.Map.Waypoints.Select(w => w.ToString())).ToArray();
+                }
+            }
+        }
+
         private void ChkGlobal_CheckedChanged(Object sender, EventArgs e)
         {
             if (isRA)
@@ -197,8 +206,28 @@ namespace MobiusEditor.Dialogs
             filter.ActionType = filter.FilterActionType ? (String)cmbActionType.SelectedItem : TriggerAction.None;
             filter.FilterTeamType = chkTeamType.Checked;
             filter.TeamType = filter.FilterTeamType ? (String)cmbTeamType.SelectedItem : TeamType.None;
+            filter.FilterWaypoint = chkWaypoint.Checked;
+            filter.Waypoint = filter.FilterWaypoint ? cmbWaypoint.SelectedIndex - 1 : -1;
             filter.FilterGlobal = chkGlobal.Checked;
             filter.Global = filter.FilterGlobal ? nudGlobal.IntValue : 0;
+        }
+
+        private void TriggerFilterDialog_Load(Object sender, EventArgs e)
+        {
+            int origTableHeight = triggersTableLayoutPanel.Height;
+            chkEventControl.Visible = this.isRA;
+            cmbEventControl.Visible = this.isRA;
+            chkWaypoint.Visible = this.isRA;
+            cmbWaypoint.Visible = this.isRA;
+            chkGlobal.Visible = this.isRA;
+            nudGlobal.Visible = this.isRA;
+            int newTableHeight = triggersTableLayoutPanel.PreferredSize.Height;
+            int diff = origTableHeight - newTableHeight;
+            this.Size = new Size(this.Width, this.Height - diff);
+            if (this.StartPosition == FormStartPosition.CenterParent || this.StartPosition == FormStartPosition.CenterScreen)
+            {
+                this.Location = new Point(this.Location.X, this.Location.Y + diff / 2);
+            }
         }
     }
 }

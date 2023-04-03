@@ -742,12 +742,6 @@ namespace MobiusEditor.Dialogs
             // 
             this.tableLayoutPanel2.SetColumnSpan(this.nudInitNum, 2);
             this.nudInitNum.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.nudInitNum.EnteredValue = new decimal(new int[] {
-            0,
-            0,
-            0,
-            0});
-            this.nudInitNum.IntValue = 0;
             this.nudInitNum.Location = new System.Drawing.Point(85, 198);
             this.nudInitNum.Margin = new System.Windows.Forms.Padding(2);
             this.nudInitNum.Maximum = new decimal(new int[] {
@@ -756,22 +750,18 @@ namespace MobiusEditor.Dialogs
             0,
             0});
             this.nudInitNum.Name = "nudInitNum";
-            this.nudInitNum.SelectedText = "";
-            this.nudInitNum.SelectionLength = 0;
-            this.nudInitNum.SelectionStart = 0;
             this.nudInitNum.Size = new System.Drawing.Size(113, 20);
             this.nudInitNum.TabIndex = 19;
+            this.nudInitNum.Value = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
             // 
             // maxAllowedNud
             // 
             this.tableLayoutPanel2.SetColumnSpan(this.maxAllowedNud, 2);
             this.maxAllowedNud.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.maxAllowedNud.EnteredValue = new decimal(new int[] {
-            0,
-            0,
-            0,
-            0});
-            this.maxAllowedNud.IntValue = 0;
             this.maxAllowedNud.Location = new System.Drawing.Point(85, 222);
             this.maxAllowedNud.Margin = new System.Windows.Forms.Padding(2);
             this.maxAllowedNud.Maximum = new decimal(new int[] {
@@ -780,22 +770,18 @@ namespace MobiusEditor.Dialogs
             0,
             0});
             this.maxAllowedNud.Name = "maxAllowedNud";
-            this.maxAllowedNud.SelectedText = "";
-            this.maxAllowedNud.SelectionLength = 0;
-            this.maxAllowedNud.SelectionStart = 0;
             this.maxAllowedNud.Size = new System.Drawing.Size(113, 20);
             this.maxAllowedNud.TabIndex = 20;
+            this.maxAllowedNud.Value = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
             // 
             // nudFear
             // 
             this.tableLayoutPanel2.SetColumnSpan(this.nudFear, 2);
             this.nudFear.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.nudFear.EnteredValue = new decimal(new int[] {
-            0,
-            0,
-            0,
-            0});
-            this.nudFear.IntValue = 0;
             this.nudFear.Location = new System.Drawing.Point(85, 246);
             this.nudFear.Margin = new System.Windows.Forms.Padding(2);
             this.nudFear.Maximum = new decimal(new int[] {
@@ -804,22 +790,18 @@ namespace MobiusEditor.Dialogs
             0,
             0});
             this.nudFear.Name = "nudFear";
-            this.nudFear.SelectedText = "";
-            this.nudFear.SelectionLength = 0;
-            this.nudFear.SelectionStart = 0;
             this.nudFear.Size = new System.Drawing.Size(113, 20);
             this.nudFear.TabIndex = 21;
+            this.nudFear.Value = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
             // 
             // nudRecruitPriority
             // 
             this.tableLayoutPanel2.SetColumnSpan(this.nudRecruitPriority, 2);
             this.nudRecruitPriority.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.nudRecruitPriority.EnteredValue = new decimal(new int[] {
-            0,
-            0,
-            0,
-            0});
-            this.nudRecruitPriority.IntValue = 0;
             this.nudRecruitPriority.Location = new System.Drawing.Point(85, 174);
             this.nudRecruitPriority.Margin = new System.Windows.Forms.Padding(2);
             this.nudRecruitPriority.Maximum = new decimal(new int[] {
@@ -833,11 +815,13 @@ namespace MobiusEditor.Dialogs
             0,
             -2147483648});
             this.nudRecruitPriority.Name = "nudRecruitPriority";
-            this.nudRecruitPriority.SelectedText = "";
-            this.nudRecruitPriority.SelectionLength = 0;
-            this.nudRecruitPriority.SelectionStart = 0;
             this.nudRecruitPriority.Size = new System.Drawing.Size(113, 20);
             this.nudRecruitPriority.TabIndex = 18;
+            this.nudRecruitPriority.Value = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
             // 
             // TeamTypesDialog
             // 

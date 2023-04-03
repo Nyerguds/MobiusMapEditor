@@ -435,7 +435,7 @@ namespace MobiusEditor.Dialogs
         {
             this.triggerFilter = triggerFilter;
             String filter = triggerFilter.ToString(persistenceLabel.Text[0], persistenceNames, typeNames);
-            this.lblFilterDetails.Text = String.Format("{0}{1}", triggerFilter.IsEmpty ? "No filters selected." : "Active filters: ", filter);
+            this.lblFilterDetails.Text = triggerFilter.IsEmpty ? "No filters selected." : String.Format("Active filters: {0}", filter);
             this.lblFilterDetails.ForeColor = triggerFilter.IsEmpty ? SystemColors.ControlText : Color.Red;
         }
 

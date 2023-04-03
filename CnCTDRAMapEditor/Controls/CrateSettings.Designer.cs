@@ -418,12 +418,6 @@ namespace MobiusEditor.Controls
             // nudAddStrength
             // 
             this.nudAddStrength.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.nudAddStrength.EnteredValue = new decimal(new int[] {
-            0,
-            0,
-            0,
-            0});
-            this.nudAddStrength.IntValue = 0;
             this.nudAddStrength.Location = new System.Drawing.Point(193, 133);
             this.nudAddStrength.Maximum = new decimal(new int[] {
             2147483647,
@@ -431,21 +425,17 @@ namespace MobiusEditor.Controls
             0,
             0});
             this.nudAddStrength.Name = "nudAddStrength";
-            this.nudAddStrength.SelectedText = "";
-            this.nudAddStrength.SelectionLength = 0;
-            this.nudAddStrength.SelectionStart = 0;
             this.nudAddStrength.Size = new System.Drawing.Size(267, 20);
             this.nudAddStrength.TabIndex = 35;
-            // 
-            // nudAddWeapon
-            // 
-            this.nudAddWeapon.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.nudAddWeapon.EnteredValue = new decimal(new int[] {
+            this.nudAddStrength.Value = new decimal(new int[] {
             0,
             0,
             0,
             0});
-            this.nudAddWeapon.IntValue = 0;
+            // 
+            // nudAddWeapon
+            // 
+            this.nudAddWeapon.Dock = System.Windows.Forms.DockStyle.Fill;
             this.nudAddWeapon.Location = new System.Drawing.Point(193, 159);
             this.nudAddWeapon.Maximum = new decimal(new int[] {
             2147483647,
@@ -453,21 +443,17 @@ namespace MobiusEditor.Controls
             0,
             0});
             this.nudAddWeapon.Name = "nudAddWeapon";
-            this.nudAddWeapon.SelectedText = "";
-            this.nudAddWeapon.SelectionLength = 0;
-            this.nudAddWeapon.SelectionStart = 0;
             this.nudAddWeapon.Size = new System.Drawing.Size(267, 20);
             this.nudAddWeapon.TabIndex = 35;
-            // 
-            // nudAddSpeed
-            // 
-            this.nudAddSpeed.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.nudAddSpeed.EnteredValue = new decimal(new int[] {
+            this.nudAddWeapon.Value = new decimal(new int[] {
             0,
             0,
             0,
             0});
-            this.nudAddSpeed.IntValue = 0;
+            // 
+            // nudAddSpeed
+            // 
+            this.nudAddSpeed.Dock = System.Windows.Forms.DockStyle.Fill;
             this.nudAddSpeed.Location = new System.Drawing.Point(193, 185);
             this.nudAddSpeed.Maximum = new decimal(new int[] {
             2147483647,
@@ -475,21 +461,17 @@ namespace MobiusEditor.Controls
             0,
             0});
             this.nudAddSpeed.Name = "nudAddSpeed";
-            this.nudAddSpeed.SelectedText = "";
-            this.nudAddSpeed.SelectionLength = 0;
-            this.nudAddSpeed.SelectionStart = 0;
             this.nudAddSpeed.Size = new System.Drawing.Size(267, 20);
             this.nudAddSpeed.TabIndex = 35;
-            // 
-            // nudRapidReload
-            // 
-            this.nudRapidReload.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.nudRapidReload.EnteredValue = new decimal(new int[] {
+            this.nudAddSpeed.Value = new decimal(new int[] {
             0,
             0,
             0,
             0});
-            this.nudRapidReload.IntValue = 0;
+            // 
+            // nudRapidReload
+            // 
+            this.nudRapidReload.Dock = System.Windows.Forms.DockStyle.Fill;
             this.nudRapidReload.Location = new System.Drawing.Point(193, 211);
             this.nudRapidReload.Maximum = new decimal(new int[] {
             2147483647,
@@ -497,21 +479,17 @@ namespace MobiusEditor.Controls
             0,
             0});
             this.nudRapidReload.Name = "nudRapidReload";
-            this.nudRapidReload.SelectedText = "";
-            this.nudRapidReload.SelectionLength = 0;
-            this.nudRapidReload.SelectionStart = 0;
             this.nudRapidReload.Size = new System.Drawing.Size(267, 20);
             this.nudRapidReload.TabIndex = 35;
-            // 
-            // nudAddRange
-            // 
-            this.nudAddRange.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.nudAddRange.EnteredValue = new decimal(new int[] {
+            this.nudRapidReload.Value = new decimal(new int[] {
             0,
             0,
             0,
             0});
-            this.nudAddRange.IntValue = 0;
+            // 
+            // nudAddRange
+            // 
+            this.nudAddRange.Dock = System.Windows.Forms.DockStyle.Fill;
             this.nudAddRange.Location = new System.Drawing.Point(193, 237);
             this.nudAddRange.Maximum = new decimal(new int[] {
             2147483647,
@@ -519,21 +497,17 @@ namespace MobiusEditor.Controls
             0,
             0});
             this.nudAddRange.Name = "nudAddRange";
-            this.nudAddRange.SelectedText = "";
-            this.nudAddRange.SelectionLength = 0;
-            this.nudAddRange.SelectionStart = 0;
             this.nudAddRange.Size = new System.Drawing.Size(267, 20);
             this.nudAddRange.TabIndex = 35;
-            // 
-            // nudHeal
-            // 
-            this.nudHeal.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.nudHeal.EnteredValue = new decimal(new int[] {
+            this.nudAddRange.Value = new decimal(new int[] {
             0,
             0,
             0,
             0});
-            this.nudHeal.IntValue = 0;
+            // 
+            // nudHeal
+            // 
+            this.nudHeal.Dock = System.Windows.Forms.DockStyle.Fill;
             this.nudHeal.Location = new System.Drawing.Point(193, 264);
             this.nudHeal.Maximum = new decimal(new int[] {
             2147483647,
@@ -541,21 +515,17 @@ namespace MobiusEditor.Controls
             0,
             0});
             this.nudHeal.Name = "nudHeal";
-            this.nudHeal.SelectedText = "";
-            this.nudHeal.SelectionLength = 0;
-            this.nudHeal.SelectionStart = 0;
             this.nudHeal.Size = new System.Drawing.Size(267, 20);
             this.nudHeal.TabIndex = 35;
-            // 
-            // nudBomb
-            // 
-            this.nudBomb.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.nudBomb.EnteredValue = new decimal(new int[] {
+            this.nudHeal.Value = new decimal(new int[] {
             0,
             0,
             0,
             0});
-            this.nudBomb.IntValue = 0;
+            // 
+            // nudBomb
+            // 
+            this.nudBomb.Dock = System.Windows.Forms.DockStyle.Fill;
             this.nudBomb.Location = new System.Drawing.Point(193, 290);
             this.nudBomb.Maximum = new decimal(new int[] {
             2147483647,
@@ -563,21 +533,17 @@ namespace MobiusEditor.Controls
             0,
             0});
             this.nudBomb.Name = "nudBomb";
-            this.nudBomb.SelectedText = "";
-            this.nudBomb.SelectionLength = 0;
-            this.nudBomb.SelectionStart = 0;
             this.nudBomb.Size = new System.Drawing.Size(267, 20);
             this.nudBomb.TabIndex = 35;
-            // 
-            // nudStealth
-            // 
-            this.nudStealth.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.nudStealth.EnteredValue = new decimal(new int[] {
+            this.nudBomb.Value = new decimal(new int[] {
             0,
             0,
             0,
             0});
-            this.nudStealth.IntValue = 0;
+            // 
+            // nudStealth
+            // 
+            this.nudStealth.Dock = System.Windows.Forms.DockStyle.Fill;
             this.nudStealth.Location = new System.Drawing.Point(193, 316);
             this.nudStealth.Maximum = new decimal(new int[] {
             2147483647,
@@ -585,21 +551,17 @@ namespace MobiusEditor.Controls
             0,
             0});
             this.nudStealth.Name = "nudStealth";
-            this.nudStealth.SelectedText = "";
-            this.nudStealth.SelectionLength = 0;
-            this.nudStealth.SelectionStart = 0;
             this.nudStealth.Size = new System.Drawing.Size(267, 20);
             this.nudStealth.TabIndex = 35;
-            // 
-            // nudTeleport
-            // 
-            this.nudTeleport.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.nudTeleport.EnteredValue = new decimal(new int[] {
+            this.nudStealth.Value = new decimal(new int[] {
             0,
             0,
             0,
             0});
-            this.nudTeleport.IntValue = 0;
+            // 
+            // nudTeleport
+            // 
+            this.nudTeleport.Dock = System.Windows.Forms.DockStyle.Fill;
             this.nudTeleport.Location = new System.Drawing.Point(193, 342);
             this.nudTeleport.Maximum = new decimal(new int[] {
             2147483647,
@@ -607,21 +569,17 @@ namespace MobiusEditor.Controls
             0,
             0});
             this.nudTeleport.Name = "nudTeleport";
-            this.nudTeleport.SelectedText = "";
-            this.nudTeleport.SelectionLength = 0;
-            this.nudTeleport.SelectionStart = 0;
             this.nudTeleport.Size = new System.Drawing.Size(267, 20);
             this.nudTeleport.TabIndex = 35;
-            // 
-            // nudKill
-            // 
-            this.nudKill.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.nudKill.EnteredValue = new decimal(new int[] {
+            this.nudTeleport.Value = new decimal(new int[] {
             0,
             0,
             0,
             0});
-            this.nudKill.IntValue = 0;
+            // 
+            // nudKill
+            // 
+            this.nudKill.Dock = System.Windows.Forms.DockStyle.Fill;
             this.nudKill.Location = new System.Drawing.Point(193, 368);
             this.nudKill.Maximum = new decimal(new int[] {
             2147483647,
@@ -629,21 +587,17 @@ namespace MobiusEditor.Controls
             0,
             0});
             this.nudKill.Name = "nudKill";
-            this.nudKill.SelectedText = "";
-            this.nudKill.SelectionLength = 0;
-            this.nudKill.SelectionStart = 0;
             this.nudKill.Size = new System.Drawing.Size(267, 20);
             this.nudKill.TabIndex = 35;
-            // 
-            // nudUncloakAll
-            // 
-            this.nudUncloakAll.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.nudUncloakAll.EnteredValue = new decimal(new int[] {
+            this.nudKill.Value = new decimal(new int[] {
             0,
             0,
             0,
             0});
-            this.nudUncloakAll.IntValue = 0;
+            // 
+            // nudUncloakAll
+            // 
+            this.nudUncloakAll.Dock = System.Windows.Forms.DockStyle.Fill;
             this.nudUncloakAll.Location = new System.Drawing.Point(193, 394);
             this.nudUncloakAll.Maximum = new decimal(new int[] {
             2147483647,
@@ -651,21 +605,17 @@ namespace MobiusEditor.Controls
             0,
             0});
             this.nudUncloakAll.Name = "nudUncloakAll";
-            this.nudUncloakAll.SelectedText = "";
-            this.nudUncloakAll.SelectionLength = 0;
-            this.nudUncloakAll.SelectionStart = 0;
             this.nudUncloakAll.Size = new System.Drawing.Size(267, 20);
             this.nudUncloakAll.TabIndex = 35;
-            // 
-            // nudReshroud
-            // 
-            this.nudReshroud.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.nudReshroud.EnteredValue = new decimal(new int[] {
+            this.nudUncloakAll.Value = new decimal(new int[] {
             0,
             0,
             0,
             0});
-            this.nudReshroud.IntValue = 0;
+            // 
+            // nudReshroud
+            // 
+            this.nudReshroud.Dock = System.Windows.Forms.DockStyle.Fill;
             this.nudReshroud.Location = new System.Drawing.Point(193, 420);
             this.nudReshroud.Maximum = new decimal(new int[] {
             2147483647,
@@ -673,21 +623,17 @@ namespace MobiusEditor.Controls
             0,
             0});
             this.nudReshroud.Name = "nudReshroud";
-            this.nudReshroud.SelectedText = "";
-            this.nudReshroud.SelectionLength = 0;
-            this.nudReshroud.SelectionStart = 0;
             this.nudReshroud.Size = new System.Drawing.Size(267, 20);
             this.nudReshroud.TabIndex = 35;
-            // 
-            // nudUnshroud
-            // 
-            this.nudUnshroud.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.nudUnshroud.EnteredValue = new decimal(new int[] {
+            this.nudReshroud.Value = new decimal(new int[] {
             0,
             0,
             0,
             0});
-            this.nudUnshroud.IntValue = 0;
+            // 
+            // nudUnshroud
+            // 
+            this.nudUnshroud.Dock = System.Windows.Forms.DockStyle.Fill;
             this.nudUnshroud.Location = new System.Drawing.Point(193, 446);
             this.nudUnshroud.Maximum = new decimal(new int[] {
             2147483647,
@@ -695,21 +641,17 @@ namespace MobiusEditor.Controls
             0,
             0});
             this.nudUnshroud.Name = "nudUnshroud";
-            this.nudUnshroud.SelectedText = "";
-            this.nudUnshroud.SelectionLength = 0;
-            this.nudUnshroud.SelectionStart = 0;
             this.nudUnshroud.Size = new System.Drawing.Size(267, 20);
             this.nudUnshroud.TabIndex = 35;
-            // 
-            // nudRadar
-            // 
-            this.nudRadar.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.nudRadar.EnteredValue = new decimal(new int[] {
+            this.nudUnshroud.Value = new decimal(new int[] {
             0,
             0,
             0,
             0});
-            this.nudRadar.IntValue = 0;
+            // 
+            // nudRadar
+            // 
+            this.nudRadar.Dock = System.Windows.Forms.DockStyle.Fill;
             this.nudRadar.Location = new System.Drawing.Point(193, 472);
             this.nudRadar.Maximum = new decimal(new int[] {
             2147483647,
@@ -717,21 +659,17 @@ namespace MobiusEditor.Controls
             0,
             0});
             this.nudRadar.Name = "nudRadar";
-            this.nudRadar.SelectedText = "";
-            this.nudRadar.SelectionLength = 0;
-            this.nudRadar.SelectionStart = 0;
             this.nudRadar.Size = new System.Drawing.Size(267, 20);
             this.nudRadar.TabIndex = 35;
-            // 
-            // nudArmageddon
-            // 
-            this.nudArmageddon.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.nudArmageddon.EnteredValue = new decimal(new int[] {
+            this.nudRadar.Value = new decimal(new int[] {
             0,
             0,
             0,
             0});
-            this.nudArmageddon.IntValue = 0;
+            // 
+            // nudArmageddon
+            // 
+            this.nudArmageddon.Dock = System.Windows.Forms.DockStyle.Fill;
             this.nudArmageddon.Location = new System.Drawing.Point(193, 498);
             this.nudArmageddon.Maximum = new decimal(new int[] {
             2147483647,
@@ -739,21 +677,17 @@ namespace MobiusEditor.Controls
             0,
             0});
             this.nudArmageddon.Name = "nudArmageddon";
-            this.nudArmageddon.SelectedText = "";
-            this.nudArmageddon.SelectionLength = 0;
-            this.nudArmageddon.SelectionStart = 0;
             this.nudArmageddon.Size = new System.Drawing.Size(267, 20);
             this.nudArmageddon.TabIndex = 35;
-            // 
-            // nudSuper
-            // 
-            this.nudSuper.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.nudSuper.EnteredValue = new decimal(new int[] {
+            this.nudArmageddon.Value = new decimal(new int[] {
             0,
             0,
             0,
             0});
-            this.nudSuper.IntValue = 0;
+            // 
+            // nudSuper
+            // 
+            this.nudSuper.Dock = System.Windows.Forms.DockStyle.Fill;
             this.nudSuper.Location = new System.Drawing.Point(193, 524);
             this.nudSuper.Maximum = new decimal(new int[] {
             2147483647,
@@ -761,21 +695,17 @@ namespace MobiusEditor.Controls
             0,
             0});
             this.nudSuper.Name = "nudSuper";
-            this.nudSuper.SelectedText = "";
-            this.nudSuper.SelectionLength = 0;
-            this.nudSuper.SelectionStart = 0;
             this.nudSuper.Size = new System.Drawing.Size(267, 20);
             this.nudSuper.TabIndex = 35;
-            // 
-            // nudDensity
-            // 
-            this.nudDensity.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.nudDensity.EnteredValue = new decimal(new int[] {
+            this.nudSuper.Value = new decimal(new int[] {
             0,
             0,
             0,
             0});
-            this.nudDensity.IntValue = 0;
+            // 
+            // nudDensity
+            // 
+            this.nudDensity.Dock = System.Windows.Forms.DockStyle.Fill;
             this.nudDensity.Location = new System.Drawing.Point(193, 29);
             this.nudDensity.Maximum = new decimal(new int[] {
             2147483647,
@@ -783,21 +713,17 @@ namespace MobiusEditor.Controls
             0,
             0});
             this.nudDensity.Name = "nudDensity";
-            this.nudDensity.SelectedText = "";
-            this.nudDensity.SelectionLength = 0;
-            this.nudDensity.SelectionStart = 0;
             this.nudDensity.Size = new System.Drawing.Size(267, 20);
             this.nudDensity.TabIndex = 35;
-            // 
-            // nudIonFactor
-            // 
-            this.nudIonFactor.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.nudIonFactor.EnteredValue = new decimal(new int[] {
+            this.nudDensity.Value = new decimal(new int[] {
             0,
             0,
             0,
             0});
-            this.nudIonFactor.IntValue = 0;
+            // 
+            // nudIonFactor
+            // 
+            this.nudIonFactor.Dock = System.Windows.Forms.DockStyle.Fill;
             this.nudIonFactor.Location = new System.Drawing.Point(193, 55);
             this.nudIonFactor.Maximum = new decimal(new int[] {
             2147483647,
@@ -805,21 +731,17 @@ namespace MobiusEditor.Controls
             0,
             0});
             this.nudIonFactor.Name = "nudIonFactor";
-            this.nudIonFactor.SelectedText = "";
-            this.nudIonFactor.SelectionLength = 0;
-            this.nudIonFactor.SelectionStart = 0;
             this.nudIonFactor.Size = new System.Drawing.Size(267, 20);
             this.nudIonFactor.TabIndex = 35;
-            // 
-            // nudCrateTimer
-            // 
-            this.nudCrateTimer.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.nudCrateTimer.EnteredValue = new decimal(new int[] {
+            this.nudIonFactor.Value = new decimal(new int[] {
             0,
             0,
             0,
             0});
-            this.nudCrateTimer.IntValue = 0;
+            // 
+            // nudCrateTimer
+            // 
+            this.nudCrateTimer.Dock = System.Windows.Forms.DockStyle.Fill;
             this.nudCrateTimer.Location = new System.Drawing.Point(193, 81);
             this.nudCrateTimer.Maximum = new decimal(new int[] {
             2147483647,
@@ -827,11 +749,13 @@ namespace MobiusEditor.Controls
             0,
             0});
             this.nudCrateTimer.Name = "nudCrateTimer";
-            this.nudCrateTimer.SelectedText = "";
-            this.nudCrateTimer.SelectionLength = 0;
-            this.nudCrateTimer.SelectionStart = 0;
             this.nudCrateTimer.Size = new System.Drawing.Size(267, 20);
             this.nudCrateTimer.TabIndex = 35;
+            this.nudCrateTimer.Value = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
             // 
             // panel1
             // 

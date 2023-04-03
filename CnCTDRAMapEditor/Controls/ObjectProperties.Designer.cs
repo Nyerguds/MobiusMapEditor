@@ -163,12 +163,6 @@ namespace MobiusEditor.Controls
             // strengthNud
             // 
             this.strengthNud.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.strengthNud.EnteredValue = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
-            this.strengthNud.IntValue = 256;
             this.strengthNud.Location = new System.Drawing.Point(83, 30);
             this.strengthNud.Maximum = new decimal(new int[] {
             256,
@@ -182,9 +176,6 @@ namespace MobiusEditor.Controls
             0});
             this.strengthNud.MouseWheelIncrement = 4;
             this.strengthNud.Name = "strengthNud";
-            this.strengthNud.SelectedText = "";
-            this.strengthNud.SelectionLength = 0;
-            this.strengthNud.SelectionStart = 0;
             this.strengthNud.Size = new System.Drawing.Size(114, 20);
             this.strengthNud.TabIndex = 6;
             this.strengthNud.Value = new decimal(new int[] {
@@ -234,12 +225,6 @@ namespace MobiusEditor.Controls
             // basePriorityNud
             // 
             this.basePriorityNud.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.basePriorityNud.EnteredValue = new decimal(new int[] {
-            0,
-            0,
-            0,
-            0});
-            this.basePriorityNud.IntValue = 0;
             this.basePriorityNud.Location = new System.Drawing.Point(82, 136);
             this.basePriorityNud.Margin = new System.Windows.Forms.Padding(2);
             this.basePriorityNud.Maximum = new decimal(new int[] {
@@ -253,12 +238,14 @@ namespace MobiusEditor.Controls
             0,
             -2147483648});
             this.basePriorityNud.Name = "basePriorityNud";
-            this.basePriorityNud.SelectedText = "";
-            this.basePriorityNud.SelectionLength = 0;
-            this.basePriorityNud.SelectionStart = 0;
             this.basePriorityNud.Size = new System.Drawing.Size(116, 20);
             this.basePriorityNud.TabIndex = 11;
             this.basePriorityNud.ValueChanged += new System.EventHandler(this.nud_ValueChanged);
+            this.basePriorityNud.Value = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
             // 
             // prebuiltCheckBox
             // 

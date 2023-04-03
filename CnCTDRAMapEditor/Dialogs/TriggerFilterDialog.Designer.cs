@@ -29,25 +29,25 @@
         private void InitializeComponent()
         {
             this.triggersTableLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
+            this.chkWaypoint = new System.Windows.Forms.CheckBox();
+            this.chkGlobal = new System.Windows.Forms.CheckBox();
+            this.chkTeamType = new System.Windows.Forms.CheckBox();
+            this.chkActionType = new System.Windows.Forms.CheckBox();
             this.chkHouse = new System.Windows.Forms.CheckBox();
             this.chkPersistenceType = new System.Windows.Forms.CheckBox();
+            this.chkEventControl = new System.Windows.Forms.CheckBox();
+            this.chkEventType = new System.Windows.Forms.CheckBox();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOk = new System.Windows.Forms.Button();
             this.btnReset = new System.Windows.Forms.Button();
-            this.chkEventControl = new System.Windows.Forms.CheckBox();
-            this.chkEventType = new System.Windows.Forms.CheckBox();
-            this.chkActionType = new System.Windows.Forms.CheckBox();
-            this.chkTeamType = new System.Windows.Forms.CheckBox();
-            this.cmbEventControl = new MobiusEditor.Controls.ComboBoxSmartWidth();
-            this.cmbPersistenceType = new MobiusEditor.Controls.ComboBoxSmartWidth();
-            this.cmbHouse = new MobiusEditor.Controls.ComboBoxSmartWidth();
-            this.cmbTeamType = new MobiusEditor.Controls.ComboBoxSmartWidth();
-            this.cmbActionType = new MobiusEditor.Controls.ComboBoxSmartWidth();
-            this.cmbEventType = new MobiusEditor.Controls.ComboBoxSmartWidth();
-            this.nudGlobal = new MobiusEditor.Controls.EnhNumericUpDown();
-            this.chkGlobal = new System.Windows.Forms.CheckBox();
-            this.chkWaypoint = new System.Windows.Forms.CheckBox();
             this.cmbWaypoint = new MobiusEditor.Controls.ComboBoxSmartWidth();
+            this.cmbEventType = new MobiusEditor.Controls.ComboBoxSmartWidth();
+            this.cmbActionType = new MobiusEditor.Controls.ComboBoxSmartWidth();
+            this.nudGlobal = new MobiusEditor.Controls.EnhNumericUpDown();
+            this.cmbTeamType = new MobiusEditor.Controls.ComboBoxSmartWidth();
+            this.cmbHouse = new MobiusEditor.Controls.ComboBoxSmartWidth();
+            this.cmbPersistenceType = new MobiusEditor.Controls.ComboBoxSmartWidth();
+            this.cmbEventControl = new MobiusEditor.Controls.ComboBoxSmartWidth();
             this.triggersTableLayoutPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.nudGlobal)).BeginInit();
             this.SuspendLayout();
@@ -89,7 +89,55 @@
             this.triggersTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.triggersTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.triggersTableLayoutPanel.Size = new System.Drawing.Size(265, 200);
-            this.triggersTableLayoutPanel.TabIndex = 2;
+            this.triggersTableLayoutPanel.TabIndex = 0;
+            // 
+            // chkWaypoint
+            // 
+            this.chkWaypoint.AutoSize = true;
+            this.chkWaypoint.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.chkWaypoint.Location = new System.Drawing.Point(3, 153);
+            this.chkWaypoint.Name = "chkWaypoint";
+            this.chkWaypoint.Size = new System.Drawing.Size(100, 19);
+            this.chkWaypoint.TabIndex = 12;
+            this.chkWaypoint.Text = "Waypoint";
+            this.chkWaypoint.UseVisualStyleBackColor = true;
+            this.chkWaypoint.CheckedChanged += new System.EventHandler(this.ChkWaypoint_CheckedChanged);
+            // 
+            // chkGlobal
+            // 
+            this.chkGlobal.AutoSize = true;
+            this.chkGlobal.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.chkGlobal.Location = new System.Drawing.Point(3, 178);
+            this.chkGlobal.Name = "chkGlobal";
+            this.chkGlobal.Size = new System.Drawing.Size(100, 19);
+            this.chkGlobal.TabIndex = 14;
+            this.chkGlobal.Text = "Global";
+            this.chkGlobal.UseVisualStyleBackColor = true;
+            this.chkGlobal.CheckedChanged += new System.EventHandler(this.ChkGlobal_CheckedChanged);
+            // 
+            // chkTeamType
+            // 
+            this.chkTeamType.AutoSize = true;
+            this.chkTeamType.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.chkTeamType.Location = new System.Drawing.Point(3, 128);
+            this.chkTeamType.Name = "chkTeamType";
+            this.chkTeamType.Size = new System.Drawing.Size(100, 19);
+            this.chkTeamType.TabIndex = 10;
+            this.chkTeamType.Text = "Team";
+            this.chkTeamType.UseVisualStyleBackColor = true;
+            this.chkTeamType.CheckedChanged += new System.EventHandler(this.ChkTeamType_CheckedChanged);
+            // 
+            // chkActionType
+            // 
+            this.chkActionType.AutoSize = true;
+            this.chkActionType.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.chkActionType.Location = new System.Drawing.Point(3, 103);
+            this.chkActionType.Name = "chkActionType";
+            this.chkActionType.Size = new System.Drawing.Size(100, 19);
+            this.chkActionType.TabIndex = 8;
+            this.chkActionType.Text = "Action";
+            this.chkActionType.UseVisualStyleBackColor = true;
+            this.chkActionType.CheckedChanged += new System.EventHandler(this.ChkActionType_CheckedChanged);
             // 
             // chkHouse
             // 
@@ -115,40 +163,6 @@
             this.chkPersistenceType.UseVisualStyleBackColor = true;
             this.chkPersistenceType.CheckedChanged += new System.EventHandler(this.ChkPersistenceType_CheckedChanged);
             // 
-            // btnCancel
-            // 
-            this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(184, 211);
-            this.btnCancel.Name = "btnCancel";
-            this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 16;
-            this.btnCancel.Text = "Cancel";
-            this.btnCancel.UseVisualStyleBackColor = true;
-            // 
-            // btnOk
-            // 
-            this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOk.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.btnOk.Location = new System.Drawing.Point(103, 211);
-            this.btnOk.Name = "btnOk";
-            this.btnOk.Size = new System.Drawing.Size(75, 23);
-            this.btnOk.TabIndex = 15;
-            this.btnOk.Text = "OK";
-            this.btnOk.UseVisualStyleBackColor = true;
-            this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
-            // 
-            // btnReset
-            // 
-            this.btnReset.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.btnReset.Location = new System.Drawing.Point(3, 211);
-            this.btnReset.Name = "btnReset";
-            this.btnReset.Size = new System.Drawing.Size(75, 23);
-            this.btnReset.TabIndex = 14;
-            this.btnReset.Text = "Reset";
-            this.btnReset.UseVisualStyleBackColor = true;
-            this.btnReset.Click += new System.EventHandler(this.btnReset_Click);
-            // 
             // chkEventControl
             // 
             this.chkEventControl.AutoSize = true;
@@ -173,43 +187,119 @@
             this.chkEventType.UseVisualStyleBackColor = true;
             this.chkEventType.CheckedChanged += new System.EventHandler(this.ChkEventType_CheckedChanged);
             // 
-            // chkActionType
+            // btnCancel
             // 
-            this.chkActionType.AutoSize = true;
-            this.chkActionType.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.chkActionType.Location = new System.Drawing.Point(3, 103);
-            this.chkActionType.Name = "chkActionType";
-            this.chkActionType.Size = new System.Drawing.Size(100, 19);
-            this.chkActionType.TabIndex = 8;
-            this.chkActionType.Text = "Action";
-            this.chkActionType.UseVisualStyleBackColor = true;
-            this.chkActionType.CheckedChanged += new System.EventHandler(this.ChkActionType_CheckedChanged);
+            this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this.btnCancel.Location = new System.Drawing.Point(184, 211);
+            this.btnCancel.Name = "btnCancel";
+            this.btnCancel.Size = new System.Drawing.Size(75, 23);
+            this.btnCancel.TabIndex = 32;
+            this.btnCancel.Text = "Cancel";
+            this.btnCancel.UseVisualStyleBackColor = true;
             // 
-            // chkTeamType
+            // btnOk
             // 
-            this.chkTeamType.AutoSize = true;
-            this.chkTeamType.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.chkTeamType.Location = new System.Drawing.Point(3, 128);
-            this.chkTeamType.Name = "chkTeamType";
-            this.chkTeamType.Size = new System.Drawing.Size(100, 19);
-            this.chkTeamType.TabIndex = 10;
-            this.chkTeamType.Text = "Team";
-            this.chkTeamType.UseVisualStyleBackColor = true;
-            this.chkTeamType.CheckedChanged += new System.EventHandler(this.ChkTeamType_CheckedChanged);
+            this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnOk.DialogResult = System.Windows.Forms.DialogResult.OK;
+            this.btnOk.Location = new System.Drawing.Point(103, 211);
+            this.btnOk.Name = "btnOk";
+            this.btnOk.Size = new System.Drawing.Size(75, 23);
+            this.btnOk.TabIndex = 31;
+            this.btnOk.Text = "OK";
+            this.btnOk.UseVisualStyleBackColor = true;
+            this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
             // 
-            // cmbEventControl
+            // btnReset
             // 
-            this.cmbEventControl.DisplayMember = "Label";
-            this.cmbEventControl.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.cmbEventControl.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cmbEventControl.Enabled = false;
-            this.cmbEventControl.FormattingEnabled = true;
-            this.cmbEventControl.Location = new System.Drawing.Point(108, 52);
-            this.cmbEventControl.Margin = new System.Windows.Forms.Padding(2);
-            this.cmbEventControl.Name = "cmbEventControl";
-            this.cmbEventControl.Size = new System.Drawing.Size(155, 21);
-            this.cmbEventControl.TabIndex = 5;
-            this.cmbEventControl.ValueMember = "Value";
+            this.btnReset.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.btnReset.Location = new System.Drawing.Point(3, 211);
+            this.btnReset.Name = "btnReset";
+            this.btnReset.Size = new System.Drawing.Size(75, 23);
+            this.btnReset.TabIndex = 30;
+            this.btnReset.Text = "Reset";
+            this.btnReset.UseVisualStyleBackColor = true;
+            this.btnReset.Click += new System.EventHandler(this.btnReset_Click);
+            // 
+            // cmbWaypoint
+            // 
+            this.cmbWaypoint.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.cmbWaypoint.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbWaypoint.Enabled = false;
+            this.cmbWaypoint.FormattingEnabled = true;
+            this.cmbWaypoint.Location = new System.Drawing.Point(108, 152);
+            this.cmbWaypoint.Margin = new System.Windows.Forms.Padding(2);
+            this.cmbWaypoint.Name = "cmbWaypoint";
+            this.cmbWaypoint.Size = new System.Drawing.Size(155, 21);
+            this.cmbWaypoint.TabIndex = 13;
+            // 
+            // cmbEventType
+            // 
+            this.cmbEventType.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.cmbEventType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbEventType.Enabled = false;
+            this.cmbEventType.FormattingEnabled = true;
+            this.cmbEventType.Location = new System.Drawing.Point(108, 77);
+            this.cmbEventType.Margin = new System.Windows.Forms.Padding(2);
+            this.cmbEventType.Name = "cmbEventType";
+            this.cmbEventType.Size = new System.Drawing.Size(155, 21);
+            this.cmbEventType.TabIndex = 7;
+            // 
+            // cmbActionType
+            // 
+            this.cmbActionType.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.cmbActionType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbActionType.Enabled = false;
+            this.cmbActionType.FormattingEnabled = true;
+            this.cmbActionType.Location = new System.Drawing.Point(108, 102);
+            this.cmbActionType.Margin = new System.Windows.Forms.Padding(2);
+            this.cmbActionType.Name = "cmbActionType";
+            this.cmbActionType.Size = new System.Drawing.Size(155, 21);
+            this.cmbActionType.TabIndex = 9;
+            // 
+            // nudGlobal
+            // 
+            this.nudGlobal.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.nudGlobal.Enabled = false;
+            this.nudGlobal.Location = new System.Drawing.Point(108, 177);
+            this.nudGlobal.Margin = new System.Windows.Forms.Padding(2, 2, 2, 3);
+            this.nudGlobal.Maximum = new decimal(new int[] {
+            29,
+            0,
+            0,
+            0});
+            this.nudGlobal.Name = "nudGlobal";
+            this.nudGlobal.Size = new System.Drawing.Size(155, 20);
+            this.nudGlobal.TabIndex = 15;
+            this.nudGlobal.Value = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
+            // 
+            // cmbTeamType
+            // 
+            this.cmbTeamType.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.cmbTeamType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbTeamType.Enabled = false;
+            this.cmbTeamType.FormattingEnabled = true;
+            this.cmbTeamType.Location = new System.Drawing.Point(108, 127);
+            this.cmbTeamType.Margin = new System.Windows.Forms.Padding(2);
+            this.cmbTeamType.Name = "cmbTeamType";
+            this.cmbTeamType.Size = new System.Drawing.Size(155, 21);
+            this.cmbTeamType.TabIndex = 11;
+            // 
+            // cmbHouse
+            // 
+            this.cmbHouse.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.cmbHouse.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbHouse.Enabled = false;
+            this.cmbHouse.FormattingEnabled = true;
+            this.cmbHouse.Location = new System.Drawing.Point(108, 2);
+            this.cmbHouse.Margin = new System.Windows.Forms.Padding(2);
+            this.cmbHouse.Name = "cmbHouse";
+            this.cmbHouse.Size = new System.Drawing.Size(155, 21);
+            this.cmbHouse.TabIndex = 1;
             // 
             // cmbPersistenceType
             // 
@@ -225,112 +315,19 @@
             this.cmbPersistenceType.TabIndex = 3;
             this.cmbPersistenceType.ValueMember = "Value";
             // 
-            // cmbHouse
+            // cmbEventControl
             // 
-            this.cmbHouse.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.cmbHouse.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cmbHouse.Enabled = false;
-            this.cmbHouse.FormattingEnabled = true;
-            this.cmbHouse.Location = new System.Drawing.Point(108, 2);
-            this.cmbHouse.Margin = new System.Windows.Forms.Padding(2);
-            this.cmbHouse.Name = "cmbHouse";
-            this.cmbHouse.Size = new System.Drawing.Size(155, 21);
-            this.cmbHouse.TabIndex = 1;
-            // 
-            // cmbTeamType
-            // 
-            this.cmbTeamType.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.cmbTeamType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cmbTeamType.Enabled = false;
-            this.cmbTeamType.FormattingEnabled = true;
-            this.cmbTeamType.Location = new System.Drawing.Point(108, 127);
-            this.cmbTeamType.Margin = new System.Windows.Forms.Padding(2);
-            this.cmbTeamType.Name = "cmbTeamType";
-            this.cmbTeamType.Size = new System.Drawing.Size(155, 21);
-            this.cmbTeamType.TabIndex = 11;
-            // 
-            // cmbActionType
-            // 
-            this.cmbActionType.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.cmbActionType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cmbActionType.Enabled = false;
-            this.cmbActionType.FormattingEnabled = true;
-            this.cmbActionType.Location = new System.Drawing.Point(108, 102);
-            this.cmbActionType.Margin = new System.Windows.Forms.Padding(2);
-            this.cmbActionType.Name = "cmbActionType";
-            this.cmbActionType.Size = new System.Drawing.Size(155, 21);
-            this.cmbActionType.TabIndex = 9;
-            // 
-            // cmbEventType
-            // 
-            this.cmbEventType.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.cmbEventType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cmbEventType.Enabled = false;
-            this.cmbEventType.FormattingEnabled = true;
-            this.cmbEventType.Location = new System.Drawing.Point(108, 77);
-            this.cmbEventType.Margin = new System.Windows.Forms.Padding(2);
-            this.cmbEventType.Name = "cmbEventType";
-            this.cmbEventType.Size = new System.Drawing.Size(155, 21);
-            this.cmbEventType.TabIndex = 7;
-            // 
-            // nudGlobal
-            // 
-            this.nudGlobal.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.nudGlobal.Enabled = false;
-            this.nudGlobal.EnteredValue = new decimal(new int[] {
-            0,
-            0,
-            0,
-            0});
-            this.nudGlobal.IntValue = 0;
-            this.nudGlobal.Location = new System.Drawing.Point(108, 177);
-            this.nudGlobal.Margin = new System.Windows.Forms.Padding(2, 2, 2, 3);
-            this.nudGlobal.Maximum = new decimal(new int[] {
-            29,
-            0,
-            0,
-            0});
-            this.nudGlobal.Name = "nudGlobal";
-            this.nudGlobal.SelectedText = "";
-            this.nudGlobal.SelectionLength = 0;
-            this.nudGlobal.SelectionStart = 0;
-            this.nudGlobal.Size = new System.Drawing.Size(155, 20);
-            this.nudGlobal.TabIndex = 13;
-            // 
-            // chkGlobal
-            // 
-            this.chkGlobal.AutoSize = true;
-            this.chkGlobal.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.chkGlobal.Location = new System.Drawing.Point(3, 178);
-            this.chkGlobal.Name = "chkGlobal";
-            this.chkGlobal.Size = new System.Drawing.Size(100, 19);
-            this.chkGlobal.TabIndex = 12;
-            this.chkGlobal.Text = "Global";
-            this.chkGlobal.UseVisualStyleBackColor = true;
-            this.chkGlobal.CheckedChanged += new System.EventHandler(this.ChkGlobal_CheckedChanged);
-            // 
-            // chkWaypoint
-            // 
-            this.chkWaypoint.AutoSize = true;
-            this.chkWaypoint.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.chkWaypoint.Location = new System.Drawing.Point(3, 153);
-            this.chkWaypoint.Name = "chkWaypoint";
-            this.chkWaypoint.Size = new System.Drawing.Size(100, 19);
-            this.chkWaypoint.TabIndex = 14;
-            this.chkWaypoint.Text = "Waypoint";
-            this.chkWaypoint.UseVisualStyleBackColor = true;
-            // 
-            // cmbWaypoints
-            // 
-            this.cmbWaypoint.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.cmbWaypoint.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cmbWaypoint.Enabled = false;
-            this.cmbWaypoint.FormattingEnabled = true;
-            this.cmbWaypoint.Location = new System.Drawing.Point(108, 152);
-            this.cmbWaypoint.Margin = new System.Windows.Forms.Padding(2);
-            this.cmbWaypoint.Name = "cmbWaypoints";
-            this.cmbWaypoint.Size = new System.Drawing.Size(155, 21);
-            this.cmbWaypoint.TabIndex = 15;
+            this.cmbEventControl.DisplayMember = "Label";
+            this.cmbEventControl.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.cmbEventControl.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbEventControl.Enabled = false;
+            this.cmbEventControl.FormattingEnabled = true;
+            this.cmbEventControl.Location = new System.Drawing.Point(108, 52);
+            this.cmbEventControl.Margin = new System.Windows.Forms.Padding(2);
+            this.cmbEventControl.Name = "cmbEventControl";
+            this.cmbEventControl.Size = new System.Drawing.Size(155, 21);
+            this.cmbEventControl.TabIndex = 5;
+            this.cmbEventControl.ValueMember = "Value";
             // 
             // TriggerFilterDialog
             // 
@@ -343,10 +340,10 @@
             this.Controls.Add(this.btnOk);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.triggersTableLayoutPanel);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;
-            this.MinimumSize = new System.Drawing.Size(280, 250);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
             this.Name = "TriggerFilterDialog";
             this.Text = "Filter triggers";
+            this.Load += new System.EventHandler(this.TriggerFilterDialog_Load);
             this.triggersTableLayoutPanel.ResumeLayout(false);
             this.triggersTableLayoutPanel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.nudGlobal)).EndInit();

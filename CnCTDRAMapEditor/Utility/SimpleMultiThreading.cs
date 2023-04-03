@@ -28,10 +28,6 @@ namespace MobiusEditor.Utility
         public BorderStyle ProcessingLabelBorder { get; set; } = BorderStyle.FixedSingle;
         public int ProcessingLabelWidth { get; set; } = 300;
         public int ProcessingLabelHeight { get; set; } = 100;
-
-        public delegate void InvokeDelegateEnableControls(Boolean enabled, String processingLabel);
-        public delegate DialogResult InvokeDelegateMessageBox(String message, MessageBoxButtons buttons, MessageBoxIcon icon);
-        public delegate void InvokeDelegateResult<U>(U resultObject);
         private Thread processingThread;
         private Form attachForm;
 
@@ -105,7 +101,7 @@ namespace MobiusEditor.Utility
             }
             bool resActIsInvoked = (bool)arrParams[2];
             String operationType = (arrParams[4] as String ?? String.Empty).Trim();
-            this.attachForm.Invoke(new InvokeDelegateEnableControls(enableControls), false, operationType);
+            this.attachForm.Invoke(new Action(() => enableControls(false, operationType)));
             U result = default(U);
             try
             {
@@ -119,22 +115,22 @@ namespace MobiusEditor.Utility
             catch (Exception ex)
             {
                 String message = operationType + " failed:\n" + ex.Message + "\n" + ex.StackTrace;
-                this.attachForm.Invoke(new InvokeDelegateMessageBox(this.ShowMessageBox), message, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                this.attachForm.Invoke(new Action(() => this.ShowMessageBox(message, MessageBoxButtons.OK, MessageBoxIcon.Warning)));
                 try
                 {
-                    this.attachForm.Invoke(new InvokeDelegateEnableControls(enableControls), true, null);
+                    this.attachForm.Invoke(new Action(() => enableControls(true, null)));
                 }
                 catch (InvalidOperationException) { /* ignore */ }
                 return;
             }
             try
             {
-                this.attachForm.Invoke(new InvokeDelegateEnableControls(enableControls), true, null);
+                this.attachForm.Invoke(new Action(() => enableControls(true, null)));
                 if (resAct != null)
                 {
                     if (resActIsInvoked)
                     {
-                        this.attachForm.Invoke(new InvokeDelegateResult<U>(resAct), result);
+                        this.attachForm.Invoke(new Action(() => resAct(result)));
                     }
                     else
                     {
