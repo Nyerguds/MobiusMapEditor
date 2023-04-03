@@ -440,4 +440,4 @@ Released on 03 Apr 2023 at 19:20 GMT
 * Optimised the redrawing when enabling/disabling layers in "View" → "Layers".
 * Celltriggers are now slightly more transparent when outside Celltrigger editing mode.
 * Added character count to the briefing screen. if WriteClassicBriefing is enabled a warning wil be given if the amount exceeds the maximum the classic game can handle. If the warning is ignored, the classic briefing will truncated on the maximum it can handle, to prevent game crashes.
-* Fixed line split in Red Alert's classic briefing, to also obey the classic internal maximum, and to correctly split on line break @ characters.
+* Fixed saving of Red Alert's classic briefing, to also obey the classic internal maximum, and to correctly split on line break @ characters.
