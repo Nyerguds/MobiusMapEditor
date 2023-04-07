@@ -259,6 +259,7 @@ namespace MobiusEditor.Model
             if (!render.Item1.IsEmpty)
             {
                 var th = new Bitmap(render.Item1.Width, render.Item1.Height);
+                th.SetResolution(96, 96);
                 using (var g = Graphics.FromImage(th))
                 {
                     MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);

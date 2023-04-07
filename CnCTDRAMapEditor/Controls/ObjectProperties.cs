@@ -70,6 +70,7 @@ namespace MobiusEditor.Controls
         {
             InitializeComponent();
             infoImage = new Bitmap(27, 27);
+            infoImage.SetResolution(96, 96);
             using (Graphics g = Graphics.FromImage(infoImage))
             {
                 g.DrawIcon(SystemIcons.Information, new Rectangle(0, 0, infoImage.Width, infoImage.Height));

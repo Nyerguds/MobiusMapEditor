@@ -22,6 +22,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
@@ -36,6 +37,7 @@ namespace MobiusEditor
         [STAThread]
         static void Main(string[] args)
         {
+            TryEnableDPIAware();
             const string gameId = "1213210";
             // Change current culture to en-US
             if (Thread.CurrentThread.CurrentCulture.Name != "en-US")
@@ -176,6 +178,34 @@ namespace MobiusEditor
                 SteamworksUGC.Shutdown();
             }
             Globals.TheMegafileManager.Dispose();
+        }
+        [DllImport("SHCore.dll")]
+        private static extern bool SetProcessDpiAwareness(PROCESS_DPI_AWARENESS awareness);
+
+        private enum PROCESS_DPI_AWARENESS
+        {
+            Process_DPI_Unaware = 0,
+            Process_System_DPI_Aware = 1,
+            Process_Per_Monitor_DPI_Aware = 2
+        }
+
+        [DllImport("user32.dll", SetLastError = true)]
+        static extern bool SetProcessDPIAware();
+
+        internal static void TryEnableDPIAware()
+        {
+            try
+            {
+                SetProcessDpiAwareness(PROCESS_DPI_AWARENESS.Process_Per_Monitor_DPI_Aware);
+            }
+            catch
+            {
+                try
+                { // fallback, use (simpler) internal function
+                    SetProcessDPIAware();
+                }
+                catch { }
+            }
         }
 
         private static string[] GetModPaths(string gameId, string modstoLoad, string modFolder, string modIdentifier)

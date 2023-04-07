@@ -587,6 +587,7 @@ namespace MobiusEditor.Render
                         // Avoid overlay showing as semiitransparent.
                         using (Bitmap factory = new Bitmap(maxSize.Width, maxSize.Height))
                         {
+                            factory.SetResolution(96, 96);
                             using (Graphics factoryG = Graphics.FromImage(factory))
                             {
                                 var factBounds = RenderBounds(tile.Image.Size, building.Type.Size, tileScale);
@@ -839,6 +840,7 @@ namespace MobiusEditor.Render
                 // Combine body and turret to one image, then paint it. This is done because it might be semitransparent.
                 using (Bitmap unitBm = new Bitmap(renderBounds.Width, renderBounds.Height))
                 {
+                    unitBm.SetResolution(96, 96);
                     using (Graphics unitG = Graphics.FromImage(unitBm))
                     {
                         if (tile != null) {
@@ -1216,6 +1218,7 @@ namespace MobiusEditor.Render
             int actualOutlineY = (int)Math.Max(1, outline * tileSize.Height);
             using (Bitmap bm = new Bitmap(tileSize.Width, tileSize.Height, PixelFormat.Format32bppArgb))
             {
+                bm.SetResolution(96, 96);
                 using (Graphics g2 = Graphics.FromImage(bm))
                 {
                     g2.DrawImage(tile.Image, relOverlayBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel);

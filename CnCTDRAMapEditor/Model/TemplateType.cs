@@ -354,9 +354,10 @@ namespace MobiusEditor.Model
             // To avoid having to redo the calculations on random tiles.
             ThumbnailIconWidth = loopWidth;
             ThumbnailIconHeight = loopHeight;
-            var thumbnail = new Bitmap(loopWidth * size.Width, loopHeight * size.Height);
+            var th = new Bitmap(loopWidth * size.Width, loopHeight * size.Height);
+            th.SetResolution(96, 96);
             bool found = mask[0, 0];
-            using (var g = Graphics.FromImage(thumbnail))
+            using (var g = Graphics.FromImage(th))
             {
                 MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
                 g.Clear(Color.Transparent);
@@ -409,10 +410,10 @@ namespace MobiusEditor.Model
             }
             if (!found)
             {
-                try { thumbnail.Dispose(); }
+                try { th.Dispose(); }
                 catch { /* ignore */ }
             }
-            Thumbnail = found ? thumbnail : null;
+            Thumbnail = found ? th : null;
             IconMask = mask;
             if (oldImage != null)
             {

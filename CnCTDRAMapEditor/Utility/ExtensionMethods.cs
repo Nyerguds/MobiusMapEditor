@@ -255,6 +255,7 @@ namespace MobiusEditor.Utility
         public static Bitmap FitToBoundingBox(this Image image, Rectangle cutout, int maxWidth, int maxHeight, Color clearColor)
         {
             Bitmap newImg = new Bitmap(maxWidth, maxHeight);
+            newImg.SetResolution(image.HorizontalResolution, image.VerticalResolution);
             Rectangle resized = GeneralUtils.GetBoundingBoxCenter(cutout.Width, cutout.Height, maxWidth, maxHeight);
             using (Graphics g = Graphics.FromImage(newImg))
             {
@@ -331,6 +332,8 @@ namespace MobiusEditor.Utility
             const int border = filterSize / 2;
             var result = new Color[bitmap.Width, bitmap.Height];
             var sharpenImage = new Bitmap(bitmap);
+            // Not sure if needed with a clone like this... still, better be sure.
+            sharpenImage.SetResolution(bitmap.HorizontalResolution, bitmap.VerticalResolution);
             int width = bitmap.Width;
             int height = bitmap.Height;
             // Lock image bits for read/write.

@@ -66,6 +66,7 @@ namespace MobiusEditor.Dialogs
             InitializeComponent();
             lblTooLong.Text = "Teamtype length exceeds " + maxLength + " characters!";
             infoImage = new Bitmap(27, 27);
+            infoImage.SetResolution(96, 96);
             using (Graphics g = Graphics.FromImage(infoImage))
             {
                 g.DrawIcon(SystemIcons.Information, new Rectangle(0, 0, infoImage.Width, infoImage.Height));
@@ -619,11 +620,7 @@ namespace MobiusEditor.Dialogs
             ttf.Dispose();
             if (disposing && (components != null))
             {
-                try
-                {
-                    lblTriggerInfo.Image = null;
-                }
-                catch { /*ignore*/}
+                lblTriggerInfo.Image = null;
                 try
                 {
                     infoImage.Dispose();

@@ -111,20 +111,25 @@ namespace MobiusEditor.Tools
 
         private void MapPanel_MouseDown(object sender, MouseEventArgs e)
         {
+            Point mouseCell = navigationWidget.MouseCell;
             if (placementMode)
             {
                 if (e.Button == MouseButtons.Left)
                 {
-                    AddWall(navigationWidget.MouseCell);
+                    // Overlay is not allowed on first and last row. See OverlayClass::Read_INI
+                    if (mouseCell.Y > 0 && mouseCell.Y < map.Metrics.Height - 1)
+                    {
+                        AddWall(mouseCell);
+                    }
                 }
                 else if (e.Button == MouseButtons.Right)
                 {
-                    RemoveWall(navigationWidget.MouseCell);
+                    RemoveWall(mouseCell);
                 }
             }
             else if ((e.Button == MouseButtons.Left) || (e.Button == MouseButtons.Right))
             {
-                PickWall(navigationWidget.MouseCell);
+                PickWall(mouseCell);
             }
         }
 
@@ -150,45 +155,52 @@ namespace MobiusEditor.Tools
 
         private void MouseoverWidget_MouseCellChanged(object sender, MouseCellChangedEventArgs e)
         {
+            Point mouseCell = e.NewCell;
             if (placementMode)
             {
                 if (Control.MouseButtons == MouseButtons.Left)
                 {
-                    AddWall(e.NewCell);
+                    if (mouseCell.Y > 0 && mouseCell.Y < map.Metrics.Height - 1)
+                    {
+                        AddWall(mouseCell);
+                    }
                 }
                 else if (Control.MouseButtons == MouseButtons.Right)
                 {
-                    RemoveWall(e.NewCell);
+                    RemoveWall(mouseCell);
                 }
                 if (SelectedWallType != null)
                 {
                     mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(e.OldCell, new Size(1, 1)), 1, 1));
-                    mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(e.NewCell, new Size(1, 1)), 1, 1));
+                    mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(mouseCell, new Size(1, 1)), 1, 1));
                 }
             }
             else if (e.MouseButtons == MouseButtons.Right)
             {
-                PickWall(e.NewCell);
+                PickWall(mouseCell);
             }
         }
 
         private void AddWall(Point location)
         {
+            OverlayType selected = SelectedWallType;
+            // Can't place overlay on top and bottom row. See OverlayClass::Read_INI
+            if (selected == null || location.Y == 0 || location.Y == map.Metrics.Height - 1)
+            {
+                return;
+            }
             if (map.Metrics.GetCell(location, out int cell))
             {
-                if (SelectedWallType != null)
+                var overlay = new Overlay { Type = SelectedWallType, Icon = 0 };
+                if (map.Technos.CanAdd(cell, overlay) && map.Buildings.CanAdd(cell, overlay))
                 {
-                    var overlay = new Overlay { Type = SelectedWallType, Icon = 0 };
-                    if (map.Technos.CanAdd(cell, overlay) && map.Buildings.CanAdd(cell, overlay))
+                    if (!undoOverlays.ContainsKey(cell))
                     {
-                        if (!undoOverlays.ContainsKey(cell))
-                        {
-                            undoOverlays[cell] = map.Overlay[cell];
-                        }
-                        map.Overlay[cell] = overlay;
-                        redoOverlays[cell] = overlay;
-                        mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1));
+                        undoOverlays[cell] = map.Overlay[cell];
                     }
+                    map.Overlay[cell] = overlay;
+                    redoOverlays[cell] = overlay;
+                    mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1));
                 }
             }
         }
@@ -262,6 +274,7 @@ namespace MobiusEditor.Tools
             }
             placementMode = true;
             navigationWidget.MouseoverSize = Size.Empty;
+            navigationWidget.PenColor = Color.Red;
             if (SelectedWallType != null)
             {
                 mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(navigationWidget.MouseCell, new Size(1, 1)), 1, 1));
@@ -277,6 +290,7 @@ namespace MobiusEditor.Tools
             }
             placementMode = false;
             navigationWidget.MouseoverSize = new Size(1, 1);
+            navigationWidget.PenColor = Color.Yellow;
             if (SelectedWallType != null)
             {
                 mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(navigationWidget.MouseCell, new Size(1, 1)), 1, 1));
@@ -317,28 +331,35 @@ namespace MobiusEditor.Tools
         {
             base.PreRenderMap();
             previewMap = map.Clone(true);
-            if (placementMode)
+            if (!placementMode)
             {
-                var location = navigationWidget.MouseCell;
-                if (SelectedWallType != null)
-                {
-                    if (previewMap.Metrics.GetCell(location, out int cell))
-                    {
-                        var overlay = new Overlay { Type = SelectedWallType, Icon = 0, Tint = Color.FromArgb(128, Color.White) };
-                        if (previewMap.Technos.CanAdd(cell, overlay) && previewMap.Buildings.CanAdd(cell, overlay))
-                        {
-                            previewMap.Overlay[cell] = overlay;
-                            mapPanel.Invalidate(previewMap, Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1));
-                        }
-                    }
-                }
+                return;
+            }
+            navigationWidget.MouseoverSize = Size.Empty;
+            var location = navigationWidget.MouseCell;
+            OverlayType selected = this.SelectedWallType;
+            if (selected == null || !previewMap.Metrics.GetCell(location, out int cell))
+            {
+                return;
+            }
+            if (location.Y == 0 || location.Y == map.Metrics.Height - 1)
+            {
+                navigationWidget.MouseoverSize = new Size(1, 1);
+            }
+            var overlay = new Overlay { Type = selected, Icon = 0, Tint = Color.FromArgb(128, Color.FromArgb(128, selected.Tint)) };
+            if (previewMap.Technos.CanAdd(cell, overlay) && previewMap.Buildings.CanAdd(cell, overlay))
+            {
+                previewMap.Overlay[cell] = overlay;
+                mapPanel.Invalidate(previewMap, Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1));
             }
         }
 
         protected override void PostRenderMap(Graphics graphics)
         {
             base.PostRenderMap(graphics);
-            MapRenderer.RenderAllBoundsFromCell(graphics, Globals.MapTileSize, previewMap.Overlay.Where(x => x.Value.Type.IsWall), previewMap.Metrics);
+            int secondRow = map.Metrics.Width;
+            int lastRow = map.Metrics.Length - map.Metrics.Width;
+            MapRenderer.RenderAllBoundsFromCell(graphics, Globals.MapTileSize, previewMap.Overlay.Where(x => x.Value.Type.IsWall && x.Cell >= secondRow && x.Cell < lastRow), previewMap.Metrics);
         }
 
         public override void Activate()

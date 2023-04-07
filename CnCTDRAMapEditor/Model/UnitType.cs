@@ -149,9 +149,13 @@ namespace MobiusEditor.Model
                 Strength = 256,
                 Direction = direction
             };
+            // Renderer draws a border of a full cell around the unit. In practice this is excessive,
+            // so for a nicer preview we use only half a cell around.
             var unitThumbnail = new Bitmap(Globals.PreviewTileWidth * 2, Globals.PreviewTileHeight * 2);
+            unitThumbnail.SetResolution(96, 96);
             using (Bitmap bigThumbnail = new Bitmap(Globals.PreviewTileWidth * 3, Globals.PreviewTileHeight * 3))
             {
+                bigThumbnail.SetResolution(96, 96);
                 using (var g = Graphics.FromImage(bigThumbnail))
                 {
                     MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);

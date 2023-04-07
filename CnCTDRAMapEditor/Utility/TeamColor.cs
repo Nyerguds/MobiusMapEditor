@@ -247,6 +247,7 @@ namespace MobiusEditor.Utility
             // Makes a 1x1 green pixel image, and applies the recolor operation to it.
             using (Bitmap bitmap = new Bitmap(1, 1, PixelFormat.Format32bppArgb))
             {
+                bitmap.SetResolution(96, 96);
                 bitmap.SetPixel(0, 0, RemapBaseColor);
                 if (tc != null)
                 {

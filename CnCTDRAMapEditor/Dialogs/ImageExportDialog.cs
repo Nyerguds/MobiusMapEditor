@@ -277,6 +277,7 @@ namespace MobiusEditor.Dialogs
                     using (Graphics gExportImage = Graphics.FromImage(exportImage))
                     using (Bitmap overlaysImage = new Bitmap(fullSize.Width, fullSize.Height))
                     {
+                        overlaysImage.SetResolution(96, 96);
                         using (Graphics gOverlaysImage = Graphics.FromImage(overlaysImage))
                         {
                             ViewTool.PostRenderMap(gOverlaysImage, gamePlugin, gamePlugin.Map, scale, layers, MapLayerFlag.None, false);

@@ -269,6 +269,7 @@ namespace MobiusEditor.Utility
         public static Bitmap BuildImage(Byte[] sourceData, Int32 width, Int32 height, Int32 stride, PixelFormat pixelFormat, Color[] palette, Color? defaultColor)
         {
             Bitmap newImage = new Bitmap(width, height, pixelFormat);
+            newImage.SetResolution(96, 96);
             BitmapData targetData = newImage.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.WriteOnly, newImage.PixelFormat);
             Int32 newDataWidth = ((Image.GetPixelFormatSize(pixelFormat) * width) + 7) / 8;
             Int32 targetStride = targetData.Stride;
@@ -301,6 +302,7 @@ namespace MobiusEditor.Utility
         public static Bitmap PaintOn32bpp(Image image, Color? transparencyFillColor)
         {
             Bitmap bp = new Bitmap(image.Width, image.Height, PixelFormat.Format32bppArgb);
+            bp.SetResolution(image.HorizontalResolution, image.VerticalResolution);
             using (Graphics gr = Graphics.FromImage(bp))
             {
                 if (transparencyFillColor.HasValue)

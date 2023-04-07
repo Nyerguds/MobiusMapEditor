@@ -120,7 +120,7 @@ Released on 20 Aug 2022 at 22:37 UTC
 * Added \*.ini to the list of possible extensions for opening RA maps. Apparently before I only added it for saving.
 * The editor will now accept nonstandard extensions from drag & drop without any issues. For TD maps, it will need to find the accompanying bin or ini file with the correct extension.
 * Files opened from filenames with nonstandard extensions will not change these extensions when saving the file. This also means RA maps opened from a .ini file will no longer change the extension to .mpr when saving.
-* Terrain objects will now only pop up a poperties box for setting a trigger on TD maps.
+* Terrain objects will now only pop up a properties box for setting a trigger on TD maps.
 * Optimised loading so the editor will skip loading objects from different theaters.
 * User settings (game folder, invite warning, and the dialog locations) will now be properly ported over from previous versions.
 * Added support for loading mod xml info and graphics through the "ModsToLoad" setting in "CnCTDRAMapEditor.exe.config". The syntax is a semicolon-separated list, with each entry either a Steam workshop ID, or a folder under "Documents\CnCRemastered\Mods\". As folder, the path must contain the "Tiberian_Dawn" or "Red_Alert" part at the start. That prefix folder will also be used as consistency check for the mod type as defined inside "ccmod.json". Mods given by folder name will also be looked up in the Steam workshop folders, with the prefix folder used only for the consistency check. Mods do NOT have to be enabled in the game to work in the editor. [NOTE: game prefix requirement for paths removed when this was split into settings per game in v1.4.4.0]
@@ -197,6 +197,7 @@ Released on 22 Aug 2022 at 09:28 UTC
 * The title of the window will now show an asterisk behind the filename to indicate that the current file has unsaved changes.
 * Maps loaded from file are now seen as 'modified' if any issues were detected that made the editor change or discard data during the loading process.
 * The triggers check feedback (TD only) now also uses the large window used for showing the map load errors.
+* In Tiberian Dawn, buildings where "Prebuilt" is disabled will now show as House "None", with black team color, since Tiberian Dawn has no real restrictions on which House can build these.
 
 ### v1.4.2.0:
 
@@ -441,3 +442,15 @@ Released on 03 Apr 2023 at 19:20 GMT
 * Celltriggers are now slightly more transparent when outside Celltrigger editing mode.
 * Added character count to the briefing screen. if WriteClassicBriefing is enabled a warning wil be given if the amount exceeds the maximum the classic game can handle. If the warning is ignored, the classic briefing will truncated on the maximum it can handle, to prevent game crashes.
 * Fixed saving of Red Alert's classic briefing, to also obey the classic internal maximum, and to correctly split on line break @ characters.
+
+
+### v1.4.5.1:
+
+Unreleased
+
+* All overlay placement is now correctly restricted to not be allowed on the top or bottom row of the map, showing red indicators when in placement mode.
+* Resource placement with a brush size larger than 1 shows red cells inside the brush area when hovering over the top or bottom cells of the map. At size 1, the brush is simply completely red.
+* Resource tool will accept PageUp and PageDown buttons for incrementing and decrementing its size.
+* Applied DPI changes that might fix issues with objects drawing weirdly on some people's systems.
+* PageUp and PageDown buttons will now consistently move through the tool list in all editing modes.
+* Removed [ and ] as shortcuts to affect resource paint size because they did not work consistently on foreign keyboards. The functionality was also changed to PageUp and PageDown.

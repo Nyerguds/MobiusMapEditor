@@ -417,10 +417,10 @@ namespace MobiusEditor.Tools
                     ExitAllModes();
                 }
             }
-            else
-            {
-                ExitAllModes();
-            }
+            //else
+            //{
+            //    ExitAllModes();
+            //}
         }
 
         private void TemplateTool_KeyUp(object sender, KeyEventArgs e)
@@ -1236,6 +1236,10 @@ namespace MobiusEditor.Tools
 
         private void UpdateTooltip()
         {
+            if (!placementMode)
+            {
+
+            }
             FacingType showEdge = dragEdge != FacingType.None ? dragEdge : DetectDragEdge(dragStartPoint.HasValue);
             if (boundsMode && (showEdge != FacingType.None || (dragStartPoint.HasValue && dragStartBounds.HasValue)))
             {

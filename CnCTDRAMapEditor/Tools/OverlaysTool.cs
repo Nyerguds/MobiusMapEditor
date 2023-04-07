@@ -94,6 +94,10 @@ namespace MobiusEditor.Tools
             {
                 EnterPlacementMode();
             }
+            else
+            {
+                CheckSelectShortcuts(e);
+            }
         }
 
         private void OverlaysTool_KeyUp(object sender, KeyEventArgs e)
@@ -150,33 +154,34 @@ namespace MobiusEditor.Tools
 
         private void MouseoverWidget_MouseCellChanged(object sender, MouseCellChangedEventArgs e)
         {
+            Point mouseCell = e.NewCell;
             if (placementMode)
             {
                 if (Control.MouseButtons == MouseButtons.Left)
                 {
-                    AddOverlay(e.NewCell);
+                    AddOverlay(mouseCell);
                 }
                 else if (Control.MouseButtons == MouseButtons.Right)
                 {
-                    RemoveOverlay(e.NewCell);
+                    RemoveOverlay(mouseCell);
                 }
                 if (SelectedOverlayType != null)
                 {
                     // For Concrete
                     mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(e.OldCell, new Size(1, 1)), 1, 1));
-                    mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(e.NewCell, new Size(1, 1)), 1, 1));
+                    mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(mouseCell, new Size(1, 1)), 1, 1));
                 }
             }
             else if ((e.MouseButtons == MouseButtons.Left) || (e.MouseButtons == MouseButtons.Right))
             {
-                PickOverlay(e.NewCell);
+                PickOverlay(mouseCell);
             }
         }
 
         private void AddOverlay(Point location)
         {
             OverlayType selected = SelectedOverlayType;
-            // Can't place overlay on top and bottom row, for some odd reason.
+            // Can't place overlay on top and bottom row. See OverlayClass::Read_INI
             if (selected == null || location.Y == 0 || location.Y == map.Metrics.Height - 1)
             {
                 return;
@@ -257,6 +262,38 @@ namespace MobiusEditor.Tools
             url.Track(undoAction, redoAction);
         }
 
+        private void CheckSelectShortcuts(KeyEventArgs e)
+        {
+            int maxVal = overlayTypeComboBox.Items.Count - 1;
+            int curVal = overlayTypeComboBox.SelectedIndex;
+            int newVal;
+            switch (e.KeyCode)
+            {
+                case Keys.Home:
+                    newVal = 0;
+                    break;
+                case Keys.End:
+                    newVal = maxVal;
+                    break;
+                case Keys.PageDown:
+                    newVal = Math.Min(curVal + 1, maxVal);
+                    break;
+                case Keys.PageUp:
+                    newVal = Math.Max(curVal - 1, 0);
+                    break;
+                default:
+                    return;
+            }
+            if (curVal != newVal)
+            {
+                overlayTypeComboBox.SelectedIndex = newVal;
+                if (placementMode)
+                {
+                    mapPanel.Invalidate(map, navigationWidget.MouseCell);
+                }
+            }
+        }
+
         private void EnterPlacementMode()
         {
             if (placementMode)
@@ -265,6 +302,7 @@ namespace MobiusEditor.Tools
             }
             placementMode = true;
             navigationWidget.MouseoverSize = Size.Empty;
+            navigationWidget.PenColor = Color.Red;
             if (SelectedOverlayType != null)
             {
                 mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(navigationWidget.MouseCell, new Size(1, 1)), 1, 1));
@@ -280,6 +318,7 @@ namespace MobiusEditor.Tools
             }
             placementMode = false;
             navigationWidget.MouseoverSize = new Size(1, 1);
+            navigationWidget.PenColor = Color.Yellow;
             if (SelectedOverlayType != null)
             {
                 mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(navigationWidget.MouseCell, new Size(1, 1)), 1, 1));
@@ -306,6 +345,7 @@ namespace MobiusEditor.Tools
             if (SelectedOverlayType != null)
             {
                 var overlayPreview = new Bitmap(Globals.PreviewTileWidth, Globals.PreviewTileHeight);
+                overlayPreview.SetResolution(96, 96);
                 Overlay mockOverlay = new Overlay()
                 {
                     Type = SelectedOverlayType,
@@ -361,20 +401,25 @@ namespace MobiusEditor.Tools
         {
             base.PreRenderMap();
             previewMap = map.Clone(true);
-            if (placementMode)
+            if (!placementMode)
             {
-                var location = navigationWidget.MouseCell;
-                if (SelectedOverlayType != null)
-                {
-                    if (previewMap.Metrics.GetCell(location, out int cell))
-                    {
-                        if (previewMap.Overlay[cell] == null)
-                        {
-                            previewMap.Overlay[cell] = new Overlay { Type = SelectedOverlayType, Icon = 0, Tint = Color.FromArgb(128, SelectedOverlayType.Tint) };
-                            mapPanel.Invalidate(previewMap, Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1));
-                        }
-                    }
-                }
+                return;
+            }
+            navigationWidget.MouseoverSize = Size.Empty;
+            var location = navigationWidget.MouseCell;
+            OverlayType selected = this.SelectedOverlayType;
+            if (selected == null || !previewMap.Metrics.GetCell(location, out int cell))
+            {
+                return;
+            }
+            if (location.Y == 0 || location.Y == map.Metrics.Height - 1)
+            {
+                navigationWidget.MouseoverSize = new Size(1, 1);
+            }
+            if (previewMap.Overlay[cell] == null)
+            {
+                previewMap.Overlay[cell] = new Overlay { Type = SelectedOverlayType, Icon = 0, Tint = Color.FromArgb(128, SelectedOverlayType.Tint) };
+                mapPanel.Invalidate(previewMap, Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1));
             }
         }
 
@@ -385,7 +430,9 @@ namespace MobiusEditor.Tools
             {
                 MapRenderer.RenderAllCrateOutlines(graphics, previewMap, Globals.MapTileSize, Globals.MapTileScale, false);
             }
-            MapRenderer.RenderAllBoundsFromCell(graphics, Globals.MapTileSize, previewMap.Overlay.Where(x => x.Value.Type.IsOverlay), previewMap.Metrics);
+            int secondRow = map.Metrics.Width;
+            int lastRow = map.Metrics.Length - map.Metrics.Width;
+            MapRenderer.RenderAllBoundsFromCell(graphics, Globals.MapTileSize, previewMap.Overlay.Where(x => x.Value.Type.IsOverlay && x.Cell >= secondRow && x.Cell < lastRow), previewMap.Metrics);
         }
 
         public override void Activate()

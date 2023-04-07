@@ -66,6 +66,10 @@ namespace MobiusEditor.Widgets
             }
             set
             {
+                if (value.ToArgb() == penColor.ToArgb() && defaultMouseoverPen != null)
+                {
+                    return;
+                }
                 penColor = value;
                 Pen p = defaultMouseoverPen;
                 defaultMouseoverPen = null;
@@ -260,6 +264,11 @@ namespace MobiusEditor.Widgets
 
         public void RenderRect(Graphics graphics, Point mouseCell)
         {
+            if (defaultMouseoverPen == null)
+            {
+                // Forces creation of pen object
+                this.PenColor = penColor;
+            }
             Pen p = defaultMouseoverPen;
             if (!MouseoverSize.IsEmpty && p != null)
             {

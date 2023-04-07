@@ -80,6 +80,7 @@ namespace MobiusEditor.Tools
             else
             {
                 navigationWidget.MouseoverSize = new Size((int)brushSizeNud.Value, (int)brushSizeNud.Value);
+                CheckRedPenEdges();
             }
         }
 
@@ -94,12 +95,12 @@ namespace MobiusEditor.Tools
 
         private void ResourceTool_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.OemOpenBrackets)
+            if (e.KeyCode == Keys.PageDown)
             {
                 brushSizeNud.DownButton();
                 mapPanel.Invalidate();
             }
-            else if (e.KeyCode == Keys.OemCloseBrackets)
+            else if (e.KeyCode == Keys.PageUp)
             {
                 brushSizeNud.UpButton();
                 mapPanel.Invalidate();
@@ -153,6 +154,7 @@ namespace MobiusEditor.Tools
 
         private void MouseoverWidget_MouseCellChanged(object sender, MouseCellChangedEventArgs e)
         {
+            CheckRedPenEdges();
             if (placementMode)
             {
                 if (additivePlacement)
@@ -164,20 +166,6 @@ namespace MobiusEditor.Tools
                     RemoveResource(e.NewCell);
                 }
             }
-            /*/
-            // This code doesn't function. Thankfully, resources don't actually paint a preview anyway.
-            // MapToClient seems fundamentally broken; it requires coordinates of the mouse at image scale.
-            if (brushSizeNud.Value > 1)
-            {
-                foreach (var cell in new Point[] { e.OldCell, e.NewCell })
-                {
-                    mapPanel.Invalidate(mapPanel.MapToClient(new Rectangle(
-                        new Point(cell.X - ((int)brushSizeNud.Value / 2), cell.Y - ((int)brushSizeNud.Value / 2)),
-                        new Size((int)brushSizeNud.Value, (int)brushSizeNud.Value)
-                    )));
-                }
-            }
-            //*/
         }
 
         private void AddResource(Point location)
@@ -193,7 +181,7 @@ namespace MobiusEditor.Tools
             rectangle.Inflate(navigationWidget.MouseoverSize.Width / 2, navigationWidget.MouseoverSize.Height / 2);
             foreach (var subLocation in rectangle.Points())
             {
-                // Can't place overlay on top and bottom row, for some odd reason.
+                // Can't place overlay on top and bottom row. See OverlayClass::Read_INI
                 if (subLocation.Y == 0 || subLocation.Y == map.Metrics.Height - 1)
                 {
                     continue;
@@ -239,6 +227,20 @@ namespace MobiusEditor.Tools
             rectangle.Inflate(1, 1);
             mapPanel.Invalidate(map, rectangle);
             Update();
+        }
+
+        private void CheckRedPenEdges()
+        {
+            // Only check if size is 1x1; otherwise it'll be marked by PostRenderMap.
+            if (navigationWidget.MouseoverSize.Width == 1 && navigationWidget.MouseoverSize.Height == 1
+                && navigationWidget.MouseCell.Y == 0 || navigationWidget.MouseCell.Y == map.Metrics.Height - 1)
+            {
+                navigationWidget.PenColor = Color.Red;
+            }
+            else
+            {
+                navigationWidget.PenColor = Color.Yellow;
+            }
         }
 
         private void EnterPlacementMode(bool additive)
@@ -348,7 +350,20 @@ namespace MobiusEditor.Tools
         protected override void PostRenderMap(Graphics graphics)
         {
             base.PostRenderMap(graphics);
+            List<int> redCells = new List<int>();
+            Rectangle rectangle = new Rectangle(navigationWidget.MouseCell, new Size(1, 1));
+            rectangle.Inflate(navigationWidget.MouseoverSize.Width / 2, navigationWidget.MouseoverSize.Height / 2);
+            int lastRow = map.Metrics.Height - 1;
+            foreach (var subLocation in rectangle.Points())
+            {
+                // Can't place overlay on top and bottom row. See OverlayClass::Read_INI
+                if ((subLocation.Y == 0 || subLocation.Y == lastRow) && map.Metrics.GetCell(subLocation, out int cell))
+                {
+                    redCells.Add(cell);
+                }
+            }
             MapRenderer.RenderAllBoundsFromCell(graphics, Globals.MapTileSize, map.Overlay.Where(x => x.Value.Type.IsResource), map.Metrics);
+            MapRenderer.RenderAllBoundsFromCell(graphics, Globals.MapTileSize, redCells, map.Metrics, Color.Red);
         }
 
         public override void Activate()

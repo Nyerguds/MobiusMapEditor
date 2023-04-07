@@ -312,12 +312,15 @@ namespace MobiusEditor.Dialogs
         {
             try
             {
-                (txtPreview.Tag as Image)?.Dispose();
-                Bitmap preview = null;
+                Bitmap preview = txtPreview.Tag as Bitmap;
+                txtPreview.Tag = null;
+                preview?.Dispose();
+                preview = null;
                 if (File.Exists(txtPreview.Text))
                 {
                     using (Bitmap b = new Bitmap(txtPreview.Text))
                     {
+                        b.SetResolution(96, 96);
                         preview = b.FitToBoundingBox(Globals.MapPreviewSize.Width, Globals.MapPreviewSize.Height, Color.Black);
                     }
                 }
@@ -356,6 +359,7 @@ namespace MobiusEditor.Dialogs
             // Now generates all contents.
             using (Bitmap pr = plugin.Map.GenerateWorkshopPreview(plugin.GameType, true).ToBitmap())
             {
+                pr.SetResolution(96, 96);
                 pr.Save(defaultPreview, ImageFormat.Png);
             }
             if (plugin.Map.BasicSection.SoloMission)

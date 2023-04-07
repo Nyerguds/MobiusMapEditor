@@ -191,6 +191,7 @@ namespace MobiusEditor.Model
                 var renderSize = new Size(tileSize.Width * Size.Width, tileSize.Height * Size.Height);
                 Rectangle overlayBounds = MapRenderer.RenderBounds(tile.Image.Size, Size, Globals.PreviewTileScale);
                 Bitmap th = new Bitmap(renderSize.Width, renderSize.Height);
+                th.SetResolution(96, 96);
                 using (Graphics g = Graphics.FromImage(th))
                 {
                     MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);

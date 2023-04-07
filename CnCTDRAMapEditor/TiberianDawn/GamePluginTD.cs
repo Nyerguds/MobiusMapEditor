@@ -408,7 +408,9 @@ namespace MobiusEditor.TiberianDawn
             Map.MapSection.PropertyChanged += MapSection_PropertyChanged;
             if (mapImage)
             {
-                MapImage = new Bitmap(Map.Metrics.Width * Globals.MapTileWidth, Map.Metrics.Height * Globals.MapTileHeight);
+                Bitmap mapImg = new Bitmap(Map.Metrics.Width * Globals.MapTileWidth, Map.Metrics.Height * Globals.MapTileHeight);
+                mapImg.SetResolution(96, 96);
+                MapImage = mapImg;
             }
         }
 

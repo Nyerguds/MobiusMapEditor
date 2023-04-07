@@ -1351,6 +1351,7 @@ namespace MobiusEditor
                 {
                     using (Bitmap bm = new Bitmap(imagePath))
                     {
+                        bm.SetResolution(96, 96);
                         imageWidth = bm.Width;
                         imageHeight = bm.Height;
                         imageData = ImageUtils.GetImageData(bm, PixelFormat.Format32bppArgb);

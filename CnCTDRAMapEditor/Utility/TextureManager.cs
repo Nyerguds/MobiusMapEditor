@@ -94,14 +94,20 @@ namespace MobiusEditor.Utility
                 {
                     if (!cachedTextures.ContainsKey(filename))
                     {
-                        cachedTextures.Add(filename, new Bitmap(bm));
+                        Bitmap cacheCopy = new Bitmap(bm);
+                        cacheCopy.SetResolution(96, 96);
+                        cachedTextures.Add(filename, cacheCopy);
                     }
-                    return (new Bitmap(bm), bounds);
+                    Bitmap retCopy = new Bitmap(bm);
+                    retCopy.SetResolution(96, 96);
+                    return (retCopy, bounds);
                 }
             }
             if (teamColorTextures.TryGetValue((filename, teamColor), out (Bitmap bitmap, Rectangle opaqueBounds) result))
             {
-                return (new Bitmap(result.bitmap), result.opaqueBounds);
+                Bitmap retCopy = new Bitmap(result.bitmap);
+                retCopy.SetResolution(96, 96);
+                return (retCopy, result.opaqueBounds);
             }
             if (!cachedTextures.TryGetValue(filename, out result.bitmap))
             {
@@ -189,25 +195,31 @@ namespace MobiusEditor.Utility
                     }
                     if (tga != null)
                     {
-                        var bitmap = tga.ToBitmap(true);
                         if (metadata != null)
                         {
-                            var size = new Size(metadata["size"][0].ToObject<int>(), metadata["size"][1].ToObject<int>());
-                            var crop = Rectangle.FromLTRB(
-                                metadata["crop"][0].ToObject<int>(),
-                                metadata["crop"][1].ToObject<int>(),
-                                metadata["crop"][2].ToObject<int>(),
-                                metadata["crop"][3].ToObject<int>()
-                            );
-                            var uncroppedBitmap = new Bitmap(size.Width, size.Height, bitmap.PixelFormat);
-                            using (var g = Graphics.FromImage(uncroppedBitmap))
+                            using (var bitmap = tga.ToBitmap(true))
                             {
-                                g.DrawImage(bitmap, crop, new Rectangle(Point.Empty, bitmap.Size), GraphicsUnit.Pixel);
+                                bitmap.SetResolution(96, 96);
+                                var size = new Size(metadata["size"][0].ToObject<int>(), metadata["size"][1].ToObject<int>());
+                                var crop = Rectangle.FromLTRB(
+                                    metadata["crop"][0].ToObject<int>(),
+                                    metadata["crop"][1].ToObject<int>(),
+                                    metadata["crop"][2].ToObject<int>(),
+                                    metadata["crop"][3].ToObject<int>()
+                                );
+                                var uncroppedBitmap = new Bitmap(size.Width, size.Height, bitmap.PixelFormat);
+                                uncroppedBitmap.SetResolution(96, 96);
+                                using (var g = Graphics.FromImage(uncroppedBitmap))
+                                {
+                                    g.DrawImage(bitmap, crop, new Rectangle(Point.Empty, bitmap.Size), GraphicsUnit.Pixel);
+                                }
+                                cachedTextures[filename] = uncroppedBitmap;
                             }
-                            cachedTextures[filename] = uncroppedBitmap;
                         }
                         else
                         {
+                            var bitmap = tga.ToBitmap(true);
+                            bitmap.SetResolution(96, 96);
                             cachedTextures[filename] = bitmap;
                         }
                     }
@@ -257,6 +269,7 @@ namespace MobiusEditor.Utility
                                             imageData.Metadata["crop"][3].ToObject<int>()
                                         );
                                         var uncroppedBitmap = new Bitmap(size.Width, size.Height, bitmap.PixelFormat);
+                                        uncroppedBitmap.SetResolution(96, 96);
                                         using (var g = Graphics.FromImage(uncroppedBitmap))
                                         {
                                             g.DrawImage(bitmap, crop, new Rectangle(Point.Empty, bitmap.Size), GraphicsUnit.Pixel);
@@ -310,18 +323,20 @@ namespace MobiusEditor.Utility
             {
                 return result;
             }
-            result.bitmap = new Bitmap(result.bitmap);
+            Bitmap resBm = new Bitmap(result.bitmap);
+            resBm.SetResolution(96, 96);
+            result.bitmap = resBm;
             if (teamColor != null)
             {
                 Rectangle opaqueBounds;
-                teamColor.ApplyToImage(result.bitmap, out opaqueBounds);
+                teamColor.ApplyToImage(resBm, out opaqueBounds);
                 result.opaqueBounds = opaqueBounds;
                 // EXPERIMENTAL: might be better not to cache this?
                 //teamColorTextures[(filename, teamColor)] = (new Bitmap(result.bitmap), result.opaqueBounds);
             }
             else
             {
-                result.opaqueBounds = ImageUtils.CalculateOpaqueBounds(result.bitmap);
+                result.opaqueBounds = ImageUtils.CalculateOpaqueBounds(resBm);
             }
             return result;
         }
@@ -406,6 +421,7 @@ namespace MobiusEditor.Utility
                 var bitmapData = bitmap.LockBits(new Rectangle(0, 0, image.Width, image.Height), ImageLockMode.WriteOnly, bitmap.PixelFormat);
                 Marshal.Copy(image.Data, 0, bitmapData.Scan0, image.Stride * image.Height);
                 bitmap.UnlockBits(bitmapData);
+                bitmap.SetResolution(96, 96);
                 return bitmap;
             }            
         }
@@ -420,6 +436,7 @@ namespace MobiusEditor.Utility
                 {
                     // Generate.
                     bm = new Bitmap(48, 48);
+                    bm.SetResolution(96, 96);
                     using (Graphics graphics = Graphics.FromImage(bm))
                     {
                         using (SolidBrush outside = new SolidBrush(Color.FromArgb(128, 107, 107, 107)))
@@ -435,6 +452,7 @@ namespace MobiusEditor.Utility
                 }
                 // Post-process dummy image.
                 Bitmap newBm = new Bitmap(Globals.OriginalTileWidth, Globals.OriginalTileHeight);
+                newBm.SetResolution(96, 96);
                 ColorMatrix colorMatrix = new ColorMatrix();
                 colorMatrix.Matrix33 = 0.5f;
                 var imageAttributes = new ImageAttributes();

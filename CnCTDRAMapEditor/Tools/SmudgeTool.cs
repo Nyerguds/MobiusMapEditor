@@ -193,6 +193,10 @@ namespace MobiusEditor.Tools
             {
                 EnterPlacementMode();
             }
+            else
+            {
+                CheckSelectShortcuts(e);
+            }
         }
 
         private void SmudgeTool_KeyUp(object sender, KeyEventArgs e)
@@ -474,6 +478,39 @@ namespace MobiusEditor.Tools
             return found;
         }
 
+        private void CheckSelectShortcuts(KeyEventArgs e)
+        {
+            int maxVal = smudgeTypeListBox.Items.Count - 1;
+            int curVal = smudgeTypeListBox.SelectedIndex;
+            int newVal;
+            switch (e.KeyCode)
+            {
+                case Keys.Home:
+                    newVal = 0;
+                    break;
+                case Keys.End:
+                    newVal = maxVal;
+                    break;
+                case Keys.PageDown:
+                    newVal = Math.Min(curVal + 1, maxVal);
+                    break;
+                case Keys.PageUp:
+                    newVal = Math.Max(curVal - 1, 0);
+                    break;
+                default:
+                    return;
+            }
+            if (curVal != newVal)
+            {
+                smudgeTypeListBox.SelectedIndex = newVal;
+                SmudgeType selected = SelectedSmudgeType;
+                if (placementMode && selected != null)
+                {
+                    mapPanel.Invalidate(map, new Rectangle(navigationWidget.MouseCell, selected.Size));
+                }
+            }
+        }
+
         private void EnterPlacementMode()
         {
             if (placementMode)
@@ -545,6 +582,7 @@ namespace MobiusEditor.Tools
                 Size mockSize = mockType.Size;
                 CellMetrics mockMetrics = new CellMetrics(mockSize);
                 var smudgePreview = new Bitmap(Globals.PreviewTileWidth * mockSize.Width, Globals.PreviewTileWidth * mockSize.Height);
+                smudgePreview.SetResolution(96, 96);
                 using (var g = Graphics.FromImage(smudgePreview))
                 {
                     MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);

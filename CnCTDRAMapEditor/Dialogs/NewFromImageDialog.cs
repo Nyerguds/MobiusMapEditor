@@ -196,10 +196,12 @@ namespace MobiusEditor.Dialogs
             int actualWidth = Math.Min(width, maxWidth);
             int actualHeight = Math.Min(height, maxHeight);
             finalImage = new Bitmap(actualWidth, actualHeight, PixelFormat.Format32bppArgb);
+            finalImage.SetResolution(96, 96);
             byte[] imgData = new byte[imageData.Length];
             Array.Copy(imageData, 0, imgData, 0, imageData.Length);
             using (Bitmap origData = new Bitmap(width, height, PixelFormat.Format32bppArgb))
             {
+                origData.SetResolution(96, 96);
                 // Remove all alpha.
                 for (Int32 i = 3; i < imgData.Length; i += 4)
                 {

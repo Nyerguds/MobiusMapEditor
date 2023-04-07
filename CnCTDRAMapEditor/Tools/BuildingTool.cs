@@ -115,7 +115,7 @@ namespace MobiusEditor.Tools
             }
             if (map.Metrics.GetCell(navigationWidget.MouseCell, out int cell))
             {
-                if (map.Technos[cell] is Building building)
+                if (map.Buildings[cell] is Building building)
                 {
                     selectedBuilding = null;
                     selectedBuildingLocation = null;
@@ -205,6 +205,10 @@ namespace MobiusEditor.Tools
             {
                 EnterPlacementMode();
             }
+            else
+            {
+                CheckSelectShortcuts(e);
+            }
         }
 
         private void BuildingTool_KeyUp(object sender, KeyEventArgs e)
@@ -272,7 +276,7 @@ namespace MobiusEditor.Tools
 
         private void AddMoveUndoTracking(Building toMove, Point startLocation)
         {
-            Point? finalLocation = map.Technos[toMove];
+            Point? finalLocation = map.Buildings[toMove];
             Dictionary<Point, Smudge> eaten = selectedBuildingEatenSmudge.ToDictionary(p => p.Key, p => p.Value);
             if (!finalLocation.HasValue || finalLocation.Value == selectedBuildingLocation)
             {
@@ -348,7 +352,7 @@ namespace MobiusEditor.Tools
                     startedDragging = true;
                 }
                 Building toMove = selectedBuilding;
-                var oldLocation = map.Technos[toMove].Value;
+                var oldLocation = map.Buildings[toMove].Value;
                 var newLocation = new Point(Math.Max(0, e.NewCell.X - selectedBuildingPivot.X), Math.Max(0, e.NewCell.Y - selectedBuildingPivot.Y));
                 mapPanel.Invalidate(map, toMove);
                 Point[] oldBibPoints = null;
@@ -604,6 +608,39 @@ namespace MobiusEditor.Tools
             }
         }
 
+        private void CheckSelectShortcuts(KeyEventArgs e)
+        {
+            int maxVal = buildingTypesBox.Items.Count - 1;
+            int curVal = buildingTypesBox.SelectedIndex;
+            int newVal;
+            switch (e.KeyCode)
+            {
+                case Keys.Home:
+                    newVal = 0;
+                    break;
+                case Keys.End:
+                    newVal = maxVal;
+                    break;
+                case Keys.PageDown:
+                    newVal = Math.Min(curVal + 1, maxVal);
+                    break;
+                case Keys.PageUp:
+                    newVal = Math.Max(curVal - 1, 0);
+                    break;
+                default:
+                    return;
+            }
+            if (curVal != newVal)
+            {
+                buildingTypesBox.SelectedIndex = newVal;
+                BuildingType selected = SelectedBuildingType;
+                if (placementMode && selected != null)
+                {
+                    mapPanel.Invalidate(map, new Rectangle(navigationWidget.MouseCell, selected.OverlapBounds.Size));
+                }
+            }
+        }
+
         private void EnterPlacementMode()
         {
             if (placementMode)
@@ -702,6 +739,7 @@ namespace MobiusEditor.Tools
                 var renderBuilding = MapRenderer.Render(plugin.GameType, map.Theater, new Point(0, 0), Globals.PreviewTileSize, Globals.PreviewTileScale, mockBuilding);
                 Size previewSize = mockBuilding.OverlapBounds.Size;
                 var buildingPreview = new Bitmap(previewSize.Width * Globals.PreviewTileWidth, previewSize.Height * Globals.PreviewTileHeight);
+                buildingPreview.SetResolution(96, 96);
                 using (var g = Graphics.FromImage(buildingPreview))
                 {
                     MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);

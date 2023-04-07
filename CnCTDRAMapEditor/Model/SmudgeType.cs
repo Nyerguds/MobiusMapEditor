@@ -138,6 +138,7 @@ namespace MobiusEditor.Model
             var oldImage = Thumbnail;
             var tileSize = Globals.PreviewTileSize;
             Bitmap th = new Bitmap(tileSize.Width * Size.Width, tileSize.Height * Size.Height);
+            th.SetResolution(96, 96);
             bool found = false;
             using (Graphics g = Graphics.FromImage(th))
             {

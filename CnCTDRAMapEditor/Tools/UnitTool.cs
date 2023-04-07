@@ -239,6 +239,10 @@ namespace MobiusEditor.Tools
             {
                 EnterPlacementMode();
             }
+            else
+            {
+                CheckSelectShortcuts(e);
+            }
         }
 
         private void UnitTool_KeyUp(object sender, KeyEventArgs e)
@@ -443,6 +447,38 @@ namespace MobiusEditor.Tools
             }
         }
 
+        private void CheckSelectShortcuts(KeyEventArgs e)
+        {
+            int maxVal = unitTypesBox.Items.Count - 1;
+            int curVal = unitTypesBox.SelectedIndex;
+            int newVal;
+            switch (e.KeyCode)
+            {
+                case Keys.Home:
+                    newVal = 0;
+                    break;
+                case Keys.End:
+                    newVal = maxVal;
+                    break;
+                case Keys.PageDown:
+                    newVal = Math.Min(curVal + 1, maxVal);
+                    break;
+                case Keys.PageUp:
+                    newVal = Math.Max(curVal - 1, 0);
+                    break;
+                default:
+                    return;
+            }
+            if (curVal != newVal)
+            {
+                unitTypesBox.SelectedIndex = newVal;
+                if (placementMode)
+                {
+                    mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(navigationWidget.MouseCell, new Size(1, 1)), 1, 1));
+                }
+            }
+        }
+
         private void EnterPlacementMode()
         {
             if (placementMode)
@@ -511,6 +547,7 @@ namespace MobiusEditor.Tools
             if (mockUnit.Type != null)
             {
                 var unitPreview = new Bitmap(Globals.PreviewTileWidth * 3, Globals.PreviewTileWidth * 3);
+                unitPreview.SetResolution(96, 96);
                 using (var g = Graphics.FromImage(unitPreview))
                 {
                     MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
