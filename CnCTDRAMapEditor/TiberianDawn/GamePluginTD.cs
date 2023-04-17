@@ -889,16 +889,16 @@ namespace MobiusEditor.TiberianDawn
                             }
                             trigger.Event1.EventType = eventType;
                             string actionType = tokens[1];
-                            if (EventTypes.EVENT_NONE.Equals(actionType, StringComparison.OrdinalIgnoreCase))
+                            if (ActionTypes.ACTION_NONE.Equals(actionType, StringComparison.OrdinalIgnoreCase))
                             {
-                                actionType = EventTypes.EVENT_NONE;
+                                actionType = ActionTypes.ACTION_NONE;
                             }
                             else
                             {
                                 actionType = ActionTypes.GetTypes().FirstOrDefault(act => act.Equals(actionType, StringComparison.OrdinalIgnoreCase)) ?? ActionTypes.ACTION_NONE;
-                                if (ActionTypes.ACTION_NONE.Equals(eventType, StringComparison.OrdinalIgnoreCase))
+                                if (ActionTypes.ACTION_NONE.Equals(actionType, StringComparison.OrdinalIgnoreCase))
                                 {
-                                    errors.Add(string.Format("Trigger '{0}' references unknown event '{1}'. Reverted to 'None'.", Key, tokens[4]));
+                                    errors.Add(string.Format("Trigger '{0}' references unknown action '{1}'. Reverted to 'None'.", Key, tokens[4]));
                                     modified = true;
                                 }
                             }
@@ -2951,7 +2951,6 @@ namespace MobiusEditor.TiberianDawn
         public virtual IEnumerable<string> CheckTriggers(IEnumerable<Trigger> triggers, bool includeExternalData, bool prefixNames, bool fatalOnly, out bool fatal, bool fix, out bool wasFixed)
         {
             fatal = false;
-            // Nothing actually auto-fixes errors on TD triggers.
             wasFixed = false;
             List<string> errors = new List<string>();
             List<string> curErrors = new List<string>();
@@ -3054,9 +3053,14 @@ namespace MobiusEditor.TiberianDawn
                 }
                 if (!fatalOnly && event1 == EventTypes.EVENT_BUILD && (trigger.Event1.Data < 0 || trigger.Event1.Data > Map.BuildingTypes.Max(bld => bld.ID)))
                 {
-                    curErrors.Add(prefix + "Illegal building id \"" + trigger.Event1.Data + "\" for \"Built It\" event.");
-                    trigger.Event1.Data = 0;
-                    wasFixed = true;
+                    string error = prefix + "Illegal building id \"" + trigger.Event1.Data + "\" for \"Built It\" event.";
+                    if (fix)
+                    {
+                        trigger.Event1.Data = 0;
+                        wasFixed = true;
+                        error += " Fixed to \"0\" (" + (Map.BuildingTypes.FirstOrDefault(bld => bld.ID == 0)?.Name ?? String.Empty) + ").";
+                    }
+                    curErrors.Add(error);
                 }
 
                 // Action checks

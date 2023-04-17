@@ -155,7 +155,7 @@ namespace MobiusEditor.Model
             Cleared?.Invoke(this, new EventArgs());
         }
 
-        public IEnumerable<(int Cell, T Value)> IntersectsWith(ISet<int> cells)
+        public IEnumerable<(int Cell, T Value)> IntersectsWithCells(ISet<int> cells)
         {
             foreach (var i in cells)
             {
@@ -170,7 +170,7 @@ namespace MobiusEditor.Model
             }
         }
 
-        public IEnumerable<(int Cell, T Value)> IntersectsWith(ISet<Point> locations)
+        public IEnumerable<(int Cell, T Value)> IntersectsWithCells(ISet<Point> locations)
         {
             foreach (var location in locations)
             {
@@ -181,6 +181,35 @@ namespace MobiusEditor.Model
                     {
                         metrics.GetCell(location, out int i);
                         yield return (i, cell);
+                    }
+                }
+            }
+        }
+        public IEnumerable<(Point Point, T Value)> IntersectsWithPoints(ISet<int> cells)
+        {
+            foreach (var i in cells)
+            {
+                if (metrics.GetLocation(i, out Point location))
+                {
+                    var cell = this[i];
+                    if (cell != null)
+                    {
+                        yield return (location, cell);
+                    }
+                }
+            }
+        }
+
+        public IEnumerable<(Point Point, T Value)> IntersectsWithPoints(ISet<Point> locations)
+        {
+            foreach (var location in locations)
+            {
+                if (metrics.Contains(location))
+                {
+                    var cell = this[location];
+                    if (cell != null)
+                    {
+                        yield return (location, cell);
                     }
                 }
             }

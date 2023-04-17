@@ -2043,7 +2043,6 @@ namespace MobiusEditor
             }
         }
 
-
         private void SwitchLayers(bool baseLayers, bool enabled)
         {
             if (baseLayers)

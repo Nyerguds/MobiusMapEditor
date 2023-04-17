@@ -133,6 +133,7 @@ namespace MobiusEditor.Tools
                 }
                 if ((modifiedBits & MapLayerFlag.Smudge) != MapLayerFlag.None)
                 {
+                    // Multi-cell smudges are placed per cell, so no need to filter out bibs and check all their cells separately.
                     foreach (var (Cell, _) in RenderMap.Smudge)
                     {
                         if (metr.GetLocation(Cell, out Point pt))

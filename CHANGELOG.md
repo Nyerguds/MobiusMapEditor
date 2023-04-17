@@ -443,7 +443,6 @@ Released on 03 Apr 2023 at 19:20 GMT
 * Added character count to the briefing screen. if WriteClassicBriefing is enabled a warning wil be given if the amount exceeds the maximum the classic game can handle. If the warning is ignored, the classic briefing will truncated on the maximum it can handle, to prevent game crashes.
 * Fixed saving of Red Alert's classic briefing, to also obey the classic internal maximum, and to correctly split on line break @ characters.
 
-
 ### v1.4.5.1:
 
 Unreleased
@@ -454,3 +453,7 @@ Unreleased
 * Applied DPI changes that might fix issues with objects drawing weirdly on some people's systems.
 * PageUp and PageDown buttons will now consistently move through the tool list in all editing modes.
 * Removed [ and ] as shortcuts to affect resource paint size because they did not work consistently on foreign keyboards. The functionality was also changed to PageUp and PageDown.
+* Fixed an issue where RA triggers with waypoint "None" set in them would have that value corrupted to 255 after a reload of the map, causing other systems in the editor to crash.
+* Fixed mixup between actions and events in the TD trigger reading checks.
+* Resources outside the map are now always shown at their minimum size to indicate they don't really have any impact on the map. This also updates on the fly when changing the map bounds.
+* The Resources tool no longer evaluates resources placed outside the map bounds.

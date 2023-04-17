@@ -254,13 +254,41 @@ namespace MobiusEditor.Tools
             // Fixes the fact bounds are not applied when pressing ctrl+z / ctrl+y due to the fact the ctrl key is held down
             if (boundsMode && (map.Bounds != dragBounds))
             {
+                HashSet<Point> updCells = GetResourceUpdateCells(dragBounds, map.Bounds);
                 dragBounds = map.Bounds;
                 dragEdge = FacingType.None;
                 dragStartPoint = null;
                 dragStartBounds = null;
                 UpdateTooltip();
-                mapPanel.Invalidate();
+                mapPanel.Invalidate(map, updCells);
             }
+        }
+
+        /// <summary>
+        /// Determines which cells of resources will need graphical updates with the system
+        /// to reduce resources to their minimum size outside the map bounds.
+        /// </summary>
+        /// <param name="oldBounds">Map bounds before the resize.</param>
+        /// <param name="newBounds">Map bounds after the resize.</param>
+        /// <returns></returns>
+        private HashSet<Point> GetResourceUpdateCells(Rectangle oldBounds, Rectangle newBounds)
+        {
+            Rectangle intersect = oldBounds;
+            intersect.Intersect(newBounds);
+            // Update 1-wide border inside the area common between the two rectangles.
+            // Should technically only be the cells at the sides that border the new and old areas,
+            // but we'll leave the rest to not complicate the algorithm here too much.
+            HashSet<Point> cellsToUpdate = intersect.BorderCells(1).ToHashSet();
+            // Update entire old area outside common rectangle.
+            cellsToUpdate.UnionWith(oldBounds.Points().Where(p => !intersect.Contains(p)));
+            // Update entire new area outside common rectangle.
+            cellsToUpdate.UnionWith(newBounds.Points().Where(p => !intersect.Contains(p)));
+            HashSet<Point> resourceCellsToUpdate = new HashSet<Point>();
+            foreach (var (location, overlay) in map.Overlay.IntersectsWithPoints(cellsToUpdate).Where(o => o.Value.Type.IsResource))
+            {
+                resourceCellsToUpdate.Add(location);
+            }
+            return resourceCellsToUpdate;
         }
 
         private void TemplateTypeMapPanel_MouseMove(object sender, MouseEventArgs e)
@@ -1236,10 +1264,6 @@ namespace MobiusEditor.Tools
 
         private void UpdateTooltip()
         {
-            if (!placementMode)
-            {
-
-            }
             FacingType showEdge = dragEdge != FacingType.None ? dragEdge : DetectDragEdge(dragStartPoint.HasValue);
             if (boundsMode && (showEdge != FacingType.None || (dragStartPoint.HasValue && dragStartBounds.HasValue)))
             {
@@ -1468,16 +1492,32 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
+            HashSet<Point> updCells = null;
             if (dragBounds != map.Bounds)
             {
                 var oldBounds = map.Bounds;
                 var newBounds = dragBounds;
+                updCells = GetResourceUpdateCells(oldBounds, newBounds);
+                if (updCells.Count == 0)
+                {
+                    updCells = null;
+                }
                 bool origDirtyState = plugin.Dirty;
                 plugin.Dirty = true;
                 void undoAction(UndoRedoEventArgs ure)
                 {
                     ure.Map.Bounds = oldBounds;
-                    ure.MapPanel.Invalidate();
+                    if (updCells == null)
+                    {
+                        ure.MapPanel.Invalidate();
+                    }
+                    else
+                    {
+                        // Tools that paint from a cloned map update this automatically, but not all tools use a cloned map, and undo/redo
+                        // actions can happen after switching to a different tool. Also better to just have it correct in the real map.
+                        ure.Map.UpdateResourceOverlays(updCells, true);
+                        ure.MapPanel.Invalidate(ure.Map, updCells);
+                    }
                     if (ure.Plugin != null)
                     {
                         ure.Plugin.Dirty = origDirtyState;
@@ -1486,7 +1526,17 @@ namespace MobiusEditor.Tools
                 void redoAction(UndoRedoEventArgs ure)
                 {
                     ure.Map.Bounds = newBounds;
-                    ure.MapPanel.Invalidate();
+                    if (updCells == null)
+                    {
+                        ure.MapPanel.Invalidate();
+                    }
+                    else
+                    {
+                        // Tools that paint from a cloned map update this automatically, but not all tools use a cloned map, and undo/redo
+                        // actions can happen after switching to a different tool. Also better to just have it correct in the real map.
+                        ure.Map.UpdateResourceOverlays(updCells, true);
+                        ure.MapPanel.Invalidate(ure.Map, updCells);
+                    }
                     if (ure.Plugin != null)
                     {
                         ure.Plugin.Dirty = true;
@@ -1499,7 +1549,15 @@ namespace MobiusEditor.Tools
             dragStartPoint = null;
             dragStartBounds = null;
             UpdateStatus();
-            mapPanel.Invalidate();
+            if (updCells != null)
+            {
+                map.UpdateResourceOverlays(updCells, true);
+                mapPanel.Invalidate(map, updCells);
+            }
+            else 
+            {
+                mapPanel.Invalidate();
+            }
         }
 
         private void CommitTileChanges(bool noCheck)

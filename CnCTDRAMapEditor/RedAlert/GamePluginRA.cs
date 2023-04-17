@@ -737,6 +737,66 @@ namespace MobiusEditor.RedAlert
             List<Trigger> triggers = new List<Trigger>();
             if (triggersSection != null)
             {
+                void fixEvent(TriggerEvent e)
+                {
+                    switch (e.EventType)
+                    {
+                        case EventTypes.TEVENT_THIEVED:
+                        case EventTypes.TEVENT_PLAYER_ENTERED:
+                        case EventTypes.TEVENT_CROSS_HORIZONTAL:
+                        case EventTypes.TEVENT_CROSS_VERTICAL:
+                        case EventTypes.TEVENT_ENTERS_ZONE:
+                        case EventTypes.TEVENT_HOUSE_DISCOVERED:
+                        case EventTypes.TEVENT_BUILDINGS_DESTROYED:
+                        case EventTypes.TEVENT_UNITS_DESTROYED:
+                        case EventTypes.TEVENT_ALL_DESTROYED:
+                        case EventTypes.TEVENT_LOW_POWER:
+                        case EventTypes.TEVENT_BUILDING_EXISTS:
+                        case EventTypes.TEVENT_BUILD:
+                        case EventTypes.TEVENT_BUILD_UNIT:
+                        case EventTypes.TEVENT_BUILD_INFANTRY:
+                        case EventTypes.TEVENT_BUILD_AIRCRAFT:
+                            if (e.Data != -1)
+                            {
+                                e.Data &= 0xFF;
+                            }
+                            break;
+                    }
+                };
+                void fixAction(TriggerAction a)
+                {
+                    switch (a.ActionType)
+                    {
+                        case ActionTypes.TACTION_1_SPECIAL:
+                        case ActionTypes.TACTION_FULL_SPECIAL:
+                        case ActionTypes.TACTION_FIRE_SALE:
+                        case ActionTypes.TACTION_WIN:
+                        case ActionTypes.TACTION_LOSE:
+                        case ActionTypes.TACTION_ALL_HUNT:
+                        case ActionTypes.TACTION_BEGIN_PRODUCTION:
+                        case ActionTypes.TACTION_AUTOCREATE:
+                        case ActionTypes.TACTION_BASE_BUILDING:
+                        case ActionTypes.TACTION_CREATE_TEAM:
+                        case ActionTypes.TACTION_DESTROY_TEAM:
+                        case ActionTypes.TACTION_REINFORCEMENTS:
+                        case ActionTypes.TACTION_FORCE_TRIGGER:
+                        case ActionTypes.TACTION_DESTROY_TRIGGER:
+                        case ActionTypes.TACTION_DZ:
+                        case ActionTypes.TACTION_REVEAL_SOME:
+                        case ActionTypes.TACTION_REVEAL_ZONE:
+                        case ActionTypes.TACTION_PLAY_MUSIC:
+                        case ActionTypes.TACTION_PLAY_MOVIE:
+                        case ActionTypes.TACTION_PLAY_SOUND:
+                        case ActionTypes.TACTION_PLAY_SPEECH:
+                        case ActionTypes.TACTION_PREFERRED_TARGET:
+                            if (a.Data != -1)
+                            {
+                                a.Data &= 0xFF;
+                            }
+                            break;
+                    }
+                };
+
                 foreach (var (Key, Value) in triggersSection)
                 {
                     try
@@ -767,68 +827,6 @@ namespace MobiusEditor.RedAlert
                             trigger.Action2.Trigger = tokens[16];
                             trigger.Action2.Data = long.Parse(tokens[17]);
                             // Fix up data caused by union usage in the legacy game
-                            Action<TriggerEvent> fixEvent = (TriggerEvent e) =>
-                            {
-                                switch (e.EventType)
-                                {
-                                    case EventTypes.TEVENT_THIEVED:
-                                    case EventTypes.TEVENT_PLAYER_ENTERED:
-                                    case EventTypes.TEVENT_CROSS_HORIZONTAL:
-                                    case EventTypes.TEVENT_CROSS_VERTICAL:
-                                    case EventTypes.TEVENT_ENTERS_ZONE:
-                                    case EventTypes.TEVENT_HOUSE_DISCOVERED:
-                                    case EventTypes.TEVENT_BUILDINGS_DESTROYED:
-                                    case EventTypes.TEVENT_UNITS_DESTROYED:
-                                    case EventTypes.TEVENT_ALL_DESTROYED:
-                                    case EventTypes.TEVENT_LOW_POWER:
-                                    case EventTypes.TEVENT_BUILDING_EXISTS:
-                                    case EventTypes.TEVENT_BUILD:
-                                    case EventTypes.TEVENT_BUILD_UNIT:
-                                    case EventTypes.TEVENT_BUILD_INFANTRY:
-                                    case EventTypes.TEVENT_BUILD_AIRCRAFT:
-                                        e.Data &= 0xFF;
-                                        break;
-                                    default:
-                                        break;
-                                }
-                            };
-                            Action<TriggerAction> fixAction = (TriggerAction a) =>
-                            {
-                                switch (a.ActionType)
-                                {
-                                    case ActionTypes.TACTION_1_SPECIAL:
-                                    case ActionTypes.TACTION_FULL_SPECIAL:
-                                    case ActionTypes.TACTION_FIRE_SALE:
-                                    case ActionTypes.TACTION_WIN:
-                                    case ActionTypes.TACTION_LOSE:
-                                    case ActionTypes.TACTION_ALL_HUNT:
-                                    case ActionTypes.TACTION_BEGIN_PRODUCTION:
-                                    case ActionTypes.TACTION_AUTOCREATE:
-                                    case ActionTypes.TACTION_BASE_BUILDING:
-                                    case ActionTypes.TACTION_CREATE_TEAM:
-                                    case ActionTypes.TACTION_DESTROY_TEAM:
-                                    case ActionTypes.TACTION_REINFORCEMENTS:
-                                    case ActionTypes.TACTION_FORCE_TRIGGER:
-                                    case ActionTypes.TACTION_DESTROY_TRIGGER:
-                                    case ActionTypes.TACTION_DZ:
-                                    case ActionTypes.TACTION_REVEAL_SOME:
-                                    case ActionTypes.TACTION_REVEAL_ZONE:
-                                    case ActionTypes.TACTION_PLAY_MUSIC:
-                                    case ActionTypes.TACTION_PLAY_MOVIE:
-                                    case ActionTypes.TACTION_PLAY_SOUND:
-                                    case ActionTypes.TACTION_PLAY_SPEECH:
-                                    case ActionTypes.TACTION_PREFERRED_TARGET:
-                                        a.Data &= 0xFF;
-                                        break;
-                                    // This will not be changed here; instead the system will give an error about it later.
-                                    // The trigger editor automatically makes this go into bounds anyway.
-                                    //case ActionTypes.TACTION_TEXT_TRIGGER:
-                                    //    a.Data = Math.Max(1, Math.Min(209, a.Data));
-                                    //    break;
-                                    default:
-                                        break;
-                                }
-                            };
                             fixEvent(trigger.Event1);
                             fixEvent(trigger.Event2);
                             fixAction(trigger.Action1);
@@ -3063,9 +3061,11 @@ namespace MobiusEditor.RedAlert
                         }
                     }
                 }
-                string[] unusedTeams = Map.TeamTypes.Select(tm => tm.Name).Where(tn => !usedTeams.Contains(tn)).ToArray();
-                Array.Sort(unusedTeams, cmp);
-                string unusedTeamsStr = String.Join(", ", unusedTeams);
+                List<string> unusedTeams = Map.TeamTypes.Select(tm => tm.Name).Where(tn => !usedTeams.Contains(tn)).ToList();
+                // Paratrooper Infantry team. This is a special team and thus never 'unused'.
+                unusedTeams.Remove("@PINF");
+                unusedTeams.Sort();
+                string unusedTeamsStr = String.Join(", ", unusedTeams.ToArray());
                 HashSet<int> checkedGlobals = new HashSet<int>();
                 HashSet<int> alteredGlobals = new HashSet<int>();
                 foreach (Trigger tr in Map.Triggers)
@@ -3090,8 +3090,10 @@ namespace MobiusEditor.RedAlert
                 string unusedWaypointsStr = String.Join(", ", setWaypoints.OrderBy(w => w)
                     .Where(w => (Map.Waypoints[w].Flag & toIgnore) == WaypointFlag.None
                                 && !usedWaypoints.Contains(w)).Select(w => Map.Waypoints[w].Name).ToArray());
-                string unsetUsedWaypointsStr = String.Join(", ", usedWaypoints.OrderBy(w => w).Where(w => !setWaypoints.Contains(w)).Select(w => Map.Waypoints[w].Name).ToArray());
-
+                // Prevent illegal data in triggers/teams from crashing the function by adding a range check.
+                int maxWp = Map.Waypoints.Length;
+                string unsetUsedWaypointsStr = String.Join(", ", usedWaypoints.OrderBy(w => w).Where(w => !setWaypoints.Contains(w))
+                    .Select(w => w >= maxWp ? w.ToString() : Map.Waypoints[w].Name).ToArray());
                 string evalEmpty(string str)
                 {
                     return String.IsNullOrEmpty(str) ? "-" : str;
@@ -3177,6 +3179,9 @@ namespace MobiusEditor.RedAlert
                 CheckActionTeam(prefix, trigger.Action2, curErrors, 2, ref fatal, fatalOnly);
                 CheckActionTrigger(prefix, trigger.Action1, curErrors, 1, ref fatal, fatalOnly);
                 CheckActionTrigger(prefix, trigger.Action2, curErrors, 2, ref fatal, fatalOnly);
+                // Waypoints: also only relevant on ini read.
+                CheckActionWaypoint(prefix, trigger.Action1, curErrors, 1, ref fatal, fatalOnly, fix, ref wasFixed);
+                CheckActionWaypoint(prefix, trigger.Action2, curErrors, 2, ref fatal, fatalOnly, fix, ref wasFixed);
                 // Specific checks go here:
                 // -celltrigger "Entered By" somehow cannot trigger fire sale? Investigate.
                 if (curErrors.Count > 0)
@@ -3220,19 +3225,23 @@ namespace MobiusEditor.RedAlert
                 case EventTypes.TEVENT_BUILDINGS_DESTROYED:
                 case EventTypes.TEVENT_UNITS_DESTROYED:
                 case EventTypes.TEVENT_ALL_DESTROYED:
+                    string error;
                     if (house < -1 || house > maxId)
                     {
-                        errors.Add(prefix + "Event " + nr + ": \"" + evnt.EventType.TrimEnd('.') + "\" has an illegal house id.");
+                        error = prefix + "Event " + nr + ": \"" + evnt.EventType.TrimEnd('.') + "\" has an illegal house id \"" + evnt.Data + "\".";
                         if (fix)
                         {
                             evnt.Data = -1; // 'fix' to -1, so it at least has a valid UI value.
                             wasFixed = true;
+                            error += " Fixed to \"-1\" (" + House.None + ").";
                         }
                     }
                     else
                     {
-                        errors.Add(prefix + "Event " + nr + ": \"" + evnt.EventType.TrimEnd('.') + "\" requires a house to be set.");
+                        // case "-1" is all that remains here. Never fix this case; it's user responsibility.
+                        error = prefix + "Event " + nr + ": \"" + evnt.EventType.TrimEnd('.') + "\" requires a house to be set.";
                     }
+                    errors.Add(error);
                     break;
             }
         }
@@ -3249,12 +3258,14 @@ namespace MobiusEditor.RedAlert
                 case EventTypes.TEVENT_GLOBAL_CLEAR:
                     if (evnt.Data < 0 || evnt.Data > 29)
                     {
-                        errors.Add(prefix + "Event " + nr + ": Globals only go from 0 to 29.");
+                        string error = prefix + "Event " + nr + " has an illegal global value \"" + evnt.Data + "\": Globals only go from 0 to 29.";
                         if (fix)
                         {
                             evnt.Data = evnt.Data.Restrict(0, 29);
                             wasFixed = true;
+                            error += " Fixed to \"" + evnt.Data + "\".";
                         }
+                        errors.Add(error);
                     }
                     break;
             }
@@ -3322,19 +3333,23 @@ namespace MobiusEditor.RedAlert
                 case ActionTypes.TACTION_FIRE_SALE:
                 case ActionTypes.TACTION_AUTOCREATE:
                 case ActionTypes.TACTION_ALL_HUNT:
-                    if (house == -1)
+                    string error;
+                    if (house < -1 || house > maxId)
                     {
-                        errors.Add(prefix + "Action " + nr + ": \"" + actn.TrimEnd('.') + "\" requires a house to be set.");
-                    }
-                    else
-                    {
-                        errors.Add(prefix + "Action " + nr + ": \"" + actn.TrimEnd('.') + "\" has an illegal house id.");
+                        error = prefix + "Action " + nr + ": \"" + actn.TrimEnd('.') + "\" has an illegal house id \"" + action.Data + "\".";
                         if (fix)
                         {
                             action.Data = -1; // 'fix' to -1, so it at least has a valid UI value.
                             wasFixed = true;
+                            error += " Fixed to \"" + action.Data + "\" (" + House.None + ").";
                         }
                     }
+                    else
+                    {
+                        // case "-1" is all that remains here. Never fix this case; it's user responsibility.
+                        error = prefix + "Action " + nr + ": \"" + actn.TrimEnd('.') + "\" requires a house to be set.";
+                    }
+                    errors.Add(error);
                     break;
             }
         }
@@ -3346,13 +3361,15 @@ namespace MobiusEditor.RedAlert
                 case ActionTypes.TACTION_TEXT_TRIGGER:
                     if (action.Data < 1 || action.Data > 209)
                     {
-                        errors.Add(prefix + (fatalOnly ? String.Empty : "[FATAL] - ") + "Action " + nr + ": \"Text triggers only go from 1 to 209.");
+                        string error = prefix + (fatalOnly ? String.Empty : "[FATAL] - ") + "Action " + nr + "has an illegal value \"" + action.Data + "\": \"Text triggers only go from 1 to 209.";
                         fatal = true;
                         if (fix)
                         {
                             action.Data = action.Data.Restrict(1, 209);
                             wasFixed = true;
+                            error += " Fixed to \"" + action.Data + "\".";
                         }
+                        errors.Add(error);
                     }
                     break;
             }
@@ -3368,12 +3385,14 @@ namespace MobiusEditor.RedAlert
                     case ActionTypes.TACTION_CLEAR_GLOBAL:
                         if (action.Data < 0 || action.Data > 29)
                         {
-                            errors.Add(prefix + "Action " + nr + ": Globals only go from 0 to 29.");
+                            string error = prefix + "Action " + nr + " has an illegal value \""+ action.Data + "\": Globals only go from 0 to 29.";
                             if (fix)
                             {
                                 action.Data = action.Data.Restrict(0, 29);
                                 wasFixed = true;
+                                error += " Fixed to \"" + action.Data + "\".";
                             }
+                            errors.Add(error);
                         }
                         break;
                 }
@@ -3420,6 +3439,34 @@ namespace MobiusEditor.RedAlert
                         errors.Add(prefix + "Action " + nr + ": There is no trigger set to destroy.");
                         break;
                 }
+            }
+        }
+
+        private void CheckActionWaypoint(string prefix, TriggerAction act, List<string> errors, Int32 nr, ref bool fatal, bool fatalOnly, bool fix, ref bool wasFixed)
+        {
+            int maxId = Map.Waypoints.Length - 1;
+            long wayPoint = act.Data;
+            if ((wayPoint >= -1 && wayPoint <= maxId) || fatalOnly)
+            {
+                return;
+            }
+            switch (act.ActionType)
+            {
+                case ActionTypes.TACTION_DZ:
+                case ActionTypes.TACTION_REVEAL_SOME:
+                case ActionTypes.TACTION_REVEAL_ZONE:
+                    if (wayPoint < -1 || wayPoint > maxId)
+                    {
+                        string error = prefix + "Action " + nr + ": \"" + act.ActionType.TrimEnd('.') + "\" has an illegal waypoint value \"" + act.Data + "\".";
+                        if (fix)
+                        {
+                            act.Data = -1;
+                            wasFixed = true;
+                            error += " Fixing to \"-1\" (None).";
+                        }
+                        errors.Add(error);
+                    }
+                    break;
             }
         }
 

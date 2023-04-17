@@ -559,7 +559,7 @@ namespace MobiusEditor.Model
             updating = true;
             if (invalidateLayers.TryGetValue(MapLayerFlag.Resources, out ISet<Point> locations))
             {
-                UpdateResourceOverlays(locations);
+                UpdateResourceOverlays(locations, true);
             }
             if (invalidateLayers.TryGetValue(MapLayerFlag.Walls, out locations))
             {
@@ -586,19 +586,26 @@ namespace MobiusEditor.Model
             updating = false;
         }
 
-        private void UpdateResourceOverlays(ISet<Point> locations)
+        public void UpdateResourceOverlays(ISet<Point> locations, bool reduceOutOfBounds)
         {
             var tiberiumCounts = new int[] { 0, 1, 3, 4, 6, 7, 8, 10, 11 };
             var gemCounts = new int[] { 0, 0, 0, 1, 1, 1, 2, 2, 2 };
-            foreach (var (cell, overlay) in Overlay.IntersectsWith(locations).Where(o => o.Value.Type.IsResource))
+            Rectangle checkBounds = reduceOutOfBounds ? this.Bounds : this.Metrics.Bounds;
+            foreach (var (location, overlay) in Overlay.IntersectsWithPoints(locations).Where(o => o.Value.Type.IsResource))
             {
                 int count = 0;
-                foreach (var facing in CellMetrics.AdjacentFacings)
+                if (checkBounds.Contains(location))
                 {
-                    var adjacentTiberium = Overlay.Adjacent(cell, facing);
-                    if (adjacentTiberium?.Type.IsResource ?? false)
+                    foreach (var facing in CellMetrics.AdjacentFacings)
                     {
-                        count++;
+                        if (Metrics.Adjacent(location, facing, out Point adjacent) && checkBounds.Contains(adjacent))
+                        {
+                            var adjacentOverlay = Overlay[adjacent];
+                            if (adjacentOverlay?.Type.IsResource ?? false)
+                            {
+                                count++;
+                            }
+                        }
                     }
                 }
                 overlay.Icon = overlay.Type.IsGem ? gemCounts[count] : tiberiumCounts[count];
@@ -607,12 +614,12 @@ namespace MobiusEditor.Model
 
         private void UpdateWallOverlays(ISet<Point> locations)
         {
-            foreach (var (cell, overlay) in Overlay.IntersectsWith(locations).Where(o => o.Value.Type.IsWall))
+            foreach (var (location, overlay) in Overlay.IntersectsWithPoints(locations).Where(o => o.Value.Type.IsWall))
             {
-                var northWall = Overlay.Adjacent(cell, FacingType.North);
-                var eastWall = Overlay.Adjacent(cell, FacingType.East);
-                var southWall = Overlay.Adjacent(cell, FacingType.South);
-                var westWall = Overlay.Adjacent(cell, FacingType.West);
+                Overlay northWall = Overlay.Adjacent(location, FacingType.North);
+                Overlay eastWall = Overlay.Adjacent(location, FacingType.East);
+                Overlay southWall = Overlay.Adjacent(location, FacingType.South);
+                Overlay westWall = Overlay.Adjacent(location, FacingType.West);
                 int icon = 0;
                 if (northWall?.Type == overlay.Type)
                 {
@@ -636,7 +643,7 @@ namespace MobiusEditor.Model
 
         private void UpdateConcreteOverlays(ISet<Point> locations)
         {
-            foreach (var (cell, overlay) in Overlay.IntersectsWith(locations).Where(o => o.Value.Type.IsConcrete))
+            foreach (var (cell, overlay) in Overlay.IntersectsWithCells(locations).Where(o => o.Value.Type.IsConcrete))
             {
                 // in order: top, topnext, next, bottomnext, bottom
                 FacingType[] even = { FacingType.North, FacingType.NorthWest, FacingType.West, FacingType.SouthWest, FacingType.South };
@@ -703,7 +710,7 @@ namespace MobiusEditor.Model
 
         private void UpdateConcreteOverlays_ORIG(ISet<Point> locations)
         {
-            foreach (var (cell, overlay) in Overlay.IntersectsWith(locations).Where(o => o.Value.Type.IsConcrete))
+            foreach (var (cell, overlay) in Overlay.IntersectsWithCells(locations).Where(o => o.Value.Type.IsConcrete))
             {
                 // Original logic as it is in the game code. Still doesn't match reality, probably due to bugs in the logic to add side cells.
                 FacingType[] odd = { FacingType.North, FacingType.NorthEast, FacingType.East, FacingType.SouthEast, FacingType.South };
@@ -931,6 +938,7 @@ namespace MobiusEditor.Model
             {
                 return "No cell";
             }
+            bool inBounds = Bounds.Contains(location);
             var sb = new StringBuilder();
             sb.AppendFormat("X = {0}, Y = {1}, Cell = {2}", location.X, location.Y, cell);
             var template = Templates[cell];
@@ -951,7 +959,7 @@ namespace MobiusEditor.Model
             {
                 if (overlayType.IsResource)
                 {
-                    sb.AppendFormat(", Resource = {0} Stage {1}", overlayType.DisplayName, overlay.Icon);
+                    sb.AppendFormat(", Resource = {0} Stage {1}", overlayType.DisplayName, inBounds ? overlay.Icon.ToString() : "-");
                 }
                 else
                 {
@@ -1003,7 +1011,7 @@ namespace MobiusEditor.Model
 
         private void RemoveBibs(Building building)
         {
-            var bibCells = Smudge.IntersectsWith(building.BibCells).Where(x => x.Value.Type.IsAutoBib).Select(x => x.Cell).ToArray();
+            var bibCells = Smudge.IntersectsWithCells(building.BibCells).Where(x => x.Value.Type.IsAutoBib).Select(x => x.Cell).ToArray();
             foreach (var cell in bibCells)
             {
                 Smudge[cell] = null;

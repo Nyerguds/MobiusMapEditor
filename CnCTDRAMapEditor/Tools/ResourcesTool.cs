@@ -315,7 +315,10 @@ namespace MobiusEditor.Tools
 
         private void Update()
         {
-            totalResourcesLbl.Text = map.TotalResources.ToString();
+            if (totalResourcesLbl != null)
+            {
+                totalResourcesLbl.Text = map.TotalResources.ToString();
+            }
             boundsResourcesLbl.Text = map.ResourcesInBounds.ToString();
             if (map.OverlayTypes.Any(t => t.IsGem))
             {

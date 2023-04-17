@@ -361,7 +361,7 @@ namespace MobiusEditor.Tools
                 Dictionary<Point, Smudge> refreshList = new Dictionary<Point, Smudge>();
                 if (toMove.Type.HasBib)
                 {
-                    oldBibPoints = map.Smudge.IntersectsWith(toMove.BibCells).Where(x => x.Value.Type.IsAutoBib)
+                    oldBibPoints = map.Smudge.IntersectsWithCells(toMove.BibCells).Where(x => x.Value.Type.IsAutoBib)
                         .Select(b => map.Metrics.GetLocation(b.Cell, out Point p) ? p : new Point(-1, -1)).Where(p => p.X >= 0 && p.Y >= 0).ToArray();
                     Dictionary<Point, Smudge> newBib = toMove.GetBib(newLocation, map.SmudgeTypes);
                     newBibPoints = newBib.Keys.ToArray();
