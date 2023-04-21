@@ -732,7 +732,7 @@ namespace MobiusEditor.Tools
                 using (var g = Graphics.FromImage(infantryPreview))
                 {
                     MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
-                    MapRenderer.Render(map.Theater, Point.Empty, Globals.PreviewTileSize, mockInfantry, InfantryStoppingType.Center).Item2(g);
+                    MapRenderer.RenderInfantry(map.Theater, Point.Empty, Globals.PreviewTileSize, mockInfantry, InfantryStoppingType.Center).Item2(g);
                 }
                 infantryTypeMapPanel.MapImage = infantryPreview;
             }

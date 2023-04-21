@@ -508,7 +508,7 @@ namespace MobiusEditor.Tools
                 using (var g = Graphics.FromImage(terrainPreview))
                 {
                     MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
-                    var render = MapRenderer.Render(plugin.GameType, map.Theater, new Point(0, 0), Globals.PreviewTileSize, Globals.PreviewTileScale, mockTerrain);
+                    var render = MapRenderer.RenderTerrain(plugin.GameType, map.Theater, new Point(0, 0), Globals.PreviewTileSize, Globals.PreviewTileScale, mockTerrain);
                     if (!render.Item1.IsEmpty)
                     {
                         render.Item2(g);

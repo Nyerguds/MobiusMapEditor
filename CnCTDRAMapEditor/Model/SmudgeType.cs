@@ -17,6 +17,7 @@ using MobiusEditor.Render;
 using MobiusEditor.Utility;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 
@@ -26,12 +27,15 @@ namespace MobiusEditor.Model
     public enum SmudgeTypeFlag
     {
         None = 0,
-        // Only used for the bibs automatically added under buildings.
+        /// <summary>4-wide bib indicator. Only used for the bibs automatically added under buildings.</summary>
         Bib1 = 1 << 0,
+        /// <summary>3-wide bib indicator. Only used for the bibs automatically added under buildings.</summary>
         Bib2 = 1 << 1,
+        /// <summary>2-wide bib indicator. Only used for the bibs automatically added under buildings.</summary>
         Bib3 = 1 << 2,
     }
 
+    [DebuggerDisplay("{Name}")]
     public class SmudgeType : IBrowsableType
     {
         public sbyte ID { get; private set; }
@@ -177,23 +181,17 @@ namespace MobiusEditor.Model
 
         public static SmudgeType GetBib(IEnumerable<SmudgeType> SmudgeTypes, int width)
         {
-            var bib1Type = SmudgeTypes.Where(t => t.Flag == SmudgeTypeFlag.Bib1).FirstOrDefault();
-            var bib2Type = SmudgeTypes.Where(t => t.Flag == SmudgeTypeFlag.Bib2).FirstOrDefault();
-            var bib3Type = SmudgeTypes.Where(t => t.Flag == SmudgeTypeFlag.Bib3).FirstOrDefault();
-            SmudgeType bibType = null;
             switch (width)
             {
                 case 2:
-                    bibType = bib3Type;
-                    break;
+                    return SmudgeTypes.Where(t => t.Flag == SmudgeTypeFlag.Bib3).FirstOrDefault();
                 case 3:
-                    bibType = bib2Type;
-                    break;
+                    return SmudgeTypes.Where(t => t.Flag == SmudgeTypeFlag.Bib2).FirstOrDefault();
                 case 4:
-                    bibType = bib1Type;
-                    break;
+                    return SmudgeTypes.Where(t => t.Flag == SmudgeTypeFlag.Bib1).FirstOrDefault();
+                default:
+                    return null;
             }
-            return bibType;
         }
     }
 }

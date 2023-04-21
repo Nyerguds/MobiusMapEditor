@@ -449,11 +449,11 @@ Unreleased
 
 * All overlay placement is now correctly restricted to not be allowed on the top or bottom row of the map, showing red indicators when in placement mode.
 * Resource placement with a brush size larger than 1 shows red cells inside the brush area when hovering over the top or bottom cells of the map. At size 1, the brush is simply completely red.
-* Resource tool will accept PageUp and PageDown buttons for incrementing and decrementing its size.
 * Applied DPI changes that might fix issues with objects drawing weirdly on some people's systems.
 * PageUp and PageDown buttons will now consistently move through the tool list in all editing modes.
 * Removed [ and ] as shortcuts to affect resource paint size because they did not work consistently on foreign keyboards. The functionality was also changed to PageUp and PageDown.
 * Fixed an issue where RA triggers with waypoint "None" set in them would have that value corrupted to 255 after a reload of the map, causing other systems in the editor to crash.
 * Fixed mixup between actions and events in the TD trigger reading checks.
-* Resources outside the map are now always shown at their minimum size to indicate they don't really have any impact on the map. This also updates on the fly when changing the map bounds.
+* Resources outside the map are now always shown at their minimum size, and tinted red, to indicate they don't really have any impact on the map. This also updates on the fly when changing the map bounds.
 * The Resources tool no longer evaluates resources placed outside the map bounds.
+* Rule errors that occur after closing the Map settings dialog will now show in a window with scrollable area, just like the errors shown when opening a maps.

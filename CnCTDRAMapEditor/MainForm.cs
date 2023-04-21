@@ -598,7 +598,15 @@ namespace MobiusEditor
                         }
                         catch (Exception ex)
                         {
-                            MessageBox.Show("Errors occurred when applying rule changes:\n\n" + ex.Message, GetProgramVersionTitle());
+                            //MessageBox.Show("Errors occurred when applying rule changes:\n\n" + ex.Message, GetProgramVersionTitle());
+                            using (ErrorMessageBox emb = new ErrorMessageBox())
+                            {
+                                emb.Title = GetProgramVersionTitle();
+                                emb.Message = "Errors occurred when applying rule changes:";
+                                emb.Errors = ex.Message.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n');
+                                emb.StartPosition = FormStartPosition.CenterParent;
+                                emb.ShowDialog(this);
+                            }
                         }
                         rulesChanged = plugin.GameType == GameType.RedAlert;
                         hasChanges = true;

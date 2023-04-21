@@ -732,11 +732,11 @@ namespace MobiusEditor.Tools
                 {
                     foreach (var point in bibCells.Keys)
                     {
-                        var bibCellRender = MapRenderer.Render(map.Theater, point, Globals.PreviewTileSize, Globals.PreviewTileScale, bibCells[point]);
+                        var bibCellRender = MapRenderer.RenderSmudge(map.Theater, point, Globals.PreviewTileSize, Globals.PreviewTileScale, bibCells[point]);
                         bibRender.Add(bibCellRender);
                     }
                 }
-                var renderBuilding = MapRenderer.Render(plugin.GameType, map.Theater, new Point(0, 0), Globals.PreviewTileSize, Globals.PreviewTileScale, mockBuilding);
+                var renderBuilding = MapRenderer.RenderBuilding(plugin.GameType, map.Theater, new Point(0, 0), Globals.PreviewTileSize, Globals.PreviewTileScale, mockBuilding);
                 Size previewSize = mockBuilding.OverlapBounds.Size;
                 var buildingPreview = new Bitmap(previewSize.Width * Globals.PreviewTileWidth, previewSize.Height * Globals.PreviewTileHeight);
                 buildingPreview.SetResolution(96, 96);

@@ -111,7 +111,7 @@ namespace MobiusEditor.Model
             using (var g = Graphics.FromImage(infantryThumbnail))
             {
                 MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
-                MapRenderer.Render(theater, Point.Empty, Globals.PreviewTileSize, mockInfantry, InfantryStoppingType.Center).Item2(g);
+                MapRenderer.RenderInfantry(theater, Point.Empty, Globals.PreviewTileSize, mockInfantry, InfantryStoppingType.Center).Item2(g);
             }
             Thumbnail = infantryThumbnail;
             if (oldImage != null)

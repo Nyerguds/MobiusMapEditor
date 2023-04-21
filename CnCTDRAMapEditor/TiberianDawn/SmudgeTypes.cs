@@ -24,7 +24,7 @@ namespace MobiusEditor.TiberianDawn
     public static class SmudgeTypes
     {
         public static readonly SmudgeType Crater1 = new SmudgeType(0, "cr1", 5);
-        // Seems the game has issues reading these from missions.
+        // Seems the game has issues reading the other crater types from missions.
         public static readonly SmudgeType Crater2 = new SmudgeType(1, "cr2", 5);
         public static readonly SmudgeType Crater3 = new SmudgeType(2, "cr3", 5);
         public static readonly SmudgeType Crater4 = new SmudgeType(3, "cr4", 5);

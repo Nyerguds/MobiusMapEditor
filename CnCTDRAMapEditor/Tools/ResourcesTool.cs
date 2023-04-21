@@ -365,7 +365,13 @@ namespace MobiusEditor.Tools
                     redCells.Add(cell);
                 }
             }
-            MapRenderer.RenderAllBoundsFromCell(graphics, Globals.MapTileSize, map.Overlay.Where(x => x.Value.Type.IsResource), map.Metrics);
+            Boolean inBounds(Map myMap, int cell)
+            {
+                return myMap.Metrics.GetLocation(cell, out Point location) && myMap.Bounds.Contains(location);
+            }
+            Rectangle mapBounds = map.Bounds;
+            MapRenderer.RenderAllBoundsFromCell(graphics, Globals.MapTileSize, map.Overlay.Where(x => x.Value.Type.IsResource && inBounds(map, x.Cell)), map.Metrics);
+            MapRenderer.RenderAllBoundsFromCell(graphics, Globals.MapTileSize, map.Overlay.Where(x => x.Value.Type.IsResource && !inBounds(map, x.Cell)), map.Metrics, Color.FromArgb(0x80, 0xFF, 0x40, 0x40));
             MapRenderer.RenderAllBoundsFromCell(graphics, Globals.MapTileSize, redCells, map.Metrics, Color.Red);
         }
 

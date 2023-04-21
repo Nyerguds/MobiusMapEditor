@@ -126,6 +126,8 @@ namespace MobiusEditor.Model
             "Crate outlines"
         };
 
+        private static int[] tiberiumStages = new int[] { 0, 1, 3, 4, 6, 7, 8, 10, 11 };
+        private static int[] gemStages = new int[] { 0, 0, 0, 1, 1, 1, 2, 2, 2 };
         private static Regex tileInfoSplitRegex = new Regex("^([^:]+):(\\d+)$", RegexOptions.Compiled);
 
         private int updateCount = 0;
@@ -361,8 +363,6 @@ namespace MobiusEditor.Model
         /// <returns>The combined value of all resources on the map.</returns>
         private int GetTotalResources(bool inBounds)
         {
-            int[] gold_adj = { 0, 1, 3, 4, 6, 7, 8, 10, 11 };
-            int[] gem_adj = { 0, 0, 0, 1, 1, 1, 2, 2, 2 };
             int totalResources = 0;
             foreach (var (cell, value) in Overlay)
             {
@@ -389,7 +389,7 @@ namespace MobiusEditor.Model
                         adj++;
                     }
                 }
-                int thickness = value.Type.IsGem ? gem_adj[adj] : gold_adj[adj];
+                int thickness = value.Type.IsGem ? gemStages[adj] : tiberiumStages[adj];
                 // Harvesting has a bug where the final stage returns a value of 0. In case this is fixed, this is the calculation:
                 //totalResources += value.Type.IsGem ? (thickness + 1) * GemValue * 4 : (thickness + 1) * TiberiumOrGoldValue;
                 // Harvesting one gem stage fills one bail, plus 3 extra bails. Last stage is 0 (due to a bug), but still gets the extra bails.
@@ -413,8 +413,9 @@ namespace MobiusEditor.Model
             IEnumerable<string> actionTypes, IEnumerable<string> cellActionTypes, IEnumerable<string> unitActionTypes, IEnumerable<string> structureActionTypes, IEnumerable<string> terrainActionTypes,
             IEnumerable<string> missionTypes, string armedMission, string unarmedMission, string harvestMission, string aircraftMission,
             IEnumerable<DirectionType> unitDirectionTypes, IEnumerable<DirectionType> buildingDirectionTypes, IEnumerable<InfantryType> infantryTypes,
-            IEnumerable<UnitType> unitTypes, IEnumerable<BuildingType> buildingTypes, IEnumerable<TeamMission> teamMissionTypes,IEnumerable<ITechnoType> teamTechnoTypes,
-            IEnumerable<Waypoint> waypoints, int dropZoneRadius, int gapRadius, int jamRadius, IEnumerable<string> movieTypes, string emptyMovie, IEnumerable<string> themeTypes, string emptyTheme)
+            IEnumerable<UnitType> unitTypes, IEnumerable<BuildingType> buildingTypes, IEnumerable<TeamMission> teamMissionTypes, IEnumerable<ITechnoType> teamTechnoTypes,
+            IEnumerable<Waypoint> waypoints, int dropZoneRadius, int gapRadius, int jamRadius, IEnumerable<string> movieTypes, string emptyMovie, IEnumerable<string> themeTypes, string emptyTheme,
+            int tiberiumOrGoldValue, int gemValue)
         {
             MapSection = new MapSection(cellSize);
             BasicSection = basicSection;
@@ -461,7 +462,8 @@ namespace MobiusEditor.Model
             MovieTypes = new List<string>(movieTypes);
             ThemeEmpty = emptyTheme;
             ThemeTypes = new List<string>(themeTypes);
-
+            TiberiumOrGoldValue = tiberiumOrGoldValue;
+            GemValue = gemValue;
             Metrics = new CellMetrics(cellSize);
             Templates = new CellGrid<Template>(Metrics);
             Overlay = new CellGrid<Overlay>(Metrics);
@@ -588,13 +590,12 @@ namespace MobiusEditor.Model
 
         public void UpdateResourceOverlays(ISet<Point> locations, bool reduceOutOfBounds)
         {
-            var tiberiumCounts = new int[] { 0, 1, 3, 4, 6, 7, 8, 10, 11 };
-            var gemCounts = new int[] { 0, 0, 0, 1, 1, 1, 2, 2, 2 };
             Rectangle checkBounds = reduceOutOfBounds ? this.Bounds : this.Metrics.Bounds;
             foreach (var (location, overlay) in Overlay.IntersectsWithPoints(locations).Where(o => o.Value.Type.IsResource))
             {
                 int count = 0;
-                if (checkBounds.Contains(location))
+                bool inBounds = checkBounds.Contains(location);
+                if (inBounds)
                 {
                     foreach (var facing in CellMetrics.AdjacentFacings)
                     {
@@ -608,7 +609,8 @@ namespace MobiusEditor.Model
                         }
                     }
                 }
-                overlay.Icon = overlay.Type.IsGem ? gemCounts[count] : tiberiumCounts[count];
+                overlay.Tint = inBounds ? Color.White : Color.FromArgb(0x80, 0xFF, 0x80, 0x80);
+                overlay.Icon = overlay.Type.IsGem ? gemStages[count] : tiberiumStages[count];
             }
         }
 
@@ -1052,7 +1054,8 @@ namespace MobiusEditor.Model
                 ActionTypes, CellActionTypes, UnitActionTypes, StructureActionTypes, TerrainActionTypes,
                 MissionTypes, inputMissionArmed, inputMissionUnarmed, inputMissionHarvest, inputMissionAircraft,
                 UnitDirectionTypes, BuildingDirectionTypes, AllInfantryTypes, AllUnitTypes, BuildingTypes, TeamMissionTypes,
-                AllTeamTechnoTypes, wpPreview, DropZoneRadius, GapRadius, RadarJamRadius, MovieTypes, MovieEmpty, ThemeTypes, ThemeEmpty)
+                AllTeamTechnoTypes, wpPreview, DropZoneRadius, GapRadius, RadarJamRadius, MovieTypes, MovieEmpty, ThemeTypes, ThemeEmpty,
+                TiberiumOrGoldValue, GemValue)
             {
                 TopLeft = TopLeft,
                 Size = Size

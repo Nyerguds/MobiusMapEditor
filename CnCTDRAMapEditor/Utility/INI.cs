@@ -563,6 +563,11 @@ namespace MobiusEditor.Utility
     {
         public static void ParseSection<T>(ITypeDescriptorContext context, INISection section, T data)
         {
+            ParseSection(context, section, data, null);
+        }
+
+        public static void ParseSection<T>(ITypeDescriptorContext context, INISection section, T data, List<(string,string)> errors)
+        {
             var propertyDescriptors = TypeDescriptor.GetProperties(data);
             var properties = data.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => p.GetSetMethod() != null);
             foreach (var property in properties)
@@ -571,13 +576,22 @@ namespace MobiusEditor.Utility
                 {
                     continue;
                 }
-
-                if (section.Keys.Contains(property.Name))
+                string iniKey = property.Name;
+                if (section.Keys.Contains(iniKey))
                 {
-                    var converter = propertyDescriptors.Find(property.Name, false)?.Converter ?? TypeDescriptor.GetConverter(property.PropertyType);
-                    if (converter.CanConvertFrom(context, typeof(string)))
+                    try
                     {
-                        property.SetValue(data, converter.ConvertFromString(context, section[property.Name]));
+                        var converter = propertyDescriptors.Find(iniKey, false)?.Converter ?? TypeDescriptor.GetConverter(property.PropertyType);
+                        if (converter.CanConvertFrom(context, typeof(string)))
+                        {
+                            property.SetValue(data, converter.ConvertFromString(context, section[iniKey]));
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        if (errors == null)
+                            throw;
+                        errors.Add((iniKey, e.Message));
                     }
                 }
             }

@@ -168,7 +168,7 @@ namespace MobiusEditor.Model
                     Icon = tilenr,
                 };
                 MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
-                MapRenderer.Render(gameType, theater, null, null, Point.Empty, Globals.PreviewTileSize, Globals.PreviewTileScale, mockOverlay).Item2(g);
+                MapRenderer.RenderOverlay(gameType, theater, null, null, Point.Empty, Globals.PreviewTileSize, Globals.PreviewTileScale, mockOverlay).Item2(g);
             }
             Thumbnail = th;
             if (oldImage != null)

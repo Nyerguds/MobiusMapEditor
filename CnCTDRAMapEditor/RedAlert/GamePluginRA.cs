@@ -347,10 +347,12 @@ namespace MobiusEditor.RedAlert
                 IEnumerable<string> errors = UpdateRules(ini, this.Map);
                 if (errors.Count() > 0)
                 {
+                    // Kind of a weird case; rules text is indeed updated, but this is the only way to give feedback.
                     throw new Exception(String.Join("\n", errors));
                 }
             }
         }
+
         public static bool CheckForRAMap(INI contents)
         {
             return INITools.CheckForIniInfo(contents, "MapPack");
@@ -432,11 +434,8 @@ namespace MobiusEditor.RedAlert
                 MissionTypes.GetTypes(), MissionTypes.MISSION_GUARD, MissionTypes.MISSION_STOP, MissionTypes.MISSION_HARVEST,
                 MissionTypes.MISSION_UNLOAD, DirectionTypes.GetMainTypes(), DirectionTypes.GetAllTypes(), InfantryTypes.GetTypes(),
                 UnitTypes.GetTypes(Globals.DisableAirUnits), BuildingTypes.GetTypes(), TeamMissionTypes.GetTypes(),
-                fullTechnoTypes, waypoints, DefaultDropZoneRadius, DefaultGapRadius, DefaultJamRadius, movieTypes, movieEmpty, themeTypes, themeEmpty)
-            {
-                TiberiumOrGoldValue = DefaultGoldValue,
-                GemValue = DefaultGemValue
-            };
+                fullTechnoTypes, waypoints, DefaultDropZoneRadius, DefaultGapRadius, DefaultJamRadius, movieTypes, movieEmpty, themeTypes, themeEmpty,
+                DefaultGoldValue, DefaultGemValue);
             Map.BasicSection.PropertyChanged += BasicSection_PropertyChanged;
             Map.MapSection.PropertyChanged += MapSection_PropertyChanged;
             if (mapImage)
@@ -1044,11 +1043,7 @@ namespace MobiusEditor.RedAlert
                                     for (int x = 0; x < size.Width; ++x)
                                     {
                                         placeLocation.X = location.X + x;
-                                        Map.Smudge[placeLocation] = new Smudge
-                                        {
-                                            Type = smudgeType,
-                                            Icon = multiCell ? placeIcon++ : icon
-                                        };
+                                        Map.Smudge[placeLocation] = new Smudge(smudgeType, multiCell ? placeIcon++ : icon);
                                     }
                                     placeLocation.Y++;
                                 }
@@ -2256,11 +2251,17 @@ namespace MobiusEditor.RedAlert
                 RaBuildingIniSection bld = new RaBuildingIniSection();
                 try
                 {
-                    INI.ParseSection(new MapContext(map, true), bldSettings, bld);
+                    List<(string,string)> parseErrors = new List<(string,string)>();
+                    INI.ParseSection(new MapContext(map, true), bldSettings, bld, parseErrors);
+                    foreach ((string iniKey, string error) in parseErrors)
+                    {
+                        errors.Add("Custom rules error on [" + bType.Name + "]: " + error.TrimEnd('.') + ". Value for \"" + iniKey + "\" is ignored.");
+                    }
                 }
                 catch (Exception e)
                 {
-                    errors.Add((e.Message ?? String.Empty).TrimEnd('.') + ". Rule updates for [" + bType.Name + "] are ignored.");
+                    // Normally won't happen with the aforementioned system.
+                    errors.Add("Custom rules error on [" + bType.Name + "]: " + e.Message.TrimEnd('.') + ". Rule updates for [" + bType.Name + "] are ignored.");
                     continue;
                 }
                 if (bldSettings.Keys.Contains("Power"))

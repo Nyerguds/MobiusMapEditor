@@ -113,13 +113,7 @@ namespace MobiusEditor.Model
                 for (var x = 0; x < bibType.Size.Width; ++x, ++icon)
                 {
                     Point loc = new Point(location.X + x, location.Y + Type.Size.Height + y - 1);
-
-                    Smudge bibCell = new Smudge
-                    {
-                        Type = bibType,
-                        Icon = icon,
-                        Tint = this.Tint
-                    };
+                    Smudge bibCell = new Smudge(bibType, icon, this.Tint);
                     bibCells[loc] = bibCell;
                 }
             }

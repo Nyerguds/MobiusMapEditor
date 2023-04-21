@@ -159,7 +159,7 @@ namespace MobiusEditor.Model
                 using (var g = Graphics.FromImage(bigThumbnail))
                 {
                     MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
-                    MapRenderer.Render(gameType, theater, new Point(1, 1), Globals.PreviewTileSize, mockUnit).Item2(g);
+                    MapRenderer.RenderUnit(gameType, theater, new Point(1, 1), Globals.PreviewTileSize, mockUnit).Item2(g);
                 }
                 using (var g2 = Graphics.FromImage(unitThumbnail))
                 {

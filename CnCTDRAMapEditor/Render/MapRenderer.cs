@@ -230,7 +230,7 @@ namespace MobiusEditor.Render
                     var smudge = map.Smudge[topLeft];
                     if (smudge != null && smudge.Type.IsAutoBib)
                     {
-                        Render(map.Theater, topLeft, tileSize, tileScale, smudge).Item2(graphics);
+                        RenderSmudge(map.Theater, topLeft, tileSize, tileScale, smudge).Item2(graphics);
                     }
                 }
             }
@@ -241,7 +241,7 @@ namespace MobiusEditor.Render
                     var smudge = map.Smudge[topLeft];
                     if (smudge != null && !smudge.Type.IsAutoBib)
                     {
-                        Render(map.Theater, topLeft, tileSize, tileScale, smudge).Item2(graphics);
+                        RenderSmudge(map.Theater, topLeft, tileSize, tileScale, smudge).Item2(graphics);
                     }
                 }
             }
@@ -265,7 +265,7 @@ namespace MobiusEditor.Render
                     bool paintAsOverlay = overlay.Type.IsOverlay && (layers & MapLayerFlag.Overlay) != MapLayerFlag.None;
                     if (paintAsWall || paintAsResource || paintAsOverlay)
                     {
-                        Render(gameType, map.Theater, tiberiumOrGoldTypes, gemTypes, location, tileSize, tileScale, overlay).Item2(graphics);
+                        RenderOverlay(gameType, map.Theater, tiberiumOrGoldTypes, gemTypes, location, tileSize, tileScale, overlay).Item2(graphics);
                     }
                 }
             }
@@ -278,7 +278,7 @@ namespace MobiusEditor.Render
                     {
                         continue;
                     }
-                    overlappingRenderList.Add(Render(gameType, map.Theater, topLeft, tileSize, tileScale, terrain));
+                    overlappingRenderList.Add(RenderTerrain(gameType, map.Theater, topLeft, tileSize, tileScale, terrain));
                 }
             }
             if ((layers & MapLayerFlag.Buildings) != MapLayerFlag.None)
@@ -289,7 +289,7 @@ namespace MobiusEditor.Render
                     {
                         continue;
                     }
-                    overlappingRenderList.Add(Render(gameType, map.Theater, topLeft, tileSize, tileScale, building));
+                    overlappingRenderList.Add(RenderBuilding(gameType, map.Theater, topLeft, tileSize, tileScale, building));
                 }
             }
             if ((layers & MapLayerFlag.Infantry) != MapLayerFlag.None)
@@ -307,7 +307,7 @@ namespace MobiusEditor.Render
                         {
                             continue;
                         }
-                        overlappingRenderList.Add(Render(map.Theater, topLeft, tileSize, infantry, (InfantryStoppingType)i));
+                        overlappingRenderList.Add(RenderInfantry(map.Theater, topLeft, tileSize, infantry, (InfantryStoppingType)i));
                     }
                 }
             }
@@ -319,7 +319,7 @@ namespace MobiusEditor.Render
                     {
                         continue;
                     }
-                    overlappingRenderList.Add(Render(gameType, map.Theater, topLeft, tileSize, unit));
+                    overlappingRenderList.Add(RenderUnit(gameType, map.Theater, topLeft, tileSize, unit));
                 }
             }
             // Paint flat items (like the repair bay)
@@ -342,7 +342,7 @@ namespace MobiusEditor.Render
                     {
                         continue;
                     }
-                    Render(gameType, map.Theater, tiberiumOrGoldTypes, gemTypes, topLeft, tileSize, tileScale, overlay).Item2(graphics);
+                    RenderOverlay(gameType, map.Theater, tiberiumOrGoldTypes, gemTypes, topLeft, tileSize, tileScale, overlay).Item2(graphics);
                 }
             }
 
@@ -357,7 +357,7 @@ namespace MobiusEditor.Render
                     {
                         continue;
                     }
-                    Render(gameType, map.BasicSection.SoloMission, map.Theater, tileSize, flagColors, waypoint).Item2(graphics);
+                    RenderWaypoint(gameType, map.BasicSection.SoloMission, map.Theater, tileSize, flagColors, waypoint).Item2(graphics);
                 }
             }
         }
@@ -367,7 +367,7 @@ namespace MobiusEditor.Render
             Render(gameType, map, graphics, locations, layers, Globals.MapTileScale);
         }
 
-        public static (Rectangle, Action<Graphics>) Render(TheaterType theater, Point topLeft, Size tileSize, double tileScale, Smudge smudge)
+        public static (Rectangle, Action<Graphics>) RenderSmudge(TheaterType theater, Point topLeft, Size tileSize, double tileScale, Smudge smudge)
         {
             var tint = smudge.Tint;
             var imageAttributes = new ImageAttributes();
@@ -402,7 +402,7 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static (Rectangle, Action<Graphics>) Render(GameType gameType, TheaterType theater, OverlayType[] tiberiumOrGoldTypes, OverlayType[] gemTypes, Point topLeft, Size tileSize, double tileScale, Overlay overlay)
+        public static (Rectangle, Action<Graphics>) RenderOverlay(GameType gameType, TheaterType theater, OverlayType[] tiberiumOrGoldTypes, OverlayType[] gemTypes, Point topLeft, Size tileSize, double tileScale, Overlay overlay)
         {
             string name;
             OverlayType ovtype = overlay.Type;
@@ -474,7 +474,7 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static (Rectangle, Action<Graphics>, bool) Render(GameType gameType, TheaterType theater, Point topLeft, Size tileSize, double tileScale, Terrain terrain)
+        public static (Rectangle, Action<Graphics>, bool) RenderTerrain(GameType gameType, TheaterType theater, Point topLeft, Size tileSize, double tileScale, Terrain terrain)
         {
             string tileName = terrain.Type.GraphicsSource;
             if (!Globals.TheTilesetManager.GetTileData(theater.Tilesets, tileName, terrain.Type.DisplayIcon, out Tile tile))
@@ -509,7 +509,7 @@ namespace MobiusEditor.Render
             return (terrainBounds, render, false);
         }
 
-        public static (Rectangle, Action<Graphics>, bool) Render(GameType gameType, TheaterType theater, Point topLeft, Size tileSize, double tileScale, Building building)
+        public static (Rectangle, Action<Graphics>, bool) RenderBuilding(GameType gameType, TheaterType theater, Point topLeft, Size tileSize, double tileScale, Building building)
         {
             var tint = building.Tint;
             var icon = building.Type.FrameOFfset;
@@ -615,7 +615,7 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static (Rectangle, Action<Graphics>, bool) Render(TheaterType theater, Point topLeft, Size tileSize, Infantry infantry, InfantryStoppingType infantryStoppingType)
+        public static (Rectangle, Action<Graphics>, bool) RenderInfantry(TheaterType theater, Point topLeft, Size tileSize, Infantry infantry, InfantryStoppingType infantryStoppingType)
         {
             var icon = HumanShape[Facing32[infantry.Direction.ID]];
             string teamColor = infantry.House?.UnitTeamColor;
@@ -686,7 +686,7 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static (Rectangle, Action<Graphics>, bool) Render(GameType gameType, TheaterType theater, Point topLeft, Size tileSize, Unit unit)
+        public static (Rectangle, Action<Graphics>, bool) RenderUnit(GameType gameType, TheaterType theater, Point topLeft, Size tileSize, Unit unit)
         {
             int icon = -1;
             if (gameType == GameType.TiberianDawn || gameType == GameType.SoleSurvivor)
@@ -924,7 +924,7 @@ namespace MobiusEditor.Render
             return (renderBounds, render, false);
         }
 
-        public static (Rectangle, Action<Graphics>) Render(GameType gameType, bool soloMission, TheaterType theater, Size tileSize, TeamColor[] flagColors, Waypoint waypoint)
+        public static (Rectangle, Action<Graphics>) RenderWaypoint(GameType gameType, bool soloMission, TheaterType theater, Size tileSize, TeamColor[] flagColors, Waypoint waypoint)
         {
             // Opacity is normally 0.5 for non-flag waypoint indicators, but is variable because the post-render
             // actions of the waypoints tool will paint a fully opaque version over the currently selected waypoint.
@@ -1327,7 +1327,7 @@ namespace MobiusEditor.Render
                     Type = SoleSurvivor.OverlayTypes.Road,
                     Tint = Color.FromArgb(128, Color.White)
                 };
-                Render(gameType, map.Theater, null, null, p, tileSize, tileScale, footballTerrain).Item2(graphics);
+                RenderOverlay(gameType, map.Theater, null, null, p, tileSize, tileScale, footballTerrain).Item2(graphics);
             }
         }
 
@@ -1349,7 +1349,7 @@ namespace MobiusEditor.Render
             TeamColor[] flagColors = map.FlagColors.ToArray();
             foreach (Waypoint wp in footballWayPoints)
             {
-                Render(gameType, false, map.Theater, tileSize, flagColors, wp).Item2(graphics);
+                RenderWaypoint(gameType, false, map.Theater, tileSize, flagColors, wp).Item2(graphics);
             }
         }
         

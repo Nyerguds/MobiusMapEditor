@@ -74,31 +74,31 @@ namespace MobiusEditor.SoleSurvivor
             // I guess we leave these to the TD defaults.
             string[] cellEventTypes = new[]
             {
-                TiberianDawn.EventTypes.EVENT_PLAYER_ENTERED,
-                TiberianDawn.EventTypes.EVENT_NONE
+                EventTypes.EVENT_PLAYER_ENTERED,
+                EventTypes.EVENT_NONE
             };
             string[] unitEventTypes =
             {
-                TiberianDawn.EventTypes.EVENT_DISCOVERED,
-                TiberianDawn.EventTypes.EVENT_ATTACKED,
-                TiberianDawn.EventTypes.EVENT_DESTROYED,
-                TiberianDawn.EventTypes.EVENT_ANY,
-                TiberianDawn.EventTypes.EVENT_NONE
+                EventTypes.EVENT_DISCOVERED,
+                EventTypes.EVENT_ATTACKED,
+                EventTypes.EVENT_DESTROYED,
+                EventTypes.EVENT_ANY,
+                EventTypes.EVENT_NONE
             };
-            string[] structureEventTypes = (new[] { TiberianDawn.EventTypes.EVENT_PLAYER_ENTERED }).Concat(unitEventTypes).ToArray();
+            string[] structureEventTypes = (new[] { EventTypes.EVENT_PLAYER_ENTERED }).Concat(unitEventTypes).ToArray();
             string[] terrainEventTypes =
             {
-                TiberianDawn.EventTypes.EVENT_ATTACKED,
-                TiberianDawn.EventTypes.EVENT_ANY,
-                TiberianDawn.EventTypes.EVENT_NONE
+                EventTypes.EVENT_ATTACKED,
+                EventTypes.EVENT_ANY,
+                EventTypes.EVENT_NONE
             };
             string[] cellActionTypes = { };
             string[] unitActionTypes = { };
             string[] structureActionTypes = { };
             string[] terrainActionTypes = { };
-            BuildingType[] buildings = Globals.NoOwnedObjectsInSole ? new BuildingType[0] : TiberianDawn.BuildingTypes.GetTypes().ToArray();
-            UnitType[] units = Globals.NoOwnedObjectsInSole ? new UnitType[0] : TiberianDawn.UnitTypes.GetTypes(Globals.DisableAirUnits).ToArray();
-            InfantryType[] infantry = Globals.NoOwnedObjectsInSole ? new InfantryType[0] : TiberianDawn.InfantryTypes.GetTypes().ToArray();
+            BuildingType[] buildings = Globals.NoOwnedObjectsInSole ? new BuildingType[0] : BuildingTypes.GetTypes().ToArray();
+            UnitType[] units = Globals.NoOwnedObjectsInSole ? new UnitType[0] : UnitTypes.GetTypes(Globals.DisableAirUnits).ToArray();
+            InfantryType[] infantry = Globals.NoOwnedObjectsInSole ? new InfantryType[0] : InfantryTypes.GetTypes().ToArray();
             foreach (BuildingType bld in buildings)
             {
                 // Power is irrelevant in SS.
@@ -122,19 +122,16 @@ namespace MobiusEditor.SoleSurvivor
             List<string> movies = movieTypesTD.Concat(movieTypesSole).ToList();
             ExplorerComparer sorter = new ExplorerComparer();
             movies.Sort(sorter);
-            Size mapSize = !megaMap ? TiberianDawn.Constants.MaxSize : TiberianDawn.Constants.MaxSizeMega;
+            Size mapSize = !megaMap ? Constants.MaxSize : Constants.MaxSizeMega;
             Map = new Map(basicSection, null, mapSize, typeof(TiberianDawn.House), houseTypes,
-                flagColors, TiberianDawn.TheaterTypes.GetTypes(), TiberianDawn.TemplateTypes.GetTypes(),
-                TiberianDawn.TerrainTypes.GetTypes(), OverlayTypes.GetTypes(), TiberianDawn.SmudgeTypes.GetTypes(Globals.ConvertCraters),
-                TiberianDawn.EventTypes.GetTypes(), cellEventTypes, unitEventTypes, structureEventTypes, terrainEventTypes,
-                TiberianDawn.ActionTypes.GetTypes(), cellActionTypes, unitActionTypes, structureActionTypes, terrainActionTypes,
-                TiberianDawn.MissionTypes.GetTypes(), TiberianDawn.MissionTypes.MISSION_GUARD, TiberianDawn.MissionTypes.MISSION_STOP,
-                TiberianDawn.MissionTypes.MISSION_HARVEST, TiberianDawn.MissionTypes.MISSION_UNLOAD, DirectionTypes.GetMainTypes(),
-                DirectionTypes.GetAllTypes(), infantry, units, buildings, TiberianDawn.TeamMissionTypes.GetTypes(), fullTechnoTypes,
-                waypoints, 4, 0, 0, movies, movieEmpty, themeTypesSole, themeEmpty)
-            {
-                TiberiumOrGoldValue = 25
-            };
+                flagColors, TheaterTypes.GetTypes(), TemplateTypes.GetTypes(),
+                TerrainTypes.GetTypes(), OverlayTypes.GetTypes(), SmudgeTypes.GetTypes(Globals.ConvertCraters),
+                EventTypes.GetTypes(), cellEventTypes, unitEventTypes, structureEventTypes, terrainEventTypes,
+                ActionTypes.GetTypes(), cellActionTypes, unitActionTypes, structureActionTypes, terrainActionTypes,
+                MissionTypes.GetTypes(), MissionTypes.MISSION_GUARD, MissionTypes.MISSION_STOP,
+                MissionTypes.MISSION_HARVEST, MissionTypes.MISSION_UNLOAD, DirectionTypes.GetMainTypes(),
+                DirectionTypes.GetAllTypes(), infantry, units, buildings, TeamMissionTypes.GetTypes(), fullTechnoTypes,
+                waypoints, 4, 0, 0, movies, movieEmpty, themeTypesSole, themeEmpty, tiberiumValue, 0);
             Map.MapSection.PropertyChanged += MapSection_PropertyChanged;
             // Clean up this mess.
             foreach (Model.House house in Map.Houses)

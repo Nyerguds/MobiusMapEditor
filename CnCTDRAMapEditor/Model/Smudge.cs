@@ -21,6 +21,7 @@ using System.Runtime.CompilerServices;
 
 namespace MobiusEditor.Model
 {
+    [System.Diagnostics.DebuggerDisplay("{Type.Name}")]
     public class Smudge: ICellOverlapper, INotifyPropertyChanged, ICloneable, IEquatable<Smudge>
     {
         public event PropertyChangedEventHandler PropertyChanged;
@@ -58,11 +59,31 @@ namespace MobiusEditor.Model
             return Clone();
         }
 
+        protected Smudge()
+        {
+        }
+
+        public Smudge(SmudgeType type)
+        {
+            this.type = type;
+        }
+
+        public Smudge(SmudgeType type, int icon)
+        {
+            this.type = type;
+            this.icon = icon;
+        }
+
+        public Smudge(SmudgeType type, int icon, Color tint)
+        {
+            this.type = type;
+            this.icon = icon;
+            this.Tint = tint;
+        }
+
         public Smudge Clone()
         {
-            Smudge clone = new Smudge();
-            clone.CloneDataFrom(this);
-            return clone;
+            return new Smudge(this.Type, this.Icon, this.Tint);
         }
 
         public void CloneDataFrom(Smudge other)

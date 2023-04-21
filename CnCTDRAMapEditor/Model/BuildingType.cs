@@ -255,7 +255,7 @@ namespace MobiusEditor.Model
                 Strength = 256,
                 Direction = direction
             };
-            var render = MapRenderer.Render(gameType, theater, Point.Empty, Globals.PreviewTileSize, Globals.PreviewTileScale, mockBuilding);
+            var render = MapRenderer.RenderBuilding(gameType, theater, Point.Empty, Globals.PreviewTileSize, Globals.PreviewTileScale, mockBuilding);
             if (!render.Item1.IsEmpty)
             {
                 var th = new Bitmap(render.Item1.Width, render.Item1.Height);

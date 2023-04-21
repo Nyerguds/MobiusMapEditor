@@ -37,6 +37,8 @@ namespace MobiusEditor.TiberianDawn
         protected const int maxBriefLengthClassic = 510;
         protected const int briefLineCutoffClassic = 74;
         protected const int multiStartPoints = 8;
+        protected const int tiberiumValue = 25;
+
         protected static readonly Regex SinglePlayRegex = new Regex("^SC[A-LN-Z]\\d{2}\\d?[EWX][A-EL]$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         protected static readonly Regex MovieRegex = new Regex(@"^(?:.*?\\)*(.*?)\.BK2$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
@@ -400,10 +402,7 @@ namespace MobiusEditor.TiberianDawn
                 MissionTypes.GetTypes(), MissionTypes.MISSION_GUARD, MissionTypes.MISSION_STOP, MissionTypes.MISSION_HARVEST,
                 MissionTypes.MISSION_UNLOAD, DirectionTypes.GetMainTypes(), DirectionTypes.GetAllTypes(), InfantryTypes.GetTypes(),
                 UnitTypes.GetTypes(Globals.DisableAirUnits), BuildingTypes.GetTypes(), TeamMissionTypes.GetTypes(),
-                fullTechnoTypes, waypoints, 4, 0, 0, movieTypes, movieEmpty, themeTypes, themeEmpty)
-            {
-                TiberiumOrGoldValue = 25
-            };
+                fullTechnoTypes, waypoints, 4, 0, 0, movieTypes, movieEmpty, themeTypes, themeEmpty, tiberiumValue, 0);
             Map.BasicSection.PropertyChanged += BasicSection_PropertyChanged;
             Map.MapSection.PropertyChanged += MapSection_PropertyChanged;
             if (mapImage)
@@ -1007,11 +1006,7 @@ namespace MobiusEditor.TiberianDawn
                                     for (int x = 0; x < size.Width; ++x)
                                     {
                                         placeLocation.X = location.X + x;
-                                        Map.Smudge[placeLocation] = new Smudge
-                                        {
-                                            Type = smudgeType,
-                                            Icon = multiCell ? placeIcon++ : icon
-                                        };
+                                        Map.Smudge[placeLocation] = new Smudge(smudgeType, multiCell ? placeIcon++ : icon);
                                     }
                                     placeLocation.Y++;
                                 }

@@ -86,11 +86,7 @@ namespace MobiusEditor.Tools
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
             previewMap = map;
-            mockSmudge = new Smudge()
-            {
-                Type = smudgeTypeListBox.Types.First() as SmudgeType,
-                Icon = 0
-            };
+            mockSmudge = new Smudge(smudgeTypeListBox.Types.First() as SmudgeType, 0);
             mockSmudge.PropertyChanged += MockSmudge_PropertyChanged;
             this.smudgeTypeListBox = smudgeTypeListBox;
             this.smudgeTypeListBox.SelectedIndexChanged += SmudgeTypeComboBox_SelectedIndexChanged;
@@ -591,14 +587,10 @@ namespace MobiusEditor.Tools
                     int icons = mockSize.Width * mockSize.Height;
                     for (int i = 0; i < icons; ++i)
                     {
-                        Smudge smudge = new Smudge()
-                        {
-                            Type = mockType,
-                            Icon = mockType.IsMultiCell ? i : mockSmudge.Icon
-                        };
+                        Smudge smudge = new Smudge(mockType, mockType.IsMultiCell ? i : mockSmudge.Icon);
                         smudgeList.Add((i, smudge));
                         mockMetrics.GetLocation(i, out Point p);
-                        var render = MapRenderer.Render(map.Theater, p, Globals.PreviewTileSize, Globals.PreviewTileScale, smudge);
+                        var render = MapRenderer.RenderSmudge(map.Theater, p, Globals.PreviewTileSize, Globals.PreviewTileScale, smudge);
                         if (!render.Item1.IsEmpty)
                         {
                             render.Item2(g);
