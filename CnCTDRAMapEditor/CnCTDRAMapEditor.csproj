@@ -325,11 +325,13 @@
     <Compile Include="Interface\IFeedBackHandler.cs" />
     <Compile Include="Interface\IGamePlugin.cs" />
     <Compile Include="Interface\INamedType.cs" />
+    <Compile Include="Interface\ITeamColor.cs" />
     <Compile Include="Interface\ITechno.cs" />
     <Compile Include="Interface\ITechnoType.cs" />
     <Compile Include="Interface\ITool.cs" />
     <Compile Include="Interface\IWidget.cs" />
     <Compile Include="Interface\ToolType.cs" />
+    <Compile Include="Interface\ITeamColorManager.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>

@@ -12,6 +12,7 @@
 // distributed with this program. You should have received a copy of the 
 // GNU General Public License along with permitted additional restrictions 
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
+using MobiusEditor.Interface;
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -21,9 +22,8 @@ using System.Xml;
 
 namespace MobiusEditor.Utility
 {
-    public class TeamColor
+    public class TeamColor : ITeamColor
     {
-        private static readonly Color RemapBaseColor = Color.FromArgb(0x00, 0xFF, 0x00);
         private readonly TeamColorManager teamColorManager;
 
         public string Variant { get; private set; }
@@ -31,37 +31,37 @@ namespace MobiusEditor.Utility
         public string Name { get; private set; }
 
         private byte[] classicRemap;
-        public byte[] ClassicRemap => classicRemap ?? (Variant == null ? null : teamColorManager[Variant]?.ClassicRemap);
+        public byte[] ClassicRemap => classicRemap ?? (Variant == null ? null : teamColorManager.GetItem(Variant)?.ClassicRemap);
 
         private byte[] classicRemapStructures;
-        public byte[] ClassicRemapStructures => classicRemapStructures ?? (Variant == null ? null : teamColorManager[Variant]?.ClassicRemapStructures);
+        public byte[] ClassicRemapStructures => classicRemapStructures ?? (Variant == null ? null : teamColorManager.GetItem(Variant)?.ClassicRemapStructures);
 
         private Color? lowerBounds;
-        public Color LowerBounds => lowerBounds.HasValue ? lowerBounds.Value : ((Variant != null) ? teamColorManager[Variant].LowerBounds : default);
+        public Color LowerBounds => lowerBounds.HasValue ? lowerBounds.Value : ((Variant != null) ? teamColorManager.GetItem(Variant).LowerBounds : default);
 
         private Color? upperBounds;
-        public Color UpperBounds => upperBounds.HasValue ? upperBounds.Value : ((Variant != null) ? teamColorManager[Variant].UpperBounds : default);
+        public Color UpperBounds => upperBounds.HasValue ? upperBounds.Value : ((Variant != null) ? teamColorManager.GetItem(Variant).UpperBounds : default);
 
         private float? fudge;
-        public float Fudge => fudge.HasValue ? fudge.Value : ((Variant != null) ? teamColorManager[Variant].Fudge : default);
+        public float Fudge => fudge.HasValue ? fudge.Value : ((Variant != null) ? teamColorManager.GetItem(Variant).Fudge : default);
 
         private Vector3? hsvShift;
-        public Vector3 HSVShift => hsvShift.HasValue ? hsvShift.Value : ((Variant != null) ? teamColorManager[Variant].HSVShift : default);
+        public Vector3 HSVShift => hsvShift.HasValue ? hsvShift.Value : ((Variant != null) ? teamColorManager.GetItem(Variant).HSVShift : default);
 
         private Vector3? inputLevels;
-        public Vector3 InputLevels => inputLevels.HasValue ? inputLevels.Value : ((Variant != null) ? teamColorManager[Variant].InputLevels : default);
+        public Vector3 InputLevels => inputLevels.HasValue ? inputLevels.Value : ((Variant != null) ? teamColorManager.GetItem(Variant).InputLevels : default);
 
         private Vector2? outputLevels;
-        public Vector2 OutputLevels => outputLevels.HasValue ? outputLevels.Value : ((Variant != null) ? teamColorManager[Variant].OutputLevels : default);
+        public Vector2 OutputLevels => outputLevels.HasValue ? outputLevels.Value : ((Variant != null) ? teamColorManager.GetItem(Variant).OutputLevels : default);
 
         private Vector3? overallInputLevels;
-        public Vector3 OverallInputLevels => overallInputLevels.HasValue ? overallInputLevels.Value : ((Variant != null) ? teamColorManager[Variant].OverallInputLevels : default);
+        public Vector3 OverallInputLevels => overallInputLevels.HasValue ? overallInputLevels.Value : ((Variant != null) ? teamColorManager.GetItem(Variant).OverallInputLevels : default);
 
         private Vector2? overallOutputLevels;
-        public Vector2 OverallOutputLevels => overallOutputLevels.HasValue ? overallOutputLevels.Value : ((Variant != null) ? teamColorManager[Variant].OverallOutputLevels : default);
+        public Vector2 OverallOutputLevels => overallOutputLevels.HasValue ? overallOutputLevels.Value : ((Variant != null) ? teamColorManager.GetItem(Variant).OverallOutputLevels : default);
 
         private Color? radarMapColor;
-        public Color RadarMapColor => radarMapColor.HasValue ? radarMapColor.Value : ((Variant != null) ? teamColorManager[Variant].RadarMapColor : default);
+        public Color RadarMapColor => radarMapColor.HasValue ? radarMapColor.Value : ((Variant != null) ? teamColorManager.GetItem(Variant).RadarMapColor : default);
 
         private Color? baseColor;
         public Color BaseColor
@@ -69,7 +69,7 @@ namespace MobiusEditor.Utility
             get
             {
                 if (!baseColor.HasValue)
-                    baseColor = GetTeamColor(this);
+                    baseColor = this.GetTeamColor();
                 return baseColor.Value;
             }
         }
@@ -78,6 +78,16 @@ namespace MobiusEditor.Utility
         {
             this.teamColorManager = teamColorManager;
         }
+
+        public TeamColor(TeamColorManager teamColorManager, string newName, string variant, Vector3 hsvShiftOverride)
+        {
+            this.teamColorManager = teamColorManager;
+            this.Variant = variant;
+            this.Flatten();
+            this.Name = newName;
+            this.hsvShift = hsvShiftOverride;
+        }
+
         public TeamColor(TeamColorManager teamColorManager, TeamColor col, string newName, Vector3 hsvShiftOverride)
         {
             this.teamColorManager = teamColorManager;
@@ -233,26 +243,14 @@ namespace MobiusEditor.Utility
             this.radarMapColor = this.RadarMapColor;
         }
 
-        public static Color GetTeamColorLazy(TeamColor tc)
-        {
-            if (tc == null)
-            {
-                return RemapBaseColor;
-            }
-            return tc.BaseColor;
-        }
-
-        public static Color GetTeamColor(TeamColor tc)
+        public Color GetTeamColor()
         {
             // Makes a 1x1 green pixel image, and applies the recolor operation to it.
             using (Bitmap bitmap = new Bitmap(1, 1, PixelFormat.Format32bppArgb))
             {
                 bitmap.SetResolution(96, 96);
-                bitmap.SetPixel(0, 0, RemapBaseColor);
-                if (tc != null)
-                {
-                    tc.ApplyToImage(bitmap);
-                }
+                bitmap.SetPixel(0, 0, this.teamColorManager.RemapBaseColor);
+                this.ApplyToImage(bitmap);
                 return bitmap.GetPixel(0, 0);
             }
         }
@@ -287,7 +285,7 @@ namespace MobiusEditor.Utility
             }
         }
 
-        public void ApplyToImage(Byte[] bytes, int width, int height, int bytesPerPixel, int stride, Rectangle? opaqueBounds)
+        public void ApplyToImage(byte[] bytes, int width, int height, int bytesPerPixel, int stride, Rectangle? opaqueBounds)
         {
             Rectangle bounds = opaqueBounds ?? new Rectangle(0, 0, width, height);
             float frac(float x) => x - (int)x;

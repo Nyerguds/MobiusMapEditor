@@ -12,23 +12,26 @@
 // distributed with this program. You should have received a copy of the 
 // GNU General Public License along with permitted additional restrictions 
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
+using MobiusEditor.Interface;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Numerics;
 using System.Xml;
 
 namespace MobiusEditor.Utility
 {
-    public class TeamColorManager
+    public class TeamColorManager : ITeamColorManager
     {
         private readonly Dictionary<string, TeamColor> teamColors = new Dictionary<string, TeamColor>();
 
         private readonly MegafileManager megafileManager;
         public string[] ExpandModPaths { get; set; }
+        public Color RemapBaseColor => Color.FromArgb(0x00, 0xFF, 0x00);
 
-        public TeamColor this[string key] => !string.IsNullOrEmpty(key) ? teamColors[key] : null;
+        public ITeamColor this[string key] => !string.IsNullOrEmpty(key) ? (ITeamColor)teamColors[key]: null;
+
+        public TeamColor GetItem(string key) => !string.IsNullOrEmpty(key) ? teamColors[key] : null;
 
         public void RemoveTeamColor(string col)
         {
@@ -60,19 +63,19 @@ namespace MobiusEditor.Utility
             this.ExpandModPaths = expandModPaths;
         }
 
-        public void Reset()
+        public void Reset(GameType gameType)
         {
             teamColors.Clear();
         }
 
-        public void Load(string xmlPath)
+        public void Load(string path)
         {
             XmlDocument xmlDoc = null;
             if (ExpandModPaths != null && ExpandModPaths.Length > 0)
             {
                 for (int i = 0; i < ExpandModPaths.Length; ++i)
                 {
-                    string modXmlPath = Path.Combine(ExpandModPaths[i], xmlPath);
+                    string modXmlPath = Path.Combine(ExpandModPaths[i], path);
                     if (modXmlPath != null && File.Exists(modXmlPath))
                     {
                         xmlDoc = new XmlDocument();
@@ -84,7 +87,7 @@ namespace MobiusEditor.Utility
             if (xmlDoc == null)
             {
                 xmlDoc = new XmlDocument();
-                xmlDoc.Load(megafileManager.Open(xmlPath));
+                xmlDoc.Load(megafileManager.Open(path));
             }
             foreach (XmlNode teamColorNode in xmlDoc.SelectNodes("/*/TeamColorTypeClass"))
             {
@@ -106,7 +109,7 @@ namespace MobiusEditor.Utility
             {
                 if (!string.IsNullOrEmpty(node.Variant))
                 {
-                    edges.Add((this[node.Variant], node));
+                    edges.Add((GetItem(node.Variant), node));
                 }
             }
 

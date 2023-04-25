@@ -187,7 +187,7 @@ namespace MobiusEditor.Model
 
         public readonly HouseType[] HouseTypesIncludingNone;
 
-        public readonly IEnumerable<TeamColor> FlagColors;
+        public readonly IEnumerable<ITeamColor> FlagColors;
 
         public readonly List<TheaterType> TheaterTypes;
 
@@ -407,7 +407,7 @@ namespace MobiusEditor.Model
         }
 
         public Map(BasicSection basicSection, TheaterType theater, Size cellSize, Type houseType, IEnumerable<HouseType> houseTypes,
-            IEnumerable<TeamColor> flagColors, IEnumerable<TheaterType> theaterTypes, IEnumerable<TemplateType> templateTypes,
+            IEnumerable<ITeamColor> flagColors, IEnumerable<TheaterType> theaterTypes, IEnumerable<TemplateType> templateTypes,
             IEnumerable<TerrainType> terrainTypes, IEnumerable<OverlayType> overlayTypes, IEnumerable<SmudgeType> smudgeTypes,
             IEnumerable<string> eventTypes, IEnumerable<string> cellEventTypes, IEnumerable<string> unitEventTypes, IEnumerable<string> structureEventTypes, IEnumerable<string> terrainEventTypes,
             IEnumerable<string> actionTypes, IEnumerable<string> cellActionTypes, IEnumerable<string> unitActionTypes, IEnumerable<string> structureActionTypes, IEnumerable<string> terrainActionTypes,

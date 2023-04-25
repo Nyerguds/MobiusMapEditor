@@ -12,6 +12,7 @@
 // distributed with this program. You should have received a copy of the 
 // GNU General Public License along with permitted additional restrictions 
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
+using MobiusEditor.Interface;
 using MobiusEditor.Utility;
 using System;
 using System.Drawing;
@@ -127,7 +128,7 @@ namespace MobiusEditor
         public static MegafileManager TheMegafileManager;
         public static TextureManager TheTextureManager;
         public static TilesetManager TheTilesetManager;
-        public static TeamColorManager TheTeamColorManager;
+        public static ITeamColorManager TheTeamColorManager;
         public static GameTextManager TheGameTextManager;
 
         public static readonly string RootSaveDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), @"CnCRemastered\Local_Custom_Maps");

@@ -105,7 +105,7 @@ namespace MobiusEditor.SoleSurvivor
                 bld.PowerUsage = 0;
                 bld.PowerProduction = 0;
             }
-            TeamColor[] flagColors = new TeamColor[8];
+            ITeamColor[] flagColors = new ITeamColor[8];
             foreach (HouseType house in houseTypes)
             {
                 int mpId = Waypoint.GetMpIdFromFlag(house.MultiplayIdentifier);
@@ -118,7 +118,7 @@ namespace MobiusEditor.SoleSurvivor
             // Multi7: the dark blue that's unused in SS because Multi4 uses BAD_UNITS instead.
             flagColors[6] = Globals.TheTeamColorManager["MULTI2"];
             // Multi8: RA Purple
-            flagColors[7] = new TeamColor(Globals.TheTeamColorManager, flagColors[0], "MULTI8", new Vector3(0.410f, 0.100f, 0.000f));
+            flagColors[7] = Globals.TheTeamColorManager["PURPLE"];
             List<string> movies = movieTypesTD.Concat(movieTypesSole).ToList();
             ExplorerComparer sorter = new ExplorerComparer();
             movies.Sort(sorter);

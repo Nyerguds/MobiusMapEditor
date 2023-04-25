@@ -12,6 +12,7 @@
 // distributed with this program. You should have received a copy of the 
 // GNU General Public License along with permitted additional restrictions 
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
+using MobiusEditor.Interface;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -115,7 +116,7 @@ namespace MobiusEditor.Utility
             }
         }
 
-        public bool GetTileData(string name, int shape, TeamColor teamColor, out int fps, out Tile[] tiles, bool generateFallback)
+        public bool GetTileData(string name, int shape, ITeamColor teamColor, out int fps, out Tile[] tiles, bool generateFallback)
         {
             fps = 0;
             tiles = null;

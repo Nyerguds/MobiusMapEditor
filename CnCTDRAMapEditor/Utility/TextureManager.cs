@@ -23,6 +23,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Runtime.InteropServices;
 using TGASharpLib;
+using MobiusEditor.Interface;
 
 namespace MobiusEditor.Utility
 {
@@ -45,7 +46,7 @@ namespace MobiusEditor.Utility
         private readonly MegafileManager megafileManager;
 
         private Dictionary<string, Bitmap> cachedTextures = new Dictionary<string, Bitmap>();
-        private Dictionary<(string, TeamColor), (Bitmap, Rectangle)> teamColorTextures = new Dictionary<(string, TeamColor), (Bitmap, Rectangle)>();
+        private Dictionary<(string, ITeamColor), (Bitmap, Rectangle)> teamColorTextures = new Dictionary<(string, ITeamColor), (Bitmap, Rectangle)>();
 
         public TextureManager(MegafileManager megafileManager, params String[] expandModPaths)
         {
@@ -85,7 +86,7 @@ namespace MobiusEditor.Utility
             }
         }
 
-        public (Bitmap, Rectangle) GetTexture(string filename, TeamColor teamColor, bool generateFallback)
+        public (Bitmap, Rectangle) GetTexture(string filename, ITeamColor teamColor, bool generateFallback)
         {
             if (!cachedTextures.ContainsKey(filename) && generateFallback)
             {

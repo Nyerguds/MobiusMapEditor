@@ -350,7 +350,7 @@ namespace MobiusEditor.Render
             {
                 // todo avoid overlapping waypoints of the same type?
                 HashSet<int> handledPoints = new HashSet<int>();
-                TeamColor[] flagColors = map.FlagColors.ToArray();
+                ITeamColor[] flagColors = map.FlagColors.ToArray();
                 foreach (Waypoint waypoint in map.Waypoints)
                 {
                     if (!waypoint.Point.HasValue || (locations != null && !locations.Contains(waypoint.Point.Value)))
@@ -547,7 +547,7 @@ namespace MobiusEditor.Render
                     icon += damageIconOffs;
                 }
             }
-            TeamColor tc = building.Type.CanRemap ? Globals.TheTeamColorManager[building.House.BuildingTeamColor] : null;
+            ITeamColor tc = building.Type.CanRemap ? Globals.TheTeamColorManager[building.House.BuildingTeamColor] : null;
             if (Globals.TheTilesetManager.GetTeamColorTileData(theater.Tilesets, building.Type.GraphicsSource, icon, tc, out Tile tile))
             {
                 var location = new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height);
@@ -924,7 +924,7 @@ namespace MobiusEditor.Render
             return (renderBounds, render, false);
         }
 
-        public static (Rectangle, Action<Graphics>) RenderWaypoint(GameType gameType, bool soloMission, TheaterType theater, Size tileSize, TeamColor[] flagColors, Waypoint waypoint)
+        public static (Rectangle, Action<Graphics>) RenderWaypoint(GameType gameType, bool soloMission, TheaterType theater, Size tileSize, ITeamColor[] flagColors, Waypoint waypoint)
         {
             // Opacity is normally 0.5 for non-flag waypoint indicators, but is variable because the post-render
             // actions of the waypoints tool will paint a fully opaque version over the currently selected waypoint.
@@ -933,7 +933,7 @@ namespace MobiusEditor.Render
             return Render(gameType, soloMission, theater, tileSize, flagColors, waypoint, 0.5f);
         }
 
-        public static (Rectangle, Action<Graphics>) Render(GameType gameType, bool soloMission, TheaterType theater, Size tileSize, TeamColor[] flagColors, Waypoint waypoint, float transparencyModifier)
+        public static (Rectangle, Action<Graphics>) Render(GameType gameType, bool soloMission, TheaterType theater, Size tileSize, ITeamColor[] flagColors, Waypoint waypoint, float transparencyModifier)
         {
             if (!waypoint.Point.HasValue)
             {
@@ -941,7 +941,7 @@ namespace MobiusEditor.Render
             }
             Point point = waypoint.Point.Value;
             string tileGraphics = "beacon";
-            TeamColor teamColor = null;
+            ITeamColor teamColor = null;
             Color tint = waypoint.Tint;
             float brightness = 1.0f;
             int mpId = Waypoint.GetMpIdFromFlag(waypoint.Flag);
@@ -1346,7 +1346,7 @@ namespace MobiusEditor.Render
                     footballWayPoints.Add(waypoint);
                 }
             }
-            TeamColor[] flagColors = map.FlagColors.ToArray();
+            ITeamColor[] flagColors = map.FlagColors.ToArray();
             foreach (Waypoint wp in footballWayPoints)
             {
                 RenderWaypoint(gameType, false, map.Theater, tileSize, flagColors, wp).Item2(graphics);
@@ -1592,8 +1592,8 @@ namespace MobiusEditor.Render
             {
                 return;
             }
-            TeamColor tc = building.Type.CanRemap ? Globals.TheTeamColorManager[building.House.BuildingTeamColor] : null;
-            Color circleColor = TeamColor.GetTeamColorLazy(tc);
+            ITeamColor tc = building.Type.CanRemap ? Globals.TheTeamColorManager[building.House.BuildingTeamColor] : null;
+            Color circleColor = tc?.BaseColor ?? Globals.TheTeamColorManager.RemapBaseColor;
             bool[,] cells = building.Type.BaseOccupyMask;
             int maskY = cells.GetLength(0);
             int maskX = cells.GetLength(1);
@@ -1625,8 +1625,8 @@ namespace MobiusEditor.Render
             {
                 teamColor = unit.House.UnitTeamColor;
             }
-            TeamColor tc = Globals.TheTeamColorManager[teamColor];
-            Color circleColor = TeamColor.GetTeamColorLazy(tc);
+            ITeamColor tc = Globals.TheTeamColorManager[teamColor];
+            Color circleColor = tc?.BaseColor ?? Globals.TheTeamColorManager.RemapBaseColor;
             Color alphacorr = Color.FromArgb(unit.Tint.A * 128 / 256, circleColor);
             if (isJammer)
             {

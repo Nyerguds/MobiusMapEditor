@@ -379,7 +379,7 @@ namespace MobiusEditor.TiberianDawn
             string[] unitActionTypes = { };
             string[] structureActionTypes = { };
             string[] terrainActionTypes = { };
-            TeamColor[] flagColors = new TeamColor[8];
+            ITeamColor[] flagColors = new ITeamColor[8];
             foreach (HouseType house in houseTypes)
             {
                 int mpId = Waypoint.GetMpIdFromFlag(house.MultiplayIdentifier);
@@ -392,7 +392,7 @@ namespace MobiusEditor.TiberianDawn
             // Metallic light blue
             flagColors[6] = Globals.TheTeamColorManager["BAD_UNIT"];
             // RA Purple
-            flagColors[7] = new TeamColor(Globals.TheTeamColorManager, flagColors[0], "MULTI8", new Vector3(0.410f, 0.100f, 0.000f));
+            flagColors[7] = Globals.TheTeamColorManager["PURPLE"];
             Size mapSize = !megaMap ? Constants.MaxSize : Constants.MaxSizeMega;
             Map = new Map(basicSection, null, mapSize, typeof(House), houseTypes,
                 flagColors, TheaterTypes.GetTypes(), TemplateTypes.GetTypes(),

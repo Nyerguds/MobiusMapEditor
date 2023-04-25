@@ -1305,41 +1305,66 @@ namespace MobiusEditor
             Globals.TheTilesetManager.Reset();
             Globals.TheTeamColorManager.ExpandModPaths = modPaths;
             IGamePlugin plugin = null;
+            // Reset will take care of the colours in classic mode.
+            Globals.TheTeamColorManager.Reset(gameType);
             if (gameType == GameType.TiberianDawn)
             {
-                Globals.TheTeamColorManager.Reset();
-                AddTeamColorNone(Globals.TheTeamColorManager);
-                // TODO split classic and remaster team color load.
                 Globals.TheTeamColorManager.Load(@"DATA\XML\CNCTDTEAMCOLORS.XML");
+                AddTeamColorNone(Globals.TheTeamColorManager);
+                AddTeamColorPurple(Globals.TheTeamColorManager);
+                // TODO split classic and remaster team color load.
                 plugin = new TiberianDawn.GamePluginTD(!noImage, isTdMegaMap);
             }
             else if (gameType == GameType.RedAlert)
             {
-                Globals.TheTeamColorManager.Reset();
                 Globals.TheTeamColorManager.Load(@"DATA\XML\CNCRATEAMCOLORS.XML");
                 plugin = new RedAlert.GamePluginRA(!noImage);
             }
             else if (gameType == GameType.SoleSurvivor)
             {
-                Globals.TheTeamColorManager.Reset();
-                AddTeamColorNone(Globals.TheTeamColorManager);
                 Globals.TheTeamColorManager.Load(@"DATA\XML\CNCTDTEAMCOLORS.XML");
+                AddTeamColorNone(Globals.TheTeamColorManager);
+                AddTeamColorPurple(Globals.TheTeamColorManager);
                 plugin = new SoleSurvivor.GamePluginSS(!noImage, isTdMegaMap);
             }
             return plugin;
         }
 
-        private static void AddTeamColorNone(TeamColorManager teamColorManager)
+        private static void AddTeamColorNone(ITeamColorManager teamColorManager)
         {
-            // Add default black for unowned.
-            var teamColorNone = new TeamColor(teamColorManager);
-            teamColorNone.Load("NONE", "BASE_TEAM",
-                Color.FromArgb(66, 255, 0), Color.FromArgb(0, 255, 56), 0,
-                new Vector3(0.30f, -1.00f, 0.00f), new Vector3(0f, 1f, 1f), new Vector2(0.0f, 0.1f),
-                new Vector3(0, 1, 1), new Vector2(0, 1), Color.FromArgb(61, 61, 59));
-            teamColorManager.AddTeamColor(teamColorNone);
+            if (teamColorManager is TeamColorManager tcm)
+            {
+                // Add default black for unowned.
+                var teamColorNone = new TeamColor(tcm);
+                teamColorNone.Load("NONE", "BASE_TEAM",
+                    Color.FromArgb(66, 255, 0), Color.FromArgb(0, 255, 56), 0,
+                    new Vector3(0.30f, -1.00f, 0.00f), new Vector3(0f, 1f, 1f), new Vector2(0.0f, 0.1f),
+                    new Vector3(0, 1, 1), new Vector2(0, 1), Color.FromArgb(61, 61, 59));
+                tcm.AddTeamColor(teamColorNone);
+            }
+            else // if (teamColorManager is TeamColorManagerClassic tcc)
+            {
+                // TODO classic team color
+            }
         }
 
+        private static void AddTeamColorPurple(ITeamColorManager teamColorManager)
+        {
+            if (teamColorManager is TeamColorManager tcm)
+            {
+                // Add extra purple for flag..
+                var teamColorPurple = new TeamColor(tcm);
+                teamColorPurple.Load("PURPLE", "BASE_TEAM",
+                    Color.FromArgb(66, 255, 0), Color.FromArgb(0, 255, 56), 0,
+                    new Vector3(0.410f, 0.300f, 0.000f), new Vector3(0f, 1f, 1f), new Vector2(0.0f, 1.0f),
+                    new Vector3(0, 1, 1), new Vector2(0, 1), Color.FromArgb(77, 13, 255));
+                tcm.AddTeamColor(teamColorPurple);
+            }
+            else // if (teamColorManager is TeamColorManagerClassic tcc)
+            {
+                // TODO classic team color
+            }
+        }
         /// <summary>
         /// The separate-threaded part for making a new map.
         /// </summary>

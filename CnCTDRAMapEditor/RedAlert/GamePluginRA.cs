@@ -415,7 +415,7 @@ namespace MobiusEditor.RedAlert
             string[] structureActionTypes = { ActionTypes.TACTION_DESTROY_OBJECT };
             string[] terrainActionTypes = { };
 
-            TeamColor[] flagColors = new TeamColor[8];
+            ITeamColor[] flagColors = new ITeamColor[8];
             foreach (HouseType house in houseTypes)
             {
                 int mpId = Waypoint.GetMpIdFromFlag(house.MultiplayIdentifier);
