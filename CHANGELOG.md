@@ -457,3 +457,4 @@ Unreleased
 * Resources outside the map are now always shown at their minimum size, and tinted red, to indicate they don't really have any impact on the map. This also updates on the fly when changing the map bounds.
 * The Resources tool no longer evaluates resources placed outside the map bounds.
 * Rule errors that occur after closing the Map settings dialog will now show in a window with scrollable area, just like the errors shown when opening a maps.
+* Added missing overlap checks to buildings on the rebuild-list.
