@@ -305,22 +305,26 @@ namespace MobiusEditor.TiberianDawn
         protected GamePluginTD()
         {
             // Readonly, so I'm splitting this off
-            List<string> movies = new List<string>();
-            using (Megafile megafile = new Megafile(Path.Combine(Globals.MegafilePath, "MOVIES_TD.MEG")))
+            HashSet<string> movies = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            String moviesMegPath = Path.Combine(Globals.TheArchiveManager.LoadRoot, "MOVIES_TD.MEG");
+            if (File.Exists(moviesMegPath))
             {
-                foreach (string filename in megafile)
+                using (Megafile megafile = new Megafile(moviesMegPath))
                 {
-                    Match m = MovieRegex.Match(filename);
-                    if (m.Success)
+                    foreach (string filename in megafile)
                     {
-                        movies.Add(m.Groups[1].ToString());
+                        Match m = MovieRegex.Match(filename);
+                        if (m.Success)
+                        {
+                            movies.Add(m.Groups[1].ToString());
+                        }
                     }
                 }
             }
             // Preparation for decoupling from remaster files.
             if (movies.Count == 0)
             {
-                movies.AddRange(movieTypesTD);
+                movies.UnionWith(movieTypesTD);
             }
             foreach (string mov in movieTypesAdditional)
             {
@@ -330,10 +334,10 @@ namespace MobiusEditor.TiberianDawn
                     movies.Add(mov);
                 }
             }
-            movies = movies.Distinct().ToList();
-            movies.Sort(new ExplorerComparer());
-            movies.Insert(0, movieEmpty);
-            movieTypes = movies.ToArray();
+            List<string> finalMovies = movies.ToList();
+            finalMovies.Sort(new ExplorerComparer());
+            finalMovies.Insert(0, movieEmpty);
+            movieTypes = finalMovies.ToArray();
         }
 
         public GamePluginTD(bool megaMap)

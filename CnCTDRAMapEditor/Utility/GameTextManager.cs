@@ -12,6 +12,7 @@
 // distributed with this program. You should have received a copy of the 
 // GNU General Public License along with permitted additional restrictions 
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
+using MobiusEditor.Interface;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -24,9 +25,9 @@ namespace MobiusEditor.Utility
 
         public string this[string textId] => gameText.TryGetValue(textId, out string text) ? text : textId;
 
-        public GameTextManager(MegafileManager megafileManager, string gameTextFile)
+        public GameTextManager(IArchiveManager megafileManager, string gameTextFile)
         {
-            using (var stream = megafileManager.Open(gameTextFile))
+            using (var stream = megafileManager.OpenFile(gameTextFile))
             using (var reader = new BinaryReader(stream))
             using (var unicodeReader = new BinaryReader(stream, Encoding.Unicode))
             using (var asciiReader = new BinaryReader(stream, Encoding.ASCII))

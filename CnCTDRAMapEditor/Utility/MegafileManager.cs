@@ -12,6 +12,7 @@
 // distributed with this program. You should have received a copy of the 
 // GNU General Public License along with permitted additional restrictions 
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
+using MobiusEditor.Interface;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -19,38 +20,44 @@ using System.IO;
 
 namespace MobiusEditor.Utility
 {
-    public class MegafileManager : IEnumerable<string>, IEnumerable, IDisposable
+    public class MegafileManager : IArchiveManager
     {
         private readonly string looseFilePath;
+
+        public String LoadRoot { get; private set; }
 
         private readonly List<Megafile> megafiles = new List<Megafile>();
 
         private readonly HashSet<string> filenames = new HashSet<string>();
 
-        public MegafileManager(string looseFilePath)
+        public MegafileManager(string loadRoot, string looseFilePath)
         {
             this.looseFilePath = looseFilePath;
+            this.LoadRoot = Path.GetFullPath(loadRoot);
         }
 
-        public bool Load(string megafilePath)
+        public bool LoadArchive(string archivePath)
         {
-            if (!File.Exists(megafilePath))
+            if (!Path.IsPathRooted(archivePath))
+            {
+                archivePath = Path.Combine(LoadRoot, archivePath);
+            }
+            if (!File.Exists(archivePath))
             {
                 return false;
             }
-
-            var megafile = new Megafile(megafilePath);
+            var megafile = new Megafile(archivePath);
             filenames.UnionWith(megafile);
             megafiles.Add(megafile);
             return true;
         }
 
-        public bool Exists(string path)
+        public bool FileExists(string path)
         {
             return File.Exists(Path.Combine(looseFilePath, path)) || filenames.Contains(path.ToUpper());
         }
 
-        public Stream Open(string path)
+        public Stream OpenFile(string path)
         {
             string loosePath = Path.Combine(looseFilePath, path);
             if (File.Exists(loosePath))
@@ -66,7 +73,6 @@ namespace MobiusEditor.Utility
                     return stream;
                 }
             }
-
             return null;
         }
 

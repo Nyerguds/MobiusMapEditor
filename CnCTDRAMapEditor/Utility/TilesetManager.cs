@@ -24,7 +24,7 @@ namespace MobiusEditor.Utility
     {
         private readonly Dictionary<string, Tileset> tilesets = new Dictionary<string, Tileset>();
 
-        private readonly MegafileManager megafileManager;
+        private readonly IArchiveManager megafileManager;
         private readonly TextureManager textureManager;
         private readonly string xmlPath;
         private readonly string texturesPath;
@@ -32,7 +32,7 @@ namespace MobiusEditor.Utility
         public string[] ExpandModPaths { get; set; }
 
 
-        public TilesetManager(MegafileManager megafileManager, TextureManager textureManager, string xmlPath, string texturesPath, params string[] expandModPaths)
+        public TilesetManager(IArchiveManager megafileManager, TextureManager textureManager, string xmlPath, string texturesPath, params string[] expandModPaths)
         {
             this.megafileManager = megafileManager;
             this.textureManager = textureManager;
@@ -62,7 +62,7 @@ namespace MobiusEditor.Utility
             if (xmlDoc == null)
             {
                 xmlDoc = new XmlDocument();
-                xmlDoc.Load(megafileManager.Open(xmlPath));
+                xmlDoc.Load(megafileManager.OpenFile(xmlPath));
             }
             foreach (XmlNode fileNode in xmlDoc.SelectNodes("TilesetFiles/File"))
             {
@@ -84,7 +84,7 @@ namespace MobiusEditor.Utility
                 if (fileXmlDoc == null)
                 {
                     fileXmlDoc = new XmlDocument();
-                    fileXmlDoc.Load(megafileManager.Open(xmlFile));
+                    fileXmlDoc.Load(megafileManager.OpenFile(xmlFile));
                 }
                 foreach (XmlNode tilesetNode in fileXmlDoc.SelectNodes("Tilesets/TilesetTypeClass"))
                 {

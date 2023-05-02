@@ -43,12 +43,12 @@ namespace MobiusEditor.Utility
         }
 #endif
 
-        private readonly MegafileManager megafileManager;
+        private readonly IArchiveManager megafileManager;
 
         private Dictionary<string, Bitmap> cachedTextures = new Dictionary<string, Bitmap>();
         private Dictionary<(string, ITeamColor), (Bitmap, Rectangle)> teamColorTextures = new Dictionary<(string, ITeamColor), (Bitmap, Rectangle)>();
 
-        public TextureManager(MegafileManager megafileManager, params String[] expandModPaths)
+        public TextureManager(IArchiveManager megafileManager, params String[] expandModPaths)
         {
             this.megafileManager = megafileManager;
             this.ExpandModPaths = expandModPaths;
@@ -162,7 +162,7 @@ namespace MobiusEditor.Utility
                     // First attempt to find the texture in an archive
                     if (tga == null)
                     {
-                        using (var fileStream = megafileManager.Open(archivePath))
+                        using (var fileStream = megafileManager.OpenFile(archivePath))
                         {
                             LoadTgaFromZipFileStream(fileStream, name, ref tga, ref metadata);
                         }
@@ -170,9 +170,9 @@ namespace MobiusEditor.Utility
                     // Next attempt to load a standalone file
                     if (tga == null)
                     {
-                        using (var fileStream = megafileManager.Open(filename))
+                        using (var fileStream = megafileManager.OpenFile(filename))
                         {
-                            // megafileManager.Open might return null if not found, so always check on this.
+                            // megafileManager.OpenFile might return null if not found, so always check on this.
                             // The Load???FromFileStream functions do this check internally.
                             if (fileStream != null)
                             {
@@ -182,7 +182,7 @@ namespace MobiusEditor.Utility
                         if (tga != null)
                         {
                             var meta = Path.ChangeExtension(filename, ".meta");
-                            using (var metaStream = megafileManager.Open(meta))
+                            using (var metaStream = megafileManager.OpenFile(meta))
                             {
                                 if (metaStream != null)
                                 {
@@ -309,7 +309,7 @@ namespace MobiusEditor.Utility
                     }
                     if (bitmap == null)
                     {
-                        using (var fileStream = megafileManager.Open(ddsFilename))
+                        using (var fileStream = megafileManager.OpenFile(ddsFilename))
                         {
                             bitmap = LoadDDSFromFileStream(fileStream);
                         }

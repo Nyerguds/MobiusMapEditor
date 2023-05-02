@@ -45,8 +45,8 @@ namespace MobiusEditor.Utility
         public Megafile(string megafilePath)
         {
             megafileMap = MemoryMappedFile.CreateFromFile(
-                new FileStream(megafilePath, FileMode.Open, FileAccess.Read, FileShare.Read) , null, 0, MemoryMappedFileAccess.Read, HandleInheritability.None, false
-            );
+                new FileStream(megafilePath, FileMode.Open, FileAccess.Read, FileShare.Read),
+                null, 0, MemoryMappedFileAccess.Read, HandleInheritability.None, false);
 
             var numFiles = 0U;
             var numStrings = 0U;

@@ -60,7 +60,8 @@ namespace MobiusEditor
             Application.SetCompatibleTextRenderingDefault(false);
 
             // Do a test for CONFIG.MEG
-            if (!FileTest())
+            string runPath = Environment.CurrentDirectory;
+            if (!FileTest(runPath))
             {
                 // If it does not exist, try to use the directory from the settings.
                 bool validSavedDirectory = false;
@@ -69,7 +70,7 @@ namespace MobiusEditor
                 {
                     if (FileTest(Properties.Settings.Default.GameDirectoryPath))
                     {
-                        Environment.CurrentDirectory = Properties.Settings.Default.GameDirectoryPath;
+                        runPath = Properties.Settings.Default.GameDirectoryPath;
                         validSavedDirectory = true;
                     }
                 }
@@ -81,7 +82,7 @@ namespace MobiusEditor
                     {
                         if (FileTest(gameFolder))
                         {
-                            Environment.CurrentDirectory = gameFolder;
+                            runPath = gameFolder;
                             validSavedDirectory = true;
                             Properties.Settings.Default.GameDirectoryPath = gameFolder;
                             Properties.Settings.Default.Save();
@@ -94,23 +95,21 @@ namespace MobiusEditor
                     var gameInstallationPathForm = new GameInstallationPathForm();
                     if (gameInstallationPathForm.ShowDialog() == DialogResult.No)
                         return;
-                    Environment.CurrentDirectory = Path.GetDirectoryName(gameInstallationPathForm.SelectedPath);
-                    Properties.Settings.Default.GameDirectoryPath = Environment.CurrentDirectory;
+                    runPath = Path.GetDirectoryName(gameInstallationPathForm.SelectedPath);
+                    Properties.Settings.Default.GameDirectoryPath = runPath;
                     Properties.Settings.Default.Save();
                 }
             }
 
             // Initialize megafiles
-            var runPath = Environment.CurrentDirectory;
-            Globals.TheMegafileManager = new MegafileManager(runPath);
+            Globals.TheArchiveManager = new MegafileManager(Path.Combine(runPath, Globals.MegafilePath), runPath);
 
             var megafilesLoaded = true;
-            var megafilePath = Path.Combine(runPath, "DATA");
-            megafilesLoaded &= Globals.TheMegafileManager.Load(Path.Combine(megafilePath, "CONFIG.MEG"));
-            megafilesLoaded &= Globals.TheMegafileManager.Load(Path.Combine(megafilePath, "TEXTURES_COMMON_SRGB.MEG"));
-            megafilesLoaded &= Globals.TheMegafileManager.Load(Path.Combine(megafilePath, "TEXTURES_RA_SRGB.MEG"));
-            megafilesLoaded &= Globals.TheMegafileManager.Load(Path.Combine(megafilePath, "TEXTURES_SRGB.MEG"));
-            megafilesLoaded &= Globals.TheMegafileManager.Load(Path.Combine(megafilePath, "TEXTURES_TD_SRGB.MEG"));
+            megafilesLoaded &= Globals.TheArchiveManager.LoadArchive("CONFIG.MEG");
+            megafilesLoaded &= Globals.TheArchiveManager.LoadArchive("TEXTURES_COMMON_SRGB.MEG");
+            megafilesLoaded &= Globals.TheArchiveManager.LoadArchive("TEXTURES_RA_SRGB.MEG");
+            megafilesLoaded &= Globals.TheArchiveManager.LoadArchive("TEXTURES_SRGB.MEG");
+            megafilesLoaded &= Globals.TheArchiveManager.LoadArchive("TEXTURES_TD_SRGB.MEG");
 #if !DEVELOPER
             if (!megafilesLoaded)
             {
@@ -130,17 +129,17 @@ namespace MobiusEditor
             modPaths.Add(GameType.RedAlert, GetModPaths(gameId, Properties.Settings.Default.ModsToLoadRA, raModFolder, "RA"));
             modPaths.Add(GameType.SoleSurvivor, GetModPaths(gameId, Properties.Settings.Default.ModsToLoadSS, tdModFolder, "TD"));
             // Initialize texture, tileset, team color, and game text managers
-            Globals.TheTextureManager = new TextureManager(Globals.TheMegafileManager);
-            Globals.TheTilesetManager = new TilesetManager(Globals.TheMegafileManager, Globals.TheTextureManager, Globals.TilesetsXMLPath, Globals.TexturesPath);
-            Globals.TheTeamColorManager = new TeamColorManager(Globals.TheMegafileManager);
+            Globals.TheTextureManager = new TextureManager(Globals.TheArchiveManager);
+            Globals.TheTilesetManager = new TilesetManager(Globals.TheArchiveManager, Globals.TheTextureManager, Globals.TilesetsXMLPath, Globals.TexturesPath);
+            Globals.TheTeamColorManager = new TeamColorManager(Globals.TheArchiveManager);
             // Not adapted to mods for now...
             var cultureName = CultureInfo.CurrentUICulture.Name;
             var gameTextFilename = string.Format(Globals.GameTextFilenameFormat, cultureName.ToUpper());
-            if (!Globals.TheMegafileManager.Exists(gameTextFilename))
+            if (!Globals.TheArchiveManager.FileExists(gameTextFilename))
             {
                 gameTextFilename = string.Format(Globals.GameTextFilenameFormat, "EN-US");
             }
-            Globals.TheGameTextManager = new GameTextManager(Globals.TheMegafileManager, gameTextFilename);
+            Globals.TheGameTextManager = new GameTextManager(Globals.TheArchiveManager, gameTextFilename);
             // Initialize Steam if this is a Steam build
             if (SteamworksUGC.IsSteamBuild)
             {
@@ -177,7 +176,7 @@ namespace MobiusEditor
             {
                 SteamworksUGC.Shutdown();
             }
-            Globals.TheMegafileManager.Dispose();
+            Globals.TheArchiveManager.Dispose();
         }
         [DllImport("SHCore.dll")]
         private static extern bool SetProcessDpiAwareness(PROCESS_DPI_AWARENESS awareness);
@@ -418,11 +417,6 @@ namespace MobiusEditor
                     }
                 }
             }
-        }
-
-        static bool FileTest()
-        {
-            return FileTest(Environment.CurrentDirectory);
         }
 
         static bool FileTest(String basePath)

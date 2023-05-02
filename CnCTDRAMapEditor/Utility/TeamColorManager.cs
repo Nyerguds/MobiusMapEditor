@@ -25,7 +25,7 @@ namespace MobiusEditor.Utility
     {
         private readonly Dictionary<string, TeamColor> teamColors = new Dictionary<string, TeamColor>();
 
-        private readonly MegafileManager megafileManager;
+        private readonly IArchiveManager megafileManager;
         public string[] ExpandModPaths { get; set; }
         public Color RemapBaseColor => Color.FromArgb(0x00, 0xFF, 0x00);
 
@@ -57,7 +57,7 @@ namespace MobiusEditor.Utility
             }
         }
 
-        public TeamColorManager(MegafileManager megafileManager, params string[] expandModPaths)
+        public TeamColorManager(IArchiveManager megafileManager, params string[] expandModPaths)
         {
             this.megafileManager = megafileManager;
             this.ExpandModPaths = expandModPaths;
@@ -86,14 +86,23 @@ namespace MobiusEditor.Utility
             }
             if (xmlDoc == null)
             {
-                xmlDoc = new XmlDocument();
-                xmlDoc.Load(megafileManager.Open(path));
+                using (Stream archivedFile = megafileManager.OpenFile(path))
+                {
+                    if (archivedFile != null)
+                    {
+                        xmlDoc = new XmlDocument();
+                        xmlDoc.Load(archivedFile);
+                    }
+                }
             }
-            foreach (XmlNode teamColorNode in xmlDoc.SelectNodes("/*/TeamColorTypeClass"))
+            if (xmlDoc != null)
             {
-                var teamColor = new TeamColor(this);
-                teamColor.Load(teamColorNode.OuterXml);
-                teamColors[teamColor.Name] = teamColor;
+                foreach (XmlNode teamColorNode in xmlDoc.SelectNodes("/*/TeamColorTypeClass"))
+                {
+                    var teamColor = new TeamColor(this);
+                    teamColor.Load(teamColorNode.OuterXml);
+                    teamColors[teamColor.Name] = teamColor;
+                }
             }
             foreach (var teamColor in TopologicalSortTeamColors())
             {
@@ -112,7 +121,6 @@ namespace MobiusEditor.Utility
                     edges.Add((GetItem(node.Variant), node));
                 }
             }
-
             var sorted = new List<TeamColor>();
             var openSet = new HashSet<TeamColor>(nodes.Where(n => edges.All(e => !e.Item2.Equals(n))));
             while (openSet.Count > 0)
@@ -120,19 +128,16 @@ namespace MobiusEditor.Utility
                 var node = openSet.First();
                 openSet.Remove(node);
                 sorted.Add(node);
-
                 foreach (var edge in edges.Where(e => e.Item1.Equals(node)).ToArray())
                 {
                     var node2 = edge.Item2;
                     edges.Remove(edge);
-
                     if (edges.All(edge2 => !edge2.Item2.Equals(node2)))
                     {
                         openSet.Add(node2);
                     }
                 }
             }
-
             return (edges.Count == 0) ? sorted : null;
         }
     }

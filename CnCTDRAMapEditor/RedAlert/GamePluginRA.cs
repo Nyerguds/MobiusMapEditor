@@ -341,7 +341,7 @@ namespace MobiusEditor.RedAlert
                 ini.Sections.Remove("Briefing");
                 foreach (House house in Map.Houses)
                 {
-                    INITools.ClearDataFrom(ini, house.Type.Name, (House)house);
+                    INITools.ClearDataFrom(ini, house.Type.Name, house);
                 }
                 extraSections = ini.Sections.Count == 0 ? null : ini.Sections;
                 IEnumerable<string> errors = UpdateRules(ini, this.Map);
@@ -2044,7 +2044,20 @@ namespace MobiusEditor.RedAlert
             Map.TeamTypes.AddRange(teamTypes.OrderBy(t => t.Name, comparer));
             UpdateBasePlayerHouse();
             triggers.Sort((x, y) => comparer.Compare(x.Name, y.Name));
-            errors.AddRange(CheckTriggers(triggers, true, true, false, out _, true, out bool wasFixed));
+#if DEBUG
+            //MessageBox.Show("at triggers check");
+#endif
+            // Keep track of corrected globals.
+            List<int> availableGlobals;
+            Dictionary<long, int> fixedGlobals = new Dictionary<long, int>();
+            HashSet<int> teamGlobals = GetTeamGlobals(teamTypes);
+            bool wasFixed;
+            errors.AddRange(CheckTriggers(triggers, true, true, false, out _, true, out wasFixed, teamGlobals, out availableGlobals, ref fixedGlobals));
+            if (wasFixed)
+            {
+                modified = true;
+            }
+            errors.AddRange(FixTeamTypeGlobals(Map.TeamTypes, availableGlobals, fixedGlobals, out wasFixed));
             if (wasFixed)
             {
                 modified = true;
@@ -2352,6 +2365,7 @@ namespace MobiusEditor.RedAlert
                     using (BinaryWriter mprWriter = new BinaryWriter(mprStream))
                     {
                         string iniText = ini.ToString("\n");
+                        // Possibly scan extra ini content for all units/structs/etc with "Name" fields and save them as UTF-8 too? Not sure how the Remaster handles these.
                         GeneralUtils.WriteMultiEncoding(iniText.Split('\n'), mprWriter, dos437, utf8, new[] { ("Steam", null), ("Briefing", "Text"), ("Basic", "Name"), ("Basic", "Author") }, linebreak);
                     }
                     if (!Map.BasicSection.SoloMission || !Globals.NoMetaFilesForSinglePlay)
@@ -3069,21 +3083,8 @@ namespace MobiusEditor.RedAlert
                 string unusedTeamsStr = String.Join(", ", unusedTeams.ToArray());
                 HashSet<int> checkedGlobals = new HashSet<int>();
                 HashSet<int> alteredGlobals = new HashSet<int>();
-                foreach (Trigger tr in Map.Triggers)
-                {
-                    if (tr.Event1.EventType == EventTypes.TEVENT_GLOBAL_CLEAR || tr.Event1.EventType == EventTypes.TEVENT_GLOBAL_SET)
-                        checkedGlobals.Add((int)tr.Event1.Data);
-                    if (tr.EventControl != TriggerMultiStyleType.Only && (tr.Event2.EventType == EventTypes.TEVENT_GLOBAL_CLEAR || tr.Event2.EventType == EventTypes.TEVENT_GLOBAL_SET))
-                        checkedGlobals.Add((int)tr.Event2.Data);
-                    if (tr.Action1.ActionType == ActionTypes.TACTION_CLEAR_GLOBAL || tr.Action1.ActionType == ActionTypes.TACTION_SET_GLOBAL)
-                        alteredGlobals.Add((int)tr.Action1.Data);
-                    if (tr.Action2.ActionType == ActionTypes.TACTION_CLEAR_GLOBAL || tr.Action2.ActionType == ActionTypes.TACTION_SET_GLOBAL)
-                        alteredGlobals.Add((int)tr.Action2.Data);
-                    if (tr.Action1.ActionType == ActionTypes.TACTION_DZ || tr.Action1.ActionType == ActionTypes.TACTION_REVEAL_SOME || tr.Action1.ActionType == ActionTypes.TACTION_REVEAL_ZONE)
-                        usedWaypoints.Add((int)tr.Action1.Data);
-                    if (tr.Action2.ActionType == ActionTypes.TACTION_DZ || tr.Action2.ActionType == ActionTypes.TACTION_REVEAL_SOME || tr.Action2.ActionType == ActionTypes.TACTION_REVEAL_ZONE)
-                        usedWaypoints.Add((int)tr.Action2.Data);
-                }
+                GetUsagesInTriggers(Map.Triggers, checkedGlobals, alteredGlobals, usedWaypoints);
+                alteredGlobals.UnionWith(GetTeamGlobals(Map.TeamTypes));
                 string usedGlobalsStr = String.Join(", ", checkedGlobals.Union(alteredGlobals).OrderBy(g => g).Select(g => g.ToString()).ToArray());
                 string chGlobalsNotEdStr = String.Join(", ", checkedGlobals.Where(g => !alteredGlobals.Contains(g)).OrderBy(g => g).Select(g => g.ToString()).ToArray());
                 string edGlobalsNotChStr = String.Join(", ", alteredGlobals.Where(g => !checkedGlobals.Contains(g)).OrderBy(g => g).Select(g => g.ToString()).ToArray());
@@ -3109,6 +3110,34 @@ namespace MobiusEditor.RedAlert
                 info.Add(String.Format("Empty waypoints used in teams or triggers: {0}", evalEmpty(unsetUsedWaypointsStr)));
             }
             return info;
+        }
+
+        private void GetUsagesInTriggers(IEnumerable<Trigger> triggers, HashSet<int> checkedGlobals, HashSet<int> alteredGlobals, HashSet<int> usedWaypoints)
+        {
+            foreach (Trigger tr in triggers)
+            {
+                if (checkedGlobals != null)
+                {
+                    if (tr.Event1.EventType == EventTypes.TEVENT_GLOBAL_CLEAR || tr.Event1.EventType == EventTypes.TEVENT_GLOBAL_SET)
+                        checkedGlobals.Add((int)tr.Event1.Data);
+                    if (tr.EventControl != TriggerMultiStyleType.Only && (tr.Event2.EventType == EventTypes.TEVENT_GLOBAL_CLEAR || tr.Event2.EventType == EventTypes.TEVENT_GLOBAL_SET))
+                        checkedGlobals.Add((int)tr.Event2.Data);
+                }
+                if (alteredGlobals != null)
+                {
+                    if (tr.Action1.ActionType == ActionTypes.TACTION_CLEAR_GLOBAL || tr.Action1.ActionType == ActionTypes.TACTION_SET_GLOBAL)
+                        alteredGlobals.Add((int)tr.Action1.Data);
+                    if (tr.Action2.ActionType == ActionTypes.TACTION_CLEAR_GLOBAL || tr.Action2.ActionType == ActionTypes.TACTION_SET_GLOBAL)
+                        alteredGlobals.Add((int)tr.Action2.Data);
+                }
+                if (usedWaypoints != null)
+                {
+                    if (tr.Action1.ActionType == ActionTypes.TACTION_DZ || tr.Action1.ActionType == ActionTypes.TACTION_REVEAL_SOME || tr.Action1.ActionType == ActionTypes.TACTION_REVEAL_ZONE)
+                        usedWaypoints.Add((int)tr.Action1.Data);
+                    if (tr.Action2.ActionType == ActionTypes.TACTION_DZ || tr.Action2.ActionType == ActionTypes.TACTION_REVEAL_SOME || tr.Action2.ActionType == ActionTypes.TACTION_REVEAL_ZONE)
+                        usedWaypoints.Add((int)tr.Action2.Data);
+                }
+            }
         }
 
         public HashSet<string> GetHousesWithProduction()
@@ -3147,10 +3176,24 @@ namespace MobiusEditor.RedAlert
 
         public IEnumerable<string> CheckTriggers(IEnumerable<Trigger> triggers, bool includeExternalData, bool prefixNames, bool fatalOnly, out bool fatal, bool fix, out bool wasFixed)
         {
+            Dictionary<long, int> fixedGlobals = new Dictionary<long, int>();;
+            return CheckTriggers(triggers, includeExternalData, prefixNames, fatalOnly, out fatal, fix, out wasFixed, null, out _, ref fixedGlobals);
+        }
+
+        public IEnumerable<string> CheckTriggers(IEnumerable<Trigger> triggers, bool includeExternalData, bool prefixNames, bool fatalOnly, out bool fatal, bool fix, out bool wasFixed, HashSet<int> teamGlobals, out List<int> availableGlobals, ref Dictionary<long, int> fixedGlobals)
+        {
             fatal = false;
             wasFixed = false;
             List<string> curErrors = new List<string>();
             List<string> errors = new List<string>();
+            HashSet<int> checkedGlobals = new HashSet<int>();
+            HashSet<int> alteredGlobals = new HashSet<int>();
+            GetUsagesInTriggers(triggers, checkedGlobals, alteredGlobals, null);
+            availableGlobals = !fix ? new List<int>() : Enumerable.Range(0, 30).Where(n => !checkedGlobals.Contains(n) && !alteredGlobals.Contains(n)).ToList();
+            if (teamGlobals != null)
+            {
+                availableGlobals = availableGlobals.Where(n => !teamGlobals.Contains(n)).ToList();
+            }
             foreach (Trigger trigger in triggers)
             {
                 string trigName = trigger.Name;
@@ -3164,8 +3207,8 @@ namespace MobiusEditor.RedAlert
                 CheckEventHouse(prefix, trigger.Event1, curErrors, 1, ref fatal, fatalOnly, fix, ref wasFixed);
                 CheckEventHouse(prefix, trigger.Event2, curErrors, 2, ref fatal, fatalOnly, fix, ref wasFixed);
                 // globals checks are only for ini read, really.
-                CheckEventGlobals(prefix, trigger.Event1, curErrors, 1, ref fatal, fatalOnly, fix, ref wasFixed);
-                CheckEventGlobals(prefix, trigger.Event2, curErrors, 2, ref fatal, fatalOnly, fix, ref wasFixed);
+                CheckEventGlobals(prefix, trigger.Event1, curErrors, 1, ref fatal, fatalOnly, fix, ref wasFixed, availableGlobals, fixedGlobals);
+                CheckEventGlobals(prefix, trigger.Event2, curErrors, 2, ref fatal, fatalOnly, fix, ref wasFixed, availableGlobals, fixedGlobals);
                 CheckEventTeam(prefix, trigger.Event1, curErrors, 1, ref fatal, fatalOnly);
                 CheckEventTeam(prefix, trigger.Event2, curErrors, 2, ref fatal, fatalOnly);
                 // Actions
@@ -3174,8 +3217,8 @@ namespace MobiusEditor.RedAlert
                 CheckActionText(prefix, trigger.Action1, curErrors, 1, ref fatal, fatalOnly, fix, ref wasFixed);
                 CheckActionText(prefix, trigger.Action2, curErrors, 2, ref fatal, fatalOnly, fix, ref wasFixed);
                 // globals checks are only for ini read, really.
-                CheckActionGlobals(prefix, trigger.Action1, curErrors, 1, ref fatal, fatalOnly, fix, ref wasFixed);
-                CheckActionGlobals(prefix, trigger.Action2, curErrors, 2, ref fatal, fatalOnly, fix, ref wasFixed);
+                CheckActionGlobals(prefix, trigger.Action1, curErrors, 1, ref fatal, fatalOnly, fix, ref wasFixed, availableGlobals, fixedGlobals);
+                CheckActionGlobals(prefix, trigger.Action2, curErrors, 2, ref fatal, fatalOnly, fix, ref wasFixed, availableGlobals, fixedGlobals);
                 CheckActionTeam(prefix, trigger.Action1, curErrors, 1, ref fatal, fatalOnly);
                 CheckActionTeam(prefix, trigger.Action2, curErrors, 2, ref fatal, fatalOnly);
                 CheckActionTrigger(prefix, trigger.Action1, curErrors, 1, ref fatal, fatalOnly);
@@ -3198,6 +3241,56 @@ namespace MobiusEditor.RedAlert
                         errors.Add(String.Empty);
                     }
                     curErrors.Clear();
+                }
+            }
+            return errors;
+        }
+
+        private HashSet<int> GetTeamGlobals(List<TeamType> teamTypes)
+        {
+            HashSet<int> usedGlobals = new HashSet<int>();
+            foreach (TeamType team in teamTypes)
+            {
+                foreach (TeamTypeMission ttm in team.Missions)
+                {
+                    if (ttm.Mission.Mission == TeamMissionTypes.SetGlobal.Mission)
+                    {
+                        usedGlobals.Add((int)(ttm.Argument));
+                    }
+                }
+            }
+            return usedGlobals;
+        }
+
+        private IEnumerable<string> FixTeamTypeGlobals(IEnumerable<TeamType> teamTypes, List<int> availableGlobals, Dictionary<long, int> fixedGlobals, out bool wasFixed)
+        {
+            List<string> errors = new List<string>();
+            wasFixed = false;
+            foreach (TeamType team in teamTypes)
+            {
+                for (Int32 i = 0; i < team.Missions.Count; i++)
+                {
+                    TeamTypeMission ttm = team.Missions[i];
+                    if (ttm.Mission.Mission == TeamMissionTypes.SetGlobal.Mission && (ttm.Argument < 0 || ttm.Argument > 29))
+                    {
+                        string error = String.Format("Team \"{0}\" Order {1} has an illegal global value \"{2}\": Globals only go from 0 to 29.",
+                            team.Name, i + 1, ttm.Argument);
+                        int fixedVal = -1;
+                        if (fixedGlobals != null && fixedGlobals.TryGetValue(ttm.Argument, out int fixVal))
+                        {
+                            fixedVal = fixVal;
+                        }
+                        else if (availableGlobals != null && availableGlobals.Count > 0)
+                        {
+                            fixedVal = availableGlobals[0];
+                            availableGlobals.RemoveAt(0);
+                            fixedGlobals.Add(ttm.Argument, fixedVal);
+                        }
+                        ttm.Argument = fixedVal == -1 ? ttm.Argument.Restrict(0, 29) : fixedVal;
+                        wasFixed = true;
+                        error += fixedVal == -1 ? (" Fixed to \"" + ttm.Argument + "\".") : (" Fixed to available global \"" + fixedVal + "\".");
+                        errors.Add(error);
+                    }
                 }
             }
             return errors;
@@ -3247,7 +3340,7 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        private void CheckEventGlobals(string prefix, TriggerEvent evnt, List<string> errors, Int32 nr, ref bool fatal, bool fatalOnly, bool fix, ref bool wasFixed)
+        private void CheckEventGlobals(string prefix, TriggerEvent evnt, List<string> errors, Int32 nr, ref bool fatal, bool fatalOnly, bool fix, ref bool wasFixed, List<int> availableGlobals, Dictionary<long,int> fixedGlobals)
         {
             if (fatalOnly)
             {
@@ -3262,9 +3355,20 @@ namespace MobiusEditor.RedAlert
                         string error = prefix + "Event " + nr + " has an illegal global value \"" + evnt.Data + "\": Globals only go from 0 to 29.";
                         if (fix)
                         {
-                            evnt.Data = evnt.Data.Restrict(0, 29);
+                            int fixedVal = -1;
+                            if (fixedGlobals.TryGetValue(evnt.Data, out int fixVal))
+                            {
+                                fixedVal = fixVal;
+                            }
+                            else if (availableGlobals.Count > 0)
+                            {
+                                fixedVal = availableGlobals[0];
+                                availableGlobals.RemoveAt(0);
+                                fixedGlobals.Add(evnt.Data, fixedVal);
+                            }
+                            evnt.Data = fixedVal == -1 ? evnt.Data.Restrict(0, 29) : fixedVal;
                             wasFixed = true;
-                            error += " Fixed to \"" + evnt.Data + "\".";
+                            error += fixedVal == -1 ? (" Fixed to \"" + evnt.Data + "\".") : (" Fixed to available global \"" + evnt.Data + "\".");
                         }
                         errors.Add(error);
                     }
@@ -3376,7 +3480,7 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        private void CheckActionGlobals(string prefix, TriggerAction action, List<string> errors, Int32 nr, ref bool fatal, bool fatalOnly, bool fix, ref bool wasFixed)
+        private void CheckActionGlobals(string prefix, TriggerAction action, List<string> errors, Int32 nr, ref bool fatal, bool fatalOnly, bool fix, ref bool wasFixed, List<int> availableGlobals, Dictionary<long, int> globalFixes)
         {
             if (!fatalOnly)
             {
@@ -3386,12 +3490,23 @@ namespace MobiusEditor.RedAlert
                     case ActionTypes.TACTION_CLEAR_GLOBAL:
                         if (action.Data < 0 || action.Data > 29)
                         {
-                            string error = prefix + "Action " + nr + " has an illegal value \""+ action.Data + "\": Globals only go from 0 to 29.";
+                            string error = prefix + "Action " + nr + " has an illegal global value \""+ action.Data + "\": Globals only go from 0 to 29.";
                             if (fix)
                             {
-                                action.Data = action.Data.Restrict(0, 29);
+                                int fixedVal = -1;
+                                if (globalFixes.TryGetValue(action.Data, out int fixVal))
+                                {
+                                    fixedVal = fixVal;
+                                }
+                                else if (availableGlobals.Count > 0)
+                                {
+                                    fixedVal = availableGlobals[0];
+                                    availableGlobals.RemoveAt(0);
+                                    globalFixes.Add(action.Data, fixedVal);
+                                }
+                                action.Data = fixedVal == -1 ? action.Data.Restrict(0, 29) : fixedVal;
                                 wasFixed = true;
-                                error += " Fixed to \"" + action.Data + "\".";
+                                error += fixedVal == -1 ? (" Fixed to \"" + action.Data + "\".") : (" Fixed to available global \"" + action.Data + "\".");
                             }
                             errors.Add(error);
                         }

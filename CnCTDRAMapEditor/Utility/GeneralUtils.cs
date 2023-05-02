@@ -62,10 +62,10 @@ namespace MobiusEditor.Utility
                         using (var megafile = new Megafile(path))
                         {
                             Regex ext = new Regex("^\\.((ini)|(mpr))$");
-                            var testIniFile = megafile.Where(p => ext.IsMatch(Path.GetExtension(p).ToLower())).FirstOrDefault();
+                            string testIniFile = megafile.Where(p => ext.IsMatch(Path.GetExtension(p).ToLower())).FirstOrDefault();
                             if (testIniFile != null)
                             {
-                                using (var iniReader = new StreamReader(megafile.Open(testIniFile), encDOS))
+                                using (StreamReader iniReader = new StreamReader(megafile.Open(testIniFile), encDOS))
                                 {
                                     iniContents = iniReader.ReadToEnd();
                                 }
@@ -113,7 +113,7 @@ namespace MobiusEditor.Utility
         /// </param>
         /// <param name="lineEnd">Bytes to use as line ends when writing the data to the writer.</param>
         public static void WriteMultiEncoding(string[] iniText, BinaryWriter writer, Encoding normalEncoding,
-            Encoding altEncoding, (string, string)[] toAltEncode, Byte[] lineEnd)
+            Encoding altEncoding, (string section, string key)[] toAltEncode, Byte[] lineEnd)
         {
             Dictionary<string, bool> inSection = new Dictionary<string, bool>();
             foreach ((string section, string key) in toAltEncode)

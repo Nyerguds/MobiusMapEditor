@@ -72,6 +72,7 @@ namespace MobiusEditor
         public const int PixelWidth = 24;
         public const int PixelHeight = 24;
 
+        public static string DataPath { get; set; }
         public static bool BoundsObstructFill { get; set; }
         public static bool TileDragProtect { get; set; }
         public static bool TileDragRandomize { get; set; }
@@ -125,7 +126,7 @@ namespace MobiusEditor
 
         public const long MaxMapSize = 0x20000;
 
-        public static MegafileManager TheMegafileManager;
+        public static IArchiveManager TheArchiveManager;
         public static TextureManager TheTextureManager;
         public static TilesetManager TheTilesetManager;
         public static ITeamColorManager TheTeamColorManager;
