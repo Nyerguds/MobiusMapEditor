@@ -325,6 +325,7 @@
     <Compile Include="Interface\IFeedBackHandler.cs" />
     <Compile Include="Interface\IArchiveManager.cs" />
     <Compile Include="Interface\IGamePlugin.cs" />
+    <Compile Include="Interface\IGameTextManager.cs" />
     <Compile Include="Interface\INamedType.cs" />
     <Compile Include="Interface\ITeamColor.cs" />
     <Compile Include="Interface\ITechno.cs" />
@@ -598,6 +599,7 @@
     <Compile Include="Utility\CRC.cs" />
     <Compile Include="Utility\ExtensionMethods.cs" />
     <Compile Include="Utility\GameTextManager.cs" />
+    <Compile Include="Utility\GameTextManagerClassic.cs" />
     <Compile Include="Utility\GeneralUtils.cs" />
     <Compile Include="Utility\GenericBooleanTypeConverter.cs" />
     <Compile Include="Utility\ImageUtils.cs" />

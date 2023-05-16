@@ -76,6 +76,11 @@ namespace MobiusEditor.Utility
             return null;
         }
 
+        public void Reset(GameType gameType)
+        {
+            // Do nothing.
+        }
+
         public IEnumerator<string> GetEnumerator()
         {
             return filenames.GetEnumerator();

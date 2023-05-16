@@ -19,40 +19,54 @@ using System.Text;
 
 namespace MobiusEditor.Utility
 {
-    public class GameTextManager
+    public class GameTextManager: IGameTextManager
     {
+        private IArchiveManager fileManager;
+        private Dictionary<GameType, string> gameTextPaths;
         private readonly Dictionary<string, string> gameText = new Dictionary<string, string>();
 
         public string this[string textId] => gameText.TryGetValue(textId, out string text) ? text : textId;
 
-        public GameTextManager(IArchiveManager megafileManager, string gameTextFile)
+        public void Reset(GameType gameType)
         {
-            using (var stream = megafileManager.OpenFile(gameTextFile))
-            using (var reader = new BinaryReader(stream))
-            using (var unicodeReader = new BinaryReader(stream, Encoding.Unicode))
-            using (var asciiReader = new BinaryReader(stream, Encoding.ASCII))
+            // Do nothing.
+            if (gameTextPaths.TryGetValue(gameType, out string gameTextFile))
             {
-                var numStrings = reader.ReadUInt32();
-                var stringSizes = new (uint textSize, uint idSize)[numStrings];
-                var strings = new string[numStrings];
 
-                for (var i = 0; i < numStrings; ++i)
+                using (var stream = fileManager.OpenFile(gameTextFile))
+                using (var reader = new BinaryReader(stream))
+                using (var unicodeReader = new BinaryReader(stream, Encoding.Unicode))
+                using (var asciiReader = new BinaryReader(stream, Encoding.ASCII))
                 {
-                    reader.ReadUInt32();
-                    stringSizes[i] = (reader.ReadUInt32(), reader.ReadUInt32());
-                }
+                    var numStrings = reader.ReadUInt32();
+                    var stringSizes = new (uint textSize, uint idSize)[numStrings];
+                    var strings = new string[numStrings];
 
-                for (var i = 0; i < numStrings; ++i)
-                {
-                    strings[i] = new string(unicodeReader.ReadChars((int)stringSizes[i].textSize));
-                }
+                    for (var i = 0; i < numStrings; ++i)
+                    {
+                        reader.ReadUInt32();
+                        stringSizes[i] = (reader.ReadUInt32(), reader.ReadUInt32());
+                    }
 
-                for (var i = 0; i < numStrings; ++i)
-                {
-                    var textId = new string(asciiReader.ReadChars((int)stringSizes[i].idSize));
-                    gameText[textId] = strings[i];
+                    for (var i = 0; i < numStrings; ++i)
+                    {
+                        strings[i] = new string(unicodeReader.ReadChars((int)stringSizes[i].textSize));
+                    }
+
+                    for (var i = 0; i < numStrings; ++i)
+                    {
+                        var textId = new string(asciiReader.ReadChars((int)stringSizes[i].idSize));
+                        gameText[textId] = strings[i];
+                    }
                 }
             }
+        }
+
+
+        public GameTextManager(IArchiveManager fileManager, Dictionary<GameType, string> gameTextPaths)
+        {
+            this.fileManager = fileManager;
+            this.gameTextPaths = gameTextPaths;
         }
     }
 }

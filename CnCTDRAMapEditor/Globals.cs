@@ -130,7 +130,7 @@ namespace MobiusEditor
         public static TextureManager TheTextureManager;
         public static TilesetManager TheTilesetManager;
         public static ITeamColorManager TheTeamColorManager;
-        public static GameTextManager TheGameTextManager;
+        public static IGameTextManager TheGameTextManager;
 
         public static readonly string RootSaveDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), @"CnCRemastered\Local_Custom_Maps");
 

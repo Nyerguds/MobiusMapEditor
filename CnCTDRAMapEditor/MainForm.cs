@@ -1299,14 +1299,16 @@ namespace MobiusEditor
 
         private static IGamePlugin LoadNewPlugin(GameType gameType, bool isTdMegaMap, string[] modPaths, bool noImage)
         {
+            // Resetting to a specific game type will take care of classic mode.
+            Globals.TheGameTextManager.Reset(gameType);
+            Globals.TheArchiveManager.Reset(gameType);
             Globals.TheTextureManager.ExpandModPaths = modPaths;
             Globals.TheTextureManager.Reset();
             Globals.TheTilesetManager.ExpandModPaths = modPaths;
             Globals.TheTilesetManager.Reset();
             Globals.TheTeamColorManager.ExpandModPaths = modPaths;
-            IGamePlugin plugin = null;
-            // Reset will take care of the colours in classic mode.
             Globals.TheTeamColorManager.Reset(gameType);
+            IGamePlugin plugin = null;
             if (gameType == GameType.TiberianDawn)
             {
                 Globals.TheTeamColorManager.Load(@"DATA\XML\CNCTDTEAMCOLORS.XML");

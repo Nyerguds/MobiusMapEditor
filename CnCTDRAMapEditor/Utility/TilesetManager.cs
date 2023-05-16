@@ -61,37 +61,54 @@ namespace MobiusEditor.Utility
             }
             if (xmlDoc == null)
             {
-                xmlDoc = new XmlDocument();
-                xmlDoc.Load(megafileManager.OpenFile(xmlPath));
-            }
-            foreach (XmlNode fileNode in xmlDoc.SelectNodes("TilesetFiles/File"))
-            {
-                string xmlFile = Path.Combine(Path.GetDirectoryName(xmlPath), fileNode.InnerText);
-                XmlDocument fileXmlDoc = null;
-                if (ExpandModPaths != null && ExpandModPaths.Length > 0)
+                using (Stream xmlStream = megafileManager.OpenFile(xmlPath))
                 {
-                    for (int i = 0; i < ExpandModPaths.Length; ++i)
+                    if (xmlStream != null)
                     {
-                        string modXmlPath = Path.Combine(ExpandModPaths[i], xmlFile);
-                        if (modXmlPath != null && File.Exists(modXmlPath))
-                        {
-                            fileXmlDoc = new XmlDocument();
-                            fileXmlDoc.Load(modXmlPath);
-                            break;
-                        }
+                        xmlDoc = new XmlDocument();
+                        xmlDoc.Load(xmlStream);
                     }
                 }
-                if (fileXmlDoc == null)
+            }
+            if (xmlDoc != null)
+            {
+                foreach (XmlNode fileNode in xmlDoc.SelectNodes("TilesetFiles/File"))
                 {
-                    fileXmlDoc = new XmlDocument();
-                    fileXmlDoc.Load(megafileManager.OpenFile(xmlFile));
-                }
-                foreach (XmlNode tilesetNode in fileXmlDoc.SelectNodes("Tilesets/TilesetTypeClass"))
-                {
-                    var tileset = new Tileset(textureManager);
-                    tileset.Load(tilesetNode.OuterXml, texturesPath);
-
-                    tilesets[tilesetNode.Attributes["name"].Value] = tileset;
+                    string xmlFile = Path.Combine(Path.GetDirectoryName(xmlPath), fileNode.InnerText);
+                    XmlDocument fileXmlDoc = null;
+                    if (ExpandModPaths != null && ExpandModPaths.Length > 0)
+                    {
+                        for (int i = 0; i < ExpandModPaths.Length; ++i)
+                        {
+                            string modXmlPath = Path.Combine(ExpandModPaths[i], xmlFile);
+                            if (modXmlPath != null && File.Exists(modXmlPath))
+                            {
+                                fileXmlDoc = new XmlDocument();
+                                fileXmlDoc.Load(modXmlPath);
+                                break;
+                            }
+                        }
+                    }
+                    if (fileXmlDoc == null)
+                    {
+                        using (Stream xmlStream = megafileManager.OpenFile(xmlFile))
+                        {
+                            if (xmlStream != null)
+                            {
+                                fileXmlDoc = new XmlDocument();
+                                fileXmlDoc.Load(xmlStream);
+                            }
+                        }
+                    }
+                    if (fileXmlDoc != null)
+                    {
+                        foreach (XmlNode tilesetNode in fileXmlDoc.SelectNodes("Tilesets/TilesetTypeClass"))
+                        {
+                            var tileset = new Tileset(textureManager);
+                            tileset.Load(tilesetNode.OuterXml, texturesPath);
+                            tilesets[tilesetNode.Attributes["name"].Value] = tileset;
+                        }
+                    }
                 }
             }
         }

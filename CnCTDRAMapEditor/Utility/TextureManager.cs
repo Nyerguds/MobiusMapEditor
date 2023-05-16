@@ -162,7 +162,7 @@ namespace MobiusEditor.Utility
                     // First attempt to find the texture in an archive
                     if (tga == null)
                     {
-                        using (var fileStream = megafileManager.OpenFile(archivePath))
+                        using (Stream fileStream = megafileManager.OpenFile(archivePath))
                         {
                             LoadTgaFromZipFileStream(fileStream, name, ref tga, ref metadata);
                         }
@@ -170,7 +170,7 @@ namespace MobiusEditor.Utility
                     // Next attempt to load a standalone file
                     if (tga == null)
                     {
-                        using (var fileStream = megafileManager.OpenFile(filename))
+                        using (Stream fileStream = megafileManager.OpenFile(filename))
                         {
                             // megafileManager.OpenFile might return null if not found, so always check on this.
                             // The Load???FromFileStream functions do this check internally.
@@ -182,7 +182,7 @@ namespace MobiusEditor.Utility
                         if (tga != null)
                         {
                             var meta = Path.ChangeExtension(filename, ".meta");
-                            using (var metaStream = megafileManager.OpenFile(meta))
+                            using (Stream metaStream = megafileManager.OpenFile(meta))
                             {
                                 if (metaStream != null)
                                 {
@@ -309,7 +309,7 @@ namespace MobiusEditor.Utility
                     }
                     if (bitmap == null)
                     {
-                        using (var fileStream = megafileManager.OpenFile(ddsFilename))
+                        using (Stream fileStream = megafileManager.OpenFile(ddsFilename))
                         {
                             bitmap = LoadDDSFromFileStream(fileStream);
                         }

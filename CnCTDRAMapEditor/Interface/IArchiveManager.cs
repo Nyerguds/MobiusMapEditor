@@ -12,5 +12,6 @@ namespace MobiusEditor.Interface
         bool LoadArchive(string archivePath);
         bool FileExists(string path);
         Stream OpenFile(string path);
+        void Reset(GameType gameType);
     }
 }
