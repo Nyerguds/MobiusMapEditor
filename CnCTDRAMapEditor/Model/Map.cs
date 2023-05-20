@@ -98,6 +98,13 @@ namespace MobiusEditor.Model
 
     public class Map : ICloneable
     {
+        private static readonly int randomSeed;
+
+        static Map()
+        {
+            randomSeed = Guid.NewGuid().GetHashCode();
+        }
+
         // Keep this list synchronised with the MapLayerFlag enum
         public static String[] MapLayerNames = {
             // Map layers
@@ -591,6 +598,10 @@ namespace MobiusEditor.Model
         public void UpdateResourceOverlays(ISet<Point> locations, bool reduceOutOfBounds)
         {
             Rectangle checkBounds = reduceOutOfBounds ? this.Bounds : this.Metrics.Bounds;
+            OverlayType[] tiberiumOrGoldTypes = OverlayTypes.Where(t => t.IsTiberiumOrGold).ToArray();
+            if (tiberiumOrGoldTypes.Length == 0) tiberiumOrGoldTypes = null;
+            OverlayType[] gemTypes = OverlayTypes.Where(t => t.IsGem).ToArray();
+            if (gemTypes.Length == 0) gemTypes = null;
             foreach (var (location, overlay) in Overlay.IntersectsWithPoints(locations).Where(o => o.Value.Type.IsResource))
             {
                 int count = 0;
@@ -608,6 +619,15 @@ namespace MobiusEditor.Model
                             }
                         }
                     }
+                }
+                OverlayType ovType = overlay.Type;
+                if (ovType.IsGem && gemTypes != null)
+                {
+                    overlay.Type = gemTypes[new Random(randomSeed ^ location.GetHashCode()).Next(gemTypes.Length)];
+                }
+                else if (ovType.IsTiberiumOrGold && tiberiumOrGoldTypes != null)
+                {
+                    overlay.Type = tiberiumOrGoldTypes[new Random(randomSeed ^ location.GetHashCode()).Next(tiberiumOrGoldTypes.Length)];
                 }
                 overlay.Tint = inBounds ? Color.White : Color.FromArgb(0x80, 0xFF, 0x80, 0x80);
                 overlay.Icon = overlay.Type.IsGem ? gemStages[count] : tiberiumStages[count];

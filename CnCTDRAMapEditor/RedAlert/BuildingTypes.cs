@@ -80,7 +80,7 @@ namespace MobiusEditor.RedAlert
         public static readonly BuildingType V16 = new BuildingType(60, "v16", "TEXT_STRUCTURE_TITLE_CIV15", 0, 0, 1, 1, null, "Neutral", new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, BuildingTypeFlag.NoRemap);
         public static readonly BuildingType V17 = new BuildingType(61, "v17", "TEXT_STRUCTURE_TITLE_CIV16", 0, 0, 1, 1, null, "Neutral", new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, BuildingTypeFlag.NoRemap);
         public static readonly BuildingType V18 = new BuildingType(62, "v18", "TEXT_STRUCTURE_TITLE_CIV17", 0, 0, 1, 1, null, "Neutral", new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, BuildingTypeFlag.NoRemap);
-        public static readonly BuildingType V19 = new BuildingType(63, "v19", "Oil Pump", 0, 0, 1, 1, null, "Neutral", BuildingTypeFlag.NoRemap);
+        public static readonly BuildingType V19 = new BuildingType(63, "v19", "TEXT_STRUCTURE_TITLE_OIL_PUMP", 0, 0, 1, 1, null, "Neutral", BuildingTypeFlag.NoRemap);
         // Desert civilian buildings. Will never show up unless the option to filter theater-illegals is disabled.
         public static readonly BuildingType V20 = new BuildingType(64, "v20", "TEXT_STRUCTURE_TITLE_CIV18", 0, 0, 2, 2, "00 11", "Neutral", new TheaterType[0], BuildingTypeFlag.NoRemap);
         public static readonly BuildingType V21 = new BuildingType(65, "v21", "TEXT_STRUCTURE_TITLE_CIV19", 0, 0, 2, 2, "11 01", "Neutral", new TheaterType[0], BuildingTypeFlag.NoRemap);

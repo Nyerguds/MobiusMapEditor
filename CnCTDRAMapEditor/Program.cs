@@ -100,6 +100,11 @@ namespace MobiusEditor
                     Properties.Settings.Default.Save();
                 }
             }
+            // TODO split off .mix reader.
+            // mix file manager constructor should get two arguments:
+            // -A mapping of the games to their respective folders
+            // -A mapping of the games to a list of all .mix archives used by that game.
+            // The system should scan all mix archives for known filenames of other mix archives so it can do recursive searches.
 
             // Initialize megafiles
             Globals.TheArchiveManager = new MegafileManager(Path.Combine(runPath, Globals.MegafilePath), runPath);
@@ -118,10 +123,6 @@ namespace MobiusEditor
             }
 #endif
             // Check if any mods are allowed to override the default stuff to load.
-            Dictionary<GameType, string> pathsToLoad = new Dictionary<GameType, string>();
-            pathsToLoad.Add(GameType.TiberianDawn, Properties.Settings.Default.ModsToLoadTD);
-            pathsToLoad.Add(GameType.RedAlert, Properties.Settings.Default.ModsToLoadRA);
-            pathsToLoad.Add(GameType.SoleSurvivor, Properties.Settings.Default.ModsToLoadSS);
             Dictionary<GameType, string[]> modPaths = new Dictionary<GameType, string[]>();
             const string tdModFolder = "Tiberian_Dawn";
             const string raModFolder = "Red_Alert";
@@ -139,8 +140,10 @@ namespace MobiusEditor
             {
                 gameTextFilename = string.Format(Globals.GameTextFilenameFormat, "EN-US");
             }
-            Globals.TheGameTextManager = new GameTextManager(Globals.TheArchiveManager, gameTextFilename);
-            // Initialize Steam if this is a Steam build
+            GameTextManager gtm = new GameTextManager(Globals.TheArchiveManager, gameTextFilename);
+            //gtm.Dump("alltext.txt");
+            Globals.TheGameTextManager = gtm;
+            AddMissingRemasterText(gtm);
             if (SteamworksUGC.IsSteamBuild)
             {
                 // Ignore result from this.
@@ -178,6 +181,37 @@ namespace MobiusEditor
             }
             Globals.TheArchiveManager.Dispose();
         }
+
+        private static void AddMissingRemasterText(GameTextManager gtm)
+        {
+            // Buildings
+            gtm["TEXT_STRUCTURE_TITLE_OIL_PUMP"] = "Oil Pump";
+            gtm["TEXT_STRUCTURE_TITLE_OIL_TANKER"] = "Oil Tanker";
+
+            // Overlay
+            gtm["TEXT_OVERLAY_CONCRETE_PAVEMENT"] = "Concrete";
+            gtm["TEXT_OVERLAY_CONCRETE_ROAD"] = "Concrete Road";
+            gtm["TEXT_OVERLAY_CONCRETE_ROAD_FULL"] = "Concrete Road (full)";
+            gtm["TEXT_OVERLAY_TIBERIUM"] = "Tiberium";
+            // "Gold" exists as "TEXT_CURRENCY_TACTICAL"
+            gtm["TEXT_OVERLAY_GEMS"] = "Gems";
+            gtm["TEXT_OVERLAY_WCRATE"] = "Wooden Crate";
+            gtm["TEXT_OVERLAY_SCRATE"] = "Steel Crate";
+            gtm["TEXT_OVERLAY_WATER_CRATE"] = "Water Crate";
+
+            // Smudge
+            gtm["TEXT_SMUDGE_CRATER"] = "Crater";
+            gtm["TEXT_SMUDGE_SCORCH"] = "Scorch Mark";
+            gtm["TEXT_SMUDGE_BIB"] = "Road Bib";
+        }
+
+        private static void AddMissingClassicText(GameTextManager gtm)
+        {
+            // Overlay
+            gtm["TEXT_OVERLAY_CONCRETE_ROAD"] = "Concrete Road";
+            gtm["TEXT_OVERLAY_CONCRETE_ROAD_FULL"] = "Concrete Road (full)";
+        }
+
         [DllImport("SHCore.dll")]
         private static extern bool SetProcessDpiAwareness(PROCESS_DPI_AWARENESS awareness);
 

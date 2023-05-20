@@ -91,8 +91,11 @@ namespace MobiusEditor.Widgets
 
         public CellMetrics Metrics { get; private set; }
 
+        /// <summary>Last map cell inside the map bounds.</summary>
         public Point MouseCell { get; private set; }
+        /// <summary>Cell the cursor is on, even if it is out of bounds.</summary>
         public Point ActualMouseCell { get; private set; }
+        /// <summary>True if the mouse cursor is inside the map bounds</summary>
         public bool MouseInBounds { get; private set; }
         public Point ClosestMouseCellBorder { get; private set; }
         public Point MouseSubPixel { get; private set; }

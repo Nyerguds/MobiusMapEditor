@@ -26,7 +26,7 @@ namespace MobiusEditor.Model
 
         public string Name { get; private set; }
 
-        public string DisplayName => Name;
+        public string DisplayName { get; private set; }
 
         public Rectangle OverlapBounds => new Rectangle(Point.Empty, Size);
         public bool[,] OpaqueMask { get; private set; }
@@ -60,6 +60,7 @@ namespace MobiusEditor.Model
         /// </summary>
         /// <param name="id">id</param>
         /// <param name="name">Name</param>
+        /// <param name="textId">Text ID to look up in the game text manager.</param>
         /// <param name="theaters">Theaters in which this appears. Null means all.</param>
         /// <param name="width">Width of the terrain object, in cells.</param>
         /// <param name="height">Height of the terrain object, in cells.</param>
@@ -67,10 +68,11 @@ namespace MobiusEditor.Model
         /// <param name="graphicsSource">Override for the graphics source. If null, the name is used.</param>
         /// <param name="displayIcon">Override for the frame to display. Normally 0.</param>
         /// <param name="templateType">Terrain type this should be placed down on. Currently unused.</param>
-        public TerrainType(sbyte id, string name, TheaterType[] theaters, int width, int height, string occupyMask, String graphicsSource, int displayIcon, TemplateTypeFlag templateType)
+        public TerrainType(sbyte id, string name, string textId, TheaterType[] theaters, int width, int height, string occupyMask, String graphicsSource, int displayIcon, TemplateTypeFlag templateType)
         {
             ID = id;
             Name = name;
+            DisplayName = Globals.TheGameTextManager[textId] + " (" + Name.ToUpperInvariant() + ")";
             Theaters = theaters;
             OccupyMask = GeneralUtils.GetMaskFromString(width, height, occupyMask);
             DisplayIcon = displayIcon;
@@ -83,14 +85,15 @@ namespace MobiusEditor.Model
         /// </summary>
         /// <param name="id">id</param>
         /// <param name="name">Name</param>
+        /// <param name="textId">Text ID to look up in the game text manager.</param>
         /// <param name="theaters">Theaters in which this appears. Null means all.</param>
         /// <param name="width">Width of the terrain object, in cells.</param>
         /// <param name="height">Height of the terrain object, in cells.</param>
         /// <param name="occupyMask">String indicating the occupied cells. Spaces are ignored, '0' means unoccupied, any other value means occupied. A null value indicates it is fully occupied.</param>
         /// <param name="graphicsSource">Override for the graphics source. If null, the name is used.</param>
         /// <param name="displayIcon">Override for the frame to display. Normally 0.</param>
-        public TerrainType(sbyte id, string name, TheaterType[] theaters, int width, int height, string occupyMask, String graphicsSource, int displayIcon)
-            : this(id, name, theaters, width, height, occupyMask, graphicsSource, displayIcon, TemplateTypeFlag.None)
+        public TerrainType(sbyte id, string name, string textId, TheaterType[] theaters, int width, int height, string occupyMask, String graphicsSource, int displayIcon)
+            : this(id, name, textId, theaters, width, height, occupyMask, graphicsSource, displayIcon, TemplateTypeFlag.None)
         {
         }
 
@@ -99,13 +102,14 @@ namespace MobiusEditor.Model
         /// </summary>
         /// <param name="id">id</param>
         /// <param name="name">Name</param>
+        /// <param name="textId">Text ID to look up in the game text manager.</param>
         /// <param name="theaters">Theaters in which this appears. Null means all.</param>
         /// <param name="width">Width of the terrain object, in cells.</param>
         /// <param name="height">Height of the terrain object, in cells.</param>
         /// <param name="occupyMask">String indicating the occupied cells. Spaces are ignored, '0' means unoccupied, any other value means occupied. A null value indicates it is fully occupied.</param>
         /// <param name="graphicsSource">Override for the graphics source. If null, the name is used.</param>
-        public TerrainType(sbyte id, string name, TheaterType[] theaters, int width, int height, string occupyMask, String graphicsSource)
-            : this(id, name, theaters, width, height, occupyMask, graphicsSource, 0, TemplateTypeFlag.None)
+        public TerrainType(sbyte id, string name, string textId, TheaterType[] theaters, int width, int height, string occupyMask, String graphicsSource)
+            : this(id, name, textId, theaters, width, height, occupyMask, graphicsSource, 0, TemplateTypeFlag.None)
         {
         }
 
@@ -114,13 +118,14 @@ namespace MobiusEditor.Model
         /// </summary>
         /// <param name="id">id</param>
         /// <param name="name">Name</param>
+        /// <param name="textId">Text ID to look up in the game text manager.</param>
         /// <param name="theaters">Theaters in which this appears. Null means all.</param>
         /// <param name="width">Width of the terrain object, in cells.</param>
         /// <param name="height">Height of the terrain object, in cells.</param>
         /// <param name="occupyMask">String indicating the occupied cells. Spaces are ignored, '0' means unoccupied, any other value means occupied. A null value indicates it is fully occupied.</param>
         /// <param name="displayIcon">Override for the frame to display. Normally 0.</param>
-        public TerrainType(sbyte id, string name, TheaterType[] theaters, int width, int height, string occupyMask, int displayIcon)
-            : this(id, name, theaters, width, height, occupyMask, null, displayIcon, TemplateTypeFlag.None)
+        public TerrainType(sbyte id, string name, string textId, TheaterType[] theaters, int width, int height, string occupyMask, int displayIcon)
+            : this(id, name, textId, theaters, width, height, occupyMask, null, displayIcon, TemplateTypeFlag.None)
         {
         }
 
@@ -129,13 +134,14 @@ namespace MobiusEditor.Model
         /// </summary>
         /// <param name="id">id</param>
         /// <param name="name">Name</param>
+        /// <param name="textId">Text ID to look up in the game text manager.</param>
         /// <param name="theaters">Theaters in which this appears. Null means all.</param>
         /// <param name="width">Width of the terrain object, in cells.</param>
         /// <param name="height">Height of the terrain object, in cells.</param>
         /// <param name="occupyMask">String indicating the occupied cells. Spaces are ignored, '0' means unoccupied, any other value means occupied. A null value indicates it is fully occupied.</param>
         /// <param name="templateType">Terrain type this should be placed down on. Currently unused.</param>
-        public TerrainType(sbyte id, string name, TheaterType[] theaters, int width, int height, string occupyMask, TemplateTypeFlag templateType)
-            : this(id, name, theaters, width, height, occupyMask, null, 0, templateType)
+        public TerrainType(sbyte id, string name, string textId, TheaterType[] theaters, int width, int height, string occupyMask, TemplateTypeFlag templateType)
+            : this(id, name, textId, theaters, width, height, occupyMask, null, 0, templateType)
         {
         }
 
@@ -144,12 +150,13 @@ namespace MobiusEditor.Model
         /// </summary>
         /// <param name="id">id</param>
         /// <param name="name">Name</param>
+        /// <param name="textId">Text ID to look up in the game text manager.</param>
         /// <param name="theaters">Theaters in which this appears. Null means all.</param>
         /// <param name="width">Width of the terrain object, in cells.</param>
         /// <param name="height">Height of the terrain object, in cells.</param>
         /// <param name="occupyMask">String indicating the occupied cells. Spaces are ignored, '0' means unoccupied, any other value means occupied. A null value indicates it is fully occupied.</param>
-        public TerrainType(sbyte id, string name, TheaterType[] theaters, int width, int height, string occupyMask)
-            : this(id, name, theaters, width, height, occupyMask, null, 0, TemplateTypeFlag.None)
+        public TerrainType(sbyte id, string name, string textId, TheaterType[] theaters, int width, int height, string occupyMask)
+            : this(id, name, textId, theaters, width, height, occupyMask, null, 0, TemplateTypeFlag.None)
         {
         }
 

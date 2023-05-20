@@ -113,8 +113,8 @@ namespace MobiusEditor.Model
         {
         }
 
-        public OverlayType(sbyte id, string name, OverlayTypeFlag flag, int forceTileNr)
-            : this(id, name, name, null, flag, null, forceTileNr, Color.White)
+        public OverlayType(sbyte id, string name, string textId, OverlayTypeFlag flag, int forceTileNr)
+            : this(id, name, textId, null, flag, null, forceTileNr, Color.White)
         {
         }
 
@@ -168,7 +168,7 @@ namespace MobiusEditor.Model
                     Icon = tilenr,
                 };
                 MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
-                MapRenderer.RenderOverlay(gameType, theater, null, null, Point.Empty, Globals.PreviewTileSize, Globals.PreviewTileScale, mockOverlay).Item2(g);
+                MapRenderer.RenderOverlay(gameType, theater, Point.Empty, Globals.PreviewTileSize, Globals.PreviewTileScale, mockOverlay).Item2(g);
             }
             Thumbnail = th;
             if (oldImage != null)

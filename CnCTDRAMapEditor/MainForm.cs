@@ -30,7 +30,6 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -109,6 +108,9 @@ namespace MobiusEditor
         private SimpleMultiThreading loadMultiThreader;
         private SimpleMultiThreading saveMultiThreader;
         public Label StatusLabel { get; set; }
+        private Point lastInfoPoint = new Point(-1,-1);
+        private Point lastInfoSubPixelPoint = new Point(-1, -1);
+        private String lastDescription = null;
 
         static MainForm()
         {
@@ -315,7 +317,30 @@ namespace MobiusEditor
             editUndoMenuItem.Enabled = url.CanUndo;
             editRedoMenuItem.Enabled = url.CanRedo;
             editClearUndoRedoMenuItem.Enabled = url.CanUndo || url.CanRedo;
+            UpdateCellStatusLabel(true);
         }
+
+        private void UpdateCellStatusLabel(bool force)
+        {
+            if (plugin == null || activeTool == null || activeTool.NavigationWidget == null)
+            {
+                return;
+            }
+            Point location = activeTool.NavigationWidget.ActualMouseCell;
+            var subPixel = activeTool.NavigationWidget.MouseSubPixel;
+            if (force || location != lastInfoPoint || subPixel != lastInfoSubPixelPoint)
+            {
+                String description = plugin.Map.GetCellDescription(location, subPixel);
+                if (force || lastDescription != description)
+                {
+                    lastInfoPoint = location;
+                    lastInfoSubPixelPoint = subPixel;
+                    lastDescription = description;
+                    cellStatusLabel.Text = description;
+                }
+            }
+        }
+
 
         private void UndoRedo_Updated(object sender, EventArgs e)
         {
@@ -955,18 +980,9 @@ namespace MobiusEditor
 
         private void MapPanel_MouseMove(object sender, MouseEventArgs e)
         {
-            if (plugin == null)
-            {
-                return;
-            }
-            var mapPoint = mapPanel.ClientToMap(e.Location);
-            var location = new Point((int)Math.Floor((double)mapPoint.X / Globals.MapTileWidth), (int)Math.Floor((double)mapPoint.Y / Globals.MapTileHeight));
-            var subPixel = new Point(
-                (mapPoint.X * Globals.PixelWidth / Globals.MapTileWidth) % Globals.PixelWidth,
-                (mapPoint.Y * Globals.PixelHeight / Globals.MapTileHeight) % Globals.PixelHeight
-            );
-            cellStatusLabel.Text = plugin.Map.GetCellDescription(location, subPixel);
+            UpdateCellStatusLabel(false);
         }
+
         #endregion
 
         #region Additional logic for listeners
@@ -1613,6 +1629,10 @@ namespace MobiusEditor
                 // Unlink plugin
                 IGamePlugin pl = plugin;
                 plugin = null;
+                // Clean up UI caching
+                this.lastInfoPoint = new Point(-1, -1);
+                this.lastInfoSubPixelPoint = new Point(-1, -1);
+                this.lastDescription = null;
                 // Refresh UI to plugin-less state
                 RefreshUI();
                 // Reset map panel. Looks odd if the zoom/position is preserved, so zoom out first.

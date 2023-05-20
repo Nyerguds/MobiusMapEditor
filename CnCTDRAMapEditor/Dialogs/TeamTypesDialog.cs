@@ -216,7 +216,8 @@ namespace MobiusEditor.Dialogs
                 missionItemInfo = new MissionItemInfo(null, selected.Missions, teamMissionTypes, this.wayPoints, plugin.Map.Metrics.Length, toolTip1);
                 milMissions.Populate(missionItemInfo, this);
                 milMissions.TabStop = selected.Missions.Count > 0;
-
+                btnAddTeam.Enabled = selected.Classes.Count < Globals.MaxTeamClasses;
+                btnAddMission.Enabled = SelectedTeamType.Missions.Count < Globals.MaxTeamMissions;
                 teamTypeTableLayoutPanel.Visible = true;
             }
             else

@@ -26,14 +26,14 @@ namespace MobiusEditor.RedAlert
         public static readonly OverlayType Brick = new OverlayType(2, "brik", "TEXT_STRUCTURE_RA_BRIK", OverlayTypeFlag.Wall);
         public static readonly OverlayType Barbwire = new OverlayType(3, "barb", "TEXT_STRUCTURE_RA_BARB", OverlayTypeFlag.Wall);
         public static readonly OverlayType Wood = new OverlayType(4, "wood", "TEXT_STRUCTURE_TD_WOOD", OverlayTypeFlag.Wall);
-        public static readonly OverlayType Gold1 = new OverlayType(5, "gold01", "Gold", new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, OverlayTypeFlag.TiberiumOrGold, 11);
-        public static readonly OverlayType Gold2 = new OverlayType(6, "gold02", "Gold", new [] { TheaterTypes.Temperate, TheaterTypes.Snow }, OverlayTypeFlag.TiberiumOrGold, 11);
-        public static readonly OverlayType Gold3 = new OverlayType(7, "gold03", "Gold", new [] { TheaterTypes.Temperate, TheaterTypes.Snow }, OverlayTypeFlag.TiberiumOrGold, 11);
-        public static readonly OverlayType Gold4 = new OverlayType(8, "gold04", "Gold", new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, OverlayTypeFlag.TiberiumOrGold, 11);
-        public static readonly OverlayType Gems1 = new OverlayType(9, "gem01", "Gems", new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, OverlayTypeFlag.Gems, 2);
-        public static readonly OverlayType Gems2 = new OverlayType(10, "gem02", "Gems", new [] { TheaterTypes.Temperate, TheaterTypes.Snow }, OverlayTypeFlag.Gems, 2);
-        public static readonly OverlayType Gems3 = new OverlayType(11, "gem03", "Gems", new [] { TheaterTypes.Temperate, TheaterTypes.Snow }, OverlayTypeFlag.Gems, 2);
-        public static readonly OverlayType Gems4 = new OverlayType(12, "gem04", "Gems", new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, OverlayTypeFlag.Gems, 2);
+        public static readonly OverlayType Gold1 = new OverlayType(5, "gold01", "TEXT_CURRENCY_TACTICAL", new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, OverlayTypeFlag.TiberiumOrGold, 11);
+        public static readonly OverlayType Gold2 = new OverlayType(6, "gold02", "TEXT_CURRENCY_TACTICAL", new [] { TheaterTypes.Temperate, TheaterTypes.Snow }, OverlayTypeFlag.TiberiumOrGold, 11);
+        public static readonly OverlayType Gold3 = new OverlayType(7, "gold03", "TEXT_CURRENCY_TACTICAL", new [] { TheaterTypes.Temperate, TheaterTypes.Snow }, OverlayTypeFlag.TiberiumOrGold, 11);
+        public static readonly OverlayType Gold4 = new OverlayType(8, "gold04", "TEXT_CURRENCY_TACTICAL", new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, OverlayTypeFlag.TiberiumOrGold, 11);
+        public static readonly OverlayType Gems1 = new OverlayType(9, "gem01", "TEXT_OVERLAY_GEMS", new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, OverlayTypeFlag.Gems, 2);
+        public static readonly OverlayType Gems2 = new OverlayType(10, "gem02", "TEXT_OVERLAY_GEMS", new [] { TheaterTypes.Temperate, TheaterTypes.Snow }, OverlayTypeFlag.Gems, 2);
+        public static readonly OverlayType Gems3 = new OverlayType(11, "gem03", "TEXT_OVERLAY_GEMS", new [] { TheaterTypes.Temperate, TheaterTypes.Snow }, OverlayTypeFlag.Gems, 2);
+        public static readonly OverlayType Gems4 = new OverlayType(12, "gem04", "TEXT_OVERLAY_GEMS", new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, OverlayTypeFlag.Gems, 2);
         public static readonly OverlayType V12 = new OverlayType(13, "v12", "TEXT_STRUCTURE_TITLE_CIV12", new [] { TheaterTypes.Temperate, TheaterTypes.Snow }, OverlayTypeFlag.Solid);
         public static readonly OverlayType V13 = new OverlayType(14, "v13", "TEXT_STRUCTURE_TITLE_CIV12", new [] { TheaterTypes.Temperate, TheaterTypes.Snow }, OverlayTypeFlag.Solid);
         public static readonly OverlayType V14 = new OverlayType(15, "v14", "TEXT_STRUCTURE_TITLE_CIV13", new [] { TheaterTypes.Temperate, TheaterTypes.Snow }, OverlayTypeFlag.Solid);
@@ -42,10 +42,10 @@ namespace MobiusEditor.RedAlert
         public static readonly OverlayType V17 = new OverlayType(18, "v17", "TEXT_STRUCTURE_TITLE_CIV16", new [] { TheaterTypes.Temperate, TheaterTypes.Snow }, OverlayTypeFlag.Solid);
         public static readonly OverlayType V18 = new OverlayType(19, "v18", "TEXT_STRUCTURE_TITLE_CIV17", new [] { TheaterTypes.Temperate, TheaterTypes.Snow }, OverlayTypeFlag.Solid);
         public static readonly OverlayType FlagSpot = new OverlayType(20, "fpls", "TEXT_CF_ONHOVER_SPOT", OverlayTypeFlag.Flag | OverlayTypeFlag.Pavement);
-        public static readonly OverlayType WoodCrate = new OverlayType(21, "wcrate", "Wooden Crate", OverlayTypeFlag.WoodCrate);
-        public static readonly OverlayType SteelCrate = new OverlayType(22, "scrate", "Steel Crate", OverlayTypeFlag.SteelCrate);
+        public static readonly OverlayType WoodCrate = new OverlayType(21, "wcrate", "TEXT_OVERLAY_WCRATE", OverlayTypeFlag.WoodCrate);
+        public static readonly OverlayType SteelCrate = new OverlayType(22, "scrate", "TEXT_OVERLAY_SCRATE", OverlayTypeFlag.SteelCrate);
         public static readonly OverlayType Fence = new OverlayType(23, "fenc", "TEXT_STRUCTURE_RA_FENC", OverlayTypeFlag.Wall);
-        public static readonly OverlayType WaterCrate = new OverlayType(24, "wwcrate", "Water Crate", OverlayTypeFlag.WoodCrate);
+        public static readonly OverlayType WaterCrate = new OverlayType(24, "wwcrate", "TEXT_OVERLAY_WATER_CRATE", OverlayTypeFlag.WoodCrate);
 
         private static OverlayType[] Types;
 

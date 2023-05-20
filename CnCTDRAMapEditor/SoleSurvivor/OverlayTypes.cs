@@ -1,7 +1,6 @@
 ﻿using MobiusEditor.Model;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using System.Reflection;
 
@@ -9,27 +8,27 @@ namespace MobiusEditor.SoleSurvivor
 {
     public static class OverlayTypes
     {
-        public static readonly OverlayType Concrete = new OverlayType(0, "conc", "Concrete Pavement", null, OverlayTypeFlag.Pavement | OverlayTypeFlag.Concrete );
+        public static readonly OverlayType Concrete = new OverlayType(0, "conc", "TEXT_OVERLAY_CONCRETE_PAVEMENT", null, OverlayTypeFlag.Pavement | OverlayTypeFlag.Concrete );
         public static readonly OverlayType Sandbag = new OverlayType(1, "sbag", "TEXT_STRUCTURE_TITLE_GDI_SANDBAGS", OverlayTypeFlag.Wall);
         public static readonly OverlayType Cyclone = new OverlayType(2, "cycl", "TEXT_STRUCTURE_TITLE_GDI_CHAIN_LINK", OverlayTypeFlag.Wall);
         public static readonly OverlayType Brick = new OverlayType(3, "brik", "TEXT_STRUCTURE_TITLE_GDI_CONCRETE", OverlayTypeFlag.Wall);
         public static readonly OverlayType Barbwire = new OverlayType(4, "barb", "TEXT_STRUCTURE_RA_BARB", OverlayTypeFlag.Wall);
         public static readonly OverlayType Wood = new OverlayType(5, "wood", "TEXT_STRUCTURE_TD_WOOD", OverlayTypeFlag.Wall);
-        public static readonly OverlayType Tiberium1 = new OverlayType(6, "ti1", OverlayTypeFlag.TiberiumOrGold, 11);
-        public static readonly OverlayType Tiberium2 = new OverlayType(7, "ti2", OverlayTypeFlag.TiberiumOrGold, 11);
-        public static readonly OverlayType Tiberium3 = new OverlayType(8, "ti3", OverlayTypeFlag.TiberiumOrGold, 11);
-        public static readonly OverlayType Tiberium4 = new OverlayType(9, "ti4", OverlayTypeFlag.TiberiumOrGold, 11);
-        public static readonly OverlayType Tiberium5 = new OverlayType(10, "ti5", OverlayTypeFlag.TiberiumOrGold, 11);
-        public static readonly OverlayType Tiberium6 = new OverlayType(11, "ti6", OverlayTypeFlag.TiberiumOrGold, 11);
-        public static readonly OverlayType Tiberium7 = new OverlayType(12, "ti7", OverlayTypeFlag.TiberiumOrGold, 11);
-        public static readonly OverlayType Tiberium8 = new OverlayType(13, "ti8", OverlayTypeFlag.TiberiumOrGold, 11);
-        public static readonly OverlayType Tiberium9 = new OverlayType(14, "ti9", OverlayTypeFlag.TiberiumOrGold, 11);
-        public static readonly OverlayType Tiberium10 = new OverlayType(15, "ti10", OverlayTypeFlag.TiberiumOrGold, 11);
-        public static readonly OverlayType Tiberium11 = new OverlayType(16, "ti11", OverlayTypeFlag.TiberiumOrGold, 11);
-        public static readonly OverlayType Tiberium12 = new OverlayType(17, "ti12", OverlayTypeFlag.TiberiumOrGold, 11);
+        public static readonly OverlayType Tiberium1 = new OverlayType(6, "ti1", "TEXT_OVERLAY_TIBERIUM", OverlayTypeFlag.TiberiumOrGold, 11);
+        public static readonly OverlayType Tiberium2 = new OverlayType(7, "ti2", "TEXT_OVERLAY_TIBERIUM", OverlayTypeFlag.TiberiumOrGold, 11);
+        public static readonly OverlayType Tiberium3 = new OverlayType(8, "ti3", "TEXT_OVERLAY_TIBERIUM", OverlayTypeFlag.TiberiumOrGold, 11);
+        public static readonly OverlayType Tiberium4 = new OverlayType(9, "ti4", "TEXT_OVERLAY_TIBERIUM", OverlayTypeFlag.TiberiumOrGold, 11);
+        public static readonly OverlayType Tiberium5 = new OverlayType(10, "ti5", "TEXT_OVERLAY_TIBERIUM", OverlayTypeFlag.TiberiumOrGold, 11);
+        public static readonly OverlayType Tiberium6 = new OverlayType(11, "ti6", "TEXT_OVERLAY_TIBERIUM", OverlayTypeFlag.TiberiumOrGold, 11);
+        public static readonly OverlayType Tiberium7 = new OverlayType(12, "ti7", "TEXT_OVERLAY_TIBERIUM", OverlayTypeFlag.TiberiumOrGold, 11);
+        public static readonly OverlayType Tiberium8 = new OverlayType(13, "ti8", "TEXT_OVERLAY_TIBERIUM", OverlayTypeFlag.TiberiumOrGold, 11);
+        public static readonly OverlayType Tiberium9 = new OverlayType(14, "ti9", "TEXT_OVERLAY_TIBERIUM", OverlayTypeFlag.TiberiumOrGold, 11);
+        public static readonly OverlayType Tiberium10 = new OverlayType(15, "ti10", "TEXT_OVERLAY_TIBERIUM", OverlayTypeFlag.TiberiumOrGold, 11);
+        public static readonly OverlayType Tiberium11 = new OverlayType(16, "ti11", "TEXT_OVERLAY_TIBERIUM", OverlayTypeFlag.TiberiumOrGold, 11);
+        public static readonly OverlayType Tiberium12 = new OverlayType(17, "ti12", "TEXT_OVERLAY_TIBERIUM", OverlayTypeFlag.TiberiumOrGold, 11);
         public static readonly OverlayType Teleport = new OverlayType(18, "road", "Teleporter", null, OverlayTypeFlag.Pavement, 1);
-        // Unusable in SS since it has the same name as ROAD. Forced to 1 anyway because football fields use it.
-        public static readonly OverlayType Road = new OverlayType(19, "road", "Concrete Road", null, OverlayTypeFlag.Pavement, 1);
+        // Unusable in SS from ini since it has the same name as ROAD. Added here and forced to frame 1 because it is used in football fields.
+        public static readonly OverlayType Road = new OverlayType(19, "road", "TEXT_OVERLAY_CONCRETE_ROAD", null, OverlayTypeFlag.Pavement, 1);
         // Not available to place down sadly: even the ini read for it in the game code only succeeds if 'IsGross' is enabled.
         //public static readonly OverlayType Squishy = new OverlayType(20, "SQUISH", OverlayTypeFlag.Decoration);
         public static readonly OverlayType V12 = new OverlayType(21, "v12", "TEXT_STRUCTURE_TITLE_CIV12", new[] { TiberianDawn.TheaterTypes.Temperate, TiberianDawn.TheaterTypes.Winter }, OverlayTypeFlag.Solid);

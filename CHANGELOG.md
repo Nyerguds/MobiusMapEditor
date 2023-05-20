@@ -458,3 +458,7 @@ Unreleased
 * The Resources tool no longer evaluates resources placed outside the map bounds.
 * Rule errors that occur after closing the Map settings dialog will now show in a window with scrollable area, just like the errors shown when opening a maps.
 * Added missing overlap checks to buildings on the rebuild-list.
+* Fixed bug in Team Types window where the amount of added classes and orders would not unlock when maxed out on the previously selected item.
+* Added names to Overlay, Terrain, Smudge and Resources.
+* Migrated resource randomisation from the map renderer to the density-update logic, so the actual objects don't always show as "TI01" / "GOLD01" / "GEM01".
+* Changed TD Technology Center to its real name, instead of "Prison".

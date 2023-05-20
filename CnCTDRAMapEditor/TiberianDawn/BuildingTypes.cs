@@ -27,7 +27,7 @@ namespace MobiusEditor.TiberianDawn
         public static readonly BuildingType Obelisk = new BuildingType(3, "obli", "TEXT_STRUCTURE_TITLE_NOD_OBELISK", 0, 150, 1, 2, "0 1", "Badguy");
         public static readonly BuildingType Command = new BuildingType(4, "hq", "TEXT_STRUCTURE_TITLE_GDI_COMM_CENTER", 0, 40, 2, 2, "10 11", "Goodguy", BuildingTypeFlag.Bib);
         public static readonly BuildingType Turret = new BuildingType(5, "gun", "TEXT_STRUCTURE_TITLE_NOD_TURRET", 0, 20, 1, 1, null, "Badguy", BuildingTypeFlag.Turret);
-        public static readonly BuildingType Const = new BuildingType(6, "fact", "TEXT_STRUCTURE_RA_FACT", 30, 15, 3, 2, null, "Goodguy", BuildingTypeFlag.Bib | BuildingTypeFlag.Factory);
+        public static readonly BuildingType Const = new BuildingType(6, "fact", "TEXT_STRUCTURE_TITLE_GDI_CONSTRUCTION_YARD", 30, 15, 3, 2, null, "Goodguy", BuildingTypeFlag.Bib | BuildingTypeFlag.Factory);
         public static readonly BuildingType Refinery = new BuildingType(7, "proc", "TEXT_STRUCTURE_TITLE_GDI_REFINERY", 10, 40, 1000, 3, 3, "010 111 000", "Goodguy", BuildingTypeFlag.Bib);
         public static readonly BuildingType Storage = new BuildingType(8, "silo", "TEXT_STRUCTURE_TITLE_GDI_SILO", 0, 10, 1500, 2, 1, null, "Goodguy", BuildingTypeFlag.Bib);
         public static readonly BuildingType Helipad = new BuildingType(9, "hpad", "TEXT_STRUCTURE_TITLE_GDI_HELIPAD", 0, 10, 2, 2, null, "Goodguy", BuildingTypeFlag.Bib);
@@ -37,13 +37,14 @@ namespace MobiusEditor.TiberianDawn
         public static readonly BuildingType AdvancedPower = new BuildingType(13, "nuk2", "TEXT_STRUCTURE_TITLE_GDI_ADV_POWER_PLANT", 200, 0, 2, 2, "10 11", "Goodguy", BuildingTypeFlag.Bib);
         public static readonly BuildingType Hospital = new BuildingType(14, "hosp", "TEXT_UNIT_TITLE_HOSP", 0, 20, 100, 2, 2, null, "Goodguy", BuildingTypeFlag.Bib);
         public static readonly BuildingType Barracks = new BuildingType(15, "pyle", "TEXT_STRUCTURE_TITLE_GDI_BARRACKS", 0, 20, 2, 2, "11 00", "Goodguy", BuildingTypeFlag.Bib);
-        public static readonly BuildingType Tanker = new BuildingType(16, "arco", "Oil Tanker", 0, 0, 2, 1, null, "Neutral");
+        public static readonly BuildingType Tanker = new BuildingType(16, "arco", "TEXT_STRUCTURE_TITLE_OIL_TANKER", 0, 0, 2, 1, null, "Neutral");
         public static readonly BuildingType Repair = new BuildingType(17, "fix", "TEXT_STRUCTURE_TITLE_GDI_REPAIR_FACILITY", 0, 30, 3, 3, "010 111 010", "Goodguy", BuildingTypeFlag.Bib | BuildingTypeFlag.Flat);
         public static readonly BuildingType BioLab = new BuildingType(18, "bio", "TEXT_UNIT_TITLE_BIO", 0, 40, 100, 2, 2, null, "Badguy", BuildingTypeFlag.Bib);
         public static readonly BuildingType Hand = new BuildingType(19, "hand", "TEXT_STRUCTURE_TITLE_NOD_HAND_OF_NOD", 0, 20, 2, 3, "00 11 01", "Badguy", BuildingTypeFlag.Bib);
         public static readonly BuildingType Temple = new BuildingType(20, "tmpl", "TEXT_STRUCTURE_TITLE_NOD_TEMPLE_OF_NOD", 0, 150, 3, 3, "000 111 111", "Badguy", BuildingTypeFlag.Bib);
         public static readonly BuildingType Eye = new BuildingType(21, "eye", "TEXT_STRUCTURE_TITLE_GDI_ADV_COMM_CENTER", 0, 200, 2, 2, "10 11", "Goodguy", BuildingTypeFlag.Bib);
-        public static readonly BuildingType Mission = new BuildingType(22, "miss", "TEXT_STRUCTURE_TITLE_CIV35", 0, 0, 3, 2, null, "Goodguy", BuildingTypeFlag.Bib);
+        // Was "TEXT_STRUCTURE_TITLE_CIV35" (Prison), but that's WRONG, mkay?
+        public static readonly BuildingType Mission = new BuildingType(22, "miss", "TEXT_UNIT_TITLE_MISS", 0, 0, 3, 2, null, "Goodguy", BuildingTypeFlag.Bib);
         public static readonly BuildingType V01 = new BuildingType(23, "v01", "TEXT_STRUCTURE_TITLE_CIV1", 0, 0, 2, 2, "00 11", "Neutral", new [] { TheaterTypes.Temperate, TheaterTypes.Winter });
         public static readonly BuildingType V02 = new BuildingType(24, "v02", "TEXT_STRUCTURE_TITLE_CIV2", 0, 0, 2, 2, "00 11", "Neutral", new [] { TheaterTypes.Temperate, TheaterTypes.Winter });
         public static readonly BuildingType V03 = new BuildingType(25, "v03", "TEXT_STRUCTURE_TITLE_CIV3", 0, 0, 2, 2, "01 11", "Neutral", new [] { TheaterTypes.Temperate, TheaterTypes.Winter });
@@ -62,7 +63,7 @@ namespace MobiusEditor.TiberianDawn
         public static readonly BuildingType V16 = new BuildingType(38, "v16", "TEXT_STRUCTURE_TITLE_CIV15", 0, 0, 1, 1, null, "Neutral", new [] { TheaterTypes.Temperate, TheaterTypes.Winter });
         public static readonly BuildingType V17 = new BuildingType(39, "v17", "TEXT_STRUCTURE_TITLE_CIV16", 0, 0, 1, 1, null, "Neutral", new [] { TheaterTypes.Temperate, TheaterTypes.Winter });
         public static readonly BuildingType V18 = new BuildingType(40, "v18", "TEXT_STRUCTURE_TITLE_CIV17", 0, 0, 1, 1, null, "Neutral", new [] { TheaterTypes.Temperate, TheaterTypes.Winter });
-        public static readonly BuildingType V19 = new BuildingType(41, "v19", "Oil Pump", 0, 0, 1, 1, null, "Neutral");
+        public static readonly BuildingType V19 = new BuildingType(41, "v19", "TEXT_STRUCTURE_TITLE_OIL_PUMP", 0, 0, 1, 1, null, "Neutral");
         public static readonly BuildingType V20 = new BuildingType(42, "v20", "TEXT_STRUCTURE_TITLE_CIV18", 0, 0, 2, 2, "00 11", "Neutral", new [] { TheaterTypes.Desert });
         public static readonly BuildingType V21 = new BuildingType(43, "v21", "TEXT_STRUCTURE_TITLE_CIV19", 0, 0, 2, 2, "11 01", "Neutral", new [] { TheaterTypes.Desert });
         public static readonly BuildingType V22 = new BuildingType(44, "v22", "TEXT_STRUCTURE_TITLE_CIV20", 0, 0, 2, 1, null, "Neutral", new [] { TheaterTypes.Desert });

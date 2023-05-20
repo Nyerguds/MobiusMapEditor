@@ -155,18 +155,9 @@ namespace MobiusEditor.Render
             new Point(1, 2)
         };
 
-        private static readonly int randomSeed;
-
-        static MapRenderer()
-        {
-            randomSeed = Guid.NewGuid().GetHashCode();
-        }
-
         public static void Render(GameType gameType, Map map, Graphics graphics, ISet<Point> locations, MapLayerFlag layers, double tileScale)
         {
             var tileSize = new Size(Math.Max(1, (int)(Globals.OriginalTileWidth * tileScale)), Math.Max(1, (int)(Globals.OriginalTileHeight * tileScale)));
-            var tiberiumOrGoldTypes = map.OverlayTypes.Where(t => t.IsTiberiumOrGold).Select(t => t).ToArray();
-            var gemTypes = map.OverlayTypes.Where(t => t.IsGem).ToArray();
             // paint position, paint action, true if flat.
             var overlappingRenderList = new List<(Rectangle, Action<Graphics>, bool)>();
             Func<IEnumerable<Point>> renderLocations = null;
@@ -265,7 +256,7 @@ namespace MobiusEditor.Render
                     bool paintAsOverlay = overlay.Type.IsOverlay && (layers & MapLayerFlag.Overlay) != MapLayerFlag.None;
                     if (paintAsWall || paintAsResource || paintAsOverlay)
                     {
-                        RenderOverlay(gameType, map.Theater, tiberiumOrGoldTypes, gemTypes, location, tileSize, tileScale, overlay).Item2(graphics);
+                        RenderOverlay(gameType, map.Theater, location, tileSize, tileScale, overlay).Item2(graphics);
                     }
                 }
             }
@@ -342,7 +333,7 @@ namespace MobiusEditor.Render
                     {
                         continue;
                     }
-                    RenderOverlay(gameType, map.Theater, tiberiumOrGoldTypes, gemTypes, topLeft, tileSize, tileScale, overlay).Item2(graphics);
+                    RenderOverlay(gameType, map.Theater, topLeft, tileSize, tileScale, overlay).Item2(graphics);
                 }
             }
 
@@ -402,22 +393,10 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static (Rectangle, Action<Graphics>) RenderOverlay(GameType gameType, TheaterType theater, OverlayType[] tiberiumOrGoldTypes, OverlayType[] gemTypes, Point topLeft, Size tileSize, double tileScale, Overlay overlay)
+        public static (Rectangle, Action<Graphics>) RenderOverlay(GameType gameType, TheaterType theater, Point topLeft, Size tileSize, double tileScale, Overlay overlay)
         {
-            string name;
             OverlayType ovtype = overlay.Type;
-            if (ovtype.IsGem && gemTypes != null)
-            {
-                name = gemTypes[new Random(randomSeed ^ topLeft.GetHashCode()).Next(gemTypes.Length)].Name;
-            }
-            else if (ovtype.IsTiberiumOrGold && tiberiumOrGoldTypes != null)
-            {
-                name = tiberiumOrGoldTypes[new Random(randomSeed ^ topLeft.GetHashCode()).Next(tiberiumOrGoldTypes.Length)].Name;
-            }
-            else
-            {
-                name = ovtype.GraphicsSource;
-            }
+            string name = ovtype.GraphicsSource;
             int icon = ovtype.IsConcrete || ovtype.IsResource || ovtype.IsWall || ovtype.ForceTileNr == -1 ? overlay.Icon : ovtype.ForceTileNr;
             bool isTeleport = gameType == GameType.SoleSurvivor && ovtype == SoleSurvivor.OverlayTypes.Teleport && Globals.AdjustSoleTeleports;
             // For Decoration types, generate dummy if not found.
@@ -1327,7 +1306,7 @@ namespace MobiusEditor.Render
                     Type = SoleSurvivor.OverlayTypes.Road,
                     Tint = Color.FromArgb(128, Color.White)
                 };
-                RenderOverlay(gameType, map.Theater, null, null, p, tileSize, tileScale, footballTerrain).Item2(graphics);
+                RenderOverlay(gameType, map.Theater, p, tileSize, tileScale, footballTerrain).Item2(graphics);
             }
         }
 
