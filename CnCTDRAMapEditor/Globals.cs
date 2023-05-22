@@ -25,6 +25,8 @@ namespace MobiusEditor
         static Globals()
         {
             double minScale = 1.0 / Math.Min(OriginalTileWidth, OriginalTileHeight);
+            // Startup options
+            UseClassicGraphics = Properties.Settings.Default.UseClassicGraphics;
             // Defaults
             BoundsObstructFill = Properties.Settings.Default.DefaultBoundsObstructFill;
             TileDragProtect = Properties.Settings.Default.DefaultTileDragProtect;
@@ -73,6 +75,8 @@ namespace MobiusEditor
         public const int PixelHeight = 24;
 
         public static string DataPath { get; set; }
+
+        public static bool UseClassicGraphics { get; set; }
         public static bool BoundsObstructFill { get; set; }
         public static bool TileDragProtect { get; set; }
         public static bool TileDragRandomize { get; set; }

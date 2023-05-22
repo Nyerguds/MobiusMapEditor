@@ -22,6 +22,8 @@ namespace MobiusEditor.Utility
 {
     public class MegafileManager : IArchiveManager
     {
+        public string[] ExpandModPaths { get; set; }
+
         private readonly string looseFilePath;
 
         public String LoadRoot { get; private set; }
@@ -36,7 +38,7 @@ namespace MobiusEditor.Utility
             this.LoadRoot = Path.GetFullPath(loadRoot);
         }
 
-        public bool LoadArchive(string archivePath)
+        public bool LoadArchive(GameType gameType, string archivePath)
         {
             if (!Path.IsPathRooted(archivePath))
             {
@@ -54,6 +56,16 @@ namespace MobiusEditor.Utility
 
         public bool FileExists(string path)
         {
+            if (ExpandModPaths != null && ExpandModPaths.Length > 0)
+            {
+                foreach (string modPath in ExpandModPaths)
+                {
+                    if (File.Exists(Path.Combine(path, modPath)))
+                    {
+                        return true;
+                    }
+                }
+            }
             return File.Exists(Path.Combine(looseFilePath, path)) || filenames.Contains(path.ToUpper());
         }
 
@@ -64,7 +76,17 @@ namespace MobiusEditor.Utility
             {
                 return File.Open(loosePath, FileMode.Open, FileAccess.Read);
             }
-
+            if (ExpandModPaths != null && ExpandModPaths.Length > 0)
+            {
+                foreach (string modFilePath in ExpandModPaths)
+                {
+                    string modPath = Path.Combine(modFilePath, path);
+                    if (File.Exists(modPath))
+                    {
+                        return File.Open(modPath, FileMode.Open, FileAccess.Read);
+                    }
+                }
+            }
             foreach (var megafile in megafiles)
             {
                 var stream = megafile.Open(path.ToUpper());

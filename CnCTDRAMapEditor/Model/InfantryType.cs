@@ -20,7 +20,7 @@ using System.Drawing;
 
 namespace MobiusEditor.Model
 {
-    public class InfantryType : ITechnoType, IBrowsableType
+    public class InfantryType : ITechnoType
     {
         public sbyte ID { get; private set; }
 
@@ -52,11 +52,13 @@ namespace MobiusEditor.Model
 
         public InfantryType(sbyte id, string name, string textId, string ownerHouse, UnitTypeFlag flags)
         {
-            ID = id;
-            Name = name;
-            DisplayName = Globals.TheGameTextManager[textId] + " (" + Name.ToUpperInvariant() + ")";
-            OwnerHouse = ownerHouse;
-            Flag = flags;
+            this.ID = id;
+            this.Name = name;
+            this.DisplayName = !String.IsNullOrEmpty(textId) && !String.IsNullOrEmpty(Globals.TheGameTextManager[textId])
+                ? Globals.TheGameTextManager[textId] + " (" + Name.ToUpperInvariant() + ")"
+                : name.ToUpperInvariant();
+            this.OwnerHouse = ownerHouse;
+            this.Flag = flags;
         }
 
         public InfantryType(sbyte id, string name, string textId, string ownerHouse)

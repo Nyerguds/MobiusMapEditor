@@ -40,7 +40,7 @@ namespace MobiusEditor.Model
         public const sbyte Vessel     = 1 << 6;
     }
 
-    public class UnitType : ICellOverlapper, ICellOccupier, ITechnoType, IBrowsableType
+    public class UnitType : ICellOverlapper, ICellOccupier, ITechnoType
     {
         public sbyte ID { get; private set; }
         public string Name { get; private set; }
@@ -75,16 +75,18 @@ namespace MobiusEditor.Model
 
         public UnitType(sbyte id, string name, string textId, string ownerHouse, string turret, string turret2, int turrOffset, int turrY, UnitTypeFlag flags) //bool hasTurret, bool isFixedWing, bool isArmed, bool isHarvester)
         {
-            ID = id;
-            Name = name;
-            DisplayName = Globals.TheGameTextManager[textId] + " (" + Name.ToUpperInvariant() + ")";
-            OwnerHouse = ownerHouse;
+            this.ID = id;
+            this.Name = name;
+            this.DisplayName = !String.IsNullOrEmpty(textId) && !String.IsNullOrEmpty(Globals.TheGameTextManager[textId])
+                ? Globals.TheGameTextManager[textId] + " (" + Name.ToUpperInvariant() + ")"
+                : name.ToUpperInvariant();
+            this.OwnerHouse = ownerHouse;
             bool hasTurret = ((flags & UnitTypeFlag.HasTurret) == UnitTypeFlag.HasTurret);
-            Turret = hasTurret ? turret : null;
-            SecondTurret = hasTurret && ((flags & UnitTypeFlag.HasDoubleTurret) == UnitTypeFlag.HasDoubleTurret) ? turret2 : null;
-            TurretOffset = turrOffset;
-            TurretY = turrY;
-            Flag = flags;
+            this.Turret = hasTurret ? turret : null;
+            this.SecondTurret = hasTurret && ((flags & UnitTypeFlag.HasDoubleTurret) == UnitTypeFlag.HasDoubleTurret) ? turret2 : null;
+            this.TurretOffset = turrOffset;
+            this.TurretY = turrY;
+            this.Flag = flags;
         }
 
         public UnitType(sbyte id, string name, string textId, string ownerHouse, int turrOffset, int turrY, UnitTypeFlag flags) //bool hasTurret, bool isFixedWing, bool isArmed, bool isHarvester)

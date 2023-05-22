@@ -29,16 +29,12 @@ namespace MobiusEditor.Utility
         private readonly string xmlPath;
         private readonly string texturesPath;
 
-        public string[] ExpandModPaths { get; set; }
-
-
-        public TilesetManager(IArchiveManager megafileManager, TextureManager textureManager, string xmlPath, string texturesPath, params string[] expandModPaths)
+        public TilesetManager(IArchiveManager megafileManager, TextureManager textureManager, string xmlPath, string texturesPath)
         {
             this.megafileManager = megafileManager;
             this.textureManager = textureManager;
             this.xmlPath = xmlPath;
             this.texturesPath = texturesPath;
-            this.ExpandModPaths = expandModPaths;
             LoadXmlfiles();
         }
 
@@ -46,28 +42,12 @@ namespace MobiusEditor.Utility
         {
             tilesets.Clear();
             XmlDocument xmlDoc = null;
-            if (ExpandModPaths != null && ExpandModPaths.Length > 0)
+            using (Stream xmlStream = megafileManager.OpenFile(xmlPath))
             {
-                for (int i = 0; i < ExpandModPaths.Length; ++i)
+                if (xmlStream != null)
                 {
-                    string modXmlPath = Path.Combine(ExpandModPaths[i], xmlPath);
-                    if (modXmlPath != null && File.Exists(modXmlPath))
-                    {
-                        xmlDoc = new XmlDocument();
-                        xmlDoc.Load(modXmlPath);
-                        break;
-                    }
-                }
-            }
-            if (xmlDoc == null)
-            {
-                using (Stream xmlStream = megafileManager.OpenFile(xmlPath))
-                {
-                    if (xmlStream != null)
-                    {
-                        xmlDoc = new XmlDocument();
-                        xmlDoc.Load(xmlStream);
-                    }
+                    xmlDoc = new XmlDocument();
+                    xmlDoc.Load(xmlStream);
                 }
             }
             if (xmlDoc != null)
@@ -76,28 +56,12 @@ namespace MobiusEditor.Utility
                 {
                     string xmlFile = Path.Combine(Path.GetDirectoryName(xmlPath), fileNode.InnerText);
                     XmlDocument fileXmlDoc = null;
-                    if (ExpandModPaths != null && ExpandModPaths.Length > 0)
+                    using (Stream xmlStream = megafileManager.OpenFile(xmlFile))
                     {
-                        for (int i = 0; i < ExpandModPaths.Length; ++i)
+                        if (xmlStream != null)
                         {
-                            string modXmlPath = Path.Combine(ExpandModPaths[i], xmlFile);
-                            if (modXmlPath != null && File.Exists(modXmlPath))
-                            {
-                                fileXmlDoc = new XmlDocument();
-                                fileXmlDoc.Load(modXmlPath);
-                                break;
-                            }
-                        }
-                    }
-                    if (fileXmlDoc == null)
-                    {
-                        using (Stream xmlStream = megafileManager.OpenFile(xmlFile))
-                        {
-                            if (xmlStream != null)
-                            {
-                                fileXmlDoc = new XmlDocument();
-                                fileXmlDoc.Load(xmlStream);
-                            }
+                            fileXmlDoc = new XmlDocument();
+                            fileXmlDoc.Load(xmlStream);
                         }
                     }
                     if (fileXmlDoc != null)

@@ -1316,13 +1316,11 @@ namespace MobiusEditor
         private static IGamePlugin LoadNewPlugin(GameType gameType, bool isTdMegaMap, string[] modPaths, bool noImage)
         {
             // Resetting to a specific game type will take care of classic mode.
-            Globals.TheGameTextManager.Reset(gameType);
+            Globals.TheArchiveManager.ExpandModPaths = modPaths;
             Globals.TheArchiveManager.Reset(gameType);
-            Globals.TheTextureManager.ExpandModPaths = modPaths;
+            Globals.TheGameTextManager.Reset(gameType);
             Globals.TheTextureManager.Reset();
-            Globals.TheTilesetManager.ExpandModPaths = modPaths;
             Globals.TheTilesetManager.Reset();
-            Globals.TheTeamColorManager.ExpandModPaths = modPaths;
             Globals.TheTeamColorManager.Reset(gameType);
             IGamePlugin plugin = null;
             if (gameType == GameType.TiberianDawn)
@@ -1353,16 +1351,19 @@ namespace MobiusEditor
             if (teamColorManager is TeamColorManager tcm)
             {
                 // Add default black for unowned.
-                var teamColorNone = new TeamColor(tcm);
+                TeamColor teamColorNone = new TeamColor(tcm);
                 teamColorNone.Load("NONE", "BASE_TEAM",
                     Color.FromArgb(66, 255, 0), Color.FromArgb(0, 255, 56), 0,
                     new Vector3(0.30f, -1.00f, 0.00f), new Vector3(0f, 1f, 1f), new Vector2(0.0f, 0.1f),
                     new Vector3(0, 1, 1), new Vector2(0, 1), Color.FromArgb(61, 61, 59));
                 tcm.AddTeamColor(teamColorNone);
             }
-            else // if (teamColorManager is TeamColorManagerClassic tcc)
+            else // if (teamColorManager is TeamRemapManager tcc)
             {
                 // TODO classic team color
+                //TeamRemap teamColorNone = new TeamRemap(tcc);
+                //teamColorNone.Load(/*TODO*/);
+                //tcc.AddTeamColor(teamColorNone);
             }
         }
 
@@ -1371,16 +1372,19 @@ namespace MobiusEditor
             if (teamColorManager is TeamColorManager tcm)
             {
                 // Add extra purple for flag..
-                var teamColorPurple = new TeamColor(tcm);
+                TeamColor teamColorPurple = new TeamColor(tcm);
                 teamColorPurple.Load("PURPLE", "BASE_TEAM",
                     Color.FromArgb(66, 255, 0), Color.FromArgb(0, 255, 56), 0,
                     new Vector3(0.410f, 0.300f, 0.000f), new Vector3(0f, 1f, 1f), new Vector2(0.0f, 1.0f),
                     new Vector3(0, 1, 1), new Vector2(0, 1), Color.FromArgb(77, 13, 255));
                 tcm.AddTeamColor(teamColorPurple);
             }
-            else // if (teamColorManager is TeamColorManagerClassic tcc)
+            else // if (teamColorManager is TeamRemapManager tcc)
             {
                 // TODO classic team color
+                //TeamRemap teamColorPurple = new TeamRemap(tcc);
+                //teamColorPurple.Load(/*TODO*/);
+                //tcc.AddTeamColor(teamColorPurple);
             }
         }
         /// <summary>

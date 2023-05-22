@@ -83,14 +83,17 @@ namespace MobiusEditor.Model
 
         public OverlayType(sbyte id, string name, string textId, TheaterType[] theaters, OverlayTypeFlag flag, String graphicsSource, int forceTileNr, Color tint)
         {
-            ID = id;
-            Name = name;
-            GraphicsSource = graphicsSource == null ? name : graphicsSource;
-            ForceTileNr = forceTileNr;
-            DisplayName = Globals.TheGameTextManager[textId] + " (" + GraphicsSource.ToUpperInvariant() + ")";
-            Theaters = theaters;
-            Flag = flag;
-            Tint = tint;
+            this.ID = id;
+            this.Name = name;
+            this.GraphicsSource = graphicsSource == null ? name : graphicsSource;
+            this.ForceTileNr = forceTileNr;
+            // Shows graphics source and not real internal name to mask different internal name for ROAD #2.
+            this.DisplayName = !String.IsNullOrEmpty(textId) && !String.IsNullOrEmpty(Globals.TheGameTextManager[textId])
+                ? Globals.TheGameTextManager[textId] + " (" + GraphicsSource.ToUpperInvariant() + ")"
+                : name.ToUpperInvariant();
+            this.Theaters = theaters;
+            this.Flag = flag;
+            this.Tint = tint;
         }
 
         public OverlayType(sbyte id, string name, string textId, TheaterType[] theaters, OverlayTypeFlag flag, String graphicsSource, int forceTileNr)

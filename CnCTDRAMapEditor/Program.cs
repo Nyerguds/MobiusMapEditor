@@ -12,6 +12,9 @@
 // distributed with this program. You should have received a copy of the 
 // GNU General Public License along with permitted additional restrictions 
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
+
+//#define CLASSICIMPLEMENTED
+
 using MobiusEditor.Dialogs;
 using MobiusEditor.Interface;
 using MobiusEditor.Utility;
@@ -31,6 +34,9 @@ namespace MobiusEditor
 {
     static class Program
     {
+        const string gameId = "1213210";
+        static readonly String ApplicationPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
@@ -38,7 +44,6 @@ namespace MobiusEditor
         static void Main(string[] args)
         {
             TryEnableDPIAware();
-            const string gameId = "1213210";
             // Change current culture to en-US
             if (Thread.CurrentThread.CurrentCulture.Name != "en-US")
             {
@@ -58,93 +63,27 @@ namespace MobiusEditor
             }
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-
-            // Do a test for CONFIG.MEG
-            string runPath = Environment.CurrentDirectory;
-            if (!FileTest(runPath))
-            {
-                // If it does not exist, try to use the directory from the settings.
-                bool validSavedDirectory = false;
-                if (!String.IsNullOrWhiteSpace(Properties.Settings.Default.GameDirectoryPath) &&
-                    Directory.Exists(Properties.Settings.Default.GameDirectoryPath))
-                {
-                    if (FileTest(Properties.Settings.Default.GameDirectoryPath))
-                    {
-                        runPath = Properties.Settings.Default.GameDirectoryPath;
-                        validSavedDirectory = true;
-                    }
-                }
-                // Before showing a dialog to ask, try to autodetect the Steam path.
-                if (!validSavedDirectory)
-                {
-                    string gameFolder = SteamAssist.TryGetSteamGameFolder(gameId, "TiberianDawn.dll", "RedAlert.dll");
-                    if (gameFolder != null)
-                    {
-                        if (FileTest(gameFolder))
-                        {
-                            runPath = gameFolder;
-                            validSavedDirectory = true;
-                            Properties.Settings.Default.GameDirectoryPath = gameFolder;
-                            Properties.Settings.Default.Save();
-                        }
-                    }
-                }
-                // If the directory in the settings is wrong, and it can not be autodetected, we need to ask the user for the installation dir.
-                if (!validSavedDirectory)
-                {
-                    var gameInstallationPathForm = new GameInstallationPathForm();
-                    if (gameInstallationPathForm.ShowDialog() == DialogResult.No)
-                        return;
-                    runPath = Path.GetDirectoryName(gameInstallationPathForm.SelectedPath);
-                    Properties.Settings.Default.GameDirectoryPath = runPath;
-                    Properties.Settings.Default.Save();
-                }
-            }
-            // TODO split off .mix reader.
-            // mix file manager constructor should get two arguments:
-            // -A mapping of the games to their respective folders
-            // -A mapping of the games to a list of all .mix archives used by that game.
-            // The system should scan all mix archives for known filenames of other mix archives so it can do recursive searches.
-
-            // Initialize megafiles
-            Globals.TheArchiveManager = new MegafileManager(Path.Combine(runPath, Globals.MegafilePath), runPath);
-
-            var megafilesLoaded = true;
-            megafilesLoaded &= Globals.TheArchiveManager.LoadArchive("CONFIG.MEG");
-            megafilesLoaded &= Globals.TheArchiveManager.LoadArchive("TEXTURES_COMMON_SRGB.MEG");
-            megafilesLoaded &= Globals.TheArchiveManager.LoadArchive("TEXTURES_RA_SRGB.MEG");
-            megafilesLoaded &= Globals.TheArchiveManager.LoadArchive("TEXTURES_SRGB.MEG");
-            megafilesLoaded &= Globals.TheArchiveManager.LoadArchive("TEXTURES_TD_SRGB.MEG");
-#if !DEVELOPER
-            if (!megafilesLoaded)
-            {
-                MessageBox.Show("Required data is missing or corrupt, please validate your installation.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-#endif
-            // Check if any mods are allowed to override the default stuff to load.
             Dictionary<GameType, string[]> modPaths = new Dictionary<GameType, string[]>();
+            // Check if any mods are allowed to override the default stuff to load.
             const string tdModFolder = "Tiberian_Dawn";
             const string raModFolder = "Red_Alert";
             modPaths.Add(GameType.TiberianDawn, GetModPaths(gameId, Properties.Settings.Default.ModsToLoadTD, tdModFolder, "TD"));
             modPaths.Add(GameType.RedAlert, GetModPaths(gameId, Properties.Settings.Default.ModsToLoadRA, raModFolder, "RA"));
             modPaths.Add(GameType.SoleSurvivor, GetModPaths(gameId, Properties.Settings.Default.ModsToLoadSS, tdModFolder, "TD"));
-            // Initialize texture, tileset, team color, and game text managers
-            Globals.TheTextureManager = new TextureManager(Globals.TheArchiveManager);
-            Globals.TheTilesetManager = new TilesetManager(Globals.TheArchiveManager, Globals.TheTextureManager, Globals.TilesetsXMLPath, Globals.TexturesPath);
-            Globals.TheTeamColorManager = new TeamColorManager(Globals.TheArchiveManager);
-            // Not adapted to mods for now...
-            var cultureName = CultureInfo.CurrentUICulture.Name;
-            var gameTextFilename = string.Format(Globals.GameTextFilenameFormat, cultureName.ToUpper());
-            if (!Globals.TheArchiveManager.FileExists(gameTextFilename))
+            String runPath = Globals.UseClassicGraphics ? null : GetRemasterRunPath();
+            if (runPath != null)
             {
-                gameTextFilename = string.Format(Globals.GameTextFilenameFormat, "EN-US");
+                LoadEditorRemastered(runPath);
             }
-            GameTextManager gtm = new GameTextManager(Globals.TheArchiveManager, gameTextFilename);
-            //gtm.Dump("alltext.txt");
-            Globals.TheGameTextManager = gtm;
-            AddMissingRemasterText(gtm);
-            if (SteamworksUGC.IsSteamBuild)
+            else
+            {
+#if CLASSICIMPLEMENTED
+                LoadEditorClassic();
+#else
+                return;
+#endif
+            }
+            if (SteamworksUGC.IsSteamBuild && runPath != null)
             {
                 // Ignore result from this.
                 SteamworksUGC.Init();
@@ -182,12 +121,147 @@ namespace MobiusEditor
             Globals.TheArchiveManager.Dispose();
         }
 
+        private static void LoadEditorClassic()
+        {
+#if CLASSICIMPLEMENTED
+            // The system should scan all mix archives for known filenames of other mix archives so it can do recursive searches.
+            // Mix files should be given in order or depth, so first give ones that are in the folder, then ones that may occur inside others.
+            // The order of load determines the file priority; only the first found occurrence of a file is used.
+            Dictionary<GameType, String> gameFolders = new Dictionary<GameType, string>();
+            gameFolders.Add(GameType.TiberianDawn, "Classic\\TD\\");
+            gameFolders.Add(GameType.RedAlert, "Classic\\RA\\");
+            gameFolders.Add(GameType.SoleSurvivor, "Classic\\TD\\");
+            //Globals.TheArchiveManager = new MixfileManager(ApplicationPath, gameFolders);
+
+            var mixfilesLoaded = true;
+            // This will map the mix files to the respective games, and look for them in the respective folders.
+            mixfilesLoaded &= Globals.TheArchiveManager.LoadArchive(GameType.TiberianDawn, "cclocal.mix");
+            mixfilesLoaded &= Globals.TheArchiveManager.LoadArchive(GameType.TiberianDawn, "conquer.mix");
+            mixfilesLoaded &= Globals.TheArchiveManager.LoadArchive(GameType.TiberianDawn, "desert.mix");
+            mixfilesLoaded &= Globals.TheArchiveManager.LoadArchive(GameType.TiberianDawn, "temperat.mix");
+            mixfilesLoaded &= Globals.TheArchiveManager.LoadArchive(GameType.TiberianDawn, "winter.mix");
+            mixfilesLoaded &= Globals.TheArchiveManager.LoadArchive(GameType.SoleSurvivor, "cclocal.mix");
+            mixfilesLoaded &= Globals.TheArchiveManager.LoadArchive(GameType.SoleSurvivor, "conquer.mix");
+            mixfilesLoaded &= Globals.TheArchiveManager.LoadArchive(GameType.SoleSurvivor, "desert.mix");
+            mixfilesLoaded &= Globals.TheArchiveManager.LoadArchive(GameType.SoleSurvivor, "temperat.mix");
+            mixfilesLoaded &= Globals.TheArchiveManager.LoadArchive(GameType.SoleSurvivor, "winter.mix");
+            mixfilesLoaded &= Globals.TheArchiveManager.LoadArchive(GameType.RedAlert, "expand2.mix");
+            // All graphics from expand are also in expand2
+            //mixfilesLoaded &= Globals.TheArchiveManager.LoadArchive(GameType.RedAlert, "expand.mix");
+            Globals.TheArchiveManager.LoadArchive(GameType.RedAlert, "redalert.mix");
+            Globals.TheArchiveManager.LoadArchive(GameType.RedAlert, "main.mix");
+            // Only needed for conquer.eng, and expand* override those anyway.
+            //mixfilesLoaded &= Globals.TheArchiveManager.LoadArchive(GameType.RedAlert, "local.mix");
+            mixfilesLoaded &= Globals.TheArchiveManager.LoadArchive(GameType.RedAlert, "conquer.mix");
+            mixfilesLoaded &= Globals.TheArchiveManager.LoadArchive(GameType.RedAlert, "lores.mix");
+            mixfilesLoaded &= Globals.TheArchiveManager.LoadArchive(GameType.RedAlert, "lores1.mix");
+            mixfilesLoaded &= Globals.TheArchiveManager.LoadArchive(GameType.RedAlert, "temperat.mix");
+            mixfilesLoaded &= Globals.TheArchiveManager.LoadArchive(GameType.RedAlert, "snow.mix");
+            mixfilesLoaded &= Globals.TheArchiveManager.LoadArchive(GameType.RedAlert, "interior.mix");
+#if !DEVELOPER
+            if (!mixfilesLoaded)
+            {
+                MessageBox.Show("Required data is missing or corrupt, please validate your installation.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+#endif
+#endif
+        }
+
+        private static void LoadEditorRemastered(String runPath)
+        {
+            // Initialize megafiles
+            Globals.TheArchiveManager = new MegafileManager(Path.Combine(runPath, Globals.MegafilePath), runPath);
+
+            var megafilesLoaded = true;
+            megafilesLoaded &= Globals.TheArchiveManager.LoadArchive(GameType.None, "CONFIG.MEG");
+            megafilesLoaded &= Globals.TheArchiveManager.LoadArchive(GameType.None, "TEXTURES_COMMON_SRGB.MEG");
+            megafilesLoaded &= Globals.TheArchiveManager.LoadArchive(GameType.None, "TEXTURES_RA_SRGB.MEG");
+            megafilesLoaded &= Globals.TheArchiveManager.LoadArchive(GameType.None, "TEXTURES_SRGB.MEG");
+            megafilesLoaded &= Globals.TheArchiveManager.LoadArchive(GameType.None, "TEXTURES_TD_SRGB.MEG");
+#if !DEVELOPER
+            if (!megafilesLoaded)
+            {
+                MessageBox.Show("Required data is missing or corrupt, please validate your installation.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+#endif
+            // Initialize texture, tileset, team color, and game text managers
+            Globals.TheTextureManager = new TextureManager(Globals.TheArchiveManager);
+            Globals.TheTilesetManager = new TilesetManager(Globals.TheArchiveManager, Globals.TheTextureManager, Globals.TilesetsXMLPath, Globals.TexturesPath);
+            Globals.TheTeamColorManager = new TeamColorManager(Globals.TheArchiveManager);
+            // Not adapted to mods for now...
+            var cultureName = CultureInfo.CurrentUICulture.Name;
+            var gameTextFilename = string.Format(Globals.GameTextFilenameFormat, cultureName.ToUpper());
+            if (!Globals.TheArchiveManager.FileExists(gameTextFilename))
+            {
+                gameTextFilename = string.Format(Globals.GameTextFilenameFormat, "EN-US");
+            }
+            GameTextManager gtm = new GameTextManager(Globals.TheArchiveManager, gameTextFilename);
+            //gtm.Dump("alltext.txt");
+            Globals.TheGameTextManager = gtm;
+            AddMissingRemasterText(gtm);
+        }
+
+        private static String GetRemasterRunPath()
+        {
+            // Do a test for CONFIG.MEG
+            string runPath = Environment.CurrentDirectory;
+            if (FileTest(runPath))
+            {
+                return runPath;
+            }
+            // If it does not exist, try to use the directory from the settings.
+            bool validSavedDirectory = false;
+            if (!String.IsNullOrWhiteSpace(Properties.Settings.Default.GameDirectoryPath) &&
+                Directory.Exists(Properties.Settings.Default.GameDirectoryPath))
+            {
+                if (FileTest(Properties.Settings.Default.GameDirectoryPath))
+                {
+                    runPath = Properties.Settings.Default.GameDirectoryPath;
+                    validSavedDirectory = true;
+                }
+            }
+            // Before showing a dialog to ask, try to autodetect the Steam path.
+            if (!validSavedDirectory)
+            {
+                string gameFolder = SteamAssist.TryGetSteamGameFolder(gameId, "TiberianDawn.dll", "RedAlert.dll");
+                if (gameFolder != null)
+                {
+                    if (FileTest(gameFolder))
+                    {
+                        runPath = gameFolder;
+                        validSavedDirectory = true;
+                        Properties.Settings.Default.GameDirectoryPath = gameFolder;
+                        Properties.Settings.Default.Save();
+                    }
+                }
+            }
+            // If the directory in the settings is wrong, and it can not be autodetected, we need to ask the user for the installation dir.
+            if (!validSavedDirectory)
+            {
+                var gameInstallationPathForm = new GameInstallationPathForm();
+                if (gameInstallationPathForm.ShowDialog() == DialogResult.No)
+                    return null;
+                runPath = Path.GetDirectoryName(gameInstallationPathForm.SelectedPath);
+                Properties.Settings.Default.GameDirectoryPath = runPath;
+                Properties.Settings.Default.Save();
+            }
+            return runPath;
+        }
+
         private static void AddMissingRemasterText(GameTextManager gtm)
         {
             // Buildings
             gtm["TEXT_STRUCTURE_TITLE_OIL_PUMP"] = "Oil Pump";
             gtm["TEXT_STRUCTURE_TITLE_OIL_TANKER"] = "Oil Tanker";
 
+            String fake = " (" + gtm["TEXT_UI_FAKE"] + ")";
+            if (!gtm["TEXT_STRUCTURE_RA_WEAF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_WEAF"] = Globals.TheGameTextManager["TEXT_STRUCTURE_RA_WEAF"] + fake;
+            if (!gtm["TEXT_STRUCTURE_RA_FACF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_FACF"] = Globals.TheGameTextManager["TEXT_STRUCTURE_RA_FACF"] + fake;
+            if (!gtm["TEXT_STRUCTURE_RA_SYRF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_SYRF"] = Globals.TheGameTextManager["TEXT_STRUCTURE_RA_SYRF"] + fake;
+            if (!gtm["TEXT_STRUCTURE_RA_SPEF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_SPEF"] = Globals.TheGameTextManager["TEXT_STRUCTURE_RA_SPEF"] + fake;
+            if (!gtm["TEXT_STRUCTURE_RA_DOMF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_DOMF"] = Globals.TheGameTextManager["TEXT_STRUCTURE_RA_DOMF"] + fake;
             // Overlay
             gtm["TEXT_OVERLAY_CONCRETE_PAVEMENT"] = "Concrete";
             gtm["TEXT_OVERLAY_CONCRETE_ROAD"] = "Concrete Road";
@@ -210,6 +284,7 @@ namespace MobiusEditor
             // Overlay
             gtm["TEXT_OVERLAY_CONCRETE_ROAD"] = "Concrete Road";
             gtm["TEXT_OVERLAY_CONCRETE_ROAD_FULL"] = "Concrete Road (full)";
+            gtm["TEXT_UI_FAKE"] = "FAKE";
         }
 
         [DllImport("SHCore.dll")]

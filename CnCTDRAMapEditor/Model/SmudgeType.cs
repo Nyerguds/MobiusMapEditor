@@ -102,13 +102,15 @@ namespace MobiusEditor.Model
 
         public SmudgeType(sbyte id, string name, string textId, TheaterType[] theaters, Size size, int icons, SmudgeTypeFlag flag)
         {
-            ID = id;
-            Name = name;
-            DisplayName = Globals.TheGameTextManager[textId] + " (" + Name.ToUpperInvariant() + ")";
-            Size = size;
-            Icons = icons;
-            Flag = flag;
-            Theaters = theaters;
+            this.ID = id;
+            this.Name = name;
+            this.DisplayName = !String.IsNullOrEmpty(textId) && !String.IsNullOrEmpty(Globals.TheGameTextManager[textId])
+                ? Globals.TheGameTextManager[textId] + " (" + Name.ToUpperInvariant() + ")"
+                : name.ToUpperInvariant();
+            this.Size = size;
+            this.Icons = icons;
+            this.Flag = flag;
+            this.Theaters = theaters;
         }
 
         public override bool Equals(object obj)

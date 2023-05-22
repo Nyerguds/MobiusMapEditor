@@ -35,7 +35,7 @@ namespace MobiusEditor.Model
         IsGapGenerator = (1 << 7),
     }
 
-    public class BuildingType : ICellOverlapper, ICellOccupier, ITechnoType, IBrowsableType
+    public class BuildingType : ICellOverlapper, ICellOccupier, ITechnoType
     {
         public sbyte ID { get; private set; }
 
@@ -107,7 +107,9 @@ namespace MobiusEditor.Model
             this.FrameOFfset = frameOffset;
             this.Name = name;
             this.GraphicsSource = graphicsSource ?? name;
-            this.DisplayName = String.IsNullOrEmpty(textId) ? String.Empty : ((IsFake ? "Fake " : String.Empty) + Globals.TheGameTextManager[textId] + " (" + Name.ToUpperInvariant() + ")");
+            this.DisplayName = !String.IsNullOrEmpty(textId) && !String.IsNullOrEmpty(Globals.TheGameTextManager[textId])
+                ? Globals.TheGameTextManager[textId] + " (" + Name.ToUpperInvariant() + ")"
+                : name.ToUpperInvariant();
             this.PowerProduction = powerProd;
             this.PowerUsage = powerUse;
             this.Storage = storage;

@@ -9,9 +9,10 @@ namespace MobiusEditor.Interface
     {
         String LoadRoot { get; }
 
-        bool LoadArchive(string archivePath);
+        bool LoadArchive(GameType gameType, string archivePath);
         bool FileExists(string path);
         Stream OpenFile(string path);
         void Reset(GameType gameType);
+        string[] ExpandModPaths { get; set; }
     }
 }

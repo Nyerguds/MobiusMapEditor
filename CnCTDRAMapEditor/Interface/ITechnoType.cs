@@ -14,11 +14,10 @@
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 namespace MobiusEditor.Interface
 {
-    public interface ITechnoType
+    public interface ITechnoType: IBrowsableType
     {
         sbyte ID { get; }
         string Name { get; }
-        string DisplayName { get; }
         bool IsArmed { get; }
         bool IsAircraft { get; }
         bool IsFixedWing { get; }

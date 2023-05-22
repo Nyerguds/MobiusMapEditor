@@ -12,7 +12,6 @@ namespace MobiusEditor.Interface
 {
     public interface ITeamColorManager
     {
-        string[] ExpandModPaths { get; set; }
         Color RemapBaseColor { get; }
         ITeamColor this[string key] { get; }
 

@@ -33,8 +33,6 @@ namespace MobiusEditor.Utility
         private static string MissingTexture = "DATA\\ART\\TEXTURES\\SRGB\\COMMON\\MISC\\MISSING.TGA";
         private bool processedMissingTexture = false;
 
-        public string[] ExpandModPaths { get; set; }
-
 #if false
         private class ImageData
         {
@@ -48,10 +46,9 @@ namespace MobiusEditor.Utility
         private Dictionary<string, Bitmap> cachedTextures = new Dictionary<string, Bitmap>();
         private Dictionary<(string, ITeamColor), (Bitmap, Rectangle)> teamColorTextures = new Dictionary<(string, ITeamColor), (Bitmap, Rectangle)>();
 
-        public TextureManager(IArchiveManager megafileManager, params String[] expandModPaths)
+        public TextureManager(IArchiveManager megafileManager)
         {
             this.megafileManager = megafileManager;
-            this.ExpandModPaths = expandModPaths;
         }
 
         public void Reset()
@@ -119,46 +116,6 @@ namespace MobiusEditor.Utility
                     var name = Path.GetFileNameWithoutExtension(filename);
                     var archiveDir = Path.GetDirectoryName(filename);
                     var archivePath = archiveDir + ".ZIP";
-                    // First attempt to find the texture in mod folders.
-                    if (ExpandModPaths != null && ExpandModPaths.Length > 0)
-                    {
-                        for (int i = 0; i < ExpandModPaths.Length; ++i)
-                        {
-                            // First attempt to find the texture in an archive
-                            var modArch = Path.Combine(ExpandModPaths[i], archivePath);
-                            if (File.Exists(modArch))
-                            {
-                                using (FileStream fs = new FileStream(modArch, FileMode.Open))
-                                {
-                                    LoadTgaFromZipFileStream(fs, name, ref tga, ref metadata);
-                                }
-                            }
-                            // Next attempt to load a standalone file
-                            if (tga == null)
-                            {
-                                var modFile = Path.Combine(ExpandModPaths[i], filename);
-                                if (File.Exists(modFile))
-                                {
-                                    using (var fileStream = new FileStream(modFile, FileMode.Open))
-                                    {
-                                        tga = new TGA(fileStream);
-                                    }
-                                }
-                                if (tga != null)
-                                {
-                                    var modMeta = Path.ChangeExtension(modFile, ".meta");
-                                    if (File.Exists(modMeta))
-                                    {
-                                        using (var metaStream = new FileStream(modMeta, FileMode.Open))
-                                        using (var reader = new StreamReader(metaStream))
-                                        {
-                                            metadata = JObject.Parse(reader.ReadToEnd());
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
                     // First attempt to find the texture in an archive
                     if (tga == null)
                     {
@@ -293,26 +250,9 @@ namespace MobiusEditor.Utility
                     // Try loading as a DDS
                     var ddsFilename = Path.ChangeExtension(filename, ".DDS");
                     Bitmap bitmap = null;
-                    if (ExpandModPaths != null && ExpandModPaths.Length > 0)
+                    using (Stream fileStream = megafileManager.OpenFile(ddsFilename))
                     {
-                        for (int i = 0; i < ExpandModPaths.Length; ++i)
-                        {
-                            var modFile = Path.Combine(ExpandModPaths[i], ddsFilename);
-                            if (File.Exists(modFile))
-                            {
-                                using (FileStream fs = new FileStream(modFile, FileMode.Open))
-                                {
-                                    bitmap = LoadDDSFromFileStream(fs);
-                                }
-                            }
-                        }
-                    }
-                    if (bitmap == null)
-                    {
-                        using (Stream fileStream = megafileManager.OpenFile(ddsFilename))
-                        {
-                            bitmap = LoadDDSFromFileStream(fileStream);
-                        }
+                        bitmap = LoadDDSFromFileStream(fileStream);
                     }
                     if (bitmap != null)
                     {

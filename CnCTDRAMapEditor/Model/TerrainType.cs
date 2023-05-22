@@ -20,7 +20,7 @@ using System.Drawing;
 
 namespace MobiusEditor.Model
 {
-    public class TerrainType : ITechnoType, ICellOverlapper, ICellOccupier, IBrowsableType
+    public class TerrainType : ITechnoType, ICellOverlapper, ICellOccupier
     {
         public sbyte ID { get; private set; }
 
@@ -70,14 +70,16 @@ namespace MobiusEditor.Model
         /// <param name="templateType">Terrain type this should be placed down on. Currently unused.</param>
         public TerrainType(sbyte id, string name, string textId, TheaterType[] theaters, int width, int height, string occupyMask, String graphicsSource, int displayIcon, TemplateTypeFlag templateType)
         {
-            ID = id;
-            Name = name;
-            DisplayName = Globals.TheGameTextManager[textId] + " (" + Name.ToUpperInvariant() + ")";
-            Theaters = theaters;
-            OccupyMask = GeneralUtils.GetMaskFromString(width, height, occupyMask);
-            DisplayIcon = displayIcon;
-            GraphicsSource = graphicsSource == null ? name : graphicsSource;
-            TemplateType = templateType;
+            this.ID = id;
+            this.Name = name;
+            this.DisplayName = !String.IsNullOrEmpty(textId) && !String.IsNullOrEmpty(Globals.TheGameTextManager[textId])
+                ? Globals.TheGameTextManager[textId] + " (" + Name.ToUpperInvariant() + ")"
+                : name.ToUpperInvariant();
+            this.Theaters = theaters;
+            this.OccupyMask = GeneralUtils.GetMaskFromString(width, height, occupyMask);
+            this.DisplayIcon = displayIcon;
+            this.GraphicsSource = graphicsSource == null ? name : graphicsSource;
+            this.TemplateType = templateType;
         }
 
         /// <summary>

@@ -26,7 +26,6 @@ namespace MobiusEditor.Utility
         private readonly Dictionary<string, TeamColor> teamColors = new Dictionary<string, TeamColor>();
 
         private readonly IArchiveManager megafileManager;
-        public string[] ExpandModPaths { get; set; }
         public Color RemapBaseColor => Color.FromArgb(0x00, 0xFF, 0x00);
 
         public ITeamColor this[string key] => !string.IsNullOrEmpty(key) ? (ITeamColor)teamColors[key]: null;
@@ -60,7 +59,6 @@ namespace MobiusEditor.Utility
         public TeamColorManager(IArchiveManager megafileManager, params string[] expandModPaths)
         {
             this.megafileManager = megafileManager;
-            this.ExpandModPaths = expandModPaths;
         }
 
         public void Reset(GameType gameType)
@@ -71,28 +69,12 @@ namespace MobiusEditor.Utility
         public void Load(string path)
         {
             XmlDocument xmlDoc = null;
-            if (ExpandModPaths != null && ExpandModPaths.Length > 0)
+            using (Stream archivedFile = megafileManager.OpenFile(path))
             {
-                for (int i = 0; i < ExpandModPaths.Length; ++i)
+                if (archivedFile != null)
                 {
-                    string modXmlPath = Path.Combine(ExpandModPaths[i], path);
-                    if (modXmlPath != null && File.Exists(modXmlPath))
-                    {
-                        xmlDoc = new XmlDocument();
-                        xmlDoc.Load(modXmlPath);
-                        break;
-                    }
-                }
-            }
-            if (xmlDoc == null)
-            {
-                using (Stream archivedFile = megafileManager.OpenFile(path))
-                {
-                    if (archivedFile != null)
-                    {
-                        xmlDoc = new XmlDocument();
-                        xmlDoc.Load(archivedFile);
-                    }
+                    xmlDoc = new XmlDocument();
+                    xmlDoc.Load(archivedFile);
                 }
             }
             if (xmlDoc != null)

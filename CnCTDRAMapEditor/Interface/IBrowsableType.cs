@@ -19,7 +19,6 @@ namespace MobiusEditor.Interface
     public interface IBrowsableType
     {
         string DisplayName { get; }
-
         Bitmap Thumbnail { get; }
     }
 }
