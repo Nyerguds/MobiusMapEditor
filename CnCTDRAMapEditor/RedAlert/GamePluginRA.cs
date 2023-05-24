@@ -2934,42 +2934,42 @@ namespace MobiusEditor.RedAlert
             int numUnits = Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsGroundUnit).Count();
             int numVessels = Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsVessel).Count();
             int numWaypoints = Map.Waypoints.Count(w => (w.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart && w.Cell.HasValue);
-            if (numAircraft > Constants.MaxAircraft)
+            if (!Globals.DisableAirUnits && numAircraft > Constants.MaxAircraft && Globals.EnforceObjectMaximums)
             {
                 sb.AppendLine().Append(string.Format("Maximum number of aircraft exceeded ({0} > {1})", numAircraft, Constants.MaxAircraft));
                 ok = false;
             }
-            if (numBuildings > Constants.MaxBuildings)
+            if (numBuildings > Constants.MaxBuildings && Globals.EnforceObjectMaximums)
             {
                 sb.AppendLine().Append(string.Format("Maximum number of structures exceeded ({0} > {1})", numBuildings, Constants.MaxBuildings));
                 ok = false;
             }
-            if (numInfantry > Constants.MaxInfantry)
+            if (numInfantry > Constants.MaxInfantry && Globals.EnforceObjectMaximums)
             {
                 sb.AppendLine().Append(string.Format("Maximum number of infantry exceeded ({0} > {1})", numInfantry, Constants.MaxInfantry));
                 ok = false;
             }
-            if (numTerrain > Constants.MaxTerrain)
+            if (numTerrain > Constants.MaxTerrain && Globals.EnforceObjectMaximums)
             {
                 sb.AppendLine().Append(string.Format("Maximum number of terrain objects exceeded ({0} > {1})", numTerrain, Constants.MaxTerrain));
                 ok = false;
             }
-            if (numUnits > Constants.MaxUnits)
+            if (numUnits > Constants.MaxUnits && Globals.EnforceObjectMaximums)
             {
                 sb.AppendLine().Append(string.Format("Maximum number of units exceeded ({0} > {1})", numUnits, Constants.MaxUnits));
                 ok = false;
             }
-            if (numVessels > Constants.MaxVessels)
+            if (numVessels > Constants.MaxVessels && Globals.EnforceObjectMaximums)
             {
                 sb.AppendLine().Append(string.Format("Maximum number of ships exceeded ({0} > {1})", numVessels, Constants.MaxVessels));
                 ok = false;
             }
-            if (Map.TeamTypes.Count > Constants.MaxTeams)
+            if (Map.TeamTypes.Count > Constants.MaxTeams && Globals.EnforceObjectMaximums)
             {
                 sb.AppendLine().Append(string.Format("Maximum number of team types exceeded ({0} > {1})", Map.TeamTypes.Count, Constants.MaxTeams));
                 ok = false;
             }
-            if (Map.Triggers.Count > Constants.MaxTriggers)
+            if (Map.Triggers.Count > Constants.MaxTriggers && Globals.EnforceObjectMaximums)
             {
                 sb.AppendLine().Append(string.Format("Maximum number of triggers exceeded ({0} > {1})", Map.Triggers.Count, Constants.MaxTriggers));
                 ok = false;
@@ -3482,79 +3482,74 @@ namespace MobiusEditor.RedAlert
 
         private void CheckActionGlobals(string prefix, TriggerAction action, List<string> errors, Int32 nr, ref bool fatal, bool fatalOnly, bool fix, ref bool wasFixed, List<int> availableGlobals, Dictionary<long, int> globalFixes)
         {
-            if (!fatalOnly)
+            if (fatalOnly)
             {
-                switch (action.ActionType)
-                {
-                    case ActionTypes.TACTION_SET_GLOBAL:
-                    case ActionTypes.TACTION_CLEAR_GLOBAL:
-                        if (action.Data < 0 || action.Data > 29)
+                return;
+            }
+            switch (action.ActionType)
+            {
+                case ActionTypes.TACTION_SET_GLOBAL:
+                case ActionTypes.TACTION_CLEAR_GLOBAL:
+                    if (action.Data < 0 || action.Data > 29)
+                    {
+                        string error = prefix + "Action " + nr + " has an illegal global value \""+ action.Data + "\": Globals only go from 0 to 29.";
+                        if (fix)
                         {
-                            string error = prefix + "Action " + nr + " has an illegal global value \""+ action.Data + "\": Globals only go from 0 to 29.";
-                            if (fix)
+                            int fixedVal = -1;
+                            if (globalFixes.TryGetValue(action.Data, out int fixVal))
                             {
-                                int fixedVal = -1;
-                                if (globalFixes.TryGetValue(action.Data, out int fixVal))
-                                {
-                                    fixedVal = fixVal;
-                                }
-                                else if (availableGlobals.Count > 0)
-                                {
-                                    fixedVal = availableGlobals[0];
-                                    availableGlobals.RemoveAt(0);
-                                    globalFixes.Add(action.Data, fixedVal);
-                                }
-                                action.Data = fixedVal == -1 ? action.Data.Restrict(0, 29) : fixedVal;
-                                wasFixed = true;
-                                error += fixedVal == -1 ? (" Fixed to \"" + action.Data + "\".") : (" Fixed to available global \"" + action.Data + "\".");
+                                fixedVal = fixVal;
                             }
-                            errors.Add(error);
+                            else if (availableGlobals.Count > 0)
+                            {
+                                fixedVal = availableGlobals[0];
+                                availableGlobals.RemoveAt(0);
+                                globalFixes.Add(action.Data, fixedVal);
+                            }
+                            action.Data = fixedVal == -1 ? action.Data.Restrict(0, 29) : fixedVal;
+                            wasFixed = true;
+                            error += fixedVal == -1 ? (" Fixed to \"" + action.Data + "\".") : (" Fixed to available global \"" + action.Data + "\".");
                         }
-                        break;
-                }
+                        errors.Add(error);
+                    }
+                    break;
             }
         }
 
         private void CheckActionTeam(string prefix, TriggerAction action, List<string> errors, int nr, ref bool fatal, bool fatalOnly)
         {
-            if (!TeamType.IsEmpty(action.Team))
+            if (!TeamType.IsEmpty(action.Team) || fatalOnly)
+            {
                 return;
+            }
             switch (action.ActionType)
             {
                 case ActionTypes.TACTION_REINFORCEMENTS:
-                    if (fatalOnly)
-                    {
-                        errors.Add(prefix + "Action " + nr + ": There is no team type set to reinforce.");
-                    }
+                    errors.Add(prefix + "Action " + nr + ": There is no team type set to reinforce.");
                     break;
                 case ActionTypes.TACTION_CREATE_TEAM:
-                    errors.Add(prefix + (fatalOnly ? String.Empty : "[FATAL] - ") + "Action " + nr + ": There is no team type set to create.");
-                    fatal = true;
+                    errors.Add(prefix + "Action " + nr + ": There is no team type set to create.");
                     break;
                 case ActionTypes.TACTION_DESTROY_TEAM:
-                    if (fatalOnly)
-                    {
-                        errors.Add(prefix + "Action " + nr + ": There is no team type set to disband.");
-                    }
+                    errors.Add(prefix + "Action " + nr + ": There is no team type set to disband.");
                     break;
             }
         }
 
         private void CheckActionTrigger(string prefix, TriggerAction action, List<string> errors, Int32 nr, ref bool fatal, bool fatalOnly)
         {
-            if (!Trigger.IsEmpty(action.Trigger))
-                return;
-            if (!fatalOnly)
+            if (!Trigger.IsEmpty(action.Trigger) || fatalOnly)
             {
-                switch (action.ActionType)
-                {
-                    case ActionTypes.TACTION_FORCE_TRIGGER:
-                        errors.Add(prefix + "Action " + nr + ": There is no trigger set to force.");
-                        break;
-                    case ActionTypes.TACTION_DESTROY_TRIGGER:
-                        errors.Add(prefix + "Action " + nr + ": There is no trigger set to destroy.");
-                        break;
-                }
+                return;
+            }
+            switch (action.ActionType)
+            {
+                case ActionTypes.TACTION_FORCE_TRIGGER:
+                    errors.Add(prefix + "Action " + nr + ": There is no trigger set to force.");
+                    break;
+                case ActionTypes.TACTION_DESTROY_TRIGGER:
+                    errors.Add(prefix + "Action " + nr + ": There is no trigger set to destroy.");
+                    break;
             }
         }
 

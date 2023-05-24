@@ -75,6 +75,7 @@ You can find the mod [on the Steam workshop](https://steamcommunity.com/sharedfi
 
 These options are all enabled by default, but can be disabled if you wish. Use these at your own risk.
 
+* **EnforceObjectMaximums**: (NEXT VERSION; NOT AVAILABLE YET) Don't allow saving a map if any of the the object amounts exceed the normal internal maximums of the game. Can be disabled in case a mission is specifically meant to be played on a modded game that increases these limits.
 * **Ignore106Scripting**: Don't support the extended scripting added by the C&C95 v1.06 patch. If this option is disabled, additional triggers named UUUU, VVVV and WWWW can also be destroyed with "Dstry Trig" actions.
 * **NoMetaFilesForSinglePlay**: Suppresses the generation of .tga and .json files for single player maps saved to disc, since they are useless clutter and unused by the game. This does not affect Steam uploads. Note that json files for single player maps will now only contain the Home waypoint.
 * **ConvertRaObsoleteClear**: Automatically clear tiles with ID 255 on RA Temperate/Snow maps, or on Interior maps if more than 80% of the area outside the map bounds is filled with it, to fix the fact old versions of RA saved that as Clear terrain. This can be disabled to research changes on old maps.

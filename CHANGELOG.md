@@ -463,3 +463,4 @@ Unreleased
 * Migrated resource randomisation from the map renderer to the density-update logic, so the actual objects don't always show as "TI01" / "GOLD01" / "GEM01".
 * Changed TD Technology Center to its real name, instead of "Prison".
 * Added reference to GraphicsFixesRA mod.
+* Added "EnforceObjectMaximums" setting that can be disabled to remove save checks on object maximums.

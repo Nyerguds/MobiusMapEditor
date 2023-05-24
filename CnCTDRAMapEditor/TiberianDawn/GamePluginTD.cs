@@ -2743,39 +2743,39 @@ namespace MobiusEditor.TiberianDawn
             int maxTer = classicSole ? Constants.MaxTerrainClassic : Constants.MaxTerrain;
             int maxUni = classicSole ? Constants.MaxUnitsClassic : Constants.MaxUnits;
             bool noSoleSkip = !forSole || !Globals.NoOwnedObjectsInSole;
-            if (!Globals.DisableAirUnits && numAircraft > maxAir && noSoleSkip)
+            if (!Globals.DisableAirUnits && numAircraft > maxAir && noSoleSkip && Globals.EnforceObjectMaximums)
             {
                 sb.AppendLine().Append(string.Format("Maximum number of aircraft exceeded ({0} > {1})", numAircraft, maxAir));
                 ok = false;
             }
-            if (numBuildings > maxBld && noSoleSkip)
+            if (numBuildings > maxBld && noSoleSkip && Globals.EnforceObjectMaximums)
             {
                 sb.AppendLine().Append(string.Format("Maximum number of structures exceeded ({0} > {1})", numBuildings, maxBld));
                 ok = false;
             }
-            if (numInfantry > maxInf && noSoleSkip)
+            if (numInfantry > maxInf && noSoleSkip && Globals.EnforceObjectMaximums)
             {
                 sb.AppendLine().Append(string.Format("Maximum number of infantry exceeded ({0} > {1})", numInfantry, maxInf));
                 ok = false;
             }
-            if (numTerrain > maxTer)
+            if (numTerrain > maxTer && Globals.EnforceObjectMaximums)
             {
                 sb.AppendLine().Append(string.Format("Maximum number of terrain objects exceeded ({0} > {1})", numTerrain, maxTer));
                 ok = false;
             }
-            if (numUnits > maxUni && noSoleSkip)
+            if (numUnits > maxUni && noSoleSkip && Globals.EnforceObjectMaximums)
             {
                 sb.AppendLine().Append(string.Format("Maximum number of units exceeded ({0} > {1})", numUnits, maxUni));
                 ok = false;
             }
             if (!forSole)
             {
-                if (Map.TeamTypes.Count > Constants.MaxTeams)
+                if (Map.TeamTypes.Count > Constants.MaxTeams && Globals.EnforceObjectMaximums)
                 {
                     sb.AppendLine().Append(string.Format("Maximum number of team types exceeded ({0} > {1})", Map.TeamTypes.Count, Constants.MaxTeams));
                     ok = false;
                 }
-                if (Map.Triggers.Count > Constants.MaxTriggers)
+                if (Map.Triggers.Count > Constants.MaxTriggers && Globals.EnforceObjectMaximums)
                 {
                     sb.AppendLine().Append(string.Format("Maximum number of triggers exceeded ({0} > {1})", Map.Triggers.Count, Constants.MaxTriggers));
                     ok = false;
