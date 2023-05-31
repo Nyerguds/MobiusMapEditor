@@ -3201,21 +3201,21 @@ namespace MobiusEditor.TiberianDawn
             return String.IsNullOrEmpty(name) || "None".Equals(name, StringComparison.OrdinalIgnoreCase);
         }
 
-        public virtual bool EvaluateBriefing(string briefing, out string message)
+        public virtual string EvaluateBriefing(string briefing)
         {
-            message = null;
+            string message = null;
             if (!Globals.WriteClassicBriefing)
             {
-                return true;
+                return null;
             }
-            string briefText = briefing.Replace('\t', ' ').Trim('\r', '\n', ' ').Replace("\r\n", "\r").Replace("\n", "\r");
+            string briefText = (briefing ?? String.Empty).Replace('\t', ' ').Trim('\r', '\n', ' ').Replace("\r\n", "\n").Replace("\r", "\n");
             // Remove duplicate spaces
             briefText = Regex.Replace(briefText, " +", " ");
             if (briefText.Length > maxBriefLengthClassic)
             {
                 message = "Classic Tiberian Dawn briefings cannot exceed " + maxBriefLengthClassic + " characters. This includes line breaks.\n\nThis will not affect the mission when playing in the Remaster, but the briefing will be truncated when playing in the original game.";
             }
-            return message == null;
+            return message;
         }
 
         protected void BasicSection_PropertyChanged(object sender, PropertyChangedEventArgs e)

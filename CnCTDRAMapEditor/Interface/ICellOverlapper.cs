@@ -18,7 +18,9 @@ namespace MobiusEditor.Interface
 {
     public interface ICellOverlapper
     {
+        /// <summary>Rectangular bounds of this overlapper.</summary>
         Rectangle OverlapBounds { get; }
+        /// <summary>Determines for each cell whether other graphics drawn under this one are considered to be mostly visible.</summary>
         bool[,] OpaqueMask { get; }
     }
 }

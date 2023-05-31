@@ -16,11 +16,17 @@ namespace MobiusEditor.Interface
 {
     public interface ITechnoType: IBrowsableType
     {
+        /// <summary>Object ID</summary>
         sbyte ID { get; }
+        /// <summary>Object ini name</summary>
         string Name { get; }
+        /// <summary>True if this object has a weapon. This affects the default orders for placing it on the map.</summary>
         bool IsArmed { get; }
+        /// <summary>True if this object is an aircraft, and is normally not placeable on the map.</summary>
         bool IsAircraft { get; }
+        /// <summary>True if this object is a fixed-wing aircraft. This treats it as 16-frame rotation, and affects the default orders for placing it on the map.</summary>
         bool IsFixedWing { get; }
+        /// <summary>True if this object can harvest resources. This affects the default orders for placing it on the map.</summary>
         bool IsHarvester { get; }
     }
 }

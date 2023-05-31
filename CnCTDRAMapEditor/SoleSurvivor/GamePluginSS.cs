@@ -275,10 +275,9 @@ namespace MobiusEditor.SoleSurvivor
             return info;
         }
 
-        public override Boolean EvaluateBriefing(string briefing, out string message)
+        public override string EvaluateBriefing(string briefing)
         {
-            message = null;
-            return true;
+            return null;
         }
     }
 }

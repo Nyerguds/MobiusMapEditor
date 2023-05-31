@@ -2314,7 +2314,7 @@ namespace MobiusEditor.RedAlert
             {
                 return changed;
             }
-            List<(Point p, Building b)> foundBuildings = buildings.Where(lo => bType.Name.Equals(lo.Occupier.Type.Name, StringComparison.InvariantCultureIgnoreCase))
+            List<(Point p, Building b)> foundBuildings = buildings.Where(lo => bType.ID == lo.Occupier.Type.ID)
                 .OrderBy(lo => lo.Location.Y * map.Metrics.Width + lo.Location.X).ToList();
             bType.HasBib = hasBib;
             foreach ((Point p, Building b) in foundBuildings)
@@ -2535,7 +2535,7 @@ namespace MobiusEditor.RedAlert
             }
             string nameToIndexString<T>(IList<T> list, string name) => nameToIndex(list, name).ToString();
             INISection teamTypesSection = ini.Sections.Add("TeamTypes");
-            foreach (TeamType teamType in Map.TeamTypes.OrderBy(t => t.Name.ToUpperInvariant()))
+            foreach (TeamType teamType in Map.TeamTypes)
             {
                 string[] classes = teamType.Classes
                     .Select(c => string.Format("{0}:{1}", c.Type.Name.ToUpperInvariant(), c.Count))
@@ -3586,19 +3586,19 @@ namespace MobiusEditor.RedAlert
             return String.IsNullOrEmpty(name) || "<none>".Equals(name, StringComparison.OrdinalIgnoreCase);
         }
 
-        public bool EvaluateBriefing(string briefing, out string message)
+        public string EvaluateBriefing(string briefing)
         {
             bool briefLenOvfl = false;
             bool briefLenSplitOvfl = false;
             const int cutoff = 40;
-            string brief = briefing.Replace('\t', ' ').Trim('\r', '\n', ' ').Replace("\r\n", "\n").Replace("\r", "\n");
-            int lines = brief.Count(c => c == '\n') + 1;
+            string briefText = (briefing ?? String.Empty).Replace('\t', ' ').Trim('\r', '\n', ' ').Replace("\r\n", "\n").Replace("\r", "\n");
+            int lines = briefText.Count(c => c == '\n') + 1;
             briefLenOvfl = lines > 25;
             if (!briefLenOvfl)
             {
                 // split in lines of 40; that's more or less the average line length in the brief screen.
                 List<string> txtLines = new List<string>();
-                string[] briefLines = brief.Split('\n');
+                string[] briefLines = briefText.Split('\n');
                 for (int i = 0; i < briefLines.Length; ++i)
                 {
                     string line = briefLines[i].Trim();
@@ -3627,7 +3627,7 @@ namespace MobiusEditor.RedAlert
                 briefLenSplitOvfl = txtLines.Count > 25;
             }
             const string warn25Lines = "Red Alert's briefing screen in the Remaster can only show 25 lines of briefing text. ";
-            message = null;
+            string message = null;
             if (briefLenOvfl)
             {
                 message = warn25Lines + "Your current briefing exceeds that.";
@@ -3636,7 +3636,7 @@ namespace MobiusEditor.RedAlert
             {
                 message = warn25Lines + "The lines average to about 40 characters per line, and when split that way, your current briefing exceeds that, meaning it will most likely not display correctly in-game.";
             }
-            if (Globals.WriteClassicBriefing && brief.Length > maxBriefLengthClassic)
+            if (Globals.WriteClassicBriefing && briefText.Length > maxBriefLengthClassic)
             {
                 if (message == null)
                 {
@@ -3648,7 +3648,7 @@ namespace MobiusEditor.RedAlert
                 }
                 message += "Classic Red Alert briefings cannot exceed " + maxBriefLengthClassic + " characters. This includes line breaks.\n\nThis will not affect the mission when playing in the Remaster, but the briefing will be truncated when playing in the original game.";
             }
-            return message != null;
+            return message;
         }
 
         private void BasicSection_PropertyChanged(object sender, PropertyChangedEventArgs e)

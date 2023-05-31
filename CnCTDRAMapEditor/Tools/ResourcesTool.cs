@@ -35,7 +35,6 @@ namespace MobiusEditor.Tools
         /// </summary>
         protected override MapLayerFlag ManuallyHandledLayers => MapLayerFlag.None;
 
-        private readonly Label totalResourcesLbl;
         private readonly Label boundsResourcesLbl;
         private readonly NumericUpDown brushSizeNud;
         private readonly CheckBox gemsCheckBox;
@@ -51,11 +50,10 @@ namespace MobiusEditor.Tools
         private readonly Dictionary<int, Overlay> undoOverlays = new Dictionary<int, Overlay>();
         private readonly Dictionary<int, Overlay> redoOverlays = new Dictionary<int, Overlay>();
 
-        public ResourcesTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, Label totalResourcesLbl, Label boundsResourcesLbl,
+        public ResourcesTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, Label boundsResourcesLbl,
             NumericUpDown brushSizeNud, CheckBox gemsCheckBox, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> url)
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
-            this.totalResourcesLbl = totalResourcesLbl;
             this.boundsResourcesLbl = boundsResourcesLbl;
             this.brushSizeNud = brushSizeNud;
             this.gemsCheckBox = gemsCheckBox;
@@ -315,11 +313,7 @@ namespace MobiusEditor.Tools
 
         private void Update()
         {
-            if (totalResourcesLbl != null)
-            {
-                totalResourcesLbl.Text = map.TotalResources.ToString();
-            }
-            boundsResourcesLbl.Text = map.ResourcesInBounds.ToString();
+            boundsResourcesLbl.Text = map.ResourcesOnMap.ToString();
             if (map.OverlayTypes.Any(t => t.IsGem))
             {
                 gemsCheckBox.Visible = true;

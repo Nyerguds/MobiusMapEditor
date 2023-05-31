@@ -25,12 +25,27 @@ namespace MobiusEditor.Model
     [Flags]
     public enum TemplateTypeFlag
     {
+        /// <summary>No flags set.</summary>
         None           = 0,
+        /// <summary>Used to filter out default terrain.</summary>
         Clear          = (1 << 0),
         Water          = (1 << 1),
+        /// <summary>This tileset is 1x1, and any additional tiles it contains are treated as randomisable alternate tiles, not as parts of a larger shape.</summary>
         RandomCell     = (1 << 2),
+        /// <summary>
+        /// This is a virtual tileset group, used to group together loose equivalent 1x1 tiles as randomisable. It should never actually be placed down on the map.
+        /// GroupTiles will contain all tiles that are part of this group.
+        /// </summary>
         Group          = RandomCell | (1 << 3),
+        /// <summary>
+        /// This tile is a 1x1 tile that has a bunch of equivalent alternates, and because of that, it is grouped in a virtual tileset group as randomisable.
+        /// GroupTiles will contain the group it belongs to, so picking it from the map can easily select the group it belongs to.
+        /// </summary>
         IsGrouped      = (1 << 4),
+        /// <summary>
+        /// This tileset has equivalent tilesets, and when drag-placing this, it will switch to randomly placing the alternates as well.
+        /// GroupTiles contains all equivalents that can be used.
+        /// </summary>
         HasEquivalents = (1 << 5),
     }
 
@@ -200,8 +215,8 @@ namespace MobiusEditor.Model
         /// <param name="iconHeight">Height in cells.</param>
         /// <param name="theaters">Theaters that contain this tile.</param>
         /// <param name="maskOverrides">Mask override for tiles that contain too many graphics in the Remaster. Indices with '0' are removed from the tiles. Spaces are ignored and can be added for visual separation.</param>
-        /// <param name="equivalentOffset"></param>
-        /// <param name="equivalentTiles"></param>
+        /// <param name="equivalentOffset">Thez position this tileset should be placed on when used as equivalent.</param>
+        /// <param name="equivalentTiles">Equivalent tiles that can be placed down when drag-placing multiple of this.</param>
         public TemplateType(ushort id, string name, int iconWidth, int iconHeight, TheaterType[] theaters, string[] maskOverrides, Point equivalentOffset, string[] equivalentTiles)
             : this(id, name, iconWidth, iconHeight, theaters, TemplateTypeFlag.None, maskOverrides)
         {
@@ -230,7 +245,6 @@ namespace MobiusEditor.Model
         {
         }
 
-
         /// <summary>
         /// Creates a TemplateType object.
         /// </summary>
@@ -244,6 +258,7 @@ namespace MobiusEditor.Model
             : this(id, name, iconWidth, iconHeight, theaters, TemplateTypeFlag.None, maskOverride)
         {
         }
+        
         /// <summary>
         /// Creates a TemplateType object.
         /// </summary>
@@ -293,7 +308,6 @@ namespace MobiusEditor.Model
             {
                 return string.Equals(Name, obj as string, StringComparison.OrdinalIgnoreCase);
             }
-
             return base.Equals(obj);
         }
 

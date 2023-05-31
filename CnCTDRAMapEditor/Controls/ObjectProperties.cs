@@ -138,8 +138,8 @@ namespace MobiusEditor.Controls
                 case Building building:
                     isOnMap = building.IsPrebuilt;
                     items = Plugin.Map.FilterStructureTriggers().Select(t => t.Name).Distinct().ToArray();
-                    filteredEvents = Plugin.Map.EventTypes.Where(ac => Plugin.Map.StructureEventTypes.Contains(ac)).Distinct().ToArray();
-                    filteredActions = Plugin.Map.ActionTypes.Where(ac => Plugin.Map.StructureActionTypes.Contains(ac)).Distinct().ToArray();
+                    filteredEvents = Plugin.Map.EventTypes.Where(ac => Plugin.Map.BuildingEventTypes.Contains(ac)).Distinct().ToArray();
+                    filteredActions = Plugin.Map.ActionTypes.Where(ac => Plugin.Map.BuildingActionTypes.Contains(ac)).Distinct().ToArray();
                     break;
                 default:
                     items = Plugin.Map.Triggers.Select(t => t.Name).Distinct().ToArray();

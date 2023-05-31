@@ -254,7 +254,8 @@ namespace MobiusEditor.Dialogs
             briefingSettingsTracker.TryGetMember("Briefing", out object brf);
             if (brf is String brief)
             {
-                if (!plugin.EvaluateBriefing(brief, out String message) && !String.IsNullOrEmpty(message))
+                string message = plugin.EvaluateBriefing(brief);
+                if (message != null)
                 {
                     message += "\n\nPress Cancel to go back and edit the briefing, or OK to ignore the issue and continue.";
                     DialogResult dres = MessageBox.Show(message, "Warning", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1);

@@ -24,17 +24,28 @@ namespace MobiusEditor.Model
     [Flags]
     public enum OverlayTypeFlag
     {
+        /// <summary>No flags set.</summary>
         None            = 0,
+        /// <summary>Is a basic resource overlay.</summary>
         TiberiumOrGold  = (1 << 0),
+        /// <summary>Is a high value resource overlay.</summary>
         Gems            = (1 << 1),
+        /// <summary>Is a wall.</summary>
         Wall            = (1 << 2),
+        /// <summary>Is a wooden crate. This affects the color of the outline it gets.</summary>
         WoodCrate       = (1 << 3),
+        /// <summary>Is a steel crate. This affects the color of the outline it gets.</summary>
         SteelCrate      = (1 << 4),
+        /// <summary>Is the flag placement indicator.</summary>
         Flag            = (1 << 5),
+        /// <summary>Is a pavement type.</summary>
         Pavement        = (1 << 6),
+        /// <summary>Needs to use the special concrete pavement connection logic.</summary>
         Concrete        = (1 << 7),
+        /// <summary>Is a solid object that obstructs placement.</summary>
         Solid           = (1 << 8),
-        Crate = WoodCrate | SteelCrate,
+        /// <summary>Is a crate.</summary>
+        Crate           = WoodCrate | SteelCrate,
     }
 
     public class OverlayType : ICellOccupier, IBrowsableType

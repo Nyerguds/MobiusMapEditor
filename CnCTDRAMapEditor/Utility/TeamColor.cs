@@ -30,12 +30,6 @@ namespace MobiusEditor.Utility
 
         public string Name { get; private set; }
 
-        private byte[] classicRemap;
-        public byte[] ClassicRemap => classicRemap ?? (Variant == null ? null : teamColorManager.GetItem(Variant)?.ClassicRemap);
-
-        private byte[] classicRemapStructures;
-        public byte[] ClassicRemapStructures => classicRemapStructures ?? (Variant == null ? null : teamColorManager.GetItem(Variant)?.ClassicRemapStructures);
-
         private Color? lowerBounds;
         public Color LowerBounds => lowerBounds.HasValue ? lowerBounds.Value : ((Variant != null) ? teamColorManager.GetItem(Variant).LowerBounds : default);
 
@@ -100,8 +94,6 @@ namespace MobiusEditor.Utility
         {
             this.Name = col.Name;
             this.Variant = col.Variant;
-            this.classicRemap = col.ClassicRemap;
-            this.classicRemapStructures = col.ClassicRemapStructures;
             this.lowerBounds = col.LowerBounds;
             this.upperBounds = col.UpperBounds;
             this.fudge = col.Fudge;
@@ -126,14 +118,6 @@ namespace MobiusEditor.Utility
             this.overallInputLevels = overallInputLevels;
             this.overallOutputLevels = overallOutputLevels;
             this.radarMapColor = radarMapColor;
-        }
-
-        public void Load(string name, string variant, byte[] classicRemap, byte[] classicRemapStructures)
-        {
-            this.Name = name;
-            this.Variant = variant;
-            this.classicRemap = classicRemap;
-            this.classicRemapStructures = classicRemapStructures;        
         }
 
         public void Load(string xml)
@@ -262,17 +246,27 @@ namespace MobiusEditor.Utility
 
         public void ApplyToImage(Bitmap image, out Rectangle opaqueBounds)
         {
+            if (image == null)
+            {
+                opaqueBounds = Rectangle.Empty;
+                return;
+            }
+            int bytesPerPixel = Image.GetPixelFormatSize(image.PixelFormat) / 8;
+            if (bytesPerPixel != 3 && bytesPerPixel != 4)
+            {
+                opaqueBounds = new Rectangle(Point.Empty, image.Size);
+                return;
+            }
             BitmapData data = null;
             try
             {
                 data = image.LockBits(new Rectangle(0, 0, image.Width, image.Height), ImageLockMode.ReadWrite, image.PixelFormat);
-                var bytesPerPixel = Image.GetPixelFormatSize(data.PixelFormat) / 8;
-                var bytes = new byte[data.Stride * data.Height];
+                byte[] bytes = new byte[data.Stride * data.Height];
                 Marshal.Copy(data.Scan0, bytes, 0, bytes.Length);
                 int width = data.Width;
                 int height = data.Height;
                 int stride = data.Stride;
-                opaqueBounds = ImageUtils.CalculateOpaqueBounds(bytes, width, height, bytesPerPixel, stride);
+                opaqueBounds = ImageUtils.CalculateOpaqueBoundsHiCol(bytes, width, height, bytesPerPixel, stride);
                 ApplyToImage(bytes, width, height, bytesPerPixel, stride, opaqueBounds);
                 Marshal.Copy(bytes, 0, data.Scan0, bytes.Length);
             }
@@ -287,26 +281,32 @@ namespace MobiusEditor.Utility
 
         public void ApplyToImage(byte[] bytes, int width, int height, int bytesPerPixel, int stride, Rectangle? opaqueBounds)
         {
+            // Only handle 24bpp and 32bpp data.
+            if (bytesPerPixel != 3 && bytesPerPixel != 4)
+            {
+                return;
+            }
             Rectangle bounds = opaqueBounds ?? new Rectangle(0, 0, width, height);
             float frac(float x) => x - (int)x;
             float lerp(float x, float y, float t) => (x * (1.0f - t)) + (y * t);
             float saturate(float x) => Math.Max(0.0f, Math.Min(1.0f, x));
-                // Precalculate some stuff.
-                var lowerHue = this.LowerBounds.GetHue() / 360.0f;
-                var upperHue = this.UpperBounds.GetHue() / 360.0f;
-                var lowerHueFudge = lowerHue - this.Fudge;
-                var upperHueFudge = upperHue + this.Fudge;
-                var hueError = (upperHueFudge - lowerHueFudge) / (upperHue - lowerHue);
-                var hueShift = this.HSVShift.X;
-                var satShift = this.HSVShift.Y;
-                var valShift = this.HSVShift.Z;
-                // Optimisation: since we got the opaque bounds calculated anyway, might as well use them and only process what's inside.
-                int lineStart = bounds.Top * stride;
+            // Precalculate some stuff.
+            var lowerHue = this.LowerBounds.GetHue() / 360.0f;
+            var upperHue = this.UpperBounds.GetHue() / 360.0f;
+            var lowerHueFudge = lowerHue - this.Fudge;
+            var upperHueFudge = upperHue + this.Fudge;
+            var hueError = (upperHueFudge - lowerHueFudge) / (upperHue - lowerHue);
+            var hueShift = this.HSVShift.X;
+            var satShift = this.HSVShift.Y;
+            var valShift = this.HSVShift.Z;
+            // Optimisation: since we got the opaque bounds calculated anyway, might as well use them and only process what's inside.
+            int lineStart = bounds.Top * stride;
             for (int y = bounds.Top; y < bounds.Bottom; y++)
             {
                 int addr = lineStart + bounds.Left * bytesPerPixel;
-                for (int x = bounds.Left; x < width; ++x)
+                for (int x = bounds.Left; x < bounds.Right; ++x)
                 {
+                    // 4-byte pixel = [B,G,R,A]. This code remains the same if it's 24 bpp since the alpha byte is never processed.
                     var pixel = Color.FromArgb(bytes[addr + 2], bytes[addr + 1], bytes[addr + 0]);
                     (float r, float g, float b) = (pixel.R.ToLinear(), pixel.G.ToLinear(), pixel.B.ToLinear());
                     (float x, float y, float z, float w) K = (0.0f, -1.0f / 3.0f, 2.0f / 3.0f, -1.0f);

@@ -23,7 +23,6 @@ namespace MobiusEditor.Tools.Dialogs
 {
     public partial class ResourcesToolDialog : ToolDialog<ResourcesTool>
     {
-        //public Label TotalResourcesLbl => lblResTotalVal;
         public Label BoundsResourcesLbl => lblResBoundsVal;
 
         public NumericUpDown ResourceBrushSizeNud => nudBrushSize;
@@ -38,7 +37,7 @@ namespace MobiusEditor.Tools.Dialogs
         protected override void InitializeInternal(MapPanel mapPanel, MapLayerFlag activeLayers, ToolStripStatusLabel toolStatusLabel,
             ToolTip mouseToolTip, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> undoRedoList)
         {
-            Tool = new ResourcesTool(mapPanel, activeLayers, toolStatusLabel, null, BoundsResourcesLbl,
+            Tool = new ResourcesTool(mapPanel, activeLayers, toolStatusLabel, BoundsResourcesLbl,
                 ResourceBrushSizeNud, GemsCheckBox, plugin, undoRedoList);
         }
     }

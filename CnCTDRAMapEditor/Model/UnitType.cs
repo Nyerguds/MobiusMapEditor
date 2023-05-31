@@ -23,14 +23,23 @@ namespace MobiusEditor.Model
     [Flags]
     public enum UnitTypeFlag
     {
+        /// <summary>No flags set.</summary>
         None            = 0,
+        /// <summary>Is a fixed-wing airplane. This treats it as 16-frame rotation, and affects the default orders for placing it on the map.</summary>
         IsFixedWing     = 1 << 0,
+        /// <summary>Has a turret drawn on the unit.</summary>
         HasTurret       = 1 << 1,
+        /// <summary>Needs to render two turrets.</summary>
         HasDoubleTurret = 1 << 2,
+        /// <summary>Can attack units. This affects the default orders for placing it on the map.</summary>
         IsArmed         = 1 << 3,
+        /// <summary>Can harvest resources. This affects the default orders for placing it on the map.</summary>
         IsHarvester     = 1 << 4,
+        /// <summary>Is a unit that is filtered out of the lists if expansion units are disabled.</summary>
         IsExpansionUnit = 1 << 5,
+        /// <summary>Can show a mobile gap area-of-effect radius indicator.</summary>
         IsGapGenerator  = 1 << 6,
+        /// <summary>Can show a radar jamming area-of-effect radius indicator.</summary>
         IsJammer        = 1 << 7,
     }
 

@@ -24,14 +24,23 @@ namespace MobiusEditor.Model
     [Flags]
     public enum BuildingTypeFlag
     {
+        /// <summary>No flags set.</summary>
         None           = 0,
+        /// <summary>Produces structures.</summary>
         Factory        = (1 << 0),
+        /// <summary>Has a bib attached.</summary>
         Bib            = (1 << 1),
+        /// <summary>Is a fake building.</summary>
         Fake           = (1 << 2),
+        /// <summary>Has a rotating turret, and accepts a Facing value in the ini file.</summary>
         Turret         = (1 << 3),
+        /// <summary>Only has a single frame of graphics.</summary>
         SingleFrame    = (1 << 4),
+        /// <summary>Does not adjust to house colors.</summary>
         NoRemap        = (1 << 5),
+        /// <summary>Is flat on the ground; anything around will overlap this building's graphics.</summary>
         Flat           = (1 << 6),
+        /// <summary>Can show a gap area-of-effect radius indicator.</summary>
         IsGapGenerator = (1 << 7),
     }
 
@@ -70,7 +79,8 @@ namespace MobiusEditor.Model
             get { return (Flag & BuildingTypeFlag.Bib) == BuildingTypeFlag.Bib; }
             set
             {
-                if (value)
+                // Bibs are only supported for widths 2 to 4
+                if (value && Size.Width >= 2 && Size.Width <= 4)
                 {
                     Flag |= BuildingTypeFlag.Bib;
                 }
@@ -118,7 +128,8 @@ namespace MobiusEditor.Model
             this.OwnerHouse = ownerHouse;
             this.Theaters = theaters;
             this.FactoryOverlay = factoryOverlay;
-            this.RecalculateBibs();
+            // Check on width and disable if needed. This also calls RecalculateBibs.
+            this.HasBib = this.HasBib;
         }
 
         public BuildingType(sbyte id, string name, string textId, int powerProd, int powerUse, int width, int height, string occupyMask, string ownerHouse, TheaterType[] theaters, String graphicsSource, BuildingTypeFlag flag)

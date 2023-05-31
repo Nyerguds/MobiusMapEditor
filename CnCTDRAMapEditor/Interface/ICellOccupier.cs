@@ -16,6 +16,7 @@ namespace MobiusEditor.Interface
 {
     public interface ICellOccupier
     {
+        /// <summary>Footprint of this object, determining where no other objects can be placed.</summary>
         bool[,] OccupyMask { get; }
     }
 }

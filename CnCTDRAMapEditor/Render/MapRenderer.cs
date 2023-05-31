@@ -752,21 +752,22 @@ namespace MobiusEditor.Render
                 string turret2Name = unit.Type.HasDoubleTurret ? unit.Type.SecondTurret ?? unit.Type.Turret ?? unit.Type.Name : null;
                 int turretIcon = unit.Type.Name.Equals(turretName, StringComparison.OrdinalIgnoreCase) ? icon + 32 : icon;
                 int turret2Icon = unit.Type.Name.Equals(turret2Name, StringComparison.OrdinalIgnoreCase) ? icon + 32 : icon;
+                // Special frame handling
                 if (gameType == GameType.RedAlert)
                 {
-                    if (unit.Type == RedAlert.UnitTypes.Phase)
+                    if (unit.Type.ID == RedAlert.UnitTypes.Phase.ID)
                     {
                         // Compensate for unload frames.
                         turretIcon += 6;
                     }
-                    else if (unit.Type == RedAlert.UnitTypes.MGG)
+                    else if (unit.Type.ID == RedAlert.UnitTypes.MGG.ID)
                     {
                         // 16-frame rotation, but saved as 8 frames because the other 8 are identical.
                         turretIcon = 32 + ((icon / 2) & 7);
                     }
-                    else if (unit.Type == RedAlert.UnitTypes.Tesla)
+                    else if (unit.Type.ID == RedAlert.UnitTypes.Tesla.ID)
                     {
-                        // Fixed turret frame.
+                        // turret is an animation rather than a rotation; always take the first frame.
                         turretIcon = 32;
                     }
                 }
@@ -874,26 +875,26 @@ namespace MobiusEditor.Render
                                 turret2Adjust.Y += unit.Type.TurretY;
                             }                            
                             Point center = new Point(renderBounds.Width / 2, renderBounds.Height / 2);
-                            if (turretTile != null) {
-                                Size turretSize = turretTile.Image.Size;
-                                var turretRenderSize = new Size(turretSize.Width * tileSize.Width / Globals.OriginalTileWidth, turretSize.Height * tileSize.Height / Globals.OriginalTileHeight);
-                                var turretBounds = new Rectangle(center - new Size(turretRenderSize.Width / 2, turretRenderSize.Height / 2), turretRenderSize);
-                                turretBounds.Offset(
-                                    turretAdjust.X * tileSize.Width / Globals.PixelWidth,
-                                    turretAdjust.Y * tileSize.Height / Globals.PixelHeight
+
+                            void RenderTurret(Graphics ug, Tile turrTile, Point turrAdjust, Size tSize)
+                            {
+                                Size turretSize = turrTile.Image.Size;
+                                var turretRenderSize = new Size(turretSize.Width * tSize.Width / Globals.OriginalTileWidth, turretSize.Height * tSize.Height / Globals.OriginalTileHeight);
+                                var turrBounds = new Rectangle(center - new Size(turretRenderSize.Width / 2, turretRenderSize.Height / 2), turretRenderSize);
+                                turrBounds.Offset(
+                                    turrAdjust.X * tSize.Width / Globals.PixelWidth,
+                                    turrAdjust.Y * tSize.Height / Globals.PixelHeight
                                 );
-                                unitG.DrawImage(turretTile.Image, turretBounds, 0, 0, turretTile.Image.Width, turretTile.Image.Height, GraphicsUnit.Pixel); 
+                                ug.DrawImage(turrTile.Image, turrBounds, 0, 0, turrTile.Image.Width, turrTile.Image.Height, GraphicsUnit.Pixel);
+                            }
+
+                            if (turretTile != null)
+                            {
+                                RenderTurret(unitG, turretTile, turretAdjust, tileSize);
                             }
                             if (unit.Type.HasDoubleTurret && turret2Tile != null)
                             {
-                                Size turret2Size = turret2Tile.Image.Size;
-                                var turret2RenderSize = new Size(turret2Size.Width * tileSize.Width / Globals.OriginalTileWidth, turret2Size.Height * tileSize.Height / Globals.OriginalTileHeight);
-                                var turret2Bounds = new Rectangle(center - new Size(turret2RenderSize.Width / 2, turret2RenderSize.Height / 2), turret2RenderSize);
-                                turret2Bounds.Offset(
-                                    turret2Adjust.X * tileSize.Width / Globals.PixelWidth,
-                                    turret2Adjust.Y * tileSize.Height / Globals.PixelHeight
-                                );
-                                unitG.DrawImage(turret2Tile.Image, turret2Bounds, 0, 0, turret2Tile.Image.Width, turret2Tile.Image.Height, GraphicsUnit.Pixel);
+                                RenderTurret(unitG, turret2Tile, turret2Adjust, tileSize);
                             }
                         }
                     }
@@ -1571,7 +1572,7 @@ namespace MobiusEditor.Render
             {
                 return;
             }
-            ITeamColor tc = building.Type.CanRemap ? Globals.TheTeamColorManager[building.House.BuildingTeamColor] : null;
+            ITeamColor tc = Globals.TheTeamColorManager[building.House.BuildingTeamColor];
             Color circleColor = tc?.BaseColor ?? Globals.TheTeamColorManager.RemapBaseColor;
             bool[,] cells = building.Type.BaseOccupyMask;
             int maskY = cells.GetLength(0);
@@ -1599,12 +1600,7 @@ namespace MobiusEditor.Render
             {
                 return;
             }
-            String teamColor;
-            if (!unit.House.OverrideTeamColors.TryGetValue(unit.Type.Name, out teamColor))
-            {
-                teamColor = unit.House.UnitTeamColor;
-            }
-            ITeamColor tc = Globals.TheTeamColorManager[teamColor];
+            ITeamColor tc = Globals.TheTeamColorManager[unit.House.BuildingTeamColor];
             Color circleColor = tc?.BaseColor ?? Globals.TheTeamColorManager.RemapBaseColor;
             Color alphacorr = Color.FromArgb(unit.Tint.A * 128 / 256, circleColor);
             if (isJammer)

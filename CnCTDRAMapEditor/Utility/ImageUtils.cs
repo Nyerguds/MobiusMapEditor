@@ -379,11 +379,36 @@ namespace MobiusEditor.Utility
             BitmapData data = null;
             try
             {
-                data = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height), ImageLockMode.ReadWrite, bitmap.PixelFormat);
-                var bpp = Image.GetPixelFormatSize(data.PixelFormat) / 8;
+                PixelFormat dataFormat = bitmap.PixelFormat;
+                if (dataFormat == PixelFormat.Format24bppRgb || dataFormat == PixelFormat.Format32bppRgb)
+                {
+                    return new Rectangle(0, 0, bitmap.Width, bitmap.Height);
+                }
+                List<int> transColors = null;
+                if ((dataFormat & PixelFormat.Indexed) == PixelFormat.Indexed)
+                {
+                    dataFormat = PixelFormat.Format8bppIndexed;
+                    Color[] entries = bitmap.Palette.Entries;
+                    transColors = new List<int>();
+                    for (Int32 i = 0; i < entries.Length; i++)
+                    {
+                        if (entries[i].A == 0)
+                            transColors.Add(i);
+                    }
+                }
+                
+                data = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height), ImageLockMode.ReadWrite, dataFormat);
                 var bytes = new byte[data.Stride * data.Height];
                 Marshal.Copy(data.Scan0, bytes, 0, bytes.Length);
-                return ImageUtils.CalculateOpaqueBounds(bytes, data.Width, data.Height, bpp, data.Stride);
+                if (bitmap.PixelFormat == PixelFormat.Format8bppIndexed)
+                {
+                    return CalculateOpaqueBounds8bpp(bytes, data.Width, data.Height, data.Stride, transColors);
+                }
+                else
+                {
+                    var bpp = Image.GetPixelFormatSize(dataFormat) / 8;
+                    return CalculateOpaqueBoundsHiCol(bytes, data.Width, data.Height, bpp, data.Stride);
+                }
             }
             finally
             {
@@ -394,8 +419,22 @@ namespace MobiusEditor.Utility
             }
         }
 
-        public static Rectangle CalculateOpaqueBounds(byte[] data, int width, int height, int bytespp, int stride)
+        /// <summary>
+        /// Calculates the actually opaque bounds of a 24bpp or 32bpp image given as bytes.
+        /// </summary>
+        /// <param name="data">Image data.</param>
+        /// <param name="width">Image width.</param>
+        /// <param name="height">Image height.</param>
+        /// <param name="bytespp">Bytes per pixel.</param>
+        /// <param name="stride">Stride of the image.</param>
+        /// <returns></returns>
+        public static Rectangle CalculateOpaqueBoundsHiCol(byte[] data, int width, int height, int bytespp, int stride)
         {
+            // Only handle 32bpp data.
+            if (bytespp != 4)
+            {
+                return new Rectangle(0, 0, width, height);
+            }
             // Modified this function to result in (0,0,0,0) when the image is empty, rather than retaining the full size.
             int lineWidth = width * bytespp;
             bool isTransparentRow(int y)
@@ -438,6 +477,78 @@ namespace MobiusEditor.Utility
                     {
                         return false;
                     }
+                }
+                return true;
+            }
+            for (int x = width - 1; x >= 0; --x)
+            {
+                if (!isTransparentColumn(x))
+                {
+                    break;
+                }
+                opaqueBounds.Width = x;
+            }
+            int endWidth = opaqueBounds.Width;
+            for (int x = 0; x < endWidth; ++x)
+            {
+                if (!isTransparentColumn(x))
+                {
+                    opaqueBounds.X = x;
+                    opaqueBounds.Width = endWidth - x;
+                    break;
+                }
+            }
+            return opaqueBounds;
+        }
+
+        private static Rectangle CalculateOpaqueBounds8bpp(byte[] data, int width, int height, int stride, List<int> transparentColors)
+        {
+            HashSet<int> trMap = new HashSet<int>(transparentColors);
+            // Only handle 32bpp data.
+            // Modified this function to result in (0,0,0,0) when the image is empty, rather than retaining the full size.
+            int lineWidth = width;
+            bool isTransparentRow(int y)
+            {
+                int start = y * stride;
+                int end = start + lineWidth;
+                for (var i = start; i < end; ++i)
+                {
+                    if (!trMap.Contains(data[i]))
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            }
+            var opaqueBounds = new Rectangle(0, 0, width, height);
+            for (int y = height - 1; y >= 0; --y)
+            {
+                if (!isTransparentRow(y))
+                {
+                    break;
+                }
+                opaqueBounds.Height = y;
+            }
+            int endHeight = opaqueBounds.Height;
+            for (int y = 0; y < endHeight; ++y)
+            {
+                if (!isTransparentRow(y))
+                {
+                    opaqueBounds.Y = y;
+                    opaqueBounds.Height = endHeight - y;
+                    break;
+                }
+            }
+            bool isTransparentColumn(int x)
+            {
+                var pos = opaqueBounds.Top * stride + x;
+                for (var y = 0; y < opaqueBounds.Height; ++y)
+                {
+                    if (!trMap.Contains(data[pos]))
+                    {
+                        return false;
+                    }
+                    pos += stride;
                 }
                 return true;
             }
