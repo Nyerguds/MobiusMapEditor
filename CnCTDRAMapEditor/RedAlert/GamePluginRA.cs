@@ -3803,7 +3803,10 @@ namespace MobiusEditor.RedAlert
             {
                 if (disposing)
                 {
-                    MapImage?.Dispose();
+                    try { MapImage?.Dispose(); }
+                    catch { /* ignore */ }
+                    // Dispose of cached images in type objects. This is non-destructive; the type objects themselves don't actually get disposed.
+                    Map.ResetCachedGraphics();
                 }
                 disposedValue = true;
             }

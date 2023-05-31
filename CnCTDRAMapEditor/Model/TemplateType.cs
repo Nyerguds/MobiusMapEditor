@@ -484,5 +484,15 @@ namespace MobiusEditor.Model
             // Should never happen.
             return new Point(0, 0);
         }
+        public void Reset()
+        {
+            Bitmap oldImage = this.Thumbnail;
+            this.Thumbnail = null;
+            if (oldImage != null)
+            {
+                try { oldImage.Dispose(); }
+                catch { /* ignore */ }
+            }
+        }
     }
 }

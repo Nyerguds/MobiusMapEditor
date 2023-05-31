@@ -14,8 +14,6 @@ namespace MobiusEditor.Interface
     {
         /// <summary>Name of the color, used as identifier.</summary>
         string Name { get; }
-        /// <summary>A general color representing this team color.</summary>
-        Color BaseColor { get; }
 
         /// <summary>
         /// Apply this color to a given image.

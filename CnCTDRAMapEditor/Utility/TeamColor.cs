@@ -85,14 +85,13 @@ namespace MobiusEditor.Utility
         public TeamColor(TeamColorManager teamColorManager, TeamColor col, string newName, Vector3 hsvShiftOverride)
         {
             this.teamColorManager = teamColorManager;
-            this.Load(col);
-            this.Name = newName;
+            this.Load(col, newName);
             this.hsvShift = hsvShiftOverride;
         }
 
-        public void Load(TeamColor col)
+        public void Load(TeamColor col, string newName)
         {
-            this.Name = col.Name;
+            this.Name = newName ?? col.Name;
             this.Variant = col.Variant;
             this.lowerBounds = col.LowerBounds;
             this.upperBounds = col.UpperBounds;

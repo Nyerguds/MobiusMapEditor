@@ -122,5 +122,15 @@ namespace MobiusEditor.Model
                 catch { /* ignore */ }
             }
         }
+        public void Reset()
+        {
+            Bitmap oldImage = this.Thumbnail;
+            this.Thumbnail = null;
+            if (oldImage != null)
+            {
+                try { oldImage.Dispose(); }
+                catch { /* ignore */ }
+            }
+        }
     }
 }

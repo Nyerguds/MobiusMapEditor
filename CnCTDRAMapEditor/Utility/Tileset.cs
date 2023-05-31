@@ -23,7 +23,7 @@ using System.Xml;
 
 namespace MobiusEditor.Utility
 {
-    public class Tile
+    public class Tile: IDisposable
     {
         public Bitmap Image { get; private set; }
 
@@ -38,6 +38,24 @@ namespace MobiusEditor.Utility
         public Tile(Bitmap image)
             : this(image, new Rectangle(0, 0, image.Width, image.Height))
         {
+        }
+
+        public void Dispose()
+        {
+            Bitmap image = this.Image;
+            this.Image = null;
+            try
+            {
+                if (image != null)
+                {
+                    image.Dispose();
+                }
+            }
+            catch
+            {
+                // ignore.
+            }
+
         }
     }
 
@@ -77,6 +95,17 @@ namespace MobiusEditor.Utility
             {
                 foreach (var tileItem in item.Value)
                 {
+                    // no need to dispose the images; the Reset of TextureManager handles that.
+                    foreach (KeyValuePair<string, Tile[]> tileinfo in tileItem.Value.TeamColorTiles)
+                    {
+                        if (tileinfo.Value != null) {
+                            foreach (Tile tile in tileinfo.Value)
+                            {
+                                // clean up bitmap
+                                tile.Dispose();
+                            }
+                        }
+                    }
                     tileItem.Value.TeamColorTiles.Clear();
                 }
             }

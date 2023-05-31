@@ -1987,5 +1987,46 @@ namespace MobiusEditor.Model
             }
             return info;
         }
+
+        public void ResetCachedGraphics()
+        {
+            // Dispose of cached images. This is non-destructive; the type objects themselves
+            // don't actually get disposed. Their thumbnail simply gets disposed and cleared.
+            foreach (ITechnoType technoType in this.AllTeamTechnoTypes)
+            {
+                // units, boats, aircraft, infantry
+                technoType.Reset();
+            }
+            // probably not needed since it's in the team techno types.
+            foreach (UnitType unitType in this.AllUnitTypes)
+            {
+                unitType.Reset();
+            }
+            // probably not needed since it's in the team techno types.
+            foreach (InfantryType infantryType in this.AllInfantryTypes)
+            {
+                infantryType.Reset();
+            }
+            foreach (BuildingType buildingType in this.BuildingTypes)
+            {
+                buildingType.Reset();
+            }
+            foreach (TemplateType template in this.TemplateTypes)
+            {
+                template.Reset();
+            }
+            foreach (TerrainType terrainType in this.TerrainTypes)
+            {
+                terrainType.Reset();
+            }
+            foreach (OverlayType overlayType in this.OverlayTypes)
+            {
+                overlayType.Reset();
+            }
+            foreach (SmudgeType smudgeType in this.SmudgeTypes)
+            {
+                smudgeType.Reset();
+            }
+        }
     }
 }

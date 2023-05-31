@@ -394,9 +394,9 @@ namespace MobiusEditor.TiberianDawn
                 flagColors[mpId] = Globals.TheTeamColorManager[house.UnitTeamColor];
             }
             // Metallic light blue
-            flagColors[6] = Globals.TheTeamColorManager["BAD_UNIT"];
+            flagColors[6] = Globals.TheTeamColorManager["MULTI7"];
             // RA Purple
-            flagColors[7] = Globals.TheTeamColorManager["PURPLE"];
+            flagColors[7] = Globals.TheTeamColorManager["MULTI8"];
             Size mapSize = !megaMap ? Constants.MaxSize : Constants.MaxSizeMega;
             Map = new Map(basicSection, null, mapSize, typeof(House), houseTypes,
                 flagColors, TheaterTypes.GetTypes(), TemplateTypes.GetTypes(),
@@ -3284,7 +3284,10 @@ namespace MobiusEditor.TiberianDawn
             {
                 if (disposing)
                 {
-                    MapImage?.Dispose();
+                    try { MapImage?.Dispose(); }
+                    catch { /* ignore */ }
+                    // Dispose of cached images in type objects. This is non-destructive; the type objects themselves don't actually get disposed.
+                    Map.ResetCachedGraphics();
                 }
                 disposedValue = true;
             }

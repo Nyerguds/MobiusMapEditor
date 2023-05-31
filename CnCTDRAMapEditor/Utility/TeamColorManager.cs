@@ -28,8 +28,16 @@ namespace MobiusEditor.Utility
         private readonly IArchiveManager megafileManager;
         public Color RemapBaseColor => Color.FromArgb(0x00, 0xFF, 0x00);
 
-        public ITeamColor this[string key] => !string.IsNullOrEmpty(key) ? (ITeamColor)teamColors[key]: null;
+        public ITeamColor this[string key] => !string.IsNullOrEmpty(key) && teamColors.ContainsKey(key) ? (ITeamColor)teamColors[key]: null;
 
+        public Color GetBaseColor(string key)
+        {
+            if (!string.IsNullOrEmpty(key) && teamColors.ContainsKey(key))
+            {
+                return teamColors[key].BaseColor;
+            }
+            return RemapBaseColor;
+        }
         public TeamColor GetItem(string key) => !string.IsNullOrEmpty(key) ? teamColors[key] : null;
 
         public void RemoveTeamColor(string col)
@@ -56,12 +64,12 @@ namespace MobiusEditor.Utility
             }
         }
 
-        public TeamColorManager(IArchiveManager megafileManager, params string[] expandModPaths)
+        public TeamColorManager(IArchiveManager megafileManager)
         {
             this.megafileManager = megafileManager;
         }
 
-        public void Reset(GameType gameType)
+        public void Reset(GameType gameType, string theater)
         {
             teamColors.Clear();
         }

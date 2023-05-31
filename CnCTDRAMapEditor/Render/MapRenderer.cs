@@ -1573,7 +1573,7 @@ namespace MobiusEditor.Render
                 return;
             }
             ITeamColor tc = Globals.TheTeamColorManager[building.House.BuildingTeamColor];
-            Color circleColor = tc?.BaseColor ?? Globals.TheTeamColorManager.RemapBaseColor;
+            Color circleColor = Globals.TheTeamColorManager.GetBaseColor(tc.Name);
             bool[,] cells = building.Type.BaseOccupyMask;
             int maskY = cells.GetLength(0);
             int maskX = cells.GetLength(1);
@@ -1601,7 +1601,7 @@ namespace MobiusEditor.Render
                 return;
             }
             ITeamColor tc = Globals.TheTeamColorManager[unit.House.BuildingTeamColor];
-            Color circleColor = tc?.BaseColor ?? Globals.TheTeamColorManager.RemapBaseColor;
+            Color circleColor = Globals.TheTeamColorManager.GetBaseColor(tc.Name);
             Color alphacorr = Color.FromArgb(unit.Tint.A * 128 / 256, circleColor);
             if (isJammer)
             {

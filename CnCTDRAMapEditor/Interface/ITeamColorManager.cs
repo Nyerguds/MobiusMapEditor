@@ -15,7 +15,12 @@ namespace MobiusEditor.Interface
         Color RemapBaseColor { get; }
         ITeamColor this[string key] { get; }
 
+        /// <summary>Gets a general color representing this team color.</summary>
+        /// <param name="key">Color key</param>
+        /// <returns>The basic color for this team color.</returns>
+        Color GetBaseColor(string key);
+
         void Load(string path);
-        void Reset(GameType gameType);
+        void Reset(GameType gameType, string theater);
     }
 }

@@ -33,25 +33,16 @@ namespace MobiusEditor.Utility
         private static string MissingTexture = "DATA\\ART\\TEXTURES\\SRGB\\COMMON\\MISC\\MISSING.TGA";
         private bool processedMissingTexture = false;
 
-#if false
-        private class ImageData
-        {
-            public TGA TGA;
-            public JObject Metadata;
-        }
-#endif
-
         private readonly IArchiveManager megafileManager;
 
         private Dictionary<string, Bitmap> cachedTextures = new Dictionary<string, Bitmap>();
-        private Dictionary<(string, ITeamColor), (Bitmap, Rectangle)> teamColorTextures = new Dictionary<(string, ITeamColor), (Bitmap, Rectangle)>();
 
         public TextureManager(IArchiveManager megafileManager)
         {
             this.megafileManager = megafileManager;
         }
 
-        public void Reset()
+        public void Reset(GameType gameType, string theater)
         {
             Bitmap[] cachedImages = cachedTextures.Values.ToArray();
             cachedTextures.Clear();
@@ -61,20 +52,6 @@ namespace MobiusEditor.Utility
                 try
                 {
                     cachedImages[i].Dispose();
-                }
-                catch
-                {
-                    // Ignore.
-                }
-            }
-            (Bitmap, Rectangle)[] cachedTeamImages = teamColorTextures.Values.ToArray();
-            teamColorTextures.Clear();
-            for (int i = 0; i < cachedTeamImages.Length; ++i)
-            {
-                try
-                {
-                    (Bitmap bitmap, Rectangle opaqueBounds) = cachedTeamImages[i];
-                    bitmap.Dispose();
                 }
                 catch
                 {
@@ -101,13 +78,9 @@ namespace MobiusEditor.Utility
                     return (retCopy, bounds);
                 }
             }
-            if (teamColorTextures.TryGetValue((filename, teamColor), out (Bitmap bitmap, Rectangle opaqueBounds) result))
-            {
-                Bitmap retCopy = new Bitmap(result.bitmap);
-                retCopy.SetResolution(96, 96);
-                return (retCopy, result.opaqueBounds);
-            }
-            if (!cachedTextures.TryGetValue(filename, out result.bitmap))
+            Bitmap resBitmap;
+            Rectangle resBounds = Rectangle.Empty;
+            if (!cachedTextures.TryGetValue(filename, out _))
             {
                 if (Path.GetExtension(filename).ToLower() == ".tga")
                 {
@@ -181,71 +154,8 @@ namespace MobiusEditor.Utility
                             cachedTextures[filename] = bitmap;
                         }
                     }
-#if false
-                    // Attempt to load parent directory as archive
-                    var archiveDir = Path.GetDirectoryName(filename);
-                    var archivePath = archiveDir + ".ZIP";
-                    using (var fileStream = megafileManager.Open(archivePath))
-                    {
-                        if (fileStream != null)
-                        {
-                            using (var archive = new ZipArchive(fileStream, ZipArchiveMode.Read))
-                            {
-                                var images = new Dictionary<string, ImageData>();
-                                foreach (var entry in archive.Entries)
-                                {
-                                    var name = Path.GetFileNameWithoutExtension(entry.Name);
-                                    if (!images.TryGetValue(name, out ImageData imageData))
-                                    {
-                                        imageData = images[name] = new ImageData { TGA = null, Metadata = null };
-                                    }
-                                    if ((imageData.TGA == null) && (Path.GetExtension(entry.Name).ToLower() == ".tga"))
-                                    {
-                                        using (var stream = entry.Open())
-                                        using (var memStream = new MemoryStream())
-                                        {
-                                            stream.CopyTo(memStream);
-                                            imageData.TGA = new TGA(memStream);
-                                        }
-                                    }
-                                    else if ((imageData.Metadata == null) && (Path.GetExtension(entry.Name).ToLower() == ".meta"))
-                                    {
-                                        using (var stream = entry.Open())
-                                        using (var reader = new StreamReader(stream))
-                                        {
-                                            imageData.Metadata = JObject.Parse(reader.ReadToEnd());
-                                        }
-                                    }
-                                    if ((imageData.TGA != null) && (imageData.Metadata != null))
-                                    {
-                                        var bitmap = imageData.TGA.ToBitmap(true);
-                                        var size = new Size(imageData.Metadata["size"][0].ToObject<int>(), imageData.Metadata["size"][1].ToObject<int>());
-                                        var crop = Rectangle.FromLTRB(
-                                            imageData.Metadata["crop"][0].ToObject<int>(),
-                                            imageData.Metadata["crop"][1].ToObject<int>(),
-                                            imageData.Metadata["crop"][2].ToObject<int>(),
-                                            imageData.Metadata["crop"][3].ToObject<int>()
-                                        );
-                                        var uncroppedBitmap = new Bitmap(size.Width, size.Height, bitmap.PixelFormat);
-                                        uncroppedBitmap.SetResolution(96, 96);
-                                        using (var g = Graphics.FromImage(uncroppedBitmap))
-                                        {
-                                            g.DrawImage(bitmap, crop, new Rectangle(Point.Empty, bitmap.Size), GraphicsUnit.Pixel);
-                                        }
-                                        cachedTextures[Path.Combine(archiveDir, name) + ".tga"] = uncroppedBitmap;
-                                        images.Remove(name);
-                                    }
-                                }
-                                foreach (var item in images.Where(x => x.Value.TGA != null))
-                                {
-                                    cachedTextures[Path.Combine(archiveDir, item.Key) + ".tga"] = item.Value.TGA.ToBitmap(true);
-                                }
-                            }
-                        }
-                    }
-#endif
                 }
-                if (!cachedTextures.TryGetValue(filename, out result.bitmap))
+                if (!cachedTextures.TryGetValue(filename, out resBitmap))
                 {
                     // Try loading as a DDS
                     var ddsFilename = Path.ChangeExtension(filename, ".DDS");
@@ -260,26 +170,25 @@ namespace MobiusEditor.Utility
                     }
                 }
             }
-            if (!cachedTextures.TryGetValue(filename, out result.bitmap))
+            if (!cachedTextures.TryGetValue(filename, out resBitmap))
             {
-                return result;
+                return (resBitmap, resBounds);
             }
-            Bitmap resBm = new Bitmap(result.bitmap);
+            // Clone returned image.
+            Bitmap resBm = new Bitmap(resBitmap);
             resBm.SetResolution(96, 96);
-            result.bitmap = resBm;
+            resBitmap = resBm;
             if (teamColor != null)
             {
                 Rectangle opaqueBounds;
                 teamColor.ApplyToImage(resBm, out opaqueBounds);
-                result.opaqueBounds = opaqueBounds;
-                // EXPERIMENTAL: might be better not to cache this?
-                //teamColorTextures[(filename, teamColor)] = (new Bitmap(result.bitmap), result.opaqueBounds);
+                resBounds = opaqueBounds;
             }
             else
             {
-                result.opaqueBounds = ImageUtils.CalculateOpaqueBounds(resBm);
+                resBounds = ImageUtils.CalculateOpaqueBounds(resBm);
             }
-            return result;
+            return (resBitmap, resBounds);
         }
 
         private void LoadTgaFromZipFileStream(Stream fileStream, String name, ref TGA tga, ref JObject metadata)

@@ -618,6 +618,8 @@
     <Compile Include="Utility\SteamworksUGC.cs" />
     <Compile Include="Utility\TeamColor.cs" />
     <Compile Include="Utility\TeamColorManager.cs" />
+    <Compile Include="Utility\TeamRemap.cs" />
+    <Compile Include="Utility\TeamRemapManager.cs" />
     <Compile Include="Utility\TextureManager.cs" />
     <Compile Include="Utility\TGASharpLib.cs" />
     <Compile Include="Utility\Tileset.cs" />

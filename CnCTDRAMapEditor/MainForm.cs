@@ -1059,7 +1059,7 @@ namespace MobiusEditor
         {
             var fileInfo = new FileInfo(fileName);
             String name = fileInfo.FullName;
-            if (!IdentifyMap(name, out FileType fileType, out GameType gameType, out bool isTdMegaMap))
+            if (!IdentifyMap(name, out FileType fileType, out GameType gameType, out bool isTdMegaMap, out string theater))
             {
                 string extension = Path.GetExtension(name).TrimStart('.');
                 // No point in supporting jpeg here; the mapping needs distinct colours without fades.
@@ -1092,7 +1092,7 @@ namespace MobiusEditor
                 ModPaths.TryGetValue(gameType, out modPaths);
             }
             loadMultiThreader.ExecuteThreaded(
-                () => LoadFile(name, fileType, gameType, isTdMegaMap, modPaths),
+                () => LoadFile(name, fileType, gameType, theater, isTdMegaMap, modPaths),
                 PostLoad, true,
                 (e,l) => LoadUnloadUi(e, l, loadMultiThreader),
                 "Loading map");
@@ -1138,10 +1138,11 @@ namespace MobiusEditor
                 "Saving map");
         }
 
-        private Boolean IdentifyMap(String loadFilename, out FileType fileType, out GameType gameType, out bool isTdMegaMap)
+        private Boolean IdentifyMap(String loadFilename, out FileType fileType, out GameType gameType, out bool isTdMegaMap, out string theater)
         {
             fileType = FileType.None;
             gameType = GameType.None;
+            theater = null;
             isTdMegaMap = false;
             try
             {
@@ -1212,6 +1213,7 @@ namespace MobiusEditor
             {
                 return false;
             }
+            theater = (iniContents["Map"].TryGetValue("Theater") ?? "temperate").ToLower();
             switch (fileType)
             {
                 case FileType.INI:
@@ -1308,20 +1310,20 @@ namespace MobiusEditor
             }
         }
 
-        private static IGamePlugin LoadNewPlugin(GameType gameType, bool isTdMegaMap, string[] modPaths)
+        private static IGamePlugin LoadNewPlugin(GameType gameType, string theater, bool isTdMegaMap, string[] modPaths)
         {
-            return LoadNewPlugin(gameType, isTdMegaMap, modPaths, false);
+            return LoadNewPlugin(gameType, theater, isTdMegaMap, modPaths, false);
         }
 
-        private static IGamePlugin LoadNewPlugin(GameType gameType, bool isTdMegaMap, string[] modPaths, bool noImage)
+        private static IGamePlugin LoadNewPlugin(GameType gameType, string theater, bool isTdMegaMap, string[] modPaths, bool noImage)
         {
             // Resetting to a specific game type will take care of classic mode.
             Globals.TheArchiveManager.ExpandModPaths = modPaths;
             Globals.TheArchiveManager.Reset(gameType);
             Globals.TheGameTextManager.Reset(gameType);
-            Globals.TheTextureManager.Reset();
+            Globals.TheTextureManager.Reset(gameType, theater);
             Globals.TheTilesetManager.Reset();
-            Globals.TheTeamColorManager.Reset(gameType);
+            Globals.TheTeamColorManager.Reset(gameType, theater);
             IGamePlugin plugin = null;
             if (gameType == GameType.TiberianDawn)
             {
@@ -1334,6 +1336,7 @@ namespace MobiusEditor
             else if (gameType == GameType.RedAlert)
             {
                 Globals.TheTeamColorManager.Load(@"DATA\XML\CNCRATEAMCOLORS.XML");
+                Globals.TheTeamColorManager.Load("palette.cps");
                 plugin = new RedAlert.GamePluginRA(!noImage);
             }
             else if (gameType == GameType.SoleSurvivor)
@@ -1358,35 +1361,26 @@ namespace MobiusEditor
                     new Vector3(0, 1, 1), new Vector2(0, 1), Color.FromArgb(61, 61, 59));
                 tcm.AddTeamColor(teamColorNone);
             }
-            else // if (teamColorManager is TeamRemapManager tcc)
-            {
-                // TODO classic team color
-                //TeamRemap teamColorNone = new TeamRemap(tcc);
-                //teamColorNone.Load(/*TODO*/);
-                //tcc.AddTeamColor(teamColorNone);
-            }
         }
 
         private static void AddTeamColorPurple(ITeamColorManager teamColorManager)
         {
             if (teamColorManager is TeamColorManager tcm)
             {
-                // Add extra purple for flag..
-                TeamColor teamColorPurple = new TeamColor(tcm);
-                teamColorPurple.Load("PURPLE", "BASE_TEAM",
+                // Add extra colors for flags.
+                TeamColor teamColorSeven = new TeamColor(tcm);
+                teamColorSeven.Load(tcm.GetItem("BAD_UNIT"), "MULTI7");
+                tcm.AddTeamColor(teamColorSeven);
+
+                TeamColor teamColorEight = new TeamColor(tcm);
+                teamColorEight.Load("MULTI8", "BASE_TEAM",
                     Color.FromArgb(66, 255, 0), Color.FromArgb(0, 255, 56), 0,
                     new Vector3(0.410f, 0.300f, 0.000f), new Vector3(0f, 1f, 1f), new Vector2(0.0f, 1.0f),
                     new Vector3(0, 1, 1), new Vector2(0, 1), Color.FromArgb(77, 13, 255));
-                tcm.AddTeamColor(teamColorPurple);
-            }
-            else // if (teamColorManager is TeamRemapManager tcc)
-            {
-                // TODO classic team color
-                //TeamRemap teamColorPurple = new TeamRemap(tcc);
-                //teamColorPurple.Load(/*TODO*/);
-                //tcc.AddTeamColor(teamColorPurple);
+                tcm.AddTeamColor(teamColorEight);
             }
         }
+
         /// <summary>
         /// The separate-threaded part for making a new map.
         /// </summary>
@@ -1424,7 +1418,7 @@ namespace MobiusEditor
             }
             try
             {
-                IGamePlugin plugin = LoadNewPlugin(gameType, isTdMegaMap, modPaths);
+                IGamePlugin plugin = LoadNewPlugin(gameType, theater, isTdMegaMap, modPaths);
                 // This initialises the theater
                 plugin.New(theater);
                 if (SteamworksUGC.IsInit)
@@ -1488,11 +1482,11 @@ namespace MobiusEditor
         /// <param name="isTdMegaMap"></param>
         /// <param name="modPaths"></param>
         /// <returns></returns>
-        private static MapLoadInfo LoadFile(string loadFilename, FileType fileType, GameType gameType, bool isTdMegaMap, string[] modPaths)
+        private static MapLoadInfo LoadFile(string loadFilename, FileType fileType, GameType gameType, string theater, bool isTdMegaMap, string[] modPaths)
         {
             try
             {
-                IGamePlugin plugin = LoadNewPlugin(gameType, isTdMegaMap, modPaths);
+                IGamePlugin plugin = LoadNewPlugin(gameType, theater, isTdMegaMap, modPaths);
                 string[] errors = plugin.Load(loadFilename, fileType).ToArray();
                 return new MapLoadInfo(loadFilename, fileType, plugin, errors);
             }
@@ -1650,7 +1644,7 @@ namespace MobiusEditor
                 }
                 // Unload graphics
                 Globals.TheTilesetManager.Reset();
-                Globals.TheTextureManager.Reset();
+                Globals.TheTextureManager.Reset(GameType.None, null);
                 // Clean up loaded file status
                 filename = null;
                 loadedFileType = FileType.None;
