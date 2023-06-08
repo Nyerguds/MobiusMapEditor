@@ -48,8 +48,12 @@ namespace MobiusEditor.Model
             {
                 return null;
             }
+            return ConvertFrom(context as MapContext, value as string);
+        }
 
-            var map = (context as MapContext).Map;
+        public TheaterType ConvertFrom(MapContext context, string value)
+        {
+            var map = context.Map;
             return map.TheaterTypes.Where(t => t.Equals(value)).FirstOrDefault() ?? map.TheaterTypes.First();
         }
     }

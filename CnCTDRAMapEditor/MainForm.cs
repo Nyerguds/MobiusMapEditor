@@ -1317,67 +1317,90 @@ namespace MobiusEditor
 
         private static IGamePlugin LoadNewPlugin(GameType gameType, string theater, bool isTdMegaMap, string[] modPaths, bool noImage)
         {
+            // Get plugin type
+            IGamePlugin plugin = null;
+            if (gameType == GameType.TiberianDawn)
+            {
+                plugin = new TiberianDawn.GamePluginTD(!noImage, isTdMegaMap);
+            }
+            else if (gameType == GameType.RedAlert)
+            {
+                plugin = new RedAlert.GamePluginRA(!noImage);
+            }
+            else if (gameType == GameType.SoleSurvivor)
+            {
+                plugin = new SoleSurvivor.GamePluginSS(!noImage, isTdMegaMap);
+            }
+            // Get theater object
+            TheaterTypeConverter ttc = new TheaterTypeConverter();
+            TheaterType theaterType = ttc.ConvertFrom(new MapContext(plugin.Map, false), theater);
             // Resetting to a specific game type will take care of classic mode.
             Globals.TheArchiveManager.ExpandModPaths = modPaths;
             Globals.TheArchiveManager.Reset(gameType);
             Globals.TheGameTextManager.Reset(gameType);
-            Globals.TheTextureManager.Reset(gameType, theater);
+            Globals.TheTextureManager.Reset(gameType, theaterType);
             Globals.TheTilesetManager.Reset();
-            Globals.TheTeamColorManager.Reset(gameType, theater);
-            IGamePlugin plugin = null;
+            Globals.TheTeamColorManager.Reset(gameType, theaterType);
+            // Load game-specific data
             if (gameType == GameType.TiberianDawn)
             {
                 Globals.TheTeamColorManager.Load(@"DATA\XML\CNCTDTEAMCOLORS.XML");
-                AddTeamColorNone(Globals.TheTeamColorManager);
-                AddTeamColorPurple(Globals.TheTeamColorManager);
-                // TODO split classic and remaster team color load.
-                plugin = new TiberianDawn.GamePluginTD(!noImage, isTdMegaMap);
+                AddTeamColorsTD(Globals.TheTeamColorManager);
             }
             else if (gameType == GameType.RedAlert)
             {
                 Globals.TheTeamColorManager.Load(@"DATA\XML\CNCRATEAMCOLORS.XML");
                 Globals.TheTeamColorManager.Load("palette.cps");
-                plugin = new RedAlert.GamePluginRA(!noImage);
+                AddTeamColorsRA(Globals.TheTeamColorManager);
             }
             else if (gameType == GameType.SoleSurvivor)
             {
                 Globals.TheTeamColorManager.Load(@"DATA\XML\CNCTDTEAMCOLORS.XML");
-                AddTeamColorNone(Globals.TheTeamColorManager);
-                AddTeamColorPurple(Globals.TheTeamColorManager);
-                plugin = new SoleSurvivor.GamePluginSS(!noImage, isTdMegaMap);
+                AddTeamColorsTD(Globals.TheTeamColorManager);
             }
             return plugin;
         }
 
-        private static void AddTeamColorNone(ITeamColorManager teamColorManager)
+        private static void AddTeamColorsTD(ITeamColorManager teamColorManager)
         {
             if (teamColorManager is TeamColorManager tcm)
             {
-                // Add default black for unowned.
+                // Neutral
+                TeamColor teamColorSNeutral = new TeamColor(tcm);
+                teamColorSNeutral.Load(tcm.GetItem("GOOD"), "NEUTRAL");
+                tcm.AddTeamColor(teamColorSNeutral);
+                // Special
+                TeamColor teamColorSpecial = new TeamColor(tcm);
+                teamColorSpecial.Load(tcm.GetItem("GOOD"), "SPECIAL");
+                tcm.AddTeamColor(teamColorSpecial);
+                // Black for unowned.
                 TeamColor teamColorNone = new TeamColor(tcm);
                 teamColorNone.Load("NONE", "BASE_TEAM",
                     Color.FromArgb(66, 255, 0), Color.FromArgb(0, 255, 56), 0,
                     new Vector3(0.30f, -1.00f, 0.00f), new Vector3(0f, 1f, 1f), new Vector2(0.0f, 0.1f),
                     new Vector3(0, 1, 1), new Vector2(0, 1), Color.FromArgb(61, 61, 59));
                 tcm.AddTeamColor(teamColorNone);
-            }
-        }
-
-        private static void AddTeamColorPurple(ITeamColorManager teamColorManager)
-        {
-            if (teamColorManager is TeamColorManager tcm)
-            {
-                // Add extra colors for flags.
+                // Extra colors for flags 7 and 8.
                 TeamColor teamColorSeven = new TeamColor(tcm);
                 teamColorSeven.Load(tcm.GetItem("BAD_UNIT"), "MULTI7");
                 tcm.AddTeamColor(teamColorSeven);
-
                 TeamColor teamColorEight = new TeamColor(tcm);
                 teamColorEight.Load("MULTI8", "BASE_TEAM",
                     Color.FromArgb(66, 255, 0), Color.FromArgb(0, 255, 56), 0,
                     new Vector3(0.410f, 0.300f, 0.000f), new Vector3(0f, 1f, 1f), new Vector2(0.0f, 1.0f),
                     new Vector3(0, 1, 1), new Vector2(0, 1), Color.FromArgb(77, 13, 255));
                 tcm.AddTeamColor(teamColorEight);
+            }
+        }
+
+        private static void AddTeamColorsRA(ITeamColorManager teamColorManager)
+        {
+            if (teamColorManager is TeamColorManager tcm)
+            {
+                // Special
+                TeamColor teamColorSpecial = new TeamColor(tcm);
+                teamColorSpecial.Load(tcm.GetItem("SPAIN"), "SPECIAL");
+                tcm.AddTeamColor(teamColorSpecial);
             }
         }
 

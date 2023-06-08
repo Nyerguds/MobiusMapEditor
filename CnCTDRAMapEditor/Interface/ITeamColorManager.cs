@@ -6,6 +6,7 @@
 // the GNU General Public License as published by the Free Software Foundation, 
 // either version 3 of the License, or (at your option) any later version.
 
+using MobiusEditor.Model;
 using System.Drawing;
 
 namespace MobiusEditor.Interface
@@ -21,6 +22,6 @@ namespace MobiusEditor.Interface
         Color GetBaseColor(string key);
 
         void Load(string path);
-        void Reset(GameType gameType, string theater);
+        void Reset(GameType gameType, TheaterType theater);
     }
 }

@@ -402,7 +402,7 @@ namespace MobiusEditor.Utility
                 Marshal.Copy(data.Scan0, bytes, 0, bytes.Length);
                 if (bitmap.PixelFormat == PixelFormat.Format8bppIndexed)
                 {
-                    return CalculateOpaqueBounds8bpp(bytes, data.Width, data.Height, data.Stride, transColors);
+                    return CalculateOpaqueBounds8bpp(bytes, data.Width, data.Height, data.Stride, transColors.ToArray());
                 }
                 else
                 {
@@ -501,7 +501,7 @@ namespace MobiusEditor.Utility
             return opaqueBounds;
         }
 
-        private static Rectangle CalculateOpaqueBounds8bpp(byte[] data, int width, int height, int stride, List<int> transparentColors)
+        public static Rectangle CalculateOpaqueBounds8bpp(byte[] data, int width, int height, int stride, params int[] transparentColors)
         {
             HashSet<int> trMap = new HashSet<int>(transparentColors);
             // Only handle 32bpp data.

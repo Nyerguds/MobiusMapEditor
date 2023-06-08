@@ -583,6 +583,7 @@
     <Compile Include="Tools\Dialogs\WaypointsToolDialog.Designer.cs">
       <DependentUpon>WaypointsToolDialog.cs</DependentUpon>
     </Compile>
+    <Compile Include="Utility\ArrayUtils.cs" />
     <Compile Include="Utility\BlobDetection.cs" />
     <Compile Include="Tools\InfantryTool.cs" />
     <Compile Include="Tools\OverlaysTool.cs" />
@@ -596,6 +597,7 @@
     <Compile Include="Tools\CellTriggersTool.cs" />
     <Compile Include="Tools\WaypointsTool.cs" />
     <Compile Include="Utility\BooleanStringStyle.cs" />
+    <Compile Include="Utility\ClassicSpriteLoader.cs" />
     <Compile Include="Utility\CRC.cs" />
     <Compile Include="Utility\ExtensionMethods.cs" />
     <Compile Include="Utility\GameTextManager.cs" />

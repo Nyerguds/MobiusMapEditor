@@ -13,6 +13,7 @@
 // GNU General Public License along with permitted additional restrictions 
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using MobiusEditor.Interface;
+using MobiusEditor.Model;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -69,7 +70,7 @@ namespace MobiusEditor.Utility
             this.megafileManager = megafileManager;
         }
 
-        public void Reset(GameType gameType, string theater)
+        public void Reset(GameType gameType, TheaterType theater)
         {
             teamColors.Clear();
         }
@@ -87,6 +88,7 @@ namespace MobiusEditor.Utility
             }
             if (xmlDoc != null)
             {
+                teamColors.Clear();
                 foreach (XmlNode teamColorNode in xmlDoc.SelectNodes("/*/TeamColorTypeClass"))
                 {
                     var teamColor = new TeamColor(this);

@@ -255,7 +255,6 @@ namespace MobiusEditor
             // Buildings
             gtm["TEXT_STRUCTURE_TITLE_OIL_PUMP"] = "Oil Pump";
             gtm["TEXT_STRUCTURE_TITLE_OIL_TANKER"] = "Oil Tanker";
-
             String fake = " (" + gtm["TEXT_UI_FAKE"] + ")";
             if (!gtm["TEXT_STRUCTURE_RA_WEAF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_WEAF"] = Globals.TheGameTextManager["TEXT_STRUCTURE_RA_WEAF"] + fake;
             if (!gtm["TEXT_STRUCTURE_RA_FACF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_FACF"] = Globals.TheGameTextManager["TEXT_STRUCTURE_RA_FACF"] + fake;
@@ -272,7 +271,6 @@ namespace MobiusEditor
             gtm["TEXT_OVERLAY_WCRATE"] = "Wooden Crate";
             gtm["TEXT_OVERLAY_SCRATE"] = "Steel Crate";
             gtm["TEXT_OVERLAY_WATER_CRATE"] = "Water Crate";
-
             // Smudge
             gtm["TEXT_SMUDGE_CRATER"] = "Crater";
             gtm["TEXT_SMUDGE_SCORCH"] = "Scorch Mark";

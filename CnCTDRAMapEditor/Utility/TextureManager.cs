@@ -24,6 +24,7 @@ using System.IO.Compression;
 using System.Runtime.InteropServices;
 using TGASharpLib;
 using MobiusEditor.Interface;
+using MobiusEditor.Model;
 
 namespace MobiusEditor.Utility
 {
@@ -42,7 +43,7 @@ namespace MobiusEditor.Utility
             this.megafileManager = megafileManager;
         }
 
-        public void Reset(GameType gameType, string theater)
+        public void Reset(GameType gameType, TheaterType theater)
         {
             Bitmap[] cachedImages = cachedTextures.Values.ToArray();
             cachedTextures.Clear();
