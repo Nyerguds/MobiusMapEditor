@@ -23,7 +23,6 @@ namespace MobiusEditor.Controls
         public MissionItemControl()
             :this(null, null, null, null, 0, null)
         {
-            
         }
 
         public MissionItemControl(TeamTypeMission info, ListedControlController<TeamTypeMission> controller, IEnumerable<TeamMission> missions, IEnumerable<ListItem<int>> waypoints, int mapSize, ToolTip tooltip)
@@ -32,7 +31,7 @@ namespace MobiusEditor.Controls
             SetInfo(info, controller, missions, waypoints, mapSize, tooltip);
         }
 
-        public void SetInfo(TeamTypeMission info, ListedControlController<TeamTypeMission> controller, IEnumerable<TeamMission> missions, IEnumerable<ListItem<int>> waypoints, int mapSize, ToolTip tooltip) 
+        public void SetInfo(TeamTypeMission info, ListedControlController<TeamTypeMission> controller, IEnumerable<TeamMission> missions, IEnumerable<ListItem<int>> waypoints, int mapSize, ToolTip tooltip)
         {
             try
             {

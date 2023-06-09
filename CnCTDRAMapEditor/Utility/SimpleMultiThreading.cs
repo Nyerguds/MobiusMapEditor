@@ -52,7 +52,7 @@ namespace MobiusEditor.Utility
         }
 
         /// <summary>
-        /// Executes a threaded operation while locking the UI. 
+        /// Executes a threaded operation while locking the UI.
         /// </summary>
         /// <param name="function">The heavy processing function to run on a different thread.</param>
         /// <param name="resultFunction">Optional function to call after <paramref name="function"/> returns a non-null result.</param>

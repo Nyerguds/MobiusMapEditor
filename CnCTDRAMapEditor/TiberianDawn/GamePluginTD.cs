@@ -1,16 +1,16 @@
 ﻿//
 // Copyright 2020 Electronic Arts Inc.
 //
-// The Command & Conquer Map Editor and corresponding source code is free 
-// software: you can redistribute it and/or modify it under the terms of 
-// the GNU General Public License as published by the Free Software Foundation, 
+// The Command & Conquer Map Editor and corresponding source code is free
+// software: you can redistribute it and/or modify it under the terms of
+// the GNU General Public License as published by the Free Software Foundation,
 // either version 3 of the License, or (at your option) any later version.
 
-// The Command & Conquer Map Editor and corresponding source code is distributed 
-// in the hope that it will be useful, but with permitted additional restrictions 
-// under Section 7 of the GPL. See the GNU General Public License in LICENSE.TXT 
-// distributed with this program. You should have received a copy of the 
-// GNU General Public License along with permitted additional restrictions 
+// The Command & Conquer Map Editor and corresponding source code is distributed
+// in the hope that it will be useful, but with permitted additional restrictions
+// under Section 7 of the GPL. See the GNU General Public License in LICENSE.TXT
+// distributed with this program. You should have received a copy of the
+// GNU General Public License along with permitted additional restrictions
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using MobiusEditor.Interface;
 using MobiusEditor.Model;
@@ -162,7 +162,7 @@ namespace MobiusEditor.TiberianDawn
             "TURTKILL",
             "VISOR",
         };
-        
+
         protected static readonly IEnumerable<string> movieTypesAdditional = new string[]
         {
             "BODYBAGS (Classic only)",
@@ -622,7 +622,7 @@ namespace MobiusEditor.TiberianDawn
             }
             // Only process the ini if any of the detected lines have a found amount of more than one. If references to literal ROAD2 are found,
             // also process the ini so they can be removed; we do not want those to be accepted as valid type by the editor.
-            if (foundAmounts.All(k => k.Value == 1) && !cellTypes.Values.Contains(OverlayTypes.Road2.Name, StringComparer.OrdinalIgnoreCase)) 
+            if (foundAmounts.All(k => k.Value == 1) && !cellTypes.Values.Contains(OverlayTypes.Road2.Name, StringComparer.OrdinalIgnoreCase))
             {
                 return iniText;
             }
@@ -2303,7 +2303,6 @@ namespace MobiusEditor.TiberianDawn
             briefingSection["Text"] = briefText.Replace("\n", "@");
             if (Globals.WriteClassicBriefing)
             {
-                
                 if (briefText.Length > maxBriefLengthClassic)
                 {
                     briefText = briefText.Substring(0, maxBriefLengthClassic);
@@ -3002,7 +3001,7 @@ namespace MobiusEditor.TiberianDawn
                 if (String.Equals(trigger.Name, "ZZZZ", StringComparison.OrdinalIgnoreCase)) zzzzExists = true;
                 if (actionType == ActionTypes.ACTION_DESTROY_XXXX) delXExists = true;
                 if (actionType == ActionTypes.ACTION_DESTROY_YYYY) delYExists = true;
-                if (actionType == ActionTypes.ACTION_DESTROY_ZZZZ) delZExists = true;                
+                if (actionType == ActionTypes.ACTION_DESTROY_ZZZZ) delZExists = true;
                 if (!Globals.Ignore106Scripting)
                 {
                     if (String.Equals(trigger.Name, "UUUU", StringComparison.OrdinalIgnoreCase)) uuuuExists = true;

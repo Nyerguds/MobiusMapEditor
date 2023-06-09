@@ -396,7 +396,6 @@ namespace MobiusEditor.Utility
                             transColors.Add(i);
                     }
                 }
-                
                 data = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height), ImageLockMode.ReadWrite, dataFormat);
                 var bytes = new byte[data.Stride * data.Height];
                 Marshal.Copy(data.Scan0, bytes, 0, bytes.Length);

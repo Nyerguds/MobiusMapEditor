@@ -1,16 +1,16 @@
 ﻿//
 // Copyright 2020 Electronic Arts Inc.
 //
-// The Command & Conquer Map Editor and corresponding source code is free 
-// software: you can redistribute it and/or modify it under the terms of 
-// the GNU General Public License as published by the Free Software Foundation, 
+// The Command & Conquer Map Editor and corresponding source code is free
+// software: you can redistribute it and/or modify it under the terms of
+// the GNU General Public License as published by the Free Software Foundation,
 // either version 3 of the License, or (at your option) any later version.
 
-// The Command & Conquer Map Editor and corresponding source code is distributed 
-// in the hope that it will be useful, but with permitted additional restrictions 
-// under Section 7 of the GPL. See the GNU General Public License in LICENSE.TXT 
-// distributed with this program. You should have received a copy of the 
-// GNU General Public License along with permitted additional restrictions 
+// The Command & Conquer Map Editor and corresponding source code is distributed
+// in the hope that it will be useful, but with permitted additional restrictions
+// under Section 7 of the GPL. See the GNU General Public License in LICENSE.TXT
+// distributed with this program. You should have received a copy of the
+// GNU General Public License along with permitted additional restrictions
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using MobiusEditor.Interface;
 using MobiusEditor.Model;
@@ -693,7 +693,6 @@ namespace MobiusEditor.Render
                     if (unit.Strength < 64)
                         icon += 32;
                 }
-                
             }
             else if (gameType == GameType.RedAlert)
             {
@@ -873,7 +872,7 @@ namespace MobiusEditor.Render
                             if (unit.Type.HasDoubleTurret)
                             {
                                 turret2Adjust.Y += unit.Type.TurretY;
-                            }                            
+                            }
                             Point center = new Point(renderBounds.Width / 2, renderBounds.Height / 2);
 
                             void RenderTurret(Graphics ug, Tile turrTile, Point turrAdjust, Size tSize)
@@ -1332,7 +1331,6 @@ namespace MobiusEditor.Render
                 RenderWaypoint(gameType, false, map.Theater, tileSize, flagColors, wp).Item2(graphics);
             }
         }
-        
 
         public static void RenderAllFakeBuildingLabels(Graphics graphics, Map map, Size tileSize, double tileScale)
         {

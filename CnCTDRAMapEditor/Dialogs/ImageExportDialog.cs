@@ -305,7 +305,6 @@ namespace MobiusEditor.Dialogs
                     this.DialogResult = DialogResult.OK;
                 }
             }
-            
         }
 
         private void EnableControls(Boolean enabled, String processingLabel)

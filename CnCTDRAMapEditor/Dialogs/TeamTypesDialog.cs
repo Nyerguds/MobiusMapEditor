@@ -1,16 +1,16 @@
 ﻿//
 // Copyright 2020 Electronic Arts Inc.
 //
-// The Command & Conquer Map Editor and corresponding source code is free 
-// software: you can redistribute it and/or modify it under the terms of 
-// the GNU General Public License as published by the Free Software Foundation, 
+// The Command & Conquer Map Editor and corresponding source code is free
+// software: you can redistribute it and/or modify it under the terms of
+// the GNU General Public License as published by the Free Software Foundation,
 // either version 3 of the License, or (at your option) any later version.
 
-// The Command & Conquer Map Editor and corresponding source code is distributed 
-// in the hope that it will be useful, but with permitted additional restrictions 
-// under Section 7 of the GPL. See the GNU General Public License in LICENSE.TXT 
-// distributed with this program. You should have received a copy of the 
-// GNU General Public License along with permitted additional restrictions 
+// The Command & Conquer Map Editor and corresponding source code is distributed
+// in the hope that it will be useful, but with permitted additional restrictions
+// under Section 7 of the GPL. See the GNU General Public License in LICENSE.TXT
+// distributed with this program. You should have received a copy of the
+// GNU General Public License along with permitted additional restrictions
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using MobiusEditor.Controls;
 using MobiusEditor.Controls.ControlsList;
@@ -124,10 +124,8 @@ namespace MobiusEditor.Dialogs
             HashSet<string> allowedTriggers = new HashSet<string>(items);
             items = Trigger.None.Yield().Concat(plugin.Map.Triggers.Select(t => t.Name).Where(t => allowedTriggers.Contains(t)).Distinct()).ToArray();
             cmbTrigger.DataSource = items;
-
             defaultTeam = technoTypes.FirstOrDefault();
             // Fix for case sensitivity issue in teamtype missions
-            
             TeamMission[] missions = plugin.Map.TeamMissionTypes;
             this.teamMissionTypes = missions.ToArray();
             this.defaultMission = missions.FirstOrDefault();
@@ -206,7 +204,7 @@ namespace MobiusEditor.Dialogs
                 maxAllowedNud.DataBindings.Add("Value", selected, "MaxAllowed");
                 selected.Fear = CheckBounds(selected.Fear, nudFear);
                 nudFear.DataBindings.Add("Value", selected, "Fear");
-                cmbWaypoint.DataBindings.Add("SelectedValue", selected, "Origin"); 
+                cmbWaypoint.DataBindings.Add("SelectedValue", selected, "Origin");
                 //cmbWaypoint.DataBindings.Add("SelectedIndex", selected, "Origin");
                 cmbTrigger.DataBindings.Add("SelectedItem", selected, "Trigger");
 
@@ -589,8 +587,7 @@ namespace MobiusEditor.Dialogs
                 }
                 btnAddTeam.Enabled = SelectedTeamType.Classes.Count < Globals.MaxTeamClasses;
                 tilTeams.TabStop = SelectedTeamType.Classes.Count > 0;
- 
-            }
+             }
         }
 
         private void BtnAddMission_Click(Object sender, EventArgs e)
@@ -637,7 +634,7 @@ namespace MobiusEditor.Dialogs
         {
             CalcListColSizes();
         }
-        
+
         private void teamTypesListView_ColumnWidthChanging(Object sender, ColumnWidthChangingEventArgs e)
         {
             e.Cancel = true;

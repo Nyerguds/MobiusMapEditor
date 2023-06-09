@@ -1,16 +1,16 @@
 ﻿//
 // Copyright 2020 Electronic Arts Inc.
 //
-// The Command & Conquer Map Editor and corresponding source code is free 
-// software: you can redistribute it and/or modify it under the terms of 
-// the GNU General Public License as published by the Free Software Foundation, 
+// The Command & Conquer Map Editor and corresponding source code is free
+// software: you can redistribute it and/or modify it under the terms of
+// the GNU General Public License as published by the Free Software Foundation,
 // either version 3 of the License, or (at your option) any later version.
 
-// The Command & Conquer Map Editor and corresponding source code is distributed 
-// in the hope that it will be useful, but with permitted additional restrictions 
-// under Section 7 of the GPL. See the GNU General Public License in LICENSE.TXT 
-// distributed with this program. You should have received a copy of the 
-// GNU General Public License along with permitted additional restrictions 
+// The Command & Conquer Map Editor and corresponding source code is distributed
+// in the hope that it will be useful, but with permitted additional restrictions
+// under Section 7 of the GPL. See the GNU General Public License in LICENSE.TXT
+// distributed with this program. You should have received a copy of the
+// GNU General Public License along with permitted additional restrictions
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using MobiusEditor.Interface;
 using MobiusEditor.Render;
@@ -156,7 +156,6 @@ namespace MobiusEditor.Model
                         break;
                     }
                 }
-                
             }
         }
 
@@ -258,7 +257,7 @@ namespace MobiusEditor.Model
             : this(id, name, iconWidth, iconHeight, theaters, TemplateTypeFlag.None, maskOverride)
         {
         }
-        
+
         /// <summary>
         /// Creates a TemplateType object.
         /// </summary>
@@ -325,7 +324,7 @@ namespace MobiusEditor.Model
         {
             Init(theater, false);
         }
-        
+
         public void Init(TheaterType theater, bool forceDummy)
         {
             // This allows mods to add 'random' tiles to existing 1x1 tiles. Check excludes 'Clear' terrain and items already defined as random.

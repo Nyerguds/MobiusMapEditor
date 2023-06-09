@@ -19,7 +19,6 @@ namespace MobiusEditor.Controls
         public TeamItemControl()
             :this(null, null, null)
         {
-            
         }
 
         public TeamItemControl(TeamTypeClass info, ListedControlController<TeamTypeClass> controller, IEnumerable<ITechnoType> technos)

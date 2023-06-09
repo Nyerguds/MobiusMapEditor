@@ -1,16 +1,16 @@
 ﻿//
 // Copyright 2020 Electronic Arts Inc.
 //
-// The Command & Conquer Map Editor and corresponding source code is free 
-// software: you can redistribute it and/or modify it under the terms of 
-// the GNU General Public License as published by the Free Software Foundation, 
+// The Command & Conquer Map Editor and corresponding source code is free
+// software: you can redistribute it and/or modify it under the terms of
+// the GNU General Public License as published by the Free Software Foundation,
 // either version 3 of the License, or (at your option) any later version.
 
-// The Command & Conquer Map Editor and corresponding source code is distributed 
-// in the hope that it will be useful, but with permitted additional restrictions 
-// under Section 7 of the GPL. See the GNU General Public License in LICENSE.TXT 
-// distributed with this program. You should have received a copy of the 
-// GNU General Public License along with permitted additional restrictions 
+// The Command & Conquer Map Editor and corresponding source code is distributed
+// in the hope that it will be useful, but with permitted additional restrictions
+// under Section 7 of the GPL. See the GNU General Public License in LICENSE.TXT
+// distributed with this program. You should have received a copy of the
+// GNU General Public License along with permitted additional restrictions
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 /*                         MIT License
                  Copyright (c) 2017 TGASharpLib
@@ -328,7 +328,7 @@ namespace TGASharpLib
     /// When working with a TrueVista card(ATVista or NuVista) you would select 24-bit(8 bits per
     /// primary) or 32-bit(8 bits per primary including Alpha channel) depending on your
     /// application’s use of look-up tables. It is suggested that when working with 16-bit and
-    /// 32-bit color images, you store them as True-Color images and do not use the color map 
+    /// 32-bit color images, you store them as True-Color images and do not use the color map
     /// field to store look-up tables. Please refer to the TGA Extensions for fields better suited
     /// to storing look-up table information.
     /// </summary>
@@ -1189,7 +1189,7 @@ namespace TGASharpLib
         /// When working with a TrueVista card(ATVista or NuVista) you would select 24-bit(8 bits per
         /// primary) or 32-bit(8 bits per primary including Alpha channel) depending on your
         /// application’s use of look-up tables. It is suggested that when working with 16-bit and
-        /// 32-bit color images, you store them as True-Color images and do not use the color map 
+        /// 32-bit color images, you store them as True-Color images and do not use the color map
         /// field to store look-up tables. Please refer to the TGA Extensions for fields better suited
         /// to storing look-up table information.
         /// </summary>
@@ -3643,7 +3643,7 @@ namespace TGASharpLib
 
         /// <summary>
         /// Job Name/ID - Field 14 (41 Bytes):
-        /// Bytes 379-419 - This field is an ASCII field of 41 bytes where the last byte must be 
+        /// Bytes 379-419 - This field is an ASCII field of 41 bytes where the last byte must be
         /// a binary zero. This gives a total of 40 ASCII characters for the job name or the ID.
         /// If the field is used, it should contain a name or id tag which refers to the job with
         /// which the image was associated.This allows production companies (and others) to tie

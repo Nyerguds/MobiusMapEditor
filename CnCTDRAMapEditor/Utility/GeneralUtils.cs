@@ -329,7 +329,7 @@ namespace MobiusEditor.Utility
 
         /// <summary>
         /// ArgumentException messes with the Message property, and dumps its own extra (localised) bit of
-        /// text with the argument onto the end of the message. This uses serialisation to retrieve the 
+        /// text with the argument onto the end of the message. This uses serialisation to retrieve the
         /// original internal message of the exception without added junk.
         /// </summary>
         /// <param name="argex">The ArgumentException to retrieve the message from</param>

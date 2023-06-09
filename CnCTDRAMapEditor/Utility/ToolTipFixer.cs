@@ -12,7 +12,7 @@ namespace MobiusEditor.Utility
         private int showDuration;
         private List<Control> attachedControls;
 
-        public ToolTipFixer(Form form, ToolTip tooltip, int showDuration, Dictionary<Type, Int32> extraWidths) 
+        public ToolTipFixer(Form form, ToolTip tooltip, int showDuration, Dictionary<Type, Int32> extraWidths)
         {
             this.tooltip = tooltip;
             this.showDuration = showDuration;

@@ -54,7 +54,6 @@ namespace MobiusEditor.SoleSurvivor
                 (from field in typeof(OverlayTypes).GetFields(BindingFlags.Static | BindingFlags.Public)
                  where field.IsInitOnly && typeof(OverlayType).IsAssignableFrom(field.FieldType)
                  select field.GetValue(null) as OverlayType).Where(t => t.ID != 19).OrderBy(t => t.ID).ToArray();
-            
         }
 
         public static IEnumerable<OverlayType> GetTypes()

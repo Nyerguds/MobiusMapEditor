@@ -1,16 +1,16 @@
 ﻿//
 // Copyright 2020 Electronic Arts Inc.
 //
-// The Command & Conquer Map Editor and corresponding source code is free 
-// software: you can redistribute it and/or modify it under the terms of 
-// the GNU General Public License as published by the Free Software Foundation, 
+// The Command & Conquer Map Editor and corresponding source code is free
+// software: you can redistribute it and/or modify it under the terms of
+// the GNU General Public License as published by the Free Software Foundation,
 // either version 3 of the License, or (at your option) any later version.
 
-// The Command & Conquer Map Editor and corresponding source code is distributed 
-// in the hope that it will be useful, but with permitted additional restrictions 
-// under Section 7 of the GPL. See the GNU General Public License in LICENSE.TXT 
-// distributed with this program. You should have received a copy of the 
-// GNU General Public License along with permitted additional restrictions 
+// The Command & Conquer Map Editor and corresponding source code is distributed
+// in the hope that it will be useful, but with permitted additional restrictions
+// under Section 7 of the GPL. See the GNU General Public License in LICENSE.TXT
+// distributed with this program. You should have received a copy of the
+// GNU General Public License along with permitted additional restrictions
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using MobiusEditor.Model;
 using System.Collections.Generic;
@@ -38,8 +38,8 @@ namespace MobiusEditor.RedAlert
         public static readonly HouseType Multi3 = new HouseType(14, "Multi3", WaypointFlag.PlayerStart3, "MULTI3"); // red
         public static readonly HouseType Multi4 = new HouseType(15, "Multi4", WaypointFlag.PlayerStart4, "MULTI4"); // green
         public static readonly HouseType Multi5 = new HouseType(16, "Multi5", WaypointFlag.PlayerStart5, "MULTI5"); // orange
-        public static readonly HouseType Multi6 = new HouseType(17, "Multi6", WaypointFlag.PlayerStart6, "MULTI7"); // purple; fixed to match actual game. 
-        public static readonly HouseType Multi7 = new HouseType(18, "Multi7", WaypointFlag.PlayerStart7, "MULTI6"); // blue; fixed to match actual game. 
+        public static readonly HouseType Multi6 = new HouseType(17, "Multi6", WaypointFlag.PlayerStart6, "MULTI7"); // purple; fixed to match actual game.
+        public static readonly HouseType Multi7 = new HouseType(18, "Multi7", WaypointFlag.PlayerStart7, "MULTI6"); // blue; fixed to match actual game.
         public static readonly HouseType Multi8 = new HouseType(19, "Multi8", WaypointFlag.PlayerStart8, "MULTI8"); // pink
 
         private static readonly HouseType[] Types;

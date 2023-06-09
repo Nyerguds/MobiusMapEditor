@@ -1,16 +1,16 @@
 ﻿//
 // Copyright 2020 Electronic Arts Inc.
 //
-// The Command & Conquer Map Editor and corresponding source code is free 
-// software: you can redistribute it and/or modify it under the terms of 
-// the GNU General Public License as published by the Free Software Foundation, 
+// The Command & Conquer Map Editor and corresponding source code is free
+// software: you can redistribute it and/or modify it under the terms of
+// the GNU General Public License as published by the Free Software Foundation,
 // either version 3 of the License, or (at your option) any later version.
 
-// The Command & Conquer Map Editor and corresponding source code is distributed 
-// in the hope that it will be useful, but with permitted additional restrictions 
-// under Section 7 of the GPL. See the GNU General Public License in LICENSE.TXT 
-// distributed with this program. You should have received a copy of the 
-// GNU General Public License along with permitted additional restrictions 
+// The Command & Conquer Map Editor and corresponding source code is distributed
+// in the hope that it will be useful, but with permitted additional restrictions
+// under Section 7 of the GPL. See the GNU General Public License in LICENSE.TXT
+// distributed with this program. You should have received a copy of the
+// GNU General Public License along with permitted additional restrictions
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using MobiusEditor.Controls;
 using MobiusEditor.Interface;
@@ -112,7 +112,7 @@ namespace MobiusEditor.Widgets
             get
             {
                 float mapScale = mapPanel.ClientSize.Width > mapPanel.ClientSize.Height
-                    ? mapPanel.ClientSize.Width / (float)mapPanel.CameraBounds.Width 
+                    ? mapPanel.ClientSize.Width / (float)mapPanel.CameraBounds.Width
                     : mapPanel.ClientSize.Height / (float)mapPanel.CameraBounds.Height;
                 return new SizeF(mapScale * mapPanel.MapImage.Width / Metrics.Width, mapScale * mapPanel.MapImage.Height / Metrics.Height);
             }
@@ -170,8 +170,10 @@ namespace MobiusEditor.Widgets
             {
                 startScrollMouseLocation = (Size)mapPanel.PointToClient(Control.MousePosition);
                 startScrollFromLocation = mapPanel.AutoScrollPosition;
-                if (mapPanel != null) 
+                if (mapPanel != null)
+                {
                     mapPanel.Cursor = Cursors.SizeAll;
+                }
                 // Only return true if already dragging, not when initialising.
                 return false;
             }
@@ -199,7 +201,7 @@ namespace MobiusEditor.Widgets
         private void MapPanel_KeyUp(Object sender, KeyEventArgs e)
         {
             CheckIfDragging();
-        }        
+        }
 
         private void MapPanel_MouseMove(object sender, MouseEventArgs e)
         {

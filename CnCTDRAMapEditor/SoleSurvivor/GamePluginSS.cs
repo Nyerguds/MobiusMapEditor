@@ -20,7 +20,7 @@ namespace MobiusEditor.SoleSurvivor
         {
             "WESTLOGO",
         };
-        
+
         protected static readonly IEnumerable<string> themeTypesSole = new string[]
         {
             "No Theme",

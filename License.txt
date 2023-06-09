@@ -1,5 +1,5 @@
-Electronic Arts Inc. released only TiberianDawn.dll, RedAlert.dll and 
-the Command & Conquer Map Editor and their corresponding source code 
+Electronic Arts Inc. released only TiberianDawn.dll, RedAlert.dll and
+the Command & Conquer Map Editor and their corresponding source code
 under the GPL V3 below, with additional terms at the bottom.
 
                     GNU GENERAL PUBLIC LICENSE

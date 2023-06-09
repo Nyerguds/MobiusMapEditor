@@ -50,7 +50,7 @@ namespace MobiusEditor.Dialogs
                 {
                     Color col = value.Value;
                     foreCol = col;
-                    backCol = col.GetBrightness() > 0.5 ? Color.Black : Color.White;                    
+                    backCol = col.GetBrightness() > 0.5 ? Color.Black : Color.White;
                 }
                 lblColorVal.ForeColor = foreCol;
                 lblColorVal.BackColor = backCol;
@@ -67,7 +67,7 @@ namespace MobiusEditor.Dialogs
                     else
                     {
                         _selectedIcon = null;
-                    }                    
+                    }
                     lstTemplates.SelectedItem = template.Name;
                     RefreshPreviewPanel();
                     SelectMapping();
@@ -175,9 +175,7 @@ namespace MobiusEditor.Dialogs
         public NewFromImageDialog(IGamePlugin plugin, int width, int height, byte[] imageData, Dictionary<int, string> mappings)
         {
             this.plugin = plugin;
-
             InitializeComponent();
-            
             foreach (KeyValuePair<int, string> kvp in mappings)
             {
                 string tileType = kvp.Value;
@@ -421,7 +419,6 @@ namespace MobiusEditor.Dialogs
             }
             String col = String.Format("#{0:X6} ", selected.Value.ToArgb() & 0xFFFFFF);
             int mappings = lstMappings.Items.Count;
-            
             for (int i = 0; i < mappings; i++)
             {
                 String entry = (lstMappings.Items[i] ?? String.Empty).ToString();
@@ -552,8 +549,6 @@ namespace MobiusEditor.Dialogs
                 var rect = new Rectangle(new Point(padX + selectedIcon.X * cellSize.Width, padY + selectedIcon.Y * cellSize.Height), cellSize);
                 e.Graphics.DrawRectangle(selectedIconPen, rect);
             }
-            
-
         }
 
         private void templateTypeMapPanel_MouseDown(Object sender, MouseEventArgs e)

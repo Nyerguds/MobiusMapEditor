@@ -7,7 +7,7 @@ namespace MobiusEditor.Interface
         HouseType House { get; set; }
 
         int Strength { get; set; }
-        
+
         string Trigger { get; set; }
     }
 }

@@ -17,7 +17,7 @@ Released on 08 Jul 2022 at 21:37 UTC
 * Fixed overlay height overflow bug in Rampa's new UI.
 * Fixed map tiles list duplicating every time the "Map" tool window is opened in Rampa's version.
 * Split off internal overlay type "decoration", used for pavements and civilian buildings.
-* Added CONC and ROAD pavement. They have no graphics, but at least now they are accepted by the editor and not discarded as errors.
+* Added CONC and ROAD pavement to TD. They have no graphics, but at least now they are accepted by the editor and not discarded as errors.
 * Sorted all items in the lists (except map tiles) by key, which is usually a lot more straightforward.
 * Split off specific separate list for techno types usable in teamtypes.
 * Removed the Aircraft from the placeable units in TD. [NOTE: made into a setting in v1.4.3.0]
@@ -43,8 +43,8 @@ Released on 13 Jul 2022 at 07:35 UTC
 * Added "All supported types (\*.ini;\*.bin;\*.mpr)" as default filter when opening files.
 * Added Drag & Drop support for opening map files.
 * Added command line file argument support, which allows setting the editor as application for opening ini/mpr files.
+* Changed the order of the choices for the "Edge" setting of the Houses to a more logical North, East, South, West.
 * House Edge reading now corrects values with case differences so they show up in the dropdown.
-* Centralised the House Edge array on the House class, and changed its order to a more logical North, East, South, West.
 * Fixed order of the Multi-House colors. It seems the error is not in the editor, but in bizarre mixed-up team color names in the remastered game itself.
 * Remapped Neutral (TD only) and Special as yellow, as they are in the game.
 * All tool windows will now save their position.
@@ -84,9 +84,9 @@ Released on 14 Jul 2022 at 20:22 UTC
 * Damaged states now work correctly on all buildings, with a vastly simpler and more general internal logic.
 * Using the mouse wheel will now change the strength of objects in increments of 4.
 * IQ of all Houses in RA now defaults to 0.
-* Fixed Gunboat facing and damage states logic.
+* Fixed TD Gunboat facing and damage states logic.
 * Fixed bug causing bad refresh when previewing the placement of a single cell selected from a template with an empty top right corner cell.
-* The "clear1" tile is now explicitly shown in the tiles list. It acts as eraser.
+* The "clear1" tile is now explicitly shown in the tiles list. It acts as 1x1 eraser.
 * Teamtype "Priority" value (recruit priority) is now capped at 15. [NOTE: reverted in v1.4.0.3]
 
 ### v1.4.0.3:
@@ -443,7 +443,7 @@ Released on 03 Apr 2023 at 19:20 GMT
 * Added character count to the briefing screen. if WriteClassicBriefing is enabled a warning wil be given if the amount exceeds the maximum the classic game can handle. If the warning is ignored, the classic briefing will truncated on the maximum it can handle, to prevent game crashes.
 * Fixed saving of Red Alert's classic briefing, to also obey the classic internal maximum, and to correctly split on line break @ characters.
 
-### v1.4.5.1:
+### v1.4.6.0:
 
 Unreleased
 
@@ -456,11 +456,12 @@ Unreleased
 * Fixed mixup between actions and events in the TD trigger reading checks.
 * Resources outside the map are now always shown at their minimum size, and tinted red, to indicate they don't really have any impact on the map. This also updates on the fly when changing the map bounds.
 * The Resources tool no longer evaluates resources placed outside the map bounds.
+* Fixed a bug in the resource value calculation for gems.
 * Rule errors that occur after closing the Map settings dialog will now show in a window with scrollable area, just like the errors shown when opening a maps.
-* Added missing overlap checks to buildings on the rebuild-list.
+* Added missing overlap checks to buildings on the rebuild-list, so they can no longer disappear on map load without any warning.
 * Fixed bug in Team Types window where the amount of added classes and orders would not unlock when maxed out on the previously selected item.
 * Added names to Overlay, Terrain, Smudge and Resources.
-* Migrated resource randomisation from the map renderer to the density-update logic, so the actual objects don't always show as "TI01" / "GOLD01" / "GEM01".
+* Migrated resource randomisation from the map renderer to the density-update logic, so the actual objects don't always show as "TI01" / "GOLD01" / "GEM01" if that's not the graphics they're showing.
 * Changed TD Technology Center to its real name, instead of "Prison".
 * Added reference to GraphicsFixesRA mod.
 * Added "EnforceObjectMaximums" setting that can be disabled to remove save checks on object maximums.
