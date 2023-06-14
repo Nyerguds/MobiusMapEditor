@@ -77,7 +77,14 @@ namespace MobiusEditor
             else
             {
 #if CLASSICIMPLEMENTED
-                LoadEditorClassic();
+                if (Globals.UseClassicGraphics)
+                {
+                    LoadEditorClassic();
+                }
+                else
+                {
+                    return;
+                }
 #else
                 return;
 #endif
@@ -122,6 +129,7 @@ namespace MobiusEditor
 
         private static void LoadEditorClassic()
         {
+            Globals.SetTileSize(true);
 #if CLASSICIMPLEMENTED
             // The system should scan all mix archives for known filenames of other mix archives so it can do recursive searches.
             // Mix files should be given in order or depth, so first give ones that are in the folder, then ones that may occur inside others.
@@ -130,33 +138,46 @@ namespace MobiusEditor
             gameFolders.Add(GameType.TiberianDawn, "Classic\\TD\\");
             gameFolders.Add(GameType.RedAlert, "Classic\\RA\\");
             gameFolders.Add(GameType.SoleSurvivor, "Classic\\TD\\");
-            //Globals.TheArchiveManager = new MixfileManager(ApplicationPath, gameFolders);
+            MixfileManager mfm = new MixfileManager(ApplicationPath, gameFolders);
+            Globals.TheArchiveManager = mfm;
 
             var mixfilesLoaded = true;
             // This will map the mix files to the respective games, and look for them in the respective folders.
-            mixfilesLoaded &= Globals.TheArchiveManager.LoadArchive(GameType.TiberianDawn, "cclocal.mix");
-            mixfilesLoaded &= Globals.TheArchiveManager.LoadArchive(GameType.TiberianDawn, "conquer.mix");
-            mixfilesLoaded &= Globals.TheArchiveManager.LoadArchive(GameType.TiberianDawn, "desert.mix");
-            mixfilesLoaded &= Globals.TheArchiveManager.LoadArchive(GameType.TiberianDawn, "temperat.mix");
-            mixfilesLoaded &= Globals.TheArchiveManager.LoadArchive(GameType.TiberianDawn, "winter.mix");
-            mixfilesLoaded &= Globals.TheArchiveManager.LoadArchive(GameType.SoleSurvivor, "cclocal.mix");
-            mixfilesLoaded &= Globals.TheArchiveManager.LoadArchive(GameType.SoleSurvivor, "conquer.mix");
-            mixfilesLoaded &= Globals.TheArchiveManager.LoadArchive(GameType.SoleSurvivor, "desert.mix");
-            mixfilesLoaded &= Globals.TheArchiveManager.LoadArchive(GameType.SoleSurvivor, "temperat.mix");
-            mixfilesLoaded &= Globals.TheArchiveManager.LoadArchive(GameType.SoleSurvivor, "winter.mix");
-            mixfilesLoaded &= Globals.TheArchiveManager.LoadArchive(GameType.RedAlert, "expand2.mix");
-            // All graphics from expand are also in expand2
-            //mixfilesLoaded &= Globals.TheArchiveManager.LoadArchive(GameType.RedAlert, "expand.mix");
-            Globals.TheArchiveManager.LoadArchive(GameType.RedAlert, "redalert.mix");
-            Globals.TheArchiveManager.LoadArchive(GameType.RedAlert, "main.mix");
-            // Only needed for conquer.eng, and expand* override those anyway.
-            //mixfilesLoaded &= Globals.TheArchiveManager.LoadArchive(GameType.RedAlert, "local.mix");
-            mixfilesLoaded &= Globals.TheArchiveManager.LoadArchive(GameType.RedAlert, "conquer.mix");
-            mixfilesLoaded &= Globals.TheArchiveManager.LoadArchive(GameType.RedAlert, "lores.mix");
-            mixfilesLoaded &= Globals.TheArchiveManager.LoadArchive(GameType.RedAlert, "lores1.mix");
-            mixfilesLoaded &= Globals.TheArchiveManager.LoadArchive(GameType.RedAlert, "temperat.mix");
-            mixfilesLoaded &= Globals.TheArchiveManager.LoadArchive(GameType.RedAlert, "snow.mix");
-            mixfilesLoaded &= Globals.TheArchiveManager.LoadArchive(GameType.RedAlert, "interior.mix");
+            // Tiberian Dawn
+            mixfilesLoaded &= mfm.LoadArchive(GameType.TiberianDawn, "cclocal.mix", false, false);
+            mixfilesLoaded &= mfm.LoadArchive(GameType.TiberianDawn, "conquer.mix", false, false);
+            // Tiberian Dawn Theaters
+            mixfilesLoaded &= mfm.LoadArchive(GameType.TiberianDawn, "desert.mix", false, false, true);
+            mixfilesLoaded &= mfm.LoadArchive(GameType.TiberianDawn, "temperat.mix", false, false, true);
+            mixfilesLoaded &= mfm.LoadArchive(GameType.TiberianDawn, "winter.mix", false, false, true);
+            // Sole Survivor
+            mixfilesLoaded &= mfm.LoadArchive(GameType.SoleSurvivor, "cclocal.mix", false, false);
+            mixfilesLoaded &= mfm.LoadArchive(GameType.SoleSurvivor, "conquer.mix", false, false);
+            // Sole Survivor Theaters
+            mixfilesLoaded &= mfm.LoadArchive(GameType.SoleSurvivor, "desert.mix", false, false, true);
+            mixfilesLoaded &= mfm.LoadArchive(GameType.SoleSurvivor, "temperat.mix", false, false, true);
+            mixfilesLoaded &= mfm.LoadArchive(GameType.SoleSurvivor, "winter.mix", false, false, true);
+            // Red Alert
+            // Aftermath expand file. Required.
+            mixfilesLoaded &= mfm.LoadArchive(GameType.RedAlert, "expand2.mix", false, false);
+            // Counterstrike expand file. All graphics from expand are also in expand2.mix,
+            // but it could be used in modding to override different files. Not considered vital.
+            mfm.LoadArchive(GameType.RedAlert, "expand.mix", false, false);
+            // Container archives, so not considered vital.
+            mfm.LoadArchive(GameType.RedAlert, "redalert.mix", true, false);
+            mfm.LoadArchive(GameType.RedAlert, "main.mix", true, false);
+            // Needed for theater palettes and the remap settings in palette.cps
+            mixfilesLoaded &= mfm.LoadArchive(GameType.RedAlert, "local.mix", false, true);
+            // Main graphics archive
+            mixfilesLoaded &= mfm.LoadArchive(GameType.RedAlert, "conquer.mix", false, true);
+            // Infantry
+            mixfilesLoaded &= mfm.LoadArchive(GameType.RedAlert, "lores.mix", false, true);
+            // Expansion infantry
+            mixfilesLoaded &= mfm.LoadArchive(GameType.RedAlert, "lores1.mix", false, true);
+            // Theaters
+            mixfilesLoaded &= mfm.LoadArchive(GameType.RedAlert, "temperat.mix", false, true, true);
+            mixfilesLoaded &= mfm.LoadArchive(GameType.RedAlert, "snow.mix", false, true, true);
+            mixfilesLoaded &= mfm.LoadArchive(GameType.RedAlert, "interior.mix", false, true, true);
 #if !DEVELOPER
             if (!mixfilesLoaded)
             {
@@ -164,20 +185,31 @@ namespace MobiusEditor
                 return;
             }
 #endif
+            // Initialize texture, tileset, team color, and game text managers
+            // TODO
+            // TilesetManager: is the system graphics are requested from, possibly with house remap.
+            //Globals.TheTilesetManager = new ClassicTilesetManager(mfm);
+
+            // All the same. Would introduce region-based language differences, but the French and German files are... also called "conquer.eng".
+            Dictionary<GameType, String> gameStringsFiles = new Dictionary<GameType, string>();
+            gameStringsFiles.Add(GameType.TiberianDawn, "conquer.eng");
+            gameStringsFiles.Add(GameType.RedAlert, "conquer.eng");
+            gameStringsFiles.Add(GameType.SoleSurvivor, "conquer.eng");
+            Globals.TheTeamColorManager = new TeamRemapManager(mfm);
+            Globals.TheGameTextManager = new GameTextManagerClassic(mfm, gameStringsFiles);
 #endif
         }
 
         private static void LoadEditorRemastered(String runPath)
         {
             // Initialize megafiles
-            Globals.TheArchiveManager = new MegafileManager(Path.Combine(runPath, Globals.MegafilePath), runPath);
-
+            MegafileManager mfm = new MegafileManager(Path.Combine(runPath, Globals.MegafilePath), runPath);
             var megafilesLoaded = true;
-            megafilesLoaded &= Globals.TheArchiveManager.LoadArchive(GameType.None, "CONFIG.MEG");
-            megafilesLoaded &= Globals.TheArchiveManager.LoadArchive(GameType.None, "TEXTURES_COMMON_SRGB.MEG");
-            megafilesLoaded &= Globals.TheArchiveManager.LoadArchive(GameType.None, "TEXTURES_RA_SRGB.MEG");
-            megafilesLoaded &= Globals.TheArchiveManager.LoadArchive(GameType.None, "TEXTURES_SRGB.MEG");
-            megafilesLoaded &= Globals.TheArchiveManager.LoadArchive(GameType.None, "TEXTURES_TD_SRGB.MEG");
+            megafilesLoaded &= mfm.LoadArchive("CONFIG.MEG");
+            megafilesLoaded &= mfm.LoadArchive("TEXTURES_COMMON_SRGB.MEG");
+            megafilesLoaded &= mfm.LoadArchive("TEXTURES_RA_SRGB.MEG");
+            megafilesLoaded &= mfm.LoadArchive("TEXTURES_SRGB.MEG");
+            megafilesLoaded &= mfm.LoadArchive("TEXTURES_TD_SRGB.MEG");
 #if !DEVELOPER
             if (!megafilesLoaded)
             {
@@ -185,9 +217,10 @@ namespace MobiusEditor
                 return;
             }
 #endif
+            Globals.TheArchiveManager = mfm;
             // Initialize texture, tileset, team color, and game text managers
-            Globals.TheTextureManager = new TextureManager(Globals.TheArchiveManager);
-            Globals.TheTilesetManager = new TilesetManager(Globals.TheArchiveManager, Globals.TheTextureManager, Globals.TilesetsXMLPath, Globals.TexturesPath);
+            TextureManager txm = new TextureManager(Globals.TheArchiveManager);
+            Globals.TheTilesetManager = new TilesetManager(Globals.TheArchiveManager, txm, Globals.TilesetsXMLPath, Globals.TexturesPath);
             Globals.TheTeamColorManager = new TeamColorManager(Globals.TheArchiveManager);
             // Not adapted to mods for now...
             var cultureName = CultureInfo.CurrentUICulture.Name;
@@ -212,12 +245,12 @@ namespace MobiusEditor
             }
             // If it does not exist, try to use the directory from the settings.
             bool validSavedDirectory = false;
-            if (!String.IsNullOrWhiteSpace(Properties.Settings.Default.GameDirectoryPath) &&
-                Directory.Exists(Properties.Settings.Default.GameDirectoryPath))
+            string savedPath = (Properties.Settings.Default.GameDirectoryPath ?? String.Empty).Trim();
+            if (savedPath.Length > 0 && Directory.Exists(savedPath))
             {
-                if (FileTest(Properties.Settings.Default.GameDirectoryPath))
+                if (FileTest(savedPath))
                 {
-                    runPath = Properties.Settings.Default.GameDirectoryPath;
+                    runPath = savedPath;
                     validSavedDirectory = true;
                 }
             }
@@ -240,11 +273,19 @@ namespace MobiusEditor
             if (!validSavedDirectory)
             {
                 var gameInstallationPathForm = new GameInstallationPathForm();
-                if (gameInstallationPathForm.ShowDialog() == DialogResult.No)
-                    return null;
-                runPath = Path.GetDirectoryName(gameInstallationPathForm.SelectedPath);
-                Properties.Settings.Default.GameDirectoryPath = runPath;
-                Properties.Settings.Default.Save();
+                switch (gameInstallationPathForm.ShowDialog())
+                {
+                    case DialogResult.OK:
+                        runPath = Path.GetDirectoryName(gameInstallationPathForm.SelectedPath);
+                        Properties.Settings.Default.GameDirectoryPath = runPath;
+                        Properties.Settings.Default.Save();
+                        break;
+                    case DialogResult.No: // No longer used; cancelling will always fall back to classic graphics.
+                        return null;
+                    case DialogResult.Cancel:
+                        Globals.UseClassicGraphics = true;
+                        return null;
+                }
             }
             return runPath;
         }

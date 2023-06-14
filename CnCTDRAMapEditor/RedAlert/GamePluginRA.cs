@@ -495,7 +495,7 @@ namespace MobiusEditor.RedAlert
                                     throw new ApplicationException("Cannot find the necessary file inside the " + Path.GetFileName(path) + " archive.");
                                 }
                                 INI ini = new INI();
-                                using (BinaryReader reader = new BinaryReader(megafile.Open(mprFile)))
+                                using (BinaryReader reader = new BinaryReader(megafile.OpenFile(mprFile)))
                                 {
                                     iniBytes = reader.ReadAllBytes();
                                     ParseIniContent(ini, iniBytes);

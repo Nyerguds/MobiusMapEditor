@@ -65,7 +65,7 @@ namespace MobiusEditor.Utility
                             string testIniFile = megafile.Where(p => ext.IsMatch(Path.GetExtension(p).ToLower())).FirstOrDefault();
                             if (testIniFile != null)
                             {
-                                using (StreamReader iniReader = new StreamReader(megafile.Open(testIniFile), encDOS))
+                                using (StreamReader iniReader = new StreamReader(megafile.OpenFile(testIniFile), encDOS))
                                 {
                                     iniContents = iniReader.ReadToEnd();
                                 }

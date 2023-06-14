@@ -13,6 +13,8 @@
 // GNU General Public License along with permitted additional restrictions
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using MobiusEditor.Interface;
+using MobiusEditor.Model;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -20,7 +22,7 @@ using System.Xml;
 
 namespace MobiusEditor.Utility
 {
-    public class TilesetManager
+    public class TilesetManager: ITilesetManager, IDisposable
     {
         private readonly Dictionary<string, Tileset> tilesets = new Dictionary<string, Tileset>();
 
@@ -28,6 +30,9 @@ namespace MobiusEditor.Utility
         private readonly TextureManager textureManager;
         private readonly string xmlPath;
         private readonly string texturesPath;
+        private TheaterType theater;
+
+        public TextureManager TextureManager { get { return textureManager; } }
 
         public TilesetManager(IArchiveManager megafileManager, TextureManager textureManager, string xmlPath, string texturesPath)
         {
@@ -77,22 +82,33 @@ namespace MobiusEditor.Utility
             }
         }
 
-        public void Reset()
+        public void Reset(TheaterType theater)
         {
+            this.textureManager.Reset();
             foreach (var item in tilesets)
             {
                 item.Value.Reset();
             }
             LoadXmlfiles();
+            this.theater = theater;
         }
 
-        public bool GetTeamColorTileData(IEnumerable<string> searchTilesets, string name, int shape, ITeamColor teamColor, out int fps, out Tile[] tiles, bool generateFallback, bool onlyIfDefined)
+        private bool GetTeamColorTileData(string name, int shape, ITeamColor teamColor, out int fps, out Tile[] tiles, bool generateFallback, bool onlyIfDefined)
         {
+            if (disposedValue)
+            {
+                throw new ObjectDisposedException("TilesetManager");
+            }
             fps = 0;
             tiles = null;
             Tileset first = null;
             // Tilesets are now searched in the given order, allowing accurate defining of main tilesets and fallback tilesets.
             //foreach (var tileset in tilesets.Join(searchTilesets, x => x.Key, y => y, (x, y) => x.Value))
+            if (this.theater == null)
+            {
+                return false;
+            }
+            IEnumerable<string> searchTilesets = this.theater.Tilesets;
             foreach (string searchTileset in searchTilesets)
             {
                 if (!tilesets.ContainsKey(searchTileset))
@@ -111,7 +127,8 @@ namespace MobiusEditor.Utility
                         // Tile found, but contains no data. Re-fetch with dummy generation.
                         if (tileset.GetTileData(name, shape, teamColor, out fps, out tiles, true))
                         {
-                            return true;
+                            // Signal in return value that dummy was generated.
+                            return false;
                         }
                         continue;
                     }
@@ -121,85 +138,47 @@ namespace MobiusEditor.Utility
             // If the tile is not defined at all, and onlyifdefined is not enabled, make a dummy entry anyway.
             if (!onlyIfDefined && generateFallback && first != null && first.GetTileData(name, shape, teamColor, out fps, out tiles, true))
             {
-                return true;
+                // Signal in return value that dummy was generated.
+                return false;
             }
             return false;
         }
 
-        public bool GetTeamColorTileData(IEnumerable<string> searchTilesets, string name, int shape, ITeamColor teamColor, out int fps, out Tile tile, bool generateFallback, bool onlyIfDefined)
+        private bool GetTeamColorTileData(string name, int shape, ITeamColor teamColor, out int fps, out Tile tile, bool generateFallback, bool onlyIfDefined)
         {
-            tile = null;
-            if (!GetTeamColorTileData(searchTilesets, name, shape, teamColor, out fps, out Tile[] tiles, generateFallback, onlyIfDefined))
+            bool success = GetTeamColorTileData(name, shape, teamColor, out fps, out Tile[] tiles, generateFallback, onlyIfDefined);
+            tile = tiles == null ? null : tiles[0];
+            return success;
+        }
+
+        public bool GetTeamColorTileData(string name, int shape, ITeamColor teamColor, out Tile tile, bool generateFallback, bool onlyIfDefined)
+        {
+            return GetTeamColorTileData(name, shape, teamColor, out int fps, out tile, generateFallback, onlyIfDefined);
+        }
+
+        public bool GetTeamColorTileData(string name, int shape, ITeamColor teamColor, out Tile tile)
+        {
+            return GetTeamColorTileData(name, shape, teamColor, out int fps, out tile, false, false);
+        }
+
+        public bool GetTileData(string name, int shape, out Tile tile, bool generateFallback, bool onlyIfDefined)
+        {
+            return GetTeamColorTileData(name, shape, null, out tile, generateFallback, onlyIfDefined);
+        }
+
+        public bool GetTileData(string name, int shape, out Tile tile)
+        {
+            return GetTeamColorTileData(name, shape, null, out tile, false, false);
+        }
+
+        public int GetTileDataLength(string name)
+        {
+            if (this.theater == null)
             {
-                return false;
+                return 0;
             }
-            tile = tiles[0];
-            return true;
-        }
-
-        public bool GetTeamColorTileData(IEnumerable<string> searchTilesets, string name, int shape, ITeamColor teamColor, out Tile[] tiles, bool generateFallback, bool onlyIfDefined)
-        {
-            return GetTeamColorTileData(searchTilesets, name, shape, teamColor, out int fps, out tiles, generateFallback, onlyIfDefined);
-        }
-
-        public bool GetTeamColorTileData(IEnumerable<string> searchTilesets, string name, int shape, ITeamColor teamColor, out Tile[] tiles)
-        {
-            return GetTeamColorTileData(searchTilesets, name, shape, teamColor, out int fps, out tiles, false, false);
-        }
-
-        public bool GetTeamColorTileData(IEnumerable<string> searchTilesets, string name, int shape, ITeamColor teamColor, out Tile tile, bool generateFallback, bool onlyIfDefined)
-        {
-            return GetTeamColorTileData(searchTilesets, name, shape, teamColor, out int fps, out tile, generateFallback, onlyIfDefined);
-        }
-
-        public bool GetTeamColorTileData(IEnumerable<string> searchTilesets, string name, int shape, ITeamColor teamColor, out Tile tile)
-        {
-            return GetTeamColorTileData(searchTilesets, name, shape, teamColor, out int fps, out tile, false, false);
-        }
-
-        public bool GetTileData(IEnumerable<string> searchTilesets, string name, int shape, out int fps, out Tile[] tiles, bool generateFallback, bool onlyIfDefined)
-        {
-            return GetTeamColorTileData(searchTilesets, name, shape, null, out fps, out tiles, generateFallback, onlyIfDefined);
-        }
-
-        public bool GetTileData(IEnumerable<string> searchTilesets, string name, int shape, out int fps, out Tile[] tiles)
-        {
-            return GetTeamColorTileData(searchTilesets, name, shape, null, out fps, out tiles, false, false);
-        }
-
-        public bool GetTileData(IEnumerable<string> searchTilesets, string name, int shape, out int fps, out Tile tile, bool generateFallback, bool onlyIfDefined)
-        {
-            return GetTeamColorTileData(searchTilesets, name, shape, null, out fps, out tile, generateFallback, onlyIfDefined);
-        }
-
-        public bool GetTileData(IEnumerable<string> searchTilesets, string name, int shape, out int fps, out Tile tile)
-        {
-            return GetTeamColorTileData(searchTilesets, name, shape, null, out fps, out tile, false, false);
-        }
-
-        public bool GetTileData(IEnumerable<string> searchTilesets, string name, int shape, out Tile[] tiles, bool generateFallback, bool onlyIfDefined)
-        {
-            return GetTeamColorTileData(searchTilesets, name, shape, null, out tiles, generateFallback, onlyIfDefined);
-        }
-
-        public bool GetTileData(IEnumerable<string> searchTilesets, string name, int shape, out Tile[] tiles)
-        {
-            return GetTeamColorTileData(searchTilesets, name, shape, null, out tiles, false, false);
-        }
-
-        public bool GetTileData(IEnumerable<string> searchTilesets, string name, int shape, out Tile tile, bool generateFallback, bool onlyIfDefined)
-        {
-            return GetTeamColorTileData(searchTilesets, name, shape, null, out tile, generateFallback, onlyIfDefined);
-        }
-
-        public bool GetTileData(IEnumerable<string> searchTilesets, string name, int shape, out Tile tile)
-        {
-            return GetTeamColorTileData(searchTilesets, name, shape, null, out tile, false, false);
-        }
-
-        public int GetTileDataLength(IEnumerable<string> searchTilesets, string name)
-        {
-            foreach (var tileset in tilesets.Join(searchTilesets, x => x.Key, y => y, (x, y) => x.Value))
+            IEnumerable<string> searchTilesets = this.theater.Tilesets;
+            foreach (Tileset tileset in tilesets.Join(searchTilesets, x => x.Key, y => y, (x, y) => x.Value))
             {
                 int frames = tileset.GetTileDataLength(name);
                 if (frames != -1)
@@ -209,5 +188,27 @@ namespace MobiusEditor.Utility
             }
             return -1;
         }
+
+        #region IDisposable Support
+        private bool disposedValue = false;
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    TextureManager.Dispose();
+                    this.Reset(null);
+                }
+                disposedValue = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+        }
+        #endregion
     }
 }

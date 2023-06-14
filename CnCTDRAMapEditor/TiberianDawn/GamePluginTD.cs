@@ -486,8 +486,8 @@ namespace MobiusEditor.TiberianDawn
                         {
                             throw new ApplicationException("Cannot find the necessary files inside the " + Path.GetFileName(path) + " archive.");
                         }
-                        using (BinaryReader iniReader = new BinaryReader(megafile.Open(iniFile)))
-                        using (BinaryReader binReader = new BinaryReader(megafile.Open(binFile)))
+                        using (BinaryReader iniReader = new BinaryReader(megafile.OpenFile(iniFile)))
+                        using (BinaryReader binReader = new BinaryReader(megafile.OpenFile(binFile)))
                         {
                             iniBytes = iniReader.ReadAllBytes();
                             ParseIniContent(ini, iniBytes, forSole);

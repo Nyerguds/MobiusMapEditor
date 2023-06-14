@@ -14,7 +14,7 @@
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using System;
 
-namespace MobiusEditor.Utility
+namespace MobiusEditor.Utility.Hashing
 {
     public class CRC
     {

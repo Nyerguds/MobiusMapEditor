@@ -168,7 +168,7 @@ namespace MobiusEditor.Model
             return Name;
         }
 
-        public void Init(GameType gameType, TheaterType theater)
+        public void Init(GameType gameType)
         {
             var oldImage = Thumbnail;
             var tileSize = Globals.PreviewTileSize;
@@ -182,7 +182,7 @@ namespace MobiusEditor.Model
                     Icon = tilenr,
                 };
                 MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
-                MapRenderer.RenderOverlay(gameType, theater, Point.Empty, Globals.PreviewTileSize, Globals.PreviewTileScale, mockOverlay).Item2(g);
+                MapRenderer.RenderOverlay(gameType, Point.Empty, Globals.PreviewTileSize, Globals.PreviewTileScale, mockOverlay).Item2(g);
             }
             Thumbnail = th;
             if (oldImage != null)

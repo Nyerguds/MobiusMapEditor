@@ -24,6 +24,7 @@ namespace MobiusEditor
     {
         static Globals()
         {
+            SetTileSize(false);
             double minScale = 1.0 / Math.Min(OriginalTileWidth, OriginalTileHeight);
             // Startup options
             UseClassicGraphics = Properties.Settings.Default.UseClassicGraphics;
@@ -68,9 +69,15 @@ namespace MobiusEditor
         public const string MegafilePath = @"DATA";
         public const string GameTextFilenameFormat = @"DATA\TEXT\MASTERTEXTFILE_{0}.LOC";
 
-        public const int OriginalTileWidth = 128;
-        public const int OriginalTileHeight = 128;
-        public static readonly Size OriginalTileSize = new Size(OriginalTileWidth, OriginalTileHeight);
+        public static void SetTileSize(bool classic)
+        {
+            OriginalTileWidth = classic ? 24 : 128;
+            OriginalTileHeight = classic ? 24 : 128;
+        }
+
+        public static int OriginalTileWidth { get; private set; }
+        public static int OriginalTileHeight { get; private set; }
+        public static Size OriginalTileSize => new Size(OriginalTileWidth, OriginalTileHeight);
 
         public const int PixelWidth = 24;
         public const int PixelHeight = 24;
@@ -134,8 +141,7 @@ namespace MobiusEditor
         public const long MaxMapSize = 0x20000;
 
         public static IArchiveManager TheArchiveManager;
-        public static TextureManager TheTextureManager;
-        public static TilesetManager TheTilesetManager;
+        public static ITilesetManager TheTilesetManager;
         public static ITeamColorManager TheTeamColorManager;
         public static IGameTextManager TheGameTextManager;
 

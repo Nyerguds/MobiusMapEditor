@@ -190,11 +190,11 @@ namespace MobiusEditor.Model
             return (Name ?? String.Empty).ToUpperInvariant();
         }
 
-        public void Init(TheaterType theater)
+        public void Init()
         {
             var oldImage = Thumbnail;
             string tileName = GraphicsSource;
-            if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, tileName, DisplayIcon, out Tile tile))
+            if (Globals.TheTilesetManager.GetTileData(tileName, DisplayIcon, out Tile tile))
             {
                 var tileSize = Globals.PreviewTileSize;
                 var renderSize = new Size(tileSize.Width * Size.Width, tileSize.Height * Size.Height);

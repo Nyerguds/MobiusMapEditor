@@ -28,9 +28,8 @@ using MobiusEditor.Model;
 
 namespace MobiusEditor.Utility
 {
-    public class TextureManager
+    public class TextureManager: IDisposable
     {
-
         private static string MissingTexture = "DATA\\ART\\TEXTURES\\SRGB\\COMMON\\MISC\\MISSING.TGA";
         private bool processedMissingTexture = false;
 
@@ -43,26 +42,24 @@ namespace MobiusEditor.Utility
             this.megafileManager = megafileManager;
         }
 
-        public void Reset(GameType gameType, TheaterType theater)
+        public void Reset()
         {
             Bitmap[] cachedImages = cachedTextures.Values.ToArray();
             cachedTextures.Clear();
             // Bitmaps need to be specifically disposed.
             for (int i = 0; i < cachedImages.Length; ++i)
             {
-                try
-                {
-                    cachedImages[i].Dispose();
-                }
-                catch
-                {
-                    // Ignore.
-                }
+                try { cachedImages[i].Dispose(); }
+                catch { /* Ignore */ }
             }
         }
 
         public (Bitmap, Rectangle) GetTexture(string filename, ITeamColor teamColor, bool generateFallback)
         {
+            if (disposedValue)
+            {
+                throw new ObjectDisposedException("TextureManager");
+            }
             if (!cachedTextures.ContainsKey(filename) && generateFallback)
             {
                 (Bitmap bm, Rectangle bounds) = GetDummyImage();
@@ -332,5 +329,26 @@ namespace MobiusEditor.Utility
             }
             return (bm, r);
         }
+
+        #region IDisposable Support
+        private bool disposedValue = false;
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    this.Reset();
+                }
+                disposedValue = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+        }
+        #endregion
     }
 }

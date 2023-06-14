@@ -258,7 +258,7 @@ namespace MobiusEditor.Model
             return (this.Name ?? String.Empty).ToUpperInvariant();
         }
 
-        public void Init(GameType gameType, TheaterType theater, HouseType house, DirectionType direction)
+        public void Init(GameType gameType, HouseType house, DirectionType direction)
         {
             Bitmap oldImage = this.Thumbnail;
             Building mockBuilding = new Building()
@@ -268,7 +268,7 @@ namespace MobiusEditor.Model
                 Strength = 256,
                 Direction = direction
             };
-            (Rectangle, Action<Graphics>, bool) render = MapRenderer.RenderBuilding(gameType, theater, Point.Empty, Globals.PreviewTileSize, Globals.PreviewTileScale, mockBuilding);
+            (Rectangle, Action<Graphics>, bool) render = MapRenderer.RenderBuilding(gameType, Point.Empty, Globals.PreviewTileSize, Globals.PreviewTileScale, mockBuilding);
             if (!render.Item1.IsEmpty)
             {
                 Bitmap th = new Bitmap(render.Item1.Width, render.Item1.Height);

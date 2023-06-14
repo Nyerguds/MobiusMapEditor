@@ -551,7 +551,7 @@ namespace MobiusEditor.Tools
                 using (var g = Graphics.FromImage(unitPreview))
                 {
                     MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
-                    MapRenderer.RenderUnit(plugin.GameType, map.Theater, new Point(1, 1), Globals.PreviewTileSize, mockUnit).Item2(g);
+                    MapRenderer.RenderUnit(plugin.GameType, new Point(1, 1), Globals.PreviewTileSize, mockUnit).Item2(g);
                 }
                 unitTypeMapPanel.MapImage = unitPreview;
             }

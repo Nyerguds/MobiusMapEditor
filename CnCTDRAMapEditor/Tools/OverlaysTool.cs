@@ -351,7 +351,7 @@ namespace MobiusEditor.Tools
                     Type = SelectedOverlayType,
                     Icon = 0
                 };
-                var render = MapRenderer.RenderOverlay(plugin.GameType, map.Theater, new Point(0,0), Globals.PreviewTileSize, Globals.PreviewTileScale, mockOverlay);
+                var render = MapRenderer.RenderOverlay(plugin.GameType, new Point(0,0), Globals.PreviewTileSize, Globals.PreviewTileScale, mockOverlay);
                 if (!render.Item1.IsEmpty)
                 {
                     using (var g = Graphics.FromImage(overlayPreview))

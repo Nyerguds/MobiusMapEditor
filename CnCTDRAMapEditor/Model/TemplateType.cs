@@ -330,7 +330,7 @@ namespace MobiusEditor.Model
             // This allows mods to add 'random' tiles to existing 1x1 tiles. Check excludes 'Clear' terrain and items already defined as random.
             if (IconWidth == 1 & IconHeight == 1 && (Flag & TemplateTypeFlag.Clear) == TemplateTypeFlag.None && (Flag & TemplateTypeFlag.RandomCell) == TemplateTypeFlag.None)
             {
-                if (Globals.TheTilesetManager.GetTileDataLength(theater.Tilesets, Name) > 1)
+                if (Globals.TheTilesetManager.GetTileDataLength(Name) > 1)
                 {
                     Flag |= TemplateTypeFlag.RandomCell;
                 }
@@ -351,7 +351,7 @@ namespace MobiusEditor.Model
                 }
                 else
                 {
-                    numIcons = Globals.TheTilesetManager.GetTileDataLength(theater.Tilesets, Name);
+                    numIcons = Globals.TheTilesetManager.GetTileDataLength(Name);
                 }
                 numIcons = Math.Max(1, numIcons);
                 NumIcons = numIcons;
@@ -404,7 +404,7 @@ namespace MobiusEditor.Model
                             tryDummy = forceDummy;
                         }
                         // Fetch dummy if definitely in bounds, first cell of a random one, or dummy is forced.
-                        if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, nameToFetch, iconToFetch, out Tile tile, tryDummy, forceDummy || !isRandom || (x == 0 && y == 0)))
+                        if (Globals.TheTilesetManager.GetTileData(nameToFetch, iconToFetch, out Tile tile, tryDummy, forceDummy || !isRandom || (x == 0 && y == 0)))
                         {
                             if (tile.Image != null)
                             {

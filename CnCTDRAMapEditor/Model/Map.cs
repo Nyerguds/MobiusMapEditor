@@ -527,31 +527,31 @@ namespace MobiusEditor.Model
             }
             foreach (SmudgeType smudgeType in this.SmudgeTypes.Where(itm => !Globals.FilterTheaterObjects || itm.Theaters == null || itm.Theaters.Contains(this.Theater)))
             {
-                smudgeType.Init(this.Theater);
+                smudgeType.Init();
             }
             foreach (OverlayType overlayType in this.OverlayTypes.Where(itm => !Globals.FilterTheaterObjects || itm.Theaters == null || itm.Theaters.Contains(this.Theater)))
             {
-                overlayType.Init(gameType, this.Theater);
+                overlayType.Init(gameType);
             }
             foreach (TerrainType terrainType in this.TerrainTypes.Where(itm => !Globals.FilterTheaterObjects || itm.Theaters == null || itm.Theaters.Contains(this.Theater)))
             {
-                terrainType.Init(this.Theater);
+                terrainType.Init();
             }
             // Ignore expansion status for these; they can still be enabled later.
             DirectionType infDir = this.UnitDirectionTypes.Where(d => d.Facing == FacingType.South).First();
             foreach (InfantryType infantryType in this.AllInfantryTypes)
             {
-                infantryType.Init(gameType, this.Theater, this.HouseTypesIncludingNone.Where(h => h.Equals(infantryType.OwnerHouse)).FirstOrDefault(), infDir);
+                infantryType.Init(this.HouseTypesIncludingNone.Where(h => h.Equals(infantryType.OwnerHouse)).FirstOrDefault(), infDir);
             }
             DirectionType unitDir = this.UnitDirectionTypes.Where(d => d.Facing == FacingType.SouthWest).First();
             foreach (UnitType unitType in this.AllUnitTypes)
             {
-                unitType.Init(gameType, this.Theater, this.HouseTypesIncludingNone.Where(h => h.Equals(unitType.OwnerHouse)).FirstOrDefault(), unitDir);
+                unitType.Init(gameType, this.HouseTypesIncludingNone.Where(h => h.Equals(unitType.OwnerHouse)).FirstOrDefault(), unitDir);
             }
             DirectionType bldDir = this.UnitDirectionTypes.Where(d => d.Facing == FacingType.North).First();
             foreach (BuildingType buildingType in this.BuildingTypes.Where(itm => !Globals.FilterTheaterObjects || itm.Theaters == null || itm.Theaters.Contains(this.Theater)))
             {
-                buildingType.Init(gameType, this.Theater, this.HouseTypesIncludingNone.Where(h => h.Equals(buildingType.OwnerHouse)).FirstOrDefault(), bldDir);
+                buildingType.Init(gameType, this.HouseTypesIncludingNone.Where(h => h.Equals(buildingType.OwnerHouse)).FirstOrDefault(), bldDir);
             }
         }
 

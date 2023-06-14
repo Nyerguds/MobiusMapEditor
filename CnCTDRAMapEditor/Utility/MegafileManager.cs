@@ -12,11 +12,12 @@
 // distributed with this program. You should have received a copy of the
 // GNU General Public License along with permitted additional restrictions
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
-using MobiusEditor.Interface;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using MobiusEditor.Interface;
+using MobiusEditor.Model;
 
 namespace MobiusEditor.Utility
 {
@@ -38,7 +39,7 @@ namespace MobiusEditor.Utility
             this.LoadRoot = Path.GetFullPath(loadRoot);
         }
 
-        public bool LoadArchive(GameType gameType, string archivePath)
+        public bool LoadArchive(string archivePath)
         {
             if (!Path.IsPathRooted(archivePath))
             {
@@ -89,7 +90,7 @@ namespace MobiusEditor.Utility
             }
             foreach (var megafile in megafiles)
             {
-                var stream = megafile.Open(path.ToUpper());
+                var stream = megafile.OpenFile(path.ToUpper());
                 if (stream != null)
                 {
                     return stream;
@@ -98,7 +99,7 @@ namespace MobiusEditor.Utility
             return null;
         }
 
-        public void Reset(GameType gameType)
+        public void Reset(GameType gameType, TheaterType theater)
         {
             // Do nothing.
         }
@@ -110,7 +111,7 @@ namespace MobiusEditor.Utility
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return GetEnumerator();
+            return this.GetEnumerator();
         }
 
         #region IDisposable Support

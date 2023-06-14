@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using System.IO;
 using System.Security;
 using System.Windows.Forms;
@@ -55,13 +56,19 @@ namespace MobiusEditor
                 return;
             }
             textBox1.Text = dir;
-            DialogResult = DialogResult.OK;
+            DialogResult = DialogResult.Yes;
             Close();
         }
 
         private void btnQuit_Click(object sender, EventArgs e)
         {
             DialogResult = DialogResult.No;
+            Close();
+        }
+
+        private void btnClassic_Click(object sender, EventArgs e)
+        {
+            DialogResult = DialogResult.Cancel;
             Close();
         }
     }

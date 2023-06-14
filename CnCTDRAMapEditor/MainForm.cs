@@ -1335,10 +1335,10 @@ namespace MobiusEditor
             TheaterType theaterType = ttc.ConvertFrom(new MapContext(plugin.Map, false), theater);
             // Resetting to a specific game type will take care of classic mode.
             Globals.TheArchiveManager.ExpandModPaths = modPaths;
-            Globals.TheArchiveManager.Reset(gameType);
+            Globals.TheArchiveManager.Reset(gameType, theaterType);
             Globals.TheGameTextManager.Reset(gameType);
-            Globals.TheTextureManager.Reset(gameType, theaterType);
-            Globals.TheTilesetManager.Reset();
+            //Globals.TheTextureManager.Reset(gameType, theaterType);
+            Globals.TheTilesetManager.Reset(theaterType);
             Globals.TheTeamColorManager.Reset(gameType, theaterType);
             // Load game-specific data
             if (gameType == GameType.TiberianDawn)
@@ -1665,8 +1665,7 @@ namespace MobiusEditor
                     pl.Dispose();
                 }
                 // Unload graphics
-                Globals.TheTilesetManager.Reset();
-                Globals.TheTextureManager.Reset(GameType.None, null);
+                Globals.TheTilesetManager.Reset(null);
                 // Clean up loaded file status
                 filename = null;
                 loadedFileType = FileType.None;
@@ -2398,7 +2397,7 @@ namespace MobiusEditor
             Tile templateTile = null;
             if (template != null)
             {
-                Globals.TheTilesetManager.GetTileData(plugin.Map.Theater.Tilesets, template.Name, template.GetIconIndex(template.GetFirstValidIcon()), out templateTile, false, true);
+                Globals.TheTilesetManager.GetTileData(template.Name, template.GetIconIndex(template.GetFirstValidIcon()), out templateTile);
             }
             // For the following, check if the thumbnail was initialised.
             SmudgeType smudge = plugin.Map.SmudgeTypes.Where(sm => !sm.IsAutoBib && sm.Icons == 1 && sm.Size.Width == 1 && sm.Size.Height == 1 && sm.Thumbnail != null
@@ -2424,13 +2423,13 @@ namespace MobiusEditor
                                         && (!Globals.FilterTheaterObjects || ov.Theaters == null || ov.Theaters.Contains(plugin.Map.Theater))).OrderBy(ov => ov.ID).FirstOrDefault();
             OverlayType wall = plugin.Map.OverlayTypes.Where(ov => (ov.Flag & OverlayTypeFlag.Wall) == OverlayTypeFlag.Wall
                                         && (!Globals.FilterTheaterObjects || ov.Theaters == null || ov.Theaters.Contains(plugin.Map.Theater))).OrderBy(ov => ov.ID).FirstOrDefault();
-            bool gotBeacon = Globals.TheTilesetManager.GetTileData(plugin.Map.Theater.Tilesets, "beacon", 0, out Tile waypoint, false, true);
+            bool gotBeacon = Globals.TheTilesetManager.GetTileData("beacon", 0, out Tile waypoint);
             if (!gotBeacon)
             {
                 // Beacon only exists in rematered graphics. Get fallback.
-                Globals.TheTilesetManager.GetTileData(plugin.Map.Theater.Tilesets, "armor", 6, out waypoint, false, true);
+                Globals.TheTilesetManager.GetTileData("armor", 6, out waypoint);
             }
-            Globals.TheTilesetManager.GetTileData(plugin.Map.Theater.Tilesets, "mine", 3, out Tile cellTrigger, false, true);
+            Globals.TheTilesetManager.GetTileData("mine", 3, out Tile cellTrigger);
             LoadNewIcon(mapToolStripButton, templateTile?.Image, plugin, 0);
             LoadNewIcon(smudgeToolStripButton, smudge?.Thumbnail, plugin, 1);
             //LoadNewIcon(overlayToolStripButton, overlayTile?.Image, plugin, 2);
@@ -2446,9 +2445,13 @@ namespace MobiusEditor
             // The Texture manager returns a clone of its own cached image. The Tileset manager caches those clones,
             // and is responsible for their cleanup, but if we use it directly it needs to be disposed.
             // Icon: chrono cursor from TEXTURES_SRGB.MEG
-            using (Bitmap select = Globals.TheTextureManager.GetTexture(@"DATA\ART\TEXTURES\SRGB\ICON_SELECT_GREEN_04.DDS", null, false).Item1)
+            if (Globals.TheTilesetManager is TilesetManager tsm)
             {
-                LoadNewIcon(selectToolStripButton, select, plugin, 11, false);
+                // Loaded without tileset manager, in modern only. Will need to fix this for classic later.
+                using (Bitmap select = tsm.TextureManager.GetTexture(@"DATA\ART\TEXTURES\SRGB\ICON_SELECT_GREEN_04.DDS", null, false).Item1)
+                {
+                    LoadNewIcon(selectToolStripButton, select, plugin, 11, false);
+                }
             }
         }
         private void LoadNewIcon(ViewToolStripButton button, Bitmap image, IGamePlugin plugin, int index)

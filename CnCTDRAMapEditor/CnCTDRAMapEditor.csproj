@@ -330,6 +330,7 @@
     <Compile Include="Interface\ITeamColor.cs" />
     <Compile Include="Interface\ITechno.cs" />
     <Compile Include="Interface\ITechnoType.cs" />
+    <Compile Include="Interface\ITilesetManager.cs" />
     <Compile Include="Interface\ITool.cs" />
     <Compile Include="Interface\IWidget.cs" />
     <Compile Include="Interface\ToolType.cs" />
@@ -598,12 +599,13 @@
     <Compile Include="Tools\WaypointsTool.cs" />
     <Compile Include="Utility\BooleanStringStyle.cs" />
     <Compile Include="Utility\ClassicSpriteLoader.cs" />
-    <Compile Include="Utility\CRC.cs" />
     <Compile Include="Utility\ExtensionMethods.cs" />
     <Compile Include="Utility\GameTextManager.cs" />
     <Compile Include="Utility\GameTextManagerClassic.cs" />
     <Compile Include="Utility\GeneralUtils.cs" />
     <Compile Include="Utility\GenericBooleanTypeConverter.cs" />
+    <Compile Include="Utility\Hashing\CRC.cs" />
+    <Compile Include="Utility\Hashing\Rol.cs" />
     <Compile Include="Utility\ImageUtils.cs" />
     <Compile Include="Utility\INI.cs" />
     <Compile Include="Utility\INITools.cs" />
@@ -612,6 +614,8 @@
     <Compile Include="Utility\Megafile.cs" />
     <Compile Include="Utility\MegafileBuilder.cs" />
     <Compile Include="Utility\MegafileManager.cs" />
+    <Compile Include="Utility\Mixfile.cs" />
+    <Compile Include="Utility\MixfileManager.cs" />
     <Compile Include="Utility\MRU.cs" />
     <Compile Include="Utility\PropertyTracker.cs" />
     <Compile Include="Event\MapRefreshEventArgs.cs" />

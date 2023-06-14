@@ -195,7 +195,7 @@ namespace MobiusEditor.Render
                         icon = 0;
                     }
                     // If it's actually placed on the map, show it, even if it has no graphics.
-                    if (Globals.TheTilesetManager.GetTileData(map.Theater.Tilesets, name, icon, out Tile tile, true, false))
+                    if (Globals.TheTilesetManager.GetTileData(name, icon, out Tile tile, true, false))
                     {
                         var renderBounds = new Rectangle(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height, tileSize.Width, tileSize.Height);
                         if(tile.Image != null)
@@ -256,7 +256,7 @@ namespace MobiusEditor.Render
                     bool paintAsOverlay = overlay.Type.IsOverlay && (layers & MapLayerFlag.Overlay) != MapLayerFlag.None;
                     if (paintAsWall || paintAsResource || paintAsOverlay)
                     {
-                        RenderOverlay(gameType, map.Theater, location, tileSize, tileScale, overlay).Item2(graphics);
+                        RenderOverlay(gameType, location, tileSize, tileScale, overlay).Item2(graphics);
                     }
                 }
             }
@@ -280,7 +280,7 @@ namespace MobiusEditor.Render
                     {
                         continue;
                     }
-                    overlappingRenderList.Add(RenderBuilding(gameType, map.Theater, topLeft, tileSize, tileScale, building));
+                    overlappingRenderList.Add(RenderBuilding(gameType, topLeft, tileSize, tileScale, building));
                 }
             }
             if ((layers & MapLayerFlag.Infantry) != MapLayerFlag.None)
@@ -298,7 +298,7 @@ namespace MobiusEditor.Render
                         {
                             continue;
                         }
-                        overlappingRenderList.Add(RenderInfantry(map.Theater, topLeft, tileSize, infantry, (InfantryStoppingType)i));
+                        overlappingRenderList.Add(RenderInfantry(topLeft, tileSize, infantry, (InfantryStoppingType)i));
                     }
                 }
             }
@@ -310,7 +310,7 @@ namespace MobiusEditor.Render
                     {
                         continue;
                     }
-                    overlappingRenderList.Add(RenderUnit(gameType, map.Theater, topLeft, tileSize, unit));
+                    overlappingRenderList.Add(RenderUnit(gameType, topLeft, tileSize, unit));
                 }
             }
             // Paint flat items (like the repair bay)
@@ -333,7 +333,7 @@ namespace MobiusEditor.Render
                     {
                         continue;
                     }
-                    RenderOverlay(gameType, map.Theater, topLeft, tileSize, tileScale, overlay).Item2(graphics);
+                    RenderOverlay(gameType, topLeft, tileSize, tileScale, overlay).Item2(graphics);
                 }
             }
 
@@ -348,7 +348,7 @@ namespace MobiusEditor.Render
                     {
                         continue;
                     }
-                    RenderWaypoint(gameType, map.BasicSection.SoloMission, map.Theater, tileSize, flagColors, waypoint).Item2(graphics);
+                    RenderWaypoint(gameType, map.BasicSection.SoloMission, tileSize, flagColors, waypoint).Item2(graphics);
                 }
             }
         }
@@ -375,7 +375,7 @@ namespace MobiusEditor.Render
                 );
                 imageAttributes.SetColorMatrix(colorMatrix);
             }
-            if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, smudge.Type.Name, smudge.Icon, out Tile tile))
+            if (Globals.TheTilesetManager.GetTileData(smudge.Type.Name, smudge.Icon, out Tile tile))
             {
                 Rectangle smudgeBounds = RenderBounds(tile.Image.Size, new Size(1, 1), tileScale);
                 smudgeBounds.X += topLeft.X * tileSize.Width;
@@ -393,14 +393,14 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static (Rectangle, Action<Graphics>) RenderOverlay(GameType gameType, TheaterType theater, Point topLeft, Size tileSize, double tileScale, Overlay overlay)
+        public static (Rectangle, Action<Graphics>) RenderOverlay(GameType gameType, Point topLeft, Size tileSize, double tileScale, Overlay overlay)
         {
             OverlayType ovtype = overlay.Type;
             string name = ovtype.GraphicsSource;
             int icon = ovtype.IsConcrete || ovtype.IsResource || ovtype.IsWall || ovtype.ForceTileNr == -1 ? overlay.Icon : ovtype.ForceTileNr;
             bool isTeleport = gameType == GameType.SoleSurvivor && ovtype == SoleSurvivor.OverlayTypes.Teleport && Globals.AdjustSoleTeleports;
             // For Decoration types, generate dummy if not found.
-            if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, name, icon, out Tile tile, (ovtype.Flag & OverlayTypeFlag.Pavement) != 0, false))
+            if (Globals.TheTilesetManager.GetTileData(name, icon, out Tile tile, (ovtype.Flag & OverlayTypeFlag.Pavement) != 0, false))
             {
                 int actualTopLeftX = topLeft.X * tileSize.Width;
                 int actualTopLeftY = topLeft.Y * tileSize.Height;
@@ -456,7 +456,7 @@ namespace MobiusEditor.Render
         public static (Rectangle, Action<Graphics>, bool) RenderTerrain(GameType gameType, TheaterType theater, Point topLeft, Size tileSize, double tileScale, Terrain terrain)
         {
             string tileName = terrain.Type.GraphicsSource;
-            if (!Globals.TheTilesetManager.GetTileData(theater.Tilesets, tileName, terrain.Type.DisplayIcon, out Tile tile))
+            if (!Globals.TheTilesetManager.GetTileData(tileName, terrain.Type.DisplayIcon, out Tile tile))
             {
                 Debug.Print(string.Format("Terrain {0} ({1}) not found", tileName, terrain.Type.DisplayIcon));
                 return (Rectangle.Empty, (g) => { }, false);
@@ -488,7 +488,7 @@ namespace MobiusEditor.Render
             return (terrainBounds, render, false);
         }
 
-        public static (Rectangle, Action<Graphics>, bool) RenderBuilding(GameType gameType, TheaterType theater, Point topLeft, Size tileSize, double tileScale, Building building)
+        public static (Rectangle, Action<Graphics>, bool) RenderBuilding(GameType gameType, Point topLeft, Size tileSize, double tileScale, Building building)
         {
             var tint = building.Tint;
             var icon = building.Type.FrameOFfset;
@@ -502,7 +502,7 @@ namespace MobiusEditor.Render
             // Only fetch if damaged. BuildingType.IsSingleFrame is an override for the RA mines. Everything else works with one simple logic.
             if (isDamaged && !building.Type.IsSingleFrame)
             {
-                maxIcon = Globals.TheTilesetManager.GetTileDataLength(theater.Tilesets, building.Type.GraphicsSource);
+                maxIcon = Globals.TheTilesetManager.GetTileDataLength(building.Type.GraphicsSource);
                 hasCollapseFrame = (gameType == GameType.TiberianDawn || gameType == GameType.SoleSurvivor) && maxIcon > 1 && maxIcon % 2 == 1;
                 damageIconOffs = maxIcon / 2;
                 collapseIcon = maxIcon - 1;
@@ -527,7 +527,7 @@ namespace MobiusEditor.Render
                 }
             }
             ITeamColor tc = building.Type.CanRemap ? Globals.TheTeamColorManager[building.House.BuildingTeamColor] : null;
-            if (Globals.TheTilesetManager.GetTeamColorTileData(theater.Tilesets, building.Type.GraphicsSource, icon, tc, out Tile tile))
+            if (Globals.TheTilesetManager.GetTeamColorTileData(building.Type.GraphicsSource, icon, tc, out Tile tile))
             {
                 var location = new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height);
                 var maxSize = new Size(building.Type.Size.Width * tileSize.Width, building.Type.Size.Height * tileSize.Height);
@@ -540,10 +540,10 @@ namespace MobiusEditor.Render
                     int overlayIcon = 0;
                     if (building.Strength <= healthyMin)
                     {
-                        int maxOverlayIcon = Globals.TheTilesetManager.GetTileDataLength(theater.Tilesets, building.Type.FactoryOverlay);
+                        int maxOverlayIcon = Globals.TheTilesetManager.GetTileDataLength(building.Type.FactoryOverlay);
                         overlayIcon = maxOverlayIcon / 2;
                     }
-                    Globals.TheTilesetManager.GetTeamColorTileData(theater.Tilesets, building.Type.FactoryOverlay, overlayIcon, Globals.TheTeamColorManager[building.House.BuildingTeamColor], out factoryOverlayTile);
+                    Globals.TheTilesetManager.GetTeamColorTileData(building.Type.FactoryOverlay, overlayIcon, Globals.TheTeamColorManager[building.House.BuildingTeamColor], out factoryOverlayTile);
                 }
                 void render(Graphics g)
                 {
@@ -594,11 +594,11 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static (Rectangle, Action<Graphics>, bool) RenderInfantry(TheaterType theater, Point topLeft, Size tileSize, Infantry infantry, InfantryStoppingType infantryStoppingType)
+        public static (Rectangle, Action<Graphics>, bool) RenderInfantry(Point topLeft, Size tileSize, Infantry infantry, InfantryStoppingType infantryStoppingType)
         {
             var icon = HumanShape[Facing32[infantry.Direction.ID]];
             string teamColor = infantry.House?.UnitTeamColor;
-            if (Globals.TheTilesetManager.GetTeamColorTileData(theater.Tilesets, infantry.Type.Name, icon, Globals.TheTeamColorManager[teamColor], out Tile tile))
+            if (Globals.TheTilesetManager.GetTeamColorTileData(infantry.Type.Name, icon, Globals.TheTeamColorManager[teamColor], out Tile tile))
             {
                 // These values are experimental, from comparing map editor screenshots to game screenshots. -Nyer
                 int infantryCorrectX = tileSize.Width / -12;
@@ -665,7 +665,7 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static (Rectangle, Action<Graphics>, bool) RenderUnit(GameType gameType, TheaterType theater, Point topLeft, Size tileSize, Unit unit)
+        public static (Rectangle, Action<Graphics>, bool) RenderUnit(GameType gameType, Point topLeft, Size tileSize, Unit unit)
         {
             int icon = -1;
             if (gameType == GameType.TiberianDawn || gameType == GameType.SoleSurvivor)
@@ -732,7 +732,7 @@ namespace MobiusEditor.Render
                     teamColor = unit.House.UnitTeamColor;
                 }
             }
-            if (!Globals.TheTilesetManager.GetTeamColorTileData(theater.Tilesets, unit.Type.Name, icon, Globals.TheTeamColorManager[teamColor], out Tile tile))
+            if (!Globals.TheTilesetManager.GetTeamColorTileData(unit.Type.Name, icon, Globals.TheTeamColorManager[teamColor], out Tile tile))
             {
                 Debug.Print(string.Format("Unit {0} ({1}) not found", unit.Type.Name, icon));
                 return (Rectangle.Empty, (g) => { }, false);
@@ -795,9 +795,9 @@ namespace MobiusEditor.Render
                     turret2Icon = getRotorIcon(turret2Name, unit.Direction.ID, turret2Icon);
                 }
                 if (turretName != null)
-                    Globals.TheTilesetManager.GetTeamColorTileData(theater.Tilesets, turretName, turretIcon, Globals.TheTeamColorManager[teamColor], out turretTile);
+                    Globals.TheTilesetManager.GetTeamColorTileData(turretName, turretIcon, Globals.TheTeamColorManager[teamColor], out turretTile);
                 if (turret2Name != null)
-                    Globals.TheTilesetManager.GetTeamColorTileData(theater.Tilesets, turret2Name, turret2Icon, Globals.TheTeamColorManager[teamColor], out turret2Tile);
+                    Globals.TheTilesetManager.GetTeamColorTileData(turret2Name, turret2Icon, Globals.TheTeamColorManager[teamColor], out turret2Tile);
             }
             var tint = unit.Tint;
             void render(Graphics g)
@@ -903,16 +903,16 @@ namespace MobiusEditor.Render
             return (renderBounds, render, false);
         }
 
-        public static (Rectangle, Action<Graphics>) RenderWaypoint(GameType gameType, bool soloMission, TheaterType theater, Size tileSize, ITeamColor[] flagColors, Waypoint waypoint)
+        public static (Rectangle, Action<Graphics>) RenderWaypoint(GameType gameType, bool soloMission, Size tileSize, ITeamColor[] flagColors, Waypoint waypoint)
         {
             // Opacity is normally 0.5 for non-flag waypoint indicators, but is variable because the post-render
             // actions of the waypoints tool will paint a fully opaque version over the currently selected waypoint.
             //int mpId = Waypoint.GetMpIdFromFlag(waypoint.Flag);
             //float defaultOpacity = !soloMission && mpId >= 0 && mpId < flagColors.Length ? 1.0f : 0.5f;
-            return Render(gameType, soloMission, theater, tileSize, flagColors, waypoint, 0.5f);
+            return RenderWaypoint(gameType, soloMission, tileSize, flagColors, waypoint, 0.5f);
         }
 
-        public static (Rectangle, Action<Graphics>) Render(GameType gameType, bool soloMission, TheaterType theater, Size tileSize, ITeamColor[] flagColors, Waypoint waypoint, float transparencyModifier)
+        public static (Rectangle, Action<Graphics>) RenderWaypoint(GameType gameType, bool soloMission, Size tileSize, ITeamColor[] flagColors, Waypoint waypoint, float transparencyModifier)
         {
             if (!waypoint.Point.HasValue)
             {
@@ -925,31 +925,36 @@ namespace MobiusEditor.Render
             float brightness = 1.0f;
             int mpId = Waypoint.GetMpIdFromFlag(waypoint.Flag);
             int icon = 0;
-            bool defaultIcon = true;
+            bool isDefaultIcon = true;
+            bool gotIcon = false;
+            Tile tile;
             if (!soloMission && mpId >= 0 && mpId < flagColors.Length)
             {
-                defaultIcon = false;
+                isDefaultIcon = false;
                 tileGraphics = "flagfly";
                 // Always paint flags as opaque.
                 transparencyModifier = 1.0f;
                 teamColor = flagColors[mpId];
-                icon = 0;
+                gotIcon = Globals.TheTilesetManager.GetTeamColorTileData(tileGraphics, icon, teamColor, out tile);
             }
-            if (gameType == GameType.SoleSurvivor && (waypoint.Flag & WaypointFlag.CrateSpawn) == WaypointFlag.CrateSpawn)
+            else if (gameType == GameType.SoleSurvivor && (waypoint.Flag & WaypointFlag.CrateSpawn) == WaypointFlag.CrateSpawn)
             {
-                defaultIcon = false;
+                isDefaultIcon = false;
                 tileGraphics = "scrate";
-                icon = 0;
                 //tint = Color.FromArgb(waypoint.Tint.A, Color.Green);
                 //brightness = 1.5f;
+                gotIcon = Globals.TheTilesetManager.GetTileData(tileGraphics, icon, out tile);
             }
-            bool gotIcon = Globals.TheTilesetManager.GetTeamColorTileData(theater.Tilesets, tileGraphics, icon, teamColor, out Tile tile, true, true);
-            if (!gotIcon && defaultIcon)
+            else
+            {
+                gotIcon = Globals.TheTilesetManager.GetTileData(tileGraphics, icon, out tile);
+            }
+            if (!gotIcon && isDefaultIcon)
             {
                 // Beacon only exists in remastered graphics. Get fallback.
                 tileGraphics = "armor";
                 icon = 6;
-                gotIcon = Globals.TheTilesetManager.GetTeamColorTileData(theater.Tilesets, tileGraphics, icon, teamColor, out tile, true, true);
+                gotIcon = Globals.TheTilesetManager.GetTeamColorTileData(tileGraphics, icon, teamColor, out tile);
             }
             if (!gotIcon)
             {
@@ -1184,7 +1189,7 @@ namespace MobiusEditor.Render
             string name = ovtype.GraphicsSource;
             int icon = ovtype.IsConcrete || ovtype.IsResource || ovtype.IsWall || ovtype.ForceTileNr == -1 ? overlay.Icon : ovtype.ForceTileNr;
             // For Decoration types, generate dummy if not found.
-            if (!Globals.TheTilesetManager.GetTileData(theater.Tilesets, name, icon, out Tile tile, (ovtype.Flag & OverlayTypeFlag.Pavement) != 0, false))
+            if (!Globals.TheTilesetManager.GetTileData(name, icon, out Tile tile, (ovtype.Flag & OverlayTypeFlag.Pavement) != 0, false))
             {
                 return null;
             }
@@ -1306,7 +1311,7 @@ namespace MobiusEditor.Render
                     Type = SoleSurvivor.OverlayTypes.Road,
                     Tint = Color.FromArgb(128, Color.White)
                 };
-                RenderOverlay(gameType, map.Theater, p, tileSize, tileScale, footballTerrain).Item2(graphics);
+                RenderOverlay(gameType, p, tileSize, tileScale, footballTerrain).Item2(graphics);
             }
         }
 
@@ -1328,7 +1333,7 @@ namespace MobiusEditor.Render
             ITeamColor[] flagColors = map.FlagColors.ToArray();
             foreach (Waypoint wp in footballWayPoints)
             {
-                RenderWaypoint(gameType, false, map.Theater, tileSize, flagColors, wp).Item2(graphics);
+                RenderWaypoint(gameType, false, tileSize, flagColors, wp).Item2(graphics);
             }
         }
 

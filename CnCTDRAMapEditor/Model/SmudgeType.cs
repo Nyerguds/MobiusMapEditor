@@ -140,7 +140,7 @@ namespace MobiusEditor.Model
             return Name;
         }
 
-        public void Init(TheaterType theater)
+        public void Init()
         {
             var oldImage = Thumbnail;
             var tileSize = Globals.PreviewTileSize;
@@ -155,7 +155,7 @@ namespace MobiusEditor.Model
                 {
                     for (int x = 0; x < Size.Width; x++)
                     {
-                        if (Globals.TheTilesetManager.GetTileData(theater.Tilesets, Name, icon++, out Tile tile))
+                        if (Globals.TheTilesetManager.GetTileData(Name, icon++, out Tile tile))
                         {
                             found = true;
                             Rectangle overlayBounds = MapRenderer.RenderBounds(tile.Image.Size, new Size(1, 1), Globals.PreviewTileScale);

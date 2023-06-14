@@ -97,18 +97,25 @@ namespace MobiusEditor.Utility
             }
         }
 
-        public Stream Open(string path)
+        public Stream OpenFile(string path)
         {
+            if (disposedValue)
+            {
+                throw new ObjectDisposedException("MegaFile");
+            }
             if (!fileTable.TryGetValue(path, out SubFileData subFile))
             {
                 return null;
             }
-
             return megafileMap.CreateViewStream(subFile.SubfileImageDataOffset, subFile.SubfileSize, MemoryMappedFileAccess.Read);
         }
 
         public IEnumerator<string> GetEnumerator()
         {
+            if (disposedValue)
+            {
+                throw new ObjectDisposedException("MegaFile");
+            }
             foreach (var file in stringTable)
             {
                 yield return file;
