@@ -2435,9 +2435,14 @@ namespace MobiusEditor
             if (!gotBeacon)
             {
                 // Beacon only exists in rematered graphics. Get fallback.
-                Globals.TheTilesetManager.GetTileData("armor", 6, out waypoint);
+                int icn = plugin.GameType == GameType.RedAlert ? 15 : 12;
+                Globals.TheTilesetManager.GetTileData("mouse", icn, out waypoint);
             }
-            Globals.TheTilesetManager.GetTileData("mine", 3, out Tile cellTrigger);
+            Globals.TheTilesetManager.GetTileData("mine.shp", 3, out Tile cellTrigger);
+            if (cellTrigger == null)
+            {
+                Globals.TheTilesetManager.GetTileData("mine", 3, out cellTrigger);
+            }
             LoadNewIcon(mapToolStripButton, templateTile?.Image, plugin, 0);
             LoadNewIcon(smudgeToolStripButton, smudge?.Thumbnail, plugin, 1);
             //LoadNewIcon(overlayToolStripButton, overlayTile?.Image, plugin, 2);

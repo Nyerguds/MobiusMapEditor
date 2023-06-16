@@ -360,7 +360,7 @@ namespace MobiusEditor.Dialogs
                 }
                 templateTypeMapPanel.MapImage = selected.Thumbnail;
                 var templateTypeMetrics = new CellMetrics(selected.ThumbnailIconWidth, selected.ThumbnailIconHeight);
-                templateTypeNavigationWidget = new NavigationWidget(templateTypeMapPanel, templateTypeMetrics, Globals.OriginalTileSize, false);
+                templateTypeNavigationWidget = new NavigationWidget(templateTypeMapPanel, templateTypeMetrics, Globals.PreviewTileSize, false);
                 templateTypeNavigationWidget.MouseoverSize = Size.Empty;
                 templateTypeNavigationWidget.Activate();
             }

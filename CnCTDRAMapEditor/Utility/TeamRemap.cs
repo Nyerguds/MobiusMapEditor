@@ -40,7 +40,7 @@ namespace MobiusEditor.Utility
             this.Name = name;
             this.UnitRadarColor = unitRadarColor;
             this.BuildingRadarColor = buildingRadarColor;
-            this.remapTable = Enumerable.Range(0, 0x100).Select(b => (Byte)b).ToArray();
+            this.remapTable = Enumerable.Range(0, 0x100).Select(b => (byte)b).ToArray();
             int max = Math.Min(0x100, remapstart + remapValues.Length) - remapstart;
             for (int i = 0; i < max; ++i)
             {
@@ -53,7 +53,7 @@ namespace MobiusEditor.Utility
             this.Name = name;
             this.UnitRadarColor = unitRadarColor;
             this.BuildingRadarColor = buildingRadarColor;
-            this.remapTable = Enumerable.Range(0, 0x100).Cast<byte>().ToArray();
+            this.remapTable = Enumerable.Range(0, 0x100).Select(b => (byte)b).ToArray();
             int max = Math.Max(remapOrigins.Length, remapValues.Length);
             for (int i = 0; i < max; ++i)
             {
@@ -100,6 +100,7 @@ namespace MobiusEditor.Utility
                 }
             }
         }
+
         public void ApplyToImage(byte[] bytes, int width, int height, int bytesPerPixel, int stride, Rectangle? opaqueBounds)
         {
             // Only handle 8bpp data.
@@ -110,7 +111,7 @@ namespace MobiusEditor.Utility
             Rectangle bounds = opaqueBounds ?? new Rectangle(0, 0, width, height);
             int boundsBottom = Math.Min(height, bounds.Bottom);
             int boundsWidth = Math.Min(Math.Max(0, width - bounds.Left), bounds.Width);
-            int linePtr = 0;
+            int linePtr = bounds.Top * stride;
             for (int y = bounds.Top; y < boundsBottom; y++)
             {
                 int ptr = linePtr + bounds.Left;

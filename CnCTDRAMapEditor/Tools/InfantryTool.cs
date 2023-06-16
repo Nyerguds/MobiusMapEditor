@@ -812,7 +812,7 @@ namespace MobiusEditor.Tools
             MapRenderer.RenderAllBoundsFromPoint(graphics, Globals.MapTileSize, previewMap.Technos.OfType<InfantryGroup>());
             if ((Layers & (MapLayerFlag.Infantry | MapLayerFlag.TechnoTriggers)) == (MapLayerFlag.Infantry | MapLayerFlag.TechnoTriggers))
             {
-                MapRenderer.RenderAllTechnoTriggers(graphics, previewMap, Globals.MapTileSize, Globals.MapTileScale, Layers);
+                MapRenderer.RenderAllTechnoTriggers(graphics, previewMap, Globals.MapTileSize, Layers);
             }
         }
 

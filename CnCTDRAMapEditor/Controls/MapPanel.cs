@@ -405,6 +405,7 @@ namespace MobiusEditor.Controls
 
             PreRender?.Invoke(this, new RenderEventArgs(pe.Graphics, fullInvalidation ? null : invalidateCells));
             Image mapImg = mapImage;
+            MapRenderer.SetRenderSettings(pe.Graphics, SmoothScale);
             if (mapImg != null)
             {
                 pe.Graphics.Transform = compositeTransform;
@@ -412,7 +413,6 @@ namespace MobiusEditor.Controls
                 var oldCompositingQuality = pe.Graphics.CompositingQuality;
                 var oldInterpolationMode = pe.Graphics.InterpolationMode;
                 var oldPixelOffsetMode = pe.Graphics.PixelOffsetMode;
-                MapRenderer.SetRenderSettings(pe.Graphics, SmoothScale);
                 pe.Graphics.DrawImage(mapImg, 0, 0);
                 pe.Graphics.CompositingMode = oldCompositingMode;
                 pe.Graphics.CompositingQuality = oldCompositingQuality;

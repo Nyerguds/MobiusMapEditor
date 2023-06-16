@@ -35,12 +35,14 @@ namespace MobiusEditor.Model
         IsArmed         = 1 << 3,
         /// <summary>Can harvest resources. This affects the default orders for placing it on the map.</summary>
         IsHarvester     = 1 << 4,
+        /// <summary>Can attack units. This affects the default orders for placing it on the map.</summary>
+        NoRemap         = 1 << 5,
         /// <summary>Is a unit that is filtered out of the lists if expansion units are disabled.</summary>
-        IsExpansionUnit = 1 << 5,
+        IsExpansionUnit = 1 << 6,
         /// <summary>Can show a mobile gap area-of-effect radius indicator.</summary>
-        IsGapGenerator  = 1 << 6,
+        IsGapGenerator  = 1 << 7,
         /// <summary>Can show a radar jamming area-of-effect radius indicator.</summary>
-        IsJammer        = 1 << 7,
+        IsJammer        = 1 << 8,
     }
 
     public static class UnitTypeIDMask
@@ -72,6 +74,7 @@ namespace MobiusEditor.Model
         public bool IsArmed => (this.Flag & UnitTypeFlag.IsArmed) == UnitTypeFlag.IsArmed;
         public bool IsHarvester => (this.Flag & UnitTypeFlag.IsHarvester) == UnitTypeFlag.IsHarvester;
         public bool IsExpansionUnit => (this.Flag & UnitTypeFlag.IsExpansionUnit) == UnitTypeFlag.IsExpansionUnit;
+        public bool CanRemap => (this.Flag & UnitTypeFlag.NoRemap) != UnitTypeFlag.NoRemap;
         private Size _RenderSize;
         private string nameId;
 

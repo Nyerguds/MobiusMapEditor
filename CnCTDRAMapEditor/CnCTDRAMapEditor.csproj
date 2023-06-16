@@ -393,6 +393,7 @@
     <Compile Include="RedAlert\GamePluginRA.cs" />
     <Compile Include="RedAlert\House.cs" />
     <Compile Include="RedAlert\HouseTypes.cs" />
+    <Compile Include="RedAlert\InfantryClassicRemap.cs" />
     <Compile Include="RedAlert\InfantryTypes.cs" />
     <Compile Include="RedAlert\MissionTypes.cs" />
     <Compile Include="RedAlert\OverlayTypes.cs" />

@@ -613,7 +613,7 @@ namespace MobiusEditor.Tools
             {
                 if ((Layers & MapLayerFlag.TechnoTriggers) == MapLayerFlag.TechnoTriggers)
                 {
-                    MapRenderer.RenderAllTechnoTriggers(graphics, previewMap, Globals.MapTileSize, Globals.MapTileScale, Layers);
+                    MapRenderer.RenderAllTechnoTriggers(graphics, previewMap, Globals.MapTileSize, Layers);
                 }
                 if ((Layers & MapLayerFlag.EffectRadius) == MapLayerFlag.EffectRadius)
                 {

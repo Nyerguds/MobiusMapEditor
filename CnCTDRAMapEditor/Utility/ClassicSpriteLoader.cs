@@ -500,7 +500,8 @@ namespace MobiusEditor.Utility
             Int32 hdrIconsPtr = ArrayUtils.ReadInt32FromByteArrayLe(fileData, 0x0C);
             // Offset of start of palette data. Probably always 0.
             Int32 hdrPalettesPtr = ArrayUtils.ReadInt32FromByteArrayLe(fileData, 0x10);
-            // Offset of remaps data? Always fixed value "0x0D1AFFFF", which makes no sense as ptr.
+            // Offset of remaps data. Dune II leftover of 4 bit to 8 bit translation tables.
+            // Always fixed value 0x0D1AFFFF, which makes no sense as ptr.
             Int32 hdrRemapsPtr = ArrayUtils.ReadInt32FromByteArrayLe(fileData, 0x14);
             // Offset of 'transparency flags'? Generally points to an empty array at the end of the file.
             Int32 hdrTransFlagPtr = ArrayUtils.ReadInt32FromByteArrayLe(fileData, 0x18);
@@ -513,7 +514,85 @@ namespace MobiusEditor.Utility
             if (hdrHeight != 24 || hdrWidth != 24)
                 throw new ArgumentException("Only 24×24 pixel tiles are supported.", "fileData");
             // Checking some normally hardcoded values
-            if (hdrAllocated != 00 || hdrPalettesPtr != 0 || hdrRemapsPtr != 0x0D1AFFFF)
+            if (hdrAllocated != 0 || hdrPalettesPtr != 0)// || hdrRemapsPtr != 0x0D1AFFFF)
+                throw new ArgumentException("Invalid values encountered in header.");
+            if (hdrCount == 0)
+                throw new ArgumentException("Tileset files with 0 tiles are not supported!", "fileData");
+            // Checking if data is all inside the file
+            if (hdrIconsPtr >= fileLen || (hdrMapPtr + hdrCount) > fileLen)
+                throw new ArgumentException("Invalid header values: indices outside file range.", "fileData");
+            Int32 tileSize = hdrWidth * hdrHeight;
+            // Maps the available images onto the full iconset definition
+            Byte[] map = new Byte[hdrCount];
+            Array.Copy(fileData, hdrMapPtr, map, 0, hdrCount);
+            // Get max index plus one for real images count. Nothing in the file header actually specifies this directly.
+            Int32 actualImages = map.Max(x => x == 0xFF ? -1 : x) + 1;
+            if (hdrTransFlagPtr + actualImages > fileLen)
+                throw new ArgumentException("Invalid header values: indices outside file range.", "fileData");
+            if (hdrIconsPtr + actualImages * tileSize > fileLen)
+                throw new ArgumentException("Tile image data outside file range.", "fileData");
+            Byte[] imagesIndex = new Byte[actualImages];
+            Array.Copy(fileData, hdrTransFlagPtr, imagesIndex, 0, actualImages);
+            Byte[][] tiles = new Byte[hdrCount][];
+            widths = new int[hdrCount];
+            heights = new int[hdrCount];
+            Boolean[] tileUseList = new Boolean[map.Length];
+            for (Int32 i = 0; i < map.Length; ++i)
+            {
+                Byte dataIndex = map[i];
+                Boolean used = dataIndex != 0xFF;
+                tileUseList[i] = used;
+                Byte[] tileData = new Byte[tileSize];
+                if (used)
+                {
+                    Int32 offset = hdrIconsPtr + dataIndex * tileSize;
+                    if ((offset + tileSize) > fileLen)
+                        throw new ArgumentException("Tile data outside file range.", "fileData");
+                    Array.Copy(fileData, offset, tileData, 0, tileSize);
+                    tiles[i] = tileData;
+                    widths[i] = hdrWidth;
+                    heights[i] = hdrHeight;
+                }
+            }
+            return tiles;
+        }
+
+        public static Byte[][] GetRaTmpData(Byte[] fileData, out int[] widths, out int[] heights)
+        {
+            Int32 fileLen = fileData.Length;
+            if (fileLen < 0x28)
+                throw new ArgumentException("File is not long enough to be a C&C Template file.", "fileData");
+            Int16 hdrWidth = ArrayUtils.ReadInt16FromByteArrayLe(fileData, 0x00);
+            Int16 hdrHeight = ArrayUtils.ReadInt16FromByteArrayLe(fileData, 0x02);
+            // Amount of icons to form the full icon set. Not necessarily the same as the amount of actual icons.
+            Int16 hdrCount = ArrayUtils.ReadInt16FromByteArrayLe(fileData, 0x04);
+            // Always 0
+            Int16 hdrAllocated = ArrayUtils.ReadInt16FromByteArrayLe(fileData, 0x06);
+            // New in RA
+            Int16 hdrMapWidth = ArrayUtils.ReadInt16FromByteArrayLe(fileData, 0x08);
+            Int16 hdrMapHeight = ArrayUtils.ReadInt16FromByteArrayLe(fileData, 0x0A);
+            Int32 hdrSize = ArrayUtils.ReadInt32FromByteArrayLe(fileData, 0x0C);
+            // Offset of start of actual icon data. Generally always 0x20
+            Int32 hdrIconsPtr = ArrayUtils.ReadInt32FromByteArrayLe(fileData, 0x10);
+            // Offset of start of palette data. Probably always 0.
+            Int32 hdrPalettesPtr = ArrayUtils.ReadInt32FromByteArrayLe(fileData, 0x14);
+            // Offset of remaps data. Dune II leftover of 4 bit to 8 bit translation tables.
+            // Always seems to be 0x2C730FXX (with values differing for the lowest byte), which makes no sense as ptr.
+            Int32 hdrRemapsPtr = ArrayUtils.ReadInt32FromByteArrayLe(fileData, 0x18);
+            // Offset of 'transparency flags'? Generally points to an empty array at the end of the file.
+            Int32 hdrTransFlagPtr = ArrayUtils.ReadInt32FromByteArrayLe(fileData, 0x1C);
+            // Offset of 'color' map, indicating the terrain type for each type. This includes unused cells, which are usually indicated as 0.
+            Int32 hdrColorMapPtr = ArrayUtils.ReadInt32FromByteArrayLe(fileData, 0x20);
+            // Offset of actual icon set definition, defining for each index which icon data to use. FF for none.
+            Int32 hdrMapPtr = ArrayUtils.ReadInt32FromByteArrayLe(fileData, 0x24);
+            // File size check
+            if (hdrSize != fileData.Length)
+                throw new ArgumentException("File size in header does not match.", "fileData");
+            // Only allowing standard 24x24 size
+            if (hdrHeight != 24 || hdrWidth != 24)
+                throw new ArgumentException("Only 24×24 pixel tiles are supported.", "fileData");
+            // Checking some normally hardcoded values
+            if (hdrAllocated != 00 || hdrPalettesPtr != 0)
                 throw new ArgumentException("Invalid values encountered in header.");
             if (hdrCount == 0)
                 throw new ArgumentException("Tileset files with 0 tiles are not supported!", "fileData");
@@ -554,14 +633,6 @@ namespace MobiusEditor.Utility
                 }
             }
             return tiles;
-        }
-
-        public static Byte[][] GetRaTmpData(Byte[] fileData, out int width, out int height)
-        {
-            width = 24;
-            height = 24;
-            // TODO
-            return null;
         }
 
         public static Color[] LoadSixBitPalette(Byte[] fileData, int palStart, int colors)

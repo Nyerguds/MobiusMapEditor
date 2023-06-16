@@ -37,6 +37,7 @@ namespace MobiusEditor.Model
         public bool IsAircraft => false;
         public bool IsFixedWing => false;
         public bool IsHarvester => false;
+        public bool CanRemap => false;
         private string nameId;
 
         public Size GetRenderSize(Size cellSize)
@@ -186,7 +187,14 @@ namespace MobiusEditor.Model
                 : Name.ToUpperInvariant();
             var oldImage = Thumbnail;
             string tileName = GraphicsSource;
-            if (Globals.TheTilesetManager.GetTileData(tileName, DisplayIcon, out Tile tile))
+            Tile tile;
+            // If the graphics source doesn't yield a result, fall back on actual name.
+            // This fixes the graphics source override for the ore mine not working in classic mode.
+            if (!Globals.TheTilesetManager.GetTileData(tileName, DisplayIcon, out tile))
+            {
+                Globals.TheTilesetManager.GetTileData(this.Name, DisplayIcon, out tile);
+            }
+            if (tile != null)
             {
                 var tileSize = Globals.PreviewTileSize;
                 var renderSize = new Size(tileSize.Width * Size.Width, tileSize.Height * Size.Height);

@@ -36,9 +36,9 @@ namespace MobiusEditor.RedAlert
         public static readonly UnitType MCV = new UnitType(11, "mcv", "TEXT_UNIT_RA_MCV", "Greece");
         public static readonly UnitType V2Launcher = new UnitType(12, "v2rl", "TEXT_UNIT_RA_V2RL", "USSR", UnitTypeFlag.IsArmed);
         public static readonly UnitType ConvoyTruck = new UnitType(13, "truk", "TEXT_UNIT_RA_TRUK", "Greece");
-        public static readonly UnitType Ant1 = new UnitType(14, "ant1", "TEXT_UNIT_RA_ANT1", "Special", UnitTypeFlag.IsArmed);
-        public static readonly UnitType Ant2 = new UnitType(15, "ant2", "TEXT_UNIT_RA_ANT2", "Special", UnitTypeFlag.IsArmed);
-        public static readonly UnitType Ant3 = new UnitType(16, "ant3", "TEXT_UNIT_RA_ANT3", "Special", UnitTypeFlag.IsArmed);
+        public static readonly UnitType Ant1 = new UnitType(14, "ant1", "TEXT_UNIT_RA_ANT1", "BadGuy", UnitTypeFlag.IsArmed);
+        public static readonly UnitType Ant2 = new UnitType(15, "ant2", "TEXT_UNIT_RA_ANT2", "Ukraine", UnitTypeFlag.IsArmed);
+        public static readonly UnitType Ant3 = new UnitType(16, "ant3", "TEXT_UNIT_RA_ANT3", "Germany", UnitTypeFlag.IsArmed);
         public static readonly UnitType Chrono = new UnitType(17, "ctnk", "TEXT_UNIT_RA_CTNK", "Greece", UnitTypeFlag.IsArmed | UnitTypeFlag.IsExpansionUnit);
         public static readonly UnitType Tesla = new UnitType(18, "ttnk", "TEXT_UNIT_RA_TTNK", "USSR", UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret | UnitTypeFlag.IsExpansionUnit | UnitTypeFlag.IsJammer);
         public static readonly UnitType MAD = new UnitType(19, "qtnk", "TEXT_UNIT_RA_QTNK", "USSR", UnitTypeFlag.IsArmed | UnitTypeFlag.IsExpansionUnit);

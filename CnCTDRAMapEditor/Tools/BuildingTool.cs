@@ -759,11 +759,11 @@ namespace MobiusEditor.Tools
                     MapRenderer.RenderAllOccupierBounds(g, Globals.PreviewTileSize, buildingList);
                     if ((Layers & MapLayerFlag.BuildingFakes) == MapLayerFlag.BuildingFakes)
                     {
-                        MapRenderer.RenderFakeBuildingLabel(g, mockBuilding, new Point(0, 0), Globals.PreviewTileSize, Globals.PreviewTileScale, false);
+                        MapRenderer.RenderFakeBuildingLabel(g, mockBuilding, new Point(0, 0), Globals.PreviewTileSize, false);
                     }
                     if ((Layers & MapLayerFlag.BuildingRebuild) == MapLayerFlag.BuildingRebuild)
                     {
-                        MapRenderer.RenderRebuildPriorityLabel(g, mockBuilding, new Point(0, 0), Globals.PreviewTileSize, Globals.PreviewTileScale, false);
+                        MapRenderer.RenderRebuildPriorityLabel(g, mockBuilding, new Point(0, 0), Globals.PreviewTileSize, false);
                     }
                 }
                 buildingTypeMapPanel.MapImage = buildingPreview;
@@ -858,15 +858,15 @@ namespace MobiusEditor.Tools
                 }
                 if ((Layers & MapLayerFlag.BuildingFakes) == MapLayerFlag.BuildingFakes)
                 {
-                    MapRenderer.RenderAllFakeBuildingLabels(graphics, previewMap, Globals.MapTileSize, Globals.MapTileScale);
+                    MapRenderer.RenderAllFakeBuildingLabels(graphics, previewMap, Globals.MapTileSize);
                 }
                 if ((Layers & MapLayerFlag.BuildingRebuild) == MapLayerFlag.BuildingRebuild)
                 {
-                    MapRenderer.RenderAllRebuildPriorityLabels(graphics, previewMap, Globals.MapTileSize, Globals.MapTileScale);
+                    MapRenderer.RenderAllRebuildPriorityLabels(graphics, previewMap, Globals.MapTileSize);
                 }
                 if ((Layers & MapLayerFlag.TechnoTriggers) == MapLayerFlag.TechnoTriggers)
                 {
-                    MapRenderer.RenderAllTechnoTriggers(graphics, previewMap, Globals.MapTileSize, Globals.MapTileScale, Layers);
+                    MapRenderer.RenderAllTechnoTriggers(graphics, previewMap, Globals.MapTileSize, Layers);
                 }
             }
         }

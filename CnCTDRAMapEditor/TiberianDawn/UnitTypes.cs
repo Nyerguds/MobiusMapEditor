@@ -40,10 +40,10 @@ namespace MobiusEditor.TiberianDawn
         public static readonly UnitType GunBoat = new UnitType(15, "boat", "TEXT_UNIT_TITLE_WAKE", "Goodguy", UnitTypeFlag.IsArmed);
         public static readonly UnitType MCV = new UnitType(16, "mcv", "TEXT_UNIT_TITLE_GDI_MCV", "Goodguy");
         public static readonly UnitType Bike = new UnitType(17, "bike", "TEXT_UNIT_TITLE_NOD_RECON_BIKE", "Badguy", UnitTypeFlag.IsArmed);
-        public static readonly UnitType Tric = new UnitType(18, "tric", "TEXT_UNIT_TITLE_TRIC", "Special", UnitTypeFlag.IsArmed);
-        public static readonly UnitType Trex = new UnitType(19, "trex", "TEXT_UNIT_TITLE_TREX", "Special", UnitTypeFlag.IsArmed);
-        public static readonly UnitType Rapt = new UnitType(20, "rapt", "TEXT_UNIT_TITLE_RAPT", "Special", UnitTypeFlag.IsArmed);
-        public static readonly UnitType Steg = new UnitType(21, "steg", "TEXT_UNIT_TITLE_STEG", "Special", UnitTypeFlag.IsArmed);
+        public static readonly UnitType Tric = new UnitType(18, "tric", "TEXT_UNIT_TITLE_TRIC", "Special", UnitTypeFlag.IsArmed | UnitTypeFlag.NoRemap);
+        public static readonly UnitType Trex = new UnitType(19, "trex", "TEXT_UNIT_TITLE_TREX", "Special", UnitTypeFlag.IsArmed | UnitTypeFlag.NoRemap);
+        public static readonly UnitType Rapt = new UnitType(20, "rapt", "TEXT_UNIT_TITLE_RAPT", "Special", UnitTypeFlag.IsArmed | UnitTypeFlag.NoRemap);
+        public static readonly UnitType Steg = new UnitType(21, "steg", "TEXT_UNIT_TITLE_STEG", "Special", UnitTypeFlag.IsArmed | UnitTypeFlag.NoRemap);
 
         public static readonly UnitType Tran = new UnitType(0 | UnitTypeIDMask.Aircraft, "tran", "TEXT_UNIT_TITLE_GDI_TRANSPORT", "Goodguy", "LROTOR", "RROTOR", 1, -2, UnitTypeFlag.HasTurret | UnitTypeFlag.HasDoubleTurret);
         public static readonly UnitType A10 = new UnitType(1 | UnitTypeIDMask.Aircraft, "a10", "TEXT_UNIT_TITLE_A10", "Goodguy", UnitTypeFlag.IsArmed | UnitTypeFlag.IsFixedWing);

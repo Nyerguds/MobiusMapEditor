@@ -413,6 +413,7 @@ namespace MobiusEditor.TiberianDawn
             {
                 Bitmap mapImg = new Bitmap(Map.Metrics.Width * Globals.MapTileWidth, Map.Metrics.Height * Globals.MapTileHeight);
                 mapImg.SetResolution(96, 96);
+                mapImg.RemoveAlphaOnCurrent();
                 MapImage = mapImg;
             }
         }

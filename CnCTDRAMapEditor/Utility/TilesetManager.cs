@@ -139,7 +139,7 @@ namespace MobiusEditor.Utility
                 {
                     if (generateFallback && tiles.Any(t => t.Image == null))
                     {
-                        // Tile found, but contains no data. Re-fetch with dummy generation.
+                        // Tile not found, or contains no data. Re-fetch with dummy generation.
                         if (tileset.GetTileData(name, shape, teamColor, out fps, out tiles, true))
                         {
                             // Signal in return value that dummy was generated.
@@ -151,7 +151,7 @@ namespace MobiusEditor.Utility
                 }
             }
             // If the tile is not defined at all, and onlyifdefined is not enabled, make a dummy entry anyway.
-            if (!onlyIfDefined && generateFallback && first != null && first.GetTileData(name, shape, teamColor, out fps, out tiles, true))
+            if (generateFallback && !onlyIfDefined && first != null && first.GetTileData(name, shape, teamColor, out fps, out tiles, true))
             {
                 // Signal in return value that dummy was generated.
                 return false;

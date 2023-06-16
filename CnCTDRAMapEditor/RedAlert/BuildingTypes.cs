@@ -30,7 +30,7 @@ namespace MobiusEditor.RedAlert
         public static readonly BuildingType Pillbox = new BuildingType(4, "pbox", "TEXT_STRUCTURE_RA_PBOX", 0, 15, 1, 1, null, "Greece");
         public static readonly BuildingType CamoPillbox = new BuildingType(5, "hbox", "TEXT_STRUCTURE_RA_HBOX", 0, 15, 1, 1, null, "Greece");
         public static readonly BuildingType Command = new BuildingType(6, "dome", "TEXT_STRUCTURE_RA_DOME", 0, 40, 2, 2, null, "Greece", BuildingTypeFlag.Bib);
-        public static readonly BuildingType GapGenerator = new BuildingType(7, "gap", "TEXT_STRUCTURE_RA_GAP", 60, 0, 1, 2, "0 1", "Greece", 13, BuildingTypeFlag.IsGapGenerator);
+        public static readonly BuildingType GapGenerator = new BuildingType(7, "gap", "TEXT_STRUCTURE_RA_GAP", 0, 60, 1, 2, "0 1", "Greece", 13, BuildingTypeFlag.IsGapGenerator);
         public static readonly BuildingType Turret = new BuildingType(8, "gun", "TEXT_STRUCTURE_RA_GUN", 0, 40, 1, 1, null, "Greece", BuildingTypeFlag.Turret);
         public static readonly BuildingType AAGun = new BuildingType(9, "agun", "TEXT_STRUCTURE_RA_AGUN", 0, 50, 1, 2, "0 1", "Greece", BuildingTypeFlag.Turret);
         public static readonly BuildingType FlameTurret = new BuildingType(10, "ftur", "TEXT_STRUCTURE_RA_FTUR", 0, 20, 1, 1, null, "USSR");
@@ -52,7 +52,7 @@ namespace MobiusEditor.RedAlert
         public static readonly BuildingType Mission = new BuildingType(26, "miss", "TEXT_STRUCTURE_RA_MISS", 0, 0, 3, 2, null, "Greece", BuildingTypeFlag.Bib);
         public static readonly BuildingType ShipYard = new BuildingType(27, "syrd", "TEXT_STRUCTURE_RA_SYRD", 0, 30, 3, 3, null, "Greece");
         public static readonly BuildingType SubPen = new BuildingType(28, "spen", "TEXT_STRUCTURE_RA_SPEN", 0, 30, 3, 3, null, "USSR");
-        public static readonly BuildingType MissileSilo = new BuildingType(29, "mslo", "TEXT_STRUCTURE_RA_MSLO", 0, 100, 2, 1, null, "Greece", new[] { TheaterTypes.Temperate, TheaterTypes.Snow });
+        public static readonly BuildingType MissileSilo = new BuildingType(29, "mslo", "TEXT_STRUCTURE_RA_MSLO", 0, 100, 2, 1, null, "Greece");
         public static readonly BuildingType ForwardCom = new BuildingType(30, "fcom", "TEXT_STRUCTURE_RA_FCOM", 0, 200, 2, 2, "00 11", "USSR", BuildingTypeFlag.Bib);
         public static readonly BuildingType Tesla = new BuildingType(31, "tsla", "TEXT_STRUCTURE_RA_TSLA", 0, 150, 1, 2, "0 1", "USSR");
         public static readonly BuildingType FakeWeapon = new BuildingType(32, "weaf", "TEXT_STRUCTURE_RA_WEAF", 0, 2, 3, 2, null, "Greece", "weap2", "weap", BuildingTypeFlag.Bib | BuildingTypeFlag.Fake);
@@ -103,9 +103,9 @@ namespace MobiusEditor.RedAlert
 
         public static readonly BuildingType Barrel = new BuildingType(82, "barl", "TEXT_STRUCTURE_RA_BARL", 0, 0, 1, 1, null, "Neutral", BuildingTypeFlag.NoRemap);
         public static readonly BuildingType Barrel3 = new BuildingType(83, "brl3", "TEXT_STRUCTURE_RA_BRL3", 0, 0, 1, 1, null, "Neutral", BuildingTypeFlag.NoRemap);
-        public static readonly BuildingType Queen = new BuildingType(84, "quee", "TEXT_STRUCTURE_RA_QUEE", 0, 0, 2, 1, null, "Special");
-        public static readonly BuildingType Larva1 = new BuildingType(85, "lar1", "TEXT_STRUCTURE_RA_LAR1", 0, 0, 1, 1, null, "Special", BuildingTypeFlag.NoRemap);
-        public static readonly BuildingType Larva2 = new BuildingType(86, "lar2", "TEXT_STRUCTURE_RA_LAR2", 0, 0, 1, 1, null, "Special", BuildingTypeFlag.NoRemap);
+        public static readonly BuildingType Queen = new BuildingType(84, "quee", "TEXT_STRUCTURE_RA_QUEE", 0, 0, 2, 1, null, "BadGuy");
+        public static readonly BuildingType Larva1 = new BuildingType(85, "lar1", "TEXT_STRUCTURE_RA_LAR1", 0, 0, 1, 1, null, "BadGuy", BuildingTypeFlag.NoRemap);
+        public static readonly BuildingType Larva2 = new BuildingType(86, "lar2", "TEXT_STRUCTURE_RA_LAR2", 0, 0, 1, 1, null, "BadGuy", BuildingTypeFlag.NoRemap);
 
         private static readonly BuildingType[] Types;
 

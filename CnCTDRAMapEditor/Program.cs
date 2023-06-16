@@ -13,7 +13,7 @@
 // GNU General Public License along with permitted additional restrictions
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 
-//#define CLASSICIMPLEMENTED
+#define CLASSICIMPLEMENTED
 
 using MobiusEditor.Dialogs;
 using MobiusEditor.Interface;
@@ -133,7 +133,6 @@ namespace MobiusEditor
 
         private static void LoadEditorClassic()
         {
-            Globals.SetTileSize(true);
             // The system should scan all mix archives for known filenames of other mix archives so it can do recursive searches.
             // Mix files should be given in order or depth, so first give ones that are in the folder, then ones that may occur inside others.
             // The order of load determines the file priority; only the first found occurrence of a file is used.

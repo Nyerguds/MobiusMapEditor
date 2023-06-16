@@ -278,6 +278,45 @@ namespace MobiusEditor.Utility
             return GeneralUtils.GetBoundingBoxCenter(image.Width, image.Height, maxWidth, maxHeight);
         }
 
+        public static void RemoveAlphaOnCurrent(this Bitmap bitmap)
+        {
+            Rectangle rect = new Rectangle(0, 0, bitmap.Width, bitmap.Height);
+            if ((bitmap.PixelFormat & PixelFormat.Indexed) == PixelFormat.Indexed)
+            {
+                ColorPalette pal = bitmap.Palette;
+                for (int i = 0; i < pal.Entries.Length; i++)
+                {
+                    pal.Entries[i] = Color.FromArgb(255, pal.Entries[i]);
+                }
+                return;
+            }
+            if (bitmap.PixelFormat != PixelFormat.Format32bppArgb)
+            {
+                // can't handle.
+                return;
+            }
+            BitmapData sourceData = bitmap.LockBits(rect, ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
+            Int32 actualDataWidth = rect.Width * 4;
+            Int32 h = bitmap.Height;
+            Int32 origStride = sourceData.Stride;
+            Byte[] imageData = new Byte[actualDataWidth];
+            Int64 sourcePos = sourceData.Scan0.ToInt64();
+            // Copy line by line, skipping by stride but copying actual data width
+            for (Int32 y = 0; y < h; ++y)
+            {
+                Marshal.Copy(new IntPtr(sourcePos), imageData, 0, actualDataWidth);
+                for (int i = 3; i < actualDataWidth; i += 4)
+                {
+                    // Clear alpha
+                    imageData[i] = 255;
+                }
+                Marshal.Copy(imageData, 0, new IntPtr(sourcePos), actualDataWidth);
+                sourcePos += origStride;
+            }
+            bitmap.UnlockBits(sourceData);
+            return;
+        }
+
         public static Bitmap RemoveAlpha(this Bitmap bitmap)
         {
             Rectangle rect = new Rectangle(0, 0, bitmap.Width, bitmap.Height);
@@ -285,7 +324,7 @@ namespace MobiusEditor.Utility
             targetImage.SetResolution(bitmap.HorizontalResolution, bitmap.VerticalResolution);
             BitmapData sourceData = bitmap.LockBits(rect, ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
             BitmapData targetData = targetImage.LockBits(rect, ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb);
-            Int32 actualDataWidth = ((Image.GetPixelFormatSize(bitmap.PixelFormat) * rect.Width) + 7) / 8;
+            Int32 actualDataWidth = ((Image.GetPixelFormatSize(PixelFormat.Format32bppArgb) * rect.Width) + 7) / 8;
             Int32 h = bitmap.Height;
             Int32 origStride = sourceData.Stride;
             Int32 targetStride = targetData.Stride;

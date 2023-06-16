@@ -580,7 +580,7 @@ namespace MobiusEditor.Tools
             MapRenderer.RenderAllOccupierBounds(graphics, Globals.MapTileSize, previewMap.Technos.OfType<Terrain>());
             if ((Layers & MapLayerFlag.TechnoTriggers) == MapLayerFlag.TechnoTriggers)
             {
-                MapRenderer.RenderAllTechnoTriggers(graphics, previewMap, Globals.MapTileSize, Globals.MapTileScale, Layers);
+                MapRenderer.RenderAllTechnoTriggers(graphics, previewMap, Globals.MapTileSize, Layers);
             }
         }
 

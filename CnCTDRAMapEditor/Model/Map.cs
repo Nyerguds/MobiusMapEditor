@@ -1412,7 +1412,7 @@ namespace MobiusEditor.Model
                 }
                 using (Graphics g = Graphics.FromImage(croppedBitmap))
                 {
-                    MapRenderer.SetRenderSettings(g, true);
+                    MapRenderer.SetRenderSettings(g, smooth);
                     Matrix transform = new Matrix();
                     transform.Scale(previewScale, previewScale);
                     transform.Translate((scaledSize.Width - mapBounds.Width) / 2, (scaledSize.Height - mapBounds.Height) / 2);

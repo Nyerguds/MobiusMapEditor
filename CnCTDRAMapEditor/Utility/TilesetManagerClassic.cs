@@ -60,7 +60,7 @@ namespace MobiusEditor.Utility
             this.currentlyLoadedPalette = TeamRemapManager.GetPaletteForTheater(this.archiveManager, theater);
         }
 
-        public Boolean GetTeamColorTileData(String name, Int32 shape, ITeamColor teamColor, out Tile tile, Boolean generateFallback, Boolean onlyIfDefined)
+        public Boolean GetTeamColorTileData(String name, Int32 shape, ITeamColor teamColor, out Tile tile, Boolean generateFallback, Boolean onlyIfDefined, string remapGraphicsSource, byte[] remapTable)
         {
             tile = null;
             String teamColorName = teamColor == null ? String.Empty : (teamColor.Name ?? String.Empty);
@@ -78,7 +78,8 @@ namespace MobiusEditor.Utility
             }
             else
             {
-                shapeFile = this.GetShapeFile(name);
+                // If there's a remap graphics source, prefer that.
+                shapeFile = this.GetShapeFile(remapGraphicsSource ?? name);
                 if (shapeFile == null)
                 {
                     if (!generateFallback)
@@ -88,25 +89,44 @@ namespace MobiusEditor.Utility
                     shapeFile = new Dictionary<int, ShapeFrameData>();
                 }
                 tileData[name] = shapeFile;
+                // System to fix RA's remapped infantry. Since everything is cached, this only works if the very
+                // first call to fetch these graphics is guaranteed to pass along the graphics source and remap info.
+                if (remapTable != null && remapTable.Length >= 0x100)
+                {
+                    foreach (int key in shapeFile.Keys)
+                    {
+                        ShapeFrameData sfd = shapeFile[key];
+                        Byte[] frameGfx = sfd.FrameData;
+                        for (int i = 0; i < frameGfx.Length; ++i)
+                        {
+                            frameGfx[i] = remapTable[frameGfx[i]];
+                        }
+                    }
+                }
                 // Remaps the tile, and takes care of caching it and possibly generating dummies.
                 tile = this.RemapShapeFile(shapeFile, shape, teamColor, generateFallback);
             }
             return tile != null;
         }
 
-        public Boolean GetTeamColorTileData(String name, Int32 shape, ITeamColor teamColor, out Tile tile)
+        public Boolean GetTeamColorTileData(String name, Int32 shape, ITeamColor teamColor, out Tile tile, Boolean generateFallback, Boolean onlyIfDefined)
         {
-            return GetTeamColorTileData(name, shape, teamColor, out tile, false, false);
+            return GetTeamColorTileData(name, shape, teamColor, out tile, generateFallback, onlyIfDefined, null, null);
         }
 
         public Boolean GetTileData(String name, Int32 shape, out Tile tile, Boolean generateFallback, Boolean onlyIfDefined)
         {
-            return GetTeamColorTileData(name, shape, null, out tile, false, false);
+            return GetTeamColorTileData(name, shape, null, out tile, generateFallback, onlyIfDefined, null, null);
+        }
+
+        public Boolean GetTeamColorTileData(String name, Int32 shape, ITeamColor teamColor, out Tile tile)
+        {
+            return GetTeamColorTileData(name, shape, teamColor, out tile, false, false, null, null);
         }
 
         public Boolean GetTileData(String name, Int32 shape, out Tile tile)
         {
-            return GetTeamColorTileData(name, shape, null, out tile, false, false);
+            return GetTeamColorTileData(name, shape, null, out tile, false, false, null, null);
         }
 
         public int GetTileDataLength(string name)
@@ -117,7 +137,13 @@ namespace MobiusEditor.Utility
             }
             if (!this.tileData.TryGetValue(name, out Dictionary<int, ShapeFrameData> shapes))
             {
-                return -1;
+                // If it's not cached yet, fetch without caching. This avoids issues with the special remap system.
+                // These ShapeFrameData objects don't need to be disposed since they can't contain Bitmap objects yet.
+                shapes = GetShapeFile(name);
+                if (shapes == null)
+                {
+                    return -1;
+                }
             }
             return shapes.Max(kv => kv.Key) + 1;
         }
@@ -125,8 +151,22 @@ namespace MobiusEditor.Utility
         private Dictionary<int, ShapeFrameData> GetShapeFile(String name)
         {
             bool isShpExt = false;
+            Byte[] fileContents = null;
+            // If it has an extension, force it.
+            if (Path.HasExtension(name))
+            {
+                fileContents = GetFileContents(name);
+                // Immediately abort; classic file system does not support double extensions.
+                if (fileContents == null)
+                {
+                    return null;
+                }
+            }
             // Try theater extension, then ".shp".
-            Byte[] fileContents = GetFileContents(name + "." + theater.ClassicExtension);
+            if (fileContents == null)
+            {
+                fileContents = GetFileContents(name + "." + theater.ClassicExtension);
+            }
             if (fileContents == null)
             {
                 isShpExt = true;
@@ -168,15 +208,7 @@ namespace MobiusEditor.Utility
                 try
                 {
                     // RA map template tileset
-                    int width;
-                    int height;
-                    shpData = ClassicSpriteLoader.GetRaTmpData(fileContents, out width, out height);
-                    if (shpData != null)
-                    {
-                        int len = shpData.Length;
-                        widths = Enumerable.Repeat(width, len).ToArray();
-                        heights = Enumerable.Repeat(height, len).ToArray();
-                    }
+                    shpData = ClassicSpriteLoader.GetRaTmpData(fileContents, out widths, out heights);
                 }
                 catch (ArgumentException) { /* ignore */ }
             }
@@ -228,10 +260,11 @@ namespace MobiusEditor.Utility
                     return null;
                 }
                 // Make average-sized dummy.
-                int minWidth = shapeFile.Values.Where(v => v.Width != 0).Min(v => v.Width);
-                int maxWidth = shapeFile.Values.Where(v => v.Width != 0).Max(v => v.Width);
-                int minHeight = shapeFile.Values.Where(v => v.Height != 0).Min(v => v.Height);
-                int maxHeight = shapeFile.Values.Where(v => v.Height != 0).Max(v => v.Height);
+                bool noValues = shapeFile.Values.Count == 0;
+                int minWidth = noValues? 24 : shapeFile.Values.Where(v => v.Width != 0).Min(v => v.Width);
+                int maxWidth = noValues? 24 : shapeFile.Values.Where(v => v.Width != 0).Max(v => v.Width);
+                int minHeight = noValues? 24 : shapeFile.Values.Where(v => v.Height != 0).Min(v => v.Height);
+                int maxHeight = noValues? 24 : shapeFile.Values.Where(v => v.Height != 0).Max(v => v.Height);
                 int dummyWidth = minWidth + (maxWidth - minWidth) / 2;
                 int dummyHeight = minHeight + (maxHeight - minHeight) / 2;
                 frameData = GenerateDummy(dummyWidth, dummyHeight);
@@ -249,9 +282,20 @@ namespace MobiusEditor.Utility
             if (teamColor != null && !String.IsNullOrEmpty(teamColorName) && !frameData.IsDummy)
             {
                 // Finally, the actual remapping!
-                teamColor.ApplyToImage(data, width, height, 1, width, opaqueBounds);
+                byte[] dataRemap = new byte[data.Length];
+                Array.Copy(data, 0, dataRemap, 0, data.Length);
+                teamColor.ApplyToImage(dataRemap, width, height, 1, width, opaqueBounds);
+                data = dataRemap;
             }
-            Bitmap bm = ImageUtils.BuildImage(data, width, height, width, PixelFormat.Format8bppIndexed, currentlyLoadedPalette, null);
+            Color[] pal = currentlyLoadedPalette;
+            if (frameData.IsDummy)
+            {
+                // Make gray colour semitransparent on dummy graphics.
+                pal = new Color[currentlyLoadedPalette.Length];
+                Array.Copy(currentlyLoadedPalette, 0, pal, 0, pal.Length);
+                pal[14] = Color.FromArgb(0x80, pal[14]);
+            }
+            Bitmap bm = ImageUtils.BuildImage(data, width, height, width, PixelFormat.Format8bppIndexed, pal, null);
             tile = new Tile(bm, opaqueBounds);
             frameData.TeamColorTiles.Add(teamColorName, tile);
             return tile;

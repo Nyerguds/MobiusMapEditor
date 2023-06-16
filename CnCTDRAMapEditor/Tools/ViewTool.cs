@@ -281,7 +281,7 @@ namespace MobiusEditor.Tools
             if ((layersToRender & MapLayerFlag.CellTriggers) == MapLayerFlag.CellTriggers
                 && (manuallyHandledLayers & MapLayerFlag.CellTriggers) == MapLayerFlag.None)
             {
-                MapRenderer.RenderCellTriggersSoft(graphics, map, tileSize, tileScale);
+                MapRenderer.RenderCellTriggersSoft(graphics, map, tileSize);
             }
             if ((layersToRender & (MapLayerFlag.Waypoints | MapLayerFlag.FootballArea)) == (MapLayerFlag.Waypoints | MapLayerFlag.FootballArea)
                 && (manuallyHandledLayers & MapLayerFlag.WaypointsIndic) == MapLayerFlag.None && plugin.GameType == GameType.SoleSurvivor)
@@ -307,22 +307,22 @@ namespace MobiusEditor.Tools
             if ((layersToRender & (MapLayerFlag.Waypoints | MapLayerFlag.WaypointsIndic)) == (MapLayerFlag.Waypoints | MapLayerFlag.WaypointsIndic)
                 && (manuallyHandledLayers & MapLayerFlag.WaypointsIndic) == MapLayerFlag.None)
             {
-                MapRenderer.RenderWayPointIndicators(graphics, map, tileSize, tileScale, Color.LightGreen, false, true);
+                MapRenderer.RenderWayPointIndicators(graphics, map, tileSize, Color.LightGreen, false, true);
             }
             if ((layersToRender & (MapLayerFlag.Buildings | MapLayerFlag.BuildingFakes)) == (MapLayerFlag.Buildings | MapLayerFlag.BuildingFakes)
                 && (manuallyHandledLayers & MapLayerFlag.BuildingFakes) == MapLayerFlag.None)
             {
-                MapRenderer.RenderAllFakeBuildingLabels(graphics, map, tileSize, tileScale);
+                MapRenderer.RenderAllFakeBuildingLabels(graphics, map, tileSize);
             }
             if ((layersToRender & (MapLayerFlag.Buildings | MapLayerFlag.BuildingRebuild)) == (MapLayerFlag.Buildings | MapLayerFlag.BuildingRebuild)
                 && (manuallyHandledLayers & MapLayerFlag.BuildingRebuild) == MapLayerFlag.None)
             {
-                MapRenderer.RenderAllRebuildPriorityLabels(graphics, map, tileSize, tileScale);
+                MapRenderer.RenderAllRebuildPriorityLabels(graphics, map, tileSize);
             }
             if ((layersToRender & MapLayerFlag.TechnoTriggers) == MapLayerFlag.TechnoTriggers
                 && (manuallyHandledLayers & MapLayerFlag.TechnoTriggers) == MapLayerFlag.None)
             {
-                MapRenderer.RenderAllTechnoTriggers(graphics, map, tileSize, tileScale, layersToRender);
+                MapRenderer.RenderAllTechnoTriggers(graphics, map, tileSize, layersToRender);
             }
         }
 

@@ -32,7 +32,7 @@ namespace MobiusEditor.Utility
 
         static TeamRemapManager()
         {
-            RemapsTd = (from field in typeof(ITeamColorManager).GetFields(BindingFlags.Static | BindingFlags.Public)
+            RemapsTd = (from field in typeof(TeamRemapManager).GetFields(BindingFlags.Static | BindingFlags.Public)
                         where field.IsInitOnly && typeof(TeamRemap).IsAssignableFrom(field.FieldType) && field.Name.StartsWith("RemapTd")
                         select field.GetValue(null) as TeamRemap).ToDictionary(trm => trm.Name);
         }

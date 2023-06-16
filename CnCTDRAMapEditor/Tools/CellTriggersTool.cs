@@ -486,14 +486,14 @@ namespace MobiusEditor.Tools
                 selected = null;
             string[] selectedRange = selected != null ? new[] { selected } : new string[] { };
             // Normal techno triggers: under cell
-            MapRenderer.RenderAllTechnoTriggers(graphics, map, Globals.MapTileSize, Globals.MapTileScale, Layers, Color.LimeGreen, selected, true);
-            MapRenderer.RenderCellTriggersHard(graphics, map, Globals.MapTileSize, Globals.MapTileScale, selectedRange);
+            MapRenderer.RenderAllTechnoTriggers(graphics, map, Globals.MapTileSize, Layers, Color.LimeGreen, selected, true);
+            MapRenderer.RenderCellTriggersHard(graphics, map, Globals.MapTileSize, selectedRange);
             if (selected != null)
             {
                 // Only use preview map if in placement mode.
-                MapRenderer.RenderCellTriggersSelected(graphics, placementMode ? previewMap : map, Globals.MapTileSize, Globals.MapTileScale, selectedRange);
+                MapRenderer.RenderCellTriggersSelected(graphics, placementMode ? previewMap : map, Globals.MapTileSize, selectedRange);
                 // Selected technos: on top of cell
-                MapRenderer.RenderAllTechnoTriggers(graphics, map, Globals.MapTileSize, Globals.MapTileScale, Layers, Color.Yellow, selected, false);
+                MapRenderer.RenderAllTechnoTriggers(graphics, map, Globals.MapTileSize, Layers, Color.Yellow, selected, false);
             }
         }
 

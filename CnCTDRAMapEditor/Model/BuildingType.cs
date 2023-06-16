@@ -267,7 +267,7 @@ namespace MobiusEditor.Model
                     render.Item2(g);
                     if (this.IsFake)
                     {
-                        MapRenderer.RenderFakeBuildingLabel(g, mockBuilding, Point.Empty, Globals.PreviewTileSize, Globals.PreviewTileScale, false);
+                        MapRenderer.RenderFakeBuildingLabel(g, mockBuilding, Point.Empty, Globals.PreviewTileSize, false);
                     }
                 }
                 this.Thumbnail = th;

@@ -16,7 +16,7 @@ namespace MobiusEditor.Utility
         private bool isEmbedded = false;
         private long fileStart;
         private long fileLength;
-        private long dataStart;
+        private uint dataStart;
 
         public Mixfile(string mixPath)
         {
@@ -42,18 +42,18 @@ namespace MobiusEditor.Utility
             this.fileLength = length;
             // Copy reference to parent map. The "CreateViewStream" function takes care of reading the right parts from it.
             this.mixFileMap = container.mixFileMap;
-            this.ReadMixHeader(mixFileMap, offset, fileLength);
+            this.ReadMixHeader(this.mixFileMap, offset, this.fileLength);
         }
 
         private void ReadMixHeader(MemoryMappedFile mixMap, long mixStart, long mixLength)
         {
-            mixFileContents.Clear();
+            this.mixFileContents.Clear();
             uint readOffset = 0;
             ushort nrOfFiles = 0;
             bool hasFlags = false;
             bool encrypted = false;
             bool checksum = false;
-            using (BinaryReader headerReader = new BinaryReader(CreateViewStream(mixMap, mixStart, mixLength, readOffset, 2)))
+            using (BinaryReader headerReader = new BinaryReader(this.CreateViewStream(mixMap, mixStart, mixLength, readOffset, 2)))
             {
                 ushort start = headerReader.ReadUInt16();
                 if (start == 0)
@@ -64,9 +64,9 @@ namespace MobiusEditor.Utility
             }
             if (hasFlags)
             {
-                using (BinaryReader headerReader = new BinaryReader(CreateViewStream(mixMap, mixStart, mixLength, readOffset, 2)))
+                using (BinaryReader headerReader = new BinaryReader(this.CreateViewStream(mixMap, mixStart, mixLength, readOffset, 2)))
                 {
-                    var flags = headerReader.ReadUInt16();
+                    ushort flags = headerReader.ReadUInt16();
                     checksum = (flags & 1) != 0;
                     encrypted = (flags & 2) != 0;
                     readOffset += 2;
@@ -74,7 +74,7 @@ namespace MobiusEditor.Utility
                 // Not encrypted; read nr of files.
                 if (!encrypted)
                 {
-                    using (BinaryReader headerReader = new BinaryReader(CreateViewStream(mixMap, mixStart, mixLength, readOffset, 2)))
+                    using (BinaryReader headerReader = new BinaryReader(this.CreateViewStream(mixMap, mixStart, mixLength, readOffset, 2)))
                     {
                         nrOfFiles = headerReader.ReadUInt16();
                         readOffset += 2;
@@ -85,7 +85,7 @@ namespace MobiusEditor.Utility
             Byte[] header = null;
             if (encrypted)
             {
-                using (BinaryReader headerReader = new BinaryReader(CreateViewStream(mixMap, mixStart, mixLength, readOffset, 80)))
+                using (BinaryReader headerReader = new BinaryReader(this.CreateViewStream(mixMap, mixStart, mixLength, readOffset, 80)))
                 {
                     byte[] blowfishKey = headerReader.ReadAllBytes();
                     readOffset += 80;
@@ -102,7 +102,7 @@ namespace MobiusEditor.Utility
                 {
                     throw new ArgumentOutOfRangeException("Not a valid mix file: header length exceeds file length.");
                 }
-                using (BinaryReader headerReader = new BinaryReader(CreateViewStream(mixMap, mixStart, mixLength, readOffset, headerSize)))
+                using (BinaryReader headerReader = new BinaryReader(this.CreateViewStream(mixMap, mixStart, mixLength, readOffset, headerSize)))
                 {
                     header = headerReader.ReadBytes((Int32)headerSize);
                     // End of header reading; no longer needed.
@@ -123,7 +123,7 @@ namespace MobiusEditor.Utility
                     {
                         throw new ArgumentOutOfRangeException(String.Format("Not a valid mix file: file #{0} with id {1:X08} exceeds archive length.", i, fileId));
                     }
-                    mixFileContents.Add(fileId, (fileOffset, fileLength));
+                    this.mixFileContents.Add(fileId, (fileOffset, fileLength));
                 }
             }
         }
@@ -132,26 +132,24 @@ namespace MobiusEditor.Utility
         {
             offset = 0;
             length = 0;
-            uint fileId = hashRol.GetNameId(filename);
+            uint fileId = this.hashRol.GetNameId(filename);
             (uint Offset, uint Length) fileLoc;
-            if (!mixFileContents.TryGetValue(fileId, out fileLoc))
+            if (!this.mixFileContents.TryGetValue(fileId, out fileLoc))
             {
                 return false;
             }
-            offset = fileLoc.Offset;
+            offset = fileLoc.Offset + this.dataStart;
             length = fileLoc.Length;
             return true;
         }
 
         public Stream OpenFile(string path)
         {
-            uint fileId = hashRol.GetNameId(path);
-            (uint Offset, uint Length) fileLoc;
-            if (!mixFileContents.TryGetValue(fileId, out fileLoc))
+            if (!this.GetFileInfo(path, out uint offset, out uint length))
             {
                 return null;
             }
-            return CreateViewStream(mixFileMap, fileStart, fileLength, this.dataStart + fileLoc.Offset, fileLoc.Length);
+            return this.CreateViewStream(this.mixFileMap, this.fileStart, this.fileLength, offset, length);
         }
 
         /// <summary>
@@ -166,7 +164,7 @@ namespace MobiusEditor.Utility
         /// <exception cref="IndexOutOfRangeException">The data is not in the bounds of this mix file.</exception>
         private Stream CreateViewStream(MemoryMappedFile mixMap, long mixFileStart, long mixFileLength, long dataReadOffset, uint dataReadLength)
         {
-            if (disposedValue)
+            if (this.disposedValue)
             {
                 throw new ObjectDisposedException("Mixfile");
             }
@@ -182,22 +180,22 @@ namespace MobiusEditor.Utility
 
         protected virtual void Dispose(bool disposing)
         {
-            if (!disposedValue)
+            if (!this.disposedValue)
             {
                 // Only dispose if not an embedded mix file.
                 // If embedded, the mixFileMap is contained in the parent.
-                if (disposing && !isEmbedded)
+                if (disposing && !this.isEmbedded)
                 {
-                    mixFileMap.Dispose();
+                    this.mixFileMap.Dispose();
                 }
-                mixFileMap = null;
-                disposedValue = true;
+                this.mixFileMap = null;
+                this.disposedValue = true;
             }
         }
 
         public void Dispose()
         {
-            Dispose(true);
+            this.Dispose(true);
         }
         #endregion
     }

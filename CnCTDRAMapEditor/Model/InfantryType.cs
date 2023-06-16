@@ -32,6 +32,10 @@ namespace MobiusEditor.Model
         public bool IsFixedWing => false;
         public bool IsExpansionUnit => (Flag & UnitTypeFlag.IsExpansionUnit) == UnitTypeFlag.IsExpansionUnit;
         public bool IsHarvester => false;
+        public bool CanRemap => (this.Flag & UnitTypeFlag.NoRemap) != UnitTypeFlag.NoRemap;
+        public string ClassicGraphicsSource { get; private set; }
+        public Byte[] ClassicGraphicsRemap { get; private set; }
+
         private Size _RenderSize;
         public Size GetRenderSize(Size cellSize)
         {
@@ -41,17 +45,23 @@ namespace MobiusEditor.Model
         public Bitmap Thumbnail { get; set; }
         private string nameId;
 
-        public InfantryType(sbyte id, string name, string textId, string ownerHouse, UnitTypeFlag flags)
+        public InfantryType(sbyte id, string name, string textId, string ownerHouse, string remappedFrom, byte[] remapTable, UnitTypeFlag flags)
         {
             this.ID = id;
             this.Name = name;
             this.nameId = textId;
             this.OwnerHouse = ownerHouse;
             this.Flag = flags;
+            this.ClassicGraphicsSource = remappedFrom;
+            this.ClassicGraphicsRemap = remapTable;
         }
 
+        public InfantryType(sbyte id, string name, string textId, string ownerHouse, UnitTypeFlag flags)
+            : this(id, name, textId, ownerHouse, null, null, flags)
+        {
+        }
         public InfantryType(sbyte id, string name, string textId, string ownerHouse)
-            : this(id, name, textId, ownerHouse, UnitTypeFlag.None)
+        : this(id, name, textId, ownerHouse, null, null, UnitTypeFlag.None)
         {
         }
 
@@ -89,7 +99,17 @@ namespace MobiusEditor.Model
                 ? Globals.TheGameTextManager[nameId] + " (" + Name.ToUpperInvariant() + ")"
                 : Name.ToUpperInvariant();
             Bitmap oldImage = Thumbnail;
-            if (Globals.TheTilesetManager.GetTileData(Name, 4, out Tile tile))
+            Tile tile;
+            // RA classic infantry remap support.
+            if (this.ClassicGraphicsSource != null && Globals.TheTilesetManager is TilesetManagerClassic tsmc)
+            {
+                tsmc.GetTeamColorTileData(this.Name, 4, null, out tile, true, false, this.ClassicGraphicsSource, this.ClassicGraphicsRemap);
+            }
+            else
+            {
+                Globals.TheTilesetManager.GetTeamColorTileData(this.Name, 4, null, out tile, true, false);
+            }
+            if (tile != null && tile.Image != null)
             {
                 _RenderSize = tile.Image.Size;
             }

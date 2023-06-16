@@ -24,8 +24,6 @@ namespace MobiusEditor
     {
         static Globals()
         {
-            SetTileSize(false);
-            double minScale = 1.0 / Math.Min(OriginalTileWidth, OriginalTileHeight);
             // Startup options
             UseClassicGraphics = Properties.Settings.Default.UseClassicGraphics;
             // Defaults
@@ -36,16 +34,10 @@ namespace MobiusEditor
             OutlineAllCrates = Properties.Settings.Default.DefaultOutlineAllCrates;
             CratesOnTop = Properties.Settings.Default.DefaultCratesOnTop;
             ShowMapGrid = Properties.Settings.Default.DefaultShowMapGrid;
-            ExportTileScale = Math.Min(1, Math.Max(minScale, Math.Abs(Properties.Settings.Default.DefaultExportScale)));
-            ExportSmoothScale = Properties.Settings.Default.DefaultExportScale < 0;
             // Fine tuning
             ZoomToBoundsOnLoad = Properties.Settings.Default.ZoomToBoundsOnLoad;
             MapGridColor = Properties.Settings.Default.MapGridColor;
             MapBackColor = Color.FromArgb(255, Properties.Settings.Default.MapBackColor);
-            MapTileScale = Math.Min(1, Math.Max(minScale, Math.Abs(Properties.Settings.Default.MapScale)));
-            MapSmoothScale = Properties.Settings.Default.MapScale < 0;
-            PreviewTileScale = Math.Min(1, Math.Max(minScale, Math.Abs(Properties.Settings.Default.PreviewScale)));
-            PreviewSmoothScale = Properties.Settings.Default.PreviewScale < 0;
             UndoRedoStackSize = Properties.Settings.Default.UndoRedoStackSize;
             MinimumClampSize = Properties.Settings.Default.MinimumClampSize;
             // Behavior tweaks
@@ -69,14 +61,8 @@ namespace MobiusEditor
         public const string MegafilePath = @"DATA";
         public const string GameTextFilenameFormat = @"DATA\TEXT\MASTERTEXTFILE_{0}.LOC";
 
-        public static void SetTileSize(bool classic)
-        {
-            OriginalTileWidth = classic ? 24 : 128;
-            OriginalTileHeight = classic ? 24 : 128;
-        }
-
-        public static int OriginalTileWidth { get; private set; }
-        public static int OriginalTileHeight { get; private set; }
+        public static int OriginalTileWidth { get { return UseClassicGraphics ? 24 : 128; } }
+        public static int OriginalTileHeight { get { return UseClassicGraphics ? 24 : 128; } }
         public static Size OriginalTileSize => new Size(OriginalTileWidth, OriginalTileHeight);
 
         public const int PixelWidth = 24;
@@ -92,21 +78,50 @@ namespace MobiusEditor
         public static bool CratesOnTop { get; set; }
         public static bool OutlineAllCrates { get; set; }
         public static bool ShowMapGrid { get; set; }
-        public static double ExportTileScale { get; private set; }
-        public static bool ExportSmoothScale { get; private set; }
+
+        public static double ExportTileScale
+        {
+            get
+            {
+                double defExpScale = UseClassicGraphics ? Properties.Settings.Default.DefaultExportScaleClassic : Properties.Settings.Default.DefaultExportScale;
+                return Math.Max(GetMinScale(), Math.Abs(defExpScale));
+            }
+        }
+
+        public static bool ExportSmoothScale
+        {
+            get
+            {
+                return (UseClassicGraphics ? Properties.Settings.Default.DefaultExportScaleClassic : Properties.Settings.Default.DefaultExportScale) < 0;
+            }
+        }
 
         public static bool ZoomToBoundsOnLoad { get; private set; }
         public static Color MapGridColor { get; private set; }
         public static Color MapBackColor { get; private set; }
 
-        public static double MapTileScale { get; private set; }
-        public static bool MapSmoothScale { get; private set; }
+        private static double GetMinScale(){ return 1.0 / Math.Min(OriginalTileWidth, OriginalTileHeight); }
+        public static double MapTileScale => Math.Max(GetMinScale(), Math.Abs(UseClassicGraphics ? Properties.Settings.Default.MapScaleClassic : Properties.Settings.Default.MapScale));
+        public static bool MapSmoothScale => (UseClassicGraphics ? Properties.Settings.Default.MapScaleClassic : Properties.Settings.Default.MapScale) < 0;
         public static int MapTileWidth => Math.Max(1, (int)(OriginalTileWidth * MapTileScale));
         public static int MapTileHeight => Math.Max(1, (int)(OriginalTileHeight * MapTileScale));
         public static Size MapTileSize => new Size(MapTileWidth, MapTileHeight);
 
-        public static double PreviewTileScale { get; private set; }
-        public static bool PreviewSmoothScale { get; private set; }
+        public static double PreviewTileScale
+        {
+            get
+            {
+                double prevTileScale = Math.Max(GetMinScale(), Math.Abs(Properties.Settings.Default.PreviewScale));
+                if (UseClassicGraphics)
+                {
+                    // Adjust to classic graphics' considerably smaller overall size
+                    prevTileScale = prevTileScale * 128 / 24;
+                }
+                return prevTileScale;
+
+            }
+        }
+        public static bool PreviewSmoothScale => Properties.Settings.Default.PreviewScale < 0;
         public static int PreviewTileWidth => Math.Max(1, (int)(OriginalTileWidth * PreviewTileScale));
         public static int PreviewTileHeight => (int)(OriginalTileHeight * PreviewTileScale);
         public static Size PreviewTileSize => new Size(PreviewTileWidth, PreviewTileHeight);

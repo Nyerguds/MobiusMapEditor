@@ -38,6 +38,9 @@
     <Setting Name="DefaultExportScale" Type="System.Double" Scope="Application">
       <Value Profile="(Default)">-0.5</Value>
     </Setting>
+    <Setting Name="DefaultExportScaleClassic" Type="System.Double" Scope="Application">
+      <Value Profile="(Default)">1.0</Value>
+    </Setting>
     <Setting Name="ZoomToBoundsOnLoad" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>
@@ -49,6 +52,9 @@
     </Setting>
     <Setting Name="MapScale" Type="System.Double" Scope="Application">
       <Value Profile="(Default)">0.5</Value>
+    </Setting>
+    <Setting Name="MapScaleClassic" Type="System.Double" Scope="Application">
+      <Value Profile="(Default)">1.0</Value>
     </Setting>
     <Setting Name="PreviewScale" Type="System.Double" Scope="Application">
       <Value Profile="(Default)">1</Value>

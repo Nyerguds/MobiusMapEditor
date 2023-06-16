@@ -28,5 +28,7 @@ namespace MobiusEditor.Interface
         bool IsFixedWing { get; }
         /// <summary>True if this object can harvest resources. This affects the default orders for placing it on the map.</summary>
         bool IsHarvester { get; }
+        /// <summary>True if this techno type adapts to its house colors.</summary>
+        bool CanRemap { get; }
     }
 }
