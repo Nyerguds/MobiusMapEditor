@@ -25,7 +25,7 @@ namespace MobiusEditor
         static Globals()
         {
             // Startup options
-            UseClassicGraphics = Properties.Settings.Default.UseClassicGraphics;
+            UseClassicFiles = Properties.Settings.Default.UseClassicFiles;
             // Defaults
             BoundsObstructFill = Properties.Settings.Default.DefaultBoundsObstructFill;
             TileDragProtect = Properties.Settings.Default.DefaultTileDragProtect;
@@ -61,8 +61,8 @@ namespace MobiusEditor
         public const string MegafilePath = @"DATA";
         public const string GameTextFilenameFormat = @"DATA\TEXT\MASTERTEXTFILE_{0}.LOC";
 
-        public static int OriginalTileWidth { get { return UseClassicGraphics ? 24 : 128; } }
-        public static int OriginalTileHeight { get { return UseClassicGraphics ? 24 : 128; } }
+        public static int OriginalTileWidth { get { return UseClassicFiles ? 24 : 128; } }
+        public static int OriginalTileHeight { get { return UseClassicFiles ? 24 : 128; } }
         public static Size OriginalTileSize => new Size(OriginalTileWidth, OriginalTileHeight);
 
         public const int PixelWidth = 24;
@@ -70,7 +70,7 @@ namespace MobiusEditor
 
         public static string DataPath { get; set; }
 
-        public static bool UseClassicGraphics { get; set; }
+        public static bool UseClassicFiles { get; set; }
         public static bool BoundsObstructFill { get; set; }
         public static bool TileDragProtect { get; set; }
         public static bool TileDragRandomize { get; set; }
@@ -83,7 +83,7 @@ namespace MobiusEditor
         {
             get
             {
-                double defExpScale = UseClassicGraphics ? Properties.Settings.Default.DefaultExportScaleClassic : Properties.Settings.Default.DefaultExportScale;
+                double defExpScale = UseClassicFiles ? Properties.Settings.Default.DefaultExportScaleClassic : Properties.Settings.Default.DefaultExportScale;
                 return Math.Max(GetMinScale(), Math.Abs(defExpScale));
             }
         }
@@ -92,7 +92,7 @@ namespace MobiusEditor
         {
             get
             {
-                return (UseClassicGraphics ? Properties.Settings.Default.DefaultExportScaleClassic : Properties.Settings.Default.DefaultExportScale) < 0;
+                return (UseClassicFiles ? Properties.Settings.Default.DefaultExportScaleClassic : Properties.Settings.Default.DefaultExportScale) < 0;
             }
         }
 
@@ -101,8 +101,8 @@ namespace MobiusEditor
         public static Color MapBackColor { get; private set; }
 
         private static double GetMinScale(){ return 1.0 / Math.Min(OriginalTileWidth, OriginalTileHeight); }
-        public static double MapTileScale => Math.Max(GetMinScale(), Math.Abs(UseClassicGraphics ? Properties.Settings.Default.MapScaleClassic : Properties.Settings.Default.MapScale));
-        public static bool MapSmoothScale => (UseClassicGraphics ? Properties.Settings.Default.MapScaleClassic : Properties.Settings.Default.MapScale) < 0;
+        public static double MapTileScale => Math.Max(GetMinScale(), Math.Abs(UseClassicFiles ? Properties.Settings.Default.MapScaleClassic : Properties.Settings.Default.MapScale));
+        public static bool MapSmoothScale => (UseClassicFiles ? Properties.Settings.Default.MapScaleClassic : Properties.Settings.Default.MapScale) < 0;
         public static int MapTileWidth => Math.Max(1, (int)(OriginalTileWidth * MapTileScale));
         public static int MapTileHeight => Math.Max(1, (int)(OriginalTileHeight * MapTileScale));
         public static Size MapTileSize => new Size(MapTileWidth, MapTileHeight);
@@ -112,7 +112,7 @@ namespace MobiusEditor
             get
             {
                 double prevTileScale = Math.Max(GetMinScale(), Math.Abs(Properties.Settings.Default.PreviewScale));
-                if (UseClassicGraphics)
+                if (UseClassicFiles)
                 {
                     // Adjust to classic graphics' considerably smaller overall size
                     prevTileScale = prevTileScale * 128 / 24;

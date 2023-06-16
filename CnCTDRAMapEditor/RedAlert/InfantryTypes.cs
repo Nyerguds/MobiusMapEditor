@@ -40,8 +40,8 @@ namespace MobiusEditor.RedAlert
         public static readonly InfantryType C6 = new InfantryType(16, "c6", "TEXT_UNIT_TITLE_CIV12", "Neutral", "c1", InfantryClassicRemap.RemapCiv6, UnitTypeFlag.NoRemap);
         public static readonly InfantryType C7 = new InfantryType(17, "c7", "TEXT_UNIT_TITLE_CIV7", "Neutral", "c1", InfantryClassicRemap.RemapCiv7, UnitTypeFlag.IsArmed | UnitTypeFlag.NoRemap);
         public static readonly InfantryType C8 = new InfantryType(18, "c8", "TEXT_UNIT_TITLE_CIV8", "Neutral", "c1", InfantryClassicRemap.RemapCiv8, UnitTypeFlag.NoRemap);
-        public static readonly InfantryType C9 = new InfantryType(19, "c9", "TEXT_UNIT_TITLE_CIV9", "Neutral", "c1", InfantryClassicRemap.RemapCiv10, UnitTypeFlag.NoRemap);
-        public static readonly InfantryType C10 = new InfantryType(20, "c10", "TEXT_UNIT_RA_SCIENTIST", "Neutral", UnitTypeFlag.NoRemap);
+        public static readonly InfantryType C9 = new InfantryType(19, "c9", "TEXT_UNIT_TITLE_CIV9", "Neutral", "c1", InfantryClassicRemap.RemapCiv9, UnitTypeFlag.NoRemap);
+        public static readonly InfantryType C10 = new InfantryType(20, "c10", "TEXT_UNIT_RA_SCIENTIST", "Neutral", "c1", InfantryClassicRemap.RemapCiv10, UnitTypeFlag.NoRemap);
         public static readonly InfantryType Einstein = new InfantryType(21, "einstein", "TEXT_UNIT_RA_EINSTEIN", "Neutral", UnitTypeFlag.NoRemap);
         public static readonly InfantryType Delphi = new InfantryType(22, "delphi", "TEXT_UNIT_RA_DELPHI", "Neutral", UnitTypeFlag.IsArmed | UnitTypeFlag.NoRemap);
         public static readonly InfantryType DrChan = new InfantryType(23, "chan", "TEXT_UNIT_TITLE_CHAN", "Neutral", UnitTypeFlag.NoRemap);

@@ -26,9 +26,9 @@ namespace MobiusEditor.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool UseClassicGraphics {
+        public bool UseClassicFiles {
             get {
-                return ((bool)(this["UseClassicGraphics"]));
+                return ((bool)(this["UseClassicFiles"]));
             }
         }
         

@@ -70,7 +70,7 @@ namespace MobiusEditor
             modPaths.Add(GameType.RedAlert, GetModPaths(gameId, Properties.Settings.Default.ModsToLoadRA, raModFolder, "RA"));
             modPaths.Add(GameType.SoleSurvivor, GetModPaths(gameId, Properties.Settings.Default.ModsToLoadSS, tdModFolder, "TD"));
 #if CLASSICIMPLEMENTED
-            String runPath = Globals.UseClassicGraphics ? null : GetRemasterRunPath();
+            String runPath = Globals.UseClassicFiles ? null : GetRemasterRunPath();
 #else
             String runPath = GetRemasterRunPath();
 #endif
@@ -81,7 +81,7 @@ namespace MobiusEditor
             else
             {
 #if CLASSICIMPLEMENTED
-                if (Globals.UseClassicGraphics)
+                if (Globals.UseClassicFiles)
                 {
                     LoadEditorClassic();
                 }
@@ -146,14 +146,18 @@ namespace MobiusEditor
             var mixfilesLoaded = true;
             // This will map the mix files to the respective games, and look for them in the respective folders.
             // Tiberian Dawn
-            mixfilesLoaded &= mfm.LoadArchive(GameType.TiberianDawn, "cclocal.mix", false, false);
+            bool cclocalLoadedD = mfm.LoadArchive(GameType.TiberianDawn, "local.mix", false, false);
+            bool cclocalLoadedG = mfm.LoadArchive(GameType.TiberianDawn, "cclocal.mix", false, false);
+            mixfilesLoaded &= (cclocalLoadedG | cclocalLoadedD);
             mixfilesLoaded &= mfm.LoadArchive(GameType.TiberianDawn, "conquer.mix", false, false);
             // Tiberian Dawn Theaters
             mixfilesLoaded &= mfm.LoadArchive(GameType.TiberianDawn, "desert.mix", false, false, true);
             mixfilesLoaded &= mfm.LoadArchive(GameType.TiberianDawn, "temperat.mix", false, false, true);
             mixfilesLoaded &= mfm.LoadArchive(GameType.TiberianDawn, "winter.mix", false, false, true);
             // Sole Survivor
-            mixfilesLoaded &= mfm.LoadArchive(GameType.SoleSurvivor, "cclocal.mix", false, false);
+            bool sslocalLoadedD = mfm.LoadArchive(GameType.SoleSurvivor, "local.mix", false, false);
+            bool sslocalLoadedG = mfm.LoadArchive(GameType.SoleSurvivor, "cclocal.mix", false, false);
+            mixfilesLoaded &= (sslocalLoadedG | sslocalLoadedD);
             mixfilesLoaded &= mfm.LoadArchive(GameType.SoleSurvivor, "conquer.mix", false, false);
             // Sole Survivor Theaters
             mixfilesLoaded &= mfm.LoadArchive(GameType.SoleSurvivor, "desert.mix", false, false, true);
@@ -286,7 +290,7 @@ namespace MobiusEditor
                     case DialogResult.No: // No longer used; cancelling will always fall back to classic graphics.
                         return null;
                     case DialogResult.Cancel:
-                        Globals.UseClassicGraphics = true;
+                        Globals.UseClassicFiles = true;
                         return null;
                 }
             }
