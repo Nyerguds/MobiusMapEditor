@@ -33,11 +33,11 @@ namespace MobiusEditor.RedAlert
         public static readonly InfantryType General = new InfantryType(9, "gnrl", "TEXT_UNIT_RA_GNRL", "Greece", UnitTypeFlag.IsArmed);
         public static readonly InfantryType Dog = new InfantryType(10, "dog", "TEXT_UNIT_RA_DOG", "USSR", UnitTypeFlag.IsArmed);
         public static readonly InfantryType C1 = new InfantryType(11, "c1", "TEXT_UNIT_TITLE_CIV1", "Neutral", UnitTypeFlag.IsArmed);
-        public static readonly InfantryType C2 = new InfantryType(12, "c2", "TEXT_UNIT_TITLE_CIV2", "Neutral");
+        public static readonly InfantryType C2 = new InfantryType(12, "c2", "TEXT_UNIT_TITLE_CIV10", "Neutral");
         public static readonly InfantryType C3 = new InfantryType(13, "c3", "TEXT_UNIT_TITLE_CIV3", "Neutral");
         public static readonly InfantryType C4 = new InfantryType(14, "c4", "TEXT_UNIT_TITLE_CIV4", "Neutral");
-        public static readonly InfantryType C5 = new InfantryType(15, "c5", "TEXT_UNIT_TITLE_CIV5", "Neutral");
-        public static readonly InfantryType C6 = new InfantryType(16, "c6", "TEXT_UNIT_TITLE_CIV6", "Neutral");
+        public static readonly InfantryType C5 = new InfantryType(15, "c5", "TEXT_UNIT_TITLE_CIV11", "Neutral");
+        public static readonly InfantryType C6 = new InfantryType(16, "c6", "TEXT_UNIT_TITLE_CIV12", "Neutral");
         public static readonly InfantryType C7 = new InfantryType(17, "c7", "TEXT_UNIT_TITLE_CIV7", "Neutral", UnitTypeFlag.IsArmed);
         public static readonly InfantryType C8 = new InfantryType(18, "c8", "TEXT_UNIT_TITLE_CIV8", "Neutral");
         public static readonly InfantryType C9 = new InfantryType(19, "c9", "TEXT_UNIT_TITLE_CIV9", "Neutral");

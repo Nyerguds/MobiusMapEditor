@@ -39,21 +39,16 @@ namespace MobiusEditor.Model
     public class SmudgeType : IBrowsableType
     {
         public sbyte ID { get; private set; }
-
         public string Name { get; private set; }
-
         public string DisplayName { get; private set; }
-
         public TheaterType[] Theaters { get; private set; }
-
         public Size Size { get; set; }
         public int Icons { get; set; }
-
         public SmudgeTypeFlag Flag { get; private set; }
         public bool IsAutoBib => (Flag & (SmudgeTypeFlag.Bib1 | SmudgeTypeFlag.Bib2 | SmudgeTypeFlag.Bib3)) != SmudgeTypeFlag.None;
         public bool IsMultiCell => Icons == 1 && (Size.Width > 0 || Size.Height > 0);
-
         public Bitmap Thumbnail { get; set; }
+        private string nameId;
 
         public SmudgeType(sbyte id, string name, string textId)
             : this(id, name, textId, null, new Size(1, 1), 1, SmudgeTypeFlag.None)
@@ -104,9 +99,7 @@ namespace MobiusEditor.Model
         {
             this.ID = id;
             this.Name = name;
-            this.DisplayName = !String.IsNullOrEmpty(textId) && !String.IsNullOrEmpty(Globals.TheGameTextManager[textId])
-                ? Globals.TheGameTextManager[textId] + " (" + Name.ToUpperInvariant() + ")"
-                : name.ToUpperInvariant();
+            this.nameId = textId;
             this.Size = size;
             this.Icons = icons;
             this.Flag = flag;
@@ -142,6 +135,9 @@ namespace MobiusEditor.Model
 
         public void Init()
         {
+            this.DisplayName = !String.IsNullOrEmpty(nameId) && !String.IsNullOrEmpty(Globals.TheGameTextManager[nameId])
+                ? Globals.TheGameTextManager[nameId] + " (" + Name.ToUpperInvariant() + ")"
+                : Name.ToUpperInvariant();
             var oldImage = Thumbnail;
             var tileSize = Globals.PreviewTileSize;
             Bitmap th = new Bitmap(tileSize.Width * Size.Width, tileSize.Height * Size.Height);

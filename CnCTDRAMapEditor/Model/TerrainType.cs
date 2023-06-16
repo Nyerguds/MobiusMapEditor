@@ -23,30 +23,21 @@ namespace MobiusEditor.Model
     public class TerrainType : ITechnoType, ICellOverlapper, ICellOccupier
     {
         public sbyte ID { get; private set; }
-
         public string Name { get; private set; }
-
         public string DisplayName { get; private set; }
-
         public Rectangle OverlapBounds => new Rectangle(Point.Empty, Size);
         public bool[,] OpaqueMask { get; private set; }
-
         public bool[,] OccupyMask { get; private set; }
-
         public Size Size => new Size(OccupyMask.GetLength(1), OccupyMask.GetLength(0));
-
         public TheaterType[] Theaters { get; private set; }
-
         public int DisplayIcon { get; private set; }
-
         public TemplateTypeFlag TemplateType { get; private set; }
-
         public String GraphicsSource { get; private set; }
-
         public bool IsArmed => false;
         public bool IsAircraft => false;
         public bool IsFixedWing => false;
         public bool IsHarvester => false;
+        private string nameId;
 
         public Size GetRenderSize(Size cellSize)
         {
@@ -72,9 +63,7 @@ namespace MobiusEditor.Model
         {
             this.ID = id;
             this.Name = name;
-            this.DisplayName = !String.IsNullOrEmpty(textId) && !String.IsNullOrEmpty(Globals.TheGameTextManager[textId])
-                ? Globals.TheGameTextManager[textId] + " (" + Name.ToUpperInvariant() + ")"
-                : name.ToUpperInvariant();
+            this.nameId = textId;
             this.Theaters = theaters;
             this.OccupyMask = GeneralUtils.GetMaskFromString(width, height, occupyMask);
             this.DisplayIcon = displayIcon;
@@ -192,6 +181,9 @@ namespace MobiusEditor.Model
 
         public void Init()
         {
+            this.DisplayName = !String.IsNullOrEmpty(nameId) && !String.IsNullOrEmpty(Globals.TheGameTextManager[nameId])
+                ? Globals.TheGameTextManager[nameId] + " (" + Name.ToUpperInvariant() + ")"
+                : Name.ToUpperInvariant();
             var oldImage = Thumbnail;
             string tileName = GraphicsSource;
             if (Globals.TheTilesetManager.GetTileData(tileName, DisplayIcon, out Tile tile))

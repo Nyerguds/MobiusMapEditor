@@ -23,42 +23,6 @@ using System.Xml;
 
 namespace MobiusEditor.Utility
 {
-    public class Tile: IDisposable
-    {
-        public Bitmap Image { get; private set; }
-
-        public Rectangle OpaqueBounds { get; private set; }
-
-        public Tile(Bitmap image, Rectangle opaqueBounds)
-        {
-            Image = image;
-            OpaqueBounds = opaqueBounds;
-        }
-
-        public Tile(Bitmap image)
-            : this(image, new Rectangle(0, 0, image.Width, image.Height))
-        {
-        }
-
-        public void Dispose()
-        {
-            Bitmap image = this.Image;
-            this.Image = null;
-            try
-            {
-                if (image != null)
-                {
-                    image.Dispose();
-                }
-            }
-            catch
-            {
-                // ignore.
-            }
-
-        }
-    }
-
     public class Tileset
     {
         private static string DummyFormatTga = "DATA\\ART\\TEXTURES\\SRGB\\FALLBACK_DUMMY\\{0}_{1:D4}.tga";
@@ -95,7 +59,7 @@ namespace MobiusEditor.Utility
             {
                 foreach (var tileItem in item.Value)
                 {
-                    // no need to dispose the images; the Reset of TextureManager handles that.
+                    // TextureManager returns clones, so these need to be cleaned up explicitly.
                     foreach (KeyValuePair<string, Tile[]> tileinfo in tileItem.Value.TeamColorTiles)
                     {
                         if (tileinfo.Value != null) {

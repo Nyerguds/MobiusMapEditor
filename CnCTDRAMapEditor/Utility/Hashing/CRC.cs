@@ -44,14 +44,24 @@ namespace MobiusEditor.Utility.Hashing
             {
                 throw new ArgumentNullException("bytes");
             }
+            return Calculate(bytes, 0, bytes.Length);
+        }
 
-            uint remainder = 0xFFFFFFFFU;
-            for (var i = 0; i < bytes.Length; ++i)
+        public static uint Calculate(byte[] bytes, Int32 start, Int32 length)
+        {
+            if (bytes == null)
             {
-                uint index = (remainder & 0xFF) ^ bytes[i];
-                remainder = (remainder >> 8) ^ crcTable[index];
+                throw new ArgumentNullException("bytes");
             }
-            return ~remainder;
+
+            uint crc = 0xFFFFFFFFU;
+            Int32 end = start + length;
+            for (var i = start; i < end; ++i)
+            {
+                uint index = (crc & 0xFF) ^ bytes[i];
+                crc = (crc >> 8) ^ crcTable[index];
+            }
+            return ~crc;
         }
 
         private static readonly uint[] crcTable = new uint[256];

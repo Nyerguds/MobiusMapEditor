@@ -69,7 +69,11 @@ namespace MobiusEditor
             modPaths.Add(GameType.TiberianDawn, GetModPaths(gameId, Properties.Settings.Default.ModsToLoadTD, tdModFolder, "TD"));
             modPaths.Add(GameType.RedAlert, GetModPaths(gameId, Properties.Settings.Default.ModsToLoadRA, raModFolder, "RA"));
             modPaths.Add(GameType.SoleSurvivor, GetModPaths(gameId, Properties.Settings.Default.ModsToLoadSS, tdModFolder, "TD"));
+#if CLASSICIMPLEMENTED
             String runPath = Globals.UseClassicGraphics ? null : GetRemasterRunPath();
+#else
+            String runPath = GetRemasterRunPath();
+#endif
             if (runPath != null)
             {
                 LoadEditorRemastered(runPath);
@@ -130,7 +134,6 @@ namespace MobiusEditor
         private static void LoadEditorClassic()
         {
             Globals.SetTileSize(true);
-#if CLASSICIMPLEMENTED
             // The system should scan all mix archives for known filenames of other mix archives so it can do recursive searches.
             // Mix files should be given in order or depth, so first give ones that are in the folder, then ones that may occur inside others.
             // The order of load determines the file priority; only the first found occurrence of a file is used.
@@ -186,18 +189,18 @@ namespace MobiusEditor
             }
 #endif
             // Initialize texture, tileset, team color, and game text managers
-            // TODO
             // TilesetManager: is the system graphics are requested from, possibly with house remap.
-            //Globals.TheTilesetManager = new ClassicTilesetManager(mfm);
+            Globals.TheTilesetManager = new TilesetManagerClassic(mfm);
 
+            Globals.TheTeamColorManager = new TeamRemapManager(mfm);
             // All the same. Would introduce region-based language differences, but the French and German files are... also called "conquer.eng".
             Dictionary<GameType, String> gameStringsFiles = new Dictionary<GameType, string>();
             gameStringsFiles.Add(GameType.TiberianDawn, "conquer.eng");
             gameStringsFiles.Add(GameType.RedAlert, "conquer.eng");
             gameStringsFiles.Add(GameType.SoleSurvivor, "conquer.eng");
-            Globals.TheTeamColorManager = new TeamRemapManager(mfm);
-            Globals.TheGameTextManager = new GameTextManagerClassic(mfm, gameStringsFiles);
-#endif
+            GameTextManagerClassic gtm = new GameTextManagerClassic(mfm, gameStringsFiles);
+            AddMissingClassicText(gtm);
+            Globals.TheGameTextManager = gtm;
         }
 
         private static void LoadEditorRemastered(String runPath)
@@ -222,7 +225,8 @@ namespace MobiusEditor
             TextureManager txm = new TextureManager(Globals.TheArchiveManager);
             Globals.TheTilesetManager = new TilesetManager(Globals.TheArchiveManager, txm, Globals.TilesetsXMLPath, Globals.TexturesPath);
             Globals.TheTeamColorManager = new TeamColorManager(Globals.TheArchiveManager);
-            // Not adapted to mods for now...
+
+            // Text manager.
             var cultureName = CultureInfo.CurrentUICulture.Name;
             var gameTextFilename = string.Format(Globals.GameTextFilenameFormat, cultureName.ToUpper());
             if (!Globals.TheArchiveManager.FileExists(gameTextFilename))
@@ -231,8 +235,8 @@ namespace MobiusEditor
             }
             GameTextManager gtm = new GameTextManager(Globals.TheArchiveManager, gameTextFilename);
             //gtm.Dump("alltext.txt");
-            Globals.TheGameTextManager = gtm;
             AddMissingRemasterText(gtm);
+            Globals.TheGameTextManager = gtm;
         }
 
         private static String GetRemasterRunPath()
@@ -290,25 +294,27 @@ namespace MobiusEditor
             return runPath;
         }
 
-        private static void AddMissingRemasterText(GameTextManager gtm)
+        private static void AddMissingRemasterText(IGameTextManager gtm)
         {
             // Buildings
             gtm["TEXT_STRUCTURE_TITLE_OIL_PUMP"] = "Oil Pump";
             gtm["TEXT_STRUCTURE_TITLE_OIL_TANKER"] = "Oil Tanker";
             String fake = " (" + gtm["TEXT_UI_FAKE"] + ")";
-            if (!gtm["TEXT_STRUCTURE_RA_WEAF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_WEAF"] = Globals.TheGameTextManager["TEXT_STRUCTURE_RA_WEAF"] + fake;
-            if (!gtm["TEXT_STRUCTURE_RA_FACF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_FACF"] = Globals.TheGameTextManager["TEXT_STRUCTURE_RA_FACF"] + fake;
-            if (!gtm["TEXT_STRUCTURE_RA_SYRF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_SYRF"] = Globals.TheGameTextManager["TEXT_STRUCTURE_RA_SYRF"] + fake;
-            if (!gtm["TEXT_STRUCTURE_RA_SPEF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_SPEF"] = Globals.TheGameTextManager["TEXT_STRUCTURE_RA_SPEF"] + fake;
-            if (!gtm["TEXT_STRUCTURE_RA_DOMF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_DOMF"] = Globals.TheGameTextManager["TEXT_STRUCTURE_RA_DOMF"] + fake;
+            if (!gtm["TEXT_STRUCTURE_RA_WEAF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_WEAF"] = gtm["TEXT_STRUCTURE_RA_WEAF"] + fake;
+            if (!gtm["TEXT_STRUCTURE_RA_FACF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_FACF"] = gtm["TEXT_STRUCTURE_RA_FACF"] + fake;
+            if (!gtm["TEXT_STRUCTURE_RA_SYRF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_SYRF"] = gtm["TEXT_STRUCTURE_RA_SYRF"] + fake;
+            if (!gtm["TEXT_STRUCTURE_RA_SPEF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_SPEF"] = gtm["TEXT_STRUCTURE_RA_SPEF"] + fake;
+            if (!gtm["TEXT_STRUCTURE_RA_DOMF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_DOMF"] = gtm["TEXT_STRUCTURE_RA_DOMF"] + fake;
             // Overlay
             gtm["TEXT_OVERLAY_CONCRETE_PAVEMENT"] = "Concrete";
             gtm["TEXT_OVERLAY_CONCRETE_ROAD"] = "Concrete Road";
             gtm["TEXT_OVERLAY_CONCRETE_ROAD_FULL"] = "Concrete Road (full)";
             gtm["TEXT_OVERLAY_TIBERIUM"] = "Tiberium";
+            // Haystacks. Extra ID added for classic support. Remaster only has the string "Haystack", so we'll just copy it.
+            gtm["TEXT_STRUCTURE_TITLE_CIV12B"] = gtm["TEXT_STRUCTURE_TITLE_CIV12"];
             // "Gold" exists as "TEXT_CURRENCY_TACTICAL"
             gtm["TEXT_OVERLAY_GEMS"] = "Gems";
-            gtm["TEXT_OVERLAY_WCRATE"] = "Wooden Crate";
+            gtm["TEXT_OVERLAY_WCRATE"] = "Wood Crate";
             gtm["TEXT_OVERLAY_SCRATE"] = "Steel Crate";
             gtm["TEXT_OVERLAY_WATER_CRATE"] = "Water Crate";
             // Smudge
@@ -317,12 +323,23 @@ namespace MobiusEditor
             gtm["TEXT_SMUDGE_BIB"] = "Road Bib";
         }
 
-        private static void AddMissingClassicText(GameTextManager gtm)
+        private static void AddMissingClassicText(IGameTextManager gtm)
         {
-            // Overlay
+            // Classic game text manager does not clear these extra strings when resetting the strings table.
+            // TD Overlay
             gtm["TEXT_OVERLAY_CONCRETE_ROAD"] = "Concrete Road";
             gtm["TEXT_OVERLAY_CONCRETE_ROAD_FULL"] = "Concrete Road (full)";
+            // TD Terrain
+            gtm["TEXT_PROP_TITLE_CACTUS"] = "Cactus";
+            // RA Misc
             gtm["TEXT_UI_FAKE"] = "FAKE";
+            // RA ants
+            gtm["TEXT_UNIT_RA_ANT1"] = "Warrior Ant";
+            gtm["TEXT_UNIT_RA_ANT2"] = "Fire Ant";
+            gtm["TEXT_UNIT_RA_ANT3"] = "Scout Ant";
+            gtm["TEXT_STRUCTURE_RA_QUEE"] = "Queen Ant";
+            gtm["TEXT_STRUCTURE_RA_LAR1"] = "Larva";
+            gtm["TEXT_STRUCTURE_RA_LAR2"] = "Larvae";
         }
 
         [DllImport("SHCore.dll")]

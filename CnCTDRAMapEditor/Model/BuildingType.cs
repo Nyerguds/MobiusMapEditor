@@ -47,33 +47,21 @@ namespace MobiusEditor.Model
     public class BuildingType : ICellOverlapper, ICellOccupier, ITechnoType
     {
         public sbyte ID { get; private set; }
-
         public string Name { get; private set; }
-
         public string DisplayName { get; private set; }
-
         public BuildingTypeFlag Flag { get; private set; }
-
         public String GraphicsSource { get; private set; }
-
         public int FrameOFfset { get; private set; }
-
         public int PowerUsage { get; set; }
-
         public int PowerProduction { get; set; }
-
         public int Storage { get; set; }
-
         public Rectangle OverlapBounds => new Rectangle(Point.Empty, new Size(this.OccupyMask.GetLength(1), this.OccupyMask.GetLength(0)));
         public bool[,] OpaqueMask { get; private set; }
-
         public bool[,] OccupyMask { get; private set; }
 
         /// <summary>Actual footprint of the building, without bibs involved.</summary>
         public bool[,] BaseOccupyMask { get; private set; }
-
         public Size Size { get; private set; }
-
         public bool HasBib
         {
             get { return (this.Flag & BuildingTypeFlag.Bib) == BuildingTypeFlag.Bib; }
@@ -109,6 +97,7 @@ namespace MobiusEditor.Model
         /// Indicates buildings that have pieces sticking out at the top that should not overlap the objects on these cells.
         /// </summary>
         public bool IsFlat => (this.Flag & BuildingTypeFlag.Flat) == BuildingTypeFlag.Flat;
+        private string nameId;
 
         public BuildingType(sbyte id, string name, string textId, int powerProd, int powerUse, int storage, int width, int height, string occupyMask, string ownerHouse, TheaterType[] theaters, string factoryOverlay, int frameOffset, String graphicsSource, BuildingTypeFlag flag)
         {
@@ -117,9 +106,7 @@ namespace MobiusEditor.Model
             this.FrameOFfset = frameOffset;
             this.Name = name;
             this.GraphicsSource = graphicsSource ?? name;
-            this.DisplayName = !String.IsNullOrEmpty(textId) && !String.IsNullOrEmpty(Globals.TheGameTextManager[textId])
-                ? Globals.TheGameTextManager[textId] + " (" + this.Name.ToUpperInvariant() + ")"
-                : name.ToUpperInvariant();
+            this.nameId = textId;
             this.PowerProduction = powerProd;
             this.PowerUsage = powerUse;
             this.Storage = storage;
@@ -224,9 +211,7 @@ namespace MobiusEditor.Model
                 theaters = new TheaterType[thLen];
                 Array.Copy(this.Theaters, theaters, thLen);
             }
-            // Don't do lookup of the UI name. We don't have the original lookup ID at this point, so don't bother, and just restore the name afterwards.
-            BuildingType newBld = new BuildingType(this.ID, this.Name, null, this.PowerProduction, this.PowerUsage, this.Storage, baseMaskX, baseMaskY, occupyMask, this.OwnerHouse, theaters, this.FactoryOverlay, this.FrameOFfset, this.GraphicsSource, this.Flag);
-            newBld.DisplayName = this.DisplayName;
+            BuildingType newBld = new BuildingType(this.ID, this.Name, this.nameId, this.PowerProduction, this.PowerUsage, this.Storage, baseMaskX, baseMaskY, occupyMask, this.OwnerHouse, theaters, this.FactoryOverlay, this.FrameOFfset, this.GraphicsSource, this.Flag);
             return newBld;
         }
 
@@ -260,6 +245,9 @@ namespace MobiusEditor.Model
 
         public void Init(GameType gameType, HouseType house, DirectionType direction)
         {
+            this.DisplayName = !String.IsNullOrEmpty(this.nameId) && !String.IsNullOrEmpty(Globals.TheGameTextManager[this.nameId])
+                ? Globals.TheGameTextManager[this.nameId] + " (" + this.Name.ToUpperInvariant() + ")"
+                : this.Name.ToUpperInvariant();
             Bitmap oldImage = this.Thumbnail;
             Building mockBuilding = new Building()
             {

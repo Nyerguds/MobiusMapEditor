@@ -15,7 +15,15 @@ namespace MobiusEditor.Utility
         public string Name { get; private set; }
         public byte UnitRadarColor { get; private set; }
         public byte BuildingRadarColor { get; private set; }
-
+        public byte[] RemapTable
+        {
+            get
+            {
+                byte[] remapCopy = new byte[0x100];
+                Array.Copy(this.remapTable, remapCopy, remapCopy.Length);
+                return remapCopy;
+            }
+        }
         private byte[] remapTable;
 
         public TeamRemap(string newName, TeamRemap baseRemap)
@@ -32,8 +40,8 @@ namespace MobiusEditor.Utility
             this.Name = name;
             this.UnitRadarColor = unitRadarColor;
             this.BuildingRadarColor = buildingRadarColor;
-            this.remapTable = Enumerable.Range(0, 0x100).Cast<byte>().ToArray();
-            int max = Math.Max(0x100, remapstart + remapValues.Length);
+            this.remapTable = Enumerable.Range(0, 0x100).Select(b => (Byte)b).ToArray();
+            int max = Math.Min(0x100, remapstart + remapValues.Length) - remapstart;
             for (int i = 0; i < max; ++i)
             {
                 remapTable[remapstart + i] = remapValues[i];

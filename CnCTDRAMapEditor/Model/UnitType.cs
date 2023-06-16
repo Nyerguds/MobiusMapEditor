@@ -63,21 +63,22 @@ namespace MobiusEditor.Model
         public bool[,] OpaqueMask => new bool[1, 1] { { true } };
         public bool[,] OccupyMask => new bool[1, 1] { { true } };
         public string OwnerHouse { get; private set; }
-        public bool IsGroundUnit => !IsAircraft && !IsVessel;
-        public bool IsAircraft => (ID & UnitTypeIDMask.Aircraft) != 0;
-        public bool IsVessel => (ID & UnitTypeIDMask.Vessel) != 0;
-        public bool HasTurret => (Flag & UnitTypeFlag.HasTurret) == UnitTypeFlag.HasTurret;
-        public bool HasDoubleTurret => (Flag & UnitTypeFlag.HasDoubleTurret) == UnitTypeFlag.HasDoubleTurret;
-        public bool IsFixedWing => (Flag & UnitTypeFlag.IsFixedWing) == UnitTypeFlag.IsFixedWing;
-        public bool IsArmed => (Flag & UnitTypeFlag.IsArmed) == UnitTypeFlag.IsArmed;
-        public bool IsHarvester => (Flag & UnitTypeFlag.IsHarvester) == UnitTypeFlag.IsHarvester;
-        public bool IsExpansionUnit => (Flag & UnitTypeFlag.IsExpansionUnit) == UnitTypeFlag.IsExpansionUnit;
+        public bool IsGroundUnit => !this.IsAircraft && !this.IsVessel;
+        public bool IsAircraft => (this.ID & UnitTypeIDMask.Aircraft) != 0;
+        public bool IsVessel => (this.ID & UnitTypeIDMask.Vessel) != 0;
+        public bool HasTurret => (this.Flag & UnitTypeFlag.HasTurret) == UnitTypeFlag.HasTurret;
+        public bool HasDoubleTurret => (this.Flag & UnitTypeFlag.HasDoubleTurret) == UnitTypeFlag.HasDoubleTurret;
+        public bool IsFixedWing => (this.Flag & UnitTypeFlag.IsFixedWing) == UnitTypeFlag.IsFixedWing;
+        public bool IsArmed => (this.Flag & UnitTypeFlag.IsArmed) == UnitTypeFlag.IsArmed;
+        public bool IsHarvester => (this.Flag & UnitTypeFlag.IsHarvester) == UnitTypeFlag.IsHarvester;
+        public bool IsExpansionUnit => (this.Flag & UnitTypeFlag.IsExpansionUnit) == UnitTypeFlag.IsExpansionUnit;
         private Size _RenderSize;
+        private string nameId;
 
         public Size GetRenderSize(Size cellSize)
         {
             //RenderSize = new Size(tile.Image.Width / Globals.MapTileScale, tile.Image.Height / Globals.MapTileScale);
-            return new Size(_RenderSize.Width * cellSize.Width / Globals.OriginalTileWidth, _RenderSize.Height * cellSize.Height / Globals.OriginalTileHeight);
+            return new Size(this._RenderSize.Width * cellSize.Width / Globals.OriginalTileWidth, this._RenderSize.Height * cellSize.Height / Globals.OriginalTileHeight);
         }
 
         public Bitmap Thumbnail { get; set; }
@@ -86,9 +87,7 @@ namespace MobiusEditor.Model
         {
             this.ID = id;
             this.Name = name;
-            this.DisplayName = !String.IsNullOrEmpty(textId) && !String.IsNullOrEmpty(Globals.TheGameTextManager[textId])
-                ? Globals.TheGameTextManager[textId] + " (" + Name.ToUpperInvariant() + ")"
-                : name.ToUpperInvariant();
+            this.nameId = textId;
             this.OwnerHouse = ownerHouse;
             bool hasTurret = ((flags & UnitTypeFlag.HasTurret) == UnitTypeFlag.HasTurret);
             this.Turret = hasTurret ? turret : null;
@@ -122,15 +121,15 @@ namespace MobiusEditor.Model
         {
             if (obj is UnitType unit)
             {
-                return ReferenceEquals(this, obj) || string.Equals(Name, unit.Name, StringComparison.OrdinalIgnoreCase) && ID == unit.ID;
+                return ReferenceEquals(this, obj) || string.Equals(this.Name, unit.Name, StringComparison.OrdinalIgnoreCase) && this.ID == unit.ID;
             }
             else if (obj is sbyte)
             {
-                return ID == (sbyte)obj;
+                return this.ID == (sbyte)obj;
             }
             else if (obj is string)
             {
-                return string.Equals(Name, obj as string, StringComparison.OrdinalIgnoreCase);
+                return string.Equals(this.Name, obj as string, StringComparison.OrdinalIgnoreCase);
             }
 
             return base.Equals(obj);
@@ -138,22 +137,27 @@ namespace MobiusEditor.Model
 
         public override int GetHashCode()
         {
-            return ID.GetHashCode();
+            return this.ID.GetHashCode();
         }
 
         public override string ToString()
         {
-            return Name;
+            return this.Name;
         }
 
         public void Init(GameType gameType, HouseType house, DirectionType direction)
         {
-            var oldImage = Thumbnail;
-            if (Globals.TheTilesetManager.GetTileData(Name, 0, out Tile tile))
+            // Required for classic mode: reset name.
+            this.DisplayName = !String.IsNullOrEmpty(this.nameId) && !String.IsNullOrEmpty(Globals.TheGameTextManager[this.nameId])
+                ? Globals.TheGameTextManager[this.nameId] + " (" + this.Name.ToUpperInvariant() + ")"
+                : this.Name.ToUpperInvariant();
+
+            Bitmap oldImage = this.Thumbnail;
+            if (Globals.TheTilesetManager.GetTileData(this.Name, 0, out Tile tile))
             {
-                _RenderSize = tile.Image.Size;
+                this._RenderSize = tile.Image.Size;
             }
-            var mockUnit = new Unit()
+            Unit mockUnit = new Unit()
             {
                 Type = this,
                 House = house,
@@ -162,22 +166,22 @@ namespace MobiusEditor.Model
             };
             // Renderer draws a border of a full cell around the unit. In practice this is excessive,
             // so for a nicer preview we use only half a cell around.
-            var unitThumbnail = new Bitmap(Globals.PreviewTileWidth * 2, Globals.PreviewTileHeight * 2);
+            Bitmap unitThumbnail = new Bitmap(Globals.PreviewTileWidth * 2, Globals.PreviewTileHeight * 2);
             unitThumbnail.SetResolution(96, 96);
             using (Bitmap bigThumbnail = new Bitmap(Globals.PreviewTileWidth * 3, Globals.PreviewTileHeight * 3))
             {
                 bigThumbnail.SetResolution(96, 96);
-                using (var g = Graphics.FromImage(bigThumbnail))
+                using (Graphics g = Graphics.FromImage(bigThumbnail))
                 {
                     MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
                     MapRenderer.RenderUnit(gameType, new Point(1, 1), Globals.PreviewTileSize, mockUnit).Item2(g);
                 }
-                using (var g2 = Graphics.FromImage(unitThumbnail))
+                using (Graphics g2 = Graphics.FromImage(unitThumbnail))
                 {
                     g2.DrawImage(bigThumbnail, new Point(-Globals.PreviewTileWidth / 2, -Globals.PreviewTileHeight / 2));
                 }
             }
-            Thumbnail = unitThumbnail;
+            this.Thumbnail = unitThumbnail;
             if (oldImage != null)
             {
                 try { oldImage.Dispose(); }

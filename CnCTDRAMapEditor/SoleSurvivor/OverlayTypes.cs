@@ -31,7 +31,7 @@ namespace MobiusEditor.SoleSurvivor
         public static readonly OverlayType Road = new OverlayType(19, "road", "TEXT_OVERLAY_CONCRETE_ROAD", null, OverlayTypeFlag.Pavement, 1);
         // Not available to place down sadly: even the ini read for it in the game code only succeeds if 'IsGross' is enabled.
         //public static readonly OverlayType Squishy = new OverlayType(20, "SQUISH", OverlayTypeFlag.Decoration);
-        public static readonly OverlayType V12 = new OverlayType(21, "v12", "TEXT_STRUCTURE_TITLE_CIV12", new[] { TiberianDawn.TheaterTypes.Temperate, TiberianDawn.TheaterTypes.Winter }, OverlayTypeFlag.Solid);
+        public static readonly OverlayType V12 = new OverlayType(21, "v12", "TEXT_STRUCTURE_TITLE_CIV12B", new[] { TiberianDawn.TheaterTypes.Temperate, TiberianDawn.TheaterTypes.Winter }, OverlayTypeFlag.Solid);
         public static readonly OverlayType V13 = new OverlayType(22, "v13", "TEXT_STRUCTURE_TITLE_CIV12", new[] { TiberianDawn.TheaterTypes.Temperate, TiberianDawn.TheaterTypes.Winter }, OverlayTypeFlag.Solid);
         public static readonly OverlayType V14 = new OverlayType(23, "v14", "TEXT_STRUCTURE_TITLE_CIV13", new[] { TiberianDawn.TheaterTypes.Temperate, TiberianDawn.TheaterTypes.Winter }, OverlayTypeFlag.Solid);
         public static readonly OverlayType V15 = new OverlayType(24, "v15", "TEXT_STRUCTURE_TITLE_CIV14", new[] { TiberianDawn.TheaterTypes.Temperate, TiberianDawn.TheaterTypes.Winter }, OverlayTypeFlag.Solid);

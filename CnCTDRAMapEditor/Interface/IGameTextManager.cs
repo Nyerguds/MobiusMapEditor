@@ -8,7 +8,7 @@ namespace MobiusEditor.Interface
 {
     public interface IGameTextManager
     {
-        String this[string key] { get; }
+        String this[string key] { get; set; }
         void Reset(GameType gameType);
     }
 }

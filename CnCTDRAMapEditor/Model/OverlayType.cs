@@ -52,45 +52,29 @@ namespace MobiusEditor.Model
     {
 
         public sbyte ID { get; private set; }
-
         public string Name { get; private set; }
-
         public string DisplayName { get; private set; }
-
         public TheaterType[] Theaters { get; private set; }
-
         public OverlayTypeFlag Flag { get; private set; }
-
         public Bitmap Thumbnail { get; set; }
-
         public String GraphicsSource { get; private set; }
-
         public int ForceTileNr { get; private set; }
-
         public bool[,] OccupyMask => new bool[1, 1] { { true } };
-
-        public bool IsResource => (Flag & (OverlayTypeFlag.TiberiumOrGold | OverlayTypeFlag.Gems)) != OverlayTypeFlag.None;
-
-        public bool IsTiberiumOrGold => (Flag & OverlayTypeFlag.TiberiumOrGold) != OverlayTypeFlag.None;
-
-        public bool IsGem => (Flag & OverlayTypeFlag.Gems) != OverlayTypeFlag.None;
-
-        public bool IsWall => (Flag & OverlayTypeFlag.Wall) != OverlayTypeFlag.None;
-
-        public bool IsPavement => (Flag & OverlayTypeFlag.Pavement) != OverlayTypeFlag.None;
-
-        public bool IsConcrete => (Flag & OverlayTypeFlag.Concrete) != OverlayTypeFlag.None;
-
-        public bool IsCrate => (Flag & OverlayTypeFlag.Crate) != OverlayTypeFlag.None;
-
-        public bool IsFlag => (Flag & OverlayTypeFlag.Flag) != OverlayTypeFlag.None;
-
+        public bool IsResource => (this.Flag & (OverlayTypeFlag.TiberiumOrGold | OverlayTypeFlag.Gems)) != OverlayTypeFlag.None;
+        public bool IsTiberiumOrGold => (this.Flag & OverlayTypeFlag.TiberiumOrGold) != OverlayTypeFlag.None;
+        public bool IsGem => (this.Flag & OverlayTypeFlag.Gems) != OverlayTypeFlag.None;
+        public bool IsWall => (this.Flag & OverlayTypeFlag.Wall) != OverlayTypeFlag.None;
+        public bool IsPavement => (this.Flag & OverlayTypeFlag.Pavement) != OverlayTypeFlag.None;
+        public bool IsConcrete => (this.Flag & OverlayTypeFlag.Concrete) != OverlayTypeFlag.None;
+        public bool IsCrate => (this.Flag & OverlayTypeFlag.Crate) != OverlayTypeFlag.None;
+        public bool IsFlag => (this.Flag & OverlayTypeFlag.Flag) != OverlayTypeFlag.None;
         public Color Tint { get; set; } = Color.White;
+        private string nameId;
 
         /// <summary>
         /// Defines that it is placeable under the "overlay" category (and not resource or wall)
         /// </summary>
-        public bool IsOverlay => (Flag & (OverlayTypeFlag.Wall | OverlayTypeFlag.TiberiumOrGold | OverlayTypeFlag.Gems)) == OverlayTypeFlag.None;
+        public bool IsOverlay => (this.Flag & (OverlayTypeFlag.Wall | OverlayTypeFlag.TiberiumOrGold | OverlayTypeFlag.Gems)) == OverlayTypeFlag.None;
 
         public OverlayType(sbyte id, string name, string textId, TheaterType[] theaters, OverlayTypeFlag flag, String graphicsSource, int forceTileNr, Color tint)
         {
@@ -98,10 +82,7 @@ namespace MobiusEditor.Model
             this.Name = name;
             this.GraphicsSource = graphicsSource == null ? name : graphicsSource;
             this.ForceTileNr = forceTileNr;
-            // Shows graphics source and not real internal name to mask different internal name for ROAD #2.
-            this.DisplayName = !String.IsNullOrEmpty(textId) && !String.IsNullOrEmpty(Globals.TheGameTextManager[textId])
-                ? Globals.TheGameTextManager[textId] + " (" + GraphicsSource.ToUpperInvariant() + ")"
-                : name.ToUpperInvariant();
+            this.nameId = textId;
             this.Theaters = theaters;
             this.Flag = flag;
             this.Tint = tint;
@@ -160,22 +141,27 @@ namespace MobiusEditor.Model
 
         public override int GetHashCode()
         {
-            return ID.GetHashCode();
+            return this.ID.GetHashCode();
         }
 
         public override string ToString()
         {
-            return Name;
+            return this.Name;
         }
 
         public void Init(GameType gameType)
         {
-            var oldImage = Thumbnail;
+            // Shows graphics source and not real internal name to mask different internal name for ROAD #2.
+            this.DisplayName = !String.IsNullOrEmpty(this.nameId) && !String.IsNullOrEmpty(Globals.TheGameTextManager[this.nameId])
+                ? Globals.TheGameTextManager[this.nameId] + " (" + this.GraphicsSource.ToUpperInvariant() + ")"
+                : this.Name.ToUpperInvariant();
+
+            var oldImage = this.Thumbnail;
             var tileSize = Globals.PreviewTileSize;
             Bitmap th = new Bitmap(tileSize.Width, tileSize.Height);
             using (Graphics g = Graphics.FromImage(th))
             {
-                int tilenr = ForceTileNr == -1 ? 0 : ForceTileNr;
+                int tilenr = this.ForceTileNr == -1 ? 0 : this.ForceTileNr;
                 Overlay mockOverlay = new Overlay()
                 {
                     Type = this,
@@ -184,7 +170,7 @@ namespace MobiusEditor.Model
                 MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
                 MapRenderer.RenderOverlay(gameType, Point.Empty, Globals.PreviewTileSize, Globals.PreviewTileScale, mockOverlay).Item2(g);
             }
-            Thumbnail = th;
+            this.Thumbnail = th;
             if (oldImage != null)
             {
                 try { oldImage.Dispose(); }

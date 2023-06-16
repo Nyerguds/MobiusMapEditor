@@ -374,6 +374,117 @@ namespace MobiusEditor.Utility
             return colorFreq.OrderByDescending(kvp => kvp.Value).Select(kvp => kvp.Key).Take(amount).ToArray();
         }
 
+        /// <summary>
+        /// Copies a piece out of an 8-bit image. The stride of the output will always equal the width.
+        /// </summary>
+        /// <param name="imageData">Byte data of the image.</param>
+        /// <param name="width">Width of the image.</param>
+        /// <param name="height">Height of the image.</param>
+        /// <param name="stride">Stride of the image.</param>
+        /// <param name="copyArea">The area to copy.</param>
+        /// <returns>The requested piece of the image.</returns>
+        public static Byte[] CopyFrom8bpp(Byte[] imageData, Int32 width, Int32 height, Int32 stride, Rectangle copyArea)
+        {
+            Byte[] copiedPicture = new Byte[copyArea.Width * copyArea.Height];
+            Int32 maxY = Math.Min(height - copyArea.Y, copyArea.Height);
+            Int32 maxX = Math.Min(width - copyArea.X, copyArea.Width);
+
+            for (Int32 y = 0; y < maxY; ++y)
+            {
+                for (Int32 x = 0; x < maxX; ++x)
+                {
+                    // This will hit the same byte multiple times
+                    Int32 indexSource = (copyArea.Y + y) * stride + copyArea.X + x;
+                    // This will always get a new index
+                    Int32 indexDest = y * copyArea.Width + x;
+                    copiedPicture[indexDest] = imageData[indexSource];
+                }
+            }
+            return copiedPicture;
+        }
+
+        /// <summary>
+        /// Pastes 8-bit data on an 8-bit image.
+        /// </summary>
+        /// <param name="destData">Byte data of the image that is pasted on.</param>
+        /// <param name="destWidth">Width of the image that is pasted on.</param>
+        /// <param name="destHeight">Height of the image that is pasted on.</param>
+        /// <param name="destStride">Stride of the image that is pasted on.</param>
+        /// <param name="pasteData">Byte data of the image to paste.</param>
+        /// <param name="pasteWidth">Width of the image to paste.</param>
+        /// <param name="pasteHeight">Height of the image to paste.</param>
+        /// <param name="pasteStride">Stride of the image to paste.</param>
+        /// <param name="targetPos">Position at which to paste the image.</param>
+        /// <param name="palTransparencyMask">Boolean array determining which offsets on the color palette will be treated as transparent. Use null for no transparency.</param>
+        /// <param name="modifyOrig">True to modify the original array rather than returning a copy.</param>
+        /// <returns>A new Byte array with the combined data, and the same stride as the source image.</returns>
+        public static Byte[] PasteOn8bpp(Byte[] destData, Int32 destWidth, Int32 destHeight, Int32 destStride,
+            Byte[] pasteData, Int32 pasteWidth, Int32 pasteHeight, Int32 pasteStride,
+            Rectangle targetPos, Boolean[] palTransparencyMask, Boolean modifyOrig)
+        {
+            return PasteOn8bpp(destData, destWidth, destHeight, destStride, pasteData, pasteWidth, pasteHeight, pasteStride, targetPos, palTransparencyMask, modifyOrig, null);
+        }
+
+        /// <summary>
+        /// Pastes 8-bit data on an 8-bit image.
+        /// </summary>
+        /// <param name="destData">Byte data of the image that is pasted on.</param>
+        /// <param name="destWidth">Width of the image that is pasted on.</param>
+        /// <param name="destHeight">Height of the image that is pasted on.</param>
+        /// <param name="destStride">Stride of the image that is pasted on.</param>
+        /// <param name="pasteData">Byte data of the image to paste.</param>
+        /// <param name="pasteWidth">Width of the image to paste.</param>
+        /// <param name="pasteHeight">Height of the image to paste.</param>
+        /// <param name="pasteStride">Stride of the image to paste.</param>
+        /// <param name="targetPos">Position at which to paste the image.</param>
+        /// <param name="palTransparencyMask">Boolean array determining which offsets on the color palette will be treated as transparent. Use null for no transparency.</param>
+        /// <param name="modifyOrig">True to modify the original array rather than returning a copy.</param>
+        /// <param name="transparencyMask">For image-based transparency masking rather than palette based. Values in the array set to true are treated as transparent.
+        /// If given, should have a size of exactly <see cref="pasteWidth"/> * <see cref="pasteHeight"/>.</param>
+        /// <returns>A new Byte array with the combined data, and the same stride as the source image.</returns>
+        public static Byte[] PasteOn8bpp(Byte[] destData, Int32 destWidth, Int32 destHeight, Int32 destStride,
+            Byte[] pasteData, Int32 pasteWidth, Int32 pasteHeight, Int32 pasteStride,
+            Rectangle targetPos, Boolean[] palTransparencyMask, Boolean modifyOrig, Boolean[] transparencyMask)
+        {
+            if (targetPos.Width != pasteWidth || targetPos.Height != pasteHeight)
+                pasteData = CopyFrom8bpp(pasteData, pasteWidth, pasteHeight, pasteStride, new Rectangle(0, 0, targetPos.Width, targetPos.Height));
+            Byte[] finalFileData;
+            if (modifyOrig)
+            {
+                finalFileData = destData;
+            }
+            else
+            {
+                finalFileData = new Byte[destData.Length];
+                Array.Copy(destData, finalFileData, destData.Length);
+            }
+            Boolean[] isTransparent = new Boolean[256];
+            if (palTransparencyMask != null)
+            {
+                Int32 len = Math.Min(isTransparent.Length, palTransparencyMask.Length);
+                for (Int32 i = 0; i < len; ++i)
+                    isTransparent[i] = palTransparencyMask[i];
+            }
+            Boolean transMaskGiven = transparencyMask != null && transparencyMask.Length == pasteWidth * pasteHeight;
+            Int32 maxY = Math.Min(destHeight - targetPos.Y, targetPos.Height);
+            Int32 maxX = Math.Min(destWidth - targetPos.X, targetPos.Width);
+            for (Int32 y = 0; y < maxY; ++y)
+            {
+                for (Int32 x = 0; x < maxX; ++x)
+                {
+                    Int32 indexSource = y * pasteStride + x;
+                    Int32 indexTrans = transMaskGiven ? y * pasteWidth + x : 0;
+                    Byte data = pasteData[indexSource];
+                    if (isTransparent[data] || (transMaskGiven && transparencyMask[indexTrans]))
+                        continue;
+                    Int32 indexDest = (targetPos.Y + y) * destStride + targetPos.X + x;
+                    // This will always get a new index
+                    finalFileData[indexDest] = data;
+                }
+            }
+            return finalFileData;
+        }
+
         public static Rectangle CalculateOpaqueBounds(Bitmap bitmap)
         {
             BitmapData data = null;

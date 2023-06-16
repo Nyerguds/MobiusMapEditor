@@ -52,33 +52,19 @@ namespace MobiusEditor.Model
     public class TemplateType : IBrowsableType
     {
         public ushort ID { get; private set; }
-
         public string Name { get; private set; }
-
         public string DisplayName => Name;
-
         public int IconWidth { get; private set; }
-
         public int IconHeight { get; private set; }
-
         public Size IconSize => new Size(IconWidth, IconHeight);
-
         public int ThumbnailIconWidth { get; private set; }
-
         public int ThumbnailIconHeight { get; private set; }
-
         public Size ThumbnailSize => new Size(IconWidth, IconHeight);
-
         public int NumIcons { get; private set; }
-
         public bool[,] IconMask { get; set; }
-
         public Bitmap Thumbnail { get; set; }
-
         public TheaterType[] Theaters { get; private set; }
-
         public TemplateTypeFlag Flag { get; private set; }
-
         public Dictionary<string, bool[,]> MaskOverrides { get; private set; }
 
         /// <summary>

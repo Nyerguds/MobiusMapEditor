@@ -628,7 +628,9 @@
     <Compile Include="Utility\TeamRemapManager.cs" />
     <Compile Include="Utility\TextureManager.cs" />
     <Compile Include="Utility\TGASharpLib.cs" />
+    <Compile Include="Utility\Tile.cs" />
     <Compile Include="Utility\Tileset.cs" />
+    <Compile Include="Utility\TilesetManagerClassic.cs" />
     <Compile Include="Utility\TilesetManager.cs" />
     <Compile Include="Utility\ToolTipFixer.cs" />
     <Compile Include="Utility\UndoRedoList.cs" />

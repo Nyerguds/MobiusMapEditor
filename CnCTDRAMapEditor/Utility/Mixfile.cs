@@ -16,6 +16,7 @@ namespace MobiusEditor.Utility
         private bool isEmbedded = false;
         private long fileStart;
         private long fileLength;
+        private long dataStart;
 
         public Mixfile(string mixPath)
         {
@@ -95,7 +96,7 @@ namespace MobiusEditor.Utility
             else
             {
                 // Ignore data size in header; it's only used for caching.
-                readOffset += 2;
+                readOffset += 4;
                 headerSize = (UInt32)(nrOfFiles * 12);
                 if (readOffset + headerSize > mixLength)
                 {
@@ -107,10 +108,13 @@ namespace MobiusEditor.Utility
                     // End of header reading; no longer needed.
                     //readOffset += headerSize;
                 }
+                readOffset += headerSize;
             }
-            for (int i = 0; i < nrOfFiles; ++i)
+            // Store so files can correctly be offset to the end of the header
+            this.dataStart = readOffset;
+            using (BinaryReader headerReader = new BinaryReader(new MemoryStream(header)))
             {
-                using (BinaryReader headerReader = new BinaryReader(new MemoryStream(header)))
+                for (int i = 0; i < nrOfFiles; ++i)
                 {
                     uint fileId = headerReader.ReadUInt32();
                     uint fileOffset = headerReader.ReadUInt32();
@@ -147,7 +151,7 @@ namespace MobiusEditor.Utility
             {
                 return null;
             }
-            return CreateViewStream(mixFileMap, fileStart, fileLength, fileLoc.Offset, fileLoc.Length);
+            return CreateViewStream(mixFileMap, fileStart, fileLength, this.dataStart + fileLoc.Offset, fileLoc.Length);
         }
 
         /// <summary>
@@ -160,7 +164,7 @@ namespace MobiusEditor.Utility
         /// <param name="dataReadLength">Length of the data to read.</param>
         /// <returns></returns>
         /// <exception cref="IndexOutOfRangeException">The data is not in the bounds of this mix file.</exception>
-        private Stream CreateViewStream(MemoryMappedFile mixMap, long mixFileStart, long mixFileLength, uint dataReadOffset, uint dataReadLength)
+        private Stream CreateViewStream(MemoryMappedFile mixMap, long mixFileStart, long mixFileLength, long dataReadOffset, uint dataReadLength)
         {
             if (disposedValue)
             {

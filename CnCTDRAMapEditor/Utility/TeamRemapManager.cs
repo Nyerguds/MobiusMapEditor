@@ -22,7 +22,7 @@ namespace MobiusEditor.Utility
         public static readonly TeamRemap RemapTdLtBlue = new TeamRemap("MULTI6", 201, 203, 176, new byte[] { 161, 200, 201, 202, 204, 205, 206, 12, 201, 202, 203, 204, 205, 115, 198, 114 });
         public static readonly TeamRemap RemapTdYellow = new TeamRemap("MULTI1", 5, 157, 176, new byte[] { 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191 });
         public static readonly TeamRemap RemapTdRed = new TeamRemap("MULTI3", 127, 123, 176, new byte[] { 127, 126, 125, 124, 122, 46, 120, 47, 125, 124, 123, 122, 42, 121, 120, 120 });
-        // Added extra colours for flags
+        // Extra colours added for flags and unowned buildings. With thanks to Kilkakon.
         public static readonly TeamRemap RemapTdBrown = new TeamRemap("MULTI7", 146, 209, 176, new byte[] { 146, 152, 209, 151, 173, 150, 173, 183, 146, 152, 209, 151, 173, 150, 173, 183 }); // Brown
         //public static readonly TeamRemap RemapTdBurg = new TeamRemap("Burgudy", 214, 213, 176, new byte[] { 132, 133, 134, 213, 214, 121, 120, 12, 133, 134, 213, 214, 121, 174, 120, 199 }); // Burgundy
         public static readonly TeamRemap RemapTdPink = new TeamRemap("MULTI8", 217, 218, 176, new byte[] { 17, 17, 217, 218, 209, 213, 174, 120, 217, 217, 218, 209, 213, 214, 214, 174 }); // Pink
@@ -38,8 +38,10 @@ namespace MobiusEditor.Utility
         }
 
         private Dictionary<string, TeamRemap> remapsRa = new Dictionary<string, TeamRemap>();
+        private byte remapsRaBaseIndex = 0;
         private GameType currentlyLoadedGameType;
         private Color[] currentlyLoadedPalette;
+        private byte currentRemapBaseIndex = 0;
         private readonly IArchiveManager mixfileManager;
         private readonly string[] remapsColorsRa =
             {
@@ -70,16 +72,26 @@ namespace MobiusEditor.Utility
             //{ "DIALOG_BLUE", new string[]{ } },
         };
 
-        public ITeamColor this[string key] => GetforCurrentGame(key);
+        public ITeamColor this[string key] => this.GetforCurrentGame(key);
         public Color GetBaseColor(string key)
         {
-            TeamRemap tc = GetforCurrentGame(key);
-            if (tc != null)
+            if (this.currentlyLoadedPalette == null)
             {
-                return currentlyLoadedPalette[tc.UnitRadarColor];
+                // Standard yellow. Identical in TD and RA, so give this as hardcoded default.
+                return Color.FromArgb(246, 214, 121);
             }
-            return RemapBaseColor;
+            TeamRemap tc = this.GetforCurrentGame(key);
+            if (tc == null)
+            {
+                return this.currentlyLoadedPalette[this.currentRemapBaseIndex];
+            }
+            Byte[] b = new byte[1] { this.currentRemapBaseIndex };
+            tc.ApplyToImage(b, 1, 1, 1, 1, null);
+            return this.currentlyLoadedPalette[b[0]];
+            
         }
+
+        public Color RemapBaseColor => this.GetBaseColor(null);
 
         private TeamRemap GetforCurrentGame(string key)
         {
@@ -88,14 +100,16 @@ namespace MobiusEditor.Utility
                 return null;
             }
             Dictionary<string, TeamRemap> currentRemaps;
-            switch (currentlyLoadedGameType)
+            switch (this.currentlyLoadedGameType)
             {
                 case GameType.TiberianDawn:
                 case GameType.SoleSurvivor:
                     currentRemaps = RemapsTd;
+                    this.currentRemapBaseIndex = RemapTdGood.UnitRadarColor;
                     break;
                 case GameType.RedAlert:
                     currentRemaps = this.remapsRa;
+                    this.currentRemapBaseIndex = this.remapsRaBaseIndex;
                     break;
                 default:
                     return null;
@@ -103,21 +117,18 @@ namespace MobiusEditor.Utility
             return currentRemaps.ContainsKey(key) ? currentRemaps[key] : null;
         }
 
-        private Color remapBaseColor = Color.Black;
-        public Color RemapBaseColor => remapBaseColor;
-
         public void Load(string path)
         {
-            if (currentlyLoadedGameType != GameType.RedAlert)
+            if (this.currentlyLoadedGameType != GameType.RedAlert)
             {
                 return;
             }
             byte[] cpsData;
-            Color[] palette;
-            using (Stream palettecps = mixfileManager.OpenFile(path))
+            using (Stream palettecps = this.mixfileManager.OpenFile(path))
             {
                 if (palettecps == null)
                 {
+                    // Not found; ignore and do nothing.
                     return;
                 }
                 try
@@ -127,23 +138,27 @@ namespace MobiusEditor.Utility
                     {
                         cpsFileBytes = GeneralUtils.ReadAllBytes(sr);
                     }
-                    cpsData = ClassicSpriteLoader.GetCpsData(cpsFileBytes, 0, out palette);
+                    cpsData = ClassicSpriteLoader.GetCpsData(cpsFileBytes, out _);
                 }
-                catch (ArgumentException ex)
+                catch (ArgumentException)
                 {
+                    // Not a valid CPS file; ignore and do nothing.
                     return;
                 }
             }
-            // Data found; re-initialise RA remaps.
+            // CPS file found and decoded successfully; re-initialise RA remap data.
+            this.remapsRaBaseIndex = 0;
             this.remapsRa.Clear();
-            int height = Math.Min(200, remapsColorsRa.Length);
+            int height = Math.Min(200, this.remapsColorsRa.Length);
             Dictionary<string, TeamRemap> raRemapColors = new Dictionary<string, TeamRemap>();
             byte[] remapSource = new byte[16];
             Array.Copy(cpsData, 0, remapSource, 0, 16);
+            // Taking brightest colour here, not unit/structure colour.
+            this.remapsRaBaseIndex = remapSource[0];
             for (int y = 0; y < height; ++y)
             {
                 int ptr = 320 * y;
-                String name = remapsColorsRa[y];
+                String name = this.remapsColorsRa[y];
                 Byte[] remap = new byte[16];
                 Array.Copy(cpsData, ptr, remap, 0, 16);
                 // Apparently the same in RA?
@@ -152,17 +167,17 @@ namespace MobiusEditor.Utility
                 TeamRemap col = new TeamRemap(name, unitRadarColor, buildingRadarColor, remapSource, remap);
                 raRemapColors.Add(name, col);
             }
-            foreach (String col in remapsColorsRa)
+            foreach (String col in this.remapsColorsRa)
             {
                 string[] usedRemaps;
                 TeamRemap remapColor;
-                if (remapUseRa.TryGetValue(col, out usedRemaps) && raRemapColors.TryGetValue(col, out remapColor))
+                if (this.remapUseRa.TryGetValue(col, out usedRemaps) && raRemapColors.TryGetValue(col, out remapColor))
                 {
                     for (int i = 0; i < usedRemaps.Length; ++i)
                     {
                         String actualName = usedRemaps[i];
                         TeamRemap actualCol = new TeamRemap(usedRemaps[i], remapColor);
-                        remapsRa.Add(actualName, actualCol);
+                        this.remapsRa.Add(actualName, actualCol);
                     }
                 }
             }
@@ -176,14 +191,25 @@ namespace MobiusEditor.Utility
         public void Reset(GameType gameType, TheaterType theater)
         {
             this.remapsRa.Clear();
-            currentlyLoadedGameType = gameType;
+            this.remapsRaBaseIndex = 0;
+            this.currentlyLoadedGameType = gameType;
+            this.currentlyLoadedPalette = GetPaletteForTheater(this.mixfileManager, theater);
+        }
+
+        public static Color[] GetPaletteForTheater(IArchiveManager archiveManager, TheaterType theater)
+        {
+            Color[] colors;
+            if (theater == null)
+            {
+                return Enumerable.Range(0, 0x100).Select(i => Color.FromArgb(i, i, i)).ToArray();
+            }
             // file manager should already be reset to read from the correct game at this point.
-            using (Stream palette = mixfileManager.OpenFile(theater.ClassicTileset + ".pal"))
+            using (Stream palette = archiveManager.OpenFile(theater.ClassicTileset + ".pal"))
             {
                 if (palette == null)
                 {
                     // Grayscale palette; looks awful but still allows distinguishing stuff.
-                    currentlyLoadedPalette = Enumerable.Range(0, 0x100).Select(i => Color.FromArgb(i, i, i)).ToArray();
+                    colors = Enumerable.Range(0, 0x100).Select(i => Color.FromArgb(i, i, i)).ToArray();
                 }
                 else
                 {
@@ -192,13 +218,14 @@ namespace MobiusEditor.Utility
                     {
                         pal = GeneralUtils.ReadAllBytes(sr);
                     }
-                    currentlyLoadedPalette = ClassicSpriteLoader.ReadSixBitPaletteAsEightBit(pal, 0, 0x100);
+                    colors = ClassicSpriteLoader.LoadSixBitPalette(pal, 0, 0x100);
                 }
             }
             // Set background transparent
-            currentlyLoadedPalette[0] = Color.FromArgb(0x00, currentlyLoadedPalette[0]);
+            colors[0] = Color.FromArgb(0x00, colors[0]);
             // Set shadow color to semitransparent black. I'm not gonna mess around with classic fading table remapping for this.
-            currentlyLoadedPalette[4] = Color.FromArgb(0x80, Color.Black);
+            colors[4] = Color.FromArgb(0x80, Color.Black);
+            return colors;
         }
     }
 }

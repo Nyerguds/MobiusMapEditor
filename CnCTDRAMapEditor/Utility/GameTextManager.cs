@@ -24,10 +24,10 @@ namespace MobiusEditor.Utility
     {
         private readonly Dictionary<string, string> gameText = new Dictionary<string, string>();
 
-        public string this[string textId]
+        public string this[string key]
         {
-            get => gameText.TryGetValue(textId, out string text) ? text : textId;
-            set => gameText[textId] = value;
+            get => gameText.TryGetValue(key, out string text) ? text : string.Empty;
+            set => gameText[key] = value;
         }
         //public string this[string textId] => gameText.TryGetValue(textId, out string text) ? text : textId;
 

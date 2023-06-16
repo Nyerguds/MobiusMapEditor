@@ -23,40 +23,29 @@ namespace MobiusEditor.Model
     public class InfantryType : ITechnoType
     {
         public sbyte ID { get; private set; }
-
         public string Name { get; private set; }
-
         public string DisplayName { get; private set; }
-
         public string OwnerHouse { get; private set; }
-
         public UnitTypeFlag Flag { get; private set; }
-
         public bool IsArmed => (Flag & UnitTypeFlag.IsArmed) == UnitTypeFlag.IsArmed;
-
         public bool IsAircraft => false;
         public bool IsFixedWing => false;
-
         public bool IsExpansionUnit => (Flag & UnitTypeFlag.IsExpansionUnit) == UnitTypeFlag.IsExpansionUnit;
-
         public bool IsHarvester => false;
-
         private Size _RenderSize;
-
         public Size GetRenderSize(Size cellSize)
         {
             //RenderSize = new Size(tile.Image.Width / Globals.MapTileScale, tile.Image.Height / Globals.MapTileScale);
             return new Size(_RenderSize.Width * cellSize.Width / Globals.OriginalTileWidth, _RenderSize.Height * cellSize.Height / Globals.OriginalTileHeight);
         }
         public Bitmap Thumbnail { get; set; }
+        private string nameId;
 
         public InfantryType(sbyte id, string name, string textId, string ownerHouse, UnitTypeFlag flags)
         {
             this.ID = id;
             this.Name = name;
-            this.DisplayName = !String.IsNullOrEmpty(textId) && !String.IsNullOrEmpty(Globals.TheGameTextManager[textId])
-                ? Globals.TheGameTextManager[textId] + " (" + Name.ToUpperInvariant() + ")"
-                : name.ToUpperInvariant();
+            this.nameId = textId;
             this.OwnerHouse = ownerHouse;
             this.Flag = flags;
         }
@@ -96,21 +85,24 @@ namespace MobiusEditor.Model
 
         public void Init(HouseType house, DirectionType direction)
         {
-            var oldImage = Thumbnail;
+            this.DisplayName = !String.IsNullOrEmpty(nameId) && !String.IsNullOrEmpty(Globals.TheGameTextManager[nameId])
+                ? Globals.TheGameTextManager[nameId] + " (" + Name.ToUpperInvariant() + ")"
+                : Name.ToUpperInvariant();
+            Bitmap oldImage = Thumbnail;
             if (Globals.TheTilesetManager.GetTileData(Name, 4, out Tile tile))
             {
                 _RenderSize = tile.Image.Size;
             }
 
-            var mockInfantry = new Infantry(null)
+            Infantry mockInfantry = new Infantry(null)
             {
                 Type = this,
                 House = house,
                 Strength = 256,
                 Direction = direction
             };
-            var infantryThumbnail = new Bitmap(Globals.PreviewTileWidth, Globals.PreviewTileHeight);
-            using (var g = Graphics.FromImage(infantryThumbnail))
+            Bitmap infantryThumbnail = new Bitmap(Globals.PreviewTileWidth, Globals.PreviewTileHeight);
+            using (Graphics g = Graphics.FromImage(infantryThumbnail))
             {
                 MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
                 MapRenderer.RenderInfantry(Point.Empty, Globals.PreviewTileSize, mockInfantry, InfantryStoppingType.Center).Item2(g);

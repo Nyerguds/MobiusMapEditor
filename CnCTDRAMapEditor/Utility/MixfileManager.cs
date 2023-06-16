@@ -32,7 +32,7 @@ namespace MobiusEditor.Utility
         private Dictionary<GameType, List<MixInfo>> gameArchives;
         private readonly List<MixInfo> currentMixFileInfo = new List<MixInfo>();
         private List<string> currentMixNames = new List<string>();
-        private readonly Dictionary<string, Mixfile> currentMixFiles = new Dictionary<string, Mixfile>();
+        private Dictionary<string, Mixfile> currentMixFiles;
         private GameType currentGameType = GameType.None;
 
         public string LoadRoot { get { return applicationPath; } }
@@ -112,7 +112,7 @@ namespace MobiusEditor.Utility
             // embedded mix files into account, since they are loaded in the Reset function.
             foreach (MixInfo mixInfo in currentMixFileInfo)
             {
-                if (currentMixFiles.TryGetValue(mixInfo.Name, out Mixfile archive))
+                if (currentMixFiles != null && currentMixFiles.TryGetValue(mixInfo.Name, out Mixfile archive))
                 {
                     Stream stream = archive.OpenFile(path);
                     if (stream != null)
@@ -128,15 +128,18 @@ namespace MobiusEditor.Utility
         {
             String theaterMixFile = theater == null ? null : theater.ClassicTileset + ".mix";
             // Clean up previously loaded files.
-            foreach (Mixfile oldMixFile in currentMixFiles.Values)
+            if (currentMixFiles != null)
             {
-                try
+                foreach (Mixfile oldMixFile in currentMixFiles.Values)
                 {
-                    oldMixFile.Dispose();
+                    try
+                    {
+                        oldMixFile.Dispose();
+                    }
+                    catch { /* ignore */ }
                 }
-                catch { /* ignore */ }
+                currentMixFiles = null;
             }
-            currentMixFiles.Clear();
             currentMixFileInfo.Clear();
             currentMixNames = new List<string>();
             this.currentGameType = GameType.None;
@@ -171,13 +174,11 @@ namespace MobiusEditor.Utility
                 {
                     continue;
                 }
-                String mixPath = Path.Combine(gamePath, "ccdata");
                 // This automatically excludes already-loaded files.
-                this.AddMixFileIfPresent(newMixFiles, newMixFileInfo, mixInfo, mixPath);
+                this.AddMixFileIfPresent(newMixFiles, newMixFileInfo, mixInfo, gamePath);
             }
             this.currentGameType = gameType;
-            currentMixFiles.Clear();
-            currentMixFiles.Union(newMixFiles);
+            currentMixFiles = newMixFiles;
             currentMixFileInfo.Clear();
             currentMixFileInfo.AddRange(newMixFileInfo);
             currentMixNames = currentMixFileInfo.Select(info => info.Name).ToList();
@@ -202,7 +203,7 @@ namespace MobiusEditor.Utility
                 {
                     mixFile = new Mixfile(localPath);
                 }
-                catch
+                catch(Exception ex)
                 {
                     return false;
                 }

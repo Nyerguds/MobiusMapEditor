@@ -1362,8 +1362,10 @@ namespace MobiusEditor
 
         private static void AddTeamColorsTD(ITeamColorManager teamColorManager)
         {
+            // Only applicable for Remastered colors since I can't control those.
             if (teamColorManager is TeamColorManager tcm)
             {
+                // Remaster additions / tweaks
                 // Neutral
                 TeamColor teamColorSNeutral = new TeamColor(tcm);
                 teamColorSNeutral.Load(tcm.GetItem("GOOD"), "NEUTRAL");
@@ -1379,10 +1381,11 @@ namespace MobiusEditor
                     new Vector3(0.30f, -1.00f, 0.00f), new Vector3(0f, 1f, 1f), new Vector2(0.0f, 0.1f),
                     new Vector3(0, 1, 1), new Vector2(0, 1), Color.FromArgb(61, 61, 59));
                 tcm.AddTeamColor(teamColorNone);
-                // Extra colors for flags 7 and 8.
+                // Extra color for flag 7: metallic blue.
                 TeamColor teamColorSeven = new TeamColor(tcm);
                 teamColorSeven.Load(tcm.GetItem("BAD_UNIT"), "MULTI7");
                 tcm.AddTeamColor(teamColorSeven);
+                // Extra color for flag 8: copy of RA's purple.
                 TeamColor teamColorEight = new TeamColor(tcm);
                 teamColorEight.Load("MULTI8", "BASE_TEAM",
                     Color.FromArgb(66, 255, 0), Color.FromArgb(0, 255, 56), 0,
@@ -1396,7 +1399,12 @@ namespace MobiusEditor
         {
             if (teamColorManager is TeamColorManager tcm)
             {
-                // Special
+                // Remaster additions / tweaks
+                // "Neutral" in RA colors seems broken; makes stuff black. JP is the expected unremapped green.
+                TeamColor teamColorNeutral = new TeamColor(tcm);
+                teamColorNeutral.Load(tcm.GetItem("JP"), "NEUTRAL");
+                tcm.AddTeamColor(teamColorNeutral);
+                // Special. Technically color "JP" exists for this, but it's wrong.
                 TeamColor teamColorSpecial = new TeamColor(tcm);
                 teamColorSpecial.Load(tcm.GetItem("SPAIN"), "SPECIAL");
                 tcm.AddTeamColor(teamColorSpecial);

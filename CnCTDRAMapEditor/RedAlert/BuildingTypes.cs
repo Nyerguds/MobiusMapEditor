@@ -73,7 +73,7 @@ namespace MobiusEditor.RedAlert
         public static readonly BuildingType V09 = new BuildingType(53, "v09", "TEXT_STRUCTURE_TITLE_CIV9", 0, 0, 1, 1, null, "Neutral", new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, BuildingTypeFlag.NoRemap);
         public static readonly BuildingType V10 = new BuildingType(54, "v10", "TEXT_STRUCTURE_TITLE_CIV10", 0, 0, 1, 1, null, "Neutral", new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, BuildingTypeFlag.NoRemap);
         public static readonly BuildingType V11 = new BuildingType(55, "v11", "TEXT_STRUCTURE_TITLE_CIV11", 0, 0, 1, 1, null, "Neutral", new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, BuildingTypeFlag.NoRemap);
-        public static readonly BuildingType V12 = new BuildingType(56, "v12", "TEXT_STRUCTURE_TITLE_CIV12", 0, 0, 1, 1, null, "Neutral", new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, BuildingTypeFlag.NoRemap);
+        public static readonly BuildingType V12 = new BuildingType(56, "v12", "TEXT_STRUCTURE_TITLE_CIV12B", 0, 0, 1, 1, null, "Neutral", new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, BuildingTypeFlag.NoRemap);
         public static readonly BuildingType V13 = new BuildingType(57, "v13", "TEXT_STRUCTURE_TITLE_CIV12", 0, 0, 1, 1, null, "Neutral", new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, BuildingTypeFlag.NoRemap);
         public static readonly BuildingType V14 = new BuildingType(58, "v14", "TEXT_STRUCTURE_TITLE_CIV13", 0, 0, 1, 1, null, "Neutral", new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, BuildingTypeFlag.NoRemap);
         public static readonly BuildingType V15 = new BuildingType(59, "v15", "TEXT_STRUCTURE_TITLE_CIV14", 0, 0, 1, 1, null, "Neutral", new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, BuildingTypeFlag.NoRemap);

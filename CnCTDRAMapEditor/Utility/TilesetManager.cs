@@ -22,6 +22,15 @@ using System.Xml;
 
 namespace MobiusEditor.Utility
 {
+    /// <summary>
+    /// TilesetManager: contains a dictionary of tilesets mapped by name. The Theater decides which of them will be searched in.
+    /// Tileset: thematically grouped collection of Shapes, stored as Dictionary by Shape name
+    /// Shape: Dictionary of frame numbers and the TileData for each frame number
+    /// TileData: Contains the animation rate and a collection of filenames for all alternate frames of this tile.
+    ///        Also contains a dictionary with the actually-cached Tile arrays using the team color name as key.
+    /// Tile[]: The cached remapped images, one for each filename in TileData, plus their transparent bounds.
+    ///        Normally just one item, except if there are alternates of the same frame (e.g. water animations).
+    /// </summary>
     public class TilesetManager: ITilesetManager, IDisposable
     {
         private readonly Dictionary<string, Tileset> tilesets = new Dictionary<string, Tileset>();
@@ -45,6 +54,7 @@ namespace MobiusEditor.Utility
 
         private void LoadXmlfiles()
         {
+            HashSet<String> allowedTileSets = this.theater == null ? null : theater.Tilesets.ToHashSet();
             tilesets.Clear();
             XmlDocument xmlDoc = null;
             using (Stream xmlStream = megafileManager.OpenFile(xmlPath))
@@ -73,9 +83,14 @@ namespace MobiusEditor.Utility
                     {
                         foreach (XmlNode tilesetNode in fileXmlDoc.SelectNodes("Tilesets/TilesetTypeClass"))
                         {
+                            string name = tilesetNode.Attributes["name"].Value;
+                            if (allowedTileSets != null && allowedTileSets.Contains(name))
+                            {
+                                continue;
+                            }
                             var tileset = new Tileset(textureManager);
                             tileset.Load(tilesetNode.OuterXml, texturesPath);
-                            tilesets[tilesetNode.Attributes["name"].Value] = tileset;
+                            tilesets[name] = tileset;
                         }
                     }
                 }
