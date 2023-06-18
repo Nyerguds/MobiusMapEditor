@@ -16,52 +16,10 @@ namespace MobiusEditor.RedAlert
 {
     public static class ActionDataTypes
     {
-        public enum ThemeType
-        {
-            THEME_QUIET = -3,
-            THEME_PICK_ANOTHER = -2,
-            THEME_NONE = -1,
-            THEME_BIGF,
-            THEME_CRUS,
-            THEME_FAC1,
-            THEME_FAC2,
-            THEME_HELL,
-            THEME_RUN1,
-            THEME_SMSH,
-            THEME_TREN,
-            THEME_WORK,
-            THEME_AWAIT,
-            THEME_DENSE_R,
-            THEME_FOGGER1A,
-            THEME_MUD1A,
-            THEME_RADIO2,
-            THEME_ROLLOUT,
-            THEME_SNAKE,
-            THEME_TERMINAT,
-            THEME_TWIN,
-            THEME_VECTOR1A,
-            THEME_MAP,
-            THEME_SCORE,
-            THEME_INTRO,
-            THEME_CREDITS,
-            THEME_2ND_HAND,
-            THEME_ARAZOID,
-            THEME_BACKSTAB,
-            THEME_CHAOS2,
-            THEME_SHUT_IT,
-            THEME_TWINMIX1,
-            THEME_UNDER3,
-            THEME_VR2,
-            THEME_BOG,
-            THEME_FLOAT_V2,
-            THEME_GLOOM,
-            THEME_GRNDWIRE,
-            THEME_RPT,
-            THEME_SEARCH,
-            THEME_TRACTION,
-            THEME_WASTELND,
-        };
 
+        /// <summary>
+        /// Not used; retained here for reference.
+        /// </summary>
         public enum VocType
         {
             VOC_NONE = -1,
@@ -572,6 +530,9 @@ namespace MobiusEditor.RedAlert
             "Beacon sound",
         };
 
+        /// <summary>
+        /// Not used; retained here for reference.
+        /// </summary>
         public enum VoxType
         {
             VOX_NONE = -1,
@@ -1146,18 +1107,9 @@ namespace MobiusEditor.RedAlert
             "Destroy the two missile silos.",
         };
 
-        public static readonly string[] SuperTypes = new[]
-        {
-            "Sonar Pulse",   // Momentarily reveals submarines.
-            "Nuclear Bomb",  // Tactical nuclear weapon.
-            "Chronosphere",  // Paradox device, for teleportation
-            "Parabombs",     // Parachute bomb delivery.
-            "Paratroopers",  // Parachute reinforcement delivery.
-            "Spy Plane",     // Spy plane to take photo recon mission.
-            "Iron Curtain",  // Bestow invulnerability on a unit/building
-            "GPS",           // give allies free unjammable radar.
-        };
-
+        /// <summary>
+        /// Not used; retained here for reference.
+        /// </summary>
         public enum SpecialWeaponType
         {
             SPC_NONE = -1,
@@ -1171,6 +1123,22 @@ namespace MobiusEditor.RedAlert
             SPC_GPS,           // give allies free unjammable radar.
         };
 
+        public static readonly string[] SuperTypes = new[]
+        {
+            "Sonar Pulse",   // Momentarily reveals submarines.
+            "Nuclear Bomb",  // Tactical nuclear weapon.
+            "Chronosphere",  // Paradox device, for teleportation
+            "Parabombs",     // Parachute bomb delivery.
+            "Paratroopers",  // Parachute reinforcement delivery.
+            "Spy Plane",     // Spy plane to take photo recon mission.
+            "Iron Curtain",  // Bestow invulnerability on a unit/building
+            "GPS",           // give allies free unjammable radar.
+        };
+
+        /// <summary>
+        /// Not used; retained here for reference.
+        /// This information is used in the TeamMissionTypes.Attack object.
+        /// </summary>
         public enum QuarryType
         {
             QUARRY_NONE,
@@ -1185,135 +1153,6 @@ namespace MobiusEditor.RedAlert
             QUARRY_THREAT,        // Attack enemies near friendly base.
             QUARRY_POWER,         // Attack power facilities.
             QUARRY_FAKES,         // Prefer to attack fake buildings.
-        };
-
-        public enum VQType
-        {
-            VQ_NONE = -1,
-            VQ_AAGUN,
-            VQ_MIG,
-            VQ_SFROZEN,
-            VQ_AIRFIELD,
-            VQ_BATTLE,
-            VQ_BMAP,
-            VQ_BOMBRUN,
-            VQ_DPTHCHRG,
-            VQ_GRVESTNE,
-            VQ_MONTPASS,
-            VQ_MTNKFACT,
-            VQ_CRONTEST,
-            VQ_OILDRUM,
-            VQ_ALLYEND,
-            VQ_RADRRAID,
-            VQ_SHIPYARD,
-            VQ_SHORBOMB,
-            VQ_SITDUCK,
-            VQ_SLNTSRVC,
-            VQ_SNOWBASE,
-            VQ_EXECUTE,
-            VQ_TITLE,               // Low res.
-            VQ_NUKESTOK,
-            VQ_V2ROCKET,
-            VQ_SEARCH,
-            VQ_BINOC,
-            VQ_ELEVATOR,
-            VQ_FROZEN,
-            VQ_MCV,
-            VQ_SHIPSINK,
-            VQ_SOVMCV,
-            VQ_TRINITY,
-            VQ_ALLYMORF,
-            VQ_APCESCPE,
-            VQ_BRDGTILT,
-            VQ_CRONFAIL,
-            VQ_STRAFE,
-            VQ_DESTROYR,
-            VQ_DOUBLE,
-            VQ_FLARE,
-            VQ_SNSTRAFE,
-            VQ_LANDING,
-            VQ_ONTHPRWL,
-            VQ_OVERRUN,
-            VQ_SNOWBOMB,
-            VQ_SOVCEMET,
-            VQ_TAKE_OFF,
-            VQ_TESLA,
-            VQ_SOVIET8,
-            VQ_SPOTTER,
-            VQ_SCENE1,
-            VQ_SCENE2,
-            VQ_SCENE4,
-            VQ_SOVFINAL,
-            VQ_ASSESS,
-            VQ_SOVIET10,
-            VQ_DUD,
-            VQ_MCV_LAND,
-            VQ_MCVBRDGE,
-            VQ_PERISCOP,
-            VQ_SHORBOM1,
-            VQ_SHORBOM2,
-            VQ_SOVBATL,
-            VQ_SOVTSTAR,
-            VQ_AFTRMATH,
-            VQ_SOVIET11,
-            VQ_MASASSLT,
-            VQ_REDINTRO,        // High res
-            VQ_SOVIET1,
-            VQ_SOVIET2,
-            VQ_SOVIET3,
-            VQ_SOVIET4,
-            VQ_SOVIET5,
-            VQ_SOVIET6,
-            VQ_SOVIET7,
-            VQ_INTRO_MOVIE,
-            VQ_AVERTED,
-            VQ_COUNTDWN,
-            VQ_MOVINGIN,
-            VQ_ALLIED10,
-            VQ_ALLIED12,
-            VQ_ALLIED5,
-            VQ_ALLIED6,
-            VQ_ALLIED8,
-            VQ_TANYA1,
-            VQ_TANYA2,
-            VQ_ALLY10B,
-            VQ_ALLY11,
-            VQ_ALLY14,
-            VQ_ALLY9,
-            VQ_SPY,
-            VQ_TOOFAR,
-            VQ_SOVIET12,
-            VQ_SOVIET13,
-            VQ_SOVIET9,
-            VQ_BEACHEAD,
-            VQ_SOVIET14,
-            VQ_SIZZLE,
-            VQ_SIZZLE2,
-            VQ_ANTEND,
-            VQ_ANTINTRO,
-            VQ_RETALIATION_ALLIED1,
-            VQ_RETALIATION_ALLIED2,
-            VQ_RETALIATION_ALLIED3,
-            VQ_RETALIATION_ALLIED4,
-            VQ_RETALIATION_ALLIED5,
-            VQ_RETALIATION_ALLIED6,
-            VQ_RETALIATION_ALLIED7,
-            VQ_RETALIATION_ALLIED8,
-            VQ_RETALIATION_ALLIED9,
-            VQ_RETALIATION_ALLIED10,
-            VQ_RETALIATION_SOVIET1,
-            VQ_RETALIATION_SOVIET2,
-            VQ_RETALIATION_SOVIET3,
-            VQ_RETALIATION_SOVIET4,
-            VQ_RETALIATION_SOVIET5,
-            VQ_RETALIATION_SOVIET6,
-            VQ_RETALIATION_SOVIET7,
-            VQ_RETALIATION_SOVIET8,
-            VQ_RETALIATION_SOVIET9,
-            VQ_RETALIATION_SOVIET10,
-            VQ_RETALIATION_WINA,
-            VQ_RETALIATION_WINS,
-            VQ_RETALIATION_ANTS,
         };
     }
 }

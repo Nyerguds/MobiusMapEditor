@@ -679,9 +679,10 @@ Public License instead of this License.  But first, please read
 
 ADDITIONAL TERMS per GNU GPL Section 7
 No trademark or publicity rights are granted. This license does NOT give you
-any right, title or interest in "Command & Conquer" or any other Electronic Arts trademark. You may not distribute any
-modification of this program using any Electronic Arts trademark or claim any affiliation or association with Electronic Arts Inc.
-or its affiliates or their employees.
+any right, title or interest in "Command & Conquer" or any other Electronic
+Arts trademark. You may not distribute any modification of this program using
+any Electronic Arts trademark or claim any affiliation or association with
+Electronic Arts Inc. or its affiliates or their employees.
 
 Any propagation or conveyance of this program must include this copyright
 notice and these terms.

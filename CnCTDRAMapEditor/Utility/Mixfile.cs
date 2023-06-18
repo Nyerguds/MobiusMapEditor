@@ -1,18 +1,26 @@
-﻿using MobiusEditor.Utility.Hashing;
+﻿//         DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
+//                     Version 2, December 2004
+//
+//  Copyright (C) 2004 Sam Hocevar<sam@hocevar.net>
+//
+//  Everyone is permitted to copy and distribute verbatim or modified
+//  copies of this license document, and changing it is allowed as long
+//  as the name is changed.
+//
+//             DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
+//    TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
+//
+//   0. You just DO WHAT THE FUCK YOU WANT TO.
+using MobiusEditor.Utility.Hashing;
 using Org.BouncyCastle.Crypto;
-using Org.BouncyCastle.Crypto.Encodings;
-using Org.BouncyCastle.Crypto.Engines;
-using Org.BouncyCastle.Crypto.Paddings;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Math;
-using Org.BouncyCastle.OpenSsl;
 using Org.BouncyCastle.Security;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.MemoryMappedFiles;
 using System.Linq;
-using System.Security.Cryptography;
 
 namespace MobiusEditor.Utility
 {
@@ -67,7 +75,7 @@ namespace MobiusEditor.Utility
             bool hasFlags = false;
             bool encrypted = false;
             bool checksum = false;
-            byte[] buffer = null;
+            byte[] buffer;
             using (BinaryReader headerReader = new BinaryReader(this.CreateViewStream(mixMap, mixStart, mixLength, readOffset, 2)))
             {
                 buffer = headerReader.ReadBytes(2);
@@ -210,6 +218,8 @@ namespace MobiusEditor.Utility
         /// <exception cref="ArgumentOutOfRangeException"></exception>
         private Byte[] DecodeHeader(MemoryMappedFile mixMap, long mixStart, long mixLength, ref uint readOffset)
         {
+            // Based on specs written up by OmniBlade on the Shikadi Modding Wiki.
+            // https://moddingwiki.shikadi.net/wiki/MIX_Format_(Westwood)
             // A very special thanks to Morton on the C&C Mod Haven Discord for helping me out with this.
 
             // DER identifies the block as "02 28": an integer of length 40. So just cut off the first 2 bytes and get the key.
@@ -233,9 +243,8 @@ namespace MobiusEditor.Utility
             }
             Array.Reverse(readBlock);
             BigInteger value2 = new BigInteger(readBlock);
-            // Decryption values
 
-            // decryption is x = y^e % n, encryption is y = x^d % n
+            // RSA: decryption is x = y^e % n, encryption is y = x^d % n
             // x is plaintext, y is encrypted, n is modulus, e is public exponent, d is private exponent
             BigInteger modulus = new BigInteger(modulusBytes);
             BigInteger exponent = new BigInteger(new Byte[] { 01, 00, 01 });
@@ -245,9 +254,11 @@ namespace MobiusEditor.Utility
             byte[] value2DecrB = value2Decr.ToByteArray();
             Array.Reverse(value1DecrB);
             Array.Reverse(value2DecrB);
-            // Find offset of any trailing zeroes
-            int value1len = Enumerable.Range(0, value1DecrB.Length).Reverse().First(i => value1DecrB[i] != 0) + 1;
-            int value2len = Enumerable.Range(0, value2DecrB.Length).Reverse().First(i => value2DecrB[i] != 0) + 1;
+            // Find offset of any trailing zeroes. Cast to nullable int to see a difference between 0 and default returned from finding nothing.
+            int? value1lenN = Enumerable.Range(0, value1DecrB.Length).Reverse().Select(i => (int?)i).FirstOrDefault(i => value1DecrB[i.Value] != 0);
+            int? value2lenN = Enumerable.Range(0, value2DecrB.Length).Reverse().Select(i => (int?)i).FirstOrDefault(i => value2DecrB[i.Value] != 0);
+            int value1len = value1lenN.HasValue ? value1lenN.Value + 1 : 0;
+            int value2len = value2lenN.HasValue ? value2lenN.Value + 1 : 0;
             byte[] blowFishKey = new Byte[value1len + value2len];
             Array.Copy(value1DecrB, 0, blowFishKey, 0, value1len);
             Array.Copy(value2DecrB, 0, blowFishKey, value1len, value2len);

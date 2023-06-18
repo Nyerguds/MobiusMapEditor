@@ -1,7 +1,20 @@
-﻿// This file is written by Maarten Meuris, aka Nyerguds. Use it however you want.
+﻿//         DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
+//                     Version 2, December 2004
+//
+//  Copyright (C) 2004 Sam Hocevar<sam@hocevar.net>
+//
+//  Everyone is permitted to copy and distribute verbatim or modified
+//  copies of this license document, and changing it is allowed as long
+//  as the name is changed.
+//
+//             DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
+//    TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
+//
+//   0. You just DO WHAT THE FUCK YOU WANT TO.
+//
+// This file is written by Maarten Meuris, aka Nyerguds. Use it however you want.
 // I'm sure there are more elegant methods to detect games on Steam anyway, like
 // an actual parser, so this little piece of code is public domain.
-
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;

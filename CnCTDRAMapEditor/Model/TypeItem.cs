@@ -16,7 +16,7 @@ using System;
 
 namespace MobiusEditor.Model
 {
-    public class TypeItem<T>: System.IEquatable<TypeItem<T>>, IComparable<TypeItem<T>>
+    public class TypeItem<T>: IEquatable<TypeItem<T>>, IComparable<TypeItem<T>>
     {
         public string Name { get; private set; }
 

@@ -1,17 +1,16 @@
-﻿//
-// Copyright 2020 Electronic Arts Inc.
+﻿//         DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
+//                     Version 2, December 2004
 //
-// The Command & Conquer Map Editor and corresponding source code is free
-// software: you can redistribute it and/or modify it under the terms of
-// the GNU General Public License as published by the Free Software Foundation,
-// either version 3 of the License, or (at your option) any later version.
-
-// The Command & Conquer Map Editor and corresponding source code is distributed
-// in the hope that it will be useful, but with permitted additional restrictions
-// under Section 7 of the GPL. See the GNU General Public License in LICENSE.TXT
-// distributed with this program. You should have received a copy of the
-// GNU General Public License along with permitted additional restrictions
-// with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
+//  Copyright (C) 2004 Sam Hocevar<sam@hocevar.net>
+//
+//  Everyone is permitted to copy and distribute verbatim or modified
+//  copies of this license document, and changing it is allowed as long
+//  as the name is changed.
+//
+//             DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
+//    TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
+//
+//   0. You just DO WHAT THE FUCK YOU WANT TO.
 using MobiusEditor.Model;
 using System.ComponentModel;
 
