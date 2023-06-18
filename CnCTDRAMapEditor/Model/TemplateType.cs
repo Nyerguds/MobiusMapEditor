@@ -114,7 +114,7 @@ namespace MobiusEditor.Model
         /// <param name="iconHeight">Height in cells.</param>
         /// <param name="theaters">Theaters that contain this tile.</param>
         /// <param name="flag">Indicates special terrain types.</param>
-        /// <param name="maskOverrides">Mask override for tiles that contain too many graphics in the Remaster. Indices with '0' are removed from the tiles. Spaces are ignored and can be added for visual separation.</param>
+        /// <param name="maskOverrides">Mask override per theater, for tiles that contain differing numbers of tiles in different theaters, or contain too many graphics in the Remaster. Indices with '0' are removed from the tiles. Spaces are ignored and can be added for visual separation.</param>
         public TemplateType(ushort id, string name, int iconWidth, int iconHeight, TheaterType[] theaters, TemplateTypeFlag flag, string[] maskOverrides)
             : this(id, name, iconWidth, iconHeight, theaters, flag)
         {
@@ -238,9 +238,9 @@ namespace MobiusEditor.Model
         /// <param name="iconWidth">Width in cells.</param>
         /// <param name="iconHeight">Height in cells.</param>
         /// <param name="theaters">Theaters that contain this tile.</param>
-        /// <param name="maskOverride">Mask override for tiles that contain too many graphics in the Remaster. Indices with '0' are removed from the tiles. Spaces are ignored and can be added for visual separation.</param>
-        public TemplateType(ushort id, string name, int iconWidth, int iconHeight, TheaterType[] theaters, String[] maskOverride)
-            : this(id, name, iconWidth, iconHeight, theaters, TemplateTypeFlag.None, maskOverride)
+        /// <param name="maskOverrides">Mask override per theater, for tiles that contain differing numbers of tiles in different theaters, or contain too many graphics in the Remaster. Indices with '0' are removed from the tiles. Spaces are ignored and can be added for visual separation.</param>
+        public TemplateType(ushort id, string name, int iconWidth, int iconHeight, TheaterType[] theaters, String[] maskOverrides)
+            : this(id, name, iconWidth, iconHeight, theaters, TemplateTypeFlag.None, maskOverrides)
         {
         }
 

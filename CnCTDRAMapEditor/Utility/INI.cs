@@ -563,11 +563,12 @@ namespace MobiusEditor.Utility
     {
         public static void ParseSection<T>(ITypeDescriptorContext context, INISection section, T data)
         {
-            ParseSection(context, section, data, null);
+            ParseSection(context, section, data, false);
         }
 
-        public static void ParseSection<T>(ITypeDescriptorContext context, INISection section, T data, List<(string,string)> errors)
+        public static List<(string, string)> ParseSection<T>(ITypeDescriptorContext context, INISection section, T data, bool returnErrorsList)
         {
+            List<(string, string)> errors = returnErrorsList ? new List<(string, string)>() : null;
             var propertyDescriptors = TypeDescriptor.GetProperties(data);
             var properties = data.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => p.GetSetMethod() != null);
             foreach (var property in properties)
@@ -595,6 +596,7 @@ namespace MobiusEditor.Utility
                     }
                 }
             }
+            return errors;
         }
 
         public static void RemoveHandledKeys<T>(INISection section, T data)

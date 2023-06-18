@@ -40,11 +40,6 @@ namespace MobiusEditor.Model
         public bool CanRemap => false;
         private string nameId;
 
-        public Size GetRenderSize(Size cellSize)
-        {
-            return new Size(Size.Width * cellSize.Width, Size.Height * cellSize.Height);
-        }
-
         public Bitmap Thumbnail { get; set; }
 
         /// <summary>

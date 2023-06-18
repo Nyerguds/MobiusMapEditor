@@ -117,6 +117,7 @@ namespace MobiusEditor.Utility
             fps = 0;
             tiles = null;
             Tileset first = null;
+            bool isDummy = false;
             // Tilesets are now searched in the given order, allowing accurate defining of main tilesets and fallback tilesets.
             //foreach (var tileset in tilesets.Join(searchTilesets, x => x.Key, y => y, (x, y) => x.Value))
             if (this.theater == null)
@@ -135,23 +136,23 @@ namespace MobiusEditor.Utility
                 {
                     first = tileset;
                 }
-                if (tileset.GetTileData(name, shape, teamColor, out fps, out tiles, false))
+                if (tileset.GetTileData(name, shape, teamColor, out fps, out tiles, out isDummy, false))
                 {
                     if (generateFallback && tiles.Any(t => t.Image == null))
                     {
                         // Tile not found, or contains no data. Re-fetch with dummy generation.
-                        if (tileset.GetTileData(name, shape, teamColor, out fps, out tiles, true))
+                        if (tileset.GetTileData(name, shape, teamColor, out fps, out tiles, out isDummy, true))
                         {
                             // Signal in return value that dummy was generated.
                             return false;
                         }
                         continue;
                     }
-                    return true;
+                    return !isDummy;
                 }
             }
             // If the tile is not defined at all, and onlyifdefined is not enabled, make a dummy entry anyway.
-            if (generateFallback && !onlyIfDefined && first != null && first.GetTileData(name, shape, teamColor, out fps, out tiles, true))
+            if (generateFallback && !onlyIfDefined && first != null && first.GetTileData(name, shape, teamColor, out fps, out tiles, out isDummy, true))
             {
                 // Signal in return value that dummy was generated.
                 return false;

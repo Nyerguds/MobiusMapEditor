@@ -1,13 +1,26 @@
 ﻿using MobiusEditor.Utility.Hashing;
+using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.Crypto.Encodings;
+using Org.BouncyCastle.Crypto.Engines;
+using Org.BouncyCastle.Crypto.Paddings;
+using Org.BouncyCastle.Crypto.Parameters;
+using Org.BouncyCastle.Math;
+using Org.BouncyCastle.OpenSsl;
+using Org.BouncyCastle.Security;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.MemoryMappedFiles;
+using System.Linq;
+using System.Security.Cryptography;
 
 namespace MobiusEditor.Utility
 {
     public class Mixfile: IDisposable
     {
+        private static readonly string PublicKey = "AihRvNoIbTn85FZRYNZRcT+i6KpU+maCsEqr3Q5q+LDB5tH7Tz2qQ38V";
+        private static readonly string PrivateKey = "AigKVje8mROcR8QixnxUEF5b29Curkq01DNDWCdOG99XBqH79OaCiTCB";
+
         private Dictionary<uint, (uint Offset, uint Length)> mixFileContents = new Dictionary<uint, (uint, uint)>();
         private HashRol1 hashRol = new HashRol1();
 
@@ -49,35 +62,44 @@ namespace MobiusEditor.Utility
         {
             this.mixFileContents.Clear();
             uint readOffset = 0;
-            ushort nrOfFiles = 0;
+            ushort fileCount = 0;
+            uint dataSize = 0;
             bool hasFlags = false;
             bool encrypted = false;
             bool checksum = false;
+            byte[] buffer = null;
             using (BinaryReader headerReader = new BinaryReader(this.CreateViewStream(mixMap, mixStart, mixLength, readOffset, 2)))
             {
-                ushort start = headerReader.ReadUInt16();
+                buffer = headerReader.ReadBytes(2);
+                ushort start = ArrayUtils.ReadUInt16FromByteArrayLe(buffer, 0);
                 if (start == 0)
+                {
                     hasFlags = true;
+                    readOffset += 2;
+                }
                 else
-                    nrOfFiles = start;
-                readOffset += 2;
+                {
+                    fileCount = start;
+                    // Don't increase read offset when reading file count, to keep it synchronised for the encrypted stuff.
+                }
             }
             if (hasFlags)
             {
                 using (BinaryReader headerReader = new BinaryReader(this.CreateViewStream(mixMap, mixStart, mixLength, readOffset, 2)))
                 {
-                    ushort flags = headerReader.ReadUInt16();
+                    buffer = headerReader.ReadBytes(2);
+                    ushort flags = ArrayUtils.ReadUInt16FromByteArrayLe(buffer, 0);
                     checksum = (flags & 1) != 0;
                     encrypted = (flags & 2) != 0;
                     readOffset += 2;
                 }
-                // Not encrypted; read nr of files.
                 if (!encrypted)
                 {
                     using (BinaryReader headerReader = new BinaryReader(this.CreateViewStream(mixMap, mixStart, mixLength, readOffset, 2)))
                     {
-                        nrOfFiles = headerReader.ReadUInt16();
-                        readOffset += 2;
+                        buffer = headerReader.ReadBytes(2);
+                        fileCount = ArrayUtils.ReadUInt16FromByteArrayLe(buffer, 0);
+                        // Don't increase read offset when reading file count, to keep it synchronised for the encrypted stuff.
                     }
                 }
             }
@@ -85,19 +107,15 @@ namespace MobiusEditor.Utility
             Byte[] header = null;
             if (encrypted)
             {
-                using (BinaryReader headerReader = new BinaryReader(this.CreateViewStream(mixMap, mixStart, mixLength, readOffset, 80)))
+                if (readOffset + 88 > mixLength)
                 {
-                    byte[] blowfishKey = headerReader.ReadAllBytes();
-                    readOffset += 80;
+                    throw new ArgumentOutOfRangeException("Not a valid mix file: minimum encrypted header length exceeds file length.");
                 }
-                // The rest of the blowfish decryption
-                throw new NotSupportedException("Encrypred mix archives are currently not supported.");
+                header = DecodeHeader(mixMap, mixStart, mixLength, ref readOffset);
             }
             else
             {
-                // Ignore data size in header; it's only used for caching.
-                readOffset += 4;
-                headerSize = (UInt32)(nrOfFiles * 12);
+                headerSize = 6 + (uint)(fileCount * 12);
                 if (readOffset + headerSize > mixLength)
                 {
                     throw new ArgumentOutOfRangeException("Not a valid mix file: header length exceeds file length.");
@@ -114,7 +132,9 @@ namespace MobiusEditor.Utility
             this.dataStart = readOffset;
             using (BinaryReader headerReader = new BinaryReader(new MemoryStream(header)))
             {
-                for (int i = 0; i < nrOfFiles; ++i)
+                fileCount = headerReader.ReadUInt16();
+                dataSize = headerReader.ReadUInt32();
+                for (int i = 0; i < fileCount; ++i)
                 {
                     uint fileId = headerReader.ReadUInt32();
                     uint fileOffset = headerReader.ReadUInt32();
@@ -173,6 +193,107 @@ namespace MobiusEditor.Utility
                 throw new IndexOutOfRangeException("Data exceeds mix file bounds.");
             }
             return mixMap.CreateViewStream(mixFileStart + dataReadOffset, dataReadLength, MemoryMappedFileAccess.Read);
+        }
+
+        /// <summary>
+        /// Decrypts the header.
+        /// </summary>
+        /// <param name="mixMap">Memory map of the mix file</param>
+        /// <param name="mixStart">Start of the mix file data</param>
+        /// <param name="mixLength">Length of the mix file data</param>
+        /// <param name="readOffset">Contains the start of the encrypted block inside the mix data. At the end of the process,
+        /// it contains the end of the whole encrypted header, so it can be used as origin point for the actual data addresses.</param>
+        /// <returns>
+        ///     the entire decrypted header, including the 6 bytes with the amount of files and the data length at the start.
+        ///     It might contain padding at the end as result of the decryption.
+        /// </returns>
+        /// <exception cref="ArgumentOutOfRangeException"></exception>
+        private Byte[] DecodeHeader(MemoryMappedFile mixMap, long mixStart, long mixLength, ref uint readOffset)
+        {
+            // A very special thanks to Morton on the C&C Mod Haven Discord for helping me out with this.
+
+            // DER identifies the block as "02 28": an integer of length 40. So just cut off the first 2 bytes and get the key.
+            Byte[] derKeyBytes = Convert.FromBase64String(PublicKey);
+            byte[] modulusBytes = new byte[40];
+            Array.Copy(derKeyBytes, 2, modulusBytes, 0, modulusBytes.Length);
+            // Read blocks
+            byte[] readBlock;
+            using (BinaryReader headerReader = new BinaryReader(this.CreateViewStream(mixMap, mixStart, mixLength, readOffset, 40)))
+            {
+                readBlock = headerReader.ReadAllBytes();
+                readOffset += 40;
+            }
+            // Read data is little endian. BigInteger uses big endian.
+            Array.Reverse(readBlock);
+            BigInteger value1 = new BigInteger(readBlock);
+            using (BinaryReader headerReader = new BinaryReader(this.CreateViewStream(mixMap, mixStart, mixLength, readOffset, 40)))
+            {
+                readBlock = headerReader.ReadAllBytes();
+                readOffset += 40;
+            }
+            Array.Reverse(readBlock);
+            BigInteger value2 = new BigInteger(readBlock);
+            // Decryption values
+
+            // decryption is x = y^e % n, encryption is y = x^d % n
+            // x is plaintext, y is encrypted, n is modulus, e is public exponent, d is private exponent
+            BigInteger modulus = new BigInteger(modulusBytes);
+            BigInteger exponent = new BigInteger(new Byte[] { 01, 00, 01 });
+            BigInteger value1Decr = value1.ModPow(exponent, modulus);
+            BigInteger value2Decr = value2.ModPow(exponent, modulus);
+            byte[] value1DecrB = value1Decr.ToByteArray();
+            byte[] value2DecrB = value2Decr.ToByteArray();
+            Array.Reverse(value1DecrB);
+            Array.Reverse(value2DecrB);
+            // Find offset of any trailing zeroes
+            int value1len = Enumerable.Range(0, value1DecrB.Length).Reverse().First(i => value1DecrB[i] != 0) + 1;
+            int value2len = Enumerable.Range(0, value2DecrB.Length).Reverse().First(i => value2DecrB[i] != 0) + 1;
+            byte[] blowFishKey = new Byte[value1len + value2len];
+            Array.Copy(value1DecrB, 0, blowFishKey, 0, value1len);
+            Array.Copy(value2DecrB, 0, blowFishKey, value1len, value2len);
+            if (blowFishKey.Length != 56)
+            {
+                byte[] blowFishKey2 = new byte[56];
+                Array.Copy(blowFishKey, 0, blowFishKey2, 0, Math.Min(blowFishKey2.Length, blowFishKey.Length));
+                blowFishKey = blowFishKey2;
+            }
+            IBufferedCipher blowfish = CipherUtilities.GetCipher("Blowfish/ECB/NoPadding");
+            blowfish.Init(false, new KeyParameter(blowFishKey));
+            Byte[] blowBuffer = new byte[8];
+            using (BinaryReader headerReader = new BinaryReader(this.CreateViewStream(mixMap, mixStart, mixLength, readOffset, 8)))
+            {
+                readBlock = headerReader.ReadAllBytes();
+                blowfish.ProcessBytes(readBlock, 0, 8, blowBuffer, 0);
+            }
+            ushort fileCount = ArrayUtils.ReadUInt16FromByteArrayLe(blowBuffer, 0);
+            uint headerSize = 6 + (uint)(fileCount * 12);
+            uint blocksToRead = (headerSize + 7) / 8;
+            uint realHeaderSize = blocksToRead * 8;
+            if (readOffset + realHeaderSize > mixLength)
+            {
+                throw new ArgumentOutOfRangeException("Not a valid mix file: encrypted header length exceeds file length.");
+            }
+            // Adjust read offset to end of first block
+            readOffset += 8;
+            blocksToRead--;
+            // Don't bother trimming this. It'll read it using the amount of files value anyway.
+            byte[] decryptedHeader = new byte[realHeaderSize];
+            // Add already-read block.
+            Array.Copy(blowBuffer, 0, decryptedHeader, 0, blowBuffer.Length);
+            int bfOffsetIn = 0;
+            int bfOffsetOut = 8;
+            using (BinaryReader headerReader = new BinaryReader(this.CreateViewStream(mixMap, mixStart, mixLength, readOffset, realHeaderSize - 8)))
+            {
+                readBlock = headerReader.ReadAllBytes();
+                for (int i = 0; i < blocksToRead; i++)
+                {
+                    blowfish.ProcessBytes(readBlock, bfOffsetIn, 8, decryptedHeader, bfOffsetOut);
+                    bfOffsetIn += 8;
+                    bfOffsetOut += 8;
+                    readOffset += 8;
+                }
+            }
+            return decryptedHeader;
         }
 
         #region IDisposable Support

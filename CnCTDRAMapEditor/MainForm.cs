@@ -183,18 +183,23 @@ namespace MobiusEditor
                 return;
             }
             string mapName = plugin.Map.BasicSection.Name;
-            if (plugin.MapNameIsEmpty(mapName))
+            bool mapNameEmpty = plugin.MapNameIsEmpty(mapName);
+            bool fileNameEmpty = filename == null;
+            string mapFilename = "\"" + (fileNameEmpty ? noname + plugin.DefaultExtension : Path.GetFileName(filename)) + "\"";
+            string mapShowName;
+            if (!mapNameEmpty && !fileNameEmpty)
             {
-                if (filename != null)
-                {
-                    mapName = Path.GetFileName(filename);
-                }
-                else
-                {
-                    mapName = noname;
-                }
+                mapShowName = mapFilename + " - " + mapName;
             }
-            this.Text = string.Format("{0} [{1}] - {2}{3}", mainTitle, plugin.Name, mapName, plugin != null && plugin.Dirty ? " *" : String.Empty);
+            else if (!mapNameEmpty)
+            {
+                mapShowName = mapName;
+            }
+            else
+            {
+                mapShowName = mapFilename;
+            }
+            this.Text = string.Format("{0} [{1}] - {2}{3}", mainTitle, plugin.Name, mapShowName, plugin != null && plugin.Dirty ? " *" : String.Empty);
         }
 
         private String GetProgramVersionTitle()
@@ -1400,10 +1405,8 @@ namespace MobiusEditor
             if (teamColorManager is TeamColorManager tcm)
             {
                 // Remaster additions / tweaks
-                // "Neutral" in RA colors seems broken; makes stuff black. JP is the expected unremapped green.
-                TeamColor teamColorNeutral = new TeamColor(tcm);
-                teamColorNeutral.Load(tcm.GetItem("JP"), "NEUTRAL");
-                tcm.AddTeamColor(teamColorNeutral);
+                // "Neutral" in RA colors seems broken; makes stuff black, so remove it.
+                tcm.RemoveTeamColor("NEUTRAL");
                 // Special. Technically color "JP" exists for this, but it's wrong.
                 TeamColor teamColorSpecial = new TeamColor(tcm);
                 teamColorSpecial.Load(tcm.GetItem("SPAIN"), "SPECIAL");
@@ -1446,11 +1449,14 @@ namespace MobiusEditor
                     return new MapLoadInfo(null, FileType.None, null, errorMessage.ToArray());
                 }
             }
+            IGamePlugin plugin = null;
+            bool mapLoaded = false;
             try
             {
-                IGamePlugin plugin = LoadNewPlugin(gameType, theater, isTdMegaMap, modPaths);
+                plugin = LoadNewPlugin(gameType, theater, isTdMegaMap, modPaths);
                 // This initialises the theater
                 plugin.New(theater);
+                mapLoaded = true;
                 if (SteamworksUGC.IsInit)
                 {
                     plugin.Map.BasicSection.Author = SteamFriends.GetPersonaName();
@@ -1465,7 +1471,7 @@ namespace MobiusEditor
                     }
                     plugin.Map.SetMapTemplatesRaw(imageData, imageWidth, imageHeight, types, null);
                 }
-                return new MapLoadInfo(null, FileType.None, plugin, null);
+                return new MapLoadInfo(null, FileType.None, plugin, null, true);
             }
             catch (Exception ex)
             {
@@ -1481,7 +1487,7 @@ namespace MobiusEditor
 #if DEBUG
                 errorMessage.Add(ex.StackTrace);
 #endif
-                return new MapLoadInfo(null, FileType.None, null, errorMessage.ToArray());
+                return new MapLoadInfo(null, FileType.None, plugin, errorMessage.ToArray(), mapLoaded);
             }
         }
 
@@ -1514,11 +1520,14 @@ namespace MobiusEditor
         /// <returns></returns>
         private static MapLoadInfo LoadFile(string loadFilename, FileType fileType, GameType gameType, string theater, bool isTdMegaMap, string[] modPaths)
         {
+            IGamePlugin plugin = null;
+            bool mapLoaded = false;
             try
             {
-                IGamePlugin plugin = LoadNewPlugin(gameType, theater, isTdMegaMap, modPaths);
+                plugin = LoadNewPlugin(gameType, theater, isTdMegaMap, modPaths);
                 string[] errors = plugin.Load(loadFilename, fileType).ToArray();
-                return new MapLoadInfo(loadFilename, fileType, plugin, errors);
+                mapLoaded = true;
+                return new MapLoadInfo(loadFilename, fileType, plugin, errors, true);
             }
             catch (Exception ex)
             {
@@ -1534,7 +1543,7 @@ namespace MobiusEditor
 #if DEBUG
                 errorMessage.Add(ex.StackTrace);
 #endif
-                return new MapLoadInfo(loadFilename, fileType, null, errorMessage.ToArray());
+                return new MapLoadInfo(loadFilename, fileType, plugin, errorMessage.ToArray(), mapLoaded);
             }
         }
 
@@ -1565,9 +1574,10 @@ namespace MobiusEditor
             }
             string[] errors = loadInfo.Errors ?? new string[0];
             // Plugin set to null indicates a fatal processing error where no map was loaded at all.
-            if (loadInfo.Plugin == null)
+            if (loadInfo.Plugin == null || (loadInfo.Plugin != null && !loadInfo.MapLoaded))
             {
-                if (loadInfo.FileName != null)
+                // Attempted to load file, loading went OK, but map was not loaded.
+                if (loadInfo.FileName != null && loadInfo.Plugin != null && !loadInfo.MapLoaded)
                 {
                     var fileInfo = new FileInfo(loadInfo.FileName);
                     mru.Remove(fileInfo);

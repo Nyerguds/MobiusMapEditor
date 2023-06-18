@@ -44,6 +44,7 @@ namespace MobiusEditor.TiberianDawn
 
         protected static readonly IEnumerable<ITechnoType> fullTechnoTypes;
 
+        protected const string emptyMapName = "None";
         protected const string movieEmpty = "x";
         protected readonly IEnumerable<string> movieTypes;
 
@@ -222,6 +223,8 @@ namespace MobiusEditor.TiberianDawn
         };
 
         public virtual string Name => "Tiberian Dawn";
+
+        public virtual string DefaultExtension => ".ini";
 
         public virtual GameType GameType => GameType.TiberianDawn;
 
@@ -423,6 +426,7 @@ namespace MobiusEditor.TiberianDawn
             Map.Theater = Map.TheaterTypes.Where(t => t.Equals(theater)).FirstOrDefault() ?? Map.TheaterTypes.FirstOrDefault() ?? TheaterTypes.Desert;
             Map.TopLeft = new Point(1, 1);
             Map.Size = Map.Metrics.Size - new Size(2, 2);
+            Map.BasicSection.Name = emptyMapName;
             UpdateBasePlayerHouse();
         }
 
@@ -3198,7 +3202,7 @@ namespace MobiusEditor.TiberianDawn
 
         public virtual bool MapNameIsEmpty(string name)
         {
-            return String.IsNullOrEmpty(name) || "None".Equals(name, StringComparison.OrdinalIgnoreCase);
+            return String.IsNullOrEmpty(name) || emptyMapName.Equals(name, StringComparison.OrdinalIgnoreCase);
         }
 
         public virtual string EvaluateBriefing(string briefing)

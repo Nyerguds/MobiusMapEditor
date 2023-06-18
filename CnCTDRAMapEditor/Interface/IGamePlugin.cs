@@ -41,6 +41,9 @@ namespace MobiusEditor.Interface
         /// <summary>Name of the game.</summary>
         string Name { get; }
 
+        /// <summary>The map.</summary>
+        string DefaultExtension { get; }
+
         /// <summary>The game type as enum.</summary>
         GameType GameType { get; }
 

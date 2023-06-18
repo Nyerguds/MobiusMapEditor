@@ -45,6 +45,7 @@ namespace MobiusEditor.RedAlert
 
         private static readonly Regex SinglePlayRegex = new Regex("^SC[A-LN-Z]\\d{2}[EWX][A-EL]$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
+        private const string emptyMapName = "<none>";
         private const string movieEmpty = "<none>";
         private const string RemarkOld = " (Classic only)";
 
@@ -264,6 +265,8 @@ namespace MobiusEditor.RedAlert
 
         public string Name => "Red Alert";
 
+        public string DefaultExtension => ".mpr";
+
         public GameType GameType => GameType.RedAlert;
 
         public bool IsMegaMap => true;
@@ -456,6 +459,7 @@ namespace MobiusEditor.RedAlert
                 Map.TopLeft = new Point(1, 1);
                 Map.Size = Map.Metrics.Size - new Size(2, 2);
                 Map.BasicSection.Player = Map.HouseTypes.FirstOrDefault()?.Name;
+                Map.BasicSection.Name = emptyMapName;
                 UpdateBasePlayerHouse();
             }
             finally
@@ -2265,8 +2269,7 @@ namespace MobiusEditor.RedAlert
                 RaBuildingIniSection bld = new RaBuildingIniSection();
                 try
                 {
-                    List<(string,string)> parseErrors = new List<(string,string)>();
-                    INI.ParseSection(new MapContext(map, true), bldSettings, bld, parseErrors);
+                    List<(string,string)> parseErrors = INI.ParseSection(new MapContext(map, true), bldSettings, bld, true);
                     foreach ((string iniKey, string error) in parseErrors)
                     {
                         errors.Add("Custom rules error on [" + bType.Name + "]: " + error.TrimEnd('.') + ". Value for \"" + iniKey + "\" is ignored.");
@@ -3584,7 +3587,7 @@ namespace MobiusEditor.RedAlert
 
         public bool MapNameIsEmpty(string name)
         {
-            return String.IsNullOrEmpty(name) || "<none>".Equals(name, StringComparison.OrdinalIgnoreCase);
+            return String.IsNullOrEmpty(name) || emptyMapName.Equals(name, StringComparison.OrdinalIgnoreCase);
         }
 
         public string EvaluateBriefing(string briefing)

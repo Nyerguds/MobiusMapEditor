@@ -103,9 +103,9 @@ namespace MobiusEditor.RedAlert
 
         public static readonly BuildingType Barrel = new BuildingType(82, "barl", "TEXT_STRUCTURE_RA_BARL", 0, 0, 1, 1, null, "Neutral", BuildingTypeFlag.NoRemap);
         public static readonly BuildingType Barrel3 = new BuildingType(83, "brl3", "TEXT_STRUCTURE_RA_BRL3", 0, 0, 1, 1, null, "Neutral", BuildingTypeFlag.NoRemap);
-        public static readonly BuildingType Queen = new BuildingType(84, "quee", "TEXT_STRUCTURE_RA_QUEE", 0, 0, 2, 1, null, "BadGuy");
-        public static readonly BuildingType Larva1 = new BuildingType(85, "lar1", "TEXT_STRUCTURE_RA_LAR1", 0, 0, 1, 1, null, "BadGuy", BuildingTypeFlag.NoRemap);
-        public static readonly BuildingType Larva2 = new BuildingType(86, "lar2", "TEXT_STRUCTURE_RA_LAR2", 0, 0, 1, 1, null, "BadGuy", BuildingTypeFlag.NoRemap);
+        public static readonly BuildingType Queen = new BuildingType(84, "quee", "TEXT_STRUCTURE_RA_QUEE", 0, 0, 2, 1, null, "USSR");
+        public static readonly BuildingType Larva1 = new BuildingType(85, "lar1", "TEXT_STRUCTURE_RA_LAR1", 0, 0, 1, 1, null, "USSR", BuildingTypeFlag.NoRemap);
+        public static readonly BuildingType Larva2 = new BuildingType(86, "lar2", "TEXT_STRUCTURE_RA_LAR2", 0, 0, 1, 1, null, "USSR", BuildingTypeFlag.NoRemap);
 
         private static readonly BuildingType[] Types;
 

@@ -75,14 +75,7 @@ namespace MobiusEditor.Model
         public bool IsHarvester => (this.Flag & UnitTypeFlag.IsHarvester) == UnitTypeFlag.IsHarvester;
         public bool IsExpansionUnit => (this.Flag & UnitTypeFlag.IsExpansionUnit) == UnitTypeFlag.IsExpansionUnit;
         public bool CanRemap => (this.Flag & UnitTypeFlag.NoRemap) != UnitTypeFlag.NoRemap;
-        private Size _RenderSize;
         private string nameId;
-
-        public Size GetRenderSize(Size cellSize)
-        {
-            //RenderSize = new Size(tile.Image.Width / Globals.MapTileScale, tile.Image.Height / Globals.MapTileScale);
-            return new Size(this._RenderSize.Width * cellSize.Width / Globals.OriginalTileWidth, this._RenderSize.Height * cellSize.Height / Globals.OriginalTileHeight);
-        }
 
         public Bitmap Thumbnail { get; set; }
 
@@ -156,10 +149,6 @@ namespace MobiusEditor.Model
                 : this.Name.ToUpperInvariant();
 
             Bitmap oldImage = this.Thumbnail;
-            if (Globals.TheTilesetManager.GetTileData(this.Name, 0, out Tile tile))
-            {
-                this._RenderSize = tile.Image.Size;
-            }
             Unit mockUnit = new Unit()
             {
                 Type = this,

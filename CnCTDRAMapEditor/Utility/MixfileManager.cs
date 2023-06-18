@@ -78,15 +78,24 @@ namespace MobiusEditor.Utility
             {
                 archivesForGame.Add(new MixInfo(archivePath, isContainer, canBeEmbedded, isTheater));
             }
-            String fullPath = Path.Combine(applicationPath, gamePath, archivePath);
+            if (!Path.IsPathRooted(gamePath))
+            {
+                gamePath = Path.Combine(applicationPath, gamePath);
+            }
+            String fullPath = Path.Combine(gamePath, archivePath);
             // Mod paths might still add it, but this initial check is returned.
-            return File.Exists(fullPath);
+            return canBeEmbedded || File.Exists(fullPath);
         }
 
         public Stream OpenFile(String path)
         {
+            return OpenFile(path, currentGameType, currentMixFileInfo);
+        }
+
+        private Stream OpenFile(String path, GameType gameType, List<MixInfo> mixFilesInfo)
+        {
             // Game folders dictionary determines which games are "known" to the system.
-            if (!gameFolders.TryGetValue(currentGameType, out string gamePath))
+            if (!gameFolders.TryGetValue(gameType, out string gamePath))
             {
                 return null;
             }
@@ -110,7 +119,7 @@ namespace MobiusEditor.Utility
             }
             // 3. Contained inside mix files. Note that this automatically takes mods and
             // embedded mix files into account, since they are loaded in the Reset function.
-            foreach (MixInfo mixInfo in currentMixFileInfo)
+            foreach (MixInfo mixInfo in mixFilesInfo)
             {
                 if (currentMixFiles != null && currentMixFiles.TryGetValue(mixInfo.Name, out Mixfile archive))
                 {
@@ -150,7 +159,7 @@ namespace MobiusEditor.Utility
                 return;
             }
             List<MixInfo> newMixFileInfo = gameArchives.Where(kv => kv.Key == gameType).SelectMany(kv => kv.Value).ToList();
-            Dictionary<string, Mixfile> newMixFiles = new Dictionary<string, Mixfile>();
+            Dictionary<string, Mixfile> foundMixFiles = new Dictionary<string, Mixfile>();
             if (ExpandModPaths != null && ExpandModPaths.Length > 0)
             {
                 // In each mod folder, try to read all mix files.
@@ -158,30 +167,31 @@ namespace MobiusEditor.Utility
                 {
                     foreach (MixInfo mixInfo in newMixFileInfo)
                     {
-                        if (mixInfo.IsTheater && !String.Equals(theaterMixFile, mixInfo.Name, StringComparison.InvariantCultureIgnoreCase))
+                        if (theaterMixFile != null && mixInfo.IsTheater && !String.Equals(theaterMixFile, mixInfo.Name, StringComparison.InvariantCultureIgnoreCase))
                         {
                             continue;
                         }
                         String mixPath = Path.Combine(modPath, "ccdata");
                         // This automatically excludes already-loaded files.
-                        this.AddMixFileIfPresent(newMixFiles, newMixFileInfo, mixInfo, mixPath);
+                        this.AddMixFileIfPresent(foundMixFiles, newMixFileInfo, mixInfo, mixPath);
                     }
                 }
             }
             foreach (MixInfo mixInfo in newMixFileInfo)
             {
-                if (mixInfo.IsTheater && !String.Equals(theaterMixFile, mixInfo.Name, StringComparison.InvariantCultureIgnoreCase))
+                if (theaterMixFile != null && mixInfo.IsTheater && !String.Equals(theaterMixFile, mixInfo.Name, StringComparison.InvariantCultureIgnoreCase))
                 {
                     continue;
                 }
                 // This automatically excludes already-loaded files.
-                this.AddMixFileIfPresent(newMixFiles, newMixFileInfo, mixInfo, gamePath);
+                this.AddMixFileIfPresent(foundMixFiles, newMixFileInfo, mixInfo, gamePath);
             }
             this.currentGameType = gameType;
-            currentMixFiles = newMixFiles;
+            currentMixFiles = foundMixFiles;
+            currentMixNames = foundMixFiles.Select(info => info.Key).ToList();
+            HashSet<string> foundNames = currentMixNames.ToHashSet(StringComparer.InvariantCultureIgnoreCase);
             currentMixFileInfo.Clear();
-            currentMixFileInfo.AddRange(newMixFileInfo);
-            currentMixNames = currentMixFileInfo.Select(info => info.Name).ToList();
+            currentMixFileInfo.AddRange(newMixFileInfo.Where(mi => foundNames.Contains(mi.Name)));
         }
 
         private bool AddMixFileIfPresent(Dictionary<String, Mixfile> readMixFiles, List<MixInfo> readMixNames, MixInfo mixToAdd, string readFolder)

@@ -133,7 +133,7 @@ namespace MobiusEditor.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("1.0")]
+        [global::System.Configuration.DefaultSettingValueAttribute("1")]
         public double DefaultExportScaleClassic {
             get {
                 return ((double)(this["DefaultExportScaleClassic"]));
@@ -178,7 +178,7 @@ namespace MobiusEditor.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("1.0")]
+        [global::System.Configuration.DefaultSettingValueAttribute("1")]
         public double MapScaleClassic {
             get {
                 return ((double)(this["MapScaleClassic"]));
@@ -236,6 +236,33 @@ namespace MobiusEditor.Properties {
         public global::System.Drawing.Size MinimumClampSize {
             get {
                 return ((global::System.Drawing.Size)(this["MinimumClampSize"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Classic\\TD")]
+        public string ClassicPathTD {
+            get {
+                return ((string)(this["ClassicPathTD"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Classic\\RA")]
+        public string ClassicPathRA {
+            get {
+                return ((string)(this["ClassicPathRA"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Classic\\TD")]
+        public string ClassicPathSS {
+            get {
+                return ((string)(this["ClassicPathSS"]));
             }
         }
         

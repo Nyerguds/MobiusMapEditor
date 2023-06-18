@@ -36,12 +36,6 @@ namespace MobiusEditor.Model
         public string ClassicGraphicsSource { get; private set; }
         public Byte[] ClassicGraphicsRemap { get; private set; }
 
-        private Size _RenderSize;
-        public Size GetRenderSize(Size cellSize)
-        {
-            //RenderSize = new Size(tile.Image.Width / Globals.MapTileScale, tile.Image.Height / Globals.MapTileScale);
-            return new Size(_RenderSize.Width * cellSize.Width / Globals.OriginalTileWidth, _RenderSize.Height * cellSize.Height / Globals.OriginalTileHeight);
-        }
         public Bitmap Thumbnail { get; set; }
         private string nameId;
 
@@ -100,20 +94,12 @@ namespace MobiusEditor.Model
                 : Name.ToUpperInvariant();
             Bitmap oldImage = Thumbnail;
             Tile tile;
-            // RA classic infantry remap support.
+            // Initialisation for the special RA civilian remapping logic.
             if (this.ClassicGraphicsSource != null && Globals.TheTilesetManager is TilesetManagerClassic tsmc)
             {
-                tsmc.GetTeamColorTileData(this.Name, 4, null, out tile, true, false, this.ClassicGraphicsSource, this.ClassicGraphicsRemap);
+                // Use special override that 100% makes sure previously-cached versions are cleared, so previous accidental fetches do not corrupt
+                tsmc.GetTeamColorTileData(this.Name, 4, null, out tile, true, false, this.ClassicGraphicsSource, this.ClassicGraphicsRemap, true);
             }
-            else
-            {
-                Globals.TheTilesetManager.GetTeamColorTileData(this.Name, 4, null, out tile, true, false);
-            }
-            if (tile != null && tile.Image != null)
-            {
-                _RenderSize = tile.Image.Size;
-            }
-
             Infantry mockInfantry = new Infantry(null)
             {
                 Type = this,

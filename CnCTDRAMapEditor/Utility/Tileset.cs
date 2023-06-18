@@ -31,6 +31,7 @@ namespace MobiusEditor.Utility
         {
             public int FPS { get; set; }
             public string[] Frames { get; set; }
+            public bool IsDummy { get; set; }
 
             public Dictionary<string, Tile[]> TeamColorTiles { get; } = new Dictionary<string, Tile[]>();
         }
@@ -109,11 +110,11 @@ namespace MobiusEditor.Utility
             }
         }
 
-        public bool GetTileData(string name, int shape, ITeamColor teamColor, out int fps, out Tile[] tiles, bool generateFallback)
+        public bool GetTileData(string name, int shape, ITeamColor teamColor, out int fps, out Tile[] tiles, out bool isDummy, bool generateFallback)
         {
             fps = 0;
             tiles = null;
-            Boolean isDummy = false;
+            isDummy = false;
             if (name == null)
             {
                 return false;
@@ -134,6 +135,7 @@ namespace MobiusEditor.Utility
                 shapes = new Dictionary<int, TileData>();
                 TileData dummyData = new TileData();
                 dummyData.Frames = new string[] { dummy };
+                dummyData.IsDummy = true;
                 shapes.Add(shape, dummyData);
                 // Add it, so it's present for the next lookup.
                 this.tiles[name] = shapes;
@@ -151,6 +153,7 @@ namespace MobiusEditor.Utility
                     string dummy = String.Format(DummyFormatTga, name, shape);
                     tileData = new TileData();
                     tileData.Frames = new string[] { dummy };
+                    tileData.IsDummy = true;
                     shapes.Add(shape, tileData);
                     isDummy = true;
                 }
@@ -161,7 +164,7 @@ namespace MobiusEditor.Utility
             }
             var key = teamColor?.Name ?? string.Empty;
             bool needsdummy = false;
-            if (!tileData.TeamColorTiles.TryGetValue(key, out Tile[] tileDataTiles) || (needsdummy = generateFallback && tileDataTiles.Any(t => t.Image == null)))
+            if (!tileData.TeamColorTiles.TryGetValue(key, out Tile[] tileDataTiles) || (needsdummy = generateFallback && tileDataTiles.Length == 0 || tileDataTiles.Any(t => t.Image == null)))
             {
                 tileDataTiles = new Tile[tileData.Frames.Length];
                 tileData.TeamColorTiles[key] = tileDataTiles;
@@ -180,10 +183,9 @@ namespace MobiusEditor.Utility
                     }
                 }
             }
-
             fps = tileData.FPS;
             tiles = tileDataTiles;
-
+            isDummy = tileData.IsDummy;
             return true;
         }
 
