@@ -29,14 +29,15 @@ namespace MobiusEditor.Utility
             public bool IsContainer { get; set; }
             public bool CanBeEmbedded { get; set; }
             public bool IsTheater { get; set; }
+            public bool CanUseNewFormat { get; set; }
 
-
-            public MixInfo(String name, bool isContainer, bool canBeEmbedded, bool isTheater)
+            public MixInfo(String name, bool isContainer, bool canBeEmbedded, bool isTheater, Boolean canUseNewFormat)
             {
                 this.Name = name;
                 this.IsContainer = isContainer;
                 this.CanBeEmbedded = canBeEmbedded;
                 this.IsTheater = isTheater;
+                this.CanUseNewFormat = canUseNewFormat;
             }
         }
 
@@ -67,12 +68,13 @@ namespace MobiusEditor.Utility
                 return str != null;
             }
         }
-        public bool LoadArchive(GameType gameType, String archivePath, bool isContainer, bool canBeEmbedded)
+        
+        public bool LoadArchive(GameType gameType, String archivePath, bool isTheater)
         {
-            return LoadArchive(gameType, archivePath, isContainer, canBeEmbedded, false);
+            return this.LoadArchive(gameType, archivePath, isTheater, false, false, false);
         }
 
-        public bool LoadArchive(GameType gameType, String archivePath, bool isContainer, bool canBeEmbedded, bool isTheater)
+        public bool LoadArchive(GameType gameType, String archivePath, bool isTheater, bool isContainer, bool canBeEmbedded, bool canUseNewFormat)
         {
             // Doesn't really 'load' the archive, but instead registers it as known filename for this game type.
             // The actual loading won't happen until a Reset(...) is executed to specify the game to initialise.
@@ -89,7 +91,7 @@ namespace MobiusEditor.Utility
             // Not using hash map since order and iteration will be important.
             if (archivesForGame.FindIndex(info => String.Equals(info.Name, archivePath, StringComparison.InvariantCultureIgnoreCase)) == -1)
             {
-                archivesForGame.Add(new MixInfo(archivePath, isContainer, canBeEmbedded, isTheater));
+                archivesForGame.Add(new MixInfo(archivePath, isContainer, canBeEmbedded, isTheater, canUseNewFormat));
             }
             if (!Path.IsPathRooted(gamePath))
             {
@@ -224,7 +226,7 @@ namespace MobiusEditor.Utility
             {
                 try
                 {
-                    mixFile = new Mixfile(localPath);
+                    mixFile = new Mixfile(localPath, mixToAdd.CanUseNewFormat);
                 }
                 catch(Exception ex)
                 {
@@ -241,7 +243,7 @@ namespace MobiusEditor.Utility
                         if (container.GetFileInfo(mixName, out _, out _))
                         {
                             // Create as embedded mix file
-                            mixFile = new Mixfile(container, mixName);
+                            mixFile = new Mixfile(container, mixName, mixToAdd.CanUseNewFormat);
                         }
                     }
                 }

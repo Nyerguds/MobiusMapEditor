@@ -375,11 +375,20 @@ namespace MobiusEditor.Render
                 );
                 imageAttributes.SetColorMatrix(colorMatrix);
             }
-            if (Globals.TheTilesetManager.GetTileData(smudge.Type.Name, smudge.Icon, out Tile tile))
+            string name = smudge.Type.Name;
+            bool success = Globals.TheTilesetManager.GetTileData("blargh", smudge.Icon, out Tile tile, true, false);
+            if (tile != null && tile.Image != null)
             {
                 Rectangle smudgeBounds = RenderBounds(tile.Image.Size, new Size(1, 1), tileScale);
                 smudgeBounds.X += topLeft.X * tileSize.Width;
                 smudgeBounds.Y += topLeft.Y * tileSize.Width;
+                if (!success)
+                {
+                    smudgeBounds.X += (int)(smudgeBounds.Width * 0.1f);
+                    smudgeBounds.Y += (int)(smudgeBounds.Height * 0.1f);
+                    smudgeBounds.Width = (int)(smudgeBounds.Width * 0.8f);
+                    smudgeBounds.Height = (int)(smudgeBounds.Height * 0.8f);
+                }
                 void render(Graphics g)
                 {
                     g.DrawImage(tile.Image, smudgeBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes);
@@ -399,8 +408,8 @@ namespace MobiusEditor.Render
             string name = ovtype.GraphicsSource;
             int icon = ovtype.IsConcrete || ovtype.IsResource || ovtype.IsWall || ovtype.ForceTileNr == -1 ? overlay.Icon : ovtype.ForceTileNr;
             bool isTeleport = gameType == GameType.SoleSurvivor && ovtype == SoleSurvivor.OverlayTypes.Teleport && Globals.AdjustSoleTeleports;
-            // For Decoration types, generate dummy if not found.
-            if (Globals.TheTilesetManager.GetTileData(name, icon, out Tile tile, (ovtype.Flag & OverlayTypeFlag.Pavement) != 0, false))
+            bool isDummy = Globals.TheTilesetManager.GetTileData(name, icon, out Tile tile, true, false);
+            if (tile != null && tile.Image != null)
             {
                 int actualTopLeftX = topLeft.X * tileSize.Width;
                 int actualTopLeftY = topLeft.Y * tileSize.Height;
@@ -573,7 +582,7 @@ namespace MobiusEditor.Render
                     int maxOverlayIcon = Globals.TheTilesetManager.GetTileDataLength(building.Type.FactoryOverlay);
                     overlayIcon = maxOverlayIcon / 2;
                 }
-                Globals.TheTilesetManager.GetTeamColorTileData(building.Type.FactoryOverlay, overlayIcon, Globals.TheTeamColorManager[building.House.BuildingTeamColor], out factoryOverlayTile, true, false);
+                Globals.TheTilesetManager.GetTeamColorTileData(building.Type.FactoryOverlay, overlayIcon, Globals.TheTeamColorManager[building.House.BuildingTeamColor], out factoryOverlayTile);
             }
             void render(Graphics g)
             {
@@ -600,7 +609,13 @@ namespace MobiusEditor.Render
                         using (Graphics factoryG = Graphics.FromImage(factory))
                         {
                             factoryG.CopyRenderSettingsFrom(g);
-                            Rectangle factBounds = RenderBounds(tile.Image.Size, building.Type.Size, tileScale);
+                            Size renderSize = tileISize;
+                            if (!succeeded)
+                            {
+                                renderSize.Width = building.Type.Size.Width * tileSize.Width;
+                                renderSize.Height = building.Type.Size.Height * tileSize.Height;
+                            }
+                            Rectangle factBounds = RenderBounds(renderSize, building.Type.Size, tileScale);
                             Rectangle ovrlBounds = RenderBounds(factoryOverlayTile.Image.Size, building.Type.Size, tileScale);
                             factoryG.DrawImage(tile.Image, factBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel);
                             factoryG.DrawImage(factoryOverlayTile.Image, ovrlBounds, 0, 0, factoryOverlayTile.Image.Width, factoryOverlayTile.Image.Height, GraphicsUnit.Pixel);
@@ -625,54 +640,77 @@ namespace MobiusEditor.Render
             ITeamColor teamColor = infantry.Type.CanRemap ? Globals.TheTeamColorManager[infantry.House?.UnitTeamColor] : null;
             Tile tile = null;
             // RA classic infantry remap support.
+            bool success;
             if (infantry.Type.ClassicGraphicsSource != null && Globals.TheTilesetManager is TilesetManagerClassic tsmc)
             {
-                tsmc.GetTeamColorTileData(infantry.Type.Name, icon, teamColor, out tile, true, false, infantry.Type.ClassicGraphicsSource, infantry.Type.ClassicGraphicsRemap);
+                success = tsmc.GetTeamColorTileData(infantry.Type.Name, icon, teamColor, out tile, true, false, infantry.Type.ClassicGraphicsSource, infantry.Type.ClassicGraphicsRemap);
             }
             else
             {
-                Globals.TheTilesetManager.GetTeamColorTileData(infantry.Type.Name, icon, teamColor, out tile, true, false);
+                success = Globals.TheTilesetManager.GetTeamColorTileData(infantry.Type.Name, icon, teamColor, out tile, true, false);
             }
             if (tile != null && tile.Image != null)
             {
                 Size imSize = tile.Image.Size;
                 // These values are experimental, from comparing map editor screenshots to game screenshots. -Nyer
-                int infantryCorrectX = tileSize.Width / -12;
-                int infantryCorrectY = tileSize.Height / 6;
-                Point baseLocation = new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height)
-                    + new Size(tileSize.Width / 2, tileSize.Height / 2);
+                Point baseLocation = new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height);
                 Point offset = Point.Empty;
-                switch (infantryStoppingType)
+                Rectangle renderBounds;
+                Rectangle virtualBounds;
+                if (success)
                 {
-                    case InfantryStoppingType.UpperLeft:
-                        offset.X = -tileSize.Width / 4 + infantryCorrectX;
-                        offset.Y = -tileSize.Height / 4 + infantryCorrectY;
-                        break;
-                    case InfantryStoppingType.UpperRight:
-                        offset.X = tileSize.Width / 4 + infantryCorrectX;
-                        offset.Y = -tileSize.Height / 4 + infantryCorrectY;
-                        break;
-                    case InfantryStoppingType.LowerLeft:
-                        offset.X = -tileSize.Width / 4 + infantryCorrectX;
-                        offset.Y = tileSize.Height / 4 + infantryCorrectY;
-                        break;
-                    case InfantryStoppingType.LowerRight:
-                        offset.X = tileSize.Width / 4 + infantryCorrectX;
-                        offset.Y = tileSize.Height / 4 + infantryCorrectY;
-                        break;
-                    case InfantryStoppingType.Center:
-                        offset.X = infantryCorrectX;
-                        offset.Y = infantryCorrectY;
-                        break;
+                    baseLocation += new Size(tileSize.Width / 2, tileSize.Height / 2);
+                    int infantryCorrectX = tileSize.Width / -12;
+                    int infantryCorrectY = tileSize.Height / 6;
+                    switch (infantryStoppingType)
+                    {
+                        case InfantryStoppingType.UpperLeft:
+                            offset.X = -tileSize.Width / 4 + infantryCorrectX;
+                            offset.Y = -tileSize.Height / 4 + infantryCorrectY;
+                            break;
+                        case InfantryStoppingType.UpperRight:
+                            offset.X = tileSize.Width / 4 + infantryCorrectX;
+                            offset.Y = -tileSize.Height / 4 + infantryCorrectY;
+                            break;
+                        case InfantryStoppingType.LowerLeft:
+                            offset.X = -tileSize.Width / 4 + infantryCorrectX;
+                            offset.Y = tileSize.Height / 4 + infantryCorrectY;
+                            break;
+                        case InfantryStoppingType.LowerRight:
+                            offset.X = tileSize.Width / 4 + infantryCorrectX;
+                            offset.Y = tileSize.Height / 4 + infantryCorrectY;
+                            break;
+                        case InfantryStoppingType.Center:
+                            offset.X = infantryCorrectX;
+                            offset.Y = infantryCorrectY;
+                            break;
+                    }
+                    baseLocation.Offset(offset);
+                    virtualBounds = new Rectangle(
+                        new Point(baseLocation.X - (tile.OpaqueBounds.Width / 2), baseLocation.Y - tile.OpaqueBounds.Height),
+                        tile.OpaqueBounds.Size
+                    );
+                    Size renderSize = new Size(imSize.Width * tileSize.Width / Globals.OriginalTileWidth, imSize.Height * tileSize.Height / Globals.OriginalTileHeight);
+                    renderBounds = new Rectangle(baseLocation - new Size(renderSize.Width / 2, renderSize.Height / 2), renderSize);
                 }
-                baseLocation.Offset(offset);
-                Rectangle virtualBounds = new Rectangle(
-                    new Point(baseLocation.X - (tile.OpaqueBounds.Width / 2), baseLocation.Y - tile.OpaqueBounds.Height),
-                    tile.OpaqueBounds.Size
-                );
-                Size renderSize = new Size(imSize.Width * tileSize.Width / Globals.OriginalTileWidth, imSize.Height * tileSize.Height / Globals.OriginalTileHeight);
-                Rectangle renderBounds = new Rectangle(baseLocation - new Size(renderSize.Width / 2, renderSize.Height / 2), renderSize);
-
+                else
+                {
+                    if (infantryStoppingType == InfantryStoppingType.UpperRight || infantryStoppingType == InfantryStoppingType.LowerRight)
+                        offset.X += (tileSize.Width * 2 / 3);
+                    if (infantryStoppingType == InfantryStoppingType.LowerLeft || infantryStoppingType == InfantryStoppingType.LowerRight)
+                        offset.Y += (tileSize.Height / 2);
+                    if (infantryStoppingType == InfantryStoppingType.Center)
+                    {
+                        offset.X += (tileSize.Height / 3);
+                        offset.Y += (tileSize.Height / 4);
+                    }
+                    baseLocation.Offset(offset);
+                    Size renderSize = new Size(imSize.Width * tileSize.Width / Globals.OriginalTileWidth, imSize.Height * tileSize.Height / Globals.OriginalTileHeight);
+                    renderSize.Width /= 3;
+                    renderSize.Height /= 2;
+                    renderBounds = new Rectangle(baseLocation, renderSize);
+                    virtualBounds = renderBounds;
+                }
                 Color tint = infantry.Tint;
                 void render(Graphics g)
                 {

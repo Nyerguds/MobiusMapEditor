@@ -16,7 +16,6 @@ Released on 08 Jul 2022 at 21:37 UTC
 
 * Fixed overlay height overflow bug in Rampa's new UI.
 * Fixed map tiles list duplicating every time the "Map" tool window is opened in Rampa's version.
-* Split off internal overlay type "decoration", used for pavements and civilian buildings.
 * Added CONC and ROAD pavement to TD. They have no graphics, but at least now they are accepted by the editor and not discarded as errors.
 * Sorted all items in the lists (except map tiles) by key, which is usually a lot more straightforward.
 * Split off specific separate list for techno types usable in teamtypes.
@@ -443,10 +442,12 @@ Released on 03 Apr 2023 at 19:20 GMT
 * Added character count to the briefing screen. if WriteClassicBriefing is enabled a warning wil be given if the amount exceeds the maximum the classic game can handle. If the warning is ignored, the classic briefing will truncated on the maximum it can handle, to prevent game crashes.
 * Fixed saving of Red Alert's classic briefing, to also obey the classic internal maximum, and to correctly split on line break @ characters.
 
-### v1.4.6.0:
+### v1.5.0.0:
 
 Unreleased
 
+* Added support for classic graphics, making the editor independent from the C&C Remaster.
+* Fixed an error in the sorting of ini sections that messed up the linking of teamtypes to triggers when the teamtype names ended on numbers going up to 10 and the lower numbers were not padded with zeroes.
 * All overlay placement is now correctly restricted to not be allowed on the top or bottom row of the map, showing red indicators when in placement mode.
 * Resource placement with a brush size larger than 1 shows red cells inside the brush area when hovering over the top or bottom cells of the map. At size 1, the brush is simply completely red.
 * Applied DPI changes that might fix issues with objects drawing weirdly on some people's systems.
@@ -465,3 +466,8 @@ Unreleased
 * Changed TD Technology Center to its real name, instead of "Prison".
 * Added reference to GraphicsFixesRA mod.
 * Added "EnforceObjectMaximums" setting that can be disabled to remove save checks on object maximums.
+* Fixed swapped power usage and production of RA Gap Generator.
+* Set correct preview House for the ant units and buildings.
+* Fixed bug where the Template tool and the "new from image" dialog used a tile size derived from the map scale factor instead of the preview scale factor to determine in which tile the user clicked.
+* Fixed bugs in text indicator scaling.
+* Added better fallbacks for missing graphics.

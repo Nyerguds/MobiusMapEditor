@@ -40,6 +40,11 @@ namespace MobiusEditor.Utility
         private uint dataStart;
 
         public Mixfile(string mixPath)
+            :this(mixPath, true)
+        {
+        }
+
+        public Mixfile(string mixPath, bool handleAdvanced)
         {
             FileInfo mixFile = new FileInfo(mixPath);
             this.fileStart = 0;
@@ -48,10 +53,15 @@ namespace MobiusEditor.Utility
             this.mixFileMap = MemoryMappedFile.CreateFromFile(
                 new FileStream(mixPath, FileMode.Open, FileAccess.Read, FileShare.Read),
                 null, 0, MemoryMappedFileAccess.Read, HandleInheritability.None, false);
-            this.ReadMixHeader(this.mixFileMap, this.fileStart, this.fileLength);
+            this.ReadMixHeader(this.mixFileMap, this.fileStart, this.fileLength, handleAdvanced);
         }
 
         public Mixfile(Mixfile container, string name)
+            : this(container, name, true)
+        {
+        }
+
+        public Mixfile(Mixfile container, string name, bool handleAdvanced)
         {
             this.isEmbedded = true;
             this.MixFileName = container.MixFileName + " -> " + name;
@@ -63,18 +73,18 @@ namespace MobiusEditor.Utility
             this.fileLength = length;
             // Copy reference to parent map. The "CreateViewStream" function takes care of reading the right parts from it.
             this.mixFileMap = container.mixFileMap;
-            this.ReadMixHeader(this.mixFileMap, offset, this.fileLength);
+            this.ReadMixHeader(this.mixFileMap, offset, this.fileLength, handleAdvanced);
         }
 
-        private void ReadMixHeader(MemoryMappedFile mixMap, long mixStart, long mixLength)
+        private void ReadMixHeader(MemoryMappedFile mixMap, long mixStart, long mixLength, bool handleAdvanced)
         {
             this.mixFileContents.Clear();
             uint readOffset = 0;
             ushort fileCount = 0;
-            uint dataSize = 0;
+            // uint dataSize = 0;
             bool hasFlags = false;
             bool encrypted = false;
-            bool checksum = false;
+            //bool checksum = false;
             byte[] buffer;
             using (BinaryReader headerReader = new BinaryReader(this.CreateViewStream(mixMap, mixStart, mixLength, readOffset, 2)))
             {
@@ -82,6 +92,11 @@ namespace MobiusEditor.Utility
                 ushort start = ArrayUtils.ReadUInt16FromByteArrayLe(buffer, 0);
                 if (start == 0)
                 {
+                    if (!handleAdvanced)
+                    {
+                        throw new ArgumentException("mixMap", "This mix file can't be one with extended header format.");
+
+                    }
                     hasFlags = true;
                     readOffset += 2;
                 }
@@ -97,7 +112,7 @@ namespace MobiusEditor.Utility
                 {
                     buffer = headerReader.ReadBytes(2);
                     ushort flags = ArrayUtils.ReadUInt16FromByteArrayLe(buffer, 0);
-                    checksum = (flags & 1) != 0;
+                    //checksum = (flags & 1) != 0;
                     encrypted = (flags & 2) != 0;
                     readOffset += 2;
                 }
@@ -117,7 +132,7 @@ namespace MobiusEditor.Utility
             {
                 if (readOffset + 88 > mixLength)
                 {
-                    throw new ArgumentOutOfRangeException("Not a valid mix file: minimum encrypted header length exceeds file length.");
+                    throw new ArgumentException("mixMap", "Not a valid mix file: minimum encrypted header length exceeds file length.");
                 }
                 header = DecodeHeader(mixMap, mixStart, mixLength, ref readOffset);
             }
@@ -126,7 +141,7 @@ namespace MobiusEditor.Utility
                 headerSize = 6 + (uint)(fileCount * 12);
                 if (readOffset + headerSize > mixLength)
                 {
-                    throw new ArgumentOutOfRangeException("Not a valid mix file: header length exceeds file length.");
+                    throw new ArgumentException("mixMap", "Not a valid mix file: header length exceeds file length.");
                 }
                 using (BinaryReader headerReader = new BinaryReader(this.CreateViewStream(mixMap, mixStart, mixLength, readOffset, headerSize)))
                 {
@@ -138,21 +153,23 @@ namespace MobiusEditor.Utility
             }
             // Store so files can correctly be offset to the end of the header
             this.dataStart = readOffset;
-            using (BinaryReader headerReader = new BinaryReader(new MemoryStream(header)))
+
+            int hdrPtr = 0;
+            fileCount = ArrayUtils.ReadUInt16FromByteArrayLe(header, hdrPtr);
+            //dataSize = ArrayUtils.ReadUInt32FromByteArrayLe(header, hdrPtr + 2);
+            // Skip to file table
+            hdrPtr += 6;
+            for (int i = 0; i < fileCount; ++i)
             {
-                fileCount = headerReader.ReadUInt16();
-                dataSize = headerReader.ReadUInt32();
-                for (int i = 0; i < fileCount; ++i)
+                uint fileId = ArrayUtils.ReadUInt32FromByteArrayLe(header, hdrPtr);
+                uint fileOffset = ArrayUtils.ReadUInt32FromByteArrayLe(header, hdrPtr + 4);
+                uint fileLength = ArrayUtils.ReadUInt32FromByteArrayLe(header, hdrPtr + 8);
+                hdrPtr += 12;
+                if (fileOffset + fileLength > mixLength)
                 {
-                    uint fileId = headerReader.ReadUInt32();
-                    uint fileOffset = headerReader.ReadUInt32();
-                    uint fileLength = headerReader.ReadUInt32();
-                    if (fileOffset + fileLength > mixLength)
-                    {
-                        throw new ArgumentOutOfRangeException(String.Format("Not a valid mix file: file #{0} with id {1:X08} exceeds archive length.", i, fileId));
-                    }
-                    this.mixFileContents.Add(fileId, (fileOffset, fileLength));
+                    throw new ArgumentException("mixMap", String.Format("Not a valid mix file: file #{0} with id {1:X08} exceeds archive length.", i, fileId));
                 }
+                this.mixFileContents.Add(fileId, (fileOffset, fileLength));
             }
         }
 
@@ -198,6 +215,7 @@ namespace MobiusEditor.Utility
             }
             if (dataReadOffset + dataReadLength > mixFileLength)
             {
+                // Can normally never happen; it is checked when the header is read.
                 throw new IndexOutOfRangeException("Data exceeds mix file bounds.");
             }
             return mixMap.CreateViewStream(mixFileStart + dataReadOffset, dataReadLength, MemoryMappedFileAccess.Read);
@@ -215,7 +233,6 @@ namespace MobiusEditor.Utility
         ///     the entire decrypted header, including the 6 bytes with the amount of files and the data length at the start.
         ///     It might contain padding at the end as result of the decryption.
         /// </returns>
-        /// <exception cref="ArgumentOutOfRangeException"></exception>
         private Byte[] DecodeHeader(MemoryMappedFile mixMap, long mixStart, long mixLength, ref uint readOffset)
         {
             // Based on specs written up by OmniBlade on the Shikadi Modding Wiki.
@@ -282,7 +299,7 @@ namespace MobiusEditor.Utility
             uint realHeaderSize = blocksToRead * 8;
             if (readOffset + realHeaderSize > mixLength)
             {
-                throw new ArgumentOutOfRangeException("Not a valid mix file: encrypted header length exceeds file length.");
+                throw new ArgumentException("mixMap", "Not a valid mix file: encrypted header length exceeds file length.");
             }
             // Adjust read offset to end of first block
             readOffset += 8;

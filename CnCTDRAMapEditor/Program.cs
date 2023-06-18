@@ -183,13 +183,13 @@ namespace MobiusEditor
             List<string> loadErrors = new List<string>();
             // This will map the mix files to the respective games, and look for them in the respective folders.
             // Tiberian Dawn
-            mfm.LoadArchive(GameType.TiberianDawn, "local.mix", false, false, false);
-            mfm.LoadArchive(GameType.TiberianDawn, "cclocal.mix", false, false, false);
-            mfm.LoadArchive(GameType.TiberianDawn, "conquer.mix", false, false, false);
+            mfm.LoadArchive(GameType.TiberianDawn, "local.mix", false);
+            mfm.LoadArchive(GameType.TiberianDawn, "cclocal.mix", false);
+            mfm.LoadArchive(GameType.TiberianDawn, "conquer.mix", false);
             // Tiberian Dawn Theaters
-            mfm.LoadArchive(GameType.TiberianDawn, "desert.mix", false, false, true);
-            mfm.LoadArchive(GameType.TiberianDawn, "temperat.mix", false, false, true);
-            mfm.LoadArchive(GameType.TiberianDawn, "winter.mix", false, false, true);
+            mfm.LoadArchive(GameType.TiberianDawn, "desert.mix", true);
+            mfm.LoadArchive(GameType.TiberianDawn, "temperat.mix", true);
+            mfm.LoadArchive(GameType.TiberianDawn, "winter.mix", true);
             // Check files
             modpaths.TryGetValue(GameType.TiberianDawn, out string[] tdModPaths);
             modpaths.TryGetValue(GameType.SoleSurvivor, out string[] ssModPaths);
@@ -207,13 +207,13 @@ namespace MobiusEditor
             if (!loadedFiles.Contains("winter.mix")) loadErrors.Add(prefix + "winter.mix");
 
             // Sole Survivor
-            mfm.LoadArchive(GameType.SoleSurvivor, "local.mix", false, false);
-            mfm.LoadArchive(GameType.SoleSurvivor, "cclocal.mix", false, false);
-            mfm.LoadArchive(GameType.SoleSurvivor, "conquer.mix", false, false);
+            mfm.LoadArchive(GameType.SoleSurvivor, "local.mix", false);
+            mfm.LoadArchive(GameType.SoleSurvivor, "cclocal.mix", false);
+            mfm.LoadArchive(GameType.SoleSurvivor, "conquer.mix", false);
             // Sole Survivor Theaters
-            mfm.LoadArchive(GameType.SoleSurvivor, "desert.mix", false, false, true);
-            mfm.LoadArchive(GameType.SoleSurvivor, "temperat.mix", false, false, true);
-            mfm.LoadArchive(GameType.SoleSurvivor, "winter.mix", false, false, true);
+            mfm.LoadArchive(GameType.SoleSurvivor, "desert.mix", true);
+            mfm.LoadArchive(GameType.SoleSurvivor, "temperat.mix", true);
+            mfm.LoadArchive(GameType.SoleSurvivor, "winter.mix", true);
             // Check files
             if (!tdSsEqual)
             {
@@ -229,25 +229,25 @@ namespace MobiusEditor
             }
             // Red Alert
             // Aftermath expand file. Required.
-            mfm.LoadArchive(GameType.RedAlert, "expand2.mix", false, false);
+            mfm.LoadArchive(GameType.RedAlert, "expand2.mix", false, false, false, true);
             // Counterstrike expand file. All graphics from expand are also in expand2.mix,
             // but it could be used in modding to override different files. Not considered vital.
-            mfm.LoadArchive(GameType.RedAlert, "expand.mix", false, false);
+            mfm.LoadArchive(GameType.RedAlert, "expand.mix", false, false, false, true);
             // Container archives, so not considered vital.
-            mfm.LoadArchive(GameType.RedAlert, "redalert.mix", true, false);
-            mfm.LoadArchive(GameType.RedAlert, "main.mix", true, false);
+            mfm.LoadArchive(GameType.RedAlert, "redalert.mix", false, true, false, true);
+            mfm.LoadArchive(GameType.RedAlert, "main.mix", false, true, false, true);
             // Needed for theater palettes and the remap settings in palette.cps
-            mfm.LoadArchive(GameType.RedAlert, "local.mix", false, true);
+            mfm.LoadArchive(GameType.RedAlert, "local.mix", false, false, true, true);
             // Main graphics archive
-            mfm.LoadArchive(GameType.RedAlert, "conquer.mix", false, true);
+            mfm.LoadArchive(GameType.RedAlert, "conquer.mix", false, false, true, true);
             // Infantry
-            mfm.LoadArchive(GameType.RedAlert, "lores.mix", false, true);
+            mfm.LoadArchive(GameType.RedAlert, "lores.mix", false, false, true, true);
             // Expansion infantry
-            mfm.LoadArchive(GameType.RedAlert, "lores1.mix", false, true);
+            mfm.LoadArchive(GameType.RedAlert, "lores1.mix", false, false, true, true);
             // Theaters
-            mfm.LoadArchive(GameType.RedAlert, "temperat.mix", false, true, true);
-            mfm.LoadArchive(GameType.RedAlert, "snow.mix", false, true, true);
-            mfm.LoadArchive(GameType.RedAlert, "interior.mix", false, true, true);
+            mfm.LoadArchive(GameType.RedAlert, "temperat.mix", true, false, true, true);
+            mfm.LoadArchive(GameType.RedAlert, "snow.mix", true, false, true, true);
+            mfm.LoadArchive(GameType.RedAlert, "interior.mix", true, false, true, true);
 
             // Check files
             modpaths.TryGetValue(GameType.RedAlert, out string[] raModPaths);
