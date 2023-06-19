@@ -303,7 +303,6 @@ namespace MobiusEditor.Tools
         {
             // This code picks the single icon from the preview pane.
             TemplateType selected = SelectedTemplateType;
-            bool isRandom = selected != null && (selected.Flag & TemplateTypeFlag.RandomCell) != TemplateTypeFlag.None;
             if (e.Button == MouseButtons.Right || (selected == null) || (e.Button == MouseButtons.Left && selected.NumIcons == 1))
             {
                 SelectedIcon = null;
@@ -324,7 +323,7 @@ namespace MobiusEditor.Tools
             {
                 if ((y >= 0) && (y < height))
                 {
-                    if (isRandom)
+                    if (selected.IsRandom)
                     {
                         if (y * width + x < selected.NumIcons)
                         {
@@ -350,7 +349,7 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-            bool isRandom = (selected.Flag & TemplateTypeFlag.RandomCell) != TemplateTypeFlag.None && selected.NumIcons > 1;
+            bool isRandom = selected.IsRandom && selected.NumIcons > 1;
             if (SelectedIcon.HasValue || isRandom)
             {
                 int width = selected.ThumbnailIconWidth;
@@ -720,7 +719,7 @@ namespace MobiusEditor.Tools
             TemplateTypeFlag toRandomise = TemplateTypeFlag.RandomCell | TemplateTypeFlag.IsGrouped;
             Map map = plugin.Map;
 
-            if (map.TemplateTypes.Where(t => t.Theaters == null || t.Theaters.Contains(map.Theater)).All(tm => (tm.Flag & toRandomise) == TemplateTypeFlag.None))
+            if (map.TemplateTypes.Where(t => t.Theaters == null || t.Theaters.Contains(map.Theater)).All(tm => tm.IsRandom || (tm.Flag & toRandomise) == TemplateTypeFlag.None))
             {
                 return "This map's theater does not contain randomizable tiles.";
             }
@@ -1072,7 +1071,7 @@ namespace MobiusEditor.Tools
                         }
                     }
                 }
-                bool isRandom = (selected.Flag & TemplateTypeFlag.RandomCell) != TemplateTypeFlag.None && selected.IconWidth == 1 && selected.IconHeight == 1;
+                bool isRandom = selected.IsRandom && selected.IconWidth == 1 && selected.IconHeight == 1;
                 for (int y = 0, icon = 0; y < selected.IconHeight; ++y)
                 {
                     for (var x = 0; x < selected.IconWidth; ++x, ++icon)
@@ -1392,7 +1391,7 @@ namespace MobiusEditor.Tools
                     picked = map.TemplateTypes.Where(t => t.Name.Equals("clear1", StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
                 }
                 TemplateType selected = picked;
-                bool isRandom = (selected.Flag & TemplateTypeFlag.RandomCell) != TemplateTypeFlag.None && selected.NumIcons > 1;
+                bool isRandom = selected.IsRandom && selected.NumIcons > 1;
                 if (!wholeTemplate && ((selected.IconWidth * selected.IconHeight) > 1 || isRandom))
                 {
                     int icon;

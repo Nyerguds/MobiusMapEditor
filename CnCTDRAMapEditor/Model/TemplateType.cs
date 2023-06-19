@@ -66,6 +66,9 @@ namespace MobiusEditor.Model
         public TheaterType[] Theaters { get; private set; }
         public TemplateTypeFlag Flag { get; private set; }
         public Dictionary<string, bool[,]> MaskOverrides { get; private set; }
+        private bool extraTilesFoundOn1x1;
+        public bool IsRandom => (this.extraTilesFoundOn1x1 || (this.Flag & TemplateTypeFlag.RandomCell) != TemplateTypeFlag.None)
+                                    && this.IconWidth == 1 && this.IconHeight == 1;
 
         /// <summary>
         /// On template types with the 'Group' flag, this needs to contains the list of all the tiles that are part of the group.
@@ -313,21 +316,23 @@ namespace MobiusEditor.Model
 
         public void Init(TheaterType theater, bool forceDummy)
         {
+            this.extraTilesFoundOn1x1 = false;
+            bool isRandom = (Flag & TemplateTypeFlag.RandomCell) != TemplateTypeFlag.None;
+            bool isGroup = (Flag & TemplateTypeFlag.Group) == TemplateTypeFlag.Group;
             // This allows mods to add 'random' tiles to existing 1x1 tiles. Check excludes 'Clear' terrain and items already defined as random.
-            if (IconWidth == 1 & IconHeight == 1 && (Flag & TemplateTypeFlag.Clear) == TemplateTypeFlag.None && (Flag & TemplateTypeFlag.RandomCell) == TemplateTypeFlag.None)
+            if (IconWidth == 1 & IconHeight == 1 && (Flag & TemplateTypeFlag.Clear) == TemplateTypeFlag.None && !isRandom && !isGroup)
             {
                 if (Globals.TheTilesetManager.GetTileDataLength(Name) > 1)
                 {
-                    Flag |= TemplateTypeFlag.RandomCell;
+                    this.extraTilesFoundOn1x1 = true;
+                    isRandom = true;
                 }
             }
             var oldImage = Thumbnail;
             var size = new Size(Globals.PreviewTileWidth, Globals.PreviewTileHeight);
             var mask = new bool[IconHeight, IconWidth];
-            int loopWidth = ThumbnailIconWidth;
+            int loopWidth = IconWidth;
             int loopHeight = IconHeight;
-            bool isRandom = (Flag & TemplateTypeFlag.RandomCell) != TemplateTypeFlag.None;
-            bool isGroup = (Flag & TemplateTypeFlag.Group) == TemplateTypeFlag.Group;
             if (isRandom)
             {
                 Int32 numIcons;
@@ -390,18 +395,16 @@ namespace MobiusEditor.Model
                             tryDummy = forceDummy;
                         }
                         // Fetch dummy if definitely in bounds, first cell of a random one, or dummy is forced.
-                        if (Globals.TheTilesetManager.GetTileData(nameToFetch, iconToFetch, out Tile tile, tryDummy, forceDummy || !isRandom || (x == 0 && y == 0)))
+                        bool success = Globals.TheTilesetManager.GetTileData(nameToFetch, iconToFetch, out Tile tile, tryDummy, false);
+                        if (tile != null && tile.Image != null)
                         {
-                            if (tile.Image != null)
+                            using (Bitmap tileImg = tile.Image.RemoveAlpha())
                             {
-                                using (Bitmap tileImg = tile.Image.RemoveAlpha())
-                                {
-                                    g.DrawImage(tileImg, x * size.Width, y * size.Height, size.Width, size.Height);
-                                }
-                                if (!isRandom)
-                                {
-                                    found = mask[y, x] = true;
-                                }
+                                g.DrawImage(tileImg, x * size.Width, y * size.Height, size.Width, size.Height);
+                            }
+                            if (!isRandom)
+                            {
+                                found = mask[y, x] = true;
                             }
                         }
                     }
@@ -441,7 +444,6 @@ namespace MobiusEditor.Model
 
         public bool IsValidIcon(Point point)
         {
-            bool isRandom = (Flag & TemplateTypeFlag.RandomCell) != TemplateTypeFlag.None;
             if (point.X < 0 || point.Y < 0)
             {
                 return false;
@@ -450,7 +452,7 @@ namespace MobiusEditor.Model
             {
                 return false;
             }
-            return isRandom || IconMask[point.Y, point.X];
+            return this.IsRandom || IconMask[point.Y, point.X];
         }
 
         public Point GetFirstValidIcon()

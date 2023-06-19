@@ -158,6 +158,7 @@ namespace MobiusEditor.Render
         public static void Render(GameType gameType, Map map, Graphics graphics, ISet<Point> locations, MapLayerFlag layers, double tileScale)
         {
             Size tileSize = new Size(Math.Max(1, (int)(Globals.OriginalTileWidth * tileScale)), Math.Max(1, (int)(Globals.OriginalTileHeight * tileScale)));
+            TheaterType theater = map.Theater;
             // paint position, paint action, true if flat.
             List<(Rectangle, Action<Graphics>, Boolean)> overlappingRenderList = new List<(Rectangle, Action<Graphics>, bool)>();
             Func<IEnumerable<Point>> renderLocations = null;
@@ -219,9 +220,10 @@ namespace MobiusEditor.Render
                 foreach (Point topLeft in renderLocations())
                 {
                     Smudge smudge = map.Smudge[topLeft];
-                    if (smudge != null && smudge.Type.IsAutoBib)
+                    // Don't render bibs in theaters which don't contain them.
+                    if (smudge != null && smudge.Type.IsAutoBib && (smudge.Type.Theaters == null || smudge.Type.Theaters.Contains(theater)))
                     {
-                        RenderSmudge(map.Theater, topLeft, tileSize, tileScale, smudge).Item2(graphics);
+                        RenderSmudge(theater, topLeft, tileSize, tileScale, smudge).Item2(graphics);
                     }
                 }
             }
@@ -232,7 +234,7 @@ namespace MobiusEditor.Render
                     Smudge smudge = map.Smudge[topLeft];
                     if (smudge != null && !smudge.Type.IsAutoBib)
                     {
-                        RenderSmudge(map.Theater, topLeft, tileSize, tileScale, smudge).Item2(graphics);
+                        RenderSmudge(theater, topLeft, tileSize, tileScale, smudge).Item2(graphics);
                     }
                 }
             }
@@ -269,7 +271,7 @@ namespace MobiusEditor.Render
                     {
                         continue;
                     }
-                    overlappingRenderList.Add(RenderTerrain(gameType, map.Theater, topLeft, tileSize, tileScale, terrain));
+                    overlappingRenderList.Add(RenderTerrain(gameType, theater, topLeft, tileSize, tileScale, terrain));
                 }
             }
             if ((layers & MapLayerFlag.Buildings) != MapLayerFlag.None)
@@ -341,7 +343,7 @@ namespace MobiusEditor.Render
             {
                 // todo avoid overlapping waypoints of the same type?
                 HashSet<int> handledPoints = new HashSet<int>();
-                ITeamColor[] flagColors = map.FlagColors.ToArray();
+                ITeamColor[] flagColors = map.FlagColors;
                 foreach (Waypoint waypoint in map.Waypoints)
                 {
                     if (!waypoint.Point.HasValue || (locations != null && !locations.Contains(waypoint.Point.Value)))
@@ -1006,6 +1008,7 @@ namespace MobiusEditor.Render
             bool isDefaultIcon = true;
             bool gotTile = false;
             Tile tile;
+            double sizeMultiplier = 1;
             if (!soloMission && mpId >= 0 && mpId < flagColors.Length)
             {
                 isDefaultIcon = false;
@@ -1019,6 +1022,7 @@ namespace MobiusEditor.Render
             {
                 isDefaultIcon = false;
                 tileGraphics = "scrate";
+                sizeMultiplier = 2;
                 //tint = Color.FromArgb(waypoint.Tint.A, Color.Green);
                 //brightness = 1.5f;
                 gotTile = Globals.TheTilesetManager.GetTileData(tileGraphics, icon, out tile);
@@ -1040,11 +1044,36 @@ namespace MobiusEditor.Render
                 return (Rectangle.Empty, (g) => { });
             }
             Point location = new Point(point.X * tileSize.Width, point.Y * tileSize.Height);
-            Size renderSize = tileSize;
-            //Rectangle renderBounds = RenderBounds(tile.Image.Size, new Size(1, 1), tileSize);
-            Rectangle renderBounds = GeneralUtils.GetBoundingBoxCenter(tile.OpaqueBounds.Width, tile.OpaqueBounds.Height, tileSize.Width, tileSize.Height);
-            renderBounds.X += location.X;
-            renderBounds.Y += location.Y;
+            Size renderSize = new Size(tile.Image.Width * tileSize.Width / Globals.OriginalTileWidth, tile.Image.Height * tileSize.Height / Globals.OriginalTileHeight);
+            renderSize.Width = (int)(renderSize.Width * sizeMultiplier);
+            renderSize.Height = (int)(renderSize.Height * sizeMultiplier);
+            Rectangle renderBounds = new Rectangle(location, renderSize);
+            Rectangle imgBounds = new Rectangle(Point.Empty, tile.Image.Size);
+            bool isClipping = renderSize.Width > tileSize.Width || renderSize.Height > tileSize.Height;
+            if (tileSize.Width > renderSize.Width)
+            {
+                // Pad
+                renderBounds.X += (tileSize.Width - renderSize.Width) / 2;
+            }
+            else if (tileSize.Width < renderSize.Width)
+            {
+                // Crop
+                renderBounds.Width = tileSize.Width;
+                imgBounds.Width = (int)(tileSize.Width / sizeMultiplier);
+                imgBounds.X = (tile.Image.Width - imgBounds.Width) / 2;
+            }
+            if (tileSize.Height > renderSize.Height)
+            {
+                // Pad
+                renderBounds.Y += (tileSize.Height - renderSize.Height) / 2;
+            }
+            else if (tileSize.Height < renderSize.Height)
+            {
+                // Crop
+                renderBounds.Height = tileSize.Height;
+                imgBounds.Height = (int)(tileSize.Height / sizeMultiplier);
+                imgBounds.Y = (tile.Image.Height - imgBounds.Height) / 2;
+            }
             void render(Graphics g)
             {
                 ImageAttributes imageAttributes = new ImageAttributes();
@@ -1061,7 +1090,7 @@ namespace MobiusEditor.Render
                     });
                     imageAttributes.SetColorMatrix(colorMatrix);
                 }
-                g.DrawImage(tile.Image, renderBounds, 0, 0, tile.OpaqueBounds.Width, tile.OpaqueBounds.Height, GraphicsUnit.Pixel, imageAttributes);
+                g.DrawImage(tile.Image, renderBounds, imgBounds.X, imgBounds.Y, imgBounds.Width, imgBounds.Height, GraphicsUnit.Pixel, imageAttributes);
             }
             return (renderBounds, render);
         }
@@ -1363,7 +1392,6 @@ namespace MobiusEditor.Render
 
         public static void RenderAllFootballAreas(Graphics graphics, Map map, Size tileSize, double tileScale, GameType gameType)
         {
-            // probably wouldn't work anyway; SS "road" would not be initialised.
             if (gameType != GameType.SoleSurvivor)
             {
                 return;
@@ -1376,12 +1404,8 @@ namespace MobiusEditor.Render
                     continue;
                 }
                 Point[] roadPoints = new Rectangle(waypoint.Point.Value.X - 1, waypoint.Point.Value.Y - 1, 4, 3).Points().ToArray();
-                foreach (Point p in roadPoints)
+                foreach (Point p in roadPoints.Where(p => map.Metrics.Contains(p)))
                 {
-                    //if (p == waypoint.Point.Value)
-                    //{
-                    //    continue;
-                    //}
                     footballPoints.Add(p);
                 }
             }
@@ -1411,7 +1435,7 @@ namespace MobiusEditor.Render
                     footballWayPoints.Add(waypoint);
                 }
             }
-            ITeamColor[] flagColors = map.FlagColors.ToArray();
+            ITeamColor[] flagColors = map.FlagColors;
             foreach (Waypoint wp in footballWayPoints)
             {
                 RenderWaypoint(gameType, false, tileSize, flagColors, wp).Item2(graphics);

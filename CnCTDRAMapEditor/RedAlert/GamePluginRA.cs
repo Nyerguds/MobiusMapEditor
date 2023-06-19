@@ -952,14 +952,13 @@ namespace MobiusEditor.RedAlert
                                 if (template != null)
                                 {
                                     TemplateType templateType = template.Type;
-                                    bool isRandom = (templateType.Flag & TemplateTypeFlag.RandomCell) != TemplateTypeFlag.None;
                                     bool tileOk = false;
                                     if (iconValue >= templateType.NumIcons)
                                     {
                                         errors.Add(String.Format("Template '{0}' at cell [{1},{2}] has an icon set ({3}) that is outside its icons range; clearing.", templateType.Name.ToUpper(), x, y, iconValue));
                                         modified = true;
                                     }
-                                    else if (!isRandom && templateType.IconMask != null && !templateType.IconMask[iconValue / templateType.IconWidth, iconValue % templateType.IconWidth])
+                                    else if (!templateType.IsRandom && templateType.IconMask != null && !templateType.IconMask[iconValue / templateType.IconWidth, iconValue % templateType.IconWidth])
                                     {
                                         // Attempt to automatically correct known errors like the bridges
                                         if (FixCorruptTiles(template, iconValue, out byte newIcon, out string type))

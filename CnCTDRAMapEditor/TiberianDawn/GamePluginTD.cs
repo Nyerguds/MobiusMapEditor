@@ -1992,7 +1992,6 @@ namespace MobiusEditor.TiberianDawn
             // Prevent loading of illegal tiles.
             if (templateType != null)
             {
-                bool isRandom = (templateType.Flag & TemplateTypeFlag.RandomCell) != TemplateTypeFlag.None;
                 if ((templateType.Flag & TemplateTypeFlag.Clear) != TemplateTypeFlag.None || (templateType.Flag & TemplateTypeFlag.Group) == TemplateTypeFlag.Group)
                 {
                     // No explicitly set Clear terrain allowed. Also no explicitly set versions allowed of the "group" dummy entries.
@@ -2010,7 +2009,7 @@ namespace MobiusEditor.TiberianDawn
                     modified = true;
                     templateType = null;
                 }
-                else if (!isRandom && templateType.IconMask != null && !templateType.IconMask[iconValue / templateType.IconWidth, iconValue % templateType.IconWidth])
+                else if (!templateType.IsRandom && templateType.IconMask != null && !templateType.IconMask[iconValue / templateType.IconWidth, iconValue % templateType.IconWidth])
                 {
                     errors.Add(String.Format("Template '{0}' at cell [{1},{2}] has an icon set ({3}) that is not part of its placeable cells; clearing.", templateType.Name.ToUpper(), x, y, iconValue));
                     modified = true;

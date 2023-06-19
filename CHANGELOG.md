@@ -471,3 +471,7 @@ Unreleased
 * Fixed bug where the Template tool and the "new from image" dialog used a tile size derived from the map scale factor instead of the preview scale factor to determine in which tile the user clicked.
 * Fixed bugs in text indicator scaling.
 * Added better fallbacks for missing graphics.
+* Fixed caching problems on randomisable tiles.
+* Fixed an issue where map tiles got the "contains random tiles" status assigned, but when loading a new theater this information wasn't cleared.
+* Added missing names for items that were lacking them in the available stings files.
+* Fixed multiplayer start position flags getting stretched to the full tile size instead of centered.

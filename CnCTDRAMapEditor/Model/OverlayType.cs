@@ -152,9 +152,11 @@ namespace MobiusEditor.Model
         public void Init(GameType gameType)
         {
             // Shows graphics source and not real internal name to mask different internal name for ROAD #2.
-            this.DisplayName = !String.IsNullOrEmpty(this.nameId) && !String.IsNullOrEmpty(Globals.TheGameTextManager[this.nameId])
-                ? Globals.TheGameTextManager[this.nameId] + " (" + this.GraphicsSource.ToUpperInvariant() + ")"
-                : this.Name.ToUpperInvariant();
+            bool idEmpty = String.IsNullOrEmpty(this.nameId);
+            String fetched = idEmpty? String.Empty : Globals.TheGameTextManager[this.nameId];
+            this.DisplayName = !idEmpty && !String.IsNullOrEmpty(fetched)
+                ? fetched + " (" + this.GraphicsSource.ToUpperInvariant() + ")"
+                : idEmpty ? this.GraphicsSource.ToUpperInvariant() : this.nameId;
 
             var oldImage = this.Thumbnail;
             var tileSize = Globals.PreviewTileSize;

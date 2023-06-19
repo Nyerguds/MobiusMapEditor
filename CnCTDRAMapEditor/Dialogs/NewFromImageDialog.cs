@@ -572,7 +572,7 @@ namespace MobiusEditor.Dialogs
             }
             // This code picks the single icon from the preview pane.
             TemplateType selected = SelectedTemplate;
-            bool isRandom = selected != null && (selected.Flag & TemplateTypeFlag.RandomCell) != TemplateTypeFlag.None;
+            bool isRandom = selected != null && selected.IsRandom;
             if (selected == null)
             {
                 SelectedIcon = null;

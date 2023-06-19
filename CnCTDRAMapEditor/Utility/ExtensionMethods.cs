@@ -247,6 +247,7 @@ namespace MobiusEditor.Utility
         {
             return FitToBoundingBox(image, maxWidth, maxHeight, Color.Transparent);
         }
+
         public static Bitmap FitToBoundingBox(this Image image, int maxWidth, int maxHeight, Color clearColor)
         {
             return FitToBoundingBox(image, new Rectangle(0, 0, image.Width, image.Height), maxWidth, maxHeight, clearColor);

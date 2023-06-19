@@ -399,6 +399,8 @@ namespace MobiusEditor
             gtm["TEXT_OVERLAY_CONCRETE_ROAD"] = "Concrete Road";
             gtm["TEXT_OVERLAY_CONCRETE_ROAD_FULL"] = "Concrete Road (full)";
             gtm["TEXT_OVERLAY_TIBERIUM"] = "Tiberium";
+            // Sole Survivor Teleporter
+            gtm["TEXT_OVERLAY_TELEPORTER"] = "Teleporter";
             // Haystacks. Extra ID added for classic support. Remaster only has the string "Haystack", so we'll just copy it.
             gtm["TEXT_STRUCTURE_TITLE_CIV12B"] = gtm["TEXT_STRUCTURE_TITLE_CIV12"];
             // "Gold" exists as "TEXT_CURRENCY_TACTICAL"
@@ -418,6 +420,8 @@ namespace MobiusEditor
             // TD Overlay
             gtm["TEXT_OVERLAY_CONCRETE_ROAD"] = "Concrete Road";
             gtm["TEXT_OVERLAY_CONCRETE_ROAD_FULL"] = "Concrete Road (full)";
+            // Sole Survivor Teleporter
+            gtm["TEXT_OVERLAY_TELEPORTER"] = "Teleporter";
             // TD Terrain
             gtm["TEXT_PROP_TITLE_CACTUS"] = "Cactus";
             // RA Misc
