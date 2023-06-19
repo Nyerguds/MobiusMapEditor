@@ -331,7 +331,11 @@ namespace MobiusEditor.Utility
                 // Make gray colour semitransparent on dummy graphics.
                 pal = new Color[currentlyLoadedPalette.Length];
                 Array.Copy(currentlyLoadedPalette, 0, pal, 0, pal.Length);
+                // EGA palette grayscale colours.
+                pal[12] = Color.FromArgb(0x80, pal[12]);
+                pal[13] = Color.FromArgb(0x80, pal[13]);
                 pal[14] = Color.FromArgb(0x80, pal[14]);
+                pal[15] = Color.FromArgb(0x80, pal[15]);
             }
             Bitmap bm = ImageUtils.BuildImage(data, width, height, width, PixelFormat.Format8bppIndexed, pal, null);
             tile = new Tile(bm, opaqueBounds);
@@ -344,16 +348,25 @@ namespace MobiusEditor.Utility
             // Dummy generation
             int length = width * height;
             byte[] dummyData = Enumerable.Repeat<Byte>(14, length).ToArray();
-            if (width > 2 && height > 3)
+            // Nevermind the internal border if it's too small.
+            if (width > 12 || height > 12)
             {
-                int offsX = Math.Max(width / 6, 1);
-                int offsY = Math.Max(height / 6, 1);
-                int smallW = Math.Max(width - offsX * 2, 1);
-                int smallH = Math.Max(height - offsY * 2, 1);
-                int smallLen = smallW * smallH;
-                byte[] dataSmall = Enumerable.Repeat<Byte>(15, smallLen).ToArray();
-                ImageUtils.PasteOn8bpp(dummyData, width, height, width, dataSmall, smallW, smallH, smallW, new Rectangle(offsX, offsY, smallW, smallH), null, true);
+                int offsGrX = width / 12;
+                int offsGrY = height / 12;
+                int smallGrW = width - offsGrX * 2;
+                int smallGrH = height - offsGrY * 2;
+                int smallGrLen = smallGrW * smallGrH;
+                byte[] dataSmallGr = Enumerable.Repeat<Byte>(13, smallGrLen).ToArray();
+                ImageUtils.PasteOn8bpp(dummyData, width, height, width, dataSmallGr, smallGrW, smallGrH, smallGrW, new Rectangle(offsGrX, offsGrY, smallGrW, smallGrH), null, true);
             }
+            int offsWhX =  width / 6;
+            int offsWhY =  height / 6;
+            int smallWhW = width - offsWhX * 2;
+            int smallWhH = height - offsWhY * 2;
+            int smallWhLen = smallWhW * smallWhH;
+            byte[] dataSmallWh = Enumerable.Repeat<Byte>(15, smallWhLen).ToArray();
+            ImageUtils.PasteOn8bpp(dummyData, width, height, width, dataSmallWh, smallWhW, smallWhH, smallWhW, new Rectangle(offsWhX, offsWhY, smallWhW, smallWhH), null, true);
+            // Fill frame daya object.
             ShapeFrameData frameData = new ShapeFrameData();
             frameData.Width = width;
             frameData.Height = height;

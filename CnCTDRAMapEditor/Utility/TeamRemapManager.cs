@@ -28,18 +28,19 @@ namespace MobiusEditor.Utility
         public static readonly TeamRemap RemapTdGood = new TeamRemap("GOOD", 176, 180, 176, new byte[] { 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191 });
         public static readonly TeamRemap RemapTdBadRed = new TeamRemap("BAD_STRUCTURE", 127, 123, 176, new byte[] { 127, 126, 125, 124, 122, 46, 120, 47, 125, 124, 123, 122, 42, 121, 120, 120 });
         public static readonly TeamRemap RemapTdBadGray = new TeamRemap("BAD_UNIT", 127, 123, 176, new byte[] { 161, 200, 201, 202, 204, 205, 206, 12, 201, 202, 203, 204, 205, 115, 198, 114 });
-        // The color name identifiers in the remaster are all out of wack.
+        // The color name identifiers in the remaster are all out of wack because they synced them with the RA ones.
         public static readonly TeamRemap RemapTdTealBlue = new TeamRemap("MULTI2", 2, 135, 176, new byte[] { 2, 119, 118, 135, 136, 138, 112, 12, 118, 135, 136, 137, 138, 139, 114, 112 });
         public static readonly TeamRemap RemapTdOrange = new TeamRemap("MULTI5", 24, 26, 176, new byte[] { 24, 25, 26, 27, 29, 31, 46, 47, 26, 27, 28, 29, 30, 31, 43, 47 });
         public static readonly TeamRemap RemapTdGreen = new TeamRemap("MULTI4", 167, 159, 176, new byte[] { 5, 165, 166, 167, 159, 142, 140, 199, 166, 167, 157, 3, 159, 143, 142, 141 });
         public static readonly TeamRemap RemapTdLtBlue = new TeamRemap("MULTI6", 201, 203, 176, new byte[] { 161, 200, 201, 202, 204, 205, 206, 12, 201, 202, 203, 204, 205, 115, 198, 114 });
         public static readonly TeamRemap RemapTdYellow = new TeamRemap("MULTI1", 5, 157, 176, new byte[] { 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191 });
         public static readonly TeamRemap RemapTdRed = new TeamRemap("MULTI3", 127, 123, 176, new byte[] { 127, 126, 125, 124, 122, 46, 120, 47, 125, 124, 123, 122, 42, 121, 120, 120 });
-        // Extra colours added for flags and unowned buildings. With thanks to Kilkakon.
+        // Extra colours added for flags. With thanks to Kilkakon.
         public static readonly TeamRemap RemapTdBrown = new TeamRemap("MULTI7", 146, 209, 176, new byte[] { 146, 152, 209, 151, 173, 150, 173, 183, 146, 152, 209, 151, 173, 150, 173, 183 });
         public static readonly TeamRemap RemapTdBurg = new TeamRemap("MULTI8", 214, 213, 176, new byte[] { 132, 133, 134, 213, 214, 121, 120, 12, 133, 134, 213, 214, 121, 174, 120, 199 });
+        // 'Too fleshy' according to Chad1233, so I took Burgundy instead.
         //public static readonly TeamRemap RemapTdPink = new TeamRemap("MULTI8", 217, 218, 176, new byte[] { 17, 17, 217, 218, 209, 213, 174, 120, 217, 217, 218, 209, 213, 214, 214, 174 });
-        //public static readonly TeamRemap RemapTdGray = new TeamRemap("NONE", 199, 199, 176, new byte[] { 14, 195, 196, 13, 169, 198, 199, 112, 14, 195, 196, 13, 169, 198, 199, 112 });
+        // For unowned buildings on the rebuild list.
         public static readonly TeamRemap RemapTdBlack = new TeamRemap("NONE", 199, 199, 176, new byte[] { 195, 196, 196, 13, 169, 198, 199, 112, 196, 13, 13, 169, 154, 198, 198, 199 });
 
         private static readonly Dictionary<string, TeamRemap> RemapsTd;
