@@ -37,8 +37,8 @@ namespace MobiusEditor.Utility
         public static readonly TeamRemap RemapTdRed = new TeamRemap("MULTI3", 127, 123, 176, new byte[] { 127, 126, 125, 124, 122, 46, 120, 47, 125, 124, 123, 122, 42, 121, 120, 120 });
         // Extra colours added for flags and unowned buildings. With thanks to Kilkakon.
         public static readonly TeamRemap RemapTdBrown = new TeamRemap("MULTI7", 146, 209, 176, new byte[] { 146, 152, 209, 151, 173, 150, 173, 183, 146, 152, 209, 151, 173, 150, 173, 183 }); // Brown
-        //public static readonly TeamRemap RemapTdBurg = new TeamRemap("Burgudy", 214, 213, 176, new byte[] { 132, 133, 134, 213, 214, 121, 120, 12, 133, 134, 213, 214, 121, 174, 120, 199 }); // Burgundy
-        public static readonly TeamRemap RemapTdPink = new TeamRemap("MULTI8", 217, 218, 176, new byte[] { 17, 17, 217, 218, 209, 213, 174, 120, 217, 217, 218, 209, 213, 214, 214, 174 }); // Pink
+        public static readonly TeamRemap RemapTdBurg = new TeamRemap("MULTI8", 214, 213, 176, new byte[] { 132, 133, 134, 213, 214, 121, 120, 12, 133, 134, 213, 214, 121, 174, 120, 199 }); // Burgundy
+        //public static readonly TeamRemap RemapTdPink = new TeamRemap("MULTI8", 217, 218, 176, new byte[] { 17, 17, 217, 218, 209, 213, 174, 120, 217, 217, 218, 209, 213, 214, 214, 174 }); // Pink
         public static readonly TeamRemap RemapTdBlack = new TeamRemap("NONE", 199, 199, 176, new byte[] { 14, 195, 196, 13, 169, 198, 199, 112, 14, 195, 196, 13, 169, 198, 199, 112 }); // Black
 
         private static readonly Dictionary<string, TeamRemap> RemapsTd;
@@ -51,7 +51,6 @@ namespace MobiusEditor.Utility
         }
 
         private Dictionary<string, TeamRemap> remapsRa = new Dictionary<string, TeamRemap>();
-        private byte remapsRaBaseIndex = 0;
         private GameType currentlyLoadedGameType;
         private Color[] currentlyLoadedPalette;
         private byte currentRemapBaseIndex = 0;
@@ -118,11 +117,9 @@ namespace MobiusEditor.Utility
                 case GameType.TiberianDawn:
                 case GameType.SoleSurvivor:
                     currentRemaps = RemapsTd;
-                    this.currentRemapBaseIndex = RemapTdGood.UnitRadarColor;
                     break;
                 case GameType.RedAlert:
                     currentRemaps = this.remapsRa;
-                    this.currentRemapBaseIndex = this.remapsRaBaseIndex;
                     break;
                 default:
                     return null;
@@ -160,14 +157,13 @@ namespace MobiusEditor.Utility
                 }
             }
             // CPS file found and decoded successfully; re-initialise RA remap data.
-            this.remapsRaBaseIndex = 0;
             this.remapsRa.Clear();
             int height = Math.Min(200, this.remapsColorsRa.Length);
             Dictionary<string, TeamRemap> raRemapColors = new Dictionary<string, TeamRemap>();
             byte[] remapSource = new byte[16];
             Array.Copy(cpsData, 0, remapSource, 0, 16);
             // Taking brightest colour here, not unit/structure colour.
-            this.remapsRaBaseIndex = remapSource[0];
+            this.currentRemapBaseIndex = remapSource[0];
             for (int y = 0; y < height; ++y)
             {
                 int ptr = 320 * y;
@@ -203,10 +199,23 @@ namespace MobiusEditor.Utility
 
         public void Reset(GameType gameType, TheaterType theater)
         {
+            // Need to be re-fetched from palette.cps after the reset.
             this.remapsRa.Clear();
-            this.remapsRaBaseIndex = 0;
             this.currentlyLoadedGameType = gameType;
             this.currentlyLoadedPalette = GetPaletteForTheater(this.mixfileManager, theater);
+            switch (this.currentlyLoadedGameType)
+            {
+                case GameType.TiberianDawn:
+                case GameType.SoleSurvivor:
+                    this.currentRemapBaseIndex = RemapTdGood.UnitRadarColor;
+                    break;
+                case GameType.RedAlert:
+                    this.currentRemapBaseIndex = 80;
+                    break;
+                default:
+                    this.currentRemapBaseIndex = 0;
+                    break;
+            }
         }
 
         public static Color[] GetPaletteForTheater(IArchiveManager archiveManager, TheaterType theater)

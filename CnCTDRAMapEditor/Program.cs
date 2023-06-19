@@ -193,9 +193,7 @@ namespace MobiusEditor
             // Check files
             modpaths.TryGetValue(GameType.TiberianDawn, out string[] tdModPaths);
             modpaths.TryGetValue(GameType.SoleSurvivor, out string[] ssModPaths);
-            if (tdModPaths == null) ssModPaths = new string[0];
-            if (ssModPaths == null) ssModPaths = new string[0];
-            bool tdSsEqual = ssModPaths.SequenceEqual(tdModPaths) && tdPathFull.Equals(ssPathFull);
+            bool tdSsEqual = (ssModPaths).SequenceEqual(tdModPaths) && tdPathFull.Equals(ssPathFull);
             mfm.ExpandModPaths = tdModPaths;
             mfm.Reset(GameType.TiberianDawn, null);
             List<String> loadedFiles = mfm.ToList();

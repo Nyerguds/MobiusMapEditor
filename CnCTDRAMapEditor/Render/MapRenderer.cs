@@ -375,8 +375,7 @@ namespace MobiusEditor.Render
                 );
                 imageAttributes.SetColorMatrix(colorMatrix);
             }
-            string name = smudge.Type.Name;
-            bool success = Globals.TheTilesetManager.GetTileData("blargh", smudge.Icon, out Tile tile, true, false);
+            bool success = Globals.TheTilesetManager.GetTileData(smudge.Type.Name, smudge.Icon, out Tile tile, true, false);
             if (tile != null && tile.Image != null)
             {
                 Rectangle smudgeBounds = RenderBounds(tile.Image.Size, new Size(1, 1), tileScale);

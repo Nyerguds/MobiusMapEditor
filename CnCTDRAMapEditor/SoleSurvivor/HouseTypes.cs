@@ -34,10 +34,10 @@ namespace MobiusEditor.SoleSurvivor
         public static readonly HouseType Team3 = new HouseType(8, "Team 3", "MULTI4"); // Green
         public static readonly HouseType Team4 = new HouseType(9, "Team 4", "BAD_UNIT"); // Gray
         // Guess I'll add these too? Kind of useless though...
-        public static readonly HouseType Multi1 = new HouseType(10, "Multi1", WaypointFlag.PlayerStart1, "MULTI6"); // Teal
+        public static readonly HouseType Multi1 = new HouseType(10, "Multi1", WaypointFlag.PlayerStart1, "MULTI2"); // Blue (originally teal)
         public static readonly HouseType Multi2 = new HouseType(11, "Multi2", WaypointFlag.PlayerStart2, "MULTI5"); // Orange
         public static readonly HouseType Multi3 = new HouseType(12, "Multi3", WaypointFlag.PlayerStart3, "MULTI4"); // Green
-        public static readonly HouseType Multi4 = new HouseType(13, "Multi4", WaypointFlag.PlayerStart4, "BAD_UNIT"); // Gray
+        public static readonly HouseType Multi4 = new HouseType(13, "Multi4", WaypointFlag.PlayerStart4, "MULTI6"); // Teal (originally gray)
         public static readonly HouseType Multi5 = new HouseType(14, "Multi5", WaypointFlag.PlayerStart5, "MULTI1"); // Yellow
         public static readonly HouseType Multi6 = new HouseType(15, "Multi6", WaypointFlag.PlayerStart6, "MULTI3"); // Red
         public static readonly HouseType Multi7 = new HouseType(16, "Multi7", WaypointFlag.PlayerStart7, "MULTI3"); // Red

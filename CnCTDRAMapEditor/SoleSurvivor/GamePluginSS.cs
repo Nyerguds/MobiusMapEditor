@@ -118,26 +118,12 @@ namespace MobiusEditor.SoleSurvivor
                 bld.PowerUsage = 0;
                 bld.PowerProduction = 0;
             }
-            ITeamColor[] flagColors = new ITeamColor[8];
-            foreach (HouseType house in houseTypes)
-            {
-                int mpId = Waypoint.GetMpIdFromFlag(house.MultiplayIdentifier);
-                if (mpId == -1)
-                {
-                    continue;
-                }
-                flagColors[mpId] = Globals.TheTeamColorManager[house.UnitTeamColor];
-            }
-            // Multi7: the dark blue that's unused in SS because Multi4 uses BAD_UNITS instead.
-            flagColors[6] = Globals.TheTeamColorManager["MULTI2"];
-            // Multi8: RA Purple
-            flagColors[7] = Globals.TheTeamColorManager["PURPLE"];
             List<string> movies = movieTypesTD.Concat(movieTypesSole).ToList();
             ExplorerComparer sorter = new ExplorerComparer();
             movies.Sort(sorter);
             Size mapSize = !megaMap ? Constants.MaxSize : Constants.MaxSizeMega;
             Map = new Map(basicSection, null, mapSize, typeof(TiberianDawn.House), houseTypes,
-                flagColors, TheaterTypes.GetTypes(), TemplateTypes.GetTypes(),
+                null, TheaterTypes.GetTypes(), TemplateTypes.GetTypes(),
                 TerrainTypes.GetTypes(), OverlayTypes.GetTypes(), SmudgeTypes.GetTypes(Globals.ConvertCraters),
                 EventTypes.GetTypes(), cellEventTypes, unitEventTypes, structureEventTypes, terrainEventTypes,
                 ActionTypes.GetTypes(), cellActionTypes, unitActionTypes, structureActionTypes, terrainActionTypes,
@@ -291,6 +277,25 @@ namespace MobiusEditor.SoleSurvivor
         public override string EvaluateBriefing(string briefing)
         {
             return null;
+        }
+
+        public override ITeamColor[] GetFlagColors()
+        {
+            ITeamColor[] flagColors = new ITeamColor[8];
+            foreach (HouseType house in Map.HouseTypes)
+            {
+                int mpId = Waypoint.GetMpIdFromFlag(house.MultiplayIdentifier);
+                if (mpId == -1)
+                {
+                    continue;
+                }
+                flagColors[mpId] = Globals.TheTeamColorManager[house.UnitTeamColor];
+            }
+            // Multi7: the dark blue that's unused in SS because Multi4 uses BAD_UNITS instead.
+            flagColors[6] = Globals.TheTeamColorManager["MULTI7"];
+            // Multi8: RA Purple
+            flagColors[7] = Globals.TheTeamColorManager["MULTI8"];
+            return flagColors;
         }
     }
 }

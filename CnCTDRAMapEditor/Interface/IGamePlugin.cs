@@ -149,5 +149,11 @@ namespace MobiusEditor.Interface
         /// <param name="briefing">The briefing to check</param>
         /// <returns>Null if everything is okay, otherwise any issues to show on the user interface.</returns>
         string EvaluateBriefing(string briefing);
+
+        /// <summary>
+        /// Re-initialises the flag colors for this game.
+        /// </summary>
+        /// <returns></returns>
+        ITeamColor[] GetFlagColors();
     }
 }

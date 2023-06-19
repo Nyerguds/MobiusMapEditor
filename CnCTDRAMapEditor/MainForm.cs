@@ -1342,7 +1342,6 @@ namespace MobiusEditor
             Globals.TheArchiveManager.ExpandModPaths = modPaths;
             Globals.TheArchiveManager.Reset(gameType, theaterType);
             Globals.TheGameTextManager.Reset(gameType);
-            //Globals.TheTextureManager.Reset(gameType, theaterType);
             Globals.TheTilesetManager.Reset(theaterType);
             Globals.TheTeamColorManager.Reset(gameType, theaterType);
             // Load game-specific data
@@ -1362,6 +1361,8 @@ namespace MobiusEditor
                 Globals.TheTeamColorManager.Load(@"DATA\XML\CNCTDTEAMCOLORS.XML");
                 AddTeamColorsTD(Globals.TheTeamColorManager);
             }
+            // Needs to be done after the whole init.
+            plugin.Map.FlagColors = plugin.GetFlagColors();
             return plugin;
         }
 

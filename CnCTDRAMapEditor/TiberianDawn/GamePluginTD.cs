@@ -386,23 +386,9 @@ namespace MobiusEditor.TiberianDawn
             string[] unitActionTypes = { };
             string[] structureActionTypes = { };
             string[] terrainActionTypes = { };
-            ITeamColor[] flagColors = new ITeamColor[8];
-            foreach (HouseType house in houseTypes)
-            {
-                int mpId = Waypoint.GetMpIdFromFlag(house.MultiplayIdentifier);
-                if (mpId == -1)
-                {
-                    continue;
-                }
-                flagColors[mpId] = Globals.TheTeamColorManager[house.UnitTeamColor];
-            }
-            // Metallic light blue
-            flagColors[6] = Globals.TheTeamColorManager["MULTI7"];
-            // RA Purple
-            flagColors[7] = Globals.TheTeamColorManager["MULTI8"];
             Size mapSize = !megaMap ? Constants.MaxSize : Constants.MaxSizeMega;
             Map = new Map(basicSection, null, mapSize, typeof(House), houseTypes,
-                flagColors, TheaterTypes.GetTypes(), TemplateTypes.GetTypes(),
+                null, TheaterTypes.GetTypes(), TemplateTypes.GetTypes(),
                 TerrainTypes.GetTypes(), OverlayTypes.GetTypes(), SmudgeTypes.GetTypes(Globals.ConvertCraters),
                 EventTypes.GetTypes(), cellEventTypes, unitEventTypes, structureEventTypes, terrainEventTypes,
                 ActionTypes.GetTypes(), cellActionTypes, unitActionTypes, structureActionTypes, terrainActionTypes,
@@ -3220,6 +3206,25 @@ namespace MobiusEditor.TiberianDawn
                 message = "Classic Tiberian Dawn briefings cannot exceed " + maxBriefLengthClassic + " characters. This includes line breaks.\n\nThis will not affect the mission when playing in the Remaster, but the briefing will be truncated when playing in the original game.";
             }
             return message;
+        }
+
+        public virtual ITeamColor[] GetFlagColors()
+        {
+            ITeamColor[] flagColors = new ITeamColor[8];
+            foreach (HouseType house in Map.HouseTypes)
+            {
+                int mpId = Waypoint.GetMpIdFromFlag(house.MultiplayIdentifier);
+                if (mpId == -1)
+                {
+                    continue;
+                }
+                flagColors[mpId] = Globals.TheTeamColorManager[house.UnitTeamColor];
+            }
+            // Metallic light blue
+            flagColors[6] = Globals.TheTeamColorManager["MULTI7"];
+            // RA Purple
+            flagColors[7] = Globals.TheTeamColorManager["MULTI8"];
+            return flagColors;
         }
 
         protected void BasicSection_PropertyChanged(object sender, PropertyChangedEventArgs e)

@@ -418,18 +418,8 @@ namespace MobiusEditor.RedAlert
             string[] structureActionTypes = { ActionTypes.TACTION_DESTROY_OBJECT };
             string[] terrainActionTypes = { };
 
-            ITeamColor[] flagColors = new ITeamColor[8];
-            foreach (HouseType house in houseTypes)
-            {
-                int mpId = Waypoint.GetMpIdFromFlag(house.MultiplayIdentifier);
-                if (mpId == -1)
-                {
-                    continue;
-                }
-                flagColors[mpId] = Globals.TheTeamColorManager[house.UnitTeamColor];
-            }
 
-            Map = new Map(basicSection, null, Constants.MaxSize, typeof(House), houseTypes, flagColors,
+            Map = new Map(basicSection, null, Constants.MaxSize, typeof(House), houseTypes, null,
                 TheaterTypes.GetTypes(), TemplateTypes.GetTypes(),
                 TerrainTypes.GetTypes(), OverlayTypes.GetTypes(), SmudgeTypes.GetTypes(Globals.ConvertCraters),
                 EventTypes.GetTypes(), cellEventTypes, unitEventTypes, structureEventTypes, terrainEventTypes,
@@ -3653,6 +3643,21 @@ namespace MobiusEditor.RedAlert
                 message += "Classic Red Alert briefings cannot exceed " + maxBriefLengthClassic + " characters. This includes line breaks.\n\nThis will not affect the mission when playing in the Remaster, but the briefing will be truncated when playing in the original game.";
             }
             return message;
+        }
+
+        public ITeamColor[] GetFlagColors()
+        {
+            ITeamColor[] flagColors = new ITeamColor[8];
+            foreach (HouseType house in Map.HouseTypes)
+            {
+                int mpId = Waypoint.GetMpIdFromFlag(house.MultiplayIdentifier);
+                if (mpId == -1)
+                {
+                    continue;
+                }
+                flagColors[mpId] = Globals.TheTeamColorManager[house.UnitTeamColor];
+            }
+            return flagColors;
         }
 
         private void BasicSection_PropertyChanged(object sender, PropertyChangedEventArgs e)

@@ -194,7 +194,7 @@ namespace MobiusEditor.Model
 
         public readonly HouseType[] HouseTypesIncludingNone;
 
-        public readonly IEnumerable<ITeamColor> FlagColors;
+        public ITeamColor[] FlagColors { get; set; }
 
         public readonly List<TheaterType> TheaterTypes;
 
@@ -404,7 +404,7 @@ namespace MobiusEditor.Model
         /// <param name="tiberiumOrGoldValue">The value for the basic resource on the map.</param>
         /// <param name="gemValue">The value for the high-value resource on the map.</param>
         public Map(BasicSection basicSection, TheaterType theater, Size cellSize, Type houseType, IEnumerable<HouseType> houseTypes,
-            IEnumerable<ITeamColor> flagColors, IEnumerable<TheaterType> theaterTypes, IEnumerable<TemplateType> templateTypes,
+            ITeamColor[] flagColors, IEnumerable<TheaterType> theaterTypes, IEnumerable<TemplateType> templateTypes,
             IEnumerable<TerrainType> terrainTypes, IEnumerable<OverlayType> overlayTypes, IEnumerable<SmudgeType> smudgeTypes,
             IEnumerable<string> eventTypes, IEnumerable<string> cellEventTypes, IEnumerable<string> unitEventTypes, IEnumerable<string> buildingEventTypes, IEnumerable<string> terrainEventTypes,
             IEnumerable<string> actionTypes, IEnumerable<string> cellActionTypes, IEnumerable<string> unitActionTypes, IEnumerable<string> buildingActionTypes, IEnumerable<string> terrainActionTypes,
@@ -419,7 +419,7 @@ namespace MobiusEditor.Model
             this.HouseType = houseType;
             this.HouseTypesIncludingNone = houseTypes.ToArray();
             this.HouseTypes = this.HouseTypesIncludingNone.Where(h => h.ID >= 0).ToArray();
-            this.FlagColors = flagColors.ToArray();
+            this.FlagColors = flagColors == null ? new ITeamColor[8] : flagColors;
             this.TheaterTypes = new List<TheaterType>(theaterTypes);
             this.TemplateTypes = new List<TemplateType>(templateTypes);
             this.TerrainTypes = new List<TerrainType>(terrainTypes);
