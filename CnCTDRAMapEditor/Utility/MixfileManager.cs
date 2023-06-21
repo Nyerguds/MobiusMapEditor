@@ -62,13 +62,17 @@ namespace MobiusEditor.Utility
 
         public bool FileExists(String path)
         {
+            if (disposedValue)
+            {
+                throw new ObjectDisposedException(GetType().FullName);
+            }
             // TODO check mod paths first? Not sure; files tend to need mixfiles
             using (Stream str = this.OpenFile(path))
             {
                 return str != null;
             }
         }
-        
+
         public bool LoadArchive(GameType gameType, String archivePath, bool isTheater)
         {
             return this.LoadArchive(gameType, archivePath, isTheater, false, false, false);
@@ -76,6 +80,10 @@ namespace MobiusEditor.Utility
 
         public bool LoadArchive(GameType gameType, String archivePath, bool isTheater, bool isContainer, bool canBeEmbedded, bool canUseNewFormat)
         {
+            if (disposedValue)
+            {
+                throw new ObjectDisposedException(GetType().FullName);
+            }
             // Doesn't really 'load' the archive, but instead registers it as known filename for this game type.
             // The actual loading won't happen until a Reset(...) is executed to specify the game to initialise.
             if (!gameFolders.TryGetValue(gameType, out string gamePath))
@@ -107,12 +115,25 @@ namespace MobiusEditor.Utility
             return OpenFile(path, currentGameType, currentMixFileInfo);
         }
 
+        public Stream OpenFileClassic(String path)
+        {
+            return OpenFile(path, currentGameType, currentMixFileInfo);
+        }
+
         private Stream OpenFile(String path, GameType gameType, List<MixInfo> mixFilesInfo)
         {
+            if (disposedValue)
+            {
+                throw new ObjectDisposedException(GetType().FullName);
+            }
             // Game folders dictionary determines which games are "known" to the system.
             if (!gameFolders.TryGetValue(gameType, out string gamePath))
             {
                 return null;
+            }
+            if (!Path.IsPathRooted(gamePath))
+            {
+                gamePath = Path.Combine(applicationPath, gamePath);
             }
             // 1. Loose files in game files path
             string loosePath = Path.Combine(gamePath, path);
@@ -148,8 +169,13 @@ namespace MobiusEditor.Utility
             return null;
         }
 
+
         public void Reset(GameType gameType, TheaterType theater)
         {
+            if (disposedValue)
+            {
+                throw new ObjectDisposedException(GetType().FullName);
+            }
             String theaterMixFile = theater == null ? null : theater.ClassicTileset + ".mix";
             // Clean up previously loaded files.
             if (currentMixFiles != null)
@@ -172,6 +198,10 @@ namespace MobiusEditor.Utility
             if (!gameFolders.TryGetValue(gameType, out string gamePath))
             {
                 return;
+            }
+            if (!Path.IsPathRooted(gamePath))
+            {
+                gamePath = Path.Combine(applicationPath, gamePath);
             }
             List<MixInfo> newMixFileInfo = gameArchives.Where(kv => kv.Key == gameType).SelectMany(kv => kv.Value).ToList();
             Dictionary<string, Mixfile> foundMixFiles = new Dictionary<string, Mixfile>();
@@ -257,11 +287,19 @@ namespace MobiusEditor.Utility
 
         public IEnumerator<string> GetEnumerator()
         {
+            if (disposedValue)
+            {
+                throw new ObjectDisposedException(GetType().FullName);
+            }
             return currentMixNames.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
+            if (disposedValue)
+            {
+                throw new ObjectDisposedException(GetType().FullName);
+            }
             return this.GetEnumerator();
         }
 

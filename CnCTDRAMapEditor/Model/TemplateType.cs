@@ -18,6 +18,7 @@ using MobiusEditor.Utility;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 
 namespace MobiusEditor.Model
@@ -49,6 +50,18 @@ namespace MobiusEditor.Model
         HasEquivalents = (1 << 5),
     }
 
+    public enum LandType
+    {
+        Empty = 0x00, // Filler tile, or [Clear] terrain on 1x1 sets with multiple tiles.
+        Clear = 0x03, // [Clear] Normal clear terrain.
+        Beach = 0x06, // [Beach] Sandy beach. Can''t be built on.
+        Rock  = 0x08, // [Rock]  Impassable terrain.
+        Road  = 0x09, // [Road]  Units move faster on this terrain.
+        Water = 0x0A, // [Water] Ships can travel over this.
+        River = 0x0B, // [River] Ships normally can''t travel over this.
+        Rough = 0x0E, // [Rough] Rough terrain. Can''t be built on
+    }
+
     public class TemplateType : IBrowsableType
     {
         public ushort ID { get; private set; }
@@ -65,7 +78,9 @@ namespace MobiusEditor.Model
         public Bitmap Thumbnail { get; set; }
         public TheaterType[] Theaters { get; private set; }
         public TemplateTypeFlag Flag { get; private set; }
-        public Dictionary<string, bool[,]> MaskOverrides { get; private set; }
+        public Dictionary<string, bool[]> MaskOverrides { get; private set; }
+        private LandType[] landOverrides;
+        public LandType[] LandTypes { get; private set; }
         private bool extraTilesFoundOn1x1;
         public bool IsRandom => (this.extraTilesFoundOn1x1 || (this.Flag & TemplateTypeFlag.RandomCell) != TemplateTypeFlag.None)
                                     && this.IconWidth == 1 && this.IconHeight == 1;
@@ -92,8 +107,7 @@ namespace MobiusEditor.Model
         /// <param name="iconHeight">Height in cells.</param>
         /// <param name="theaters">Theaters that contain this tile.</param>
         /// <param name="flag">Indicates special terrain types.</param>
-        /// <param name="maskOverrides">Mask override for tiles that contain too many graphics in the Remaster. Indices with '0' are removed from the tiles. Spaces are ignored and can be added for visual separation.</param>
-        public TemplateType(ushort id, string name, int iconWidth, int iconHeight, TheaterType[] theaters, TemplateTypeFlag flag)
+        public TemplateType(ushort id, string name, int iconWidth, int iconHeight, TheaterType[] theaters, string landOverride, TemplateTypeFlag flag)
         {
             ID = id;
             Name = name;
@@ -104,7 +118,11 @@ namespace MobiusEditor.Model
             ThumbnailIconHeight = IconHeight;
             Theaters = theaters;
             Flag = flag;
-            MaskOverrides = new Dictionary<string, bool[,]>(StringComparer.OrdinalIgnoreCase);
+            MaskOverrides = new Dictionary<string, bool[]>(StringComparer.OrdinalIgnoreCase);
+            if (landOverride != null)
+            {
+                this.landOverrides = landOverride == null ? null : GetLandTypesFromString(landOverride);
+            }
             GroupTiles = new string[0];
         }
 
@@ -118,8 +136,8 @@ namespace MobiusEditor.Model
         /// <param name="theaters">Theaters that contain this tile.</param>
         /// <param name="flag">Indicates special terrain types.</param>
         /// <param name="maskOverrides">Mask override per theater, for tiles that contain differing numbers of tiles in different theaters, or contain too many graphics in the Remaster. Indices with '0' are removed from the tiles. Spaces are ignored and can be added for visual separation.</param>
-        public TemplateType(ushort id, string name, int iconWidth, int iconHeight, TheaterType[] theaters, TemplateTypeFlag flag, string[] maskOverrides)
-            : this(id, name, iconWidth, iconHeight, theaters, flag)
+        public TemplateType(ushort id, string name, int iconWidth, int iconHeight, TheaterType[] theaters, string landOverride, TemplateTypeFlag flag, string[] maskOverrides)
+            : this(id, name, iconWidth, iconHeight, theaters, landOverride, flag)
         {
             bool isRandom = NumIcons == 1 && (flag & TemplateTypeFlag.RandomCell) != TemplateTypeFlag.None;
             // Mask override for tiles that contain too many graphics in the Remaster. Indices with '0' are removed from the tiles.
@@ -131,10 +149,10 @@ namespace MobiusEditor.Model
                 {
                     string maskOverride = maskOverrides[i];
                     string theater = forAll ? String.Empty : theaters[i].Name;
-                    bool[,] mask = null;
+                    bool[] mask = null;
                     if (!String.IsNullOrEmpty(maskOverride))
                     {
-                        mask = GeneralUtils.GetMaskFromString(iconWidth, iconHeight, maskOverride);
+                        mask = GeneralUtils.GetMaskFromString(iconWidth * iconHeight, maskOverride, '0', ' ');
                     }
                     if (mask != null)
                     {
@@ -156,7 +174,7 @@ namespace MobiusEditor.Model
         /// <param name="theaters">Theaters that contain this tile.</param>
         /// <param name="groupName">Name of the group entry it belongs to.</param>
         public TemplateType(ushort id, string name, TheaterType[] theaters, string groupName)
-            : this(id, name, 1, 1, theaters, TemplateTypeFlag.IsGrouped)
+            : this(id, name, 1, 1, theaters, null, TemplateTypeFlag.IsGrouped)
         {
             GroupTiles = new string[] { groupName };
         }
@@ -170,7 +188,7 @@ namespace MobiusEditor.Model
         /// <param name="asGroup">True to create this tile as group for containing other 1x1 types. Needs 'containedTiles' to be filled in.</param>
         /// <param name="containedTiles">The tiles contained in this group entry.</param>
         public TemplateType(ushort id, string name, TheaterType[] theaters, bool asGroup, string[] containedTiles)
-            : this(id, name, 1, 1, theaters, asGroup ? TemplateTypeFlag.Group : TemplateTypeFlag.RandomCell)
+            : this(id, name, 1, 1, theaters, null, asGroup ? TemplateTypeFlag.Group : TemplateTypeFlag.RandomCell)
         {
             if (asGroup)
             {
@@ -186,14 +204,14 @@ namespace MobiusEditor.Model
         /// <param name="iconWidth">Width in cells.</param>
         /// <param name="iconHeight">Height in cells.</param>
         /// <param name="theaters">Theaters that contain this tile.</param>
-        /// <param name="maskOverrides">Mask override for tiles that contain too many graphics in the Remaster. Indices with '0' are removed from the tiles. Spaces are ignored and can be added for visual separation.</param>
-        /// <param name="equivalentOffset"></param>
-        /// <param name="equivalentTiles"></param>
-        public TemplateType(ushort id, string name, int iconWidth, int iconHeight, TheaterType[] theaters, string maskOverrides, Point equivalentOffset, string[] equivalentTiles)
-            : this(id, name, iconWidth, iconHeight, theaters, maskOverrides == null ? null : new[] { maskOverrides }, equivalentOffset, equivalentTiles)
+        /// <param name="maskOverride">Mask override for tiles that contain too many graphics in the Remaster. Indices with '0' are removed from the tiles. Spaces are ignored and can be added for visual separation.</param>
+        /// <param name="equivalentOffset">Thez position this tileset should be placed on when used as equivalent.</param>
+        /// <param name="equivalentTiles">Equivalent tiles that can be placed down when drag-placing multiple of this.</param>
+        public TemplateType(ushort id, string name, int iconWidth, int iconHeight, TheaterType[] theaters, string landOverride, string maskOverride, Point equivalentOffset, string[] equivalentTiles)
+            : this (id, name, iconWidth, iconHeight, theaters, landOverride, maskOverride == null ? null : new[] { maskOverride }, equivalentOffset, equivalentTiles)
         {
-
         }
+
         /// <summary>
         /// Creates a TemplateType object.
         /// </summary>
@@ -205,8 +223,8 @@ namespace MobiusEditor.Model
         /// <param name="maskOverrides">Mask override for tiles that contain too many graphics in the Remaster. Indices with '0' are removed from the tiles. Spaces are ignored and can be added for visual separation.</param>
         /// <param name="equivalentOffset">Thez position this tileset should be placed on when used as equivalent.</param>
         /// <param name="equivalentTiles">Equivalent tiles that can be placed down when drag-placing multiple of this.</param>
-        public TemplateType(ushort id, string name, int iconWidth, int iconHeight, TheaterType[] theaters, string[] maskOverrides, Point equivalentOffset, string[] equivalentTiles)
-            : this(id, name, iconWidth, iconHeight, theaters, TemplateTypeFlag.None, maskOverrides)
+        public TemplateType(ushort id, string name, int iconWidth, int iconHeight, TheaterType[] theaters, string landOverride, string[] maskOverrides, Point equivalentOffset, string[] equivalentTiles)
+            : this(id, name, iconWidth, iconHeight, theaters, landOverride, TemplateTypeFlag.None, maskOverrides)
         {
             // prevent list with only the item itself from being accepted
             List<string> equivs = equivalentTiles == null ? null : equivalentTiles.Distinct(StringComparer.OrdinalIgnoreCase).Where(t => t != null && !t.Equals(name, StringComparison.OrdinalIgnoreCase)).ToList();
@@ -227,9 +245,9 @@ namespace MobiusEditor.Model
         /// <param name="iconWidth">Width in cells.</param>
         /// <param name="iconHeight">Height in cells.</param>
         /// <param name="theaters">Theaters that contain this tile.</param>
-        /// <param name="maskOverrides">Mask override for tiles that contain too many graphics in the Remaster. Indices with '0' are removed from the tiles. Spaces are ignored and can be added for visual separation.</param>
-        public TemplateType(ushort id, string name, int iconWidth, int iconHeight, TheaterType[] theaters, String maskOverrides, String[] equivalentTiles)
-            : this(id, name, iconWidth, iconHeight, theaters, maskOverrides == null ? null : new[] { maskOverrides }, Point.Empty, equivalentTiles)
+        /// <param name="maskOverride">Mask override for tiles that contain too many graphics in the Remaster. Indices with '0' are removed from the tiles. Spaces are ignored and can be added for visual separation.</param>
+        public TemplateType(ushort id, string name, int iconWidth, int iconHeight, TheaterType[] theaters, string landOverride, string maskOverride, string[] equivalentTiles)
+            : this(id, name, iconWidth, iconHeight, theaters, landOverride, maskOverride == null ? null : new[] { maskOverride }, Point.Empty, equivalentTiles)
         {
         }
 
@@ -242,8 +260,8 @@ namespace MobiusEditor.Model
         /// <param name="iconHeight">Height in cells.</param>
         /// <param name="theaters">Theaters that contain this tile.</param>
         /// <param name="maskOverrides">Mask override per theater, for tiles that contain differing numbers of tiles in different theaters, or contain too many graphics in the Remaster. Indices with '0' are removed from the tiles. Spaces are ignored and can be added for visual separation.</param>
-        public TemplateType(ushort id, string name, int iconWidth, int iconHeight, TheaterType[] theaters, String[] maskOverrides)
-            : this(id, name, iconWidth, iconHeight, theaters, TemplateTypeFlag.None, maskOverrides)
+        public TemplateType(ushort id, string name, int iconWidth, int iconHeight, TheaterType[] theaters, string landOverride, string[] maskOverrides)
+            : this(id, name, iconWidth, iconHeight, theaters, landOverride, TemplateTypeFlag.None, maskOverrides)
         {
         }
 
@@ -256,8 +274,8 @@ namespace MobiusEditor.Model
         /// <param name="iconHeight">Height in cells.</param>
         /// <param name="theaters">Theaters that contain this tile.</param>
         /// <param name="maskOverride">Mask override for tiles that contain too many graphics in the Remaster. Indices with '0' are removed from the tiles. Spaces are ignored and can be added for visual separation.</param>
-        public TemplateType(ushort id, string name, int iconWidth, int iconHeight, TheaterType[] theaters, String maskOverride)
-            : this(id, name, iconWidth, iconHeight, theaters, TemplateTypeFlag.None, maskOverride == null ? null : new string[] { maskOverride })
+        public TemplateType(ushort id, string name, int iconWidth, int iconHeight, TheaterType[] theaters, string landOverride, string maskOverride)
+            : this(id, name, iconWidth, iconHeight, theaters, landOverride, TemplateTypeFlag.None, maskOverride == null ? null : new string[] { maskOverride })
         {
         }
 
@@ -269,8 +287,8 @@ namespace MobiusEditor.Model
         /// <param name="iconWidth">Width in cells.</param>
         /// <param name="iconHeight">Height in cells.</param>
         /// <param name="theaters">Theaters that contain this tile.</param>
-        public TemplateType(ushort id, string name, int iconWidth, int iconHeight, TheaterType[] theaters)
-            : this(id, name, iconWidth, iconHeight, theaters, TemplateTypeFlag.None)
+        public TemplateType(ushort id, string name, int iconWidth, int iconHeight, TheaterType[] theaters, string landOverride)
+            : this(id, name, iconWidth, iconHeight, theaters, landOverride, TemplateTypeFlag.None)
         {
         }
 
@@ -328,23 +346,15 @@ namespace MobiusEditor.Model
                     isRandom = true;
                 }
             }
-            var oldImage = Thumbnail;
-            var size = new Size(Globals.PreviewTileWidth, Globals.PreviewTileHeight);
-            var mask = new bool[IconHeight, IconWidth];
+            Bitmap oldImage = Thumbnail;
+            Size size = new Size(Globals.PreviewTileWidth, Globals.PreviewTileHeight);
+            Boolean[,] mask = new bool[IconHeight, IconWidth];
             int loopWidth = IconWidth;
             int loopHeight = IconHeight;
+            Int32 numIcons = IconWidth * IconHeight;
             if (isRandom)
             {
-                Int32 numIcons;
-                if (isGroup)
-                {
-                    numIcons = GroupTiles.Length;
-                }
-                else
-                {
-                    numIcons = Globals.TheTilesetManager.GetTileDataLength(Name);
-                }
-                numIcons = Math.Max(1, numIcons);
+                numIcons = Math.Max(1, isGroup ? GroupTiles.Length : Globals.TheTilesetManager.GetTileDataLength(Name));
                 NumIcons = numIcons;
                 mask[0, 0] = true;
                 if (numIcons > 1)
@@ -358,10 +368,10 @@ namespace MobiusEditor.Model
             // To avoid having to redo the calculations on random tiles.
             ThumbnailIconWidth = loopWidth;
             ThumbnailIconHeight = loopHeight;
-            var th = new Bitmap(loopWidth * size.Width, loopHeight * size.Height);
+            Bitmap th = new Bitmap(loopWidth * size.Width, loopHeight * size.Height);
             th.SetResolution(96, 96);
             bool found = mask[0, 0];
-            using (var g = Graphics.FromImage(th))
+            using (Graphics g = Graphics.FromImage(th))
             {
                 MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
                 g.Clear(Color.Transparent);
@@ -371,20 +381,23 @@ namespace MobiusEditor.Model
                 bool tryDummy = forceDummy || (!isRandom && (IconWidth == 1 || IconHeight == 1)) || NumIcons == 1;
                 // Try to get mask; first specific per theater, then the general all-theaters mask.
                 // The dictionary should only contain either a general one or one per theater, so the fetch order doesn't really matter.
-                bool[,] maskOv = null;
+                bool[] maskOv = null;
                 if (!isRandom && MaskOverrides.Keys.Count > 0 && !MaskOverrides.TryGetValue(theater.Name, out maskOv))
                     MaskOverrides.TryGetValue(String.Empty, out maskOv);
-                for (var y = 0; y < loopHeight; ++y)
+                for (Int32 y = 0; y < loopHeight; ++y)
                 {
-                    for (var x = 0; x < loopWidth; ++x, ++icon)
+                    for (Int32 x = 0; x < loopWidth; ++x, ++icon)
                     {
                         if (icon >= NumIcons)
                         {
                             break;
                         }
-                        if (maskOv != null && !maskOv[y, x])
+                        if (maskOv != null)
                         {
-                            continue;
+                            if (!maskOv[icon])
+                                continue;
+                            else // If forced, always fetch the graphics.
+                                tryDummy = true;
                         }
                         int iconToFetch = icon;
                         string nameToFetch = Name;
@@ -422,6 +435,45 @@ namespace MobiusEditor.Model
                 try { oldImage.Dispose(); }
                 catch { /* ignore */ }
             }
+            LandType[] landTypes = landOverrides != null ? landOverrides.ToArray() : null;
+            int typeIcons = isRandom ? 1 : isGroup ? 0 : numIcons;
+            if (!isGroup && this.landOverrides == null)
+            {
+                using (Stream terrainTypeInfo = Globals.TheArchiveManager.OpenFileClassic(this.Name + "." + theater.ClassicExtension))
+                {
+                    if (terrainTypeInfo != null)
+                    {
+                        byte[] fileData;
+                        using (BinaryReader br = new BinaryReader(terrainTypeInfo))
+                        {
+                            fileData = br.ReadAllBytes();
+                        }
+                        landTypes = Enumerable.Repeat(LandType.Clear, typeIcons).ToArray();
+                        try
+                        {
+                            ClassicSpriteLoader.GetRaTmpData(fileData, out _, out _, out byte[] landTypeInfo);
+                            landTypes = new LandType[typeIcons];
+                            int max = Math.Min(typeIcons, landTypeInfo.Length);
+                            for (int icon = 0; icon < max; ++icon)
+                            {
+                                LandType land = (LandType)landTypeInfo[icon];
+                                landTypes[icon] = land == LandType.Empty ? LandType.Clear : land;
+                            }
+                        }
+                        catch (ArgumentException ex) { /* Not able to parse; fall back to all-clear. */ }
+                    }
+                }
+                if (isRandom && landTypes.Length >= 1)
+                {
+                    LandType rntp = landTypes[0];
+                    landTypes = Enumerable.Repeat(rntp == LandType.Empty ? LandType.Clear : rntp, numIcons).ToArray();
+                }
+            }
+            if (landTypes == null && !isGroup)
+            {
+                landTypes = Enumerable.Repeat(LandType.Clear, typeIcons).ToArray();
+            }
+            LandTypes = landTypes;
         }
 
         public int GetIconIndex(Point point)
@@ -480,6 +532,30 @@ namespace MobiusEditor.Model
                 try { oldImage.Dispose(); }
                 catch { /* ignore */ }
             }
+        }
+
+        public static readonly Dictionary<char, LandType> LandTypesMapping = new Dictionary<char, LandType>
+        {
+            { 'X', LandType.Empty }, // Filler tile, or [Clear] terrain on 1x1 sets with multiple tiles.
+            { 'C', LandType.Clear }, // [Clear] Normal clear terrain.
+            { 'B', LandType.Beach }, // [Beach] Sandy beach. Can''t be built on.
+            { 'I', LandType.Rock }, // [Rock]  Impassable terrain.
+            { 'R', LandType.Road }, // [Road]  Units move faster on this terrain.
+            { 'W', LandType.Water }, // [Water] Ships can travel over this.
+            { 'V', LandType.River }, // [River] Ships normally can''t travel over this.
+            { 'H', LandType.Rough }, // [Rough] Rough terrain. Can''t be built on
+        };
+
+        public static LandType[] GetLandTypesFromString(string types)
+        {
+            types = types.Replace(" ", String.Empty);
+            LandType[] arr = new LandType[types.Length];
+            Char[] array = types.ToUpperInvariant().ToCharArray();
+            for (Int32 i = 0; i < array.Length; ++i)
+            {
+                arr[i] = LandTypesMapping.TryGetValue(array[i], out LandType t) ? t : LandType.Empty;
+            }
+            return arr;
         }
     }
 }

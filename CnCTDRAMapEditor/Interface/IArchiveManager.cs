@@ -25,6 +25,7 @@ namespace MobiusEditor.Interface
 
         bool FileExists(string path);
         Stream OpenFile(string path);
+        Stream OpenFileClassic(string path);
         void Reset(GameType gameType, TheaterType theater);
         string[] ExpandModPaths { get; set; }
     }

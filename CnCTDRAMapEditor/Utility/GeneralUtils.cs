@@ -369,6 +369,26 @@ namespace MobiusEditor.Utility
             return argex.ParamName;
         }
 
+        public static bool[] GetMaskFromString(int length, string maskString, char clearChar, params char[] ignoreChars)
+        {
+            bool[] mask = new bool[length];
+            if (String.IsNullOrWhiteSpace(maskString))
+            {
+                mask.Clear(true);
+                return mask;
+            }
+            foreach (char ign in ignoreChars) {
+                maskString = maskString.Replace(ign.ToString(), String.Empty);
+            }
+            int len = Math.Min(maskString.Length, length);
+            for (int i = 0; i < len; ++i)
+            {
+                mask[i] = maskString[i] != clearChar;
+                
+            }
+            return mask;
+        }
+
         public static bool[,] GetMaskFromString(int width, int height, string maskString)
         {
             bool[,] mask = new bool[height, width];

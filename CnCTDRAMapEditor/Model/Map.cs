@@ -25,6 +25,7 @@ using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using TGASharpLib;
 
 namespace MobiusEditor.Model
@@ -56,14 +57,16 @@ namespace MobiusEditor.Model
         BuildingFakes   = 1 << 18,
         EffectRadius    = 1 << 19,
         WaypointRadius  = 1 << 20,
-        OverlapOutlines   = 1 << 21,
+        OverlapOutlines = 1 << 21,
+        LandTypes       = 1 << 22,
 
         OverlayAll = Resources | Walls | Overlay,
         Technos = Terrain | Infantry | Units | Buildings,
         MapLayers = Terrain | Resources | Walls | Overlay | Smudge | Infantry | Units | Buildings | Waypoints,
         /// <summary>Listing of layers that don't need a full map repaint.</summary>
         Indicators = Boundaries | MapSymmetry | MapGrid | WaypointsIndic | FootballArea | CellTriggers
-            | TechnoTriggers | BuildingRebuild | BuildingFakes | EffectRadius | WaypointRadius | OverlapOutlines,
+            | TechnoTriggers | BuildingRebuild | BuildingFakes | EffectRadius | WaypointRadius
+            | OverlapOutlines | LandTypes,
         All = Int32.MaxValue
     }
 
@@ -131,7 +134,8 @@ namespace MobiusEditor.Model
             "Building 'fake' labels",
             "Jam / gap radiuses",
             "Waypoint reveal radiuses",
-            "Crate outlines"
+            "Object outlines",
+            "Land types"
         };
 
         private static int[] tiberiumStages = new int[] { 0, 1, 3, 4, 6, 7, 8, 10, 11 };
@@ -522,37 +526,47 @@ namespace MobiusEditor.Model
 
         public void InitTheater(GameType gameType)
         {
-            foreach (TemplateType templateType in this.TemplateTypes.Where(itm => itm.Theaters == null || itm.Theaters.Contains(this.Theater)))
+            try
             {
-                templateType.Init(this.Theater);
+                foreach (TemplateType templateType in this.TemplateTypes.Where(itm => itm.Theaters == null || itm.Theaters.Contains(this.Theater)))
+                {
+                    templateType.Init(this.Theater);
+                }
+                foreach (SmudgeType smudgeType in this.SmudgeTypes.Where(itm => !Globals.FilterTheaterObjects || itm.Theaters == null || itm.Theaters.Contains(this.Theater)))
+                {
+                    smudgeType.Init();
+                }
+                foreach (OverlayType overlayType in this.OverlayTypes.Where(itm => !Globals.FilterTheaterObjects || itm.Theaters == null || itm.Theaters.Contains(this.Theater)))
+                {
+                    overlayType.Init(gameType);
+                }
+                foreach (TerrainType terrainType in this.TerrainTypes.Where(itm => !Globals.FilterTheaterObjects || itm.Theaters == null || itm.Theaters.Contains(this.Theater)))
+                {
+                    terrainType.Init();
+                }
+                // Ignore expansion status for these; they can still be enabled later.
+                DirectionType infDir = this.UnitDirectionTypes.Where(d => d.Facing == FacingType.South).First();
+                foreach (InfantryType infantryType in this.AllInfantryTypes)
+                {
+                    infantryType.Init(this.HouseTypesIncludingNone.Where(h => h.Equals(infantryType.OwnerHouse)).FirstOrDefault(), infDir);
+                }
+                DirectionType unitDir = this.UnitDirectionTypes.Where(d => d.Facing == FacingType.SouthWest).First();
+                foreach (UnitType unitType in this.AllUnitTypes)
+                {
+                    unitType.Init(gameType, this.HouseTypesIncludingNone.Where(h => h.Equals(unitType.OwnerHouse)).FirstOrDefault(), unitDir);
+                }
+                DirectionType bldDir = this.UnitDirectionTypes.Where(d => d.Facing == FacingType.North).First();
+                foreach (BuildingType buildingType in this.BuildingTypes.Where(itm => !Globals.FilterTheaterObjects || itm.Theaters == null || itm.Theaters.Contains(this.Theater)))
+                {
+                    buildingType.Init(gameType, this.HouseTypesIncludingNone.Where(h => h.Equals(buildingType.OwnerHouse)).FirstOrDefault(), bldDir);
+                }
             }
-            foreach (SmudgeType smudgeType in this.SmudgeTypes.Where(itm => !Globals.FilterTheaterObjects || itm.Theaters == null || itm.Theaters.Contains(this.Theater)))
+            catch (Exception ex)
             {
-                smudgeType.Init();
-            }
-            foreach (OverlayType overlayType in this.OverlayTypes.Where(itm => !Globals.FilterTheaterObjects || itm.Theaters == null || itm.Theaters.Contains(this.Theater)))
-            {
-                overlayType.Init(gameType);
-            }
-            foreach (TerrainType terrainType in this.TerrainTypes.Where(itm => !Globals.FilterTheaterObjects || itm.Theaters == null || itm.Theaters.Contains(this.Theater)))
-            {
-                terrainType.Init();
-            }
-            // Ignore expansion status for these; they can still be enabled later.
-            DirectionType infDir = this.UnitDirectionTypes.Where(d => d.Facing == FacingType.South).First();
-            foreach (InfantryType infantryType in this.AllInfantryTypes)
-            {
-                infantryType.Init(this.HouseTypesIncludingNone.Where(h => h.Equals(infantryType.OwnerHouse)).FirstOrDefault(), infDir);
-            }
-            DirectionType unitDir = this.UnitDirectionTypes.Where(d => d.Facing == FacingType.SouthWest).First();
-            foreach (UnitType unitType in this.AllUnitTypes)
-            {
-                unitType.Init(gameType, this.HouseTypesIncludingNone.Where(h => h.Equals(unitType.OwnerHouse)).FirstOrDefault(), unitDir);
-            }
-            DirectionType bldDir = this.UnitDirectionTypes.Where(d => d.Facing == FacingType.North).First();
-            foreach (BuildingType buildingType in this.BuildingTypes.Where(itm => !Globals.FilterTheaterObjects || itm.Theaters == null || itm.Theaters.Contains(this.Theater)))
-            {
-                buildingType.Init(gameType, this.HouseTypesIncludingNone.Where(h => h.Equals(buildingType.OwnerHouse)).FirstOrDefault(), bldDir);
+                if (!(ex is ThreadAbortException))
+                {
+                    System.Windows.Forms.MessageBox.Show("An error occurred while initialising the map data for the current theater.\n\n" + ex.Message + "\n" + ex.StackTrace, "Whoops!");
+                }
             }
         }
 

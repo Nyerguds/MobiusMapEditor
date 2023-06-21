@@ -255,7 +255,11 @@ namespace MobiusEditor.Tools
         {
             // tileScale should always be given so it results in an exact integer tile size. Math.Round was added to account for .999 situations in the floats.
             Size tileSize = new Size(Math.Max(1, (int)Math.Round(Globals.OriginalTileWidth * tileScale)), Math.Max(1, (int)Math.Round(Globals.OriginalTileHeight * tileScale)));
-            
+            if ((layersToRender & MapLayerFlag.LandTypes) == MapLayerFlag.LandTypes
+                && (manuallyHandledLayers & MapLayerFlag.LandTypes) == MapLayerFlag.None)
+            {
+                MapRenderer.RenderLandTypes(graphics, map, plugin.GameType, tileSize);
+            }
             // Only render these if they are not in the priority layers, and not handled manually.
             // The functions themselves will take care of checking whether they are in the active layers to render.
             if ((Globals.ShowPlacementGrid && inPlacementMode) ||

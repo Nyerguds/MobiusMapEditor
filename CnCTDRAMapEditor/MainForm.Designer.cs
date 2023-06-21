@@ -134,6 +134,7 @@ namespace MobiusEditor
             this.cellTriggersToolStripButton = new MobiusEditor.Controls.ViewToolStripButton();
             this.selectToolStripButton = new MobiusEditor.Controls.ViewToolStripButton();
             this.mapPanel = new MobiusEditor.Controls.MapPanel();
+            this.viewExtraIndicatorsMapPassabilityMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mainMenuStrip.SuspendLayout();
             this.mainStatusStrip.SuspendLayout();
             this.mainToolStrip.SuspendLayout();
@@ -682,7 +683,8 @@ namespace MobiusEditor
             this.viewExtraIndicatorsMapSymmetryMenuItem,
             this.viewExtraIndicatorsMapGridMenuItem,
             this.viewExtraIndicatorsEffectAreaRadiusMenuItem,
-            this.viewExtraIndicatorsWaypointRevealRadiusMenuItem});
+            this.viewExtraIndicatorsWaypointRevealRadiusMenuItem,
+            this.viewExtraIndicatorsMapPassabilityMenuItem});
             this.viewExtraIndicatorsToolStripMenuItem.Name = "viewExtraIndicatorsToolStripMenuItem";
             this.viewExtraIndicatorsToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.viewExtraIndicatorsToolStripMenuItem.Text = "&Extra Indicators";
@@ -973,6 +975,14 @@ namespace MobiusEditor
             this.mapPanel.DragEnter += new System.Windows.Forms.DragEventHandler(this.MapPanel_DragEnter);
             this.mapPanel.MouseMove += new System.Windows.Forms.MouseEventHandler(this.MapPanel_MouseMove);
             // 
+            // viewExtraIndicatorsMapPassabilityMenuItem
+            // 
+            this.viewExtraIndicatorsMapPassabilityMenuItem.CheckOnClick = true;
+            this.viewExtraIndicatorsMapPassabilityMenuItem.Name = "viewExtraIndicatorsMapPassabilityMenuItem";
+            this.viewExtraIndicatorsMapPassabilityMenuItem.Size = new System.Drawing.Size(205, 22);
+            this.viewExtraIndicatorsMapPassabilityMenuItem.Text = "Map passability";
+            this.viewExtraIndicatorsMapPassabilityMenuItem.CheckedChanged += new System.EventHandler(this.ViewMenuItem_CheckedChanged);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1092,6 +1102,7 @@ namespace MobiusEditor
         private System.Windows.Forms.ToolStripMenuItem viewIndicatorsMapBoundariesMenuItem;
         private System.Windows.Forms.ToolStripMenuItem viewIndicatorsOutlinesMenuItem;
         private System.Windows.Forms.ToolStripMenuItem toolsOptionsOutlineAllCratesMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem viewExtraIndicatorsMapPassabilityMenuItem;
     }
 }
 

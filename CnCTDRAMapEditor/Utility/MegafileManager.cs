@@ -26,6 +26,7 @@ namespace MobiusEditor.Utility
         public string[] ExpandModPaths { get; set; }
 
         private readonly string looseFilePath;
+        private MixfileManager mixFm;
 
         public String LoadRoot { get; private set; }
 
@@ -33,14 +34,19 @@ namespace MobiusEditor.Utility
 
         private readonly HashSet<string> filenames = new HashSet<string>();
 
-        public MegafileManager(string loadRoot, string looseFilePath)
+        public MegafileManager(string loadRoot, string looseFilePath, Dictionary<GameType, String> classicGameFolders)
         {
             this.looseFilePath = looseFilePath;
+            mixFm = new MixfileManager(loadRoot, classicGameFolders);
             this.LoadRoot = Path.GetFullPath(loadRoot);
         }
 
         public bool LoadArchive(string archivePath)
         {
+            if (disposedValue)
+            {
+                throw new ObjectDisposedException(GetType().FullName);
+            }
             if (!Path.IsPathRooted(archivePath))
             {
                 archivePath = Path.Combine(LoadRoot, archivePath);
@@ -55,8 +61,21 @@ namespace MobiusEditor.Utility
             return true;
         }
 
+        public bool LoadArchiveClassic(GameType gameType, String archivePath, bool isTheater, bool isContainer, bool canBeEmbedded, bool canUseNewFormat)
+        {
+            if (disposedValue)
+            {
+                throw new ObjectDisposedException(GetType().FullName);
+            }
+            return mixFm.LoadArchive(gameType, archivePath, isTheater, isContainer, canBeEmbedded, canUseNewFormat);
+        }
+
         public bool FileExists(string path)
         {
+            if (disposedValue)
+            {
+                throw new ObjectDisposedException(GetType().FullName);
+            }
             if (ExpandModPaths != null && ExpandModPaths.Length > 0)
             {
                 foreach (string modPath in ExpandModPaths)
@@ -72,6 +91,10 @@ namespace MobiusEditor.Utility
 
         public Stream OpenFile(string path)
         {
+            if (disposedValue)
+            {
+                throw new ObjectDisposedException(GetType().FullName);
+            }
             string loosePath = Path.Combine(looseFilePath, path);
             if (File.Exists(loosePath))
             {
@@ -99,18 +122,40 @@ namespace MobiusEditor.Utility
             return null;
         }
 
+        public Stream OpenFileClassic(String path)
+        {
+            if (disposedValue)
+            {
+                throw new ObjectDisposedException(GetType().FullName);
+            }
+            return mixFm.OpenFile(path);
+        }
+
         public void Reset(GameType gameType, TheaterType theater)
         {
-            // Do nothing.
+            if (disposedValue)
+            {
+                throw new ObjectDisposedException(GetType().FullName);
+            }
+            mixFm.ExpandModPaths = this.ExpandModPaths;
+            mixFm.Reset(gameType, theater);
         }
 
         public IEnumerator<string> GetEnumerator()
         {
+            if (disposedValue)
+            {
+                throw new ObjectDisposedException(GetType().FullName);
+            }
             return filenames.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
+            if (disposedValue)
+            {
+                throw new ObjectDisposedException(GetType().FullName);
+            }
             return this.GetEnumerator();
         }
 
@@ -124,6 +169,9 @@ namespace MobiusEditor.Utility
                 if (disposing)
                 {
                     megafiles.ForEach(m => m.Dispose());
+                    megafiles.Clear();
+                    mixFm.Dispose();
+                    mixFm = null;
                 }
                 disposedValue = true;
             }

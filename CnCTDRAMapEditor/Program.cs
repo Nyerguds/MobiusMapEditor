@@ -132,7 +132,6 @@ namespace MobiusEditor
             // The system should scan all mix archives for known filenames of other mix archives so it can do recursive searches.
             // Mix files should be given in order or depth, so first give ones that are in the folder, then ones that may occur inside others.
             // The order of load determines the file priority; only the first found occurrence of a file is used.
-            Dictionary<GameType, String> gameFolders = new Dictionary<GameType, string>();
             String tdPath = Properties.Settings.Default.ClassicPathTD;
             String tdPathFull = Path.Combine(ApplicationPath, tdPath);
             if (!Directory.Exists(tdPathFull))
@@ -164,6 +163,7 @@ namespace MobiusEditor
                 MessageBox.Show("Error while loading files: Sole Survivor and Red Alert classic data paths are identical!");
                 return false;
             }
+            Dictionary<GameType, String> gameFolders = new Dictionary<GameType, string>();
             gameFolders.Add(GameType.TiberianDawn, tdPathFull);
             gameFolders.Add(GameType.RedAlert, raPathFull);
             gameFolders.Add(GameType.SoleSurvivor, ssPathFull);
@@ -283,13 +283,23 @@ namespace MobiusEditor
         private static bool LoadEditorRemastered(String runPath)
         {
             // Initialize megafiles
-            MegafileManager mfm = new MegafileManager(Path.Combine(runPath, Globals.MegafilePath), runPath);
+            Dictionary<GameType, String> gameFolders = new Dictionary<GameType, string>();
+            gameFolders.Add(GameType.TiberianDawn, "CNCDATA\\TIBERIAN_DAWN\\CD1");
+            gameFolders.Add(GameType.RedAlert, "CNCDATA\\RED_ALERT\\AFTERMATH");
+            gameFolders.Add(GameType.SoleSurvivor, "CNCDATA\\TIBERIAN_DAWN\\CD1");
+
+            MegafileManager mfm = new MegafileManager(Path.Combine(runPath, Globals.MegafilePath), runPath, gameFolders);
             var megafilesLoaded = true;
             megafilesLoaded &= mfm.LoadArchive("CONFIG.MEG");
             megafilesLoaded &= mfm.LoadArchive("TEXTURES_COMMON_SRGB.MEG");
             megafilesLoaded &= mfm.LoadArchive("TEXTURES_RA_SRGB.MEG");
             megafilesLoaded &= mfm.LoadArchive("TEXTURES_SRGB.MEG");
             megafilesLoaded &= mfm.LoadArchive("TEXTURES_TD_SRGB.MEG");
+            // Classic main.mix and theater files, for template land type detection in RA.
+            mfm.LoadArchiveClassic(GameType.RedAlert, "main.mix", false, true, false, true);
+            mfm.LoadArchiveClassic(GameType.RedAlert, "temperat.mix", true, false, true, true);
+            mfm.LoadArchiveClassic(GameType.RedAlert, "snow.mix", true, false, true, true);
+            mfm.LoadArchiveClassic(GameType.RedAlert, "interior.mix", true, false, true, true);
 #if !DEVELOPER
             if (!megafilesLoaded)
             {

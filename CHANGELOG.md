@@ -476,7 +476,7 @@ Unreleased
 * The "Visibility" value in the Steam section now saves as simple number (0=public, 1=friends, 2=private). The old long text lines can still be interpreted though.
 * The invite warning and game path asking dialogs now have the editor's icon rather than a default icon.
 * In multi-monitor environments, the editor will now always open on the monitor where the mouse cursor is.
-* Map generation will now add waypoint flags to multiplayer maps.
+* Preview generation will now add waypoint flags to multiplayer maps.
 * Added a logic to reduce cell edge artifacts when exporting as smoothed image.
 * Optimised preview generation by not rendering the preview in full resolution first.
 * Fixed crate outlines being linked to the visibility of waypoints instead of overlay.
@@ -486,3 +486,4 @@ Unreleased
 * Changed "outlines on overlapped crates" option to "outlines on overlapped objects", and made it work for units and infantry too.
 * Fixed rounding issues in image export dialog, and added tool and info to set the scale by cell size.
 * Added warning when RA ant units or structures are used in the map, but no rule definitions for them exist in the ini.
+* Added an option under "Extra Indicators" to show the map tile passability.

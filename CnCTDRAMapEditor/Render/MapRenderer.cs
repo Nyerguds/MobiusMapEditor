@@ -343,6 +343,7 @@ namespace MobiusEditor.Render
             {
                 renderer(graphics);
             }
+            overlappingRenderList.Clear();
             if ((layers & MapLayerFlag.Terrain) != MapLayerFlag.None)
             {
                 foreach ((Point topLeft, Terrain terrain) in map.Technos.OfType<Terrain>())
@@ -351,7 +352,11 @@ namespace MobiusEditor.Render
                     {
                         continue;
                     }
-                    RenderTerrain(gameType, theater, topLeft, tileSize, tileScale, terrain).Item2(graphics);
+                    overlappingRenderList.Add(RenderTerrain(gameType, theater, topLeft, tileSize, tileScale, terrain));
+                }
+                foreach ((Rectangle location, Action<Graphics> renderer, Boolean flat) in overlappingRenderList.Where(x => !x.Item1.IsEmpty && !x.Item3).OrderBy(x => x.Item1.CenterPoint().Y))
+                {
+                    renderer(graphics);
                 }
             }
             if (Globals.CratesOnTop && (layers & MapLayerFlag.Overlay) != MapLayerFlag.None)
@@ -2094,6 +2099,198 @@ namespace MobiusEditor.Render
                     graphics.DrawLine(gridPen, new Point(xmul, topBound), new Point(xmul, bottomBound));
                 }
             }
+        }
+
+        public static void RenderLandTypes(Graphics graphics, Map map, GameType gameType, Size tileSize)
+        {
+            // Check which cells need to be marked.
+            List<(int, int)> cellsVehImpassable = new List<(int, int)>();
+            List<(int, int)> cellsUnbuildable = new List<(int, int)>();
+            List<(int, int)> cellsBoatMovable = new List<(int, int)>();
+            int mapHeight = map.Metrics.Height;
+            int mapWidth = map.Metrics.Width;
+            CellGrid<Template> tmp = map.Templates;
+            // TD evaluation...
+            void evalTD(LandType land, int x, int y)
+            {
+                switch (land)
+                {
+                    case LandType.Beach:
+                        cellsUnbuildable.Add((x, y));
+                        break;
+                    case LandType.Rock:
+                        cellsVehImpassable.Add((x, y));
+                        break;
+                    case LandType.Water:
+                    case LandType.River:
+                        cellsVehImpassable.Add((x, y));
+                        //cellsBoatMovable.Add((x, y));
+                        break;
+                }
+            }
+            // RA evaluation...
+            void evalRA(LandType land, int x, int y)
+            {
+                switch (land)
+                {
+                    case LandType.Rock:
+                    case LandType.River:
+                        cellsVehImpassable.Add((x, y));
+                        return;
+                    case LandType.Water:
+                        cellsBoatMovable.Add((x, y));
+                        return;
+                    case LandType.Rough:
+                    case LandType.Beach:
+                        cellsUnbuildable.Add((x, y));
+                        return;
+                }
+            }
+            // Choosing which function to use
+            Action<LandType, int, int> checkLand;
+            if (gameType == GameType.TiberianDawn || gameType == GameType.SoleSurvivor)
+            {
+                checkLand = evalTD;
+            }
+            else if (gameType == GameType.RedAlert)
+            {
+                checkLand = evalRA;
+            }
+            else
+            {
+                return;
+            }
+            // Possibly fetch the terrain type for clear terrain on this theater?
+            //TemplateType clear = map.TemplateTypes.Where(t => (t.Flag & TemplateTypeFlag.Clear) == TemplateTypeFlag.Clear).FirstOrDefault();
+            //LandType clearLand = clear.LandTypes.Length > 0 ? clear.LandTypes[0] : LandType.Clear;
+            // The actual check.
+            for (int y = 0; y < mapHeight; ++y)
+            {
+                for (int x = 0; x < mapWidth; ++x)
+                {
+                    Template template = tmp[y, x];
+                    if (template == null)
+                    {
+                        // Better not to enable this; it makes this process really sluggish on interior maps.
+                        //checkLand(clearLand, x, y);
+                        continue;
+                    }
+                    LandType[] types = template.Type.LandTypes;
+                    int icon = (template.Type.Flag & (TemplateTypeFlag.Clear | TemplateTypeFlag.RandomCell)) != TemplateTypeFlag.None ? 0 : template.Icon;
+                    LandType land = icon < types.Length ? types[icon] : LandType.Clear;
+                    checkLand(land, x, y);
+                }
+            }
+            // On to the painting part.
+            Bitmap bmImp = null;
+            bool disposeBmImp = false;
+            Bitmap bmUnb = null;
+            bool disposeBmUnb = false;
+            Bitmap bmWtr = null;
+            bool disposeBmWtr = false;
+            int tileWidth = tileSize.Width;
+            int tileHeight = tileSize.Height;
+            float lineSize = tileWidth / 16.0f;
+            int lineOffsetW = tileWidth / 4;
+            int lineOffsetH = tileHeight / 4;
+            Tile tile;
+            if (Globals.TheTilesetManager.GetTileData("trans.icn", 2, out tile) && tile != null) bmImp = tile.Image; // red
+            if (Globals.TheTilesetManager.GetTileData("trans.icn", 1, out tile) && tile != null) bmUnb = tile.Image; // yellow
+            if (Globals.TheTilesetManager.GetTileData("trans.icn", 0, out tile) && tile != null) bmWtr = tile.Image; // white
+            try
+            {
+                var colorMatrix = new ColorMatrix();
+                colorMatrix.Matrix33 = 0.50f;
+                var imageAttributes = new ImageAttributes();
+                imageAttributes.SetColorMatrix(
+                    colorMatrix,
+                    ColorMatrixFlag.Default,
+                    ColorAdjustType.Bitmap);
+                // If the graphics could not be loaded from the clasic files, generate them.
+                if (bmImp == null && cellsVehImpassable.Count > 0)
+                {
+                    disposeBmImp = true;
+                    bmImp = GenerateLinesBitmap(tileWidth, tileHeight, Color.FromArgb(170, 0,0), lineSize, lineOffsetW, lineOffsetH, graphics);
+                }
+                if (bmUnb == null && cellsUnbuildable.Count > 0)
+                {
+                    disposeBmUnb = true;
+                    bmUnb = GenerateLinesBitmap(tileWidth, tileHeight, Color.FromArgb(255, 255, 85), lineSize, lineOffsetW, lineOffsetH, graphics);
+                }
+                if (bmWtr == null && cellsBoatMovable.Count > 0)
+                {
+                    disposeBmWtr = true;
+                    bmWtr = GenerateLinesBitmap(tileSize.Width, tileSize.Height, Color.FromArgb(255, 255, 255), lineSize, lineOffsetW, lineOffsetH, graphics);
+                }
+                // Finally, paint the actual cells.
+                foreach ((int x, int y) in cellsVehImpassable)
+                {
+                    graphics.DrawImage(bmImp, new Rectangle(tileWidth * x, tileHeight * y, tileWidth, tileHeight), 0, 0, tileWidth, tileHeight, GraphicsUnit.Pixel, imageAttributes);
+                }
+                foreach ((int x, int y) in cellsUnbuildable)
+                {
+                    graphics.DrawImage(bmUnb, new Rectangle(tileWidth * x, tileHeight * y, tileWidth, tileHeight), 0, 0, tileWidth, tileHeight, GraphicsUnit.Pixel, imageAttributes);
+                }
+                foreach ((int x, int y) in cellsBoatMovable)
+                {
+                    graphics.DrawImage(bmWtr, new Rectangle(tileWidth * x, tileHeight * y, tileWidth, tileHeight), 0, 0, tileWidth, tileHeight, GraphicsUnit.Pixel, imageAttributes);
+                }
+            }
+            finally
+            {
+                if (disposeBmImp && bmImp != null) try { bmImp.Dispose(); } catch { /* ignore */ }
+                if (disposeBmUnb && bmUnb != null) try { bmUnb.Dispose(); } catch { /* ignore */ }
+                if (disposeBmWtr && bmWtr != null) try { bmWtr.Dispose(); } catch { /* ignore */ }
+            }
+        }
+
+        private static Bitmap GenerateLinesBitmap(Int32 width, Int32 height, Color color, float lineSize, Int32 lineOffsetW, Int32 lineOffsetH, Graphics g)
+        {
+            Bitmap bitmap = new Bitmap(width, height);
+            int tripleWidth = width * 3;
+            int tripleHeight = height * 3;
+            bool hardLines = g != null && g.InterpolationMode == InterpolationMode.NearestNeighbor;
+            int nrOfLines = 1;
+            if (hardLines)
+            {
+                nrOfLines = Math.Max(1, (int)Math.Round(lineSize));
+            }
+            using (Bitmap img = new Bitmap(tripleWidth, tripleHeight))
+            {
+                using (Graphics gr = Graphics.FromImage(img))
+                using (SolidBrush sb = new SolidBrush(color))
+                using (Pen p = new Pen(sb, hardLines ? 1 : lineSize))
+                {
+                    if (g != null)
+                    {
+                        CopyRenderSettingsFrom(gr, g);
+                    }
+                    int offsetX = lineOffsetW;
+                    int offsetY = lineOffsetH;
+                    int hexWidth = width * 6;
+                    int hexHeight = height * 6;
+                    while (offsetX <= hexWidth && offsetY <= hexHeight)
+                    {
+                        // Paint lines
+                        for (int i = 0; i < nrOfLines; i++)
+                        {
+                            gr.DrawLine(p, offsetX + i, 0, 0, offsetY + i);
+                        }
+                        offsetX += lineOffsetW;
+                        offsetY += lineOffsetH;
+                    }
+                }
+                using (Graphics gr = Graphics.FromImage(bitmap))
+                {
+                    if (g != null)
+                    {
+                        CopyRenderSettingsFrom(gr, g);
+                    }
+                    gr.DrawImage(img, new Rectangle(0, 0, width, height), width, height, width, height, GraphicsUnit.Pixel);
+                    // Paint lines image on final image.
+                }
+            }
+            return bitmap;
         }
 
         public static void SetRenderSettings(Graphics g, Boolean smooth)

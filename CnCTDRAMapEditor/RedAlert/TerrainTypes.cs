@@ -41,11 +41,11 @@ namespace MobiusEditor.RedAlert
         public static readonly TerrainType Clump3Class = new TerrainType(17, "tc03", "TEXT_PROP_TITLE_TREE", new TheaterType[] { TheaterTypes.Temperate, TheaterTypes.Snow }, 3, 2, "110 110");
         public static readonly TerrainType Clump4Class = new TerrainType(18, "tc04", "TEXT_PROP_TITLE_TREE", new TheaterType[] { TheaterTypes.Temperate, TheaterTypes.Snow }, 4, 3, "0000 1110 1000");
         public static readonly TerrainType Clump5Class = new TerrainType(19, "tc05", "TEXT_PROP_TITLE_TREE", new TheaterType[] { TheaterTypes.Temperate, TheaterTypes.Snow }, 4, 3, "0010 1110 0110");
-        public static readonly TerrainType Ice01 = new TerrainType(20, "ice01", "TEXT_PROP_TITLE_ICE", new TheaterType[] { TheaterTypes.Snow }, 2, 2, null, TemplateTypeFlag.Water);
-        public static readonly TerrainType Ice02 = new TerrainType(21, "ice02", "TEXT_PROP_TITLE_ICE", new TheaterType[] { TheaterTypes.Snow }, 1, 2, null, TemplateTypeFlag.Water);
-        public static readonly TerrainType Ice03 = new TerrainType(22, "ice03", "TEXT_PROP_TITLE_ICE", new TheaterType[] { TheaterTypes.Snow }, 2, 1, null, TemplateTypeFlag.Water);
-        public static readonly TerrainType Ice04 = new TerrainType(23, "ice04", "TEXT_PROP_TITLE_ICE", new TheaterType[] { TheaterTypes.Snow }, 1, 1, null, TemplateTypeFlag.Water);
-        public static readonly TerrainType Ice05 = new TerrainType(24, "ice05", "TEXT_PROP_TITLE_ICE", new TheaterType[] { TheaterTypes.Snow }, 1, 1, null, TemplateTypeFlag.Water);
+        public static readonly TerrainType Ice01 = new TerrainType(20, "ice01", "TEXT_PROP_TITLE_ICE", new TheaterType[] { TheaterTypes.Snow }, 2, 2, null, LandType.Water);
+        public static readonly TerrainType Ice02 = new TerrainType(21, "ice02", "TEXT_PROP_TITLE_ICE", new TheaterType[] { TheaterTypes.Snow }, 1, 2, null, LandType.Water);
+        public static readonly TerrainType Ice03 = new TerrainType(22, "ice03", "TEXT_PROP_TITLE_ICE", new TheaterType[] { TheaterTypes.Snow }, 2, 1, null, LandType.Water);
+        public static readonly TerrainType Ice04 = new TerrainType(23, "ice04", "TEXT_PROP_TITLE_ICE", new TheaterType[] { TheaterTypes.Snow }, 1, 1, null, LandType.Water);
+        public static readonly TerrainType Ice05 = new TerrainType(24, "ice05", "TEXT_PROP_TITLE_ICE", new TheaterType[] { TheaterTypes.Snow }, 1, 1, null, LandType.Water);
         public static readonly TerrainType Boxes01 = new TerrainType(25, "boxes01", "TEXT_PROP_TITLE_INT_BOXES", new TheaterType[] { TheaterTypes.Interior }, 1, 1, null);
         public static readonly TerrainType Boxes02 = new TerrainType(26, "boxes02", "TEXT_PROP_TITLE_INT_BOXES", new TheaterType[] { TheaterTypes.Interior }, 1, 1, null);
         public static readonly TerrainType Boxes03 = new TerrainType(27, "boxes03", "TEXT_PROP_TITLE_INT_BOXES", new TheaterType[] { TheaterTypes.Interior }, 1, 1, null);

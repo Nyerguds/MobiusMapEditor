@@ -2070,6 +2070,10 @@ namespace MobiusEditor
             {
                 layers &= ~MapLayerFlag.EffectRadius;
             }
+            if (!viewExtraIndicatorsMapPassabilityMenuItem.Checked)
+            {
+                layers &= ~MapLayerFlag.LandTypes;
+            }
             if (!viewIndicatorsOutlinesMenuItem.Checked)
             {
                 layers &= ~MapLayerFlag.OverlapOutlines;
@@ -2563,6 +2567,5 @@ namespace MobiusEditor
                 }
             }
         }
-
     }
 }

@@ -21,7 +21,7 @@ namespace MobiusEditor.Utility
 {
     public class GameTextManagerClassic : IGameTextManager
     {
-        private readonly Dictionary<string, int> StringMappingsTd = new Dictionary<string, int>
+        private static readonly Dictionary<string, int> StringMappingsTd = new Dictionary<string, int>
         {
             //{ "", 0 }, // Null
             //{ "%3d.%02d", 0 }, // %3d.%02d
@@ -766,7 +766,7 @@ namespace MobiusEditor.Utility
             //{ "Advanced", 740 }, // Advanced
         };
 
-        private readonly Dictionary<string, int> StringMappingsRa = new Dictionary<string, int>
+        private static readonly Dictionary<string, int> StringMappingsRa = new Dictionary<string, int>
         {
             //{ "", 0 }, // Null
             //{ "%3d.%02d", 1 }, // %3d.%02d

@@ -31,7 +31,7 @@ namespace MobiusEditor.Model
         public Size Size => new Size(OccupyMask.GetLength(1), OccupyMask.GetLength(0));
         public TheaterType[] Theaters { get; private set; }
         public int DisplayIcon { get; private set; }
-        public TemplateTypeFlag TemplateType { get; private set; }
+        public LandType PlacementLand { get; private set; }
         public String GraphicsSource { get; private set; }
         public bool IsArmed => false;
         public bool IsAircraft => false;
@@ -54,8 +54,8 @@ namespace MobiusEditor.Model
         /// <param name="occupyMask">String indicating the occupied cells. Spaces are ignored, '0' means unoccupied, any other value means occupied. A null value indicates it is fully occupied.</param>
         /// <param name="graphicsSource">Override for the graphics source. If null, the name is used.</param>
         /// <param name="displayIcon">Override for the frame to display. Normally 0.</param>
-        /// <param name="templateType">Terrain type this should be placed down on. Currently unused.</param>
-        public TerrainType(sbyte id, string name, string textId, TheaterType[] theaters, int width, int height, string occupyMask, String graphicsSource, int displayIcon, TemplateTypeFlag templateType)
+        /// <param name="placementLand">Land type this should be placed down on. Currently unused.</param>
+        public TerrainType(sbyte id, string name, string textId, TheaterType[] theaters, int width, int height, string occupyMask, String graphicsSource, int displayIcon, LandType placementLand)
         {
             this.ID = id;
             this.Name = name;
@@ -64,7 +64,7 @@ namespace MobiusEditor.Model
             this.OccupyMask = GeneralUtils.GetMaskFromString(width, height, occupyMask);
             this.DisplayIcon = displayIcon;
             this.GraphicsSource = graphicsSource == null ? name : graphicsSource;
-            this.TemplateType = templateType;
+            this.PlacementLand = placementLand;
         }
 
         /// <summary>
@@ -80,7 +80,7 @@ namespace MobiusEditor.Model
         /// <param name="graphicsSource">Override for the graphics source. If null, the name is used.</param>
         /// <param name="displayIcon">Override for the frame to display. Normally 0.</param>
         public TerrainType(sbyte id, string name, string textId, TheaterType[] theaters, int width, int height, string occupyMask, String graphicsSource, int displayIcon)
-            : this(id, name, textId, theaters, width, height, occupyMask, graphicsSource, displayIcon, TemplateTypeFlag.None)
+            : this(id, name, textId, theaters, width, height, occupyMask, graphicsSource, displayIcon, LandType.Clear)
         {
         }
 
@@ -96,7 +96,7 @@ namespace MobiusEditor.Model
         /// <param name="occupyMask">String indicating the occupied cells. Spaces are ignored, '0' means unoccupied, any other value means occupied. A null value indicates it is fully occupied.</param>
         /// <param name="graphicsSource">Override for the graphics source. If null, the name is used.</param>
         public TerrainType(sbyte id, string name, string textId, TheaterType[] theaters, int width, int height, string occupyMask, String graphicsSource)
-            : this(id, name, textId, theaters, width, height, occupyMask, graphicsSource, 0, TemplateTypeFlag.None)
+            : this(id, name, textId, theaters, width, height, occupyMask, graphicsSource, 0, LandType.Clear)
         {
         }
 
@@ -112,7 +112,7 @@ namespace MobiusEditor.Model
         /// <param name="occupyMask">String indicating the occupied cells. Spaces are ignored, '0' means unoccupied, any other value means occupied. A null value indicates it is fully occupied.</param>
         /// <param name="displayIcon">Override for the frame to display. Normally 0.</param>
         public TerrainType(sbyte id, string name, string textId, TheaterType[] theaters, int width, int height, string occupyMask, int displayIcon)
-            : this(id, name, textId, theaters, width, height, occupyMask, null, displayIcon, TemplateTypeFlag.None)
+            : this(id, name, textId, theaters, width, height, occupyMask, null, displayIcon, LandType.Clear)
         {
         }
 
@@ -126,9 +126,9 @@ namespace MobiusEditor.Model
         /// <param name="width">Width of the terrain object, in cells.</param>
         /// <param name="height">Height of the terrain object, in cells.</param>
         /// <param name="occupyMask">String indicating the occupied cells. Spaces are ignored, '0' means unoccupied, any other value means occupied. A null value indicates it is fully occupied.</param>
-        /// <param name="templateType">Terrain type this should be placed down on. Currently unused.</param>
-        public TerrainType(sbyte id, string name, string textId, TheaterType[] theaters, int width, int height, string occupyMask, TemplateTypeFlag templateType)
-            : this(id, name, textId, theaters, width, height, occupyMask, null, 0, templateType)
+        /// <param name="placementLand">Land type this should be placed down on. Currently unused.</param>
+        public TerrainType(sbyte id, string name, string textId, TheaterType[] theaters, int width, int height, string occupyMask, LandType placementLand)
+            : this(id, name, textId, theaters, width, height, occupyMask, null, 0, placementLand)
         {
         }
 
@@ -143,7 +143,7 @@ namespace MobiusEditor.Model
         /// <param name="height">Height of the terrain object, in cells.</param>
         /// <param name="occupyMask">String indicating the occupied cells. Spaces are ignored, '0' means unoccupied, any other value means occupied. A null value indicates it is fully occupied.</param>
         public TerrainType(sbyte id, string name, string textId, TheaterType[] theaters, int width, int height, string occupyMask)
-            : this(id, name, textId, theaters, width, height, occupyMask, null, 0, TemplateTypeFlag.None)
+            : this(id, name, textId, theaters, width, height, occupyMask, null, 0, LandType.Clear)
         {
         }
 
