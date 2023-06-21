@@ -274,8 +274,8 @@ namespace MobiusEditor.Tools
             {
                 MapRenderer.RenderMapBoundaries(graphics, map, tileSize);
             }
-            bool autoHandleOutlines = (manuallyHandledLayers & MapLayerFlag.OverlapOutlines) == MapLayerFlag.None
-            bool renderOverlay = (layers & MapLayerFlag.Overlay) == MapLayerFlag.Overlay;
+            bool autoHandleOutlines = (manuallyHandledLayers & MapLayerFlag.OverlapOutlines) == MapLayerFlag.None;
+            bool renderOverlay = (layersToRender & MapLayerFlag.Overlay) == MapLayerFlag.Overlay;
             if ((layersToRender & MapLayerFlag.OverlapOutlines) == MapLayerFlag.OverlapOutlines && autoHandleOutlines)
             {
                 if ((layersToRender & MapLayerFlag.Infantry) == MapLayerFlag.Infantry)
