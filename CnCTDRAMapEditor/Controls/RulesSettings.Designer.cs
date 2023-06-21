@@ -64,7 +64,7 @@ namespace MobiusEditor.Controls
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(400, 424);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(400, 200);
             this.tableLayoutPanel1.TabIndex = 2;
             // 
             // lblRaRules
@@ -75,7 +75,7 @@ namespace MobiusEditor.Controls
             this.lblRaRules.Name = "lblRaRules";
             this.lblRaRules.Padding = new System.Windows.Forms.Padding(0, 0, 0, 2);
             this.lblRaRules.Size = new System.Drawing.Size(394, 15);
-            this.lblRaRules.TabIndex = 0;
+            this.lblRaRules.TabIndex = 1;
             this.lblRaRules.Text = "Rule changes concerning bibs, power and silo storage will be applied in the edito" +
     "r.";
             // 
@@ -87,8 +87,8 @@ namespace MobiusEditor.Controls
             this.txtRules.Multiline = true;
             this.txtRules.Name = "txtRules";
             this.txtRules.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtRules.Size = new System.Drawing.Size(396, 338);
-            this.txtRules.TabIndex = 1;
+            this.txtRules.Size = new System.Drawing.Size(396, 114);
+            this.txtRules.TabIndex = 2;
             this.txtRules.Leave += new System.EventHandler(this.txtRules_Leave);
             // 
             // lblDosContent
@@ -99,7 +99,7 @@ namespace MobiusEditor.Controls
             this.lblDosContent.Name = "lblDosContent";
             this.lblDosContent.Padding = new System.Windows.Forms.Padding(0, 0, 0, 2);
             this.lblDosContent.Size = new System.Drawing.Size(394, 67);
-            this.lblDosContent.TabIndex = 2;
+            this.lblDosContent.TabIndex = 0;
             this.lblDosContent.Text = resources.GetString("lblDosContent.Text");
             // 
             // RulesSettings
@@ -109,7 +109,7 @@ namespace MobiusEditor.Controls
             this.Controls.Add(this.tableLayoutPanel1);
             this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "RulesSettings";
-            this.Size = new System.Drawing.Size(400, 424);
+            this.Size = new System.Drawing.Size(400, 200);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
             this.ResumeLayout(false);

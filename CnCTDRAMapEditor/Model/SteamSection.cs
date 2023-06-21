@@ -13,12 +13,67 @@
 // GNU General Public License along with permitted additional restrictions
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using Steamworks;
+using System;
+using System.Linq;
 using System.ComponentModel;
+using System.Text.RegularExpressions;
+using System.Collections.Generic;
+using MobiusEditor.Utility;
 
 namespace MobiusEditor.Model
 {
     public class SteamSection
     {
+        [NonSerializedINIKey]
+        public ERemoteStoragePublishedFileVisibility VisibilityAsEnum
+        {
+            get
+            {
+                string v = Visibility;
+                ERemoteStoragePublishedFileVisibility def = ERemoteStoragePublishedFileVisibility.k_ERemoteStoragePublishedFileVisibilityPublic;
+                if (string.IsNullOrWhiteSpace(v))
+                {
+                    return def;
+                }
+                v = v.Trim();
+                List<ERemoteStoragePublishedFileVisibility> visTypes =
+                    Enum.GetValues(typeof(ERemoteStoragePublishedFileVisibility)).Cast<ERemoteStoragePublishedFileVisibility>().ToList();
+                if (Regex.IsMatch(v, "^\\d+$") && int.TryParse(v, out int visib))
+                {
+                    foreach (ERemoteStoragePublishedFileVisibility vChoice in visTypes)
+                    {
+                        if (visib == (int)vChoice)
+                        {
+                            return vChoice;
+                        }
+                    }
+                    return def;
+                }
+                foreach (ERemoteStoragePublishedFileVisibility vChoice in visTypes)
+                {
+                    if (v.Equals(vChoice.ToString()))
+                    {
+                        return vChoice;
+                    }
+                }
+                // Just messing around lol.
+                if (v.ToLower().Contains("public"))
+                {
+                    return ERemoteStoragePublishedFileVisibility.k_ERemoteStoragePublishedFileVisibilityPublic;
+                }
+                if (v.ToLower().Contains("friend"))
+                {
+                    return ERemoteStoragePublishedFileVisibility.k_ERemoteStoragePublishedFileVisibilityFriendsOnly;
+                }
+                if (v.ToLower().Contains("private"))
+                {
+                    return ERemoteStoragePublishedFileVisibility.k_ERemoteStoragePublishedFileVisibilityPrivate;
+                }
+                return def;
+            }
+            set { Visibility = ((int)value).ToString(); }
+        }
+
         [DefaultValue(null)]
         public string Title { get; set; }
 
@@ -28,8 +83,8 @@ namespace MobiusEditor.Model
         [DefaultValue(null)]
         public string PreviewFile { get; set; }
 
-        [DefaultValue(ERemoteStoragePublishedFileVisibility.k_ERemoteStoragePublishedFileVisibilityPublic)]
-        public ERemoteStoragePublishedFileVisibility Visibility { get; set; }
+        [DefaultValue("0")]
+        public string Visibility { get; set; }
 
         [DefaultValue(typeof(ulong), "0")]
         public ulong PublishedFileId { get; set; }

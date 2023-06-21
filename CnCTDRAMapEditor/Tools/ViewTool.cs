@@ -253,15 +253,11 @@ namespace MobiusEditor.Tools
 
         public static void PostRenderMap(Graphics graphics, IGamePlugin plugin, Map map, double tileScale, MapLayerFlag layersToRender, MapLayerFlag manuallyHandledLayers, bool inPlacementMode)
         {
-            Size tileSize = new Size(Math.Max(1, (int)(Globals.OriginalTileWidth * tileScale)), Math.Max(1, (int)(Globals.OriginalTileHeight * tileScale)));
-
+            // tileScale should always be given so it results in an exact integer tile size. Math.Round was added to account for .999 situations in the floats.
+            Size tileSize = new Size(Math.Max(1, (int)Math.Round(Globals.OriginalTileWidth * tileScale)), Math.Max(1, (int)Math.Round(Globals.OriginalTileHeight * tileScale)));
+            
             // Only render these if they are not in the priority layers, and not handled manually.
             // The functions themselves will take care of checking whether they are in the active layers to render.
-            if ((layersToRender & (MapLayerFlag.Waypoints | MapLayerFlag.CrateOutlines)) == (MapLayerFlag.Waypoints | MapLayerFlag.CrateOutlines)
-                && (manuallyHandledLayers & MapLayerFlag.CrateOutlines) == MapLayerFlag.None)
-            {
-                MapRenderer.RenderAllCrateOutlines(graphics, map, tileSize, tileScale, !Globals.OutlineAllCrates);
-            }
             if ((Globals.ShowPlacementGrid && inPlacementMode) ||
                 (layersToRender & MapLayerFlag.MapGrid) == MapLayerFlag.MapGrid
                 && (manuallyHandledLayers & MapLayerFlag.MapGrid) == MapLayerFlag.None)
@@ -277,6 +273,29 @@ namespace MobiusEditor.Tools
                 && (manuallyHandledLayers & MapLayerFlag.Boundaries) == MapLayerFlag.None)
             {
                 MapRenderer.RenderMapBoundaries(graphics, map, tileSize);
+            }
+            bool autoHandleOutlines = (manuallyHandledLayers & MapLayerFlag.OverlapOutlines) == MapLayerFlag.None
+            bool renderOverlay = (layers & MapLayerFlag.Overlay) == MapLayerFlag.Overlay;
+            if ((layersToRender & MapLayerFlag.OverlapOutlines) == MapLayerFlag.OverlapOutlines && autoHandleOutlines)
+            {
+                if ((layersToRender & MapLayerFlag.Infantry) == MapLayerFlag.Infantry)
+                {
+                    MapRenderer.RenderAllInfantryOutlines(graphics, map, tileSize, tileScale, true);
+                }
+                if ((layersToRender & MapLayerFlag.Units) == MapLayerFlag.Units)
+                {
+                    MapRenderer.RenderAllVehicleOutlines(graphics, plugin.GameType, map, tileSize, tileScale, true);
+                }
+                if (renderOverlay && !Globals.OutlineAllCrates)
+                {
+                    MapRenderer.RenderAllCrateOutlines(graphics, map, tileSize, tileScale, !Globals.OutlineAllCrates);
+                }
+            }
+            // Special case: while it's not handled by OverlapOutlines, tools indicating that they handle the OverlapOutlines
+            // manually will also paint this, so of all the outlines, it's drawn last.
+            if (renderOverlay  && autoHandleOutlines && Globals.OutlineAllCrates)
+            {
+                MapRenderer.RenderAllCrateOutlines(graphics, map, tileSize, tileScale, false);
             }
             if ((layersToRender & MapLayerFlag.CellTriggers) == MapLayerFlag.CellTriggers
                 && (manuallyHandledLayers & MapLayerFlag.CellTriggers) == MapLayerFlag.None)
@@ -323,6 +342,33 @@ namespace MobiusEditor.Tools
                 && (manuallyHandledLayers & MapLayerFlag.TechnoTriggers) == MapLayerFlag.None)
             {
                 MapRenderer.RenderAllTechnoTriggers(graphics, map, tileSize, layersToRender);
+            }
+        }
+
+        protected void HandlePaintOutlines(Graphics graphics, Map map, Size tileSize, double tileScale, MapLayerFlag layers)
+        {
+            bool renderAllCrateOutlines = Globals.OutlineAllCrates;
+            bool renderOverlay = (layers & MapLayerFlag.Overlay) == MapLayerFlag.Overlay;
+            if ((layers & MapLayerFlag.OverlapOutlines) == MapLayerFlag.OverlapOutlines)
+            {
+                if ((layers & MapLayerFlag.Infantry) == MapLayerFlag.Infantry)
+                {
+                    MapRenderer.RenderAllInfantryOutlines(graphics, map, tileSize, tileScale, true);
+                }
+                if ((layers & MapLayerFlag.Units) == MapLayerFlag.Units)
+                {
+                    MapRenderer.RenderAllVehicleOutlines(graphics, plugin.GameType, map, tileSize, tileScale, true);
+                }
+                if (renderOverlay && !renderAllCrateOutlines)
+                {
+                    MapRenderer.RenderAllCrateOutlines(graphics, map, tileSize, tileScale, true);
+                }
+            }
+            // Special case: while it's not handled by OverlapOutlines, tools indicating that they handle the OverlapOutlines
+            // manually will also paint this, so of all the outlines, it's drawn last.
+            if (renderOverlay && renderAllCrateOutlines)
+            {
+                MapRenderer.RenderAllCrateOutlines(graphics, map, tileSize, tileScale, false);
             }
         }
 

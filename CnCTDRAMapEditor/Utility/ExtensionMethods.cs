@@ -72,11 +72,33 @@ namespace MobiusEditor.Utility
             return Math.Max(minValue, Math.Min(value, maxValue));
         }
 
-        public static void CopyTo<T>(this T data, T other)
+        /// <summary>
+        /// Copies all public properties of one object into another.
+        /// </summary>
+        /// <typeparam name="T">Type of the objects.</typeparam>
+        /// <param name="data">Data source to copy from</param>
+        /// <param name="other">Destination to copy into.</param>
+        /// <param name="ignoreAttributes">If an attribute of one of these specified types is found on a property, that property will not be copied.</param>
+        public static void CopyTo<T>(this T data, T other, params Type[] ignoreAttributes)
         {
+            List<Type> ignoreAttrTypeChecked = ignoreAttributes.Where(t => t != null && typeof(Attribute).IsAssignableFrom(t)).ToList();
             var properties = data.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => (p.GetSetMethod() != null) && (p.GetGetMethod() != null));
             foreach (var property in properties)
             {
+                bool ignore = false;
+                foreach (Type tp in ignoreAttrTypeChecked)
+                {
+                    Attribute att = Attribute.GetCustomAttribute(property, tp);
+                    if (att != null)
+                    {
+                        ignore = true;
+                        break;
+                    }
+                }
+                if (ignore)
+                {
+                    continue;
+                }
                 var defaultValueAttr = property.GetCustomAttribute(typeof(DefaultValueAttribute)) as DefaultValueAttribute;
                 property.SetValue(other, property.GetValue(data));
             }

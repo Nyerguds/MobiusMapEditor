@@ -20,8 +20,31 @@ namespace MobiusEditor.Utility
 {
     public static class ListItem
     {
+        public static ListItem<T> MakeListItem<T>(T value, string Label)
+        {
+            return new ListItem<T>(value, Label);
+        }
+
+        public static T GetValueFromDropdown<T>(ComboBox dropdown)
+        {
+            return GetValueFromDropdown(dropdown, default(T));
+        }
+
+        public static T GetValueFromDropdown<T>(ComboBox dropdown, T defaultValue)
+        {
+            if (dropdown.SelectedItem is ListItem<T> li)
+            {
+                return li.Value;
+            }
+            return defaultValue;
+        }
 
         public static int GetIndexInList<T>(T value, ListItem<T>[] items)
+        {
+            return GetIndexInList<T>(value, items, -1);
+        }
+
+        public static int GetIndexInList<T>(T value, ListItem<T>[] items, int defaultIndex)
         {
             int len = items.Length;
             for (Int32 i = 0; i < len; ++i)
@@ -32,11 +55,16 @@ namespace MobiusEditor.Utility
                     return i;
                 }
             }
-            return -1;
+            return defaultIndex;
         }
 
         public static int GetIndexInDropdown<T>(T value, ComboBox dropdown)
         {
+            return GetIndexInDropdown(value, dropdown, -1);
+        }
+
+        public static int GetIndexInDropdown<T>(T value, ComboBox dropdown, int defaultIndex)
+        {
             for (Int32 i = 0; i < dropdown.Items.Count; ++i)
             {
                 ListItem<T> item = dropdown.Items[i] as ListItem<T>;
@@ -45,10 +73,15 @@ namespace MobiusEditor.Utility
                     return i;
                 }
             }
-            return -1;
+            return defaultIndex;
         }
 
         public static int GetIndexInListByLabel<T>(String label, ListItem<T>[] items)
+        {
+            return GetIndexInListByLabel<T>(label, items, -1);
+        }
+
+        public static int GetIndexInListByLabel<T>(String label, ListItem<T>[] items, int defaultIndex)
         {
             int len = items.Length;
             for (Int32 i = 0; i < len; ++i)
@@ -59,10 +92,15 @@ namespace MobiusEditor.Utility
                     return i;
                 }
             }
-            return -1;
+            return defaultIndex;
         }
 
         public static int GetIndexInDropdownByLabel<T>(String label, ComboBox dropdown)
+        {
+            return GetIndexInDropdownByLabel<T>(label, dropdown, -1);
+        }
+
+        public static int GetIndexInDropdownByLabel<T>(String label, ComboBox dropdown, int defaultIndex)
         {
             for (Int32 i = 0; i < dropdown.Items.Count; ++i)
             {
@@ -72,7 +110,7 @@ namespace MobiusEditor.Utility
                     return i;
                 }
             }
-            return -1;
+            return defaultIndex;
         }
 
         /// <summary>

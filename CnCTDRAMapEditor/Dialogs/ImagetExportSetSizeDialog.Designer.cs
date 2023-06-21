@@ -55,7 +55,7 @@ namespace MobiusEditor.Dialogs
             this.txtDimension.Location = new System.Drawing.Point(12, 31);
             this.txtDimension.Name = "txtDimension";
             this.txtDimension.Size = new System.Drawing.Size(261, 20);
-            this.txtDimension.TabIndex = 0;
+            this.txtDimension.TabIndex = 1;
             this.txtDimension.TextChanged += new System.EventHandler(this.txtDimension_TextChanged);
             // 
             // lblDimension
@@ -65,7 +65,7 @@ namespace MobiusEditor.Dialogs
             this.lblDimension.Margin = new System.Windows.Forms.Padding(3);
             this.lblDimension.Name = "lblDimension";
             this.lblDimension.Size = new System.Drawing.Size(263, 13);
-            this.lblDimension.TabIndex = 1;
+            this.lblDimension.TabIndex = 0;
             this.lblDimension.Text = "Give amount of pixels: (used for both width and height)";
             // 
             // lblPixels
@@ -76,7 +76,7 @@ namespace MobiusEditor.Dialogs
             this.lblPixels.Margin = new System.Windows.Forms.Padding(3);
             this.lblPixels.Name = "lblPixels";
             this.lblPixels.Size = new System.Drawing.Size(33, 13);
-            this.lblPixels.TabIndex = 1;
+            this.lblPixels.TabIndex = 2;
             this.lblPixels.Text = "pixels";
             // 
             // btnOk
@@ -86,17 +86,18 @@ namespace MobiusEditor.Dialogs
             this.btnOk.Location = new System.Drawing.Point(156, 60);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(75, 23);
-            this.btnOk.TabIndex = 2;
+            this.btnOk.TabIndex = 3;
             this.btnOk.Text = "OK";
             this.btnOk.UseVisualStyleBackColor = true;
             // 
             // btnCancel
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.btnCancel.Location = new System.Drawing.Point(237, 60);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 2;
+            this.btnCancel.TabIndex = 4;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 

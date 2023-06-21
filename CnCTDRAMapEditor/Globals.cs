@@ -103,8 +103,8 @@ namespace MobiusEditor
         private static double GetMinScale(){ return 1.0 / Math.Min(OriginalTileWidth, OriginalTileHeight); }
         public static double MapTileScale => Math.Max(GetMinScale(), Math.Abs(UseClassicFiles ? Properties.Settings.Default.MapScaleClassic : Properties.Settings.Default.MapScale));
         public static bool MapSmoothScale => (UseClassicFiles ? Properties.Settings.Default.MapScaleClassic : Properties.Settings.Default.MapScale) < 0;
-        public static int MapTileWidth => Math.Max(1, (int)(OriginalTileWidth * MapTileScale));
-        public static int MapTileHeight => Math.Max(1, (int)(OriginalTileHeight * MapTileScale));
+        public static int MapTileWidth => Math.Max(1, (int)Math.Round(OriginalTileWidth * MapTileScale));
+        public static int MapTileHeight => Math.Max(1, (int)Math.Round(OriginalTileHeight * MapTileScale));
         public static Size MapTileSize => new Size(MapTileWidth, MapTileHeight);
 
         public static double PreviewTileScale
@@ -122,8 +122,8 @@ namespace MobiusEditor
             }
         }
         public static bool PreviewSmoothScale => Properties.Settings.Default.PreviewScale < 0;
-        public static int PreviewTileWidth => Math.Max(1, (int)(OriginalTileWidth * PreviewTileScale));
-        public static int PreviewTileHeight => (int)(OriginalTileHeight * PreviewTileScale);
+        public static int PreviewTileWidth => Math.Max(1, (int)Math.Round(OriginalTileWidth * PreviewTileScale));
+        public static int PreviewTileHeight => (int)Math.Round(OriginalTileHeight * PreviewTileScale);
         public static Size PreviewTileSize => new Size(PreviewTileWidth, PreviewTileHeight);
 
         public static int UndoRedoStackSize { get; private set; }

@@ -446,32 +446,43 @@ Released on 03 Apr 2023 at 19:20 GMT
 
 Unreleased
 
-* Added support for classic graphics, making the editor independent from the C&C Remaster.
+* Added support for reading and using classic game files, making the editor independent from the C&C Remaster.
 * Fixed an error in the sorting of ini sections that messed up the linking of teamtypes to triggers when the teamtype names ended on numbers going up to 10 and the lower numbers were not padded with zeroes.
 * All overlay placement is now correctly restricted to not be allowed on the top or bottom row of the map, showing red indicators when in placement mode.
 * Resource placement with a brush size larger than 1 shows red cells inside the brush area when hovering over the top or bottom cells of the map. At size 1, the brush is simply completely red.
 * Applied DPI changes that might fix issues with objects drawing weirdly on some people's systems.
-* PageUp and PageDown buttons will now consistently move through the tool list in all editing modes.
+* Pressing the PageUp and PageDown buttons while the main window is selected will now consistently move through the tool's item choices, in all editing modes.
 * Removed [ and ] as shortcuts to affect resource paint size because they did not work consistently on foreign keyboards. The functionality was also changed to PageUp and PageDown.
 * Fixed an issue where RA triggers with waypoint "None" set in them would have that value corrupted to 255 after a reload of the map, causing other systems in the editor to crash.
 * Fixed mixup between actions and events in the TD trigger reading checks.
-* Resources outside the map are now always shown at their minimum size, and tinted red, to indicate they don't really have any impact on the map. This also updates on the fly when changing the map bounds.
+* Resources outside the map are now always shown at their minimum size, and tinted red, to indicate they don't really have any impact on the map.
 * The Resources tool no longer evaluates resources placed outside the map bounds.
 * Fixed a bug in the resource value calculation for gems.
 * Rule errors that occur after closing the Map settings dialog will now show in a window with scrollable area, just like the errors shown when opening a maps.
 * Added missing overlap checks to buildings on the rebuild-list, so they can no longer disappear on map load without any warning.
-* Fixed bug in Team Types window where the amount of added classes and orders would not unlock when maxed out on the previously selected item.
-* Added names to Overlay, Terrain, Smudge and Resources.
-* Migrated resource randomisation from the map renderer to the density-update logic, so the actual objects don't always show as "TI01" / "GOLD01" / "GEM01" if that's not the graphics they're showing.
+* Fixed a bug in the Team Types window where the amount of added classes and orders would not unlock when maxed out on the previously selected item.
+* Added missing names for items that were lacking them in the available game text resources.
+* Harvestable resource will now show the actual name of the graphics they're showing, rather than always showing "TI01" / "GOLD01" / "GEM01".
 * Changed TD Technology Center to its real name, instead of "Prison".
-* Added reference to GraphicsFixesRA mod.
+* Added a reference to the GraphicsFixesRA mod in the ModsToLoadRA setting.
 * Added "EnforceObjectMaximums" setting that can be disabled to remove save checks on object maximums.
 * Fixed swapped power usage and production of RA Gap Generator.
-* Set correct preview House for the ant units and buildings.
+* Set correct preview House for the ant units and buildings. This only affects classic files mode though.
 * Fixed bug where the Template tool and the "new from image" dialog used a tile size derived from the map scale factor instead of the preview scale factor to determine in which tile the user clicked.
 * Fixed bugs in text indicator scaling.
 * Added better fallbacks for missing graphics.
-* Fixed caching problems on randomisable tiles.
-* Fixed an issue where map tiles got the "contains random tiles" status assigned, but when loading a new theater this information wasn't cleared.
-* Added missing names for items that were lacking them in the available stings files.
+* Fixed an issue where map tiles could get the "contains random tiles" status assigned, but when loading a new theater this information wasn't cleared.
 * Fixed multiplayer start position flags getting stretched to the full tile size instead of centered.
+* The "Visibility" value in the Steam section now saves as simple number (0=public, 1=friends, 2=private). The old long text lines can still be interpreted though.
+* The invite warning and game path asking dialogs now have the editor's icon rather than a default icon.
+* In multi-monitor environments, the editor will now always open on the monitor where the mouse cursor is.
+* Map generation will now add waypoint flags to multiplayer maps.
+* Added a logic to reduce cell edge artifacts when exporting as smoothed image.
+* Optimised preview generation by not rendering the preview in full resolution first.
+* Fixed crate outlines being linked to the visibility of waypoints instead of overlay.
+* Added checks on special waypoints to make sure they are actually inside the map bounds.
+* Fixed tab order in image export dialogs.
+* The long shadows of terrain decorations like trees now correctly overlap anything standing under them.
+* Changed "outlines on overlapped crates" option to "outlines on overlapped objects", and made it work for units and infantry too.
+* Fixed rounding issues in image export dialog, and added tool and info to set the scale by cell size.
+* Added warning when RA ant units or structures are used in the map, but no rule definitions for them exist in the ini.

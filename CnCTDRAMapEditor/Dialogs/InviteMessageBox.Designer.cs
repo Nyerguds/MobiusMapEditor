@@ -111,6 +111,7 @@ namespace MobiusEditor.Dialogs
             this.ClientSize = new System.Drawing.Size(425, 97);
             this.Controls.Add(this.flowLayoutPanel1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+            this.Icon = global::MobiusEditor.Properties.Resources.GameIcon00;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "CheckMessageBox";

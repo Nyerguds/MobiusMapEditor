@@ -29,7 +29,6 @@ namespace MobiusEditor.Dialogs
     public partial class ImageExportDialog : Form, IHasStatusLabel
     {
         private SimpleMultiThreading multiThreader;
-        private string boundsLabel;
 
         IGamePlugin gamePlugin;
 
@@ -59,15 +58,13 @@ namespace MobiusEditor.Dialogs
         public ImageExportDialog(IGamePlugin gamePlugin, MapLayerFlag layers, string filename)
         {
             InitializeComponent();
-            // Store to adapt later
-            this.boundsLabel = chkBoundsOnly.Text;
             this.gamePlugin = gamePlugin;
             inputFilename = filename;
             txtScale.Text = Globals.ExportTileScale.ToString(CultureInfo.InvariantCulture);
             chkSmooth.Checked = Globals.ExportSmoothScale;
             // For multiplayer maps, default to only exporting the bounds.
             chkBoundsOnly.Checked = !gamePlugin.Map.BasicSection.SoloMission;
-            SetSizeLabel();
+            SetSizeLabels();
             SetLayers(layers);
             txtScale.Select(0, 0);
             // Could make this at the moment of the call, too, but it also has a
@@ -76,18 +73,19 @@ namespace MobiusEditor.Dialogs
             multiThreader.ProcessingLabelBorder = BorderStyle.Fixed3D;
         }
 
-        private void SetSizeLabel()
+        private void SetSizeLabels()
         {
             if (Double.TryParse(txtScale.Text, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out double scale))
             {
-                int scaleWidth = Math.Max(1, (int)(Globals.OriginalTileWidth * scale));
-                int scaleHeight = Math.Max(1, (int)(Globals.OriginalTileHeight * scale));
+                int scaleWidth = Math.Max(1, (int)Math.Floor(Globals.OriginalTileWidth * scale + 0.0001));
+                int scaleHeight = Math.Max(1, (int)Math.Floor(Globals.OriginalTileHeight * scale + 0.0001));
                 int width = gamePlugin.Map.Metrics.Width * scaleWidth;
                 int height = gamePlugin.Map.Metrics.Height * scaleHeight;
-                lblSize.Text = String.Format("(Size: {0}×{1})", width, height);
+                lblSize.Text = String.Format("Size: {0}×{1}", width, height);
+                lblCellSize.Text = String.Format("Cell size: {0}×{1}", scaleWidth, scaleHeight);
                 int boundsWidth = gamePlugin.Map.Bounds.Width * scaleWidth;
                 int boundsHeight = gamePlugin.Map.Bounds.Height * scaleHeight;
-                chkBoundsOnly.Text = boundsLabel + String.Format(" ({0}×{1})", boundsWidth, boundsHeight);
+                lblSizeBounds.Text = String.Format("{0}×{1}", boundsWidth, boundsHeight);
             }
         }
 
@@ -108,7 +106,7 @@ namespace MobiusEditor.Dialogs
                  || gamePlugin.GameType == GameType.SoleSurvivor && mlf == MapLayerFlag.Infantry && Globals.NoOwnedObjectsInSole
                  || gamePlugin.GameType == GameType.SoleSurvivor && mlf == MapLayerFlag.BuildingRebuild
                  || gamePlugin.GameType != GameType.SoleSurvivor && mlf == MapLayerFlag.FootballArea
-                 || gamePlugin.GameType == GameType.SoleSurvivor && mlf == MapLayerFlag.CrateOutlines)
+                 || gamePlugin.GameType == GameType.SoleSurvivor && mlf == MapLayerFlag.OverlapOutlines)
                 {
                     continue;
                 }
@@ -157,7 +155,7 @@ namespace MobiusEditor.Dialogs
             String pattern = "^\\d*(\\.\\d*)?$";
             if (Regex.IsMatch(textBox.Text, pattern))
             {
-                SetSizeLabel();
+                SetSizeLabels();
                 return;
             }
             // something snuck in, probably with ctrl+v. Remove it.
@@ -195,7 +193,7 @@ namespace MobiusEditor.Dialogs
             if (firstIllegalChar == -1)
                 firstIllegalChar = 0;
             textBox.Select(firstIllegalChar, 0);
-            SetSizeLabel();
+            SetSizeLabels();
         }
 
         private void BtnSetDimensions_Click(Object sender, EventArgs e)
@@ -203,9 +201,9 @@ namespace MobiusEditor.Dialogs
             double scale;
             if (!Double.TryParse(txtScale.Text, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out scale))
             {
-                return;
+                scale = 1;
             }
-            int curSize = gamePlugin.Map.Metrics.Width * Math.Max(1, (int)(Globals.OriginalTileWidth * scale));
+            int curSize = gamePlugin.Map.Metrics.Width * Math.Max(1, (int)Math.Round(Globals.OriginalTileWidth * scale));
             using (ImagetExportSetSizeDialog dimdialog = new ImagetExportSetSizeDialog(curSize))
             {
                 dimdialog.StartPosition = FormStartPosition.CenterParent;
@@ -214,6 +212,30 @@ namespace MobiusEditor.Dialogs
                     // Can never be less than 1 pixel per cell.
                     curSize = Math.Max(dimdialog.Dimension, gamePlugin.Map.Metrics.Width);
                     scale = curSize / (double)(Globals.OriginalTileWidth * gamePlugin.Map.Metrics.Width);
+                    int intW = (int)Math.Floor(Globals.OriginalTileWidth * scale + 0.0001);
+                    scale = (double)intW / Globals.OriginalTileWidth;
+
+                    txtScale.Text = scale.ToString(CultureInfo.InvariantCulture);
+                }
+            }
+        }
+
+        private void BtnSetCellSize_Click(Object sender, EventArgs e)
+        {
+            double scale;
+            if (!Double.TryParse(txtScale.Text, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out scale))
+            {
+                scale = 1;
+            }
+            int curCellSize = (int)Math.Floor(Globals.OriginalTileWidth * scale + 0.0001);
+            using (ImagetExportSetSizeDialog dimdialog = new ImagetExportSetSizeDialog(curCellSize))
+            {
+                dimdialog.StartPosition = FormStartPosition.CenterParent;
+                if (DialogResult.OK == dimdialog.ShowDialog(this))
+                {
+                    // Can never be less than 1 pixel per cell.
+                    curCellSize = Math.Max(1, dimdialog.Dimension);
+                    scale = curCellSize / (double)Globals.OriginalTileWidth;
                     txtScale.Text = scale.ToString(CultureInfo.InvariantCulture);
                 }
             }
@@ -274,32 +296,15 @@ namespace MobiusEditor.Dialogs
 
         private static String SaveImage(IGamePlugin gamePlugin, MapLayerFlag layers, double scale, bool smooth, bool inBounds, string outputPath)
         {
-            int tileWidth = Math.Max(1, (int)(Globals.OriginalTileWidth * scale));
-            int tileHeight = Math.Max(1, (int)(Globals.OriginalTileHeight * scale));
+            int tileWidth = Math.Max(1, (int)Math.Round(Globals.OriginalTileWidth * scale));
+            int tileHeight = Math.Max(1, (int)Math.Round(Globals.OriginalTileHeight * scale));
             int fullWidth = gamePlugin.Map.Metrics.Width;
             int fullHeight = gamePlugin.Map.Metrics.Height;
             int width = inBounds ? gamePlugin.Map.Bounds.Width : fullWidth;
             int height = inBounds ? gamePlugin.Map.Bounds.Height : fullHeight;
-            Size fullSize = new Size(fullWidth * tileWidth, fullHeight * tileHeight);
             Size size = new Size(width * tileWidth, height * tileHeight);
-            using (Bitmap exportImage = gamePlugin.Map.GeneratePreview(size, gamePlugin.GameType, layers, smooth, inBounds, false).ToBitmap())
+            using (Bitmap exportImage = gamePlugin.Map.GeneratePreview(size, gamePlugin, layers, smooth, inBounds, false).ToBitmap())
             {
-                if ((layers & MapLayerFlag.Indicators) != MapLayerFlag.None)
-                {
-                    // Draw on new transparent layer, then paint over image.
-                    using (Graphics gExportImage = Graphics.FromImage(exportImage))
-                    using (Bitmap overlaysImage = new Bitmap(fullSize.Width, fullSize.Height))
-                    {
-                        overlaysImage.SetResolution(96, 96);
-                        using (Graphics gOverlaysImage = Graphics.FromImage(overlaysImage))
-                        {
-                            ViewTool.PostRenderMap(gOverlaysImage, gamePlugin, gamePlugin.Map, scale, layers, MapLayerFlag.None, false);
-                        }
-                        Rectangle fullRect = new Rectangle(new Point(0, 0), size);
-                        Rectangle boundsRect = inBounds ? new Rectangle(new Point(gamePlugin.Map.Bounds.X * tileWidth, gamePlugin.Map.Bounds.Y * tileHeight), size) : fullRect;
-                        gExportImage.DrawImage(overlaysImage, fullRect, boundsRect, GraphicsUnit.Pixel);
-                    }
-                }
                 exportImage.Save(outputPath, ImageFormat.Png);
             }
             return outputPath;

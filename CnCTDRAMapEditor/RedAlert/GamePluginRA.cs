@@ -625,7 +625,8 @@ namespace MobiusEditor.RedAlert
             INISection steamSection = ini.Sections.Extract("Steam");
             if (steamSection != null)
             {
-                INI.ParseSection(new MapContext(Map, true), steamSection, Map.SteamSection);
+                // Ignore any errors in this.
+                INI.ParseSection(new MapContext(Map, true), steamSection, Map.SteamSection, true);
             }
             T indexToType<T>(IList<T> list, string index, bool defnull)
             {
@@ -2339,7 +2340,7 @@ namespace MobiusEditor.RedAlert
 
         public bool Save(string path, FileType fileType, Bitmap customPreview, bool dontResavePreview)
         {
-            string errors = Validate();
+            string errors = Validate(false);
             if (errors != null)
             {
                 MessageBox.Show(errors, "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -2879,7 +2880,7 @@ namespace MobiusEditor.RedAlert
 
         private void SaveMapPreview(Stream stream, Boolean renderAll)
         {
-            Map.GenerateMapPreview(renderAll ? this.GameType : GameType.None, renderAll).Save(stream);
+            Map.GenerateMapPreview(this, renderAll).Save(stream);
         }
 
         private void SaveJSON(JsonTextWriter writer)
@@ -2899,7 +2900,8 @@ namespace MobiusEditor.RedAlert
             writer.WriteStartArray();
             if (!Map.BasicSection.SoloMission)
             {
-                foreach (Waypoint waypoint in Map.Waypoints.Where(w => (w.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart && w.Cell.HasValue))
+                foreach (Waypoint waypoint in Map.Waypoints.Where(w => (w.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart
+                    && w.Cell.HasValue && Map.Metrics.GetLocation(w.Cell.Value, out Point p) && Map.Bounds.Contains(p)))
                 {
                     writer.WriteValue(waypoint.Cell.Value);
                 }
@@ -2907,7 +2909,8 @@ namespace MobiusEditor.RedAlert
             else
             {
                 // Probably useless, but better than the player start points.
-                foreach (Waypoint waypoint in Map.Waypoints.Where(w => (w.Flag & WaypointFlag.Home) == WaypointFlag.Home && w.Cell.HasValue))
+                foreach (Waypoint waypoint in Map.Waypoints.Where(w => (w.Flag & WaypointFlag.Home) == WaypointFlag.Home
+                    && w.Cell.HasValue && Map.Metrics.GetLocation(w.Cell.Value, out Point p) && Map.Bounds.Contains(p)))
                 {
                     writer.WriteValue(waypoint.Cell.Value);
                 }
@@ -2916,9 +2919,46 @@ namespace MobiusEditor.RedAlert
             writer.WriteEndObject();
         }
 
-        public string Validate()
+        public string Validate(Boolean forWarnings)
         {
-            StringBuilder sb = new StringBuilder("Error(s) during map validation:");
+            StringBuilder sb;
+            if (forWarnings)
+            {
+                // Check if the map or any of the scripting references ants, and if so, if their rules are filled in.
+                UnitType[] antUs = { UnitTypes.Ant1, UnitTypes.Ant2, UnitTypes.Ant3 };
+                BuildingType[] antBRaw = { BuildingTypes.Queen, BuildingTypes.Larva1, BuildingTypes.Larva2 };
+                // Buildings get cloned so equal function doesn't work on the bare blueprints.
+                BuildingType[] antBs = this.Map.BuildingTypes.Where(bt => antBRaw.Any(loc => loc.ID == bt.ID)).ToArray();
+
+                List<BuildingType> usedAntBldTypes = Map.Buildings.OfType<Building>().Where(x => antBs.Contains(x.Occupier.Type)).Select(lb => lb.Occupier.Type).Distinct().ToList();
+                List<UnitType> usedAntUnitTypes = Map.Technos.OfType<Unit>().Where(u => antUs.Contains(u.Occupier.Type)).Select(lb => lb.Occupier.Type).Distinct().ToList();
+                List<UnitType> usedAntsInTeams = Map.TeamTypes.SelectMany(t => t.Classes).Where(cl => antUs.Contains(cl.Type)).Select(cl => cl.Type).OfType<UnitType>().Distinct().ToList();
+                usedAntUnitTypes.AddRange(usedAntsInTeams);
+                // Nothing found.
+                if (usedAntBldTypes.Count == 0 && usedAntUnitTypes.Count == 0)
+                {
+                    return null;
+                }
+                bool hasQueen = usedAntBldTypes.Any(bld => bld.ID == BuildingTypes.Queen.ID);
+                sb = new StringBuilder("The following ant units and structures were found on the map or in the scripting, but have no ini rules set to properly define their stats:");
+                List<String> types = new List<string>();
+                foreach (UnitType unit in usedAntUnitTypes)
+                {
+                    if (extraSections == null || !extraSections.Contains(unit.Name))
+                        types.Add(unit.Name.ToUpperInvariant());
+                }
+                foreach (BuildingType bld in usedAntBldTypes)
+                {
+                    if (extraSections == null || !extraSections.Contains(bld.Name))
+                        types.Add(bld.Name.ToUpperInvariant());
+                }
+                sb.Append("\n\n").Append(String.Join(", ", types.ToArray()));
+                string stats = usedAntUnitTypes.Count == 0 ? (hasQueen ? "strength or weapon" : "strength") : "strength, weapon or movement speed";
+                sb.Append("\n\n").Append("Without ini definitions, these things will have no "+ stats + ", and will malfunction in the game.");
+                sb.Append(" The definitions can be set in Settings → Map Settings → INI Rules & Tweaks.");
+                return sb.ToString();
+            }
+            sb = new StringBuilder("Error(s) during map validation:");
             bool ok = true;
             int numAircraft = Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsAircraft).Count();
             int numBuildings = Map.Buildings.OfType<Building>().Where(x => x.Occupier.IsPrebuilt).Count();
@@ -2926,7 +2966,10 @@ namespace MobiusEditor.RedAlert
             int numTerrain = Map.Technos.OfType<Terrain>().Count();
             int numUnits = Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsGroundUnit).Count();
             int numVessels = Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsVessel).Count();
-            int numWaypoints = Map.Waypoints.Count(w => (w.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart && w.Cell.HasValue);
+            int numStartPoints = Map.Waypoints.Count(w => (w.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart && w.Cell.HasValue
+                && Map.Metrics.GetLocation(w.Cell.Value, out Point pt) && Map.Bounds.Contains(pt));
+            int numBadPoints = Map.Waypoints.Count(w => (w.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart && w.Cell.HasValue
+                && Map.Metrics.GetLocation(w.Cell.Value, out Point pt) && !Map.Bounds.Contains(pt));
             if (!Globals.DisableAirUnits && numAircraft > Constants.MaxAircraft && Globals.EnforceObjectMaximums)
             {
                 sb.AppendLine().Append(string.Format("Maximum number of aircraft exceeded ({0} > {1})", numAircraft, Constants.MaxAircraft));
@@ -2967,15 +3010,23 @@ namespace MobiusEditor.RedAlert
                 sb.AppendLine().Append(string.Format("Maximum number of triggers exceeded ({0} > {1})", Map.Triggers.Count, Constants.MaxTriggers));
                 ok = false;
             }
-            if (!Map.BasicSection.SoloMission && (numWaypoints < 2))
+            if (!Map.BasicSection.SoloMission)
             {
-                sb.AppendLine().Append("Skirmish/Multiplayer maps need at least 2 waypoints for player starting locations.");
-                ok = false;
+                if (numStartPoints < 2)
+                {
+                    sb.AppendLine().Append("Skirmish/Multiplayer maps need at least 2 waypoints for player starting locations.");
+                    ok = false;
+                }
+                if (numBadPoints > 0)
+                {
+                    sb.AppendLine().Append("Skirmish/Multiplayer maps should not have player start waypoints placed outside the map bound.");
+                    ok = false;
+                }
             }
             Waypoint homeWaypoint = Map.Waypoints.Where(w => (w.Flag & WaypointFlag.Home) == WaypointFlag.Home).FirstOrDefault();
-            if (Map.BasicSection.SoloMission && !homeWaypoint.Cell.HasValue)
+            if (Map.BasicSection.SoloMission && (!homeWaypoint.Cell.HasValue || !Map.Metrics.GetLocation(homeWaypoint.Cell.Value, out Point p) || !Map.Bounds.Contains(p)))
             {
-                sb.AppendLine().Append("Single-player maps need the Home waypoint to be placed.");
+                sb.AppendLine().Append("Single-player maps need the Home waypoint to be placed, inside the map bounds.");
                 ok = false;
             }
             bool fatal;
@@ -3169,7 +3220,7 @@ namespace MobiusEditor.RedAlert
 
         public IEnumerable<string> CheckTriggers(IEnumerable<Trigger> triggers, bool includeExternalData, bool prefixNames, bool fatalOnly, out bool fatal, bool fix, out bool wasFixed)
         {
-            Dictionary<long, int> fixedGlobals = new Dictionary<long, int>();;
+            Dictionary<long, int> fixedGlobals = new Dictionary<long, int>();
             return CheckTriggers(triggers, includeExternalData, prefixNames, fatalOnly, out fatal, fix, out wasFixed, null, out _, ref fixedGlobals);
         }
 

@@ -330,9 +330,9 @@ namespace MobiusEditor.Utility
         {
             cellsWide = Math.Max(1, Math.Abs(cellsWide));
             cellsHigh = Math.Max(1, Math.Abs(cellsHigh));
-            int realDiamX = (int)((radiusX * 2 + 1) * tileSize.Width);
+            int realDiamX = (int)Math.Round((radiusX * 2 + 1) * tileSize.Width);
             int realRadX = realDiamX / 2;
-            int realDiamY = (int)((radiusY * 2 + 1) * tileSize.Height);
+            int realDiamY = (int)Math.Round((radiusY * 2 + 1) * tileSize.Height);
             int realRadY = realDiamY / 2;
             int centerX = (cell.X + (cellsWide - 1) / 2) * tileSize.Width + tileSize.Width / 2;
             int centerY = (cell.Y + (cellsHigh - 1) / 2) * tileSize.Height + tileSize.Height / 2;
@@ -443,7 +443,7 @@ namespace MobiusEditor.Utility
                         int addr = lineAddr;
                         for (int cellX = 0; cellX < cellHeight; ++cellX)
                         {
-                            if (data[addr + 3] > minAlpha)
+                            if (data[addr + 3] >= minAlpha)
                             {
                                 opaquePixels++;
                                 if (opaquePixels > threshold)

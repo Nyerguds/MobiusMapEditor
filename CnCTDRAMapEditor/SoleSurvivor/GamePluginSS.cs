@@ -232,9 +232,9 @@ namespace MobiusEditor.SoleSurvivor
             SaveIniSmudge(ini);
         }
 
-        public override string Validate()
+        public override string Validate(bool forWarnings)
         {
-            return Validate(true);
+            return Validate(forWarnings, true);
         }
 
         public override HashSet<string> GetHousesWithProduction()

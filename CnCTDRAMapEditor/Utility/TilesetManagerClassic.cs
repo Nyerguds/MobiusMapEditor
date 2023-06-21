@@ -297,15 +297,7 @@ namespace MobiusEditor.Utility
                 {
                     return null;
                 }
-                // Make average-sized dummy.
-                bool noValues = shapeFile.Values.Count == 0;
-                int minWidth = noValues? 24 : shapeFile.Values.Where(v => v.Width != 0).Min(v => v.Width);
-                int maxWidth = noValues? 24 : shapeFile.Values.Where(v => v.Width != 0).Max(v => v.Width);
-                int minHeight = noValues? 24 : shapeFile.Values.Where(v => v.Height != 0).Min(v => v.Height);
-                int maxHeight = noValues? 24 : shapeFile.Values.Where(v => v.Height != 0).Max(v => v.Height);
-                int dummyWidth = minWidth + (maxWidth - minWidth) / 2;
-                int dummyHeight = minHeight + (maxHeight - minHeight) / 2;
-                shapeFrame = GenerateDummy(dummyWidth, dummyHeight);
+                shapeFrame = GenerateDummy();
                 shapeFile[shape] = shapeFrame;
             }
             Tile tile;
@@ -343,9 +335,11 @@ namespace MobiusEditor.Utility
             return tile;
         }
 
-        private ShapeFrameData GenerateDummy(int width, int height)
+        private ShapeFrameData GenerateDummy()
         {
             // Dummy generation
+            int width = 24;
+            int height = 24;
             int length = width * height;
             byte[] dummyData = Enumerable.Repeat<Byte>(14, length).ToArray();
             // Nevermind the internal border if it's too small.

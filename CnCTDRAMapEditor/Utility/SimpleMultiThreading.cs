@@ -128,7 +128,7 @@ namespace MobiusEditor.Utility
             catch (Exception ex)
             {
                 String message = operationType + " failed:\n" + ex.Message + "\n" + ex.StackTrace;
-                this.attachForm.Invoke(new Action(() => this.ShowMessageBox(message, MessageBoxButtons.OK, MessageBoxIcon.Warning)));
+                ShowMessageBoxThreadSafe(attachForm, message, null, MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 try
                 {
                     this.attachForm.Invoke(new Action(() => enableControls(true, null)));
@@ -154,13 +154,27 @@ namespace MobiusEditor.Utility
             catch (InvalidOperationException) { /* ignore */ }
         }
 
-        private DialogResult ShowMessageBox(String message, MessageBoxButtons buttons, MessageBoxIcon icon)
+        public static DialogResult ShowMessageBoxThreadSafe(Form attachForm, String message, String title, MessageBoxButtons buttons, MessageBoxIcon icon)
+        {
+            return (DialogResult)attachForm.Invoke(new Func<DialogResult>(() => ShowMessageBox(attachForm, message, title, buttons, icon, MessageBoxDefaultButton.Button1)));
+        }
+
+        public static DialogResult ShowMessageBoxThreadSafe(Form attachForm, String message, String title, MessageBoxButtons buttons, MessageBoxIcon icon, MessageBoxDefaultButton def)
+        {
+            return (DialogResult)attachForm.Invoke(new Func<DialogResult>(() => ShowMessageBox(attachForm, message, title, buttons, icon, def)));
+        }
+
+        public static DialogResult ShowMessageBox(Form attachForm, String message, String title, MessageBoxButtons buttons, MessageBoxIcon icon, MessageBoxDefaultButton def)
         {
             if (message == null)
                 return DialogResult.Cancel;
             bool allowedDrop = attachForm.AllowDrop;
             attachForm.AllowDrop = false;
-            DialogResult result = MessageBox.Show(attachForm, message, attachForm.Text, buttons, icon);
+            if (title == null)
+            {
+                title = attachForm.Text;
+            }
+            DialogResult result = MessageBox.Show(attachForm, message, title, buttons, icon, def);
             attachForm.AllowDrop = allowedDrop;
             return result;
         }

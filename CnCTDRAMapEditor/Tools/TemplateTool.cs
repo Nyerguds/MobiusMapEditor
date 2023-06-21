@@ -197,7 +197,7 @@ namespace MobiusEditor.Tools
             if (maxSize == 0)
             {
                 double ratio = DesignResWidth / (double)screen.Bounds.Width;
-                maxSize = (int)((DesignTextureWidth / ratio) * Properties.Settings.Default.TemplateToolTextureSizeMultiplier);
+                maxSize = (int)Math.Round((DesignTextureWidth / ratio) * Properties.Settings.Default.TemplateToolTextureSizeMultiplier);
             }
             var maxWidth = Math.Min(templateTypeImages.Max(t => t.Width), maxSize);
             var maxHeight = Math.Min(templateTypeImages.Max(t => t.Height), maxSize);
@@ -444,10 +444,10 @@ namespace MobiusEditor.Tools
                     ExitAllModes();
                 }
             }
-            //else
-            //{
-            //    ExitAllModes();
-            //}
+            else
+            {
+                CheckSelectShortcuts(e);
+            }
         }
 
         private void TemplateTool_KeyUp(object sender, KeyEventArgs e)
@@ -1164,6 +1164,44 @@ namespace MobiusEditor.Tools
             }
         }
 
+        private void CheckSelectShortcuts(KeyEventArgs e)
+        {
+            int maxVal = templateTypeListView.Items.Count - 1;
+            int curVal = templateTypeListView.SelectedIndices.Count == 0 ? -1 : templateTypeListView.SelectedIndices[0];
+            int newVal;
+            switch (e.KeyCode)
+            {
+                case Keys.Home:
+                    newVal = 0;
+                    break;
+                case Keys.End:
+                    newVal = maxVal;
+                    break;
+                case Keys.PageDown:
+                    newVal = Math.Min(curVal + 1, maxVal);
+                    break;
+                case Keys.PageUp:
+                    newVal = Math.Max(curVal - 1, 0);
+                    break;
+                default:
+                    return;
+            }
+            if (curVal != newVal)
+            {
+                if (placementMode && SelectedTemplateType != null)
+                {
+                    InvalidateCurrentArea();
+                }
+                templateTypeListView.Items[newVal].Selected = true;
+                templateTypeListView.Select();
+                TemplateType selected = SelectedTemplateType;
+                if (placementMode && selected != null)
+                {
+                    InvalidateCurrentArea();
+                }
+            }
+        }
+
         private void EnterFillMode()
         {
             if (fillMode)
@@ -1277,19 +1315,19 @@ namespace MobiusEditor.Tools
                 {
                     if (navigationWidget.ClosestMouseCellBorder.Y > mouseCell.Y)
                     {
-                        tooltipPosition.Y += (int)((Globals.PixelWidth - navigationWidget.MouseSubPixel.Y) * zoomedCell.Height / Globals.PixelWidth);
+                        tooltipPosition.Y += (int)Math.Round((Globals.PixelWidth - navigationWidget.MouseSubPixel.Y) * zoomedCell.Height / Globals.PixelWidth);
                     }
                     else
                     {
-                        tooltipPosition.Y -= (int)(navigationWidget.MouseSubPixel.Y * zoomedCell.Height / Globals.PixelWidth);
+                        tooltipPosition.Y -= (int)Math.Round(navigationWidget.MouseSubPixel.Y * zoomedCell.Height / Globals.PixelWidth);
                     }
                     if (navigationWidget.ClosestMouseCellBorder.X > mouseCell.X)
                     {
-                        tooltipPosition.X += (int)((Globals.PixelWidth - navigationWidget.MouseSubPixel.X) * zoomedCell.Width / Globals.PixelWidth);
+                        tooltipPosition.X += (int)Math.Round((Globals.PixelWidth - navigationWidget.MouseSubPixel.X) * zoomedCell.Width / Globals.PixelWidth);
                     }
                     else
                     {
-                        tooltipPosition.X -= (int)(navigationWidget.MouseSubPixel.X * zoomedCell.Width / Globals.PixelWidth);
+                        tooltipPosition.X -= (int)Math.Round(navigationWidget.MouseSubPixel.X * zoomedCell.Width / Globals.PixelWidth);
                     }
                     switch (showEdge)
                     {

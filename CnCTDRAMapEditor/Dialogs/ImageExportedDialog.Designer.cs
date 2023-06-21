@@ -55,7 +55,7 @@ namespace MobiusEditor.Dialogs
             this.btnGoToFile.Location = new System.Drawing.Point(175, 89);
             this.btnGoToFile.Name = "btnGoToFile";
             this.btnGoToFile.Size = new System.Drawing.Size(75, 23);
-            this.btnGoToFile.TabIndex = 1;
+            this.btnGoToFile.TabIndex = 4;
             this.btnGoToFile.Text = "Go to file";
             this.btnGoToFile.UseVisualStyleBackColor = true;
             this.btnGoToFile.Click += new System.EventHandler(this.BtnGoToFile_Click);
@@ -67,7 +67,7 @@ namespace MobiusEditor.Dialogs
             this.btnDone.Location = new System.Drawing.Point(347, 89);
             this.btnDone.Name = "btnDone";
             this.btnDone.Size = new System.Drawing.Size(75, 23);
-            this.btnDone.TabIndex = 1;
+            this.btnDone.TabIndex = 0;
             this.btnDone.Text = "Done";
             this.btnDone.UseVisualStyleBackColor = true;
             // 
@@ -79,7 +79,7 @@ namespace MobiusEditor.Dialogs
             this.textBox1.Name = "textBox1";
             this.textBox1.ReadOnly = true;
             this.textBox1.Size = new System.Drawing.Size(407, 20);
-            this.textBox1.TabIndex = 2;
+            this.textBox1.TabIndex = 3;
             // 
             // lblExported
             // 
@@ -88,7 +88,7 @@ namespace MobiusEditor.Dialogs
             this.lblExported.Margin = new System.Windows.Forms.Padding(3);
             this.lblExported.Name = "lblExported";
             this.lblExported.Size = new System.Drawing.Size(143, 13);
-            this.lblExported.TabIndex = 0;
+            this.lblExported.TabIndex = 1;
             this.lblExported.Text = "Image exported successfully!";
             // 
             // lblName
@@ -98,7 +98,7 @@ namespace MobiusEditor.Dialogs
             this.lblName.Margin = new System.Windows.Forms.Padding(3);
             this.lblName.Name = "lblName";
             this.lblName.Size = new System.Drawing.Size(50, 13);
-            this.lblName.TabIndex = 0;
+            this.lblName.TabIndex = 2;
             this.lblName.Text = "File path:";
             // 
             // btnExportAgain
@@ -108,7 +108,7 @@ namespace MobiusEditor.Dialogs
             this.btnExportAgain.Location = new System.Drawing.Point(256, 89);
             this.btnExportAgain.Name = "btnExportAgain";
             this.btnExportAgain.Size = new System.Drawing.Size(85, 23);
-            this.btnExportAgain.TabIndex = 1;
+            this.btnExportAgain.TabIndex = 5;
             this.btnExportAgain.Text = "Export again...";
             this.btnExportAgain.UseVisualStyleBackColor = true;
             // 

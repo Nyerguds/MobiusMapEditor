@@ -13,8 +13,6 @@
 // GNU General Public License along with permitted additional restrictions
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 
-#define CLASSICIMPLEMENTED
-
 using MobiusEditor.Dialogs;
 using MobiusEditor.Interface;
 using MobiusEditor.Utility;
@@ -70,47 +68,38 @@ namespace MobiusEditor
             modPaths.Add(GameType.TiberianDawn, GetModPaths(gameId, Properties.Settings.Default.ModsToLoadTD, tdModFolder, "TD"));
             modPaths.Add(GameType.RedAlert, GetModPaths(gameId, Properties.Settings.Default.ModsToLoadRA, raModFolder, "RA"));
             modPaths.Add(GameType.SoleSurvivor, GetModPaths(gameId, Properties.Settings.Default.ModsToLoadSS, tdModFolder, "TD"));
-#if CLASSICIMPLEMENTED
-            String runPath = Globals.UseClassicFiles ? null : GetRemasterRunPath();
-#else
-            String runPath = GetRemasterRunPath();
-#endif
+            String runPath = GetRemasterRunPath(!Globals.UseClassicFiles);
             if (runPath != null)
             {
-                if (!LoadEditorRemastered(runPath))
-                {
-                    return;
-                }
+                // Required for Steam interface to work.
+                Environment.CurrentDirectory = runPath;
             }
-            else
+            bool loadOk = false;
+            if (!Globals.UseClassicFiles && runPath != null)
             {
-#if CLASSICIMPLEMENTED
-                if (Globals.UseClassicFiles)
-                {
-                    if (!LoadEditorClassic(modPaths))
-                    {
-                        return;
-                    }
-                }
-                else
-                {
-                    return;
-                }
-#else
-                return;
-#endif
+                loadOk = LoadEditorRemastered(runPath);
             }
-            if (SteamworksUGC.IsSteamBuild && runPath != null)
+            else if (Globals.UseClassicFiles)
+            {
+                loadOk = LoadEditorClassic(modPaths);
+            }
+            if (!loadOk)
+            {
+                return;
+            }
+            bool steamEnabled = false;
+            if (SteamworksUGC.IsSteamBuild)
             {
                 // Ignore result from this.
-                SteamworksUGC.Init();
+                steamEnabled = SteamworksUGC.Init();
             }
-            if (Properties.Settings.Default.ShowInviteWarning)
+            if (steamEnabled & Properties.Settings.Default.ShowInviteWarning)
             {
                 using (var inviteMessageBox = new InviteMessageBox())
                 {
                     // Ensures the dialog does not get lost by showing its icon in the taskbar.
                     inviteMessageBox.ShowInTaskbar = true;
+                    inviteMessageBox.StartPosition = FormStartPosition.CenterScreen;
                     inviteMessageBox.ShowDialog();
                     Properties.Settings.Default.ShowInviteWarning = !inviteMessageBox.DontShowAgain;
                     Properties.Settings.Default.Save();
@@ -328,7 +317,7 @@ namespace MobiusEditor
             return true;
         }
 
-        private static String GetRemasterRunPath()
+        private static String GetRemasterRunPath(bool askIfNotFound)
         {
             // Do a test for CONFIG.MEG
             string runPath = Environment.CurrentDirectory;
@@ -363,9 +352,10 @@ namespace MobiusEditor
                 }
             }
             // If the directory in the settings is wrong, and it can not be autodetected, we need to ask the user for the installation dir.
-            if (!validSavedDirectory)
+            if (!validSavedDirectory && askIfNotFound)
             {
                 var gameInstallationPathForm = new GameInstallationPathForm();
+                gameInstallationPathForm.StartPosition = FormStartPosition.CenterScreen;
                 switch (gameInstallationPathForm.ShowDialog())
                 {
                     case DialogResult.OK:

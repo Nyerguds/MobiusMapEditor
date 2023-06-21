@@ -455,13 +455,13 @@ namespace MobiusEditor.Controls
             var size = Size.Empty;
             if (panelAspect > mapAspect)
             {
-                size.Height = (int)(mapImage.Height / zoom);
-                size.Width = (int)(size.Height * panelAspect);
+                size.Height = (int)Math.Round(mapImage.Height / zoom);
+                size.Width = (int)Math.Round(size.Height * panelAspect);
             }
             else
             {
-                size.Width = (int)(mapImage.Width / zoom);
-                size.Height = (int)(size.Width / panelAspect);
+                size.Width = (int)Math.Round(mapImage.Width / zoom);
+                size.Height = (int)Math.Round(size.Width / panelAspect);
             }
 
             var location = Point.Empty;
@@ -497,11 +497,11 @@ namespace MobiusEditor.Controls
                 cameraLocation = cameraBounds.Location;
                 if (scrollSize.Width != 0)
                 {
-                    cameraLocation.X = Math.Max(0, Math.Min(mapImage.Width - cameraBounds.Width, (int)(mapPoint.X - (cameraBounds.Width * clientSize.Width))));
+                    cameraLocation.X = Math.Max(0, Math.Min(mapImage.Width - cameraBounds.Width, mapPoint.X - (int)Math.Round(cameraBounds.Width * clientSize.Width)));
                 }
                 if (scrollSize.Height != 0)
                 {
-                    cameraLocation.Y = Math.Max(0, Math.Min(mapImage.Height - cameraBounds.Height, (int)(mapPoint.Y - (cameraBounds.Height * clientSize.Height))));
+                    cameraLocation.Y = Math.Max(0, Math.Min(mapImage.Height - cameraBounds.Height, mapPoint.Y - (int)Math.Round(cameraBounds.Height * clientSize.Height)));
                 }
                 if (!scrollSize.IsEmpty)
                 {

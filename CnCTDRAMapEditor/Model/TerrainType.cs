@@ -185,11 +185,12 @@ namespace MobiusEditor.Model
             Tile tile;
             // If the graphics source doesn't yield a result, fall back on actual name.
             // This fixes the graphics source override for the ore mine not working in classic mode.
+            bool success = true;
             if (!Globals.TheTilesetManager.GetTileData(tileName, DisplayIcon, out tile))
             {
-                Globals.TheTilesetManager.GetTileData(this.Name, DisplayIcon, out tile);
+                success = Globals.TheTilesetManager.GetTileData(this.Name, DisplayIcon, out tile, true, false);
             }
-            if (tile != null)
+            if (tile != null && tile.Image != null)
             {
                 var tileSize = Globals.PreviewTileSize;
                 var renderSize = new Size(tileSize.Width * Size.Width, tileSize.Height * Size.Height);
@@ -202,11 +203,25 @@ namespace MobiusEditor.Model
                     g.DrawImage(tile.Image, overlayBounds);
                 }
                 Thumbnail = th;
-                OpaqueMask = GeneralUtils.FindOpaqueCells(th, Size, 10, 25, 0x80);
+                if (success)
+                {
+                    OpaqueMask = GeneralUtils.FindOpaqueCells(th, Size, 10, 25, 0x80);
+                }
             }
             else
             {
                 Thumbnail = null;
+            }
+            if (!success)
+            {
+                OpaqueMask = new bool[Size.Height, Size.Width];
+                for (int y = 0; y < Size.Height; ++y)
+                {
+                    for (int x = 0; x < Size.Width; ++x)
+                    {
+                        OpaqueMask[y, x] = true;
+                    }
+                }
             }
             if (oldImage != null)
             {

@@ -15,6 +15,7 @@
 using MobiusEditor.Event;
 using MobiusEditor.Interface;
 using MobiusEditor.Render;
+using MobiusEditor.Tools;
 using MobiusEditor.Utility;
 using System;
 using System.Collections.Generic;
@@ -55,14 +56,14 @@ namespace MobiusEditor.Model
         BuildingFakes   = 1 << 18,
         EffectRadius    = 1 << 19,
         WaypointRadius  = 1 << 20,
-        CrateOutlines   = 1 << 21,
+        OverlapOutlines   = 1 << 21,
 
         OverlayAll = Resources | Walls | Overlay,
         Technos = Terrain | Infantry | Units | Buildings,
         MapLayers = Terrain | Resources | Walls | Overlay | Smudge | Infantry | Units | Buildings | Waypoints,
         /// <summary>Listing of layers that don't need a full map repaint.</summary>
         Indicators = Boundaries | MapSymmetry | MapGrid | WaypointsIndic | FootballArea | CellTriggers
-            | TechnoTriggers | BuildingRebuild | BuildingFakes | EffectRadius | WaypointRadius | CrateOutlines,
+            | TechnoTriggers | BuildingRebuild | BuildingFakes | EffectRadius | WaypointRadius | OverlapOutlines,
         All = Int32.MaxValue
     }
 
@@ -1136,7 +1137,8 @@ namespace MobiusEditor.Model
             map.BeginUpdate();
             this.MapSection.CopyTo(map.MapSection);
             this.BriefingSection.CopyTo(map.BriefingSection);
-            this.SteamSection.CopyTo(map.SteamSection);
+            // Ignore processing-only "VisibilityAsEnum".
+            this.SteamSection.CopyTo(map.SteamSection, typeof(NonSerializedINIKeyAttribute));
             Array.Copy(this.Houses, map.Houses, map.Houses.Length);
             map.Triggers.AddRange(this.Triggers);
             this.Templates.CopyTo(map.Templates);
@@ -1378,37 +1380,83 @@ namespace MobiusEditor.Model
             return null;
         }
 
-        public TGA GeneratePreview(Size previewSize, GameType gameType, bool renderAll, bool sharpen)
+        public TGA GeneratePreview(Size previewSize, IGamePlugin plugin, bool renderAll, bool sharpen)
         {
             MapLayerFlag toRender = MapLayerFlag.Template | (renderAll ? MapLayerFlag.OverlayAll | MapLayerFlag.Smudge | MapLayerFlag.Technos : MapLayerFlag.Resources);
-            return this.GeneratePreview(previewSize, gameType, toRender, true, true, sharpen);
+            int?[] backupWps = null;
+            if (!this.BasicSection.SoloMission)
+            {
+                toRender = toRender | MapLayerFlag.Waypoints;
+                // Since there's no way to tell the map renderer to only render flag waypoints, we backup and
+                // clear all other waypoints before the preview generation, and restore them again afterwards.
+                backupWps = new int?[this.Waypoints.Length];
+                for (int i = 0; i < this.Waypoints.Length; ++i)
+                {
+                    // Clear waypoint if not player start.
+                    if (this.Waypoints[i].Cell.HasValue && (this.Waypoints[i].Flag & WaypointFlag.PlayerStart) == 0)
+                    {
+                        backupWps[i] = Waypoints[i].Cell;
+                        this.Waypoints[i].Cell = null;
+                    }
+                }
+            }
+            try
+            {
+                return this.GeneratePreview(previewSize, plugin, toRender, true, true, sharpen);
+            }
+            finally
+            {
+                // Restore waypoints.
+                if (backupWps != null)
+                {
+                    for (int i = 0; i < this.Waypoints.Length; ++i)
+                    {
+                        if (backupWps[i].HasValue)
+                        {
+                            this.Waypoints[i].Cell = backupWps[i];
+                        }
+                    }
+                }
+            }
         }
 
-        public TGA GeneratePreview(Size previewSize, GameType gameType, MapLayerFlag toRender, bool smooth, bool crop, bool sharpen)
+        public TGA GeneratePreview(Size previewSize, IGamePlugin plugin, MapLayerFlag toRender, bool smooth, bool crop, bool sharpen)
         {
-            Rectangle mapBounds;
-            HashSet<Point> locations = this.Metrics.Bounds.Points().ToHashSet();;
-            if (crop)
-            {
-                mapBounds = new Rectangle(this.Bounds.Left * Globals.OriginalTileWidth, this.Bounds.Top * Globals.OriginalTileHeight,
-                    this.Bounds.Width * Globals.OriginalTileWidth, this.Bounds.Height * Globals.OriginalTileHeight);
-                //locations = Bounds.Points().ToHashSet();
-            }
-            else
-            {
-                mapBounds = new Rectangle(0, 0, this.Metrics.Width * Globals.OriginalTileWidth, this.Metrics.Height * Globals.OriginalTileHeight);
-                //locations
-            }
-            Single previewScale = Math.Min(previewSize.Width / (float)mapBounds.Width, previewSize.Height / (float)mapBounds.Height);
-            Size scaledSize = new Size((int)(previewSize.Width / previewScale), (int)(previewSize.Height / previewScale));
+            HashSet<Point> locations = this.Metrics.Bounds.Points().ToHashSet();
+            Rectangle boundsToUse = crop ? this.Bounds : new Rectangle(Point.Empty, this.Metrics.Size);
+            Size originalTileSize = Globals.OriginalTileSize;
+            bool scaleOnWidth = !crop || this.Bounds.Width >= this.Bounds.Height;
 
-            using (Bitmap fullBitmap = new Bitmap(this.Metrics.Width * Globals.OriginalTileWidth, this.Metrics.Height * Globals.OriginalTileHeight))
+            //double tileScale = 0.5f;
+            double tileScale = scaleOnWidth ? (double)previewSize.Width / (boundsToUse.Width * originalTileSize.Width) : (double)previewSize.Height / (boundsToUse.Height * originalTileSize.Height);
+
+            Size tmpTileSize = new Size((int)Math.Round(originalTileSize.Width * tileScale), (int)Math.Round(originalTileSize.Height * tileScale));
+            tmpTileSize.Width = (int)Math.Round(Globals.OriginalTileWidth * tileScale);
+            tmpTileSize.Height = (int)Math.Round(Globals.OriginalTileHeight * tileScale);
+            if (scaleOnWidth ? (tmpTileSize.Width * boundsToUse.Width < previewSize.Width) : (tmpTileSize.Height * boundsToUse.Height < previewSize.Height))
+            {
+                tmpTileSize.Width++;
+                tmpTileSize.Height++;
+                tileScale = scaleOnWidth ? (float)tmpTileSize.Width / Globals.OriginalTileWidth : (float)tmpTileSize.Height / Globals.OriginalTileHeight;
+            }
+
+            Size renderTileSize = new Size((int)Math.Round(originalTileSize.Width * tileScale), (int)Math.Round(originalTileSize.Height * tileScale));
+            Rectangle mapBounds = new Rectangle(boundsToUse.Left * renderTileSize.Width, boundsToUse.Top * renderTileSize.Height,
+                    boundsToUse.Width * renderTileSize.Width, boundsToUse.Height * renderTileSize.Height);
+            Single previewScale = Math.Min(previewSize.Width / (float)mapBounds.Width, previewSize.Height / (float)mapBounds.Height);
+            Size scaledSize = new Size((int)Math.Round(previewSize.Width / previewScale), (int)Math.Round(previewSize.Height / previewScale));
+
+            using (Bitmap fullBitmap = new Bitmap(this.Metrics.Width * renderTileSize.Width, this.Metrics.Height * renderTileSize.Height))
             using (Bitmap croppedBitmap = new Bitmap(previewSize.Width, previewSize.Height))
             {
                 using (Graphics g = Graphics.FromImage(fullBitmap))
                 {
                     MapRenderer.SetRenderSettings(g, smooth);
-                    MapRenderer.Render(gameType, this, g, locations, toRender, 1);
+                    MapRenderer.Render(plugin.GameType, this, g, locations, toRender, tileScale);
+                    if ((toRender & MapLayerFlag.Indicators) != 0)
+                    {
+                        ViewTool.PostRenderMap(g, plugin, this, tileScale, toRender, MapLayerFlag.None, false);
+                    }
                 }
                 using (Graphics g = Graphics.FromImage(croppedBitmap))
                 {
@@ -1434,14 +1482,14 @@ namespace MobiusEditor.Model
             }
         }
 
-        public TGA GenerateMapPreview(GameType gameType, bool renderAll)
+        public TGA GenerateMapPreview(IGamePlugin plugin, bool renderAll)
         {
-            return this.GeneratePreview(Globals.MapPreviewSize, gameType, renderAll, false);
+            return this.GeneratePreview(Globals.MapPreviewSize, plugin, renderAll, false);
         }
 
-        public TGA GenerateWorkshopPreview(GameType gameType, bool renderAll)
+        public TGA GenerateWorkshopPreview(IGamePlugin plugin, bool renderAll)
         {
-            return this.GeneratePreview(Globals.WorkshopPreviewSize, gameType, renderAll, true);
+            return this.GeneratePreview(Globals.WorkshopPreviewSize, plugin, renderAll, true);
         }
 
         object ICloneable.Clone()

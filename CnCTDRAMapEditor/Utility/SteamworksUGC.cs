@@ -107,7 +107,7 @@ namespace MobiusEditor.Utility
             success = success && SteamUGC.SetItemUpdateLanguage(updateHandle, "English");
             success = success && SteamUGC.SetItemTitle(updateHandle, steamSection.Title);
             success = success && SteamUGC.SetItemDescription(updateHandle, steamSection.Description);
-            success = success && SteamUGC.SetItemVisibility(updateHandle, steamSection.Visibility);
+            success = success && SteamUGC.SetItemVisibility(updateHandle, steamSection.VisibilityAsEnum);
             success = success && SteamUGC.SetItemTags(updateHandle, tags);
             if (!success)
             {

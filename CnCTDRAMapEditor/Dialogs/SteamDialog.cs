@@ -48,11 +48,11 @@ namespace MobiusEditor.Dialogs
         {
             this.plugin = plugin;
             InitializeComponent();
-            cmbVisibility.DataSource = new[]
+            cmbVisibility.DataSource = new ListItem<ERemoteStoragePublishedFileVisibility>[]
             {
-                new { Name = "Public", Value = ERemoteStoragePublishedFileVisibility.k_ERemoteStoragePublishedFileVisibilityPublic },
-                new { Name = "Friends Only", Value = ERemoteStoragePublishedFileVisibility.k_ERemoteStoragePublishedFileVisibilityFriendsOnly },
-                new { Name = "Private", Value = ERemoteStoragePublishedFileVisibility.k_ERemoteStoragePublishedFileVisibilityPrivate }
+                ListItem.MakeListItem(ERemoteStoragePublishedFileVisibility.k_ERemoteStoragePublishedFileVisibilityPublic, "Public"),
+                ListItem.MakeListItem(ERemoteStoragePublishedFileVisibility.k_ERemoteStoragePublishedFileVisibilityFriendsOnly, "Friends Only"),
+                ListItem.MakeListItem(ERemoteStoragePublishedFileVisibility.k_ERemoteStoragePublishedFileVisibilityPrivate, "Private")
             };
             multiThreader = new SimpleMultiThreading(this);
             statusUpdateTimer.Interval = 500;
@@ -73,7 +73,7 @@ namespace MobiusEditor.Dialogs
             string description = plugin.Map.SteamSection.Description ?? String.Empty;
             txtDescription.Text = GeneralUtils.RestoreLinebreaks(description, '@', Environment.NewLine);
             txtPreview.Text = plugin.Map.SteamSection.PreviewFile ?? String.Empty;
-            cmbVisibility.SelectedValue = plugin.Map.SteamSection.Visibility;
+            cmbVisibility.SelectedIndex = ListItem.GetIndexInDropdown(plugin.Map.SteamSection.VisibilityAsEnum, cmbVisibility, 0);
             UpdatePublishButton();
             btnFromBriefing.Enabled = plugin.Map.BasicSection.SoloMission;
             FixSizeAndLocation(800, 500);
@@ -212,7 +212,7 @@ namespace MobiusEditor.Dialogs
             plugin.Map.SteamSection.PreviewFile = txtPreview.Text;
             plugin.Map.SteamSection.Title = txtTitle.Text;
             plugin.Map.SteamSection.Description = GeneralUtils.ReplaceLinebreaks(txtDescription.Text, '@');
-            plugin.Map.SteamSection.Visibility = (ERemoteStoragePublishedFileVisibility)cmbVisibility.SelectedValue;
+            plugin.Map.SteamSection.VisibilityAsEnum = ListItem.GetValueFromDropdown<ERemoteStoragePublishedFileVisibility>(cmbVisibility);
             Directory.CreateDirectory(PublishTempDirectory);
             foreach (var file in new DirectoryInfo(PublishTempDirectory).EnumerateFiles())
             {
@@ -261,11 +261,8 @@ namespace MobiusEditor.Dialogs
                 tags.Add("MultiPlayer");
             }
             // Clone to have version without line breaks to give to the Steam publish.
-            INI ini = new INI();
-            INI.WriteSection(new MapContext(plugin.Map, false), ini.Sections.Add("Steam"), plugin.Map.SteamSection);
-            var steamSection = ini.Sections.Extract("Steam");
             steamCloneSection = new SteamSection();
-            INI.ParseSection(new MapContext(plugin.Map, false), steamSection, steamCloneSection);
+            plugin.Map.SteamSection.CopyTo(steamCloneSection, typeof(NonSerializedINIKeyAttribute));
             // Restore original description from control, with actual line breaks instead of '@' replacements.
             steamCloneSection.Description = txtDescription.Text;
             if (SteamworksUGC.PublishUGC(sendPath, steamCloneSection, tags, OnPublishSuccess, OnOperationFailed))
@@ -357,7 +354,7 @@ namespace MobiusEditor.Dialogs
             Directory.CreateDirectory(PreviewDirectory);
             string defaultPreview = Path.Combine(PreviewDirectory, "Minimap.png");
             // Now generates all contents.
-            using (Bitmap pr = plugin.Map.GenerateWorkshopPreview(plugin.GameType, true).ToBitmap())
+            using (Bitmap pr = plugin.Map.GenerateWorkshopPreview(plugin, true).ToBitmap())
             {
                 pr.SetResolution(96, 96);
                 pr.Save(defaultPreview, ImageFormat.Png);

@@ -748,7 +748,8 @@ namespace MobiusEditor.TiberianDawn
             INISection steamSection = ini.Sections.Extract("Steam");
             if (steamSection != null)
             {
-                INI.ParseSection(new MapContext(Map, false), steamSection, Map.SteamSection);
+                // Ignore any errors in this.
+                INI.ParseSection(new MapContext(Map, false), steamSection, Map.SteamSection, true);
             }
             INISection teamTypesSection = ini.Sections.Extract("TeamTypes");
             // Make case insensitive dictionary of teamtype missions.
@@ -2036,7 +2037,7 @@ namespace MobiusEditor.TiberianDawn
 
         public bool Save(string path, FileType fileType, bool forSole, Bitmap customPreview, bool dontResavePreview)
         {
-            string errors = Validate(forSole);
+            string errors = Validate(false, forSole);
             if (errors != null)
             {
                 MessageBox.Show(errors, "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -2673,7 +2674,7 @@ namespace MobiusEditor.TiberianDawn
 
         protected void SaveMapPreview(Stream stream, Boolean renderAll)
         {
-            Map.GenerateMapPreview(renderAll ? this.GameType : GameType.None, renderAll).Save(stream);
+            Map.GenerateMapPreview(this, renderAll).Save(stream);
         }
 
         protected void SaveJSON(JsonTextWriter writer)
@@ -2693,7 +2694,8 @@ namespace MobiusEditor.TiberianDawn
             writer.WriteStartArray();
             if (!Map.BasicSection.SoloMission)
             {
-                foreach (Waypoint waypoint in Map.Waypoints.Where(w => (w.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart && w.Cell.HasValue))
+                foreach (Waypoint waypoint in Map.Waypoints.Where(w => (w.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart
+                    && w.Cell.HasValue && Map.Metrics.GetLocation(w.Cell.Value, out Point p) && Map.Bounds.Contains(p)))
                 {
                     writer.WriteValue(waypoint.Cell.Value);
                 }
@@ -2701,7 +2703,8 @@ namespace MobiusEditor.TiberianDawn
             else
             {
                 // Probably useless, but better than the player start points.
-                foreach (Waypoint waypoint in Map.Waypoints.Where(w => (w.Flag & WaypointFlag.Home) == WaypointFlag.Home && w.Cell.HasValue))
+                foreach (Waypoint waypoint in Map.Waypoints.Where(w => (w.Flag & WaypointFlag.Home) == WaypointFlag.Home
+                    && w.Cell.HasValue && Map.Metrics.GetLocation(w.Cell.Value, out Point p) && Map.Bounds.Contains(p)))
                 {
                     writer.WriteValue(waypoint.Cell.Value);
                 }
@@ -2710,13 +2713,18 @@ namespace MobiusEditor.TiberianDawn
             writer.WriteEndObject();
         }
 
-        public virtual string Validate()
+        public virtual string Validate(bool forWarnings)
         {
-            return Validate(false);
+            return Validate(forWarnings, false);
         }
 
-        protected string Validate(bool forSole)
+        protected string Validate(bool forWarnings, bool forSole)
         {
+            if (forWarnings)
+            {
+                // No warnings to check for TD/SS
+                return null;
+            }
             StringBuilder sb = new StringBuilder("Error(s) during map validation:");
             bool ok = true;
             int numAircraft = Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsAircraft).Count();
@@ -2724,7 +2732,10 @@ namespace MobiusEditor.TiberianDawn
             int numInfantry = Map.Technos.OfType<InfantryGroup>().Sum(item => item.Occupier.Infantry.Count(i => i != null));
             int numTerrain = Map.Technos.OfType<Terrain>().Count();
             int numUnits = Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsGroundUnit).Count();
-            int numWaypoints = Map.Waypoints.Count(w => (w.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart && w.Cell.HasValue);
+            int numStartPoints = Map.Waypoints.Count(w => (w.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart && w.Cell.HasValue
+                && Map.Metrics.GetLocation(w.Cell.Value, out Point pt) && Map.Bounds.Contains(pt));
+            int numBadPoints = Map.Waypoints.Count(w => (w.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart && w.Cell.HasValue
+                && Map.Metrics.GetLocation(w.Cell.Value, out Point pt) && !Map.Bounds.Contains(pt));
             bool classicSole = forSole && Globals.RestrictSoleLimits;
             int maxAir = classicSole ? Constants.MaxAircraftClassic : Constants.MaxAircraft;
             int maxBld = classicSole ? Constants.MaxBuildingsClassic : Constants.MaxBuildings;
@@ -2757,39 +2768,49 @@ namespace MobiusEditor.TiberianDawn
                 sb.AppendLine().Append(string.Format("Maximum number of units exceeded ({0} > {1})", numUnits, maxUni));
                 ok = false;
             }
-            if (!forSole)
+            // Ignore all further checks for Sole Survivor
+            if (forSole)
             {
-                if (Map.TeamTypes.Count > Constants.MaxTeams && Globals.EnforceObjectMaximums)
-                {
-                    sb.AppendLine().Append(string.Format("Maximum number of team types exceeded ({0} > {1})", Map.TeamTypes.Count, Constants.MaxTeams));
-                    ok = false;
-                }
-                if (Map.Triggers.Count > Constants.MaxTriggers && Globals.EnforceObjectMaximums)
-                {
-                    sb.AppendLine().Append(string.Format("Maximum number of triggers exceeded ({0} > {1})", Map.Triggers.Count, Constants.MaxTriggers));
-                    ok = false;
-                }
-                if (!Map.BasicSection.SoloMission && (numWaypoints < 2))
+                return ok ? null : sb.ToString();
+            }
+            if (Map.TeamTypes.Count > Constants.MaxTeams && Globals.EnforceObjectMaximums)
+            {
+                sb.AppendLine().Append(string.Format("Maximum number of team types exceeded ({0} > {1})", Map.TeamTypes.Count, Constants.MaxTeams));
+                ok = false;
+            }
+            if (Map.Triggers.Count > Constants.MaxTriggers && Globals.EnforceObjectMaximums)
+            {
+                sb.AppendLine().Append(string.Format("Maximum number of triggers exceeded ({0} > {1})", Map.Triggers.Count, Constants.MaxTriggers));
+                ok = false;
+            }
+            if (!Map.BasicSection.SoloMission)
+            {
+                if (numStartPoints < 2)
                 {
                     sb.AppendLine().Append("Skirmish/Multiplayer maps need at least 2 waypoints for player starting locations.");
                     ok = false;
                 }
-                Waypoint homeWaypoint = Map.Waypoints.Where(w => (w.Flag & WaypointFlag.Home) == WaypointFlag.Home).FirstOrDefault();
-                if (Map.BasicSection.SoloMission && !homeWaypoint.Cell.HasValue)
+                if (numBadPoints > 0)
                 {
-                    sb.AppendLine().Append("Single-player maps need the Home waypoint to be placed.");
+                    sb.AppendLine().Append("Skirmish/Multiplayer maps should not have player start waypoints placed outside the map bound.");
                     ok = false;
                 }
-                bool fatal;
-                IEnumerable<string> triggerErr = CheckTriggers(this.Map.Triggers, true, true, true, out fatal, false, out _);
-                if (fatal)
+            }
+            Waypoint homeWaypoint = Map.Waypoints.Where(w => (w.Flag & WaypointFlag.Home) == WaypointFlag.Home).FirstOrDefault();
+            if (Map.BasicSection.SoloMission && (!homeWaypoint.Cell.HasValue || !Map.Metrics.GetLocation(homeWaypoint.Cell.Value, out Point p) || !Map.Bounds.Contains(p)))
+            {
+                sb.AppendLine().Append("Single-player maps need the Home waypoint to be placed, inside the map bounds.");
+                ok = false;
+            }
+            bool fatal;
+            IEnumerable<string> triggerErr = CheckTriggers(this.Map.Triggers, true, true, true, out fatal, false, out _);
+            if (fatal)
+            {
+                foreach (string err in triggerErr)
                 {
-                    foreach (string err in triggerErr)
-                    {
-                        sb.AppendLine().Append(err);
-                    }
-                    ok = false;
+                    sb.AppendLine().Append(err);
                 }
+                ok = false;
             }
             return ok ? null : sb.ToString();
         }

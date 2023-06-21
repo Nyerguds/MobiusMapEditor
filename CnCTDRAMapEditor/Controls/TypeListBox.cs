@@ -47,7 +47,7 @@ namespace MobiusEditor.Controls
                     LineAlignment = StringAlignment.Center
                 };
                 var textSize = e.Graphics.MeasureString(typeItem.Name, Font, e.ItemWidth, stringFormat);
-                e.ItemHeight = Math.Max((int)textSize.Height, Math.Min((int)((typeItem.Type.Thumbnail?.Height ?? MissingThumbnail.Height) *
+                e.ItemHeight = Math.Max((int)textSize.Height, Math.Min((int)Math.Round((typeItem.Type.Thumbnail?.Height ?? MissingThumbnail.Height) *
                     Properties.Settings.Default.ObjectToolItemSizeMultiplier), MaxListBoxItemHeight));
             }
         }
@@ -84,11 +84,11 @@ namespace MobiusEditor.Controls
                         double heightRatio = e.Bounds.Height / (double)thumbnail.Height;
                         if (heightRatio < widthRatio)
                         {
-                            thumbnailWidth = (int)(thumbnail.Width * heightRatio);
+                            thumbnailWidth = (int)Math.Round(thumbnail.Width * heightRatio);
                         }
                         else
                         {
-                            thumbnailHeight = (int)(thumbnail.Height * widthRatio);
+                            thumbnailHeight = (int)Math.Round(thumbnail.Height * widthRatio);
                         }
 
                         var thumbnailSize = new Size(thumbnailWidth, thumbnailHeight);

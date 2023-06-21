@@ -1251,7 +1251,7 @@ namespace MobiusEditor.Utility
             { "TEXT_MUSIC_RAC_MUS_MILITANT_FORCE", 478 }, // Score Theme
             { "TEXT_MAIN_MENU_ONLINE", 479 }, // Internet Game
             { "TEXT_PROP_TITLE_ICE", 480 }, // Ice
-            { "TEXT_MULTIPLAYER_DETAILS_CRATES", 481 }, // Crates
+            { "TEXT_PROP_TITLE_INT_BOXES", 481 }, // Crates
             { "TEXT_SAVE_LOAD_SKIRMISH", 482 }, // Skirmish
             { "TEXT_UI_CHOOSE_YOUR_SIDE.", 483 }, // Choose your side.
             //{ "Valuable Minerals", 484 }, // Valuable Minerals

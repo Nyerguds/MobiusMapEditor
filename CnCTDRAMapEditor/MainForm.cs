@@ -122,6 +122,12 @@ namespace MobiusEditor
             this.filename = fileToOpen;
 
             InitializeComponent();
+            // Show on monitor that the mouse is in, since that's where the user is probably looking.
+            Screen s = Screen.FromPoint(Cursor.Position);
+            Point location = s.Bounds.Location;
+            this.Left = location.X;
+            this.Top = location.Y;
+
             // Loaded from global settings.
             toolsOptionsBoundsObstructFillMenuItem.Checked = Globals.BoundsObstructFill;
             toolsOptionsSafeDraggingMenuItem.Checked = Globals.TileDragProtect;
@@ -293,7 +299,7 @@ namespace MobiusEditor
                         Point curPoint = mapPanel.AutoScrollPosition;
                         SizeF zoomedCell = activeTool.NavigationWidget.ZoomedCellSize;
                         // autoscrollposition is WEIRD. Exposed as negative, needs to be given as positive.
-                        mapPanel.AutoScrollPosition = new Point(-curPoint.X + (int)(delta.X * zoomedCell.Width), -curPoint.Y + (int)(delta.Y * zoomedCell.Width));
+                        mapPanel.AutoScrollPosition = new Point(-curPoint.X + (int)Math.Round(delta.X * zoomedCell.Width), -curPoint.Y + (int)Math.Round(delta.Y * zoomedCell.Width));
                         return true;
                     }
                 }
@@ -428,10 +434,10 @@ namespace MobiusEditor
 
         private void FileSaveMenuItem_Click(object sender, EventArgs e)
         {
-            SaveAction(false, null);
+            SaveAction(false, null, false);
         }
 
-        private void SaveAction(bool dontResavePreview, Action afterSaveDone)
+        private void SaveAction(bool dontResavePreview, Action afterSaveDone, bool skipValidation)
         {
             if (plugin == null)
             {
@@ -440,13 +446,11 @@ namespace MobiusEditor
             }
             if (string.IsNullOrEmpty(filename) || !Directory.Exists(Path.GetDirectoryName(filename)))
             {
-                SaveAsAction(afterSaveDone);
+                SaveAsAction(afterSaveDone, skipValidation);
                 return;
             }
-            String errors = plugin.Validate();
-            if (errors != null)
+            if (!this.DoValidate())
             {
-                MessageBox.Show(errors, "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Error, MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
                 return;
             }
             var fileInfo = new FileInfo(filename);
@@ -455,20 +459,18 @@ namespace MobiusEditor
 
         private void FileSaveAsMenuItem_Click(object sender, EventArgs e)
         {
-            SaveAsAction(null);
+            SaveAsAction(null, false);
         }
 
-        private void SaveAsAction(Action afterSaveDone)
+        private void SaveAsAction(Action afterSaveDone, bool skipValidation)
         {
             if (plugin == null)
             {
                 afterSaveDone?.Invoke();
                 return;
             }
-            String errors = plugin.Validate();
-            if (errors != null)
+            if (!skipValidation && !this.DoValidate())
             {
-                MessageBox.Show(errors, "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
             string savePath = null;
@@ -511,6 +513,27 @@ namespace MobiusEditor
                 var fileInfo = new FileInfo(savePath);
                 SaveChosenFile(fileInfo.FullName, FileType.INI, false, afterSaveDone);
             }
+        }
+
+        private bool DoValidate()
+        {
+            String errors = plugin.Validate(true);
+            if (errors != null)
+            {
+                String message = errors + "\n\nContinue map save?";
+                DialogResult dr = SimpleMultiThreading.ShowMessageBoxThreadSafe(this, message, "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2);
+                if (dr == DialogResult.No)
+                {
+                    return false;
+                }
+            }
+            errors = plugin.Validate(false);
+            if (errors != null)
+            {
+                SimpleMultiThreading.ShowMessageBoxThreadSafe(this, errors, "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
+            return true;
         }
 
         private void FileExportMenuItem_Click(object sender, EventArgs e)
@@ -973,7 +996,7 @@ namespace MobiusEditor
         {
             if (File.Exists(e.FullName))
             {
-                OpenFileAsk(e.FullName, false);
+                OpenFileAsk(e.FullName);
             }
             else
             {
@@ -1048,17 +1071,11 @@ namespace MobiusEditor
                 loading);
         }
 
-        private void OpenFileAsk(String fileName, bool skipPrompt)
+        private void OpenFileAsk(String fileName)
         {
-            if (skipPrompt)
-            {
-                OpenFile(fileName);
-            }
-            else
-            {
-                PromptSaveMap(() => OpenFile(fileName), false);
-            }
+            PromptSaveMap(() => OpenFile(fileName), false);
         }
+
         private void OpenFile(String fileName)
         {
             var fileInfo = new FileInfo(fileName);
@@ -1768,7 +1785,7 @@ namespace MobiusEditor
             viewLayersInfantryMenuItem.Visible = !hasPlugin || plugin.GameType != GameType.SoleSurvivor || !Globals.NoOwnedObjectsInSole;
             viewIndicatorsBuildingRebuildLabelsMenuItem.Visible = !hasPlugin || plugin.GameType != GameType.SoleSurvivor;
             viewIndicatorsFootballAreaMenuItem.Visible = !hasPlugin || plugin.GameType == GameType.SoleSurvivor;
-            viewIndicatorsCrateOutlinesMenuItem.Visible = !hasPlugin || plugin.GameType != GameType.SoleSurvivor;
+            viewIndicatorsOutlinesMenuItem.Visible = !hasPlugin || plugin.GameType != GameType.SoleSurvivor;
         }
 
         private void CleanupTools()
@@ -2053,9 +2070,9 @@ namespace MobiusEditor
             {
                 layers &= ~MapLayerFlag.EffectRadius;
             }
-            if (!viewIndicatorsCrateOutlinesMenuItem.Checked)
+            if (!viewIndicatorsOutlinesMenuItem.Checked)
             {
-                layers &= ~MapLayerFlag.CrateOutlines;
+                layers &= ~MapLayerFlag.OverlapOutlines;
             }
             ActiveLayers = layers;
         }
@@ -2086,7 +2103,7 @@ namespace MobiusEditor
             String[] files = (String[])e.Data.GetData(DataFormats.FileDrop);
             if (files.Length != 1)
                 return;
-            OpenFileAsk(files[0], false);
+            OpenFileAsk(files[0]);
         }
 
         private void ViewMenuItem_CheckedChanged(object sender, EventArgs e)
@@ -2157,7 +2174,7 @@ namespace MobiusEditor
                 viewIndicatorsObjectTriggersMenuItem.Checked = enabled;
                 viewIndicatorsBuildingRebuildLabelsMenuItem.Checked = enabled;
                 viewIndicatorsBuildingFakeLabelsMenuItem.Checked = enabled;
-                viewIndicatorsCrateOutlinesMenuItem.Checked = enabled;
+                viewIndicatorsOutlinesMenuItem.Checked = enabled;
             }
         }
 
@@ -2259,7 +2276,7 @@ namespace MobiusEditor
             string oldName = plugin.Map.SteamSection.Title;
             string oldDescription = plugin.Map.SteamSection.Description;
             string oldPreview = plugin.Map.SteamSection.PreviewFile;
-            int oldVisibility = (int)plugin.Map.SteamSection.Visibility;
+            string oldVisibility = plugin.Map.SteamSection.Visibility;
             // Open publish dialog
             bool wasPublished;
             using (var sd = new SteamDialog(plugin))
@@ -2272,11 +2289,11 @@ namespace MobiusEditor
                 || oldName != plugin.Map.SteamSection.Title
                 || oldDescription != plugin.Map.SteamSection.Description
                 || oldPreview != plugin.Map.SteamSection.PreviewFile
-                || oldVisibility != (int)plugin.Map.SteamSection.Visibility))
+                || oldVisibility != plugin.Map.SteamSection.Visibility))
             {
                 // This takes care of saving the Steam info into the map.
                 // This specific overload only saves the map, without resaving the preview.
-                SaveAction(true, null);
+                SaveAction(true, null, false);
             }
         }
 
@@ -2294,7 +2311,7 @@ namespace MobiusEditor
             RefreshUI();
             UpdateUndoRedo();
             if (filename != null)
-                this.OpenFileAsk(filename, true);
+                OpenFile(filename);
         }
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
@@ -2371,21 +2388,17 @@ namespace MobiusEditor
                 {
                     case DialogResult.Yes:
                         {
-                            String errors = plugin.Validate();
-                            if (errors != null)
+                            if (!this.DoValidate())
                             {
-                                MessageBox.Show(errors, "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                                 return false;
                             }
-                            // Need to change this: should start multithreaded operation, and then perform the original asked operation.
-                            // toPerformAfterSave
                             if (string.IsNullOrEmpty(filename))
                             {
-                                SaveAsAction(nextAction);
+                                SaveAsAction(nextAction, true);
                             }
                             else
                             {
-                                SaveAction(false, nextAction);
+                                SaveAction(false, nextAction, true);
                             }
                             // Cancel current operation, since stuff after multithreading will take care of the operation.
                             return false;
@@ -2550,5 +2563,6 @@ namespace MobiusEditor
                 }
             }
         }
+
     }
 }

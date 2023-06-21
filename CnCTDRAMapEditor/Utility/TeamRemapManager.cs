@@ -165,7 +165,7 @@ namespace MobiusEditor.Utility
             byte[] remapSource = new byte[16];
             Array.Copy(cpsData, 0, remapSource, 0, 16);
             // Taking brightest colour here, not unit/structure colour.
-            this.currentRemapBaseIndex = remapSource[0];
+            bool baseRemapSet = false;
             for (int y = 0; y < height; ++y)
             {
                 int ptr = 320 * y;
@@ -175,6 +175,11 @@ namespace MobiusEditor.Utility
                 // Apparently the same in RA?
                 byte unitRadarColor = cpsData[ptr + 6];
                 byte buildingRadarColor = cpsData[ptr + 6];
+                if (!baseRemapSet)
+                {
+                    currentRemapBaseIndex = buildingRadarColor;
+                    baseRemapSet = true;
+                }
                 TeamRemap col = new TeamRemap(name, unitRadarColor, buildingRadarColor, remapSource, remap);
                 raRemapColors.Add(name, col);
             }
@@ -209,10 +214,10 @@ namespace MobiusEditor.Utility
             {
                 case GameType.TiberianDawn:
                 case GameType.SoleSurvivor:
-                    this.currentRemapBaseIndex = RemapTdGood.UnitRadarColor;
+                    this.currentRemapBaseIndex = RemapTdGood.BuildingRadarColor;
                     break;
                 case GameType.RedAlert:
-                    this.currentRemapBaseIndex = 80;
+                    this.currentRemapBaseIndex = 86;
                     break;
                 default:
                     this.currentRemapBaseIndex = 0;
