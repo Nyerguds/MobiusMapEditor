@@ -456,7 +456,7 @@ Feature updates:
 * Changed "outlines on overlapped crates" option to "outlines on overlapped objects", and made it work for units and infantry too.
 * Pressing the PageUp and PageDown buttons while the main window is selected will now consistently move through the tool's item choices, in all editing modes.
 * Removed [ and ] as shortcuts to affect resource paint size because they did not work consistently on foreign keyboards. The functionality was also changed to PageUp and PageDown.
-* The Resources tool no longer evaluates resources placed outside the map bounds.
+* The Resources tool no longer evaluates resources placed outside the map bounds. Resources outside the map are now always shown at their minimum size, and tinted red, to indicate they don't have any impact on the map.
 * Added a reference to the GraphicsFixesRA mod in the ModsToLoadRA setting.
 * Added "EnforceObjectMaximums" setting that can be disabled to remove save checks on the game engine's object maximums.
 * In multi-monitor environments, the editor will now always open on the monitor where the mouse cursor is.
@@ -466,7 +466,6 @@ Feature updates:
 * Added a warning when RA ant units or structures are used in the map, but no rule definitions for them exist in the ini.
 * Added an option in the trigger filter dialog to filter on triggers. This will filter out the trigger itself, and any triggers destroying or forcing the selected trigger.
 * When an RA trigger is set to type E1->A1, E2->A2, the controls for the events and actions will be reordered to accurately represent this.
-* Resources outside the map are now always shown at their minimum size, and tinted red, to indicate they don't have any impact on the map.
 
 Map logic updates:
 
