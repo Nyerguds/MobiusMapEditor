@@ -1469,7 +1469,7 @@ namespace MobiusEditor.Model
                     MapRenderer.Render(plugin.GameType, this, g, locations, toRender, tileScale);
                     if ((toRender & MapLayerFlag.Indicators) != 0)
                     {
-                        ViewTool.PostRenderMap(g, plugin, this, tileScale, toRender, MapLayerFlag.None, false);
+                        ViewTool.PostRenderMap(g, plugin, this, tileScale, toRender, MapLayerFlag.None, false, plugin.Map.Metrics.Bounds);
                     }
                 }
                 using (Graphics g = Graphics.FromImage(croppedBitmap))

@@ -168,7 +168,7 @@ namespace MobiusEditor.Tools
 
         private void AddResource(Point location)
         {
-            var resourceType = gemsCheckBox.Checked ?
+            OverlayType resourceType = gemsCheckBox.Checked ?
                 map.OverlayTypes.Where(t => t.IsGem).FirstOrDefault() :
                 map.OverlayTypes.Where(t => t.IsTiberiumOrGold).FirstOrDefault();
             if (resourceType == null)
@@ -177,7 +177,7 @@ namespace MobiusEditor.Tools
             }
             Rectangle rectangle = new Rectangle(location, new Size(1, 1));
             rectangle.Inflate(navigationWidget.MouseoverSize.Width / 2, navigationWidget.MouseoverSize.Height / 2);
-            foreach (var subLocation in rectangle.Points())
+            foreach (Point subLocation in rectangle.Points())
             {
                 // Can't place overlay on top and bottom row. See OverlayClass::Read_INI
                 if (subLocation.Y == 0 || subLocation.Y == map.Metrics.Height - 1)
@@ -192,7 +192,7 @@ namespace MobiusEditor.Tools
                         {
                             undoOverlays[cell] = map.Overlay[cell];
                         }
-                        var overlay = new Overlay { Type = resourceType, Icon = 0 };
+                        Overlay overlay = new Overlay { Type = resourceType, Icon = 0 };
                         map.Overlay[cell] = overlay;
                         redoOverlays[cell] = overlay;
                     }
@@ -207,7 +207,7 @@ namespace MobiusEditor.Tools
         {
             Rectangle rectangle = new Rectangle(location, new Size(1, 1));
             rectangle.Inflate(navigationWidget.MouseoverSize.Width / 2, navigationWidget.MouseoverSize.Height / 2);
-            foreach (var subLocation in rectangle.Points())
+            foreach (Point subLocation in rectangle.Points())
             {
                 if (map.Metrics.GetCell(subLocation, out int cell))
                 {
@@ -231,7 +231,7 @@ namespace MobiusEditor.Tools
         {
             // Only check if size is 1x1; otherwise it'll be marked by PostRenderMap.
             if (navigationWidget.MouseoverSize.Width == 1 && navigationWidget.MouseoverSize.Height == 1
-                && navigationWidget.MouseCell.Y == 0 || navigationWidget.MouseCell.Y == map.Metrics.Height - 1)
+                && (navigationWidget.MouseCell.Y == 0 || navigationWidget.MouseCell.Y == map.Metrics.Height - 1))
             {
                 navigationWidget.PenColor = Color.Red;
             }
@@ -267,17 +267,17 @@ namespace MobiusEditor.Tools
         {
             bool origDirtyState = plugin.Dirty;
             plugin.Dirty = true;
-            var undoOverlays2 = new Dictionary<int, Overlay>(undoOverlays);
+            Dictionary<Int32, Overlay> undoOverlays2 = new Dictionary<int, Overlay>(undoOverlays);
             void undoAction(UndoRedoEventArgs e)
             {
-                foreach (var kv in undoOverlays2)
+                foreach (KeyValuePair<Int32, Overlay> kv in undoOverlays2)
                 {
                     e.Map.Overlay[kv.Key] = kv.Value;
                 }
                 e.MapPanel.Invalidate(e.Map, undoOverlays2.Keys.Select(k =>
                 {
                     e.Map.Metrics.GetLocation(k, out Point location);
-                    var rectangle = new Rectangle(location, new Size(1, 1));
+                    Rectangle rectangle = new Rectangle(location, new Size(1, 1));
                     rectangle.Inflate(1, 1);
                     return rectangle;
                 }));
@@ -287,17 +287,17 @@ namespace MobiusEditor.Tools
                 }
             }
 
-            var redoOverlays2 = new Dictionary<int, Overlay>(redoOverlays);
+            Dictionary<Int32, Overlay> redoOverlays2 = new Dictionary<int, Overlay>(redoOverlays);
             void redoAction(UndoRedoEventArgs e)
             {
-                foreach (var kv in redoOverlays2)
+                foreach (KeyValuePair<Int32, Overlay> kv in redoOverlays2)
                 {
                     e.Map.Overlay[kv.Key] = kv.Value;
                 }
                 e.MapPanel.Invalidate(e.Map, redoOverlays2.Keys.Select(k =>
                 {
                     e.Map.Metrics.GetLocation(k, out Point location);
-                    var rectangle = new Rectangle(location, new Size(1, 1));
+                    Rectangle rectangle = new Rectangle(location, new Size(1, 1));
                     rectangle.Inflate(1, 1);
                     return rectangle;
                 }));
@@ -344,29 +344,40 @@ namespace MobiusEditor.Tools
             }
         }
 
-        protected override void PostRenderMap(Graphics graphics)
+        protected override void PostRenderMap(Graphics graphics, Rectangle visibleCells)
         {
-            base.PostRenderMap(graphics);
-            List<int> redCells = new List<int>();
+            base.PostRenderMap(graphics, visibleCells);
+            // For bounds, add one more cell to get all borders showing.
+            Rectangle boundRenderCells = visibleCells;
+            boundRenderCells.Inflate(1, 1);
+            boundRenderCells.Intersect(map.Metrics.Bounds);
+            List<Point> redCells = new List<Point>();
             Rectangle rectangle = new Rectangle(navigationWidget.MouseCell, new Size(1, 1));
             rectangle.Inflate(navigationWidget.MouseoverSize.Width / 2, navigationWidget.MouseoverSize.Height / 2);
             int lastRow = map.Metrics.Height - 1;
-            foreach (var subLocation in rectangle.Points())
+            foreach (Point subLocation in rectangle.Points())
             {
                 // Can't place overlay on top and bottom row. See OverlayClass::Read_INI
-                if ((subLocation.Y == 0 || subLocation.Y == lastRow) && map.Metrics.GetCell(subLocation, out int cell))
+                if ((subLocation.Y == 0 || subLocation.Y == lastRow) && boundRenderCells.Contains(subLocation))
                 {
-                    redCells.Add(cell);
+                    redCells.Add(subLocation);
                 }
             }
-            Boolean inBounds(Map myMap, int cell)
+            (Point, Overlay) inBounds(Map myMap, Overlay ovl, int cell, bool ifInBounds)
             {
-                return myMap.Metrics.GetLocation(cell, out Point location) && myMap.Bounds.Contains(location);
+                if (ovl.Type.IsResource && myMap.Metrics.GetLocation(cell, out Point location) && boundRenderCells.Contains(location))
+                {
+                    bool isInBounds = myMap.Bounds.Contains(location);
+                    return ((isInBounds && ifInBounds) || (!isInBounds && !ifInBounds)) ? (location, ovl) : (location, null);
+                }
+                return (Point.Empty, null);
             }
             Rectangle mapBounds = map.Bounds;
-            MapRenderer.RenderAllBoundsFromCell(graphics, Globals.MapTileSize, map.Overlay.Where(x => x.Value.Type.IsResource && inBounds(map, x.Cell)), map.Metrics);
-            MapRenderer.RenderAllBoundsFromCell(graphics, Globals.MapTileSize, map.Overlay.Where(x => x.Value.Type.IsResource && !inBounds(map, x.Cell)), map.Metrics, Color.FromArgb(0x80, 0xFF, 0x40, 0x40));
-            MapRenderer.RenderAllBoundsFromCell(graphics, Globals.MapTileSize, redCells, map.Metrics, Color.Red);
+            MapRenderer.RenderAllBoundsFromPoint(graphics, boundRenderCells, Globals.MapTileSize, map.Overlay
+                .Select(x => inBounds(map, x.Value, x.Cell, true)).Where(p => p.Item2 != null));
+            MapRenderer.RenderAllBoundsFromPoint(graphics, boundRenderCells, Globals.MapTileSize, map.Overlay
+                .Select(x => inBounds(map, x.Value, x.Cell, false)).Where(p => p.Item2 != null), Color.FromArgb(0x80, 0xFF, 0x40, 0x40));
+            MapRenderer.RenderAllBoundsFromPoint(graphics, boundRenderCells, Globals.MapTileSize, redCells, Color.Red);
         }
 
         public override void Activate()

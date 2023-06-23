@@ -125,6 +125,7 @@ namespace MobiusEditor.Dialogs
             this.Controls.Add(this.btnGoToFile);
             this.Controls.Add(this.lblName);
             this.Controls.Add(this.lblExported);
+            this.Icon = global::MobiusEditor.Properties.Resources.GameIcon00;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "ImageExportedDialog";

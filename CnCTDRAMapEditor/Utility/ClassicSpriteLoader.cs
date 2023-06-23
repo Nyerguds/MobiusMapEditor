@@ -568,7 +568,7 @@ namespace MobiusEditor.Utility
             return tiles;
         }
 
-        public static Byte[][] GetRaTmpData(Byte[] fileData, out int[] widths, out int[] heights, out byte[] landTypesInfo)
+        public static Byte[][] GetRaTmpData(Byte[] fileData, out int[] widths, out int[] heights, out byte[] landTypesInfo, out Boolean[] tileUseList, out int headerWidth, out int headerHeight)
         {
             Int32 fileLen = fileData.Length;
             if (fileLen < 0x28)
@@ -580,12 +580,8 @@ namespace MobiusEditor.Utility
             // Always 0
             Int16 hdrAllocated = ArrayUtils.ReadInt16FromByteArrayLe(fileData, 0x06);
             // New in RA
-            Int16 hdrMapWidth = ArrayUtils.ReadInt16FromByteArrayLe(fileData, 0x08);
-            Int16 hdrMapHeight = ArrayUtils.ReadInt16FromByteArrayLe(fileData, 0x0A);
-            if (hdrMapWidth <= 0)
-                hdrMapWidth = 1;
-            if (hdrMapHeight <= 0)
-                hdrMapHeight = 1;
+            headerWidth = ArrayUtils.ReadInt16FromByteArrayLe(fileData, 0x08);
+            headerHeight = ArrayUtils.ReadInt16FromByteArrayLe(fileData, 0x0A);
             Int32 hdrSize = ArrayUtils.ReadInt32FromByteArrayLe(fileData, 0x0C);
             // Offset of start of actual icon data. Generally always 0x20
             Int32 hdrIconsPtr = ArrayUtils.ReadInt32FromByteArrayLe(fileData, 0x10);
@@ -618,12 +614,12 @@ namespace MobiusEditor.Utility
             // Maps the available images onto the full iconset definition
             Byte[] map = new Byte[hdrCount];
             Array.Copy(fileData, hdrMapPtr, map, 0, hdrCount);
-            landTypesInfo = new Byte[hdrMapWidth * hdrMapHeight];
+            landTypesInfo = new Byte[Math.Max(1, headerWidth) * Math.Max(1, headerHeight)];
             if (hdrMapPtr + landTypesInfo.Length > fileLen)
                 throw new ArgumentException("Invalid header values: land types outside file range.", "fileData");
             Array.Copy(fileData, hdrColorMapPtr, landTypesInfo, 0, landTypesInfo.Length);
             // Get max index plus one for real images count. Nothing in the file header actually specifies this directly.
-            Int32 actualImages = map.Max(x => x == 0xFF ? -1 : (Int32)x) + 1;
+            Int32 actualImages = map.Max(x => x == 0xff ? -1 : x) + 1;
             if (hdrTransFlagPtr + actualImages > fileLen)
                 throw new ArgumentException("Invalid header values: indices outside file range.", "fileData");
             if (hdrIconsPtr + actualImages * tileSize > fileLen)
@@ -633,7 +629,7 @@ namespace MobiusEditor.Utility
             Byte[][] tiles = new Byte[hdrCount][];
             widths = new int[hdrCount];
             heights = new int[hdrCount];
-            Boolean[] tileUseList = new Boolean[map.Length];
+            tileUseList = new Boolean[map.Length];
             for (Int32 i = 0; i < map.Length; ++i)
             {
                 Byte dataIndex = map[i];
@@ -646,10 +642,10 @@ namespace MobiusEditor.Utility
                     if ((offset + tileSize) > fileLen)
                         throw new ArgumentException("Tile data outside file range.", "fileData");
                     Array.Copy(fileData, offset, tileData, 0, tileSize);
-                    tiles[i] = tileData;
-                    widths[i] = hdrWidth;
-                    heights[i] = hdrHeight;
                 }
+                tiles[i] = tileData;
+                widths[i] = hdrWidth;
+                heights[i] = hdrHeight;
             }
             return tiles;
         }

@@ -52,14 +52,15 @@ namespace MobiusEditor.Model
 
     public enum LandType
     {
-        Empty = 0x00, // Filler tile, or [Clear] terrain on 1x1 sets with multiple tiles.
-        Clear = 0x03, // [Clear] Normal clear terrain.
-        Beach = 0x06, // [Beach] Sandy beach. Can''t be built on.
-        Rock  = 0x08, // [Rock]  Impassable terrain.
-        Road  = 0x09, // [Road]  Units move faster on this terrain.
-        Water = 0x0A, // [Water] Ships can travel over this.
-        River = 0x0B, // [River] Ships normally can''t travel over this.
-        Rough = 0x0E, // [Rough] Rough terrain. Can''t be built on
+        Clear,     // "Clear" terrain.
+        Road,      // Road terrain.
+        Water,     // Water.
+        Rock,      // Impassable rock.
+        Wall,      // Wall (blocks movement).
+        Tiberium,  // Tiberium field.
+        Beach,     // Beach terrain.
+        Rough,     // Rocky terrain.
+        River,     // Rocky riverbed.
     }
 
     public class TemplateType : IBrowsableType
@@ -451,13 +452,15 @@ namespace MobiusEditor.Model
                         landTypes = Enumerable.Repeat(LandType.Clear, typeIcons).ToArray();
                         try
                         {
-                            ClassicSpriteLoader.GetRaTmpData(fileData, out _, out _, out byte[] landTypeInfo);
+                            // TODO: Dimensions are currently not loaded from the classic files yet.
+                            ClassicSpriteLoader.GetRaTmpData(fileData, out _, out _, out byte[] landTypeInfo, out _, out _, out _);
                             landTypes = new LandType[typeIcons];
                             int max = Math.Min(typeIcons, landTypeInfo.Length);
                             for (int icon = 0; icon < max; ++icon)
                             {
-                                LandType land = (LandType)landTypeInfo[icon];
-                                landTypes[icon] = land == LandType.Empty ? LandType.Clear : land;
+                                byte val = landTypeInfo[icon];
+                                LandType land = val > tileTypeFromFile.Length ? LandType.Clear : tileTypeFromFile[landTypeInfo[icon]];
+                                landTypes[icon] = land;
                             }
                         }
                         catch (ArgumentException ex) { /* Not able to parse; fall back to all-clear. */ }
@@ -466,7 +469,7 @@ namespace MobiusEditor.Model
                 if (isRandom && landTypes.Length >= 1)
                 {
                     LandType rntp = landTypes[0];
-                    landTypes = Enumerable.Repeat(rntp == LandType.Empty ? LandType.Clear : rntp, numIcons).ToArray();
+                    landTypes = Enumerable.Repeat(rntp, numIcons).ToArray();
                 }
             }
             if (landTypes == null && !isGroup)
@@ -534,9 +537,29 @@ namespace MobiusEditor.Model
             }
         }
 
-        public static readonly Dictionary<char, LandType> LandTypesMapping = new Dictionary<char, LandType>
+        private static readonly LandType[] tileTypeFromFile = new[]
         {
-            { 'X', LandType.Empty }, // Filler tile, or [Clear] terrain on 1x1 sets with multiple tiles.
+            LandType.Clear,         // Unused / 1x1-multiple
+            LandType.Clear,         // ???
+            LandType.Clear,         // ???
+            LandType.Clear,         // Clear
+            LandType.Clear,         // ???
+            LandType.Clear,         // ???
+            LandType.Beach,         // Beach
+            LandType.Clear,         // ???
+            LandType.Rock,          // Rock
+            LandType.Road,          // Road
+            LandType.Water,         // Water
+            LandType.River,         // River
+            LandType.Clear,         // ???
+            LandType.Clear,         // ???
+            LandType.Rough,         // Rough
+            LandType.Clear,         // ???
+        };
+
+        private static readonly Dictionary<char, LandType> LandTypesMapping = new Dictionary<char, LandType>
+        {
+            { 'X', LandType.Clear }, // Filler tile, or [Clear] terrain on 1x1 sets with multiple tiles.
             { 'C', LandType.Clear }, // [Clear] Normal clear terrain.
             { 'B', LandType.Beach }, // [Beach] Sandy beach. Can''t be built on.
             { 'I', LandType.Rock }, // [Rock]  Impassable terrain.
@@ -546,14 +569,14 @@ namespace MobiusEditor.Model
             { 'H', LandType.Rough }, // [Rough] Rough terrain. Can''t be built on
         };
 
-        public static LandType[] GetLandTypesFromString(string types)
+        private static LandType[] GetLandTypesFromString(string types)
         {
             types = types.Replace(" ", String.Empty);
             LandType[] arr = new LandType[types.Length];
             Char[] array = types.ToUpperInvariant().ToCharArray();
             for (Int32 i = 0; i < array.Length; ++i)
             {
-                arr[i] = LandTypesMapping.TryGetValue(array[i], out LandType t) ? t : LandType.Empty;
+                arr[i] = LandTypesMapping.TryGetValue(array[i], out LandType t) ? t : LandType.Clear;
             }
             return arr;
         }

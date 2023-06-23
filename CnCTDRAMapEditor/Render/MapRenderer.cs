@@ -1128,39 +1128,41 @@ namespace MobiusEditor.Render
             return (renderBounds, render);
         }
 
-        public static void RenderAllBoundsFromCell<T>(Graphics graphics, Size tileSize, IEnumerable<(int, T)> renderList, CellMetrics metrics)
+        public static void RenderAllBoundsFromCell<T>(Graphics graphics, Rectangle visibleCells, Size tileSize, IEnumerable<(int, T)> renderList, CellMetrics metrics)
         {
-            RenderAllBoundsFromCell(graphics, tileSize, renderList, metrics, Color.Green);
+            RenderAllBoundsFromCell(graphics, visibleCells, tileSize, renderList, metrics, Color.Green);
         }
 
-        public static void RenderAllBoundsFromCell<T>(Graphics graphics, Size tileSize, IEnumerable<(int, T)> renderList, CellMetrics metrics, Color boundsColor)
+        public static void RenderAllBoundsFromCell<T>(Graphics graphics, Rectangle visibleCells, Size tileSize, IEnumerable<(int, T)> renderList, CellMetrics metrics, Color boundsColor)
         {
-            RenderAllBoundsFromCell(graphics, tileSize, renderList.Select(tp => tp.Item1), metrics, boundsColor);
+            RenderAllBoundsFromCell(graphics, visibleCells, tileSize, renderList.Select(tp => tp.Item1), metrics, boundsColor);
         }
 
-        public static void RenderAllBoundsFromCell(Graphics graphics, Size tileSize, IEnumerable<int> renderList, CellMetrics metrics, Color boundsColor)
+        public static void RenderAllBoundsFromCell(Graphics graphics, Rectangle visibleCells, Size tileSize, IEnumerable<int> renderList, CellMetrics metrics, Color boundsColor)
         {
             using (Pen boundsPen = new Pen(boundsColor, Math.Max(1, tileSize.Width / 16.0f)))
             {
                 foreach (Int32 cell in renderList)
                 {
-                    metrics.GetLocation(cell, out Point topLeft);
-                    Rectangle bounds = new Rectangle(new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height), tileSize);
-                    graphics.DrawRectangle(boundsPen, bounds);
+                    if (metrics.GetLocation(cell, out Point topLeft) && visibleCells.Contains(topLeft))
+                    {
+                        Rectangle bounds = new Rectangle(new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height), tileSize);
+                        graphics.DrawRectangle(boundsPen, bounds);
+                    }
                 }
             }
         }
 
-        public static void RenderAllBoundsFromPoint<T>(Graphics graphics, Size tileSize, IEnumerable<(Point, T)> renderList)
+        public static void RenderAllBoundsFromPoint<T>(Graphics graphics, Rectangle visibleCells, Size tileSize, IEnumerable<(Point, T)> renderList)
         {
-            RenderAllBoundsFromPoint(graphics, tileSize, renderList.Select(tp => tp.Item1), Color.Green);
+            RenderAllBoundsFromPoint(graphics, visibleCells, tileSize, renderList.Select(tp => tp.Item1), Color.Green);
         }
 
-        public static void RenderAllBoundsFromPoint(Graphics graphics, Size tileSize, IEnumerable<Point> renderList, Color boundsColor)
+        public static void RenderAllBoundsFromPoint(Graphics graphics, Rectangle visibleCells, Size tileSize, IEnumerable<Point> renderList, Color boundsColor)
         {
             using (Pen boundsPen = new Pen(boundsColor, Math.Max(1, tileSize.Width / 16.0f)))
             {
-                foreach (Point topLeft in renderList)
+                foreach (Point topLeft in renderList.Where(pt => visibleCells.Contains(pt)))
                 {
                     Rectangle bounds = new Rectangle(new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height), tileSize);
                     graphics.DrawRectangle(boundsPen, bounds);
@@ -1168,11 +1170,11 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static void RenderAllBoundsFromPoint<T>(Graphics graphics, Size tileSize, IEnumerable<(Point, T)> renderList, Color boundsColor)
+        public static void RenderAllBoundsFromPoint<T>(Graphics graphics, Rectangle visibleCells, Size tileSize, IEnumerable<(Point, T)> renderList, Color boundsColor)
         {
             using (Pen boundsPen = new Pen(boundsColor, Math.Max(1, tileSize.Width / 16.0f)))
             {
-                foreach ((Point topLeft, T _) in renderList)
+                foreach ((Point topLeft, T _) in renderList.Where(pt => visibleCells.Contains(pt.Item1)))
                 {
                     Rectangle bounds = new Rectangle(new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height), tileSize);
                     graphics.DrawRectangle(boundsPen, bounds);
@@ -1180,12 +1182,12 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static void RenderAllOccupierBounds<T>(Graphics graphics, Size tileSize, IEnumerable<(Point, T)> occupiers) where T : ICellOccupier, ICellOverlapper
+        public static void RenderAllOccupierBounds<T>(Graphics graphics, Rectangle visibleCells, Size tileSize, IEnumerable<(Point, T)> occupiers) where T : ICellOccupier, ICellOverlapper
         {
-            RenderAllOccupierBounds(graphics, tileSize, occupiers, Color.Green, Color.Red);
+            RenderAllOccupierBounds(graphics, visibleCells, tileSize, occupiers, Color.Green, Color.Red);
         }
 
-        public static void RenderAllOccupierBounds<T>(Graphics graphics, Size tileSize, IEnumerable<(Point, T)> occupiers, Color boundsColor, Color OccupierColor) where T: ICellOccupier, ICellOverlapper
+        public static void RenderAllOccupierBounds<T>(Graphics graphics, Rectangle visibleCells, Size tileSize, IEnumerable<(Point, T)> occupiers, Color boundsColor, Color OccupierColor) where T: ICellOccupier, ICellOverlapper
         {
             float boundsPenSize = Math.Max(1, tileSize.Width / 16.0f);
             float occupyPenSize = Math.Max(0.5f, tileSize.Width / 32.0f);
@@ -1215,9 +1217,13 @@ namespace MobiusEditor.Render
                         {
                             if (occupyMask[y, x])
                             {
+                                Rectangle occupyCellBounds = new Rectangle(new Point(topLeft.X + x, topLeft.Y + y), new Size(1, 1));
                                 Rectangle occupyBounds = new Rectangle(
                                     new Point((topLeft.X + x) * tileSize.Width, (topLeft.Y + y) * tileSize.Height), tileSize);
-                                graphics.DrawRectangle(occupyPen, occupyBounds);
+                                if (visibleCells.Contains(occupyCellBounds))
+                                {
+                                    graphics.DrawRectangle(occupyPen, occupyBounds);
+                                }
                             }
                         }
                     }
@@ -1225,7 +1231,7 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static void RenderAllCrateOutlines(Graphics g, Map map, Size tileSize, double tileScale, bool onlyIfBehindObjects)
+        public static void RenderAllCrateOutlines(Graphics g, Map map, Rectangle visibleCells, Size tileSize, double tileScale, bool onlyIfBehindObjects)
         {
             // Optimised to only get the paint area once per crate type.
             // Sadly can't easily be cached because everything in this class is static.
@@ -1242,7 +1248,7 @@ namespace MobiusEditor.Render
                 {
                     continue;
                 }
-                if (onlyIfBehindObjects && !IsOverlapped(map, location, false))
+                if (!visibleCells.Contains(location) || (onlyIfBehindObjects && !IsOverlapped(map, location, false)))
                 {
                     continue;
                 }
@@ -1288,7 +1294,7 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static void RenderAllInfantryOutlines(Graphics g, Map map, Size tileSize, double tileScale, bool onlyIfBehindObjects)
+        public static void RenderAllInfantryOutlines(Graphics g, Map map, Rectangle visibleCells, Size tileSize, bool onlyIfBehindObjects)
         {
             // Optimised to only get the paint area once per crate type.
             // Sadly can't easily be cached because everything in this class is static.
@@ -1296,10 +1302,11 @@ namespace MobiusEditor.Render
             float outlineThickness = 0.05f;
             byte alphaThreshold = (byte)(Globals.UseClassicFiles ? 0x80 : 0x40);
             //double lumThreshold = 0.01d;
+            visibleCells.Inflate(1, 1);
             foreach (var (location, infantryGroup) in map.Technos.OfType<InfantryGroup>().OrderBy(i => map.Metrics.GetCell(i.Location)))
             {
                 Size cellSize = new Size(1, 1);
-                if (!map.Metrics.Contains(location))
+                if (!visibleCells.Contains(location))
                 {
                     continue;
                 }
@@ -1351,7 +1358,7 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static void RenderAllVehicleOutlines(Graphics g, GameType gameType, Map map, Size tileSize, double tileScale, bool onlyIfBehindObjects)
+        public static void RenderAllVehicleOutlines(Graphics g, GameType gameType, Map map, Rectangle visibleCells, Size tileSize, bool onlyIfBehindObjects)
         {
             // Optimised to only get the paint area once per crate type.
             // Sadly can't easily be cached because everything in this class is static.
@@ -1359,10 +1366,11 @@ namespace MobiusEditor.Render
             float outlineThickness = 0.05f;
             byte alphaThreshold = (byte)(Globals.UseClassicFiles ? 0x80 : 0x40);
             //double lumThreshold = 0.01d;
+            visibleCells.Inflate(1, 1);
             foreach (var (location, unit) in map.Technos.OfType<Unit>().OrderBy(i => map.Metrics.GetCell(i.Location)))
             {
                 Size cellSize = new Size(1, 1);
-                if (!map.Metrics.Contains(location))
+                if (!visibleCells.Contains(location))
                 {
                     continue;
                 }
@@ -1536,13 +1544,15 @@ namespace MobiusEditor.Render
             return rData;
         }
 
-        public static void RenderAllFootballAreas(Graphics graphics, Map map, Size tileSize, double tileScale, GameType gameType)
+        public static void RenderAllFootballAreas(Graphics graphics, Map map, Rectangle visibleCells, Size tileSize, double tileScale, GameType gameType)
         {
             if (gameType != GameType.SoleSurvivor)
             {
                 return;
             }
             HashSet<Point> footballPoints = new HashSet<Point>();
+            Rectangle renderArea = map.Metrics.Bounds;
+            renderArea.Intersect(visibleCells);
             foreach (Waypoint waypoint in map.Waypoints)
             {
                 if (!waypoint.Point.HasValue || Waypoint.GetMpIdFromFlag(waypoint.Flag) == -1)
@@ -1550,7 +1560,7 @@ namespace MobiusEditor.Render
                     continue;
                 }
                 Point[] roadPoints = new Rectangle(waypoint.Point.Value.X - 1, waypoint.Point.Value.Y - 1, 4, 3).Points().ToArray();
-                foreach (Point p in roadPoints.Where(p => map.Metrics.Contains(p)))
+                foreach (Point p in roadPoints.Where(p => renderArea.Contains(p)))
                 {
                     footballPoints.Add(p);
                 }
@@ -1566,7 +1576,7 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static void RenderFootballAreaFlags(Graphics graphics, GameType gameType, Map map, Size tileSize)
+        public static void RenderFootballAreaFlags(Graphics graphics, GameType gameType, Map map, Rectangle visibleCells, Size tileSize)
         {
             if (gameType != GameType.SoleSurvivor)
             {
@@ -1576,7 +1586,7 @@ namespace MobiusEditor.Render
             List<Waypoint> footballWayPoints = new List<Waypoint>();
             foreach (Waypoint waypoint in map.Waypoints)
             {
-                if (waypoint.Point.HasValue && Waypoint.GetMpIdFromFlag(waypoint.Flag) >= 0)
+                if (waypoint.Point.HasValue && Waypoint.GetMpIdFromFlag(waypoint.Flag) >= 0 && visibleCells.Contains(waypoint.Point.Value))
                 {
                     footballWayPoints.Add(waypoint);
                 }
@@ -1588,11 +1598,15 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static void RenderAllFakeBuildingLabels(Graphics graphics, Map map, Size tileSize)
+        public static void RenderAllFakeBuildingLabels(Graphics graphics, Map map, Rectangle visibleCells, Size tileSize)
         {
             foreach ((Point topLeft, Building building) in map.Buildings.OfType<Building>())
             {
-                RenderFakeBuildingLabel(graphics, building, topLeft, tileSize, false);
+                Rectangle buildingBounds = new Rectangle(topLeft, building.Type.Size);
+                if (visibleCells.IntersectsWith(buildingBounds))
+                {
+                    RenderFakeBuildingLabel(graphics, building, topLeft, tileSize, false);
+                }
             }
         }
 
@@ -1628,11 +1642,15 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static void RenderAllRebuildPriorityLabels(Graphics graphics, Map map, Size tileSize)
+        public static void RenderAllRebuildPriorityLabels(Graphics graphics, Map map, Rectangle visibleCells, Size tileSize)
         {
             foreach ((Point topLeft, Building building) in map.Buildings.OfType<Building>())
             {
-                RenderRebuildPriorityLabel(graphics, building, topLeft, tileSize, false);
+                Rectangle buildingBounds = new Rectangle(topLeft, building.Type.Size);
+                if (visibleCells.IntersectsWith(buildingBounds))
+                {
+                    RenderRebuildPriorityLabel(graphics, building, topLeft, tileSize, false);
+                }
             }
         }
 
@@ -1668,46 +1686,59 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static void RenderAllTechnoTriggers(Graphics graphics, Map map, Size tileSize, MapLayerFlag layersToRender)
+        public static void RenderAllTechnoTriggers(Graphics graphics, Map map, Rectangle visibleCells, Size tileSize, MapLayerFlag layersToRender)
         {
-            RenderAllTechnoTriggers(graphics, map, tileSize, layersToRender, Color.LimeGreen, null, false);
+            RenderAllTechnoTriggers(graphics, map, visibleCells, tileSize, layersToRender, Color.LimeGreen, null, false);
         }
 
-        public static void RenderAllTechnoTriggers(Graphics graphics, Map map, Size tileSize, MapLayerFlag layersToRender, Color color, string toPick, bool excludePick)
+        public static void RenderAllTechnoTriggers(Graphics graphics, Map map, Rectangle visibleCells, Size tileSize, MapLayerFlag layersToRender, Color color, string toPick, bool excludePick)
         {
             double tileScaleHor = tileSize.Width / 128.0;
             float borderSize = Math.Max(0.5f, tileSize.Width / 60.0f);
-            foreach ((Point cell, ICellOccupier techno) in map.Technos)
+            foreach ((Point topLeft, ICellOccupier techno) in map.Technos)
             {
-                Point location = new Point(cell.X * tileSize.Width, cell.Y * tileSize.Height);
+                Point location = new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height);
                 (string trigger, Rectangle bounds, int alpha)[] triggers = null;
                 if (techno is Terrain terrain && !Trigger.IsEmpty(terrain.Trigger))
                 {
                     if ((layersToRender & MapLayerFlag.Terrain) == MapLayerFlag.Terrain)
                     {
-                        Size size = new Size(terrain.Type.Size.Width * tileSize.Width, terrain.Type.Size.Height * tileSize.Height);
-                        triggers = new (string, Rectangle, int)[] { (terrain.Trigger, new Rectangle(location, size), terrain.Tint.A) };
+                        if (visibleCells.IntersectsWith(new Rectangle(topLeft, terrain.Type.Size)))
+                        {
+                            Size size = new Size(terrain.Type.Size.Width * tileSize.Width, terrain.Type.Size.Height * tileSize.Height);
+                            triggers = new (string, Rectangle, int)[] { (terrain.Trigger, new Rectangle(location, size), terrain.Tint.A) };
+                        }
                     }
                 }
                 else if (techno is Building building && !Trigger.IsEmpty(building.Trigger))
                 {
                     if ((layersToRender & MapLayerFlag.Buildings) == MapLayerFlag.Buildings)
                     {
-                        Size size = new Size(building.Type.Size.Width * tileSize.Width, building.Type.Size.Height * tileSize.Height);
-                        triggers = new (string, Rectangle, int)[] { (building.Trigger, new Rectangle(location, size), building.Tint.A) };
+                        if (visibleCells.IntersectsWith(new Rectangle(topLeft, building.Type.Size)))
+                        {
+                            Size size = new Size(building.Type.Size.Width * tileSize.Width, building.Type.Size.Height * tileSize.Height);
+                            triggers = new (string, Rectangle, int)[] { (building.Trigger, new Rectangle(location, size), building.Tint.A) };
+                        }
                     }
                 }
                 else if (techno is Unit unit && !Trigger.IsEmpty(unit.Trigger))
                 {
                     if ((layersToRender & MapLayerFlag.Units) == MapLayerFlag.Units)
                     {
-                        triggers = new (string, Rectangle, int)[] { (unit.Trigger, new Rectangle(location, tileSize), unit.Tint.A) };
+                        if (visibleCells.Contains(topLeft))
+                        {
+                            triggers = new (string, Rectangle, int)[] { (unit.Trigger, new Rectangle(location, tileSize), unit.Tint.A) };
+                        }
                     }
                 }
                 else if (techno is InfantryGroup infantryGroup)
                 {
                     if ((layersToRender & MapLayerFlag.Infantry) == MapLayerFlag.Infantry)
                     {
+                        if (!visibleCells.Contains(topLeft))
+                        {
+                            continue;
+                        }
                         List<(string, Rectangle, int)> infantryTriggers = new List<(string, Rectangle, int)>();
                         for (Int32 i = 0; i < infantryGroup.Infantry.Length; ++i)
                         {
@@ -1773,14 +1804,14 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static void RenderWayPointIndicators(Graphics graphics, Map map, Size tileSize, Color textColor, bool forPreview, bool excludeSpecified, params Waypoint[] specified)
+        public static void RenderWayPointIndicators(Graphics graphics, Map map, Rectangle visibleCells, Size tileSize, Color textColor, bool forPreview, bool excludeSpecified, params Waypoint[] specified)
         {
             HashSet<Waypoint> specifiedWaypoints = specified.ToHashSet();
 
             Waypoint[] toPaint = excludeSpecified ? map.Waypoints : specified;
             foreach (Waypoint waypoint in toPaint)
             {
-                if (waypoint.Cell.HasValue && map.Metrics.GetLocation(waypoint.Cell.Value, out Point point))
+                if (waypoint.Cell.HasValue && map.Metrics.GetLocation(waypoint.Cell.Value, out Point point) && visibleCells.Contains(point))
                 {
                     if (excludeSpecified && specifiedWaypoints.Contains(waypoint))
                     {
@@ -1817,16 +1848,16 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static void RenderAllBuildingEffectRadiuses(Graphics graphics, Map map, Size tileSize, int effectRadius)
+        public static void RenderAllBuildingEffectRadiuses(Graphics graphics, Map map, Rectangle visibleCells, Size tileSize, int effectRadius)
         {
             foreach ((Point topLeft, Building building) in map.Buildings.OfType<Building>()
                 .Where(b => (b.Occupier.Type.Flag & BuildingTypeFlag.IsGapGenerator) != BuildingTypeFlag.None))
             {
-                RenderBuildingEffectRadius(graphics, tileSize, effectRadius, building, topLeft);
+                RenderBuildingEffectRadius(graphics, visibleCells, tileSize, effectRadius, building, topLeft);
             }
         }
 
-        public static void RenderBuildingEffectRadius(Graphics graphics, Size tileSize, int effectRadius, Building building, Point topLeft)
+        public static void RenderBuildingEffectRadius(Graphics graphics, Rectangle visibleCells, Size tileSize, int effectRadius, Building building, Point topLeft)
         {
             if ((building.Type.Flag & BuildingTypeFlag.IsGapGenerator) != BuildingTypeFlag.IsGapGenerator)
             {
@@ -1837,22 +1868,26 @@ namespace MobiusEditor.Render
             bool[,] cells = building.Type.BaseOccupyMask;
             int maskY = cells.GetLength(0);
             int maskX = cells.GetLength(1);
+            Rectangle circleCellBounds = GeneralUtils.GetBoxFromCenterCell(topLeft, maskX, maskY, effectRadius, effectRadius, new Size(1,1), out _);
             Rectangle circleBounds = GeneralUtils.GetBoxFromCenterCell(topLeft, maskX, maskY, effectRadius, effectRadius, tileSize, out Point center);
-            Color alphacorr = Color.FromArgb(building.Tint.A * 128 / 256, circleColor);
-            RenderCircleDiagonals(graphics, tileSize, alphacorr, effectRadius, effectRadius, center);
-            DrawDashesCircle(graphics, circleBounds, tileSize, alphacorr, true, -1.25f, 2.5f);
+            if (visibleCells.IntersectsWith(circleCellBounds))
+            {
+                Color alphacorr = Color.FromArgb(building.Tint.A * 128 / 256, circleColor);
+                RenderCircleDiagonals(graphics, tileSize, alphacorr, effectRadius, effectRadius, center);
+                DrawDashesCircle(graphics, circleBounds, tileSize, alphacorr, true, -1.25f, 2.5f);
+            }
         }
 
-        public static void RenderAllUnitEffectRadiuses(Graphics graphics, Map map, Size tileSize, int jamRadius)
+        public static void RenderAllUnitEffectRadiuses(Graphics graphics, Map map, Rectangle visibleCells, Size tileSize, int jamRadius)
         {
             foreach ((Point topLeft, Unit unit) in map.Technos.OfType<Unit>()
                 .Where(b => (b.Occupier.Type.Flag & (UnitTypeFlag.IsGapGenerator | UnitTypeFlag.IsJammer)) != UnitTypeFlag.None))
             {
-                RenderUnitEffectRadius(graphics, tileSize, jamRadius, unit, topLeft);
+                RenderUnitEffectRadius(graphics, tileSize, jamRadius, unit, topLeft, visibleCells);
             }
         }
 
-        public static void RenderUnitEffectRadius(Graphics graphics, Size tileSize, int jamRadius, Unit unit, Point cell)
+        public static void RenderUnitEffectRadius(Graphics graphics, Size tileSize, int jamRadius, Unit unit, Point cell, Rectangle visibleCells)
         {
             bool isJammer = (unit.Type.Flag & UnitTypeFlag.IsJammer) == UnitTypeFlag.IsJammer;
             bool isGapGen = (unit.Type.Flag & UnitTypeFlag.IsGapGenerator) == UnitTypeFlag.IsGapGenerator;
@@ -1866,18 +1901,26 @@ namespace MobiusEditor.Render
             if (isJammer)
             {
                 // uses map's Gap Generator range.
+                Rectangle circleCellBounds = GeneralUtils.GetBoxFromCenterCell(cell, 1, 1, jamRadius, jamRadius, new Size(1, 1), out _);
                 Rectangle circleBounds = GeneralUtils.GetBoxFromCenterCell(cell, 1, 1, jamRadius, jamRadius, tileSize, out Point center);
-                RenderCircleDiagonals(graphics, tileSize, alphacorr, jamRadius, jamRadius, center);
-                DrawDashesCircle(graphics, circleBounds, tileSize, alphacorr, true, -1.25f, 2.5f);
+                if (visibleCells.IntersectsWith(circleCellBounds))
+                {
+                    RenderCircleDiagonals(graphics, tileSize, alphacorr, jamRadius, jamRadius, center);
+                    DrawDashesCircle(graphics, circleBounds, tileSize, alphacorr, true, -1.25f, 2.5f);
+                }
             }
             if (isGapGen)
             {
                 // uses specific 5x7 circle around the unit cell
                 int radiusX = 2;
                 int radiusY = 3;
+                Rectangle circleCellBounds = GeneralUtils.GetBoxFromCenterCell(cell, 1, 1, radiusX, radiusY, new Size(1, 1), out _);
                 Rectangle circleBounds = GeneralUtils.GetBoxFromCenterCell(cell, 1, 1, radiusX, radiusY, tileSize, out Point center);
-                RenderCircleDiagonals(graphics, tileSize, alphacorr, radiusX, radiusY, center);
-                DrawDashesCircle(graphics, circleBounds, tileSize, alphacorr, true, -1.25f, 2.5f);
+                if (visibleCells.IntersectsWith(circleCellBounds))
+                {
+                    RenderCircleDiagonals(graphics, tileSize, alphacorr, radiusX, radiusY, center);
+                    DrawDashesCircle(graphics, circleBounds, tileSize, alphacorr, true, -1.25f, 2.5f);
+                }
             }
         }
 
@@ -1907,12 +1950,12 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static void RenderAllWayPointRevealRadiuses(Graphics graphics, IGamePlugin plugin, Map map, Size tileSize, Waypoint selectedItem)
+        public static void RenderAllWayPointRevealRadiuses(Graphics graphics, IGamePlugin plugin, Map map, Rectangle visibleCells, Size tileSize, Waypoint selectedItem)
         {
-            RenderAllWayPointRevealRadiuses(graphics, plugin, map, tileSize, selectedItem, false);
+            RenderAllWayPointRevealRadiuses(graphics, plugin, map, visibleCells, tileSize, selectedItem, false);
         }
 
-        public static void RenderAllWayPointRevealRadiuses(Graphics graphics, IGamePlugin plugin, Map map, Size tileSize, Waypoint selectedItem, bool onlySelected)
+        public static void RenderAllWayPointRevealRadiuses(Graphics graphics, IGamePlugin plugin, Map map, Rectangle visibleCells, Size tileSize, Waypoint selectedItem, bool onlySelected)
         {
             int[] wpReveal1 = plugin.GetRevealRadiusForWaypoints(map, false);
             int[] wpReveal2 = plugin.GetRevealRadiusForWaypoints(map, true);
@@ -1931,27 +1974,35 @@ namespace MobiusEditor.Render
                     Color drawColor = isSelected ? Color.Yellow : Color.Orange;
                     if (wpReveal1[i] != 0)
                     {
-                        RenderWayPointRevealRadius(graphics, map.Metrics, tileSize, drawColor, isSelected, false, wpReveal1[i], cur);
+                        RenderWayPointRevealRadius(graphics, map.Metrics, visibleCells, tileSize, drawColor, isSelected, false, wpReveal1[i], cur);
                     }
                     if (wpReveal2[i] != 0)
                     {
-                        RenderWayPointRevealRadius(graphics, map.Metrics, tileSize, drawColor, isSelected, false, wpReveal2[i], cur);
+                        RenderWayPointRevealRadius(graphics, map.Metrics, visibleCells, tileSize, drawColor, isSelected, false, wpReveal2[i], cur);
                     }
                 }
             }
         }
 
-        public static void RenderWayPointRevealRadius(Graphics graphics, CellMetrics metrics, Size tileSize, Color circleColor, bool thickborder, bool forPreview, double revealRadius, Waypoint waypoint)
+        public static void RenderWayPointRevealRadius(Graphics graphics, CellMetrics metrics, Rectangle visibleCells, Size tileSize, Color circleColor, bool thickborder, bool forPreview, double revealRadius, Waypoint waypoint)
         {
             if (waypoint.Cell.HasValue && metrics.GetLocation(waypoint.Cell.Value, out Point cellPoint))
             {
                 double diam = revealRadius * 2 + 1;
+                Rectangle circleCellBounds = new Rectangle(
+                    (int)Math.Round(cellPoint.X - revealRadius),
+                    (int)Math.Round(cellPoint.Y - revealRadius),
+                    (int)Math.Round(diam),
+                    (int)Math.Round(diam));
                 Rectangle circleBounds = new Rectangle(
                     (int)Math.Round(cellPoint.X * tileSize.Width - revealRadius * tileSize.Width),
                     (int)Math.Round(cellPoint.Y * tileSize.Width - revealRadius * tileSize.Height),
                     (int)Math.Round(diam * tileSize.Width),
                     (int)Math.Round(diam * tileSize.Height));
-                DrawDashesCircle(graphics, circleBounds, tileSize, Color.FromArgb(forPreview ? 64 : 128, circleColor), thickborder, 1.25f, 2.5f);
+                if (visibleCells.IntersectsWith(circleCellBounds))
+                {
+                    DrawDashesCircle(graphics, circleBounds, tileSize, Color.FromArgb(forPreview ? 64 : 128, circleColor), thickborder, 1.25f, 2.5f);
+                }
             }
         }
 
@@ -1978,24 +2029,57 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static void RenderCellTriggersSoft(Graphics graphics, Map map, Size tileSize, params String[] specifiedToExclude)
+        public static void RenderCellTriggersSoft(Graphics graphics, Map map, Rectangle visibleCells, Size tileSize, params String[] specifiedToExclude)
         {
-            RenderCellTriggers(graphics, map, tileSize, Color.Black, Color.White, Color.White, 0.75f, false, true, specifiedToExclude);
+            RenderCellTriggers(graphics, map, visibleCells, tileSize, Color.Black, Color.White, Color.White, 0.75f, false, true, specifiedToExclude);
         }
 
-        public static void RenderCellTriggersHard(Graphics graphics, Map map, Size tileSize, params String[] specifiedToExclude)
+        public static void RenderCellTriggersHard(Graphics graphics, Map map, Rectangle visibleCells, Size tileSize, params String[] specifiedToExclude)
         {
-            RenderCellTriggers(graphics, map, tileSize, Color.Black, Color.White, Color.White, 1, false, true, specifiedToExclude);
+            RenderCellTriggers(graphics, map, visibleCells, tileSize, Color.Black, Color.White, Color.White, 1, false, true, specifiedToExclude);
         }
 
-        public static void RenderCellTriggersSelected(Graphics graphics, Map map, Size tileSize, params String[] specifiedToDraw)
+        public static void RenderCellTriggersSelected(Graphics graphics, Map map, Rectangle visibleCells, Size tileSize, params String[] specifiedToDraw)
         {
-            RenderCellTriggers(graphics, map, tileSize, Color.Black, Color.Yellow, Color.Yellow, 1, true, false, specifiedToDraw);
+            RenderCellTriggers(graphics, map, visibleCells, tileSize, Color.Black, Color.Yellow, Color.Yellow, 1, true, false, specifiedToDraw);
         }
 
-        public static void RenderCellTriggers(Graphics graphics, Map map, Size tileSize, Color fillColor, Color borderColor, Color textColor, double alphaAdjust, bool thickborder, bool excludeSpecified, params String[] specified)
+        public static void RenderCellTriggers(Graphics graphics, Map map, Rectangle visibleCells, Size tileSize, Color fillColor, Color borderColor, Color textColor, double alphaAdjust, bool thickborder, bool excludeSpecified, params String[] specified)
         {
-            double tileScaleHor = tileSize.Width / 128.0;
+            // For bounds, add one more cell to get all borders showing.
+            Rectangle boundRenderCells = visibleCells;
+            boundRenderCells.Inflate(1, 1);
+            boundRenderCells.Intersect(map.Metrics.Bounds);
+            HashSet<string> specifiedSet = new HashSet<string>(specified, StringComparer.OrdinalIgnoreCase);
+            List<(Point p, CellTrigger cellTrigger)> toRender = new List<(Point p, CellTrigger cellTrigger)>();
+            HashSet<string> toRenderSet = new HashSet<string>();
+            List<(Point p, CellTrigger cellTrigger)> boundsToDraw = new List<(Point p, CellTrigger cellTrigger)>();
+            foreach ((Int32 cell, CellTrigger cellTrigger) in map.CellTriggers.OrderBy(c => c.Cell))
+            {
+                Int32 x = cell % map.Metrics.Width;
+                Int32 y = cell / map.Metrics.Width;
+                if (!boundRenderCells.Contains(x, y))
+                {
+                    continue;
+                }
+                bool contains = specifiedSet.Contains(cellTrigger.Trigger);
+                if (contains && excludeSpecified || !contains && !excludeSpecified)
+                {
+                    continue;
+                }
+                bool isPreview = cellTrigger.Tint.A != 255;
+                Point p = new Point(x, y);
+                if (visibleCells.Contains(x, y))
+                {
+                    toRender.Add((p, cellTrigger));
+                    toRenderSet.Add(cellTrigger.Trigger + "=" + (isPreview ? 'P' : 'N'));
+                }
+                boundsToDraw.Add((p, cellTrigger));
+            }
+            if (boundsToDraw.Count == 0)
+            {
+                return;
+            }
             Color ApplyAlpha(Color col, int baseAlpha, double alphaMul)
             {
                 return Color.FromArgb(Math.Max(0, Math.Min(0xFF, (int)Math.Round(baseAlpha * alphaMul, MidpointRounding.AwayFromZero))), col);
@@ -2008,52 +2092,110 @@ namespace MobiusEditor.Render
             Color previewBorderColor = ApplyAlpha(borderColor, 0x100, alphaAdjust / 2);
             Color previewTextColor = ApplyAlpha(textColor, 0x80, alphaAdjust / 2);
 
+            Dictionary<string, Bitmap> renders = new Dictionary<string, Bitmap>();
+            try
+            {
+                int sizeW = 128;
+                int sizeH = 128;
+                double tileScaleHor = sizeW / 128.0;
+                Rectangle tileBounds = new Rectangle(0, 0, sizeW - 1, sizeH - 1);
+                using (SolidBrush prevCellTriggersBackgroundBrush = new SolidBrush(previewFillColor))
+                using (SolidBrush prevCellTriggersBrush = new SolidBrush(previewTextColor))
+                using (SolidBrush cellTriggersBackgroundBrush = new SolidBrush(fillColor))
+                using (SolidBrush cellTriggersBrush = new SolidBrush(textColor))
+                {
+                    foreach (string trigger in toRenderSet)
+                    {
+                        string[] trigPart = trigger.Split('=');
+                        if (trigPart.Length != 2)
+                        {
+                            continue;
+                        }
+                        string text = trigPart[0];
+                        bool isPreview = trigPart[1] == "P";
+
+                        Bitmap bm = new Bitmap(sizeW, sizeH);
+                        using (Graphics ctg = Graphics.FromImage(bm))
+                        {
+                            Rectangle textBounds = new Rectangle(Point.Empty, tileBounds.Size);
+                            ctg.FillRectangle(isPreview ? prevCellTriggersBackgroundBrush : cellTriggersBackgroundBrush, textBounds);
+                            StringFormat stringFormat = new StringFormat
+                            {
+                                Alignment = StringAlignment.Center,
+                                LineAlignment = StringAlignment.Center
+                            };
+                            using (Font font = ctg.GetAdjustedFont(text, SystemFonts.DefaultFont, textBounds.Width, textBounds.Height,
+                                Math.Max(1, (int)Math.Round(24 * tileScaleHor)), Math.Max(1, (int)Math.Round(48 * tileScaleHor)), stringFormat, true))
+                            {
+                                ctg.DrawString(text.ToString(), font, isPreview ? prevCellTriggersBrush : cellTriggersBrush, textBounds, stringFormat);
+                            }
+                        }
+                        renders.Add(trigger, bm);
+                    }
+                }
+                foreach ((Point p, CellTrigger cellTrigger) in toRender)
+                {
+                    bool isPreview = cellTrigger.Tint.A != 255;
+                    string requestName = cellTrigger.Trigger + "=" + (isPreview ? 'P' : 'N');
+                    if (renders.TryGetValue(requestName, out Bitmap ctBm))
+                    {
+                        Rectangle renderBounds = new Rectangle(p.X * tileSize.Width, p.Y * tileSize.Height, tileSize.Width, tileSize.Height);
+                        graphics.DrawImage(ctBm, renderBounds, tileBounds, GraphicsUnit.Pixel);
+                    }
+                }
+            }
+            finally
+            {
+                Bitmap[] bms = renders.Values.ToArray();
+                for (int i = 0; i < bms.Length; i++)
+                {
+                    try { bms[i].Dispose(); }
+                    catch { /* ignore */ }
+                }
+            }
             float borderSize = Math.Max(0.5f, tileSize.Width / 60.0f);
             float thickBorderSize = Math.Max(1f, tileSize.Width / 20.0f);
-            HashSet<String> specifiedSet = new HashSet<String>(specified, StringComparer.OrdinalIgnoreCase);
-
-            using (SolidBrush prevCellTriggersBackgroundBrush = new SolidBrush(previewFillColor))
-            using (Pen prevCellTriggerPen = new Pen(previewBorderColor, thickborder ? thickBorderSize : borderSize))
-            using (SolidBrush prevCellTriggersBrush = new SolidBrush(previewTextColor))
-            using (SolidBrush cellTriggersBackgroundBrush = new SolidBrush(fillColor))
-            using (Pen cellTriggerPen = new Pen(borderColor, thickborder ? thickBorderSize : borderSize))
-            using (SolidBrush cellTriggersBrush = new SolidBrush(textColor))
+            using (Pen prevBorderPen = new Pen(previewBorderColor, thickborder ? thickBorderSize : borderSize))
+            using (Pen borderPen = new Pen(borderColor, thickborder ? thickBorderSize : borderSize))
             {
-                foreach ((Int32 cell, CellTrigger cellTrigger) in map.CellTriggers)
+                foreach ((Point p, CellTrigger cellTrigger) in boundsToDraw)
                 {
-                    bool contains = specifiedSet.Contains(cellTrigger.Trigger);
-                    if (contains && excludeSpecified || !contains && !excludeSpecified)
-                    {
-                        continue;
-                    }
-                    Int32 x = cell % map.Metrics.Width;
-                    Int32 y = cell / map.Metrics.Width;
-                    Point location = new Point(x * tileSize.Width, y * tileSize.Height);
-                    Rectangle textBounds = new Rectangle(location, tileSize);
                     bool isPreview = cellTrigger.Tint.A != 255;
-                    graphics.FillRectangle(isPreview ? prevCellTriggersBackgroundBrush : cellTriggersBackgroundBrush, textBounds);
-                    graphics.DrawRectangle(isPreview ? prevCellTriggerPen : cellTriggerPen, textBounds);
-                    StringFormat stringFormat = new StringFormat
-                    {
-                        Alignment = StringAlignment.Center,
-                        LineAlignment = StringAlignment.Center
-                    };
-                    String text = cellTrigger.Trigger;
-                    using (Font font = graphics.GetAdjustedFont(text, SystemFonts.DefaultFont, textBounds.Width, textBounds.Height,
-                        Math.Max(1, (int)Math.Round(24 * tileScaleHor)), Math.Max(1, (int)Math.Round(48 * tileScaleHor)), stringFormat, true))
-                    {
-                        graphics.DrawString(text.ToString(), font, isPreview ? prevCellTriggersBrush : cellTriggersBrush, textBounds, stringFormat);
-                    }
+                    Rectangle bounds = new Rectangle(new Point(p.X * tileSize.Width, p.Y * tileSize.Height), tileSize);
+                    graphics.DrawRectangle(isPreview ? prevBorderPen : borderPen, bounds);
                 }
             }
         }
 
-        public static void RenderMapBoundaries(Graphics graphics, Map map, Size tileSize)
+        public static void RenderMapBoundaries(Graphics graphics, Map map, Rectangle visibleCells, Size tileSize)
         {
-            RenderMapBoundaries(graphics, map.Bounds, tileSize, Color.Cyan, false);
+            RenderMapBoundaries(graphics, map.Bounds, visibleCells, tileSize, Color.Cyan);
         }
 
-        public static void RenderMapBoundaries(Graphics graphics, Rectangle bounds, Size tileSize, Color color, bool symmetryLines)
+        public static void RenderMapBoundaries(Graphics graphics, Rectangle bounds, Rectangle visibleCells, Size tileSize, Color color)
+        {
+            // Inflate so you'd see the indicator if it's at the edge.
+            visibleCells.Inflate(1, 1);
+            Rectangle cropped = bounds;
+            cropped.Intersect(visibleCells);
+            // If these two are identical, that means all map borders are at least one cell outside the visible cells area.
+            if (visibleCells == cropped)
+            {
+                return;
+            }
+            Rectangle boundsRect = Rectangle.FromLTRB(
+                bounds.Left * tileSize.Width,
+                bounds.Top * tileSize.Height,
+                bounds.Right * tileSize.Width,
+                bounds.Bottom * tileSize.Height
+            );
+            using (Pen boundsPen = new Pen(color, Math.Max(1f, tileSize.Width / 8.0f)))
+            {
+                graphics.DrawRectangle(boundsPen, boundsRect);
+            }
+        }
+
+        public static void RenderMapSymmetry(Graphics graphics, Rectangle bounds, Size tileSize, Color color)
         {
             Rectangle boundsRect = Rectangle.FromLTRB(
                 bounds.Left * tileSize.Width,
@@ -2063,122 +2205,113 @@ namespace MobiusEditor.Render
             );
             using (Pen boundsPen = new Pen(color, Math.Max(1f, tileSize.Width / 8.0f)))
             {
-                if (!symmetryLines)
-                {
-                    graphics.DrawRectangle(boundsPen, boundsRect);
-                }
-                else
-                {
-                    graphics.DrawLine(boundsPen, new Point(boundsRect.X, boundsRect.Y), new Point(boundsRect.Right, boundsRect.Bottom));
-                    graphics.DrawLine(boundsPen, new Point(boundsRect.Right, boundsRect.Y), new Point(boundsRect.X, boundsRect.Bottom));
+                graphics.DrawLine(boundsPen, new Point(boundsRect.X, boundsRect.Y), new Point(boundsRect.Right, boundsRect.Bottom));
+                graphics.DrawLine(boundsPen, new Point(boundsRect.Right, boundsRect.Y), new Point(boundsRect.X, boundsRect.Bottom));
 
-                    int halfX = boundsRect.X + boundsRect.Width / 2;
-                    int halfY = boundsRect.Y + boundsRect.Height / 2;
-                    graphics.DrawLine(boundsPen, new Point(halfX, boundsRect.Y), new Point(halfX, boundsRect.Bottom));
-                    graphics.DrawLine(boundsPen, new Point(boundsRect.X, halfY), new Point(boundsRect.Right, halfY));
-                }
+                int halfX = boundsRect.X + boundsRect.Width / 2;
+                int halfY = boundsRect.Y + boundsRect.Height / 2;
+                graphics.DrawLine(boundsPen, new Point(halfX, boundsRect.Y), new Point(halfX, boundsRect.Bottom));
+                graphics.DrawLine(boundsPen, new Point(boundsRect.X, halfY), new Point(boundsRect.Right, halfY));
             }
         }
 
-        public static void RenderMapGrid(Graphics graphics, Rectangle bounds, Size tileSize, Color color)
+        public static void RenderMapGrid(Graphics graphics, Rectangle renderBounds, Rectangle mapBounds, bool mapBoundsRendered, Size tileSize, Color color)
         {
+            Rectangle boundvisibleCells = mapBounds;
+            boundvisibleCells.Intersect(renderBounds);
+            int startY = boundvisibleCells.Y;
+            int startX = boundvisibleCells.X;
+            int endRight = boundvisibleCells.Right;
+            int endBottom = boundvisibleCells.Bottom;
+            if (mapBoundsRendered)
+            {
+                if (boundvisibleCells.Y == mapBounds.Y)
+                {
+                    startY++;
+                }
+                if (boundvisibleCells.Bottom == mapBounds.Bottom)
+                {
+                    endBottom--;
+                }
+                if (boundvisibleCells.X == mapBounds.X)
+                {
+                    startX++;
+                }
+                if (boundvisibleCells.Right == mapBounds.Right)
+                {
+                    endRight--;
+                }
+            }
             using (Pen gridPen = new Pen(color, Math.Max(1f, tileSize.Width / 16.0f)))
             {
-                int leftBound = bounds.Left * tileSize.Width;
-                int rightBound = bounds.Right * tileSize.Width;
-                for (int y = bounds.Top + 1; y < bounds.Bottom; ++y)
+                int leftBound = boundvisibleCells.X * tileSize.Width;
+                int rightBound = boundvisibleCells.Right * tileSize.Width;
+                for (int y = startY; y <= endBottom; ++y)
                 {
                     int ymul = y * tileSize.Height;
                     graphics.DrawLine(gridPen, new Point(leftBound, ymul), new Point(rightBound, ymul));
                 }
-                int topBound = bounds.Top * tileSize.Height;
-                int bottomBound = bounds.Bottom * tileSize.Height;
-                for (int x = bounds.Left + 1; x < bounds.Right; ++x)
+                //*/
+                int topBound = boundvisibleCells.Y * tileSize.Height;
+                int bottomBound = boundvisibleCells.Bottom * tileSize.Height;
+                for (int x = startX; x <= endRight; ++x)
                 {
                     int xmul = x * tileSize.Height;
                     graphics.DrawLine(gridPen, new Point(xmul, topBound), new Point(xmul, bottomBound));
                 }
+                //*/
             }
         }
 
-        public static void RenderLandTypes(Graphics graphics, Map map, GameType gameType, Size tileSize)
+        public static void RenderLandTypes(Graphics graphics, IGamePlugin plugin, Map map, Size tileSize, Rectangle visibleCells)
         {
             // Check which cells need to be marked.
             List<(int, int)> cellsVehImpassable = new List<(int, int)>();
             List<(int, int)> cellsUnbuildable = new List<(int, int)>();
             List<(int, int)> cellsBoatMovable = new List<(int, int)>();
-            int mapHeight = map.Metrics.Height;
-            int mapWidth = map.Metrics.Width;
+            // Use this one because it might be the preview map.
             CellGrid<Template> tmp = map.Templates;
-            // TD evaluation...
-            void evalTD(LandType land, int x, int y)
-            {
-                switch (land)
-                {
-                    case LandType.Beach:
-                        cellsUnbuildable.Add((x, y));
-                        break;
-                    case LandType.Rock:
-                        cellsVehImpassable.Add((x, y));
-                        break;
-                    case LandType.Water:
-                    case LandType.River:
-                        cellsVehImpassable.Add((x, y));
-                        //cellsBoatMovable.Add((x, y));
-                        break;
-                }
-            }
-            // RA evaluation...
-            void evalRA(LandType land, int x, int y)
-            {
-                switch (land)
-                {
-                    case LandType.Rock:
-                    case LandType.River:
-                        cellsVehImpassable.Add((x, y));
-                        return;
-                    case LandType.Water:
-                        cellsBoatMovable.Add((x, y));
-                        return;
-                    case LandType.Rough:
-                    case LandType.Beach:
-                        cellsUnbuildable.Add((x, y));
-                        return;
-                }
-            }
-            // Choosing which function to use
-            Action<LandType, int, int> checkLand;
-            if (gameType == GameType.TiberianDawn || gameType == GameType.SoleSurvivor)
-            {
-                checkLand = evalTD;
-            }
-            else if (gameType == GameType.RedAlert)
-            {
-                checkLand = evalRA;
-            }
-            else
-            {
-                return;
-            }
             // Possibly fetch the terrain type for clear terrain on this theater?
-            //TemplateType clear = map.TemplateTypes.Where(t => (t.Flag & TemplateTypeFlag.Clear) == TemplateTypeFlag.Clear).FirstOrDefault();
-            //LandType clearLand = clear.LandTypes.Length > 0 ? clear.LandTypes[0] : LandType.Clear;
+            TemplateType clear = plugin.Map.TemplateTypes.Where(t => (t.Flag & TemplateTypeFlag.Clear) == TemplateTypeFlag.Clear).FirstOrDefault();
+            LandType clearLand = clear.LandTypes.Length > 0 ? clear.LandTypes[0] : LandType.Clear;
             // The actual check.
-            for (int y = 0; y < mapHeight; ++y)
+            for (int y = visibleCells.Y; y < visibleCells.Bottom; ++y)
             {
-                for (int x = 0; x < mapWidth; ++x)
+                for (int x = visibleCells.X; x < visibleCells.Right; ++x)
                 {
                     Template template = tmp[y, x];
+                    LandType land;
                     if (template == null)
                     {
-                        // Better not to enable this; it makes this process really sluggish on interior maps.
-                        //checkLand(clearLand, x, y);
-                        continue;
+                        land = clearLand;
                     }
-                    LandType[] types = template.Type.LandTypes;
-                    int icon = (template.Type.Flag & (TemplateTypeFlag.Clear | TemplateTypeFlag.RandomCell)) != TemplateTypeFlag.None ? 0 : template.Icon;
-                    LandType land = icon < types.Length ? types[icon] : LandType.Clear;
-                    checkLand(land, x, y);
+                    else
+                    {
+                        LandType[] types = template.Type.LandTypes;
+                        int icon = (template.Type.Flag & (TemplateTypeFlag.Clear | TemplateTypeFlag.RandomCell)) != TemplateTypeFlag.None ? 0 : template.Icon;
+                        land = icon < types.Length ? types[icon] : LandType.Clear;
+                    }
+                    bool isVehiclePassable = plugin.IsVehiclePassable(land);
+                    bool isBuildable = plugin.IsBuildable(land);
+                    bool isBoatPassable = plugin.IsBoatPassable(land);
+                    if (isVehiclePassable)
+                    {
+                        if (!isBuildable)
+                        {
+                            cellsUnbuildable.Add((x, y));
+                        }
+                    }
+                    else
+                    {
+                        if (isBoatPassable)
+                        {
+                            cellsBoatMovable.Add((x, y));
+                        }
+                        else
+                        {
+                            cellsVehImpassable.Add((x, y));
+                        }
+                    }
                 }
             }
             // On to the painting part.

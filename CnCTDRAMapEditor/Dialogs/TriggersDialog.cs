@@ -34,10 +34,10 @@ namespace MobiusEditor.Dialogs
         private string[] persistenceNames = new string[] { "On first triggering", "When all linked objects are triggered", "On each triggering" };
         private string[] typeNames = new string[]
         {
-                "Event => Action1 [+ Action2]",
-                "Event1 AND Event2 => Action1 [+ Action2]",
-                "Event1 OR Event2 => Action1 [+ Action2]",
-                "Event1 => Action1; Event2 => Action2",
+                "Event → Action1 [+ Action2]",
+                "Event1 AND Event2 → Action1 [+ Action2]",
+                "Event1 OR Event2 → Action1 [+ Action2]",
+                "Event1 → Action1; Event2 → Action2",
         };
 
         private TriggerFilter triggerFilter;
@@ -400,34 +400,40 @@ namespace MobiusEditor.Dialogs
 
         private void ChangeFilter()
         {
-            Trigger selectedItem = SelectedTrigger;
-            using (TriggerFilterDialog tfd = new TriggerFilterDialog(plugin, this.persistenceLabel.Text, persistenceNames, typeNames))
+            string[] currentTriggers = triggers.Select(t => t.Name).ToArray();
+            using (TriggerFilterDialog tfd = new TriggerFilterDialog(plugin, this.persistenceLabel.Text, persistenceNames, typeNames, currentTriggers))
             {
                 tfd.Filter = this.triggerFilter;
                 tfd.StartPosition = FormStartPosition.CenterParent;
                 if (tfd.ShowDialog() == DialogResult.OK)
                 {
-                    SetTriggerFilter(tfd.Filter);
-                    RefreshTriggers();
-                    bool selected = false;
-                    if (selectedItem != null)
+                    ApplyFilter(tfd.Filter);
+                }
+            }
+        }
+
+        private void ApplyFilter(TriggerFilter filter)
+        {
+            Trigger selectedItem = SelectedTrigger;
+            SetTriggerFilter(filter);
+            RefreshTriggers();
+            bool selected = false;
+            if (selectedItem != null)
+            {
+                for (Int32 i = 0; i < triggersListView.Items.Count; ++i)
+                {
+                    if (triggersListView.Items[i].Tag == selectedItem)
                     {
-                        for (Int32 i = 0; i < triggersListView.Items.Count; ++i)
-                        {
-                            if (triggersListView.Items[i].Tag == selectedItem)
-                            {
-                                triggersListView.Items[i].Selected = true;
-                                triggersListView.Select();
-                                selected = true;
-                                break;
-                            }
-                        }
-                    }
-                    if (!selected)
-                    {
-                        RefreshListSelection();
+                        triggersListView.Items[i].Selected = true;
+                        triggersListView.Select();
+                        selected = true;
+                        break;
                     }
                 }
+            }
+            if (!selected)
+            {
+                RefreshListSelection();
             }
         }
 
@@ -512,6 +518,12 @@ namespace MobiusEditor.Dialogs
             if (index >= 0 && triggersListView.Items.Count > index)
                 triggersListView.Items[index].Selected = true;
             btnAdd.Enabled = triggers.Count < maxTriggers;
+            if (triggerFilter.FilterTrigger && String.Equals(triggerFilter.Trigger, name, StringComparison.OrdinalIgnoreCase))
+            {
+                triggerFilter.FilterTrigger = false;
+                triggerFilter.Trigger = Trigger.None;
+                ApplyFilter(triggerFilter);
+            }
         }
 
         private void triggersListView_AfterLabelEdit(object sender, LabelEditEventArgs e)
@@ -551,6 +563,11 @@ namespace MobiusEditor.Dialogs
                 // Normally always false
                 lblTooLong.Visible = curName.Length > maxLength;
                 triggersListView.Items[e.Item].ToolTipText = SelectedTrigger.Name;
+                if (triggerFilter.FilterTrigger && String.Equals(triggerFilter.Trigger, oldName, StringComparison.OrdinalIgnoreCase))
+                {
+                    triggerFilter.Trigger = curName;
+                    ApplyFilter(triggerFilter);
+                }
             }
         }
 
@@ -591,7 +608,24 @@ namespace MobiusEditor.Dialogs
                     // Set event to "None".
                     event2ComboBox.SelectedIndex = 0;
                 }
+                this.triggersTableLayoutPanel.SuspendLayout();
+                RemoveFromLayout(this.event2Label, this.event2ComboBox, this.event2Flp);
+                RemoveFromLayout(this.action1Label, this.action1ComboBox, this.action1Flp);
+                if (eventType != TriggerMultiStyleType.Linked)
+                {
+                    // Normal order: E1, [E2 → A1], A2
+                    AddToLayout(this.event2Label, this.event2ComboBox, this.event2Flp, 4);
+                    AddToLayout(this.action1Label, this.action1ComboBox, this.action1Flp, 5);
+                }
+                else
+                {
+                    // Flipped order: E1 → [A1, E2] → A2
+                    AddToLayout(this.action1Label, this.action1ComboBox, this.action1Flp, 4);
+                    AddToLayout(this.event2Label, this.event2ComboBox, this.event2Flp, 5);
+                }
                 event2Label.Visible = event2ComboBox.Visible = event2Flp.Visible = hasEvent2;
+                this.triggersTableLayoutPanel.ResumeLayout(false);
+                this.triggersTableLayoutPanel.PerformLayout();
             }
         }
 
@@ -629,6 +663,21 @@ namespace MobiusEditor.Dialogs
                 SelectedTrigger.Action2.ActionType = action2ComboBox.SelectedItem.ToString();
             }
             UpdateTriggerActionControls(SelectedTrigger?.Action2, action2Nud, action2ValueComboBox, null);
+        }
+
+        private void RemoveFromLayout(Label lblname, ComboBox cmbselect, FlowLayoutPanel flpargs)
+        {
+            this.triggersTableLayoutPanel.Controls.Remove(lblname);
+            this.triggersTableLayoutPanel.Controls.Remove(cmbselect);
+            this.triggersTableLayoutPanel.Controls.Remove(flpargs);
+        }
+
+        private void AddToLayout(Label lblname, ComboBox cmbselect, FlowLayoutPanel flpargs, int row)
+        {
+            this.triggersTableLayoutPanel.Controls.Add(lblname, 0, row);
+            this.triggersTableLayoutPanel.Controls.Add(cmbselect, 1, row);
+            this.triggersTableLayoutPanel.Controls.Add(flpargs, 2, row);
+            this.triggersTableLayoutPanel.SetColumnSpan(flpargs, 2);
         }
 
         private void UpdateTriggerEventControls(TriggerEvent triggerEvent, NumericUpDown eventNud, ComboBox eventValueComboBox, TriggerEvent triggerEventData)

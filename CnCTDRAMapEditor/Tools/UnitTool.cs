@@ -600,32 +600,36 @@ namespace MobiusEditor.Tools
             previewMap.Technos.Add(location, unit);
         }
 
-        protected override void PostRenderMap(Graphics graphics)
+        protected override void PostRenderMap(Graphics graphics, Rectangle visibleCells)
         {
-            base.PostRenderMap(graphics);
+            base.PostRenderMap(graphics, visibleCells);
             // Since we manually handle GapRadius painting, need to do the Buildings ones too.
             if ((Layers & (MapLayerFlag.Buildings | MapLayerFlag.EffectRadius)) == (MapLayerFlag.Buildings | MapLayerFlag.EffectRadius))
             {
-                MapRenderer.RenderAllBuildingEffectRadiuses(graphics, previewMap, Globals.MapTileSize, map.GapRadius);
+                MapRenderer.RenderAllBuildingEffectRadiuses(graphics, previewMap, visibleCells, Globals.MapTileSize, map.GapRadius);
             }
-            this. HandlePaintOutlines(graphics, previewMap, Globals.MapTileSize, Globals.MapTileScale, this.Layers);
-            MapRenderer.RenderAllBoundsFromPoint(graphics, Globals.MapTileSize, previewMap.Technos.OfType<Unit>());
+            this. HandlePaintOutlines(graphics, previewMap, visibleCells, Globals.MapTileSize, Globals.MapTileScale, this.Layers);
+            // For bounds, add one more cell to get all borders showing.
+            Rectangle boundRenderCells = visibleCells;
+            boundRenderCells.Inflate(1, 1);
+            boundRenderCells.Intersect(map.Metrics.Bounds);
+            MapRenderer.RenderAllBoundsFromPoint(graphics, boundRenderCells, Globals.MapTileSize, previewMap.Technos.OfType<Unit>());
             if ((Layers & MapLayerFlag.Units) == MapLayerFlag.Units)
             {
                 if ((Layers & MapLayerFlag.TechnoTriggers) == MapLayerFlag.TechnoTriggers)
                 {
-                    MapRenderer.RenderAllTechnoTriggers(graphics, previewMap, Globals.MapTileSize, Layers);
+                    MapRenderer.RenderAllTechnoTriggers(graphics, previewMap, visibleCells, Globals.MapTileSize, Layers);
                 }
                 if ((Layers & MapLayerFlag.EffectRadius) == MapLayerFlag.EffectRadius)
                 {
-                    MapRenderer.RenderAllUnitEffectRadiuses(graphics, previewMap, Globals.MapTileSize, map.RadarJamRadius);
+                    MapRenderer.RenderAllUnitEffectRadiuses(graphics, previewMap, visibleCells, Globals.MapTileSize, map.RadarJamRadius);
                 }
                 else if (placementMode)
                 {
                     (Point p, Unit u) = previewMap.Technos.OfType<Unit>().Where(t => t.Occupier.Tint.A != 255).FirstOrDefault();
                     if (u != null)
                     {
-                        MapRenderer.RenderUnitEffectRadius(graphics, Globals.MapTileSize, map.RadarJamRadius, u, p);
+                        MapRenderer.RenderUnitEffectRadius(graphics, Globals.MapTileSize, map.RadarJamRadius, u, p, visibleCells);
                     }
                 }
                 else if (selectedUnit != null && selectedUnitLocation.HasValue)
@@ -633,7 +637,7 @@ namespace MobiusEditor.Tools
                     Point? loc = map.Technos[selectedUnit];
                     if (loc.HasValue)
                     {
-                        MapRenderer.RenderUnitEffectRadius(graphics, Globals.MapTileSize, map.RadarJamRadius, selectedUnit, loc.Value);
+                        MapRenderer.RenderUnitEffectRadius(graphics, Globals.MapTileSize, map.RadarJamRadius, selectedUnit, loc.Value, visibleCells);
                     }
                 }
                 else if (selectedObjectProperties?.ObjectProperties?.Object is Unit un)
@@ -641,7 +645,7 @@ namespace MobiusEditor.Tools
                     Point? loc = map.Technos[un];
                     if (loc.HasValue)
                     {
-                        MapRenderer.RenderUnitEffectRadius(graphics, Globals.MapTileSize, map.RadarJamRadius, un, loc.Value);
+                        MapRenderer.RenderUnitEffectRadius(graphics, Globals.MapTileSize, map.RadarJamRadius, un, loc.Value, visibleCells);
                     }
                 }
             }

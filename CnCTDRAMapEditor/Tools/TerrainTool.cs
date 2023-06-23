@@ -515,7 +515,7 @@ namespace MobiusEditor.Tools
                     }
                     List<(Point p, Terrain ter)> terrainList = new List<(Point p, Terrain ter)>();
                     terrainList.Add((new Point(0, 0), mockTerrain));
-                    MapRenderer.RenderAllOccupierBounds(g, Globals.PreviewTileSize, terrainList);
+                    MapRenderer.RenderAllOccupierBounds(g, new Rectangle(Point.Empty, previewSize), Globals.PreviewTileSize, terrainList);
                 }
                 terrainTypeMapPanel.MapImage = terrainPreview;
             }
@@ -574,13 +574,17 @@ namespace MobiusEditor.Tools
             }
         }
 
-        protected override void PostRenderMap(Graphics graphics)
+        protected override void PostRenderMap(Graphics graphics, Rectangle visibleCells)
         {
-            base.PostRenderMap(graphics);
-            MapRenderer.RenderAllOccupierBounds(graphics, Globals.MapTileSize, previewMap.Technos.OfType<Terrain>());
+            base.PostRenderMap(graphics, visibleCells);
+            // For bounds, add one more cell to get all borders showing.
+            Rectangle boundRenderCells = visibleCells;
+            boundRenderCells.Inflate(1, 1);
+            boundRenderCells.Intersect(map.Metrics.Bounds);
+            MapRenderer.RenderAllOccupierBounds(graphics, boundRenderCells, Globals.MapTileSize, previewMap.Technos.OfType<Terrain>());
             if ((Layers & MapLayerFlag.TechnoTriggers) == MapLayerFlag.TechnoTriggers)
             {
-                MapRenderer.RenderAllTechnoTriggers(graphics, previewMap, Globals.MapTileSize, Layers);
+                MapRenderer.RenderAllTechnoTriggers(graphics, previewMap, visibleCells, Globals.MapTileSize, Layers);
             }
         }
 

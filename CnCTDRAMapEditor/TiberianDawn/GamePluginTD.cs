@@ -3247,6 +3247,45 @@ namespace MobiusEditor.TiberianDawn
             return flagColors;
         }
 
+        public virtual bool IsVehiclePassable(LandType landType)
+        {
+            switch (landType)
+            {
+                case LandType.Clear:
+                case LandType.Beach:
+                case LandType.Road:
+                case LandType.Rough:
+                    return true;
+                case LandType.Rock:
+                case LandType.Water:
+                case LandType.River:
+                    return false;
+            }
+            return false;
+        }
+
+        public virtual bool IsBuildable(LandType landType)
+        {
+            switch (landType)
+            {
+                case LandType.Clear:
+                case LandType.Road:
+                    return true;
+                case LandType.Beach:
+                case LandType.Rock:
+                case LandType.Water:
+                case LandType.River:
+                case LandType.Rough:
+                    return false;
+            }
+            return false;
+        }
+
+        public virtual bool IsBoatPassable(LandType landType)
+        {
+            return false;
+        }
+
         protected void BasicSection_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             switch (e.PropertyName)

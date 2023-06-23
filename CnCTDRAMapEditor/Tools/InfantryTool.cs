@@ -806,14 +806,18 @@ namespace MobiusEditor.Tools
             }
         }
 
-        protected override void PostRenderMap(Graphics graphics)
+        protected override void PostRenderMap(Graphics graphics, Rectangle visibleCells)
         {
-            base.PostRenderMap(graphics);
-            MapRenderer.RenderAllBoundsFromPoint(graphics, Globals.MapTileSize, previewMap.Technos.OfType<InfantryGroup>());
-            this.HandlePaintOutlines(graphics, previewMap, Globals.MapTileSize, Globals.MapTileScale, this.Layers);
+            base.PostRenderMap(graphics, visibleCells);
+            // For bounds, add one more cell to get all borders showing.
+            Rectangle boundRenderCells = visibleCells;
+            boundRenderCells.Inflate(1, 1);
+            boundRenderCells.Intersect(map.Metrics.Bounds);
+            MapRenderer.RenderAllBoundsFromPoint(graphics, boundRenderCells, Globals.MapTileSize, previewMap.Technos.OfType<InfantryGroup>());
+            this.HandlePaintOutlines(graphics, previewMap, visibleCells, Globals.MapTileSize, Globals.MapTileScale, this.Layers);
             if ((Layers & (MapLayerFlag.Infantry | MapLayerFlag.TechnoTriggers)) == (MapLayerFlag.Infantry | MapLayerFlag.TechnoTriggers))
             {
-                MapRenderer.RenderAllTechnoTriggers(graphics, previewMap, Globals.MapTileSize, Layers);
+                MapRenderer.RenderAllTechnoTriggers(graphics, previewMap, visibleCells, Globals.MapTileSize, Layers);
             }
         }
 

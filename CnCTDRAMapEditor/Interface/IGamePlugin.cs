@@ -156,5 +156,9 @@ namespace MobiusEditor.Interface
         /// </summary>
         /// <returns></returns>
         ITeamColor[] GetFlagColors();
+
+        bool IsVehiclePassable(LandType landType);
+        bool IsBuildable(LandType landType);
+        bool IsBoatPassable(LandType landType);
     }
 }

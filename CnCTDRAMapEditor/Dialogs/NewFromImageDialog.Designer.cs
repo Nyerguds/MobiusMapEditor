@@ -218,6 +218,8 @@ namespace MobiusEditor.Dialogs
             this.Icon = global::MobiusEditor.Properties.Resources.GameIcon00;
             this.MinimizeBox = false;
             this.Name = "NewFromImageDialog";
+            this.ShowIcon = false;
+            this.ShowInTaskbar = false;
             this.Text = "Map colors to tiles";
             ((System.ComponentModel.ISupportInitialize)(this.picZoom)).EndInit();
             this.ResumeLayout(false);

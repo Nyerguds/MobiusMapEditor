@@ -596,7 +596,7 @@ namespace MobiusEditor.Tools
                             render.Item2(g);
                         }
                     }
-                    MapRenderer.RenderAllBoundsFromCell(g, Globals.PreviewTileSize, smudgeList, mockMetrics);
+                    MapRenderer.RenderAllBoundsFromCell(g, new Rectangle(Point.Empty, mockSize), Globals.PreviewTileSize, smudgeList, mockMetrics);
                 }
                 smudgeTypeMapPanel.MapImage = smudgePreview;
             }
@@ -672,10 +672,14 @@ namespace MobiusEditor.Tools
             }
         }
 
-        protected override void PostRenderMap(Graphics graphics)
+        protected override void PostRenderMap(Graphics graphics, Rectangle visibleCells)
         {
-            base.PostRenderMap(graphics);
-            MapRenderer.RenderAllBoundsFromCell(graphics, Globals.MapTileSize, previewMap.Smudge.Where(x => !x.Value.Type.IsAutoBib), previewMap.Metrics);
+            base.PostRenderMap(graphics, visibleCells);
+            // For bounds, add one more cell to get all borders showing.
+            Rectangle boundRenderCells = visibleCells;
+            boundRenderCells.Inflate(1, 1);
+            boundRenderCells.Intersect(map.Metrics.Bounds);
+            MapRenderer.RenderAllBoundsFromCell(graphics, boundRenderCells, Globals.MapTileSize, previewMap.Smudge.Where(x => !x.Value.Type.IsAutoBib), previewMap.Metrics);
         }
 
         public override void Activate()

@@ -39,7 +39,7 @@ namespace MobiusEditor.Tools
         {
             get
             {
-                MapLayerFlag handled = MapLayerFlag.Boundaries;
+                MapLayerFlag handled = MapLayerFlag.Boundaries | MapLayerFlag.LandTypes;
                 if (boundsMode)
                 {
                     handled |= MapLayerFlag.MapSymmetry;
@@ -68,7 +68,7 @@ namespace MobiusEditor.Tools
 
         protected override Boolean InPlacementMode
         {
-            get { return placementMode; }
+            get { return placementMode || fillMode; }
         }
 
         private bool boundsMode;
@@ -1719,19 +1719,23 @@ namespace MobiusEditor.Tools
             }
         }
 
-        protected override void PostRenderMap(Graphics graphics)
+        protected override void PostRenderMap(Graphics graphics, Rectangle visibleCells)
         {
-            base.PostRenderMap(graphics);
+            base.PostRenderMap(graphics, visibleCells);
+            if ((Layers & MapLayerFlag.LandTypes) == MapLayerFlag.LandTypes)
+            {
+                MapRenderer.RenderLandTypes(graphics, plugin, previewMap, Globals.MapTileSize, visibleCells);
+            }
             if (boundsMode)
             {
-                MapRenderer.RenderMapBoundaries(graphics, dragBounds, Globals.MapTileSize, Color.Red, true);
-                MapRenderer.RenderMapBoundaries(graphics, dragBounds, Globals.MapTileSize, Color.Red, false);
+                MapRenderer.RenderMapSymmetry(graphics, dragBounds, Globals.MapTileSize, Color.Red);
+                MapRenderer.RenderMapBoundaries(graphics, dragBounds, visibleCells, Globals.MapTileSize, Color.Red);
             }
             else
             {
                 if ((Layers & MapLayerFlag.Boundaries) == MapLayerFlag.Boundaries)
                 {
-                    MapRenderer.RenderMapBoundaries(graphics, map, Globals.MapTileSize);
+                    MapRenderer.RenderMapBoundaries(graphics, map, visibleCells, Globals.MapTileSize);
                 }
                 if (placementMode || fillMode)
                 {

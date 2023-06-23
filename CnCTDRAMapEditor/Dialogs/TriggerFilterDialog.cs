@@ -26,6 +26,7 @@ namespace MobiusEditor.Dialogs
     {
         private string[] persistenceNames;
         private string[] eventControlNames;
+        private string[] currentTrigs;
         private IGamePlugin plugin;
         private bool isRA;
         private TriggerFilter filter;
@@ -42,10 +43,11 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        public TriggerFilterDialog(IGamePlugin plugin, String persistenceLabel, string[] persistenceNames, string[] eventControlNames)
+        public TriggerFilterDialog(IGamePlugin plugin, String persistenceLabel, string[] persistenceNames, string[] eventControlNames, string[] currentTrigs)
         {
             this.persistenceNames = persistenceNames;
             this.eventControlNames = eventControlNames;
+            this.currentTrigs = (currentTrigs??new string[0]).Where(st => !String.IsNullOrWhiteSpace(st)).ToArray();
             this.plugin = plugin;
             this.isRA = this.plugin.GameType == GameType.RedAlert;
             InitializeComponent();
@@ -88,6 +90,12 @@ namespace MobiusEditor.Dialogs
             {
                 cmbTeamType.SelectedItem = filter.TeamType;
             }
+            string correctCaseName = currentTrigs.FirstOrDefault(tr => String.Equals(tr, filter.Trigger, StringComparison.Ordinal));
+            chkTrigger.Checked = filter.FilterTrigger && correctCaseName != null;
+            if (chkTrigger.Checked)
+            {
+                cmbTrigger.SelectedItem = correctCaseName;
+            }
             if (isRA)
             {
                 chkWaypoint.Checked = filter.FilterWaypoint;
@@ -110,6 +118,7 @@ namespace MobiusEditor.Dialogs
             chkEventType.Checked = false;
             chkActionType.Checked = false;
             chkTeamType.Checked = false;
+            chkTrigger.Checked = false;
             chkWaypoint.Checked = false;
             chkGlobal.Checked = false;
         }
@@ -182,6 +191,16 @@ namespace MobiusEditor.Dialogs
             }
         }
 
+        private void ChkTrigger_CheckedChanged(Object sender, EventArgs e)
+        {
+            cmbTrigger.DataSource = null;
+            cmbTrigger.Enabled = chkTrigger.Checked;
+            if (chkTrigger.Checked)
+            {
+                cmbTrigger.DataSource = Trigger.None.Yield().Concat(this.currentTrigs).ToArray();
+            }
+        }
+
         private void ChkWaypoint_CheckedChanged(Object sender, EventArgs e)
         {
             cmbWaypoint.DataSource = null;
@@ -223,6 +242,8 @@ namespace MobiusEditor.Dialogs
             filter.Waypoint = filter.FilterWaypoint ? cmbWaypoint.SelectedIndex - 1 : -1;
             filter.FilterGlobal = chkGlobal.Checked;
             filter.Global = filter.FilterGlobal ? nudGlobal.IntValue : 0;
+            filter.FilterTrigger= chkTrigger.Checked;
+            filter.Trigger = filter.FilterTrigger ? (String)cmbTrigger.SelectedItem : Trigger.None;
         }
 
         private void TriggerFilterDialog_Load(Object sender, EventArgs e)

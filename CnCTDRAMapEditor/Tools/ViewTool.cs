@@ -238,7 +238,10 @@ namespace MobiusEditor.Tools
 
         private void MapPanel_PostRender(object sender, RenderEventArgs e)
         {
-            PostRenderMap(e.Graphics);
+            Rectangle refreshBounds = NavigationWidget.VisibleBounds;
+            // Test to see the optimised bounds-only mode at work.
+            //refreshBounds.Inflate(-4, -4);
+            PostRenderMap(e.Graphics, refreshBounds);
             navigationWidget.Render(e.Graphics);
         }
 
@@ -246,37 +249,41 @@ namespace MobiusEditor.Tools
 
         protected abstract bool InPlacementMode { get; }
 
-        protected virtual void PostRenderMap(Graphics graphics)
+        protected virtual void PostRenderMap(Graphics graphics, Rectangle visibleCells)
         {
-            PostRenderMap(graphics, this.plugin, this.map, Globals.MapTileScale, Layers, ManuallyHandledLayers, this.InPlacementMode);
+            PostRenderMap(graphics, this.plugin, this.map, Globals.MapTileScale, Layers, ManuallyHandledLayers, this.InPlacementMode, visibleCells);
         }
 
-        public static void PostRenderMap(Graphics graphics, IGamePlugin plugin, Map map, double tileScale, MapLayerFlag layersToRender, MapLayerFlag manuallyHandledLayers, bool inPlacementMode)
+        public static void PostRenderMap(Graphics graphics, IGamePlugin plugin, Map map, double tileScale, MapLayerFlag layersToRender, MapLayerFlag manuallyHandledLayers, bool inPlacementMode, Rectangle visibleCells)
         {
             // tileScale should always be given so it results in an exact integer tile size. Math.Round was added to account for .999 situations in the floats.
             Size tileSize = new Size(Math.Max(1, (int)Math.Round(Globals.OriginalTileWidth * tileScale)), Math.Max(1, (int)Math.Round(Globals.OriginalTileHeight * tileScale)));
+            // For bounds, add one more cell to get all borders showing.
+            Rectangle boundRenderCells = visibleCells;
+            boundRenderCells.Inflate(1, 1);
+            boundRenderCells.Intersect(map.Metrics.Bounds);
+            // Only render these if they are not in the priority layers, and not handled manually.
+            // The functions themselves will take care of checking whether they are in the active layers to render.
             if ((layersToRender & MapLayerFlag.LandTypes) == MapLayerFlag.LandTypes
                 && (manuallyHandledLayers & MapLayerFlag.LandTypes) == MapLayerFlag.None)
             {
-                MapRenderer.RenderLandTypes(graphics, map, plugin.GameType, tileSize);
+                MapRenderer.RenderLandTypes(graphics, plugin, map, tileSize, visibleCells);
             }
-            // Only render these if they are not in the priority layers, and not handled manually.
-            // The functions themselves will take care of checking whether they are in the active layers to render.
             if ((Globals.ShowPlacementGrid && inPlacementMode) ||
                 (layersToRender & MapLayerFlag.MapGrid) == MapLayerFlag.MapGrid
                 && (manuallyHandledLayers & MapLayerFlag.MapGrid) == MapLayerFlag.None)
             {
-                MapRenderer.RenderMapGrid(graphics, map.Bounds, tileSize, Globals.MapGridColor);
+                MapRenderer.RenderMapGrid(graphics, visibleCells, map.Bounds, (layersToRender & MapLayerFlag.Boundaries) == MapLayerFlag.Boundaries, tileSize, Globals.MapGridColor);
             }
             if ((layersToRender & MapLayerFlag.MapSymmetry) == MapLayerFlag.MapSymmetry
                 && (manuallyHandledLayers & MapLayerFlag.MapSymmetry) == MapLayerFlag.None)
             {
-                MapRenderer.RenderMapBoundaries(graphics, map.Bounds, tileSize, Color.Cyan, true);
+                MapRenderer.RenderMapSymmetry(graphics, map.Bounds, tileSize, Color.Cyan);
             }
             if ((layersToRender & MapLayerFlag.Boundaries) == MapLayerFlag.Boundaries
                 && (manuallyHandledLayers & MapLayerFlag.Boundaries) == MapLayerFlag.None)
             {
-                MapRenderer.RenderMapBoundaries(graphics, map, tileSize);
+                MapRenderer.RenderMapBoundaries(graphics, map, visibleCells, tileSize);
             }
             bool autoHandleOutlines = (manuallyHandledLayers & MapLayerFlag.OverlapOutlines) == MapLayerFlag.None;
             bool renderOverlay = (layersToRender & MapLayerFlag.Overlay) == MapLayerFlag.Overlay;
@@ -284,72 +291,72 @@ namespace MobiusEditor.Tools
             {
                 if ((layersToRender & MapLayerFlag.Infantry) == MapLayerFlag.Infantry)
                 {
-                    MapRenderer.RenderAllInfantryOutlines(graphics, map, tileSize, tileScale, true);
+                    MapRenderer.RenderAllInfantryOutlines(graphics, map, visibleCells, tileSize, true);
                 }
                 if ((layersToRender & MapLayerFlag.Units) == MapLayerFlag.Units)
                 {
-                    MapRenderer.RenderAllVehicleOutlines(graphics, plugin.GameType, map, tileSize, tileScale, true);
+                    MapRenderer.RenderAllVehicleOutlines(graphics, plugin.GameType, map, visibleCells, tileSize, true);
                 }
                 if (renderOverlay && !Globals.OutlineAllCrates)
                 {
-                    MapRenderer.RenderAllCrateOutlines(graphics, map, tileSize, tileScale, !Globals.OutlineAllCrates);
+                    MapRenderer.RenderAllCrateOutlines(graphics, map, visibleCells, tileSize, tileScale, !Globals.OutlineAllCrates);
                 }
             }
             // Special case: while it's not handled by OverlapOutlines, tools indicating that they handle the OverlapOutlines
             // manually will also paint this, so of all the outlines, it's drawn last.
             if (renderOverlay  && autoHandleOutlines && Globals.OutlineAllCrates)
             {
-                MapRenderer.RenderAllCrateOutlines(graphics, map, tileSize, tileScale, false);
+                MapRenderer.RenderAllCrateOutlines(graphics, map, visibleCells, tileSize, tileScale, false);
             }
             if ((layersToRender & MapLayerFlag.CellTriggers) == MapLayerFlag.CellTriggers
                 && (manuallyHandledLayers & MapLayerFlag.CellTriggers) == MapLayerFlag.None)
             {
-                MapRenderer.RenderCellTriggersSoft(graphics, map, tileSize);
+                MapRenderer.RenderCellTriggersSoft(graphics, map, visibleCells, tileSize);
             }
             if ((layersToRender & (MapLayerFlag.Waypoints | MapLayerFlag.FootballArea)) == (MapLayerFlag.Waypoints | MapLayerFlag.FootballArea)
                 && (manuallyHandledLayers & MapLayerFlag.WaypointsIndic) == MapLayerFlag.None && plugin.GameType == GameType.SoleSurvivor)
             {
-                MapRenderer.RenderAllFootballAreas(graphics, map, tileSize, tileScale, plugin.GameType);
-                MapRenderer.RenderFootballAreaFlags(graphics, plugin.GameType, map, tileSize);
+                MapRenderer.RenderAllFootballAreas(graphics, map, visibleCells, tileSize, tileScale, plugin.GameType);
+                MapRenderer.RenderFootballAreaFlags(graphics, plugin.GameType, map, visibleCells, tileSize);
             }
             if ((layersToRender & (MapLayerFlag.Buildings | MapLayerFlag.EffectRadius)) == (MapLayerFlag.Buildings | MapLayerFlag.EffectRadius)
                 && (manuallyHandledLayers & MapLayerFlag.EffectRadius) == MapLayerFlag.None)
             {
-                MapRenderer.RenderAllBuildingEffectRadiuses(graphics, map, tileSize, map.GapRadius);
+                MapRenderer.RenderAllBuildingEffectRadiuses(graphics, map, visibleCells, tileSize, map.GapRadius);
             }
             if ((layersToRender & (MapLayerFlag.Units | MapLayerFlag.EffectRadius)) == (MapLayerFlag.Units | MapLayerFlag.EffectRadius)
                 && (manuallyHandledLayers & MapLayerFlag.EffectRadius) == MapLayerFlag.None)
             {
-                MapRenderer.RenderAllUnitEffectRadiuses(graphics, map, tileSize, map.RadarJamRadius);
+                MapRenderer.RenderAllUnitEffectRadiuses(graphics, map, visibleCells, tileSize, map.RadarJamRadius);
             }
             if ((layersToRender & (MapLayerFlag.Waypoints | MapLayerFlag.WaypointRadius)) == (MapLayerFlag.Waypoints | MapLayerFlag.WaypointRadius)
                 && (manuallyHandledLayers & MapLayerFlag.WaypointRadius) == MapLayerFlag.None)
             {
-                MapRenderer.RenderAllWayPointRevealRadiuses(graphics, plugin, map, tileSize, null);
+                MapRenderer.RenderAllWayPointRevealRadiuses(graphics, plugin, map, boundRenderCells, tileSize, null);
             }
             if ((layersToRender & (MapLayerFlag.Waypoints | MapLayerFlag.WaypointsIndic)) == (MapLayerFlag.Waypoints | MapLayerFlag.WaypointsIndic)
                 && (manuallyHandledLayers & MapLayerFlag.WaypointsIndic) == MapLayerFlag.None)
             {
-                MapRenderer.RenderWayPointIndicators(graphics, map, tileSize, Color.LightGreen, false, true);
+                MapRenderer.RenderWayPointIndicators(graphics, map, visibleCells, tileSize, Color.LightGreen, false, true);
             }
             if ((layersToRender & (MapLayerFlag.Buildings | MapLayerFlag.BuildingFakes)) == (MapLayerFlag.Buildings | MapLayerFlag.BuildingFakes)
                 && (manuallyHandledLayers & MapLayerFlag.BuildingFakes) == MapLayerFlag.None)
             {
-                MapRenderer.RenderAllFakeBuildingLabels(graphics, map, tileSize);
+                MapRenderer.RenderAllFakeBuildingLabels(graphics, map, visibleCells, tileSize);
             }
             if ((layersToRender & (MapLayerFlag.Buildings | MapLayerFlag.BuildingRebuild)) == (MapLayerFlag.Buildings | MapLayerFlag.BuildingRebuild)
                 && (manuallyHandledLayers & MapLayerFlag.BuildingRebuild) == MapLayerFlag.None)
             {
-                MapRenderer.RenderAllRebuildPriorityLabels(graphics, map, tileSize);
+                MapRenderer.RenderAllRebuildPriorityLabels(graphics, map, visibleCells, tileSize);
             }
             if ((layersToRender & MapLayerFlag.TechnoTriggers) == MapLayerFlag.TechnoTriggers
                 && (manuallyHandledLayers & MapLayerFlag.TechnoTriggers) == MapLayerFlag.None)
             {
-                MapRenderer.RenderAllTechnoTriggers(graphics, map, tileSize, layersToRender);
+                MapRenderer.RenderAllTechnoTriggers(graphics, map, visibleCells, tileSize, layersToRender);
             }
         }
 
-        protected void HandlePaintOutlines(Graphics graphics, Map map, Size tileSize, double tileScale, MapLayerFlag layers)
+        protected void HandlePaintOutlines(Graphics graphics, Map map, Rectangle visibleCells, Size tileSize, double tileScale, MapLayerFlag layers)
         {
             bool renderAllCrateOutlines = Globals.OutlineAllCrates;
             bool renderOverlay = (layers & MapLayerFlag.Overlay) == MapLayerFlag.Overlay;
@@ -357,22 +364,23 @@ namespace MobiusEditor.Tools
             {
                 if ((layers & MapLayerFlag.Infantry) == MapLayerFlag.Infantry)
                 {
-                    MapRenderer.RenderAllInfantryOutlines(graphics, map, tileSize, tileScale, true);
+                    MapRenderer.RenderAllInfantryOutlines(graphics, map, visibleCells, tileSize, true);
                 }
                 if ((layers & MapLayerFlag.Units) == MapLayerFlag.Units)
                 {
-                    MapRenderer.RenderAllVehicleOutlines(graphics, plugin.GameType, map, tileSize, tileScale, true);
+                    MapRenderer.RenderAllVehicleOutlines(graphics, plugin.GameType, map, visibleCells, tileSize, true);
                 }
                 if (renderOverlay && !renderAllCrateOutlines)
                 {
-                    MapRenderer.RenderAllCrateOutlines(graphics, map, tileSize, tileScale, true);
+                    MapRenderer.RenderAllCrateOutlines(graphics, map, visibleCells, tileSize, tileScale, true);
                 }
             }
-            // Special case: while it's not handled by OverlapOutlines, tools indicating that they handle the OverlapOutlines
-            // manually will also paint this, so of all the outlines, it's drawn last.
+            // Special case: while it's not handled by the OverlapOutlines flag being enabled, tools indicating
+            // that they handle the OverlapOutlines flag manually will also takr care of painting this, so of
+            // all the outlines, it's drawn last.
             if (renderOverlay && renderAllCrateOutlines)
             {
-                MapRenderer.RenderAllCrateOutlines(graphics, map, tileSize, tileScale, false);
+                MapRenderer.RenderAllCrateOutlines(graphics, map, visibleCells, tileSize, tileScale, false);
             }
         }
 

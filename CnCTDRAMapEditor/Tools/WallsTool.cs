@@ -354,12 +354,17 @@ namespace MobiusEditor.Tools
             }
         }
 
-        protected override void PostRenderMap(Graphics graphics)
+        protected override void PostRenderMap(Graphics graphics, Rectangle visibleCells)
         {
-            base.PostRenderMap(graphics);
+            base.PostRenderMap(graphics, visibleCells);
+            // For bounds, add one more cell to get all borders showing.
+            Rectangle boundRenderCells = visibleCells;
+            boundRenderCells.Inflate(1, 1);
+            boundRenderCells.Intersect(map.Metrics.Bounds);
             int secondRow = map.Metrics.Width;
             int lastRow = map.Metrics.Length - map.Metrics.Width;
-            MapRenderer.RenderAllBoundsFromCell(graphics, Globals.MapTileSize, previewMap.Overlay.Where(x => x.Value.Type.IsWall && x.Cell >= secondRow && x.Cell < lastRow), previewMap.Metrics);
+            MapRenderer.RenderAllBoundsFromCell(graphics, boundRenderCells, Globals.MapTileSize,
+                previewMap.Overlay.Where(x => x.Value.Type.IsWall && x.Cell >= secondRow && x.Cell < lastRow), previewMap.Metrics);
         }
 
         public override void Activate()

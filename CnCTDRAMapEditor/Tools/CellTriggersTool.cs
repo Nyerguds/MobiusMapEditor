@@ -478,22 +478,22 @@ namespace MobiusEditor.Tools
             }
         }
 
-        protected override void PostRenderMap(Graphics graphics)
+        protected override void PostRenderMap(Graphics graphics, Rectangle visibleCells)
         {
-            base.PostRenderMap(graphics);
+            base.PostRenderMap(graphics, visibleCells);
             string selected = triggerComboBox.SelectedItem as string;
             if (selected != null && Trigger.IsEmpty(selected))
                 selected = null;
             string[] selectedRange = selected != null ? new[] { selected } : new string[] { };
             // Normal techno triggers: under cell
-            MapRenderer.RenderAllTechnoTriggers(graphics, map, Globals.MapTileSize, Layers, Color.LimeGreen, selected, true);
-            MapRenderer.RenderCellTriggersHard(graphics, map, Globals.MapTileSize, selectedRange);
+            MapRenderer.RenderAllTechnoTriggers(graphics, map, visibleCells, Globals.MapTileSize, Layers, Color.LimeGreen, selected, true);
+            MapRenderer.RenderCellTriggersHard(graphics, map, visibleCells, Globals.MapTileSize, selectedRange);
             if (selected != null)
             {
                 // Only use preview map if in placement mode.
-                MapRenderer.RenderCellTriggersSelected(graphics, placementMode ? previewMap : map, Globals.MapTileSize, selectedRange);
+                MapRenderer.RenderCellTriggersSelected(graphics, placementMode ? previewMap : map, visibleCells, Globals.MapTileSize, selectedRange);
                 // Selected technos: on top of cell
-                MapRenderer.RenderAllTechnoTriggers(graphics, map, Globals.MapTileSize, Layers, Color.Yellow, selected, false);
+                MapRenderer.RenderAllTechnoTriggers(graphics, map, visibleCells, Globals.MapTileSize, Layers, Color.Yellow, selected, false);
             }
         }
 

@@ -115,14 +115,12 @@ namespace MobiusEditor.Controls
         private void AdjustZoom(double value, bool fromMousePos)
         {
 
-            var newZoom = Math.Max(MinZoom, Math.Min(MaxZoom, value));
+            double newZoom = Math.Max(MinZoom, Math.Min(MaxZoom, value));
             if (zoom != newZoom)
             {
                 zoom = newZoom;
-
-                var clientPosition = fromMousePos ? PointToClient(MousePosition) : new Point(ClientRectangle.Width / 2, ClientRectangle.Height / 2);
+                Point clientPosition = fromMousePos ? PointToClient(MousePosition) : new Point(ClientRectangle.Width / 2, ClientRectangle.Height / 2);
                 referencePositions = (ClientToMap(clientPosition), new SizeF(clientPosition.X / (float)ClientSize.Width, clientPosition.Y / (float)ClientSize.Height));
-
                 UpdateCamera();
             }
         }
@@ -160,13 +158,16 @@ namespace MobiusEditor.Controls
         /// <param name="doZoom">True to zoom in as far as possible to the chosen area.</param>
         public void JumpToPosition(CellMetrics metrics, int cellPointX, int cellPointY, int cellsWidth, int cellsHeight, bool doZoom)
         {
+            Rectangle clientNoScroll = this.ClientRectangle;
+            Rectangle clientActual = this.ClientRectangle;
             if (doZoom)
             {
                 // Ensure scrollbars; otherwise, ClientRectangle values are wrong.
                 this.Zoom = this.maxZoom;
+                clientActual = this.ClientRectangle;
             }
-            int scaleFull = Math.Min(this.ClientRectangle.Width, this.ClientRectangle.Height);
-            bool isWidth = scaleFull == this.ClientRectangle.Width;
+            int scaleFull = Math.Min(clientActual.Width, clientActual.Height);
+            bool isWidth = scaleFull == clientActual.Width;
             double mapSize = isWidth ? metrics.Width : metrics.Height;
             // pixels per tile at zoom level 1.
             // Technically can't handle non-square cells, but, if anyone messes with that they have more problems than this function.
@@ -174,16 +175,20 @@ namespace MobiusEditor.Controls
             double zoom = this.Zoom;
             if (doZoom)
             {
-                zoom = Math.Min(this.maxZoom, isWidth? ((double)metrics.Width / cellsWidth) : ((double)metrics.Height / cellsHeight));
+                zoom = Math.Min(this.maxZoom, isWidth ? ((double)metrics.Width / cellsWidth) : ((double)metrics.Height / cellsHeight));
                 this.Zoom = zoom;
             }
+            bool ScrollBarW = this.ClientRectangle.Width > clientActual.Width;
+            bool ScrollBarH = this.ClientRectangle.Height > clientActual.Height;
+            this.InvalidateScroll();
             // Convert cell position to actual position on image.
-            int cellX = (int)Math.Round(basicTileSize * zoom * (cellPointX + (cellsWidth / 2.0d)));
-            int cellY = (int)Math.Round(basicTileSize * zoom * (cellPointY + (cellsHeight / 2.0d)));
+            int cellX = (int)Math.Round(scaleFull * zoom * (cellPointX + (cellsWidth / 2.0d)) / mapSize);
+            int cellY = (int)Math.Round(scaleFull * zoom * (cellPointY + (cellsHeight / 2.0d)) / mapSize);
             // Get location to use to center the chosen rectangle on the screen.
-            int x = cellX - this.ClientRectangle.Width / 2;
-            int y = cellY - this.ClientRectangle.Height / 2;
+            int x = cellX - (ScrollBarW ? clientActual : clientNoScroll).Width / 2;
+            int y = cellY - (ScrollBarH ? clientActual : clientNoScroll).Height / 2;
             this.AutoScrollPosition = new Point(x, y);
+            this.InvalidateScroll();
         }
 
         public void IncreaseZoomStep()
@@ -225,42 +230,53 @@ namespace MobiusEditor.Controls
 
         public Point MapToClient(Point point)
         {
-            var points = new Point[] { point };
+            Point[] points = new Point[] { point };
             compositeTransform.TransformPoints(points);
             return points[0];
         }
 
         public Size MapToClient(Size size)
         {
-            var points = new Point[] { (Point)size };
+            Point[] points = new Point[] { (Point)size };
             compositeTransform.VectorTransformPoints(points);
             return (Size)points[0];
         }
 
         public Rectangle MapToClient(Rectangle rectangle)
         {
-            var points = new Point[] { rectangle.Location, new Point(rectangle.Right, rectangle.Bottom) };
+            Point[] points = new Point[] { rectangle.Location, new Point(rectangle.Right, rectangle.Bottom) };
             compositeTransform.TransformPoints(points);
             return new Rectangle(points[0], new Size(points[1].X - points[0].X, points[1].Y - points[0].Y));
         }
 
+        /// <summary>
+        /// Translates absolute screen position to pixel coordinates inside the visible map image
+        /// </summary>
+        /// <param name="point"></param>
+        /// <returns></returns>
         public Point ClientToMap(Point point)
         {
-            var points = new Point[] { point };
+            Point[] points = new Point[] { point };
             invCompositeTransform.TransformPoints(points);
             return points[0];
         }
 
+        /// <summary>
+        /// Translates absolute screen position to pixel coordinates inside the visible map image
+        /// </summary>
         public Size ClientToMap(Size size)
         {
-            var points = new Point[] { (Point)size };
+            Point[] points = new Point[] { (Point)size };
             invCompositeTransform.VectorTransformPoints(points);
             return (Size)points[0];
         }
 
+        /// <summary>
+        /// Translates absolute screen rectangle to pixel coordinates inside the visible map image
+        /// </summary>
         public Rectangle ClientToMap(Rectangle rectangle)
         {
-            var points = new Point[] { rectangle.Location, new Point(rectangle.Right, rectangle.Bottom) };
+            Point[] points = new Point[] { rectangle.Location, new Point(rectangle.Right, rectangle.Bottom) };
             invCompositeTransform.TransformPoints(points);
             return new Rectangle(points[0], new Size(points[1].X - points[0].X, points[1].Y - points[0].Y));
         }
@@ -291,11 +307,11 @@ namespace MobiusEditor.Controls
                 return;
             }
 
-            var count = invalidateCells.Count;
+            int count = invalidateCells.Count;
             invalidateCells.UnionWith(locations);
             if (invalidateCells.Count > count)
             {
-                var overlapCells = invalidateMap.Overlappers.Overlaps(invalidateCells).ToHashSet();
+                HashSet<Point> overlapCells = invalidateMap.Overlappers.Overlaps(invalidateCells).ToHashSet();
                 invalidateCells.UnionWith(overlapCells);
                 Invalidate();
             }
@@ -337,7 +353,6 @@ namespace MobiusEditor.Controls
             {
                 return;
             }
-
             Invalidate(invalidateMap, cells
                 .Where(c => invalidateMap.Metrics.GetLocation(c, out Point location))
                 .Select(c =>
@@ -355,7 +370,7 @@ namespace MobiusEditor.Controls
                 return;
             }
 
-            var rectangle = invalidateMap.Overlappers[overlapper];
+            Rectangle? rectangle = invalidateMap.Overlappers[overlapper];
             if (rectangle.HasValue)
             {
                 Invalidate(invalidateMap, rectangle.Value);
@@ -379,21 +394,18 @@ namespace MobiusEditor.Controls
         protected override void OnClientSizeChanged(EventArgs e)
         {
             base.OnClientSizeChanged(e);
-
             UpdateCamera();
         }
 
         protected override void OnScroll(ScrollEventArgs se)
         {
             base.OnScroll(se);
-
             InvalidateScroll();
         }
 
         protected override void OnPaintBackground(PaintEventArgs e)
         {
             base.OnPaintBackground(e);
-
             e.Graphics.Clear(BackColor);
         }
 
@@ -409,10 +421,10 @@ namespace MobiusEditor.Controls
             if (mapImg != null)
             {
                 pe.Graphics.Transform = compositeTransform;
-                var oldCompositingMode = pe.Graphics.CompositingMode;
-                var oldCompositingQuality = pe.Graphics.CompositingQuality;
-                var oldInterpolationMode = pe.Graphics.InterpolationMode;
-                var oldPixelOffsetMode = pe.Graphics.PixelOffsetMode;
+                CompositingMode oldCompositingMode = pe.Graphics.CompositingMode;
+                CompositingQuality oldCompositingQuality = pe.Graphics.CompositingQuality;
+                InterpolationMode oldInterpolationMode = pe.Graphics.InterpolationMode;
+                PixelOffsetMode oldPixelOffsetMode = pe.Graphics.PixelOffsetMode;
                 pe.Graphics.DrawImage(mapImg, 0, 0);
                 pe.Graphics.CompositingMode = oldCompositingMode;
                 pe.Graphics.CompositingQuality = oldCompositingQuality;
@@ -448,11 +460,10 @@ namespace MobiusEditor.Controls
 
             updatingCamera = true;
 
-            var mapAspect = (double)mapImage.Width / mapImage.Height;
-            var panelAspect = (double)ClientSize.Width / ClientSize.Height;
-            var cameraLocation = cameraBounds.Location;
+            double mapAspect = (double)mapImage.Width / mapImage.Height;
+            double panelAspect = (double)ClientSize.Width / ClientSize.Height;
+            Size size = Size.Empty;
 
-            var size = Size.Empty;
             if (panelAspect > mapAspect)
             {
                 size.Height = (int)Math.Round(mapImage.Height / zoom);
@@ -464,8 +475,8 @@ namespace MobiusEditor.Controls
                 size.Height = (int)Math.Round(size.Width / panelAspect);
             }
 
-            var location = Point.Empty;
-            var scrollSize = Size.Empty;
+            Point location = Point.Empty;
+            Size scrollSize = Size.Empty;
             if (size.Width < mapImage.Width)
             {
                 location.X = Math.Max(0, Math.Min(mapImage.Width - size.Width, cameraBounds.Left));
@@ -491,10 +502,10 @@ namespace MobiusEditor.Controls
 
             if (referencePositions.HasValue)
             {
-                var mapPoint = referencePositions.Value.map;
-                var clientSize = referencePositions.Value.client;
+                Point mapPoint = referencePositions.Value.map;
+                SizeF clientSize = referencePositions.Value.client;
 
-                cameraLocation = cameraBounds.Location;
+                Point cameraLocation = cameraBounds.Location;
                 if (scrollSize.Width != 0)
                 {
                     cameraLocation.X = Math.Max(0, Math.Min(mapImage.Width - cameraBounds.Width, mapPoint.X - (int)Math.Round(cameraBounds.Width * clientSize.Width)));
@@ -542,7 +553,7 @@ namespace MobiusEditor.Controls
             invCompositeTransform.Invert();
         }
 
-        private void InvalidateScroll()
+        public void InvalidateScroll()
         {
             if (updatingCamera)
             {
@@ -551,10 +562,10 @@ namespace MobiusEditor.Controls
 
             if ((lastScrollPosition.X != AutoScrollPosition.X) || (lastScrollPosition.Y != AutoScrollPosition.Y))
             {
-                var delta = ClientToMap((Size)(lastScrollPosition - (Size)AutoScrollPosition));
+                Size delta = ClientToMap((Size)(lastScrollPosition - (Size)AutoScrollPosition));
                 lastScrollPosition = AutoScrollPosition;
 
-                var cameraLocation = cameraBounds.Location;
+                Point cameraLocation = cameraBounds.Location;
                 if (AutoScrollMinSize.Width != 0)
                 {
                     cameraLocation.X = Math.Max(0, Math.Min(mapImage.Width - cameraBounds.Width, cameraBounds.Left + delta.Width));

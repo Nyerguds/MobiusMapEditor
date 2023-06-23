@@ -175,24 +175,24 @@ namespace MobiusEditor.Dialogs
             this.triggersTableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.triggersTableLayoutPanel.Controls.Add(this.label1, 0, 0);
             this.triggersTableLayoutPanel.Controls.Add(this.houseComboBox, 1, 0);
-            this.triggersTableLayoutPanel.Controls.Add(this.typeLabel, 0, 9);
-            this.triggersTableLayoutPanel.Controls.Add(this.event1Label, 0, 10);
-            this.triggersTableLayoutPanel.Controls.Add(this.event2Label, 0, 11);
-            this.triggersTableLayoutPanel.Controls.Add(this.action1Label, 0, 12);
-            this.triggersTableLayoutPanel.Controls.Add(this.action2Label, 0, 13);
-            this.triggersTableLayoutPanel.Controls.Add(this.action1ComboBox, 1, 12);
-            this.triggersTableLayoutPanel.Controls.Add(this.action2ComboBox, 1, 13);
-            this.triggersTableLayoutPanel.Controls.Add(this.persistenceLabel, 0, 8);
-            this.triggersTableLayoutPanel.Controls.Add(this.persistenceComboBox, 1, 8);
-            this.triggersTableLayoutPanel.Controls.Add(this.typeComboBox, 1, 9);
-            this.triggersTableLayoutPanel.Controls.Add(this.event1ComboBox, 1, 10);
-            this.triggersTableLayoutPanel.Controls.Add(this.event2ComboBox, 1, 11);
-            this.triggersTableLayoutPanel.Controls.Add(this.teamLabel, 0, 14);
-            this.triggersTableLayoutPanel.Controls.Add(this.teamComboBox, 1, 14);
-            this.triggersTableLayoutPanel.Controls.Add(this.event1Flp, 2, 10);
-            this.triggersTableLayoutPanel.Controls.Add(this.event2Flp, 2, 11);
-            this.triggersTableLayoutPanel.Controls.Add(this.action1Flp, 2, 12);
-            this.triggersTableLayoutPanel.Controls.Add(this.action2Flp, 2, 13);
+            this.triggersTableLayoutPanel.Controls.Add(this.typeLabel, 0, 2);
+            this.triggersTableLayoutPanel.Controls.Add(this.event1Label, 0, 3);
+            this.triggersTableLayoutPanel.Controls.Add(this.event2Label, 0, 4);
+            this.triggersTableLayoutPanel.Controls.Add(this.action1Label, 0, 5);
+            this.triggersTableLayoutPanel.Controls.Add(this.action2Label, 0, 6);
+            this.triggersTableLayoutPanel.Controls.Add(this.action1ComboBox, 1, 5);
+            this.triggersTableLayoutPanel.Controls.Add(this.action2ComboBox, 1, 6);
+            this.triggersTableLayoutPanel.Controls.Add(this.persistenceLabel, 0, 1);
+            this.triggersTableLayoutPanel.Controls.Add(this.persistenceComboBox, 1, 1);
+            this.triggersTableLayoutPanel.Controls.Add(this.typeComboBox, 1, 2);
+            this.triggersTableLayoutPanel.Controls.Add(this.event1ComboBox, 1, 3);
+            this.triggersTableLayoutPanel.Controls.Add(this.event2ComboBox, 1, 4);
+            this.triggersTableLayoutPanel.Controls.Add(this.teamLabel, 0, 7);
+            this.triggersTableLayoutPanel.Controls.Add(this.teamComboBox, 1, 7);
+            this.triggersTableLayoutPanel.Controls.Add(this.event1Flp, 2, 3);
+            this.triggersTableLayoutPanel.Controls.Add(this.event2Flp, 2, 4);
+            this.triggersTableLayoutPanel.Controls.Add(this.action1Flp, 2, 5);
+            this.triggersTableLayoutPanel.Controls.Add(this.action2Flp, 2, 6);
             this.triggersTableLayoutPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.triggersTableLayoutPanel.Location = new System.Drawing.Point(0, 0);
             this.triggersTableLayoutPanel.Margin = new System.Windows.Forms.Padding(2);
@@ -444,11 +444,6 @@ namespace MobiusEditor.Dialogs
             this.event1Nud.Name = "event1Nud";
             this.event1Nud.Size = new System.Drawing.Size(95, 20);
             this.event1Nud.TabIndex = 0;
-            this.event1Nud.Value = new decimal(new int[] {
-            0,
-            0,
-            0,
-            0});
             this.event1Nud.ValueChanged += new System.EventHandler(this.Event1Nud_ValueChanged);
             // 
             // event1ValueComboBox
@@ -491,11 +486,6 @@ namespace MobiusEditor.Dialogs
             this.event2Nud.Name = "event2Nud";
             this.event2Nud.Size = new System.Drawing.Size(95, 20);
             this.event2Nud.TabIndex = 0;
-            this.event2Nud.Value = new decimal(new int[] {
-            0,
-            0,
-            0,
-            0});
             this.event2Nud.ValueChanged += new System.EventHandler(this.Event2Nud_ValueChanged);
             // 
             // event2ValueComboBox
@@ -538,11 +528,6 @@ namespace MobiusEditor.Dialogs
             this.action1Nud.Name = "action1Nud";
             this.action1Nud.Size = new System.Drawing.Size(95, 20);
             this.action1Nud.TabIndex = 0;
-            this.action1Nud.Value = new decimal(new int[] {
-            0,
-            0,
-            0,
-            0});
             this.action1Nud.ValueChanged += new System.EventHandler(this.Action1Nud_ValueChanged);
             // 
             // action1ValueComboBox
@@ -586,11 +571,6 @@ namespace MobiusEditor.Dialogs
             this.action2Nud.Size = new System.Drawing.Size(95, 20);
             this.action2Nud.TabIndex = 0;
             this.action2Nud.ValueChanged += new System.EventHandler(this.Action2Nud_ValueChanged);
-            this.action2Nud.Value = new decimal(new int[] {
-            0,
-            0,
-            0,
-            0});
             // 
             // action2ValueComboBox
             // 
@@ -747,6 +727,7 @@ namespace MobiusEditor.Dialogs
             this.ClientSize = new System.Drawing.Size(554, 461);
             this.ControlBox = false;
             this.Controls.Add(this.tableLayoutPanel1);
+            this.Icon = global::MobiusEditor.Properties.Resources.GameIcon00;
             this.KeyPreview = true;
             this.Margin = new System.Windows.Forms.Padding(2);
             this.MaximizeBox = false;

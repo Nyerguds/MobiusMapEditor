@@ -756,7 +756,7 @@ namespace MobiusEditor.Tools
                     }
                     List<(Point p, Building ter)> buildingList = new List<(Point p, Building ter)>();
                     buildingList.Add((new Point(0, 0), mockBuilding));
-                    MapRenderer.RenderAllOccupierBounds(g, Globals.PreviewTileSize, buildingList);
+                    MapRenderer.RenderAllOccupierBounds(g, new Rectangle(Point.Empty, previewSize), Globals.PreviewTileSize, buildingList);
                     if ((Layers & MapLayerFlag.BuildingFakes) == MapLayerFlag.BuildingFakes)
                     {
                         MapRenderer.RenderFakeBuildingLabel(g, mockBuilding, new Point(0, 0), Globals.PreviewTileSize, false);
@@ -817,27 +817,31 @@ namespace MobiusEditor.Tools
             }
         }
 
-        protected override void PostRenderMap(Graphics graphics)
+        protected override void PostRenderMap(Graphics graphics, Rectangle visibleCells)
         {
-            base.PostRenderMap(graphics);
+            base.PostRenderMap(graphics, visibleCells);
+            // For bounds, add one more cell to get all borders showing.
+            Rectangle boundRenderCells = visibleCells;
+            boundRenderCells.Inflate(1, 1);
+            boundRenderCells.Intersect(map.Metrics.Bounds);
             // Since we manually handle GapRadius painting, need to do the Units ones too.
             if ((Layers & (MapLayerFlag.Units | MapLayerFlag.EffectRadius)) == (MapLayerFlag.Units | MapLayerFlag.EffectRadius))
             {
-                MapRenderer.RenderAllUnitEffectRadiuses(graphics, previewMap, Globals.MapTileSize, map.RadarJamRadius);
+                MapRenderer.RenderAllUnitEffectRadiuses(graphics, previewMap, boundRenderCells, Globals.MapTileSize, map.RadarJamRadius);
             }
-            MapRenderer.RenderAllOccupierBounds(graphics, Globals.MapTileSize, previewMap.Buildings.OfType<Building>());
+            MapRenderer.RenderAllOccupierBounds(graphics, boundRenderCells, Globals.MapTileSize, previewMap.Buildings.OfType<Building>());
             if ((Layers & MapLayerFlag.Buildings) == MapLayerFlag.Buildings)
             {
                 if ((Layers & MapLayerFlag.EffectRadius) == MapLayerFlag.EffectRadius)
                 {
-                    MapRenderer.RenderAllBuildingEffectRadiuses(graphics, previewMap, Globals.MapTileSize, map.GapRadius);
+                    MapRenderer.RenderAllBuildingEffectRadiuses(graphics, previewMap, boundRenderCells, Globals.MapTileSize, map.GapRadius);
                 }
                 else if (placementMode)
                 {
                     (Point p, Building b) = previewMap.Technos.OfType<Building>().Where(t => t.Occupier.Tint.A != 255).FirstOrDefault();
                     if (b != null)
                     {
-                        MapRenderer.RenderBuildingEffectRadius(graphics, Globals.MapTileSize, map.GapRadius, b, p);
+                        MapRenderer.RenderBuildingEffectRadius(graphics, boundRenderCells, Globals.MapTileSize, map.GapRadius, b, p);
                     }
                 }
                 else if (selectedBuilding != null && selectedBuildingLocation.HasValue)
@@ -845,7 +849,7 @@ namespace MobiusEditor.Tools
                     Point? loc = map.Buildings[selectedBuilding];
                     if (loc.HasValue)
                     {
-                        MapRenderer.RenderBuildingEffectRadius(graphics, Globals.MapTileSize, map.GapRadius, selectedBuilding, loc.Value);
+                        MapRenderer.RenderBuildingEffectRadius(graphics, boundRenderCells, Globals.MapTileSize, map.GapRadius, selectedBuilding, loc.Value);
                     }
                 }
                 else if (selectedObjectProperties?.ObjectProperties?.Object is Building bl)
@@ -853,20 +857,20 @@ namespace MobiusEditor.Tools
                     Point? loc = map.Buildings[bl];
                     if (loc.HasValue)
                     {
-                        MapRenderer.RenderBuildingEffectRadius(graphics, Globals.MapTileSize, map.GapRadius, bl, loc.Value);
+                        MapRenderer.RenderBuildingEffectRadius(graphics, boundRenderCells, Globals.MapTileSize, map.GapRadius, bl, loc.Value);
                     }
                 }
                 if ((Layers & MapLayerFlag.BuildingFakes) == MapLayerFlag.BuildingFakes)
                 {
-                    MapRenderer.RenderAllFakeBuildingLabels(graphics, previewMap, Globals.MapTileSize);
+                    MapRenderer.RenderAllFakeBuildingLabels(graphics, previewMap, visibleCells, Globals.MapTileSize);
                 }
                 if ((Layers & MapLayerFlag.BuildingRebuild) == MapLayerFlag.BuildingRebuild)
                 {
-                    MapRenderer.RenderAllRebuildPriorityLabels(graphics, previewMap, Globals.MapTileSize);
+                    MapRenderer.RenderAllRebuildPriorityLabels(graphics, previewMap, visibleCells, Globals.MapTileSize);
                 }
                 if ((Layers & MapLayerFlag.TechnoTriggers) == MapLayerFlag.TechnoTriggers)
                 {
-                    MapRenderer.RenderAllTechnoTriggers(graphics, previewMap, Globals.MapTileSize, Layers);
+                    MapRenderer.RenderAllTechnoTriggers(graphics, previewMap, visibleCells, Globals.MapTileSize, Layers);
                 }
             }
         }

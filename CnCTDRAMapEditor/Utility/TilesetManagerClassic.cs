@@ -246,7 +246,14 @@ namespace MobiusEditor.Utility
                 try
                 {
                     // RA map template tileset
-                    shpData = ClassicSpriteLoader.GetRaTmpData(fileContents, out widths, out heights, out _);
+                    shpData = ClassicSpriteLoader.GetRaTmpData(fileContents, out widths, out heights, out _, out bool[] tilesUseList, out _, out _);
+                    for (int i = 0; i < tilesUseList.Length; ++i)
+                    {
+                        if (i >= tilesUseList.Length || !tilesUseList[i])
+                        {
+                            shpData[i] = null;
+                        }
+                    }
                 }
                 catch (ArgumentException) { /* ignore */ }
             }

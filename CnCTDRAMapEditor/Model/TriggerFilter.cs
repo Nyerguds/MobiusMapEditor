@@ -20,7 +20,8 @@ namespace MobiusEditor.Model
 {
     public class TriggerFilter
     {
-        private IGamePlugin plugin;
+        private GameType gameType;
+        private Map map;
 
         public bool FilterHouse { get; set; }
         public bool FilterPersistenceType { get; set; }
@@ -30,12 +31,14 @@ namespace MobiusEditor.Model
         public bool FilterTeamType { get; set; }
         public bool FilterWaypoint { get; set; }
         public bool FilterGlobal { get; set; }
+        public bool FilterTrigger { get; set; }
         public string House { get; set; }
         public TriggerPersistentType PersistenceType { get; set; } = TriggerPersistentType.Volatile;
         public TriggerMultiStyleType EventControl { get; set; } = TriggerMultiStyleType.Only;
         public string EventType { get; set; } = TriggerEvent.None;
         public string ActionType { get; set; } = TriggerAction.None;
         public string TeamType { get; set; } = Model.TeamType.None;
+        public string Trigger { get; set; } = Model.Trigger.None;
         public int Waypoint { get; set; }
         public int Global { get; set; }
 
@@ -49,6 +52,7 @@ namespace MobiusEditor.Model
                        !this.FilterEventType &&
                        !this.FilterActionType &&
                        !this.FilterTeamType &&
+                       !this.FilterTrigger &&
                        !this.FilterWaypoint &&
                        !this.FilterGlobal;
             }
@@ -56,15 +60,22 @@ namespace MobiusEditor.Model
 
         public TriggerFilter(IGamePlugin plugin)
         {
-            this.plugin = plugin;
+            this.gameType = plugin.GameType;
+            this.map = plugin.Map;
+        }
+
+        public TriggerFilter(GameType gameType, Map map)
+        {
+            this.gameType = gameType;
+            this.map = map;
         }
 
         public bool MatchesFilter(Trigger trigger)
         {
-            bool isRA = plugin.GameType == GameType.RedAlert;
+            bool isRA = gameType == GameType.RedAlert;
             if (FilterHouse)
             {
-                House house = plugin.Map.Houses.Where(h => h.Type.Name == this.House).FirstOrDefault();
+                House house = map.Houses.Where(h => String.Equals(h.Type.Name, this.House, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
                 int houseId = house == null ? -1 : house.Type.ID;
                 bool filterMatch = trigger.House == House;
                 if (isRA && !filterMatch)
@@ -172,6 +183,38 @@ namespace MobiusEditor.Model
                     return false;
                 }
             }
+            if (FilterTrigger)
+            {
+                if (!isRA)
+                {
+                    bool filterMatch = false;
+                    if (String.Equals(trigger.Name, Trigger, StringComparison.InvariantCultureIgnoreCase))
+                        filterMatch = true;
+                    if (IsTDTriggerAction(trigger.Action1.ActionType, out string affectedTrigger)
+                        && String.Equals(affectedTrigger, Trigger, StringComparison.InvariantCultureIgnoreCase))
+                        filterMatch = true;
+                    if (!filterMatch)
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    bool filterMatch = false;
+                    if (String.Equals(trigger.Name, Trigger, StringComparison.InvariantCultureIgnoreCase))
+                        filterMatch = true;
+                    if (IsRATriggerAction(trigger.Action1.ActionType)
+                        && String.Equals(trigger.Action1.Trigger, Trigger, StringComparison.InvariantCultureIgnoreCase))
+                        filterMatch = true;
+                    if (IsRATriggerAction(trigger.Action2.ActionType)
+                        && String.Equals(trigger.Action2.Trigger, Trigger, StringComparison.InvariantCultureIgnoreCase))
+                        filterMatch = true;
+                    if (!filterMatch)
+                    {
+                        return false;
+                    }
+                }
+            }
             return true;
         }
 
@@ -180,7 +223,34 @@ namespace MobiusEditor.Model
             return (Model.TeamType.IsEmpty(filterTeam) && Model.TeamType.IsEmpty(trigTeam)) || trigTeam == filterTeam;
         }
 
-        private Boolean IsRAHouseEvent(String eventType)
+        private bool IsTDTriggerAction(string actionType, out string affectedTrigger)
+        {
+            affectedTrigger = null;
+            switch (actionType)
+            {
+                case TiberianDawn.ActionTypes.ACTION_DESTROY_XXXX:
+                    affectedTrigger = "XXXX";
+                    return true;
+                case TiberianDawn.ActionTypes.ACTION_DESTROY_YYYY:
+                    affectedTrigger = "YYYY";
+                    return true;
+                case TiberianDawn.ActionTypes.ACTION_DESTROY_ZZZZ:
+                    affectedTrigger = "ZZZZ";
+                    return true;
+                case TiberianDawn.ActionTypes.ACTION_DESTROY_UUUU:
+                    affectedTrigger = "UUUU";
+                    return !Globals.Ignore106Scripting;
+                case TiberianDawn.ActionTypes.ACTION_DESTROY_VVVV:
+                    affectedTrigger = "VVVV";
+                    return !Globals.Ignore106Scripting;
+                case TiberianDawn.ActionTypes.ACTION_DESTROY_WWWW:
+                    affectedTrigger = "WWWW";
+                    return !Globals.Ignore106Scripting;
+            }
+            return false;
+        }
+
+        private bool IsRAHouseEvent(String eventType)
         {
             switch (eventType)
             {
@@ -264,6 +334,17 @@ namespace MobiusEditor.Model
             return false;
         }
 
+        private Boolean IsRATriggerAction(String actionType)
+        {
+            switch (actionType)
+            {
+                case RedAlert.ActionTypes.TACTION_FORCE_TRIGGER:
+                case RedAlert.ActionTypes.TACTION_DESTROY_TRIGGER:
+                    return true;
+            }
+            return false;
+        }
+
         public override String ToString()
         {
             return ToString('P', null, null);
@@ -274,7 +355,7 @@ namespace MobiusEditor.Model
             List<string> sb = new List<string>();
             if (this.FilterHouse)
             {
-                sb.Add("H:" + this.House);
+                sb.Add("Hh:" + this.House);
             }
             if (this.FilterPersistenceType)
             {
@@ -282,27 +363,31 @@ namespace MobiusEditor.Model
             }
             if (this.FilterEventControl)
             {
-                sb.Add("M:" + (eventControlNames == null ? this.EventControl.ToString() : eventControlNames[(int)this.EventControl]));
+                sb.Add("Ex:" + (eventControlNames == null ? this.EventControl.ToString() : eventControlNames[(int)this.EventControl]));
             }
             if (this.FilterEventType)
             {
-                sb.Add("E:" + this.EventType);
+                sb.Add("Ev:" + this.EventType);
             }
             if (this.FilterActionType)
             {
-                sb.Add("A:" + this.ActionType);
+                sb.Add("Ac:" + this.ActionType);
             }
             if (this.FilterTeamType)
             {
-                sb.Add("T:" + this.TeamType);
+                sb.Add("Tm:" + this.TeamType);
+            }
+            if (this.FilterTrigger)
+            {
+                sb.Add("Tr:" + this.Trigger);
             }
             if (this.FilterWaypoint)
             {
-                sb.Add("W:" + this.Waypoint);
+                sb.Add("Wp:" + this.Waypoint);
             }
             if (this.FilterGlobal)
             {
-                sb.Add("G:" + this.Global);
+                sb.Add("Gl:" + this.Global);
             }
             return String.Join(", ", sb.ToArray());
 

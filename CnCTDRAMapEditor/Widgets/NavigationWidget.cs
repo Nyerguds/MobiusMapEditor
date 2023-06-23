@@ -91,6 +91,24 @@ namespace MobiusEditor.Widgets
 
         public CellMetrics Metrics { get; private set; }
 
+        public Rectangle VisibleBounds
+        {
+            get
+            {
+                Rectangle visibleArea = mapPanel.ClientToMap(mapPanel.ClientRectangle);
+                int visibleTopLeftCellX = visibleArea.X / CellSize.Width;
+                int visibleTopLeftCellY = visibleArea.Y / CellSize.Height;
+                int visibleBottomRightCellX = visibleArea.Right / CellSize.Width + 1;
+                int visibleBottomRightCellY = visibleArea.Bottom / CellSize.Height + 1;
+                Rectangle visibleMapArea = new Rectangle(
+                    visibleTopLeftCellX,
+                    visibleTopLeftCellY,
+                    Math.Max(1, visibleBottomRightCellX - visibleTopLeftCellX),
+                    Math.Max(1, visibleBottomRightCellY - visibleTopLeftCellY));
+                visibleMapArea.Intersect(Metrics.Bounds);
+                return visibleMapArea;
+            }
+        }
         /// <summary>Last map cell inside the map bounds.</summary>
         public Point MouseCell { get; private set; }
         /// <summary>Cell the cursor is on, even if it is out of bounds.</summary>
@@ -150,16 +168,6 @@ namespace MobiusEditor.Widgets
 
         private bool CheckIfDragging()
         {
-            /*/
-            return CheckIfDragging(false);
-        }
-        private bool CheckIfDragging(bool fromMouseMove)
-        {
-            if (!fromMouseMove)
-            {
-                System.Media.SystemSounds.Asterisk.Play();
-            }
-            //*/
             bool isDragging = IsDragging();
             if (!isDragging)
             {
@@ -220,12 +228,8 @@ namespace MobiusEditor.Widgets
                     mapPanel.AutoScrollPosition = new Point(-startScrollFromLocation.Value.X - delta.X, -startScrollFromLocation.Value.Y - delta.Y);
                 }
             }
-            Point newMousePosition = mapPanel.ClientToMap(location);
-            MouseSubPixel = new Point(
-                (newMousePosition.X * Globals.PixelWidth / CellSize.Width) % Globals.PixelWidth,
-                (newMousePosition.Y * Globals.PixelHeight / CellSize.Height) % Globals.PixelHeight
-            );
-            Point newMouseCell = new Point(newMousePosition.X / CellSize.Width, newMousePosition.Y / CellSize.Height);
+            Point newMouseCell = GetMouseCellPosition(location, out Point subPixel);
+            MouseSubPixel = subPixel;
             Point newClosestMouseCellBorder = newMouseCell;
             if (MouseSubPixel.X >= Globals.PixelWidth / 2)
             {
@@ -260,6 +264,16 @@ namespace MobiusEditor.Widgets
                 // This is the normal Repaint-triggering invalidate, not the full map re-render one.
                 mapPanel.Invalidate();
             }
+        }
+
+        public Point GetMouseCellPosition(Point location, out Point subPixel)
+        {
+            Point newMousePosition = mapPanel.ClientToMap(location);
+            subPixel = new Point(
+                (newMousePosition.X * Globals.PixelWidth / CellSize.Width) % Globals.PixelWidth,
+                (newMousePosition.Y * Globals.PixelHeight / CellSize.Height) % Globals.PixelHeight
+            );
+            return new Point(newMousePosition.X / CellSize.Width, newMousePosition.Y / CellSize.Height);
         }
 
         public void Render(Graphics graphics)

@@ -831,6 +831,7 @@ namespace MobiusEditor.Dialogs
             this.ClientSize = new System.Drawing.Size(875, 416);
             this.ControlBox = false;
             this.Controls.Add(this.tableLayoutPanel1);
+            this.Icon = global::MobiusEditor.Properties.Resources.GameIcon00;
             this.KeyPreview = true;
             this.Margin = new System.Windows.Forms.Padding(2);
             this.MaximizeBox = false;

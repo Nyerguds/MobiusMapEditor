@@ -291,11 +291,13 @@ namespace MobiusEditor.Dialogs
             this.Controls.Add(this.label1);
             this.Controls.Add(this.lblScale);
             this.Controls.Add(this.txtScale);
+            this.Icon = global::MobiusEditor.Properties.Resources.GameIcon00;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.MinimumSize = new System.Drawing.Size(500, 437);
             this.Name = "ImageExportDialog";
             this.ShowIcon = false;
+            this.ShowInTaskbar = false;
             this.Text = "Export as image";
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();

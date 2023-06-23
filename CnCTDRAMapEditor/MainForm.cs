@@ -298,8 +298,11 @@ namespace MobiusEditor
                     {
                         Point curPoint = mapPanel.AutoScrollPosition;
                         SizeF zoomedCell = activeTool.NavigationWidget.ZoomedCellSize;
-                        // autoscrollposition is WEIRD. Exposed as negative, needs to be given as positive.
+                        // autoscrollposition is WEIRD. Exposed as negative, needs to be given as positive.                        
                         mapPanel.AutoScrollPosition = new Point(-curPoint.X + (int)Math.Round(delta.X * zoomedCell.Width), -curPoint.Y + (int)Math.Round(delta.Y * zoomedCell.Width));
+                        mapPanel.InvalidateScroll();
+                        activeTool.NavigationWidget.Refresh();
+                        UpdateCellStatusLabel(true);
                         return true;
                     }
                 }
@@ -338,7 +341,11 @@ namespace MobiusEditor
                 return;
             }
             Point location = activeTool.NavigationWidget.ActualMouseCell;
-            var subPixel = activeTool.NavigationWidget.MouseSubPixel;
+            Point subPixel = activeTool.NavigationWidget.MouseSubPixel;
+            if (force)
+            {
+                activeTool.NavigationWidget.GetMouseCellPosition(location, out subPixel);
+            }
             if (force || location != lastInfoPoint || subPixel != lastInfoSubPixelPoint)
             {
                 String description = plugin.Map.GetCellDescription(location, subPixel);

@@ -188,7 +188,7 @@ namespace MobiusEditor.Tools
             }
             if (map.Metrics.GetCell(location, out int cell))
             {
-                var overlay = new Overlay { Type = selected, Icon = 0 };
+                Overlay overlay = new Overlay { Type = selected, Icon = 0 };
                 if (map.Overlay[location] == null)
                 {
                     if (!undoOverlays.ContainsKey(cell))
@@ -206,7 +206,7 @@ namespace MobiusEditor.Tools
         {
             if (map.Metrics.GetCell(location, out int cell))
             {
-                var overlay = map.Overlay[cell];
+                Overlay overlay = map.Overlay[cell];
                 if (overlay?.Type.IsOverlay ?? false)
                 {
                     if (!undoOverlays.ContainsKey(cell))
@@ -223,10 +223,10 @@ namespace MobiusEditor.Tools
         {
             bool origDirtyState = plugin.Dirty;
             plugin.Dirty = true;
-            var undoOverlays2 = new Dictionary<int, Overlay>(undoOverlays);
+            Dictionary<Int32, Overlay> undoOverlays2 = new Dictionary<int, Overlay>(undoOverlays);
             void undoAction(UndoRedoEventArgs e)
             {
-                foreach (var kv in undoOverlays2)
+                foreach (KeyValuePair<Int32, Overlay> kv in undoOverlays2)
                 {
                     e.Map.Overlay[kv.Key] = kv.Value;
                 }
@@ -240,10 +240,10 @@ namespace MobiusEditor.Tools
                     e.Plugin.Dirty = origDirtyState;
                 }
             }
-            var redoOverlays2 = new Dictionary<int, Overlay>(redoOverlays);
+            Dictionary<Int32, Overlay> redoOverlays2 = new Dictionary<int, Overlay>(redoOverlays);
             void redoAction(UndoRedoEventArgs e)
             {
-                foreach (var kv in redoOverlays2)
+                foreach (KeyValuePair<Int32, Overlay> kv in redoOverlays2)
                 {
                     e.Map.Overlay[kv.Key] = kv.Value;
                 }
@@ -330,7 +330,7 @@ namespace MobiusEditor.Tools
         {
             if (map.Metrics.GetCell(location, out int cell))
             {
-                var overlay = map.Overlay[cell];
+                Overlay overlay = map.Overlay[cell];
                 // Nyerguds fix: this should use the same filter as the list fill! Crashed on resources.
                 if ((overlay != null) && overlay.Type.IsOverlay)
                 {
@@ -341,20 +341,21 @@ namespace MobiusEditor.Tools
 
         protected override void RefreshPreviewPanel()
         {
-            var oldImage = overlayTypeMapPanel.MapImage;
-            if (SelectedOverlayType != null)
+            Image oldImage = overlayTypeMapPanel.MapImage;
+            OverlayType overlayType = selectedOverlayType;
+            if (overlayType != null)
             {
-                var overlayPreview = new Bitmap(Globals.PreviewTileWidth, Globals.PreviewTileHeight);
+                Bitmap overlayPreview = new Bitmap(Globals.PreviewTileWidth, Globals.PreviewTileHeight);
                 overlayPreview.SetResolution(96, 96);
                 Overlay mockOverlay = new Overlay()
                 {
-                    Type = SelectedOverlayType,
+                    Type = overlayType,
                     Icon = 0
                 };
-                var render = MapRenderer.RenderOverlay(plugin.GameType, new Point(0,0), Globals.PreviewTileSize, Globals.PreviewTileScale, mockOverlay);
+                (Rectangle, Action<Graphics>) render = MapRenderer.RenderOverlay(plugin.GameType, new Point(0,0), Globals.PreviewTileSize, Globals.PreviewTileScale, mockOverlay);
                 if (!render.Item1.IsEmpty)
                 {
-                    using (var g = Graphics.FromImage(overlayPreview))
+                    using (Graphics g = Graphics.FromImage(overlayPreview))
                     {
                         MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
                         render.Item2(g);
@@ -363,12 +364,12 @@ namespace MobiusEditor.Tools
                 else
                 {
                     // This should never happen; the map renderer renders dummy graphics for overlay now.
-                    using (var g = Graphics.FromImage(overlayPreview))
+                    using (Graphics g = Graphics.FromImage(overlayPreview))
                     {
                         MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
                         List<(int, Overlay)> overlayList = new List<(int, Overlay)>();
-                        overlayList.Add((0, new Overlay() { Type = SelectedOverlayType, Icon = 0 }));
-                        MapRenderer.RenderAllBoundsFromCell(g, Globals.PreviewTileSize, overlayList, new CellMetrics(new Size(1, 1)));
+                        overlayList.Add((0, new Overlay() { Type = overlayType, Icon = 0 }));
+                        MapRenderer.RenderAllBoundsFromCell(g, new Rectangle(0, 0, 1, 1), Globals.PreviewTileSize, overlayList, new CellMetrics(new Size(1, 1)));
                     }
                 }
                 overlayTypeMapPanel.MapImage = overlayPreview;
@@ -406,7 +407,7 @@ namespace MobiusEditor.Tools
                 return;
             }
             navigationWidget.MouseoverSize = Size.Empty;
-            var location = navigationWidget.MouseCell;
+            Point location = navigationWidget.MouseCell;
             OverlayType selected = this.SelectedOverlayType;
             if (selected == null || !previewMap.Metrics.GetCell(location, out int cell))
             {
@@ -423,13 +424,18 @@ namespace MobiusEditor.Tools
             }
         }
 
-        protected override void PostRenderMap(Graphics graphics)
+        protected override void PostRenderMap(Graphics graphics, Rectangle visibleCells)
         {
-            base.PostRenderMap(graphics);
-            this.HandlePaintOutlines(graphics, previewMap, Globals.MapTileSize, Globals.MapTileScale, this.Layers);
-            int secondRow = map.Metrics.Width;
-            int lastRow = map.Metrics.Length - map.Metrics.Width;
-            MapRenderer.RenderAllBoundsFromCell(graphics, Globals.MapTileSize, previewMap.Overlay.Where(x => x.Value.Type.IsOverlay && x.Cell >= secondRow && x.Cell < lastRow), previewMap.Metrics);
+            base.PostRenderMap(graphics, visibleCells);
+            // For bounds, add one more cell to get all borders showing.
+            Rectangle boundRenderCells = visibleCells;
+            boundRenderCells.Inflate(1, 1);
+            boundRenderCells.Intersect(map.Metrics.Bounds);
+            this.HandlePaintOutlines(graphics, previewMap, boundRenderCells, Globals.MapTileSize, Globals.MapTileScale, this.Layers);
+            int secondRowStartCell = map.Metrics.Width;
+            int lastRowStartCell = map.Metrics.Length - map.Metrics.Width;
+            MapRenderer.RenderAllBoundsFromCell(graphics, boundRenderCells, Globals.MapTileSize, 
+                previewMap.Overlay.Where(x => x.Value.Type.IsOverlay && x.Cell >= secondRowStartCell && x.Cell < lastRowStartCell), previewMap.Metrics);
         }
 
         public override void Activate()

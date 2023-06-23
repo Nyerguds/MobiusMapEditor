@@ -487,3 +487,9 @@ Unreleased
 * Fixed rounding issues in image export dialog, and added tool and info to set the scale by cell size.
 * Added warning when RA ant units or structures are used in the map, but no rule definitions for them exist in the ini.
 * Added an option under "Extra Indicators" to show the map tile passability.
+* Added an option in the trigger filter dialog to filter on triggers. This will filter out the trigger itself, and any triggers destroying or forcing the selected trigger.
+* Vastly optimised drawing of indicators, so they are only drawn inside the visible bounds of the editor.
+* The placement grid is now also shown when using the flood-fill function.
+* Fixed the cell selection indicator and the info bar not immediately refreshing when using the arrow keys to scroll around the map.
+* The auto-zoom on map load is now slightly more accurate.
+* When an RA trigger is set to type E1->A1, E2->A2, the controls for the events and actions will be reordered to accurately represent this.

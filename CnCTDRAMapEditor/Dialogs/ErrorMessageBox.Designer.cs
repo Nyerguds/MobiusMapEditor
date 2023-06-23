@@ -186,6 +186,7 @@ namespace MobiusEditor.Dialogs
             this.CancelButton = this.btnCancel;
             this.ClientSize = new System.Drawing.Size(684, 361);
             this.Controls.Add(this.tableLayoutPanel1);
+            this.Icon = global::MobiusEditor.Properties.Resources.GameIcon00;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "ErrorMessageBox";

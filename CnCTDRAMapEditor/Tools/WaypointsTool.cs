@@ -449,31 +449,36 @@ namespace MobiusEditor.Tools
             previewMap.Waypoints[selectedIndex].Tint = Color.FromArgb(128, Color.White);
         }
 
-        protected override void PostRenderMap(Graphics graphics)
+        protected override void PostRenderMap(Graphics graphics, Rectangle visibleCells)
         {
-            base.PostRenderMap(graphics);
+            base.PostRenderMap(graphics, visibleCells);
+            // For bounds, add one more cell to get all borders showing.
+            Rectangle boundRenderCells = visibleCells;
+            boundRenderCells.Inflate(1, 1);
+            boundRenderCells.Intersect(map.Metrics.Bounds);
             int selectedIndex = waypointCombo.SelectedIndex;
             Waypoint selected = waypointCombo.SelectedItem as Waypoint;
             Waypoint dummySelected = null;
             Waypoint[] selectedRange = selected != null ? new [] { selected } : new Waypoint[] { };
             if (plugin.GameType == GameType.SoleSurvivor && (Layers & MapLayerFlag.FootballArea) == MapLayerFlag.FootballArea)
             {
-                MapRenderer.RenderAllFootballAreas(graphics, map, Globals.MapTileSize, Globals.MapTileScale, plugin.GameType);
-                MapRenderer.RenderFootballAreaFlags(graphics, plugin.GameType, map, Globals.MapTileSize);
+                MapRenderer.RenderAllFootballAreas(graphics, map, visibleCells, Globals.MapTileSize, Globals.MapTileScale, plugin.GameType);
+                MapRenderer.RenderFootballAreaFlags(graphics, plugin.GameType, map, visibleCells, Globals.MapTileSize);
             }
             // If the selected waypoint is not a flag, re-render it as opaque.
             if (selected != null && (plugin.Map.BasicSection.SoloMission || (selected.Flag & WaypointFlag.PlayerStart) != WaypointFlag.PlayerStart))
             {
                 MapRenderer.RenderWaypoint(plugin.GameType, true, Globals.MapTileSize, map.FlagColors.ToArray(), selected, 1.0f).Item2(graphics);
             }
-            // Render those here to they are put over the opaque redraw of the current waypoint.
-            MapRenderer.RenderAllTechnoTriggers(graphics, plugin.Map, Globals.MapTileSize, Layers);
-            MapRenderer.RenderAllBoundsFromCell(graphics, Globals.MapTileSize,
+            // Render those here so they are put over the opaque redraw of the current waypoint.
+            MapRenderer.RenderAllTechnoTriggers(graphics, plugin.Map, visibleCells, Globals.MapTileSize, Layers);
+
+            MapRenderer.RenderAllBoundsFromCell(graphics, boundRenderCells, Globals.MapTileSize,
                 map.Waypoints.Where(wp => wp != selected && wp.Cell.HasValue).Select(wp => wp.Cell.Value), map.Metrics, Color.Orange);
             // For TD, always render reveal waypoint.
             bool renderAll = plugin.GameType != GameType.RedAlert || (Layers & MapLayerFlag.WaypointRadius) == MapLayerFlag.WaypointRadius;
-            MapRenderer.RenderAllWayPointRevealRadiuses(graphics, plugin, map, Globals.MapTileSize, selected, !renderAll);
-            MapRenderer.RenderWayPointIndicators(graphics, map, Globals.MapTileSize, Color.LightGreen, false, true, selectedRange);
+            MapRenderer.RenderAllWayPointRevealRadiuses(graphics, plugin, map, boundRenderCells, Globals.MapTileSize, selected, !renderAll);
+            MapRenderer.RenderWayPointIndicators(graphics, map, visibleCells, Globals.MapTileSize, Color.LightGreen, false, true, selectedRange);
             if (selected != null)
             {
                 if (placementMode && selectedIndex >= 0)
@@ -483,22 +488,22 @@ namespace MobiusEditor.Tools
                 }
                 if (selected.Cell.HasValue)
                 {
-                    MapRenderer.RenderAllBoundsFromCell(graphics, Globals.MapTileSize, new int[] { selected.Cell.Value }, map.Metrics, Color.Yellow);
-                    MapRenderer.RenderWayPointIndicators(graphics, map, Globals.MapTileSize, Color.Yellow, false, false, selectedRange);
+                    MapRenderer.RenderAllBoundsFromCell(graphics, boundRenderCells, Globals.MapTileSize, new int[] { selected.Cell.Value }, map.Metrics, Color.Yellow);
+                    MapRenderer.RenderWayPointIndicators(graphics, map, visibleCells, Globals.MapTileSize, Color.Yellow, false, false, selectedRange);
                 }
                 if (dummySelected != null && (selected == null || selected.Cell != dummySelected.Cell))
                 {
-                    MapRenderer.RenderWayPointIndicators(graphics, map, Globals.MapTileSize, Color.Yellow, true, false, new[] { dummySelected });
+                    MapRenderer.RenderWayPointIndicators(graphics, map, visibleCells, Globals.MapTileSize, Color.Yellow, true, false, new[] { dummySelected });
                     // Need to do this manually since it's an extra waypoint not normally on the list, and it uses the radius data of the original waypoint to place.
                     int[] wpReveal1 = plugin.GetRevealRadiusForWaypoints(map, false);
                     int[] wpReveal2 = plugin.GetRevealRadiusForWaypoints(map, true);
                     if (wpReveal1[selectedIndex] != 0)
                     {
-                        MapRenderer.RenderWayPointRevealRadius(graphics, map.Metrics, Globals.MapTileSize, Color.Yellow, true, true, wpReveal1[selectedIndex], dummySelected);
+                        MapRenderer.RenderWayPointRevealRadius(graphics, map.Metrics, boundRenderCells, Globals.MapTileSize, Color.Yellow, true, true, wpReveal1[selectedIndex], dummySelected);
                     }
                     if (wpReveal2[selectedIndex] != 0)
                     {
-                        MapRenderer.RenderWayPointRevealRadius(graphics, map.Metrics, Globals.MapTileSize, Color.Yellow, true, true, wpReveal2[selectedIndex], dummySelected);
+                        MapRenderer.RenderWayPointRevealRadius(graphics, map.Metrics, boundRenderCells, Globals.MapTileSize, Color.Yellow, true, true, wpReveal2[selectedIndex], dummySelected);
                     }
                 }
             }
