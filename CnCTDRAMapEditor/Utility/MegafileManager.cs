@@ -23,7 +23,7 @@ namespace MobiusEditor.Utility
 {
     public class MegafileManager : IArchiveManager
     {
-        public string[] ExpandModPaths { get; set; }
+        private string[] modPaths { get; set; }
 
         private readonly string looseFilePath;
         private MixfileManager mixFm;
@@ -76,9 +76,9 @@ namespace MobiusEditor.Utility
             {
                 throw new ObjectDisposedException(GetType().FullName);
             }
-            if (ExpandModPaths != null && ExpandModPaths.Length > 0)
+            if (modPaths != null && modPaths.Length > 0)
             {
-                foreach (string modPath in ExpandModPaths)
+                foreach (string modPath in modPaths)
                 {
                     if (File.Exists(Path.Combine(path, modPath)))
                     {
@@ -100,9 +100,9 @@ namespace MobiusEditor.Utility
             {
                 return File.Open(loosePath, FileMode.Open, FileAccess.Read);
             }
-            if (ExpandModPaths != null && ExpandModPaths.Length > 0)
+            if (modPaths != null && modPaths.Length > 0)
             {
-                foreach (string modFilePath in ExpandModPaths)
+                foreach (string modFilePath in modPaths)
                 {
                     string modPath = Path.Combine(modFilePath, path);
                     if (File.Exists(modPath))
@@ -122,6 +122,21 @@ namespace MobiusEditor.Utility
             return null;
         }
 
+        public Byte[] ReadFile(string path)
+        {
+            using (Stream file = OpenFile(path))
+            {
+                if (file == null)
+                {
+                    return null;
+                }
+                using (BinaryReader br = new BinaryReader(file))
+                {
+                    return br.ReadAllBytes();
+                }
+            }
+        }
+
         public Stream OpenFileClassic(String path)
         {
             if (disposedValue)
@@ -131,14 +146,29 @@ namespace MobiusEditor.Utility
             return mixFm.OpenFile(path);
         }
 
-        public void Reset(GameType gameType, TheaterType theater)
+        public Byte[] ReadFileClassic(string path)
+        {
+            using (Stream file = mixFm.OpenFile(path))
+            {
+                if (file == null)
+                {
+                    return null;
+                }
+                using (BinaryReader br = new BinaryReader(file))
+                {
+                    return br.ReadAllBytes();
+                }
+            }
+        }
+
+        public void Reset(GameType gameType, TheaterType theater, string[] modPaths)
         {
             if (disposedValue)
             {
                 throw new ObjectDisposedException(GetType().FullName);
             }
-            mixFm.ExpandModPaths = this.ExpandModPaths;
-            mixFm.Reset(gameType, theater);
+            this.modPaths = modPaths;
+            mixFm.Reset(gameType, theater, modPaths);
         }
 
         public IEnumerator<string> GetEnumerator()

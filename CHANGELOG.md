@@ -446,17 +446,39 @@ Released on 03 Apr 2023 at 19:20 GMT
 
 Unreleased
 
+Feature updates:
+
 * Added support for reading and using classic game files, making the editor independent from the C&C Remaster.
-* Fixed an error in the sorting of ini sections that messed up the linking of teamtypes to triggers when the teamtype names ended on numbers going up to 10 and the lower numbers were not padded with zeroes.
-* All overlay placement is now correctly restricted to not be allowed on the top or bottom row of the map, showing red indicators when in placement mode.
-* Resource placement with a brush size larger than 1 shows red cells inside the brush area when hovering over the top or bottom cells of the map. At size 1, the brush is simply completely red.
-* Applied DPI changes that might fix issues with objects drawing weirdly on some people's systems.
+* Vastly optimised drawing of indicators, so they are only drawn inside the visible bounds of the editor.
+* Optimised preview generation by not rendering the preview in full resolution first.
+* Added an option under "Extra Indicators" to show the map tile passability.
+* Preview generation will now add waypoint flags to multiplayer maps.
+* Changed "outlines on overlapped crates" option to "outlines on overlapped objects", and made it work for units and infantry too.
 * Pressing the PageUp and PageDown buttons while the main window is selected will now consistently move through the tool's item choices, in all editing modes.
 * Removed [ and ] as shortcuts to affect resource paint size because they did not work consistently on foreign keyboards. The functionality was also changed to PageUp and PageDown.
+* The Resources tool no longer evaluates resources placed outside the map bounds.
+* Added a reference to the GraphicsFixesRA mod in the ModsToLoadRA setting.
+* Added "EnforceObjectMaximums" setting that can be disabled to remove save checks on object maximums.
+* In multi-monitor environments, the editor will now always open on the monitor where the mouse cursor is.
+* The "Visibility" value in the Steam section now saves as simple number (0=public, 1=friends, 2=private). The old long text lines can still be interpreted though.
+* Added a logic to reduce cell edge artifacts when exporting as smoothed image.
+* Added checks on special waypoints to make sure they are actually inside the map bounds.
+* Added a warning when RA ant units or structures are used in the map, but no rule definitions for them exist in the ini.
+* Added an option in the trigger filter dialog to filter on triggers. This will filter out the trigger itself, and any triggers destroying or forcing the selected trigger.
+* When an RA trigger is set to type E1->A1, E2->A2, the controls for the events and actions will be reordered to accurately represent this.
+
+Map editing logic bug fixes:
+
+* All overlay placement is now correctly restricted to not be allowed on the top or bottom row of the map, showing red indicators when in placement mode.
+* Resource placement with a brush size larger than 1 shows red cells inside the brush area when hovering over the top or bottom cells of the map. At size 1, the brush is simply completely red.
+* Resources outside the map are now always shown at their minimum size, and tinted red, to indicate they don't have any impact on the map.
+
+Program bug fixes:
+
+* Fixed an error in the sorting of ini sections that messed up the linking of teamtypes to triggers when the teamtype names ended on numbers going up to 10 and the lower numbers were not padded with zeroes.
+* Applied DPI changes that might fix issues with objects drawing weirdly on some people's systems.
 * Fixed an issue where RA triggers with waypoint "None" set in them would have that value corrupted to 255 after a reload of the map, causing other systems in the editor to crash.
 * Fixed mixup between actions and events in the TD trigger reading checks.
-* Resources outside the map are now always shown at their minimum size, and tinted red, to indicate they don't really have any impact on the map.
-* The Resources tool no longer evaluates resources placed outside the map bounds.
 * Fixed a bug in the resource value calculation for gems.
 * Rule errors that occur after closing the Map settings dialog will now show in a window with scrollable area, just like the errors shown when opening a maps.
 * Added missing overlap checks to buildings on the rebuild-list, so they can no longer disappear on map load without any warning.
@@ -464,8 +486,6 @@ Unreleased
 * Added missing names for items that were lacking them in the available game text resources.
 * Harvestable resource will now show the actual name of the graphics they're showing, rather than always showing "TI01" / "GOLD01" / "GEM01".
 * Changed TD Technology Center to its real name, instead of "Prison".
-* Added a reference to the GraphicsFixesRA mod in the ModsToLoadRA setting.
-* Added "EnforceObjectMaximums" setting that can be disabled to remove save checks on object maximums.
 * Fixed swapped power usage and production of RA Gap Generator.
 * Set correct preview House for the ant units and buildings. This only affects classic files mode though.
 * Fixed bug where the Template tool and the "new from image" dialog used a tile size derived from the map scale factor instead of the preview scale factor to determine in which tile the user clicked.
@@ -473,23 +493,12 @@ Unreleased
 * Added better fallbacks for missing graphics.
 * Fixed an issue where map tiles could get the "contains random tiles" status assigned, but when loading a new theater this information wasn't cleared.
 * Fixed multiplayer start position flags getting stretched to the full tile size instead of centered.
-* The "Visibility" value in the Steam section now saves as simple number (0=public, 1=friends, 2=private). The old long text lines can still be interpreted though.
 * The invite warning and game path asking dialogs now have the editor's icon rather than a default icon.
-* In multi-monitor environments, the editor will now always open on the monitor where the mouse cursor is.
-* Preview generation will now add waypoint flags to multiplayer maps.
-* Added a logic to reduce cell edge artifacts when exporting as smoothed image.
-* Optimised preview generation by not rendering the preview in full resolution first.
 * Fixed crate outlines being linked to the visibility of waypoints instead of overlay.
-* Added checks on special waypoints to make sure they are actually inside the map bounds.
 * Fixed tab order in image export dialogs.
 * The long shadows of terrain decorations like trees now correctly overlap anything standing under them.
-* Changed "outlines on overlapped crates" option to "outlines on overlapped objects", and made it work for units and infantry too.
-* Fixed rounding issues in image export dialog, and added tool and info to set the scale by cell size.
-* Added warning when RA ant units or structures are used in the map, but no rule definitions for them exist in the ini.
-* Added an option under "Extra Indicators" to show the map tile passability.
-* Added an option in the trigger filter dialog to filter on triggers. This will filter out the trigger itself, and any triggers destroying or forcing the selected trigger.
-* Vastly optimised drawing of indicators, so they are only drawn inside the visible bounds of the editor.
+* Fixed rounding issues in image export dialog, and added info and a tool to set the scale by cell size.
 * The placement grid is now also shown when using the flood-fill function.
-* Fixed the cell selection indicator and the info bar not immediately refreshing when using the arrow keys to scroll around the map.
+* Fixed the cell selection indicator and the bottom info bar not immediately refreshing when using the arrow keys to scroll around the map.
 * The auto-zoom on map load is now slightly more accurate.
-* When an RA trigger is set to type E1->A1, E2->A2, the controls for the events and actions will be reordered to accurately represent this.
+* Fixed a bug in the dragging logic that made the mouse position and map desynchronise or not work at all when dragging very slowly.

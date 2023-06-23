@@ -23,10 +23,48 @@ namespace MobiusEditor.Interface
     {
         string LoadRoot { get; }
 
+        /// <summary>
+        /// Check whether a file exists in the currently loaded files.
+        /// </summary>
+        /// <param name="path">The internal path of the file to open.</param>
+        /// <returns>True if the file exists.</returns>
         bool FileExists(string path);
+
+        /// <summary>
+        /// Open a file from the folders or archives as Stream.
+        /// </summary>
+        /// <param name="path">The internal path of the file to open.</param>
+        /// <returns>A stream to read from, or null if the file was not found.</returns>
         Stream OpenFile(string path);
-        Stream OpenFileClassic(string path);
-        void Reset(GameType gameType, TheaterType theater);
-        string[] ExpandModPaths { get; set; }
+
+        /// <summary>
+        /// Read a file from the folders or archives as bytes.
+        /// </summary>
+        /// <param name="path">The internal path of the file to open.</param>
+        /// <returns>A byte array with the file's contents, or null if the file was not found.</returns>
+        Byte[] ReadFile(string path);
+
+        /// <summary>
+        /// Open a file from the classic folders or archives as Stream.
+        /// </summary>
+        /// <param name="name">The name of the file to open.</param>
+        /// <returns>A stream to read from, or null if the file was not found.</returns>
+        Stream OpenFileClassic(string name);
+
+        /// <summary>
+        /// Read a file from the classic folders or archives as bytes.
+        /// </summary>
+        /// <param name="name">The name of the file to open.</param>
+        /// <returns>A byte array with the file's contents, or null if the file was not found.</returns>
+        Byte[] ReadFileClassic(string path);
+
+        /// <summary>
+        /// Resets the archive manager for a new context. This may restrict or re-prioritise where certain files are read from.
+        /// </summary>
+        /// <param name="gameType">Game type for the new context.</param>
+        /// <param name="theater">Theater for the new context.</param>
+        /// <param name="modPaths">Mod paths for the new context.</param>
+        void Reset(GameType gameType, TheaterType theater, string[] modPaths);
+
     }
 }

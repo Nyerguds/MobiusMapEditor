@@ -1347,13 +1347,15 @@ namespace MobiusEditor
         {
             // Get plugin type
             IGamePlugin plugin = null;
+            RedAlert.GamePluginRA raPlugin = null;
             if (gameType == GameType.TiberianDawn)
             {
                 plugin = new TiberianDawn.GamePluginTD(!noImage, isTdMegaMap);
             }
             else if (gameType == GameType.RedAlert)
             {
-                plugin = new RedAlert.GamePluginRA(!noImage);
+                raPlugin = new RedAlert.GamePluginRA(!noImage);
+                plugin = raPlugin;
             }
             else if (gameType == GameType.SoleSurvivor)
             {
@@ -1363,8 +1365,7 @@ namespace MobiusEditor
             TheaterTypeConverter ttc = new TheaterTypeConverter();
             TheaterType theaterType = ttc.ConvertFrom(new MapContext(plugin.Map, false), theater);
             // Resetting to a specific game type will take care of classic mode.
-            Globals.TheArchiveManager.ExpandModPaths = modPaths;
-            Globals.TheArchiveManager.Reset(gameType, theaterType);
+            Globals.TheArchiveManager.Reset(gameType, theaterType, modPaths);
             Globals.TheGameTextManager.Reset(gameType);
             Globals.TheTilesetManager.Reset(theaterType);
             Globals.TheTeamColorManager.Reset(gameType, theaterType);
@@ -1376,6 +1377,14 @@ namespace MobiusEditor
             }
             else if (gameType == GameType.RedAlert)
             {
+                if (raPlugin != null)
+                {
+                    Byte[] rulesFile = Globals.TheArchiveManager.ReadFileClassic("rules.ini");
+                    Byte[] rulesUpdFile = Globals.TheArchiveManager.ReadFileClassic("aftrmath.ini");
+                    raPlugin.ReadRules(rulesFile);
+                    raPlugin.PatchRules(rulesUpdFile);
+                }
+                // Only one will be found.
                 Globals.TheTeamColorManager.Load(@"DATA\XML\CNCRATEAMCOLORS.XML");
                 Globals.TheTeamColorManager.Load("palette.cps");
                 AddTeamColorsRA(Globals.TheTeamColorManager);

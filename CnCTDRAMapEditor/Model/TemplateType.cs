@@ -438,43 +438,38 @@ namespace MobiusEditor.Model
             }
             LandType[] landTypes = landOverrides != null ? landOverrides.ToArray() : null;
             int typeIcons = isRandom ? 1 : isGroup ? 0 : numIcons;
+            // All TD tiles have land overrides, so this logic will be skipped for them.
             if (!isGroup && this.landOverrides == null)
             {
-                using (Stream terrainTypeInfo = Globals.TheArchiveManager.OpenFileClassic(this.Name + "." + theater.ClassicExtension))
+                byte[] fileData = Globals.TheArchiveManager.ReadFileClassic(this.Name + "." + theater.ClassicExtension);
+                if (fileData != null)
                 {
-                    if (terrainTypeInfo != null)
+                    landTypes = Enumerable.Repeat(LandType.Clear, typeIcons).ToArray();
+                    try
                     {
-                        byte[] fileData;
-                        using (BinaryReader br = new BinaryReader(terrainTypeInfo))
+                        // TODO: Dimensions are currently not loaded from the classic files yet.
+                        ClassicSpriteLoader.GetRaTmpData(fileData, out _, out _, out byte[] landTypeInfo, out _, out _, out _);
+                        landTypes = new LandType[typeIcons];
+                        int max = Math.Min(typeIcons, landTypeInfo.Length);
+                        for (int icon = 0; icon < max; ++icon)
                         {
-                            fileData = br.ReadAllBytes();
+                            byte val = landTypeInfo[icon];
+                            LandType land = val > tileTypeFromFile.Length ? LandType.Clear : tileTypeFromFile[landTypeInfo[icon]];
+                            landTypes[icon] = land;
                         }
-                        landTypes = Enumerable.Repeat(LandType.Clear, typeIcons).ToArray();
-                        try
-                        {
-                            // TODO: Dimensions are currently not loaded from the classic files yet.
-                            ClassicSpriteLoader.GetRaTmpData(fileData, out _, out _, out byte[] landTypeInfo, out _, out _, out _);
-                            landTypes = new LandType[typeIcons];
-                            int max = Math.Min(typeIcons, landTypeInfo.Length);
-                            for (int icon = 0; icon < max; ++icon)
-                            {
-                                byte val = landTypeInfo[icon];
-                                LandType land = val > tileTypeFromFile.Length ? LandType.Clear : tileTypeFromFile[landTypeInfo[icon]];
-                                landTypes[icon] = land;
-                            }
-                        }
-                        catch (ArgumentException ex) { /* Not able to parse; fall back to all-clear. */ }
                     }
-                }
-                if (isRandom && landTypes.Length >= 1)
-                {
-                    LandType rntp = landTypes[0];
-                    landTypes = Enumerable.Repeat(rntp, numIcons).ToArray();
+                    catch (ArgumentException ex) { /* Not able to parse; fall back to all-clear. */ }
                 }
             }
             if (landTypes == null && !isGroup)
             {
                 landTypes = Enumerable.Repeat(LandType.Clear, typeIcons).ToArray();
+            }
+            // Randoms initialise to 1, then expand and copy that to all tiles.
+            if (!isGroup && isRandom && landTypes.Length >= 1)
+            {
+                LandType rntp = landTypes[0];
+                landTypes = Enumerable.Repeat(rntp, numIcons).ToArray();
             }
             LandTypes = landTypes;
         }
@@ -539,22 +534,22 @@ namespace MobiusEditor.Model
 
         private static readonly LandType[] tileTypeFromFile = new[]
         {
-            LandType.Clear,         // Unused / 1x1-multiple
-            LandType.Clear,         // ???
-            LandType.Clear,         // ???
-            LandType.Clear,         // Clear
-            LandType.Clear,         // ???
-            LandType.Clear,         // ???
-            LandType.Beach,         // Beach
-            LandType.Clear,         // ???
-            LandType.Rock,          // Rock
-            LandType.Road,          // Road
-            LandType.Water,         // Water
-            LandType.River,         // River
-            LandType.Clear,         // ???
-            LandType.Clear,         // ???
-            LandType.Rough,         // Rough
-            LandType.Clear,         // ???
+            LandType.Clear,     // Unused / 1x1-multiple
+            LandType.Clear,     // ???
+            LandType.Clear,     // ???
+            LandType.Clear,     // Clear
+            LandType.Clear,     // ???
+            LandType.Clear,     // ???
+            LandType.Beach,     // Beach
+            LandType.Clear,     // ???
+            LandType.Rock,      // Rock
+            LandType.Road,      // Road
+            LandType.Water,     // Water
+            LandType.River,     // River
+            LandType.Clear,     // ???
+            LandType.Clear,     // ???
+            LandType.Rough,     // Rough
+            LandType.Clear,     // ???
         };
 
         private static readonly Dictionary<char, LandType> LandTypesMapping = new Dictionary<char, LandType>

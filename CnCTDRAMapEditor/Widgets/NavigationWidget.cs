@@ -86,7 +86,7 @@ namespace MobiusEditor.Widgets
         private bool includeNavigation;
         public Size CellSize { get; private set; }
 
-        private Size? startScrollMouseLocation;
+        private Point? startScrollMouseLocation;
         private Point? startScrollFromLocation;
 
         public CellMetrics Metrics { get; private set; }
@@ -98,8 +98,8 @@ namespace MobiusEditor.Widgets
                 Rectangle visibleArea = mapPanel.ClientToMap(mapPanel.ClientRectangle);
                 int visibleTopLeftCellX = visibleArea.X / CellSize.Width;
                 int visibleTopLeftCellY = visibleArea.Y / CellSize.Height;
-                int visibleBottomRightCellX = visibleArea.Right / CellSize.Width + 1;
-                int visibleBottomRightCellY = visibleArea.Bottom / CellSize.Height + 1;
+                int visibleBottomRightCellX = visibleArea.Right / CellSize.Width + (visibleArea.Right % CellSize.Width == 0 ? 0 : 1);
+                int visibleBottomRightCellY = visibleArea.Bottom / CellSize.Height + (visibleArea.Bottom % CellSize.Height == 0 ? 0 : 1);
                 Rectangle visibleMapArea = new Rectangle(
                     visibleTopLeftCellX,
                     visibleTopLeftCellY,
@@ -176,7 +176,7 @@ namespace MobiusEditor.Widgets
             }
             if (isDragging && !startScrollMouseLocation.HasValue)
             {
-                startScrollMouseLocation = (Size)mapPanel.PointToClient(Control.MousePosition);
+                startScrollMouseLocation = mapPanel.PointToClient(Control.MousePosition);
                 startScrollFromLocation = mapPanel.AutoScrollPosition;
                 if (mapPanel != null)
                 {
@@ -222,10 +222,18 @@ namespace MobiusEditor.Widgets
             {
                 if (mapPanel != null)
                     mapPanel.Cursor = Cursors.SizeAll;
-                Point delta = location - startScrollMouseLocation.Value;
+                Point delta = new Point(location.X - startScrollMouseLocation.Value.X, location.Y - startScrollMouseLocation.Value.Y);
+                Point newScrollPos = new Point(-startScrollFromLocation.Value.X - delta.X, -startScrollFromLocation.Value.Y - delta.Y);
+                // Minimize drag drift. If less than an entire zoomed pixel is moved, the system seems to bug out
+                // and not scroll at all, while the control's AutoScrollPosition still registers it as a scroll.
+                double pixelX = ZoomedCellSize.Width / Globals.MapTileSize.Width;
+                double pixelY = ZoomedCellSize.Width / Globals.MapTileSize.Height;
+                // Round down to exact zoomed pixel.
+                newScrollPos.X = (int)((int)(newScrollPos.X / pixelX) * pixelX);
+                newScrollPos.Y = (int)((int)(newScrollPos.Y / pixelY) * pixelY);
                 if (!delta.IsEmpty)
                 {
-                    mapPanel.AutoScrollPosition = new Point(-startScrollFromLocation.Value.X - delta.X, -startScrollFromLocation.Value.Y - delta.Y);
+                    mapPanel.AutoScrollPosition = newScrollPos;
                 }
             }
             Point newMouseCell = GetMouseCellPosition(location, out Point subPixel);

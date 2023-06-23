@@ -135,28 +135,22 @@ namespace MobiusEditor.Utility
             {
                 return;
             }
-            byte[] cpsData;
-            using (Stream palettecps = this.mixfileManager.OpenFile(path))
+            byte[] cpsData = null;
+            Byte[] cpsFileBytes = this.mixfileManager.ReadFile(path);
+            if (cpsData == null)
             {
-                if (palettecps == null)
-                {
-                    // Not found; ignore and do nothing.
-                    return;
-                }
-                try
-                {
-                    Byte[] cpsFileBytes;
-                    using (BinaryReader sr = new BinaryReader(palettecps))
-                    {
-                        cpsFileBytes = GeneralUtils.ReadAllBytes(sr);
-                    }
-                    cpsData = ClassicSpriteLoader.GetCpsData(cpsFileBytes, out _);
-                }
-                catch (ArgumentException)
-                {
-                    // Not a valid CPS file; ignore and do nothing.
-                    return;
-                }
+                // Not found; ignore and do nothing. Don't reset the current remaps unless a valid cps file is actually
+                // found, since the remap manager will also be requested to attempt to read the remaster xml file.
+                return;
+            }
+            try
+            {
+                cpsData = ClassicSpriteLoader.GetCpsData(cpsFileBytes, out _);
+            }
+            catch (ArgumentException)
+            {
+                // Not a valid CPS file; ignore and do nothing.
+                return;
             }
             // CPS file found and decoded successfully; re-initialise RA remap data.
             this.remapsRa.Clear();

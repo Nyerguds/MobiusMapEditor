@@ -2086,6 +2086,24 @@ namespace MobiusEditor.RedAlert
             return errors;
         }
 
+        public void ReadRules(Byte[] rulesFile)
+        {
+            if (rulesFile == null)
+            {
+                return;
+            }
+            // TODO read this. Might keep it as ini to just look up stuff from as fallback.
+        }
+
+        public void PatchRules(Byte[] rulesUpdFile)
+        {
+            if (rulesUpdFile == null)
+            {
+                return;
+            }
+            // TODO read this. Might keep it as ini to just look up stuff from as fallback.
+        }
+
         private Boolean FixCorruptTiles(Template template, byte iconValue, out byte newIconValue, out string type)
         {
             TemplateType templateType = template.Type;

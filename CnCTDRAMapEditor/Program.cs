@@ -183,8 +183,7 @@ namespace MobiusEditor
             modpaths.TryGetValue(GameType.TiberianDawn, out string[] tdModPaths);
             modpaths.TryGetValue(GameType.SoleSurvivor, out string[] ssModPaths);
             bool tdSsEqual = (ssModPaths).SequenceEqual(tdModPaths) && tdPathFull.Equals(ssPathFull);
-            mfm.ExpandModPaths = tdModPaths;
-            mfm.Reset(GameType.TiberianDawn, null);
+            mfm.Reset(GameType.TiberianDawn, null, tdModPaths);
             List<String> loadedFiles = mfm.ToList();
             string prefix = tdSsEqual ? "TD/SS: " : "TD: ";
             if (!loadedFiles.Contains("local.mix") && !loadedFiles.Contains("cclocal.mix")) loadErrors.Add(prefix + "local.mix / cclocal.mix");
@@ -204,8 +203,7 @@ namespace MobiusEditor
             // Check files
             if (!tdSsEqual)
             {
-                mfm.ExpandModPaths = ssModPaths;
-                mfm.Reset(GameType.SoleSurvivor, null);
+                mfm.Reset(GameType.SoleSurvivor, null, ssModPaths);
                 loadedFiles = mfm.ToList();
                 prefix = "SS: ";
                 if (!loadedFiles.Contains("local.mix") && !loadedFiles.Contains("cclocal.mix")) loadErrors.Add(prefix + "local.mix / cclocal.mix");
@@ -238,8 +236,7 @@ namespace MobiusEditor
 
             // Check files
             modpaths.TryGetValue(GameType.RedAlert, out string[] raModPaths);
-            mfm.ExpandModPaths = raModPaths;
-            mfm.Reset(GameType.RedAlert, null);
+            mfm.Reset(GameType.RedAlert, null, raModPaths);
             loadedFiles = mfm.ToList();
             prefix = "RA: ";
             if (!loadedFiles.Contains("expand2.mix")) loadErrors.Add(prefix + "expand2.mix");
@@ -250,8 +247,7 @@ namespace MobiusEditor
             if (!loadedFiles.Contains("temperat.mix")) loadErrors.Add(prefix + "temperat.mix");
             if (!loadedFiles.Contains("snow.mix")) loadErrors.Add(prefix + "snow.mix");
             if (!loadedFiles.Contains("interior.mix")) loadErrors.Add(prefix + "interior.mix");
-            mfm.ExpandModPaths = null;
-            mfm.Reset(GameType.None, null);
+            mfm.Reset(GameType.None, null, null);
 
 #if !DEVELOPER
             if (loadErrors.Count > 0)
