@@ -449,7 +449,7 @@ Unreleased
 Feature updates:
 
 * Added support for reading and using classic game files, making the editor independent from the C&C Remaster.
-* Vastly optimised drawing of indicators, so they are only drawn inside the visible bounds of the editor.
+* Vastly optimised editor responsiveness by only drawing map indicators inside the shown area, rather than processing them for the whole map.
 * Optimised preview generation by not rendering the preview in full resolution first.
 * Added an option under "Extra Indicators" to show the map tile passability.
 * Preview generation will now add waypoint flags to multiplayer maps.
@@ -458,20 +458,20 @@ Feature updates:
 * Removed [ and ] as shortcuts to affect resource paint size because they did not work consistently on foreign keyboards. The functionality was also changed to PageUp and PageDown.
 * The Resources tool no longer evaluates resources placed outside the map bounds.
 * Added a reference to the GraphicsFixesRA mod in the ModsToLoadRA setting.
-* Added "EnforceObjectMaximums" setting that can be disabled to remove save checks on object maximums.
+* Added "EnforceObjectMaximums" setting that can be disabled to remove save checks on the game engine's object maximums.
 * In multi-monitor environments, the editor will now always open on the monitor where the mouse cursor is.
 * The "Visibility" value in the Steam section now saves as simple number (0=public, 1=friends, 2=private). The old long text lines can still be interpreted though.
 * Added a logic to reduce cell edge artifacts when exporting as smoothed image.
-* Added checks on special waypoints to make sure they are actually inside the map bounds.
+* Added checks on the validation of special waypoints to make sure they are actually inside the map bounds.
 * Added a warning when RA ant units or structures are used in the map, but no rule definitions for them exist in the ini.
 * Added an option in the trigger filter dialog to filter on triggers. This will filter out the trigger itself, and any triggers destroying or forcing the selected trigger.
 * When an RA trigger is set to type E1->A1, E2->A2, the controls for the events and actions will be reordered to accurately represent this.
+* Resources outside the map are now always shown at their minimum size, and tinted red, to indicate they don't have any impact on the map.
 
-Map editing logic bug fixes:
+Map logic updates:
 
 * All overlay placement is now correctly restricted to not be allowed on the top or bottom row of the map, showing red indicators when in placement mode.
 * Resource placement with a brush size larger than 1 shows red cells inside the brush area when hovering over the top or bottom cells of the map. At size 1, the brush is simply completely red.
-* Resources outside the map are now always shown at their minimum size, and tinted red, to indicate they don't have any impact on the map.
 
 Program bug fixes:
 
@@ -497,7 +497,7 @@ Program bug fixes:
 * Fixed crate outlines being linked to the visibility of waypoints instead of overlay.
 * Fixed tab order in image export dialogs.
 * The long shadows of terrain decorations like trees now correctly overlap anything standing under them.
-* Fixed rounding issues in image export dialog, and added info and a tool to set the scale by cell size.
+* Fixed rounding issues in image export dialog, and added cell size info and a tool to set the scale by cell size.
 * The placement grid is now also shown when using the flood-fill function.
 * Fixed the cell selection indicator and the bottom info bar not immediately refreshing when using the arrow keys to scroll around the map.
 * The auto-zoom on map load is now slightly more accurate.
