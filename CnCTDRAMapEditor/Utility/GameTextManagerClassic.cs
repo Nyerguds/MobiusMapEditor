@@ -1352,12 +1352,8 @@ namespace MobiusEditor.Utility
                     // File manager should be initialised for a specific game by getting a list of all
                     // .mix files to open, and all .mix files that can occur inside those mix files.
                     // This way, it can do a recursive search through everything.
-                    using (Stream stream = fileManager.OpenFile(gameTextFile))
-                    using (BinaryReader reader = new BinaryReader(stream))
-                    {
-                        byte[] file = reader.ReadAllBytes();
-                        stringsFile = LoadFile(file);
-                    }
+                    byte[] file = fileManager.ReadFile(gameTextFile);
+                    stringsFile = LoadFile(file);
                 }
                 catch { /*ignore; just gonna be empty I guess */ }
             }
@@ -1384,6 +1380,10 @@ namespace MobiusEditor.Utility
 
         public List<byte[]> LoadFile(byte[] fileData)
         {
+            if (fileData == null)
+            {
+                return null;
+            }
             int len = fileData.Length;
             if (len < 2)
                 throw new ArgumentOutOfRangeException("fileData", "File is too short to contain any entries!");

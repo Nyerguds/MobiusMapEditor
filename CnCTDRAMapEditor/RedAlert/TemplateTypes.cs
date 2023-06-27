@@ -148,9 +148,9 @@ namespace MobiusEditor.RedAlert
         public static readonly TemplateType Boulder1 = new TemplateType(97, "b1", 1, 1, new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, null);
         public static readonly TemplateType Boulder2 = new TemplateType(98, "b2", 2, 1, new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, null);
         public static readonly TemplateType Boulder3 = new TemplateType(99, "b3", 3, 1, new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, null);
-        //public static readonly TemplateType Boulder4 = new TemplateType(100, "b4", 0, 0, new [] { TheaterTypes.Temperate, TheaterTypes.Snow }, null);
-        //public static readonly TemplateType Boulder5 = new TemplateType(101, "b5", 0, 0, new [] { TheaterTypes.Temperate, TheaterTypes.Snow }, null);
-        //public static readonly TemplateType Boulder6 = new TemplateType(102, "b6", 0, 0, new [] { TheaterTypes.Temperate, TheaterTypes.Snow }, null);
+        //public static readonly TemplateType Boulder4 = new TemplateType(100, "b4", 0, 0, new [] { TheaterTypes.Temperate, TheaterTypes.Snow }, null); // Files don't actually exist.
+        //public static readonly TemplateType Boulder5 = new TemplateType(101, "b5", 0, 0, new [] { TheaterTypes.Temperate, TheaterTypes.Snow }, null); // Files don't actually exist.
+        //public static readonly TemplateType Boulder6 = new TemplateType(102, "b6", 0, 0, new [] { TheaterTypes.Temperate, TheaterTypes.Snow }, null); // Files don't actually exist.
         public static readonly TemplateType Patch01 = new TemplateType(103, "p01", 1, 1, new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, null);
         public static readonly TemplateType Patch02 = new TemplateType(104, "p02", 1, 1, new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, null);
         public static readonly TemplateType Patch03 = new TemplateType(105, "p03", 1, 1, new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, null);
@@ -159,7 +159,7 @@ namespace MobiusEditor.RedAlert
         public static readonly TemplateType Patch08 = new TemplateType(108, "p08", 3, 2, new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, null);
         public static readonly TemplateType Patch13 = new TemplateType(109, "p13", 3, 2, new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, null);
         public static readonly TemplateType Patch14 = new TemplateType(110, "p14", 2, 1, new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, null);
-        //public static readonly TemplateType Patch15 = new TemplateType(111, "p15", 0, 0, new [] { TheaterTypes.Temperate, TheaterTypes.Snow }, null);
+        //public static readonly TemplateType Patch15 = new TemplateType(111, "p15", 0, 0, new [] { TheaterTypes.Temperate, TheaterTypes.Snow }, null); // Files don't actually exist. Leftover of TD Snow.
         public static readonly TemplateType River01 = new TemplateType(112, "rv01", 5, 4, new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, null, "11000 11111 11111 01100");
         public static readonly TemplateType River02 = new TemplateType(113, "rv02", 5, 3, new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, null, "11111 11111 11100");
         public static readonly TemplateType River03 = new TemplateType(114, "rv03", 4, 4, new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, null, "1100 1111 1111 0111");
@@ -378,6 +378,8 @@ namespace MobiusEditor.RedAlert
         public static readonly TemplateType Strp0010 = new TemplateType(327, "strp0010", 1, 1, new[] { TheaterTypes.Interior }, null);
         public static readonly TemplateType Strp0011 = new TemplateType(328, "strp0011", 1, 1, new[] { TheaterTypes.Interior }, null);
         public static readonly TemplateType Wall0001 = new TemplateType(329, "wall0001", 1, 1, new[] { TheaterTypes.Interior }, null);
+        // These 1x1 tiles get combined into three 'tile groups', making them not show up as individual tiles.
+        // This reduces clutter and offers automatic randomisability to the user.
         public static readonly TemplateType Wall0002 = new TemplateType(330, "wall0002", new[] { TheaterTypes.Interior }, "wallgroup1");
         public static readonly TemplateType Wall0003 = new TemplateType(331, "wall0003", new[] { TheaterTypes.Interior }, "wallgroup2");
         public static readonly TemplateType Wall0004 = new TemplateType(332, "wall0004", new[] { TheaterTypes.Interior }, "wallgroup1");
@@ -399,6 +401,7 @@ namespace MobiusEditor.RedAlert
         public static readonly TemplateType Wall0020 = new TemplateType(348, "wall0020", new[] { TheaterTypes.Interior }, "wallgroup1");
         public static readonly TemplateType Wall0021 = new TemplateType(349, "wall0021", new[] { TheaterTypes.Interior }, "wallgroup3");
         public static readonly TemplateType Wall0022 = new TemplateType(350, "wall0022", new[] { TheaterTypes.Interior }, "wallgroup3");
+        // These combine a bunch of separate 1x1 walls into one randomisable group.
         public static readonly TemplateType WallsLite = new TemplateType(0xFFFC, "wallgroup1", new[] { TheaterTypes.Interior }, true, new[] { "wall0002", "wall0004", "wall0006", "wall0008", "wall0010", "wall0019", "wall0020" });
         public static readonly TemplateType WallsDark = new TemplateType(0xFFFD, "wallgroup2", new[] { TheaterTypes.Interior }, true, new[] { "wall0003", "wall0005", "wall0007", "wall0009", "wall0011" });
         public static readonly TemplateType WallsFlat = new TemplateType(0xFFFE, "wallgroup3", new[] { TheaterTypes.Interior }, true, new[] { "wall0012", "wall0013", "wall0014", "wall0015", "wall0016", "wall0017", "wall0018", "wall0021", "wall0022" });

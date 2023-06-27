@@ -490,9 +490,9 @@ namespace MobiusEditor.RedAlert
                                     throw new ApplicationException("Cannot find the necessary file inside the " + Path.GetFileName(path) + " archive.");
                                 }
                                 INI ini = new INI();
-                                using (BinaryReader reader = new BinaryReader(megafile.OpenFile(mprFile)))
+                                using (Stream iniStream = megafile.OpenFile(mprFile))
                                 {
-                                    iniBytes = reader.ReadAllBytes();
+                                    iniBytes = iniStream.ReadAllBytes();
                                     ParseIniContent(ini, iniBytes);
                                 }
                                 errors.AddRange(LoadINI(ini, false, ref modified));
@@ -2079,8 +2079,11 @@ namespace MobiusEditor.RedAlert
             }
             if (switchedToSolo)
             {
-                errors.Insert(0, "Filename detected as classic single player mission format, and win and lose trigger detected. Applying \"SoloMission\" flag.");
                 Map.BasicSection.SoloMission = true;
+                if (Globals.ReportMissionDetection)
+                {
+                    errors.Insert(0, "Filename detected as classic single player mission format, and win and lose trigger detected. Applying \"SoloMission\" flag.");
+                }
             }
             Map.EndUpdate();
             return errors;

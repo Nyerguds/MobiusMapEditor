@@ -352,8 +352,8 @@ namespace MobiusEditor.Tools
                     startedDragging = true;
                 }
                 Building toMove = selectedBuilding;
-                var oldLocation = map.Buildings[toMove].Value;
-                var newLocation = new Point(Math.Max(0, e.NewCell.X - selectedBuildingPivot.X), Math.Max(0, e.NewCell.Y - selectedBuildingPivot.Y));
+                Point oldLocation = map.Buildings[toMove].Value;
+                Point newLocation = new Point(Math.Max(0, e.NewCell.X - selectedBuildingPivot.X), Math.Max(0, e.NewCell.Y - selectedBuildingPivot.Y));
                 mapPanel.Invalidate(map, toMove);
                 Point[] oldBibPoints = null;
                 Point[] newBibPoints = null;
@@ -433,7 +433,7 @@ namespace MobiusEditor.Tools
             selectedBuildingLocation = null;
             selectedBuildingPivot = Point.Empty;
             startedDragging = false;
-            var building = mockBuilding.Clone();
+            Building building = mockBuilding.Clone();
             if (!map.Technos.CanAdd(location, building, building.Type.BaseOccupyMask))
             {
                 return;
@@ -472,11 +472,11 @@ namespace MobiusEditor.Tools
                         }
                     }
                     baseBuildingsOrdered = baseBuildings.OrderBy(x => x.BasePriority).ToArray();
-                    for (var i = 0; i < baseBuildingsOrdered.Length; ++i)
+                    for (int i = 0; i < baseBuildingsOrdered.Length; ++i)
                     {
                         baseBuildingsOrdered[i].BasePriority = i;
                     }
-                    foreach (var baseBuilding in baseBuildings)
+                    foreach (Building baseBuilding in baseBuildings)
                     {
                         mapPanel.Invalidate(map, baseBuilding);
                     }
@@ -555,12 +555,12 @@ namespace MobiusEditor.Tools
                 {
                     baseBuildings = map.Buildings.OfType<Building>().Select(x => x.Occupier).Where(x => x.BasePriority >= 0).OrderBy(x => x.BasePriority).ToArray();
                     buildingPrioritiesOld = new int[baseBuildings.Length];
-                    for (var i = 0; i < baseBuildings.Length; ++i)
+                    for (int i = 0; i < baseBuildings.Length; ++i)
                     {
                         buildingPrioritiesOld[i] = baseBuildings[i].BasePriority;
                         baseBuildings[i].BasePriority = i;
                     }
-                    foreach (var baseBuilding in map.Buildings.OfType<Building>().Select(x => x.Occupier).Where(x => x.BasePriority >= 0))
+                    foreach (Building baseBuilding in map.Buildings.OfType<Building>().Select(x => x.Occupier).Where(x => x.BasePriority >= 0))
                     {
                         mapPanel.Invalidate(map, baseBuilding);
                     }
@@ -723,27 +723,27 @@ namespace MobiusEditor.Tools
 
         protected override void RefreshPreviewPanel()
         {
-            var oldImage = buildingTypeMapPanel.MapImage;
+            Image oldImage = buildingTypeMapPanel.MapImage;
             if (mockBuilding.Type != null)
             {
                 Dictionary <Point, Smudge> bibCells = mockBuilding.GetBib(new Point(0, 0), map.SmudgeTypes);
                 List<(Rectangle, Action<Graphics>)> bibRender = new List<(Rectangle, Action<Graphics>)>();
                 if (bibCells != null)
                 {
-                    foreach (var point in bibCells.Keys)
+                    foreach (Point point in bibCells.Keys)
                     {
-                        var bibCellRender = MapRenderer.RenderSmudge(map.Theater, point, Globals.PreviewTileSize, Globals.PreviewTileScale, bibCells[point]);
+                        (Rectangle, Action<Graphics>) bibCellRender = MapRenderer.RenderSmudge(map.Theater, point, Globals.PreviewTileSize, Globals.PreviewTileScale, bibCells[point]);
                         bibRender.Add(bibCellRender);
                     }
                 }
-                var renderBuilding = MapRenderer.RenderBuilding(plugin.GameType, new Point(0, 0), Globals.PreviewTileSize, Globals.PreviewTileScale, mockBuilding);
+                (Rectangle, Action<Graphics>, Boolean) renderBuilding = MapRenderer.RenderBuilding(plugin.GameType, new Point(0, 0), Globals.PreviewTileSize, Globals.PreviewTileScale, mockBuilding);
                 Size previewSize = mockBuilding.OverlapBounds.Size;
-                var buildingPreview = new Bitmap(previewSize.Width * Globals.PreviewTileWidth, previewSize.Height * Globals.PreviewTileHeight);
+                Bitmap buildingPreview = new Bitmap(previewSize.Width * Globals.PreviewTileWidth, previewSize.Height * Globals.PreviewTileHeight);
                 buildingPreview.SetResolution(96, 96);
-                using (var g = Graphics.FromImage(buildingPreview))
+                using (Graphics g = Graphics.FromImage(buildingPreview))
                 {
                     MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
-                    foreach (var bib in bibRender)
+                    foreach ((Rectangle, Action<Graphics>) bib in bibRender)
                     {
                         if (!bib.Item1.IsEmpty)
                         {
@@ -808,8 +808,8 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-            var location = navigationWidget.MouseCell;
-            var building = mockBuilding.Clone();
+            Point location = navigationWidget.MouseCell;
+            Building building = mockBuilding.Clone();
             building.Tint = Color.FromArgb(128, Color.White);
             if (previewMap.Technos.CanAdd(location, building, building.Type.BaseOccupyMask) && previewMap.Buildings.Add(location, building))
             {

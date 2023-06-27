@@ -100,6 +100,19 @@ namespace MobiusEditor.Utility
             }
         }
 
+        /// <summary>
+        /// Reads all remaining bytes from a stream behind the current Position. This does not close the stream.
+        /// </summary>
+        /// <param name="stream">Stream</param>
+        /// <returns>The contents of the stream, behind the current Position.</returns>
+        public static byte[] ReadAllBytes(this Stream stream)
+        {
+            using (BinaryReader reader = new BinaryReader(stream, new UTF8Encoding(), true))
+            {
+                return ReadAllBytes(reader);
+            }
+        }
+
         public static byte[] ReadAllBytes(this BinaryReader reader)
         {
             const int bufferSize = 4096;
@@ -523,6 +536,16 @@ namespace MobiusEditor.Utility
                 sb.Append(c);
             }
             return sb.ToString();
+        }
+
+        public static Regex FileMaskToRegex(string fileMask)
+        {
+            return FileMaskToRegex(fileMask, true);
+        }
+        public static Regex FileMaskToRegex(string fileMask, bool ignoreCase)
+        {
+            String convertedMask = "^" + Regex.Escape(fileMask).Replace("\\*", ".*").Replace("\\?", ".") + "$";
+            return new Regex(convertedMask, ignoreCase ? RegexOptions.IgnoreCase : RegexOptions.None);
         }
 
     }

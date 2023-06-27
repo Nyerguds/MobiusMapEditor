@@ -16,6 +16,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using MobiusEditor.Interface;
 using MobiusEditor.Model;
 
@@ -42,7 +43,7 @@ namespace MobiusEditor.Utility
         }
 
         private string applicationPath;
-        private string[] modPaths;
+        Dictionary<GameType, string[]> modPathsPerGame;
         private Dictionary<GameType, string> gameFolders;
         private Dictionary<GameType, List<MixInfo>> gameArchives;
         private readonly List<MixInfo> currentMixFileInfo = new List<MixInfo>();
@@ -53,12 +54,12 @@ namespace MobiusEditor.Utility
         public string LoadRoot { get { return applicationPath; } }
 
 
-        public MixfileManager(String applicationPath, Dictionary<GameType, String> gameFolders)
+        public MixfileManager(String applicationPath, Dictionary<GameType, String> gameFolders, Dictionary<GameType, string[]> modPaths)
         {
             this.applicationPath = applicationPath;
             this.gameFolders = gameFolders;
             this.gameArchives = new Dictionary<GameType, List<MixInfo>>();
-            //this.Reset(currentGameType, null);
+            this.modPathsPerGame = modPaths;
         }
 
         public bool FileExists(String path)
@@ -111,6 +112,82 @@ namespace MobiusEditor.Utility
             return canBeEmbedded || File.Exists(fullPath);
         }
 
+        public int LoadArchives(GameType gameType, String archiveMask, bool canUseNewFormat)
+        {
+            if (disposedValue)
+            {
+                throw new ObjectDisposedException(GetType().FullName);
+            }
+            // Doesn't really 'load' the archive, but instead registers it as known filename for this game type.
+            // The actual loading won't happen until a Reset(...) is executed to specify the game to initialise.
+            if (!gameFolders.TryGetValue(gameType, out string gamePath))
+            {
+                return 0;
+            }
+            List<string> foundFiles = new List<string>();
+            Dictionary<string, string> foundPaths = new Dictionary<string, string>();
+            Regex filter = GeneralUtils.FileMaskToRegex(archiveMask);
+            List <MixInfo> archivesForGame;
+            if (!gameArchives.TryGetValue(gameType, out archivesForGame))
+            {
+                archivesForGame = new List<MixInfo>();
+                gameArchives[gameType] = archivesForGame;
+            }
+            // Not using hash map since order and iteration will be important.
+            foreach (MixInfo file in archivesForGame)
+            {
+                if (filter.IsMatch(file.Name) && !foundPaths.ContainsKey(file.Name))
+                {
+                    foundFiles.Add(file.Name);
+                    // Previously loaded files are higher in priority. Mark as inaccessible so
+                    // it's not registered from other places, but also not added in the end.
+                    foundPaths.Add(file.Name, null);
+                }
+            }
+            if (!Path.IsPathRooted(gamePath))
+            {
+                gamePath = Path.Combine(applicationPath, gamePath);
+            }
+            if (modPathsPerGame != null && modPathsPerGame.TryGetValue(gameType, out string[] modPaths) && modPaths != null && modPaths.Length > 0)
+            {
+                // In each mod folder, try to read all mix files.
+                foreach (string modPath in modPaths)
+                {
+                    String mixPath = Path.Combine(modPath, "ccdata");
+                    if (!Directory.Exists(mixPath))
+                    {
+                        continue;
+                    }
+                    foreach (string filePath in Directory.GetFiles(mixPath, archiveMask))
+                    {
+                        string name = Path.GetFileName(filePath);
+                        foundFiles.Add(name);
+                        foundPaths.Add(name, filePath);
+                    }
+                }
+            }
+            if (Directory.Exists(gamePath))
+            {
+                foreach (string filePath in Directory.GetFiles(gamePath, archiveMask))
+                {
+                    string name = Path.GetFileName(filePath);
+                    foundFiles.Add(name);
+                    foundPaths.Add(name, filePath);
+                }
+            }            
+            int counter = 0;
+            foreach (string filename in foundFiles)
+            {
+                // "filePath == null" indicates that file was already registered before.
+                if (foundPaths.TryGetValue(filename, out string filePath) && filePath != null)
+                {
+                    archivesForGame.Add(new MixInfo(filePath, false, false, false, canUseNewFormat));
+                    counter++;
+                }
+            }
+            return counter;
+        }
+
         public Stream OpenFile(String path)
         {
             return OpenFile(path, currentGameType, currentMixFileInfo);
@@ -124,10 +201,7 @@ namespace MobiusEditor.Utility
                 {
                     return null;
                 }
-                using (BinaryReader br = new BinaryReader(file))
-                {
-                    return br.ReadAllBytes();
-                }
+                return file.ReadAllBytes();
             }
         }
 
@@ -163,7 +237,7 @@ namespace MobiusEditor.Utility
                 return File.Open(loosePath, FileMode.Open, FileAccess.Read);
             }
             // 2. Loose files in mod path
-            if (modPaths != null && modPaths.Length > 0)
+            if (modPathsPerGame != null && modPathsPerGame.TryGetValue(gameType, out string[] modPaths) && modPaths != null && modPaths.Length > 0)
             {
                 foreach (string modFilePath in modPaths)
                 {
@@ -190,14 +264,13 @@ namespace MobiusEditor.Utility
             return null;
         }
 
-        public void Reset(GameType gameType, TheaterType theater, string[] modPaths)
+        public void Reset(GameType gameType, TheaterType theater)
         {
             if (disposedValue)
             {
                 throw new ObjectDisposedException(GetType().FullName);
             }
-            this.modPaths = modPaths;
-            String theaterMixFile = theater == null ? null : theater.ClassicTileset + ".mix";
+            string theaterMixFile = theater == null ? null : theater.ClassicTileset + ".mix";
             // Clean up previously loaded files.
             if (currentMixFiles != null)
             {
@@ -226,13 +299,14 @@ namespace MobiusEditor.Utility
             }
             List<MixInfo> newMixFileInfo = gameArchives.Where(kv => kv.Key == gameType).SelectMany(kv => kv.Value).ToList();
             Dictionary<string, Mixfile> foundMixFiles = new Dictionary<string, Mixfile>();
-            if (this.modPaths != null && this.modPaths.Length > 0)
+            if (modPathsPerGame != null && modPathsPerGame.TryGetValue(gameType, out string[] modPaths) && modPaths != null && modPaths.Length > 0)
             {
                 // In each mod folder, try to read all mix files.
-                foreach (string modPath in this.modPaths)
+                foreach (string modPath in modPaths)
                 {
                     foreach (MixInfo mixInfo in newMixFileInfo)
                     {
+                        // Only load one theater mix file.
                         if (theaterMixFile != null && mixInfo.IsTheater && !String.Equals(theaterMixFile, mixInfo.Name, StringComparison.InvariantCultureIgnoreCase))
                         {
                             continue;

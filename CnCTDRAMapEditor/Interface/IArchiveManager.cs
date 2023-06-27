@@ -63,8 +63,7 @@ namespace MobiusEditor.Interface
         /// </summary>
         /// <param name="gameType">Game type for the new context.</param>
         /// <param name="theater">Theater for the new context.</param>
-        /// <param name="modPaths">Mod paths for the new context.</param>
-        void Reset(GameType gameType, TheaterType theater, string[] modPaths);
+        void Reset(GameType gameType, TheaterType theater);
 
     }
 }

@@ -41,6 +41,7 @@ namespace MobiusEditor
             UndoRedoStackSize = Properties.Settings.Default.UndoRedoStackSize;
             MinimumClampSize = Properties.Settings.Default.MinimumClampSize;
             // Behavior tweaks
+            ReportMissionDetection = Properties.Settings.Default.ReportMissionDetection;
             EnforceObjectMaximums = Properties.Settings.Default.EnforceObjectMaximums;
             Ignore106Scripting = Properties.Settings.Default.Ignore106Scripting;
             NoMetaFilesForSinglePlay = Properties.Settings.Default.NoMetaFilesForSinglePlay;
@@ -129,6 +130,7 @@ namespace MobiusEditor
         public static int UndoRedoStackSize { get; private set; }
         public static Size MinimumClampSize { get; private set; }
 
+        public static bool ReportMissionDetection { get; private set; }
         public static bool EnforceObjectMaximums { get; private set; }
         public static bool Ignore106Scripting { get; private set; }
         public static bool NoMetaFilesForSinglePlay { get; private set; }

@@ -41,9 +41,7 @@ namespace MobiusEditor
 
         public delegate Object FunctionInvoker();
 
-        public Dictionary<GameType, string[]> ModPaths { get; set; }
-
-        private Dictionary<int, Bitmap> theaterIcons = new Dictionary<int, Bitmap>();
+        private Dictionary<string, Bitmap> theaterIcons = new Dictionary<string, Bitmap>();
 
         private static readonly ToolType[] toolTypes;
 
@@ -1062,17 +1060,12 @@ namespace MobiusEditor
                     imagePath = ofd.FileName;
                 }
             }
-            string[] modPaths = null;
-            if (ModPaths != null)
-            {
-                ModPaths.TryGetValue(gameType, out modPaths);
-            }
             Unload();
             String loading = "Loading new map";
             if (withImage)
                 loading += " from image";
             loadMultiThreader.ExecuteThreaded(
-                () => NewFile(gameType, imagePath, theater, isTdMegaMap, modPaths, this),
+                () => NewFile(gameType, imagePath, theater, isTdMegaMap, this),
                 PostLoad, true,
                 (e, l) => LoadUnloadUi(e, l, loadMultiThreader),
                 loading);
@@ -1114,13 +1107,8 @@ namespace MobiusEditor
                 MessageBox.Show(string.Format("Error loading {0}: {1}", fileInfo.Name, "Could not identify map type."), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-            string[] modPaths = null;
-            if (ModPaths != null)
-            {
-                ModPaths.TryGetValue(gameType, out modPaths);
-            }
             loadMultiThreader.ExecuteThreaded(
-                () => LoadFile(name, fileType, gameType, theater, isTdMegaMap, modPaths),
+                () => LoadFile(name, fileType, gameType, theater, isTdMegaMap),
                 PostLoad, true,
                 (e,l) => LoadUnloadUi(e, l, loadMultiThreader),
                 "Loading map");
@@ -1338,12 +1326,12 @@ namespace MobiusEditor
             }
         }
 
-        private static IGamePlugin LoadNewPlugin(GameType gameType, string theater, bool isTdMegaMap, string[] modPaths)
+        private static IGamePlugin LoadNewPlugin(GameType gameType, string theater, bool isTdMegaMap)
         {
-            return LoadNewPlugin(gameType, theater, isTdMegaMap, modPaths, false);
+            return LoadNewPlugin(gameType, theater, isTdMegaMap, false);
         }
 
-        private static IGamePlugin LoadNewPlugin(GameType gameType, string theater, bool isTdMegaMap, string[] modPaths, bool noImage)
+        private static IGamePlugin LoadNewPlugin(GameType gameType, string theater, bool isTdMegaMap, bool noImage)
         {
             // Get plugin type
             IGamePlugin plugin = null;
@@ -1365,7 +1353,7 @@ namespace MobiusEditor
             TheaterTypeConverter ttc = new TheaterTypeConverter();
             TheaterType theaterType = ttc.ConvertFrom(new MapContext(plugin.Map, false), theater);
             // Resetting to a specific game type will take care of classic mode.
-            Globals.TheArchiveManager.Reset(gameType, theaterType, modPaths);
+            Globals.TheArchiveManager.Reset(gameType, theaterType);
             Globals.TheGameTextManager.Reset(gameType);
             Globals.TheTilesetManager.Reset(theaterType);
             Globals.TheTeamColorManager.Reset(gameType, theaterType);
@@ -1454,9 +1442,8 @@ namespace MobiusEditor
         /// <param name="gameType"></param>
         /// <param name="theater"></param>
         /// <param name="isTdMegaMap"></param>
-        /// <param name="modPaths"></param>
         /// <returns></returns>
-        private static MapLoadInfo NewFile(GameType gameType, String imagePath, string theater, bool isTdMegaMap, string[] modPaths, MainForm showTarget)
+        private static MapLoadInfo NewFile(GameType gameType, String imagePath, string theater, bool isTdMegaMap, MainForm showTarget)
         {
             int imageWidth = 0;
             int imageHeight = 0;
@@ -1487,7 +1474,7 @@ namespace MobiusEditor
             bool mapLoaded = false;
             try
             {
-                plugin = LoadNewPlugin(gameType, theater, isTdMegaMap, modPaths);
+                plugin = LoadNewPlugin(gameType, theater, isTdMegaMap);
                 // This initialises the theater
                 plugin.New(theater);
                 mapLoaded = true;
@@ -1550,15 +1537,14 @@ namespace MobiusEditor
         /// <param name="fileType"></param>
         /// <param name="gameType"></param>
         /// <param name="isTdMegaMap"></param>
-        /// <param name="modPaths"></param>
         /// <returns></returns>
-        private static MapLoadInfo LoadFile(string loadFilename, FileType fileType, GameType gameType, string theater, bool isTdMegaMap, string[] modPaths)
+        private static MapLoadInfo LoadFile(string loadFilename, FileType fileType, GameType gameType, string theater, bool isTdMegaMap)
         {
             IGamePlugin plugin = null;
             bool mapLoaded = false;
             try
             {
-                plugin = LoadNewPlugin(gameType, theater, isTdMegaMap, modPaths);
+                plugin = LoadNewPlugin(gameType, theater, isTdMegaMap);
                 string[] errors = plugin.Load(loadFilename, fileType).ToArray();
                 mapLoaded = true;
                 return new MapLoadInfo(loadFilename, fileType, plugin, errors, true);
@@ -2368,7 +2354,7 @@ namespace MobiusEditor
             LoadNewIcon(waypointsToolStripButton, null, null, 9);
             LoadNewIcon(cellTriggersToolStripButton, null, null, 10);
             List<Bitmap> toDispose = new List<Bitmap>();
-            foreach (int key in theaterIcons.Keys)
+            foreach (string key in theaterIcons.Keys)
             {
                 toDispose.Add(theaterIcons[key]);
             }
@@ -2499,15 +2485,34 @@ namespace MobiusEditor
             LoadNewIcon(wallsToolStripButton, wall?.Thumbnail, plugin, 8);
             LoadNewIcon(waypointsToolStripButton, waypoint?.Image, plugin, 9);
             LoadNewIcon(cellTriggersToolStripButton, cellTrigger?.Image, plugin, 10);
-            // The Texture manager returns a clone of its own cached image. The Tileset manager caches those clones,
-            // and is responsible for their cleanup, but if we use it directly it needs to be disposed.
-            // Icon: chrono cursor from TEXTURES_SRGB.MEG
             if (Globals.TheTilesetManager is TilesetManager tsm)
             {
-                // Loaded without tileset manager, in modern only. Will need to fix this for classic later.
+                // The Texture manager returns a clone of its own cached image. The Tileset manager caches those clones again,
+                // and is responsible for their cleanup, but if we use it directly it needs to be disposed.
+                // Alt: @"DATA\ART\TEXTURES\SRGB\ICON_IONCANNON_15.DDS
+                // Chronosphere cursor from TEXTURES_SRGB.MEG
                 using (Bitmap select = tsm.TextureManager.GetTexture(@"DATA\ART\TEXTURES\SRGB\ICON_SELECT_GREEN_04.DDS", null, false).Item1)
                 {
                     LoadNewIcon(selectToolStripButton, select, plugin, 11, false);
+                }
+            }
+            else if (Globals.UseClassicFiles)
+            {
+                if (plugin.GameType == GameType.TiberianDawn || plugin.GameType == GameType.SoleSurvivor)
+                {
+                    // Ion Cannon cursor
+                    if (Globals.TheTilesetManager.GetTileData("mouse", 118, out Tile tile) && tile != null && tile.Image != null)
+                    {
+                        LoadNewIcon(selectToolStripButton, tile.Image, plugin, 11, false);
+                    }
+                }
+                else if (plugin.GameType == GameType.RedAlert)
+                {
+                    // Chronosphere cursor
+                    if (Globals.TheTilesetManager.GetTileData("mouse", 101, out Tile tile) && tile != null && tile.Image != null)
+                    {
+                        LoadNewIcon(selectToolStripButton, tile.Image, plugin, 11, false);
+                    }
                 }
             }
         }
@@ -2531,7 +2536,9 @@ namespace MobiusEditor
                 }
                 return;
             }
-            int id = ((int)plugin.GameType) << 8 | Enumerable.Range(0, plugin.Map.TheaterTypes.Count).FirstOrDefault(i => plugin.Map.TheaterTypes[i].Equals(plugin.Map.Theater)) << 4 | index;
+            string id = ((int)plugin.GameType)  + "_"
+                + Enumerable.Range(0, plugin.Map.TheaterTypes.Count).FirstOrDefault(i => plugin.Map.TheaterTypes[i].ID.Equals(plugin.Map.Theater.ID))
+                + "_" + index;
             if (theaterIcons.TryGetValue(id, out Bitmap bm))
             {
                 button.Image = bm;

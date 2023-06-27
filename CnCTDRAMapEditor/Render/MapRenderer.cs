@@ -395,6 +395,11 @@ namespace MobiusEditor.Render
 
         public static (Rectangle, Action<Graphics>) RenderSmudge(TheaterType theater, Point topLeft, Size tileSize, double tileScale, Smudge smudge)
         {
+            if (Globals.FilterTheaterObjects && smudge.Type.Theaters != null && !smudge.Type.Theaters.Contains(theater))
+            {
+                Debug.Print(string.Format("Smudge {0} ({1}) not available in this theater.", smudge.Type.Name, smudge.Icon));
+                return (Rectangle.Empty, (g) => { });
+            }
             Color tint = smudge.Tint;
             ImageAttributes imageAttributes = new ImageAttributes();
             if (tint != Color.White)
@@ -1032,29 +1037,31 @@ namespace MobiusEditor.Render
                 return (Rectangle.Empty, (g) => { });
             }
             Point point = waypoint.Point.Value;
+            bool isDefaultIcon = true;
             string tileGraphics = "beacon";
+            int icon = 0;
             ITeamColor teamColor = null;
+            double sizeMultiplier = 1;
             Color tint = waypoint.Tint;
             float brightness = 1.0f;
             int mpId = Waypoint.GetMpIdFromFlag(waypoint.Flag);
-            int icon = 0;
-            bool isDefaultIcon = true;
             bool gotTile = false;
             Tile tile;
-            double sizeMultiplier = 1;
             if (!soloMission && mpId >= 0 && mpId < flagColors.Length)
             {
                 isDefaultIcon = false;
                 tileGraphics = "flagfly";
+                icon = 0;
+                teamColor = flagColors[mpId];
                 // Always paint flags as opaque.
                 transparencyModifier = 1.0f;
-                teamColor = flagColors[mpId];
                 gotTile = Globals.TheTilesetManager.GetTeamColorTileData(tileGraphics, icon, teamColor, out tile);
             }
             else if (gameType == GameType.SoleSurvivor && (waypoint.Flag & WaypointFlag.CrateSpawn) == WaypointFlag.CrateSpawn)
             {
                 isDefaultIcon = false;
                 tileGraphics = "scrate";
+                icon = 0;
                 sizeMultiplier = 2;
                 //tint = Color.FromArgb(waypoint.Tint.A, Color.Green);
                 //brightness = 1.5f;
@@ -2263,14 +2270,12 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static void RenderLandTypes(Graphics graphics, IGamePlugin plugin, Map map, Size tileSize, Rectangle visibleCells)
+        public static void RenderLandTypes(Graphics graphics, IGamePlugin plugin, CellGrid<Template> templates, Size tileSize, Rectangle visibleCells)
         {
             // Check which cells need to be marked.
             List<(int, int)> cellsVehImpassable = new List<(int, int)>();
             List<(int, int)> cellsUnbuildable = new List<(int, int)>();
             List<(int, int)> cellsBoatMovable = new List<(int, int)>();
-            // Use this one because it might be the preview map.
-            CellGrid<Template> tmp = map.Templates;
             // Possibly fetch the terrain type for clear terrain on this theater?
             TemplateType clear = plugin.Map.TemplateTypes.Where(t => (t.Flag & TemplateTypeFlag.Clear) == TemplateTypeFlag.Clear).FirstOrDefault();
             LandType clearLand = clear.LandTypes.Length > 0 ? clear.LandTypes[0] : LandType.Clear;
@@ -2279,7 +2284,7 @@ namespace MobiusEditor.Render
             {
                 for (int x = visibleCells.X; x < visibleCells.Right; ++x)
                 {
-                    Template template = tmp[y, x];
+                    Template template = templates[y, x];
                     LandType land;
                     if (template == null)
                     {
@@ -2358,15 +2363,15 @@ namespace MobiusEditor.Render
                 // Finally, paint the actual cells.
                 foreach ((int x, int y) in cellsVehImpassable)
                 {
-                    graphics.DrawImage(bmImp, new Rectangle(tileWidth * x, tileHeight * y, tileWidth, tileHeight), 0, 0, tileWidth, tileHeight, GraphicsUnit.Pixel, imageAttributes);
+                    graphics.DrawImage(bmImp, new Rectangle(tileWidth * x, tileHeight * y, tileWidth, tileHeight), 0, 0, bmImp.Width, bmImp.Height, GraphicsUnit.Pixel, imageAttributes);
                 }
                 foreach ((int x, int y) in cellsUnbuildable)
                 {
-                    graphics.DrawImage(bmUnb, new Rectangle(tileWidth * x, tileHeight * y, tileWidth, tileHeight), 0, 0, tileWidth, tileHeight, GraphicsUnit.Pixel, imageAttributes);
+                    graphics.DrawImage(bmUnb, new Rectangle(tileWidth * x, tileHeight * y, tileWidth, tileHeight), 0, 0, bmUnb.Width, bmUnb.Height, GraphicsUnit.Pixel, imageAttributes);
                 }
                 foreach ((int x, int y) in cellsBoatMovable)
                 {
-                    graphics.DrawImage(bmWtr, new Rectangle(tileWidth * x, tileHeight * y, tileWidth, tileHeight), 0, 0, tileWidth, tileHeight, GraphicsUnit.Pixel, imageAttributes);
+                    graphics.DrawImage(bmWtr, new Rectangle(tileWidth * x, tileHeight * y, tileWidth, tileHeight), 0, 0, bmWtr.Width, bmWtr.Height, GraphicsUnit.Pixel, imageAttributes);
                 }
             }
             finally

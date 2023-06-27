@@ -946,6 +946,8 @@ namespace MobiusEditor.Tools
                 templateTypeNavigationWidget = null;
             }
             TemplateType selected = SelectedTemplateType;
+            var oldImage = templateTypeMapPanel.MapImage;
+            bool renderGrid = (this.Layers & MapLayerFlag.LandTypes) == MapLayerFlag.LandTypes;
             if (selected != null)
             {
                 if (selected.Thumbnail == null)
@@ -954,16 +956,52 @@ namespace MobiusEditor.Tools
                     // This is really only for the tile FF "research mode" on RA maps.
                     selected.Init(plugin.Map.Theater, true);
                 }
-                templateTypeMapPanel.MapImage = selected.Thumbnail;
                 var templateTypeMetrics = new CellMetrics(selected.ThumbnailIconWidth, selected.ThumbnailIconHeight);
+                CellGrid<Template> templates = null;
+                if (renderGrid)
+                {
+                    // Fill "dummy map" to apply fland types grid to it.
+                    templates = new CellGrid<Template>(templateTypeMetrics);
+                    int cell = 0;
+                    for (int y = 0; y < selected.ThumbnailIconHeight; ++y)
+                    {
+                        for (int x = 0; x < selected.ThumbnailIconWidth; ++x)
+                        {
+                            if (selected.IconMask[y, x])
+                            {
+                                templates[y, x] = new Template() { Type = selected, Icon = cell };
+                            }
+                            cell++;
+                        }
+                    }
+                }
                 templateTypeNavigationWidget = new NavigationWidget(templateTypeMapPanel, templateTypeMetrics, Globals.PreviewTileSize, false);
                 templateTypeNavigationWidget.MouseoverSize = Size.Empty;
                 templateTypeNavigationWidget.Activate();
+                Bitmap templatePreview = new Bitmap(selected.ThumbnailSize.Width * Globals.PreviewTileWidth, selected.ThumbnailSize.Height * Globals.PreviewTileHeight);
+                templatePreview.SetResolution(96, 96);
+                using (Graphics g = Graphics.FromImage(templatePreview))
+                {
+                    MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
+                    g.DrawImage(selected.Thumbnail, new Rectangle(Point.Empty, selected.Thumbnail.Size), 0, 0, templatePreview.Width, templatePreview.Height, GraphicsUnit.Pixel);
+                    if (templates != null)
+                    {
+                        MapRenderer.RenderLandTypes(g, plugin, templates, Globals.PreviewTileSize, templateTypeMetrics.Bounds); 
+                    }
+                }
+                // paint selected.Thumbnail;
+                templateTypeMapPanel.MapImage = templatePreview;
             }
             else
             {
                 templateTypeMapPanel.MapImage = null;
             }
+            if (oldImage != null)
+            {
+                try { oldImage.Dispose(); }
+                catch { /* ignore */ }
+            }
+            templateTypeMapPanel.Invalidate();
         }
 
         private void SetTemplate(Point location, bool skipInvalidate)
@@ -1724,7 +1762,7 @@ namespace MobiusEditor.Tools
             base.PostRenderMap(graphics, visibleCells);
             if ((Layers & MapLayerFlag.LandTypes) == MapLayerFlag.LandTypes)
             {
-                MapRenderer.RenderLandTypes(graphics, plugin, previewMap, Globals.MapTileSize, visibleCells);
+                MapRenderer.RenderLandTypes(graphics, plugin, previewMap.Templates, Globals.MapTileSize, visibleCells);
             }
             if (boundsMode)
             {

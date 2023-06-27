@@ -23,10 +23,10 @@ namespace MobiusEditor.Utility
 {
     public class MegafileManager : IArchiveManager
     {
-        private string[] modPaths { get; set; }
-
+        private Dictionary<GameType, string[]> modPathsPerGame;
         private readonly string looseFilePath;
         private MixfileManager mixFm;
+        private GameType currentGameType;
 
         public String LoadRoot { get; private set; }
 
@@ -34,10 +34,11 @@ namespace MobiusEditor.Utility
 
         private readonly HashSet<string> filenames = new HashSet<string>();
 
-        public MegafileManager(string loadRoot, string looseFilePath, Dictionary<GameType, String> classicGameFolders)
+        public MegafileManager(string loadRoot, string looseFilePath, Dictionary<GameType, string[]> modPaths, Dictionary<GameType, String> classicGameFolders)
         {
             this.looseFilePath = looseFilePath;
-            mixFm = new MixfileManager(loadRoot, classicGameFolders);
+            this.modPathsPerGame = modPaths;
+            mixFm = new MixfileManager(loadRoot, classicGameFolders, modPaths);
             this.LoadRoot = Path.GetFullPath(loadRoot);
         }
 
@@ -76,7 +77,7 @@ namespace MobiusEditor.Utility
             {
                 throw new ObjectDisposedException(GetType().FullName);
             }
-            if (modPaths != null && modPaths.Length > 0)
+            if (modPathsPerGame != null && modPathsPerGame.TryGetValue(currentGameType, out string[] modPaths) && modPaths != null && modPaths.Length > 0)
             {
                 foreach (string modPath in modPaths)
                 {
@@ -100,7 +101,7 @@ namespace MobiusEditor.Utility
             {
                 return File.Open(loosePath, FileMode.Open, FileAccess.Read);
             }
-            if (modPaths != null && modPaths.Length > 0)
+            if (modPathsPerGame != null && modPathsPerGame.TryGetValue(currentGameType, out string[] modPaths) && modPaths != null && modPaths.Length > 0)
             {
                 foreach (string modFilePath in modPaths)
                 {
@@ -130,10 +131,7 @@ namespace MobiusEditor.Utility
                 {
                     return null;
                 }
-                using (BinaryReader br = new BinaryReader(file))
-                {
-                    return br.ReadAllBytes();
-                }
+                return file.ReadAllBytes();
             }
         }
 
@@ -154,21 +152,18 @@ namespace MobiusEditor.Utility
                 {
                     return null;
                 }
-                using (BinaryReader br = new BinaryReader(file))
-                {
-                    return br.ReadAllBytes();
-                }
+                return file.ReadAllBytes();
             }
         }
 
-        public void Reset(GameType gameType, TheaterType theater, string[] modPaths)
+        public void Reset(GameType gameType, TheaterType theater)
         {
             if (disposedValue)
             {
                 throw new ObjectDisposedException(GetType().FullName);
             }
-            this.modPaths = modPaths;
-            mixFm.Reset(gameType, theater, modPaths);
+            this.currentGameType = gameType;
+            mixFm.Reset(gameType, theater);
         }
 
         public IEnumerator<string> GetEnumerator()

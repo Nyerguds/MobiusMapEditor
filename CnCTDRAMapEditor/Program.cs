@@ -77,7 +77,7 @@ namespace MobiusEditor
             bool loadOk = false;
             if (!Globals.UseClassicFiles && runPath != null)
             {
-                loadOk = LoadEditorRemastered(runPath);
+                loadOk = LoadEditorRemastered(runPath, modPaths);
             }
             else if (Globals.UseClassicFiles)
             {
@@ -117,7 +117,6 @@ namespace MobiusEditor
             }
             using (MainForm mainForm = new MainForm(arg))
             {
-                mainForm.ModPaths = modPaths;
                 Application.Run(mainForm);
             }
             if (SteamworksUGC.IsSteamBuild)
@@ -133,25 +132,25 @@ namespace MobiusEditor
             // Mix files should be given in order or depth, so first give ones that are in the folder, then ones that may occur inside others.
             // The order of load determines the file priority; only the first found occurrence of a file is used.
             String tdPath = Properties.Settings.Default.ClassicPathTD;
-            String tdPathFull = Path.Combine(ApplicationPath, tdPath);
+            String tdPathFull = Path.GetFullPath(Path.Combine(ApplicationPath, tdPath));
             if (!Directory.Exists(tdPathFull))
             {
                 tdPath = "Classic\\TD\\";
-                tdPathFull = Path.Combine(ApplicationPath, tdPath);
+                tdPathFull = Path.GetFullPath(Path.Combine(ApplicationPath, tdPath));
             }
             String raPath = Properties.Settings.Default.ClassicPathRA;
-            String raPathFull = Path.Combine(ApplicationPath, raPath);
+            String raPathFull = Path.GetFullPath(Path.Combine(ApplicationPath, raPath));
             if (!Directory.Exists(raPathFull))
             {
                 raPath = "Classic\\RA\\";
-                raPathFull = Path.Combine(ApplicationPath, raPath);
+                raPathFull = Path.GetFullPath(Path.Combine(ApplicationPath, raPath));
             }
             String ssPath = Properties.Settings.Default.ClassicPathSS;
-            String ssPathFull = Path.Combine(ApplicationPath, ssPath);
+            String ssPathFull = Path.GetFullPath(Path.Combine(ApplicationPath, ssPath));
             if (!Directory.Exists(ssPathFull))
             {
                 ssPath = "Classic\\TD\\";
-                ssPathFull = Path.Combine(ApplicationPath, ssPath);
+                ssPathFull = Path.GetFullPath(Path.GetFullPath(Path.Combine(ApplicationPath, ssPath)));
             }
             if (String.Equals(Path.GetFullPath(raPathFull), Path.GetFullPath(tdPathFull), StringComparison.InvariantCultureIgnoreCase))
             {
@@ -164,16 +163,18 @@ namespace MobiusEditor
                 return false;
             }
             Dictionary<GameType, String> gameFolders = new Dictionary<GameType, string>();
-            gameFolders.Add(GameType.TiberianDawn, tdPathFull);
-            gameFolders.Add(GameType.RedAlert, raPathFull);
-            gameFolders.Add(GameType.SoleSurvivor, ssPathFull);
-            MixfileManager mfm = new MixfileManager(ApplicationPath, gameFolders);
+            gameFolders.Add(GameType.TiberianDawn, tdPath);
+            gameFolders.Add(GameType.RedAlert, raPath);
+            gameFolders.Add(GameType.SoleSurvivor, ssPath);
+            MixfileManager mfm = new MixfileManager(ApplicationPath, gameFolders, modpaths);
             Globals.TheArchiveManager = mfm;
             List<string> loadErrors = new List<string>();
             // This will map the mix files to the respective games, and look for them in the respective folders.
             // Tiberian Dawn
             mfm.LoadArchive(GameType.TiberianDawn, "local.mix", false);
             mfm.LoadArchive(GameType.TiberianDawn, "cclocal.mix", false);
+            // Mod addons
+            mfm.LoadArchives(GameType.TiberianDawn, "sc*.mix", false);
             mfm.LoadArchive(GameType.TiberianDawn, "conquer.mix", false);
             // Tiberian Dawn Theaters
             mfm.LoadArchive(GameType.TiberianDawn, "desert.mix", true);
@@ -182,8 +183,8 @@ namespace MobiusEditor
             // Check files
             modpaths.TryGetValue(GameType.TiberianDawn, out string[] tdModPaths);
             modpaths.TryGetValue(GameType.SoleSurvivor, out string[] ssModPaths);
-            bool tdSsEqual = (ssModPaths).SequenceEqual(tdModPaths) && tdPathFull.Equals(ssPathFull);
-            mfm.Reset(GameType.TiberianDawn, null, tdModPaths);
+            bool tdSsEqual = ssModPaths.SequenceEqual(tdModPaths) && tdPathFull.Equals(ssPathFull);
+            mfm.Reset(GameType.TiberianDawn, null);
             List<String> loadedFiles = mfm.ToList();
             string prefix = tdSsEqual ? "TD/SS: " : "TD: ";
             if (!loadedFiles.Contains("local.mix") && !loadedFiles.Contains("cclocal.mix")) loadErrors.Add(prefix + "local.mix / cclocal.mix");
@@ -195,6 +196,8 @@ namespace MobiusEditor
             // Sole Survivor
             mfm.LoadArchive(GameType.SoleSurvivor, "local.mix", false);
             mfm.LoadArchive(GameType.SoleSurvivor, "cclocal.mix", false);
+            // Mod addons
+            mfm.LoadArchives(GameType.SoleSurvivor, "sc*.mix", false);
             mfm.LoadArchive(GameType.SoleSurvivor, "conquer.mix", false);
             // Sole Survivor Theaters
             mfm.LoadArchive(GameType.SoleSurvivor, "desert.mix", true);
@@ -203,7 +206,7 @@ namespace MobiusEditor
             // Check files
             if (!tdSsEqual)
             {
-                mfm.Reset(GameType.SoleSurvivor, null, ssModPaths);
+                mfm.Reset(GameType.SoleSurvivor, null);
                 loadedFiles = mfm.ToList();
                 prefix = "SS: ";
                 if (!loadedFiles.Contains("local.mix") && !loadedFiles.Contains("cclocal.mix")) loadErrors.Add(prefix + "local.mix / cclocal.mix");
@@ -213,16 +216,18 @@ namespace MobiusEditor
                 if (!loadedFiles.Contains("winter.mix")) loadErrors.Add(prefix + "winter.mix");
             }
             // Red Alert
-            // Aftermath expand file. Required.
+            // Aftermath expand file. Required. Contains latest strings file.
             mfm.LoadArchive(GameType.RedAlert, "expand2.mix", false, false, false, true);
             // Counterstrike expand file. All graphics from expand are also in expand2.mix,
             // but it could be used in modding to override different files. Not considered vital.
             mfm.LoadArchive(GameType.RedAlert, "expand.mix", false, false, false, true);
-            // Container archives, so not considered vital.
+            // Container archives.
             mfm.LoadArchive(GameType.RedAlert, "redalert.mix", false, true, false, true);
             mfm.LoadArchive(GameType.RedAlert, "main.mix", false, true, false, true);
             // Needed for theater palettes and the remap settings in palette.cps
             mfm.LoadArchive(GameType.RedAlert, "local.mix", false, false, true, true);
+            // Mod addons
+            mfm.LoadArchives(GameType.RedAlert, "sc*.mix", true);
             // Main graphics archive
             mfm.LoadArchive(GameType.RedAlert, "conquer.mix", false, false, true, true);
             // Infantry
@@ -236,7 +241,7 @@ namespace MobiusEditor
 
             // Check files
             modpaths.TryGetValue(GameType.RedAlert, out string[] raModPaths);
-            mfm.Reset(GameType.RedAlert, null, raModPaths);
+            mfm.Reset(GameType.RedAlert, null);
             loadedFiles = mfm.ToList();
             prefix = "RA: ";
             if (!loadedFiles.Contains("expand2.mix")) loadErrors.Add(prefix + "expand2.mix");
@@ -247,7 +252,7 @@ namespace MobiusEditor
             if (!loadedFiles.Contains("temperat.mix")) loadErrors.Add(prefix + "temperat.mix");
             if (!loadedFiles.Contains("snow.mix")) loadErrors.Add(prefix + "snow.mix");
             if (!loadedFiles.Contains("interior.mix")) loadErrors.Add(prefix + "interior.mix");
-            mfm.Reset(GameType.None, null, null);
+            mfm.Reset(GameType.None, null);
 
 #if !DEVELOPER
             if (loadErrors.Count > 0)
@@ -276,7 +281,7 @@ namespace MobiusEditor
             return true;
         }
 
-        private static bool LoadEditorRemastered(String runPath)
+        private static bool LoadEditorRemastered(String runPath, Dictionary<GameType, string[]> modPaths)
         {
             // Initialize megafiles
             Dictionary<GameType, String> gameFolders = new Dictionary<GameType, string>();
@@ -284,7 +289,7 @@ namespace MobiusEditor
             gameFolders.Add(GameType.RedAlert, "CNCDATA\\RED_ALERT\\AFTERMATH");
             gameFolders.Add(GameType.SoleSurvivor, "CNCDATA\\TIBERIAN_DAWN\\CD1");
 
-            MegafileManager mfm = new MegafileManager(Path.Combine(runPath, Globals.MegafilePath), runPath, gameFolders);
+            MegafileManager mfm = new MegafileManager(Path.Combine(runPath, Globals.MegafilePath), runPath, modPaths, gameFolders);
             var megafilesLoaded = true;
             megafilesLoaded &= mfm.LoadArchive("CONFIG.MEG");
             megafilesLoaded &= mfm.LoadArchive("TEXTURES_COMMON_SRGB.MEG");

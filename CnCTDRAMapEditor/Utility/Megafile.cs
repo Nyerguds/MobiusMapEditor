@@ -36,14 +36,14 @@ namespace MobiusEditor.Utility
 
     public class Megafile : IEnumerable<string>, IEnumerable, IDisposable
     {
+        public string MegaFileName { get; private set; }
         private readonly MemoryMappedFile megafileMap;
-
         private readonly string[] stringTable;
-
         private readonly Dictionary<string, SubFileData> fileTable = new Dictionary<string, SubFileData>();
 
         public Megafile(string megafilePath)
         {
+            MegaFileName = megafilePath;
             megafileMap = MemoryMappedFile.CreateFromFile(
                 new FileStream(megafilePath, FileMode.Open, FileAccess.Read, FileShare.Read),
                 null, 0, MemoryMappedFileAccess.Read, HandleInheritability.None, false);

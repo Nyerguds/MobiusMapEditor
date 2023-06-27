@@ -124,6 +124,15 @@ namespace MobiusEditor.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool DefaultShowLandTypes {
+            get {
+                return ((bool)(this["DefaultShowLandTypes"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("-0.5")]
         public double DefaultExportScale {
             get {
@@ -263,6 +272,15 @@ namespace MobiusEditor.Properties {
         public string ClassicPathSS {
             get {
                 return ((string)(this["ClassicPathSS"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool ReportMissionDetection {
+            get {
+                return ((bool)(this["ReportMissionDetection"]));
             }
         }
         

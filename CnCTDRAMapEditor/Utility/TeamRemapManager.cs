@@ -135,14 +135,14 @@ namespace MobiusEditor.Utility
             {
                 return;
             }
-            byte[] cpsData = null;
             Byte[] cpsFileBytes = this.mixfileManager.ReadFile(path);
-            if (cpsData == null)
+            if (cpsFileBytes == null)
             {
                 // Not found; ignore and do nothing. Don't reset the current remaps unless a valid cps file is actually
                 // found, since the remap manager will also be requested to attempt to read the remaster xml file.
                 return;
             }
+            byte[] cpsData;
             try
             {
                 cpsData = ClassicSpriteLoader.GetCpsData(cpsFileBytes, out _);
@@ -227,22 +227,16 @@ namespace MobiusEditor.Utility
                 return Enumerable.Range(0, 0x100).Select(i => Color.FromArgb(i, i, i)).ToArray();
             }
             // file manager should already be reset to read from the correct game at this point.
-            using (Stream palette = archiveManager.OpenFile(theater.ClassicTileset + ".pal"))
+
+            byte[] pal = archiveManager.ReadFile(theater.ClassicTileset + ".pal");
+            if (pal == null)
             {
-                if (palette == null)
-                {
-                    // Grayscale palette; looks awful but still allows distinguishing stuff.
-                    colors = Enumerable.Range(0, 0x100).Select(i => Color.FromArgb(i, i, i)).ToArray();
-                }
-                else
-                {
-                    byte[] pal;
-                    using (BinaryReader sr = new BinaryReader(palette))
-                    {
-                        pal = GeneralUtils.ReadAllBytes(sr);
-                    }
-                    colors = ClassicSpriteLoader.LoadSixBitPalette(pal, 0, 0x100);
-                }
+                // Grayscale palette; looks awful but still allows distinguishing stuff.
+                colors = Enumerable.Range(0, 0x100).Select(i => Color.FromArgb(i, i, i)).ToArray();
+            }
+            else
+            {
+                colors = ClassicSpriteLoader.LoadSixBitPalette(pal, 0, 0x100);
             }
             // Set background transparent
             colors[0] = Color.FromArgb(0x00, colors[0]);

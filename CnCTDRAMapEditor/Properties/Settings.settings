@@ -83,6 +83,9 @@
     <Setting Name="ClassicPathSS" Type="System.String" Scope="Application">
       <Value Profile="(Default)">Classic\TD</Value>
     </Setting>
+    <Setting Name="ReportMissionDetection" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
     <Setting Name="EnforceObjectMaximums" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>

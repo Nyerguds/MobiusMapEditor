@@ -477,10 +477,11 @@ namespace MobiusEditor.TiberianDawn
                         {
                             throw new ApplicationException("Cannot find the necessary files inside the " + Path.GetFileName(path) + " archive.");
                         }
-                        using (BinaryReader iniReader = new BinaryReader(megafile.OpenFile(iniFile)))
-                        using (BinaryReader binReader = new BinaryReader(megafile.OpenFile(binFile)))
+                        using (Stream iniStream = megafile.OpenFile(iniFile))
+                        using (Stream binStream = megafile.OpenFile(binFile))
+                        using (BinaryReader binReader = new BinaryReader(binStream))
                         {
-                            iniBytes = iniReader.ReadAllBytes();
+                            iniBytes = iniStream.ReadAllBytes();
                             ParseIniContent(ini, iniBytes, forSole);
                             errors.AddRange(LoadINI(ini, false, ref modified));
                             long mapLen = binReader.BaseStream.Length;
@@ -1854,8 +1855,11 @@ namespace MobiusEditor.TiberianDawn
                     || triggers.Any(t => t.Event1.EventType == EventTypes.EVENT_ANY && t.Action1.ActionType == ActionTypes.ACTION_WINLOSE));
             if (switchedToSolo)
             {
-                errors.Insert(0, "Filename detected as classic single player mission format, and win and lose trigger detected. Applying \"SoloMission\" flag.");
                 Map.BasicSection.SoloMission = true;
+                if (Globals.ReportMissionDetection)
+                {
+                    errors.Insert(0, "Filename detected as classic single player mission format, and win and lose trigger detected. Applying \"SoloMission\" flag.");
+                }
             }
             Map.EndUpdate();
             return errors;

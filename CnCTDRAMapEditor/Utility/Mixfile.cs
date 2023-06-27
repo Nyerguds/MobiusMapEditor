@@ -86,9 +86,9 @@ namespace MobiusEditor.Utility
             bool encrypted = false;
             //bool checksum = false;
             byte[] buffer;
-            using (BinaryReader headerReader = new BinaryReader(this.CreateViewStream(mixMap, mixStart, mixLength, readOffset, 2)))
+            using (Stream headerStream = this.CreateViewStream(mixMap, mixStart, mixLength, readOffset, 2))
             {
-                buffer = headerReader.ReadBytes(2);
+                buffer = headerStream.ReadAllBytes();
                 ushort start = ArrayUtils.ReadUInt16FromByteArrayLe(buffer, 0);
                 if (start == 0)
                 {
@@ -108,9 +108,9 @@ namespace MobiusEditor.Utility
             }
             if (hasFlags)
             {
-                using (BinaryReader headerReader = new BinaryReader(this.CreateViewStream(mixMap, mixStart, mixLength, readOffset, 2)))
+                using (Stream headerStream = this.CreateViewStream(mixMap, mixStart, mixLength, readOffset, 2))
                 {
-                    buffer = headerReader.ReadBytes(2);
+                    buffer = headerStream.ReadAllBytes();
                     ushort flags = ArrayUtils.ReadUInt16FromByteArrayLe(buffer, 0);
                     //checksum = (flags & 1) != 0;
                     encrypted = (flags & 2) != 0;
@@ -118,9 +118,9 @@ namespace MobiusEditor.Utility
                 }
                 if (!encrypted)
                 {
-                    using (BinaryReader headerReader = new BinaryReader(this.CreateViewStream(mixMap, mixStart, mixLength, readOffset, 2)))
+                    using (Stream headerStream = this.CreateViewStream(mixMap, mixStart, mixLength, readOffset, 2))
                     {
-                        buffer = headerReader.ReadBytes(2);
+                        buffer = headerStream.ReadAllBytes();
                         fileCount = ArrayUtils.ReadUInt16FromByteArrayLe(buffer, 0);
                         // Don't increase read offset when reading file count, to keep it synchronised for the encrypted stuff.
                     }
@@ -143,9 +143,9 @@ namespace MobiusEditor.Utility
                 {
                     throw new ArgumentException("mixMap", "Not a valid mix file: header length exceeds file length.");
                 }
-                using (BinaryReader headerReader = new BinaryReader(this.CreateViewStream(mixMap, mixStart, mixLength, readOffset, headerSize)))
+                using (Stream headerStream = this.CreateViewStream(mixMap, mixStart, mixLength, readOffset, headerSize))
                 {
-                    header = headerReader.ReadBytes((Int32)headerSize);
+                    header = headerStream.ReadAllBytes();
                     // End of header reading; no longer needed.
                     //readOffset += headerSize;
                 }
@@ -245,17 +245,17 @@ namespace MobiusEditor.Utility
             Array.Copy(derKeyBytes, 2, modulusBytes, 0, modulusBytes.Length);
             // Read blocks
             byte[] readBlock;
-            using (BinaryReader headerReader = new BinaryReader(this.CreateViewStream(mixMap, mixStart, mixLength, readOffset, 40)))
+            using (Stream headerStream = this.CreateViewStream(mixMap, mixStart, mixLength, readOffset, 40))
             {
-                readBlock = headerReader.ReadAllBytes();
+                readBlock = headerStream.ReadAllBytes();
                 readOffset += 40;
             }
             // Read data is little endian. BigInteger uses big endian.
             Array.Reverse(readBlock);
             BigInteger value1 = new BigInteger(readBlock);
-            using (BinaryReader headerReader = new BinaryReader(this.CreateViewStream(mixMap, mixStart, mixLength, readOffset, 40)))
+            using (Stream headerStream = this.CreateViewStream(mixMap, mixStart, mixLength, readOffset, 40))
             {
-                readBlock = headerReader.ReadAllBytes();
+                readBlock = headerStream.ReadAllBytes();
                 readOffset += 40;
             }
             Array.Reverse(readBlock);
@@ -288,9 +288,9 @@ namespace MobiusEditor.Utility
             IBufferedCipher blowfish = CipherUtilities.GetCipher("Blowfish/ECB/NoPadding");
             blowfish.Init(false, new KeyParameter(blowFishKey));
             Byte[] blowBuffer = new byte[8];
-            using (BinaryReader headerReader = new BinaryReader(this.CreateViewStream(mixMap, mixStart, mixLength, readOffset, 8)))
+            using (Stream headerStream = this.CreateViewStream(mixMap, mixStart, mixLength, readOffset, 8))
             {
-                readBlock = headerReader.ReadAllBytes();
+                readBlock = headerStream.ReadAllBytes();
                 blowfish.ProcessBytes(readBlock, 0, 8, blowBuffer, 0);
             }
             ushort fileCount = ArrayUtils.ReadUInt16FromByteArrayLe(blowBuffer, 0);
@@ -310,9 +310,9 @@ namespace MobiusEditor.Utility
             Array.Copy(blowBuffer, 0, decryptedHeader, 0, blowBuffer.Length);
             int bfOffsetIn = 0;
             int bfOffsetOut = 8;
-            using (BinaryReader headerReader = new BinaryReader(this.CreateViewStream(mixMap, mixStart, mixLength, readOffset, realHeaderSize - 8)))
+            using (Stream headerStream = this.CreateViewStream(mixMap, mixStart, mixLength, readOffset, realHeaderSize - 8))
             {
-                readBlock = headerReader.ReadAllBytes();
+                readBlock = headerStream.ReadAllBytes();
                 for (int i = 0; i < blocksToRead; i++)
                 {
                     blowfish.ProcessBytes(readBlock, bfOffsetIn, 8, decryptedHeader, bfOffsetOut);

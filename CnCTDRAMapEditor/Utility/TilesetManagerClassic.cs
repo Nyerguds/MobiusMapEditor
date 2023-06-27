@@ -193,7 +193,7 @@ namespace MobiusEditor.Utility
             // If it has an extension, force it.
             if (Path.HasExtension(name))
             {
-                fileContents = GetFileContents(name);
+                fileContents = archiveManager.ReadFile(name);
                 // Immediately abort; classic file system does not support double extensions.
                 if (fileContents == null)
                 {
@@ -203,12 +203,12 @@ namespace MobiusEditor.Utility
             // Try theater extension, then ".shp".
             if (fileContents == null)
             {
-                fileContents = GetFileContents(name + "." + theater.ClassicExtension);
+                fileContents = archiveManager.ReadFile(name + "." + theater.ClassicExtension);
             }
             if (fileContents == null)
             {
                 isShpExt = true;
-                fileContents = GetFileContents(name + ".shp");
+                fileContents = archiveManager.ReadFile(name + ".shp");
             }
             if (fileContents == null)
             {
@@ -375,23 +375,5 @@ namespace MobiusEditor.Utility
             frameData.IsDummy = true;
             return frameData;
         }
-
-        private Byte[] GetFileContents(String name)
-        {
-            Byte[] fileContents = null;
-            using (Stream stream = archiveManager.OpenFile(name))
-            {
-                if (stream != null)
-                {
-                    using (BinaryReader sr = new BinaryReader(stream))
-                    {
-                        fileContents = sr.ReadAllBytes();
-                    }
-                }
-            }
-            return fileContents;
-        }
-
-
     }
 }
