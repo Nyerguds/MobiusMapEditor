@@ -141,13 +141,16 @@ namespace MobiusEditor.Model
             return this.Name;
         }
 
-        public void Init(GameType gameType, HouseType house, DirectionType direction)
+        public void Init(GameType gameType, HouseType house, DirectionType direction, bool fullInit)
         {
             // Required for classic mode: reset name.
             this.DisplayName = !String.IsNullOrEmpty(this.nameId) && !String.IsNullOrEmpty(Globals.TheGameTextManager[this.nameId])
                 ? Globals.TheGameTextManager[this.nameId] + " (" + this.Name.ToUpperInvariant() + ")"
                 : this.Name.ToUpperInvariant();
-
+            if (!fullInit)
+            {
+                return;
+            }
             Bitmap oldImage = this.Thumbnail;
             Unit mockUnit = new Unit()
             {
