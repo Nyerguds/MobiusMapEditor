@@ -14,6 +14,7 @@
 using MobiusEditor.Controls.ControlsList;
 using MobiusEditor.Interface;
 using MobiusEditor.Model;
+using MobiusEditor.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -47,8 +48,8 @@ namespace MobiusEditor.Controls
                 this.m_Loading = true;
                 this.Info = null;
                 this.m_Controller = controller;
-                ITechnoType[] technoTypes = technos.ToArray();
-                this.defaultType = technoTypes.FirstOrDefault();
+                ListItem<ITechnoType>[] technoTypes = technos.Select(t => ListItem.MakeListItem(t, t.DisplayName)).ToArray();
+                this.defaultType = technoTypes.FirstOrDefault()?.Value;
                 this.cmbTechno.DisplayMember = null;
                 this.cmbTechno.DataSource = null;
                 this.cmbTechno.Items.Clear();
@@ -69,7 +70,8 @@ namespace MobiusEditor.Controls
             {
                 this.m_Loading = true;
                 this.Info = info;
-                this.cmbTechno.SelectedItem = info != null ? info.Type : defaultType;
+                this.cmbTechno.SelectedIndex = ListItem.GetIndexInDropdown(info != null ? info.Type : defaultType, this.cmbTechno);
+                //this.cmbTechno.SelectedItem = info != null ? info.Type : defaultType;
                 this.numAmount.Value = info != null ? info.Count : 0;
             }
             finally
@@ -89,7 +91,7 @@ namespace MobiusEditor.Controls
             {
                 return;
             }
-            this.Info.Type = this.cmbTechno.SelectedItem as ITechnoType;
+            this.Info.Type = ListItem.GetValueFromDropdown(this.cmbTechno, defaultType);
         }
 
         private void numAmount_ValueChanged(Object sender, EventArgs e)

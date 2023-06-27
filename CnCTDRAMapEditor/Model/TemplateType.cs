@@ -52,6 +52,7 @@ namespace MobiusEditor.Model
 
     public enum LandType
     {
+        None = 0,  // Uninitialised.
         Clear,     // "Clear" terrain.
         Road,      // Road terrain.
         Water,     // Water.

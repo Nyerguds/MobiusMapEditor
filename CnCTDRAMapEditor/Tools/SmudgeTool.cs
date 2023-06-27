@@ -284,6 +284,11 @@ namespace MobiusEditor.Tools
                 for (int x = 0; x < size.Width; ++x)
                 {
                     placeLocation.X = location.X + x;
+                    if (!map.Metrics.Contains(placeLocation))
+                    {
+                        icon++;
+                        continue;
+                    }
                     Smudge existingBib = map.Smudge[placeLocation];
                     if (existingBib != null && existingBib.Type.IsAutoBib)
                     {
@@ -382,6 +387,10 @@ namespace MobiusEditor.Tools
             foreach (Point loc in toClear.Points())
             {
                 SmudgeType smudgeType;
+                if (!map.Metrics.Contains(loc))
+                {
+                    continue;
+                }
                 if (!(map.Smudge[loc] is Smudge smudge) || (smudgeType = smudge.Type).IsAutoBib)
                 {
                     continue;
@@ -396,6 +405,11 @@ namespace MobiusEditor.Tools
                     for (int x = 0; x < size.Width; ++x)
                     {
                         removeLocation.X = baseLocation.X + x;
+                        if (!map.Metrics.Contains(removeLocation))
+                        {
+                            curIcon++;
+                            continue;
+                        }
                         var foundSmudge = map.Smudge[removeLocation];
                         if (isMultiCell && foundSmudge != null && (!smudgeType.Equals(foundSmudge.Type) || foundSmudge.Icon != curIcon))
                         {
@@ -425,7 +439,7 @@ namespace MobiusEditor.Tools
             {
                 // scan smudges from bottom to top, right to left, to find if any cell from a nearby smudge should occupy this location.
                 Rectangle scanRect = new Rectangle(loc.X - maxW + 1, loc.Y - maxH + 1, maxW * 2 - 1, maxH * 2 - 1);
-                foreach (Point p in scanRect.Points().Where(p => map.Metrics.Bounds.Contains(p)).OrderByDescending(p => p.X).ThenByDescending(p => p.Y))
+                foreach (Point p in scanRect.Points().Where(p => map.Metrics.Contains(p)).OrderByDescending(p => p.X).ThenByDescending(p => p.Y))
                 {
                     Smudge toFix = map.Smudge[p];
                     SmudgeType toFixType = toFix?.Type;
@@ -459,6 +473,10 @@ namespace MobiusEditor.Tools
             List<Point> found = new List<Point>();
             foreach (Point p in scanRect.Points())
             {
+                if (!map.Metrics.Contains(p))
+                {
+                    continue;
+                }
                 Smudge toCheck = map.Smudge[p];
                 SmudgeType toFindType = toCheck?.Type;
                 if (toFindType == null)
@@ -543,29 +561,31 @@ namespace MobiusEditor.Tools
 
         private void PickSmudge(Point location)
         {
-            if (map.Metrics.GetCell(location, out int cell))
+            if (!map.Metrics.GetCell(location, out int cell))
             {
-                var smudge = map.Smudge[cell];
-                if (smudge != null)
+                return;
+            }
+            var smudge = map.Smudge[cell];
+            if (smudge == null)
+            {
+                return;
+            }
+            SmudgeType picked = smudge.Type;
+            // convert building bib back to usable bib
+            if (picked.IsAutoBib)
+            {
+                SmudgeType sm = map.SmudgeTypes.FirstOrDefault(s => !s.IsAutoBib && s.Name == picked.Name);
+                if (sm != null)
                 {
-                    SmudgeType picked = smudge.Type;
-                    // convert building bib back to usable bib
-                    if (picked.IsAutoBib)
-                    {
-                        SmudgeType sm = map.SmudgeTypes.FirstOrDefault(s => !s.IsAutoBib && s.Name == picked.Name);
-                        if (sm != null)
-                        {
-                            mockSmudge.Icon = 0;
-                            SelectedSmudgeType = sm;
-                        }
-                    }
-                    else
-                    {
-                        mockSmudge.Icon = 0;
-                        SelectedSmudgeType = picked;
-                        mockSmudge.Icon = Math.Min(smudge.Type.Icons - 1, picked.IsMultiCell ? 0 : smudge.Icon);
-                    }
+                    mockSmudge.Icon = 0;
+                    SelectedSmudgeType = sm;
                 }
+            }
+            else
+            {
+                mockSmudge.Icon = 0;
+                SelectedSmudgeType = picked;
+                mockSmudge.Icon = Math.Min(smudge.Type.Icons - 1, picked.IsMultiCell ? 0 : smudge.Icon);
             }
         }
 
@@ -655,6 +675,10 @@ namespace MobiusEditor.Tools
                     {
                         mock.Icon = icon++;
                     }
+                    if (!previewMap.Metrics.Contains(placeLocation))
+                    {
+                        continue;
+                    }
                     Smudge oldSmudge = previewMap.Smudge[placeLocation];
                     if (oldSmudge != null && oldSmudge.Type.IsAutoBib)
                     {
@@ -692,7 +716,7 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseLeave += MapPanel_MouseLeave;
             (this.mapPanel as Control).KeyDown += SmudgeTool_KeyDown;
             (this.mapPanel as Control).KeyUp += SmudgeTool_KeyUp;
-            navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
+            navigationWidget.BoundsMouseCellChanged += MouseoverWidget_MouseCellChanged;
             this.UpdateStatus();
         }
 
@@ -714,7 +738,7 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseLeave -= MapPanel_MouseLeave;
             (this.mapPanel as Control).KeyDown -= SmudgeTool_KeyDown;
             (this.mapPanel as Control).KeyUp -= SmudgeTool_KeyUp;
-            this.navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;
+            this.navigationWidget.BoundsMouseCellChanged -= MouseoverWidget_MouseCellChanged;
         }
 
         #region IDisposable Support

@@ -553,7 +553,16 @@ namespace MobiusEditor.Model
                 DirectionType unitDir = this.UnitDirectionTypes.Where(d => d.Facing == FacingType.SouthWest).First();
                 foreach (UnitType unitType in this.AllUnitTypes)
                 {
-                    unitType.Init(gameType, this.HouseTypesIncludingNone.Where(h => h.Equals(unitType.OwnerHouse)).FirstOrDefault(), unitDir);
+                    unitType.Init(gameType, this.HouseTypesIncludingNone.Where(h => h.Equals(unitType.OwnerHouse)).FirstOrDefault(), unitDir, true);
+                }
+                if (Globals.DisableAirUnits)
+                {
+                    // Necessary for initialising the full name to show in teamtypes.
+                    // If DisableAirUnits is false, this is done along with the other units.
+                    foreach (UnitType airUnit in this.AllTeamTechnoTypes.OfType<UnitType>().Where(u => u.IsAircraft))
+                    {
+                        airUnit.Init(gameType, this.HouseTypesIncludingNone.Where(h => h.Equals(airUnit.OwnerHouse)).FirstOrDefault(), unitDir, false);
+                    }
                 }
                 DirectionType bldDir = this.UnitDirectionTypes.Where(d => d.Facing == FacingType.North).First();
                 foreach (BuildingType buildingType in this.BuildingTypes.Where(itm => !Globals.FilterTheaterObjects || itm.Theaters == null || itm.Theaters.Contains(this.Theater)))
@@ -1026,7 +1035,7 @@ namespace MobiusEditor.Model
         {
             if (!this.Metrics.GetCell(location, out int cell))
             {
-                return "No cell";
+                return String.Format("X = {0}, Y = {1}, No cell", location.X, location.Y);
             }
             bool inBounds = this.Bounds.Contains(location);
             StringBuilder sb = new StringBuilder();

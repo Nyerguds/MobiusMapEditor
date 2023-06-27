@@ -449,9 +449,10 @@ Unreleased
 Feature updates:
 
 * Added support for reading and using classic game files, making the editor independent from the C&C Remaster.
+* Added the ability for classic mode to use classic mods, reading files from the "ccdata" folder in any C&C Remastered mod. This includes the ability to read any sc*.mix files that happen to be in these folders.
 * Vastly optimised editor responsiveness by only drawing map indicators inside the shown area, rather than processing them for the whole map.
 * Optimised preview generation by not rendering the preview in full resolution first.
-* Added an option under "Extra Indicators" to show the map tile passability.
+* Added an option under "Extra Indicators" to show the map tile passability. This will also be shown on the map tile tool's preview pane.
 * Preview generation will now add waypoint flags to multiplayer maps.
 * Changed "outlines on overlapped crates" option to "outlines on overlapped objects", and made it work for units and infantry too.
 * Pressing the PageUp and PageDown buttons while the main window is selected will now consistently move through the tool's item choices, in all editing modes.
@@ -466,6 +467,10 @@ Feature updates:
 * Added a warning when RA ant units or structures are used in the map, but no rule definitions for them exist in the ini.
 * Added an option in the trigger filter dialog to filter on triggers. This will filter out the trigger itself, and any triggers destroying or forcing the selected trigger.
 * When an RA trigger is set to type E1->A1, E2->A2, the controls for the events and actions will be reordered to accurately represent this.
+* Added zoom options to the View menu.
+* Added F-keys as shortcuts for the "Extra Indicator" options in the View menu .
+* The user can now place map tiles partially outside the map at the top and left side.
+* Teamtypes now show full unit names.
 
 Map logic updates:
 
@@ -500,4 +505,5 @@ Program bug fixes:
 * The placement grid is now also shown when using the flood-fill function.
 * Fixed the cell selection indicator and the bottom info bar not immediately refreshing when using the arrow keys to scroll around the map.
 * The auto-zoom on map load is now slightly more accurate.
-* Fixed a bug in the dragging logic that made the mouse position and map desynchronise or not work at all when dragging very slowly.
+* Fixed a bug in the dragging logic that made the mouse position and map desynchronise or not work at all when dragging very slowly.* Fixed bugs in the logic to zoom to the map bounds.
+* Fixed crashes that occurred when dragging bibs and buildings out of the left or bottom of the map bounds.

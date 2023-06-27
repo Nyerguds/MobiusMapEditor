@@ -137,6 +137,7 @@ namespace MobiusEditor.Widgets
         }
 
         public event EventHandler<MouseCellChangedEventArgs> MouseCellChanged;
+        public event EventHandler<MouseCellChangedEventArgs> BoundsMouseCellChanged;
         public event EventHandler<MouseCellChangedEventArgs> ClosestMouseCellBorderChanged;
 
         public NavigationWidget(MapPanel mapPanel, CellMetrics metrics, Size cellSize, bool includeNavigation)
@@ -236,9 +237,9 @@ namespace MobiusEditor.Widgets
                     mapPanel.AutoScrollPosition = newScrollPos;
                 }
             }
-            Point newMouseCell = GetMouseCellPosition(location, out Point subPixel);
+            Point newCell = GetMouseCellPosition(location, out Point subPixel);
             MouseSubPixel = subPixel;
-            Point newClosestMouseCellBorder = newMouseCell;
+            Point newClosestMouseCellBorder = newCell;
             if (MouseSubPixel.X >= Globals.PixelWidth / 2)
             {
                 newClosestMouseCellBorder.X += 1;
@@ -247,18 +248,27 @@ namespace MobiusEditor.Widgets
             {
                 newClosestMouseCellBorder.Y += 1;
             }
-            bool mouseCellChanged = MouseCell != newMouseCell;
+            bool mouseCellChanged = ActualMouseCell != newCell;
             bool closestChanged = ClosestMouseCellBorder != newClosestMouseCellBorder;
             if (mouseCellChanged)
             {
-                bool mouseInBounds = Metrics.Contains(newMouseCell);
+                bool mouseInBounds = Metrics.Contains(newCell);
                 this.MouseInBounds = mouseInBounds;
-                if (mouseInBounds) {
-                    var oldCell = MouseCell;
-                    MouseCell = newMouseCell;
-                    MouseCellChanged?.Invoke(this, new MouseCellChangedEventArgs(oldCell, MouseCell, Control.MouseButtons));
+                var oldCellBounds = MouseCell;
+                var oldCell = ActualMouseCell;
+                Point newCellBounds = newCell;
+                newCellBounds.X = Math.Max(0, Math.Min(Metrics.Width - 1, newCellBounds.X));
+                newCellBounds.Y = Math.Max(0, Math.Min(Metrics.Height - 1, newCellBounds.Y));
+                MouseCell = newCellBounds;
+                ActualMouseCell = newCell;
+                if (oldCell != newCell)
+                {
+                    MouseCellChanged?.Invoke(this, new MouseCellChangedEventArgs(oldCell, newCell, Control.MouseButtons));
                 }
-                ActualMouseCell = newMouseCell;
+                if (oldCellBounds != newCellBounds)
+                {
+                    BoundsMouseCellChanged?.Invoke(this, new MouseCellChangedEventArgs(oldCellBounds, newCellBounds, Control.MouseButtons));
+                }
             }
             // This excludes the outer border, but that's okay; it's not allowed for border dragging anyway.
             if (closestChanged && Metrics.Contains(newClosestMouseCellBorder) && newClosestMouseCellBorder.X > 0 && newClosestMouseCellBorder.Y > 0)
@@ -277,10 +287,21 @@ namespace MobiusEditor.Widgets
         public Point GetMouseCellPosition(Point location, out Point subPixel)
         {
             Point newMousePosition = mapPanel.ClientToMap(location);
+            //Console.WriteLine("Mouse pos: (" + newMousePosition.X + ", " + newMousePosition.Y + ")");
             subPixel = new Point(
                 (newMousePosition.X * Globals.PixelWidth / CellSize.Width) % Globals.PixelWidth,
                 (newMousePosition.Y * Globals.PixelHeight / CellSize.Height) % Globals.PixelHeight
             );
+            //Console.WriteLine("Mouse pos subcell: (" + subPixel.X + ", " + subPixel.Y + ")");
+            if (newMousePosition.X < 0)
+            {
+                newMousePosition.X -= CellSize.Width;
+            }
+            if (newMousePosition.Y < 0)
+            {
+                newMousePosition.Y -= CellSize.Height;
+            }
+            //Console.WriteLine("Mouse pos cell: (" + (newMousePosition.X / CellSize.Width) + ", " + (newMousePosition.Y / CellSize.Height) + ")");
             return new Point(newMousePosition.X / CellSize.Width, newMousePosition.Y / CellSize.Height);
         }
 

@@ -600,7 +600,7 @@ namespace MobiusEditor.Tools
             (this.mapPanel as Control).KeyDown += TerrainTool_KeyDown;
             (this.mapPanel as Control).KeyUp += TerrainTool_KeyUp;
             this.UpdateStatus();
-            this.navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
+            this.navigationWidget.BoundsMouseCellChanged += MouseoverWidget_MouseCellChanged;
         }
 
         public override void Deactivate()
@@ -622,7 +622,7 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseLeave -= MapPanel_MouseLeave;
             (this.mapPanel as Control).KeyDown -= TerrainTool_KeyDown;
             (this.mapPanel as Control).KeyUp -= TerrainTool_KeyUp;
-            this.navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;
+            this.navigationWidget.BoundsMouseCellChanged -= MouseoverWidget_MouseCellChanged;
         }
 
         #region IDisposable Support

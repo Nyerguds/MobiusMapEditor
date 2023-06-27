@@ -126,14 +126,21 @@ namespace MobiusEditor
             this.Left = location.X;
             this.Top = location.Y;
 
-            // Loaded from global settings.
-            toolsOptionsBoundsObstructFillMenuItem.Checked = Globals.BoundsObstructFill;
-            toolsOptionsSafeDraggingMenuItem.Checked = Globals.TileDragProtect;
-            toolsOptionsRandomizeDragPlaceMenuItem.Checked = Globals.TileDragRandomize;
-            toolsOptionsPlacementGridMenuItem.Checked = Globals.ShowPlacementGrid;
-            toolsOptionsOutlineAllCratesMenuItem.Checked = Globals.OutlineAllCrates;
-            toolsOptionsCratesOnTopMenuItem.Checked = Globals.CratesOnTop;
-            viewExtraIndicatorsMapGridMenuItem.Checked = Globals.ShowMapGrid;
+            // Synced from app settings.
+            this.toolsOptionsBoundsObstructFillMenuItem.Checked = Globals.BoundsObstructFill;
+            this.toolsOptionsSafeDraggingMenuItem.Checked = Globals.TileDragProtect;
+            this.toolsOptionsRandomizeDragPlaceMenuItem.Checked = Globals.TileDragRandomize;
+            this.toolsOptionsPlacementGridMenuItem.Checked = Globals.ShowPlacementGrid;
+            this.toolsOptionsOutlineAllCratesMenuItem.Checked = Globals.OutlineAllCrates;
+            this.toolsOptionsCratesOnTopMenuItem.Checked = Globals.CratesOnTop;
+
+            // Loaded directly from settings file setting and applied to checkboxes.
+            this.viewExtraIndicatorsMapSymmetryMenuItem.Checked = Properties.Settings.Default.DefaultExtraSymmetry;
+            this.viewExtraIndicatorsMapGridMenuItem.Checked = Properties.Settings.Default.DefaultExtraMapGrid;
+            this.viewExtraIndicatorsEffectAreaRadiusMenuItem.Checked = Properties.Settings.Default.DefaultExtraEffectRadiuses;
+            this.viewExtraIndicatorsWaypointRevealRadiusMenuItem.Checked = Properties.Settings.Default.DefaultExtraWaypointReveal;
+            this.viewExtraIndicatorsMapPassabilityMenuItem.Checked = Properties.Settings.Default.DefaultExtraPassability;
+
             // Obey the settings.
             this.mapPanel.SmoothScale = Globals.MapSmoothScale;
             this.mapPanel.BackColor = Globals.MapBackColor;
@@ -264,6 +271,9 @@ namespace MobiusEditor
                     case OemScanCode.H:
                         selectToolStripButton.PerformClick();
                         return true;
+                    case OemScanCode.NumPadAsterisk:
+                        viewZoomResetMenuItem.PerformClick();
+                        return true;
                 }
                 // Map navigation shortcuts (zoom and move the camera around)
                 if (plugin != null && mapPanel.MapImage != null && activeTool != null)
@@ -285,11 +295,11 @@ namespace MobiusEditor
                             break;
                         case Keys.Oemplus:
                         case Keys.Add:
-                            mapPanel.IncreaseZoomStep();
+                            viewZoomInMenuItem.PerformClick();
                             return true;
                         case Keys.OemMinus:
                         case Keys.Subtract:
-                            mapPanel.DecreaseZoomStep();
+                            viewZoomOutMenuItem.PerformClick();
                             return true;
                     }
                     if (delta != Point.Empty)
@@ -995,6 +1005,30 @@ namespace MobiusEditor
                 imex.StartPosition = FormStartPosition.CenterParent;
                 imex.ShowDialog(this);
             }
+        }
+
+        private void ViewZoomInMenuItem_Click(Object sender, EventArgs e)
+        {
+            mapPanel.IncreaseZoomStep();
+        }
+
+        private void ViewZoomOutMenuItem_Click(Object sender, EventArgs e)
+        {
+            mapPanel.DecreaseZoomStep();
+        }
+
+        private void ViewZoomResetMenuItem_Click(Object sender, EventArgs e)
+        {
+            mapPanel.Zoom = 1.0;
+        }
+
+        private void ViewZoomBoundsMenuItem_Click(Object sender, EventArgs e)
+        {
+            lock (jumpToBounds_lock)
+            {
+                this.jumpToBounds = true;
+            }
+            mapPanel.Refresh();
         }
 
         private void Mru_FileSelected(object sender, FileInfo e)
@@ -2582,7 +2616,11 @@ namespace MobiusEditor
                     {
                         Rectangle rect = plugin.Map.Bounds;
                         rect.Inflate(1, 1);
-                        if (plugin.Map.Metrics.Bounds != rect)
+                        if (plugin.Map.Metrics.Bounds == rect)
+                        {
+                            mapPanel.Zoom = 1.0;
+                        }
+                        else
                         {
                             mapPanel.JumpToPosition(plugin.Map.Metrics, rect, true);
                         }

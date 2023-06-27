@@ -372,8 +372,13 @@ namespace MobiusEditor.Tools
                     }
                     foreach (Point newBibPoint in newBibPoints)
                     {
+                        if (!map.Metrics.Contains(newBibPoint))
+                        {
+                            continue;
+                        }
                         Smudge oldSmudge = map.Smudge[newBibPoint];
-                        if (oldSmudge != null && !oldSmudge.Type.IsAutoBib && !selectedBuildingEatenSmudge.ContainsKey(newBibPoint)) {
+                        if (oldSmudge != null && !oldSmudge.Type.IsAutoBib && !selectedBuildingEatenSmudge.ContainsKey(newBibPoint))
+                        {
                             selectedBuildingEatenSmudge.Add(newBibPoint, oldSmudge);
                         }
                     }
@@ -886,7 +891,7 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseLeave += MapPanel_MouseLeave;
             (this.mapPanel as Control).KeyDown += BuildingTool_KeyDown;
             (this.mapPanel as Control).KeyUp += BuildingTool_KeyUp;
-            this.navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
+            this.navigationWidget.BoundsMouseCellChanged += MouseoverWidget_MouseCellChanged;
             this.UpdateStatus();
         }
 
@@ -909,7 +914,7 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseLeave -= MapPanel_MouseLeave;
             (this.mapPanel as Control).KeyDown -= BuildingTool_KeyDown;
             (this.mapPanel as Control).KeyUp -= BuildingTool_KeyUp;
-            this.navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;
+            this.navigationWidget.BoundsMouseCellChanged -= MouseoverWidget_MouseCellChanged;
         }
 
         #region IDisposable Support

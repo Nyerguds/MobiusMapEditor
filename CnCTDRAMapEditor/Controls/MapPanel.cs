@@ -158,16 +158,16 @@ namespace MobiusEditor.Controls
         /// <param name="doZoom">True to zoom in as far as possible to the chosen area.</param>
         public void JumpToPosition(CellMetrics metrics, int cellPointX, int cellPointY, int cellsWidth, int cellsHeight, bool doZoom)
         {
-            Rectangle clientNoScroll = this.ClientRectangle;
-            Rectangle clientActual = this.ClientRectangle;
+            Rectangle clientNoScroll = new Rectangle(0,0, this.Width, this.Height);
             if (doZoom)
             {
-                // Ensure scrollbars; otherwise, ClientRectangle values are wrong.
-                this.Zoom = this.maxZoom;
-                clientActual = this.ClientRectangle;
+                this.Zoom = maxZoom;
+                this.InvalidateScroll();
             }
+            Rectangle clientActual = this.ClientRectangle;
             int scaleFull = Math.Min(clientActual.Width, clientActual.Height);
-            bool isWidth = scaleFull == clientActual.Width;
+            // (width/height) ratio is smaller for client than for map: map width is the limiting factor.
+            bool isWidth = clientActual.Width / (double)clientActual.Height < cellsWidth / (double)cellsHeight;
             double mapSize = isWidth ? metrics.Width : metrics.Height;
             // pixels per tile at zoom level 1.
             // Technically can't handle non-square cells, but, if anyone messes with that they have more problems than this function.
@@ -175,18 +175,25 @@ namespace MobiusEditor.Controls
             double zoom = this.Zoom;
             if (doZoom)
             {
-                zoom = Math.Min(this.maxZoom, isWidth ? ((double)metrics.Width / cellsWidth) : ((double)metrics.Height / cellsHeight));
+                zoom = Math.Min(this.maxZoom, isWidth ? (clientActual.Width / (cellsWidth * basicTileSize)) : (clientActual.Height / (cellsHeight * basicTileSize)));
                 this.Zoom = zoom;
             }
-            bool ScrollBarW = this.ClientRectangle.Width > clientActual.Width;
-            bool ScrollBarH = this.ClientRectangle.Height > clientActual.Height;
+            // Check whether there are scrollbars.
+            bool scrollBarVert = clientNoScroll.Width > this.ClientRectangle.Width;
+            bool scrollBarHor = clientNoScroll.Height > this.ClientRectangle.Height;
             this.InvalidateScroll();
-            // Convert cell position to actual position on image.
-            int cellX = (int)Math.Round(scaleFull * zoom * (cellPointX + (cellsWidth / 2.0d)) / mapSize);
-            int cellY = (int)Math.Round(scaleFull * zoom * (cellPointY + (cellsHeight / 2.0d)) / mapSize);
-            // Get location to use to center the chosen rectangle on the screen.
-            int x = cellX - (ScrollBarW ? clientActual : clientNoScroll).Width / 2;
-            int y = cellY - (ScrollBarH ? clientActual : clientNoScroll).Height / 2;
+            // Get location of the top left coordinates of the rectangle.
+            int x = scrollBarHor ? (int)(scaleFull * zoom * cellPointX / mapSize) : 0;
+            int y = scrollBarVert ? (int)(scaleFull * zoom * cellPointY / mapSize) : 0;
+            // Add space if needed to center it.
+            if (scrollBarHor)
+            {
+                x -= (clientActual.Width - (int)(cellsWidth * basicTileSize * zoom)) / 2;
+            }
+            if (scrollBarVert)
+            {
+                y -= (clientActual.Height - (int)(cellsHeight * basicTileSize * zoom)) / 2;
+            }
             this.AutoScrollPosition = new Point(x, y);
             this.InvalidateScroll();
         }

@@ -33,7 +33,6 @@ namespace MobiusEditor
             ShowPlacementGrid = Properties.Settings.Default.DefaultShowPlacementGrid;
             OutlineAllCrates = Properties.Settings.Default.DefaultOutlineAllCrates;
             CratesOnTop = Properties.Settings.Default.DefaultCratesOnTop;
-            ShowMapGrid = Properties.Settings.Default.DefaultShowMapGrid;
             // Fine tuning
             ZoomToBoundsOnLoad = Properties.Settings.Default.ZoomToBoundsOnLoad;
             MapGridColor = Properties.Settings.Default.MapGridColor;
@@ -76,9 +75,8 @@ namespace MobiusEditor
         public static bool TileDragProtect { get; set; }
         public static bool TileDragRandomize { get; set; }
         public static bool ShowPlacementGrid { get; set; }
-        public static bool CratesOnTop { get; set; }
         public static bool OutlineAllCrates { get; set; }
-        public static bool ShowMapGrid { get; set; }
+        public static bool CratesOnTop { get; set; }
 
         public static double ExportTileScale
         {

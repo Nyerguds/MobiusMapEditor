@@ -2961,7 +2961,6 @@ namespace MobiusEditor.RedAlert
                     return null;
                 }
                 bool hasQueen = usedAntBldTypes.Any(bld => bld.ID == BuildingTypes.Queen.ID);
-                sb = new StringBuilder("The following ant units and structures were found on the map or in the scripting, but have no ini rules set to properly define their stats:");
                 List<String> types = new List<string>();
                 foreach (UnitType unit in usedAntUnitTypes)
                 {
@@ -2973,6 +2972,11 @@ namespace MobiusEditor.RedAlert
                     if (extraSections == null || !extraSections.Contains(bld.Name))
                         types.Add(bld.Name.ToUpperInvariant());
                 }
+                if (types.Count == 0)
+                {
+                    return null;
+                }
+                sb = new StringBuilder("The following ant units and structures were found on the map or in the scripting, but have no ini rules set to properly define their stats:");
                 sb.Append("\n\n").Append(String.Join(", ", types.ToArray()));
                 string stats = usedAntUnitTypes.Count == 0 ? (hasQueen ? "strength or weapon" : "strength") : "strength, weapon or movement speed";
                 sb.Append("\n\n").Append("Without ini definitions, these things will have no "+ stats + ", and will malfunction in the game.");

@@ -2270,7 +2270,7 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static void RenderLandTypes(Graphics graphics, IGamePlugin plugin, CellGrid<Template> templates, Size tileSize, Rectangle visibleCells)
+        public static void RenderLandTypes(Graphics graphics, IGamePlugin plugin, CellGrid<Template> templates, Size tileSize, Rectangle visibleCells, bool ignoreClear)
         {
             // Check which cells need to be marked.
             List<(int, int)> cellsVehImpassable = new List<(int, int)>();
@@ -2285,10 +2285,13 @@ namespace MobiusEditor.Render
                 for (int x = visibleCells.X; x < visibleCells.Right; ++x)
                 {
                     Template template = templates[y, x];
-                    LandType land;
+                    LandType land = LandType.None;
                     if (template == null)
                     {
-                        land = clearLand;
+                        if (!ignoreClear)
+                        {
+                            land = clearLand;
+                        }
                     }
                     else
                     {
@@ -2296,25 +2299,28 @@ namespace MobiusEditor.Render
                         int icon = (template.Type.Flag & (TemplateTypeFlag.Clear | TemplateTypeFlag.RandomCell)) != TemplateTypeFlag.None ? 0 : template.Icon;
                         land = icon < types.Length ? types[icon] : LandType.Clear;
                     }
-                    bool isVehiclePassable = plugin.IsVehiclePassable(land);
-                    bool isBuildable = plugin.IsBuildable(land);
-                    bool isBoatPassable = plugin.IsBoatPassable(land);
-                    if (isVehiclePassable)
+                    if (land != LandType.None)
                     {
-                        if (!isBuildable)
+                        bool isVehiclePassable = plugin.IsVehiclePassable(land);
+                        bool isBuildable = plugin.IsBuildable(land);
+                        bool isBoatPassable = plugin.IsBoatPassable(land);
+                        if (isVehiclePassable)
                         {
-                            cellsUnbuildable.Add((x, y));
-                        }
-                    }
-                    else
-                    {
-                        if (isBoatPassable)
-                        {
-                            cellsBoatMovable.Add((x, y));
+                            if (!isBuildable)
+                            {
+                                cellsUnbuildable.Add((x, y));
+                            }
                         }
                         else
                         {
-                            cellsVehImpassable.Add((x, y));
+                            if (isBoatPassable)
+                            {
+                                cellsBoatMovable.Add((x, y));
+                            }
+                            else
+                            {
+                                cellsVehImpassable.Add((x, y));
+                            }
                         }
                     }
                 }

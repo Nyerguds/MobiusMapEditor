@@ -662,7 +662,7 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseLeave += MapPanel_MouseLeave;
             (this.mapPanel as Control).KeyDown += UnitTool_KeyDown;
             (this.mapPanel as Control).KeyUp += UnitTool_KeyUp;
-            navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
+            navigationWidget.BoundsMouseCellChanged += MouseoverWidget_MouseCellChanged;
             UpdateStatus();
         }
 
@@ -685,7 +685,7 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseLeave -= MapPanel_MouseLeave;
             (this.mapPanel as Control).KeyDown -= UnitTool_KeyDown;
             (this.mapPanel as Control).KeyUp -= UnitTool_KeyUp;
-            navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;
+            navigationWidget.BoundsMouseCellChanged -= MouseoverWidget_MouseCellChanged;
         }
 
         #region IDisposable Support

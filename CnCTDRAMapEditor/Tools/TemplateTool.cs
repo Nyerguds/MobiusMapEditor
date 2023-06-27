@@ -497,7 +497,7 @@ namespace MobiusEditor.Tools
             }
             else if ((e.Button == MouseButtons.Left) || (e.Button == MouseButtons.Right))
             {
-                PickTemplate(navigationWidget.MouseCell, e.Button == MouseButtons.Left);
+                PickTemplate(navigationWidget.ActualMouseCell, e.Button == MouseButtons.Left);
             }
         }
 
@@ -508,16 +508,16 @@ namespace MobiusEditor.Tools
             {
                 if (selected == null || (selected.Flag & TemplateTypeFlag.Clear) != 0)
                 {
-                    RemoveTemplate(navigationWidget.MouseCell);
+                    RemoveTemplate(navigationWidget.ActualMouseCell);
                 }
                 else
                 {
-                    SetTemplate(navigationWidget.MouseCell, false);
+                    SetTemplate(navigationWidget.ActualMouseCell, false);
                 }
             }
             else if (button == MouseButtons.Right)
             {
-                RemoveTemplate(navigationWidget.MouseCell);
+                RemoveTemplate(navigationWidget.ActualMouseCell);
             }
         }
 
@@ -960,14 +960,15 @@ namespace MobiusEditor.Tools
                 CellGrid<Template> templates = null;
                 if (renderGrid)
                 {
-                    // Fill "dummy map" to apply fland types grid to it.
+                    // Fill "dummy map" to apply land types grid to it.
                     templates = new CellGrid<Template>(templateTypeMetrics);
                     int cell = 0;
+                    bool isRandom = selected.IsRandom;
                     for (int y = 0; y < selected.ThumbnailIconHeight; ++y)
                     {
                         for (int x = 0; x < selected.ThumbnailIconWidth; ++x)
                         {
-                            if (selected.IconMask[y, x])
+                            if ((!isRandom && selected.IconMask[y, x]) || (isRandom && cell < selected.NumIcons))
                             {
                                 templates[y, x] = new Template() { Type = selected, Icon = cell };
                             }
@@ -978,7 +979,7 @@ namespace MobiusEditor.Tools
                 templateTypeNavigationWidget = new NavigationWidget(templateTypeMapPanel, templateTypeMetrics, Globals.PreviewTileSize, false);
                 templateTypeNavigationWidget.MouseoverSize = Size.Empty;
                 templateTypeNavigationWidget.Activate();
-                Bitmap templatePreview = new Bitmap(selected.ThumbnailSize.Width * Globals.PreviewTileWidth, selected.ThumbnailSize.Height * Globals.PreviewTileHeight);
+                Bitmap templatePreview = new Bitmap(selected.ThumbnailIconWidth * Globals.PreviewTileWidth, selected.ThumbnailIconHeight * Globals.PreviewTileHeight);
                 templatePreview.SetResolution(96, 96);
                 using (Graphics g = Graphics.FromImage(templatePreview))
                 {
@@ -986,7 +987,7 @@ namespace MobiusEditor.Tools
                     g.DrawImage(selected.Thumbnail, new Rectangle(Point.Empty, selected.Thumbnail.Size), 0, 0, templatePreview.Width, templatePreview.Height, GraphicsUnit.Pixel);
                     if (templates != null)
                     {
-                        MapRenderer.RenderLandTypes(g, plugin, templates, Globals.PreviewTileSize, templateTypeMetrics.Bounds); 
+                        MapRenderer.RenderLandTypes(g, plugin, templates, Globals.PreviewTileSize, templateTypeMetrics.Bounds, true); 
                     }
                 }
                 // paint selected.Thumbnail;
@@ -1727,7 +1728,7 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-            var location = navigationWidget.MouseCell;
+            var location = navigationWidget.ActualMouseCell;
             if (SelectedIcon.HasValue)
             {
                 if (previewMap.Metrics.GetCell(location, out int cell))
@@ -1762,7 +1763,7 @@ namespace MobiusEditor.Tools
             base.PostRenderMap(graphics, visibleCells);
             if ((Layers & MapLayerFlag.LandTypes) == MapLayerFlag.LandTypes)
             {
-                MapRenderer.RenderLandTypes(graphics, plugin, previewMap.Templates, Globals.MapTileSize, visibleCells);
+                MapRenderer.RenderLandTypes(graphics, plugin, previewMap.Templates, Globals.MapTileSize, visibleCells, false);
             }
             if (boundsMode)
             {
@@ -1777,7 +1778,7 @@ namespace MobiusEditor.Tools
                 }
                 if (placementMode || fillMode)
                 {
-                    var location = navigationWidget.MouseCell;
+                    var location = navigationWidget.ActualMouseCell;
                     TemplateType selected = SelectedTemplateType;
                     if (selected == null)
                     {
