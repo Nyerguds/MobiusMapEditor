@@ -506,4 +506,4 @@ Program bug fixes:
 * Fixed the cell selection indicator and the bottom info bar not immediately refreshing when using the arrow keys to scroll around the map.
 * The auto-zoom on map load is now slightly more accurate.
 * Fixed a bug in the dragging logic that made the mouse position and map desynchronise or not work at all when dragging very slowly.* Fixed bugs in the logic to zoom to the map bounds.
-* Fixed crashes that occurred when dragging bibs and buildings out of the left or bottom of the map bounds.
+* Fixed crashes that occurred when dragging bibs and buildings out of the right or bottom of the map bounds.
