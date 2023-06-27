@@ -1856,7 +1856,7 @@ namespace MobiusEditor.TiberianDawn
             if (switchedToSolo)
             {
                 Map.BasicSection.SoloMission = true;
-                if (Globals.ReportMissionDetection)
+                if (Globals.ReportMissionDetection || errors.Count > 0)
                 {
                     errors.Insert(0, "Filename detected as classic single player mission format, and win and lose trigger detected. Applying \"SoloMission\" flag.");
                 }
