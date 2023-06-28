@@ -45,8 +45,8 @@ namespace MobiusEditor.Model
         public Size Size { get; set; }
         public int Icons { get; set; }
         public SmudgeTypeFlag Flag { get; private set; }
-        public bool IsAutoBib => (Flag & (SmudgeTypeFlag.Bib1 | SmudgeTypeFlag.Bib2 | SmudgeTypeFlag.Bib3)) != SmudgeTypeFlag.None;
-        public bool IsMultiCell => Icons == 1 && (Size.Width > 0 || Size.Height > 0);
+        public bool IsAutoBib => (this.Flag & (SmudgeTypeFlag.Bib1 | SmudgeTypeFlag.Bib2 | SmudgeTypeFlag.Bib3)) != SmudgeTypeFlag.None;
+        public bool IsMultiCell => this.Icons == 1 && (this.Size.Width > 0 || this.Size.Height > 0);
         public Bitmap Thumbnail { get; set; }
         private string nameId;
 
@@ -110,48 +110,53 @@ namespace MobiusEditor.Model
         {
             if (obj is SmudgeType sm)
             {
-                return ReferenceEquals(this, sm) || (ID == sm.ID && Name == sm.Name && Flag == sm.Flag && Size == sm.Size && Icons == sm.Icons);
+                return ReferenceEquals(this, sm) || (this.ID == sm.ID && this.Name == sm.Name && this.Flag == sm.Flag && this.Size == sm.Size && this.Icons == sm.Icons);
             }
             else if (obj is sbyte)
             {
-                return ID == (sbyte)obj;
+                return this.ID == (sbyte)obj;
             }
             else if (obj is string)
             {
-                return string.Equals(Name, obj as string, StringComparison.OrdinalIgnoreCase);
+                return string.Equals(this.Name, obj as string, StringComparison.OrdinalIgnoreCase);
             }
             return base.Equals(obj);
         }
 
         public override int GetHashCode()
         {
-            return ID.GetHashCode();
+            return this.ID.GetHashCode();
         }
 
         public override string ToString()
         {
-            return Name;
+            return this.Name;
+        }
+
+        public void InitDisplayName()
+        {
+            this.DisplayName = !String.IsNullOrEmpty(this.nameId) && !String.IsNullOrEmpty(Globals.TheGameTextManager[this.nameId])
+                ? Globals.TheGameTextManager[this.nameId] + " (" + this.Name.ToUpperInvariant() + ")"
+                : this.Name.ToUpperInvariant();
         }
 
         public void Init()
         {
-            this.DisplayName = !String.IsNullOrEmpty(nameId) && !String.IsNullOrEmpty(Globals.TheGameTextManager[nameId])
-                ? Globals.TheGameTextManager[nameId] + " (" + Name.ToUpperInvariant() + ")"
-                : Name.ToUpperInvariant();
-            var oldImage = Thumbnail;
+            InitDisplayName();
+            var oldImage = this.Thumbnail;
             var tileSize = Globals.PreviewTileSize;
-            Bitmap th = new Bitmap(tileSize.Width * Size.Width, tileSize.Height * Size.Height);
+            Bitmap th = new Bitmap(tileSize.Width * this.Size.Width, tileSize.Height * this.Size.Height);
             th.SetResolution(96, 96);
             bool found = false;
             using (Graphics g = Graphics.FromImage(th))
             {
                 MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
                 int icon = 0;
-                for (int y = 0; y < Size.Height; y++)
+                for (int y = 0; y < this.Size.Height; y++)
                 {
-                    for (int x = 0; x < Size.Width; x++)
+                    for (int x = 0; x < this.Size.Width; x++)
                     {
-                        if (Globals.TheTilesetManager.GetTileData(Name, icon++, out Tile tile))
+                        if (Globals.TheTilesetManager.GetTileData(this.Name, icon++, out Tile tile))
                         {
                             found = true;
                             Rectangle overlayBounds = MapRenderer.RenderBounds(tile.Image.Size, new Size(1, 1), Globals.PreviewTileScale);
@@ -164,12 +169,12 @@ namespace MobiusEditor.Model
             }
             if (found)
             {
-                Thumbnail = th;
+                this.Thumbnail = th;
             }
             else
             {
                 th.Dispose();
-                Thumbnail = null;
+                this.Thumbnail = null;
             }
             if (oldImage != null)
             {

@@ -243,11 +243,16 @@ namespace MobiusEditor.Model
             return (this.Name ?? String.Empty).ToUpperInvariant();
         }
 
-        public void Init(GameType gameType, HouseType house, DirectionType direction)
+        public void InitDisplayName()
         {
             this.DisplayName = !String.IsNullOrEmpty(this.nameId) && !String.IsNullOrEmpty(Globals.TheGameTextManager[this.nameId])
                 ? Globals.TheGameTextManager[this.nameId] + " (" + this.Name.ToUpperInvariant() + ")"
                 : this.Name.ToUpperInvariant();
+        }
+
+        public void Init(GameType gameType, HouseType house, DirectionType direction)
+        {
+            this.InitDisplayName();
             Bitmap oldImage = this.Thumbnail;
             Building mockBuilding = new Building()
             {

@@ -25,10 +25,10 @@ namespace MobiusEditor.Model
         public sbyte ID { get; private set; }
         public string Name { get; private set; }
         public string DisplayName { get; private set; }
-        public Rectangle OverlapBounds => new Rectangle(Point.Empty, Size);
+        public Rectangle OverlapBounds => new Rectangle(Point.Empty, this.Size);
         public bool[,] OpaqueMask { get; private set; }
         public bool[,] OccupyMask { get; private set; }
-        public Size Size => new Size(OccupyMask.GetLength(1), OccupyMask.GetLength(0));
+        public Size Size => new Size(this.OccupyMask.GetLength(1), this.OccupyMask.GetLength(0));
         public TheaterType[] Theaters { get; private set; }
         public int DisplayIcon { get; private set; }
         public LandType PlacementLand { get; private set; }
@@ -155,11 +155,11 @@ namespace MobiusEditor.Model
             }
             else if (obj is sbyte)
             {
-                return ID == (sbyte)obj;
+                return this.ID == (sbyte)obj;
             }
             else if (obj is string)
             {
-                return string.Equals(Name, obj as string, StringComparison.OrdinalIgnoreCase);
+                return string.Equals(this.Name, obj as string, StringComparison.OrdinalIgnoreCase);
             }
 
             return base.Equals(obj);
@@ -167,34 +167,38 @@ namespace MobiusEditor.Model
 
         public override int GetHashCode()
         {
-            return ID.GetHashCode();
+            return this.ID.GetHashCode();
         }
 
         public override string ToString()
         {
-            return (Name ?? String.Empty).ToUpperInvariant();
+            return (this.Name ?? String.Empty).ToUpperInvariant();
+        }
+
+        public void InitDisplayName()
+        {
+            this.DisplayName = !String.IsNullOrEmpty(this.nameId) && !String.IsNullOrEmpty(Globals.TheGameTextManager[this.nameId])
+                ? Globals.TheGameTextManager[this.nameId] + " (" + this.Name.ToUpperInvariant() + ")"
+                : this.Name.ToUpperInvariant();
         }
 
         public void Init()
         {
-            this.DisplayName = !String.IsNullOrEmpty(nameId) && !String.IsNullOrEmpty(Globals.TheGameTextManager[nameId])
-                ? Globals.TheGameTextManager[nameId] + " (" + Name.ToUpperInvariant() + ")"
-                : Name.ToUpperInvariant();
-            var oldImage = Thumbnail;
-            string tileName = GraphicsSource;
+            Bitmap oldImage = this.Thumbnail;
+            string tileName = this.GraphicsSource;
             Tile tile;
             // If the graphics source doesn't yield a result, fall back on actual name.
             // This fixes the graphics source override for the ore mine not working in classic mode.
             bool success = true;
-            if (!Globals.TheTilesetManager.GetTileData(tileName, DisplayIcon, out tile))
+            if (!Globals.TheTilesetManager.GetTileData(tileName, this.DisplayIcon, out tile))
             {
-                success = Globals.TheTilesetManager.GetTileData(this.Name, DisplayIcon, out tile, true, false);
+                success = Globals.TheTilesetManager.GetTileData(this.Name, this.DisplayIcon, out tile, true, false);
             }
             if (tile != null && tile.Image != null)
             {
-                var tileSize = Globals.PreviewTileSize;
-                var renderSize = new Size(tileSize.Width * Size.Width, tileSize.Height * Size.Height);
-                Rectangle overlayBounds = MapRenderer.RenderBounds(tile.Image.Size, Size, Globals.PreviewTileScale);
+                Size tileSize = Globals.PreviewTileSize;
+                Size renderSize = new Size(tileSize.Width * this.Size.Width, tileSize.Height * this.Size.Height);
+                Rectangle overlayBounds = MapRenderer.RenderBounds(tile.Image.Size, this.Size, Globals.PreviewTileScale);
                 Bitmap th = new Bitmap(renderSize.Width, renderSize.Height);
                 th.SetResolution(96, 96);
                 using (Graphics g = Graphics.FromImage(th))
@@ -202,24 +206,24 @@ namespace MobiusEditor.Model
                     MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
                     g.DrawImage(tile.Image, overlayBounds);
                 }
-                Thumbnail = th;
+                this.Thumbnail = th;
                 if (success)
                 {
-                    OpaqueMask = GeneralUtils.FindOpaqueCells(th, Size, 10, 25, 0x80);
+                    this.OpaqueMask = GeneralUtils.FindOpaqueCells(th, this.Size, 10, 25, 0x80);
                 }
             }
             else
             {
-                Thumbnail = null;
+                this.Thumbnail = null;
             }
             if (!success)
             {
-                OpaqueMask = new bool[Size.Height, Size.Width];
-                for (int y = 0; y < Size.Height; ++y)
+                this.OpaqueMask = new bool[this.Size.Height, this.Size.Width];
+                for (int y = 0; y < this.Size.Height; ++y)
                 {
-                    for (int x = 0; x < Size.Width; ++x)
+                    for (int x = 0; x < this.Size.Width; ++x)
                     {
-                        OpaqueMask[y, x] = true;
+                        this.OpaqueMask[y, x] = true;
                     }
                 }
             }

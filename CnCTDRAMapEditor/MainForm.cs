@@ -134,13 +134,6 @@ namespace MobiusEditor
             this.toolsOptionsOutlineAllCratesMenuItem.Checked = Globals.OutlineAllCrates;
             this.toolsOptionsCratesOnTopMenuItem.Checked = Globals.CratesOnTop;
 
-            // Loaded directly from settings file setting and applied to checkboxes.
-            this.viewExtraIndicatorsMapSymmetryMenuItem.Checked = Properties.Settings.Default.DefaultExtraSymmetry;
-            this.viewExtraIndicatorsMapGridMenuItem.Checked = Properties.Settings.Default.DefaultExtraMapGrid;
-            this.viewExtraIndicatorsEffectAreaRadiusMenuItem.Checked = Properties.Settings.Default.DefaultExtraEffectRadiuses;
-            this.viewExtraIndicatorsWaypointRevealRadiusMenuItem.Checked = Properties.Settings.Default.DefaultExtraWaypointReveal;
-            this.viewExtraIndicatorsMapPassabilityMenuItem.Checked = Properties.Settings.Default.DefaultExtraPassability;
-
             // Obey the settings.
             this.mapPanel.SmoothScale = Globals.MapSmoothScale;
             this.mapPanel.BackColor = Globals.MapBackColor;

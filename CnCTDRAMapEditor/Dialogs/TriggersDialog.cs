@@ -609,19 +609,19 @@ namespace MobiusEditor.Dialogs
                     event2ComboBox.SelectedIndex = 0;
                 }
                 this.triggersTableLayoutPanel.SuspendLayout();
-                RemoveFromLayout(this.event2Label, this.event2ComboBox, this.event2Flp);
-                RemoveFromLayout(this.action1Label, this.action1ComboBox, this.action1Flp);
+                RemoveFromLayout(this.triggersTableLayoutPanel, this.event2Label, this.event2ComboBox, this.event2Flp);
+                RemoveFromLayout(this.triggersTableLayoutPanel, this.action1Label, this.action1ComboBox, this.action1Flp);
                 if (eventType != TriggerMultiStyleType.Linked)
                 {
                     // Normal order: E1, [E2 → A1], A2
-                    AddToLayout(this.event2Label, this.event2ComboBox, this.event2Flp, 4);
-                    AddToLayout(this.action1Label, this.action1ComboBox, this.action1Flp, 5);
+                    AddToLayout(this.triggersTableLayoutPanel, this.event2Label, this.event2ComboBox, this.event2Flp, 4);
+                    AddToLayout(this.triggersTableLayoutPanel, this.action1Label, this.action1ComboBox, this.action1Flp, 5);
                 }
                 else
                 {
                     // Flipped order: E1 → [A1, E2] → A2
-                    AddToLayout(this.action1Label, this.action1ComboBox, this.action1Flp, 4);
-                    AddToLayout(this.event2Label, this.event2ComboBox, this.event2Flp, 5);
+                    AddToLayout(this.triggersTableLayoutPanel, this.action1Label, this.action1ComboBox, this.action1Flp, 4);
+                    AddToLayout(this.triggersTableLayoutPanel, this.event2Label, this.event2ComboBox, this.event2Flp, 5);
                 }
                 event2Label.Visible = event2ComboBox.Visible = event2Flp.Visible = hasEvent2;
                 this.triggersTableLayoutPanel.ResumeLayout(false);
@@ -665,19 +665,19 @@ namespace MobiusEditor.Dialogs
             UpdateTriggerActionControls(SelectedTrigger?.Action2, action2Nud, action2ValueComboBox, null);
         }
 
-        private void RemoveFromLayout(Label lblname, ComboBox cmbselect, FlowLayoutPanel flpargs)
+        private void RemoveFromLayout(TableLayoutPanel panel, Label lblname, ComboBox cmbselect, FlowLayoutPanel flpargs)
         {
-            this.triggersTableLayoutPanel.Controls.Remove(lblname);
-            this.triggersTableLayoutPanel.Controls.Remove(cmbselect);
-            this.triggersTableLayoutPanel.Controls.Remove(flpargs);
+            panel.Controls.Remove(lblname);
+            panel.Controls.Remove(cmbselect);
+            panel.Controls.Remove(flpargs);
         }
 
-        private void AddToLayout(Label lblname, ComboBox cmbselect, FlowLayoutPanel flpargs, int row)
+        private void AddToLayout(TableLayoutPanel panel, Label lblname, ComboBox cmbselect, FlowLayoutPanel flpargs, int row)
         {
-            this.triggersTableLayoutPanel.Controls.Add(lblname, 0, row);
-            this.triggersTableLayoutPanel.Controls.Add(cmbselect, 1, row);
-            this.triggersTableLayoutPanel.Controls.Add(flpargs, 2, row);
-            this.triggersTableLayoutPanel.SetColumnSpan(flpargs, 2);
+            panel.Controls.Add(lblname, 0, row);
+            panel.Controls.Add(cmbselect, 1, row);
+            panel.Controls.Add(flpargs, 2, row);
+            panel.SetColumnSpan(flpargs, 2);
         }
 
         private void UpdateTriggerEventControls(TriggerEvent triggerEvent, NumericUpDown eventNud, ComboBox eventValueComboBox, TriggerEvent triggerEventData)

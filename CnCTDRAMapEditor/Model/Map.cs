@@ -553,16 +553,12 @@ namespace MobiusEditor.Model
                 DirectionType unitDir = this.UnitDirectionTypes.Where(d => d.Facing == FacingType.SouthWest).First();
                 foreach (UnitType unitType in this.AllUnitTypes)
                 {
-                    unitType.Init(gameType, this.HouseTypesIncludingNone.Where(h => h.Equals(unitType.OwnerHouse)).FirstOrDefault(), unitDir, true);
+                    unitType.Init(gameType, this.HouseTypesIncludingNone.Where(h => h.Equals(unitType.OwnerHouse)).FirstOrDefault(), unitDir);
                 }
-                if (Globals.DisableAirUnits)
+                // Probably already done for most, but required for initialising air unit names for teamtypes if DisableAirUnits is true.
+                foreach (ITechnoType techno in this.AllTeamTechnoTypes)
                 {
-                    // Necessary for initialising the full name to show in teamtypes.
-                    // If DisableAirUnits is false, this is done along with the other units.
-                    foreach (UnitType airUnit in this.AllTeamTechnoTypes.OfType<UnitType>().Where(u => u.IsAircraft))
-                    {
-                        airUnit.Init(gameType, this.HouseTypesIncludingNone.Where(h => h.Equals(airUnit.OwnerHouse)).FirstOrDefault(), unitDir, false);
-                    }
+                    techno.InitDisplayName();
                 }
                 DirectionType bldDir = this.UnitDirectionTypes.Where(d => d.Facing == FacingType.North).First();
                 foreach (BuildingType buildingType in this.BuildingTypes.Where(itm => !Globals.FilterTheaterObjects || itm.Theaters == null || itm.Theaters.Contains(this.Theater)))

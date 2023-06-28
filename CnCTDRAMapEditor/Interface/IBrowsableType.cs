@@ -20,6 +20,8 @@ namespace MobiusEditor.Interface
 {
     public interface IBrowsableType
     {
+        /// <summary>Initialise the unit's name based on the currently loaded strings file.</summary>
+        void InitDisplayName();
         string DisplayName { get; }
         Bitmap Thumbnail { get; }
         void Reset();

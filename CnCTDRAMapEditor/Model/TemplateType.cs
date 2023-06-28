@@ -329,6 +329,11 @@ namespace MobiusEditor.Model
             return Name;
         }
 
+        public void InitDisplayName()
+        {
+            // Do nothing. Templates have no real UI names.
+        }
+
         public void Init(TheaterType theater)
         {
             Init(theater, false);

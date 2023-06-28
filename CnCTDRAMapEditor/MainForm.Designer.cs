@@ -687,8 +687,8 @@ namespace MobiusEditor
             // 
             this.viewExtraIndicatorsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.viewExtraIndicatorsMapSymmetryMenuItem,
-            this.viewExtraIndicatorsMapPassabilityMenuItem,
             this.viewExtraIndicatorsMapGridMenuItem,
+            this.viewExtraIndicatorsMapPassabilityMenuItem,
             this.viewExtraIndicatorsWaypointRevealRadiusMenuItem,
             this.viewExtraIndicatorsEffectAreaRadiusMenuItem});
             this.viewExtraIndicatorsToolStripMenuItem.Name = "viewExtraIndicatorsToolStripMenuItem";
@@ -704,23 +704,23 @@ namespace MobiusEditor
             this.viewExtraIndicatorsMapSymmetryMenuItem.Text = "Map &symmetry";
             this.viewExtraIndicatorsMapSymmetryMenuItem.CheckedChanged += new System.EventHandler(this.ViewMenuItem_CheckedChanged);
             // 
-            // viewExtraIndicatorsMapPassabilityMenuItem
-            // 
-            this.viewExtraIndicatorsMapPassabilityMenuItem.CheckOnClick = true;
-            this.viewExtraIndicatorsMapPassabilityMenuItem.Name = "viewExtraIndicatorsMapPassabilityMenuItem";
-            this.viewExtraIndicatorsMapPassabilityMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F2;
-            this.viewExtraIndicatorsMapPassabilityMenuItem.Size = new System.Drawing.Size(224, 22);
-            this.viewExtraIndicatorsMapPassabilityMenuItem.Text = "Map passability";
-            this.viewExtraIndicatorsMapPassabilityMenuItem.CheckedChanged += new System.EventHandler(this.ViewMenuItem_CheckedChanged);
-            // 
             // viewExtraIndicatorsMapGridMenuItem
             // 
             this.viewExtraIndicatorsMapGridMenuItem.CheckOnClick = true;
             this.viewExtraIndicatorsMapGridMenuItem.Name = "viewExtraIndicatorsMapGridMenuItem";
-            this.viewExtraIndicatorsMapGridMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F3;
+            this.viewExtraIndicatorsMapGridMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F2;
             this.viewExtraIndicatorsMapGridMenuItem.Size = new System.Drawing.Size(224, 22);
             this.viewExtraIndicatorsMapGridMenuItem.Text = "Map &grid";
             this.viewExtraIndicatorsMapGridMenuItem.CheckedChanged += new System.EventHandler(this.ViewMenuItem_CheckedChanged);
+            // 
+            // viewExtraIndicatorsMapPassabilityMenuItem
+            // 
+            this.viewExtraIndicatorsMapPassabilityMenuItem.CheckOnClick = true;
+            this.viewExtraIndicatorsMapPassabilityMenuItem.Name = "viewExtraIndicatorsMapPassabilityMenuItem";
+            this.viewExtraIndicatorsMapPassabilityMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F3;
+            this.viewExtraIndicatorsMapPassabilityMenuItem.Size = new System.Drawing.Size(224, 22);
+            this.viewExtraIndicatorsMapPassabilityMenuItem.Text = "Map passability";
+            this.viewExtraIndicatorsMapPassabilityMenuItem.CheckedChanged += new System.EventHandler(this.ViewMenuItem_CheckedChanged);
             // 
             // viewExtraIndicatorsWaypointRevealRadiusMenuItem
             // 

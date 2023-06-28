@@ -149,15 +149,19 @@ namespace MobiusEditor.Model
             return this.Name;
         }
 
-        public void Init(GameType gameType)
+        public void InitDisplayName()
         {
             // Shows graphics source and not real internal name to mask different internal name for ROAD #2.
             bool idEmpty = String.IsNullOrEmpty(this.nameId);
-            String fetched = idEmpty? String.Empty : Globals.TheGameTextManager[this.nameId];
+            String fetched = idEmpty ? String.Empty : Globals.TheGameTextManager[this.nameId];
             this.DisplayName = !idEmpty && !String.IsNullOrEmpty(fetched)
                 ? fetched + " (" + this.GraphicsSource.ToUpperInvariant() + ")"
                 : idEmpty ? this.GraphicsSource.ToUpperInvariant() : this.nameId;
+        }
 
+        public void Init(GameType gameType)
+        {
+            InitDisplayName();
             var oldImage = this.Thumbnail;
             var tileSize = Globals.PreviewTileSize;
             Bitmap th = new Bitmap(tileSize.Width, tileSize.Height);

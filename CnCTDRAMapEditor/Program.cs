@@ -390,11 +390,11 @@ namespace MobiusEditor
             gtm["TEXT_STRUCTURE_TITLE_OIL_PUMP"] = "Oil Pump";
             gtm["TEXT_STRUCTURE_TITLE_OIL_TANKER"] = "Oil Tanker";
             String fake = " (" + gtm["TEXT_UI_FAKE"] + ")";
-            if (!gtm["TEXT_STRUCTURE_RA_WEAF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_WEAF"] = gtm["TEXT_STRUCTURE_RA_WEAF"] + fake;
-            if (!gtm["TEXT_STRUCTURE_RA_FACF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_FACF"] = gtm["TEXT_STRUCTURE_RA_FACF"] + fake;
-            if (!gtm["TEXT_STRUCTURE_RA_SYRF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_SYRF"] = gtm["TEXT_STRUCTURE_RA_SYRF"] + fake;
-            if (!gtm["TEXT_STRUCTURE_RA_SPEF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_SPEF"] = gtm["TEXT_STRUCTURE_RA_SPEF"] + fake;
-            if (!gtm["TEXT_STRUCTURE_RA_DOMF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_DOMF"] = gtm["TEXT_STRUCTURE_RA_DOMF"] + fake;
+            if (!gtm["TEXT_STRUCTURE_RA_WEAF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_WEAF"] += fake;
+            if (!gtm["TEXT_STRUCTURE_RA_FACF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_FACF"] += fake;
+            if (!gtm["TEXT_STRUCTURE_RA_SYRF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_SYRF"] += fake;
+            if (!gtm["TEXT_STRUCTURE_RA_SPEF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_SPEF"] += fake;
+            if (!gtm["TEXT_STRUCTURE_RA_DOMF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_DOMF"] += fake;
             // Overlay
             gtm["TEXT_OVERLAY_CONCRETE_PAVEMENT"] = "Concrete";
             gtm["TEXT_OVERLAY_CONCRETE_ROAD"] = "Concrete Road";

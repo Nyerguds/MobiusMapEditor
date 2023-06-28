@@ -27,10 +27,10 @@ namespace MobiusEditor.Model
         public string DisplayName { get; private set; }
         public string OwnerHouse { get; private set; }
         public UnitTypeFlag Flag { get; private set; }
-        public bool IsArmed => (Flag & UnitTypeFlag.IsArmed) == UnitTypeFlag.IsArmed;
+        public bool IsArmed => (this.Flag & UnitTypeFlag.IsArmed) == UnitTypeFlag.IsArmed;
         public bool IsAircraft => false;
         public bool IsFixedWing => false;
-        public bool IsExpansionUnit => (Flag & UnitTypeFlag.IsExpansionUnit) == UnitTypeFlag.IsExpansionUnit;
+        public bool IsExpansionUnit => (this.Flag & UnitTypeFlag.IsExpansionUnit) == UnitTypeFlag.IsExpansionUnit;
         public bool IsHarvester => false;
         public bool CanRemap => (this.Flag & UnitTypeFlag.NoRemap) != UnitTypeFlag.NoRemap;
         public string ClassicGraphicsSource { get; private set; }
@@ -67,11 +67,11 @@ namespace MobiusEditor.Model
             }
             else if (obj is sbyte)
             {
-                return ID == (sbyte)obj;
+                return this.ID == (sbyte)obj;
             }
             else if (obj is string)
             {
-                return string.Equals(Name, obj as string, StringComparison.OrdinalIgnoreCase);
+                return string.Equals(this.Name, obj as string, StringComparison.OrdinalIgnoreCase);
             }
 
             return base.Equals(obj);
@@ -79,20 +79,26 @@ namespace MobiusEditor.Model
 
         public override int GetHashCode()
         {
-            return ID.GetHashCode();
+            return this.ID.GetHashCode();
         }
 
         public override string ToString()
         {
-            return Name;
+            return this.Name;
+        }
+
+
+        public void InitDisplayName()
+        {
+            this.DisplayName = !String.IsNullOrEmpty(this.nameId) && !String.IsNullOrEmpty(Globals.TheGameTextManager[this.nameId])
+                ? Globals.TheGameTextManager[this.nameId] + " (" + this.Name.ToUpperInvariant() + ")"
+                : this.Name.ToUpperInvariant();
         }
 
         public void Init(HouseType house, DirectionType direction)
         {
-            this.DisplayName = !String.IsNullOrEmpty(nameId) && !String.IsNullOrEmpty(Globals.TheGameTextManager[nameId])
-                ? Globals.TheGameTextManager[nameId] + " (" + Name.ToUpperInvariant() + ")"
-                : Name.ToUpperInvariant();
-            Bitmap oldImage = Thumbnail;
+            this.InitDisplayName();
+            Bitmap oldImage = this.Thumbnail;
             Tile tile;
             // Initialisation for the special RA civilian remapping logic.
             if (this.ClassicGraphicsSource != null && Globals.TheTilesetManager is TilesetManagerClassic tsmc)
@@ -113,7 +119,7 @@ namespace MobiusEditor.Model
                 MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
                 MapRenderer.RenderInfantry(Point.Empty, Globals.PreviewTileSize, mockInfantry, InfantryStoppingType.Center).Item2(g);
             }
-            Thumbnail = infantryThumbnail;
+            this.Thumbnail = infantryThumbnail;
             if (oldImage != null)
             {
                 try { oldImage.Dispose(); }
