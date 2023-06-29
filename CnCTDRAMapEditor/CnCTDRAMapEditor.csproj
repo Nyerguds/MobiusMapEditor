@@ -616,6 +616,7 @@
     <Compile Include="Utility\MegafileBuilder.cs" />
     <Compile Include="Utility\MegafileManager.cs" />
     <Compile Include="Utility\Mixfile.cs" />
+    <Compile Include="Utility\MixFileCrypto.cs" />
     <Compile Include="Utility\MixfileManager.cs" />
     <Compile Include="Utility\MRU.cs" />
     <Compile Include="Utility\PropertyTracker.cs" />
@@ -772,9 +773,6 @@
     <Content Include="License.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Licenses\BouncyCastle.Cryptography.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <Content Include="Licenses\Newtonsoft.Json.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -790,9 +788,6 @@
     <Content Include="Steamworks.NET\redist\steam_api.dll" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="BouncyCastle.Cryptography">
-      <Version>2.2.1</Version>
-    </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
       <Version>13.0.1</Version>
     </PackageReference>

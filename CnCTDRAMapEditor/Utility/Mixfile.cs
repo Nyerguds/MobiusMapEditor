@@ -12,10 +12,6 @@
 //
 //   0. You just DO WHAT THE FUCK YOU WANT TO.
 using MobiusEditor.Utility.Hashing;
-using Org.BouncyCastle.Crypto;
-using Org.BouncyCastle.Crypto.Parameters;
-using Org.BouncyCastle.Math;
-using Org.BouncyCastle.Security;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -245,81 +241,34 @@ namespace MobiusEditor.Utility
             Array.Copy(derKeyBytes, 2, modulusBytes, 0, modulusBytes.Length);
             // Read blocks
             byte[] readBlock;
-            using (Stream headerStream = this.CreateViewStream(mixMap, mixStart, mixLength, readOffset, 40))
+            using (Stream headerStream = this.CreateViewStream(mixMap, mixStart, mixLength, readOffset, 80))
             {
                 readBlock = headerStream.ReadAllBytes();
-                readOffset += 40;
+                readOffset += 80;
             }
-            // Read data is little endian. BigInteger uses big endian.
-            Array.Reverse(readBlock);
-            BigInteger value1 = new BigInteger(readBlock);
-            using (Stream headerStream = this.CreateViewStream(mixMap, mixStart, mixLength, readOffset, 40))
+            byte[] blowFishKey = MixFileCrypto.DecryptBlowfishKey(readBlock);
+            Byte[] blowBuffer = new byte[BlowfishStream.SIZE_OF_BLOCK];
+            long remaining = mixLength - readOffset;
+            byte[] decryptedHeader;
+            using (Stream headerStream = this.CreateViewStream(mixMap, mixStart, mixLength, readOffset, (uint)remaining))
+            using (BlowfishStream bfStream = new BlowfishStream(headerStream, blowFishKey))
             {
-                readBlock = headerStream.ReadAllBytes();
-                readOffset += 40;
-            }
-            Array.Reverse(readBlock);
-            BigInteger value2 = new BigInteger(readBlock);
+                bfStream.Read(blowBuffer, 0, BlowfishStream.SIZE_OF_BLOCK);
 
-            // RSA: decryption is x = y^e % n, encryption is y = x^d % n
-            // x is plaintext, y is encrypted, n is modulus, e is public exponent, d is private exponent
-            BigInteger modulus = new BigInteger(modulusBytes);
-            BigInteger exponent = new BigInteger(new Byte[] { 01, 00, 01 });
-            BigInteger value1Decr = value1.ModPow(exponent, modulus);
-            BigInteger value2Decr = value2.ModPow(exponent, modulus);
-            byte[] value1DecrB = value1Decr.ToByteArray();
-            byte[] value2DecrB = value2Decr.ToByteArray();
-            Array.Reverse(value1DecrB);
-            Array.Reverse(value2DecrB);
-            // Find offset of any trailing zeroes. Cast to nullable int to see a difference between 0 and default returned from finding nothing.
-            int? value1lenN = Enumerable.Range(0, value1DecrB.Length).Reverse().Select(i => (int?)i).FirstOrDefault(i => value1DecrB[i.Value] != 0);
-            int? value2lenN = Enumerable.Range(0, value2DecrB.Length).Reverse().Select(i => (int?)i).FirstOrDefault(i => value2DecrB[i.Value] != 0);
-            int value1len = value1lenN.HasValue ? value1lenN.Value + 1 : 0;
-            int value2len = value2lenN.HasValue ? value2lenN.Value + 1 : 0;
-            byte[] blowFishKey = new Byte[value1len + value2len];
-            Array.Copy(value1DecrB, 0, blowFishKey, 0, value1len);
-            Array.Copy(value2DecrB, 0, blowFishKey, value1len, value2len);
-            if (blowFishKey.Length != 56)
-            {
-                byte[] blowFishKey2 = new byte[56];
-                Array.Copy(blowFishKey, 0, blowFishKey2, 0, Math.Min(blowFishKey2.Length, blowFishKey.Length));
-                blowFishKey = blowFishKey2;
-            }
-            IBufferedCipher blowfish = CipherUtilities.GetCipher("Blowfish/ECB/NoPadding");
-            blowfish.Init(false, new KeyParameter(blowFishKey));
-            Byte[] blowBuffer = new byte[8];
-            using (Stream headerStream = this.CreateViewStream(mixMap, mixStart, mixLength, readOffset, 8))
-            {
-                readBlock = headerStream.ReadAllBytes();
-                blowfish.ProcessBytes(readBlock, 0, 8, blowBuffer, 0);
-            }
-            ushort fileCount = ArrayUtils.ReadUInt16FromByteArrayLe(blowBuffer, 0);
-            uint headerSize = 6 + (uint)(fileCount * 12);
-            uint blocksToRead = (headerSize + 7) / 8;
-            uint realHeaderSize = blocksToRead * 8;
-            if (readOffset + realHeaderSize > mixLength)
-            {
-                throw new ArgumentException("mixMap", "Not a valid mix file: encrypted header length exceeds file length.");
-            }
-            // Adjust read offset to end of first block
-            readOffset += 8;
-            blocksToRead--;
-            // Don't bother trimming this. It'll read it using the amount of files value anyway.
-            byte[] decryptedHeader = new byte[realHeaderSize];
-            // Add already-read block.
-            Array.Copy(blowBuffer, 0, decryptedHeader, 0, blowBuffer.Length);
-            int bfOffsetIn = 0;
-            int bfOffsetOut = 8;
-            using (Stream headerStream = this.CreateViewStream(mixMap, mixStart, mixLength, readOffset, realHeaderSize - 8))
-            {
-                readBlock = headerStream.ReadAllBytes();
-                for (int i = 0; i < blocksToRead; i++)
+                ushort fileCount = ArrayUtils.ReadUInt16FromByteArrayLe(blowBuffer, 0);
+                uint headerSize = 6 + (uint)(fileCount * 12);
+                uint blocksToRead = (headerSize + BlowfishStream.SIZE_OF_BLOCK - 1) / BlowfishStream.SIZE_OF_BLOCK;
+                uint realHeaderSize = blocksToRead * BlowfishStream.SIZE_OF_BLOCK;
+                if (readOffset + realHeaderSize > mixLength)
                 {
-                    blowfish.ProcessBytes(readBlock, bfOffsetIn, 8, decryptedHeader, bfOffsetOut);
-                    bfOffsetIn += 8;
-                    bfOffsetOut += 8;
-                    readOffset += 8;
+                    throw new ArgumentException("mixMap", "Not a valid mix file: encrypted header length exceeds file length.");
                 }
+                // Don't bother trimming this. It'll read it using the amount of files value anyway.
+                decryptedHeader = new byte[realHeaderSize];
+                // Add already-read block.
+                Array.Copy(blowBuffer, 0, decryptedHeader, 0, BlowfishStream.SIZE_OF_BLOCK);
+                readOffset += realHeaderSize;
+                bfStream.Read(decryptedHeader, BlowfishStream.SIZE_OF_BLOCK, (int)(realHeaderSize - BlowfishStream.SIZE_OF_BLOCK));
             }
             return decryptedHeader;
         }
