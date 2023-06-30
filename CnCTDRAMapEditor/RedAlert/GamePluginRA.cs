@@ -646,7 +646,15 @@ namespace MobiusEditor.RedAlert
                         }
                         TeamType teamType = new TeamType { Name = Key };
                         List<string> tokens = Value.Split(',').ToList();
-                        teamType.House = Map.HouseTypes.Where(t => t.Equals(sbyte.Parse(tokens[0]))).FirstOrDefault(); tokens.RemoveAt(0);
+                        teamType.House = Map.HouseTypes.Where(t => t.Equals(sbyte.Parse(tokens[0]))).FirstOrDefault();
+                        if (teamType.House == null)
+                        {
+                            HouseType defHouse = Map.HouseTypes.First();
+                            errors.Add(string.Format("Team '{0}' has unknown house ID '{1}'; clearing to '{2}'.", Key, tokens[0], defHouse.Name));
+                            modified = true;
+                            teamType.House = defHouse;
+                        }
+                        tokens.RemoveAt(0);
                         int flags = int.Parse(tokens[0]); tokens.RemoveAt(0);
                         teamType.IsRoundAbout = (flags & 0x01) != 0;
                         teamType.IsSuicide = (flags & 0x02) != 0;
@@ -791,7 +799,6 @@ namespace MobiusEditor.RedAlert
                             break;
                     }
                 };
-
                 foreach (var (Key, Value) in triggersSection)
                 {
                     try
@@ -805,7 +812,13 @@ namespace MobiusEditor.RedAlert
                             }
                             Trigger trigger = new Trigger { Name = Key };
                             trigger.PersistentType = (TriggerPersistentType)int.Parse(tokens[0]);
-                            trigger.House = Map.HouseTypes.Where(t => t.Equals(sbyte.Parse(tokens[1]))).FirstOrDefault()?.Name ?? House.None;
+                            trigger.House = Map.HouseTypes.Where(t => t.Equals(sbyte.Parse(tokens[1]))).FirstOrDefault()?.Name;
+                            if (trigger.House == null)
+                            {
+                                errors.Add(string.Format("Trigger '{0}' has unknown house ID '{1}'; clearing to '{2}'.", Key, tokens[0], House.None));
+                                modified = true;
+                                trigger.House = House.None;
+                            }
                             trigger.EventControl = (TriggerMultiStyleType)int.Parse(tokens[2]);
                             trigger.Event1.EventType = indexToType(Map.EventTypes, tokens[4], false);
                             trigger.Event1.Team = tokens[5];
@@ -1108,6 +1121,22 @@ namespace MobiusEditor.RedAlert
                             Mission = Map.MissionTypes.Where(t => t.Equals(tokens[5])).FirstOrDefault() ?? Map.GetDefaultMission(unitType),
                             Trigger = tokens[6]
                         };
+                        if (newUnit.House == null)
+                        {
+                            HouseType defHouse;
+                            if ("ITALY".Equals(tokens[0], StringComparison.OrdinalIgnoreCase))
+                            {
+                                defHouse = HouseTypes.Ukraine;
+                                errors.Add(string.Format("Unit '{0}' on cell {1} has obsolete house '{2}'; clearing to {3}.", newUnit.Type.Name, cell, tokens[0], defHouse.Name));
+                            }
+                            else
+                            {
+                                defHouse = Map.HouseTypes.First();
+                                errors.Add(string.Format("Unit '{0}' on cell {1} references unknown house '{2}'; clearing to {3}.", newUnit.Type.Name, cell, tokens[0], defHouse.Name));
+                            }
+                            modified = true;
+                            newUnit.House = defHouse;
+                        }
                         if (Map.Technos.Add(cell, newUnit))
                         {
                             if (!checkTrigs.Contains(tokens[6]))
@@ -1225,6 +1254,22 @@ namespace MobiusEditor.RedAlert
                             Direction = DirectionType.GetDirectionType(dirValue, Map.UnitDirectionTypes),
                             Mission = Map.MissionTypes.Where(t => t.Equals(tokens[5])).FirstOrDefault() ?? Map.GetDefaultMission(aircraftType)
                         };
+                        if (newUnit.House == null)
+                        {
+                            HouseType defHouse;
+                            if ("ITALY".Equals(tokens[0], StringComparison.OrdinalIgnoreCase))
+                            {
+                                defHouse = HouseTypes.Ukraine;
+                                errors.Add(string.Format("Aircraft '{0}' on cell {1} has obsolete house '{2}'; clearing to {3}.", newUnit.Type.Name, cell, tokens[0], defHouse.Name));
+                            }
+                            else
+                            {
+                                defHouse = Map.HouseTypes.First();
+                                errors.Add(string.Format("Aircraft '{0}' on cell {1} references unknown house '{2}'; clearing to {3}.", newUnit.Type.Name, cell, tokens[0], defHouse.Name));
+                            }
+                            modified = true;
+                            newUnit.House = defHouse;
+                        }
                         if (!Map.Technos.Add(cell, newUnit))
                         {
                             ICellOccupier techno = Map.Technos[cell];
@@ -1299,21 +1344,21 @@ namespace MobiusEditor.RedAlert
                         int strength;
                         if (!int.TryParse(tokens[2], out strength))
                         {
-                            errors.Add(string.Format("Strength for aircraft '{0}' cannot be parsed; value: '{1}'; skipping.", vesselType.Name, tokens[2]));
+                            errors.Add(string.Format("Strength for ship '{0}' cannot be parsed; value: '{1}'; skipping.", vesselType.Name, tokens[2]));
                             modified = true;
                             continue;
                         }
                         int cell;
                         if (!int.TryParse(tokens[3], out cell))
                         {
-                            errors.Add(string.Format("Cell for aircraft '{0}' cannot be parsed; value: '{1}'; skipping.", vesselType.Name, tokens[3]));
+                            errors.Add(string.Format("Cell for ship '{0}' cannot be parsed; value: '{1}'; skipping.", vesselType.Name, tokens[3]));
                             modified = true;
                             continue;
                         }
                         int dirValue;
                         if (!int.TryParse(tokens[4], out dirValue))
                         {
-                            errors.Add(string.Format("Direction for aircraft '{0}' cannot be parsed; value: '{1}'; skipping.", vesselType.Name, tokens[4]));
+                            errors.Add(string.Format("Direction for ship '{0}' cannot be parsed; value: '{1}'; skipping.", vesselType.Name, tokens[4]));
                             modified = true;
                             continue;
                         }
@@ -1326,6 +1371,22 @@ namespace MobiusEditor.RedAlert
                             Mission = Map.MissionTypes.Where(t => t.Equals(tokens[5])).FirstOrDefault() ?? Map.GetDefaultMission(vesselType),
                             Trigger = tokens[6]
                         };
+                        if (newShip.House == null)
+                        {
+                            HouseType defHouse;
+                            if ("ITALY".Equals(tokens[0], StringComparison.OrdinalIgnoreCase))
+                            {
+                                defHouse = HouseTypes.Ukraine;
+                                errors.Add(string.Format("Ship '{0}' on cell {1} has obsolete house '{2}'; clearing to {3}.", newUnit.Type.Name, cell, tokens[0], defHouse.Name));
+                            }
+                            else
+                            {
+                                defHouse = Map.HouseTypes.First();
+                                errors.Add(string.Format("Ship '{0}' on cell {1} references unknown house '{2}'; clearing to {3}.", newUnit.Type.Name, cell, tokens[0], defHouse.Name));
+                            }
+                            modified = true;
+                            newShip.House = defHouse;
+                        }
                         if (Map.Technos.Add(cell, newShip))
                         {
                             if (!checkTrigs.Contains(tokens[6]))
@@ -1464,7 +1525,7 @@ namespace MobiusEditor.RedAlert
                                         modified = true;
                                         tokens[7] = Trigger.None;
                                     }
-                                    infantryGroup.Infantry[stoppingPos] = new Infantry(infantryGroup)
+                                    Infantry inf = new Infantry(infantryGroup)
                                     {
                                         Type = infantryType,
                                         House = Map.HouseTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault(),
@@ -1473,6 +1534,23 @@ namespace MobiusEditor.RedAlert
                                         Mission = Map.MissionTypes.Where(t => t.Equals(tokens[5])).FirstOrDefault() ?? Map.GetDefaultMission(infantryType),
                                         Trigger = tokens[7]
                                     };
+                                    infantryGroup.Infantry[stoppingPos] = inf;
+                                    if (inf.House == null)
+                                    {
+                                        HouseType defHouse;
+                                        if ("ITALY".Equals(tokens[0], StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            defHouse = HouseTypes.Ukraine;
+                                            errors.Add(string.Format("Infantry '{0}' on cell {1}, sub-position {2} has obsolete house '{3}'; substituting with {4}.", inf.Type.Name, cell, stoppingPos, tokens[0], defHouse.Name));
+                                        }
+                                        else
+                                        {
+                                            defHouse = Map.HouseTypes.First();
+                                            errors.Add(string.Format("Infantry '{0}' on cell {1}, sub-position {2} references unknown house '{3}'; clearing to {4}.", inf.Type.Name, cell, stoppingPos, tokens[0], defHouse.Name));
+                                        }
+                                        modified = true;
+                                        inf.House = defHouse;
+                                    }
                                 }
                                 else
                                 {
@@ -1585,6 +1663,22 @@ namespace MobiusEditor.RedAlert
                             Sellable = sellable,
                             Rebuild = rebuild
                         };
+                        if (newBld.House == null)
+                        {
+                            HouseType defHouse;
+                            if ("ITALY".Equals(tokens[0], StringComparison.OrdinalIgnoreCase))
+                            {
+                                defHouse = RedAlert.HouseTypes.Ukraine;
+                                errors.Add(string.Format("Structure '{0}' on cell {1} has obsolete house '{2}'; substituting with {3}.", buildingType.Name, cell, tokens[0], defHouse.Name));
+                            }
+                            else
+                            {
+                                defHouse = Map.HouseTypes.First();
+                                errors.Add(string.Format("Structure '{0}' on cell {1} references unknown house '{2}'; clearing to {3}.", buildingType.Name, cell, tokens[0], defHouse.Name));
+                            }
+                            modified = true;
+                            newBld.House = defHouse;
+                        }
                         if (Map.Buildings.Add(cell, newBld))
                         {
                             if (!checkTrigs.Contains(tokens[5]))

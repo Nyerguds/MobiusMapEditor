@@ -588,7 +588,7 @@ namespace MobiusEditor.Render
                     icon += damageIconOffs;
                 }
             }
-            ITeamColor teamColor = building.Type.CanRemap ? Globals.TheTeamColorManager[building.House.BuildingTeamColor] : null;
+            ITeamColor teamColor = building.Type.CanRemap ? Globals.TheTeamColorManager[building.House?.BuildingTeamColor] : null;
             bool succeeded = Globals.TheTilesetManager.GetTeamColorTileData(building.Type.GraphicsSource, icon, teamColor, out Tile tile, true, false);
             if (tile == null || tile.Image == null)
             {
@@ -621,7 +621,7 @@ namespace MobiusEditor.Render
                     int maxOverlayIcon = Globals.TheTilesetManager.GetTileDataLength(building.Type.FactoryOverlay);
                     overlayIcon = maxOverlayIcon / 2;
                 }
-                Globals.TheTilesetManager.GetTeamColorTileData(building.Type.FactoryOverlay, overlayIcon, Globals.TheTeamColorManager[building.House.BuildingTeamColor], out factoryOverlayTile);
+                Globals.TheTilesetManager.GetTeamColorTileData(building.Type.FactoryOverlay, overlayIcon, Globals.TheTeamColorManager[building.House?.BuildingTeamColor], out factoryOverlayTile);
             }
             void render(Graphics g)
             {
@@ -843,7 +843,7 @@ namespace MobiusEditor.Render
                 String teamColorName;
                 if (!unit.House.OverrideTeamColors.TryGetValue(unit.Type.Name, out teamColorName))
                 {
-                    teamColorName = unit.House.UnitTeamColor;
+                    teamColorName = unit.House?.UnitTeamColor;
                 }
                 teamColor = Globals.TheTeamColorManager[teamColorName];
             }
@@ -1328,7 +1328,7 @@ namespace MobiusEditor.Render
                     {
                         continue;
                     }
-                    Color outlineCol = Color.FromArgb(0xA0, Globals.TheTeamColorManager.GetBaseColor(infantry.House.UnitTeamColor));
+                    Color outlineCol = Color.FromArgb(0xA0, Globals.TheTeamColorManager.GetBaseColor(infantry.House?.UnitTeamColor));
                     RegionData paintAreaRel;
                     String id = infantry.Type.Name + '_' + i + '_' + infantry.Direction.ID;
                     if (!paintAreas.TryGetValue(id, out paintAreaRel))
@@ -1385,7 +1385,7 @@ namespace MobiusEditor.Render
                 {
                     continue;
                 }
-                Color outlineCol = Color.FromArgb(0xA0, Globals.TheTeamColorManager.GetBaseColor(unit.House.UnitTeamColor));
+                Color outlineCol = Color.FromArgb(0xA0, Globals.TheTeamColorManager.GetBaseColor(unit.House?.UnitTeamColor));
                 RegionData paintAreaRel;
                 String id = unit.Type.Name + '_' + unit.Direction.ID;
                 if (!paintAreas.TryGetValue(id, out paintAreaRel))
@@ -1870,8 +1870,8 @@ namespace MobiusEditor.Render
             {
                 return;
             }
-            ITeamColor tc = Globals.TheTeamColorManager[building.House.BuildingTeamColor];
-            Color circleColor = Globals.TheTeamColorManager.GetBaseColor(tc.Name);
+            ITeamColor tc = Globals.TheTeamColorManager[building.House?.BuildingTeamColor];
+            Color circleColor = Globals.TheTeamColorManager.GetBaseColor(tc?.Name);
             bool[,] cells = building.Type.BaseOccupyMask;
             int maskY = cells.GetLength(0);
             int maskX = cells.GetLength(1);
@@ -1902,8 +1902,8 @@ namespace MobiusEditor.Render
             {
                 return;
             }
-            ITeamColor tc = Globals.TheTeamColorManager[unit.House.BuildingTeamColor];
-            Color circleColor = Globals.TheTeamColorManager.GetBaseColor(tc.Name);
+            ITeamColor tc = Globals.TheTeamColorManager[unit.House?.BuildingTeamColor];
+            Color circleColor = Globals.TheTeamColorManager.GetBaseColor(tc?.Name);
             Color alphacorr = Color.FromArgb(unit.Tint.A * 128 / 256, circleColor);
             if (isJammer)
             {

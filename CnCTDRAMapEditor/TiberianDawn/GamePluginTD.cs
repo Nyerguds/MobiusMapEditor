@@ -764,11 +764,18 @@ namespace MobiusEditor.TiberianDawn
                         if (Key.Length > 8)
                         {
                             errors.Add(string.Format("TeamType '{0}' has a name that is longer than 8 characters. This will not be corrected by the loading process, but should be addressed, since it can make the teams fail to read correctly, and might even crash the game.", Key));
-                            modified = true;
                         }
                         TeamType teamType = new TeamType { Name = Key };
                         List<string> tokens = Value.Split(',').ToList();
-                        teamType.House = Map.HouseTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault(); tokens.RemoveAt(0);
+                        teamType.House = Map.HouseTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault();
+                        if (teamType.House == null)
+                        {
+                            HouseType defHouse = Map.HouseTypes.First();
+                            errors.Add(string.Format("Teamtype '{0}' references unknown house '{1}'; clearing to {2}.", Key, tokens[0], defHouse.Name));
+                            modified = true;
+                            teamType.House = defHouse;
+                        }
+                        tokens.RemoveAt(0);
                         teamType.IsRoundAbout = int.Parse(tokens[0]) != 0; tokens.RemoveAt(0);
                         teamType.IsLearning = int.Parse(tokens[0]) != 0; tokens.RemoveAt(0);
                         teamType.IsSuicide = int.Parse(tokens[0]) != 0; tokens.RemoveAt(0);
@@ -1102,7 +1109,7 @@ namespace MobiusEditor.TiberianDawn
                                         // Adapt to same case
                                         tokens[7] = checkTrigs[tokens[7]];
                                     }
-                                    infantryGroup.Infantry[stoppingPos] = new Infantry(infantryGroup)
+                                    Infantry inf = new Infantry(infantryGroup)
                                     {
                                         Type = infantryType,
                                         House = Map.HouseTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault(),
@@ -1111,6 +1118,14 @@ namespace MobiusEditor.TiberianDawn
                                         Mission = Map.MissionTypes.Where(t => t.Equals(tokens[5])).FirstOrDefault() ?? Map.GetDefaultMission(infantryType),
                                         Trigger = tokens[7]
                                     };
+                                    infantryGroup.Infantry[stoppingPos] = inf;
+                                    if (inf.House == null)
+                                    {
+                                        HouseType defHouse = Map.HouseTypes.First();
+                                        errors.Add(string.Format("Infantry '{0}' on cell {1}, sub-position {2} references unknown house '{3}'; clearing to {4}.", inf.Type.Name, cell, stoppingPos, tokens[0], defHouse.Name));
+                                        modified = true;
+                                        inf.House = defHouse;
+                                    }
                                 }
                                 else
                                 {
@@ -1221,6 +1236,13 @@ namespace MobiusEditor.TiberianDawn
                             Direction = DirectionType.GetDirectionType(dirValue, Map.UnitDirectionTypes),
                             Mission = Map.MissionTypes.Where(t => t.Equals(tokens[5], StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault() ?? Map.GetDefaultMission(unitType),
                         };
+                        if (newUnit.House == null)
+                        {
+                            HouseType defHouse = Map.HouseTypes.First();
+                            errors.Add(string.Format("Unit '{0}' on cell {1} references unknown house '{4}'; clearing to {5}.", newUnit.Type.Name, cell, tokens[0], defHouse.Name));
+                            modified = true;
+                            newUnit.House = defHouse;
+                        }
                         // "Rescue" and "Unload" both make the MCV deploy, but "Rescue" looks very strange in the editor, so we keep only one of them and convert the other.
                         if (MissionTypes.MISSION_RESCUE.Equals(tokens[5], StringComparison.InvariantCultureIgnoreCase) && newUnit.Type.Equals(UnitTypes.MCV))
                         {
@@ -1351,6 +1373,13 @@ namespace MobiusEditor.TiberianDawn
                             Direction = DirectionType.GetDirectionType(dirValue, Map.UnitDirectionTypes),
                             Mission = Map.MissionTypes.Where(t => t.Equals(tokens[5])).FirstOrDefault() ?? Map.GetDefaultMission(aircraftType)
                         };
+                        if (newUnit.House == null)
+                        {
+                            HouseType defHouse = Map.HouseTypes.First();
+                            errors.Add(string.Format("Aircraft '{0}' on cell {1} references unknown house '{4}'; clearing to {5}.", newUnit.Type.Name, cell, tokens[0], defHouse.Name));
+                            modified = true;
+                            newUnit.House = defHouse;
+                        }
                         if (!Map.Technos.Add(cell, newUnit))
                         {
                             ICellOccupier techno = Map.Technos[cell];
@@ -1458,6 +1487,13 @@ namespace MobiusEditor.TiberianDawn
                             Strength = strength,
                             Direction = DirectionType.GetDirectionType(dirValue, Map.BuildingDirectionTypes),
                         };
+                        if (newBld.House == null)
+                        {
+                            HouseType defHouse = Map.HouseTypes.First();
+                            errors.Add(string.Format("Structure '{0}' on cell {1} references unknown house '{2}'; clearing to {3}.", buildingType.Name, cell, tokens[0], defHouse.Name));
+                            modified = true;
+                            newBld.House = defHouse;
+                        }
                         if (Map.Buildings.Add(cell, newBld))
                         {
                             if (!checkTrigs.ContainsKey(tokens[5]))
