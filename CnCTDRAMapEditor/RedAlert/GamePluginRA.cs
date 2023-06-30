@@ -1127,12 +1127,12 @@ namespace MobiusEditor.RedAlert
                             if ("ITALY".Equals(tokens[0], StringComparison.OrdinalIgnoreCase))
                             {
                                 defHouse = HouseTypes.Ukraine;
-                                errors.Add(string.Format("Unit '{0}' on cell {1} has obsolete house '{2}'; clearing to {3}.", newUnit.Type.Name, cell, tokens[0], defHouse.Name));
+                                errors.Add(string.Format("Unit '{0}' on cell {1} has obsolete house '{2}'; substituting with '{3}'.", newUnit.Type.Name, cell, tokens[0], defHouse.Name));
                             }
                             else
                             {
                                 defHouse = Map.HouseTypes.First();
-                                errors.Add(string.Format("Unit '{0}' on cell {1} references unknown house '{2}'; clearing to {3}.", newUnit.Type.Name, cell, tokens[0], defHouse.Name));
+                                errors.Add(string.Format("Unit '{0}' on cell {1} references unknown house '{2}'; clearing to '{3}'.", newUnit.Type.Name, cell, tokens[0], defHouse.Name));
                             }
                             modified = true;
                             newUnit.House = defHouse;
@@ -1260,12 +1260,12 @@ namespace MobiusEditor.RedAlert
                             if ("ITALY".Equals(tokens[0], StringComparison.OrdinalIgnoreCase))
                             {
                                 defHouse = HouseTypes.Ukraine;
-                                errors.Add(string.Format("Aircraft '{0}' on cell {1} has obsolete house '{2}'; clearing to {3}.", newUnit.Type.Name, cell, tokens[0], defHouse.Name));
+                                errors.Add(string.Format("Aircraft '{0}' on cell {1} has obsolete house '{2}'; substituting with '{3}'.", newUnit.Type.Name, cell, tokens[0], defHouse.Name));
                             }
                             else
                             {
                                 defHouse = Map.HouseTypes.First();
-                                errors.Add(string.Format("Aircraft '{0}' on cell {1} references unknown house '{2}'; clearing to {3}.", newUnit.Type.Name, cell, tokens[0], defHouse.Name));
+                                errors.Add(string.Format("Aircraft '{0}' on cell {1} references unknown house '{2}'; clearing to '{3}'.", newUnit.Type.Name, cell, tokens[0], defHouse.Name));
                             }
                             modified = true;
                             newUnit.House = defHouse;
@@ -1377,12 +1377,12 @@ namespace MobiusEditor.RedAlert
                             if ("ITALY".Equals(tokens[0], StringComparison.OrdinalIgnoreCase))
                             {
                                 defHouse = HouseTypes.Ukraine;
-                                errors.Add(string.Format("Ship '{0}' on cell {1} has obsolete house '{2}'; clearing to {3}.", newUnit.Type.Name, cell, tokens[0], defHouse.Name));
+                                errors.Add(string.Format("Ship '{0}' on cell {1} has obsolete house '{2}'; substituting with '{3}'.", newShip.Type.Name, cell, tokens[0], defHouse.Name));
                             }
                             else
                             {
                                 defHouse = Map.HouseTypes.First();
-                                errors.Add(string.Format("Ship '{0}' on cell {1} references unknown house '{2}'; clearing to {3}.", newUnit.Type.Name, cell, tokens[0], defHouse.Name));
+                                errors.Add(string.Format("Ship '{0}' on cell {1} references unknown house '{2}'; clearing to '{3}'.", newShip.Type.Name, cell, tokens[0], defHouse.Name));
                             }
                             modified = true;
                             newShip.House = defHouse;
@@ -1541,12 +1541,12 @@ namespace MobiusEditor.RedAlert
                                         if ("ITALY".Equals(tokens[0], StringComparison.OrdinalIgnoreCase))
                                         {
                                             defHouse = HouseTypes.Ukraine;
-                                            errors.Add(string.Format("Infantry '{0}' on cell {1}, sub-position {2} has obsolete house '{3}'; substituting with {4}.", inf.Type.Name, cell, stoppingPos, tokens[0], defHouse.Name));
+                                            errors.Add(string.Format("Infantry '{0}' on cell {1}, sub-position {2} has obsolete house '{3}'; substituting with '{4}'.", inf.Type.Name, cell, stoppingPos, tokens[0], defHouse.Name));
                                         }
                                         else
                                         {
                                             defHouse = Map.HouseTypes.First();
-                                            errors.Add(string.Format("Infantry '{0}' on cell {1}, sub-position {2} references unknown house '{3}'; clearing to {4}.", inf.Type.Name, cell, stoppingPos, tokens[0], defHouse.Name));
+                                            errors.Add(string.Format("Infantry '{0}' on cell {1}, sub-position {2} references unknown house '{3}'; clearing to '{4}'.", inf.Type.Name, cell, stoppingPos, tokens[0], defHouse.Name));
                                         }
                                         modified = true;
                                         inf.House = defHouse;
@@ -1669,12 +1669,12 @@ namespace MobiusEditor.RedAlert
                             if ("ITALY".Equals(tokens[0], StringComparison.OrdinalIgnoreCase))
                             {
                                 defHouse = RedAlert.HouseTypes.Ukraine;
-                                errors.Add(string.Format("Structure '{0}' on cell {1} has obsolete house '{2}'; substituting with {3}.", buildingType.Name, cell, tokens[0], defHouse.Name));
+                                errors.Add(string.Format("Structure '{0}' on cell {1} has obsolete house '{2}'; substituting with '{3}'.", buildingType.Name, cell, tokens[0], defHouse.Name));
                             }
                             else
                             {
                                 defHouse = Map.HouseTypes.First();
-                                errors.Add(string.Format("Structure '{0}' on cell {1} references unknown house '{2}'; clearing to {3}.", buildingType.Name, cell, tokens[0], defHouse.Name));
+                                errors.Add(string.Format("Structure '{0}' on cell {1} references unknown house '{2}'; clearing to '{3}'.", buildingType.Name, cell, tokens[0], defHouse.Name));
                             }
                             modified = true;
                             newBld.House = defHouse;

@@ -771,7 +771,7 @@ namespace MobiusEditor.TiberianDawn
                         if (teamType.House == null)
                         {
                             HouseType defHouse = Map.HouseTypes.First();
-                            errors.Add(string.Format("Teamtype '{0}' references unknown house '{1}'; clearing to {2}.", Key, tokens[0], defHouse.Name));
+                            errors.Add(string.Format("Teamtype '{0}' references unknown house '{1}'; clearing to '{2}'.", Key, tokens[0], defHouse.Name));
                             modified = true;
                             teamType.House = defHouse;
                         }
@@ -917,7 +917,7 @@ namespace MobiusEditor.TiberianDawn
                                 house = Map.HouseTypes.FirstOrDefault(t => t.Name.Equals(house, StringComparison.OrdinalIgnoreCase))?.Name ?? Model.House.None;
                                 if (Model.House.IsEmpty(house))
                                 {
-                                    errors.Add(string.Format("Trigger '{0}' references unknown House '{1}'. Reverted to 'None'.", Key, tokens[4]));
+                                    errors.Add(string.Format("Trigger '{0}' references unknown House '{1}'; clearing to 'None'.", Key, tokens[4]));
                                     modified = true;
                                 }
                             }
@@ -1122,7 +1122,7 @@ namespace MobiusEditor.TiberianDawn
                                     if (inf.House == null)
                                     {
                                         HouseType defHouse = Map.HouseTypes.First();
-                                        errors.Add(string.Format("Infantry '{0}' on cell {1}, sub-position {2} references unknown house '{3}'; clearing to {4}.", inf.Type.Name, cell, stoppingPos, tokens[0], defHouse.Name));
+                                        errors.Add(string.Format("Infantry '{0}' on cell {1}, sub-position {2} references unknown house '{3}'; clearing to '{4}'.", inf.Type.Name, cell, stoppingPos, tokens[0], defHouse.Name));
                                         modified = true;
                                         inf.House = defHouse;
                                     }
@@ -1239,7 +1239,7 @@ namespace MobiusEditor.TiberianDawn
                         if (newUnit.House == null)
                         {
                             HouseType defHouse = Map.HouseTypes.First();
-                            errors.Add(string.Format("Unit '{0}' on cell {1} references unknown house '{4}'; clearing to {5}.", newUnit.Type.Name, cell, tokens[0], defHouse.Name));
+                            errors.Add(string.Format("Unit '{0}' on cell {1} references unknown house '{2}'; clearing to '{3}'.", newUnit.Type.Name, cell, tokens[0], defHouse.Name));
                             modified = true;
                             newUnit.House = defHouse;
                         }
@@ -1376,7 +1376,7 @@ namespace MobiusEditor.TiberianDawn
                         if (newUnit.House == null)
                         {
                             HouseType defHouse = Map.HouseTypes.First();
-                            errors.Add(string.Format("Aircraft '{0}' on cell {1} references unknown house '{4}'; clearing to {5}.", newUnit.Type.Name, cell, tokens[0], defHouse.Name));
+                            errors.Add(string.Format("Aircraft '{0}' on cell {1} references unknown house '{2}'; clearing to '{3}'.", newUnit.Type.Name, cell, tokens[0], defHouse.Name));
                             modified = true;
                             newUnit.House = defHouse;
                         }
@@ -1490,7 +1490,7 @@ namespace MobiusEditor.TiberianDawn
                         if (newBld.House == null)
                         {
                             HouseType defHouse = Map.HouseTypes.First();
-                            errors.Add(string.Format("Structure '{0}' on cell {1} references unknown house '{2}'; clearing to {3}.", buildingType.Name, cell, tokens[0], defHouse.Name));
+                            errors.Add(string.Format("Structure '{0}' on cell {1} references unknown house '{2}'; clearing to '{3}'.", buildingType.Name, cell, tokens[0], defHouse.Name));
                             modified = true;
                             newBld.House = defHouse;
                         }
