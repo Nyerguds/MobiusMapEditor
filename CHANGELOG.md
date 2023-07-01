@@ -508,3 +508,4 @@ Program bug fixes:
 * Fixed a bug in the dragging logic that made the mouse position and map desynchronise or not work at all when dragging very slowly.* Fixed bugs in the logic to zoom to the map bounds.
 * Fixed crashes that occurred when dragging bibs and buildings out of the right or bottom of the map bounds.
 * Added map load checks on failing to detect the House of units, structures, triggers and teams. This includes a logic for RA to substitute the prerelease House Italy with its final version, Ukraine.
+* Added relevant theaters to theater-specific buildings in the "Built it" trigger event lists.
