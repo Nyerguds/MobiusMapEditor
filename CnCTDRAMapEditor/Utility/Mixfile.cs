@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.MemoryMappedFiles;
 using System.Linq;
+using System.Numerics;
 
 namespace MobiusEditor.Utility
 {
@@ -239,6 +240,9 @@ namespace MobiusEditor.Utility
             Byte[] derKeyBytes = Convert.FromBase64String(PublicKey);
             byte[] modulusBytes = new byte[40];
             Array.Copy(derKeyBytes, 2, modulusBytes, 0, modulusBytes.Length);
+            Array.Reverse(modulusBytes);
+            BigInteger publicModulus = new BigInteger(modulusBytes);
+            BigInteger publicExponent = new BigInteger(65537);
             // Read blocks
             byte[] readBlock;
             using (Stream headerStream = this.CreateViewStream(mixMap, mixStart, mixLength, readOffset, 80))
@@ -246,7 +250,7 @@ namespace MobiusEditor.Utility
                 readBlock = headerStream.ReadAllBytes();
                 readOffset += 80;
             }
-            byte[] blowFishKey = MixFileCrypto.DecryptBlowfishKey(readBlock);
+            byte[] blowFishKey = MixFileCrypto.DecryptBlowfishKey(readBlock, publicModulus, publicExponent);
             Byte[] blowBuffer = new byte[BlowfishStream.SIZE_OF_BLOCK];
             long remaining = mixLength - readOffset;
             byte[] decryptedHeader;

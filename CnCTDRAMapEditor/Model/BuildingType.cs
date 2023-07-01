@@ -17,6 +17,7 @@ using MobiusEditor.Render;
 using MobiusEditor.Utility;
 using System;
 using System.Drawing;
+using System.Linq;
 
 namespace MobiusEditor.Model
 {
@@ -49,6 +50,22 @@ namespace MobiusEditor.Model
         public sbyte ID { get; private set; }
         public string Name { get; private set; }
         public string DisplayName { get; private set; }
+        public string DisplayNameWithTheaterInfo
+        {
+            get
+            {
+                if (this.Theaters == null)
+                {
+                    return this.DisplayName;
+                }
+                if (this.Theaters.Length == 0)
+                {
+                    return this.DisplayName + " (Not in any theaters)";
+                }
+                return this.DisplayName + " (" + String.Join(",", this.Theaters.Select(th => th.Name).ToArray()) +")";
+            }
+        }
+
         public BuildingTypeFlag Flag { get; private set; }
         public String GraphicsSource { get; private set; }
         public int FrameOFfset { get; private set; }

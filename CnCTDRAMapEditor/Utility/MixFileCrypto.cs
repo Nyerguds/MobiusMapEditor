@@ -24,21 +24,11 @@ namespace MobiusEditor.Utility
         public const int SIZE_OF_RSA_KEY = 40;
 
         /// <summary>
-        /// C&C RSA key public exponent.
-        /// </summary>
-        private static readonly BigInteger PublicExponent = new BigInteger(65537);
-
-        /// <summary>
-        /// C&C RSA key public modulus.
-        /// </summary>
-        private static readonly BigInteger PublicModulus = BigInteger.Parse("681994811107118991598552881669230523074742337494683459234572860554038768387821901289207730765589");
-
-        /// <summary>
         /// Performs RSA decryption on Blowfish key read from MIX.
         /// </summary>
         /// <param name="encryptedBlowfishKey">Encrypted Blowish key.</param>
         /// <returns>Decrypted Blowfish key.</returns>
-        public static byte[] DecryptBlowfishKey(byte[] encryptedBlowfishKey)
+        public static byte[] DecryptBlowfishKey(byte[] encryptedBlowfishKey, BigInteger publicModulus, BigInteger publicExponent)
         {
             if (encryptedBlowfishKey.Length < SIZE_OF_ENCRYPTED_KEY)
                 throw new ArgumentException("buffer is not long enough");
@@ -53,7 +43,7 @@ namespace MobiusEditor.Utility
                 Array.Copy(encryptedBlowfishKey, i, part, 0, Math.Min(remainingLength, SIZE_OF_RSA_KEY));
                 remainingLength -= SIZE_OF_RSA_KEY;
                 // Perform RSA decryption on 40 byte chunks.
-                var decrypted = BigInteger.ModPow(new BigInteger(part), PublicExponent, PublicModulus).ToByteArray();
+                var decrypted = BigInteger.ModPow(new BigInteger(part), publicExponent, publicModulus).ToByteArray();
 
                 // Trim trailing zeros.
                 int l = decrypted.Length;

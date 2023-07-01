@@ -738,7 +738,7 @@ namespace MobiusEditor.Dialogs
                                 eventValueComboBox.Visible = true;
                                 eventValueComboBox.DisplayMember = "Label";
                                 eventValueComboBox.ValueMember = "Value";
-                                var bldData = plugin.Map.BuildingTypes.Select(t => new ListItem<long>(t.ID, t.DisplayName)).ToArray();
+                                var bldData = plugin.Map.BuildingTypes.Select(t => new ListItem<long>(t.ID, t.DisplayNameWithTheaterInfo)).ToArray();
                                 eventValueComboBox.DataSource = bldData;
                                 eventValueComboBox.DataBindings.Add("SelectedValue", triggerEvent, "Data");
                                 eventValueComboBox.SelectedValue = ListItem.CheckInList(data, bldData);
@@ -796,7 +796,7 @@ namespace MobiusEditor.Dialogs
                                 eventValueComboBox.Visible = true;
                                 eventValueComboBox.DisplayMember = "Label";
                                 eventValueComboBox.ValueMember = "Value";
-                                var bldData = plugin.Map.BuildingTypes.Select(t => new ListItem<long>(t.ID, t.DisplayName)).ToArray();
+                                var bldData = plugin.Map.BuildingTypes.Select(t => new ListItem<long>(t.ID, t.DisplayNameWithTheaterInfo)).ToArray();
                                 eventValueComboBox.DataSource = bldData;
                                 eventValueComboBox.DataBindings.Add("SelectedValue", triggerEvent, "Data");
                                 eventValueComboBox.SelectedValue = ListItem.CheckInList(data, bldData);

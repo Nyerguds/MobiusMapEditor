@@ -555,7 +555,7 @@ namespace MobiusEditor.Model
                 {
                     unitType.Init(gameType, this.HouseTypesIncludingNone.Where(h => h.Equals(unitType.OwnerHouse)).FirstOrDefault(), unitDir);
                 }
-                // Probably already done for most, but required for initialising air unit names for teamtypes if DisableAirUnits is true.
+                // Required for initialising air unit names for teamtypes if DisableAirUnits is true.
                 foreach (ITechnoType techno in this.AllTeamTechnoTypes)
                 {
                     techno.InitDisplayName();
@@ -564,6 +564,11 @@ namespace MobiusEditor.Model
                 foreach (BuildingType buildingType in this.BuildingTypes.Where(itm => !Globals.FilterTheaterObjects || itm.Theaters == null || itm.Theaters.Contains(this.Theater)))
                 {
                     buildingType.Init(gameType, this.HouseTypesIncludingNone.Where(h => h.Equals(buildingType.OwnerHouse)).FirstOrDefault(), bldDir);
+                }
+                // Required for initialising all civilian building names shown in "built it" triggers if FilterTheaterObjects is true.
+                foreach (BuildingType buildingType in this.BuildingTypes)
+                {
+                    buildingType.InitDisplayName();
                 }
             }
             catch (Exception ex)
