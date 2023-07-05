@@ -566,6 +566,7 @@ namespace MobiusEditor.Tools
             {
                 var terrain = mockTerrain.Clone();
                 terrain.Tint = Color.FromArgb(128, Color.White);
+                terrain.IsPreview = true;
                 //previewMap.Technos.Add(location, terrain);
                 if (previewMap.Technos.CanAdd(location, terrain, terrain.Type.OccupyMask) && previewMap.Buildings.Add(location, terrain))
                 {

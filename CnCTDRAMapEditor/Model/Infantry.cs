@@ -57,6 +57,7 @@ namespace MobiusEditor.Model
         public string Trigger { get => trigger; set => SetField(ref trigger, value); }
 
         public Color Tint { get; set; } = Color.White;
+        public bool IsPreview { get; set; }
 
         public Infantry(InfantryGroup infantryGroup)
         {

@@ -66,6 +66,7 @@ namespace MobiusEditor.Model
             get => IsPrebuilt ? tint : Color.FromArgb((int)(tint.A * 0.60f), tint.R, tint.G, tint.B);
             set => tint = value;
         }
+        public bool IsPreview { get; set; }
 
         public override string ToString()
         {

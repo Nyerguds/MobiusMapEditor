@@ -21,6 +21,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
+using System.Drawing.Text;
 using System.Linq;
 
 namespace MobiusEditor.Render
@@ -166,7 +167,7 @@ namespace MobiusEditor.Render
             Func<IEnumerable<Point>> renderLocations = null;
             if (locations != null)
             {
-                renderLocations = () => locations;
+                renderLocations = () => locations.OrderBy(p => p.Y).ThenBy(p => p.X);
             }
             else
             {
@@ -202,17 +203,17 @@ namespace MobiusEditor.Render
                 TemplateType clear = map.TemplateTypes.Where(t => t.Flag == TemplateTypeFlag.Clear).FirstOrDefault();
                 foreach (Point topLeft in renderLocations())
                 {
-                    map.Metrics.GetCell(topLeft, out int cell);
                     Template template = map.Templates[topLeft];
                     TemplateType ttype = template?.Type ?? clear;
                     String name = ttype.Name;
-                    Int32 icon = template?.Icon ?? ((cell & 0x03) | ((cell >> 4) & 0x0C));
+                    Int32 icon = template?.Icon ?? ((topLeft.X & 0x03) | ((topLeft.Y) & 0x03) << 2);
+                    // This should never happen; group tiles should never be placed down on the map.
                     if ((ttype.Flag & TemplateTypeFlag.Group) == TemplateTypeFlag.Group)
                     {
                         name = ttype.GroupTiles[icon];
                         icon = 0;
                     }
-                    // If it's actually placed on the map, show it, even if it has no graphics.
+                    // If something is actually placed on the map, show it, even if it has no graphics.
                     bool success = Globals.TheTilesetManager.GetTileData(name, icon, out Tile tile, true, false);
                     if (tile != null)
                     {
@@ -1283,7 +1284,7 @@ namespace MobiusEditor.Render
                         {
                             RenderOverlay(GameType.None, Point.Empty, tileSize, tileScale, toRender).Item2(ig);
                         }
-                        paintAreaRel = GetOutline(tileSize, bm, outlineThickness, alphaThreshold, Globals.UseClassicFiles);
+                        paintAreaRel = ImageUtils.GetOutline(tileSize, bm, outlineThickness, alphaThreshold, Globals.UseClassicFiles);
                         paintAreas[ovlt.Name] = paintAreaRel;
                     }
                 }
@@ -1345,7 +1346,7 @@ namespace MobiusEditor.Render
                             {
                                 RenderInfantry(new Point(1, 1), tileSize, infantry, (InfantryStoppingType)i).Item2(ig);
                             }
-                            paintAreaRel = GetOutline(tileSize, bm, outlineThickness, alphaThreshold, Globals.UseClassicFiles);
+                            paintAreaRel = ImageUtils.GetOutline(tileSize, bm, outlineThickness, alphaThreshold, Globals.UseClassicFiles);
                             paintAreas[id] = paintAreaRel;
                         }
                     }
@@ -1403,7 +1404,7 @@ namespace MobiusEditor.Render
                         {
                             RenderUnit(gameType, new Point(1, 1), tileSize, toRender).Item2(ig);
                         }
-                        paintAreaRel = GetOutline(tileSize, bm, outlineThickness, alphaThreshold, Globals.UseClassicFiles);
+                        paintAreaRel = ImageUtils.GetOutline(tileSize, bm, outlineThickness, alphaThreshold, Globals.UseClassicFiles);
                         paintAreas[id] = paintAreaRel;
                     }
 
@@ -1474,81 +1475,6 @@ namespace MobiusEditor.Render
                 }
             }
             return false;
-        }
-
-        public static RegionData GetOutline(Size tileSize, Bitmap image, float outline, byte alphaThreshold, bool includeBlack)
-        {
-            byte[] imgData = ImageUtils.GetImageData(image, out int stride, PixelFormat.Format32bppArgb, true);
-            int actualOutlineX = (int)Math.Max(1, outline * tileSize.Width);
-            int actualOutlineY = (int)Math.Max(1, outline * tileSize.Height);
-            Rectangle imageBounds = new Rectangle(Point.Empty, image.Size);
-
-            bool isOpaque(byte[] mapdata, int yVal, int xVal, bool checkBlack)
-            {
-                int address = yVal * stride + xVal * 4;
-                // Check alpha
-                byte alpha = mapdata[address + 3];
-                if (mapdata[address + 3] <= alphaThreshold)
-                {
-                    return false;
-                }
-                if (alpha == 255 || !checkBlack)
-                {
-                    return true;
-                }
-                // Check brightness to exclude shadow
-                byte red = mapdata[address + 2];
-                byte grn = mapdata[address + 1];
-                byte blu = mapdata[address + 0];
-                // Integer method.
-                int redBalanced = red * red * 2126;
-                int grnBalanced = grn * grn * 7152;
-                int bluBalanced = blu * blu * 0722;
-                int lum = (redBalanced + grnBalanced + bluBalanced) / 255 / 255;
-                // The integer division will automatically reduce anything near-black
-                // to zero, so actually checking against a threshold is unnecessary.
-                return lum > 0; // lum > lumThresholdSq * 1000
-            };
-
-            //Func<byte[], int, int, bool> isOpaque_ = (mapdata, yVal, xVal) => mapdata[yVal * stride + xVal * 4 + 3] >= alphaThreshold;
-            List<List<Point>> blobs = BlobDetection.FindBlobs(imgData, image.Width, image.Height, (d, y, x) => isOpaque(d, y, x, !includeBlack), true, false);
-            List<Point> allblobs = new List<Point>();
-            foreach (List<Point> blob in blobs)
-            {
-                foreach (Point p in blob)
-                {
-                    allblobs.Add(p);
-                }
-            }
-            HashSet<Point> drawPoints = new HashSet<Point>();
-            HashSet<Point> removePoints = new HashSet<Point>();
-            foreach (Point p in allblobs)
-            {
-                Rectangle rect = new Rectangle(p.X, p.Y, 1, 1);
-                removePoints.UnionWith(rect.Points());
-                rect.Inflate(actualOutlineX, actualOutlineY);
-                rect.Intersect(imageBounds);
-                if (!rect.IsEmpty)
-                {
-                    drawPoints.UnionWith(rect.Points());
-                }
-            }
-            foreach (Point p in removePoints)
-            {
-                drawPoints.Remove(p);
-            }
-            RegionData rData;
-            using (Region r = new Region())
-            {
-                r.MakeEmpty();
-                Size pixelSize = new Size(1, 1);
-                foreach (Point p in drawPoints)
-                {
-                    r.Union(new Rectangle(p, pixelSize));
-                }
-                rData = r.GetRegionData();
-            }
-            return rData;
         }
 
         public static void RenderAllFootballAreas(Graphics graphics, Map map, Rectangle visibleCells, Size tileSize, double tileScale, GameType gameType)
@@ -1855,16 +1781,16 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static void RenderAllBuildingEffectRadiuses(Graphics graphics, Map map, Rectangle visibleCells, Size tileSize, int effectRadius)
+        public static void RenderAllBuildingEffectRadiuses(Graphics graphics, Map map, Rectangle visibleCells, Size tileSize, int effectRadius, Building selected)
         {
             foreach ((Point topLeft, Building building) in map.Buildings.OfType<Building>()
                 .Where(b => (b.Occupier.Type.Flag & BuildingTypeFlag.IsGapGenerator) != BuildingTypeFlag.None))
             {
-                RenderBuildingEffectRadius(graphics, visibleCells, tileSize, effectRadius, building, topLeft);
+                RenderBuildingEffectRadius(graphics, visibleCells, tileSize, effectRadius, building, topLeft, selected);
             }
         }
 
-        public static void RenderBuildingEffectRadius(Graphics graphics, Rectangle visibleCells, Size tileSize, int effectRadius, Building building, Point topLeft)
+        public static void RenderBuildingEffectRadius(Graphics graphics, Rectangle visibleCells, Size tileSize, int effectRadius, Building building, Point topLeft, Building selected)
         {
             if ((building.Type.Flag & BuildingTypeFlag.IsGapGenerator) != BuildingTypeFlag.IsGapGenerator)
             {
@@ -1879,22 +1805,22 @@ namespace MobiusEditor.Render
             Rectangle circleBounds = GeneralUtils.GetBoxFromCenterCell(topLeft, maskX, maskY, effectRadius, effectRadius, tileSize, out Point center);
             if (visibleCells.IntersectsWith(circleCellBounds))
             {
-                Color alphacorr = Color.FromArgb(building.Tint.A * 128 / 256, circleColor);
+                Color alphacorr = Color.FromArgb(selected == building ? 255 : (building.Tint.A * 128 / 256), circleColor);
                 RenderCircleDiagonals(graphics, tileSize, alphacorr, effectRadius, effectRadius, center);
                 DrawDashesCircle(graphics, circleBounds, tileSize, alphacorr, true, -1.25f, 2.5f);
             }
         }
 
-        public static void RenderAllUnitEffectRadiuses(Graphics graphics, Map map, Rectangle visibleCells, Size tileSize, int jamRadius)
+        public static void RenderAllUnitEffectRadiuses(Graphics graphics, Map map, Rectangle visibleCells, Size tileSize, int jamRadius, Unit selected)
         {
             foreach ((Point topLeft, Unit unit) in map.Technos.OfType<Unit>()
                 .Where(b => (b.Occupier.Type.Flag & (UnitTypeFlag.IsGapGenerator | UnitTypeFlag.IsJammer)) != UnitTypeFlag.None))
             {
-                RenderUnitEffectRadius(graphics, tileSize, jamRadius, unit, topLeft, visibleCells);
+                RenderUnitEffectRadius(graphics, tileSize, jamRadius, unit, topLeft, visibleCells, selected);
             }
         }
 
-        public static void RenderUnitEffectRadius(Graphics graphics, Size tileSize, int jamRadius, Unit unit, Point cell, Rectangle visibleCells)
+        public static void RenderUnitEffectRadius(Graphics graphics, Size tileSize, int jamRadius, Unit unit, Point cell, Rectangle visibleCells, Unit selected)
         {
             bool isJammer = (unit.Type.Flag & UnitTypeFlag.IsJammer) == UnitTypeFlag.IsJammer;
             bool isGapGen = (unit.Type.Flag & UnitTypeFlag.IsGapGenerator) == UnitTypeFlag.IsGapGenerator;
@@ -1904,7 +1830,7 @@ namespace MobiusEditor.Render
             }
             ITeamColor tc = Globals.TheTeamColorManager[unit.House?.BuildingTeamColor];
             Color circleColor = Globals.TheTeamColorManager.GetBaseColor(tc?.Name);
-            Color alphacorr = Color.FromArgb(unit.Tint.A * 128 / 256, circleColor);
+            Color alphacorr = Color.FromArgb(unit == selected ? 255 : (unit.Tint.A * 128 / 256), circleColor);
             if (isJammer)
             {
                 // uses map's Gap Generator range.
@@ -1991,7 +1917,7 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static void RenderWayPointRevealRadius(Graphics graphics, CellMetrics metrics, Rectangle visibleCells, Size tileSize, Color circleColor, bool thickborder, bool forPreview, double revealRadius, Waypoint waypoint)
+        public static void RenderWayPointRevealRadius(Graphics graphics, CellMetrics metrics, Rectangle visibleCells, Size tileSize, Color circleColor, bool isSelected, bool forPreview, double revealRadius, Waypoint waypoint)
         {
             if (waypoint.Cell.HasValue && metrics.GetLocation(waypoint.Cell.Value, out Point cellPoint))
             {
@@ -2008,7 +1934,7 @@ namespace MobiusEditor.Render
                     (int)Math.Round(diam * tileSize.Height));
                 if (visibleCells.IntersectsWith(circleCellBounds))
                 {
-                    DrawDashesCircle(graphics, circleBounds, tileSize, Color.FromArgb(forPreview ? 64 : 128, circleColor), thickborder, 1.25f, 2.5f);
+                    DrawDashesCircle(graphics, circleBounds, tileSize, Color.FromArgb(isSelected && !forPreview ? 255 : 128, circleColor), isSelected, 1.25f, 2.5f);
                 }
             }
         }
@@ -2093,10 +2019,10 @@ namespace MobiusEditor.Render
             };
             // Actual balance is fixed; border is 1, text is 1/2, background is 3/8. The original alpha inside the given colours is ignored.
             fillColor = ApplyAlpha(fillColor, 0x60, alphaAdjust);
-            borderColor = ApplyAlpha(borderColor, 0x100, alphaAdjust);
+            borderColor = ApplyAlpha(borderColor, 0xFF, alphaAdjust);
             textColor = ApplyAlpha(textColor, 0x80, alphaAdjust);
             Color previewFillColor = ApplyAlpha(fillColor, 0x60, alphaAdjust / 2);
-            Color previewBorderColor = ApplyAlpha(borderColor, 0x100, alphaAdjust / 2);
+            Color previewBorderColor = ApplyAlpha(borderColor, 0xFF, alphaAdjust / 2);
             Color previewTextColor = ApplyAlpha(textColor, 0x80, alphaAdjust / 2);
 
             Dictionary<string, Bitmap> renders = new Dictionary<string, Bitmap>();
@@ -2120,26 +2046,51 @@ namespace MobiusEditor.Render
                         }
                         string text = trigPart[0];
                         bool isPreview = trigPart[1] == "P";
+                        Color textCol = isPreview ? previewTextColor : textColor;
 
                         Bitmap bm = new Bitmap(sizeW, sizeH);
                         using (Graphics ctg = Graphics.FromImage(bm))
                         {
+                            SetRenderSettings(ctg, true);
                             Rectangle textBounds = new Rectangle(Point.Empty, tileBounds.Size);
-                            ctg.FillRectangle(isPreview ? prevCellTriggersBackgroundBrush : cellTriggersBackgroundBrush, textBounds);
                             StringFormat stringFormat = new StringFormat
                             {
                                 Alignment = StringAlignment.Center,
                                 LineAlignment = StringAlignment.Center
                             };
-                            using (Font font = ctg.GetAdjustedFont(text, SystemFonts.DefaultFont, textBounds.Width, textBounds.Height,
-                                Math.Max(1, (int)Math.Round(24 * tileScaleHor)), Math.Max(1, (int)Math.Round(48 * tileScaleHor)), stringFormat, true))
+                            //*/
+                            ctg.FillRectangle(isPreview ? prevCellTriggersBackgroundBrush : cellTriggersBackgroundBrush, textBounds);
+                            using (Bitmap textBm = new Bitmap(sizeW, sizeH))
                             {
-                                ctg.DrawString(text.ToString(), font, isPreview ? prevCellTriggersBrush : cellTriggersBrush, textBounds, stringFormat);
+                                using (Graphics textGr = Graphics.FromImage(textBm))
+                                using (Font font = ctg.GetAdjustedFont(text, SystemFonts.DefaultFont, textBounds.Width, textBounds.Height,
+                                    Math.Max(1, (int)Math.Round(24 * tileScaleHor)), Math.Max(1, (int)Math.Round(48 * tileScaleHor)), stringFormat, true))
+                                {
+                                    // If not set, the text will not use alpha
+                                    textGr.TextRenderingHint = TextRenderingHint.SingleBitPerPixel;
+                                    textGr.DrawString(text, font, isPreview ? prevCellTriggersBrush : cellTriggersBrush, textBounds, stringFormat);
+                                }
+                                // Clear background under text to make it more transparent. There are probably more elegant ways to do this, but this works.
+                                RegionData textInline = ImageUtils.GetOutline(new Size(sizeW, sizeH), textBm, 0.00f, (byte)Math.Max(0, textCol.A - 1), true);
+                                using (Region clearArea = new Region(textInline))
+                                using (Brush clear = new SolidBrush(Color.Transparent))
+                                {
+                                    ctg.CompositingMode = CompositingMode.SourceCopy;
+                                    ctg.FillRegion(clear, clearArea);
+                                    ctg.CompositingMode = CompositingMode.SourceOver;
+                                }
+                                ctg.DrawImage(textBm, new Rectangle(0, 0, sizeW, sizeH), 0, 0, sizeW, sizeH, GraphicsUnit.Pixel);
                             }
                         }
                         renders.Add(trigger, bm);
                     }
                 }
+
+                var backupCompositingQuality = graphics.CompositingQuality;
+                var backupInterpolationMode = graphics.InterpolationMode;
+                var backupSmoothingMode = graphics.SmoothingMode;
+                var backupPixelOffsetMode = graphics.PixelOffsetMode;
+                SetRenderSettings(graphics, true);
                 foreach ((Point p, CellTrigger cellTrigger) in toRender)
                 {
                     bool isPreview = cellTrigger.Tint.A != 255;
@@ -2150,6 +2101,11 @@ namespace MobiusEditor.Render
                         graphics.DrawImage(ctBm, renderBounds, tileBounds, GraphicsUnit.Pixel);
                     }
                 }
+                graphics.CompositingQuality = backupCompositingQuality;
+                graphics.InterpolationMode = backupInterpolationMode;
+                graphics.SmoothingMode = backupSmoothingMode;
+                graphics.PixelOffsetMode = backupPixelOffsetMode;
+
             }
             finally
             {

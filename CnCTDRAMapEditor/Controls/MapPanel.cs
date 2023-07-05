@@ -178,21 +178,22 @@ namespace MobiusEditor.Controls
                 zoom = Math.Min(this.maxZoom, isWidth ? (clientActual.Width / (cellsWidth * basicTileSize)) : (clientActual.Height / (cellsHeight * basicTileSize)));
                 this.Zoom = zoom;
             }
+            // Recalculate for current zoom state
+            Rectangle clientCur = this.ClientRectangle;
+            scaleFull = Math.Min(clientCur.Width, clientCur.Height);
+            basicTileSize = scaleFull / mapSize;
             // Check whether there are scrollbars.
-            bool scrollBarVert = clientNoScroll.Width > this.ClientRectangle.Width;
-            bool scrollBarHor = clientNoScroll.Height > this.ClientRectangle.Height;
+            bool scrollBarVert = clientNoScroll.Width > clientCur.Width;
+            bool scrollBarHor = clientNoScroll.Height > clientCur.Height;
             this.InvalidateScroll();
             // Get location of the top left coordinates of the rectangle.
             int x = scrollBarHor ? (int)(scaleFull * zoom * cellPointX / mapSize) : 0;
             int y = scrollBarVert ? (int)(scaleFull * zoom * cellPointY / mapSize) : 0;
             // Add space if needed to center it.
-            if (scrollBarHor)
+            if (scrollBarVert && scrollBarHor)
             {
-                x -= (clientActual.Width - (int)(cellsWidth * basicTileSize * zoom)) / 2;
-            }
-            if (scrollBarVert)
-            {
-                y -= (clientActual.Height - (int)(cellsHeight * basicTileSize * zoom)) / 2;
+                x = x - (clientCur.Width - (int)(cellsWidth * basicTileSize * zoom)) / 2;
+                y = y - (clientCur.Height - (int)(cellsHeight * basicTileSize * zoom)) / 2;
             }
             this.AutoScrollPosition = new Point(x, y);
             this.InvalidateScroll();

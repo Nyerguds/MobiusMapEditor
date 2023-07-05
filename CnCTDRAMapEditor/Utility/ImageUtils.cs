@@ -14,6 +14,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -692,6 +693,94 @@ namespace MobiusEditor.Utility
                 }
             }
             return opaqueBounds;
+        }
+
+        /// <summary>
+        /// Generates an area to fill to create an outline around an image.
+        /// </summary>
+        /// <param name="tileSize">Size of the tile, in pixels.</param>
+        /// <param name="image">Image to detect outline on.</param>
+        /// <param name="outline">Outline thickness, in fraction of tile size. Give 0 to instead return the detected area.</param>
+        /// <param name="alphaThreshold">Alpha threshold for the detection.</param>
+        /// <param name="includeBlack">Include non-transparent black in the criteria for what to consider "transparent". This can be used to ignore black shadows.</param>
+        /// <returns>Region data to fill to create an outline of the object in the image.</returns>
+        public static RegionData GetOutline(Size tileSize, Bitmap image, float outline, byte alphaThreshold, bool includeBlack)
+        {
+            byte[] imgData = ImageUtils.GetImageData(image, out int stride, PixelFormat.Format32bppArgb, true);
+            int actualOutlineX = (int)Math.Max(1, outline * tileSize.Width);
+            int actualOutlineY = (int)Math.Max(1, outline * tileSize.Height);
+            Rectangle imageBounds = new Rectangle(Point.Empty, image.Size);
+
+            bool isOpaque(byte[] mapdata, int yVal, int xVal, bool checkBlack)
+            {
+                int address = yVal * stride + xVal * 4;
+                // Check alpha
+                byte alpha = mapdata[address + 3];
+                if (mapdata[address + 3] <= alphaThreshold)
+                {
+                    return false;
+                }
+                if (alpha == 255 || !checkBlack)
+                {
+                    return true;
+                }
+                // Check brightness to exclude shadow
+                byte red = mapdata[address + 2];
+                byte grn = mapdata[address + 1];
+                byte blu = mapdata[address + 0];
+                // Integer method.
+                int redBalanced = red * red * 2126;
+                int grnBalanced = grn * grn * 7152;
+                int bluBalanced = blu * blu * 0722;
+                int lum = (redBalanced + grnBalanced + bluBalanced) / 255 / 255;
+                // The integer division will automatically reduce anything near-black
+                // to zero, so actually checking against a threshold is unnecessary.
+                return lum > 0; // lum > lumThresholdSq * 1000
+            };
+
+            //Func<byte[], int, int, bool> isOpaque_ = (mapdata, yVal, xVal) => mapdata[yVal * stride + xVal * 4 + 3] >= alphaThreshold;
+            List<List<Point>> blobs = BlobDetection.FindBlobs(imgData, image.Width, image.Height, (d, y, x) => isOpaque(d, y, x, !includeBlack), true, false);
+            HashSet<Point> allblobs = new HashSet<Point>();
+            foreach (List<Point> blob in blobs)
+            {
+                foreach (Point p in blob)
+                {
+                    allblobs.Add(p);
+                }
+            }
+            HashSet<Point> drawPoints = new HashSet<Point>();
+            HashSet<Point> removePoints = new HashSet<Point>();
+            foreach (Point p in allblobs)
+            {
+                Rectangle rect = new Rectangle(p.X, p.Y, 1, 1);
+                // If outline is specified as 0, return inner area.
+                if (outline > 0)
+                {
+                    removePoints.UnionWith(rect.Points());
+                    rect.Inflate(actualOutlineX, actualOutlineY);
+                }
+                rect.Intersect(imageBounds);
+                if (!rect.IsEmpty)
+                {
+                    drawPoints.UnionWith(rect.Points());
+                }
+            }
+            foreach (Point p in removePoints)
+            {
+                drawPoints.Remove(p);
+            }
+            RegionData rData;
+            using (Region r = new Region())
+            {
+                r.MakeEmpty();
+                Size pixelSize = new Size(1, 1);
+                foreach (Point p in drawPoints)
+                {
+                    r.Union(new Rectangle(p, pixelSize));
+                }
+                rData = r.GetRegionData();
+            }
+            return rData;
         }
 
     }

@@ -597,6 +597,7 @@ namespace MobiusEditor.Tools
             var location = navigationWidget.MouseCell;
             var unit = mockUnit.Clone();
             unit.Tint = Color.FromArgb(128, Color.White);
+            unit.IsPreview = true;
             previewMap.Technos.Add(location, unit);
         }
 
@@ -606,7 +607,7 @@ namespace MobiusEditor.Tools
             // Since we manually handle GapRadius painting, need to do the Buildings ones too.
             if ((Layers & (MapLayerFlag.Buildings | MapLayerFlag.EffectRadius)) == (MapLayerFlag.Buildings | MapLayerFlag.EffectRadius))
             {
-                MapRenderer.RenderAllBuildingEffectRadiuses(graphics, previewMap, visibleCells, Globals.MapTileSize, map.GapRadius);
+                MapRenderer.RenderAllBuildingEffectRadiuses(graphics, previewMap, visibleCells, Globals.MapTileSize, map.GapRadius, null);
             }
             this. HandlePaintOutlines(graphics, previewMap, visibleCells, Globals.MapTileSize, Globals.MapTileScale, this.Layers);
             // For bounds, add one more cell to get all borders showing.
@@ -614,40 +615,41 @@ namespace MobiusEditor.Tools
             boundRenderCells.Inflate(1, 1);
             boundRenderCells.Intersect(map.Metrics.Bounds);
             MapRenderer.RenderAllBoundsFromPoint(graphics, boundRenderCells, Globals.MapTileSize, previewMap.Technos.OfType<Unit>());
-            if ((Layers & MapLayerFlag.Units) == MapLayerFlag.Units)
+            if ((Layers & MapLayerFlag.TechnoTriggers) == MapLayerFlag.TechnoTriggers)
             {
-                if ((Layers & MapLayerFlag.TechnoTriggers) == MapLayerFlag.TechnoTriggers)
+                MapRenderer.RenderAllTechnoTriggers(graphics, previewMap, visibleCells, Globals.MapTileSize, Layers);
+            }
+            Unit selected = null;
+            Point? loc = null;
+            if (selectedUnit != null && selectedUnitLocation.HasValue)
+            {
+                selected = selectedUnit;
+                loc = selectedUnitLocation.Value;
+            }
+            else if (placementMode)
+            {
+                (Point p, Unit u) = previewMap.Technos.OfType<Unit>().Where(t => t.Occupier.IsPreview).FirstOrDefault();
+                if (u != null)
                 {
-                    MapRenderer.RenderAllTechnoTriggers(graphics, previewMap, visibleCells, Globals.MapTileSize, Layers);
+                    selected = u;
+                    loc = p;
                 }
-                if ((Layers & MapLayerFlag.EffectRadius) == MapLayerFlag.EffectRadius)
+            }
+            else if (selectedObjectProperties?.ObjectProperties?.Object is Unit un)
+            {
+                loc = map.Technos[un];
+                if (loc.HasValue)
                 {
-                    MapRenderer.RenderAllUnitEffectRadiuses(graphics, previewMap, visibleCells, Globals.MapTileSize, map.RadarJamRadius);
+                    selected = un;
                 }
-                else if (placementMode)
-                {
-                    (Point p, Unit u) = previewMap.Technos.OfType<Unit>().Where(t => t.Occupier.Tint.A != 255).FirstOrDefault();
-                    if (u != null)
-                    {
-                        MapRenderer.RenderUnitEffectRadius(graphics, Globals.MapTileSize, map.RadarJamRadius, u, p, visibleCells);
-                    }
-                }
-                else if (selectedUnit != null && selectedUnitLocation.HasValue)
-                {
-                    Point? loc = map.Technos[selectedUnit];
-                    if (loc.HasValue)
-                    {
-                        MapRenderer.RenderUnitEffectRadius(graphics, Globals.MapTileSize, map.RadarJamRadius, selectedUnit, loc.Value, visibleCells);
-                    }
-                }
-                else if (selectedObjectProperties?.ObjectProperties?.Object is Unit un)
-                {
-                    Point? loc = map.Technos[un];
-                    if (loc.HasValue)
-                    {
-                        MapRenderer.RenderUnitEffectRadius(graphics, Globals.MapTileSize, map.RadarJamRadius, un, loc.Value, visibleCells);
-                    }
-                }
+            }
+            if ((Layers & MapLayerFlag.EffectRadius) == MapLayerFlag.EffectRadius)
+            {
+                MapRenderer.RenderAllUnitEffectRadiuses(graphics, previewMap, visibleCells, Globals.MapTileSize, map.RadarJamRadius, selected);
+            }
+            else if (selected != null && loc.HasValue)
+            {
+                MapRenderer.RenderUnitEffectRadius(graphics, Globals.MapTileSize, map.RadarJamRadius, selected, loc.Value, visibleCells, selected);
             }
         }
 

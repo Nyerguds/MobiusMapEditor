@@ -334,18 +334,25 @@ namespace MobiusEditor.Model
             // Do nothing. Templates have no real UI names.
         }
 
-        public void Init(TheaterType theater)
+        public void Init(GameType gameType, TheaterType theater)
         {
-            Init(theater, false);
+            Init(gameType, theater, false);
         }
 
-        public void Init(TheaterType theater, bool forceDummy)
+        public void Init(GameType gameType, TheaterType theater, bool forceDummy)
         {
-            this.extraTilesFoundOn1x1 = false;
-            bool isRandom = (Flag & TemplateTypeFlag.RandomCell) != TemplateTypeFlag.None;
             bool isGroup = (Flag & TemplateTypeFlag.Group) == TemplateTypeFlag.Group;
+            bool[,] mask = null;
+            LandType[] landTypes = null;
+            bool isRandom = (Flag & TemplateTypeFlag.RandomCell) == TemplateTypeFlag.RandomCell;
+            bool fileInit = gameType == GameType.RedAlert && this.InitFromClassicFile(theater, out mask, out landTypes);
+            if (!fileInit)
+            {
+                mask = new bool[IconHeight, IconWidth];
+            }
+            this.extraTilesFoundOn1x1 = false;
             // This allows mods to add 'random' tiles to existing 1x1 tiles. Check excludes 'Clear' terrain and items already defined as random.
-            if (IconWidth == 1 & IconHeight == 1 && (Flag & TemplateTypeFlag.Clear) == TemplateTypeFlag.None && !isRandom && !isGroup)
+            if (IconWidth == 1 & IconHeight == 1 && (Flag & TemplateTypeFlag.Clear) == TemplateTypeFlag.None && (!isRandom || fileInit) && !isGroup)
             {
                 if (Globals.TheTilesetManager.GetTileDataLength(Name) > 1)
                 {
@@ -355,7 +362,6 @@ namespace MobiusEditor.Model
             }
             Bitmap oldImage = Thumbnail;
             Size size = new Size(Globals.PreviewTileWidth, Globals.PreviewTileHeight);
-            Boolean[,] mask = new bool[IconHeight, IconWidth];
             int loopWidth = IconWidth;
             int loopHeight = IconHeight;
             Int32 numIcons = IconWidth * IconHeight;
@@ -389,7 +395,7 @@ namespace MobiusEditor.Model
                 // Try to get mask; first specific per theater, then the general all-theaters mask.
                 // The dictionary should only contain either a general one or one per theater, so the fetch order doesn't really matter.
                 bool[] maskOv = null;
-                if (!isRandom && MaskOverrides.Keys.Count > 0 && !MaskOverrides.TryGetValue(theater.Name, out maskOv))
+                if (!fileInit && !isRandom && MaskOverrides.Keys.Count > 0 && !MaskOverrides.TryGetValue(theater.Name, out maskOv))
                     MaskOverrides.TryGetValue(String.Empty, out maskOv);
                 for (Int32 y = 0; y < loopHeight; ++y)
                 {
@@ -414,6 +420,18 @@ namespace MobiusEditor.Model
                             iconToFetch = 0;
                             tryDummy = forceDummy;
                         }
+                        if (fileInit && !isRandom && (loopWidth * loopHeight) > 1)
+                        {
+                            if (!mask[y, x])
+                            {
+                                // Don't bother.
+                                continue;
+                            }
+                            else
+                            {
+                                found = true;
+                            }
+                        }
                         // Fetch dummy if definitely in bounds, first cell of a random one, or dummy is forced.
                         bool success = Globals.TheTilesetManager.GetTileData(nameToFetch, iconToFetch, out Tile tile, tryDummy, false);
                         if (tile != null && tile.Image != null)
@@ -422,7 +440,7 @@ namespace MobiusEditor.Model
                             {
                                 g.DrawImage(tileImg, x * size.Width, y * size.Height, size.Width, size.Height);
                             }
-                            if (!isRandom)
+                            if (!isRandom && !fileInit)
                             {
                                 found = mask[y, x] = true;
                             }
@@ -442,33 +460,13 @@ namespace MobiusEditor.Model
                 try { oldImage.Dispose(); }
                 catch { /* ignore */ }
             }
-            LandType[] landTypes = landOverrides != null ? landOverrides.ToArray() : null;
-            int typeIcons = isRandom ? 1 : isGroup ? 0 : numIcons;
-            // All TD tiles have land overrides, so this logic will be skipped for them.
-            if (!isGroup && this.landOverrides == null)
+            if (!fileInit)
             {
-                byte[] fileData = Globals.TheArchiveManager.ReadFileClassic(this.Name + "." + theater.ClassicExtension);
-                if (fileData != null)
-                {
-                    landTypes = Enumerable.Repeat(LandType.Clear, typeIcons).ToArray();
-                    try
-                    {
-                        // TODO: Dimensions are currently not loaded from the classic files yet.
-                        ClassicSpriteLoader.GetRaTmpData(fileData, out _, out _, out byte[] landTypeInfo, out _, out _, out _);
-                        landTypes = new LandType[typeIcons];
-                        int max = Math.Min(typeIcons, landTypeInfo.Length);
-                        for (int icon = 0; icon < max; ++icon)
-                        {
-                            byte val = landTypeInfo[icon];
-                            LandType land = val > tileTypeFromFile.Length ? LandType.Clear : tileTypeFromFile[landTypeInfo[icon]];
-                            landTypes[icon] = land;
-                        }
-                    }
-                    catch (ArgumentException ex) { /* Not able to parse; fall back to all-clear. */ }
-                }
+                landTypes = landOverrides != null ? landOverrides.ToArray() : null;
             }
             if (landTypes == null && !isGroup)
             {
+                int typeIcons = isRandom ? 1 : isGroup ? 0 : numIcons;
                 landTypes = Enumerable.Repeat(LandType.Clear, typeIcons).ToArray();
             }
             // Randoms initialise to 1, then expand and copy that to all tiles.
@@ -478,6 +476,61 @@ namespace MobiusEditor.Model
                 landTypes = Enumerable.Repeat(rntp, numIcons).ToArray();
             }
             LandTypes = landTypes;
+        }
+
+        private Boolean InitFromClassicFile(TheaterType theater, out bool[,] usageMask, out LandType[] landTypes)
+        {
+            usageMask = null;
+            landTypes = null;
+            if ((Flag & TemplateTypeFlag.Group) == TemplateTypeFlag.Group)
+            {
+                return false;
+            }
+            byte[] fileData = Globals.TheArchiveManager.ReadFileClassic(this.Name + "." + theater.ClassicExtension);
+            if (fileData == null)
+            {
+                return false;
+            }
+            //try
+            {
+                ClassicSpriteLoader.GetRaTmpData(fileData, out _, out _, out byte[] landTypeInfo, out bool[] usage, out int width, out int height);
+                this.IconHeight = Math.Max(1, height);
+                this.IconWidth = Math.Max(1, width);
+                this.NumIcons = this.IconWidth * this.IconHeight;
+                landTypes = new LandType[NumIcons];
+                int max = Math.Min(IconWidth * IconHeight, landTypeInfo.Length);
+                for (int icon = 0; icon < max; ++icon)
+                {
+                    byte val = landTypeInfo[icon];
+                    LandType land = val > tileTypeFromFile.Length ? LandType.Clear : tileTypeFromFile[landTypeInfo[icon]];
+                    landTypes[icon] = land;
+                }
+                usageMask = new bool[IconHeight, IconWidth];
+                if (NumIcons > 1)
+                {
+                    int frame = 0;
+                    for (int y = 0; y < IconHeight; y++)
+                    {
+                        for (int x = 0; x < IconWidth; x++)
+                        {
+                            if (frame < max)
+                            {
+                                usageMask[y, x] = usage[frame++];
+                            }
+                        }
+                    }
+                }
+                else if (NumIcons == 1)
+                {
+                    usageMask[0, 0] = true;
+                }
+                return true;
+            }
+            //catch (ArgumentException ex)
+            //{
+                // Parse failure.
+                //return false;
+            //}
         }
 
         public int GetIconIndex(Point point)

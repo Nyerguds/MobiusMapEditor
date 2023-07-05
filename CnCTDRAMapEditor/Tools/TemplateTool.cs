@@ -716,10 +716,9 @@ namespace MobiusEditor.Tools
             Random rnd = new Random();
             Dictionary<int, Template> undoTemplates = new Dictionary<int, Template>();
             Dictionary<int, Template> redoTemplates = new Dictionary<int, Template>();
-            TemplateTypeFlag toRandomise = TemplateTypeFlag.RandomCell | TemplateTypeFlag.IsGrouped;
             Map map = plugin.Map;
 
-            if (map.TemplateTypes.Where(t => t.Theaters == null || t.Theaters.Contains(map.Theater)).All(tm => tm.IsRandom || (tm.Flag & toRandomise) == TemplateTypeFlag.None))
+            if (map.TemplateTypes.Where(t => t.Theaters == null || t.Theaters.Contains(map.Theater)).All(tm => !tm.IsRandom))
             {
                 return "This map's theater does not contain randomizable tiles.";
             }
@@ -730,11 +729,11 @@ namespace MobiusEditor.Tools
                 Point location = new Point(i / mapWidth, i % mapWidth);
                 // For grouped tiles, PickTemplate will return the Group, not the individual tile. So RandomCell is enabled on the result.
                 TemplateType cur = PickTemplate(map, location, true, out _);
-                if (cur == null || (cur.Flag & TemplateTypeFlag.RandomCell) == TemplateTypeFlag.None)
+                if (cur == null || !cur.IsRandom)
                 {
                     continue;
                 }
-                SetTemplate(map, cur, location, null, undoTemplates, redoTemplates, rnd);
+                SetTemplate(map, cur, location, null, undoTemplates, redoTemplates, rnd, true);
             }
             mapPanel.Invalidate(map, redoTemplates.Keys);
             int count = undoTemplates.Count;
@@ -954,7 +953,7 @@ namespace MobiusEditor.Tools
                 {
                     // Special case: tile is not initialised. Initialise with forced dummy generation.
                     // This is really only for the tile FF "research mode" on RA maps.
-                    selected.Init(plugin.Map.Theater, true);
+                    selected.Init(plugin.GameType, plugin.Map.Theater, true);
                 }
                 var templateTypeMetrics = new CellMetrics(selected.ThumbnailIconWidth, selected.ThumbnailIconHeight);
                 CellGrid<Template> templates = null;
@@ -1052,7 +1051,7 @@ namespace MobiusEditor.Tools
                 }
             }
             Dictionary<int, Template> addedRedoTemplates = new Dictionary<int, Template>();
-            SetTemplate(map, selected, location, SelectedIcon, undoTemplates, addedRedoTemplates, random);
+            SetTemplate(map, selected, location, SelectedIcon, undoTemplates, addedRedoTemplates, random, false);
             lastPlaced = selected.Name;
             // Merge with main redoTemplates list.
             addedRedoTemplates.ToList().ForEach(kv => redoTemplates[kv.Key] = kv.Value);
@@ -1063,7 +1062,7 @@ namespace MobiusEditor.Tools
         }
 
         public static void SetTemplate(Map map, TemplateType selected, Point location, Point? SelectedIcon,
-            Dictionary<int, Template> undoTemplates, Dictionary<int, Template> redoTemplates, Random randomiser)
+            Dictionary<int, Template> undoTemplates, Dictionary<int, Template> redoTemplates, Random randomiser, bool diversify)
         {
             if (selected == null)
             {
@@ -1126,13 +1125,56 @@ namespace MobiusEditor.Tools
                             TemplateType placeType = selected;
                             if (isGroup)
                             {
+                                // diversify: when filling random tiles, check that the tiles above and to the left are different.
+                                // This does not consider all 4 sides since they are randomised sequentially per cell number.
+                                List<int> used = new List<int>();
+                                if (diversify && selected.NumIcons > 4)
+                                {
+                                    Template adjNorth = map.Templates.Adjacent(location, FacingType.North);
+                                    if (adjNorth != null && (adjNorth.Type.Flag & TemplateTypeFlag.IsGrouped) != TemplateTypeFlag.None
+                                        && adjNorth.Type.GroupTiles[0] == selected.Name)
+                                    {
+                                        used.Add(adjNorth.Type.ID);
+                                    }
+                                    Template adjWest = map.Templates.Adjacent(location, FacingType.West);
+                                    if (adjWest != null && (adjWest.Type.Flag & TemplateTypeFlag.IsGrouped) != TemplateTypeFlag.None
+                                        && adjWest.Type.GroupTiles[0] == selected.Name)
+                                    {
+                                        used.Add(adjWest.Type.ID);
+                                    }
+                                }
                                 int randomType = randomiser.Next(0, selected.NumIcons);
                                 placeType = map.TemplateTypes.Where(t => t.Name == selected.GroupTiles[randomType]).FirstOrDefault();
                                 placeIcon = 0;
+                                while (used.Contains(placeType.ID))
+                                {
+                                    randomType = randomiser.Next(0, selected.NumIcons);
+                                    placeType = map.TemplateTypes.Where(t => t.Name == selected.GroupTiles[randomType]).FirstOrDefault();
+                                }
                             }
                             else if (isRandom)
                             {
+                                // diversify: when filling random tiles, check that the tiles above and to the left are different.
+                                // This does not consider all 4 sides since they are randomised sequentially per cell number.
+                                List<int> used = new List<int>();
+                                if (diversify && selected.NumIcons > 4)
+                                {
+                                    Template adjNorth = map.Templates.Adjacent(location, FacingType.North);
+                                    if (adjNorth != null && adjNorth.Type.ID == selected.ID)
+                                    {
+                                        used.Add(adjNorth.Icon);
+                                    }
+                                    Template adjWest = map.Templates.Adjacent(location, FacingType.West);
+                                    if (adjWest != null && adjWest.Type.ID == selected.ID)
+                                    {
+                                        used.Add(adjWest.Icon);
+                                    }
+                                }
                                 placeIcon = randomiser.Next(0, selected.NumIcons);
+                                while (used.Contains(placeIcon))
+                                {
+                                    placeIcon = randomiser.Next(0, selected.NumIcons);
+                                }
                             }
                             else
                             {

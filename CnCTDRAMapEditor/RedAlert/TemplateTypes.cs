@@ -83,7 +83,7 @@ namespace MobiusEditor.RedAlert
         public static readonly TemplateType Shore30 = new TemplateType(32, "sh30", 3, 2, new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, null);
         public static readonly TemplateType Shore31 = new TemplateType(33, "sh31", 6, 5, new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, null, "000111 001111 111110 111110 111110");
         public static readonly TemplateType Shore32 = new TemplateType(34, "sh32", 4, 4, new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, null, "0011 1111 1110 1100");
-        public static readonly TemplateType Shore33 = new TemplateType(35, "sh33", 3, 4, new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, null, "011 111 110 110 110");
+        public static readonly TemplateType Shore33 = new TemplateType(35, "sh33", 3, 4, new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, null, "011 111 110 110");
         public static readonly TemplateType Shore34 = new TemplateType(36, "sh34", 6, 5, new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, null, "000111 011110 011100 011100 111000");
         public static readonly TemplateType Shore35 = new TemplateType(37, "sh35", 4, 4, new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, null, "0011 0111 0111 1110");
         public static readonly TemplateType Shore36 = new TemplateType(38, "sh36", 4, 3, new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, null, "0111 1110 1110");

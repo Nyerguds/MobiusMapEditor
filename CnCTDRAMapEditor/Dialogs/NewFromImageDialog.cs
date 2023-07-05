@@ -363,14 +363,8 @@ namespace MobiusEditor.Dialogs
                 templateTypeNavigationWidget = null;
             }
             TemplateType selected = SelectedTemplate;
-            if (selected != null && SelectedColor.HasValue)
+            if (selected != null && selected.Thumbnail != null && SelectedColor.HasValue)
             {
-                if (selected.Thumbnail == null)
-                {
-                    // Special case: tile is not initialised. Initialise with forced dummy generation.
-                    // This is really only for the tile FF "research mode" on RA maps.
-                    selected.Init(plugin.Map.Theater, true);
-                }
                 templateTypeMapPanel.MapImage = selected.Thumbnail;
                 var templateTypeMetrics = new CellMetrics(selected.ThumbnailIconWidth, selected.ThumbnailIconHeight);
                 templateTypeNavigationWidget = new NavigationWidget(templateTypeMapPanel, templateTypeMetrics, Globals.PreviewTileSize, false);

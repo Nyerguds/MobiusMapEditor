@@ -20,10 +20,9 @@ namespace MobiusEditor.Interface
     /// </summary>
     public interface ITechno
     {
+        bool IsPreview { get; set; }
         HouseType House { get; set; }
-
         int Strength { get; set; }
-
         string Trigger { get; set; }
     }
 }

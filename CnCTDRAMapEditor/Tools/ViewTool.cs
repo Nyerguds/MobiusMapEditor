@@ -322,12 +322,12 @@ namespace MobiusEditor.Tools
             if ((layersToRender & (MapLayerFlag.Buildings | MapLayerFlag.EffectRadius)) == (MapLayerFlag.Buildings | MapLayerFlag.EffectRadius)
                 && (manuallyHandledLayers & MapLayerFlag.EffectRadius) == MapLayerFlag.None)
             {
-                MapRenderer.RenderAllBuildingEffectRadiuses(graphics, map, visibleCells, tileSize, map.GapRadius);
+                MapRenderer.RenderAllBuildingEffectRadiuses(graphics, map, visibleCells, tileSize, map.GapRadius, null);
             }
             if ((layersToRender & (MapLayerFlag.Units | MapLayerFlag.EffectRadius)) == (MapLayerFlag.Units | MapLayerFlag.EffectRadius)
                 && (manuallyHandledLayers & MapLayerFlag.EffectRadius) == MapLayerFlag.None)
             {
-                MapRenderer.RenderAllUnitEffectRadiuses(graphics, map, visibleCells, tileSize, map.RadarJamRadius);
+                MapRenderer.RenderAllUnitEffectRadiuses(graphics, map, visibleCells, tileSize, map.RadarJamRadius, null);
             }
             if ((layersToRender & (MapLayerFlag.Waypoints | MapLayerFlag.WaypointRadius)) == (MapLayerFlag.Waypoints | MapLayerFlag.WaypointRadius)
                 && (manuallyHandledLayers & MapLayerFlag.WaypointRadius) == MapLayerFlag.None)

@@ -436,7 +436,7 @@ namespace MobiusEditor.Tools
             }
             Waypoint orig = previewMap.Waypoints[selectedIndex];
             var location = navigationWidget.MouseCell;
-            if(!previewMap.Metrics.GetCell(location, out int cell))
+            if (!previewMap.Metrics.GetCell(location, out int cell))
             {
                 return;
             }

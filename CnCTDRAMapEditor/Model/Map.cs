@@ -530,7 +530,7 @@ namespace MobiusEditor.Model
             {
                 foreach (TemplateType templateType in this.TemplateTypes.Where(itm => itm.Theaters == null || itm.Theaters.Contains(this.Theater)))
                 {
-                    templateType.Init(this.Theater);
+                    templateType.Init(gameType, this.Theater);
                 }
                 foreach (SmudgeType smudgeType in this.SmudgeTypes.Where(itm => !Globals.FilterTheaterObjects || itm.Theaters == null || itm.Theaters.Contains(this.Theater)))
                 {
@@ -575,6 +575,11 @@ namespace MobiusEditor.Model
             {
                 if (!(ex is ThreadAbortException))
                 {
+                    string message = ex.Message;
+                    if (ex is ArgumentException argex)
+                    {
+                        message = GeneralUtils.RecoverArgExceptionMessage(argex, false);
+                    }
                     System.Windows.Forms.MessageBox.Show("An error occurred while initialising the map data for the current theater.\n\n" + ex.Message + "\n" + ex.StackTrace, "Whoops!");
                 }
             }

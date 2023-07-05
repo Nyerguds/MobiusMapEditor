@@ -799,6 +799,7 @@ namespace MobiusEditor.Tools
                     {
                         var infantry = mockInfantry.Clone();
                         infantry.Tint = Color.FromArgb(128, Color.White);
+                        infantry.IsPreview = true;
                         infantryGroup.Infantry[i] = infantry;
                         break;
                     }

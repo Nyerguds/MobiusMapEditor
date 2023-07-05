@@ -34,7 +34,7 @@ namespace MobiusEditor
     static class Program
     {
         const string gameId = "1213210";
-        static readonly String ApplicationPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        public static readonly String ApplicationPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 
         /// <summary>
         /// The main entry point for the application.
@@ -169,6 +169,7 @@ namespace MobiusEditor
             MixfileManager mfm = new MixfileManager(ApplicationPath, gameFolders, modpaths);
             Globals.TheArchiveManager = mfm;
             List<string> loadErrors = new List<string>();
+            List<string> fileLoadErrors = new List<string>();
             // This will map the mix files to the respective games, and look for them in the respective folders.
             // Tiberian Dawn
             mfm.LoadArchive(GameType.TiberianDawn, "local.mix", false);
@@ -192,6 +193,7 @@ namespace MobiusEditor
             if (!loadedFiles.Contains("desert.mix")) loadErrors.Add(prefix + "desert.mix");
             if (!loadedFiles.Contains("temperat.mix")) loadErrors.Add(prefix + "temperat.mix");
             if (!loadedFiles.Contains("winter.mix")) loadErrors.Add(prefix + "winter.mix");
+            if (!mfm.FileExists("conquer.eng")) fileLoadErrors.Add(prefix + "conquer.eng");
 
             // Sole Survivor
             mfm.LoadArchive(GameType.SoleSurvivor, "local.mix", false);
@@ -214,6 +216,7 @@ namespace MobiusEditor
                 if (!loadedFiles.Contains("desert.mix")) loadErrors.Add(prefix + "desert.mix");
                 if (!loadedFiles.Contains("temperat.mix")) loadErrors.Add(prefix + "temperat.mix");
                 if (!loadedFiles.Contains("winter.mix")) loadErrors.Add(prefix + "winter.mix");
+                if (!mfm.FileExists("conquer.eng")) fileLoadErrors.Add(prefix + "conquer.eng");
             }
             // Red Alert
             // Aftermath expand file. Required. Contains latest strings file.
@@ -226,6 +229,8 @@ namespace MobiusEditor
             mfm.LoadArchive(GameType.RedAlert, "main.mix", false, true, false, true);
             // Needed for theater palettes and the remap settings in palette.cps
             mfm.LoadArchive(GameType.RedAlert, "local.mix", false, false, true, true);
+            // Not normally needed, but in the beta this contains palette.cps.
+            mfm.LoadArchive(GameType.RedAlert, "general.mix", false, false, true, true);
             // Mod addons
             mfm.LoadArchives(GameType.RedAlert, "sc*.mix", true);
             // Main graphics archive
@@ -252,6 +257,8 @@ namespace MobiusEditor
             if (!loadedFiles.Contains("temperat.mix")) loadErrors.Add(prefix + "temperat.mix");
             if (!loadedFiles.Contains("snow.mix")) loadErrors.Add(prefix + "snow.mix");
             if (!loadedFiles.Contains("interior.mix")) loadErrors.Add(prefix + "interior.mix");
+            if (!mfm.FileExists("palette.cps")) fileLoadErrors.Add(prefix + "palette.cps");
+            if (!mfm.FileExists("conquer.eng")) fileLoadErrors.Add(prefix + "conquer.eng");
             mfm.Reset(GameType.None, null);
 
 #if !DEVELOPER
@@ -260,6 +267,15 @@ namespace MobiusEditor
                 StringBuilder msg = new StringBuilder();
                 msg.Append("Required data is missing or corrupt. The following mix files could not be opened:").Append('\n');
                 string errors = String.Join("\n", loadErrors.ToArray());
+                msg.Append(errors);
+                MessageBox.Show(msg.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
+            if (fileLoadErrors.Count > 0)
+            {
+                StringBuilder msg = new StringBuilder();
+                msg.Append("Required data is missing or corrupt. The following data files could not be opened:").Append('\n');
+                string errors = String.Join("\n", fileLoadErrors.ToArray());
                 msg.Append(errors);
                 MessageBox.Show(msg.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
