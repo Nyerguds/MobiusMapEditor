@@ -2229,13 +2229,17 @@ namespace MobiusEditor.RedAlert
         public IEnumerable<string> ReadRules(Byte[] rulesFile)
         {
             this.rulesIni = ReadRulesFile(rulesFile);
-            return UpdateRules(rulesIni, this.Map);
+            if (this.rulesIni != null)
+            {
+                return UpdateRules(rulesIni, this.Map);
+            }
+            return null;
         }
 
         public IEnumerable<string> ReadExpandRules(Byte[] rulesFile)
         {
             this.aftermathRulesIni = ReadRulesFile(rulesFile);
-            if (this.Map.BasicSection.ExpansionEnabled)
+            if (this.aftermathRulesIni != null && this.Map.BasicSection.ExpansionEnabled)
             {
                 return UpdateRules(aftermathRulesIni, this.Map);
             }
