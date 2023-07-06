@@ -298,56 +298,26 @@ namespace MobiusEditor.RedAlert
         {
             get
             {
-                INI ini = new INI();
+                INI extraTextIni = new INI();
                 if (extraSections != null)
                 {
-                    ini.Sections.AddRange(extraSections);
+                    extraTextIni.Sections.AddRange(extraSections);
                 }
-                return ini.ToString();
+                return extraTextIni.ToString();
             }
             set
             {
-                INI ini = new INI();
+                INI extraTextIni = new INI();
                 try
                 {
-                    ini.Parse(value);
+                    extraTextIni.Parse(value ?? String.Empty);
                 }
                 catch
                 {
                     return;
                 }
-                // Strip "NewUnitsEnabled" from the Aftermath section.
-                INISection amSection = ini.Sections["Aftermath"];
-                if (amSection != null)
-                {
-                    amSection.Keys.Remove("NewUnitsEnabled");
-                }
-                // Remove any sections known and handled / disallowed by the editor.
-                ini.Sections.Remove("Digest");
-                INITools.ClearDataFrom(ini, "Basic", (BasicSection)Map.BasicSection);
-                INITools.ClearDataFrom(ini, "Map", Map.MapSection);
-                ini.Sections.Remove("Steam");
-                ini.Sections.Remove("TeamTypes");
-                ini.Sections.Remove("Trigs");
-                ini.Sections.Remove("MapPack");
-                ini.Sections.Remove("Terrain");
-                ini.Sections.Remove("OverlayPack");
-                ini.Sections.Remove("Smudge");
-                ini.Sections.Remove("Units");
-                ini.Sections.Remove("Aircraft");
-                ini.Sections.Remove("Ships");
-                ini.Sections.Remove("Infantry");
-                ini.Sections.Remove("Structures");
-                ini.Sections.Remove("Base");
-                ini.Sections.Remove("Waypoints");
-                ini.Sections.Remove("CellTriggers");
-                ini.Sections.Remove("Briefing");
-                foreach (House house in Map.Houses)
-                {
-                    INITools.ClearDataFrom(ini, house.Type.Name, house);
-                }
-                extraSections = ini.Sections.Count == 0 ? null : ini.Sections;
-                IEnumerable<string> errors = UpdateRules(ini, this.Map);
+                IEnumerable<string> errors = ResetRules(extraTextIni);
+                extraSections = extraTextIni.Sections.Count == 0 ? null : extraTextIni.Sections;
                 if (errors.Count() > 0)
                 {
                     // Kind of a weird case; rules text is indeed updated, but this is the only way to give feedback.
@@ -355,6 +325,75 @@ namespace MobiusEditor.RedAlert
                 }
             }
         }
+
+        /// <summary>
+        /// Trims the given extra ini content to just unmanaged information,
+        /// resets the plugin's rules to their defaults, and then applies any
+        /// rules in the given extra ini content to the plugin.
+        /// </summary>
+        /// <param name="extraTextIni">Ini content that remains after parsing an ini file. If null, only a rules reset is performed.</param>
+        /// <returns>Any errors in parsing the <paramref name="extraTextIni"/> contents.</returns>
+        private IEnumerable<string> ResetRules(INI extraTextIni)
+        {
+            if (extraTextIni != null)
+            {
+                // Strip "NewUnitsEnabled" from the Aftermath section.
+                INISection amSection = extraTextIni.Sections["Aftermath"];
+                if (amSection != null)
+                {
+                    amSection.Keys.Remove("NewUnitsEnabled");
+                }
+                // Remove any sections known and handled / disallowed by the editor.
+                extraTextIni.Sections.Remove("Digest");
+                INITools.ClearDataFrom(extraTextIni, "Basic", (BasicSection)Map.BasicSection);
+                INITools.ClearDataFrom(extraTextIni, "Map", Map.MapSection);
+                extraTextIni.Sections.Remove("Steam");
+                extraTextIni.Sections.Remove("TeamTypes");
+                extraTextIni.Sections.Remove("Trigs");
+                extraTextIni.Sections.Remove("MapPack");
+                extraTextIni.Sections.Remove("Terrain");
+                extraTextIni.Sections.Remove("OverlayPack");
+                extraTextIni.Sections.Remove("Smudge");
+                extraTextIni.Sections.Remove("Units");
+                extraTextIni.Sections.Remove("Aircraft");
+                extraTextIni.Sections.Remove("Ships");
+                extraTextIni.Sections.Remove("Infantry");
+                extraTextIni.Sections.Remove("Structures");
+                extraTextIni.Sections.Remove("Base");
+                extraTextIni.Sections.Remove("Waypoints");
+                extraTextIni.Sections.Remove("CellTriggers");
+                extraTextIni.Sections.Remove("Briefing");
+                foreach (House house in Map.Houses)
+                {
+                    INITools.ClearDataFrom(extraTextIni, house.Type.Name, house);
+                }
+            }
+            if (this.rulesIni != null)
+            {
+                UpdateRules(rulesIni, this.Map);
+            }
+            if (this.aftermathRulesIni != null && Map.BasicSection.ExpansionEnabled)
+            {
+                UpdateRules(aftermathRulesIni, this.Map);
+            }
+            if (this.multiplayRulesIni != null && !this.Map.BasicSection.SoloMission)
+            {
+                UpdateRules(multiplayRulesIni, this.Map);
+            }
+            return extraTextIni == null ? null : UpdateRules(extraTextIni, this.Map);
+        }
+        
+        private INI rulesIni;
+        private INI aftermathRulesIni;
+        private INI multiplayRulesIni;
+
+        private readonly RaLandIniSection LandClear = new RaLandIniSection(90, 80, 60, 00, true);
+        private readonly RaLandIniSection LandRough = new RaLandIniSection(80, 70, 40, 00, false);
+        private readonly RaLandIniSection LandRoad = new RaLandIniSection(100, 100, 100, 00, true);
+        private readonly RaLandIniSection LandWater = new RaLandIniSection(00, 00, 00, 100, false);
+        private readonly RaLandIniSection LandRock = new RaLandIniSection(00, 00, 00, 00, false);
+        private readonly RaLandIniSection LandBeach = new RaLandIniSection(80, 70, 40, 00, false);
+        private readonly RaLandIniSection LandRiver = new RaLandIniSection(00, 00, 00, 00, false);
 
         public static bool CheckForRAMap(INI contents)
         {
@@ -451,6 +490,8 @@ namespace MobiusEditor.RedAlert
                 Map.BasicSection.Player = Map.HouseTypes.FirstOrDefault()?.Name;
                 Map.BasicSection.Name = emptyMapName;
                 UpdateBasePlayerHouse();
+                // Initialises rules.
+                ResetRules(null);
             }
             finally
             {
@@ -1221,7 +1262,7 @@ namespace MobiusEditor.RedAlert
                         }
                         if (!aftermathEnabled && aircraftType.IsExpansionUnit)
                         {
-                            errors.Add(string.Format("Expansion unit '{0}' encountered, but expansion units are not enabled; enabling expansion units.", aircraftType.Name));
+                            errors.Add(string.Format("Expansion aircraft '{0}' encountered, but expansion units are not enabled; enabling expansion units.", aircraftType.Name));
                             modified = true;
                             Map.BasicSection.ExpansionEnabled = aftermathEnabled = true;
                         }
@@ -1337,7 +1378,7 @@ namespace MobiusEditor.RedAlert
                         }
                         if (!aftermathEnabled && vesselType.IsExpansionUnit)
                         {
-                            errors.Add(string.Format("Expansion unit '{0}' encountered, but expansion units are not enabled; enabling expansion units.", vesselType.Name));
+                            errors.Add(string.Format("Expansion ship '{0}' encountered, but expansion units are not enabled; enabling expansion units.", vesselType.Name));
                             modified = true;
                             Map.BasicSection.ExpansionEnabled = aftermathEnabled = true;
                         }
@@ -1469,7 +1510,7 @@ namespace MobiusEditor.RedAlert
                         }
                         if (!aftermathEnabled && infantryType.IsExpansionUnit)
                         {
-                            errors.Add(string.Format("Expansion infantry '{0}' encountered, but expansion units are not enabled; enabling expansion units.", infantryType.Name));
+                            errors.Add(string.Format("Expansion infantry unit '{0}' encountered, but expansion units are not enabled; enabling expansion units.", infantryType.Name));
                             modified = true;
                             Map.BasicSection.ExpansionEnabled = aftermathEnabled = true;
                         }
@@ -2154,7 +2195,9 @@ namespace MobiusEditor.RedAlert
             // Won't trigger the notifications.
             Map.Triggers.Clear();
             Map.Triggers.AddRange(triggers);
-            extraSections = ini.Sections;
+            // init rules stuff
+            errors.AddRange(this.ResetRules(ini));
+            this.extraSections = ini.Sections;
             bool switchedToSolo = false;
             if (forceSoloMission && !basic.SoloMission)
             {
@@ -2183,22 +2226,43 @@ namespace MobiusEditor.RedAlert
             return errors;
         }
 
-        public void ReadRules(Byte[] rulesFile)
+        public IEnumerable<string> ReadRules(Byte[] rulesFile)
+        {
+            this.rulesIni = ReadRulesFile(rulesFile);
+            return UpdateRules(rulesIni, this.Map);
+        }
+
+        public IEnumerable<string> ReadExpandRules(Byte[] rulesFile)
+        {
+            this.aftermathRulesIni = ReadRulesFile(rulesFile);
+            if (this.Map.BasicSection.ExpansionEnabled)
+            {
+                return UpdateRules(aftermathRulesIni, this.Map);
+            }
+            return null;
+        }
+
+        public IEnumerable<string> ReadMultiRules(Byte[] rulesFile)
+        {
+            this.multiplayRulesIni = ReadRulesFile(rulesFile);
+            if (this.multiplayRulesIni != null && !this.Map.BasicSection.SoloMission)
+            {
+                return UpdateRules(multiplayRulesIni, this.Map);
+            }
+            return null;
+        }
+
+        private INI ReadRulesFile(Byte[] rulesFile)
         {
             if (rulesFile == null)
             {
-                return;
+                return null;
             }
-            // TODO read this. Might keep it as ini to just look up stuff from as fallback.
-        }
-
-        public void PatchRules(Byte[] rulesUpdFile)
-        {
-            if (rulesUpdFile == null)
-            {
-                return;
-            }
-            // TODO read this. Might keep it as ini to just look up stuff from as fallback.
+            Encoding encDOS = Encoding.GetEncoding(437);
+            string iniText = encDOS.GetString(rulesFile);
+            INI ini = new INI();
+            ini.Parse(iniText);
+            return ini;
         }
 
         private Boolean FixCorruptTiles(Template template, byte iconValue, out byte newIconValue, out string type)
@@ -2295,31 +2359,91 @@ namespace MobiusEditor.RedAlert
                 && (templateType.IconMask == null || templateType.IconMask[newIconValue / templateType.IconWidth, newIconValue % templateType.IconWidth]);
         }
 
+        /// <summary>
+        /// Update rules according to the information in the given ini file.
+        /// </summary>
+        /// <param name="ini">ini file</param>
+        /// <param name="map">Current map; used for ini parsing.</param>
+        /// <returns>Any errors returned by the parsing process.</returns>
         private IEnumerable<string> UpdateRules(INI ini, Map map)
         {
             List<string> errors = new List<string>();
-            errors.AddRange(UpdateGeneralRules(ini, map));
-            errors.AddRange(UpdateBuildingRules(ini, map));
+            if (ini == null)
+            {
+                errors.Add("Rules file is null!");
+            }
+            else
+            {
+                errors.AddRange(UpdateLandTypeRules(ini, map));
+                errors.AddRange(UpdateGeneralRules(ini, map));
+                errors.AddRange(UpdateBuildingRules(ini, map));
+            }
             return errors;
+        }
+
+        private IEnumerable<string> UpdateLandTypeRules(INI ini, Map map)
+        {
+            List<string> errors = new List<string>();
+            this.ReadLandType(ini, map, "Clear", LandClear, errors);
+            this.ReadLandType(ini, map, "Rough", LandRough, errors);
+            this.ReadLandType(ini, map, "Road", LandRoad, errors);
+            this.ReadLandType(ini, map, "Water", LandWater, errors);
+            this.ReadLandType(ini, map, "Rock", LandRock, errors);
+            this.ReadLandType(ini, map, "Beach", LandBeach, errors);
+            this.ReadLandType(ini, map, "River", LandRiver, errors);
+            return errors;
+        }
+
+        private void ReadLandType(INI ini, Map map, string landType, RaLandIniSection landRules, List<string> errors)
+        {
+            if (ini == null || landRules == null)
+            {
+                return;
+            }
+            INISection landIni = ini[landType];
+            if (landIni == null)
+            {
+                return;
+            }
+            try
+            {
+                List<(string, string)> parseErrors = INI.ParseSection(new MapContext(map, false), landIni, landRules, true);
+                if (errors != null)
+                {
+                    foreach ((string iniKey, string error) in parseErrors)
+                    {
+                        errors.Add("Custom rules error on [" + landType + "]: " + error.TrimEnd('.') + ". Value for \"" + iniKey + "\" is ignored.");
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                if (errors != null)
+                {
+                    // Normally won't happen with the aforementioned system.
+                    errors.Add("Custom rules error on [" + landType + "]: " + e.Message.TrimEnd('.') + ". Rule updates for [" + landType + "] are ignored.");
+                }
+            }
+        
         }
 
         private IEnumerable<string> UpdateGeneralRules(INI ini, Map map)
         {
             List<string> errors = new List<string>();
-            int? goldVal = GetIntRulesValue(ini, "General", "GoldValue", errors);
+            int? goldVal = GetIntRulesValue(ini, "General", "GoldValue", false, errors);
             map.TiberiumOrGoldValue = goldVal ?? DefaultGoldValue;
-            int? gemVal = GetIntRulesValue(ini, "General", "GemValue", errors);
+            int? gemVal = GetIntRulesValue(ini, "General", "GemValue", false, errors);
             map.GemValue = gemVal ?? DefaultGemValue;
-            int? radius = GetIntRulesValue(ini, "General", "DropZoneRadius", errors);
+            int? radius = GetIntRulesValue(ini, "General", "DropZoneRadius", false, errors);
             map.DropZoneRadius = radius ?? DefaultDropZoneRadius;
-            int? gapRadius = GetIntRulesValue(ini, "General", "GapRadius", errors);
+            int? gapRadius = GetIntRulesValue(ini, "General", "GapRadius", false, errors);
             map.GapRadius = gapRadius ?? DefaultGapRadius;
-            int? jamRadius = GetIntRulesValue(ini, "General", "RadarJamRadius", errors);
+            int? jamRadius = GetIntRulesValue(ini, "General", "RadarJamRadius", false, errors);
             map.RadarJamRadius = jamRadius ?? DefaultJamRadius;
             return errors;
         }
 
-        private int? GetIntRulesValue(INI ini, string sec, string key, List<string> errors)
+        private int? GetIntRulesValue(INI ini, string sec, string key, bool percentage, List<string> errors)
         {
             INISection section = ini.Sections[sec];
             if (section == null)
@@ -2327,15 +2451,22 @@ namespace MobiusEditor.RedAlert
                 return null;
             }
             string valStr = section.TryGetValue(key);
+            string valStrOrig = valStr;
             if (valStr != null)
             {
+                valStr = valStr.Trim();
+                if (percentage)
+                {
+                    valStr = valStr.TrimEnd('%', ' ', '\t');
+                }
                 try
                 {
                     return Int32.Parse(valStr);
                 }
                 catch
                 {
-                    errors.Add(String.Format("Bad value for \"{0}\" rule in section [{1}]. Needs an integer number.", key, sec));
+                    errors.Add(String.Format("Bad value \"{0}\" for \"{1}\" rule in section [{2}]. Needs an integer number{3}.",
+                        valStrOrig, key, sec, percentage ? " percentage" : String.Empty));
                 }
             }
             return null;
@@ -2456,7 +2587,7 @@ namespace MobiusEditor.RedAlert
         public bool Save(string path, FileType fileType, Bitmap customPreview, bool dontResavePreview)
         {
             string errors = Validate(false);
-            if (errors != null)
+            if (!String.IsNullOrWhiteSpace(errors))
             {
                 MessageBox.Show(errors, "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
@@ -3036,9 +3167,14 @@ namespace MobiusEditor.RedAlert
 
         public string Validate(Boolean forWarnings)
         {
-            StringBuilder sb;
+            StringBuilder sb = new StringBuilder();
             if (forWarnings)
             {
+                // Check if map has name
+                if (this.MapNameIsEmpty(this.Map.BasicSection.Name))
+                {
+                    sb.AppendLine("Map name is empty. If you continue, the filename will be filled in as map name.");
+                }
                 // Check if the map or any of the scripting references ants, and if so, if their rules are filled in.
                 UnitType[] antUs = { UnitTypes.Ant1, UnitTypes.Ant2, UnitTypes.Ant3 };
                 BuildingType[] antBRaw = { BuildingTypes.Queen, BuildingTypes.Larva1, BuildingTypes.Larva2 };
@@ -3052,7 +3188,7 @@ namespace MobiusEditor.RedAlert
                 // Nothing found.
                 if (usedAntBldTypes.Count == 0 && usedAntUnitTypes.Count == 0)
                 {
-                    return null;
+                    return sb.ToString();
                 }
                 bool hasQueen = usedAntBldTypes.Any(bld => bld.ID == BuildingTypes.Queen.ID);
                 List<String> types = new List<string>();
@@ -3068,7 +3204,7 @@ namespace MobiusEditor.RedAlert
                 }
                 if (types.Count == 0)
                 {
-                    return null;
+                    return sb.ToString();
                 }
                 sb = new StringBuilder("The following ant units and structures were found on the map or in the scripting, but have no ini rules set to properly define their stats:");
                 sb.Append("\n\n").Append(String.Join(", ", types.ToArray()));
@@ -3077,7 +3213,7 @@ namespace MobiusEditor.RedAlert
                 sb.Append(" The definitions can be set in Settings → Map Settings → INI Rules & Tweaks.");
                 return sb.ToString();
             }
-            sb = new StringBuilder("Error(s) during map validation:");
+            sb.AppendLine("Error(s) during map validation:");
             bool ok = true;
             int numAircraft = Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsAircraft).Count();
             int numBuildings = Map.Buildings.OfType<Building>().Where(x => x.Occupier.IsPrebuilt).Count();
@@ -3829,109 +3965,38 @@ namespace MobiusEditor.RedAlert
             return flagColors;
         }
 
-        public bool IsVehiclePassable(LandType landType)
+
+        private RaLandIniSection GetLandInfo(LandType landType)
         {
             switch (landType)
             {
-                case LandType.Clear:
-                case LandType.Beach:
-                case LandType.Road:
-                case LandType.Rough:
-                    return true;
-                case LandType.Rock:
-                case LandType.River:
-                case LandType.Water:
-                    return false;
+                case LandType.Clear: return this.LandClear;
+                case LandType.Beach: return this.LandBeach;
+                case LandType.Road: return this.LandRoad;
+                case LandType.Rough: return this.LandRough;
+                case LandType.Rock: return this.LandRock;
+                case LandType.River: return this.LandRiver;
+                case LandType.Water: return this.LandWater;
             }
-            // TODO make rules-obeying versions.
-            switch (landType)
-            {
-                case LandType.Clear:
-                    break;
-                case LandType.Beach:
-                    break;
-                case LandType.Rock:
-                    break;
-                case LandType.Road:
-                    break;
-                case LandType.Water:
-                    break;
-                case LandType.River:
-                    break;
-                case LandType.Rough:
-                    break;
-            }
-            return false;
+            return null;
         }
 
-        public bool IsBuildable(LandType landType)
+        public bool IsLandUnitPassable(LandType landType)
         {
-            switch (landType)
-            {
-                case LandType.Clear:
-                case LandType.Road:
-                    return true;
-                case LandType.Beach:
-                case LandType.Rock:
-                case LandType.Water:
-                case LandType.River:
-                case LandType.Rough:
-                    return false;
-            }
-            // TODO make rules-obeying versions.
-            switch (landType)
-            {
-                case LandType.Clear:
-                    break;
-                case LandType.Beach:
-                    break;
-                case LandType.Rock:
-                    break;
-                case LandType.Road:
-                    break;
-                case LandType.Water:
-                    break;
-                case LandType.River:
-                    break;
-                case LandType.Rough:
-                    break;
-            }
-            return false;
+            RaLandIniSection landInfo = GetLandInfo(landType);
+            return landInfo != null && (landInfo.Foot > 0 || landInfo.Wheel > 0 || landInfo.Track > 0);
         }
 
         public bool IsBoatPassable(LandType landType)
         {
-            switch (landType)
-            {
-                case LandType.Water:
-                    return true;
-                case LandType.Clear:
-                case LandType.Beach:
-                case LandType.Rock:
-                case LandType.Road:
-                case LandType.River:
-                case LandType.Rough:
-                    return false;
-            }
-            // TODO make rules-obeying versions.
-            switch (landType)
-            {
-                case LandType.Clear:
-                    break;
-                case LandType.Beach:
-                    break;
-                case LandType.Rock:
-                    break;
-                case LandType.Road:
-                    break;
-                case LandType.Water:
-                    break;
-                case LandType.River:
-                    break;
-                case LandType.Rough:
-                    break;
-            }
-            return false;
+            RaLandIniSection landInfo = GetLandInfo(landType);
+            return landInfo != null && landInfo.Float > 0;
+        }
+
+        public bool IsBuildable(LandType landType)
+        {
+            RaLandIniSection landInfo = GetLandInfo(landType);
+            return landInfo != null && landInfo.Buildable;
         }
 
         private void BasicSection_PropertyChanged(object sender, PropertyChangedEventArgs e)

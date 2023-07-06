@@ -13,7 +13,9 @@
 // GNU General Public License along with permitted additional restrictions
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using MobiusEditor.Model;
+using MobiusEditor.Utility;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Reflection;
@@ -470,5 +472,37 @@ namespace MobiusEditor.RedAlert
         {
             return Types;
         }
+    }
+
+    public class RaLandIniSection
+    {
+        public RaLandIniSection(int footSpeed, int trackSpeed, int wheelSpeed, int floatSpeed, bool buildable)
+        {
+            this.Foot = footSpeed;
+            this.Track = trackSpeed;
+            this.Wheel = wheelSpeed;
+            this.Float = floatSpeed;
+            this.Buildable = buildable;
+        }
+
+        [DefaultValue(0)]
+        [TypeConverter(typeof(PercentageTypeConverter))]
+        public int Foot { get; set; }
+
+        [DefaultValue(0)]
+        [TypeConverter(typeof(PercentageTypeConverter))]
+        public int Track { get; set; }
+
+        [DefaultValue(0)]
+        [TypeConverter(typeof(PercentageTypeConverter))]
+        public int Wheel { get; set; }
+
+        [DefaultValue(0)]
+        [TypeConverter(typeof(PercentageTypeConverter))]
+        public int Float { get; set; }
+
+        [TypeConverter(typeof(OneZeroBooleanTypeConverter))]
+        [DefaultValue(0)]
+        public bool Buildable { get; set; }
     }
 }

@@ -13,6 +13,7 @@
 //   0. You just DO WHAT THE FUCK YOU WANT TO.
 using MobiusEditor.Model;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace MobiusEditor.Utility
@@ -82,10 +83,26 @@ namespace MobiusEditor.Utility
         /// <returns>Null if the section was not found, otherwise the trimmed section.</returns>
         public static INISection ParseAndLeaveRemainder<T>(INI ini, string name, T data, MapContext context)
         {
+            return ParseAndLeaveRemainder<T>(ini, name, data, context, false, out _);
+        }
+
+        /// <summary>
+        /// Will find a section in the ini information, parse its data into the given data object, remove all
+        /// keys managed by the data object from the ini section, and, if empty, remove the section from the ini.
+        /// </summary>
+        /// <typeparam name="T">Type of the data.</typeparam>
+        /// <param name="ini">Ini object.</param>
+        /// <param name="name">Name of the section.</param>
+        /// <param name="data">Data object.</param>
+        /// <param name="context">Map context to read data.</param>
+        /// <returns>Null if the section was not found, otherwise the trimmed section.</returns>
+        public static INISection ParseAndLeaveRemainder<T>(INI ini, string name, T data, MapContext context, bool returnErrors, out List<(string, string)> errors)
+        {
+            errors = null;
             var dataSection = ini.Sections[name];
             if (dataSection == null)
                 return null;
-            INI.ParseSection(context, dataSection, data);
+            errors = INI.ParseSection(context, dataSection, data, returnErrors);
             INI.RemoveHandledKeys(dataSection, data);
             if (dataSection.Keys.Count() == 0)
                 ini.Sections.Remove(name);

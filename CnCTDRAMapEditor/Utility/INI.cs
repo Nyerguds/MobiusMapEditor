@@ -90,13 +90,13 @@ namespace MobiusEditor.Utility
 
         public T Get<T>(string key) where T : struct
         {
-            var converter = TypeDescriptor.GetConverter(typeof(T));
+            TypeConverter converter = TypeDescriptor.GetConverter(typeof(T));
             return (T)converter.ConvertFromString(this[key]);
         }
 
         public void Set<T>(string key, T value) where T : struct
         {
-            var converter = TypeDescriptor.GetConverter(typeof(T));
+            TypeConverter converter = TypeDescriptor.GetConverter(typeof(T));
             this[key] = converter.ConvertToString(value);
         }
 
@@ -147,6 +147,11 @@ namespace MobiusEditor.Utility
             return Keys.TryGetValue(key);
         }
 
+        public bool Contains(string key)
+        {
+            return Keys.Contains(key);
+        }
+
         public bool Empty => Keys.Count == 0;
 
         public INISection(string name)
@@ -159,13 +164,13 @@ namespace MobiusEditor.Utility
         {
             while (true)
             {
-                var line = reader.ReadLine();
+                string line = reader.ReadLine();
                 if (line == null)
                 {
                     break;
                 }
 
-                var m = INIHelpers.KeyValueRegex.Match(line);
+                Match m = INIHelpers.KeyValueRegex.Match(line);
                 if (m.Success)
                 {
                     Keys[m.Groups[1].Value] = m.Groups[2].Value.Trim();
@@ -175,7 +180,7 @@ namespace MobiusEditor.Utility
 
         public void Parse(string iniText)
         {
-            using (var reader = new StringReader(iniText))
+            using (StringReader reader = new StringReader(iniText))
             {
                 Parse(reader);
             }
@@ -193,8 +198,8 @@ namespace MobiusEditor.Utility
 
         public override string ToString()
         {
-            var lines = new List<string>(Keys.Count);
-            foreach (var item in Keys)
+            List<string> lines = new List<string>(Keys.Count);
+            foreach ((string Key, string Value) item in Keys)
             {
                 lines.Add(string.Format("{0}={1}", item.Key, item.Value));
             }
@@ -221,7 +226,7 @@ namespace MobiusEditor.Utility
         {
             if (!Sections.Contains(name))
             {
-                var section = new INISection(name);
+                INISection section = new INISection(name);
                 Sections[name] = section;
             }
             return this[name];
@@ -249,7 +254,7 @@ namespace MobiusEditor.Utility
 
         public void AddRange(IEnumerable<INISection> sections)
         {
-            foreach (var section in sections)
+            foreach (INISection section in sections)
             {
                 Add(section);
             }
@@ -271,7 +276,7 @@ namespace MobiusEditor.Utility
             {
                 return null;
             }
-            var section = this[name];
+            INISection section = this[name];
             Sections.Remove(name);
             return section;
         }
@@ -307,13 +312,13 @@ namespace MobiusEditor.Utility
 
             while (true)
             {
-                var line = reader.ReadLine();
+                string line = reader.ReadLine();
                 if (line == null)
                 {
                     break;
                 }
 
-                var m = INIHelpers.SectionRegex.Match(line);
+                Match m = INIHelpers.SectionRegex.Match(line);
                 if (m.Success)
                 {
                     currentSection = Sections.Add(m.Groups[1].Value);
@@ -333,7 +338,7 @@ namespace MobiusEditor.Utility
 
         public void Parse(string iniText)
         {
-            using (var reader = new StringReader(iniText))
+            using (StringReader reader = new StringReader(iniText))
             {
                 Parse(reader);
             }
@@ -341,7 +346,7 @@ namespace MobiusEditor.Utility
 
         public IEnumerator<INISection> GetEnumerator()
         {
-            foreach (var section in Sections)
+            foreach (INISection section in Sections)
             {
                 yield return section;
             }
@@ -364,10 +369,10 @@ namespace MobiusEditor.Utility
 
         public string ToString(string lineEnd)
         {
-            var sections = new List<string>(Sections.Count);
-            foreach (var item in Sections)
+            List<string> sections = new List<string>(Sections.Count);
+            foreach (INISection item in Sections)
             {
-                var lines = new List<string>
+                List<string> lines = new List<string>
                 {
                     string.Format("[{0}]", item.Name)
                 };
@@ -419,7 +424,7 @@ namespace MobiusEditor.Utility
         internal INISectionDiff(INIDiffType type, INISection section)
             : this()
         {
-            foreach (var keyValue in section.Keys)
+            foreach ((string Key, string Value) keyValue in section.Keys)
             {
                 keyDiff[keyValue.Key] = type;
             }
@@ -430,9 +435,9 @@ namespace MobiusEditor.Utility
         internal INISectionDiff(INISection leftSection, INISection rightSection)
             : this(INIDiffType.Removed, leftSection)
         {
-            foreach (var keyValue in rightSection.Keys)
+            foreach ((string Key, string Value) keyValue in rightSection.Keys)
             {
-                var key = keyValue.Key;
+                string key = keyValue.Key;
                 if (keyDiff.ContainsKey(key))
                 {
                     if (leftSection[key] == rightSection[key])
@@ -467,8 +472,8 @@ namespace MobiusEditor.Utility
 
         public override string ToString()
         {
-            var sb = new StringBuilder();
-            foreach (var item in keyDiff)
+            StringBuilder sb = new StringBuilder();
+            foreach (KeyValuePair<string, INIDiffType> item in keyDiff)
             {
                 sb.AppendLine(string.Format("{0} {1}", INIHelpers.DiffPrefix(item.Value), item.Key));
             }
@@ -500,14 +505,14 @@ namespace MobiusEditor.Utility
         public INIDiff(INI leftIni, INI rightIni)
             : this()
         {
-            foreach (var leftSection in leftIni)
+            foreach (INISection leftSection in leftIni)
             {
                 sectionDiffs[leftSection.Name] = rightIni.Sections.Contains(leftSection.Name) ?
                     new INISectionDiff(leftSection, rightIni[leftSection.Name]) :
                     new INISectionDiff(INIDiffType.Removed, leftSection);
             }
 
-            foreach (var rightSection in rightIni)
+            foreach (INISection rightSection in rightIni)
             {
                 if (!leftIni.Sections.Contains(rightSection.Name))
                 {
@@ -532,15 +537,15 @@ namespace MobiusEditor.Utility
 
         public override string ToString()
         {
-            var sb = new StringBuilder();
-            foreach (var item in sectionDiffs)
+            StringBuilder sb = new StringBuilder();
+            foreach (KeyValuePair<string, INISectionDiff> item in sectionDiffs)
             {
                 sb.AppendLine(string.Format("{0} {1}", INIHelpers.DiffPrefix(item.Value.Type), item.Key));
-                using (var reader = new StringReader(item.Value.ToString()))
+                using (StringReader reader = new StringReader(item.Value.ToString()))
                 {
                     while (true)
                     {
-                        var line = reader.ReadLine();
+                        string line = reader.ReadLine();
                         if (line == null)
                         {
                             break;
@@ -569,9 +574,9 @@ namespace MobiusEditor.Utility
         public static List<(string, string)> ParseSection<T>(ITypeDescriptorContext context, INISection section, T data, bool returnErrorsList)
         {
             List<(string, string)> errors = returnErrorsList ? new List<(string, string)>() : null;
-            var propertyDescriptors = TypeDescriptor.GetProperties(data);
-            var properties = data.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => p.GetSetMethod() != null);
-            foreach (var property in properties)
+            PropertyDescriptorCollection propertyDescriptors = TypeDescriptor.GetProperties(data);
+            IEnumerable<PropertyInfo> properties = data.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => p.GetSetMethod() != null);
+            foreach (PropertyInfo property in properties)
             {
                 if (property.GetCustomAttribute<NonSerializedINIKeyAttribute>() != null)
                 {
@@ -582,7 +587,7 @@ namespace MobiusEditor.Utility
                 {
                     try
                     {
-                        var converter = propertyDescriptors.Find(iniKey, false)?.Converter ?? TypeDescriptor.GetConverter(property.PropertyType);
+                        TypeConverter converter = propertyDescriptors.Find(iniKey, false)?.Converter ?? TypeDescriptor.GetConverter(property.PropertyType);
                         if (converter.CanConvertFrom(context, typeof(string)))
                         {
                             property.SetValue(data, converter.ConvertFromString(context, section[iniKey]));
@@ -601,9 +606,9 @@ namespace MobiusEditor.Utility
 
         public static void RemoveHandledKeys<T>(INISection section, T data)
         {
-            var propertyDescriptors = TypeDescriptor.GetProperties(data);
-            var properties = data.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => p.GetSetMethod() != null);
-            foreach (var property in properties)
+            PropertyDescriptorCollection propertyDescriptors = TypeDescriptor.GetProperties(data);
+            IEnumerable<PropertyInfo> properties = data.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => p.GetSetMethod() != null);
+            foreach (PropertyInfo property in properties)
             {
                 if (property.GetCustomAttribute<NonSerializedINIKeyAttribute>() != null)
                 {
@@ -615,19 +620,18 @@ namespace MobiusEditor.Utility
 
         public static void WriteSection<T>(ITypeDescriptorContext context, INISection section, T data)
         {
-            var propertyDescriptors = TypeDescriptor.GetProperties(data);
-            var properties = data.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => p.GetGetMethod() != null);
-            foreach (var property in properties)
+            PropertyDescriptorCollection propertyDescriptors = TypeDescriptor.GetProperties(data);
+            IEnumerable<PropertyInfo> properties = data.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => p.GetGetMethod() != null);
+            foreach (PropertyInfo property in properties)
             {
                 if (property.GetCustomAttribute<NonSerializedINIKeyAttribute>() != null)
                 {
                     continue;
                 }
-
-                var value = property.GetValue(data);
+                Object value = property.GetValue(data);
                 if (property.PropertyType.IsValueType || (value != null))
                 {
-                    var converter = propertyDescriptors.Find(property.Name, false)?.Converter ?? TypeDescriptor.GetConverter(property.PropertyType);
+                    TypeConverter converter = propertyDescriptors.Find(property.Name, false)?.Converter ?? TypeDescriptor.GetConverter(property.PropertyType);
                     if (converter.CanConvertTo(context, typeof(string)))
                     {
                         section[property.Name] = converter.ConvertToString(context, value);

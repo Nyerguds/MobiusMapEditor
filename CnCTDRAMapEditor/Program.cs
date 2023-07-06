@@ -166,10 +166,54 @@ namespace MobiusEditor
             gameFolders.Add(GameType.TiberianDawn, tdPath);
             gameFolders.Add(GameType.RedAlert, raPath);
             gameFolders.Add(GameType.SoleSurvivor, ssPath);
+            // Check files
+            modpaths.TryGetValue(GameType.TiberianDawn, out string[] tdModPaths);
+            modpaths.TryGetValue(GameType.SoleSurvivor, out string[] ssModPaths);
+            bool tdSsEqual = ssModPaths.SequenceEqual(tdModPaths) && tdPathFull.Equals(ssPathFull);
             MixfileManager mfm = new MixfileManager(ApplicationPath, gameFolders, modpaths);
-            Globals.TheArchiveManager = mfm;
             List<string> loadErrors = new List<string>();
             List<string> fileLoadErrors = new List<string>();
+            InitClassicFilesTdSs(mfm, tdSsEqual, loadErrors, fileLoadErrors);
+            InitClassicFilesRa(mfm, loadErrors, fileLoadErrors, false);
+#if !DEVELOPER
+            if (loadErrors.Count > 0)
+            {
+                StringBuilder msg = new StringBuilder();
+                msg.Append("Required data is missing or corrupt. The following mix files could not be opened:").Append('\n');
+                string errors = String.Join("\n", loadErrors.ToArray());
+                msg.Append(errors);
+                MessageBox.Show(msg.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
+            if (fileLoadErrors.Count > 0)
+            {
+                StringBuilder msg = new StringBuilder();
+                msg.Append("Required data is missing or corrupt. The following data files could not be opened:").Append('\n');
+                string errors = String.Join("\n", fileLoadErrors.ToArray());
+                msg.Append(errors);
+                MessageBox.Show(msg.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
+#endif
+            Globals.TheArchiveManager = mfm;
+            // Initialize texture, tileset, team color, and game text managers
+            // TilesetManager: is the system graphics are requested from, possibly with house remap.
+            Globals.TheTilesetManager = new TilesetManagerClassic(mfm);
+
+            Globals.TheTeamColorManager = new TeamRemapManager(mfm);
+            // All the same. Would introduce region-based language differences, but the French and German files are... also called "conquer.eng".
+            Dictionary<GameType, String> gameStringsFiles = new Dictionary<GameType, string>();
+            gameStringsFiles.Add(GameType.TiberianDawn, "conquer.eng");
+            gameStringsFiles.Add(GameType.RedAlert, "conquer.eng");
+            gameStringsFiles.Add(GameType.SoleSurvivor, "conquer.eng");
+            GameTextManagerClassic gtm = new GameTextManagerClassic(mfm, gameStringsFiles);
+            AddMissingClassicText(gtm);
+            Globals.TheGameTextManager = gtm;
+            return true;
+        }
+
+        private static void InitClassicFilesTdSs(MixfileManager mfm, bool tdSsEqual, List<string> loadErrors, List<string> fileLoadErrors)
+        {
             // This will map the mix files to the respective games, and look for them in the respective folders.
             // Tiberian Dawn
             mfm.LoadArchive(GameType.TiberianDawn, "local.mix", false);
@@ -181,10 +225,6 @@ namespace MobiusEditor
             mfm.LoadArchive(GameType.TiberianDawn, "desert.mix", true);
             mfm.LoadArchive(GameType.TiberianDawn, "temperat.mix", true);
             mfm.LoadArchive(GameType.TiberianDawn, "winter.mix", true);
-            // Check files
-            modpaths.TryGetValue(GameType.TiberianDawn, out string[] tdModPaths);
-            modpaths.TryGetValue(GameType.SoleSurvivor, out string[] ssModPaths);
-            bool tdSsEqual = ssModPaths.SequenceEqual(tdModPaths) && tdPathFull.Equals(ssPathFull);
             mfm.Reset(GameType.TiberianDawn, null);
             List<String> loadedFiles = mfm.ToList();
             string prefix = tdSsEqual ? "TD/SS: " : "TD: ";
@@ -218,6 +258,11 @@ namespace MobiusEditor
                 if (!loadedFiles.Contains("winter.mix")) loadErrors.Add(prefix + "winter.mix");
                 if (!mfm.FileExists("conquer.eng")) fileLoadErrors.Add(prefix + "conquer.eng");
             }
+            mfm.Reset(GameType.None, null);
+        }
+
+        private static void InitClassicFilesRa(MixfileManager mfm, List<string> loadErrors, List<string> fileLoadErrors, bool forRemaster)
+        {
             // Red Alert
             // Aftermath expand file. Required. Contains latest strings file.
             mfm.LoadArchive(GameType.RedAlert, "expand2.mix", false, false, false, true);
@@ -229,10 +274,10 @@ namespace MobiusEditor
             mfm.LoadArchive(GameType.RedAlert, "main.mix", false, true, false, true);
             // Needed for theater palettes and the remap settings in palette.cps
             mfm.LoadArchive(GameType.RedAlert, "local.mix", false, false, true, true);
-            // Not normally needed, but in the beta this contains palette.cps.
-            mfm.LoadArchive(GameType.RedAlert, "general.mix", false, false, true, true);
             // Mod addons
             mfm.LoadArchives(GameType.RedAlert, "sc*.mix", true);
+            // Not normally needed, but in the beta this contains palette.cps.
+            mfm.LoadArchive(GameType.RedAlert, "general.mix", false, false, true, true);
             // Main graphics archive
             mfm.LoadArchive(GameType.RedAlert, "conquer.mix", false, false, true, true);
             // Infantry
@@ -245,56 +290,29 @@ namespace MobiusEditor
             mfm.LoadArchive(GameType.RedAlert, "interior.mix", true, false, true, true);
 
             // Check files
-            modpaths.TryGetValue(GameType.RedAlert, out string[] raModPaths);
             mfm.Reset(GameType.RedAlert, null);
-            loadedFiles = mfm.ToList();
-            prefix = "RA: ";
+            List<String> loadedFiles = mfm.ToList();
+            String prefix = "RA: ";
             if (!loadedFiles.Contains("expand2.mix")) loadErrors.Add(prefix + "expand2.mix");
             if (!loadedFiles.Contains("local.mix")) loadErrors.Add(prefix + "local.mix");
-            if (!loadedFiles.Contains("conquer.mix")) loadErrors.Add(prefix + "conquer.mix");
-            if (!loadedFiles.Contains("lores.mix")) loadErrors.Add(prefix + "lores.mix");
-            if (!loadedFiles.Contains("lores1.mix")) loadErrors.Add(prefix + "lores1.mix");
+            if (!forRemaster)
+            {
+                if (!loadedFiles.Contains("conquer.mix")) loadErrors.Add(prefix + "conquer.mix");
+                if (!loadedFiles.Contains("lores.mix")) loadErrors.Add(prefix + "lores.mix");
+                if (!loadedFiles.Contains("lores1.mix")) loadErrors.Add(prefix + "lores1.mix");
+            }
             if (!loadedFiles.Contains("temperat.mix")) loadErrors.Add(prefix + "temperat.mix");
             if (!loadedFiles.Contains("snow.mix")) loadErrors.Add(prefix + "snow.mix");
             if (!loadedFiles.Contains("interior.mix")) loadErrors.Add(prefix + "interior.mix");
-            if (!mfm.FileExists("palette.cps")) fileLoadErrors.Add(prefix + "palette.cps");
-            if (!mfm.FileExists("conquer.eng")) fileLoadErrors.Add(prefix + "conquer.eng");
+            if (!forRemaster)
+            {
+                if (!mfm.FileExists("palette.cps")) fileLoadErrors.Add(prefix + "palette.cps");
+                if (!mfm.FileExists("conquer.eng")) fileLoadErrors.Add(prefix + "conquer.eng");
+            }
+            if (!mfm.FileExists("rules.ini")) fileLoadErrors.Add(prefix + "rules.ini");
+            if (!mfm.FileExists("aftrmath.ini")) fileLoadErrors.Add(prefix + "aftrmath.ini");
+            if (!mfm.FileExists("mplayer.ini")) fileLoadErrors.Add(prefix + "mplayer.ini");
             mfm.Reset(GameType.None, null);
-
-#if !DEVELOPER
-            if (loadErrors.Count > 0)
-            {
-                StringBuilder msg = new StringBuilder();
-                msg.Append("Required data is missing or corrupt. The following mix files could not be opened:").Append('\n');
-                string errors = String.Join("\n", loadErrors.ToArray());
-                msg.Append(errors);
-                MessageBox.Show(msg.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return false;
-            }
-            if (fileLoadErrors.Count > 0)
-            {
-                StringBuilder msg = new StringBuilder();
-                msg.Append("Required data is missing or corrupt. The following data files could not be opened:").Append('\n');
-                string errors = String.Join("\n", fileLoadErrors.ToArray());
-                msg.Append(errors);
-                MessageBox.Show(msg.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return false;
-            }
-#endif
-            // Initialize texture, tileset, team color, and game text managers
-            // TilesetManager: is the system graphics are requested from, possibly with house remap.
-            Globals.TheTilesetManager = new TilesetManagerClassic(mfm);
-
-            Globals.TheTeamColorManager = new TeamRemapManager(mfm);
-            // All the same. Would introduce region-based language differences, but the French and German files are... also called "conquer.eng".
-            Dictionary<GameType, String> gameStringsFiles = new Dictionary<GameType, string>();
-            gameStringsFiles.Add(GameType.TiberianDawn, "conquer.eng");
-            gameStringsFiles.Add(GameType.RedAlert, "conquer.eng");
-            gameStringsFiles.Add(GameType.SoleSurvivor, "conquer.eng");
-            GameTextManagerClassic gtm = new GameTextManagerClassic(mfm, gameStringsFiles);
-            AddMissingClassicText(gtm);
-            Globals.TheGameTextManager = gtm;
-            return true;
         }
 
         private static bool LoadEditorRemastered(String runPath, Dictionary<GameType, string[]> modPaths)
@@ -312,15 +330,34 @@ namespace MobiusEditor
             megafilesLoaded &= mfm.LoadArchive("TEXTURES_RA_SRGB.MEG");
             megafilesLoaded &= mfm.LoadArchive("TEXTURES_SRGB.MEG");
             megafilesLoaded &= mfm.LoadArchive("TEXTURES_TD_SRGB.MEG");
-            // Classic main.mix and theater files, for template land type detection in RA.
-            mfm.LoadArchiveClassic(GameType.RedAlert, "main.mix", false, true, false, true);
-            mfm.LoadArchiveClassic(GameType.RedAlert, "temperat.mix", true, false, true, true);
-            mfm.LoadArchiveClassic(GameType.RedAlert, "snow.mix", true, false, true, true);
-            mfm.LoadArchiveClassic(GameType.RedAlert, "interior.mix", true, false, true, true);
 #if !DEVELOPER
             if (!megafilesLoaded)
             {
                 MessageBox.Show("Required data is missing or corrupt, please validate your installation.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
+#endif
+            // Classic main.mix and theater files, for rules reading and template land type detection in RA.
+            List<string> loadErrors = new List<string>();
+            List<string> fileLoadErrors = new List<string>();
+            InitClassicFilesRa(mfm.ClassicFileManager, loadErrors, fileLoadErrors, true);
+#if !DEVELOPER
+            if (loadErrors.Count > 0)
+            {
+                StringBuilder msg = new StringBuilder();
+                msg.Append("Required classic data is missing or corrupt. The following mix files could not be opened:").Append('\n');
+                string errors = String.Join("\n", loadErrors.ToArray());
+                msg.Append(errors);
+                MessageBox.Show(msg.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
+            if (fileLoadErrors.Count > 0)
+            {
+                StringBuilder msg = new StringBuilder();
+                msg.Append("Required classic data is missing or corrupt. The following data files could not be opened:").Append('\n');
+                string errors = String.Join("\n", fileLoadErrors.ToArray());
+                msg.Append(errors);
+                MessageBox.Show(msg.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
 #endif

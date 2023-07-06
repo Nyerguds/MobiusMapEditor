@@ -611,7 +611,8 @@ namespace MobiusEditor
             {
                 return;
             }
-            bool expansionEnabled = plugin.Map.BasicSection.ExpansionEnabled;
+            bool wasSolo = plugin.Map.BasicSection.SoloMission;
+            bool wasExpanded = plugin.Map.BasicSection.ExpansionEnabled;
             bool rulesChanged = false;
             PropertyTracker<BasicSection> basicSettings = new PropertyTracker<BasicSection>(plugin.Map.BasicSection);
             PropertyTracker<BriefingSection> briefingSettings = new PropertyTracker<BriefingSection>(plugin.Map.BriefingSection);
@@ -651,7 +652,12 @@ namespace MobiusEditor
                     // Ignore trivial line changes. This will not detect any irrelevant but non-trivial changes like swapping lines, though.
                     String checkTextNew = Regex.Replace(normalised, "[\\r\\n]+", "\n").Trim('\n');
                     String checkTextOrig = Regex.Replace(extraIniText ?? String.Empty, "[\\r\\n]+", "\n").Trim('\n');
-                    if (!checkTextOrig.Equals(checkTextNew, StringComparison.OrdinalIgnoreCase))
+                    bool amStatusChanged = wasExpanded != plugin.Map.BasicSection.ExpansionEnabled;
+                    bool multiStatusChanged = wasSolo != plugin.Map.BasicSection.SoloMission;
+                    bool iniTextChanged = !checkTextOrig.Equals(checkTextNew, StringComparison.OrdinalIgnoreCase);
+                    // All three of those warrant a rules reset.
+                    // TODO: give warning on the multiplay rules changes.
+                    if (amStatusChanged || multiStatusChanged || iniTextChanged)
                     {
                         try
                         {
@@ -669,13 +675,14 @@ namespace MobiusEditor
                                 emb.ShowDialog(this);
                             }
                         }
+                        // Maybe make more advanced logic to check if any bibs changed, and don't clear if not needed?
                         rulesChanged = plugin.GameType == GameType.RedAlert;
                         hasChanges = true;
                     }
                     plugin.Dirty = hasChanges;
                 }
             }
-            if (rulesChanged || (expansionEnabled && !plugin.Map.BasicSection.ExpansionEnabled))
+            if (rulesChanged || (wasExpanded && !plugin.Map.BasicSection.ExpansionEnabled))
             {
                 // If Aftermath units were disabled, we can't guarantee none of them are still in
                 // the undo/redo history, so the undo/redo history is cleared to avoid issues.
@@ -1107,7 +1114,7 @@ namespace MobiusEditor
         {
             var fileInfo = new FileInfo(fileName);
             String name = fileInfo.FullName;
-            if (!IdentifyMap(name, out FileType fileType, out GameType gameType, out bool isTdMegaMap, out string theater))
+            if (!IdentifyMap(name, out FileType fileType, out GameType gameType, out bool isMegaMap, out string theater))
             {
                 string extension = Path.GetExtension(name).TrimStart('.');
                 // No point in supporting jpeg here; the mapping needs distinct colours without fades.
@@ -1135,7 +1142,7 @@ namespace MobiusEditor
                 return;
             }
             loadMultiThreader.ExecuteThreaded(
-                () => LoadFile(name, fileType, gameType, theater, isTdMegaMap),
+                () => LoadFile(name, fileType, gameType, theater, isMegaMap),
                 PostLoad, true,
                 (e,l) => LoadUnloadUi(e, l, loadMultiThreader),
                 "Loading map");
@@ -1167,6 +1174,10 @@ namespace MobiusEditor
                     fileType = FileType.INI;
                 }
             }
+            if (plugin.MapNameIsEmpty(plugin.Map.BasicSection.Name))
+            {
+                plugin.Map.BasicSection.Name = Path.GetFileNameWithoutExtension(saveFilename);
+            }
             // Once saved, leave it to be manually handled on steam publish.
             if (string.IsNullOrEmpty(plugin.Map.SteamSection.Title) || plugin.Map.SteamSection.PublishedFileId == 0)
             {
@@ -1181,12 +1192,12 @@ namespace MobiusEditor
                 "Saving map");
         }
 
-        private Boolean IdentifyMap(String loadFilename, out FileType fileType, out GameType gameType, out bool isTdMegaMap, out string theater)
+        private Boolean IdentifyMap(String loadFilename, out FileType fileType, out GameType gameType, out bool isMegaMap, out string theater)
         {
             fileType = FileType.None;
             gameType = GameType.None;
             theater = null;
-            isTdMegaMap = false;
+            isMegaMap = false;
             try
             {
                 if (!File.Exists(loadFilename))
@@ -1294,11 +1305,16 @@ namespace MobiusEditor
             }
             if (gameType == GameType.TiberianDawn)
             {
-                isTdMegaMap = TiberianDawn.GamePluginTD.CheckForMegamap(iniContents);
+                isMegaMap = TiberianDawn.GamePluginTD.CheckForMegamap(iniContents);
                 if (SoleSurvivor.GamePluginSS.CheckForSSmap(iniContents))
                 {
                     gameType = GameType.SoleSurvivor;
                 }
+            }
+            else if (gameType == GameType.RedAlert)
+            {
+                // Not actually used for RA at the moment.
+                isMegaMap = true;
             }
             return gameType != GameType.None;
         }
@@ -1353,28 +1369,28 @@ namespace MobiusEditor
             }
         }
 
-        private static IGamePlugin LoadNewPlugin(GameType gameType, string theater, bool isTdMegaMap)
+        private static IGamePlugin LoadNewPlugin(GameType gameType, string theater, bool isMegaMap)
         {
-            return LoadNewPlugin(gameType, theater, isTdMegaMap, false);
+            return LoadNewPlugin(gameType, theater, isMegaMap, false);
         }
 
-        private static IGamePlugin LoadNewPlugin(GameType gameType, string theater, bool isTdMegaMap, bool noImage)
+        private static IGamePlugin LoadNewPlugin(GameType gameType, string theater, bool isMegaMap, bool noImage)
         {
             // Get plugin type
             IGamePlugin plugin = null;
             RedAlert.GamePluginRA raPlugin = null;
             if (gameType == GameType.TiberianDawn)
             {
-                plugin = new TiberianDawn.GamePluginTD(!noImage, isTdMegaMap);
+                plugin = new TiberianDawn.GamePluginTD(!noImage, isMegaMap);
             }
             else if (gameType == GameType.RedAlert)
             {
-                raPlugin = new RedAlert.GamePluginRA(!noImage);
+                raPlugin = new RedAlert.GamePluginRA(!noImage); // isMegaMap);
                 plugin = raPlugin;
             }
             else if (gameType == GameType.SoleSurvivor)
             {
-                plugin = new SoleSurvivor.GamePluginSS(!noImage, isTdMegaMap);
+                plugin = new SoleSurvivor.GamePluginSS(!noImage, isMegaMap);
             }
             // Get theater object
             TheaterTypeConverter ttc = new TheaterTypeConverter();
@@ -1390,15 +1406,15 @@ namespace MobiusEditor
                 Globals.TheTeamColorManager.Load(@"DATA\XML\CNCTDTEAMCOLORS.XML");
                 AddTeamColorsTD(Globals.TheTeamColorManager);
             }
-            else if (gameType == GameType.RedAlert)
+            else if (gameType == GameType.RedAlert && raPlugin != null)
             {
-                if (raPlugin != null)
-                {
-                    Byte[] rulesFile = Globals.TheArchiveManager.ReadFileClassic("rules.ini");
-                    Byte[] rulesUpdFile = Globals.TheArchiveManager.ReadFileClassic("aftrmath.ini");
-                    raPlugin.ReadRules(rulesFile);
-                    raPlugin.PatchRules(rulesUpdFile);
-                }
+                Byte[] rulesFile = Globals.TheArchiveManager.ReadFileClassic("rules.ini");
+                Byte[] rulesUpdFile = Globals.TheArchiveManager.ReadFileClassic("aftrmath.ini");
+                Byte[] rulesMpFile = Globals.TheArchiveManager.ReadFileClassic("mplayer.ini");
+                // This returns errors in original rules files. Ignore for now.
+                raPlugin.ReadRules(rulesFile);
+                raPlugin.ReadExpandRules(rulesUpdFile);
+                raPlugin.ReadMultiRules(rulesMpFile);
                 // Only one will be found.
                 Globals.TheTeamColorManager.Load(@"DATA\XML\CNCRATEAMCOLORS.XML");
                 Globals.TheTeamColorManager.Load("palette.cps");
@@ -1409,7 +1425,7 @@ namespace MobiusEditor
                 Globals.TheTeamColorManager.Load(@"DATA\XML\CNCTDTEAMCOLORS.XML");
                 AddTeamColorsTD(Globals.TheTeamColorManager);
             }
-            // Needs to be done after the whole init.
+            // Needs to be done after the whole init, so colors reading is properly initialised.
             plugin.Map.FlagColors = plugin.GetFlagColors();
             return plugin;
         }
@@ -1560,18 +1576,18 @@ namespace MobiusEditor
         /// <summary>
         /// The separate-threaded part for loading a map.
         /// </summary>
-        /// <param name="loadFilename"></param>
-        /// <param name="fileType"></param>
-        /// <param name="gameType"></param>
-        /// <param name="isTdMegaMap"></param>
+        /// <param name="loadFilename">File to load.</param>
+        /// <param name="fileType">Type of the loaded file (detected in advance).</param>
+        /// <param name="gameType">Game type (detected in advance)</param>
+        /// <param name="isMegaMap">True if this is a megamap.</param>
         /// <returns></returns>
-        private static MapLoadInfo LoadFile(string loadFilename, FileType fileType, GameType gameType, string theater, bool isTdMegaMap)
+        private static MapLoadInfo LoadFile(string loadFilename, FileType fileType, GameType gameType, string theater, bool isMegaMap)
         {
             IGamePlugin plugin = null;
             bool mapLoaded = false;
             try
             {
-                plugin = LoadNewPlugin(gameType, theater, isTdMegaMap);
+                plugin = LoadNewPlugin(gameType, theater, isMegaMap);
                 string[] errors = plugin.Load(loadFilename, fileType).ToArray();
                 mapLoaded = true;
                 return new MapLoadInfo(loadFilename, fileType, plugin, errors, true);

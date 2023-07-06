@@ -65,9 +65,10 @@ namespace MobiusEditor.Model
             }
             str = str.Trim();
             var mapContext = context as MapContext;
-            if (str.EndsWith("%"))
+            bool isPercentage = str.EndsWith("%");
+            if (isPercentage)
                 str = str.Substring(0, str.Length - 1);
-            if (mapContext != null && mapContext.FractionalPercentages && str.Contains("."))
+            if (mapContext != null && mapContext.FractionalPercentages && !isPercentage && str.TrimStart('0').StartsWith("."))
             {
                 if (!decimal.TryParse(str, out decimal percent))
                 {

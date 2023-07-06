@@ -264,7 +264,7 @@ namespace MobiusEditor.TiberianDawn
                 INI ini = new INI();
                 try
                 {
-                    ini.Parse(value);
+                    ini.Parse(value ?? String.Empty);
                 }
                 catch
                 {
@@ -2762,7 +2762,11 @@ namespace MobiusEditor.TiberianDawn
         {
             if (forWarnings)
             {
-                // No warnings to check for TD/SS
+                // Check if map has name
+                if (this.MapNameIsEmpty(this.Map.BasicSection.Name))
+                {
+                    return "Map name is empty. If you continue, the filename will be filled in as map name.";
+                }
                 return null;
             }
             StringBuilder sb = new StringBuilder("Error(s) during map validation:");
@@ -3287,7 +3291,7 @@ namespace MobiusEditor.TiberianDawn
             return flagColors;
         }
 
-        public virtual bool IsVehiclePassable(LandType landType)
+        public virtual bool IsLandUnitPassable(LandType landType)
         {
             switch (landType)
             {
@@ -3301,6 +3305,11 @@ namespace MobiusEditor.TiberianDawn
                 case LandType.River:
                     return false;
             }
+            return false;
+        }
+
+        public virtual bool IsBoatPassable(LandType landType)
+        {
             return false;
         }
 
@@ -3318,11 +3327,6 @@ namespace MobiusEditor.TiberianDawn
                 case LandType.Rough:
                     return false;
             }
-            return false;
-        }
-
-        public virtual bool IsBoatPassable(LandType landType)
-        {
             return false;
         }
 

@@ -466,20 +466,20 @@ Feature updates:
 * Added checks on the validation of special waypoints to make sure they are actually inside the map bounds.
 * Added a warning when RA ant units or structures are used in the map, but no rule definitions for them exist in the ini.
 * Added an option in the trigger filter dialog to filter on triggers. This will filter out the trigger itself, and any triggers destroying or forcing the selected trigger.
-* When an RA trigger is set to type E1->A1, E2->A2, the controls for the events and actions will be reordered to accurately represent this.
+* When an RA trigger is set to type E1→A1, E2→A2, the controls for the events and actions will be reordered to accurately represent this.
 * Added zoom options to the View menu.
-* Added F-keys as shortcuts for the "Extra Indicator" options in the View menu .
+* Added F-keys as shortcuts for the "Extra Indicator" options in the View menu.
 * The user can now place map tiles partially outside the map at the top and left side.
 * Teamtypes now show full unit names.
 * The argument dropdown for "Built It" triggers now shows the available theaters on theater-specific buildings in the list.
 * Tile randomising now avoids identical adjacent tiles.
 * Units, buildings and waypoints with a radius will now show that radius more clearly in placement preview mode.
+* Red Alert data concerning rules.ini data, and map tileset data (dimensions, tile usage, land types) is now read from the original classic files.
 
 Map logic updates:
 
 * All overlay placement is now correctly restricted to not be allowed on the top or bottom row of the map, showing red indicators when in placement mode.
 * Resource placement with a brush size larger than 1 shows red cells inside the brush area when hovering over the top or bottom cells of the map. At size 1, the brush is simply completely red.
-* The automatic tiling of clear terrain used a logic that was incorrect for the larger maps in Red Alert and Sole Survivor. This has now been fixed.
 
 Program bug fixes:
 
@@ -514,3 +514,4 @@ Program bug fixes:
 * Added map load checks on failing to detect the House of units, structures, triggers and teams. This includes a logic for RA to substitute the prerelease House Italy with its final version, Ukraine.
 * Added relevant theaters to theater-specific buildings in the "Built it" trigger event lists.
 * Fixed bug where the radius painting of the placement preview for gap generators wouldn't work correctly because it could get mixed up with buildings set to be built later.
+* The automatic tiling of clear terrain used a logic that was incorrect for the larger maps in Red Alert and Sole Survivor. This has now been fixed.

@@ -26,6 +26,8 @@ namespace MobiusEditor.Utility
         private Dictionary<GameType, string[]> modPathsPerGame;
         private readonly string looseFilePath;
         private MixfileManager mixFm;
+        public MixfileManager ClassicFileManager { get { return mixFm; } }
+
         private GameType currentGameType;
 
         public String LoadRoot { get; private set; }
@@ -60,15 +62,6 @@ namespace MobiusEditor.Utility
             filenames.UnionWith(megafile);
             megafiles.Add(megafile);
             return true;
-        }
-
-        public bool LoadArchiveClassic(GameType gameType, String archivePath, bool isTheater, bool isContainer, bool canBeEmbedded, bool canUseNewFormat)
-        {
-            if (disposedValue)
-            {
-                throw new ObjectDisposedException(GetType().FullName);
-            }
-            return mixFm.LoadArchive(gameType, archivePath, isTheater, isContainer, canBeEmbedded, canUseNewFormat);
         }
 
         public bool FileExists(string path)

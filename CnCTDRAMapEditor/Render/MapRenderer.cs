@@ -2232,9 +2232,21 @@ namespace MobiusEditor.Render
             List<(int, int)> cellsVehImpassable = new List<(int, int)>();
             List<(int, int)> cellsUnbuildable = new List<(int, int)>();
             List<(int, int)> cellsBoatMovable = new List<(int, int)>();
+            List<(int, int)> cellsRiver = new List<(int, int)>();
             // Possibly fetch the terrain type for clear terrain on this theater?
             TemplateType clear = plugin.Map.TemplateTypes.Where(t => (t.Flag & TemplateTypeFlag.Clear) == TemplateTypeFlag.Clear).FirstOrDefault();
             LandType clearLand = clear.LandTypes.Length > 0 ? clear.LandTypes[0] : LandType.Clear;
+            // Caching this in advance for all types.
+            LandType[] landTypes = (LandType[])Enum.GetValues(typeof(LandType));
+            bool[][] passable = new bool[landTypes.Length][];
+            for (int i = 0; i < landTypes.Length; i++)
+            {
+                LandType landType = landTypes[i];
+                passable[i] = new bool[3];
+                passable[i][0] = plugin.IsLandUnitPassable(landType); // isVehiclePassable
+                passable[i][1] = plugin.IsBuildable(landType); // isBuildable
+                passable[i][2] = plugin.IsBoatPassable(landType); // isBoatPassable
+            }
             // The actual check.
             for (int y = visibleCells.Y; y < visibleCells.Bottom; ++y)
             {
@@ -2255,11 +2267,12 @@ namespace MobiusEditor.Render
                         int icon = (template.Type.Flag & (TemplateTypeFlag.Clear | TemplateTypeFlag.RandomCell)) != TemplateTypeFlag.None ? 0 : template.Icon;
                         land = icon < types.Length ? types[icon] : LandType.Clear;
                     }
+                    // Exclude uninitialised terrain
                     if (land != LandType.None)
                     {
-                        bool isVehiclePassable = plugin.IsVehiclePassable(land);
-                        bool isBuildable = plugin.IsBuildable(land);
-                        bool isBoatPassable = plugin.IsBoatPassable(land);
+                        bool isVehiclePassable = passable[(int)land][0];
+                        bool isBuildable = passable[(int)land][1];
+                        bool isBoatPassable = passable[(int)land][2];
                         if (isVehiclePassable)
                         {
                             if (!isBuildable)
@@ -2275,7 +2288,15 @@ namespace MobiusEditor.Render
                             }
                             else
                             {
-                                cellsVehImpassable.Add((x, y));
+                                if (land == LandType.River || land == LandType.Water)
+                                {
+                                    // Special case; impassable water.
+                                    cellsRiver.Add((x, y));
+                                }
+                                else
+                                {
+                                    cellsVehImpassable.Add((x, y));
+                                }
                             }
                         }
                     }
@@ -2288,6 +2309,7 @@ namespace MobiusEditor.Render
             bool disposeBmUnb = false;
             Bitmap bmWtr = null;
             bool disposeBmWtr = false;
+            Bitmap bmRiv = null;
             int tileWidth = tileSize.Width;
             int tileHeight = tileSize.Height;
             float lineSize = tileWidth / 16.0f;
@@ -2317,10 +2339,28 @@ namespace MobiusEditor.Render
                     disposeBmUnb = true;
                     bmUnb = GenerateLinesBitmap(tileWidth, tileHeight, Color.FromArgb(255, 255, 85), lineSize, lineOffsetW, lineOffsetH, graphics);
                 }
-                if (bmWtr == null && cellsBoatMovable.Count > 0)
+                if (bmWtr == null)
                 {
-                    disposeBmWtr = true;
-                    bmWtr = GenerateLinesBitmap(tileSize.Width, tileSize.Height, Color.FromArgb(255, 255, 255), lineSize, lineOffsetW, lineOffsetH, graphics);
+                    if (cellsBoatMovable.Count > 0)
+                    {
+                        disposeBmWtr = true;
+                        bmWtr = GenerateLinesBitmap(tileSize.Width, tileSize.Height, Color.FromArgb(255, 255, 255), lineSize, lineOffsetW, lineOffsetH, graphics);
+                    }
+                    if (cellsRiver.Count > 0)
+                    {
+                        bmRiv = GenerateLinesBitmap(tileSize.Width, tileSize.Height, Color.FromArgb(0, 0, 255), lineSize, lineOffsetW, lineOffsetH, graphics);
+                    }
+                }
+                else if (cellsRiver.Count > 0)
+                {
+                    bmRiv = new Bitmap(bmWtr);
+                    RegionData lines = ImageUtils.GetOutline(bmWtr.Size, bmWtr, 0.00f, 0x80, true);
+                    using (Graphics bgr = Graphics.FromImage(bmRiv))
+                    using (Region blueArea = new Region(lines))
+                    using (Brush blueBrush = new SolidBrush(Color.FromArgb(0, 0, 255)))
+                    {
+                        bgr.FillRegion(blueBrush, blueArea);
+                    }
                 }
                 // Finally, paint the actual cells.
                 foreach ((int x, int y) in cellsVehImpassable)
@@ -2335,12 +2375,17 @@ namespace MobiusEditor.Render
                 {
                     graphics.DrawImage(bmWtr, new Rectangle(tileWidth * x, tileHeight * y, tileWidth, tileHeight), 0, 0, bmWtr.Width, bmWtr.Height, GraphicsUnit.Pixel, imageAttributes);
                 }
+                foreach ((int x, int y) in cellsRiver)
+                {
+                    graphics.DrawImage(bmRiv, new Rectangle(tileWidth * x, tileHeight * y, tileWidth, tileHeight), 0, 0, bmRiv.Width, bmRiv.Height, GraphicsUnit.Pixel, imageAttributes);
+                }
             }
             finally
             {
                 if (disposeBmImp && bmImp != null) try { bmImp.Dispose(); } catch { /* ignore */ }
                 if (disposeBmUnb && bmUnb != null) try { bmUnb.Dispose(); } catch { /* ignore */ }
                 if (disposeBmWtr && bmWtr != null) try { bmWtr.Dispose(); } catch { /* ignore */ }
+                if (bmRiv != null) try { bmRiv.Dispose(); } catch { /* ignore */ }
             }
         }
 

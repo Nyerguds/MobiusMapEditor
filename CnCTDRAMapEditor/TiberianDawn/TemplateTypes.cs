@@ -216,7 +216,7 @@ namespace MobiusEditor.TiberianDawn
         public static readonly TemplateType Shore25 = new TemplateType(174, "sh25", 3, 2, new[] { TheaterTypes.Desert }, "III CII", null, ShoresWaterNorthDes);
         public static readonly TemplateType Shore26 = new TemplateType(175, "sh26", 3, 2, new[] { TheaterTypes.Desert }, "III XII", "111 011", ShoresWaterNorthDes);
         public static readonly TemplateType Shore27 = new TemplateType(176, "sh27", 4, 1, new[] { TheaterTypes.Desert }, "III III");
-        public static readonly TemplateType Shore28 = new TemplateType(177, "sh28", 3, 1, new[] { TheaterTypes.Desert }, "III", (string)null,  Point.Empty, ShoresWaterNorthDes);
+        public static readonly TemplateType Shore28 = new TemplateType(177, "sh28", 3, 1, new[] { TheaterTypes.Desert }, "III", (string)null, Point.Empty, ShoresWaterNorthDes);
         public static readonly TemplateType Shore29 = new TemplateType(178, "sh29", 6, 2, new[] { TheaterTypes.Desert }, "IIIIII XCIIXX", "111111 011100");
         public static readonly TemplateType Shore30 = new TemplateType(179, "sh30", 2, 2, new[] { TheaterTypes.Desert }, "II IX", "11 10");
         public static readonly TemplateType Shore31 = new TemplateType(180, "sh31", 3, 3, new[] { TheaterTypes.Desert }, "III III III");
