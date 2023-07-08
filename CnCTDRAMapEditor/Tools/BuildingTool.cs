@@ -79,7 +79,7 @@ namespace MobiusEditor.Tools
                         mapPanel.Invalidate(map, new Rectangle(navigationWidget.MouseCell, selectedBuildingType.OverlapBounds.Size));
                     }
                     mockBuilding.Type = selectedBuildingType;
-                    RefreshPreviewPanel();
+                    // No need to call 'RefreshPreviewPanel()'; it is triggered through MockBuilding_PropertyChanged.
                 }
             }
         }

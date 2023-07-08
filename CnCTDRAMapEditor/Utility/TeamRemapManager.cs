@@ -102,7 +102,6 @@ namespace MobiusEditor.Utility
             Byte[] b = new byte[1] { this.currentRemapBaseIndex };
             tc.ApplyToImage(b, 1, 1, 1, 1, null);
             return this.currentlyLoadedPalette[b[0]];
-            
         }
 
         public Color RemapBaseColor => this.GetBaseColor(null);

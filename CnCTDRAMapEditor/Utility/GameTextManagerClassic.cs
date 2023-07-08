@@ -1339,7 +1339,7 @@ namespace MobiusEditor.Utility
         {
             get => GetString(key) ?? string.Empty;
             set => gameTextAdditions[key] = value;
-        }        
+        }
 
         public void Reset(GameType gameType)
         {

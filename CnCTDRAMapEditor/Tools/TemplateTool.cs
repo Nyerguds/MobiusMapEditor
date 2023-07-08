@@ -435,7 +435,7 @@ namespace MobiusEditor.Tools
                 {
                     EnterFillMode();
                 }
-                else if(Control.ModifierKeys == Keys.Control)
+                else if (Control.ModifierKeys == Keys.Control)
                 {
                     EnterBoundsMode();
                 }
@@ -986,7 +986,7 @@ namespace MobiusEditor.Tools
                     g.DrawImage(selected.Thumbnail, new Rectangle(Point.Empty, selected.Thumbnail.Size), 0, 0, templatePreview.Width, templatePreview.Height, GraphicsUnit.Pixel);
                     if (templates != null)
                     {
-                        MapRenderer.RenderLandTypes(g, plugin, templates, Globals.PreviewTileSize, templateTypeMetrics.Bounds, true); 
+                        MapRenderer.RenderLandTypes(g, plugin, templates, Globals.PreviewTileSize, templateTypeMetrics.Bounds, true);
                     }
                 }
                 // paint selected.Thumbnail;
@@ -1672,7 +1672,7 @@ namespace MobiusEditor.Tools
                 map.UpdateResourceOverlays(updCells, true);
                 mapPanel.Invalidate(map, updCells);
             }
-            else 
+            else
             {
                 mapPanel.Invalidate();
             }

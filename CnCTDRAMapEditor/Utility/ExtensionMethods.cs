@@ -262,7 +262,7 @@ namespace MobiusEditor.Utility
         {
             return ((String.IsNullOrEmpty(str) || String.Equals(str, def, sc)) &&
                   (String.IsNullOrEmpty(other) || String.Equals(other, def, sc)))
-                || String.Equals(str,other, sc);
+                || String.Equals(str, other, sc);
         }
 
         public static Bitmap FitToBoundingBox(this Image image, int maxWidth, int maxHeight)

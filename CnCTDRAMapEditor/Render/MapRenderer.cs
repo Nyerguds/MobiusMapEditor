@@ -566,7 +566,8 @@ namespace MobiusEditor.Render
             if (isDamaged && !building.Type.IsSingleFrame)
             {
                 maxIcon = Globals.TheTilesetManager.GetTileDataLength(building.Type.GraphicsSource);
-                hasCollapseFrame = (gameType == GameType.TiberianDawn || gameType == GameType.SoleSurvivor) && maxIcon > 1 && maxIcon % 2 == 1;
+                //hasCollapseFrame = (gameType == GameType.TiberianDawn || gameType == GameType.SoleSurvivor) && maxIcon > 1 && maxIcon % 2 == 1;
+                hasCollapseFrame = maxIcon > 1 && maxIcon % 2 == 1;
                 damageIconOffs = (maxIcon + (hasCollapseFrame ? 0 : 1)) / 2;
                 collapseIcon = maxIcon - 1;
             }
@@ -2243,9 +2244,9 @@ namespace MobiusEditor.Render
             {
                 LandType landType = landTypes[i];
                 passable[i] = new bool[3];
-                passable[i][0] = plugin.IsLandUnitPassable(landType); // isVehiclePassable
-                passable[i][1] = plugin.IsBuildable(landType); // isBuildable
-                passable[i][2] = plugin.IsBoatPassable(landType); // isBoatPassable
+                passable[i][0] = plugin.IsLandUnitPassable(landType);
+                passable[i][1] = plugin.IsBoatPassable(landType);
+                passable[i][2] = plugin.IsBuildable(landType);
             }
             // The actual check.
             for (int y = visibleCells.Y; y < visibleCells.Bottom; ++y)
@@ -2270,10 +2271,10 @@ namespace MobiusEditor.Render
                     // Exclude uninitialised terrain
                     if (land != LandType.None)
                     {
-                        bool isVehiclePassable = passable[(int)land][0];
-                        bool isBuildable = passable[(int)land][1];
-                        bool isBoatPassable = passable[(int)land][2];
-                        if (isVehiclePassable)
+                        bool isLandUnitPassable = passable[(int)land][0];
+                        bool isBoatPassable = passable[(int)land][1];
+                        bool isBuildable = passable[(int)land][2];
+                        if (isLandUnitPassable)
                         {
                             if (!isBuildable)
                             {

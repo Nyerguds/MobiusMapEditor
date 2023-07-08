@@ -294,36 +294,30 @@ namespace MobiusEditor.RedAlert
         }
 
         private INISectionCollection extraSections;
-        public string ExtraIniText
+        public string GetExtraIniText()
         {
-            get
+            INI extraTextIni = new INI();
+            if (extraSections != null)
             {
-                INI extraTextIni = new INI();
-                if (extraSections != null)
-                {
-                    extraTextIni.Sections.AddRange(extraSections);
-                }
-                return extraTextIni.ToString();
+                extraTextIni.Sections.AddRange(extraSections);
             }
-            set
+            return extraTextIni.ToString();
+        }
+
+        public virtual IEnumerable<string> SetExtraIniText(String extraIniText)
+        {
+            INI extraTextIni = new INI();
+            try
             {
-                INI extraTextIni = new INI();
-                try
-                {
-                    extraTextIni.Parse(value ?? String.Empty);
-                }
-                catch
-                {
-                    return;
-                }
-                IEnumerable<string> errors = ResetRules(extraTextIni);
-                extraSections = extraTextIni.Sections.Count == 0 ? null : extraTextIni.Sections;
-                if (errors.Count() > 0)
-                {
-                    // Kind of a weird case; rules text is indeed updated, but this is the only way to give feedback.
-                    throw new Exception(String.Join("\n", errors));
-                }
+                extraTextIni.Parse(extraIniText ?? String.Empty);
             }
+            catch
+            {
+                return null;
+            }
+            IEnumerable<string> errors = ResetRules(extraTextIni);
+            extraSections = extraTextIni.Sections.Count == 0 ? null : extraTextIni.Sections;
+            return errors;
         }
 
         /// <summary>
@@ -382,11 +376,12 @@ namespace MobiusEditor.RedAlert
             }
             return extraTextIni == null ? null : UpdateRules(extraTextIni, this.Map);
         }
-        
+
         private INI rulesIni;
         private INI aftermathRulesIni;
         private INI multiplayRulesIni;
 
+        // Any time a new plugin is made it starts with these defaults. They are then further adapted by the rule reads.
         private readonly RaLandIniSection LandClear = new RaLandIniSection(90, 80, 60, 00, true);
         private readonly RaLandIniSection LandRough = new RaLandIniSection(80, 70, 40, 00, false);
         private readonly RaLandIniSection LandRoad = new RaLandIniSection(100, 100, 100, 00, true);
@@ -896,7 +891,7 @@ namespace MobiusEditor.RedAlert
                 }
             }
             //MessageBox.Show("at triggers");
-            HashSet<string> checkTrigs = Trigger.None.Yield().Concat(triggers.Select(t => t.Name)).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            Dictionary<string, string> caseTrigs = Trigger.None.Yield().Concat(triggers.Select(t => t.Name)).ToDictionary(t => t, StringComparer.OrdinalIgnoreCase);
             HashSet<string> checkCellTrigs = Map.FilterCellTriggers(triggers).Select(t => t.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
             HashSet<string> checkUnitTrigs = Trigger.None.Yield().Concat(Map.FilterUnitTriggers(triggers).Select(t => t.Name)).ToHashSet(StringComparer.OrdinalIgnoreCase);
             HashSet<string> checkStrcTrigs = Trigger.None.Yield().Concat(Map.FilterStructureTriggers(triggers).Select(t => t.Name)).ToHashSet(StringComparer.OrdinalIgnoreCase);
@@ -1160,7 +1155,6 @@ namespace MobiusEditor.RedAlert
                             Strength = strength,
                             Direction = DirectionType.GetDirectionType(dirValue, Map.UnitDirectionTypes),
                             Mission = Map.MissionTypes.Where(t => t.Equals(tokens[5])).FirstOrDefault() ?? Map.GetDefaultMission(unitType),
-                            Trigger = tokens[6]
                         };
                         if (newUnit.House == null)
                         {
@@ -1180,7 +1174,7 @@ namespace MobiusEditor.RedAlert
                         }
                         if (Map.Technos.Add(cell, newUnit))
                         {
-                            if (!checkTrigs.Contains(tokens[6]))
+                            if (!caseTrigs.ContainsKey(tokens[6]))
                             {
                                 errors.Add(string.Format("Unit '{0}' on cell {1} links to unknown trigger '{1}'; clearing trigger.", unitType.Name, cell, tokens[6]));
                                 modified = true;
@@ -1191,6 +1185,11 @@ namespace MobiusEditor.RedAlert
                                 errors.Add(string.Format("Unit '{0}' on cell {1} links to trigger '{1}' which does not contain an event or action applicable to units; clearing trigger.", unitType.Name, cell, tokens[6]));
                                 modified = true;
                                 newUnit.Trigger = Trigger.None;
+                            }
+                            else
+                            {
+                                // Adapt to same case
+                                newUnit.Trigger = caseTrigs[tokens[6]];
                             }
                         }
                         else
@@ -1410,7 +1409,6 @@ namespace MobiusEditor.RedAlert
                             Strength = strength,
                             Direction = DirectionType.GetDirectionType(dirValue, Map.UnitDirectionTypes),
                             Mission = Map.MissionTypes.Where(t => t.Equals(tokens[5])).FirstOrDefault() ?? Map.GetDefaultMission(vesselType),
-                            Trigger = tokens[6]
                         };
                         if (newShip.House == null)
                         {
@@ -1430,7 +1428,7 @@ namespace MobiusEditor.RedAlert
                         }
                         if (Map.Technos.Add(cell, newShip))
                         {
-                            if (!checkTrigs.Contains(tokens[6]))
+                            if (!caseTrigs.ContainsKey(tokens[6]))
                             {
                                 errors.Add(string.Format("Ship '{0}' on cell {1} links to unknown trigger '{2}'; clearing trigger.", vesselType.Name, cell, tokens[6]));
                                 modified = true;
@@ -1441,6 +1439,11 @@ namespace MobiusEditor.RedAlert
                                 errors.Add(string.Format("Ship '{0}' on cell {1} links to trigger '{2}' which does not contain an event or action applicable to ships; clearing trigger.", vesselType.Name, cell, tokens[6]));
                                 modified = true;
                                 newShip.Trigger = Trigger.None;
+                            }
+                            else
+                            {
+                                // Adapt to same case
+                                newShip.Trigger = caseTrigs[tokens[6]];
                             }
                         }
                         else
@@ -1554,7 +1557,7 @@ namespace MobiusEditor.RedAlert
                                 }
                                 if (infantryGroup.Infantry[stoppingPos] == null)
                                 {
-                                    if (!checkTrigs.Contains(tokens[7]))
+                                    if (!caseTrigs.ContainsKey(tokens[7]))
                                     {
                                         errors.Add(string.Format("Infantry '{0}' on cell {1}, sub-position {2}  links to unknown trigger '{3}'; clearing trigger.", infantryType.Name, cell, stoppingPos, tokens[7]));
                                         modified = true;
@@ -1565,6 +1568,11 @@ namespace MobiusEditor.RedAlert
                                         errors.Add(string.Format("Infantry '{0}' on cell {1}, sub-position {2}  links to trigger '{3}' which does not contain an event or action applicable to infantry; clearing trigger.", infantryType.Name, cell, stoppingPos, tokens[7]));
                                         modified = true;
                                         tokens[7] = Trigger.None;
+                                    }
+                                    else
+                                    {
+                                        // Adapt to same case
+                                        tokens[7] = caseTrigs[tokens[7]];
                                     }
                                     Infantry inf = new Infantry(infantryGroup)
                                     {
@@ -1700,7 +1708,6 @@ namespace MobiusEditor.RedAlert
                             House = Map.HouseTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault(),
                             Strength = strength,
                             Direction = DirectionType.GetDirectionType(dirValue, Map.BuildingDirectionTypes),
-                            Trigger = tokens[5],
                             Sellable = sellable,
                             Rebuild = rebuild
                         };
@@ -1722,7 +1729,7 @@ namespace MobiusEditor.RedAlert
                         }
                         if (Map.Buildings.Add(cell, newBld))
                         {
-                            if (!checkTrigs.Contains(tokens[5]))
+                            if (!caseTrigs.ContainsKey(tokens[5]))
                             {
                                 errors.Add(string.Format("Structure '{0}' on cell {1} links to unknown trigger '{2}'; clearing trigger.", buildingType.Name, cell, tokens[5]));
                                 modified = true;
@@ -1733,6 +1740,11 @@ namespace MobiusEditor.RedAlert
                                 errors.Add(string.Format("Structure '{0}' on cell {1} links to trigger '{2}' which does not contain an event or action applicable to structures; clearing trigger.", buildingType.Name, cell, tokens[5]));
                                 modified = true;
                                 newBld.Trigger = Trigger.None;
+                            }
+                            else
+                            {
+                                // Adapt to same case
+                                newBld.Trigger = caseTrigs[tokens[5]];
                             }
                         }
                         else
@@ -2091,7 +2103,7 @@ namespace MobiusEditor.RedAlert
                     {
                         if (Map.Metrics.Contains(cell))
                         {
-                            if (!checkTrigs.Contains(Value))
+                            if (!caseTrigs.ContainsKey(Value))
                             {
                                 errors.Add(string.Format("Cell trigger {0} links to unknown trigger '{1}'; skipping.", cell, Value));
                                 modified = true;
@@ -2103,7 +2115,7 @@ namespace MobiusEditor.RedAlert
                             }
                             else
                             {
-                                Map.CellTriggers[cell] = new CellTrigger(Value);
+                                Map.CellTriggers[cell] = new CellTrigger(caseTrigs[Value]);
                             }
                         }
                         else
@@ -2181,6 +2193,7 @@ namespace MobiusEditor.RedAlert
             List<int> availableGlobals;
             Dictionary<long, int> fixedGlobals = new Dictionary<long, int>();
             HashSet<int> teamGlobals = GetTeamGlobals(teamTypes);
+            ClearUnusedTriggerArguments(triggers);
             bool wasFixed;
             errors.AddRange(CheckTriggers(triggers, true, true, false, out _, true, out wasFixed, teamGlobals, out availableGlobals, ref fixedGlobals));
             if (wasFixed)
@@ -2197,7 +2210,7 @@ namespace MobiusEditor.RedAlert
             Map.Triggers.AddRange(triggers);
             // init rules stuff
             errors.AddRange(this.ResetRules(ini));
-            this.extraSections = ini.Sections;
+            extraSections = ini.Sections.Count == 0 ? null : ini.Sections;
             bool switchedToSolo = false;
             if (forceSoloMission && !basic.SoloMission)
             {
@@ -2428,7 +2441,6 @@ namespace MobiusEditor.RedAlert
                     errors.Add("Custom rules error on [" + landType + "]: " + e.Message.TrimEnd('.') + ". Rule updates for [" + landType + "] are ignored.");
                 }
             }
-        
         }
 
         private IEnumerable<string> UpdateGeneralRules(INI ini, Map map)
@@ -3177,7 +3189,7 @@ namespace MobiusEditor.RedAlert
                 // Check if map has name
                 if (this.MapNameIsEmpty(this.Map.BasicSection.Name))
                 {
-                    sb.AppendLine("Map name is empty. If you continue, the filename will be filled in as map name.");
+                    sb.Append("Map name is empty. If you continue, the filename will be filled in as map name.\n");
                 }
                 // Check if the map or any of the scripting references ants, and if so, if their rules are filled in.
                 UnitType[] antUs = { UnitTypes.Ant1, UnitTypes.Ant2, UnitTypes.Ant3 };
@@ -3210,14 +3222,14 @@ namespace MobiusEditor.RedAlert
                 {
                     return sb.ToString();
                 }
-                sb = new StringBuilder("The following ant units and structures were found on the map or in the scripting, but have no ini rules set to properly define their stats:");
-                sb.Append("\n\n").Append(String.Join(", ", types.ToArray()));
+                sb.Append("The following ant units and structures were found on the map or in the scripting, but have no ini rules set to properly define their stats:\n\n");
+                sb.Append(String.Join(", ", types.ToArray()));
                 string stats = usedAntUnitTypes.Count == 0 ? (hasQueen ? "strength or weapon" : "strength") : "strength, weapon or movement speed";
-                sb.Append("\n\n").Append("Without ini definitions, these things will have no "+ stats + ", and will malfunction in the game.");
-                sb.Append(" The definitions can be set in Settings → Map Settings → INI Rules & Tweaks.");
+                sb.Append("\n\nWithout ini definitions, these things will have no ").Append(stats)
+                    .Append(", and will malfunction in the game. The definitions can be set in Settings → Map Settings → INI Rules & Tweaks.");
                 return sb.ToString();
             }
-            sb.AppendLine("Error(s) during map validation:");
+            sb.Append("Error(s) during map validation:\n");
             bool ok = true;
             int numAircraft = Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsAircraft).Count();
             int numBuildings = Map.Buildings.OfType<Building>().Where(x => x.Occupier.IsPrebuilt).Count();
@@ -3231,61 +3243,61 @@ namespace MobiusEditor.RedAlert
                 && Map.Metrics.GetLocation(w.Cell.Value, out Point pt) && !Map.Bounds.Contains(pt));
             if (!Globals.DisableAirUnits && numAircraft > Constants.MaxAircraft && Globals.EnforceObjectMaximums)
             {
-                sb.AppendLine().Append(string.Format("Maximum number of aircraft exceeded ({0} > {1})", numAircraft, Constants.MaxAircraft));
+                sb.Append(string.Format("\nMaximum number of aircraft exceeded ({0} > {1})", numAircraft, Constants.MaxAircraft));
                 ok = false;
             }
             if (numBuildings > Constants.MaxBuildings && Globals.EnforceObjectMaximums)
             {
-                sb.AppendLine().Append(string.Format("Maximum number of structures exceeded ({0} > {1})", numBuildings, Constants.MaxBuildings));
+                sb.Append(string.Format("\nMaximum number of structures exceeded ({0} > {1})", numBuildings, Constants.MaxBuildings));
                 ok = false;
             }
             if (numInfantry > Constants.MaxInfantry && Globals.EnforceObjectMaximums)
             {
-                sb.AppendLine().Append(string.Format("Maximum number of infantry exceeded ({0} > {1})", numInfantry, Constants.MaxInfantry));
+                sb.Append(string.Format("\nMaximum number of infantry exceeded ({0} > {1})", numInfantry, Constants.MaxInfantry));
                 ok = false;
             }
             if (numTerrain > Constants.MaxTerrain && Globals.EnforceObjectMaximums)
             {
-                sb.AppendLine().Append(string.Format("Maximum number of terrain objects exceeded ({0} > {1})", numTerrain, Constants.MaxTerrain));
+                sb.Append(string.Format("\nMaximum number of terrain objects exceeded ({0} > {1})", numTerrain, Constants.MaxTerrain));
                 ok = false;
             }
             if (numUnits > Constants.MaxUnits && Globals.EnforceObjectMaximums)
             {
-                sb.AppendLine().Append(string.Format("Maximum number of units exceeded ({0} > {1})", numUnits, Constants.MaxUnits));
+                sb.Append(string.Format("\nMaximum number of units exceeded ({0} > {1})", numUnits, Constants.MaxUnits));
                 ok = false;
             }
             if (numVessels > Constants.MaxVessels && Globals.EnforceObjectMaximums)
             {
-                sb.AppendLine().Append(string.Format("Maximum number of ships exceeded ({0} > {1})", numVessels, Constants.MaxVessels));
+                sb.Append(string.Format("\nMaximum number of ships exceeded ({0} > {1})", numVessels, Constants.MaxVessels));
                 ok = false;
             }
             if (Map.TeamTypes.Count > Constants.MaxTeams && Globals.EnforceObjectMaximums)
             {
-                sb.AppendLine().Append(string.Format("Maximum number of team types exceeded ({0} > {1})", Map.TeamTypes.Count, Constants.MaxTeams));
+                sb.Append(string.Format("\nMaximum number of team types exceeded ({0} > {1})", Map.TeamTypes.Count, Constants.MaxTeams));
                 ok = false;
             }
             if (Map.Triggers.Count > Constants.MaxTriggers && Globals.EnforceObjectMaximums)
             {
-                sb.AppendLine().Append(string.Format("Maximum number of triggers exceeded ({0} > {1})", Map.Triggers.Count, Constants.MaxTriggers));
+                sb.Append(string.Format("\nMaximum number of triggers exceeded ({0} > {1})", Map.Triggers.Count, Constants.MaxTriggers));
                 ok = false;
             }
             if (!Map.BasicSection.SoloMission)
             {
                 if (numStartPoints < 2)
                 {
-                    sb.AppendLine().Append("Skirmish/Multiplayer maps need at least 2 waypoints for player starting locations.");
+                    sb.Append("\nSkirmish/Multiplayer maps need at least 2 waypoints for player starting locations.");
                     ok = false;
                 }
                 if (numBadPoints > 0)
                 {
-                    sb.AppendLine().Append("Skirmish/Multiplayer maps should not have player start waypoints placed outside the map bound.");
+                    sb.Append("\nSkirmish/Multiplayer maps should not have player start waypoints placed outside the map bound.");
                     ok = false;
                 }
             }
             Waypoint homeWaypoint = Map.Waypoints.Where(w => (w.Flag & WaypointFlag.Home) == WaypointFlag.Home).FirstOrDefault();
             if (Map.BasicSection.SoloMission && (!homeWaypoint.Cell.HasValue || !Map.Metrics.GetLocation(homeWaypoint.Cell.Value, out Point p) || !Map.Bounds.Contains(p)))
             {
-                sb.AppendLine().Append("Single-player maps need the Home waypoint to be placed, inside the map bounds.");
+                sb.Append("\nSingle-player maps need the Home waypoint to be placed, inside the map bounds.");
                 ok = false;
             }
             bool fatal;
@@ -3294,11 +3306,11 @@ namespace MobiusEditor.RedAlert
             {
                 foreach (string err in triggerErr)
                 {
-                    sb.AppendLine().Append(err);
+                    sb.Append("\n").Append(err);
                 }
                 ok = false;
             }
-            return ok ? null : sb.ToString();
+            return ok ? null : sb.ToString().Trim('\n');
         }
 
         public IEnumerable<string> AssessMapItems()
@@ -3414,7 +3426,7 @@ namespace MobiusEditor.RedAlert
             }
             return info;
         }
-
+                        
         private void GetUsagesInTriggers(IEnumerable<Trigger> triggers, HashSet<int> checkedGlobals, HashSet<int> alteredGlobals, HashSet<int> usedWaypoints)
         {
             foreach (Trigger tr in triggers)
@@ -3440,6 +3452,130 @@ namespace MobiusEditor.RedAlert
                     if (tr.Action2.ActionType == ActionTypes.TACTION_DZ || tr.Action2.ActionType == ActionTypes.TACTION_REVEAL_SOME || tr.Action2.ActionType == ActionTypes.TACTION_REVEAL_ZONE)
                         usedWaypoints.Add((int)tr.Action2.Data);
                 }
+            }
+        }
+
+        private void ClearUnusedTriggerArguments(List<Trigger> triggers)
+        {
+            foreach (Trigger tr in triggers)
+            {
+                ClearUnusedEventArgs(tr.Event1, false);
+                ClearUnusedActionArgs(tr.Action1);
+                ClearUnusedEventArgs(tr.Event2, tr.EventControl == TriggerMultiStyleType.Only);
+                ClearUnusedActionArgs(tr.Action2);
+            }
+        }
+
+        private void ClearUnusedEventArgs(TriggerEvent ev, bool isUnused)
+        {
+            if (isUnused)
+            {
+                ev.EventType = TriggerEvent.None;
+                ev.Data = 0;
+                ev.Team = TeamType.None;
+            }
+            switch (ev.EventType)
+            {
+                case EventTypes.TEVENT_NONE:
+                case EventTypes.TEVENT_SPIED:
+                case EventTypes.TEVENT_DISCOVERED:
+                case EventTypes.TEVENT_ATTACKED:
+                case EventTypes.TEVENT_DESTROYED:
+                case EventTypes.TEVENT_ANY:
+                case EventTypes.TEVENT_MISSION_TIMER_EXPIRED:
+                case EventTypes.TEVENT_NOFACTORIES:
+                case EventTypes.TEVENT_EVAC_CIVILIAN:
+                case EventTypes.TEVENT_FAKES_DESTROYED:
+                case EventTypes.TEVENT_ALL_BRIDGES_DESTROYED:
+                    // Neither team nor data
+                    ev.Data = 0;
+                    ev.Team = TeamType.None;
+                    break;
+                case EventTypes.TEVENT_LEAVES_MAP:
+                    // Only team
+                    ev.Data = 0;
+                    break;
+                case EventTypes.TEVENT_PLAYER_ENTERED:
+                case EventTypes.TEVENT_CROSS_HORIZONTAL:
+                case EventTypes.TEVENT_CROSS_VERTICAL:
+                case EventTypes.TEVENT_ENTERS_ZONE:
+                case EventTypes.TEVENT_LOW_POWER:
+                case EventTypes.TEVENT_THIEVED:
+                case EventTypes.TEVENT_HOUSE_DISCOVERED:
+                case EventTypes.TEVENT_BUILDINGS_DESTROYED:
+                case EventTypes.TEVENT_UNITS_DESTROYED:
+                case EventTypes.TEVENT_ALL_DESTROYED:
+                case EventTypes.TEVENT_BUILDING_EXISTS:
+                case EventTypes.TEVENT_BUILD:
+                case EventTypes.TEVENT_BUILD_UNIT:
+                case EventTypes.TEVENT_BUILD_INFANTRY:
+                case EventTypes.TEVENT_BUILD_AIRCRAFT:
+                case EventTypes.TEVENT_NUNITS_DESTROYED:
+                case EventTypes.TEVENT_NBUILDINGS_DESTROYED:
+                case EventTypes.TEVENT_CREDITS:
+                case EventTypes.TEVENT_TIME:
+                case EventTypes.TEVENT_GLOBAL_SET:
+                case EventTypes.TEVENT_GLOBAL_CLEAR:
+                    // Only data
+                    ev.Team = TeamType.None;
+                    break;
+            }
+        }
+
+        private void ClearUnusedActionArgs(TriggerAction ac)
+        {
+            switch (ac.ActionType)
+            {
+                case ActionTypes.TACTION_NONE:
+                case ActionTypes.TACTION_WINLOSE:
+                case ActionTypes.TACTION_ALLOWWIN:
+                case ActionTypes.TACTION_REVEAL_ALL:
+                case ActionTypes.TACTION_START_TIMER:
+                case ActionTypes.TACTION_STOP_TIMER:
+                case ActionTypes.TACTION_CREEP_SHADOW:
+                case ActionTypes.TACTION_DESTROY_OBJECT:
+                case ActionTypes.TACTION_LAUNCH_NUKES:
+                    ac.Trigger = Trigger.None;
+                    ac.Team = TeamType.None;
+                    ac.Data = 0;
+                    break;
+                case ActionTypes.TACTION_WIN:
+                case ActionTypes.TACTION_LOSE:
+                case ActionTypes.TACTION_BEGIN_PRODUCTION:
+                case ActionTypes.TACTION_ALL_HUNT:
+                case ActionTypes.TACTION_FIRE_SALE:
+                case ActionTypes.TACTION_DZ:
+                case ActionTypes.TACTION_PLAY_MOVIE:
+                case ActionTypes.TACTION_TEXT_TRIGGER:
+                case ActionTypes.TACTION_REVEAL_SOME:
+                case ActionTypes.TACTION_REVEAL_ZONE:
+                case ActionTypes.TACTION_PLAY_SOUND:
+                case ActionTypes.TACTION_PLAY_MUSIC:
+                case ActionTypes.TACTION_PLAY_SPEECH:
+                case ActionTypes.TACTION_ADD_TIMER:
+                case ActionTypes.TACTION_SUB_TIMER:
+                case ActionTypes.TACTION_SET_TIMER:
+                case ActionTypes.TACTION_SET_GLOBAL:
+                case ActionTypes.TACTION_CLEAR_GLOBAL:
+                case ActionTypes.TACTION_BASE_BUILDING:
+                case ActionTypes.TACTION_1_SPECIAL:
+                case ActionTypes.TACTION_FULL_SPECIAL:
+                case ActionTypes.TACTION_PREFERRED_TARGET:
+                case ActionTypes.TACTION_AUTOCREATE:
+                    ac.Trigger = Trigger.None;
+                    ac.Team = TeamType.None;
+                    break;
+                case ActionTypes.TACTION_CREATE_TEAM:
+                case ActionTypes.TACTION_DESTROY_TEAM:
+                case ActionTypes.TACTION_REINFORCEMENTS:
+                    ac.Trigger = Trigger.None;
+                    ac.Data = 0;
+                    break;
+                case ActionTypes.TACTION_DESTROY_TRIGGER:
+                case ActionTypes.TACTION_FORCE_TRIGGER:
+                    ac.Team = TeamType.None;
+                    ac.Data = 0;
+                    break;
             }
         }
 

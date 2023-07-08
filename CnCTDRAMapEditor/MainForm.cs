@@ -299,7 +299,7 @@ namespace MobiusEditor
                     {
                         Point curPoint = mapPanel.AutoScrollPosition;
                         SizeF zoomedCell = activeTool.NavigationWidget.ZoomedCellSize;
-                        // autoscrollposition is WEIRD. Exposed as negative, needs to be given as positive.                        
+                        // autoscrollposition is WEIRD. Exposed as negative, needs to be given as positive.
                         mapPanel.AutoScrollPosition = new Point(-curPoint.X + (int)Math.Round(delta.X * zoomedCell.Width), -curPoint.Y + (int)Math.Round(delta.Y * zoomedCell.Width));
                         mapPanel.InvalidateScroll();
                         activeTool.NavigationWidget.Refresh();
@@ -526,7 +526,7 @@ namespace MobiusEditor
         private bool DoValidate()
         {
             String errors = plugin.Validate(true);
-            if (errors != null)
+            if (!String.IsNullOrEmpty(errors))
             {
                 String message = errors + "\n\nContinue map save?";
                 DialogResult dr = SimpleMultiThreading.ShowMessageBoxThreadSafe(this, message, "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2);
@@ -621,10 +621,13 @@ namespace MobiusEditor
             {
                 cratesSettings = new PropertyTracker<SoleSurvivor.CratesSection>(ssPlugin.CratesSection);
             }
-            string extraIniText = plugin.ExtraIniText;
+            string extraIniText = plugin.GetExtraIniText();
             if (extraIniText.Trim('\r', '\n').Length == 0)
                 extraIniText = String.Empty;
             Dictionary<House, PropertyTracker<House>> houseSettingsTrackers = plugin.Map.Houses.ToDictionary(h => h, h => new PropertyTracker<House>(h));
+            bool amStatusChanged = false;
+            bool multiStatusChanged = false;
+            bool iniTextChanged = false;
             using (MapSettingsDialog msd = new MapSettingsDialog(plugin, basicSettings, briefingSettings, cratesSettings, houseSettingsTrackers, extraIniText))
             {
                 msd.StartPosition = FormStartPosition.CenterParent;
@@ -652,25 +655,21 @@ namespace MobiusEditor
                     // Ignore trivial line changes. This will not detect any irrelevant but non-trivial changes like swapping lines, though.
                     String checkTextNew = Regex.Replace(normalised, "[\\r\\n]+", "\n").Trim('\n');
                     String checkTextOrig = Regex.Replace(extraIniText ?? String.Empty, "[\\r\\n]+", "\n").Trim('\n');
-                    bool amStatusChanged = wasExpanded != plugin.Map.BasicSection.ExpansionEnabled;
-                    bool multiStatusChanged = wasSolo != plugin.Map.BasicSection.SoloMission;
-                    bool iniTextChanged = !checkTextOrig.Equals(checkTextNew, StringComparison.OrdinalIgnoreCase);
+                    amStatusChanged = wasExpanded != plugin.Map.BasicSection.ExpansionEnabled;
+                    multiStatusChanged = wasSolo != plugin.Map.BasicSection.SoloMission;
+                    iniTextChanged = !checkTextOrig.Equals(checkTextNew, StringComparison.OrdinalIgnoreCase);
                     // All three of those warrant a rules reset.
                     // TODO: give warning on the multiplay rules changes.
                     if (amStatusChanged || multiStatusChanged || iniTextChanged)
                     {
-                        try
+                        IEnumerable<string> errors = plugin.SetExtraIniText(normalised);
+                        if (errors != null && errors.Count() > 0)
                         {
-                            plugin.ExtraIniText = normalised;
-                        }
-                        catch (Exception ex)
-                        {
-                            //MessageBox.Show("Errors occurred when applying rule changes:\n\n" + ex.Message, GetProgramVersionTitle());
                             using (ErrorMessageBox emb = new ErrorMessageBox())
                             {
                                 emb.Title = GetProgramVersionTitle();
                                 emb.Message = "Errors occurred when applying rule changes:";
-                                emb.Errors = ex.Message.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n');
+                                emb.Errors = errors;
                                 emb.StartPosition = FormStartPosition.CenterParent;
                                 emb.ShowDialog(this);
                             }
@@ -682,7 +681,7 @@ namespace MobiusEditor
                     plugin.Dirty = hasChanges;
                 }
             }
-            if (rulesChanged || (wasExpanded && !plugin.Map.BasicSection.ExpansionEnabled))
+            if (rulesChanged || amStatusChanged)
             {
                 // If Aftermath units were disabled, we can't guarantee none of them are still in
                 // the undo/redo history, so the undo/redo history is cleared to avoid issues.

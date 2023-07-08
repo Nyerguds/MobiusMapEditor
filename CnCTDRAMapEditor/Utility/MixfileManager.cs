@@ -56,8 +56,13 @@ namespace MobiusEditor.Utility
 
         public MixfileManager(String applicationPath, Dictionary<GameType, String> gameFolders, Dictionary<GameType, string[]> modPaths)
         {
-            this.applicationPath = applicationPath;
+            this.applicationPath = applicationPath ?? Path.GetFullPath(".");
             this.gameFolders = gameFolders;
+            if (gameFolders != null)
+            {
+                // Making 100% sure that that isn't in there
+                gameFolders.Remove(GameType.None);
+            }
             this.gameArchives = new Dictionary<GameType, List<MixInfo>>();
             this.modPathsPerGame = modPaths;
         }
@@ -88,7 +93,7 @@ namespace MobiusEditor.Utility
             }
             // Doesn't really 'load' the archive, but instead registers it as known filename for this game type.
             // The actual loading won't happen until a Reset(...) is executed to specify the game to initialise.
-            if (!gameFolders.TryGetValue(gameType, out string gamePath))
+            if (gameFolders == null || !gameFolders.TryGetValue(gameType, out string gamePath))
             {
                 return false;
             }
@@ -120,7 +125,7 @@ namespace MobiusEditor.Utility
             }
             // Doesn't really 'load' the archive, but instead registers it as known filename for this game type.
             // The actual loading won't happen until a Reset(...) is executed to specify the game to initialise.
-            if (!gameFolders.TryGetValue(gameType, out string gamePath))
+            if (gameFolders == null || !gameFolders.TryGetValue(gameType, out string gamePath))
             {
                 return 0;
             }
@@ -174,7 +179,7 @@ namespace MobiusEditor.Utility
                     foundFiles.Add(name);
                     foundPaths.Add(name, filePath);
                 }
-            }            
+            }
             int counter = 0;
             foreach (string filename in foundFiles)
             {
@@ -222,7 +227,7 @@ namespace MobiusEditor.Utility
                 throw new ObjectDisposedException(GetType().FullName);
             }
             // Game folders dictionary determines which games are "known" to the system.
-            if (!gameFolders.TryGetValue(gameType, out string gamePath))
+            if (gameFolders == null || !gameFolders.TryGetValue(gameType, out string gamePath))
             {
                 return null;
             }
@@ -289,7 +294,7 @@ namespace MobiusEditor.Utility
             this.currentGameType = GameType.None;
             // Load current files
             // Game folders dictionary determines which games are "known" to the system.
-            if (!gameFolders.TryGetValue(gameType, out string gamePath))
+            if (gameFolders == null || !gameFolders.TryGetValue(gameType, out string gamePath))
             {
                 return;
             }
@@ -407,7 +412,8 @@ namespace MobiusEditor.Utility
             {
                 if (disposing)
                 {
-                    //megafiles.ForEach(m => m.Dispose());
+                    // This disposes all currently loaded mixfiles.
+                    this.Reset(GameType.None, null);
                 }
                 disposedValue = true;
             }

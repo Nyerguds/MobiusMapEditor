@@ -62,8 +62,11 @@ namespace MobiusEditor.Interface
         /// <summary>True if the currently loaded map was modified.</summary>
         bool Dirty { get; set; }
 
-        /// <summary>Extra ini text that can be freely edited by the user.</summary>
-        string ExtraIniText { get; set; }
+        /// <summary>Get any unmanaged sections from the mission file so they can be edited by the user.</summary>
+        string GetExtraIniText();
+
+        /// <summary>Store extra ini text after it has been edited by the user.</summary>
+        IEnumerable<string> SetExtraIniText(String extraIniText);
 
         /// <summary>
         /// Create a new map in the chosen theater.

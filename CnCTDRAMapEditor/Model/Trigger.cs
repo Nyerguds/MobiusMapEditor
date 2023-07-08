@@ -38,9 +38,9 @@ namespace MobiusEditor.Model
     {
         public static readonly string None = "None";
 
-        public static bool IsEmpty(string teamtype)
+        public static bool IsEmpty(string eventType)
         {
-            return teamtype == null || teamtype.Equals(None, StringComparison.OrdinalIgnoreCase);
+            return eventType == null || eventType.Equals(None, StringComparison.OrdinalIgnoreCase);
         }
 
         public string EventType { get; set; } = None;

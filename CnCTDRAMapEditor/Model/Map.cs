@@ -1131,7 +1131,7 @@ namespace MobiusEditor.Model
             {
                 return;
             }
-            foreach(Point p in bibPoints.Keys)
+            foreach (Point p in bibPoints.Keys)
             {
                 if (this.Metrics.GetCell(p, out int subCell))
                 {

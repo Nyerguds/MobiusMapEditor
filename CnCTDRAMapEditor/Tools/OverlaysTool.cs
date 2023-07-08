@@ -434,7 +434,7 @@ namespace MobiusEditor.Tools
             this.HandlePaintOutlines(graphics, previewMap, boundRenderCells, Globals.MapTileSize, Globals.MapTileScale, this.Layers);
             int secondRowStartCell = map.Metrics.Width;
             int lastRowStartCell = map.Metrics.Length - map.Metrics.Width;
-            MapRenderer.RenderAllBoundsFromCell(graphics, boundRenderCells, Globals.MapTileSize, 
+            MapRenderer.RenderAllBoundsFromCell(graphics, boundRenderCells, Globals.MapTileSize,
                 previewMap.Overlay.Where(x => x.Value.Type.IsOverlay && x.Cell >= secondRowStartCell && x.Cell < lastRowStartCell), previewMap.Metrics);
         }
 

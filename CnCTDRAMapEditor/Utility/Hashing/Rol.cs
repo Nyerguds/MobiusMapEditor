@@ -22,7 +22,7 @@ namespace MobiusEditor.Utility.Hashing
         {
             return GetNameId(name, 1);
         }
-        
+
         public override UInt32 GetNameIdCorrectCase(Byte[] data)
         {
             return GetNameId(data, 1);
@@ -38,7 +38,6 @@ namespace MobiusEditor.Utility.Hashing
             return "ROL";
         }
     }
-
 
     public class HashRol3 : Rol
     {
@@ -110,7 +109,7 @@ namespace MobiusEditor.Utility.Hashing
         {
             return GetNameId(Encoding.ASCII.GetBytes(name), rot);
         }
-        
+
         protected UInt32 GetNameId(Byte[] values, Int32 rot)
         {
             Int32 i = 0;

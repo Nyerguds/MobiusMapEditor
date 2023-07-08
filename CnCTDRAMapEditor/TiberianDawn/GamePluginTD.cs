@@ -249,50 +249,50 @@ namespace MobiusEditor.TiberianDawn
         }
 
         protected INISectionCollection extraSections;
-        public virtual string ExtraIniText
+        public virtual string GetExtraIniText()
         {
-            get
+            INI ini = new INI();
+            if (extraSections != null)
             {
-                INI ini = new INI();
-                if (extraSections != null)
-                {
-                    ini.Sections.AddRange(extraSections);
-                }
-                return ini.ToString();
+                ini.Sections.AddRange(extraSections);
             }
-            set {
-                INI ini = new INI();
-                try
-                {
-                    ini.Parse(value ?? String.Empty);
-                }
-                catch
-                {
-                    return;
-                }
-                // Remove any sections known and handled / disallowed by the editor.
-                INITools.ClearDataFrom(ini, "Basic", (BasicSection)Map.BasicSection);
-                INITools.ClearDataFrom(ini, "Map", Map.MapSection);
-                ini.Sections.Remove("Briefing");
-                ini.Sections.Remove("Steam");
-                ini.Sections.Remove("TeamTypes");
-                ini.Sections.Remove("Triggers");
-                ini.Sections.Remove("Terrain");
-                ini.Sections.Remove("Overlay");
-                ini.Sections.Remove("Smudge");
-                ini.Sections.Remove("Infantry");
-                ini.Sections.Remove("Units");
-                ini.Sections.Remove("Aircraft");
-                ini.Sections.Remove("Structures");
-                ini.Sections.Remove("Base");
-                ini.Sections.Remove("Waypoints");
-                ini.Sections.Remove("CellTriggers");
-                foreach (Model.House house in Map.Houses)
-                {
-                    INITools.ClearDataFrom(ini, house.Type.Name, (House)house);
-                }
-                extraSections = ini.Sections.Count == 0 ? null : ini.Sections;
+            return ini.ToString();
+        }
+
+        public virtual IEnumerable<string> SetExtraIniText(String extraIniText)
+        {
+            INI ini = new INI();
+            try
+            {
+                ini.Parse(extraIniText ?? String.Empty);
             }
+            catch
+            {
+                return null;
+            }
+            // Remove any sections known and handled / disallowed by the editor.
+            INITools.ClearDataFrom(ini, "Basic", (BasicSection)Map.BasicSection);
+            INITools.ClearDataFrom(ini, "Map", Map.MapSection);
+            ini.Sections.Remove("Briefing");
+            ini.Sections.Remove("Steam");
+            ini.Sections.Remove("TeamTypes");
+            ini.Sections.Remove("Triggers");
+            ini.Sections.Remove("Terrain");
+            ini.Sections.Remove("Overlay");
+            ini.Sections.Remove("Smudge");
+            ini.Sections.Remove("Infantry");
+            ini.Sections.Remove("Units");
+            ini.Sections.Remove("Aircraft");
+            ini.Sections.Remove("Structures");
+            ini.Sections.Remove("Base");
+            ini.Sections.Remove("Waypoints");
+            ini.Sections.Remove("CellTriggers");
+            foreach (Model.House house in Map.Houses)
+            {
+                INITools.ClearDataFrom(ini, house.Type.Name, (House)house);
+            }
+            extraSections = ini.Sections.Count == 0 ? null : ini.Sections;
+            return null;
         }
 
         public static bool CheckForMegamap(INI iniContents)
@@ -960,7 +960,7 @@ namespace MobiusEditor.TiberianDawn
             // Sort
             ExplorerComparer comparer = new ExplorerComparer();
             triggers.Sort((x, y) => comparer.Compare(x.Name, y.Name));
-            Dictionary<string, string> checkTrigs = Trigger.None.Yield().Concat(triggers.Select(t => t.Name)).ToDictionary(t => t, t => t, StringComparer.OrdinalIgnoreCase);
+            Dictionary<string, string> caseTrigs = Trigger.None.Yield().Concat(triggers.Select(t => t.Name)).ToDictionary(t => t, StringComparer.OrdinalIgnoreCase);
             HashSet<string> checkCellTrigs = Map.FilterCellTriggers(triggers).Select(t => t.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
             HashSet<string> checkUnitTrigs = Trigger.None.Yield().Concat(Map.FilterUnitTriggers(triggers).Select(t => t.Name)).ToHashSet(StringComparer.OrdinalIgnoreCase);
             HashSet<string> checkStrcTrigs = Trigger.None.Yield().Concat(Map.FilterStructureTriggers(triggers).Select(t => t.Name)).ToHashSet(StringComparer.OrdinalIgnoreCase);
@@ -1092,7 +1092,7 @@ namespace MobiusEditor.TiberianDawn
                                 }
                                 if (infantryGroup.Infantry[stoppingPos] == null)
                                 {
-                                    if (!checkTrigs.ContainsKey(tokens[7]))
+                                    if (!caseTrigs.ContainsKey(tokens[7]))
                                     {
                                         errors.Add(string.Format("Infantry '{0}' on cell {1}, sub-position {2} links to unknown trigger '{3}'; clearing trigger.", infantryType.Name, cell, stoppingPos, tokens[7]));
                                         modified = true;
@@ -1107,7 +1107,7 @@ namespace MobiusEditor.TiberianDawn
                                     else
                                     {
                                         // Adapt to same case
-                                        tokens[7] = checkTrigs[tokens[7]];
+                                        tokens[7] = caseTrigs[tokens[7]];
                                     }
                                     Infantry inf = new Infantry(infantryGroup)
                                     {
@@ -1250,7 +1250,7 @@ namespace MobiusEditor.TiberianDawn
                         }
                         if (Map.Technos.Add(cell, newUnit))
                         {
-                            if (!checkTrigs.ContainsKey(tokens[6]))
+                            if (!caseTrigs.ContainsKey(tokens[6]))
                             {
                                 errors.Add(string.Format("Unit '{0}' on cell {1} links to unknown trigger '{2}'; clearing trigger.", unitType.Name, cell, tokens[6]));
                                 modified = true;
@@ -1265,7 +1265,7 @@ namespace MobiusEditor.TiberianDawn
                             else
                             {
                                 // Adapt to same case
-                                newUnit.Trigger = checkTrigs[tokens[6]];
+                                newUnit.Trigger = caseTrigs[tokens[6]];
                             }
                         }
                         else
@@ -1496,7 +1496,7 @@ namespace MobiusEditor.TiberianDawn
                         }
                         if (Map.Buildings.Add(cell, newBld))
                         {
-                            if (!checkTrigs.ContainsKey(tokens[5]))
+                            if (!caseTrigs.ContainsKey(tokens[5]))
                             {
                                 errors.Add(string.Format("Structure '{0}' on cell {1} links to unknown trigger '{2}'; clearing trigger.", buildingType.Name, cell, tokens[5]));
                                 modified = true;
@@ -1511,7 +1511,7 @@ namespace MobiusEditor.TiberianDawn
                             else
                             {
                                 // Adapt to same case
-                                newBld.Trigger = checkTrigs[tokens[5]];
+                                newBld.Trigger = caseTrigs[tokens[5]];
                             }
                         }
                         else
@@ -1663,7 +1663,7 @@ namespace MobiusEditor.TiberianDawn
                             };
                             if (Map.Technos.Add(cell, newTerr))
                             {
-                                if (!checkTrigs.ContainsKey(tokens[1]))
+                                if (!caseTrigs.ContainsKey(tokens[1]))
                                 {
                                     errors.Add(string.Format("Terrain '{0}' on cell {1} links to unknown trigger '{2}'; clearing trigger.", terrainType.Name, cell, tokens[1]));
                                     modified = true;
@@ -1678,7 +1678,7 @@ namespace MobiusEditor.TiberianDawn
                                 else
                                 {
                                     // Adapt to same case
-                                    newTerr.Trigger = checkTrigs[tokens[1]];
+                                    newTerr.Trigger = caseTrigs[tokens[1]];
                                 }
                             }
                             else
@@ -1834,22 +1834,19 @@ namespace MobiusEditor.TiberianDawn
                     {
                         if (Map.Metrics.Contains(cell))
                         {
-                            if (checkTrigs.ContainsKey(Value))
-                            {
-                                if (checkCellTrigs.Contains(Value))
-                                {
-                                    Map.CellTriggers[cell] = new CellTrigger(Value);
-                                }
-                                else
-                                {
-                                    errors.Add(string.Format("Cell trigger {0} links to trigger '{1}' which does not contain a placeable event; skipping.", cell, Value));
-                                    modified = true;
-                                }
-                            }
-                            else
+                            if (!caseTrigs.ContainsKey(Value))
                             {
                                 errors.Add(string.Format("Cell trigger {0} links to unknown trigger '{1}'; skipping.", cell, Value));
                                 modified = true;
+                            }
+                            else if (!checkCellTrigs.Contains(Value))
+                            {
+                                errors.Add(string.Format("Cell trigger {0} links to trigger '{1}' which does not contain a placeable event; skipping.", cell, Value));
+                                modified = true;
+                            }
+                            else
+                            {
+                                Map.CellTriggers[cell] = new CellTrigger(caseTrigs[Value]);
                             }
                         }
                         else
@@ -1880,7 +1877,13 @@ namespace MobiusEditor.TiberianDawn
                 gameHouse.Enabled = houseSection != null;
             }
             UpdateBasePlayerHouse();
-            errors.AddRange(CheckTriggers(triggers, true, true, false, out _, false, out _));
+            ClearUnusedTriggerArguments(triggers);
+            bool wasFixed;
+            errors.AddRange(CheckTriggers(triggers, true, true, false, out _, true, out wasFixed));
+            if (wasFixed)
+            {
+                modified = true;
+            }
             // Won't trigger the notifications.
             Map.Triggers.Clear();
             Map.Triggers.AddRange(triggers);
@@ -2789,27 +2792,27 @@ namespace MobiusEditor.TiberianDawn
             bool noSoleSkip = !forSole || !Globals.NoOwnedObjectsInSole;
             if (!Globals.DisableAirUnits && numAircraft > maxAir && noSoleSkip && Globals.EnforceObjectMaximums)
             {
-                sb.AppendLine().Append(string.Format("Maximum number of aircraft exceeded ({0} > {1})", numAircraft, maxAir));
+                sb.Append(string.Format("\nMaximum number of aircraft exceeded ({0} > {1})", numAircraft, maxAir));
                 ok = false;
             }
             if (numBuildings > maxBld && noSoleSkip && Globals.EnforceObjectMaximums)
             {
-                sb.AppendLine().Append(string.Format("Maximum number of structures exceeded ({0} > {1})", numBuildings, maxBld));
+                sb.Append(string.Format("\nMaximum number of structures exceeded ({0} > {1})", numBuildings, maxBld));
                 ok = false;
             }
             if (numInfantry > maxInf && noSoleSkip && Globals.EnforceObjectMaximums)
             {
-                sb.AppendLine().Append(string.Format("Maximum number of infantry exceeded ({0} > {1})", numInfantry, maxInf));
+                sb.Append(string.Format("\nMaximum number of infantry exceeded ({0} > {1})", numInfantry, maxInf));
                 ok = false;
             }
             if (numTerrain > maxTer && Globals.EnforceObjectMaximums)
             {
-                sb.AppendLine().Append(string.Format("Maximum number of terrain objects exceeded ({0} > {1})", numTerrain, maxTer));
+                sb.Append(string.Format("\nMaximum number of terrain objects exceeded ({0} > {1})", numTerrain, maxTer));
                 ok = false;
             }
             if (numUnits > maxUni && noSoleSkip && Globals.EnforceObjectMaximums)
             {
-                sb.AppendLine().Append(string.Format("Maximum number of units exceeded ({0} > {1})", numUnits, maxUni));
+                sb.Append(string.Format("\nMaximum number of units exceeded ({0} > {1})", numUnits, maxUni));
                 ok = false;
             }
             // Ignore all further checks for Sole Survivor
@@ -2819,31 +2822,31 @@ namespace MobiusEditor.TiberianDawn
             }
             if (Map.TeamTypes.Count > Constants.MaxTeams && Globals.EnforceObjectMaximums)
             {
-                sb.AppendLine().Append(string.Format("Maximum number of team types exceeded ({0} > {1})", Map.TeamTypes.Count, Constants.MaxTeams));
+                sb.Append(string.Format("\nMaximum number of team types exceeded ({0} > {1})", Map.TeamTypes.Count, Constants.MaxTeams));
                 ok = false;
             }
             if (Map.Triggers.Count > Constants.MaxTriggers && Globals.EnforceObjectMaximums)
             {
-                sb.AppendLine().Append(string.Format("Maximum number of triggers exceeded ({0} > {1})", Map.Triggers.Count, Constants.MaxTriggers));
+                sb.Append(string.Format("\nMaximum number of triggers exceeded ({0} > {1})", Map.Triggers.Count, Constants.MaxTriggers));
                 ok = false;
             }
             if (!Map.BasicSection.SoloMission)
             {
                 if (numStartPoints < 2)
                 {
-                    sb.AppendLine().Append("Skirmish/Multiplayer maps need at least 2 waypoints for player starting locations.");
+                    sb.Append("\nSkirmish/Multiplayer maps need at least 2 waypoints for player starting locations.");
                     ok = false;
                 }
                 if (numBadPoints > 0)
                 {
-                    sb.AppendLine().Append("Skirmish/Multiplayer maps should not have player start waypoints placed outside the map bound.");
+                    sb.Append("\nSkirmish/Multiplayer maps should not have player start waypoints placed outside the map bound.");
                     ok = false;
                 }
             }
             Waypoint homeWaypoint = Map.Waypoints.Where(w => (w.Flag & WaypointFlag.Home) == WaypointFlag.Home).FirstOrDefault();
             if (Map.BasicSection.SoloMission && (!homeWaypoint.Cell.HasValue || !Map.Metrics.GetLocation(homeWaypoint.Cell.Value, out Point p) || !Map.Bounds.Contains(p)))
             {
-                sb.AppendLine().Append("Single-player maps need the Home waypoint to be placed, inside the map bounds.");
+                sb.Append("\nSingle-player maps need the Home waypoint to be placed, inside the map bounds.");
                 ok = false;
             }
             bool fatal;
@@ -2852,11 +2855,11 @@ namespace MobiusEditor.TiberianDawn
             {
                 foreach (string err in triggerErr)
                 {
-                    sb.AppendLine().Append(err);
+                    sb.Append("\n").Append(err);
                 }
                 ok = false;
             }
-            return ok ? null : sb.ToString();
+            return ok ? null : sb.ToString().Trim('\n');
         }
 
         public virtual IEnumerable<string> AssessMapItems()
@@ -2949,6 +2952,72 @@ namespace MobiusEditor.TiberianDawn
                 info.Add(string.Format("Empty waypoints used in teams or triggers: {0}", evalEmpty(unsetUsedWaypointsStr)));
             }
             return info;
+        }
+
+        private void ClearUnusedTriggerArguments(List<Trigger> triggers)
+        {
+            foreach (Trigger tr in triggers)
+            {
+                ClearUnusedEventArgs(tr.Event1);
+                ClearUnusedActionArgs(tr.Action1);
+            }
+        }
+
+        private void ClearUnusedEventArgs(TriggerEvent ev)
+        {
+            switch (ev.EventType)
+            {
+                case EventTypes.EVENT_NONE:
+                case EventTypes.EVENT_PLAYER_ENTERED:
+                case EventTypes.EVENT_DISCOVERED:
+                case EventTypes.EVENT_ATTACKED:
+                case EventTypes.EVENT_DESTROYED:
+                case EventTypes.EVENT_ANY:
+                case EventTypes.EVENT_HOUSE_DISCOVERED:
+                case EventTypes.EVENT_UNITS_DESTROYED:
+                case EventTypes.EVENT_BUILDINGS_DESTROYED:
+                case EventTypes.EVENT_ALL_DESTROYED:
+                case EventTypes.EVENT_NOFACTORIES:
+                case EventTypes.EVENT_EVAC_CIVILIAN:
+                    ev.Data = 0;
+                    break;
+                case EventTypes.EVENT_CREDITS:
+                case EventTypes.EVENT_TIME:
+                case EventTypes.EVENT_NBUILDINGS_DESTROYED:
+                case EventTypes.EVENT_NUNITS_DESTROYED:
+                case EventTypes.EVENT_BUILD:
+                    break;
+            }
+        }
+        private void ClearUnusedActionArgs(TriggerAction ac)
+        {
+            switch (ac.ActionType)
+            {
+                case ActionTypes.ACTION_NONE:
+                case ActionTypes.ACTION_WIN:
+                case ActionTypes.ACTION_LOSE:
+                case ActionTypes.ACTION_BEGIN_PRODUCTION:
+                case ActionTypes.ACTION_ALL_HUNT:
+                case ActionTypes.ACTION_DZ:
+                case ActionTypes.ACTION_AIRSTRIKE:
+                case ActionTypes.ACTION_NUKE:
+                case ActionTypes.ACTION_ION:
+                case ActionTypes.ACTION_DESTROY_XXXX:
+                case ActionTypes.ACTION_DESTROY_YYYY:
+                case ActionTypes.ACTION_DESTROY_ZZZZ:
+                case ActionTypes.ACTION_DESTROY_UUUU:
+                case ActionTypes.ACTION_DESTROY_VVVV:
+                case ActionTypes.ACTION_DESTROY_WWWW:
+                case ActionTypes.ACTION_AUTOCREATE:
+                case ActionTypes.ACTION_WINLOSE:
+                case ActionTypes.ACTION_ALLOWWIN:
+                    ac.Team = TeamType.None;
+                    break;
+                case ActionTypes.ACTION_CREATE_TEAM:
+                case ActionTypes.ACTION_DESTROY_TEAM:
+                case ActionTypes.ACTION_REINFORCEMENTS:
+                    break;
+            }
         }
 
         public virtual HashSet<string> GetHousesWithProduction()
@@ -3310,6 +3379,18 @@ namespace MobiusEditor.TiberianDawn
 
         public virtual bool IsBoatPassable(LandType landType)
         {
+            switch (landType)
+            {
+                case LandType.Water:
+                case LandType.River:
+                    return true;
+                case LandType.Clear:
+                case LandType.Road:
+                case LandType.Rock:
+                case LandType.Beach:
+                case LandType.Rough:
+                    return false;
+            }
             return false;
         }
 

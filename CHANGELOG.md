@@ -515,3 +515,4 @@ Program bug fixes:
 * Added relevant theaters to theater-specific buildings in the "Built it" trigger event lists.
 * Fixed bug where the radius painting of the placement preview for gap generators wouldn't work correctly because it could get mixed up with buildings set to be built later.
 * The automatic tiling of clear terrain used a logic that was incorrect for the larger maps in Red Alert and Sole Survivor. This has now been fixed.
+* Fixed case difference issues in triggers linked to objects and celltriggers.

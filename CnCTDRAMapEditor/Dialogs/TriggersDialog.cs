@@ -75,7 +75,7 @@ namespace MobiusEditor.Dialogs
             }
             triggers = new List<Trigger>(plugin.Map.Triggers.Select(t => t.Clone()));
             renameActions = new List<(string Name1, string Name2)>();
-            backupTriggers = new List<Trigger>(plugin.Map.Triggers.Select(t => t.Clone()));
+            backupTriggers = new List<Trigger>(triggers.Select(t => t.Clone()));
             int nrOfTriggers = Math.Min(maxTriggers, triggers.Count);
             if (triggers.Count > maxTriggers)
             {
@@ -722,7 +722,7 @@ namespace MobiusEditor.Dialogs
                             case TiberianDawn.EventTypes.EVENT_ALL_DESTROYED:
                             case TiberianDawn.EventTypes.EVENT_NOFACTORIES:
                             case TiberianDawn.EventTypes.EVENT_EVAC_CIVILIAN:
-                                //triggerEvent.Data = 0;
+                                triggerEvent.Data = 0;
                                 //triggerEvent.Team = TeamType.None;
                                 break;
                             case TiberianDawn.EventTypes.EVENT_TIME:
