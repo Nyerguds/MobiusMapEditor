@@ -28,6 +28,7 @@ namespace MobiusEditor.Model
 
         private BuildingType type;
         public BuildingType Type { get => type; set => SetField(ref type, value); }
+        public ITechnoType TechnoType => type;
 
         public Rectangle OverlapBounds => Type.OverlapBounds;
         public bool[,] OpaqueMask => Type.OpaqueMask;

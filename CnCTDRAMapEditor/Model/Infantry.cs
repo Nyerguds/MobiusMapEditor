@@ -40,6 +40,7 @@ namespace MobiusEditor.Model
 
         private InfantryType type;
         public InfantryType Type { get => type; set => SetField(ref type, value); }
+        public ITechnoType TechnoType => type;
 
         private HouseType house;
         public HouseType House { get => house; set => SetField(ref house, value); }

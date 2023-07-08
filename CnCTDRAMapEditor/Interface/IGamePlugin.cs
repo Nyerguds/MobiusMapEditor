@@ -63,10 +63,21 @@ namespace MobiusEditor.Interface
         bool Dirty { get; set; }
 
         /// <summary>Get any unmanaged sections from the mission file so they can be edited by the user.</summary>
+        /// <returns>All unmanaged sections from the mission file, as text.</returns>
         string GetExtraIniText();
 
         /// <summary>Store extra ini text after it has been edited by the user.</summary>
-        IEnumerable<string> SetExtraIniText(String extraIniText);
+        /// <param name="extraIniText">The extra ini text to store</param>
+        /// <param name="forFootprintTest">Don't apply changes, just test the result for <paramref name="footPrintsChanged"/></param>
+        /// <param name="footPrintsChanged">Returns true if any building footprints were changed as a result of the given ini rule tweaks</param>
+        /// <returns>Any errors that occurred while parsing <paramref name="extraIniText"/></returns>
+        IEnumerable<string> SetExtraIniText(String extraIniText, out bool footPrintsChanged);
+
+        /// <summary>Test if setting extra ini text will result in footprint changes.</summary>
+        /// <param name="extraIniText">The extra ini text to evaluate</param>
+        /// <param name="footPrintsChanged">Returns true if any building footprints were changed as a result of the given ini rule tweaks</param>
+        /// <returns>Any errors that occurred while parsing <paramref name="extraIniText"/></returns>
+        IEnumerable<string> TestSetExtraIniText(String extraIniText, bool isSolo, bool expansionEnabled, out bool footPrintsChanged);
 
         /// <summary>
         /// Create a new map in the chosen theater.

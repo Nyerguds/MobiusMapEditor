@@ -73,7 +73,7 @@ namespace MobiusEditor.Model
         public bool IsFixedWing => (this.Flag & UnitTypeFlag.IsFixedWing) == UnitTypeFlag.IsFixedWing;
         public bool IsArmed => (this.Flag & UnitTypeFlag.IsArmed) == UnitTypeFlag.IsArmed;
         public bool IsHarvester => (this.Flag & UnitTypeFlag.IsHarvester) == UnitTypeFlag.IsHarvester;
-        public bool IsExpansionUnit => (this.Flag & UnitTypeFlag.IsExpansionUnit) == UnitTypeFlag.IsExpansionUnit;
+        public bool IsExpansionOnly => (this.Flag & UnitTypeFlag.IsExpansionUnit) == UnitTypeFlag.IsExpansionUnit;
         public bool CanRemap => (this.Flag & UnitTypeFlag.NoRemap) != UnitTypeFlag.NoRemap;
         private string nameId;
 

@@ -475,11 +475,14 @@ Feature updates:
 * Tile randomising now avoids identical adjacent tiles.
 * Units, buildings and waypoints with a radius will now show that radius more clearly in placement preview mode.
 * Red Alert data concerning rules.ini data, and map tileset data (dimensions, tile usage, land types) is now read from the original classic files.
+* Changing rules will now only clear undo/redo history if bibs were actually changed.
 
 Map logic updates:
 
 * All overlay placement is now correctly restricted to not be allowed on the top or bottom row of the map, showing red indicators when in placement mode.
 * Resource placement with a brush size larger than 1 shows red cells inside the brush area when hovering over the top or bottom cells of the map. At size 1, the brush is simply completely red.
+* Enabling/disabling expansion units in RA missions will now take into account any rule changes done by "aftrmath.ini".
+* Changing the "solo mission" option for RA missions will now take into account any rule changes done by "mplayer.ini".
 
 Program bug fixes:
 
@@ -516,3 +519,4 @@ Program bug fixes:
 * Fixed bug where the radius painting of the placement preview for gap generators wouldn't work correctly because it could get mixed up with buildings set to be built later.
 * The automatic tiling of clear terrain used a logic that was incorrect for the larger maps in Red Alert and Sole Survivor. This has now been fixed.
 * Fixed case difference issues in triggers linked to objects and celltriggers.
+* Fixed the fact disabling expansion units did not clear the undo/redo history if none were currently in use on the map or in teamtypes.

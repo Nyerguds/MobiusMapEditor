@@ -304,7 +304,17 @@ namespace MobiusEditor.RedAlert
             return extraTextIni.ToString();
         }
 
-        public virtual IEnumerable<string> SetExtraIniText(String extraIniText)
+        public IEnumerable<string> SetExtraIniText(String extraIniText, out bool footPrintsChanged)
+        {
+            return SetExtraIniText(extraIniText, this.Map.BasicSection.SoloMission, this.Map.BasicSection.ExpansionEnabled, false, out footPrintsChanged);
+        }
+
+        public IEnumerable<string> TestSetExtraIniText(String extraIniText, bool isSolo, bool expansionEnabled, out bool footPrintsChanged)
+        {
+            return SetExtraIniText(extraIniText, isSolo, expansionEnabled, true, out footPrintsChanged);
+        }
+
+        public IEnumerable<string> SetExtraIniText(String extraIniText, bool isSolo, bool expansionEnabled, bool forFootprintTest, out bool footPrintsChanged)
         {
             INI extraTextIni = new INI();
             try
@@ -313,10 +323,14 @@ namespace MobiusEditor.RedAlert
             }
             catch
             {
+                footPrintsChanged = false;
                 return null;
             }
-            IEnumerable<string> errors = ResetRules(extraTextIni);
-            extraSections = extraTextIni.Sections.Count == 0 ? null : extraTextIni.Sections;
+            IEnumerable<string> errors = ResetRules(extraTextIni, isSolo, expansionEnabled, forFootprintTest, out footPrintsChanged);
+            if (!forFootprintTest)
+            {
+                extraSections = extraTextIni.Sections.Count == 0 ? null : extraTextIni.Sections;
+            }
             return errors;
         }
 
@@ -326,10 +340,27 @@ namespace MobiusEditor.RedAlert
         /// rules in the given extra ini content to the plugin.
         /// </summary>
         /// <param name="extraTextIni">Ini content that remains after parsing an ini file. If null, only a rules reset is performed.</param>
+        /// <param name="footPrintsChanged">Returns true if any building footprints were changed as a result of the ini rule changes.</param>
         /// <returns>Any errors in parsing the <paramref name="extraTextIni"/> contents.</returns>
         private IEnumerable<string> ResetRules(INI extraTextIni)
         {
-            if (extraTextIni != null)
+            return ResetRules(extraTextIni, this.Map.BasicSection.SoloMission, this.Map.BasicSection.ExpansionEnabled, false, out _);
+        }
+
+        /// <summary>
+        /// Trims the given extra ini content to just unmanaged information,
+        /// resets the plugin's rules to their defaults, and then applies any
+        /// rules in the given extra ini content to the plugin.
+        /// </summary>
+        /// <param name="extraTextIni">Ini content that remains after parsing an ini file. If null, only a rules reset is performed.</param>
+        /// <param name="isSolo">True if this operation should consider this as singleplayer mission.</param>
+        /// <param name="expansionEnabled">True if this operation should consider expansions to be enabled.</param>
+        /// <param name="forFootprintTest">Don't apply changes, just test the result for <paramref name="footPrintsChanged"/></param>
+        /// <param name="footPrintsChanged">Returns true if any building footprints were changed as a result of the ini rule changes.</param>
+        /// <returns>Any errors in parsing the <paramref name="extraTextIni"/> contents.</returns>
+        private IEnumerable<string> ResetRules(INI extraTextIni, bool isSolo, bool expansionEnabled, bool forFootprintTest, out bool footPrintsChanged)
+        {
+            if (extraTextIni != null && !forFootprintTest)
             {
                 // Strip "NewUnitsEnabled" from the Aftermath section.
                 INISection amSection = extraTextIni.Sections["Aftermath"];
@@ -362,19 +393,39 @@ namespace MobiusEditor.RedAlert
                     INITools.ClearDataFrom(extraTextIni, house.Type.Name, house);
                 }
             }
+            Dictionary<string, bool> bibBackups = Map.BuildingTypes.ToDictionary(b => b.Name, b => b.HasBib, StringComparer.OrdinalIgnoreCase);
             if (this.rulesIni != null)
             {
-                UpdateRules(rulesIni, this.Map);
+                UpdateRules(rulesIni, this.Map, forFootprintTest);
             }
-            if (this.aftermathRulesIni != null && Map.BasicSection.ExpansionEnabled)
+            if (this.aftermathRulesIni != null && expansionEnabled)
             {
-                UpdateRules(aftermathRulesIni, this.Map);
+                UpdateRules(aftermathRulesIni, this.Map, forFootprintTest);
             }
-            if (this.multiplayRulesIni != null && !this.Map.BasicSection.SoloMission)
+            if (this.multiplayRulesIni != null && !isSolo)
             {
-                UpdateRules(multiplayRulesIni, this.Map);
+                UpdateRules(multiplayRulesIni, this.Map, forFootprintTest);
             }
-            return extraTextIni == null ? null : UpdateRules(extraTextIni, this.Map);
+            IEnumerable<string> errors = null;
+            if (extraTextIni != null)
+            {
+                errors = UpdateRules(extraTextIni, this.Map, forFootprintTest);
+            }
+            footPrintsChanged = false;
+            foreach (BuildingType bType in Map.BuildingTypes)
+            {
+                if (bibBackups.TryGetValue(bType.Name, out bool bTypeHadBib))
+                {
+                    bool bibChanged = bType.HasBib != bTypeHadBib;
+                    footPrintsChanged |= bibChanged;
+                    if (forFootprintTest && bibChanged)
+                    {
+                        // Restore old value. Test mode will make sure nothing on the map changed.
+                        bType.HasBib = bTypeHadBib;
+                    }
+                }
+            }            
+            return errors;
         }
 
         private INI rulesIni;
@@ -600,7 +651,7 @@ namespace MobiusEditor.RedAlert
             List<string> errors = new List<string>();
             Map.BeginUpdate();
             // Fetch some rules.ini information
-            errors.AddRange(UpdateBuildingRules(ini, this.Map));
+            errors.AddRange(UpdateBuildingRules(ini, this.Map, false));
             // Just gonna remove this; I assume it'll be invalid after a re-save anyway.
             ini.Sections.Extract("Digest");
             // Basic info
@@ -712,7 +763,7 @@ namespace MobiusEditor.RedAlert
                                 byte count = byte.Parse(classTokens[1]);
                                 if (type != null)
                                 {
-                                    if (!aftermathEnabled && ((type is UnitType un && un.IsExpansionUnit) || (type is InfantryType it && it.IsExpansionUnit)))
+                                    if (!aftermathEnabled && type.IsExpansionOnly)
                                     {
                                         errors.Add(string.Format("Team '{0}' contains expansion unit '{1}', but expansion units are not enabled; enabling expansion units.", Key, type.Name));
                                         Map.BasicSection.ExpansionEnabled = aftermathEnabled = true;
@@ -1121,7 +1172,7 @@ namespace MobiusEditor.RedAlert
                             modified = true;
                             continue;
                         }
-                        if (!aftermathEnabled && unitType.IsExpansionUnit)
+                        if (!aftermathEnabled && unitType.IsExpansionOnly)
                         {
                             errors.Add(string.Format("Expansion unit '{0}' encountered, but expansion units are not enabled; enabling expansion units.", unitType.Name));
                             modified = true;
@@ -1259,7 +1310,7 @@ namespace MobiusEditor.RedAlert
                             modified = true;
                             continue;
                         }
-                        if (!aftermathEnabled && aircraftType.IsExpansionUnit)
+                        if (!aftermathEnabled && aircraftType.IsExpansionOnly)
                         {
                             errors.Add(string.Format("Expansion aircraft '{0}' encountered, but expansion units are not enabled; enabling expansion units.", aircraftType.Name));
                             modified = true;
@@ -1375,7 +1426,7 @@ namespace MobiusEditor.RedAlert
                             modified = true;
                             continue;
                         }
-                        if (!aftermathEnabled && vesselType.IsExpansionUnit)
+                        if (!aftermathEnabled && vesselType.IsExpansionOnly)
                         {
                             errors.Add(string.Format("Expansion ship '{0}' encountered, but expansion units are not enabled; enabling expansion units.", vesselType.Name));
                             modified = true;
@@ -1511,7 +1562,7 @@ namespace MobiusEditor.RedAlert
                             modified = true;
                             continue;
                         }
-                        if (!aftermathEnabled && infantryType.IsExpansionUnit)
+                        if (!aftermathEnabled && infantryType.IsExpansionOnly)
                         {
                             errors.Add(string.Format("Expansion infantry unit '{0}' encountered, but expansion units are not enabled; enabling expansion units.", infantryType.Name));
                             modified = true;
@@ -2244,7 +2295,7 @@ namespace MobiusEditor.RedAlert
             this.rulesIni = ReadRulesFile(rulesFile);
             if (this.rulesIni != null)
             {
-                return UpdateRules(rulesIni, this.Map);
+                return UpdateRules(rulesIni, this.Map, false);
             }
             return null;
         }
@@ -2254,7 +2305,7 @@ namespace MobiusEditor.RedAlert
             this.aftermathRulesIni = ReadRulesFile(rulesFile);
             if (this.aftermathRulesIni != null && this.Map.BasicSection.ExpansionEnabled)
             {
-                return UpdateRules(aftermathRulesIni, this.Map);
+                return UpdateRules(aftermathRulesIni, this.Map, false);
             }
             return null;
         }
@@ -2264,7 +2315,7 @@ namespace MobiusEditor.RedAlert
             this.multiplayRulesIni = ReadRulesFile(rulesFile);
             if (this.multiplayRulesIni != null && !this.Map.BasicSection.SoloMission)
             {
-                return UpdateRules(multiplayRulesIni, this.Map);
+                return UpdateRules(multiplayRulesIni, this.Map, false);
             }
             return null;
         }
@@ -2381,8 +2432,10 @@ namespace MobiusEditor.RedAlert
         /// </summary>
         /// <param name="ini">ini file</param>
         /// <param name="map">Current map; used for ini parsing.</param>
+        /// <param name="forFootprintTest">Run in test mode, where bibs are changed but nothing is actually updated on the map.</param>
+        /// <param name="footPrintsChanged">Returns true of the rule changes modified any building footprint sizes.</param>
         /// <returns>Any errors returned by the parsing process.</returns>
-        private IEnumerable<string> UpdateRules(INI ini, Map map)
+        private IEnumerable<string> UpdateRules(INI ini, Map map, bool forFootprintTest)
         {
             List<string> errors = new List<string>();
             if (ini == null)
@@ -2391,9 +2444,12 @@ namespace MobiusEditor.RedAlert
             }
             else
             {
-                errors.AddRange(UpdateLandTypeRules(ini, map));
-                errors.AddRange(UpdateGeneralRules(ini, map));
-                errors.AddRange(UpdateBuildingRules(ini, map));
+                if (!forFootprintTest)
+                {
+                    errors.AddRange(this.UpdateLandTypeRules(ini, map));
+                    errors.AddRange(this.UpdateGeneralRules(ini, map));
+                }
+                errors.AddRange(UpdateBuildingRules(ini, map, forFootprintTest));
             }
             return errors;
         }
@@ -2488,7 +2544,7 @@ namespace MobiusEditor.RedAlert
             return null;
         }
 
-        private static IEnumerable<string> UpdateBuildingRules(INI ini, Map map)
+        private static IEnumerable<string> UpdateBuildingRules(INI ini, Map map, bool forFootPrintTest)
         {
             List<string> errors = new List<string>();
             Dictionary<string, BuildingType> originals = BuildingTypes.GetTypes().ToDictionary(b => b.Name, StringComparer.OrdinalIgnoreCase);
@@ -2496,10 +2552,13 @@ namespace MobiusEditor.RedAlert
             List<(Point Location, Building Occupier)> buildings = map.Buildings.OfType<Building>()
                  .OrderBy(pb => pb.Location.Y * map.Metrics.Width + pb.Location.X).ToList();
             // Remove all buildings
-            foreach ((Point p, Building b) in buildings)
+            if (!forFootPrintTest)
             {
-                refreshPoints.UnionWith(OccupierSet<Building>.GetOccupyPoints(p, b.OccupyMask));
-                map.Buildings.Remove(b);
+                foreach ((Point p, Building b) in buildings)
+                {
+                    refreshPoints.UnionWith(OccupierSet<Building>.GetOccupyPoints(p, b.OccupyMask));
+                    map.Buildings.Remove(b);
+                }
             }
             // Potentially add new bibs that obstruct stuff
             foreach (BuildingType bType in map.BuildingTypes)
@@ -2510,12 +2569,22 @@ namespace MobiusEditor.RedAlert
                 }
                 INISection bldSettings = ini[bType.Name];
                 // Reset
-                bType.PowerUsage = orig.PowerUsage;
-                bType.PowerProduction = orig.PowerProduction;
-                bType.Storage = orig.Storage;
+                if (!forFootPrintTest)
+                {
+                    bType.PowerUsage = orig.PowerUsage;
+                    bType.PowerProduction = orig.PowerProduction;
+                    bType.Storage = orig.Storage;
+                }
                 if (bldSettings == null)
                 {
-                    refreshPoints.UnionWith(ChangeBib(map, buildings, bType, orig.HasBib));
+                    if (!forFootPrintTest)
+                    {
+                        refreshPoints.UnionWith(ChangeBib(map, buildings, bType, orig.HasBib));
+                    }
+                    else if (bType.HasBib != orig.HasBib)
+                    {
+                        bType.HasBib = orig.HasBib;
+                    }
                     continue;
                 }
                 RaBuildingIniSection bld = new RaBuildingIniSection();
@@ -2533,17 +2602,31 @@ namespace MobiusEditor.RedAlert
                     errors.Add("Custom rules error on [" + bType.Name + "]: " + e.Message.TrimEnd('.') + ". Rule updates for [" + bType.Name + "] are ignored.");
                     continue;
                 }
-                if (bldSettings.Keys.Contains("Power"))
+                if (!forFootPrintTest)
                 {
-                    bType.PowerUsage = bld.Power >= 0 ? 0 : -bld.Power;
-                    bType.PowerProduction = bld.Power <= 0 ? 0 : bld.Power;
-                }
-                if (bldSettings.Keys.Contains("Storage"))
-                {
-                    bType.Storage = bld.Storage;
+                    if (bldSettings.Keys.Contains("Power"))
+                    {
+                        bType.PowerUsage = bld.Power >= 0 ? 0 : -bld.Power;
+                        bType.PowerProduction = bld.Power <= 0 ? 0 : bld.Power;
+                    }
+                    if (bldSettings.Keys.Contains("Storage"))
+                    {
+                        bType.Storage = bld.Storage;
+                    }
                 }
                 bool hasBib = bldSettings.Keys.Contains("Bib") ? bld.Bib : orig.HasBib;
-                refreshPoints.UnionWith(ChangeBib(map, buildings, bType, hasBib));
+                if (!forFootPrintTest)
+                {
+                    refreshPoints.UnionWith(ChangeBib(map, buildings, bType, hasBib));
+                }
+                else if (bType.HasBib != hasBib)
+                {
+                    bType.HasBib = hasBib;
+                }
+            }
+            if (forFootPrintTest)
+            {
+                return errors;
             }
             // Try re-adding the buildings.
             foreach ((Point p, Building b) in buildings)
@@ -2563,7 +2646,7 @@ namespace MobiusEditor.RedAlert
         /// <param name="bType">Building type</param>
         /// <param name="hasBib">true if the new setting says the building will have a bib.</param>
         /// <returns>The points of and directly around any removed walls.</returns>
-        private static IEnumerable<Point> ChangeBib(Map map, IEnumerable<(Point Location, Building Occupier)> buildings, BuildingType bType, Boolean hasBib)
+        private static IEnumerable<Point> ChangeBib(Map map, IEnumerable<(Point Location, Building Occupier)> buildings, BuildingType bType, bool hasBib)
         {
             HashSet<Point> changed = new HashSet<Point>();
             if (bType.HasBib == hasBib)

@@ -27,6 +27,7 @@ namespace MobiusEditor.Model
 
         private UnitType type;
         public UnitType Type { get => type; set => SetField(ref type, value); }
+        public ITechnoType TechnoType => type;
 
         public Rectangle OverlapBounds => Type.OverlapBounds;
         public bool[,] OpaqueMask => Type.OpaqueMask;

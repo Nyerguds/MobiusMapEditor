@@ -30,7 +30,7 @@ namespace MobiusEditor.Model
         public bool IsArmed => (this.Flag & UnitTypeFlag.IsArmed) == UnitTypeFlag.IsArmed;
         public bool IsAircraft => false;
         public bool IsFixedWing => false;
-        public bool IsExpansionUnit => (this.Flag & UnitTypeFlag.IsExpansionUnit) == UnitTypeFlag.IsExpansionUnit;
+        public bool IsExpansionOnly => (this.Flag & UnitTypeFlag.IsExpansionUnit) == UnitTypeFlag.IsExpansionUnit;
         public bool IsHarvester => false;
         public bool CanRemap => (this.Flag & UnitTypeFlag.NoRemap) != UnitTypeFlag.NoRemap;
         public string ClassicGraphicsSource { get; private set; }

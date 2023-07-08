@@ -259,8 +259,19 @@ namespace MobiusEditor.TiberianDawn
             return ini.ToString();
         }
 
-        public virtual IEnumerable<string> SetExtraIniText(String extraIniText)
+        public virtual IEnumerable<string> SetExtraIniText(String extraIniText, out bool footPrintsChanged)
         {
+            return SetExtraIniText(extraIniText, false, out footPrintsChanged);
+        }
+
+        public IEnumerable<string> TestSetExtraIniText(String extraIniText, bool isSolo, bool expansionEnabled, out bool footPrintsChanged)
+        {
+            return SetExtraIniText(extraIniText, true, out footPrintsChanged);
+        }
+
+        public IEnumerable<string> SetExtraIniText(String extraIniText, bool forFootprintTest, out bool footPrintsChanged)
+        {
+            footPrintsChanged = false;
             INI ini = new INI();
             try
             {
@@ -292,6 +303,10 @@ namespace MobiusEditor.TiberianDawn
                 INITools.ClearDataFrom(ini, house.Type.Name, (House)house);
             }
             extraSections = ini.Sections.Count == 0 ? null : ini.Sections;
+            if (!Globals.Ignore106Scripting)
+            {
+                // Perhaps support the v1.06 bibs-disabling option in the future? Would need an entire bib-changing logic like RA has though.
+            }
             return null;
         }
 

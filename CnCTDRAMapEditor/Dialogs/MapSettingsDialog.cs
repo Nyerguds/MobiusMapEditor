@@ -63,7 +63,8 @@ namespace MobiusEditor.Dialogs
         private readonly PropertyTracker<SoleSurvivor.CratesSection> cratesSettingsTracker;
         private readonly IDictionary<House, PropertyTracker<House>> houseSettingsTrackers;
         private TreeNode playersNode;
-        private bool expansionWasEnabled;
+        private bool wasExp;
+        private bool wasSolo;
         private string currentSelection;
 
 
@@ -74,7 +75,8 @@ namespace MobiusEditor.Dialogs
             this.plugin = plugin;
             this.originalExtraIniText = extraIniText ?? String.Empty;
             this.ExtraIniText = extraIniText ?? String.Empty;
-            expansionWasEnabled = plugin.Map.BasicSection.ExpansionEnabled;
+            this.wasExp = plugin.Map.BasicSection.ExpansionEnabled;
+            this.wasSolo = plugin.Map.BasicSection.SoloMission;
             this.basicSettingsTracker = basicSettingsTracker;
             this.basicSettingsTracker.PropertyChanged += this.BasicSettingsTracker_PropertyChanged;
             this.briefingSettingsTracker = briefingSettingsTracker;
@@ -276,32 +278,39 @@ namespace MobiusEditor.Dialogs
             // This is specifically about RA rules. TD has no changes that require any kind of refresh on the map.
             String checkTextNew = Regex.Replace(normalised, "[\\r\\n]+", "\n").Trim('\n');
             String checkTextOrig = Regex.Replace(originalExtraIniText ?? String.Empty, "[\\r\\n]+", "\n").Trim('\n');
-            bool rulesChanged = plugin.GameType == GameType.RedAlert && !checkTextOrig.Equals(checkTextNew, StringComparison.OrdinalIgnoreCase);
+            bool footPrintsChanged = false;
+            bool isSolo = basicSettingsTracker.TryGetMember("SoloMission", out object sres) && (sres is bool solo) && solo;
+            bool isExp = basicSettingsTracker.TryGetMember("ExpansionEnabled", out object exres) && (exres is bool exp) && exp;
+            // Check if the changes in added rules, expansion being enabled or the map being singleplayer had any effect on building footprints.
+            if (!checkTextOrig.Equals(checkTextNew, StringComparison.OrdinalIgnoreCase) || wasSolo != isSolo || wasExp != isExp)
+            {
+                IEnumerable<string> errors = plugin.TestSetExtraIniText(normalised, isSolo, isExp, out footPrintsChanged);
+            }
             // Check if RA expansion units were disabled.
-            bool expansionWarn = plugin.GameType == GameType.RedAlert && expansionWasEnabled
-                                    && basicSettingsTracker.TryGetMember("ExpansionEnabled", out object res) && (res is bool expOn) && !expOn;
+            bool expansionWarn = plugin.GameType == GameType.RedAlert && wasExp && !isExp;
+            bool hasExpUnits = false;
             if (expansionWarn)
             {
                 // Check if a warning is actually necessary.
-                expansionWarn = plugin.Map.GetAllTechnos().Any(t => (t is Unit un && un.Type.IsExpansionUnit) || (t is Infantry it && it.Type.IsExpansionUnit))
-                    || plugin.Map.TeamTypes.Any(tt => tt.Classes.Any(cl => (cl.Type is UnitType ut && ut.IsExpansionUnit) || (cl.Type is InfantryType it && it.IsExpansionUnit)));
+                hasExpUnits = plugin.Map.GetAllTechnos().Any(t => t.TechnoType.IsExpansionOnly)
+                    || plugin.Map.TeamTypes.Any(tt => tt.Classes.Any(cl => cl.Type.IsExpansionOnly));
             }
-            if (expansionWarn || rulesChanged)
+            if (expansionWarn || footPrintsChanged)
             {
                 StringBuilder msg = new StringBuilder();
                 if (expansionWarn)
                 {
                     // The actual cleanup this refers to can be found in the ViewTool class, in the BasicSection_PropertyChanged function.
-                    msg.Append("Expansion units have been disabled. This will remove all expansion units currently present on the map and in team types. Because of its complexity, this cleanup cannot be undone.\n\n");
-                }
-                if (rulesChanged)
-                {
-                    msg.Append("Rules have been changed.");
-                    if (Globals.BlockingBibs)
+                    msg.Append("Expansion units have been disabled.");
+                    if (hasExpUnits)
                     {
-                        msg.Append(" If any bibs were added, be aware that this may remove overlapped structures and walls.");
+                        msg.Append(" This will remove all expansion units currently present on the map and in team types. Because of its complexity, this cleanup cannot be undone.");
                     }
                     msg.Append("\n\n");
+                }
+                if (footPrintsChanged)
+                {
+                    msg.Append("Rules have been changed, resulting in changes in buildings having bibs. Be aware that this may remove overlapped structures and walls.\n\n");
                 }
                 // The undo/redo clearing is done in the MainForm function that opens this form.
                 msg.Append("The Undo/Redo history will be cleared to avoid conflicts with previous-performed actions involving any objects affected by this.")

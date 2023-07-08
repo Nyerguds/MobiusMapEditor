@@ -37,6 +37,7 @@ namespace MobiusEditor.Model
         public bool IsAircraft => false;
         public bool IsFixedWing => false;
         public bool IsHarvester => false;
+        public bool IsExpansionOnly => false;
         public bool CanRemap => false;
         private string nameId;
 

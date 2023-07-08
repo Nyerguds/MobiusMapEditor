@@ -247,7 +247,7 @@ namespace MobiusEditor.Model
             {
                 if (this.BasicSection == null || !this.BasicSection.ExpansionEnabled)
                 {
-                    return this.AllInfantryTypes.Where(inf => !inf.IsExpansionUnit).ToList();
+                    return this.AllInfantryTypes.Where(inf => !inf.IsExpansionOnly).ToList();
                 }
                 return this.AllInfantryTypes.ToList();
             }
@@ -260,7 +260,7 @@ namespace MobiusEditor.Model
             {
                 if (this.BasicSection == null || !this.BasicSection.ExpansionEnabled)
                 {
-                    return this.AllUnitTypes.Where(un => !un.IsExpansionUnit).ToList();
+                    return this.AllUnitTypes.Where(un => !un.IsExpansionOnly).ToList();
                 }
                 return this.AllUnitTypes.ToList();
             }
@@ -275,7 +275,7 @@ namespace MobiusEditor.Model
             {
                 if (this.BasicSection == null || !this.BasicSection.ExpansionEnabled)
                 {
-                    return this.AllTeamTechnoTypes.Where(tc => (tc is UnitType ut && !ut.IsExpansionUnit) || (tc is InfantryType it && !it.IsExpansionUnit)).ToList();
+                    return this.AllTeamTechnoTypes.Where(tc => !tc.IsExpansionOnly).ToList();
                 }
                 return this.AllTeamTechnoTypes.ToList();
             }
@@ -1643,14 +1643,14 @@ namespace MobiusEditor.Model
             {
                 if (occup is Unit un)
                 {
-                    if (un.Type.IsExpansionUnit)
+                    if (un.Type.IsExpansionOnly)
                     {
                         toDelete.Add((p, occup));
                     }
                 }
                 else if (occup is InfantryGroup ifg)
                 {
-                    if (ifg.Infantry.Any(inf => inf != null && inf.Type.IsExpansionUnit))
+                    if (ifg.Infantry.Any(inf => inf != null && inf.Type.IsExpansionOnly))
                     {
                         toDelete.Add((p, occup));
                     }
@@ -1699,7 +1699,7 @@ namespace MobiusEditor.Model
                 List<TeamTypeClass> toRemove = new List<TeamTypeClass>();
                 foreach (TeamTypeClass ttclass in teamtype.Classes)
                 {
-                    if ((ttclass.Type is UnitType ut && ut.IsExpansionUnit) || (ttclass.Type is InfantryType it && it.IsExpansionUnit))
+                    if (ttclass.Type.IsExpansionOnly)
                     {
                         toRemove.Add(ttclass);
                     }

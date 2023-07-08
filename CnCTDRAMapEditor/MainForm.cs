@@ -613,7 +613,6 @@ namespace MobiusEditor
             }
             bool wasSolo = plugin.Map.BasicSection.SoloMission;
             bool wasExpanded = plugin.Map.BasicSection.ExpansionEnabled;
-            bool rulesChanged = false;
             PropertyTracker<BasicSection> basicSettings = new PropertyTracker<BasicSection>(plugin.Map.BasicSection);
             PropertyTracker<BriefingSection> briefingSettings = new PropertyTracker<BriefingSection>(plugin.Map.BriefingSection);
             PropertyTracker<SoleSurvivor.CratesSection> cratesSettings = null;
@@ -628,6 +627,7 @@ namespace MobiusEditor
             bool amStatusChanged = false;
             bool multiStatusChanged = false;
             bool iniTextChanged = false;
+            bool footPrintsChanged = false;
             using (MapSettingsDialog msd = new MapSettingsDialog(plugin, basicSettings, briefingSettings, cratesSettings, houseSettingsTrackers, extraIniText))
             {
                 msd.StartPosition = FormStartPosition.CenterParent;
@@ -662,7 +662,7 @@ namespace MobiusEditor
                     // TODO: give warning on the multiplay rules changes.
                     if (amStatusChanged || multiStatusChanged || iniTextChanged)
                     {
-                        IEnumerable<string> errors = plugin.SetExtraIniText(normalised);
+                        IEnumerable<string> errors = plugin.SetExtraIniText(normalised, out footPrintsChanged);
                         if (errors != null && errors.Count() > 0)
                         {
                             using (ErrorMessageBox emb = new ErrorMessageBox())
@@ -675,13 +675,12 @@ namespace MobiusEditor
                             }
                         }
                         // Maybe make more advanced logic to check if any bibs changed, and don't clear if not needed?
-                        rulesChanged = plugin.GameType == GameType.RedAlert;
                         hasChanges = true;
                     }
                     plugin.Dirty = hasChanges;
                 }
             }
-            if (rulesChanged || amStatusChanged)
+            if (footPrintsChanged || amStatusChanged)
             {
                 // If Aftermath units were disabled, we can't guarantee none of them are still in
                 // the undo/redo history, so the undo/redo history is cleared to avoid issues.

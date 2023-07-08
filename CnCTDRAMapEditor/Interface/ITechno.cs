@@ -20,9 +20,15 @@ namespace MobiusEditor.Interface
     /// </summary>
     public interface ITechno
     {
+        /// <summary>True if this is a preview dummy object.</summary>
         bool IsPreview { get; set; }
+        /// <summary>House that owns this object.</summary>
         HouseType House { get; set; }
+        /// <summary>The Type, as TechnoType.</summary>
+        ITechnoType TechnoType { get; }
+        /// <summary>Strength of the object, on a scale of 1 to 256.</summary>
         int Strength { get; set; }
+        /// <summary>Trigger attached to this object.</summary>
         string Trigger { get; set; }
     }
 }
