@@ -167,7 +167,7 @@ namespace MobiusEditor.Render
             Func<IEnumerable<Point>> renderLocations = null;
             if (locations != null)
             {
-                renderLocations = () => locations.OrderBy(p => p.Y).ThenBy(p => p.X);
+                renderLocations = () => locations.OrderBy(p => p.Y * map.Metrics.Width + p.X);
             }
             else
             {
@@ -1458,7 +1458,7 @@ namespace MobiusEditor.Render
                 }
                 // Get list of points, find current point in the list.
                 Rectangle boundsRect = new Rectangle(pt.Value, new Size(maskX, maskY));
-                List<Point> pts = boundsRect.Points().OrderBy(p => p.Y).ThenBy(p => p.X).ToList();
+                List<Point> pts = boundsRect.Points().OrderBy(p => p.Y * map.Metrics.Width + p.X).ToList();
                 int index = pts.IndexOf(location);
                 if (index == -1)
                 {
