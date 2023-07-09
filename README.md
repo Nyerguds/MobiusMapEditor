@@ -2,9 +2,13 @@
 
 ## Project
 
-Mobius Map Editor is an enhanced version of the map editor of the Command & Conquer Remastered Collection, based on the source code released by Electronic Arts.
+Mobius Map Editor is an enhanced version of the map editor supplied with the Command & Conquer Remastered Collection, based on the source code released by Electronic Arts.
 
 The editor can edit maps for Command & Conquer Tiberian Dawn, Sole Survivor and Red Alert. The goal of the project is to improve the usability and convenience of the map editor, fix bugs, improve and clean its code-base, enhance compatibility with different kinds of systems and enhance the editor's support for mods.
+
+As of v1.5.0.0, the editor does not require the C&C Remaster; if the C&C Remastered Collection is not installed on the PC, you can launch the editor in Classic mode instead, using the original 90's graphics.
+
+Updates are regularly posted on my little corner of [the C&C Tiberian Dawn Remastered Multiplayer Discord server](https://discord.gg/m4wcAZd).
 
 ### Contributing
 
@@ -18,14 +22,13 @@ Simply unpack the editor into a new folder on your disk somewhere. On first star
 
 It is advised to install the `GraphicsFixesTD` and `GraphicsFixesRA` mods, to fix errors and add missing bits in the Remastered graphics. The editor will use the mods automatically when they are installed, even if they are not enabled inside the game. You can find them on the Steam workshop ([GraphicsFixesTD](https://steamcommunity.com/sharedfiles/filedetails/?id=2844969675), [GraphicsFixesRA](https://steamcommunity.com/sharedfiles/filedetails/?id=2978875641)) and on ModDB ([GraphicsFixesTD](https://www.moddb.com/games/command-conquer-remastered/addons/graphicsfixestd), [GraphicsFixesRA](https://www.moddb.com/games/cc-red-alert-remastered/addons/graphicsfixesra)).
 
-**The GraphicsFixesRA mod is not currently configured in the settings file to load automatically; this will be amended in the next release. To add it manually, edit `CnCTDRAMapEditor.exe.config` and replace the `<value />` under the "ModsToLoadRA" setting with `<value>2978875641;GraphicsFixesRA</value>`**
-
 For usage and configuration, see [MANUAL.md](MANUAL.md).
 
 ## Features
 
 A brief overview of the improvements and added features:
 
+* Can be configured to run independently from the C&C Remastered Collection, using classic graphics.
 * Multithreading for loading and saving, preventing the application from freezing during these operations.
 * Keyboard shortcuts for most functions in the editor.
 * Drag & drop support.
@@ -53,7 +56,7 @@ The full change log can be viewed in [CHANGELOG.md](CHANGELOG.md)
 
 Some ideas that might get implemented in the future:
 
-* A function to place random equivalent tiles.
+* A function to automatically add ant rules.
 * The ability to change a map's theater.
 * A copy & paste function.
-* Use classic graphics, making it independent from the Remaster.
+* Support for classic fonts, so 1:1 image exports from Classic mode actually have readable labels.
