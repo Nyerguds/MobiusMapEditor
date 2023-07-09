@@ -82,7 +82,8 @@ namespace MobiusEditor.Tools
             }
         }
 
-        public WallsTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, TypeListBox wallTypeComboBox, MapPanel wallTypeMapPanel, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> url)
+        public WallsTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, TypeListBox wallTypeComboBox, MapPanel wallTypeMapPanel,
+            IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs, ToolType> url)
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
             previewMap = map;
@@ -275,7 +276,7 @@ namespace MobiusEditor.Tools
             }
             undoOverlays.Clear();
             redoOverlays.Clear();
-            url.Track(undoAction, redoAction);
+            url.Track(undoAction, redoAction, ToolType.Wall);
         }
 
         private void EnterPlacementMode()
@@ -391,6 +392,7 @@ namespace MobiusEditor.Tools
             (this.mapPanel as Control).KeyUp += WallTool_KeyUp;
             this.navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
             this.UpdateStatus();
+            this.RefreshPreviewPanel();
         }
 
         public override void Deactivate()

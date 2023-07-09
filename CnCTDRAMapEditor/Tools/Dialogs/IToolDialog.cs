@@ -12,6 +12,7 @@ namespace MobiusEditor.Tools.Dialogs
     {
         ITool GetTool();
         void SetTool(ITool value);
-        void Initialize(MapPanel mapPanel, MapLayerFlag activeLayers, ToolStripStatusLabel toolStatusLabel, ToolTip mouseToolTip, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> undoRedoList);
+        void Initialize(MapPanel mapPanel, MapLayerFlag activeLayers, ToolStripStatusLabel toolStatusLabel, ToolTip mouseToolTip,
+            IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs, ToolType> undoRedoList);
     }
 }

@@ -53,9 +53,11 @@ namespace MobiusEditor.Tools.Dialogs
             this.FormClosing += this.ObjectToolDialog_FormClosing;
         }
 
-        protected abstract void InitializeInternal(MapPanel mapPanel, MapLayerFlag activeLayers, ToolStripStatusLabel toolStatusLabel, ToolTip mouseToolTip, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> undoRedoList);
+        protected abstract void InitializeInternal(MapPanel mapPanel, MapLayerFlag activeLayers, ToolStripStatusLabel toolStatusLabel, ToolTip mouseToolTip,
+            IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs, ToolType> undoRedoList);
 
-        public void Initialize(MapPanel mapPanel, MapLayerFlag activeLayers, ToolStripStatusLabel toolStatusLabel, ToolTip mouseToolTip, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> undoRedoList)
+        public void Initialize(MapPanel mapPanel, MapLayerFlag activeLayers, ToolStripStatusLabel toolStatusLabel, ToolTip mouseToolTip,
+            IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs, ToolType> undoRedoList)
         {
             // Fixed error: this creates a new Tool internally but never disposed the old one, resulting in lingering event bindings.
             if (this.Tool != null)

@@ -34,8 +34,8 @@ namespace MobiusEditor.Tools.Dialogs
         {
             InitializeComponent();
         }
-        protected override void InitializeInternal(MapPanel mapPanel, MapLayerFlag activeLayers, ToolStripStatusLabel toolStatusLabel,
-            ToolTip mouseToolTip, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> undoRedoList)
+        protected override void InitializeInternal(MapPanel mapPanel, MapLayerFlag activeLayers, ToolStripStatusLabel toolStatusLabel, ToolTip mouseToolTip,
+            IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs, ToolType> undoRedoList)
         {
             Tool = new ResourcesTool(mapPanel, activeLayers, toolStatusLabel, BoundsResourcesLbl,
                 ResourceBrushSizeNud, GemsCheckBox, plugin, undoRedoList);

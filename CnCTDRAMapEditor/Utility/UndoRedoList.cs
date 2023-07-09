@@ -17,25 +17,30 @@ using System.Collections.Generic;
 
 namespace MobiusEditor.Utility
 {
-    public interface IUndoRedoEventArgs
+    public interface IUndoRedoEventArgs<T>
     {
         /// <summary>
         /// Allows giving a warning for large undo/redo events, and cancelling if the warning makes the user reconsider the action.
         /// </summary>
         bool Cancelled { get; set; }
+
+        /// <summary>
+        /// Source of the change
+        /// </summary>
+        T Source { get; set; }
     }
 
-    public class UndoRedoList<T> where T: IUndoRedoEventArgs
+    public class UndoRedoList<T, U> where T: EventArgs, IUndoRedoEventArgs<U>
     {
         private const int DefaultMaxUndoRedo = 50;
 
-        private readonly List<(Action<T> Undo, Action<T> Redo)> undoRedoActions = new List<(Action<T> Undo, Action<T> Redo)>();
+        private readonly List<(Action<T> Undo, Action<T> Redo, U Source)> undoRedoActions = new List<(Action<T> Undo, Action<T> Redo, U Source)>();
         private readonly int maxUndoRedo;
         private int undoRedoPosition = 0;
 
         public event EventHandler<EventArgs> Tracked;
-        public event EventHandler<EventArgs> Undone;
-        public event EventHandler<EventArgs> Redone;
+        public event EventHandler<T> Undone;
+        public event EventHandler<T> Redone;
 
         public bool CanUndo => undoRedoPosition > 0;
 
@@ -58,13 +63,19 @@ namespace MobiusEditor.Utility
             OnTracked();
         }
 
-        public void Track(Action<T> undo, Action<T> redo)
+        /// <summary>
+        /// Adds an item to the undo/redo list.
+        /// </summary>
+        /// <param name="undo">The action to perform to undo the executed operation.</param>
+        /// <param name="redo">The action to perform to redo the executed operation.</param>
+        /// <param name="source">The source that performed the original action.</param>
+        public void Track(Action<T> undo, Action<T> redo, U source)
         {
             if (undoRedoActions.Count > undoRedoPosition)
             {
                 undoRedoActions.RemoveRange(undoRedoPosition, undoRedoActions.Count - undoRedoPosition);
             }
-            undoRedoActions.Add((undo, redo));
+            undoRedoActions.Add((undo, redo, source));
             if (undoRedoActions.Count > maxUndoRedo)
             {
                 undoRedoActions.RemoveRange(0, undoRedoActions.Count - maxUndoRedo);
@@ -73,6 +84,11 @@ namespace MobiusEditor.Utility
             OnTracked();
         }
 
+        /// <summary>
+        /// Undo the current action in the undo/redo list.
+        /// </summary>
+        /// <param name="context">Context event argument. The <typeparamref name="U"/> <paramref name="context.Source "/> will be filled in automatically.</param>
+        /// <exception cref="InvalidOperationException">There are no undo actions left in the list. Check <see cref="CanUndo"/> to avoid getting this.</exception>
         public void Undo(T context)
         {
             if (!CanUndo)
@@ -80,10 +96,12 @@ namespace MobiusEditor.Utility
                 throw new InvalidOperationException();
             }
             undoRedoPosition--;
+            // Set source into event.
+            context.Source = undoRedoActions[undoRedoPosition].Source;
             undoRedoActions[undoRedoPosition].Undo(context);
             if (!context.Cancelled)
             {
-                OnUndone();
+                OnUndone(context);
             }
             else
             {
@@ -91,17 +109,24 @@ namespace MobiusEditor.Utility
             }
         }
 
+        /// <summary>
+        /// Redo the current action in the undo/redo list.
+        /// </summary>
+        /// <param name="context">Context event argument. The <typeparamref name="U"/> <paramref name="context.Source "/> will be filled in automatically.</param>
+        /// <exception cref="InvalidOperationException">There are no redo actions left in the list. Check <see cref="CanRedo"/> to avoid getting this.</exception>
         public void Redo(T context)
         {
             if (!CanRedo)
             {
                 throw new InvalidOperationException();
             }
+            // Set source into event.
+            context.Source = undoRedoActions[undoRedoPosition].Source;
             undoRedoActions[undoRedoPosition].Redo(context);
             if (!context.Cancelled)
             {
                 undoRedoPosition++;
-                OnRedone();
+                OnRedone(context);
             }
         }
 
@@ -110,14 +135,14 @@ namespace MobiusEditor.Utility
             Tracked?.Invoke(this, new EventArgs());
         }
 
-        protected virtual void OnUndone()
+        protected virtual void OnUndone(T context)
         {
-            Undone?.Invoke(this, new EventArgs());
+            Undone?.Invoke(this, context);
         }
 
-        protected virtual void OnRedone()
+        protected virtual void OnRedone(T context)
         {
-            Redone?.Invoke(this, new EventArgs());
+            Redone?.Invoke(this, context);
         }
     }
 }

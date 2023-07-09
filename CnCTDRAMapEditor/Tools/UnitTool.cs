@@ -50,12 +50,9 @@ namespace MobiusEditor.Tools
             {
                 if (value is Unit un)
                 {
-                    if (plugin.ActiveHouse != null)
-                    {
-                        un.House = plugin.ActiveHouse;
-                    }
                     SelectedUnitType = un.Type;
                     mockUnit.CloneDataFrom(un);
+                    RefreshPreviewPanel();
                 }
             }
         }
@@ -70,7 +67,7 @@ namespace MobiusEditor.Tools
         private readonly Unit mockUnit;
 
         private Unit selectedUnit;
-        private Point? selectedUnitLocation;
+        private Point? selectedUnitStartLocation;
         private bool startedDragging;
 
         private ObjectPropertiesPopup selectedObjectProperties;
@@ -98,7 +95,8 @@ namespace MobiusEditor.Tools
             }
         }
 
-        public UnitTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, TypeListBox unitTypesBox, MapPanel unitTypeMapPanel, ObjectProperties objectProperties, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> url)
+        public UnitTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, TypeListBox unitTypesBox, MapPanel unitTypeMapPanel,
+            ObjectProperties objectProperties, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs, ToolType> url)
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
             previewMap = map;
@@ -172,7 +170,7 @@ namespace MobiusEditor.Tools
                 if (map.Technos[cell] is Unit unit)
                 {
                     selectedUnit = null;
-                    selectedUnitLocation = null;
+                    selectedUnitStartLocation = null;
                     startedDragging = false;
                     mapPanel.Invalidate();
                     Unit preEdit = unit.Clone();
@@ -230,7 +228,7 @@ namespace MobiusEditor.Tools
                     ev.Plugin.Dirty = true;
                 }
             }
-            url.Track(undoAction, redoAction);
+            url.Track(undoAction, redoAction, ToolType.Unit);
         }
 
         private void MockUnit_PropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -315,11 +313,11 @@ namespace MobiusEditor.Tools
 
         private void MapPanel_MouseUp(object sender, MouseEventArgs e)
         {
-            if (selectedUnit != null && selectedUnitLocation.HasValue)
+            if (selectedUnit != null && selectedUnitStartLocation.HasValue)
             {
-                AddMoveUndoTracking(selectedUnit, selectedUnitLocation.Value);
+                AddMoveUndoTracking(selectedUnit, selectedUnitStartLocation.Value);
                 selectedUnit = null;
-                selectedUnitLocation = null;
+                selectedUnitStartLocation = null;
                 startedDragging = false;
                 mapPanel.Invalidate();
                 UpdateStatus();
@@ -358,7 +356,7 @@ namespace MobiusEditor.Tools
                     ev.Plugin.Dirty = true;
                 }
             }
-            url.Track(undoAction, redoAction);
+            url.Track(undoAction, redoAction, ToolType.Unit);
         }
 
         private void MouseoverWidget_MouseCellChanged(object sender, MouseCellChangedEventArgs e)
@@ -373,7 +371,7 @@ namespace MobiusEditor.Tools
             }
             else if (selectedUnit != null)
             {
-                if (!startedDragging && selectedUnitLocation.HasValue && selectedUnitLocation.Value != e.NewCell)
+                if (!startedDragging && selectedUnitStartLocation.HasValue && selectedUnitStartLocation.Value != e.NewCell)
                 {
                     startedDragging = true;
                 }
@@ -407,7 +405,7 @@ namespace MobiusEditor.Tools
                 return;
             }
             selectedUnit = null;
-            selectedUnitLocation = null;
+            selectedUnitStartLocation = null;
             startedDragging = false;
             var unit = mockUnit.Clone();
             if (map.Technos.Add(location, unit))
@@ -433,7 +431,7 @@ namespace MobiusEditor.Tools
                         e.Plugin.Dirty = true;
                     }
                 }
-                url.Track(undoAction, redoAction);
+                url.Track(undoAction, redoAction, ToolType.Unit);
             }
         }
 
@@ -463,7 +461,7 @@ namespace MobiusEditor.Tools
                         e.Plugin.Dirty = true;
                     }
                 }
-                url.Track(undoAction, redoAction);
+                url.Track(undoAction, redoAction, ToolType.Unit);
             }
         }
 
@@ -548,14 +546,14 @@ namespace MobiusEditor.Tools
         private void SelectUnit(Point location)
         {
             selectedUnit = null;
-            selectedUnitLocation = null;
+            selectedUnitStartLocation = null;
             startedDragging = false;
             if (map.Metrics.GetCell(location, out int cell))
             {
                 Unit selected = map.Technos[cell] as Unit;
                 Point? selectedLocation = selected != null ? map.Technos[selected] : null;
                 selectedUnit = selected;
-                selectedUnitLocation = selectedLocation;
+                selectedUnitStartLocation = selectedLocation;
             }
             mapPanel.Invalidate();
             UpdateStatus();
@@ -641,10 +639,10 @@ namespace MobiusEditor.Tools
             }
             Unit selected = null;
             Point? loc = null;
-            if (selectedUnit != null && selectedUnitLocation.HasValue)
+            if (selectedUnit != null && selectedUnitStartLocation.HasValue)
             {
                 selected = selectedUnit;
-                loc = selectedUnitLocation.Value;
+                loc = map.Technos[selectedUnit];
             }
             else if (placementMode)
             {
@@ -676,8 +674,8 @@ namespace MobiusEditor.Tools
         public override void Activate()
         {
             base.Activate();
-            Deactivate(true);
-            mockUnit.PropertyChanged += MockUnit_PropertyChanged;
+            this.Deactivate(true);
+            this.mockUnit.PropertyChanged += MockUnit_PropertyChanged;
             this.mapPanel.MouseDown += MapPanel_MouseDown;
             this.mapPanel.MouseUp += MapPanel_MouseUp;
             this.mapPanel.MouseDoubleClick += MapPanel_MouseDoubleClick;
@@ -685,8 +683,9 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseLeave += MapPanel_MouseLeave;
             (this.mapPanel as Control).KeyDown += UnitTool_KeyDown;
             (this.mapPanel as Control).KeyUp += UnitTool_KeyUp;
-            navigationWidget.BoundsMouseCellChanged += MouseoverWidget_MouseCellChanged;
-            UpdateStatus();
+            this.navigationWidget.BoundsMouseCellChanged += MouseoverWidget_MouseCellChanged;
+            this.UpdateStatus();
+            this.RefreshPreviewPanel();
         }
 
         public override void Deactivate()
@@ -701,7 +700,7 @@ namespace MobiusEditor.Tools
                 ExitPlacementMode();
                 base.Deactivate();
             }
-            mockUnit.PropertyChanged -= MockUnit_PropertyChanged;
+            this.mockUnit.PropertyChanged -= MockUnit_PropertyChanged;
             this.mapPanel.MouseDown -= MapPanel_MouseDown;
             this.mapPanel.MouseUp -= MapPanel_MouseUp;
             this.mapPanel.MouseDoubleClick -= MapPanel_MouseDoubleClick;
@@ -709,7 +708,7 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseLeave -= MapPanel_MouseLeave;
             (this.mapPanel as Control).KeyDown -= UnitTool_KeyDown;
             (this.mapPanel as Control).KeyUp -= UnitTool_KeyUp;
-            navigationWidget.BoundsMouseCellChanged -= MouseoverWidget_MouseCellChanged;
+            this.navigationWidget.BoundsMouseCellChanged -= MouseoverWidget_MouseCellChanged;
         }
 
         #region IDisposable Support

@@ -45,7 +45,8 @@ namespace MobiusEditor.Tools.Dialogs
             lblTriggerInfo.ImageAlign = ContentAlignment.MiddleCenter;
         }
 
-        protected override void InitializeInternal(MapPanel mapPanel, MapLayerFlag activeLayers, ToolStripStatusLabel toolStatusLabel, ToolTip mouseToolTip, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> undoRedoList)
+        protected override void InitializeInternal(MapPanel mapPanel, MapLayerFlag activeLayers, ToolStripStatusLabel toolStatusLabel, ToolTip mouseToolTip,
+            IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs, ToolType> undoRedoList)
         {
             Tool = new CellTriggersTool(mapPanel, activeLayers, toolStatusLabel, TriggerCombo, BtnJumpTo, plugin, undoRedoList);
         }

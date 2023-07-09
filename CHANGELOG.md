@@ -476,7 +476,7 @@ Feature updates:
 * Units, buildings and waypoints with a radius will now show that radius more clearly in placement preview mode.
 * Red Alert data concerning rules.ini data, and map tileset data (dimensions, tile usage, land types) is now read from the original classic files.
 * Changing rules will now only clear undo/redo history if bibs were actually changed.
-* The tool windows will now remember what was last selected in them when they are reselecting or reloaded.
+* The tool windows will now remember what was last selected in them when they are reselected or reloaded.
 * The selected House will now be retained across the infantry, units, and structures tools.
 
 Map logic updates:
@@ -522,3 +522,4 @@ Program bug fixes:
 * The automatic tiling of clear terrain used a logic that was incorrect for the larger maps in Red Alert and Sole Survivor. This has now been fixed.
 * Fixed case difference issues in triggers linked to objects and celltriggers.
 * Fixed the fact disabling expansion units did not clear the undo/redo history if none were currently in use on the map or in teamtypes.
+* Adding and removing cell triggers now enables and disables the "jump to" button correctly, and updates the jump locations.

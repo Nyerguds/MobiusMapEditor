@@ -332,7 +332,6 @@ namespace MobiusEditor.Model
                 this.triggers = value;
                 // Only an actual replacing of the list will call these, but they can be called manually after an update.
                 // A bit more manual than the whole ObservableCollection system, but a lot less cumbersome.
-                //CleanUpTriggers();
                 this.NotifyTriggersUpdate();
             }
         }

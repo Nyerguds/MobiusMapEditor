@@ -99,7 +99,7 @@ namespace MobiusEditor
 
         private readonly MRU mru;
 
-        private readonly UndoRedoList<UndoRedoEventArgs> url = new UndoRedoList<UndoRedoEventArgs>(Globals.UndoRedoStackSize);
+        private readonly UndoRedoList<UndoRedoEventArgs, ToolType> url = new UndoRedoList<UndoRedoEventArgs, ToolType>(Globals.UndoRedoStackSize);
 
         private readonly Timer steamUpdateTimer = new Timer();
 
@@ -165,7 +165,7 @@ namespace MobiusEditor
             fileExportMenuItem.Visible = false;
             developerToolStripMenuItem.Visible = false;
 #endif
-            url.Tracked += UndoRedo_Updated;
+            url.Tracked += UndoRedo_Tracked;
             url.Undone += UndoRedo_Updated;
             url.Redone += UndoRedo_Updated;
             UpdateUndoRedo();
@@ -360,8 +360,12 @@ namespace MobiusEditor
             }
         }
 
+        private void UndoRedo_Tracked(object sender, EventArgs e)
+        {
+            UpdateUndoRedo();
+        }
 
-        private void UndoRedo_Updated(object sender, EventArgs e)
+        private void UndoRedo_Updated(object sender, UndoRedoEventArgs e)
         {
             UpdateUndoRedo();
         }
@@ -717,7 +721,7 @@ namespace MobiusEditor
                     List<Trigger> oldTriggers = plugin.Map.Triggers.Select(tr => tr.Clone()).ToList();
                     plugin.Map.TeamTypes.Clear();
                     plugin.Map.ApplyTeamTypeRenames(ttd.RenameActions);
-                    // Triggers in their new state after the rename.
+                    // Triggers in their new state after the teamtype item renames.
                     List<Trigger> newTriggers = plugin.Map.Triggers.Select(tr => tr.Clone()).ToList();
                     plugin.Map.TeamTypes.AddRange(ttd.TeamTypes.OrderBy(t => t.Name, new ExplorerComparer()).Select(t => t.Clone()));
                     List<TeamType> newTeamTypes = plugin.Map.TeamTypes.ToList();
@@ -756,7 +760,7 @@ namespace MobiusEditor
                             ev.Plugin.Dirty = true;
                         }
                     }
-                    url.Track(undoAction, redoAction);
+                    url.Track(undoAction, redoAction, ToolType.None);
                     plugin.Dirty = true;
                 }
             }
@@ -872,7 +876,7 @@ namespace MobiusEditor
                             // Repaint map labels
                             ev.MapPanel?.Invalidate();
                         }
-                        url.Track(undoAction, redoAction);
+                        url.Track(undoAction, redoAction, ToolType.None);
                         // No longer a full refresh, since celltriggers function is no longer disabled when no triggers are found.
                         mapPanel.Invalidate();
                     }
@@ -1957,14 +1961,26 @@ namespace MobiusEditor
                 // Creates the actual Tool class
                 toolDialog.Initialize(mapPanel, active, toolStatusLabel, mouseToolTip, plugin, url);
                 activeTool = toolDialog.GetTool();
+                // If an active House is set, and the current tool has a techno type, copy it out so its house can be adjusted.
+                if (plugin.ActiveHouse != null && mockObject == null && activeTool.CurrentObject is ITechno)
+                {
+                    mockObject = activeTool.CurrentObject;
+                }
+                // If an active House is set, and the mock object is an ITechno, adjust its house (regardless of source)
+                if (plugin.ActiveHouse != null && mockObject is ITechno techno)
+                {
+                    techno.House = plugin.ActiveHouse;
+                }
+                // Sets backed up / adjusted object in current tool.
+                if (mockObject != null)
+                {
+                    activeTool.CurrentObject = mockObject;
+                }
                 activeToolForm.ResizeEnd -= ActiveToolForm_ResizeEnd;
                 activeToolForm.Shown -= this.ActiveToolForm_Shown;
                 activeToolForm.Shown += this.ActiveToolForm_Shown;
                 activeToolForm.Show(this);
                 activeTool.Activate();
-                // Ensures that the active house is set in the tool.
-                // Only set this after activation, so the mock object's PropertyChanged event is active.
-                activeTool.CurrentObject = mockObject ?? activeTool.CurrentObject;
                 activeToolForm.ResizeEnd += ActiveToolForm_ResizeEnd;
             }
             if (plugin.IsMegaMap)

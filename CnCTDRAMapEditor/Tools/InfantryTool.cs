@@ -44,12 +44,9 @@ namespace MobiusEditor.Tools
             {
                 if (value is Infantry inf)
                 {
-                    if (plugin.ActiveHouse != null)
-                    {
-                        inf.House = plugin.ActiveHouse;
-                    }
                     SelectedInfantryType = inf.Type;
                     mockInfantry.CloneDataFrom(inf);
+                    RefreshPreviewPanel();
                 }
             }
         }
@@ -70,8 +67,8 @@ namespace MobiusEditor.Tools
         private readonly Infantry mockInfantry;
 
         private Infantry selectedInfantry;
-        private Point? selectedInfantryLocation;
-        private int selectedInfantryStop = -1;
+        private Point? selectedInfantryStartLocation;
+        private int selectedInfantryStartStop = -1;
         private bool startedDragging;
         private ObjectPropertiesPopup selectedObjectProperties;
 
@@ -99,7 +96,8 @@ namespace MobiusEditor.Tools
             }
         }
 
-        public InfantryTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, TypeListBox infantryTypesBox, MapPanel infantryTypeMapPanel, ObjectProperties objectProperties, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> url)
+        public InfantryTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, TypeListBox infantryTypesBox, MapPanel infantryTypeMapPanel,
+            ObjectProperties objectProperties, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs, ToolType> url)
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
             previewMap = map;
@@ -175,8 +173,8 @@ namespace MobiusEditor.Tools
                     if (infantryGroup.Infantry[i] is Infantry infantry)
                     {
                         selectedInfantry = null;
-                        selectedInfantryLocation = null;
-                        selectedInfantryStop = -1;
+                        selectedInfantryStartLocation = null;
+                        selectedInfantryStartStop = -1;
                         startedDragging = false;
                         mapPanel.Invalidate();
                         Infantry preEdit = infantry.Clone();
@@ -235,7 +233,7 @@ namespace MobiusEditor.Tools
                     ev.Plugin.Dirty = true;
                 }
             }
-            url.Track(undoAction, redoAction);
+            url.Track(undoAction, redoAction, ToolType.Infantry);
         }
 
         private void MockInfantry_PropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -301,7 +299,7 @@ namespace MobiusEditor.Tools
             {
                 Point curCell = navigationWidget.MouseCell;
                 Point oldLocation = map.Technos[selectedInfantry.InfantryGroup].Value;
-                if (!startedDragging && selectedInfantryLocation.HasValue && selectedInfantryLocation.Value != curCell)
+                if (!startedDragging && selectedInfantryStartLocation.HasValue && selectedInfantryStartLocation.Value != curCell)
                 {
                     startedDragging = true;
                 }
@@ -339,7 +337,7 @@ namespace MobiusEditor.Tools
                         }
                         if (infantryGroup == selectedInfantry.InfantryGroup)
                         {
-                            if (!startedDragging && selectedInfantryStop != i)
+                            if (!startedDragging && selectedInfantryStartStop != i)
                             {
                                 startedDragging = true;
                             }
@@ -379,12 +377,12 @@ namespace MobiusEditor.Tools
 
         private void MapPanel_MouseUp(object sender, MouseEventArgs e)
         {
-            if (selectedInfantry != null && selectedInfantryLocation.HasValue && selectedInfantryStop != -1)
+            if (selectedInfantry != null && selectedInfantryStartLocation.HasValue && selectedInfantryStartStop != -1)
             {
-                AddMoveUndoTracking(selectedInfantry, selectedInfantryLocation.Value, selectedInfantryStop);
+                AddMoveUndoTracking(selectedInfantry, selectedInfantryStartLocation.Value, selectedInfantryStartStop);
                 selectedInfantry = null;
-                selectedInfantryLocation = null;
-                selectedInfantryStop = -1;
+                selectedInfantryStartLocation = null;
+                selectedInfantryStartStop = -1;
                 startedDragging = false;
                 mapPanel.Invalidate();
                 UpdateStatus();
@@ -468,7 +466,7 @@ namespace MobiusEditor.Tools
                     ev.Plugin.Dirty = true;
                 }
             }
-            url.Track(undoAction, redoAction);
+            url.Track(undoAction, redoAction, ToolType.Infantry);
         }
 
         private void MouseoverWidget_MouseCellChanged(object sender, MouseCellChangedEventArgs e)
@@ -494,8 +492,8 @@ namespace MobiusEditor.Tools
                 return;
             }
             selectedInfantry = null;
-            selectedInfantryLocation = null;
-            selectedInfantryStop = -1;
+            selectedInfantryStartLocation = null;
+            selectedInfantryStartStop = -1;
             startedDragging = false;
             InfantryGroup infantryGroup = null;
             var techno = map.Technos[cell];
@@ -559,7 +557,7 @@ namespace MobiusEditor.Tools
                             ev.Plugin.Dirty = true;
                         }
                     }
-                    url.Track(undoAction, redoAction);
+                    url.Track(undoAction, redoAction, ToolType.Infantry);
                     break;
                 }
             }
@@ -627,7 +625,7 @@ namespace MobiusEditor.Tools
                         ev.Plugin.Dirty = true;
                     }
                 }
-                url.Track(undoAction, redoAction);
+                url.Track(undoAction, redoAction, ToolType.Infantry);
                 break;
             }
         }
@@ -719,8 +717,8 @@ namespace MobiusEditor.Tools
         private void SelectInfantry(Point location)
         {
             selectedInfantry = null;
-            selectedInfantryLocation = null;
-            selectedInfantryStop = -1;
+            selectedInfantryStartLocation = null;
+            selectedInfantryStartStop = -1;
             if (map.Metrics.GetCell(location, out int cell))
             {
                 if (map.Technos[cell] is InfantryGroup infantryGroup)
@@ -729,8 +727,8 @@ namespace MobiusEditor.Tools
                     if (infantryGroup.Infantry[i] is Infantry infantry)
                     {
                         selectedInfantry = infantry;
-                        selectedInfantryLocation = location;
-                        selectedInfantryStop = i;
+                        selectedInfantryStartLocation = location;
+                        selectedInfantryStartStop = i;
                     }
                 }
             }
@@ -842,7 +840,7 @@ namespace MobiusEditor.Tools
         {
             base.Activate();
             this.Deactivate(true);
-            mockInfantry.PropertyChanged += MockInfantry_PropertyChanged;
+            this.mockInfantry.PropertyChanged += MockInfantry_PropertyChanged;
             this.mapPanel.MouseDown += MapPanel_MouseDown;
             this.mapPanel.MouseUp += MapPanel_MouseUp;
             this.mapPanel.MouseDoubleClick += MapPanel_MouseDoubleClick;
@@ -852,6 +850,7 @@ namespace MobiusEditor.Tools
             (this.mapPanel as Control).KeyUp += InfantryTool_KeyUp;
             this.navigationWidget.BoundsMouseCellChanged += MouseoverWidget_MouseCellChanged;
             this.UpdateStatus();
+            this.RefreshPreviewPanel();
         }
 
         public override void Deactivate()
@@ -866,7 +865,7 @@ namespace MobiusEditor.Tools
                 this.ExitPlacementMode();
                 base.Deactivate();
             }
-            mockInfantry.PropertyChanged -= MockInfantry_PropertyChanged;
+            this.mockInfantry.PropertyChanged -= MockInfantry_PropertyChanged;
             this.mapPanel.MouseDown -= MapPanel_MouseDown;
             this.mapPanel.MouseUp -= MapPanel_MouseUp;
             this.mapPanel.MouseDoubleClick -= MapPanel_MouseDoubleClick;

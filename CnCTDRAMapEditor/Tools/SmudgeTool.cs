@@ -52,6 +52,7 @@ namespace MobiusEditor.Tools
                 {
                     SelectedSmudgeType = sm.Type;
                     mockSmudge.CloneDataFrom(sm);
+                    RefreshPreviewPanel();
                 }
             }
         }
@@ -94,7 +95,8 @@ namespace MobiusEditor.Tools
             }
         }
 
-        public SmudgeTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, TypeListBox smudgeTypeListBox, MapPanel smudgeTypeMapPanel, SmudgeProperties smudgeProperties, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> url)
+        public SmudgeTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, TypeListBox smudgeTypeListBox, MapPanel smudgeTypeMapPanel,
+            SmudgeProperties smudgeProperties, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs, ToolType> url)
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
             previewMap = map;
@@ -173,7 +175,7 @@ namespace MobiusEditor.Tools
                     ev.Plugin.Dirty = true;
                 }
             }
-            url.Track(undoAction, redoAction);
+            url.Track(undoAction, redoAction, ToolType.Smudge);
         }
 
         private void MockSmudge_PropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -350,7 +352,7 @@ namespace MobiusEditor.Tools
                     e.Plugin.Dirty = true;
                 }
             }
-            url.Track(undoAction, redoAction);
+            url.Track(undoAction, redoAction, ToolType.Smudge);
         }
 
         private void RemoveSmudge(Point location)
@@ -392,7 +394,7 @@ namespace MobiusEditor.Tools
                     e.Plugin.Dirty = true;
                 }
             }
-            url.Track(undoAction, redoAction);
+            url.Track(undoAction, redoAction, ToolType.Smudge);
         }
 
         private void RemoveSmudgePoints(Rectangle toClear, Dictionary<Point, Smudge> undomap, Dictionary<Point, Smudge> redomap)
@@ -732,6 +734,7 @@ namespace MobiusEditor.Tools
             (this.mapPanel as Control).KeyUp += SmudgeTool_KeyUp;
             this.navigationWidget.BoundsMouseCellChanged += MouseoverWidget_MouseCellChanged;
             this.UpdateStatus();
+            this.RefreshPreviewPanel();
         }
 
         public override void Deactivate()

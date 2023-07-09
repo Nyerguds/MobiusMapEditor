@@ -16,7 +16,8 @@ namespace MobiusEditor.Tools.Dialogs
             Text = "Units";
         }
 
-        protected override void InitializeInternal(MapPanel mapPanel, MapLayerFlag activeLayers, ToolStripStatusLabel toolStatusLabel, ToolTip mouseToolTip, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> undoRedoList)
+        protected override void InitializeInternal(MapPanel mapPanel, MapLayerFlag activeLayers, ToolStripStatusLabel toolStatusLabel, ToolTip mouseToolTip,
+            IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs, ToolType> undoRedoList)
         {
             Tool = new UnitTool(mapPanel, activeLayers, toolStatusLabel, ObjectTypeListBox,
                 ObjectTypeMapPanel, ObjectProperties, plugin, undoRedoList);

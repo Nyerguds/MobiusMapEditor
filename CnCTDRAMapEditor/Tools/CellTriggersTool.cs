@@ -76,7 +76,7 @@ namespace MobiusEditor.Tools
         public string TriggerToolTip { get; set; }
 
         public CellTriggersTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, ComboBox triggerCombo, Button jumpToButton,
-            IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> url)
+            IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs, ToolType> url)
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
             previewMap = map;
@@ -84,6 +84,17 @@ namespace MobiusEditor.Tools
             this.triggerComboBox = triggerCombo;
             UpdateDataSource();
             this.triggerComboBox.SelectedIndexChanged += this.TriggerCombo_SelectedIndexChanged;
+        }
+
+        private void Url_UndoRedoDone(object sender, UndoRedoEventArgs e)
+        {
+            // Only update this stuff if the undo/redo event was actually a celltriggers change.
+            if (e.Source != ToolType.CellTrigger)
+            {
+                return;
+            }
+            // Can't know for sure which one updated, so update them all.
+            UpdateDataSource();
         }
 
         private void Triggers_CollectionChanged(object sender, EventArgs e)
@@ -105,6 +116,10 @@ namespace MobiusEditor.Tools
             triggerComboBox.DataSource = items;
             triggerComboBox.SelectedIndex = selectIndex;
             triggerComboBox.Enabled = hasItems;
+            // Needed if the index didn't change but the item did.
+            selected = items[selectIndex];
+            jumpToButton.Enabled = hasItems && selected != null && cellTrigBlobCenters.TryGetValue(selected, out Rectangle[] locations) && locations != null && locations.Length > 0;
+            currentObj = hasItems ? selected : null;
             TriggerToolTip = Map.MakeAllowedTriggersToolTip(filteredEvents, filteredActions);
         }
 
@@ -120,7 +135,7 @@ namespace MobiusEditor.Tools
         }
 
         /// <summary>
-        /// Upodates the blob lists. If items is not given, it takes the current map state. If updateItem is given, only that one will be updated in the list.
+        /// Updates the blob lists. If items is not given, it takes the current map state. If updateItem is given, only that one will be updated in the list.
         /// </summary>
         /// <param name="items">Optional list of items, for optimisation to avoid an extra fetch action.</param>
         /// <param name="updateItem">Optional item to update. Leave empty to update all.</param>
@@ -394,10 +409,6 @@ namespace MobiusEditor.Tools
                 {
                     e.Plugin.Dirty = origDirtyState;
                 }
-                if (selected != null)
-                {
-                    UpdateBlobsList(null, selected);
-                }
             }
             var redoCellTriggers2 = new Dictionary<int, CellTrigger>(redoCellTriggers);
             void redoAction(UndoRedoEventArgs e)
@@ -414,14 +425,11 @@ namespace MobiusEditor.Tools
                 {
                     e.Plugin.Dirty = true;
                 }
-                if (selected != null)
-                {
-                    UpdateBlobsList(null, selected);
-                }
             }
             undoCellTriggers.Clear();
             redoCellTriggers.Clear();
-            url.Track(undoAction, redoAction);
+            this.jumpToButton.Enabled = selected != null && cellTrigBlobCenters.TryGetValue(selected, out Rectangle[] locations) && locations != null && locations.Length > 0;
+            url.Track(undoAction, redoAction, ToolType.CellTrigger);
         }
 
         private void TriggerCombo_SelectedIndexChanged(System.Object sender, System.EventArgs e)
@@ -537,7 +545,9 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseLeave += MapPanel_MouseLeave;
             (this.mapPanel as Control).KeyDown += CellTriggersTool_KeyDown;
             (this.mapPanel as Control).KeyUp += CellTriggersTool_KeyUp;
-            navigationWidget.BoundsMouseCellChanged += MouseoverWidget_MouseCellChanged;
+            this.navigationWidget.BoundsMouseCellChanged += MouseoverWidget_MouseCellChanged;
+            this.url.Undone += Url_UndoRedoDone;
+            this.url.Redone += Url_UndoRedoDone;
             UpdateStatus();
         }
 
@@ -559,9 +569,11 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseUp -= MapPanel_MouseUp;
             this.mapPanel.MouseMove -= MapPanel_MouseMove;
             this.mapPanel.MouseLeave -= MapPanel_MouseLeave;
-            (mapPanel as Control).KeyDown -= CellTriggersTool_KeyDown;
-            (mapPanel as Control).KeyUp -= CellTriggersTool_KeyUp;
-            navigationWidget.BoundsMouseCellChanged -= MouseoverWidget_MouseCellChanged;
+            (this.mapPanel as Control).KeyDown -= CellTriggersTool_KeyDown;
+            (this.mapPanel as Control).KeyUp -= CellTriggersTool_KeyUp;
+            this.navigationWidget.BoundsMouseCellChanged -= MouseoverWidget_MouseCellChanged;
+            this.url.Undone -= Url_UndoRedoDone;
+            this.url.Redone -= Url_UndoRedoDone;
         }
 
         #region IDisposable Support

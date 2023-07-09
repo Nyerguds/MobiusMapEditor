@@ -33,8 +33,8 @@ namespace MobiusEditor.Tools.Dialogs
             InitializeComponent();
         }
 
-        protected override void InitializeInternal(MapPanel mapPanel, MapLayerFlag activeLayers,
-            ToolStripStatusLabel toolStatusLabel, ToolTip mouseToolTip, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> undoRedoList)
+        protected override void InitializeInternal(MapPanel mapPanel, MapLayerFlag activeLayers, ToolStripStatusLabel toolStatusLabel, ToolTip mouseToolTip,
+            IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs, ToolType> undoRedoList)
         {
             Tool = new TemplateTool(mapPanel, activeLayers, toolStatusLabel,
                 TemplateTypeListView, TemplateTypeMapPanel, mouseToolTip, plugin, undoRedoList);

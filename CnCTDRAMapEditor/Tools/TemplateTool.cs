@@ -64,6 +64,7 @@ namespace MobiusEditor.Tools
         private Map previewMap;
         protected override Map RenderMap => previewMap;
 
+        // Uses a dummy Template object with the type and selected cell, with -1 if no specific cell is selected.
         public override Object CurrentObject
         {
             get
@@ -204,7 +205,8 @@ namespace MobiusEditor.Tools
 
         private NavigationWidget templateTypeNavigationWidget;
 
-        public TemplateTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, ListView templateTypeListView, MapPanel templateTypeMapPanel, ToolTip mouseTooltip, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> url)
+        public TemplateTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, ListView templateTypeListView, MapPanel templateTypeMapPanel, ToolTip mouseTooltip,
+            IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs, ToolType> url)
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
             previewMap = map;
@@ -284,8 +286,13 @@ namespace MobiusEditor.Tools
             SelectedTemplateType = templateTypes.First().First();
         }
 
-        private void Url_UndoRedoDone(object sender, EventArgs e)
+        private void Url_UndoRedoDone(object sender, UndoRedoEventArgs e)
         {
+            // Only update this stuff if the undo/redo event was actually a map change.
+            if (e.Source != ToolType.Map)
+            {
+                return;
+            }
             // Fixes the fact bounds are not applied when pressing ctrl+z / ctrl+y due to the fact the ctrl key is held down
             if (boundsMode && (map.Bounds != dragBounds))
             {
@@ -746,7 +753,7 @@ namespace MobiusEditor.Tools
             CommitTileChanges(true);
         }
 
-        public static String RandomizeTiles(IGamePlugin plugin, MapPanel mapPanel, UndoRedoList<UndoRedoEventArgs> url)
+        public static String RandomizeTiles(IGamePlugin plugin, MapPanel mapPanel, UndoRedoList<UndoRedoEventArgs, ToolType> url)
         {
             Random rnd = new Random();
             Dictionary<int, Template> undoTemplates = new Dictionary<int, Template>();
@@ -1696,7 +1703,7 @@ namespace MobiusEditor.Tools
                     }
                 }
                 map.Bounds = newBounds;
-                url.Track(undoAction, redoAction);
+                url.Track(undoAction, redoAction, ToolType.Map);
             }
             dragEdge = FacingType.None;
             dragStartPoint = null;
@@ -1722,7 +1729,7 @@ namespace MobiusEditor.Tools
             CommitTileChanges(this.url, this.undoTemplates, this.redoTemplates, plugin);
         }
 
-        private static void CommitTileChanges(UndoRedoList<UndoRedoEventArgs> url, Dictionary<int, Template> undoTemplates, Dictionary<int, Template> redoTemplates, IGamePlugin plugin)
+        private static void CommitTileChanges(UndoRedoList<UndoRedoEventArgs, ToolType> url, Dictionary<int, Template> undoTemplates, Dictionary<int, Template> redoTemplates, IGamePlugin plugin)
         {
             if (undoTemplates.Count == 0 || redoTemplates.Count == 0)
             {
@@ -1758,7 +1765,7 @@ namespace MobiusEditor.Tools
             }
             undoTemplates.Clear();
             redoTemplates.Clear();
-            url.Track(undoAction, redoAction);
+            url.Track(undoAction, redoAction, ToolType.Map);
         }
 
         private void UpdateStatus()
@@ -1900,6 +1907,7 @@ namespace MobiusEditor.Tools
             this.url.Undone += Url_UndoRedoDone;
             this.url.Redone += Url_UndoRedoDone;
             this.UpdateStatus();
+            this.RefreshPreviewPanel();
         }
 
         public override void Deactivate()

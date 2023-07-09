@@ -52,6 +52,7 @@ namespace MobiusEditor.Tools
                 {
                     selectedTerrainType = ter.Type;
                     mockTerrain.CloneDataFrom(ter);
+                    RefreshPreviewPanel();
                 }
             }
         }
@@ -66,7 +67,7 @@ namespace MobiusEditor.Tools
         private readonly Terrain mockTerrain;
 
         private Terrain selectedTerrain;
-        private Point? selectedTerrainLocation;
+        private Point? selectedTerrainStartLocation;
         private Point selectedTerrainPivot;
         private bool startedDragging;
 
@@ -95,7 +96,8 @@ namespace MobiusEditor.Tools
             }
         }
 
-        public TerrainTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, TypeListBox terrainTypeComboBox, MapPanel terrainTypeMapPanel, TerrainProperties terrainProperties, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> url)
+        public TerrainTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, TypeListBox terrainTypeComboBox, MapPanel terrainTypeMapPanel,
+            TerrainProperties terrainProperties, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs, ToolType> url)
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
             previewMap = map;
@@ -129,7 +131,7 @@ namespace MobiusEditor.Tools
                 if (map.Technos[cell] is Terrain terrain)
                 {
                     selectedTerrain = null;
-                    selectedTerrainLocation = null;
+                    selectedTerrainStartLocation = null;
                     selectedTerrainPivot = Point.Empty;
                     startedDragging = false;
                     mapPanel.Invalidate();
@@ -190,7 +192,7 @@ namespace MobiusEditor.Tools
                     ev.Plugin.Dirty = true;
                 }
             }
-            url.Track(undoAction, redoAction);
+            url.Track(undoAction, redoAction, ToolType.Terrain);
         }
 
         private void MockTerrain_PropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -249,11 +251,11 @@ namespace MobiusEditor.Tools
 
         private void MapPanel_MouseUp(object sender, MouseEventArgs e)
         {
-            if (selectedTerrain != null && selectedTerrainLocation.HasValue)
+            if (selectedTerrain != null && selectedTerrainStartLocation.HasValue)
             {
-                AddMoveUndoTracking(selectedTerrain, selectedTerrainLocation.Value);
+                AddMoveUndoTracking(selectedTerrain, selectedTerrainStartLocation.Value);
                 selectedTerrain = null;
-                selectedTerrainLocation = null;
+                selectedTerrainStartLocation = null;
                 selectedTerrainPivot = Point.Empty;
                 startedDragging = false;
                 mapPanel.Invalidate();
@@ -291,7 +293,7 @@ namespace MobiusEditor.Tools
                         ev.Plugin.Dirty = true;
                     }
                 }
-                url.Track(undoAction, redoAction);
+                url.Track(undoAction, redoAction, ToolType.Terrain);
             }
         }
 
@@ -319,8 +321,8 @@ namespace MobiusEditor.Tools
             }
             else if (selectedTerrain != null)
             {
-                if (!startedDragging && selectedTerrainLocation.HasValue
-                    && new Point(selectedTerrainLocation.Value.X + selectedTerrainPivot.X, selectedTerrainLocation.Value.Y + selectedTerrainPivot.Y) != e.NewCell)
+                if (!startedDragging && selectedTerrainStartLocation.HasValue
+                    && new Point(selectedTerrainStartLocation.Value.X + selectedTerrainPivot.X, selectedTerrainStartLocation.Value.Y + selectedTerrainPivot.Y) != e.NewCell)
                 {
                     startedDragging = true;
                 }
@@ -355,7 +357,7 @@ namespace MobiusEditor.Tools
                 return;
             }
             selectedTerrain = null;
-            selectedTerrainLocation = null;
+            selectedTerrainStartLocation = null;
             selectedTerrainPivot = Point.Empty;
             startedDragging = false;
             var terrain = mockTerrain.Clone();
@@ -382,7 +384,7 @@ namespace MobiusEditor.Tools
                         e.Plugin.Dirty = true;
                     }
                 }
-                url.Track(undoAction, redoAction);
+                url.Track(undoAction, redoAction, ToolType.Terrain);
             }
         }
 
@@ -413,7 +415,7 @@ namespace MobiusEditor.Tools
                         e.Plugin.Dirty = true;
                     }
                 }
-                url.Track(undoAction, redoAction);
+                url.Track(undoAction, redoAction, ToolType.Terrain);
             }
         }
 
@@ -495,7 +497,7 @@ namespace MobiusEditor.Tools
         private void SelectTerrain(Point location)
         {
             selectedTerrain = null;
-            selectedTerrainLocation = null;
+            selectedTerrainStartLocation = null;
             selectedTerrainPivot = Point.Empty;
             startedDragging = false;
             if (map.Metrics.GetCell(location, out int cell) && map.Technos[cell] is Terrain selected && selected != null)
@@ -503,7 +505,7 @@ namespace MobiusEditor.Tools
                 Point? selectedLocation = map.Technos[selected];
                 Point selectedPivot = location - (Size)selectedLocation;
                 selectedTerrain = selected;
-                selectedTerrainLocation = selectedLocation;
+                selectedTerrainStartLocation = selectedLocation;
                 selectedTerrainPivot = selectedPivot;
             }
             mapPanel.Invalidate();
@@ -614,8 +616,9 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseLeave += MapPanel_MouseLeave;
             (this.mapPanel as Control).KeyDown += TerrainTool_KeyDown;
             (this.mapPanel as Control).KeyUp += TerrainTool_KeyUp;
-            this.UpdateStatus();
             this.navigationWidget.BoundsMouseCellChanged += MouseoverWidget_MouseCellChanged;
+            this.UpdateStatus();
+            this.RefreshPreviewPanel();
         }
 
         public override void Deactivate()

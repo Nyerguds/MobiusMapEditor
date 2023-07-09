@@ -82,7 +82,8 @@ namespace MobiusEditor.Tools
             }
         }
 
-        public OverlaysTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, TypeListBox overlayTypeComboBox, MapPanel overlayTypeMapPanel, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> url)
+        public OverlaysTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, TypeListBox overlayTypeComboBox, MapPanel overlayTypeMapPanel,
+            IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs, ToolType> url)
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
             previewMap = map;
@@ -271,7 +272,7 @@ namespace MobiusEditor.Tools
             }
             undoOverlays.Clear();
             redoOverlays.Clear();
-            url.Track(undoAction, redoAction);
+            url.Track(undoAction, redoAction, ToolType.Overlay);
         }
 
         private void CheckSelectShortcuts(KeyEventArgs e)
@@ -462,6 +463,7 @@ namespace MobiusEditor.Tools
             (this.mapPanel as Control).KeyUp += OverlaysTool_KeyUp;
             this.navigationWidget.BoundsMouseCellChanged += MouseoverWidget_MouseCellChanged;
             this.UpdateStatus();
+            this.RefreshPreviewPanel();
         }
 
         public override void Deactivate()

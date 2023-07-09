@@ -65,8 +65,8 @@ namespace MobiusEditor.Tools
         private readonly Dictionary<int, Overlay> undoOverlays = new Dictionary<int, Overlay>();
         private readonly Dictionary<int, Overlay> redoOverlays = new Dictionary<int, Overlay>();
 
-        public ResourcesTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, Label boundsResourcesLbl,
-            NumericUpDown brushSizeNud, CheckBox gemsCheckBox, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> url)
+        public ResourcesTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, Label boundsResourcesLbl, NumericUpDown brushSizeNud, CheckBox gemsCheckBox,
+            IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs, ToolType> url)
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
             this.boundsResourcesLbl = boundsResourcesLbl;
@@ -78,8 +78,13 @@ namespace MobiusEditor.Tools
             Update();
         }
 
-        private void Url_UndoRedo(object sender, EventArgs e)
+        private void Url_UndoRedoDone(object sender, UndoRedoEventArgs e)
         {
+            // Only update this stuff if the undo/redo event was actually a resources change.
+            if (e.Source != ToolType.Resources)
+            {
+                return;
+            }
             Update();
         }
 
@@ -330,7 +335,7 @@ namespace MobiusEditor.Tools
             }
             undoOverlays.Clear();
             redoOverlays.Clear();
-            url.Track(undoAction, redoAction);
+            url.Track(undoAction, redoAction, ToolType.Resources);
         }
 
         private void Update()
@@ -412,9 +417,10 @@ namespace MobiusEditor.Tools
             (this.mapPanel as Control).KeyDown += ResourceTool_KeyDown;
             (this.mapPanel as Control).KeyUp += ResourcesTool_KeyUpDown;
             this.navigationWidget.BoundsMouseCellChanged += MouseoverWidget_MouseCellChanged;
-            this.url.Undone += Url_UndoRedo;
-            this.url.Redone += Url_UndoRedo;
+            this.url.Undone += Url_UndoRedoDone;
+            this.url.Redone += Url_UndoRedoDone;
             this.UpdateStatus();
+            this.RefreshPreviewPanel();
         }
 
         public override void Deactivate()
@@ -435,8 +441,8 @@ namespace MobiusEditor.Tools
             (this.mapPanel as Control).KeyDown -= ResourceTool_KeyDown;
             (this.mapPanel as Control).KeyUp -= ResourcesTool_KeyUpDown;
             this.navigationWidget.BoundsMouseCellChanged -= MouseoverWidget_MouseCellChanged;
-            this.url.Undone -= Url_UndoRedo;
-            this.url.Redone -= Url_UndoRedo;
+            this.url.Undone -= Url_UndoRedoDone;
+            this.url.Redone -= Url_UndoRedoDone;
         }
 
         #region IDisposable Support

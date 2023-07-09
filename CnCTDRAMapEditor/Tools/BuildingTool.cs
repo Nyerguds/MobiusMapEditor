@@ -44,12 +44,9 @@ namespace MobiusEditor.Tools
             {
                 if (value is Building bld)
                 {
-                    if (plugin.ActiveHouse != null)
-                    {
-                        bld.House = plugin.ActiveHouse;
-                    }
                     SelectedBuildingType = bld.Type;
                     mockBuilding.CloneDataFrom(bld);
+                    RefreshPreviewPanel();
                 }
             }
         }
@@ -70,7 +67,7 @@ namespace MobiusEditor.Tools
         private readonly Building mockBuilding;
 
         private Building selectedBuilding;
-        private Point? selectedBuildingLocation;
+        private Point? selectedBuildingStartLocation;
         private Dictionary<Point, Smudge> selectedBuildingEatenSmudge;
         private Point selectedBuildingPivot;
         private bool startedDragging;
@@ -101,7 +98,8 @@ namespace MobiusEditor.Tools
             }
         }
 
-        public BuildingTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, TypeListBox buildingTypesBox, MapPanel buildingTypeMapPanel, ObjectProperties objectProperties, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> url)
+        public BuildingTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, TypeListBox buildingTypesBox, MapPanel buildingTypeMapPanel,
+            ObjectProperties objectProperties, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs, ToolType> url)
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
             previewMap = map;
@@ -134,7 +132,7 @@ namespace MobiusEditor.Tools
                 if (map.Buildings[cell] is Building building)
                 {
                     selectedBuilding = null;
-                    selectedBuildingLocation = null;
+                    selectedBuildingStartLocation = null;
                     selectedBuildingPivot = Point.Empty;
                     startedDragging = false;
                     mapPanel.Invalidate();
@@ -193,7 +191,7 @@ namespace MobiusEditor.Tools
                     ev.Plugin.Dirty = true;
                 }
             }
-            url.Track(undoAction, redoAction);
+            url.Track(undoAction, redoAction, ToolType.Building);
         }
 
         private void MockBuilding_PropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -281,12 +279,12 @@ namespace MobiusEditor.Tools
 
         private void MapPanel_MouseUp(object sender, MouseEventArgs e)
         {
-            if (selectedBuilding != null && selectedBuildingLocation.HasValue)
+            if (selectedBuilding != null && selectedBuildingStartLocation.HasValue)
             {
-                AddMoveUndoTracking(selectedBuilding, selectedBuildingLocation.Value);
+                AddMoveUndoTracking(selectedBuilding, selectedBuildingStartLocation.Value);
                 selectedBuildingEatenSmudge = null;
                 selectedBuilding = null;
-                selectedBuildingLocation = null;
+                selectedBuildingStartLocation = null;
                 selectedBuildingPivot = Point.Empty;
                 startedDragging = false;
                 mapPanel.Invalidate();
@@ -298,7 +296,7 @@ namespace MobiusEditor.Tools
         {
             Point? finalLocation = map.Buildings[toMove];
             Dictionary<Point, Smudge> eaten = selectedBuildingEatenSmudge.ToDictionary(p => p.Key, p => p.Value);
-            if (!finalLocation.HasValue || finalLocation.Value == selectedBuildingLocation)
+            if (!finalLocation.HasValue || finalLocation.Value == selectedBuildingStartLocation)
             {
                 return;
             }
@@ -351,7 +349,7 @@ namespace MobiusEditor.Tools
                     ev.Plugin.Dirty = true;
                 }
             }
-            url.Track(undoAction, redoAction);
+            url.Track(undoAction, redoAction, ToolType.Building);
         }
 
         private void MouseoverWidget_MouseCellChanged(object sender, MouseCellChangedEventArgs e)
@@ -366,8 +364,8 @@ namespace MobiusEditor.Tools
             }
             else if (selectedBuilding != null)
             {
-                if (!startedDragging && selectedBuildingLocation.HasValue
-                    && new Point(selectedBuildingLocation.Value.X + selectedBuildingPivot.X, selectedBuildingLocation.Value.Y + selectedBuildingPivot.Y) != e.NewCell)
+                if (!startedDragging && selectedBuildingStartLocation.HasValue
+                    && new Point(selectedBuildingStartLocation.Value.X + selectedBuildingPivot.X, selectedBuildingStartLocation.Value.Y + selectedBuildingPivot.Y) != e.NewCell)
                 {
                     startedDragging = true;
                 }
@@ -455,7 +453,7 @@ namespace MobiusEditor.Tools
                 return;
             }
             selectedBuilding = null;
-            selectedBuildingLocation = null;
+            selectedBuildingStartLocation = null;
             selectedBuildingPivot = Point.Empty;
             startedDragging = false;
             Building building = mockBuilding.Clone();
@@ -560,7 +558,7 @@ namespace MobiusEditor.Tools
                         e.Plugin.Dirty = true;
                     }
                 }
-                url.Track(undoAction, redoAction);
+                url.Track(undoAction, redoAction, ToolType.Building);
             }
         }
 
@@ -629,7 +627,7 @@ namespace MobiusEditor.Tools
                         e.Plugin.Dirty = true;
                     }
                 }
-                url.Track(undoAction, redoAction);
+                url.Track(undoAction, redoAction, ToolType.Building);
             }
         }
 
@@ -719,7 +717,7 @@ namespace MobiusEditor.Tools
         {
             selectedBuildingEatenSmudge = null;
             selectedBuilding = null;
-            selectedBuildingLocation = null;
+            selectedBuildingStartLocation = null;
             selectedBuildingPivot = Point.Empty;
             startedDragging = false;
             if (map.Metrics.GetCell(location, out int cell))
@@ -729,7 +727,7 @@ namespace MobiusEditor.Tools
                 Point selectedPivot = selected != null ? location - (Size)selectedLocation : Point.Empty;
                 selectedBuildingEatenSmudge = new Dictionary<Point, Smudge>();
                 selectedBuilding = selected;
-                selectedBuildingLocation = selectedLocation;
+                selectedBuildingStartLocation = selectedLocation;
                 selectedBuildingPivot = selectedPivot;
             }
             mapPanel.Invalidate();
@@ -858,10 +856,10 @@ namespace MobiusEditor.Tools
             MapRenderer.RenderAllOccupierBounds(graphics, boundRenderCells, Globals.MapTileSize, previewMap.Buildings.OfType<Building>());
             Building selected = null;
             Point? loc = null;
-            if (selectedBuilding != null && selectedBuildingLocation.HasValue)
+            if (selectedBuilding != null && selectedBuildingStartLocation.HasValue)
             {
-                selected = selectedBuildingLocation.HasValue ? selectedBuilding : null;
-                loc = selectedBuildingLocation;
+                selected = selectedBuildingStartLocation.HasValue ? selectedBuilding : null;
+                loc = map.Buildings[selectedBuilding];
             }
             else if (placementMode)
             {
@@ -906,7 +904,7 @@ namespace MobiusEditor.Tools
         {
             base.Activate();
             this.Deactivate(true);
-            mockBuilding.PropertyChanged += MockBuilding_PropertyChanged;
+            this.mockBuilding.PropertyChanged += MockBuilding_PropertyChanged;
             this.mapPanel.MouseDown += MapPanel_MouseDown;
             this.mapPanel.MouseUp += MapPanel_MouseUp;
             this.mapPanel.MouseDoubleClick += MapPanel_MouseDoubleClick;
@@ -916,6 +914,7 @@ namespace MobiusEditor.Tools
             (this.mapPanel as Control).KeyUp += BuildingTool_KeyUp;
             this.navigationWidget.BoundsMouseCellChanged += MouseoverWidget_MouseCellChanged;
             this.UpdateStatus();
+            this.RefreshPreviewPanel();
         }
 
         public override void Deactivate()
@@ -930,7 +929,7 @@ namespace MobiusEditor.Tools
                 this.ExitPlacementMode();
                 base.Deactivate();
             }
-            mockBuilding.PropertyChanged -= MockBuilding_PropertyChanged;
+            this.mockBuilding.PropertyChanged -= MockBuilding_PropertyChanged;
             this.mapPanel.MouseDown -= MapPanel_MouseDown;
             this.mapPanel.MouseUp -= MapPanel_MouseUp;
             this.mapPanel.MouseDoubleClick -= MapPanel_MouseDoubleClick;

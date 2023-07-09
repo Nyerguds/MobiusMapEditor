@@ -37,8 +37,12 @@ namespace MobiusEditor.Model
         private string trigger = Model.Trigger.None;
         public string Trigger { get => trigger; set => SetField(ref trigger, value); }
 
-        private HouseType house;
-        public HouseType House { get => house; set => SetField(ref house, value); }
+        // Terrain has no House; ignore this.
+        public HouseType House
+        {
+            get { return null; }
+            set { }
+        }
 
         private int strength = 256;
         public int Strength { get => strength; set => SetField(ref strength, value); }
@@ -61,7 +65,6 @@ namespace MobiusEditor.Model
         public void CloneDataFrom(Terrain other)
         {
             Type = other.Type;
-            House = other.House;
             Strength = other.Strength;
             Trigger = other.Trigger;
         }
@@ -87,7 +90,6 @@ namespace MobiusEditor.Model
         public Boolean Equals(Terrain other)
         {
             return this.Type == other.Type &&
-                this.House == other.House &&
                 this.Strength == other.Strength &&
                 this.Trigger == other.Trigger;
         }

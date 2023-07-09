@@ -33,12 +33,14 @@ namespace MobiusEditor.Tools
         protected readonly IGamePlugin plugin;
         public IGamePlugin Plugin => plugin;
         public abstract Object CurrentObject { get; set; }
+        protected bool isActive = false;
+        public bool IsActive { get { return isActive; } }
 
         protected readonly Map map;
 
         protected readonly MapPanel mapPanel;
         protected readonly ToolStripStatusLabel statusLbl;
-        protected readonly UndoRedoList<UndoRedoEventArgs> url;
+        protected readonly UndoRedoList<UndoRedoEventArgs, ToolType> url;
         protected readonly NavigationWidget navigationWidget;
 
         public NavigationWidget NavigationWidget => navigationWidget;
@@ -67,7 +69,7 @@ namespace MobiusEditor.Tools
             }
         }
 
-        public ViewTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> url)
+        public ViewTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs, ToolType> url)
         {
             this.layers = layers;
             this.plugin = plugin;
@@ -399,6 +401,7 @@ namespace MobiusEditor.Tools
             this.mapPanel.PostRender += MapPanel_PostRender;
             this.map.RulesChanged += this.Map_RulesChanged;
             this.map.MapContentsChanged += this.Map_MapContentsChanged;
+            isActive = true;
         }
 
         /// <summary>
@@ -409,6 +412,7 @@ namespace MobiusEditor.Tools
         /// </summary>
         public virtual void Deactivate()
         {
+            isActive = false;
             this.navigationWidget.Deactivate();
             this.mapPanel.PreRender -= MapPanel_PreRender;
             this.mapPanel.PostRender -= MapPanel_PostRender;

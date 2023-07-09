@@ -42,6 +42,7 @@ namespace MobiusEditor.Tools
         protected override Map RenderMap => previewMap;
 
         private int lastSelectedIndex;
+        // Simply uses the index.
         public override Object CurrentObject
         {
             get { return lastSelectedIndex; }
@@ -63,7 +64,7 @@ namespace MobiusEditor.Tools
         }
 
         public WaypointsTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, ComboBox waypointCombo, Button jumpToButton,
-            IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs> url)
+            IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs, ToolType> url)
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
             previewMap = map;
@@ -76,6 +77,23 @@ namespace MobiusEditor.Tools
             navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
             this.WaypointCombo_SelectedIndexChanged(null, null);
             UpdateStatus();
+        }
+
+        private void Url_UndoRedoDone(object sender, UndoRedoEventArgs e)
+        {
+            // Only update this stuff if the undo/redo event was actually a waypoint change.
+            if (e.Source != ToolType.Waypoint)
+            {
+                return;
+            }
+            int selectedIndex = lastSelectedIndex;
+            waypointCombo.DataSource = null;
+            waypointCombo.Items.Clear();
+            Waypoint[] wp = map.Waypoints.ToArray();
+            waypointCombo.DataSource = wp;
+            waypointCombo.SelectedIndex = selectedIndex;
+            Waypoint selected = wp[selectedIndex];
+            this.jumpToButton.Enabled = selected != null && selected.Cell.HasValue;
         }
 
         private void MapPanel_MouseDown(object sender, MouseEventArgs e)
@@ -169,7 +187,7 @@ namespace MobiusEditor.Tools
                 return;
             }
             Waypoint[] wp = map.Waypoints;
-            var waypoint = wp[selected];
+            Waypoint waypoint = wp[selected];
             if (waypoint.Cell == cell)
             {
                 return;
@@ -180,7 +198,6 @@ namespace MobiusEditor.Tools
             waypointCombo.DataSource = null;
             waypointCombo.Items.Clear();
             waypointCombo.DataSource = wp.ToArray();
-            lastSelectedIndex = selected;
             waypointCombo.SelectedIndex = selected;
             if (oldCell.HasValue)
             {
@@ -283,6 +300,7 @@ namespace MobiusEditor.Tools
                         }
                     }
                 }
+                lastSelectedIndex = newVal.Value;
                 waypointCombo.SelectedIndex = newVal.Value;
                 if (placementMode)
                 {
@@ -357,6 +375,7 @@ namespace MobiusEditor.Tools
                 }
                 if (foundIndices.Count == 1 || curIndex == -1)
                 {
+                    lastSelectedIndex = foundIndices[0];
                     waypointCombo.SelectedIndex = foundIndices[0];
                     return;
                 }
@@ -365,6 +384,7 @@ namespace MobiusEditor.Tools
                     nextIndex = foundIndices.Count - 1;
                 else if (nextIndex >= foundIndices.Count)
                     nextIndex = 0;
+                lastSelectedIndex = foundIndices[nextIndex];
                 waypointCombo.SelectedIndex = foundIndices[nextIndex];
             }
         }
@@ -397,7 +417,9 @@ namespace MobiusEditor.Tools
                     e.Plugin.Dirty = true;
                 }
             }
-            url.Track(undoAction, redoAction);
+            Waypoint selected = waypointCombo.SelectedItem as Waypoint;
+            jumpToButton.Enabled = selected != null && selected.Cell.HasValue;
+            url.Track(undoAction, redoAction, ToolType.Waypoint);
         }
 
         private void WaypointCombo_SelectedIndexChanged(Object sender, EventArgs e)
@@ -584,7 +606,11 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseMove += MapPanel_MouseMove;
             this.mapPanel.MouseLeave += MapPanel_MouseLeave;
             this.map.WaypointsUpdated += this.Map_WaypointsUpdated;
-            navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
+            this.navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
+            this.url.Undone += Url_UndoRedoDone;
+            this.url.Redone += Url_UndoRedoDone;
+            this.UpdateStatus();
+            this.RefreshPreviewPanel();
         }
 
         public override void Deactivate()
@@ -605,7 +631,9 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseLeave -= MapPanel_MouseLeave;
             (this.mapPanel as Control).KeyDown -= WaypointsTool_KeyDown;
             (this.mapPanel as Control).KeyUp -= WaypointsTool_KeyUp;
-            navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;
+            this.navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;
+            this.url.Undone += Url_UndoRedoDone;
+            this.url.Redone += Url_UndoRedoDone;
         }
 
         #region IDisposable Support
