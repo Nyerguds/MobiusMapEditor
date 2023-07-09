@@ -31,6 +31,9 @@ namespace MobiusEditor.Tools
     public abstract class ViewTool : ITool
     {
         protected readonly IGamePlugin plugin;
+        public IGamePlugin Plugin => plugin;
+        public abstract Object CurrentObject { get; set; }
+
         protected readonly Map map;
 
         protected readonly MapPanel mapPanel;

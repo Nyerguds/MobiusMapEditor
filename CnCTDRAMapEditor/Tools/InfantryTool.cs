@@ -37,6 +37,23 @@ namespace MobiusEditor.Tools
         private Map previewMap;
         protected override Map RenderMap => previewMap;
 
+        public override Object CurrentObject
+        {
+            get { return mockInfantry; }
+            set
+            {
+                if (value is Infantry inf)
+                {
+                    if (plugin.ActiveHouse != null)
+                    {
+                        inf.House = plugin.ActiveHouse;
+                    }
+                    SelectedInfantryType = inf.Type;
+                    mockInfantry.CloneDataFrom(inf);
+                }
+            }
+        }
+
         /// <summary>
         /// Layers that are not painted by the PostRenderMap function on ViewTool level because they are handled
         /// at a specific point in the PostRenderMap override by the implementing tool.
@@ -70,17 +87,13 @@ namespace MobiusEditor.Tools
                     {
                         mapPanel.Invalidate(map, navigationWidget.MouseCell);
                     }
-
                     selectedInfantryType = value;
                     infantryTypesBox.SelectedValue = selectedInfantryType;
-
                     if (placementMode && (selectedInfantryType != null))
                     {
                         mapPanel.Invalidate(map, navigationWidget.MouseCell);
                     }
-
                     mockInfantry.Type = selectedInfantryType;
-
                     RefreshPreviewPanel();
                 }
             }
@@ -100,7 +113,6 @@ namespace MobiusEditor.Tools
                 Direction = map.UnitDirectionTypes.Where(d => d.Equals(FacingType.South)).First(),
                 Mission = map.GetDefaultMission(infType)
             };
-            mockInfantry.PropertyChanged += MockInfantry_PropertyChanged;
             this.infantryTypesBox = infantryTypesBox;
             this.infantryTypesBox.Types = infTypes;
             this.infantryTypesBox.SelectedIndexChanged += InfantryTypeComboBox_SelectedIndexChanged;
@@ -228,6 +240,10 @@ namespace MobiusEditor.Tools
 
         private void MockInfantry_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
+            if (e.PropertyName == "House")
+            {
+                plugin.ActiveHouse = mockInfantry.House;
+            }
             RefreshPreviewPanel();
         }
 
@@ -826,6 +842,7 @@ namespace MobiusEditor.Tools
         {
             base.Activate();
             this.Deactivate(true);
+            mockInfantry.PropertyChanged += MockInfantry_PropertyChanged;
             this.mapPanel.MouseDown += MapPanel_MouseDown;
             this.mapPanel.MouseUp += MapPanel_MouseUp;
             this.mapPanel.MouseDoubleClick += MapPanel_MouseDoubleClick;
@@ -849,6 +866,7 @@ namespace MobiusEditor.Tools
                 this.ExitPlacementMode();
                 base.Deactivate();
             }
+            mockInfantry.PropertyChanged -= MockInfantry_PropertyChanged;
             this.mapPanel.MouseDown -= MapPanel_MouseDown;
             this.mapPanel.MouseUp -= MapPanel_MouseUp;
             this.mapPanel.MouseDoubleClick -= MapPanel_MouseDoubleClick;

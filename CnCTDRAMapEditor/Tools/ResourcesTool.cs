@@ -39,6 +39,21 @@ namespace MobiusEditor.Tools
         private readonly NumericUpDown brushSizeNud;
         private readonly CheckBox gemsCheckBox;
 
+        public int currentVal;
+        public override Object CurrentObject
+        {
+            get { return currentVal; }
+            set
+            {
+                if (value is int val)
+                {
+                    currentVal = val;
+                    this.brushSizeNud.Value = (val & 0x7FFFFFFF) | 1;
+                    this.gemsCheckBox.Checked = ((uint)val & 0x80000000) != 0;
+                }
+            }
+        }
+
         private bool placementMode;
         private bool additivePlacement;
 
@@ -58,6 +73,7 @@ namespace MobiusEditor.Tools
             this.brushSizeNud = brushSizeNud;
             this.gemsCheckBox = gemsCheckBox;
             this.brushSizeNud.ValueChanged += BrushSizeNud_ValueChanged;
+            this.gemsCheckBox.CheckedChanged += GemsCheckBox_CheckedChanged;
             navigationWidget.MouseoverSize = new Size((int)brushSizeNud.Value, (int)brushSizeNud.Value);
             Update();
         }
@@ -70,6 +86,7 @@ namespace MobiusEditor.Tools
         private void BrushSizeNud_ValueChanged(object sender, EventArgs e)
         {
             int actualValue = (int)brushSizeNud.Value | 1;
+            currentVal = gemsCheckBox.Checked ? (int)(0x80000000 | (uint)actualValue) : actualValue;
             if (brushSizeNud.Value != actualValue)
             {
                 // Will re-trigger this, and then go to the other case.
@@ -82,6 +99,11 @@ namespace MobiusEditor.Tools
             }
         }
 
+        private void GemsCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            int brushValue = (int)brushSizeNud.Value | 1;
+            currentVal = gemsCheckBox.Checked ? (int)(0x80000000 | (uint)brushValue) : brushValue;
+        }
 
         private void ResourcesTool_KeyUpDown(object sender, KeyEventArgs e)
         {

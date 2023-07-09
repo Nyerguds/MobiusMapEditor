@@ -21,8 +21,9 @@ namespace MobiusEditor.Interface
     public interface ITool : IDisposable
     {
         MapLayerFlag Layers { get; set; }
-
+        IGamePlugin Plugin { get; }
         NavigationWidget NavigationWidget { get; }
+        Object CurrentObject { get; set; }
 
         void Activate();
         void Deactivate();

@@ -41,6 +41,20 @@ namespace MobiusEditor.Tools
         private Map previewMap;
         protected override Map RenderMap => previewMap;
 
+        private int lastSelectedIndex;
+        public override Object CurrentObject
+        {
+            get { return lastSelectedIndex; }
+            set
+            {
+                if (value is int index)
+                {
+                    lastSelectedIndex = index;
+                    waypointCombo.SelectedIndex = index;
+                }
+            }
+        }
+
         private bool placementMode;
 
         protected override Boolean InPlacementMode
@@ -166,6 +180,7 @@ namespace MobiusEditor.Tools
             waypointCombo.DataSource = null;
             waypointCombo.Items.Clear();
             waypointCombo.DataSource = wp.ToArray();
+            lastSelectedIndex = selected;
             waypointCombo.SelectedIndex = selected;
             if (oldCell.HasValue)
             {
@@ -387,6 +402,7 @@ namespace MobiusEditor.Tools
 
         private void WaypointCombo_SelectedIndexChanged(Object sender, EventArgs e)
         {
+            lastSelectedIndex = waypointCombo.SelectedIndex;
             Waypoint selected = waypointCombo.SelectedItem as Waypoint;
             jumpToButton.Enabled = selected != null && selected.Cell.HasValue;
             if (selected != null && selected.Cell.HasValue)
@@ -554,6 +570,7 @@ namespace MobiusEditor.Tools
             waypointCombo.Items.Clear();
             waypointCombo.DataSource = map.Waypoints.ToArray();
             waypointCombo.SelectedIndex = selected;
+            lastSelectedIndex = selected;
             this.waypointCombo.SelectedIndexChanged += this.WaypointCombo_SelectedIndexChanged;
         }
 

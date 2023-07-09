@@ -228,6 +228,8 @@ namespace MobiusEditor.TiberianDawn
 
         public virtual GameType GameType => GameType.TiberianDawn;
 
+        public virtual HouseType ActiveHouse { get; set; }
+
         public virtual bool IsMegaMap => isMegaMap;
 
         public virtual Map Map { get; protected set; }

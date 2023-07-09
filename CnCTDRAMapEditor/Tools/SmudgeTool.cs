@@ -43,6 +43,19 @@ namespace MobiusEditor.Tools
         private Map previewMap;
         protected override Map RenderMap => previewMap;
 
+        public override Object CurrentObject
+        {
+            get { return mockSmudge; }
+            set
+            {
+                if (value is Smudge sm)
+                {
+                    SelectedSmudgeType = sm.Type;
+                    mockSmudge.CloneDataFrom(sm);
+                }
+            }
+        }
+
         private bool placementMode;
 
         protected override Boolean InPlacementMode
@@ -75,9 +88,8 @@ namespace MobiusEditor.Tools
                     {
                         mapPanel.Invalidate(map, new Rectangle(navigationWidget.MouseCell, selectedSmudgeType.Size));
                     }
-                    mockSmudge.Icon = Math.Min(selectedSmudgeType.Icons - 1, mockSmudge.Icon);
                     mockSmudge.Type = selectedSmudgeType;
-                    RefreshPreviewPanel();
+                    mockSmudge.Icon = Math.Min(selectedSmudgeType.Icons - 1, mockSmudge.Icon);
                 }
             }
         }
@@ -87,7 +99,6 @@ namespace MobiusEditor.Tools
         {
             previewMap = map;
             mockSmudge = new Smudge(smudgeTypeListBox.Types.First() as SmudgeType, 0);
-            mockSmudge.PropertyChanged += MockSmudge_PropertyChanged;
             this.smudgeTypeListBox = smudgeTypeListBox;
             this.smudgeTypeListBox.SelectedIndexChanged += SmudgeTypeComboBox_SelectedIndexChanged;
             this.smudgeTypeMapPanel = smudgeTypeMapPanel;
@@ -97,6 +108,7 @@ namespace MobiusEditor.Tools
             this.smudgeProperties = smudgeProperties;
             this.smudgeProperties.Smudge = mockSmudge;
             SelectedSmudgeType = smudgeTypeListBox.Types.First() as SmudgeType;
+            RefreshPreviewPanel();
         }
 
         private void MapPanel_MouseLeave(object sender, EventArgs e)
@@ -181,6 +193,7 @@ namespace MobiusEditor.Tools
         private void SmudgeTypeComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
             SelectedSmudgeType = smudgeTypeListBox.SelectedValue as SmudgeType;
+            RefreshPreviewPanel();
         }
 
         private void SmudgeTool_KeyDown(object sender, KeyEventArgs e)
@@ -710,13 +723,14 @@ namespace MobiusEditor.Tools
         {
             base.Activate();
             this.Deactivate(true);
+            this.mockSmudge.PropertyChanged += MockSmudge_PropertyChanged;
             this.mapPanel.MouseDown += MapPanel_MouseDown;
             this.mapPanel.MouseMove += MapPanel_MouseMove;
             this.mapPanel.MouseDoubleClick += MapPanel_MouseDoubleClick;
             this.mapPanel.MouseLeave += MapPanel_MouseLeave;
             (this.mapPanel as Control).KeyDown += SmudgeTool_KeyDown;
             (this.mapPanel as Control).KeyUp += SmudgeTool_KeyUp;
-            navigationWidget.BoundsMouseCellChanged += MouseoverWidget_MouseCellChanged;
+            this.navigationWidget.BoundsMouseCellChanged += MouseoverWidget_MouseCellChanged;
             this.UpdateStatus();
         }
 
@@ -732,6 +746,7 @@ namespace MobiusEditor.Tools
                 ExitPlacementMode();
                 base.Deactivate();
             }
+            this.mockSmudge.PropertyChanged -= MockSmudge_PropertyChanged;
             this.mapPanel.MouseDown -= MapPanel_MouseDown;
             this.mapPanel.MouseMove -= MapPanel_MouseMove;
             this.mapPanel.MouseDoubleClick -= MapPanel_MouseDoubleClick;

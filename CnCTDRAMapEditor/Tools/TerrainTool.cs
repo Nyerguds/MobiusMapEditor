@@ -43,6 +43,19 @@ namespace MobiusEditor.Tools
         private Map previewMap;
         protected override Map RenderMap => previewMap;
 
+        public override Object CurrentObject
+        {
+            get { return mockTerrain; }
+            set
+            {
+                if (value is Terrain ter)
+                {
+                    selectedTerrainType = ter.Type;
+                    mockTerrain.CloneDataFrom(ter);
+                }
+            }
+        }
+
         private bool placementMode;
 
         protected override Boolean InPlacementMode
@@ -78,7 +91,6 @@ namespace MobiusEditor.Tools
                         mapPanel.Invalidate(map, new Rectangle(navigationWidget.MouseCell, selectedTerrainType.OverlapBounds.Size));
                     }
                     mockTerrain.Type = selectedTerrainType;
-                    RefreshPreviewPanel();
                 }
             }
         }
@@ -88,7 +100,6 @@ namespace MobiusEditor.Tools
         {
             previewMap = map;
             mockTerrain = new Terrain();
-            mockTerrain.PropertyChanged += MockTerrain_PropertyChanged;
             this.terrainTypeListBox = terrainTypeComboBox;
             this.terrainTypeListBox.SelectedIndexChanged += TerrainTypeCombo_SelectedIndexChanged;
             this.terrainTypeMapPanel = terrainTypeMapPanel;
@@ -99,6 +110,7 @@ namespace MobiusEditor.Tools
             this.terrainProperties.Terrain = mockTerrain;
             this.terrainProperties.Visible = plugin.Map.TerrainEventTypes.Count > 0;
             SelectedTerrainType = terrainTypeComboBox.Types.First() as TerrainType;
+            RefreshPreviewPanel();
         }
 
         private void MapPanel_MouseLeave(object sender, EventArgs e)
@@ -189,6 +201,7 @@ namespace MobiusEditor.Tools
         private void TerrainTypeCombo_SelectedIndexChanged(object sender, EventArgs e)
         {
             SelectedTerrainType = terrainTypeListBox.SelectedValue as TerrainType;
+            RefreshPreviewPanel();
         }
 
         private void TerrainTool_KeyDown(object sender, KeyEventArgs e)
@@ -593,6 +606,7 @@ namespace MobiusEditor.Tools
         {
             base.Activate();
             this.Deactivate(true);
+            this.mockTerrain.PropertyChanged += MockTerrain_PropertyChanged;
             this.mapPanel.MouseDown += MapPanel_MouseDown;
             this.mapPanel.MouseMove += MapPanel_MouseMove;
             this.mapPanel.MouseUp += MapPanel_MouseUp;
@@ -616,6 +630,7 @@ namespace MobiusEditor.Tools
                 this.ExitPlacementMode();
                 base.Deactivate();
             }
+            this.mockTerrain.PropertyChanged -= MockTerrain_PropertyChanged;
             this.mapPanel.MouseDown -= MapPanel_MouseDown;
             this.mapPanel.MouseMove -= MapPanel_MouseMove;
             this.mapPanel.MouseUp -= MapPanel_MouseUp;

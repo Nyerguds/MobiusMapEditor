@@ -44,6 +44,18 @@ namespace MobiusEditor.Tools
         private Map previewMap;
         protected override Map RenderMap => previewMap;
 
+        public override Object CurrentObject
+        {
+            get { return selectedOverlayType; }
+            set
+            {
+                if (value is OverlayType ovt)
+                {
+                    SelectedOverlayType = ovt;
+                }
+            }
+        }
+
         private bool placementMode;
 
         protected override Boolean InPlacementMode

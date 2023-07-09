@@ -37,6 +37,23 @@ namespace MobiusEditor.Tools
         private Map previewMap;
         protected override Map RenderMap => previewMap;
 
+        public override Object CurrentObject
+        {
+            get { return mockBuilding; }
+            set
+            {
+                if (value is Building bld)
+                {
+                    if (plugin.ActiveHouse != null)
+                    {
+                        bld.House = plugin.ActiveHouse;
+                    }
+                    SelectedBuildingType = bld.Type;
+                    mockBuilding.CloneDataFrom(bld);
+                }
+            }
+        }
+
         /// <summary>
         /// Layers that are not painted by the PostRenderMap function on ViewTool level because they are handled
         /// at a specific point in the PostRenderMap override by the implementing tool.
@@ -79,7 +96,7 @@ namespace MobiusEditor.Tools
                         mapPanel.Invalidate(map, new Rectangle(navigationWidget.MouseCell, selectedBuildingType.OverlapBounds.Size));
                     }
                     mockBuilding.Type = selectedBuildingType;
-                    // No need to call 'RefreshPreviewPanel()'; it is triggered through MockBuilding_PropertyChanged.
+                    RefreshPreviewPanel();
                 }
             }
         }
@@ -95,7 +112,6 @@ namespace MobiusEditor.Tools
                 Strength = 256,
                 Direction = map.BuildingDirectionTypes.Where(d => d.Equals(FacingType.North)).First()
             };
-            mockBuilding.PropertyChanged += MockBuilding_PropertyChanged;
             this.buildingTypesBox = buildingTypesBox;
             this.buildingTypesBox.SelectedIndexChanged += BuildingTypeComboBox_SelectedIndexChanged;
             this.buildingTypeMapPanel = buildingTypeMapPanel;
@@ -185,6 +201,10 @@ namespace MobiusEditor.Tools
             if (e.PropertyName == "Type" && (mockBuilding.Type == null || !mockBuilding.Type.HasTurret))
             {
                 mockBuilding.Direction = map.BuildingDirectionTypes.Where(d => d.Equals(FacingType.North)).First();
+            }
+            if (e.PropertyName == "House")
+            {
+                plugin.ActiveHouse = mockBuilding.House;
             }
             RefreshPreviewPanel();
         }
@@ -886,6 +906,7 @@ namespace MobiusEditor.Tools
         {
             base.Activate();
             this.Deactivate(true);
+            mockBuilding.PropertyChanged += MockBuilding_PropertyChanged;
             this.mapPanel.MouseDown += MapPanel_MouseDown;
             this.mapPanel.MouseUp += MapPanel_MouseUp;
             this.mapPanel.MouseDoubleClick += MapPanel_MouseDoubleClick;
@@ -909,6 +930,7 @@ namespace MobiusEditor.Tools
                 this.ExitPlacementMode();
                 base.Deactivate();
             }
+            mockBuilding.PropertyChanged -= MockBuilding_PropertyChanged;
             this.mapPanel.MouseDown -= MapPanel_MouseDown;
             this.mapPanel.MouseUp -= MapPanel_MouseUp;
             this.mapPanel.MouseDoubleClick -= MapPanel_MouseDoubleClick;

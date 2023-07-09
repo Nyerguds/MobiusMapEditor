@@ -52,6 +52,20 @@ namespace MobiusEditor.Tools
 
         private Map previewMap;
         protected override Map RenderMap => previewMap;
+
+        private string currentObj;
+        public override Object CurrentObject
+        {
+            get { return currentObj; }
+            set
+            {
+                if (value is string trig)
+                {
+                    this.triggerComboBox.SelectedItem = trig;
+                }
+            }
+        }
+
         private bool placementMode;
 
         protected override Boolean InPlacementMode
@@ -340,7 +354,8 @@ namespace MobiusEditor.Tools
                     triggerComboBox.SelectedItem = trigger;
                     if (cellTrigBlobCenters.TryGetValue(trigger, out Rectangle[] locations))
                     {
-                        currentCellTrig = cellTrigger.Trigger;
+                        currentCellTrig = trigger;
+                        currentObj = trigger;
                         currentCellTrigIndex = 0;
                         // If found, make sure clicking the "jump to next use" button
                         // will go to the blob after the currently clicked one.
@@ -413,6 +428,7 @@ namespace MobiusEditor.Tools
         {
             string selected = triggerComboBox.SelectedItem as string;
             jumpToButton.Enabled = selected != null && cellTrigBlobCenters.TryGetValue(selected, out Rectangle[] locations) && locations != null && locations.Length > 0;
+            currentObj = selected;
             if (placementMode)
             {
                 // An invalidate without cells won't call PreRenderMap, and will thus

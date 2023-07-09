@@ -1947,6 +1947,13 @@ namespace MobiusEditor
             if (toolDialog != null)
             {
                 activeToolForm = (Form)toolDialog;
+                ITool oldTool = toolDialog.GetTool();
+                Object mockObject = null;
+                if (oldTool != null && oldTool.Plugin == plugin)
+                {
+                    // Same map edit session; restore old data
+                    mockObject = oldTool.CurrentObject;
+                }
                 // Creates the actual Tool class
                 toolDialog.Initialize(mapPanel, active, toolStatusLabel, mouseToolTip, plugin, url);
                 activeTool = toolDialog.GetTool();
@@ -1955,6 +1962,9 @@ namespace MobiusEditor
                 activeToolForm.Shown += this.ActiveToolForm_Shown;
                 activeToolForm.Show(this);
                 activeTool.Activate();
+                // Ensures that the active house is set in the tool.
+                // Only set this after activation, so the mock object's PropertyChanged event is active.
+                activeTool.CurrentObject = mockObject ?? activeTool.CurrentObject;
                 activeToolForm.ResizeEnd += ActiveToolForm_ResizeEnd;
             }
             if (plugin.IsMegaMap)

@@ -43,6 +43,23 @@ namespace MobiusEditor.Tools
         private Map previewMap;
         protected override Map RenderMap => previewMap;
 
+        public override Object CurrentObject
+        {
+            get { return mockUnit; }
+            set
+            {
+                if (value is Unit un)
+                {
+                    if (plugin.ActiveHouse != null)
+                    {
+                        un.House = plugin.ActiveHouse;
+                    }
+                    SelectedUnitType = un.Type;
+                    mockUnit.CloneDataFrom(un);
+                }
+            }
+        }
+
         private bool placementMode;
 
         protected override Boolean InPlacementMode
@@ -77,7 +94,6 @@ namespace MobiusEditor.Tools
                         mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(navigationWidget.MouseCell, new Size(1, 1)), 1, 1));
                     }
                     mockUnit.Type = selectedUnitType;
-                    RefreshPreviewPanel();
                 }
             }
         }
@@ -96,7 +112,6 @@ namespace MobiusEditor.Tools
                 Direction = map.UnitDirectionTypes.Where(d => d.Equals(FacingType.North)).First(),
                 Mission = map.GetDefaultMission(unitType)
             };
-            mockUnit.PropertyChanged += MockUnit_PropertyChanged;
             this.unitTypesBox = unitTypesBox;
             this.unitTypesBox.Types = unitTypes;
             this.unitTypesBox.SelectedIndexChanged += UnitTypeComboBox_SelectedIndexChanged;
@@ -107,6 +122,7 @@ namespace MobiusEditor.Tools
             this.objectProperties = objectProperties;
             this.objectProperties.Object = mockUnit;
             SelectedUnitType = mockUnit.Type;
+            RefreshPreviewPanel();
         }
 
         protected override void UpdateExpansionUnits()
@@ -219,6 +235,10 @@ namespace MobiusEditor.Tools
 
         private void MockUnit_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
+            if (e.PropertyName == "House")
+            {
+                plugin.ActiveHouse = mockUnit.House;
+            }
             RefreshPreviewPanel();
         }
 
@@ -657,6 +677,7 @@ namespace MobiusEditor.Tools
         {
             base.Activate();
             Deactivate(true);
+            mockUnit.PropertyChanged += MockUnit_PropertyChanged;
             this.mapPanel.MouseDown += MapPanel_MouseDown;
             this.mapPanel.MouseUp += MapPanel_MouseUp;
             this.mapPanel.MouseDoubleClick += MapPanel_MouseDoubleClick;
@@ -680,6 +701,7 @@ namespace MobiusEditor.Tools
                 ExitPlacementMode();
                 base.Deactivate();
             }
+            mockUnit.PropertyChanged -= MockUnit_PropertyChanged;
             this.mapPanel.MouseDown -= MapPanel_MouseDown;
             this.mapPanel.MouseUp -= MapPanel_MouseUp;
             this.mapPanel.MouseDoubleClick -= MapPanel_MouseDoubleClick;

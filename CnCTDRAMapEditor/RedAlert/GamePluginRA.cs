@@ -269,6 +269,8 @@ namespace MobiusEditor.RedAlert
 
         public GameType GameType => GameType.RedAlert;
 
+        public HouseType ActiveHouse { get; set; }
+
         public bool IsMegaMap => true;
 
         public Map Map { get; }

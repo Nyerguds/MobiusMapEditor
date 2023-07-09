@@ -44,6 +44,18 @@ namespace MobiusEditor.Tools
         private Map previewMap;
         protected override Map RenderMap => previewMap;
 
+        public override Object CurrentObject
+        {
+            get { return selectedWallType; }
+            set
+            {
+                if (value is OverlayType ovt)
+                {
+                    SelectedWallType = ovt;
+                }
+            }
+        }
+
         private bool placementMode;
 
         protected override Boolean InPlacementMode
@@ -65,7 +77,7 @@ namespace MobiusEditor.Tools
                     }
                     selectedWallType = value;
                     wallTypeComboBox.SelectedValue = selectedWallType;
-                    RefreshMapPanel();
+                    base.RefreshPreviewPanel();
                 }
             }
         }
@@ -310,7 +322,7 @@ namespace MobiusEditor.Tools
             }
         }
 
-        private void RefreshMapPanel()
+        protected override void RefreshPreviewPanel()
         {
             wallTypeMapPanel.MapImage = SelectedWallType?.Thumbnail;
         }

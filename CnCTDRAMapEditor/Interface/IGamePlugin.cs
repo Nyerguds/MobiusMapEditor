@@ -47,6 +47,9 @@ namespace MobiusEditor.Interface
         /// <summary>The game type as enum.</summary>
         GameType GameType { get; }
 
+        /// <summary>Currently edited house.</summary>
+        HouseType ActiveHouse { get; set; }
+
         /// <summary>True if the plugin is initialised to handle a megamap.</summary>
         bool IsMegaMap { get; }
 

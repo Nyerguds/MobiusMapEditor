@@ -64,6 +64,41 @@ namespace MobiusEditor.Tools
         private Map previewMap;
         protected override Map RenderMap => previewMap;
 
+        public override Object CurrentObject
+        {
+            get
+            {
+                Template template = new Template();
+                template.Type = this.selectedTemplateType;
+                Point? sel = SelectedIcon;
+                if (!sel.HasValue)
+                {
+                    template.Icon = -1;
+                }
+                else
+                {
+                    template.Icon = (sel.Value.Y * template.Type.ThumbnailIconWidth) + sel.Value.X;
+                }
+                return template;
+            }
+            set
+            {
+                if (value is Template tem)
+                {
+                    SelectedTemplateType = tem.Type;
+                    if (tem.Icon < 0)
+                    {
+                        SelectedIcon = null;
+                    }
+                    else
+                    {
+                        Point p = new Point(tem.Icon % tem.Type.ThumbnailIconWidth, tem.Icon / tem.Type.ThumbnailIconWidth);
+                        SelectedIcon = p;
+                    }
+                }
+            }
+        }
+
         private bool placementMode;
 
         protected override Boolean InPlacementMode
