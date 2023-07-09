@@ -432,7 +432,7 @@ namespace MobiusEditor.Tools
             url.Track(undoAction, redoAction, ToolType.CellTrigger);
         }
 
-        private void TriggerCombo_SelectedIndexChanged(System.Object sender, System.EventArgs e)
+        private void TriggerCombo_SelectedIndexChanged(System.Object sender, EventArgs e)
         {
             string selected = triggerComboBox.SelectedItem as string;
             jumpToButton.Enabled = selected != null && cellTrigBlobCenters.TryGetValue(selected, out Rectangle[] locations) && locations != null && locations.Length > 0;

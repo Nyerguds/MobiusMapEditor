@@ -86,13 +86,18 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-            int selectedIndex = lastSelectedIndex;
+            int selectedIndex = waypointCombo.SelectedIndex;
             waypointCombo.DataSource = null;
             waypointCombo.Items.Clear();
             Waypoint[] wp = map.Waypoints.ToArray();
             waypointCombo.DataSource = wp;
-            waypointCombo.SelectedIndex = selectedIndex;
-            Waypoint selected = wp[selectedIndex];
+            Waypoint selected = null;
+            if (selectedIndex >= 0 && selectedIndex < wp.Length)
+            {
+                lastSelectedIndex = selectedIndex;
+                waypointCombo.SelectedIndex = selectedIndex;
+                selected = wp[selectedIndex];
+            }
             this.jumpToButton.Enabled = selected != null && selected.Cell.HasValue;
         }
 
@@ -424,11 +429,11 @@ namespace MobiusEditor.Tools
 
         private void WaypointCombo_SelectedIndexChanged(Object sender, EventArgs e)
         {
-            lastSelectedIndex = waypointCombo.SelectedIndex;
             Waypoint selected = waypointCombo.SelectedItem as Waypoint;
             jumpToButton.Enabled = selected != null && selected.Cell.HasValue;
             if (selected != null && selected.Cell.HasValue)
             {
+                lastSelectedIndex = waypointCombo.SelectedIndex;
                 mapPanel.Invalidate(RenderMap, selected.Cell.Value);
             }
             mapPanel.Invalidate(RenderMap, navigationWidget.MouseCell);

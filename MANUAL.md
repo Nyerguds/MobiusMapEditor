@@ -139,7 +139,7 @@ These options are all enabled by default, but can be disabled if you wish. Use t
 
 ## Classic files listing:
 
-The following files can be read from the "Classic" folders, for running the editor in classic mode. They can also be loaded from mod folders. They will be loaded for in the listed order, over all available sources. The basic rule in the game is that the first-loaded files have priority, so this also shows which archives can override the contents of which other archives.
+The following files can be read from the configured classic data folders, for running the editor in classic mode. They can also be loaded from mod folders. They will be loaded in the listed order, over all available sources. The basic rule in the game is that the first-loaded files have priority, so this also shows which archives can override the contents of which other archives.
 
 Files marked with <sup>(*)</sup> are required, though they may not be visible inside the folder if they are embedded inside another archive.
 
@@ -177,3 +177,5 @@ These are read from the "Classic\RA" subfolder by default.
 * temperat.mix <sup>(*)</sup> <sup>(2)</sup>
 
 There is no support for running Red Alert from files that don't include the expansions data. If such a setup would be attempted (e.g. for research purposes, using the beta 0.09c files), the files **expand2.mix** and **lores1.mix** will need to be added before the editor will accept the folder.
+
+There is also no support for running the editor for one specific game while not having the files for the other game(s) available. All data needs to be present to make the editor start up.

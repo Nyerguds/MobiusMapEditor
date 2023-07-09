@@ -39,8 +39,8 @@ namespace MobiusEditor.TiberianDawn
         public static readonly TerrainType Tree16 = new TerrainType(15, "t16", "TEXT_PROP_TITLE_TREE", new TheaterType[] { TheaterTypes.Winter, TheaterTypes.Temperate }, 2, 2, "00 10");
         public static readonly TerrainType Tree17 = new TerrainType(16, "t17", "TEXT_PROP_TITLE_TREE", new TheaterType[] { TheaterTypes.Winter, TheaterTypes.Temperate }, 2, 2, "00 10");
         public static readonly TerrainType Tree18 = new TerrainType(17, "t18", "TEXT_PROP_TITLE_TREE", new TheaterType[] { TheaterTypes.Desert }, 3, 2, "000 010");
-        public static readonly TerrainType Split1 = new TerrainType(18, "split2", "TEXT_PROP_TITLE_BLOSSOM_TREE", new TheaterType[] { TheaterTypes.Temperate, TheaterTypes.Winter }, 2, 2, "00 10", 22);
-        public static readonly TerrainType Split2 = new TerrainType(19, "split3", "TEXT_PROP_TITLE_BLOSSOM_TREE", new TheaterType[] { TheaterTypes.Temperate, TheaterTypes.Winter, TheaterTypes.Desert }, 2, 2, "00 10", 22);
+        public static readonly TerrainType Split1 = new TerrainType(18, "split2", "TEXT_PROP_TITLE_BLOSSOM_TREE", new TheaterType[] { TheaterTypes.Temperate, TheaterTypes.Winter }, 2, 2, "00 10", 30);
+        public static readonly TerrainType Split2 = new TerrainType(19, "split3", "TEXT_PROP_TITLE_BLOSSOM_TREE", new TheaterType[] { TheaterTypes.Temperate, TheaterTypes.Winter, TheaterTypes.Desert }, 2, 2, "00 10", 30);
         public static readonly TerrainType Clump1 = new TerrainType(20, "tc01", "TEXT_PROP_TITLE_TREE", new TheaterType[] { TheaterTypes.Winter, TheaterTypes.Temperate }, 3, 2, "000 110");
         public static readonly TerrainType Clump2 = new TerrainType(21, "tc02", "TEXT_PROP_TITLE_TREE", new TheaterType[] { TheaterTypes.Winter, TheaterTypes.Temperate }, 3, 2, "010 110");
         public static readonly TerrainType Clump3 = new TerrainType(22, "tc03", "TEXT_PROP_TITLE_TREE", new TheaterType[] { TheaterTypes.Winter, TheaterTypes.Temperate }, 3, 2, "110 110");

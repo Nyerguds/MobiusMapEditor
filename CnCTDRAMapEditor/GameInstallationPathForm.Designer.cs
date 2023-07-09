@@ -94,6 +94,7 @@
             // btnClassic
             // 
             this.btnClassic.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnClassic.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.btnClassic.Location = new System.Drawing.Point(161, 106);
             this.btnClassic.Name = "btnClassic";
             this.btnClassic.Size = new System.Drawing.Size(161, 23);
@@ -112,7 +113,7 @@
             this.label2.Size = new System.Drawing.Size(395, 33);
             this.label2.TabIndex = 0;
             this.label2.Text = "To skip this dialog and always start with the classic graphics, edit CnCTDRAMapEd" +
-    "itor.exe.config and set the <ClassicGraphics> setting to True.";
+    "itor.exe.config and set the \"UseClassicFiles\" setting to True.";
             // 
             // GameInstallationPathForm
             // 

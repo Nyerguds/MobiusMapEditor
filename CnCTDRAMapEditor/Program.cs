@@ -384,10 +384,10 @@ namespace MobiusEditor
         private static String GetRemasterRunPath(bool askIfNotFound)
         {
             // Do a test for CONFIG.MEG
-            string runPath = Environment.CurrentDirectory;
-            if (FileTest(runPath))
+            string runPath = null;
+            if (FileTest(Environment.CurrentDirectory))
             {
-                return runPath;
+                return Environment.CurrentDirectory;
             }
             // If it does not exist, try to use the directory from the settings.
             bool validSavedDirectory = false;
@@ -403,7 +403,12 @@ namespace MobiusEditor
             // Before showing a dialog to ask, try to autodetect the Steam path.
             if (!validSavedDirectory)
             {
-                string gameFolder = SteamAssist.TryGetSteamGameFolder(gameId, "TiberianDawn.dll", "RedAlert.dll");
+                string gameFolder = null;
+                try
+                {
+                    gameFolder = SteamAssist.TryGetSteamGameFolder(gameId, "TiberianDawn.dll", "RedAlert.dll");
+                }
+                catch { /* ignore */ }
                 if (gameFolder != null)
                 {
                     if (FileTest(gameFolder))
@@ -418,20 +423,22 @@ namespace MobiusEditor
             // If the directory in the settings is wrong, and it can not be autodetected, we need to ask the user for the installation dir.
             if (!validSavedDirectory && askIfNotFound)
             {
-                var gameInstallationPathForm = new GameInstallationPathForm();
-                gameInstallationPathForm.StartPosition = FormStartPosition.CenterScreen;
-                switch (gameInstallationPathForm.ShowDialog())
+                using (GameInstallationPathForm gameInstallationPathForm = new GameInstallationPathForm())
                 {
-                    case DialogResult.OK:
-                        runPath = Path.GetDirectoryName(gameInstallationPathForm.SelectedPath);
-                        Properties.Settings.Default.GameDirectoryPath = runPath;
-                        Properties.Settings.Default.Save();
-                        break;
-                    case DialogResult.No: // No longer used; cancelling will always fall back to classic graphics.
-                        return null;
-                    case DialogResult.Cancel:
-                        Globals.UseClassicFiles = true;
-                        return null;
+                    gameInstallationPathForm.StartPosition = FormStartPosition.CenterScreen;
+                    switch (gameInstallationPathForm.ShowDialog())
+                    {
+                        case DialogResult.OK:
+                            runPath = Path.GetDirectoryName(gameInstallationPathForm.SelectedPath);
+                            Properties.Settings.Default.GameDirectoryPath = runPath;
+                            Properties.Settings.Default.Save();
+                            break;
+                        case DialogResult.No: // No longer used; cancelling will always fall back to classic graphics.
+                            return null;
+                        case DialogResult.Cancel:
+                            Globals.UseClassicFiles = true;
+                            return null;
+                    }
                 }
             }
             return runPath;

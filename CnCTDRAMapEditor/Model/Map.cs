@@ -542,6 +542,7 @@ namespace MobiusEditor.Model
                 foreach (TerrainType terrainType in this.TerrainTypes.Where(itm => !Globals.FilterTheaterObjects || itm.Theaters == null || itm.Theaters.Contains(this.Theater)))
                 {
                     terrainType.Init();
+                    terrainType.InitDisplayName();
                 }
                 // Ignore expansion status for these; they can still be enabled later.
                 DirectionType infDir = this.UnitDirectionTypes.Where(d => d.Facing == FacingType.South).First();

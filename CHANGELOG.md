@@ -523,3 +523,12 @@ Program bug fixes:
 * Fixed case difference issues in triggers linked to objects and celltriggers.
 * Fixed the fact disabling expansion units did not clear the undo/redo history if none were currently in use on the map or in teamtypes.
 * Adding and removing cell triggers now enables and disables the "jump to" button correctly, and updates the jump locations.
+
+### v1.5.0.1:
+
+Unreleased
+
+* Fixed the classic mode setting wrongly being stated as "ClassicGraphics" instead of "UseClassicFiles" on the game folder selection dialog.
+* Fixed bugs that crashed the undo/redo function on the waypoints tool.
+* Fixed tree names not getting initialised.
+* Fixed Tiberian Dawn's Blossom Trees showing the "barnacled" state at the start of their mutation, rather than their fully mutated state.
