@@ -444,7 +444,7 @@ Released on 03 Apr 2023 at 19:20 GMT
 
 ### v1.5.0.0:
 
-Unreleased
+Released on 09 Jul 2023 at 14:58 GMT
 
 Feature updates:
 
