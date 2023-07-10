@@ -36,11 +36,11 @@ namespace MobiusEditor.RedAlert
         public static readonly TerrainType Tree15Class = new TerrainType(12, "t15", "TEXT_PROP_TITLE_TREE", new TheaterType[] { TheaterTypes.Temperate, TheaterTypes.Snow }, 2, 2, "00 11");
         public static readonly TerrainType Tree16Class = new TerrainType(13, "t16", "TEXT_PROP_TITLE_TREE", new TheaterType[] { TheaterTypes.Temperate, TheaterTypes.Snow }, 2, 2, "00 10");
         public static readonly TerrainType Tree17Class = new TerrainType(14, "t17", "TEXT_PROP_TITLE_TREE", new TheaterType[] { TheaterTypes.Temperate, TheaterTypes.Snow }, 2, 2, "00 10");
-        public static readonly TerrainType Clump1Class = new TerrainType(15, "tc01", "TEXT_PROP_TITLE_TREE", new TheaterType[] { TheaterTypes.Temperate, TheaterTypes.Snow }, 3, 2, "000 110");
-        public static readonly TerrainType Clump2Class = new TerrainType(16, "tc02", "TEXT_PROP_TITLE_TREE", new TheaterType[] { TheaterTypes.Temperate, TheaterTypes.Snow }, 3, 2, "010 110");
-        public static readonly TerrainType Clump3Class = new TerrainType(17, "tc03", "TEXT_PROP_TITLE_TREE", new TheaterType[] { TheaterTypes.Temperate, TheaterTypes.Snow }, 3, 2, "110 110");
-        public static readonly TerrainType Clump4Class = new TerrainType(18, "tc04", "TEXT_PROP_TITLE_TREE", new TheaterType[] { TheaterTypes.Temperate, TheaterTypes.Snow }, 4, 3, "0000 1110 1000");
-        public static readonly TerrainType Clump5Class = new TerrainType(19, "tc05", "TEXT_PROP_TITLE_TREE", new TheaterType[] { TheaterTypes.Temperate, TheaterTypes.Snow }, 4, 3, "0010 1110 0110");
+        public static readonly TerrainType Clump1Class = new TerrainType(15, "tc01", "TEXT_PROP_TITLE_TREES", new TheaterType[] { TheaterTypes.Temperate, TheaterTypes.Snow }, 3, 2, "000 110");
+        public static readonly TerrainType Clump2Class = new TerrainType(16, "tc02", "TEXT_PROP_TITLE_TREES", new TheaterType[] { TheaterTypes.Temperate, TheaterTypes.Snow }, 3, 2, "010 110");
+        public static readonly TerrainType Clump3Class = new TerrainType(17, "tc03", "TEXT_PROP_TITLE_TREES", new TheaterType[] { TheaterTypes.Temperate, TheaterTypes.Snow }, 3, 2, "110 110");
+        public static readonly TerrainType Clump4Class = new TerrainType(18, "tc04", "TEXT_PROP_TITLE_TREES", new TheaterType[] { TheaterTypes.Temperate, TheaterTypes.Snow }, 4, 3, "0000 1110 1000");
+        public static readonly TerrainType Clump5Class = new TerrainType(19, "tc05", "TEXT_PROP_TITLE_TREES", new TheaterType[] { TheaterTypes.Temperate, TheaterTypes.Snow }, 4, 3, "0010 1110 0110");
         public static readonly TerrainType Ice01 = new TerrainType(20, "ice01", "TEXT_PROP_TITLE_ICE", new TheaterType[] { TheaterTypes.Snow }, 2, 2, null, LandType.Water);
         public static readonly TerrainType Ice02 = new TerrainType(21, "ice02", "TEXT_PROP_TITLE_ICE", new TheaterType[] { TheaterTypes.Snow }, 1, 2, null, LandType.Water);
         public static readonly TerrainType Ice03 = new TerrainType(22, "ice03", "TEXT_PROP_TITLE_ICE", new TheaterType[] { TheaterTypes.Snow }, 2, 1, null, LandType.Water);

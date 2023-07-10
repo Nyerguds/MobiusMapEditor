@@ -54,12 +54,14 @@ namespace MobiusEditor.Dialogs
         public Label StatusLabel { get; set; }
 
         private string inputFilename;
+        private string lastOpenedFolder;
 
-        public ImageExportDialog(IGamePlugin gamePlugin, MapLayerFlag layers, string filename)
+        public ImageExportDialog(IGamePlugin gamePlugin, MapLayerFlag layers, string filename, string lastOpenedFolder)
         {
             InitializeComponent();
             this.gamePlugin = gamePlugin;
             inputFilename = filename;
+            this.lastOpenedFolder = lastOpenedFolder;
             txtScale.Text = Globals.ExportTileScale.ToString(CultureInfo.InvariantCulture);
             chkSmooth.Checked = Globals.ExportSmoothScale;
             // For multiplayer maps, default to only exporting the bounds.
@@ -274,16 +276,24 @@ namespace MobiusEditor.Dialogs
             using (SaveFileDialog sfd = new SaveFileDialog())
             {
                 sfd.AutoUpgradeEnabled = false;
-                sfd.RestoreDirectory = true;
+                sfd.RestoreDirectory = false;
                 sfd.AddExtension = true;
-                sfd.Filter = "PNG files (*.png)|*.png|JPEG files (*.jpg)|*.jpg";
+                sfd.Filter = "PNG files (*.png)|*.png|JPEG files (*.jpg;*.jpeg)|*.jpg;*.jpeg";
                 string current = string.IsNullOrEmpty(txtPath.Text) ? inputFilename : txtPath.Text;
                 if (!String.IsNullOrEmpty(current))
                 {
                     sfd.InitialDirectory = Path.GetDirectoryName(current);
-                    bool isJpeg = "jpg".Equals(Path.GetExtension(current), StringComparison.OrdinalIgnoreCase);
+                    bool isJpeg = Regex.IsMatch(Path.GetExtension(current), "^\\.jpe?g$", RegexOptions.IgnoreCase);
                     sfd.FilterIndex = isJpeg ? 2 : 1;
-                    sfd.FileName = Path.ChangeExtension(current, isJpeg ? "jpg" : "png");
+                    // If already detected as jpeg by extension, there's no need to change the extension.
+                    sfd.FileName = isJpeg ? current : Path.ChangeExtension(current, ".png");
+                }
+                else
+                {
+                    bool classicLogic = Globals.UseClassicFiles && Globals.ClassicIgnoresRemasterPaths;
+                    string lastFolder = lastOpenedFolder;
+                    string constFolder = Directory.Exists(gamePlugin.DefaultSaveDirectory) ? gamePlugin.DefaultSaveDirectory : Environment.GetFolderPath(Environment.SpecialFolder.Personal);
+                    sfd.InitialDirectory = lastFolder ?? (classicLogic ? Program.ApplicationPath : constFolder);
                 }
                 if (sfd.ShowDialog(this) == DialogResult.OK)
                 {

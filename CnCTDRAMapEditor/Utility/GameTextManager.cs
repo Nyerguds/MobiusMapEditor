@@ -26,10 +26,14 @@ namespace MobiusEditor.Utility
 
         public string this[string key]
         {
-            get => gameText.TryGetValue(key, out string text) ? text : string.Empty;
+            get => GetString(key) ?? string.Empty;
             set => gameText[key] = value;
         }
-        //public string this[string textId] => gameText.TryGetValue(textId, out string text) ? text : textId;
+
+        public string GetString(string key)
+        {
+            return gameText.TryGetValue(key, out string val) ? val : null;
+        }
 
         public void Reset(GameType gameType)
         {
@@ -48,31 +52,28 @@ namespace MobiusEditor.Utility
             }
         }
 
-        public GameTextManager(IArchiveManager megafileManager, string gameTextFile)
+        public GameTextManager(IArchiveManager archiveManager, string gameTextFile)
         {
-            using (var stream = megafileManager.OpenFile(gameTextFile))
-            using (var reader = new BinaryReader(stream))
-            using (var unicodeReader = new BinaryReader(stream, Encoding.Unicode))
-            using (var asciiReader = new BinaryReader(stream, Encoding.ASCII))
+            using (Stream stream = archiveManager.OpenFile(gameTextFile))
+            using (BinaryReader reader = new BinaryReader(stream))
+            using (BinaryReader unicodeReader = new BinaryReader(stream, Encoding.Unicode))
+            using (BinaryReader asciiReader = new BinaryReader(stream, Encoding.ASCII))
             {
-                var numStrings = reader.ReadUInt32();
-                var stringSizes = new (uint textSize, uint idSize)[numStrings];
-                var strings = new string[numStrings];
-
-                for (var i = 0; i < numStrings; ++i)
+                uint numStrings = reader.ReadUInt32();
+                (uint textSize, uint idSize)[] stringSizes = new (uint, uint)[numStrings];
+                string[] strings = new string[numStrings];
+                for (int i = 0; i < numStrings; ++i)
                 {
                     reader.ReadUInt32();
                     stringSizes[i] = (reader.ReadUInt32(), reader.ReadUInt32());
                 }
-
-                for (var i = 0; i < numStrings; ++i)
+                for (int i = 0; i < numStrings; ++i)
                 {
                     strings[i] = new string(unicodeReader.ReadChars((int)stringSizes[i].textSize));
                 }
-
                 for (var i = 0; i < numStrings; ++i)
                 {
-                    var textId = new string(asciiReader.ReadChars((int)stringSizes[i].idSize));
+                    string textId = new string(asciiReader.ReadChars((int)stringSizes[i].idSize));
                     gameText[textId] = strings[i];
                 }
             }

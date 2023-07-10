@@ -224,9 +224,17 @@ namespace MobiusEditor.TiberianDawn
 
         public virtual string Name => "Tiberian Dawn";
 
-        public virtual string DefaultExtension => ".ini";
-
         public virtual GameType GameType => GameType.TiberianDawn;
+
+        public virtual string DefaultSaveDirectory => Constants.SaveDirectory;
+
+        public static string FileFilter = "Tiberian Dawn files (*.ini;*.bin)|*.ini;*.bin";
+
+        public virtual string OpenFilter => FileFilter;
+
+        public virtual string SaveFilter => FileFilter;
+
+        public virtual string DefaultExtension => ".ini";
 
         public virtual HouseType ActiveHouse { get; set; }
 

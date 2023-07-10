@@ -10,6 +10,12 @@ namespace MobiusEditor
         private OpenFileDialog fileDialog;
         public string SelectedPath => textBox1.Text;
 
+        public string LabelInfo
+        {
+            get { return lblInfo.Text; }
+            set { lblInfo.Text = value; }
+        }
+
         public GameInstallationPathForm()
         {
             InitializeComponent();
@@ -52,6 +58,7 @@ namespace MobiusEditor
                     "installation path for the C&C Remastered Collection. The " +
                     "installation directory is where the main executables of the " +
                     "collection (ClientG.exe and ClientLauncherG.exe) reside.", "Invalid directory");
+                DialogResult = DialogResult.None;
                 return;
             }
             textBox1.Text = dir;

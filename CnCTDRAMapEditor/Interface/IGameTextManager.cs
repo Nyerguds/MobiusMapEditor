@@ -15,7 +15,25 @@ namespace MobiusEditor.Interface
 {
     public interface IGameTextManager
     {
+        /// <summary>
+        /// Gets or overrides the value for the given key in the strings file.
+        /// </summary>
+        /// <param name="key">string key of the text to get or set.</param>
+        /// <returns>The found text, or an empty string if not found.</returns>
         string this[string key] { get; set; }
+
+        /// <summary>
+        /// Gets the value for the given key in the strings file, or null if it wasn't found.
+        /// </summary>
+        /// <param name="key">string key of the text to get.</param>
+        /// <returns>The found text, or null if not found.</returns>
+        string GetString(string key);
+
+        /// <summary>
+        /// Reset the game text manager for the given game type. This requires that the archive manager
+        /// is already reset for this game type, so the game text manager can read the correct files.
+        /// </summary>
+        /// <param name="gameType">The game type to initialise the game text manager for.</param>
         void Reset(GameType gameType);
     }
 }

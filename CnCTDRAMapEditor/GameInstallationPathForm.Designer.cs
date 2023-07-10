@@ -34,7 +34,7 @@
             this.btnContinue = new System.Windows.Forms.Button();
             this.btnQuit = new System.Windows.Forms.Button();
             this.btnClassic = new System.Windows.Forms.Button();
-            this.label2 = new System.Windows.Forms.Label();
+            this.lblInfo = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // label1
@@ -69,7 +69,6 @@
             // btnContinue
             // 
             this.btnContinue.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnContinue.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.btnContinue.Location = new System.Drawing.Point(328, 106);
             this.btnContinue.Name = "btnContinue";
             this.btnContinue.Size = new System.Drawing.Size(84, 23);
@@ -103,17 +102,16 @@
             this.btnClassic.UseVisualStyleBackColor = true;
             this.btnClassic.Click += new System.EventHandler(this.btnClassic_Click);
             // 
-            // label2
+            // lblInfo
             // 
-            this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            this.lblInfo.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.label2.Location = new System.Drawing.Point(13, 70);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(395, 33);
-            this.label2.TabIndex = 0;
-            this.label2.Text = "To skip this dialog and always start with the classic graphics, edit CnCTDRAMapEd" +
-    "itor.exe.config and set the \"UseClassicFiles\" setting to True.";
+            this.lblInfo.Location = new System.Drawing.Point(13, 70);
+            this.lblInfo.Name = "lblInfo";
+            this.lblInfo.Size = new System.Drawing.Size(395, 33);
+            this.lblInfo.TabIndex = 0;
+            this.lblInfo.Text = "INFO HERE";
             // 
             // GameInstallationPathForm
             // 
@@ -128,7 +126,7 @@
             this.Controls.Add(this.btnContinue);
             this.Controls.Add(this.btnBrowse);
             this.Controls.Add(this.textBox1);
-            this.Controls.Add(this.label2);
+            this.Controls.Add(this.lblInfo);
             this.Controls.Add(this.label1);
             this.Icon = global::MobiusEditor.Properties.Resources.GameIcon00;
             this.MaximizeBox = false;
@@ -148,6 +146,6 @@
         private System.Windows.Forms.Button btnContinue;
         private System.Windows.Forms.Button btnQuit;
         private System.Windows.Forms.Button btnClassic;
-        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Label lblInfo;
     }
 }

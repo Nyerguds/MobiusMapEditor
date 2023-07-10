@@ -23,6 +23,12 @@ namespace MobiusEditor.Interface
     {
         string LoadRoot { get; }
 
+        /// <summary>Gets the currently loaded game type. This can be changed with the <see cref="Reset(GameType, TheaterType)"/> function.</summary>
+        GameType CurrentGameType { get; }
+
+        /// <summary>Gets the currently loaded theater. This can be changed with the <see cref="Reset(GameType, TheaterType)"/> function.</summary>
+        TheaterType CurrentTheater { get; }
+
         /// <summary>
         /// Check whether a file exists in the currently loaded files.
         /// </summary>

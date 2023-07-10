@@ -14,7 +14,6 @@
 using MobiusEditor.Interface;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Text;
 
 namespace MobiusEditor.Utility
@@ -1327,7 +1326,7 @@ namespace MobiusEditor.Utility
             { "TEXT_UNIT_RA_CARR", 554 }, // Helicarrier
         };
 
-        private IArchiveManager fileManager;
+        private IArchiveManager archiveManager;
         // Name of the strings file for each game.
         private Dictionary<GameType, string> gameTextPaths;
         private Dictionary<string, int> gameTextMapping;
@@ -1343,29 +1342,33 @@ namespace MobiusEditor.Utility
 
         public void Reset(GameType gameType)
         {
-            stringsFile = null;
-            this.LoadGameMappings(gameType);
+            this.stringsFile = null;
+            this.gameTextMapping = null;
+            if (archiveManager.CurrentGameType != gameType)
+            {
+                throw new InvalidOperationException("The file manager is not reset to the given game; cannot load the correct files.");
+            }
+            this.gameTextMapping = this.GetGameMappings(gameType);
             if (gameTextPaths.TryGetValue(gameType, out string gameTextFile))
             {
                 try
                 {
-                    // File manager should be initialised for a specific game by getting a list of all
-                    // .mix files to open, and all .mix files that can occur inside those mix files.
-                    // This way, it can do a recursive search through everything.
-                    byte[] file = fileManager.ReadFile(gameTextFile);
+                    // File manager should be initialised for a specific game so it only opens the files
+                    // for that game. So a request for "conquer.eng" should always go to the right place.
+                    byte[] file = archiveManager.ReadFile(gameTextFile);
                     stringsFile = LoadFile(file);
                 }
                 catch { /*ignore; just gonna be empty I guess */ }
             }
         }
 
-        private string GetString(string key)
+        public string GetString(string key)
         {
             if (gameTextAdditions.TryGetValue(key, out string overrStr))
             {
                 return overrStr;
             }
-            if (stringsFile == null || gameTextMapping == null || !gameTextMapping.TryGetValue(key, out int val) || val >= stringsFile.Count)
+            if (stringsFile == null || gameTextMapping == null || !gameTextMapping.TryGetValue(key, out int val) || val < 0 || val >= stringsFile.Count)
             {
                 return null;
             }
@@ -1374,11 +1377,11 @@ namespace MobiusEditor.Utility
 
         public GameTextManagerClassic(IArchiveManager fileManager, Dictionary<GameType, string> gameTextPaths)
         {
-            this.fileManager = fileManager;
+            this.archiveManager = fileManager;
             this.gameTextPaths = gameTextPaths;
         }
 
-        public List<byte[]> LoadFile(byte[] fileData)
+        private List<byte[]> LoadFile(byte[] fileData)
         {
             if (fileData == null)
             {
@@ -1418,16 +1421,17 @@ namespace MobiusEditor.Utility
             return strings;
         }
 
-        private void LoadGameMappings(GameType gameType)
+        private Dictionary<string, int> GetGameMappings(GameType gameType)
         {
-            if (gameType == GameType.TiberianDawn || gameType == GameType.SoleSurvivor)
+            switch (gameType)
             {
-                this.gameTextMapping = StringMappingsTd;
+                case GameType.TiberianDawn:
+                case GameType.SoleSurvivor:
+                    return StringMappingsTd;
+                case GameType.RedAlert:
+                    return StringMappingsRa;
             }
-            else if (gameType == GameType.RedAlert)
-            {
-                this.gameTextMapping = StringMappingsRa;
-            }
+            return null;
         }
 
     }

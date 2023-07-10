@@ -260,6 +260,15 @@ namespace MobiusEditor.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool ClassicIgnoresRemasterPaths {
+            get {
+                return ((bool)(this["ClassicIgnoresRemasterPaths"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool ReportMissionDetection {
             get {
                 return ((bool)(this["ReportMissionDetection"]));

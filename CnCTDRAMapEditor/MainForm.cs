@@ -406,32 +406,29 @@ namespace MobiusEditor
         {
             // Always remove the label when showing an Open File dialog.
             SimpleMultiThreading.RemoveBusyLabel(this);
-            var pgmFilter = "|PGM files (*.pgm)|*.pgm";
-            string allSupported = "All supported types (*.ini;*.bin;*.mpr;*.pgm)|*.ini;*.bin;*.mpr;*.pgm";
-            String selectedFileName = null;
+            List<string> filters = new List<string>();
+            filters.Add("All supported types (*.ini;*.bin;*.mpr;*.pgm)|*.ini;*.bin;*.mpr;*.pgm");
+            filters.Add(TiberianDawn.GamePluginTD.FileFilter);
+            filters.Add(RedAlert.GamePluginRA.FileFilter);
+            filters.Add("PGM files (*.pgm)|*.pgm");
+            filters.Add("All files (*.*)|*.*");
+            string selectedFileName = null;
             using (OpenFileDialog ofd = new OpenFileDialog())
             {
                 ofd.AutoUpgradeEnabled = false;
                 ofd.RestoreDirectory = true;
-                ofd.Filter = allSupported + "|Tiberian Dawn files (*.ini;*.bin)|*.ini;*.bin|Red Alert files (*.mpr;*.ini)|*.mpr;*.ini" + pgmFilter + "|All files (*.*)|*.*";
+                ofd.Filter = String.Join("|", filters);
+                bool classicLogic = Globals.UseClassicFiles && Globals.ClassicIgnoresRemasterPaths;
+                string lastFolder = mru.Files.Select(f => f.DirectoryName).Where(d => Directory.Exists(d)).FirstOrDefault();
                 if (plugin != null)
                 {
-                    switch (plugin.GameType)
-                    {
-                        case GameType.TiberianDawn:
-                        case GameType.SoleSurvivor:
-                            ofd.InitialDirectory = Path.GetDirectoryName(filename) ?? TiberianDawn.Constants.SaveDirectory;
-                            //ofd.FilterIndex = 2;
-                            break;
-                        case GameType.RedAlert:
-                            ofd.InitialDirectory = Path.GetDirectoryName(filename) ?? RedAlert.Constants.SaveDirectory;
-                            //ofd.FilterIndex = 3;
-                            break;
-                    }
+                    string openFolder = Path.GetDirectoryName(filename);
+                    string constFolder = Directory.Exists(plugin.DefaultSaveDirectory) ? plugin.DefaultSaveDirectory : Environment.GetFolderPath(Environment.SpecialFolder.Personal);
+                    ofd.InitialDirectory = openFolder ?? lastFolder ?? (classicLogic ? Program.ApplicationPath : constFolder);
                 }
                 else
                 {
-                    ofd.InitialDirectory = Globals.RootSaveDirectory;
+                    ofd.InitialDirectory = lastFolder ?? (classicLogic ? Program.ApplicationPath : Globals.RootSaveDirectory);
                 }
                 if (ofd.ShowDialog() == DialogResult.OK)
                 {
@@ -489,27 +486,23 @@ namespace MobiusEditor
             using (SaveFileDialog sfd = new SaveFileDialog())
             {
                 sfd.AutoUpgradeEnabled = false;
-                sfd.RestoreDirectory = true;
-
+                sfd.RestoreDirectory = false;
+                bool classicLogic = Globals.UseClassicFiles && Globals.ClassicIgnoresRemasterPaths;
+                string lastFolder = mru.Files.Select(f => f.DirectoryName).Where(d => Directory.Exists(d)).FirstOrDefault();
+                string openFolder = Path.GetDirectoryName(filename);
+                string constFolder = Directory.Exists(plugin.DefaultSaveDirectory) ? plugin.DefaultSaveDirectory : Environment.GetFolderPath(Environment.SpecialFolder.Personal);
                 var filters = new List<string>();
-                switch (plugin.GameType)
-                {
-                    case GameType.TiberianDawn:
-                    case GameType.SoleSurvivor:
-                        filters.Add("Tiberian Dawn files (*.ini;*.bin)|*.ini;*.bin");
-                        sfd.InitialDirectory = TiberianDawn.Constants.SaveDirectory;
-                        break;
-                    case GameType.RedAlert:
-                        filters.Add("Red Alert files (*.mpr;*.ini)|*.mpr;*.ini");
-                        sfd.InitialDirectory = RedAlert.Constants.SaveDirectory;
-                        break;
-                }
+                filters.Add(plugin.SaveFilter);
                 filters.Add("All files (*.*)|*.*");
+                sfd.InitialDirectory = openFolder ?? lastFolder ?? (classicLogic ? Program.ApplicationPath : constFolder);
                 sfd.Filter = string.Join("|", filters);
                 if (!string.IsNullOrEmpty(filename))
                 {
-                    sfd.InitialDirectory = Path.GetDirectoryName(filename);
                     sfd.FileName = Path.GetFileName(filename);
+                }
+                else if (!plugin.MapNameIsEmpty(plugin.Map.BasicSection.Name))
+                {
+                    sfd.FileName = Path.GetFileName(plugin.Map.BasicSection.Name);
                 }
                 if (sfd.ShowDialog(this) == DialogResult.OK)
                 {
@@ -1002,7 +995,8 @@ namespace MobiusEditor
             {
                 return;
             }
-            using (ImageExportDialog imex = new ImageExportDialog(plugin, activeLayers, filename))
+            string lastFolder = mru.Files.Select(f => f.DirectoryName).Where(d => Directory.Exists(d)).FirstOrDefault();
+            using (ImageExportDialog imex = new ImageExportDialog(plugin, activeLayers, filename, lastFolder))
             {
                 imex.StartPosition = FormStartPosition.CenterParent;
                 imex.ShowDialog(this);
@@ -1400,7 +1394,7 @@ namespace MobiusEditor
             // Resetting to a specific game type will take care of classic mode.
             Globals.TheArchiveManager.Reset(gameType, theaterType);
             Globals.TheGameTextManager.Reset(gameType);
-            Globals.TheTilesetManager.Reset(theaterType);
+            Globals.TheTilesetManager.Reset(gameType, theaterType);
             Globals.TheTeamColorManager.Reset(gameType, theaterType);
             // Load game-specific data
             if (gameType == GameType.TiberianDawn)
@@ -1748,7 +1742,7 @@ namespace MobiusEditor
                     pl.Dispose();
                 }
                 // Unload graphics
-                Globals.TheTilesetManager.Reset(null);
+                Globals.TheTilesetManager.Reset(GameType.None, null);
                 // Clean up loaded file status
                 filename = null;
                 loadedFileType = FileType.None;

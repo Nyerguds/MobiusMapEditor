@@ -265,9 +265,17 @@ namespace MobiusEditor.RedAlert
 
         public string Name => "Red Alert";
 
-        public string DefaultExtension => ".mpr";
-
         public GameType GameType => GameType.RedAlert;
+
+        public string DefaultSaveDirectory => Constants.SaveDirectory;
+
+        public static string FileFilter = "Red Alert files (*.mpr;*.ini)|*.mpr;*.ini";
+        
+        public string SaveFilter => FileFilter;
+
+        public string OpenFilter => FileFilter;
+
+        public string DefaultExtension => ".mpr";
 
         public HouseType ActiveHouse { get; set; }
 

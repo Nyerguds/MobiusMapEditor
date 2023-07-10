@@ -35,7 +35,7 @@ namespace MobiusEditor.Utility
     {
         private readonly Dictionary<string, Tileset> tilesets = new Dictionary<string, Tileset>();
 
-        private readonly IArchiveManager megafileManager;
+        private readonly IArchiveManager archiveManager;
         private readonly TextureManager textureManager;
         private readonly string xmlPath;
         private readonly string texturesPath;
@@ -43,10 +43,10 @@ namespace MobiusEditor.Utility
 
         public TextureManager TextureManager { get { return textureManager; } }
 
-        public TilesetManager(IArchiveManager megafileManager, TextureManager textureManager, string xmlPath, string texturesPath)
+        public TilesetManager(IArchiveManager megafileManager, string xmlPath, string texturesPath)
         {
-            this.megafileManager = megafileManager;
-            this.textureManager = textureManager;
+            this.archiveManager = megafileManager;
+            this.textureManager = new TextureManager(megafileManager);
             this.xmlPath = xmlPath;
             this.texturesPath = texturesPath;
             LoadXmlfiles();
@@ -55,9 +55,14 @@ namespace MobiusEditor.Utility
         private void LoadXmlfiles()
         {
             HashSet<String> allowedTileSets = this.theater == null ? null : theater.Tilesets.ToHashSet();
+            this.textureManager.Reset();
+            foreach (var item in tilesets)
+            {
+                item.Value.Reset();
+            }
             tilesets.Clear();
             XmlDocument xmlDoc = null;
-            using (Stream xmlStream = megafileManager.OpenFile(xmlPath))
+            using (Stream xmlStream = archiveManager.OpenFile(xmlPath))
             {
                 if (xmlStream != null)
                 {
@@ -71,7 +76,7 @@ namespace MobiusEditor.Utility
                 {
                     string xmlFile = Path.Combine(Path.GetDirectoryName(xmlPath), fileNode.InnerText);
                     XmlDocument fileXmlDoc = null;
-                    using (Stream xmlStream = megafileManager.OpenFile(xmlFile))
+                    using (Stream xmlStream = archiveManager.OpenFile(xmlFile))
                     {
                         if (xmlStream != null)
                         {
@@ -97,13 +102,8 @@ namespace MobiusEditor.Utility
             }
         }
 
-        public void Reset(TheaterType theater)
+        public void Reset(GameType gameType, TheaterType theater)
         {
-            this.textureManager.Reset();
-            foreach (var item in tilesets)
-            {
-                item.Value.Reset();
-            }
             LoadXmlfiles();
             this.theater = theater;
         }
@@ -215,7 +215,7 @@ namespace MobiusEditor.Utility
                 if (disposing)
                 {
                     TextureManager.Dispose();
-                    this.Reset(null);
+                    this.Reset(GameType.None, null);
                 }
                 disposedValue = true;
             }

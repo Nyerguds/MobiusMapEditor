@@ -10,7 +10,7 @@
     <AssemblyName Condition="'$(Configuration)'=='Debug'">CnCTDRAMapEditorD</AssemblyName>
     <AssemblyName Condition="'$(Configuration)'=='Release'">CnCTDRAMapEditor</AssemblyName>
     <AssemblyName Condition="'$(Configuration)'=='Gold'">CnCTDRAMapEditor</AssemblyName>
-    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>false</Deterministic>
@@ -99,6 +99,9 @@
     <LangVersion>7.3</LangVersion>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -622,6 +625,7 @@
     <Compile Include="Utility\PropertyTracker.cs" />
     <Compile Include="Event\MapRefreshEventArgs.cs" />
     <Compile Include="Utility\SimpleMultiThreading.cs" />
+    <Compile Include="Utility\StartupLoader.cs" />
     <Compile Include="Utility\SteamAssist.cs" />
     <Compile Include="Utility\SteamworksUGC.cs" />
     <Compile Include="Utility\TeamColor.cs" />
@@ -757,6 +761,7 @@
     <EmbeddedResource Include="Tools\Dialogs\WaypointsToolDialog.resx">
       <DependentUpon>WaypointsToolDialog.cs</DependentUpon>
     </EmbeddedResource>
+    <None Include="app.manifest" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

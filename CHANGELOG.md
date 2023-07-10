@@ -532,3 +532,8 @@ Unreleased
 * Fixed bugs that crashed the undo/redo function on the waypoints tool.
 * Fixed tree names not getting initialised.
 * Fixed Tiberian Dawn's Blossom Trees showing the "barnacled" state at the start of their mutation, rather than their fully mutated state.
+* Changed the internal image handling of the classic sprite manager to 32-bpp images, to avoid strange colour corruption that occurred on some systems.
+* Fixed a crash in the mod lookup logic on PCs where Steam isn't installed.
+* Fixed bug where selecting an incorrect C&C Remastered folder would still close the dialog and save the incorrect path after showing the warning.
+* Groups of trees are now indicated as "Trees".
+* Opening a file or saving a new file will now default to the last folder from which a map was opened.

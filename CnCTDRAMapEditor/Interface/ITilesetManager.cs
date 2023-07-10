@@ -22,8 +22,9 @@ namespace MobiusEditor.Interface
         /// Resets the ITilesetManager instance to prepare it for a new game. This clears cached objects
         /// and makes any subsequent tile reads search specifically for tiles of this game.
         /// </summary>
-        /// <param name="theater"></param>
-        void Reset(TheaterType theater);
+        /// <param name="gameType">Game type.</param>
+        /// <param name="theater">Theater type.</param>
+        void Reset(GameType gameType, TheaterType theater);
 
         /// <summary>
         /// Gets team color adapted tile data. If <paramref name="tile"/> is null, nothing was found. If it is not null, a

@@ -197,10 +197,13 @@ namespace MobiusEditor.Utility
             }
         }
 
+        /*/
+        // Was added to make the editor work in .Net 4.6.2; No longer needed on 4.7.2.
         public static HashSet<T> ToHashSet<T>(this IEnumerable<T> source, IEqualityComparer<T> comparer = null)
         {
             return new HashSet<T>(source, comparer);
         }
+        //*/
 
         public static IEnumerable<byte[]> Split(this byte[] bytes, int length)
         {

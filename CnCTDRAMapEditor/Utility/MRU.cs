@@ -27,6 +27,8 @@ namespace MobiusEditor.Utility
 
         private readonly List<FileInfo> files = new List<FileInfo>();
 
+        public FileInfo[] Files => files.ToArray();
+
         private readonly ToolStripMenuItem menu;
         private readonly ToolStripMenuItem[] fileItems;
 

@@ -52,9 +52,10 @@ namespace MobiusEditor.Utility
         public TilesetManagerClassic(IArchiveManager archiveManager)
         {
             this.archiveManager = archiveManager;
+            this.Reset(GameType.None, null);
         }
 
-        public void Reset(TheaterType theater)
+        public void Reset(GameType gameType, TheaterType theater)
         {
             foreach (Dictionary<Int32, ShapeFrameData> tiles in this.tileData.Values)
             {
@@ -69,6 +70,11 @@ namespace MobiusEditor.Utility
                 tiles.Clear();
             }
             this.tileData.Clear();
+            this.theater = null;
+            if (gameType != GameType.None && theater != null && (this.archiveManager.CurrentGameType != gameType || this.archiveManager.CurrentTheater != theater))
+            {
+                throw new InvalidOperationException("The archive manager is not reset to the given game; cannot load the correct files.");
+            }
             this.theater = theater;
             this.currentlyLoadedPalette = TeamRemapManager.GetPaletteForTheater(this.archiveManager, theater);
         }
@@ -336,7 +342,12 @@ namespace MobiusEditor.Utility
                 pal[14] = Color.FromArgb(0x80, pal[14]);
                 pal[15] = Color.FromArgb(0x80, pal[15]);
             }
-            Bitmap bm = ImageUtils.BuildImage(data, width, height, width, PixelFormat.Format8bppIndexed, pal, null);
+            Bitmap bm;
+            using (Bitmap bm8 = ImageUtils.BuildImage(data, width, height, width, PixelFormat.Format8bppIndexed, pal, null))
+            {
+                // Convert to 32-bit, to avoid weird artifacts when using ColorMatrix on it.
+                bm = new Bitmap(bm8);
+            }
             tile = new Tile(bm, opaqueBounds);
             shapeFrame.TeamColorTiles.Add(teamColorName, tile);
             return tile;

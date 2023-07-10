@@ -195,6 +195,7 @@ namespace MobiusEditor.Utility
         public TeamRemapManager(IArchiveManager fileManager)
         {
             this.mixfileManager = fileManager;
+            this.Reset(GameType.None, null);
         }
 
         public void Reset(GameType gameType, TheaterType theater)

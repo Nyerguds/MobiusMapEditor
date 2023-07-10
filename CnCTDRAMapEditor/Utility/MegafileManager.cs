@@ -28,7 +28,9 @@ namespace MobiusEditor.Utility
         private MixfileManager mixFm;
         public MixfileManager ClassicFileManager { get { return mixFm; } }
 
-        private GameType currentGameType;
+        public GameType CurrentGameType { get; private set; }
+
+        public TheaterType CurrentTheater { get; private set; }
 
         public String LoadRoot { get; private set; }
 
@@ -70,7 +72,7 @@ namespace MobiusEditor.Utility
             {
                 throw new ObjectDisposedException(GetType().FullName);
             }
-            if (modPathsPerGame != null && modPathsPerGame.TryGetValue(currentGameType, out string[] modPaths) && modPaths != null && modPaths.Length > 0)
+            if (modPathsPerGame != null && modPathsPerGame.TryGetValue(CurrentGameType, out string[] modPaths) && modPaths != null && modPaths.Length > 0)
             {
                 foreach (string modPath in modPaths)
                 {
@@ -94,7 +96,7 @@ namespace MobiusEditor.Utility
             {
                 return File.Open(loosePath, FileMode.Open, FileAccess.Read);
             }
-            if (modPathsPerGame != null && modPathsPerGame.TryGetValue(currentGameType, out string[] modPaths) && modPaths != null && modPaths.Length > 0)
+            if (modPathsPerGame != null && modPathsPerGame.TryGetValue(CurrentGameType, out string[] modPaths) && modPaths != null && modPaths.Length > 0)
             {
                 foreach (string modFilePath in modPaths)
                 {
@@ -155,7 +157,8 @@ namespace MobiusEditor.Utility
             {
                 throw new ObjectDisposedException(GetType().FullName);
             }
-            this.currentGameType = gameType;
+            this.CurrentGameType = gameType;
+            this.CurrentTheater = theater;
             mixFm.Reset(gameType, theater);
         }
 

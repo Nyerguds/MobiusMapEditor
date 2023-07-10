@@ -49,10 +49,12 @@ namespace MobiusEditor.Utility
         private readonly List<MixInfo> currentMixFileInfo = new List<MixInfo>();
         private List<string> currentMixNames = new List<string>();
         private Dictionary<string, Mixfile> currentMixFiles;
-        private GameType currentGameType = GameType.None;
 
         public string LoadRoot { get { return applicationPath; } }
 
+        public GameType CurrentGameType { get; private set; }
+
+        public TheaterType CurrentTheater { get; private set; }
 
         public MixfileManager(String applicationPath, Dictionary<GameType, String> gameFolders, Dictionary<GameType, string[]> modPaths)
         {
@@ -195,12 +197,12 @@ namespace MobiusEditor.Utility
 
         public Stream OpenFile(String path)
         {
-            return OpenFile(path, currentGameType, currentMixFileInfo);
+            return OpenFile(path, CurrentGameType, currentMixFileInfo);
         }
 
         public Byte[] ReadFile(string path)
         {
-            using (Stream file = OpenFile(path, currentGameType, currentMixFileInfo))
+            using (Stream file = OpenFile(path, CurrentGameType, currentMixFileInfo))
             {
                 if (file == null)
                 {
@@ -212,7 +214,7 @@ namespace MobiusEditor.Utility
 
         public Stream OpenFileClassic(String path)
         {
-            return OpenFile(path, currentGameType, currentMixFileInfo);
+            return OpenFile(path, CurrentGameType, currentMixFileInfo);
         }
 
         public Byte[] ReadFileClassic(string path)
@@ -291,7 +293,7 @@ namespace MobiusEditor.Utility
             }
             currentMixFileInfo.Clear();
             currentMixNames = new List<string>();
-            this.currentGameType = GameType.None;
+            this.CurrentGameType = GameType.None;
             // Load current files
             // Game folders dictionary determines which games are "known" to the system.
             if (gameFolders == null || !gameFolders.TryGetValue(gameType, out string gamePath))
@@ -331,7 +333,8 @@ namespace MobiusEditor.Utility
                 // This automatically excludes already-loaded files.
                 this.AddMixFileIfPresent(foundMixFiles, newMixFileInfo, mixInfo, gamePath);
             }
-            this.currentGameType = gameType;
+            this.CurrentGameType = gameType;
+            this.CurrentTheater = theater;
             currentMixFiles = foundMixFiles;
             currentMixNames = foundMixFiles.Select(info => info.Key).ToList();
             HashSet<string> foundNames = currentMixNames.ToHashSet(StringComparer.InvariantCultureIgnoreCase);

@@ -41,11 +41,20 @@ namespace MobiusEditor.Interface
         /// <summary>Name of the game.</summary>
         string Name { get; }
 
-        /// <summary>The map.</summary>
-        string DefaultExtension { get; }
-
         /// <summary>The game type as enum.</summary>
         GameType GameType { get; }
+
+        /// <summary>The game type as enum.</summary>
+        string DefaultSaveDirectory { get; }
+
+        /// <summary>The file open filter for this game.</summary>
+        string OpenFilter { get; }
+
+        /// <summary>The file save filter for this game.</summary>
+        string SaveFilter { get; }
+
+        /// <summary>The default map extension.</summary>
+        string DefaultExtension { get; }
 
         /// <summary>Currently edited house.</summary>
         HouseType ActiveHouse { get; set; }
