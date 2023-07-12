@@ -1913,7 +1913,7 @@ namespace MobiusEditor.TiberianDawn
             Map.Triggers.Clear();
             Map.Triggers.AddRange(triggers);
             Map.TeamTypes.Sort((x, y) => comparer.Compare(x.Name, y.Name));
-            extraSections = ini.Sections;
+            extraSections = ini.Sections.Clone();
             bool switchedToSolo = !forSole && forceSoloMission && !basic.SoloMission
                 && ((triggers.Any(t => t.Action1.ActionType == ActionTypes.ACTION_WIN) && triggers.Any(t => t.Action1.ActionType == ActionTypes.ACTION_LOSE))
                     || triggers.Any(t => t.Event1.EventType == EventTypes.EVENT_ANY && t.Action1.ActionType == ActionTypes.ACTION_WINLOSE));
@@ -2271,7 +2271,7 @@ namespace MobiusEditor.TiberianDawn
         {
             if (extraSections != null)
             {
-                ini.Sections.AddRange(extraSections);
+                ini.Sections.AddRange(extraSections.Clone());
             }
             SaveIniBasic(ini, fileName);
             SaveIniMap(ini);

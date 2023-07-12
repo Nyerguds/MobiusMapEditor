@@ -73,9 +73,7 @@ namespace MobiusEditor.Tools
             this.waypointCombo = waypointCombo;
             this.waypointCombo.DisplayMember = "";
             this.waypointCombo.DataSource = plugin.Map.Waypoints.ToArray();
-            this.waypointCombo.SelectedIndexChanged += this.WaypointCombo_SelectedIndexChanged;
             navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
-            this.WaypointCombo_SelectedIndexChanged(null, null);
             UpdateStatus();
         }
 
@@ -87,15 +85,24 @@ namespace MobiusEditor.Tools
                 return;
             }
             int selectedIndex = waypointCombo.SelectedIndex;
-            waypointCombo.DataSource = null;
-            waypointCombo.Items.Clear();
+            this.waypointCombo.SelectedIndexChanged -= this.WaypointCombo_SelectedIndexChanged;
+            this.waypointCombo.DataSource = null;
+            this.waypointCombo.Items.Clear();
             Waypoint[] wp = map.Waypoints.ToArray();
-            waypointCombo.DataSource = wp;
+            this.waypointCombo.DataSource = wp;
+            this.waypointCombo.SelectedIndexChanged += this.WaypointCombo_SelectedIndexChanged;
             Waypoint selected = null;
             if (selectedIndex >= 0 && selectedIndex < wp.Length)
             {
                 lastSelectedIndex = selectedIndex;
-                waypointCombo.SelectedIndex = selectedIndex;
+                try
+                {
+                    waypointCombo.SelectedIndex = selectedIndex;
+                }
+                catch (ArgumentOutOfRangeException)
+                {
+                    // Not sure if this can still happen but if it does... ignore it.
+                }
                 selected = wp[selectedIndex];
             }
             this.jumpToButton.Enabled = selected != null && selected.Cell.HasValue;
@@ -200,9 +207,11 @@ namespace MobiusEditor.Tools
             int? oldCell = waypoint.Cell;
             waypoint.Cell = cell;
             CommitChange(waypoint, oldCell, cell);
+            this.waypointCombo.SelectedIndexChanged -= this.WaypointCombo_SelectedIndexChanged;
             waypointCombo.DataSource = null;
             waypointCombo.Items.Clear();
             waypointCombo.DataSource = wp.ToArray();
+            this.waypointCombo.SelectedIndexChanged += this.WaypointCombo_SelectedIndexChanged;
             waypointCombo.SelectedIndex = selected;
             if (oldCell.HasValue)
             {
@@ -557,6 +566,7 @@ namespace MobiusEditor.Tools
             WaypointFlag flag = WaypointFlag.None;
             Waypoint[] wps = map.Waypoints;
             int wplen = map.Waypoints.Length;
+            // Collect all existing flags in the list.
             for (int i = 0; i < wplen; ++i) {
                 flag |= wps[i].Flag;
             }
@@ -577,7 +587,6 @@ namespace MobiusEditor.Tools
             {
                 specialKeys.Add("S");
             }
-
             if (placementMode)
             {
                 statusLbl.Text = "Left-Click to set cell waypoint, Right-Click to clear cell waypoint, " + String.Join("/", specialKeys) + " to select a special waypoint";
@@ -597,8 +606,8 @@ namespace MobiusEditor.Tools
             waypointCombo.Items.Clear();
             waypointCombo.DataSource = map.Waypoints.ToArray();
             waypointCombo.SelectedIndex = selected;
-            lastSelectedIndex = selected;
             this.waypointCombo.SelectedIndexChanged += this.WaypointCombo_SelectedIndexChanged;
+            WaypointCombo_SelectedIndexChanged(null, null);
         }
 
         public override void Activate()
@@ -615,7 +624,6 @@ namespace MobiusEditor.Tools
             this.url.Undone += Url_UndoRedoDone;
             this.url.Redone += Url_UndoRedoDone;
             this.UpdateStatus();
-            this.RefreshPreviewPanel();
         }
 
         public override void Deactivate()

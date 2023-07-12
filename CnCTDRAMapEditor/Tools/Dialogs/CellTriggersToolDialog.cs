@@ -14,7 +14,6 @@
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using System;
 using System.Drawing;
-using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
 using MobiusEditor.Controls;
@@ -41,8 +40,8 @@ namespace MobiusEditor.Tools.Dialogs
             {
                 g.DrawIcon(SystemIcons.Information, new Rectangle(0, 0, infoImage.Width, infoImage.Height));
             }
-            lblTriggerInfo.Image = infoImage;
-            lblTriggerInfo.ImageAlign = ContentAlignment.MiddleCenter;
+            lblTriggerTypesInfo.Image = infoImage;
+            lblTriggerTypesInfo.ImageAlign = ContentAlignment.MiddleCenter;
         }
 
         protected override void InitializeInternal(MapPanel mapPanel, MapLayerFlag activeLayers, ToolStripStatusLabel toolStatusLabel, ToolTip mouseToolTip,
@@ -83,7 +82,7 @@ namespace MobiusEditor.Tools.Dialogs
             {
                 try
                 {
-                    lblTriggerInfo.Image = null;
+                    lblTriggerTypesInfo.Image = null;
                 }
                 catch { /*ignore*/}
                 try

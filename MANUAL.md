@@ -105,7 +105,7 @@ In classic graphics mode, the editor can still use mods, if they contain classic
 
 ### Editor fine tuning:
 
-* **ZoomToBoundsOnLoad**: When enabled, causes the editor to zoom in to the map bounds when loading an existing map.
+* **ZoomToBoundsOnLoad**: Defaults to True. When enabled, causes the editor to zoom in to the map bounds when loading an existing map.
 * **MapGridColor**: Color for drawing the map grid, as "A,R,G,B". This includes the alpha value, because the grid is semitransparent by default.
 * **MapBackColor**: Background color for the map screen, as "R,G,B". This defaults to dark grey, so users can see the actual map outline on Red Alert Interior maps.
 * **MapScale**: Scaling multiplier for the size at which assets are rendered on the map. Scaling down the rendered map size will make the UI more responsive. Negative values will enable smooth scaling, which gives nicer graphics but will make the UI noticeable _less_ responsive. Defaults to 0.5.
@@ -117,6 +117,7 @@ In classic graphics mode, the editor can still use mods, if they contain classic
 * **UndoRedoStackSize**: The amount of undo/redo actions stored in memory. Defaults to 100.
 * **MinimumClampSize**: Minimum size of the tool window that will automatically be forced to remain in the screen area. If set to 0,0, this will default to the size of the entire tool window.
 * **ClassicPathTD** / **ClassicPathRA** / **ClassicPathSS**: Path to load the classic files from for each of the game types. If the directory entered in this cannot be found, this reverts to predefined subfolders of the editor's location; "Classic\TD" for Tiberian Dawn and Sole Survivor, and "Classic\RA" for Red Alert.
+* **ClassicIgnoresRemasterPaths**: Defaults to True. When enabled, switching the editor to classic mode will make it stop using the Remaster's specific folders under Documents, and default to the program folder instead.
 
 ### Editor behavior tweaks:
 

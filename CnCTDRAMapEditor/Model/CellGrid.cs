@@ -62,6 +62,8 @@ namespace MobiusEditor.Model
     public class CellGrid<T> : IEnumerable<(int Cell, T Value)>, IEnumerable
     {
         private readonly CellMetrics metrics;
+        public CellMetrics Metrics => metrics;
+
         private readonly T[,] cells;
 
         public T this[int y, int x]

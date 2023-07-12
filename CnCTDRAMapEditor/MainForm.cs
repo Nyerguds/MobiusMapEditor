@@ -1615,10 +1615,8 @@ namespace MobiusEditor
             }
             catch (Exception ex)
             {
-                string errorMessage = "Error loading map: " + ex.Message;
-#if DEBUG
+                string errorMessage = "Error saving map: " + ex.Message;
                 errorMessage += "\n\n" + ex.StackTrace;
-#endif
                 return (saveFilename, false, errorMessage);
             }
         }

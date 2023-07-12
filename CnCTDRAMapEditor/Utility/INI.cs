@@ -120,6 +120,11 @@ namespace MobiusEditor.Utility
             return true;
         }
 
+        public void Clear()
+        {
+            KeyValues.Clear();
+        }
+
         public IEnumerator<(string Key, string Value)> GetEnumerator()
         {
             foreach (DictionaryEntry entry in KeyValues)
@@ -194,6 +199,21 @@ namespace MobiusEditor.Utility
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        public INISection Clone()
+        {
+            INISection clone = new INISection(this.Name);
+            foreach ((string Key, string Value) item in Keys)
+            {
+                clone[item.Key] = item.Value;
+            }
+            return clone;
+        }
+
+        public void Clear()
+        {
+            Keys.Clear();
         }
 
         public override string ToString()
@@ -279,6 +299,19 @@ namespace MobiusEditor.Utility
             INISection section = this[name];
             Sections.Remove(name);
             return section;
+        }
+
+        public INISectionCollection Clone()
+        {
+            INISectionCollection clone = new INISectionCollection();
+            foreach (DictionaryEntry entry in Sections)
+            {
+                if (entry.Value is INISection section)
+                {
+                    clone.Add(section.Clone());
+                }                
+            }
+            return clone;
         }
 
         public IEnumerator<INISection> GetEnumerator()
@@ -566,14 +599,18 @@ namespace MobiusEditor.Utility
 
     public partial class INI
     {
-        public static void ParseSection<T>(ITypeDescriptorContext context, INISection section, T data)
+        public static void ParseSection(ITypeDescriptorContext context, INISection section, object data)
         {
             ParseSection(context, section, data, false);
         }
 
-        public static List<(string, string)> ParseSection<T>(ITypeDescriptorContext context, INISection section, T data, bool returnErrorsList)
+        public static List<(string, string)> ParseSection(ITypeDescriptorContext context, INISection section, object data, bool returnErrorsList)
         {
             List<(string, string)> errors = returnErrorsList ? new List<(string, string)>() : null;
+            if (data == null)
+            {
+                return errors;
+            }
             PropertyDescriptorCollection propertyDescriptors = TypeDescriptor.GetProperties(data);
             IEnumerable<PropertyInfo> properties = data.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => p.GetSetMethod() != null);
             foreach (PropertyInfo property in properties)
@@ -604,7 +641,7 @@ namespace MobiusEditor.Utility
             return errors;
         }
 
-        public static void RemoveHandledKeys<T>(INISection section, T data)
+        public static void RemoveHandledKeys(INISection section, object data)
         {
             PropertyDescriptorCollection propertyDescriptors = TypeDescriptor.GetProperties(data);
             IEnumerable<PropertyInfo> properties = data.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => p.GetSetMethod() != null);
@@ -618,8 +655,12 @@ namespace MobiusEditor.Utility
             }
         }
 
-        public static void WriteSection<T>(ITypeDescriptorContext context, INISection section, T data)
+        public static void WriteSection(ITypeDescriptorContext context, INISection section, object data)
         {
+            if (data == null)
+            {
+                return;
+            }
             PropertyDescriptorCollection propertyDescriptors = TypeDescriptor.GetProperties(data);
             IEnumerable<PropertyInfo> properties = data.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => p.GetGetMethod() != null);
             foreach (PropertyInfo property in properties)
@@ -640,8 +681,8 @@ namespace MobiusEditor.Utility
             }
         }
 
-        public static void ParseSection<T>(INISection section, T data) => ParseSection(null, section, data);
+        public static void ParseSection(INISection section, object data) => ParseSection(null, section, data);
 
-        public static void WriteSection<T>(INISection section, T data) => WriteSection(null, section, data);
+        public static void WriteSection(INISection section, object data) => WriteSection(null, section, data);
     }
 }

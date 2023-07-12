@@ -193,11 +193,12 @@ namespace MobiusEditor.SoleSurvivor
             INISection overlayBackup = null;
             if (extraSections != null)
             {
+                INISectionCollection extra = extraSections.Clone();
                 // Commonly found in official maps as backups of beta versions of the map.
                 // If found, place them under their respective original sections.
-                waypointBackup = extraSections.Extract("OldWaypoints");
-                overlayBackup = extraSections.Extract("OldOverlay");
-                ini.Sections.AddRange(extraSections);
+                waypointBackup = extra.Extract("OldWaypoints");
+                overlayBackup = extra.Extract("OldOverlay");
+                ini.Sections.AddRange(extra.Clone());
             }
             INISection basicSection = SaveIniBasic(ini, fileName);
             // Not used for SS; not Remaster, and no single play in it.

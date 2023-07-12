@@ -2784,7 +2784,7 @@ namespace MobiusEditor.RedAlert
 
         private void SaveINI(INI ini, FileType fileType, string fileName)
         {
-            INISection aftermathSection = null;
+            INISection oldAftermathSection = null;
             List<INISection> addedExtra = new List<INISection>();
             if (extraSections != null)
             {
@@ -2792,11 +2792,11 @@ namespace MobiusEditor.RedAlert
                 {
                     if ("Aftermath".Equals(section.Name, StringComparison.OrdinalIgnoreCase))
                     {
-                        aftermathSection = section;
+                        oldAftermathSection = section.Clone();
                     }
                     else
                     {
-                        addedExtra.Add(section);
+                        addedExtra.Add(section.Clone());
                     }
                 }
             }
@@ -2804,17 +2804,20 @@ namespace MobiusEditor.RedAlert
             // Make new Aftermath section
             INISection newAftermathSection = new INISection("Aftermath");
             newAftermathSection["NewUnitsEnabled"] = basic.ExpansionEnabled ? "1" : "0";
-            if (aftermathSection != null)
+            if (oldAftermathSection != null)
             {
                 // If old section is present, remove NewUnitsEnabled value from it, and copy the remainder into the new one.
-                aftermathSection.Keys.Remove("NewUnitsEnabled");
-                foreach ((string key, string value) in aftermathSection)
+                oldAftermathSection.Keys.Remove("NewUnitsEnabled");
+                foreach ((string key, string value) in oldAftermathSection)
                 {
                     newAftermathSection[key] = value;
                 }
             }
-            // Add Aftermath section
-            ini.Sections.Add(newAftermathSection);
+            // Add Aftermath section, either if it's enabled or if any custom info was added into the section besides the Enabled status.
+            if (basic.ExpansionEnabled || newAftermathSection.Keys.Count > 1)
+            {
+                ini.Sections.Add(newAftermathSection);
+            }
             // Add any other rules / unmanaged sections.
             ini.Sections.AddRange(addedExtra);
             // Clean up video names

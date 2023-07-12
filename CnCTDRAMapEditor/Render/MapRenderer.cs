@@ -208,11 +208,13 @@ namespace MobiusEditor.Render
                     String name = ttype.Name;
                     Int32 icon = template?.Icon ?? ((topLeft.X & 0x03) | ((topLeft.Y) & 0x03) << 2);
                     // This should never happen; group tiles should never be placed down on the map.
+                    /*
                     if ((ttype.Flag & TemplateTypeFlag.Group) == TemplateTypeFlag.Group)
                     {
                         name = ttype.GroupTiles[icon];
                         icon = 0;
                     }
+                    */
                     // If something is actually placed on the map, show it, even if it has no graphics.
                     bool success = Globals.TheTilesetManager.GetTileData(name, icon, out Tile tile, true, false);
                     if (tile != null)
@@ -2266,7 +2268,14 @@ namespace MobiusEditor.Render
                     {
                         LandType[] types = template.Type.LandTypes;
                         int icon = (template.Type.Flag & (TemplateTypeFlag.Clear | TemplateTypeFlag.RandomCell)) != TemplateTypeFlag.None ? 0 : template.Icon;
-                        land = icon < types.Length ? types[icon] : LandType.Clear;
+                        // This should never happen; group tiles should never be placed down on the map.
+                        /*
+                        if ((template.Type.Flag & TemplateTypeFlag.Group) == TemplateTypeFlag.Group && template.Icon < template.Type.GroupTiles.Length)
+                        {
+                            types = plugin.Map.TemplateTypes.FirstOrDefault(t => String.Equals(t.Name, template.Type.GroupTiles[template.Icon]))?.LandTypes;
+                        }
+                        */
+                        land = types != null && icon < types.Length ? types[icon] : LandType.Clear;
                     }
                     // Exclude uninitialised terrain
                     if (land != LandType.None)

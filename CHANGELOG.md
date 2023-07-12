@@ -532,8 +532,13 @@ Unreleased
 * Fixed bugs that crashed the undo/redo function on the waypoints tool.
 * Fixed tree names not getting initialised.
 * Fixed Tiberian Dawn's Blossom Trees showing the "barnacled" state at the start of their mutation, rather than their fully mutated state.
-* Changed the internal image handling of the classic sprite manager to 32-bpp images, to avoid strange colour corruption that occurred on some systems.
+* Fixed colour corruption that occurred on some systems when showing semitransparent images in Classic mode, by making all internal image handling use 32 bpp images.
 * Fixed a crash in the mod lookup logic on PCs where Steam isn't installed.
 * Fixed bug where selecting an incorrect C&C Remastered folder would still close the dialog and save the incorrect path after showing the warning.
-* Groups of trees are now indicated as "Trees".
+* Groups of trees are now indicated as "Trees" instead of "Tree".
 * Opening a file or saving a new file will now default to the last folder from which a map was opened.
+* Fixed bug where having custom ini content in managed sections (like Basic and the houses) would make the fully filled section show up in "INI Rules & Tweaks" after saving.
+* Custom-added ini keys on managed sections are now added to the end of the section rather then at the start.
+* Fixed crashes when selecting WallGroups in Interior theater when map passability indication is enabled.
+* Fixed issues related to previewing the placement of WallGroup tiles on the map.
+* Disabled DPI awareness, because apparently it only had negative side effects.

@@ -33,7 +33,7 @@ namespace MobiusEditor.Tools.Dialogs
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.label1 = new System.Windows.Forms.Label();
             this.triggerComboBox = new System.Windows.Forms.ComboBox();
-            this.lblTriggerInfo = new System.Windows.Forms.Label();
+            this.lblTriggerTypesInfo = new System.Windows.Forms.Label();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.btnJumpTo = new System.Windows.Forms.Button();
             this.tableLayoutPanel1.SuspendLayout();
@@ -49,7 +49,7 @@ namespace MobiusEditor.Tools.Dialogs
             this.tableLayoutPanel1.Controls.Add(this.btnJumpTo, 1, 1);
             this.tableLayoutPanel1.Controls.Add(this.label1, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.triggerComboBox, 1, 0);
-            this.tableLayoutPanel1.Controls.Add(this.lblTriggerInfo, 2, 0);
+            this.tableLayoutPanel1.Controls.Add(this.lblTriggerTypesInfo, 2, 0);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
@@ -84,16 +84,16 @@ namespace MobiusEditor.Tools.Dialogs
             // 
             // lblTriggerInfo
             // 
-            this.lblTriggerInfo.AutoSize = true;
-            this.lblTriggerInfo.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lblTriggerInfo.Location = new System.Drawing.Point(221, 0);
-            this.lblTriggerInfo.Margin = new System.Windows.Forms.Padding(0);
-            this.lblTriggerInfo.Name = "lblTriggerInfo";
-            this.lblTriggerInfo.Size = new System.Drawing.Size(29, 27);
-            this.lblTriggerInfo.TabIndex = 10;
-            this.lblTriggerInfo.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.lblTriggerInfo.MouseEnter += new System.EventHandler(this.LblTriggerInfo_MouseEnter);
-            this.lblTriggerInfo.MouseLeave += new System.EventHandler(this.LblTriggerInfo_MouseLeave);
+            this.lblTriggerTypesInfo.AutoSize = true;
+            this.lblTriggerTypesInfo.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblTriggerTypesInfo.Location = new System.Drawing.Point(221, 0);
+            this.lblTriggerTypesInfo.Margin = new System.Windows.Forms.Padding(0);
+            this.lblTriggerTypesInfo.Name = "lblTriggerInfo";
+            this.lblTriggerTypesInfo.Size = new System.Drawing.Size(29, 27);
+            this.lblTriggerTypesInfo.TabIndex = 10;
+            this.lblTriggerTypesInfo.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.lblTriggerTypesInfo.MouseEnter += new System.EventHandler(this.LblTriggerInfo_MouseEnter);
+            this.lblTriggerTypesInfo.MouseLeave += new System.EventHandler(this.LblTriggerInfo_MouseLeave);
             // 
             // btnJumpTo
             // 
@@ -135,7 +135,7 @@ namespace MobiusEditor.Tools.Dialogs
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.ComboBox triggerComboBox;
         private System.Windows.Forms.ToolTip toolTip1;
-        private System.Windows.Forms.Label lblTriggerInfo;
+        private System.Windows.Forms.Label lblTriggerTypesInfo;
         private System.Windows.Forms.Button btnJumpTo;
     }
 }

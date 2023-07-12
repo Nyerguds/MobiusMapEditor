@@ -81,9 +81,9 @@ namespace MobiusEditor.Utility
         /// <param name="data">Data object.</param>
         /// <param name="context">Map context to read data.</param>
         /// <returns>Null if the section was not found, otherwise the trimmed section.</returns>
-        public static INISection ParseAndLeaveRemainder<T>(INI ini, string name, T data, MapContext context)
+        public static INISection ParseAndLeaveRemainder(INI ini, string name, object data, MapContext context)
         {
-            return ParseAndLeaveRemainder<T>(ini, name, data, context, false, out _);
+            return ParseAndLeaveRemainder(ini, name, data, context, false, out _);
         }
 
         /// <summary>
@@ -96,7 +96,7 @@ namespace MobiusEditor.Utility
         /// <param name="data">Data object.</param>
         /// <param name="context">Map context to read data.</param>
         /// <returns>Null if the section was not found, otherwise the trimmed section.</returns>
-        public static INISection ParseAndLeaveRemainder<T>(INI ini, string name, T data, MapContext context, bool returnErrors, out List<(string, string)> errors)
+        public static INISection ParseAndLeaveRemainder(INI ini, string name, object data, MapContext context, bool returnErrors, out List<(string, string)> errors)
         {
             errors = null;
             var dataSection = ini.Sections[name];
@@ -122,13 +122,17 @@ namespace MobiusEditor.Utility
         /// <param name="context">Map context to write data.</param>
         /// <param name="shouldAdd">False if the object is not supposed to be added. This will be ignored if a section with that name is found that contains keys not managed by the data object.</param>
         /// <returns>Null if the section was not found, otherwise the final re-added section.</returns>
-        public static INISection FillAndReAdd<T>(INI ini, string name, T data, MapContext context, bool shouldAdd)
+        public static INISection FillAndReAdd(INI ini, string name, object data, MapContext context, bool shouldAdd)
         {
-            INISection dataSection = ini.Sections.Extract(name);
-            if (dataSection != null)
+            // Removes the section from the ini object.
+            INISection originalDataSection = ini.Sections.Extract(name);
+            // Clone to store existing data to re-add.
+            INISection existingDataSection = null;
+            if (originalDataSection != null)
             {
-                INI.RemoveHandledKeys(dataSection, data);
-                if (dataSection.Keys.Count > 0)
+                existingDataSection = originalDataSection.Clone();
+                INI.RemoveHandledKeys(existingDataSection, data);
+                if (existingDataSection.Keys.Count > 0)
                 {
                     // Contains extra keys.
                     shouldAdd = true;
@@ -138,16 +142,22 @@ namespace MobiusEditor.Utility
             {
                 return null;
             }
-            if (dataSection != null)
+            // either recycle the old one, or make a new one. This retains the original object, which can be important for references.
+            INISection newDataSection = originalDataSection ?? new INISection(name);
+            ini.Sections.Add(newDataSection);
+            // Clear, in case it was the original one.
+            newDataSection.Clear();
+            // Add object's data into the section.
+            INI.WriteSection(context, newDataSection, data);
+            // Add any custom added keys into the section.
+            if (existingDataSection != null)
             {
-                ini.Sections.Add(dataSection);
+                foreach ((string key, string value) in existingDataSection)
+                {
+                    newDataSection[key] = value;
+                }
             }
-            else
-            {
-                dataSection = ini.Sections.Add(name);
-            }
-            INI.WriteSection(context, dataSection, data);
-            return dataSection;
+            return newDataSection;
         }
 
         /// <summary>
@@ -158,7 +168,7 @@ namespace MobiusEditor.Utility
         /// <param name="ini">Ini object.</param>
         /// <param name="data">Data object.</param>
         /// <param name="name">Name of the section.</param>
-        public static void ClearDataFrom<T>(INI ini, string name, T data)
+        public static void ClearDataFrom(INI ini, string name, object data)
         {
             var basicSection = ini.Sections[name];
             if (basicSection != null)
