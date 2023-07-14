@@ -127,7 +127,7 @@ namespace MobiusEditor.Interface
         /// Validate the map to see if there are any blocking errors preventing it from saving.
         /// </summary>
         /// <param name="forWarnings">true if this is not the actual map validation, but a check that should return any warnings to show that the user can still choose to ignore.</param>
-        /// <returns>true if the validation succeeded.</returns>
+        /// <returns>Null if the validation succeeded, else a string containing the problems that occurred..</returns>
         string Validate(Boolean forWarnings);
 
         /// <summary>

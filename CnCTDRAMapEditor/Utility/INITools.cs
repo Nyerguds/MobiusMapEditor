@@ -152,9 +152,9 @@ namespace MobiusEditor.Utility
             // Add any custom added keys into the section.
             if (existingDataSection != null)
             {
-                foreach ((string key, string value) in existingDataSection)
+                foreach (KeyValuePair<string, string> kvp in existingDataSection)
                 {
-                    newDataSection[key] = value;
+                    newDataSection[kvp.Key] = kvp.Value;
                 }
             }
             return newDataSection;

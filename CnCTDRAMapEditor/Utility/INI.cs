@@ -46,7 +46,7 @@ namespace MobiusEditor.Utility
         };
     }
 
-    public class INIKeyValueCollection : IEnumerable<(string Key, string Value)>, IEnumerable
+    public class INIKeyValueCollection : IEnumerable<KeyValuePair<string, string>>, IEnumerable
     {
         private readonly OrderedDictionary KeyValues;
 
@@ -125,11 +125,11 @@ namespace MobiusEditor.Utility
             KeyValues.Clear();
         }
 
-        public IEnumerator<(string Key, string Value)> GetEnumerator()
+        public IEnumerator<KeyValuePair<string, string>> GetEnumerator()
         {
             foreach (DictionaryEntry entry in KeyValues)
             {
-                yield return (entry.Key as string, entry.Value as string);
+                yield return new KeyValuePair<string, string>(entry.Key as string, entry.Value as string);
             }
         }
 
@@ -137,13 +137,31 @@ namespace MobiusEditor.Utility
         {
             return GetEnumerator();
         }
+
+        public void RemoveWhere(Func<string, bool> keySelector)
+        {
+            List<string> toRemove = new List<string>();
+            foreach (KeyValuePair<string,string> kvp in this)
+            {
+                if (keySelector(kvp.Key))
+                {
+                    toRemove.Add(kvp.Key);
+                }
+            }
+            foreach (string key in toRemove)
+            {
+                KeyValues.Remove(key);
+            }
+        }
     }
 
-    public class INISection : IEnumerable<(string Key, string Value)>, IEnumerable
+    public class INISection : IEnumerable<KeyValuePair<string, string>>, IEnumerable
     {
         public readonly INIKeyValueCollection Keys;
 
         public string Name { get; private set; }
+        
+        public int Count { get { return Keys.Count; } }
 
         public string this[string key] { get => Keys[key]; set => Keys[key] = value; }
 
@@ -191,7 +209,7 @@ namespace MobiusEditor.Utility
             }
         }
 
-        public IEnumerator<(string Key, string Value)> GetEnumerator()
+        public IEnumerator<KeyValuePair<string, string>> GetEnumerator()
         {
             return Keys.GetEnumerator();
         }
@@ -204,7 +222,7 @@ namespace MobiusEditor.Utility
         public INISection Clone()
         {
             INISection clone = new INISection(this.Name);
-            foreach ((string Key, string Value) item in Keys)
+            foreach (KeyValuePair<string, string> item in Keys)
             {
                 clone[item.Key] = item.Value;
             }
@@ -216,10 +234,20 @@ namespace MobiusEditor.Utility
             Keys.Clear();
         }
 
+        public bool Remove(string key)
+        {
+            return Keys.Remove(key);
+        }
+
+        public void RemoveWhere(Func<string, bool> keySelector)
+        {
+            Keys.RemoveWhere(keySelector);
+        }
+
         public override string ToString()
         {
             List<string> lines = new List<string>(Keys.Count);
-            foreach ((string Key, string Value) item in Keys)
+            foreach (KeyValuePair<string, string> item in Keys)
             {
                 lines.Add(string.Format("{0}={1}", item.Key, item.Value));
             }
@@ -457,18 +485,17 @@ namespace MobiusEditor.Utility
         internal INISectionDiff(INIDiffType type, INISection section)
             : this()
         {
-            foreach ((string Key, string Value) keyValue in section.Keys)
+            foreach (KeyValuePair<string, string> keyValue in section.Keys)
             {
                 keyDiff[keyValue.Key] = type;
             }
-
             Type = type;
         }
 
         internal INISectionDiff(INISection leftSection, INISection rightSection)
             : this(INIDiffType.Removed, leftSection)
         {
-            foreach ((string Key, string Value) keyValue in rightSection.Keys)
+            foreach (KeyValuePair<string, string> keyValue in rightSection.Keys)
             {
                 string key = keyValue.Key;
                 if (keyDiff.ContainsKey(key))

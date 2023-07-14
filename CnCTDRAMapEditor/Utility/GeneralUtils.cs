@@ -228,6 +228,13 @@ namespace MobiusEditor.Utility
             return fallback;
         }
 
+        /// <summary>
+        /// Removes the end of the given string starting from the point at which a character from the given characters array is encountered.
+        /// </summary>
+        /// <param name="value">Value to trim.</param>
+        /// <param name="trimResult">True to trim spaces off the resulting string.</param>
+        /// <param name="cutFrom">characters that indicate the remark started.</param>
+        /// <returns></returns>
         public static string TrimRemarks(string value, bool trimResult, params char[] cutFrom)
         {
             if (String.IsNullOrEmpty(value))
@@ -241,6 +248,15 @@ namespace MobiusEditor.Utility
             return value;
         }
 
+        /// <summary>
+        /// If the given value is one of the values inside the given list, then add the remark to its end. Otherwise, return the original string.
+        /// </summary>
+        /// <param name="value">Value to evaluate.</param>
+        /// <param name="defaultVal">Value to return if the input is empty.</param>
+        /// <param name="trimSource">True to trim the source before adding the remark.</param>
+        /// <param name="valuesToDetect">List of values to add the remark to. Case-insensitive.</param>
+        /// <param name="remarkToAdd">Remark to add to the detected values.</param>
+        /// <returns></returns>
         public static string AddRemarks(string value, string defaultVal, Boolean trimSource, IEnumerable<string> valuesToDetect, string remarkToAdd)
         {
             if (String.IsNullOrEmpty(value))

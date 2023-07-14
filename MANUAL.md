@@ -24,6 +24,16 @@ Specific options about the map and the scripting elements can be found in the "S
 
 The triggers dialog contains a "Check" button that will check if any configurations in the triggers might not work, or might even cause game crashes. For TD, these checks are based on [the TD triggers overview guide I wrote on Steam](https://steamcommunity.com/sharedfiles/filedetails/?id=2824756756). Note that this is not a scripting guide; it is an overview of what each trigger event and action will accept as inputs, and produce as output, highlighting potential issues and some workarounds.
 
+### Hotkeys
+
+You can switch between the different editing modes using the six first letters on the top two rows on your keyboard; Q-W-E-R-T-Y and A-S-D-F-G on classic a US qwerty keyboard. Note that these keys are interpreted positionally on the keyboard, meaning that they will work in the intended logical way on different-region keyboard, like the German 'qwertz' and French 'azerty'.
+
+Besides those, PageUp and PageDown have been universally implemented to let you switch to the next / previous item on the current editing tool's selection list, with Home and End going to the start and end of the list. This also works for increasing/decreasing the resource placement size in Resources mode.
+
+Some editing modes will have their own specific shortcuts, like the ones to select specific special waypoints in Waypoints mode. Those will be indicated in the bottom bar along with the mouse function modifiers.
+
+Note that these hotkeys only work when the main window is selected; if you click on the tool window to select it, all keys will work as expected inside the selected controls.
+
 ### The "New from image" function
 
 The editor contains a function to create a new map starting from an image, also usable with the drag-and-drop feature. This is not some magical conversion tool, however; it needs to be used in a very specific way.

@@ -376,7 +376,7 @@ namespace MobiusEditor.RedAlert
                 INISection amSection = extraTextIni.Sections["Aftermath"];
                 if (amSection != null)
                 {
-                    amSection.Keys.Remove("NewUnitsEnabled");
+                    amSection.Remove("NewUnitsEnabled");
                 }
                 // Remove any sections known and handled / disallowed by the editor.
                 extraTextIni.Sections.Remove("Digest");
@@ -394,10 +394,19 @@ namespace MobiusEditor.RedAlert
                 extraTextIni.Sections.Remove("Ships");
                 extraTextIni.Sections.Remove("Infantry");
                 extraTextIni.Sections.Remove("Structures");
-                extraTextIni.Sections.Remove("Base");
+                if (extraTextIni.Sections["Base"] is INISection baseSec)
+                {
+                    baseSec.Remove("Player");
+                    baseSec.Remove("Count");
+                    baseSec.RemoveWhere(k => Regex.IsMatch(k, "^\\d{3}$"));
+                }
                 extraTextIni.Sections.Remove("Waypoints");
                 extraTextIni.Sections.Remove("CellTriggers");
-                extraTextIni.Sections.Remove("Briefing");
+                if (extraTextIni.Sections["Briefing"] is INISection briefSec)
+                {
+                    briefSec.Remove("Text");
+                    briefSec.RemoveWhere(k => Regex.IsMatch(k, "^\\d+$"));
+                }
                 foreach (House house in Map.Houses)
                 {
                     INITools.ClearDataFrom(extraTextIni, house.Type.Name, house);
@@ -705,7 +714,7 @@ namespace MobiusEditor.RedAlert
             {
                 string amEnabled = aftermathSection.TryGetValue("NewUnitsEnabled");
                 aftermathEnabled = amEnabled != null && Int32.TryParse(amEnabled, out int val) && val == 1;
-                aftermathSection.Keys.Remove("NewUnitsEnabled");
+                aftermathSection.Remove("NewUnitsEnabled");
                 // Remove if empty.
                 if (aftermathSection.Empty)
                     ini.Sections.Remove(aftermathSection.Name);
@@ -733,21 +742,21 @@ namespace MobiusEditor.RedAlert
             List<TeamType> teamTypes = new List<TeamType>();
             if (teamTypesSection != null)
             {
-                foreach (var (Key, Value) in teamTypesSection)
+                foreach (KeyValuePair<string, string> kvp in teamTypesSection)
                 {
                     try
                     {
-                        if (Key.Length > 8)
+                        if (kvp.Key.Length > 8)
                         {
-                            errors.Add(string.Format("TeamType '{0}' has a name that is longer than 8 characters. This will not be corrected by the loading process, but should be addressed, since it can make the teams fail to read correctly, and might even crash the game.", Key));
+                            errors.Add(string.Format("TeamType '{0}' has a name that is longer than 8 characters. This will not be corrected by the loading process, but should be addressed, since it can make the teams fail to read correctly, and might even crash the game.", kvp.Key));
                         }
-                        TeamType teamType = new TeamType { Name = Key };
-                        List<string> tokens = Value.Split(',').ToList();
+                        TeamType teamType = new TeamType { Name = kvp.Key };
+                        List<string> tokens = kvp.Value.Split(',').ToList();
                         teamType.House = Map.HouseTypes.Where(t => t.Equals(sbyte.Parse(tokens[0]))).FirstOrDefault();
                         if (teamType.House == null)
                         {
                             HouseType defHouse = Map.HouseTypes.First();
-                            errors.Add(string.Format("Team '{0}' has unknown house ID '{1}'; clearing to '{2}'.", Key, tokens[0], defHouse.Name));
+                            errors.Add(string.Format("Team '{0}' has unknown house ID '{1}'; clearing to '{2}'.", kvp.Key, tokens[0], defHouse.Name));
                             modified = true;
                             teamType.House = defHouse;
                         }
@@ -775,7 +784,7 @@ namespace MobiusEditor.RedAlert
                                 {
                                     if (!aftermathEnabled && type.IsExpansionOnly)
                                     {
-                                        errors.Add(string.Format("Team '{0}' contains expansion unit '{1}', but expansion units are not enabled; enabling expansion units.", Key, type.Name));
+                                        errors.Add(string.Format("Team '{0}' contains expansion unit '{1}', but expansion units are not enabled; enabling expansion units.", kvp.Key, type.Name));
                                         Map.BasicSection.ExpansionEnabled = aftermathEnabled = true;
                                         modified = true;
                                     }
@@ -783,13 +792,13 @@ namespace MobiusEditor.RedAlert
                                 }
                                 else
                                 {
-                                    errors.Add(string.Format("Team '{0}' references unknown class '{1}'.", Key, classTokens[0]));
+                                    errors.Add(string.Format("Team '{0}' references unknown class '{1}'.", kvp.Key, classTokens[0]));
                                     modified = true;
                                 }
                             }
                             else
                             {
-                                errors.Add(string.Format("Team '{0}' has wrong number of tokens for class index {1} (expecting 2).", Key, i));
+                                errors.Add(string.Format("Team '{0}' has wrong number of tokens for class index {1} (expecting 2).", kvp.Key, i));
                                 modified = true;
                             }
                         }
@@ -808,19 +817,19 @@ namespace MobiusEditor.RedAlert
                                     }
                                     else
                                     {
-                                        errors.Add(string.Format("Team '{0}', orders index {1} ('{2}') has an incorrect value '{3}'.", Key, i, mission, missionTokens[1]));
+                                        errors.Add(string.Format("Team '{0}', orders index {1} ('{2}') has an incorrect value '{3}'.", kvp.Key, i, mission, missionTokens[1]));
                                         modified = true;
                                     }
                                 }
                                 else
                                 {
-                                    errors.Add(string.Format("Team '{0}' references unknown orders id '{1}'.", Key, missionTokens[0]));
+                                    errors.Add(string.Format("Team '{0}' references unknown orders id '{1}'.", kvp.Key, missionTokens[0]));
                                     modified = true;
                                 }
                             }
                             else
                             {
-                                errors.Add(string.Format("Team '{0}' has wrong number of tokens for orders index {1} (expecting 2).", Key, i));
+                                errors.Add(string.Format("Team '{0}' has wrong number of tokens for orders index {1} (expecting 2).", kvp.Key, i));
                                 modified = true;
                             }
                         }
@@ -828,7 +837,7 @@ namespace MobiusEditor.RedAlert
                     }
                     catch (Exception ex)
                     {
-                        errors.Add(string.Format("Teamtype '{0}' has errors and can't be parsed: {1}.", Key, ex.Message));
+                        errors.Add(string.Format("Teamtype '{0}' has errors and can't be parsed: {1}.", kvp.Key, ex.Message));
                         modified = true;
                     }
                 }
@@ -896,23 +905,23 @@ namespace MobiusEditor.RedAlert
                             break;
                     }
                 };
-                foreach (var (Key, Value) in triggersSection)
+                foreach (KeyValuePair<string, string> kvp in triggersSection)
                 {
                     try
                     {
-                        string[] tokens = Value.Split(',');
+                        string[] tokens = kvp.Value.Split(',');
                         if (tokens.Length == 18)
                         {
-                            if (Key.Length > 4)
+                            if (kvp.Key.Length > 4)
                             {
-                                errors.Add(string.Format("Trigger '{0}' has a name that is longer than 4 characters. This will not be corrected by the loading process, but should be addressed, since it can make the triggers fail to link correctly to objects and cell triggers, and might even crash the game.", Key));
+                                errors.Add(string.Format("Trigger '{0}' has a name that is longer than 4 characters. This will not be corrected by the loading process, but should be addressed, since it can make the triggers fail to link correctly to objects and cell triggers, and might even crash the game.", kvp.Key));
                             }
-                            Trigger trigger = new Trigger { Name = Key };
+                            Trigger trigger = new Trigger { Name = kvp.Key };
                             trigger.PersistentType = (TriggerPersistentType)int.Parse(tokens[0]);
                             trigger.House = Map.HouseTypes.Where(t => t.Equals(sbyte.Parse(tokens[1]))).FirstOrDefault()?.Name;
                             if (trigger.House == null)
                             {
-                                errors.Add(string.Format("Trigger '{0}' has unknown house ID '{1}'; clearing to '{2}'.", Key, tokens[0], House.None));
+                                errors.Add(string.Format("Trigger '{0}' has unknown house ID '{1}'; clearing to '{2}'.", kvp.Key, tokens[0], House.None));
                                 modified = true;
                                 trigger.House = House.None;
                             }
@@ -940,13 +949,13 @@ namespace MobiusEditor.RedAlert
                         }
                         else
                         {
-                            errors.Add(string.Format("Trigger '{0}' has too few tokens (expecting 18).", Key));
+                            errors.Add(string.Format("Trigger '{0}' has too few tokens (expecting 18).", kvp.Key));
                             modified = true;
                         }
                     }
                     catch (Exception ex)
                     {
-                        errors.Add(string.Format("Trigger '{0}' has curErrors and can't be parsed: {1}.", Key, ex.Message));
+                        errors.Add(string.Format("Trigger '{0}' has curErrors and can't be parsed: {1}.", kvp.Key, ex.Message));
                         modified = true;
                     }
                 }
@@ -1106,16 +1115,16 @@ namespace MobiusEditor.RedAlert
             INISection smudgeSection = ini.Sections.Extract("Smudge");
             if (smudgeSection != null)
             {
-                foreach (var (Key, Value) in smudgeSection)
+                foreach (KeyValuePair<string, string> kvp in smudgeSection)
                 {
                     int cell;
-                    if (!int.TryParse(Key, out cell))
+                    if (!int.TryParse(kvp.Key, out cell))
                     {
-                        errors.Add(string.Format("Cell for Smudge cannot be parsed. Key: '{0}', value: '{1}'; skipping.", Key, Value));
+                        errors.Add(string.Format("Cell for Smudge cannot be parsed. Key: '{0}', value: '{1}'; skipping.", kvp.Key, kvp.Value));
                         modified = true;
                         continue;
                     }
-                    string[] tokens = Value.Split(',');
+                    string[] tokens = kvp.Value.Split(',');
                     if (tokens.Length == 3)
                     {
                         // Craters other than cr1 don't work right in the game. Replace them by stage-0 cr1.
@@ -1162,7 +1171,7 @@ namespace MobiusEditor.RedAlert
                     }
                     else
                     {
-                        errors.Add(string.Format("Smudge on cell '{0}' has wrong number of tokens (expecting 3).", Key));
+                        errors.Add(string.Format("Smudge on cell '{0}' has wrong number of tokens (expecting 3).", kvp.Key));
                         modified = true;
                     }
                 }
@@ -1170,9 +1179,9 @@ namespace MobiusEditor.RedAlert
             INISection unitsSection = ini.Sections.Extract("Units");
             if (unitsSection != null)
             {
-                foreach (var (Key, Value) in unitsSection)
+                foreach (KeyValuePair<string, string> kvp in unitsSection)
                 {
-                    string[] tokens = Value.Split(',');
+                    string[] tokens = kvp.Value.Split(',');
                     if (tokens.Length == 7)
                     {
                         UnitType unitType = Map.AllUnitTypes.Where(t => t.IsGroundUnit && t.Equals(tokens[1])).FirstOrDefault();
@@ -1292,7 +1301,7 @@ namespace MobiusEditor.RedAlert
                     {
                         if (tokens.Length < 2)
                         {
-                            errors.Add(string.Format("Unit entry '{0}' has wrong number of tokens (expecting 7).", Key));
+                            errors.Add(string.Format("Unit entry '{0}' has wrong number of tokens (expecting 7).", kvp.Key));
                             modified = true;
                         }
                         else
@@ -1308,9 +1317,9 @@ namespace MobiusEditor.RedAlert
             INISection aircraftSection = ini.Sections.Extract("Aircraft");
             if (!Globals.DisableAirUnits && aircraftSection != null)
             {
-                foreach (var (Key, Value) in aircraftSection)
+                foreach (KeyValuePair<string, string> kvp in aircraftSection)
                 {
-                    string[] tokens = Value.Split(',');
+                    string[] tokens = kvp.Value.Split(',');
                     if (tokens.Length == 6)
                     {
                         UnitType aircraftType = Map.AllUnitTypes.Where(t => t.IsAircraft && t.Equals(tokens[1])).FirstOrDefault();
@@ -1410,7 +1419,7 @@ namespace MobiusEditor.RedAlert
                     {
                         if (tokens.Length < 2)
                         {
-                            errors.Add(string.Format("Aircraft entry '{0}' has wrong number of tokens (expecting 6).", Key));
+                            errors.Add(string.Format("Aircraft entry '{0}' has wrong number of tokens (expecting 6).", kvp.Key));
                             modified = true;
                         }
                         else
@@ -1424,9 +1433,9 @@ namespace MobiusEditor.RedAlert
             INISection shipsSection = ini.Sections.Extract("Ships");
             if (shipsSection != null)
             {
-                foreach (var (Key, Value) in shipsSection)
+                foreach (KeyValuePair<string, string> kvp in shipsSection)
                 {
-                    string[] tokens = Value.Split(',');
+                    string[] tokens = kvp.Value.Split(',');
                     if (tokens.Length == 7)
                     {
                         UnitType vesselType = Map.AllUnitTypes.Where(t => t.IsVessel && t.Equals(tokens[1])).FirstOrDefault();
@@ -1546,7 +1555,7 @@ namespace MobiusEditor.RedAlert
                     {
                         if (tokens.Length < 2)
                         {
-                            errors.Add(string.Format("Ship entry '{0}' has wrong number of tokens (expecting 7).", Key));
+                            errors.Add(string.Format("Ship entry '{0}' has wrong number of tokens (expecting 7).", kvp.Key));
                             modified = true;
                         }
                         else
@@ -1560,9 +1569,9 @@ namespace MobiusEditor.RedAlert
             INISection infantrySection = ini.Sections.Extract("Infantry");
             if (infantrySection != null)
             {
-                foreach (var (Key, Value) in infantrySection)
+                foreach (KeyValuePair<string, string> kvp in infantrySection)
                 {
-                    string[] tokens = Value.Split(',');
+                    string[] tokens = kvp.Value.Split(',');
                     if (tokens.Length == 8)
                     {
                         InfantryType infantryType = Map.AllInfantryTypes.Where(t => t.Equals(tokens[1])).FirstOrDefault();
@@ -1708,7 +1717,7 @@ namespace MobiusEditor.RedAlert
                     {
                         if (tokens.Length < 2)
                         {
-                            errors.Add(string.Format("Infantry entry '{0}' has wrong number of tokens (expecting 8).", Key));
+                            errors.Add(string.Format("Infantry entry '{0}' has wrong number of tokens (expecting 8).", kvp.Key));
                             modified = true;
                         }
                         else
@@ -1722,9 +1731,9 @@ namespace MobiusEditor.RedAlert
             INISection structuresSection = ini.Sections.Extract("Structures");
             if (structuresSection != null)
             {
-                foreach (var (Key, Value) in structuresSection)
+                foreach (KeyValuePair<string, string> kvp in structuresSection)
                 {
-                    string[] tokens = Value.Split(',');
+                    string[] tokens = kvp.Value.Split(',');
                     if (tokens.Length > 5)
                     {
                         BuildingType buildingType = Map.BuildingTypes.Where(t => t.Equals(tokens[1])).FirstOrDefault();
@@ -1871,7 +1880,7 @@ namespace MobiusEditor.RedAlert
                     {
                         if (tokens.Length < 2)
                         {
-                            errors.Add(string.Format("Structure entry '{0}' has wrong number of tokens (expecting 6).", Key));
+                            errors.Add(string.Format("Structure entry '{0}' has wrong number of tokens (expecting 6).", kvp.Key));
                             modified = true;
                         }
                         else
@@ -1882,7 +1891,7 @@ namespace MobiusEditor.RedAlert
                     }
                 }
             }
-            INISection baseSection = ini.Sections.Extract("Base");
+            INISection baseSection = ini.Sections["Base"];
             string baseCountStr = baseSection != null ? baseSection.TryGetValue("Count") : null;
             string basePlayerStr = baseSection != null ? baseSection.TryGetValue("Player") : null;
             HouseType basePlayer = Map.HouseTypes.First();
@@ -1904,8 +1913,8 @@ namespace MobiusEditor.RedAlert
                 }
                 else
                 {
-                    baseSection.Keys.Remove("Count");
-                    baseSection.Keys.Remove("Player");
+                    baseSection.Remove("Count");
+                    baseSection.Remove("Player");
                     int curPriorityVal = 0;
                     for (int i = 0; i < baseCount; i++)
                     {
@@ -1915,7 +1924,7 @@ namespace MobiusEditor.RedAlert
                         {
                             continue;
                         }
-                        baseSection.Keys.Remove(key);
+                        baseSection.Remove(key);
                         string[] tokens = value.Split(',');
                         if (tokens.Length != 2)
                         {
@@ -1962,26 +1971,34 @@ namespace MobiusEditor.RedAlert
                         }
                         curPriorityVal++;
                     }
-                    foreach (var (Key, Value) in baseSection)
+                    foreach (KeyValuePair<string, string> kvp in baseSection)
                     {
-                        errors.Add(string.Format("Invalid base rebuild priority entry '{0}={1}'.", Key, Value));
+                        errors.Add(string.Format("Invalid base rebuild priority entry '{0}={1}'.", kvp.Key, kvp.Value));
                         modified = true;
                     }
+                }
+                // Clean out and leave; might contain addon keys.
+                baseSection.Remove("Player");
+                baseSection.Remove("Count");
+                baseSection.RemoveWhere(k => Regex.IsMatch(k, "^\\d{3}$"));
+                if (baseSection.Count == 0)
+                {
+                    ini.Sections.Remove("Base");
                 }
             }
             INISection terrainSection = ini.Sections.Extract("Terrain");
             if (terrainSection != null)
             {
-                foreach (var (Key, Value) in terrainSection)
+                foreach (KeyValuePair<string, string> kvp in terrainSection)
                 {
                     int cell;
-                    if (!int.TryParse(Key, out cell))
+                    if (!int.TryParse(kvp.Key, out cell))
                     {
-                        errors.Add(string.Format("Cell for terrain cannot be parsed. Key: '{0}', value: '{1}'; skipping.", Key, Value));
+                        errors.Add(string.Format("Cell for terrain cannot be parsed. Key: '{0}', value: '{1}'; skipping.", kvp.Key, kvp.Value));
                         modified = true;
                         continue;
                     }
-                    string name = Value.Split(',')[0];
+                    string name = kvp.Value.Split(',')[0];
                     TerrainType terrainType = Map.TerrainTypes.Where(t => t.Equals(name)).FirstOrDefault();
                     if (terrainType != null)
                     {
@@ -2114,11 +2131,11 @@ namespace MobiusEditor.RedAlert
             INISection waypointsSection = ini.Sections.Extract("Waypoints");
             if (waypointsSection != null)
             {
-                foreach (var (Key, Value) in waypointsSection)
+                foreach (KeyValuePair<string, string> kvp in waypointsSection)
                 {
-                    if (int.TryParse(Key, out int waypoint))
+                    if (int.TryParse(kvp.Key, out int waypoint))
                     {
-                        if (int.TryParse(Value, out int cell))
+                        if (int.TryParse(kvp.Value, out int cell))
                         {
                             if ((waypoint >= 0) && (waypoint < Map.Waypoints.Length))
                             {
@@ -2144,13 +2161,13 @@ namespace MobiusEditor.RedAlert
                         }
                         else
                         {
-                            errors.Add(string.Format("Waypoint {0} has invalid cell '{1}' (expecting integer).", waypoint, Value));
+                            errors.Add(string.Format("Waypoint {0} has invalid cell '{1}' (expecting integer).", waypoint, kvp.Value));
                             modified = true;
                         }
                     }
                     else
                     {
-                        errors.Add(string.Format("Invalid waypoint '{0}' (expecting integer).", Key));
+                        errors.Add(string.Format("Invalid waypoint '{0}' (expecting integer).", kvp.Key));
                         modified = true;
                     }
                 }
@@ -2158,25 +2175,25 @@ namespace MobiusEditor.RedAlert
             INISection cellTriggersSection = ini.Sections.Extract("CellTriggers");
             if (cellTriggersSection != null)
             {
-                foreach (var (Key, Value) in cellTriggersSection)
+                foreach (KeyValuePair<string, string> kvp in cellTriggersSection)
                 {
-                    if (int.TryParse(Key, out int cell))
+                    if (int.TryParse(kvp.Key, out int cell))
                     {
                         if (Map.Metrics.Contains(cell))
                         {
-                            if (!caseTrigs.ContainsKey(Value))
+                            if (!caseTrigs.ContainsKey(kvp.Value))
                             {
-                                errors.Add(string.Format("Cell trigger {0} links to unknown trigger '{1}'; skipping.", cell, Value));
+                                errors.Add(string.Format("Cell trigger {0} links to unknown trigger '{1}'; skipping.", cell, kvp.Value));
                                 modified = true;
                             }
-                            else if (!checkCellTrigs.Contains(Value))
+                            else if (!checkCellTrigs.Contains(kvp.Value))
                             {
-                                errors.Add(string.Format("Cell trigger {0} links to trigger '{1}' which does not contain a placeable event; skipping.", cell, Value));
+                                errors.Add(string.Format("Cell trigger {0} links to trigger '{1}' which does not contain a placeable event; skipping.", cell, kvp.Value));
                                 modified = true;
                             }
                             else
                             {
-                                Map.CellTriggers[cell] = new CellTrigger(caseTrigs[Value]);
+                                Map.CellTriggers[cell] = new CellTrigger(caseTrigs[kvp.Value]);
                             }
                         }
                         else
@@ -2187,21 +2204,38 @@ namespace MobiusEditor.RedAlert
                     }
                     else
                     {
-                        errors.Add(string.Format("Invalid cell trigger '{0}' (expecting integer).", Key));
+                        errors.Add(string.Format("Invalid cell trigger '{0}' (expecting integer).", kvp.Key));
                         modified = true;
                     }
                 }
             }
-            INISection briefingSection = ini.Sections.Extract("Briefing");
+            INISection briefingSection = ini.Sections["Briefing"];
             if (briefingSection != null)
             {
+                // Remove all spaces before and after the line breaks.
+                Regex breaksWithTrim = new Regex("[ \t]*@[ \t]*");
                 if (briefingSection.Keys.Contains("Text"))
                 {
-                    Map.BriefingSection.Briefing = briefingSection["Text"].Replace("@", Environment.NewLine);
+                    Map.BriefingSection.Briefing = breaksWithTrim.Replace(briefingSection["Text"], Environment.NewLine);
                 }
                 else
                 {
-                    Map.BriefingSection.Briefing = string.Join(" ", briefingSection.Keys.Select(k => k.Value)).Replace("@", Environment.NewLine);
+                    List<string> briefLines = new List<string>();
+                    int line = 1;
+                    string lineStr;
+                    // Only take consecutive numbers; if one is missing, abort.
+                    while (briefingSection.Keys.Contains(lineStr = line.ToString()))
+                    {
+                        briefLines.Add(briefingSection[lineStr].Trim());
+                        line++;
+                    }
+                    Map.BriefingSection.Briefing = breaksWithTrim.Replace(String.Join(" ", briefLines), Environment.NewLine);
+                }
+                briefingSection.Remove("Text");
+                briefingSection.RemoveWhere(k => Regex.IsMatch(k, "^\\d+$"));
+                if (briefingSection.Keys.Count == 0)
+                {
+                    ini.Sections.Remove("Briefing");
                 }
             }
             foreach (House house in Map.Houses)
@@ -2807,10 +2841,10 @@ namespace MobiusEditor.RedAlert
             if (oldAftermathSection != null)
             {
                 // If old section is present, remove NewUnitsEnabled value from it, and copy the remainder into the new one.
-                oldAftermathSection.Keys.Remove("NewUnitsEnabled");
-                foreach ((string key, string value) in oldAftermathSection)
+                oldAftermathSection.Remove("NewUnitsEnabled");
+                foreach (KeyValuePair<string, string> kvp in oldAftermathSection)
                 {
-                    newAftermathSection[key] = value;
+                    newAftermathSection[kvp.Key] = kvp.Value;
                 }
             }
             // Add Aftermath section, either if it's enabled or if any custom info was added into the section besides the Enabled status.
@@ -2963,6 +2997,13 @@ namespace MobiusEditor.RedAlert
                     building.Rebuild ? 1 : 0
                 );
             }
+            INISection baseSectionOld = ini.Sections.Extract("Base");
+            if (baseSectionOld != null)
+            {
+                baseSectionOld.Remove("Player");
+                baseSectionOld.Remove("Count");
+                baseSectionOld.RemoveWhere(k => Regex.IsMatch(k, "^\\d{3}$"));
+            }
             INISection baseSection = ini.Sections.Add("Base");
             var baseBuildings = Map.Buildings.OfType<Building>().Where(x => x.Occupier.BasePriority >= 0).OrderBy(x => x.Occupier.BasePriority).ToArray();
             baseSection["Player"] = Map.BasicSection.BasePlayer;
@@ -2980,6 +3021,13 @@ namespace MobiusEditor.RedAlert
                     building.Type.Name.ToUpperInvariant(),
                     cell
                 );
+            }
+            if (baseSectionOld != null)
+            {
+                foreach (KeyValuePair<string, string> kvp in baseSectionOld)
+                {
+                    baseSection[kvp.Key] = kvp.Value;
+                }
             }
             INISection unitsSection = ini.Sections.Add("UNITS");
             int unitIndex = 0;
@@ -3098,11 +3146,7 @@ namespace MobiusEditor.RedAlert
                 bool enabled = house.Enabled;
                 INITools.FillAndReAdd(ini, gameHouse.Type.Name, gameHouse, new MapContext(Map, false), enabled);
             }
-            ini.Sections.Remove("Briefing");
-            if (!string.IsNullOrEmpty(Map.BriefingSection.Briefing))
-            {
-                SaveIniBriefing(ini);
-            }
+            SaveIniBriefing(ini);
             using (MemoryStream stream = new MemoryStream())
             {
                 using (BinaryWriter writer = new BinaryWriter(stream))
@@ -3165,8 +3209,19 @@ namespace MobiusEditor.RedAlert
 
         protected INISection SaveIniBriefing(INI ini)
         {
+            INISection oldSection = ini.Sections.Extract("Briefing");
+            if (oldSection != null)
+            {
+                oldSection.Remove("Text");
+                oldSection.RemoveWhere(k => Regex.IsMatch(k, "^\\d+$"));
+            }
             if (string.IsNullOrEmpty(Map.BriefingSection.Briefing))
             {
+                if (oldSection != null)
+                {
+                    ini.Sections.Add(oldSection);
+                    return oldSection;
+                }
                 return null;
             }
             INISection briefingSection = ini.Sections.Add("Briefing");
@@ -3193,7 +3248,6 @@ namespace MobiusEditor.RedAlert
                 else
                 {
                     string[] splitLine = Regex.Split(line, "([ @])");
-                    //.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                     int wordIndex = 0;
                     while (wordIndex < splitLine.Length)
                     {
@@ -3231,6 +3285,16 @@ namespace MobiusEditor.RedAlert
                 for (int i = 0; i < finalLines.Count; ++i)
                 {
                     briefingSection[(i + 1).ToString()] = finalLines[i];
+                }
+            }
+            if (oldSection != null)
+            {
+                foreach (KeyValuePair<String, String> kvp in oldSection)
+                {
+                    if (!briefingSection.Contains(kvp.Key))
+                    {
+                        briefingSection[kvp.Key] = kvp.Value;
+                    }
                 }
             }
             return briefingSection;
@@ -4328,9 +4392,9 @@ namespace MobiusEditor.RedAlert
         private byte[] DecompressLCWSection(INISection section, int bytesPerCell, List<string> errors)
         {
             StringBuilder sb = new StringBuilder();
-            foreach (var (_, value) in section)
+            foreach (KeyValuePair<string, string> kvp in section)
             {
-                sb.Append(value);
+                sb.Append(kvp.Value);
             }
             byte[] compressedBytes;
             try

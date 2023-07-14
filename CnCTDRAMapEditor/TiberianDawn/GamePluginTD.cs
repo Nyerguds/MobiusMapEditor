@@ -294,7 +294,11 @@ namespace MobiusEditor.TiberianDawn
             // Remove any sections known and handled / disallowed by the editor.
             INITools.ClearDataFrom(ini, "Basic", (BasicSection)Map.BasicSection);
             INITools.ClearDataFrom(ini, "Map", Map.MapSection);
-            ini.Sections.Remove("Briefing");
+            if (ini.Sections["Briefing"] is INISection briefSec)
+            {
+                briefSec.Remove("Text");
+                briefSec.RemoveWhere(k => Regex.IsMatch(k, "^\\d+$"));
+            }
             ini.Sections.Remove("Steam");
             ini.Sections.Remove("TeamTypes");
             ini.Sections.Remove("Triggers");
@@ -305,7 +309,11 @@ namespace MobiusEditor.TiberianDawn
             ini.Sections.Remove("Units");
             ini.Sections.Remove("Aircraft");
             ini.Sections.Remove("Structures");
-            ini.Sections.Remove("Base");
+            if (ini.Sections["Base"] is INISection baseSec)
+            {
+                baseSec.Remove("Count");
+                baseSec.RemoveWhere(k => Regex.IsMatch(k, "^\\d{3}$"));
+            }
             ini.Sections.Remove("Waypoints");
             ini.Sections.Remove("CellTriggers");
             foreach (Model.House house in Map.Houses)
@@ -727,14 +735,14 @@ namespace MobiusEditor.TiberianDawn
             Map.BasicSection.Player = Map.HouseTypes.Where(t => t.Equals(Map.BasicSection.Player)).FirstOrDefault()?.Name ?? Map.HouseTypes.First().Name;
             INISection mapSection = INITools.ParseAndLeaveRemainder(ini, "Map", Map.MapSection, new MapContext(Map, false));
             // Also clear megamap indicator.
-            if (mapSection.Keys.Remove("Version") && mapSection.Keys.Count == 0)
+            if (mapSection.Remove("Version") && mapSection.Keys.Count == 0)
                 ini.Sections.Remove(mapSection.Name);
             Map.MapSection.FixBounds();
 #if DEBUG
             //MessageBox.Show("Graphics loaded");
 #endif
             bool skipSoleStuff = forSole && Globals.NoOwnedObjectsInSole;
-            INISection briefingSection = ini.Sections.Extract("Briefing");
+            INISection briefingSection = ini.Sections["Briefing"];
             if (briefingSection != null)
             {
                 if (briefingSection.Keys.Contains("Text"))
@@ -749,8 +757,8 @@ namespace MobiusEditor.TiberianDawn
                     bool addSpace = false;
                     while (briefingSection.Keys.Contains(lineStr = line.ToString()))
                     {
-                        string briefLine = briefingSection[lineStr].TrimStart();
-                        // C&C95 v1.06 line break format.
+                        string briefLine = briefingSection[lineStr].Trim();
+                        // C&C95 v1.06 line break format. Unlike RA's '@' system, this only works at the end of the line.
                         bool hasBreak = briefLine.EndsWith("##");
                         if (hasBreak)
                         {
@@ -770,6 +778,12 @@ namespace MobiusEditor.TiberianDawn
                     }
                     Map.BriefingSection.Briefing = briefLines.ToString();
                 }
+                briefingSection.Remove("Text");
+                briefingSection.RemoveWhere(k => Regex.IsMatch(k, "^\\d+$"));
+                if (briefingSection.Keys.Count == 0)
+                {
+                    ini.Sections.Remove("Briefing");
+                }
             }
             INISection steamSection = ini.Sections.Extract("Steam");
             if (steamSection != null)
@@ -782,21 +796,21 @@ namespace MobiusEditor.TiberianDawn
             Dictionary<string, TeamMission> teamMissionTypes = Enumerable.ToDictionary(TeamMissionTypes.GetTypes(), t => t.Mission, StringComparer.OrdinalIgnoreCase);
             if (teamTypesSection != null)
             {
-                foreach (var (Key, Value) in teamTypesSection)
+                foreach (KeyValuePair<string, string> kvp in teamTypesSection)
                 {
                     try
                     {
-                        if (Key.Length > 8)
+                        if (kvp.Key.Length > 8)
                         {
-                            errors.Add(string.Format("TeamType '{0}' has a name that is longer than 8 characters. This will not be corrected by the loading process, but should be addressed, since it can make the teams fail to read correctly, and might even crash the game.", Key));
+                            errors.Add(string.Format("TeamType '{0}' has a name that is longer than 8 characters. This will not be corrected by the loading process, but should be addressed, since it can make the teams fail to read correctly, and might even crash the game.", kvp.Key));
                         }
-                        TeamType teamType = new TeamType { Name = Key };
-                        List<string> tokens = Value.Split(',').ToList();
+                        TeamType teamType = new TeamType { Name = kvp.Key };
+                        List<string> tokens = kvp.Value.Split(',').ToList();
                         teamType.House = Map.HouseTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault();
                         if (teamType.House == null)
                         {
                             HouseType defHouse = Map.HouseTypes.First();
-                            errors.Add(string.Format("Teamtype '{0}' references unknown house '{1}'; clearing to '{2}'.", Key, tokens[0], defHouse.Name));
+                            errors.Add(string.Format("Teamtype '{0}' references unknown house '{1}'; clearing to '{2}'.", kvp.Key, tokens[0], defHouse.Name));
                             modified = true;
                             teamType.House = defHouse;
                         }
@@ -826,13 +840,13 @@ namespace MobiusEditor.TiberianDawn
                                 }
                                 else
                                 {
-                                    errors.Add(string.Format("Team '{0}' references unknown class '{1}'.", Key, classTokens[0]));
+                                    errors.Add(string.Format("Team '{0}' references unknown class '{1}'.", kvp.Key, classTokens[0]));
                                     modified = true;
                                 }
                             }
                             else
                             {
-                                errors.Add(string.Format("Team '{0}' has wrong number of tokens for class index {1} (expecting 2).", Key, i));
+                                errors.Add(string.Format("Team '{0}' has wrong number of tokens for class index {1} (expecting 2).", kvp.Key, i));
                                 modified = true;
                             }
                         }
@@ -850,7 +864,7 @@ namespace MobiusEditor.TiberianDawn
                                     // I'll allow any value for Attack Tarcom; you never know.
                                     if (!Int32.TryParse(missionTokens[1], out int arg) || (mission != TeamMissionTypes.AttackTarcom && arg < 0))
                                     {
-                                        errors.Add(string.Format("Team '{0}', orders index {1} ('{2}') has an incorrect value '{3}'. Reverting to 0.", Key, i, mission.Mission, missionTokens[1]));
+                                        errors.Add(string.Format("Team '{0}', orders index {1} ('{2}') has an incorrect value '{3}'. Reverting to 0.", kvp.Key, i, mission.Mission, missionTokens[1]));
                                         modified = true;
                                         arg = 0;
                                     }
@@ -858,13 +872,13 @@ namespace MobiusEditor.TiberianDawn
                                 }
                                 else
                                 {
-                                    errors.Add(string.Format("Team '{0}' references unknown orders '{1}'. Orders ignored.", Key, missionTokens[0]));
+                                    errors.Add(string.Format("Team '{0}' references unknown orders '{1}'. Orders ignored.", kvp.Key, missionTokens[0]));
                                     modified = true;
                                 }
                             }
                             else
                             {
-                                errors.Add(string.Format("Team '{0}' has wrong number of tokens for orders index {1} (expecting 2).", Key, i));
+                                errors.Add(string.Format("Team '{0}' has wrong number of tokens for orders index {1} (expecting 2).", kvp.Key, i));
                                 modified = true;
                             }
                         }
@@ -880,7 +894,7 @@ namespace MobiusEditor.TiberianDawn
                     }
                     catch (Exception ex)
                     {
-                        errors.Add(string.Format("Teamtype '{0}' has errors and can't be parsed: {1}.", Key, ex.Message));
+                        errors.Add(string.Format("Teamtype '{0}' has errors and can't be parsed: {1}.", kvp.Key, ex.Message));
                         modified = true;
                     }
                 }
@@ -889,18 +903,18 @@ namespace MobiusEditor.TiberianDawn
             List<Trigger> triggers = new List<Trigger>();
             if (triggersSection != null)
             {
-                foreach (var (Key, Value) in triggersSection)
+                foreach (KeyValuePair<string, string> kvp in triggersSection)
                 {
                     try
                     {
-                        if (Key.Length > 4)
+                        if (kvp.Key.Length > 4)
                         {
-                            errors.Add(string.Format("Trigger '{0}' has a name that is longer than 4 characters. This will not be corrected by the loading process, but should be addressed, since it can make the triggers fail to link correctly to objects and cell triggers, and might even crash the game.", Key));
+                            errors.Add(string.Format("Trigger '{0}' has a name that is longer than 4 characters. This will not be corrected by the loading process, but should be addressed, since it can make the triggers fail to link correctly to objects and cell triggers, and might even crash the game.", kvp.Key));
                         }
-                        string[] tokens = Value.Split(',');
+                        string[] tokens = kvp.Value.Split(',');
                         if (tokens.Length >= 5)
                         {
-                            Trigger trigger = new Trigger { Name = Key };
+                            Trigger trigger = new Trigger { Name = kvp.Key };
                             string eventType = tokens[0];
                             if (EventTypes.EVENT_NONE.Equals(eventType, StringComparison.OrdinalIgnoreCase))
                             {
@@ -911,7 +925,7 @@ namespace MobiusEditor.TiberianDawn
                                 eventType = EventTypes.GetTypes().FirstOrDefault(evt => evt.Equals(eventType, StringComparison.OrdinalIgnoreCase)) ?? EventTypes.EVENT_NONE;
                                 if (EventTypes.EVENT_NONE.Equals(eventType, StringComparison.OrdinalIgnoreCase))
                                 {
-                                    errors.Add(string.Format("Trigger '{0}' references unknown event '{1}'. Reverted to 'None'.", Key, tokens[0]));
+                                    errors.Add(string.Format("Trigger '{0}' references unknown event '{1}'. Reverted to 'None'.", kvp.Key, tokens[0]));
                                     modified = true;
                                 }
                             }
@@ -926,7 +940,7 @@ namespace MobiusEditor.TiberianDawn
                                 actionType = ActionTypes.GetTypes().FirstOrDefault(act => act.Equals(actionType, StringComparison.OrdinalIgnoreCase)) ?? ActionTypes.ACTION_NONE;
                                 if (ActionTypes.ACTION_NONE.Equals(actionType, StringComparison.OrdinalIgnoreCase))
                                 {
-                                    errors.Add(string.Format("Trigger '{0}' references unknown action '{1}'. Reverted to 'None'.", Key, tokens[4]));
+                                    errors.Add(string.Format("Trigger '{0}' references unknown action '{1}'. Reverted to 'None'.", kvp.Key, tokens[4]));
                                     modified = true;
                                 }
                             }
@@ -942,7 +956,7 @@ namespace MobiusEditor.TiberianDawn
                                 house = Map.HouseTypes.FirstOrDefault(t => t.Name.Equals(house, StringComparison.OrdinalIgnoreCase))?.Name ?? Model.House.None;
                                 if (Model.House.IsEmpty(house))
                                 {
-                                    errors.Add(string.Format("Trigger '{0}' references unknown House '{1}'; clearing to 'None'.", Key, tokens[4]));
+                                    errors.Add(string.Format("Trigger '{0}' references unknown House '{1}'; clearing to 'None'.", kvp.Key, tokens[4]));
                                     modified = true;
                                 }
                             }
@@ -957,7 +971,7 @@ namespace MobiusEditor.TiberianDawn
                                 team = Map.TeamTypes.FirstOrDefault(tt => tt.Name.Equals(tokens[4], StringComparison.OrdinalIgnoreCase))?.Name ?? TeamType.None;
                                 if (TeamType.IsEmpty(tokens[4]))
                                 {
-                                    errors.Add(string.Format("Trigger '{0}' references unknown teamtype '{1}'. Reverted to 'None'.", Key, tokens[4]));
+                                    errors.Add(string.Format("Trigger '{0}' references unknown teamtype '{1}'. Reverted to 'None'.", kvp.Key, tokens[4]));
                                     modified = true;
                                 }
                             }
@@ -971,13 +985,13 @@ namespace MobiusEditor.TiberianDawn
                         }
                         else
                         {
-                            errors.Add(string.Format("Trigger '{0}' has too few tokens (expecting at least 5).", Key));
+                            errors.Add(string.Format("Trigger '{0}' has too few tokens (expecting at least 5).", kvp.Key));
                             modified = true;
                         }
                     }
                     catch (Exception ex)
                     {
-                        errors.Add(string.Format("Trigger '{0}' has errors and can't be parsed: {1}.", Key, ex.Message));
+                        errors.Add(string.Format("Trigger '{0}' has errors and can't be parsed: {1}.", kvp.Key, ex.Message));
                         modified = true;
                     }
                 }
@@ -993,16 +1007,16 @@ namespace MobiusEditor.TiberianDawn
             INISection smudgeSection = ini.Sections.Extract("Smudge");
             if (smudgeSection != null)
             {
-                foreach (var (Key, Value) in smudgeSection)
+                foreach (KeyValuePair<string, string> kvp in smudgeSection)
                 {
                     int cell;
-                    if (!int.TryParse(Key, out cell))
+                    if (!int.TryParse(kvp.Key, out cell))
                     {
-                        errors.Add(string.Format("Cell for Smudge cannot be parsed. Key: '{0}', value: '{1}'; skipping.", Key, Value));
+                        errors.Add(string.Format("Cell for Smudge cannot be parsed. Key: '{0}', value: '{1}'; skipping.", kvp.Key, kvp.Value));
                         modified = true;
                         continue;
                     }
-                    string[] tokens = Value.Split(',');
+                    string[] tokens = kvp.Value.Split(',');
                     if (tokens.Length == 3)
                     {
                         // Craters other than cr1 don't work right in the game. Replace them by stage-0 cr1.
@@ -1049,7 +1063,7 @@ namespace MobiusEditor.TiberianDawn
                     }
                     else
                     {
-                        errors.Add(string.Format("Smudge on cell '{0}' has wrong number of tokens (expecting 3).", Key));
+                        errors.Add(string.Format("Smudge on cell '{0}' has wrong number of tokens (expecting 3).", kvp.Key));
                         modified = true;
                     }
                 }
@@ -1057,7 +1071,7 @@ namespace MobiusEditor.TiberianDawn
             INISection infantrySection = ini.Sections.Extract("Infantry");
             if (infantrySection != null)
             {
-                foreach (var (Key, Value) in infantrySection)
+                foreach (KeyValuePair<string, string> kvp in infantrySection)
                 {
                     if (skipSoleStuff)
                     {
@@ -1067,7 +1081,7 @@ namespace MobiusEditor.TiberianDawn
                         modified = true;
                         break;
                     }
-                    string[] tokens = Value.Split(',');
+                    string[] tokens = kvp.Value.Split(',');
                     if (tokens.Length == 8)
                     {
                         InfantryType infantryType = Map.InfantryTypes.Where(t => t.Equals(tokens[1])).FirstOrDefault();
@@ -1198,7 +1212,7 @@ namespace MobiusEditor.TiberianDawn
                     {
                         if (tokens.Length < 2)
                         {
-                            errors.Add(string.Format("Infantry entry '{0}' has wrong number of tokens (expecting 8).", Key));
+                            errors.Add(string.Format("Infantry entry '{0}' has wrong number of tokens (expecting 8).", kvp.Key));
                             modified = true;
                         }
                         else
@@ -1212,7 +1226,7 @@ namespace MobiusEditor.TiberianDawn
             INISection unitsSection = ini.Sections.Extract("Units");
             if (unitsSection != null)
             {
-                foreach (var (Key, Value) in unitsSection)
+                foreach (KeyValuePair<string, string> kvp in unitsSection)
                 {
                     if (skipSoleStuff)
                     {
@@ -1222,7 +1236,7 @@ namespace MobiusEditor.TiberianDawn
                         modified = true;
                         break;
                     }
-                    string[] tokens = Value.Split(',');
+                    string[] tokens = kvp.Value.Split(',');
                     if (tokens.Length == 7)
                     {
                         UnitType unitType = Map.UnitTypes.Where(t => t.IsGroundUnit && t.Equals(tokens[1])).FirstOrDefault();
@@ -1332,7 +1346,7 @@ namespace MobiusEditor.TiberianDawn
                     {
                         if (tokens.Length < 2)
                         {
-                            errors.Add(string.Format("Unit entry '{0}' has wrong number of tokens (expecting 7).", Key));
+                            errors.Add(string.Format("Unit entry '{0}' has wrong number of tokens (expecting 7).", kvp.Key));
                             modified = true;
                         }
                         else
@@ -1348,7 +1362,7 @@ namespace MobiusEditor.TiberianDawn
             INISection aircraftSection = ini.Sections.Extract("Aircraft");
             if (aircraftSection != null)
             {
-                foreach (var (Key, Value) in aircraftSection)
+                foreach (KeyValuePair<string, string> kvp in aircraftSection)
                 {
                     if (Globals.DisableAirUnits || skipSoleStuff)
                     {
@@ -1359,7 +1373,7 @@ namespace MobiusEditor.TiberianDawn
                         modified = true;
                         break;
                     }
-                    string[] tokens = Value.Split(',');
+                    string[] tokens = kvp.Value.Split(',');
                     if (tokens.Length == 6)
                     {
                         UnitType aircraftType = Map.UnitTypes.Where(t => t.IsAircraft && t.Equals(tokens[1])).FirstOrDefault();
@@ -1444,7 +1458,7 @@ namespace MobiusEditor.TiberianDawn
                     {
                         if (tokens.Length < 2)
                         {
-                            errors.Add(string.Format("Aircraft entry '{0}' has wrong number of tokens (expecting 6).", Key));
+                            errors.Add(string.Format("Aircraft entry '{0}' has wrong number of tokens (expecting 6).", kvp.Key));
                             modified = true;
                         }
                         else
@@ -1458,7 +1472,7 @@ namespace MobiusEditor.TiberianDawn
             INISection structuresSection = ini.Sections.Extract("Structures");
             if (structuresSection != null)
             {
-                foreach (var (Key, Value) in structuresSection)
+                foreach (KeyValuePair<string, string> kvp in structuresSection)
                 {
                     if (skipSoleStuff)
                     {
@@ -1468,7 +1482,7 @@ namespace MobiusEditor.TiberianDawn
                         modified = true;
                         break;
                     }
-                    string[] tokens = Value.Split(',');
+                    string[] tokens = kvp.Value.Split(',');
                     if (tokens.Length == 6)
                     {
                         BuildingType buildingType = Map.BuildingTypes.Where(t => t.Equals(tokens[1])).FirstOrDefault();
@@ -1549,7 +1563,7 @@ namespace MobiusEditor.TiberianDawn
                     {
                         if (tokens.Length < 2)
                         {
-                            errors.Add(string.Format("Structure entry '{0}' has wrong number of tokens (expecting 6).", Key));
+                            errors.Add(string.Format("Structure entry '{0}' has wrong number of tokens (expecting 6).", kvp.Key));
                             modified = true;
                         }
                         else
@@ -1564,7 +1578,7 @@ namespace MobiusEditor.TiberianDawn
             string baseCountStr = baseSection != null ? baseSection.TryGetValue("Count") : null;
             if (baseSection != null)
             {
-                baseSection.Keys.Remove("Count");
+                baseSection.Remove("Count");
                 if (!Int32.TryParse(baseCountStr, out int baseCount))
                 {
                     if (skipSoleStuff)
@@ -1594,7 +1608,7 @@ namespace MobiusEditor.TiberianDawn
                         {
                             continue;
                         }
-                        baseSection.Keys.Remove(key);
+                        baseSection.Remove(key);
                         string[] tokens = value.Split(',');
                         if (tokens.Length != 2)
                         {
@@ -1651,9 +1665,9 @@ namespace MobiusEditor.TiberianDawn
                         }
                         curPriorityVal++;
                     }
-                    foreach (var (Key, Value) in baseSection)
+                    foreach (KeyValuePair<string, string> kvp in baseSection)
                     {
-                        errors.Add(string.Format("Invalid base rebuild priority entry '{0}={1}'.", Key, Value));
+                        errors.Add(string.Format("Invalid base rebuild priority entry '{0}={1}'.", kvp.Key, kvp.Value));
                         modified = true;
                     }
                 }
@@ -1661,16 +1675,16 @@ namespace MobiusEditor.TiberianDawn
             INISection terrainSection = ini.Sections.Extract("Terrain");
             if (terrainSection != null)
             {
-                foreach (var (Key, Value) in terrainSection)
+                foreach (KeyValuePair<string, string> kvp in terrainSection)
                 {
                     int cell;
-                    if (!int.TryParse(Key, out cell))
+                    if (!int.TryParse(kvp.Key, out cell))
                     {
-                        errors.Add(string.Format("Cell for terrain cannot be parsed. Key: '{0}', value: '{1}'; skipping.", Key, Value));
+                        errors.Add(string.Format("Cell for terrain cannot be parsed. Key: '{0}', value: '{1}'; skipping.", kvp.Key, kvp.Value));
                         modified = true;
                         continue;
                     }
-                    string[] tokens = Value.Split(',');
+                    string[] tokens = kvp.Value.Split(',');
                     if (tokens.Length == 2)
                     {
                         TerrainType terrainType = Map.TerrainTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault();
@@ -1758,7 +1772,7 @@ namespace MobiusEditor.TiberianDawn
                     }
                     else
                     {
-                        errors.Add(string.Format("Terrain '{0}' has wrong number of tokens (expecting 2).", Key));
+                        errors.Add(string.Format("Terrain '{0}' has wrong number of tokens (expecting 2).", kvp.Key));
                         modified = true;
                     }
                 }
@@ -1767,28 +1781,28 @@ namespace MobiusEditor.TiberianDawn
             if (overlaySection != null)
             {
                 int lastLine = Map.Metrics.Height - 1;
-                foreach (var (Key, Value) in overlaySection)
+                foreach (KeyValuePair<string, string> kvp in overlaySection)
                 {
                     int cell;
-                    if (!int.TryParse(Key, out cell))
+                    if (!int.TryParse(kvp.Key, out cell))
                     {
-                        errors.Add(string.Format("Cell for overlay cannot be parsed. Key: '{0}', value: '{1}'; skipping.", Key, Value));
+                        errors.Add(string.Format("Cell for overlay cannot be parsed. Key: '{0}', value: '{1}'; skipping.", kvp.Key, kvp.Value));
                         modified = true;
                         continue;
                     }
                     if (!Map.Metrics.GetLocation(cell, out Point point))
                     {
-                        errors.Add(string.Format("Cell for overlay is not inside the map bounds. Key: '{0}', value: '{1}'; skipping.", Key, Value));
+                        errors.Add(string.Format("Cell for overlay is not inside the map bounds. Key: '{0}', value: '{1}'; skipping.", kvp.Key, kvp.Value));
                         modified = true;
                         continue;
                     }
                     if (point.Y == 0 || point.Y == lastLine)
                     {
-                        errors.Add(string.Format("Overlay can not be placed on the first and or last lines of the map. Key: '{0}', value: '{1}'; skipping.", Key, Value));
+                        errors.Add(string.Format("Overlay can not be placed on the first and or last lines of the map. Key: '{0}', value: '{1}'; skipping.", kvp.Key, kvp.Value));
                         modified = true;
                         continue;
                     }
-                    OverlayType overlayType = Map.OverlayTypes.Where(t => t.Equals(Value)).FirstOrDefault();
+                    OverlayType overlayType = Map.OverlayTypes.Where(t => t.Equals(kvp.Value)).FirstOrDefault();
                     if (overlayType != null)
                     {
                         if (Globals.FilterTheaterObjects && overlayType.Theaters != null && !overlayType.Theaters.Contains(Map.Theater))
@@ -1801,7 +1815,7 @@ namespace MobiusEditor.TiberianDawn
                     }
                     else
                     {
-                        errors.Add(string.Format("Overlay '{0}' references unknown overlay.", Value));
+                        errors.Add(string.Format("Overlay '{0}' references unknown overlay.", kvp.Value));
                         modified = true;
                     }
                 }
@@ -1809,11 +1823,11 @@ namespace MobiusEditor.TiberianDawn
             INISection waypointsSection = ini.Sections.Extract("Waypoints");
             if (waypointsSection != null)
             {
-                foreach (var (Key, Value) in waypointsSection)
+                foreach (KeyValuePair<string, string> kvp in waypointsSection)
                 {
-                    if (int.TryParse(Key, out int waypoint))
+                    if (int.TryParse(kvp.Key, out int waypoint))
                     {
-                        if (int.TryParse(Value, out int cell))
+                        if (int.TryParse(kvp.Value, out int cell))
                         {
                             if ((waypoint >= 0) && (waypoint < Map.Waypoints.Length))
                             {
@@ -1839,13 +1853,13 @@ namespace MobiusEditor.TiberianDawn
                         }
                         else
                         {
-                            errors.Add(string.Format("Waypoint {0} has invalid cell '{1}' (expecting integer).", waypoint, Value));
+                            errors.Add(string.Format("Waypoint {0} has invalid cell '{1}' (expecting integer).", waypoint, kvp.Value));
                             modified = true;
                         }
                     }
                     else
                     {
-                        errors.Add(string.Format("Invalid waypoint '{0}' (expecting integer).", Key));
+                        errors.Add(string.Format("Invalid waypoint '{0}' (expecting integer).", kvp.Key));
                         modified = true;
                     }
                 }
@@ -1853,25 +1867,25 @@ namespace MobiusEditor.TiberianDawn
             INISection cellTriggersSection = ini.Sections.Extract("CellTriggers");
             if (cellTriggersSection != null)
             {
-                foreach (var (Key, Value) in cellTriggersSection)
+                foreach (KeyValuePair<string, string> kvp in cellTriggersSection)
                 {
-                    if (int.TryParse(Key, out int cell))
+                    if (int.TryParse(kvp.Key, out int cell))
                     {
                         if (Map.Metrics.Contains(cell))
                         {
-                            if (!caseTrigs.ContainsKey(Value))
+                            if (!caseTrigs.ContainsKey(kvp.Value))
                             {
-                                errors.Add(string.Format("Cell trigger {0} links to unknown trigger '{1}'; skipping.", cell, Value));
+                                errors.Add(string.Format("Cell trigger {0} links to unknown trigger '{1}'; skipping.", cell, kvp.Value));
                                 modified = true;
                             }
-                            else if (!checkCellTrigs.Contains(Value))
+                            else if (!checkCellTrigs.Contains(kvp.Value))
                             {
-                                errors.Add(string.Format("Cell trigger {0} links to trigger '{1}' which does not contain a placeable event; skipping.", cell, Value));
+                                errors.Add(string.Format("Cell trigger {0} links to trigger '{1}' which does not contain a placeable event; skipping.", cell, kvp.Value));
                                 modified = true;
                             }
                             else
                             {
-                                Map.CellTriggers[cell] = new CellTrigger(caseTrigs[Value]);
+                                Map.CellTriggers[cell] = new CellTrigger(caseTrigs[kvp.Value]);
                             }
                         }
                         else
@@ -1882,7 +1896,7 @@ namespace MobiusEditor.TiberianDawn
                     }
                     else
                     {
-                        errors.Add(string.Format("Invalid cell trigger '{0}' (expecting integer).", Key));
+                        errors.Add(string.Format("Invalid cell trigger '{0}' (expecting integer).", kvp.Key));
                         modified = true;
                     }
                 }
@@ -2347,8 +2361,19 @@ namespace MobiusEditor.TiberianDawn
 
         protected INISection SaveIniBriefing(INI ini)
         {
+            INISection oldSection = ini.Sections.Extract("Briefing");
+            if (oldSection != null)
+            {
+                oldSection.Remove("Text");
+                oldSection.RemoveWhere(k => Regex.IsMatch(k, "^\\d+$"));
+            }
             if (string.IsNullOrEmpty(Map.BriefingSection.Briefing))
             {
+                if (oldSection != null)
+                {
+                    ini.Sections.Add(oldSection);
+                    return oldSection;
+                }
                 return null;
             }
             INISection briefingSection = ini.Sections.Add("Briefing");
@@ -2401,6 +2426,16 @@ namespace MobiusEditor.TiberianDawn
                 for (int i = 0; i < finalLines.Count; ++i)
                 {
                     briefingSection[(i + 1).ToString()] = finalLines[i];
+                }
+            }
+            if (oldSection != null)
+            {
+                foreach (KeyValuePair<String, String> kvp in oldSection)
+                {
+                    if (!briefingSection.Contains(kvp.Key))
+                    {
+                        briefingSection[kvp.Key] = kvp.Value;
+                    }
                 }
             }
             return briefingSection;
@@ -2499,24 +2534,39 @@ namespace MobiusEditor.TiberianDawn
 
         protected INISection SaveIniBase(INI ini, bool dummy)
         {
+            INISection baseSectionOld = ini.Sections.Extract("Base");
+            if (baseSectionOld != null)
+            {
+                baseSectionOld.Remove("Count");
+                baseSectionOld.RemoveWhere(k => Regex.IsMatch(k, "^\\d{3}$"));
+            }
             INISection baseSection = ini.Sections.Add("Base");
             if (dummy)
             {
                 baseSection["Count"] = "0";
-                return baseSection;
             }
-            var baseBuildings = Map.Buildings.OfType<Building>().Where(x => x.Occupier.BasePriority >= 0).OrderByDescending(x => x.Occupier.BasePriority).ToArray();
-            int baseIndex = baseBuildings.Length - 1;
-            foreach (var (location, building) in baseBuildings)
+            else
             {
-                string key = baseIndex.ToString("D3");
-                baseIndex--;
-                baseSection[key] = string.Format("{0},{1}",
-                    building.Type.Name.ToUpperInvariant(),
-                    ((location.Y & 0x7F) << 24) | ((location.X & 0x7F) << 8)
-                );
+                var baseBuildings = Map.Buildings.OfType<Building>().Where(x => x.Occupier.BasePriority >= 0).OrderByDescending(x => x.Occupier.BasePriority).ToArray();
+                int baseIndex = baseBuildings.Length - 1;
+                foreach (var (location, building) in baseBuildings)
+                {
+                    string key = baseIndex.ToString("D3");
+                    baseIndex--;
+                    baseSection[key] = string.Format("{0},{1}",
+                        building.Type.Name.ToUpperInvariant(),
+                        ((location.Y & 0x7F) << 24) | ((location.X & 0x7F) << 8)
+                    );
+                }
+                baseSection["Count"] = baseBuildings.Length.ToString();
             }
-            baseSection["Count"] = baseBuildings.Length.ToString();
+            if (baseSectionOld != null)
+            {
+                foreach (KeyValuePair<string, string> kvp in baseSectionOld)
+                {
+                    baseSection[kvp.Key] = kvp.Value;
+                }
+            }
             return baseSection;
         }
 
