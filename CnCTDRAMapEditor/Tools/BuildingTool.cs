@@ -37,6 +37,8 @@ namespace MobiusEditor.Tools
         private Map previewMap;
         protected override Map RenderMap => previewMap;
 
+        public override bool IsBusy { get { return startedDragging; } }
+
         public override Object CurrentObject
         {
             get { return mockBuilding; }
@@ -803,7 +805,7 @@ namespace MobiusEditor.Tools
             buildingTypeMapPanel.Invalidate();
         }
 
-        private void UpdateStatus()
+        public override void UpdateStatus()
         {
             if (placementMode)
             {

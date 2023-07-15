@@ -262,7 +262,7 @@ namespace MobiusEditor
                         cellTriggersToolStripButton.PerformClick();
                         return true;
                     case OemScanCode.H:
-                        selectToolStripButton.PerformClick();
+                        //selectToolStripButton.PerformClick();
                         return true;
                     case OemScanCode.NumPadAsterisk:
                         viewZoomResetMenuItem.PerformClick();
@@ -302,6 +302,7 @@ namespace MobiusEditor
                         // autoscrollposition is WEIRD. Exposed as negative, needs to be given as positive.
                         mapPanel.AutoScrollPosition = new Point(-curPoint.X + (int)Math.Round(delta.X * zoomedCell.Width), -curPoint.Y + (int)Math.Round(delta.Y * zoomedCell.Width));
                         mapPanel.InvalidateScroll();
+                        // Map moved without mouse movement. Pretend mouse moved.
                         activeTool.NavigationWidget.Refresh();
                         UpdateCellStatusLabel(true);
                         return true;
@@ -332,6 +333,7 @@ namespace MobiusEditor
             editUndoMenuItem.Enabled = url.CanUndo;
             editRedoMenuItem.Enabled = url.CanRedo;
             editClearUndoRedoMenuItem.Enabled = url.CanUndo || url.CanRedo;
+            // Some action has occurred; probably something was placed or removed. Force-refresh current cell.
             UpdateCellStatusLabel(true);
         }
 
@@ -580,6 +582,10 @@ namespace MobiusEditor
 
         private void EditUndoMenuItem_Click(object sender, EventArgs e)
         {
+            if (activeTool == null || activeTool.IsBusy)
+            {
+                return;
+            }
             if (url.CanUndo)
             {
                 url.Undo(new UndoRedoEventArgs(mapPanel, plugin));
@@ -588,6 +594,10 @@ namespace MobiusEditor
 
         private void EditRedoMenuItem_Click(object sender, EventArgs e)
         {
+            if (activeTool == null || activeTool.IsBusy)
+            {
+                return;
+            }
             if (url.CanRedo)
             {
                 url.Redo(new UndoRedoEventArgs(mapPanel, plugin));
@@ -869,7 +879,8 @@ namespace MobiusEditor
                             // Repaint map labels
                             ev.MapPanel?.Invalidate();
                         }
-                        url.Track(undoAction, redoAction, ToolType.None);
+                        // These changes can affect a whole lot of tools.
+                        url.Track(undoAction, redoAction, ToolType.Terrain | ToolType.Infantry | ToolType.Unit | ToolType.Building | ToolType.CellTrigger);
                         // No longer a full refresh, since celltriggers function is no longer disabled when no triggers are found.
                         mapPanel.Invalidate();
                     }
@@ -1040,6 +1051,12 @@ namespace MobiusEditor
             }
         }
 
+        private void ViewTool_RequestMouseInfoRefresh(object sender, EventArgs e)
+        {
+            // Viewtool has asked a deliberate refresh; probably the map position jumped without the mouse moving.
+            UpdateCellStatusLabel(true);
+        }
+        
         private void MapPanel_MouseMove(object sender, MouseEventArgs e)
         {
             UpdateCellStatusLabel(false);
@@ -1766,7 +1783,6 @@ namespace MobiusEditor
             if (plugin != null)
             {
                 TheaterType th = plugin.Map.Theater;
-                availableToolTypes |= ToolType.Waypoint;
                 availableToolTypes |= plugin.Map.TemplateTypes.Any(t => t.Theaters == null || t.Theaters.Contains(th)) ? ToolType.Map : ToolType.None;
                 availableToolTypes |= plugin.Map.SmudgeTypes.Any(t => !Globals.FilterTheaterObjects || t.Theaters == null || t.Theaters.Contains(th)) ? ToolType.Smudge : ToolType.None;
                 availableToolTypes |= plugin.Map.OverlayTypes.Any(t => t.IsOverlay && (!Globals.FilterTheaterObjects || t.Theaters == null || t.Theaters.Contains(th))) ? ToolType.Overlay : ToolType.None;
@@ -1776,7 +1792,9 @@ namespace MobiusEditor
                 availableToolTypes |= plugin.Map.BuildingTypes.Any(t => !Globals.FilterTheaterObjects || t.Theaters == null || t.Theaters.Contains(th)) ? ToolType.Building : ToolType.None;
                 availableToolTypes |= plugin.Map.OverlayTypes.Any(t => t.IsResource && (!Globals.FilterTheaterObjects || t.Theaters == null || t.Theaters.Contains(th))) ? ToolType.Resources : ToolType.None;
                 availableToolTypes |= plugin.Map.OverlayTypes.Any(t => t.IsWall && (!Globals.FilterTheaterObjects || t.Theaters == null || t.Theaters.Contains(th))) ? ToolType.Wall : ToolType.None;
-                // Always allow celltrigger tool, even if triggers list is empty; it contains a tooltip saying which triggers are eligible.
+                // Waypoints are always available.
+                availableToolTypes |= ToolType.Waypoint;
+                // Always allow celltrigger tool, even if triggers list is empty; it contains a tooltip saying which trigger types are eligible.
                 availableToolTypes |= ToolType.CellTrigger;
                 // TODO - "Select" tool will always be enabled
                 //availableToolTypes |= ToolType.Select;
@@ -1840,7 +1858,11 @@ namespace MobiusEditor
 
         private void ClearActiveTool()
         {
-            activeTool?.Deactivate();
+            if (activeTool != null)
+            {
+                activeTool.RequestMouseInfoRefresh -= ViewTool_RequestMouseInfoRefresh;
+                activeTool.Deactivate();
+            }
             activeTool = null;
             if (activeToolForm != null)
             {
@@ -1968,6 +1990,8 @@ namespace MobiusEditor
                 {
                     activeTool.CurrentObject = mockObject;
                 }
+                // Allow the tool to refresh the cell info under the mouse cursor.
+                activeTool.RequestMouseInfoRefresh += ViewTool_RequestMouseInfoRefresh;
                 activeToolForm.ResizeEnd -= ActiveToolForm_ResizeEnd;
                 activeToolForm.Shown -= this.ActiveToolForm_Shown;
                 activeToolForm.Shown += this.ActiveToolForm_Shown;

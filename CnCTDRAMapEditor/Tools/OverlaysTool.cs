@@ -41,6 +41,8 @@ namespace MobiusEditor.Tools
         private readonly Dictionary<int, Overlay> undoOverlays = new Dictionary<int, Overlay>();
         private readonly Dictionary<int, Overlay> redoOverlays = new Dictionary<int, Overlay>();
 
+        public override bool IsBusy { get { return undoOverlays.Count > 0; } }
+
         private Map previewMap;
         protected override Map RenderMap => previewMap;
 
@@ -399,7 +401,7 @@ namespace MobiusEditor.Tools
             overlayTypeMapPanel.Invalidate();
         }
 
-        private void UpdateStatus()
+        public override void UpdateStatus()
         {
             if (placementMode)
             {

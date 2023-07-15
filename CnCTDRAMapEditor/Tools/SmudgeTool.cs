@@ -647,7 +647,7 @@ namespace MobiusEditor.Tools
             smudgeTypeMapPanel.Invalidate();
         }
 
-        private void UpdateStatus()
+        public override void UpdateStatus()
         {
             if (placementMode)
             {

@@ -15,17 +15,34 @@
 using MobiusEditor.Model;
 using MobiusEditor.Widgets;
 using System;
+using System.Windows.Forms;
 
 namespace MobiusEditor.Interface
 {
     public interface ITool : IDisposable
     {
-        MapLayerFlag Layers { get; set; }
+        /// <summary>Game plugin set in the Tool</summary>
         IGamePlugin Plugin { get; }
+        /// <summary>Navigation widget set in the tool.</summary>
         NavigationWidget NavigationWidget { get; }
-        Object CurrentObject { get; set; }
 
+        /// <summary>Indicates that the tool is in the middle of an operation, and undo/redo actions are not allowed at that moment.</summary>
+        bool IsBusy { get; }
+        /// <summary>Gets whether this tool is currently activated.</summary>
+        bool IsActive { get; }
+
+        /// <summary>Allows getting/setting the current layers to paint.</summary>
+        MapLayerFlag Layers { get; set; }
+        /// <summary>Allows extracting/setting the state of the current selection and mock object in the Tool.</summary>
+        Object CurrentObject { get; set; }
+        /// <summary>Allows the Tool to force the main window to refresh its mouse cell info without a real mouse move event occurring.</summary>
+        event EventHandler RequestMouseInfoRefresh;
+
+        /// <summary>Activate the Tool</summary>
         void Activate();
+        /// <summary>Deactivate the Tool</summary>
         void Deactivate();
+        /// <summary>Update the status label.</summary>
+        void UpdateStatus();
     }
 }

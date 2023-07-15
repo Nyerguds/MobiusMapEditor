@@ -2377,10 +2377,12 @@ namespace MobiusEditor.TiberianDawn
                 return null;
             }
             INISection briefingSection = ini.Sections.Add("Briefing");
-            string briefText = Map.BriefingSection.Briefing.Replace('\t', ' ').Trim('\r', '\n', ' ').Replace("\r\n", "\n").Replace("\r", "\n");
-            // Remove duplicate spaces
+            string briefText = (Map.BriefingSection.Briefing ?? String.Empty).Replace('\t', ' ').Trim('\r', '\n', ' ').Replace("\r\n", "\n").Replace("\r", "\n");
+            // Remove duplicate spaces,
             briefText = Regex.Replace(briefText, " +", " ");
-            if (string.IsNullOrEmpty(briefText))
+            // Remove spaces around line breaks. (Test this!)
+            briefText = Regex.Replace(briefText, " *\\n *", "\n");
+            if (briefText.Length == 0)
             {
                 return null;
             }

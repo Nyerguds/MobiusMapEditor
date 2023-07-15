@@ -88,13 +88,16 @@ namespace MobiusEditor.Tools
 
         private void Url_UndoRedoDone(object sender, UndoRedoEventArgs e)
         {
-            // Only update this stuff if the undo/redo event was actually a celltriggers change.
-            if (e.Source != ToolType.CellTrigger)
+            if ((e.Source & (ToolType.Infantry | ToolType.Unit | ToolType.Building)) != ToolType.None)
             {
-                return;
+                // Moving units and buildings around can affect blobs, since they might be attached to the triggers.
+                UpdateBlobsList(null, null);
             }
-            // Can't know for sure which one updated, so update them all.
-            UpdateDataSource();
+            else if ((e.Source & ToolType.CellTrigger) != ToolType.None)
+            {
+                // Can't know for sure which one updated, so update them all.
+                UpdateDataSource();
+            }
         }
 
         private void Triggers_CollectionChanged(object sender, EventArgs e)
@@ -178,13 +181,41 @@ namespace MobiusEditor.Tools
                 }
                 Func<bool[,], int, int, bool> isCelltrigger = (mapdata, yVal, xVal) => mapdata[yVal, xVal];
                 List<List<Point>> blobs = BlobDetection.FindBlobs(cellTrigs, width, height, points.ToArray(), isCelltrigger, true, true);
-                List<Rectangle> curBlobBounds = blobs.Where(b => b.Count > 0).Select(BlobDetection.GetBlobBounds).ToList();
+                HashSet<Rectangle> curBlobBounds = blobs.Where(b => b.Count > 0).Select(BlobDetection.GetBlobBounds).ToHashSet();
+                // Get blobs for technos
+                cellTrigs = new bool[height, width];
+                points.Clear();
+                foreach ((Point Location, ICellOccupier Occupier) techno in map.Technos.Where(lco => lco.Occupier is ITechno t && t.Trigger == trig))
+                {
+                    // Should cover buildings too.
+                    bool[,] occupyMask = techno.Occupier.OccupyMask;
+                    for (Int32 y = 0; y < occupyMask.GetLength(0); ++y)
+                    {
+                        for (Int32 x = 0; x < occupyMask.GetLength(1); ++x)
+                        {
+                            Point loc = new Point(techno.Location.X + x, techno.Location.Y + y);
+                            points.Add(loc);
+                            cellTrigs[loc.Y, loc.X] = true;
+                        }
+                    }
+                }
+                foreach ((Point Location, ICellOccupier Occupier) techno in map.Technos
+                    .Where(lco => lco.Occupier is InfantryGroup ifg && ifg.Infantry.Any(i => i != null && i.Trigger == trig)))
+                {
+                    points.Add(techno.Location);
+                    cellTrigs[techno.Location.Y, techno.Location.X] = true;
+                }
+                List<List<Point>> technoBlobs = BlobDetection.FindBlobs(cellTrigs, width, height, points.ToArray(), isCelltrigger, false, true);
+                HashSet<Rectangle> curTechnoBlobBounds = technoBlobs.Where(b => b.Count > 0).Select(BlobDetection.GetBlobBounds).ToHashSet();
+                curBlobBounds.UnionWith(curTechnoBlobBounds);
+                Rectangle[] curBlobs = curBlobBounds.ToArray();
+                Array.Sort(curBlobs.Select(t => (int)map.Metrics.GetCell(t.Location)).ToArray(), curBlobs);
                 if (updateItem != null)
                 {
-                    cellTrigBlobCenters[updateItem] = curBlobBounds.ToArray();
+                    cellTrigBlobCenters[updateItem] = curBlobs;
                     break;
                 }
-                cellTrigBlobCenters[trig] = curBlobBounds.ToArray();
+                cellTrigBlobCenters[trig] = curBlobs;
             }
         }
 
@@ -471,6 +502,9 @@ namespace MobiusEditor.Tools
                 }
                 Rectangle location = locations[currentCellTrigIndex];
                 mapPanel.JumpToPosition(map.Metrics, location, false);
+                navigationWidget.Refresh();
+                this.UpdateStatus();
+                this.RefreshMainWindowMouseInfo();
                 currentCellTrigIndex++;
             }
         }
@@ -521,7 +555,7 @@ namespace MobiusEditor.Tools
             }
         }
 
-        private void UpdateStatus()
+        public override void UpdateStatus()
         {
             if (placementMode)
             {

@@ -44,6 +44,8 @@ namespace MobiusEditor.Tools
         private Map previewMap;
         protected override Map RenderMap => previewMap;
 
+        public override bool IsBusy { get { return undoOverlays.Count > 0; } }
+
         public override Object CurrentObject
         {
             get { return selectedWallType; }
@@ -328,7 +330,7 @@ namespace MobiusEditor.Tools
             wallTypeMapPanel.MapImage = SelectedWallType?.Thumbnail;
         }
 
-        private void UpdateStatus()
+        public override void UpdateStatus()
         {
             if (placementMode)
             {

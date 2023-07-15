@@ -39,6 +39,8 @@ namespace MobiusEditor.Tools
         private readonly NumericUpDown brushSizeNud;
         private readonly CheckBox gemsCheckBox;
 
+        public override bool IsBusy { get { return undoOverlays.Count > 0; } }
+
         public int currentVal;
         public override Object CurrentObject
         {
@@ -81,7 +83,7 @@ namespace MobiusEditor.Tools
         private void Url_UndoRedoDone(object sender, UndoRedoEventArgs e)
         {
             // Only update this stuff if the undo/redo event was actually a resources change.
-            if (e.Source != ToolType.Resources)
+            if ((e.Source & ToolType.Resources) == ToolType.None)
             {
                 return;
             }
@@ -352,7 +354,7 @@ namespace MobiusEditor.Tools
             }
         }
 
-        private void UpdateStatus()
+        public override void UpdateStatus()
         {
             if (placementMode)
             {

@@ -35,6 +35,16 @@ namespace MobiusEditor.Tools
         public abstract Object CurrentObject { get; set; }
         protected bool isActive = false;
         public bool IsActive { get { return isActive; } }
+        public event EventHandler RequestMouseInfoRefresh;
+
+        protected void RefreshMainWindowMouseInfo()
+        {
+            RequestMouseInfoRefresh?.Invoke(this, new EventArgs());
+        }
+
+        public abstract void UpdateStatus();
+
+        public virtual bool IsBusy { get { return false; } }
 
         protected readonly Map map;
 

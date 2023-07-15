@@ -542,3 +542,12 @@ Released on 12 Jul 2023 at 08:28 GMT
 * Fixed crashes when selecting WallGroups in Interior theater when map passability indication is enabled.
 * Fixed issues related to previewing the placement of WallGroup tiles on the map.
 * Disabled DPI awareness logic, because apparently it only had negative side effects.
+
+### v1.5.0.2:
+
+Unreleased
+
+* The Cell Trigger tool's "jump to" function will now also jump to placed objects with the attached trigger, to easily review what uses it.
+* The "jump to" function in Waypoints and Cell Triggers will now properly update the mouse cell info in the bottom bar.
+* The [Briefing] and [Base] sections can now also accept custom ini keys (which can be useful for mods).
+* Undo/redo operations are now blocked while mouse drag operations (moving or drag-placing objects) are in progress.

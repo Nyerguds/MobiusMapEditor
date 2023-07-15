@@ -64,6 +64,8 @@ namespace MobiusEditor.Tools
         private Map previewMap;
         protected override Map RenderMap => previewMap;
 
+        public override bool IsBusy { get { return undoTemplates.Count > 0; } }
+
         // Uses a dummy Template object with the type and selected cell, with -1 if no specific cell is selected.
         public override Object CurrentObject
         {
@@ -289,7 +291,7 @@ namespace MobiusEditor.Tools
         private void Url_UndoRedoDone(object sender, UndoRedoEventArgs e)
         {
             // Only update this stuff if the undo/redo event was actually a map change.
-            if (e.Source != ToolType.Map)
+            if ((e.Source & ToolType.Map) == ToolType.None)
             {
                 return;
             }
@@ -1780,7 +1782,7 @@ namespace MobiusEditor.Tools
             url.Track(undoAction, redoAction, ToolType.Map);
         }
 
-        private void UpdateStatus()
+        public override void UpdateStatus()
         {
             if (placementMode)
             {

@@ -73,6 +73,7 @@ namespace MobiusEditor.Tools
             this.waypointCombo = waypointCombo;
             this.waypointCombo.DisplayMember = "";
             this.waypointCombo.DataSource = plugin.Map.Waypoints.ToArray();
+            this.waypointCombo.SelectedIndexChanged += this.WaypointCombo_SelectedIndexChanged;
             navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
             UpdateStatus();
         }
@@ -80,7 +81,7 @@ namespace MobiusEditor.Tools
         private void Url_UndoRedoDone(object sender, UndoRedoEventArgs e)
         {
             // Only update this stuff if the undo/redo event was actually a waypoint change.
-            if (e.Source != ToolType.Waypoint)
+            if ((e.Source & ToolType.Waypoint) == ToolType.None)
             {
                 return;
             }
@@ -278,7 +279,8 @@ namespace MobiusEditor.Tools
                         break;
                 }
             }
-            else
+            // Allow these to work while shift is pressed.
+            if (!newVal.HasValue)
             {
                 switch (e.KeyCode)
                 {
@@ -470,6 +472,9 @@ namespace MobiusEditor.Tools
                 return;
             }
             mapPanel.JumpToPosition(map.Metrics, cellPoint, false);
+            navigationWidget.Refresh();
+            this.UpdateStatus();
+            this.RefreshMainWindowMouseInfo();
         }
 
         protected override void PreRenderMap()
@@ -561,7 +566,7 @@ namespace MobiusEditor.Tools
             }
         }
 
-        private void UpdateStatus()
+        public override void UpdateStatus()
         {
             WaypointFlag flag = WaypointFlag.None;
             Waypoint[] wps = map.Waypoints;
