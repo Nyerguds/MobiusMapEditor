@@ -551,3 +551,4 @@ Unreleased
 * The "jump to" function in Waypoints and Cell Triggers will now properly update the mouse cell info in the bottom bar.
 * The [Briefing] and [Base] sections can now also accept custom ini keys (which can be useful for mods).
 * Undo/redo operations are now blocked while mouse drag operations (moving or drag-placing objects) are in progress.
+* Fixed bug where having a specific tile from a random tiles group selected would show the first tile of the group as placement preview.

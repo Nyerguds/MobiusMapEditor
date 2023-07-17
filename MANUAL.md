@@ -44,6 +44,16 @@ After selecting the map type and the image, a dialog will be shown where colors 
 
 The result of this is obviously not an immediately usable map. It will produce a rough layout which will then need to be overlayed with actual cliffs, rivers and shores to turn it into an actual map. For Red Alert Interior theater, you can probably do a lot more preparation work in the image editor; all corridor sizes can be laid out exactly, and you can even pre-place areas where wall shadows will come, so they can be taken care of with a few quick flood fill commands in the editor.
 
+### Randomizable tiles
+
+In Red Alert's Interior theater, the editor unlocks access to an unused game feature, namely, the ability to use the random alternates that exist in most of the Interior theater's 1x1 tile types. None of the original game maps ever use these alternates, but both the original game and the remaster can perfectly show them if they are present in maps.
+
+On the preview window, such tiles will be indicated with a light blue grid drawn over them. When you have such a tile type selected, placing down a tile will randomly place one of the available tiles. Of course, just as with any other tile, you can right-click on the map (or left-click on the preview window) to select a specific tile to place, which will disable the randomizing feature. Left-clicking in the preview window will remove the specifically-selected cell and re-enable the randomization.
+
+The randomizability feature is also applied the other way around: to remove clutter, three ranges of equivalent 1x1 wall tiles were packed together into three randomizable tileset groups. These are "wallgroup1", "wallgroup2" and "wallgroup3". If you place down any of these walls on the map and hover your mouse over the tile, you will see the actual tiles are identified as wall0002 to wall0022.
+
+The Tools menu has a specific "Re-randomize tiles" option to automatically apply this randomization to existing maps. This will include randomizing the walls. Note that even though the specific corner pieces in wall0023 to wall0049 are pretty much equivalent to combinations of these randomizable wall tiles, they are not affected by this operation.
+
 ### The "Publish" function
 
 The "Publish" option in the menu will allow you to upload your map to the Steam Workshop. It only works if you have the C&C Remastered game installed through Steam.
@@ -106,7 +116,7 @@ In classic graphics mode, the editor can still use mods, if they contain classic
 
 * **DefaultBoundsObstructFill**: Default for the option "Tools" → "Options" → "Flood fill is obstructed by map bounds".  When enabled, and filling map tiles with [Ctrl]+[Shift]+[Click], the map boundary acts as border blocking the fill spread. This applies both inside and outside the border.
 * **DefaultTileDragProtect**: Default for the option "Tools" → "Options" → "Drag-place map tiles without smearing". When placing tiles in map mode, and dragging around the mouse, this option will make sure a new tileset block is only placed after fully leaving the previously-placed blocks inside that one mouse action.
-* **DefaultTileDragRandomize**: Default for the option "Tools" → "Options" → "Randomize drag-placed map tiles". When placing a tile and holding down the mouse to drag more, this will make the subsequently placed tiles randomise between equivalents of the same size.
+* **DefaultTileDragRandomize**: Default for the option "Tools" → "Options" → "Randomize drag-placed map tiles". When placing a tile and holding down the mouse to drag more, this will make the subsequently placed tiles randomize between equivalents of the same size.
 * **DefaultShowPlacementGrid**: Default for the option "Tools" → "Options" → "Show grid when placing / moving". This option enables showing the map grid when in placement mode (and/or holding down [Shift]) or when dragging a placed down object to a different location.
 * **DefaultOutlineAllCrates**: Default for the option "Tools" → "Options" → "Crate outline indicators show on all crates". When enabled, the crate indicators from the "View" → "Indicators" → "Outlines on overlapped crates" option will show on all crates instead of just those underneath objects or graphics.
 * **DefaultCratesOnTop**: Default for the option "Tools" → "Options" → "Show crates on top of other objects".

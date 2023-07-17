@@ -1266,20 +1266,63 @@ namespace MobiusEditor.Model
 
         public static String MakeAllowedTriggersToolTip(string[] filteredEvents, string[] filteredActions)
         {
+            return MakeAllowedTriggersToolTip(filteredEvents, null, filteredActions, null);
+        }
+
+        public static String MakeAllowedTriggersToolTip(string[] filteredEvents, string[] filteredActions, Trigger trigger)
+        {
+            List<string> indicatedEvents = new List<string>();
+            List<string> indicatedActions = new List<string>();
+            if (trigger != null)
+            {
+                indicatedEvents.Add(trigger.Event1.EventType);
+                if (trigger.EventControl != TriggerMultiStyleType.Only && !TriggerEvent.IsEmpty(trigger.Event2.EventType))
+                {
+                    indicatedEvents.Add(trigger.Event2.EventType);
+                }
+                indicatedActions.Add(trigger.Action1.ActionType);
+                if (trigger.EventControl == TriggerMultiStyleType.Linked || !TriggerEvent.IsEmpty(trigger.Action2.ActionType))
+                {
+                    indicatedActions.Add(trigger.Action2.ActionType);
+                }
+            }
+            return MakeAllowedTriggersToolTip(filteredEvents, indicatedEvents.ToArray(), filteredActions, indicatedActions.ToArray());
+        }
+
+        public static String MakeAllowedTriggersToolTip(string[] filteredEvents, String[] indicatedEvents, string[] filteredActions, string[] indicatedActions)
+        {
+            if (indicatedEvents == null)
+            {
+                indicatedEvents = new string[0];
+            }
+            if (indicatedActions == null)
+            {
+                indicatedActions = new string[0];
+            }
             StringBuilder tooltip = new StringBuilder();
             bool hasEvents = filteredEvents != null && filteredEvents.Length > 0;
             bool hasActions = filteredActions != null && filteredActions.Length > 0;
             if (hasEvents)
             {
-                tooltip.Append("Allowed trigger events:\n\u2022 ")
-                    .Append(String.Join("\n\u2022 ", filteredEvents));
+                tooltip.Append("Allowed trigger events:");
+                foreach(string evt in filteredEvents)
+                {
+                    tooltip.Append(indicatedEvents.Contains(evt) ? "\n> " : "\n\u2022 ").Append(evt);
+                }
                 if (hasActions)
                     tooltip.Append('\n');
             }
             if (hasActions)
             {
-                tooltip.Append("Allowed trigger actions:\n\u2022 ")
-                    .Append(String.Join("\n\u2022 ", filteredActions));
+                if (hasEvents)
+                {
+                    tooltip.Append("\n");
+                }
+                tooltip.Append("Allowed trigger actions:");
+                foreach (string act in filteredActions)
+                {
+                    tooltip.Append(indicatedActions.Contains(act) ? "\n> " : "\n\u2022 ").Append(act);
+                }
             }
             return hasEvents || hasActions ? tooltip.ToString() : null;
         }
