@@ -31,6 +31,9 @@ namespace MobiusEditor.Controls
         private Bitmap infoImage;
         private bool isMockObject;
 
+        string[] filteredEvents;
+        string[] filteredActions;
+
         public IGamePlugin Plugin { get; private set; }
 
         private string triggerToolTip;
@@ -59,8 +62,8 @@ namespace MobiusEditor.Controls
             {
                 g.DrawIcon(SystemIcons.Information, new Rectangle(0, 0, infoImage.Width, infoImage.Height));
             }
-            lblTriggerInfo.Image = infoImage;
-            lblTriggerInfo.ImageAlign = ContentAlignment.MiddleCenter;
+            lblTriggerTypesInfo.Image = infoImage;
+            lblTriggerTypesInfo.ImageAlign = ContentAlignment.MiddleCenter;
         }
 
         public void Initialize(IGamePlugin plugin, bool isMockObject)
@@ -85,11 +88,12 @@ namespace MobiusEditor.Controls
         {
             string selected = terrain != null ? terrain.Trigger : triggerComboBox.SelectedItem as string;
             triggerComboBox.DataBindings.Clear();
+            triggerComboBox.SelectedIndexChanged -= this.TriggerComboBox_SelectedIndexChanged;
             triggerComboBox.DataSource = null;
             triggerComboBox.Items.Clear();
             string[] items = Plugin.Map.FilterTerrainTriggers().Select(t => t.Name).Distinct().ToArray();
-            string[] filteredEvents = Plugin.Map.EventTypes.Where(ev => Plugin.Map.TerrainEventTypes.Contains(ev)).Distinct().ToArray();
-            string[] filteredActions = Plugin.Map.ActionTypes.Where(ev => Plugin.Map.TerrainActionTypes.Contains(ev)).Distinct().ToArray();
+            filteredEvents = Plugin.Map.EventTypes.Where(ev => Plugin.Map.TerrainEventTypes.Contains(ev)).Distinct().ToArray();
+            filteredActions = Plugin.Map.ActionTypes.Where(ev => Plugin.Map.TerrainActionTypes.Contains(ev)).Distinct().ToArray();
             HashSet<string> allowedTriggers = new HashSet<string>(items, StringComparer.OrdinalIgnoreCase);
             items = Trigger.None.Yield().Concat(Plugin.Map.Triggers.Select(t => t.Name).Where(t => allowedTriggers.Contains(t)).Distinct()).ToArray();
             int selectIndex = String.IsNullOrEmpty(selected) ? 0 : Enumerable.Range(0, items.Length).FirstOrDefault(x => String.Equals(items[x], selected, StringComparison.OrdinalIgnoreCase));
@@ -100,8 +104,28 @@ namespace MobiusEditor.Controls
                 terrain.Trigger = items[selectIndex];
                 triggerComboBox.DataBindings.Add("SelectedItem", terrain, "Trigger");
             }
+            triggerComboBox.SelectedIndexChanged += this.TriggerComboBox_SelectedIndexChanged;
             triggerComboBox.SelectedIndex = selectIndex;
             triggerToolTip = Map.MakeAllowedTriggersToolTip(filteredEvents, filteredActions);
+        }
+
+        private void TriggerComboBox_SelectedIndexChanged(Object sender, EventArgs e)
+        {
+            if (filteredEvents == null || filteredActions == null)
+            {
+                return;
+            }
+            string selected = triggerComboBox.SelectedItem as string;
+            Trigger trig = this.Plugin.Map.Triggers.FirstOrDefault(t => String.Equals(t.Name, selected, StringComparison.OrdinalIgnoreCase));
+            triggerToolTip = Map.MakeAllowedTriggersToolTip(filteredEvents, filteredActions, trig);
+            Point pt = MousePosition;
+            Point lblPos = lblTriggerTypesInfo.PointToScreen(Point.Empty);
+            Rectangle lblRect = new Rectangle(lblPos, lblTriggerTypesInfo.Size);
+            if (lblRect.Contains(pt))
+            {
+                this.toolTip1.Hide(lblTriggerTypesInfo);
+                LblTriggerTypesInfo_MouseEnter(lblTriggerTypesInfo, e);
+            }
         }
 
         private void comboBox_SelectedValueChanged(object sender, EventArgs e)
@@ -120,7 +144,7 @@ namespace MobiusEditor.Controls
             }
         }
 
-        private void LblTriggerInfo_MouseEnter(Object sender, EventArgs e)
+        private void LblTriggerTypesInfo_MouseEnter(Object sender, EventArgs e)
         {
             Control target = sender as Control;
             if (target == null || triggerToolTip == null)
@@ -136,7 +160,7 @@ namespace MobiusEditor.Controls
             //this.toolTip1.Show(triggerToolTip, target, target.Width, 0, 10000);
         }
 
-        private void LblTriggerInfo_MouseLeave(Object sender, EventArgs e)
+        private void LblTriggerTypesInfo_MouseLeave(Object sender, EventArgs e)
         {
             Control target = sender as Control;
             this.toolTip1.Hide(target);
@@ -152,7 +176,7 @@ namespace MobiusEditor.Controls
             {
                 try
                 {
-                    lblTriggerInfo.Image = null;
+                    lblTriggerTypesInfo.Image = null;
                 }
                 catch { /*ignore*/}
                 try

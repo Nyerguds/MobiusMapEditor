@@ -52,7 +52,7 @@ namespace MobiusEditor.Tools
             {
                 if (value is Terrain ter)
                 {
-                    selectedTerrainType = ter.Type;
+                    SelectedTerrainType = ter.Type;
                     mockTerrain.CloneDataFrom(ter);
                     RefreshPreviewPanel();
                 }
@@ -525,14 +525,21 @@ namespace MobiusEditor.Tools
                 using (var g = Graphics.FromImage(terrainPreview))
                 {
                     MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
-                    var render = MapRenderer.RenderTerrain(plugin.GameType, map.Theater, new Point(0, 0), Globals.PreviewTileSize, Globals.PreviewTileScale, mockTerrain);
-                    if (!render.Item1.IsEmpty)
+                    RenderInfo render = MapRenderer.RenderTerrain(new Point(0, 0), Globals.PreviewTileSize, Globals.PreviewTileScale, mockTerrain);
+                    if (render.RenderedObject != null)
                     {
-                        render.Item2(g);
+                        render.RenderAction(g);
                     }
                     List<(Point p, Terrain ter)> terrainList = new List<(Point p, Terrain ter)>();
                     terrainList.Add((new Point(0, 0), mockTerrain));
                     MapRenderer.RenderAllOccupierBounds(g, new Rectangle(Point.Empty, previewSize), Globals.PreviewTileSize, terrainList);
+                    if ((Layers & MapLayerFlag.TechnoTriggers) == MapLayerFlag.TechnoTriggers)
+                    {
+                        CellMetrics tm = new CellMetrics(mockTerrain.Type.OverlapBounds.Size);
+                        OccupierSet<ICellOccupier> technoSet = new OccupierSet<ICellOccupier>(tm);
+                        technoSet.Add(0, mockTerrain);
+                        MapRenderer.RenderAllTechnoTriggers(g, technoSet, tm.Bounds, Globals.PreviewTileSize, Layers, Color.LimeGreen, null, false);
+                    }
                 }
                 terrainTypeMapPanel.MapImage = terrainPreview;
             }
@@ -585,7 +592,7 @@ namespace MobiusEditor.Tools
                 terrain.Tint = Color.FromArgb(128, Color.White);
                 terrain.IsPreview = true;
                 //previewMap.Technos.Add(location, terrain);
-                if (previewMap.Technos.CanAdd(location, terrain, terrain.Type.OccupyMask) && previewMap.Buildings.Add(location, terrain))
+                if (previewMap.Technos.CanAdd(location, terrain, terrain.Type.OccupyMask) && previewMap.Technos.Add(location, terrain))
                 {
                     mapPanel.Invalidate(previewMap, terrain);
                 }

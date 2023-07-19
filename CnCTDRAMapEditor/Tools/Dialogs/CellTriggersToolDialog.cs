@@ -27,8 +27,6 @@ namespace MobiusEditor.Tools.Dialogs
     public partial class CellTriggersToolDialog : ToolDialog<CellTriggersTool>
     {
         private Bitmap infoImage;
-        public ComboBox TriggerCombo => triggerComboBox;
-        public Button BtnJumpTo => btnJumpTo;
 
         public CellTriggersToolDialog(Form parentForm)
             : base(parentForm)
@@ -47,10 +45,23 @@ namespace MobiusEditor.Tools.Dialogs
         protected override void InitializeInternal(MapPanel mapPanel, MapLayerFlag activeLayers, ToolStripStatusLabel toolStatusLabel, ToolTip mouseToolTip,
             IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs, ToolType> undoRedoList)
         {
-            Tool = new CellTriggersTool(mapPanel, activeLayers, toolStatusLabel, TriggerCombo, BtnJumpTo, plugin, undoRedoList);
+            Tool = new CellTriggersTool(mapPanel, activeLayers, toolStatusLabel, triggerComboBox, btnJumpTo, plugin, undoRedoList);
+            Tool.OnTriggerToolTipChanged += this.Tool_OnTriggerToolTipChanged;
         }
 
-        private void LblTriggerInfo_MouseEnter(Object sender, EventArgs e)
+        private void Tool_OnTriggerToolTipChanged(Object sender, EventArgs e)
+        {
+            Point pt = MousePosition;
+            Point lblPos = lblTriggerTypesInfo.PointToScreen(Point.Empty);
+            Rectangle lblRect = new Rectangle(lblPos, lblTriggerTypesInfo.Size);
+            if (lblRect.Contains(pt))
+            {
+                this.toolTip1.Hide(lblTriggerTypesInfo);
+                LblTriggerTypesInfo_MouseEnter(lblTriggerTypesInfo, e);
+            }
+        }
+
+        private void LblTriggerTypesInfo_MouseEnter(Object sender, EventArgs e)
         {
             Control target = sender as Control;
             if (target == null || Tool == null || Tool.TriggerToolTip == null)

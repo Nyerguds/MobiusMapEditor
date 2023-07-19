@@ -328,6 +328,32 @@ namespace MobiusEditor
             return base.ProcessCmdKey(ref msg, keyData);
         }
 
+        private void MainForm_KeyPress(Object sender, KeyPressEventArgs e)
+        {
+            // Workaround for localised non-numpad versions of keys.
+            char typedChar = e.KeyChar;
+            bool handled = true;
+            switch (typedChar)
+            {
+                case '*':
+                    viewZoomResetMenuItem.PerformClick();
+                    break;
+                case '+':
+                    viewZoomInMenuItem.PerformClick();
+                    break;
+                case '-':
+                    viewZoomOutMenuItem.PerformClick();
+                    break;
+                default:
+                    handled = false;
+                    break;
+            }
+            if (handled)
+            {
+                e.Handled = true;
+            }
+        }
+
         private void UpdateUndoRedo()
         {
             editUndoMenuItem.Enabled = url.CanUndo;
@@ -1536,7 +1562,11 @@ namespace MobiusEditor
                 mapLoaded = true;
                 if (SteamworksUGC.IsInit)
                 {
-                    plugin.Map.BasicSection.Author = SteamFriends.GetPersonaName();
+                    try
+                    {
+                        plugin.Map.BasicSection.Author = SteamFriends.GetPersonaName();
+                    }
+                    catch { /* ignore */ }
                 }
                 if (imageData != null)
                 {

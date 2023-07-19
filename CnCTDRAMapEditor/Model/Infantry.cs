@@ -118,6 +118,55 @@ namespace MobiusEditor.Model
 
     public class InfantryGroup : ICellOverlapper, ICellOccupier
     {
+        public static InfantryStoppingType[] RenderOrder =
+        {
+            InfantryStoppingType.UpperRight,
+            InfantryStoppingType.UpperLeft,
+            InfantryStoppingType.Center,
+            InfantryStoppingType.LowerRight,
+            InfantryStoppingType.LowerLeft,
+        };
+
+        public static int RenderPriority(InfantryStoppingType ist)
+        {
+            return Enumerable.Range(0, RenderOrder.Length).Where(i => RenderOrder[i] == ist).FirstOrDefault();
+        }
+
+        public static Point RenderPosition(InfantryStoppingType ist, bool adjust)
+        {
+            // Start with center
+            Point offset = new Point(Globals.PixelWidth / 2, Globals.PixelHeight / 2);
+            // Spread out 4 points around center
+            switch (ist)
+            {
+                case InfantryStoppingType.UpperLeft:
+                    offset.X -= Globals.PixelWidth / 4;
+                    offset.Y -= Globals.PixelHeight / 4;
+                    break;
+                case InfantryStoppingType.UpperRight:
+                    offset.X += Globals.PixelWidth / 4;
+                    offset.Y -= Globals.PixelHeight / 4;
+                    break;
+                case InfantryStoppingType.LowerLeft:
+                    offset.X -= Globals.PixelWidth / 4;
+                    offset.Y += Globals.PixelHeight / 4;
+                    break;
+                case InfantryStoppingType.LowerRight:
+                    offset.X += Globals.PixelWidth / 4;
+                    offset.Y += Globals.PixelHeight / 4;
+                    break;
+                case InfantryStoppingType.Center:
+                    break;
+            }
+            if (adjust)
+            {
+                // Add corrections to get feet locations. These values are experimental, from comparing the map editor to game screenshots.
+                offset.X -= Globals.PixelWidth / 12; // X minus 2 pixels
+                offset.Y += Globals.PixelHeight / 6; // Y plus 4 pixels
+            }
+            return offset;
+        }
+
         private static readonly string[] StoppingTypeNames =
         {
             "Center",

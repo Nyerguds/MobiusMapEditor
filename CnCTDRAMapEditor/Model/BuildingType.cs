@@ -78,6 +78,7 @@ namespace MobiusEditor.Model
 
         /// <summary>Actual footprint of the building, without bibs involved.</summary>
         public bool[,] BaseOccupyMask { get; private set; }
+        public Rectangle BaseOccupyBounds => new Rectangle(Point.Empty, new Size(this.BaseOccupyMask.GetLength(1), this.BaseOccupyMask.GetLength(0)));
         public Size Size { get; private set; }
         public bool HasBib
         {
@@ -279,15 +280,15 @@ namespace MobiusEditor.Model
                 Strength = 256,
                 Direction = direction
             };
-            (Rectangle, Action<Graphics>, bool) render = MapRenderer.RenderBuilding(gameType, Point.Empty, Globals.PreviewTileSize, Globals.PreviewTileScale, mockBuilding);
-            if (!render.Item1.IsEmpty)
+            RenderInfo render = MapRenderer.RenderBuilding(gameType, Point.Empty, Globals.PreviewTileSize, Globals.PreviewTileScale, mockBuilding);
+            if (render.RenderedObject != null)
             {
-                Bitmap th = new Bitmap(render.Item1.Width, render.Item1.Height);
+                Bitmap th = new Bitmap(this.Size.Width * Globals.PreviewTileSize.Width, this.Size.Height * Globals.PreviewTileSize.Height);
                 th.SetResolution(96, 96);
                 using (Graphics g = Graphics.FromImage(th))
                 {
                     MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
-                    render.Item2(g);
+                    render.RenderAction(g);
                     if (this.IsFake)
                     {
                         MapRenderer.RenderFakeBuildingLabel(g, mockBuilding, Point.Empty, Globals.PreviewTileSize, false);

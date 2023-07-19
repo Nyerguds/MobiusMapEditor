@@ -92,7 +92,7 @@ namespace MobiusEditor.Tools.Dialogs
             this.lblTriggerTypesInfo.Size = new System.Drawing.Size(29, 27);
             this.lblTriggerTypesInfo.TabIndex = 10;
             this.lblTriggerTypesInfo.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.lblTriggerTypesInfo.MouseEnter += new System.EventHandler(this.LblTriggerInfo_MouseEnter);
+            this.lblTriggerTypesInfo.MouseEnter += new System.EventHandler(this.LblTriggerTypesInfo_MouseEnter);
             this.lblTriggerTypesInfo.MouseLeave += new System.EventHandler(this.LblTriggerInfo_MouseLeave);
             // 
             // btnJumpTo

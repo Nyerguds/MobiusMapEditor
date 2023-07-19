@@ -97,7 +97,7 @@ namespace MobiusEditor.Dialogs
             indicatorsListBox.Items.Clear();
             String[] names = Map.MapLayerNames;
             int len = names.Length;
-            for (int i = 1; i < len; ++i)
+            for (int i = 0; i < len; ++i)
             {
                 // Special rules per game. These should be kept identical to those in MainForm.EnableDisableMenuItems
                 MapLayerFlag mlf = (MapLayerFlag)(1 << i);
@@ -114,7 +114,7 @@ namespace MobiusEditor.Dialogs
                 }
                 ListItem<MapLayerFlag> mli = new ListItem<MapLayerFlag>(mlf, names[i]);
                 int index;
-                if ((MapLayerFlag.MapLayers & mlf) != MapLayerFlag.None)
+                if ((MapLayerFlag.MapLayers & mlf) != MapLayerFlag.None || mlf == MapLayerFlag.Template)
                 {
                     index = layersListBox.Items.Add(mli);
                     if ((layers & mlf) != MapLayerFlag.None)
@@ -263,7 +263,7 @@ namespace MobiusEditor.Dialogs
                 MessageBox.Show("Could not parse scale factor!", "Error");
                 return;
             }
-            MapLayerFlag layers = GetLayers() | MapLayerFlag.Template;
+            MapLayerFlag layers = GetLayers();
             bool smooth = chkSmooth.Checked;
             bool inBounds = chkBoundsOnly.Checked;
             string path = txtPath.Text;
@@ -313,7 +313,8 @@ namespace MobiusEditor.Dialogs
             int width = inBounds ? gamePlugin.Map.Bounds.Width : fullWidth;
             int height = inBounds ? gamePlugin.Map.Bounds.Height : fullHeight;
             Size size = new Size(width * tileWidth, height * tileHeight);
-            using (Bitmap exportImage = gamePlugin.Map.GeneratePreview(size, gamePlugin, layers, smooth, inBounds, false).ToBitmap())
+            bool clearBg = (layers & MapLayerFlag.Template) == MapLayerFlag.Template;
+            using (Bitmap exportImage = gamePlugin.Map.GeneratePreview(size, gamePlugin, layers, clearBg, smooth, inBounds, false).ToBitmap())
             {
                 exportImage.Save(outputPath, ImageFormat.Png);
             }

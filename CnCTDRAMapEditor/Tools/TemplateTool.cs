@@ -1831,7 +1831,7 @@ namespace MobiusEditor.Tools
             {
                 // When placing a random tile, always place first icon, otherwise it shows as random tile,
                 // and the user might think that that specific shown random tile is what will be placed down.
-                Point? placeIcon = SelectedIcon.HasValue ? SelectedIcon : new Point(0, 0);
+                Point? placeIcon = SelectedIcon ?? new Point(0, 0);
                 SetTemplate(map.TemplateTypes, previewMap.Templates, selected, location, placeIcon, null, null, this.random, false);
             }
             else

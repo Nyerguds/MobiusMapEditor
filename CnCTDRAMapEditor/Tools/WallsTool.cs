@@ -79,7 +79,7 @@ namespace MobiusEditor.Tools
                     }
                     selectedWallType = value;
                     wallTypeComboBox.SelectedValue = selectedWallType;
-                    base.RefreshPreviewPanel();
+                    RefreshPreviewPanel();
                 }
             }
         }

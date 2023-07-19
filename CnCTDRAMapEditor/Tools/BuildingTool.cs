@@ -761,7 +761,7 @@ namespace MobiusEditor.Tools
                         bibRender.Add(bibCellRender);
                     }
                 }
-                (Rectangle, Action<Graphics>, Boolean) renderBuilding = MapRenderer.RenderBuilding(plugin.GameType, new Point(0, 0), Globals.PreviewTileSize, Globals.PreviewTileScale, mockBuilding);
+                RenderInfo render = MapRenderer.RenderBuilding(plugin.GameType, new Point(0, 0), Globals.PreviewTileSize, Globals.PreviewTileScale, mockBuilding);
                 Size previewSize = mockBuilding.OverlapBounds.Size;
                 Bitmap buildingPreview = new Bitmap(previewSize.Width * Globals.PreviewTileWidth, previewSize.Height * Globals.PreviewTileHeight);
                 buildingPreview.SetResolution(96, 96);
@@ -775,9 +775,9 @@ namespace MobiusEditor.Tools
                             bib.Item2(g);
                         }
                     }
-                    if (!renderBuilding.Item1.IsEmpty)
+                    if (render.RenderedObject != null)
                     {
-                        renderBuilding.Item2(g);
+                        render.RenderAction(g);
                     }
                     List<(Point p, Building ter)> buildingList = new List<(Point p, Building ter)>();
                     buildingList.Add((new Point(0, 0), mockBuilding));
@@ -789,6 +789,13 @@ namespace MobiusEditor.Tools
                     if ((Layers & MapLayerFlag.BuildingRebuild) == MapLayerFlag.BuildingRebuild)
                     {
                         MapRenderer.RenderRebuildPriorityLabel(g, mockBuilding, new Point(0, 0), Globals.PreviewTileSize, false);
+                    }
+                    if ((Layers & MapLayerFlag.TechnoTriggers) == MapLayerFlag.TechnoTriggers)
+                    {
+                        CellMetrics tm = new CellMetrics(mockBuilding.Type.OverlapBounds.Size);
+                        OccupierSet<ICellOccupier> technoSet = new OccupierSet<ICellOccupier>(tm);
+                        technoSet.Add(0, mockBuilding);
+                        MapRenderer.RenderAllTechnoTriggers(g, technoSet, tm.Bounds, Globals.PreviewTileSize, Layers, Color.LimeGreen, null, false);
                     }
                 }
                 buildingTypeMapPanel.MapImage = buildingPreview;

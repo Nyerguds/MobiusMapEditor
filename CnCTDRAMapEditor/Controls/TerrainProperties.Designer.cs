@@ -33,7 +33,7 @@ namespace MobiusEditor.Controls
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.label1 = new System.Windows.Forms.Label();
             this.triggerComboBox = new MobiusEditor.Controls.PropertiesComboBox();
-            this.lblTriggerInfo = new System.Windows.Forms.Label();
+            this.lblTriggerTypesInfo = new System.Windows.Forms.Label();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
@@ -47,7 +47,7 @@ namespace MobiusEditor.Controls
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 28F));
             this.tableLayoutPanel1.Controls.Add(this.label1, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.triggerComboBox, 1, 0);
-            this.tableLayoutPanel1.Controls.Add(this.lblTriggerInfo, 2, 0);
+            this.tableLayoutPanel1.Controls.Add(this.lblTriggerTypesInfo, 2, 0);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
@@ -80,18 +80,18 @@ namespace MobiusEditor.Controls
             this.triggerComboBox.TabIndex = 9;
             this.triggerComboBox.SelectedIndexChanged += new System.EventHandler(this.comboBox_SelectedValueChanged);
             // 
-            // lblTriggerInfo
+            // lblTriggerTypesInfo
             // 
-            this.lblTriggerInfo.AutoSize = true;
-            this.lblTriggerInfo.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lblTriggerInfo.Location = new System.Drawing.Point(201, 0);
-            this.lblTriggerInfo.Margin = new System.Windows.Forms.Padding(0);
-            this.lblTriggerInfo.Name = "lblTriggerInfo";
-            this.lblTriggerInfo.Size = new System.Drawing.Size(29, 27);
-            this.lblTriggerInfo.TabIndex = 10;
-            this.lblTriggerInfo.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.lblTriggerInfo.MouseEnter += new System.EventHandler(this.LblTriggerInfo_MouseEnter);
-            this.lblTriggerInfo.MouseLeave += new System.EventHandler(this.LblTriggerInfo_MouseLeave);
+            this.lblTriggerTypesInfo.AutoSize = true;
+            this.lblTriggerTypesInfo.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblTriggerTypesInfo.Location = new System.Drawing.Point(201, 0);
+            this.lblTriggerTypesInfo.Margin = new System.Windows.Forms.Padding(0);
+            this.lblTriggerTypesInfo.Name = "lblTriggerTypesInfo";
+            this.lblTriggerTypesInfo.Size = new System.Drawing.Size(29, 27);
+            this.lblTriggerTypesInfo.TabIndex = 10;
+            this.lblTriggerTypesInfo.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.lblTriggerTypesInfo.MouseEnter += new System.EventHandler(this.LblTriggerTypesInfo_MouseEnter);
+            this.lblTriggerTypesInfo.MouseLeave += new System.EventHandler(this.LblTriggerTypesInfo_MouseLeave);
             // 
             // TerrainProperties
             // 
@@ -112,6 +112,6 @@ namespace MobiusEditor.Controls
         private System.Windows.Forms.Label label1;
         private MobiusEditor.Controls.PropertiesComboBox triggerComboBox;
         private System.Windows.Forms.ToolTip toolTip1;
-        private System.Windows.Forms.Label lblTriggerInfo;
+        private System.Windows.Forms.Label lblTriggerTypesInfo;
     }
 }

@@ -354,6 +354,7 @@ namespace MobiusEditor.Model
             }
             else if (gameType == GameType.RedAlert)
             {
+                // This changes IconHeight, IconWidth and NumIcons.
                 fileInit = this.InitFromClassicFileRa(theater, out mask, out landTypes);
                 maskInit = fileInit;
             }

@@ -552,3 +552,11 @@ Unreleased
 * The [Briefing] and [Base] sections can now also accept custom ini keys (which can be useful for mods).
 * Undo/redo operations are now blocked while mouse drag operations (moving or drag-placing objects) are in progress.
 * Fixed bug where having a specific tile from a random tiles group selected would show the first tile of the group as placement preview.
+* Added the ability to export map previews without the map templates layer.
+* The tooltips showing which trigger criteria are needed for using a trigger in a certain situation will indicate which of the criteria are fulfilled by the currently selected trigger.
+* The tooltips showing which trigger criteria are needed will now say "usable" events/actions rather than "required".
+* The Zoom shortcuts should now work on more keys than just the numpad ones.
+* Fixed issues with how objects overlapped with each other.
+* Fixed a bug where Terrain objects would not show a placement preview on bibs.
+* Fixed a bug where changing the Wall type did not refresh the preview.
+* Fixed a bug where switching back to the Terrain tool would show the previously-selected type in the preview, but would not select it in the list.

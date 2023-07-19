@@ -105,8 +105,8 @@ namespace MobiusEditor
             this.viewIndicatorsOutlinesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewExtraIndicatorsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewExtraIndicatorsMapSymmetryMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.viewExtraIndicatorsMapPassabilityMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewExtraIndicatorsMapGridMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.viewExtraIndicatorsMapPassabilityMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewExtraIndicatorsWaypointRevealRadiusMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewExtraIndicatorsEffectAreaRadiusMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewZoomToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -770,7 +770,7 @@ namespace MobiusEditor
             // viewZoomResetMenuItem
             // 
             this.viewZoomResetMenuItem.Name = "viewZoomResetMenuItem";
-            this.viewZoomResetMenuItem.ShortcutKeyDisplayString = "Numpad *";
+            this.viewZoomResetMenuItem.ShortcutKeyDisplayString = "*";
             this.viewZoomResetMenuItem.Size = new System.Drawing.Size(232, 22);
             this.viewZoomResetMenuItem.Text = "&Reset zoom";
             this.viewZoomResetMenuItem.Click += new System.EventHandler(this.ViewZoomResetMenuItem_Click);
@@ -1055,6 +1055,7 @@ namespace MobiusEditor
             this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
             this.Shown += new System.EventHandler(this.MainForm_Shown);
+            this.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.MainForm_KeyPress);
             this.mainMenuStrip.ResumeLayout(false);
             this.mainMenuStrip.PerformLayout();
             this.mainStatusStrip.ResumeLayout(false);

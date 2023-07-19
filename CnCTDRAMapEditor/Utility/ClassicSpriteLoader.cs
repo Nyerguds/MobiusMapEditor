@@ -19,6 +19,9 @@ using System.Linq;
 
 namespace MobiusEditor.Utility
 {
+    /// <summary>
+    /// This class contains the code for loading classic sprite formats; TD/RA SHP, Dune II SHP, TD Template, RA Template, and CPS.
+    /// </summary>
     public static class ClassicSpriteLoader
     {
         private static readonly byte[] ConvertToEightBit = new byte[64];

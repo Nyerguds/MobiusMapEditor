@@ -748,7 +748,22 @@ namespace MobiusEditor.Tools
                 using (var g = Graphics.FromImage(infantryPreview))
                 {
                     MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
-                    MapRenderer.RenderInfantry(Point.Empty, Globals.PreviewTileSize, mockInfantry, InfantryStoppingType.Center).Item2(g);
+                    RenderInfo render = MapRenderer.RenderInfantry(Point.Empty, Globals.PreviewTileSize, mockInfantry, InfantryStoppingType.Center);
+                    if (render.RenderedObject != null)
+                    {
+                        render.RenderAction(g);
+                    }
+                    if ((Layers & MapLayerFlag.TechnoTriggers) == MapLayerFlag.TechnoTriggers)
+                    {
+                        CellMetrics tm = new CellMetrics(1,1);
+                        OccupierSet<ICellOccupier> technoSet = new OccupierSet<ICellOccupier>(tm);
+                        InfantryGroup ifg = new InfantryGroup();
+                        ifg.Infantry[(int)InfantryStoppingType.Center] = mockInfantry;
+                        mockInfantry.InfantryGroup = ifg;
+                        technoSet.Add(0, ifg);
+                        MapRenderer.RenderAllTechnoTriggers(g, technoSet, tm.Bounds, Globals.PreviewTileSize, Layers, Color.LimeGreen, null, false);
+                        mockInfantry.InfantryGroup = null;
+                    }
                 }
                 infantryTypeMapPanel.MapImage = infantryPreview;
             }

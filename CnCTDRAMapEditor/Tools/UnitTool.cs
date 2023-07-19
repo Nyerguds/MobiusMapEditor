@@ -571,7 +571,18 @@ namespace MobiusEditor.Tools
                 using (var g = Graphics.FromImage(unitPreview))
                 {
                     MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
-                    MapRenderer.RenderUnit(plugin.GameType, new Point(1, 1), Globals.PreviewTileSize, mockUnit).Item2(g);
+                    RenderInfo render = MapRenderer.RenderUnit(plugin.GameType, new Point(1, 1), Globals.PreviewTileSize, mockUnit);
+                    if (render.RenderedObject != null)
+                    {
+                        render.RenderAction(g);
+                    }
+                    if ((Layers & MapLayerFlag.TechnoTriggers) == MapLayerFlag.TechnoTriggers)
+                    {
+                        CellMetrics tm = new CellMetrics(3, 3);
+                        OccupierSet<ICellOccupier> technoSet = new OccupierSet<ICellOccupier>(tm);
+                        technoSet.Add(4, mockUnit);
+                        MapRenderer.RenderAllTechnoTriggers(g, technoSet, tm.Bounds, Globals.PreviewTileSize, Layers, Color.LimeGreen, null, false);
+                    }
                 }
                 unitTypeMapPanel.MapImage = unitPreview;
             }

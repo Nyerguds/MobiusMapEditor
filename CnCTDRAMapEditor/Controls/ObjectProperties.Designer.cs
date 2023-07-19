@@ -46,7 +46,7 @@ namespace MobiusEditor.Controls
             this.basePriorityLabel = new System.Windows.Forms.Label();
             this.sellableCheckBox = new System.Windows.Forms.CheckBox();
             this.rebuildCheckBox = new System.Windows.Forms.CheckBox();
-            this.lblTriggerInfo = new System.Windows.Forms.Label();
+            this.lblTriggerTypesInfo = new System.Windows.Forms.Label();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.tableLayoutPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.strengthNud)).BeginInit();
@@ -74,7 +74,7 @@ namespace MobiusEditor.Controls
             this.tableLayoutPanel1.Controls.Add(this.basePriorityLabel, 0, 5);
             this.tableLayoutPanel1.Controls.Add(this.sellableCheckBox, 1, 7);
             this.tableLayoutPanel1.Controls.Add(this.rebuildCheckBox, 1, 8);
-            this.tableLayoutPanel1.Controls.Add(this.lblTriggerInfo, 2, 4);
+            this.tableLayoutPanel1.Controls.Add(this.lblTriggerTypesInfo, 2, 4);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
@@ -293,17 +293,17 @@ namespace MobiusEditor.Controls
             this.rebuildCheckBox.UseVisualStyleBackColor = true;
             this.rebuildCheckBox.CheckedChanged += new System.EventHandler(this.checkBox_CheckedChanged);
             // 
-            // lblTriggerInfo
+            // lblTriggerTypesInfo
             // 
-            this.lblTriggerInfo.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lblTriggerInfo.Location = new System.Drawing.Point(200, 107);
-            this.lblTriggerInfo.Margin = new System.Windows.Forms.Padding(0);
-            this.lblTriggerInfo.Name = "lblTriggerInfo";
-            this.lblTriggerInfo.Size = new System.Drawing.Size(30, 27);
-            this.lblTriggerInfo.TabIndex = 16;
-            this.lblTriggerInfo.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.lblTriggerInfo.MouseEnter += new System.EventHandler(this.LblTriggerInfo_MouseEnter);
-            this.lblTriggerInfo.MouseLeave += new System.EventHandler(this.LblTriggerInfo_MouseLeave);
+            this.lblTriggerTypesInfo.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblTriggerTypesInfo.Location = new System.Drawing.Point(200, 107);
+            this.lblTriggerTypesInfo.Margin = new System.Windows.Forms.Padding(0);
+            this.lblTriggerTypesInfo.Name = "lblTriggerTypesInfo";
+            this.lblTriggerTypesInfo.Size = new System.Drawing.Size(30, 27);
+            this.lblTriggerTypesInfo.TabIndex = 16;
+            this.lblTriggerTypesInfo.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.lblTriggerTypesInfo.MouseEnter += new System.EventHandler(this.LblTriggerTypesInfo_MouseEnter);
+            this.lblTriggerTypesInfo.MouseLeave += new System.EventHandler(this.LblTriggerInfo_MouseLeave);
             // 
             // ObjectProperties
             // 
@@ -341,6 +341,6 @@ namespace MobiusEditor.Controls
         private System.Windows.Forms.CheckBox sellableCheckBox;
         private System.Windows.Forms.CheckBox rebuildCheckBox;
         private System.Windows.Forms.ToolTip toolTip1;
-        private System.Windows.Forms.Label lblTriggerInfo;
+        private System.Windows.Forms.Label lblTriggerTypesInfo;
     }
 }

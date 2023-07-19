@@ -112,7 +112,7 @@ namespace MobiusEditor.Model
         // Keep this list synchronised with the MapLayerFlag enum
         public static String[] MapLayerNames = {
             // Map layers
-            "Template",
+            "Map templates",
             "Terrain",
             "Infantry",
             "Units",
@@ -1304,13 +1304,19 @@ namespace MobiusEditor.Model
             bool hasActions = filteredActions != null && filteredActions.Length > 0;
             if (hasEvents)
             {
-                tooltip.Append("Allowed trigger events:");
+                tooltip.Append("Usable trigger events:");
                 foreach(string evt in filteredEvents)
                 {
-                    tooltip.Append(indicatedEvents.Contains(evt) ? "\n> " : "\n\u2022 ").Append(evt);
+                    string showEvt = evt.TrimEnd('.');
+                    if (indicatedEvents.Contains(evt))
+                    {
+                        tooltip.Append("\n> [").Append(showEvt.ToUpperInvariant()).Append("]");
+                    }
+                    else
+                    {
+                        tooltip.Append("\n\u2022 ").Append(showEvt);
+                    }
                 }
-                if (hasActions)
-                    tooltip.Append('\n');
             }
             if (hasActions)
             {
@@ -1318,10 +1324,18 @@ namespace MobiusEditor.Model
                 {
                     tooltip.Append("\n");
                 }
-                tooltip.Append("Allowed trigger actions:");
+                tooltip.Append("Usable trigger actions:");
                 foreach (string act in filteredActions)
                 {
-                    tooltip.Append(indicatedActions.Contains(act) ? "\n> " : "\n\u2022 ").Append(act);
+                    string showAct = act.TrimEnd('.');
+                    if (indicatedActions.Contains(act))
+                    {
+                        tooltip.Append("\n> [").Append(showAct.ToUpperInvariant()).Append("]");
+                    }
+                    else
+                    {
+                        tooltip.Append("\n\u2022 ").Append(showAct);
+                    }
                 }
             }
             return hasEvents || hasActions ? tooltip.ToString() : null;
@@ -1474,7 +1488,7 @@ namespace MobiusEditor.Model
             }
             try
             {
-                return this.GeneratePreview(previewSize, plugin, toRender, true, true, sharpen);
+                return this.GeneratePreview(previewSize, plugin, toRender, true, true, true, sharpen);
             }
             finally
             {
@@ -1492,14 +1506,13 @@ namespace MobiusEditor.Model
             }
         }
 
-        public TGA GeneratePreview(Size previewSize, IGamePlugin plugin, MapLayerFlag toRender, bool smooth, bool crop, bool sharpen)
+        public TGA GeneratePreview(Size previewSize, IGamePlugin plugin, MapLayerFlag toRender, bool clearBackgrround, bool smooth, bool crop, bool sharpen)
         {
             HashSet<Point> locations = this.Metrics.Bounds.Points().ToHashSet();
             Rectangle boundsToUse = crop ? this.Bounds : new Rectangle(Point.Empty, this.Metrics.Size);
             Size originalTileSize = Globals.OriginalTileSize;
             bool scaleOnWidth = !crop || this.Bounds.Width >= this.Bounds.Height;
 
-            //double tileScale = 0.5f;
             double tileScale = scaleOnWidth ? (double)previewSize.Width / (boundsToUse.Width * originalTileSize.Width) : (double)previewSize.Height / (boundsToUse.Height * originalTileSize.Height);
 
             Size tmpTileSize = new Size((int)Math.Round(originalTileSize.Width * tileScale), (int)Math.Round(originalTileSize.Height * tileScale));
@@ -1512,22 +1525,23 @@ namespace MobiusEditor.Model
                 tileScale = scaleOnWidth ? (float)tmpTileSize.Width / Globals.OriginalTileWidth : (float)tmpTileSize.Height / Globals.OriginalTileHeight;
             }
 
-            Size renderTileSize = new Size((int)Math.Round(originalTileSize.Width * tileScale), (int)Math.Round(originalTileSize.Height * tileScale));
+            Size renderTileSize = originalTileSize;
+            //Size renderTileSize = new Size((int)Math.Round(originalTileSize.Width * tileScale), (int)Math.Round(originalTileSize.Height * tileScale));
             Rectangle mapBounds = new Rectangle(boundsToUse.Left * renderTileSize.Width, boundsToUse.Top * renderTileSize.Height,
                     boundsToUse.Width * renderTileSize.Width, boundsToUse.Height * renderTileSize.Height);
             Single previewScale = Math.Min(previewSize.Width / (float)mapBounds.Width, previewSize.Height / (float)mapBounds.Height);
             Size scaledSize = new Size((int)Math.Round(previewSize.Width / previewScale), (int)Math.Round(previewSize.Height / previewScale));
 
-            using (Bitmap fullBitmap = new Bitmap(this.Metrics.Width * renderTileSize.Width, this.Metrics.Height * renderTileSize.Height))
+            using (Bitmap fullBitmap = new Bitmap(this.Metrics.Width * originalTileSize.Width, this.Metrics.Height * originalTileSize.Height))
             using (Bitmap croppedBitmap = new Bitmap(previewSize.Width, previewSize.Height))
             {
                 using (Graphics g = Graphics.FromImage(fullBitmap))
                 {
                     MapRenderer.SetRenderSettings(g, smooth);
-                    MapRenderer.Render(plugin.GameType, this, g, locations, toRender, tileScale);
+                    MapRenderer.Render(plugin.GameType, this, g, locations, toRender, 1);
                     if ((toRender & MapLayerFlag.Indicators) != 0)
                     {
-                        ViewTool.PostRenderMap(g, plugin, this, tileScale, toRender, MapLayerFlag.None, false, plugin.Map.Metrics.Bounds);
+                        ViewTool.PostRenderMap(g, plugin, this, 1, toRender, MapLayerFlag.None, false, plugin.Map.Metrics.Bounds);
                     }
                 }
                 using (Graphics g = Graphics.FromImage(croppedBitmap))
@@ -1537,7 +1551,10 @@ namespace MobiusEditor.Model
                     transform.Scale(previewScale, previewScale);
                     transform.Translate((scaledSize.Width - mapBounds.Width) / 2, (scaledSize.Height - mapBounds.Height) / 2);
                     g.Transform = transform;
-                    g.Clear(Color.Black);
+                    if (clearBackgrround)
+                    {
+                        g.Clear(Color.Black);
+                    }
                     g.DrawImage(fullBitmap, new Rectangle(0, 0, mapBounds.Width, mapBounds.Height), mapBounds, GraphicsUnit.Pixel);
                 }
                 if (sharpen)

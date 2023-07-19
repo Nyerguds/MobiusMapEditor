@@ -33,6 +33,8 @@ namespace MobiusEditor.Controls
         private HouseType originalHouse;
         private String originalTrigger;
         private int originalStrength;
+        string[] filteredEvents;
+        string[] filteredActions;
 
         public IGamePlugin Plugin { get; private set; }
 
@@ -75,8 +77,8 @@ namespace MobiusEditor.Controls
             {
                 g.DrawIcon(SystemIcons.Information, new Rectangle(0, 0, infoImage.Width, infoImage.Height));
             }
-            lblTriggerInfo.Image = infoImage;
-            lblTriggerInfo.ImageAlign = ContentAlignment.MiddleCenter;
+            lblTriggerTypesInfo.Image = infoImage;
+            lblTriggerTypesInfo.ImageAlign = ContentAlignment.MiddleCenter;
         }
 
         private void ObjectProperties_Load(Object sender, EventArgs e)
@@ -120,11 +122,10 @@ namespace MobiusEditor.Controls
         {
             string selected = triggerComboBox.SelectedItem as string;
             triggerComboBox.DataBindings.Clear();
+            triggerComboBox.SelectedIndexChanged -= this.TriggerComboBox_SelectedIndexChanged;
             triggerComboBox.DataSource = null;
             triggerComboBox.Items.Clear();
             string[] items;
-            string[] filteredEvents;
-            string[] filteredActions;
             Boolean isAircraft = obj is Unit un && un.Type.IsAircraft;
             Boolean isOnMap = true;
             switch (obj)
@@ -157,7 +158,28 @@ namespace MobiusEditor.Controls
             {
                 triggerComboBox.DataBindings.Add("SelectedItem", obj, "Trigger");
             }
+            triggerComboBox.SelectedIndexChanged += this.TriggerComboBox_SelectedIndexChanged;
             triggerComboBox.SelectedItem = items[selectIndex];
+            TriggerComboBox_SelectedIndexChanged(triggerComboBox, new EventArgs());
+        }
+
+        private void TriggerComboBox_SelectedIndexChanged(Object sender, EventArgs e)
+        {
+            if (filteredEvents == null || filteredActions == null)
+            {
+                return;
+            }
+            string selected = triggerComboBox.SelectedItem as string;
+            Trigger trig = this.Plugin.Map.Triggers.FirstOrDefault(t => String.Equals(t.Name, selected, StringComparison.OrdinalIgnoreCase));
+            triggerToolTip = Map.MakeAllowedTriggersToolTip(filteredEvents, filteredActions, trig);
+            Point pt = MousePosition;
+            Point lblPos = lblTriggerTypesInfo.PointToScreen(Point.Empty);
+            Rectangle lblRect = new Rectangle(lblPos, lblTriggerTypesInfo.Size);
+            if (lblRect.Contains(pt))
+            {
+                this.toolTip1.Hide(lblTriggerTypesInfo);
+                LblTriggerTypesInfo_MouseEnter(lblTriggerTypesInfo, e);
+            }
         }
 
         private void Rebind()
@@ -399,7 +421,7 @@ namespace MobiusEditor.Controls
             }
         }
 
-        private void LblTriggerInfo_MouseEnter(Object sender, EventArgs e)
+        private void LblTriggerTypesInfo_MouseEnter(Object sender, EventArgs e)
         {
             Control target = sender as Control;
             string tooltip;
@@ -449,7 +471,7 @@ namespace MobiusEditor.Controls
             {
                 try
                 {
-                    lblTriggerInfo.Image = null;
+                    lblTriggerTypesInfo.Image = null;
                 }
                 catch { /*ignore*/}
                 try

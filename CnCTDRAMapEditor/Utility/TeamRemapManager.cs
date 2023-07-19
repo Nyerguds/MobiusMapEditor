@@ -37,7 +37,7 @@ namespace MobiusEditor.Utility
         public static readonly TeamRemap RemapTdRed = new TeamRemap("MULTI3", 127, 123, 176, new byte[] { 127, 126, 125, 124, 122, 46, 120, 47, 125, 124, 123, 122, 42, 121, 120, 120 });
         // Extra colours added for flags. With thanks to Kilkakon.
         public static readonly TeamRemap RemapTdBrown = new TeamRemap("MULTI7", 146, 209, 176, new byte[] { 146, 152, 209, 151, 173, 150, 173, 183, 146, 152, 209, 151, 173, 150, 173, 183 });
-        public static readonly TeamRemap RemapTdBurg = new TeamRemap("MULTI8", 214, 213, 176, new byte[] { 132, 133, 134, 213, 214, 121, 120, 12, 133, 134, 213, 214, 121, 174, 120, 199 });
+        public static readonly TeamRemap RemapTdBurgundy = new TeamRemap("MULTI8", 214, 213, 176, new byte[] { 132, 133, 134, 213, 214, 121, 120, 12, 133, 134, 213, 214, 121, 174, 120, 199 });
         // 'Too fleshy' according to Chad1233, so I took Burgundy instead.
         //public static readonly TeamRemap RemapTdPink = new TeamRemap("MULTI8", 217, 218, 176, new byte[] { 17, 17, 217, 218, 209, 213, 174, 120, 217, 217, 218, 209, 213, 214, 214, 174 });
         // For unowned buildings on the rebuild list.
@@ -138,7 +138,7 @@ namespace MobiusEditor.Utility
             if (cpsFileBytes == null)
             {
                 // Not found; ignore and do nothing. Don't reset the current remaps unless a valid cps file is actually
-                // found, since the remap manager will also be requested to attempt to read the remaster xml file.
+                // found, since the remap manager will also be requested to attempt to read the remaster team colors xml file.
                 return;
             }
             byte[] cpsData;
@@ -157,7 +157,6 @@ namespace MobiusEditor.Utility
             Dictionary<string, TeamRemap> raRemapColors = new Dictionary<string, TeamRemap>();
             byte[] remapSource = new byte[16];
             Array.Copy(cpsData, 0, remapSource, 0, 16);
-            // Taking brightest colour here, not unit/structure colour.
             bool baseRemapSet = false;
             for (int y = 0; y < height; ++y)
             {
@@ -165,7 +164,7 @@ namespace MobiusEditor.Utility
                 String name = this.remapsColorsRa[y];
                 Byte[] remap = new byte[16];
                 Array.Copy(cpsData, ptr, remap, 0, 16);
-                // Apparently the same in RA?
+                // Apparently the same in RA.
                 byte unitRadarColor = cpsData[ptr + 6];
                 byte buildingRadarColor = cpsData[ptr + 6];
                 if (!baseRemapSet)

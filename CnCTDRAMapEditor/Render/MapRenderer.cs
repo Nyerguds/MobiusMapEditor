@@ -12,6 +12,8 @@
 // distributed with this program. You should have received a copy of the
 // GNU General Public License along with permitted additional restrictions
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
+#define BetterRendering
+//#define IgnoreTreePositions
 using MobiusEditor.Interface;
 using MobiusEditor.Model;
 using MobiusEditor.Utility;
@@ -26,6 +28,27 @@ using System.Linq;
 
 namespace MobiusEditor.Render
 {
+    public class RenderInfo
+    {
+        // paint position, paint action, true if flat, sub-position.
+
+        // This works in 'classic pixels'; 1/24th of a cell.
+        public Point RenderBasePoint;
+        public Action<Graphics> RenderAction { get; private set; }
+        public bool IsFlat { get; private set; }
+        public ITechno RenderedObject { get; private set; }
+        public bool IsRendered { get; set; }
+
+        public RenderInfo(Point renderPosition, Action<Graphics> paintAction, bool flat, ITechno paintedObject)
+        {
+            this.RenderBasePoint = renderPosition;
+            this.RenderAction = paintAction;
+            this.IsFlat = flat;
+            this.RenderedObject = paintedObject;
+            this.IsRendered = false;
+        }
+    }
+
     public static class MapRenderer
     {
         private static readonly int[] Facing16 = new int[256]
@@ -162,8 +185,8 @@ namespace MobiusEditor.Render
             Size tileSize = new Size(Math.Max(1, (int)Math.Round(Globals.OriginalTileWidth * tileScale)), Math.Max(1, (int)Math.Round(Globals.OriginalTileHeight * tileScale)));
             //Size tileSize = new Size(Math.Max(1, (int)(Globals.OriginalTileWidth * tileScale)), Math.Max(1, (int)(Globals.OriginalTileHeight * tileScale)));
             TheaterType theater = map.Theater;
-            // paint position, paint action, true if flat.
-            List<(Rectangle, Action<Graphics>, Boolean)> overlappingRenderList = new List<(Rectangle, Action<Graphics>, bool)>();
+            // paint position, paint action, true if flat, sub-position.
+            List<RenderInfo> overlappingRenderList = new List<RenderInfo>();
             Func<IEnumerable<Point>> renderLocations = null;
             if (locations != null)
             {
@@ -313,14 +336,14 @@ namespace MobiusEditor.Render
                     {
                         continue;
                     }
-                    for (int i = 0; i < infantryGroup.Infantry.Length; ++i)
+                    foreach (InfantryStoppingType ist in InfantryGroup.RenderOrder)
                     {
-                        Infantry infantry = infantryGroup.Infantry[i];
+                        Infantry infantry = infantryGroup.Infantry[(int)ist];
                         if (infantry == null)
                         {
                             continue;
                         }
-                        overlappingRenderList.Add(RenderInfantry(topLeft, tileSize, infantry, (InfantryStoppingType)i));
+                        overlappingRenderList.Add(RenderInfantry(topLeft, tileSize, infantry, ist));
                     }
                 }
             }
@@ -335,18 +358,6 @@ namespace MobiusEditor.Render
                     overlappingRenderList.Add(RenderUnit(gameType, topLeft, tileSize, unit));
                 }
             }
-            // Paint flat items (like the repair bay)
-            //.OrderBy(x => x.Item1.Bottom) --> .OrderBy(x => x.Item1.CenterPoint().Y)
-            foreach ((Rectangle location, Action<Graphics> renderer, Boolean flat) in overlappingRenderList.Where(x => !x.Item1.IsEmpty && x.Item3).OrderBy(x => x.Item1.CenterPoint().Y))
-            {
-                renderer(graphics);
-            }
-            // Paint all the rest
-            foreach ((Rectangle location, Action<Graphics> renderer, Boolean flat) in overlappingRenderList.Where(x => !x.Item1.IsEmpty && !x.Item3).OrderBy(x => x.Item1.CenterPoint().Y))
-            {
-                renderer(graphics);
-            }
-            overlappingRenderList.Clear();
             if ((layers & MapLayerFlag.Terrain) != MapLayerFlag.None)
             {
                 foreach ((Point topLeft, Terrain terrain) in map.Technos.OfType<Terrain>())
@@ -355,12 +366,29 @@ namespace MobiusEditor.Render
                     {
                         continue;
                     }
-                    overlappingRenderList.Add(RenderTerrain(gameType, theater, topLeft, tileSize, tileScale, terrain));
+                    overlappingRenderList.Add(RenderTerrain(topLeft, tileSize, tileScale, terrain));
                 }
-                foreach ((Rectangle location, Action<Graphics> renderer, Boolean flat) in overlappingRenderList.Where(x => !x.Item1.IsEmpty && !x.Item3).OrderBy(x => x.Item1.CenterPoint().Y))
-                {
-                    renderer(graphics);
-                }
+            }
+            // Paint logic: sort by "base point" Y, but paint right to left so long shadows (mostly on trees) overlap stuff to the right of them.
+            // Paint flat items first (like the repair bay)
+            List<RenderInfo> validRendersFlat = overlappingRenderList.Where(obj => obj.RenderedObject != null && obj.IsFlat).ToList();
+#if BetterRendering
+            foreach (RenderInfo info in validRendersFlat.OrderBy(obj => obj.RenderBasePoint.Y).ThenByDescending(obj => obj.RenderBasePoint.X))
+#else
+            foreach (RenderInfo info in validRendersFlat.OrderBy(obj => obj.RenderBasePoint.Y).ThenBy(obj => obj.RenderBasePoint.X))
+#endif
+            {
+                info.RenderAction(graphics);
+            }
+            // Paint all the rest
+            List<RenderInfo> validRenders = overlappingRenderList.Where(obj => obj.RenderedObject != null && !obj.IsFlat).ToList();
+#if BetterRendering
+            foreach (RenderInfo info in validRenders.OrderBy(obj => obj.RenderBasePoint.Y).ThenByDescending(obj => obj.RenderBasePoint.X))
+#else
+            foreach (RenderInfo info in validRenders.OrderBy(obj => obj.RenderBasePoint.Y).ThenBy(obj => obj.RenderBasePoint.X))
+#endif
+            {
+                info.RenderAction(graphics);
             }
             if (Globals.CratesOnTop && (layers & MapLayerFlag.Overlay) != MapLayerFlag.None)
             {
@@ -504,7 +532,7 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static (Rectangle, Action<Graphics>, bool) RenderTerrain(GameType gameType, TheaterType theater, Point topLeft, Size tileSize, double tileScale, Terrain terrain)
+        public static RenderInfo RenderTerrain(Point topLeft, Size tileSize, double tileScale, Terrain terrain)
         {
             string tileName = terrain.Type.GraphicsSource;
             bool succeeded = Globals.TheTilesetManager.GetTileData(tileName, terrain.Type.DisplayIcon, out Tile tile, true, false);
@@ -550,10 +578,16 @@ namespace MobiusEditor.Render
             {
                 g.DrawImage(tile.Image, paintBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes);
             }
-            return (terrainBounds, render, false);
+#if IgnoreTreePositions
+            Point centerPoint = GeneralUtils.GetOccupiedCenter(terrain.Type.OccupyMask, new Size(Globals.PixelWidth, Globals.PixelHeight));
+            Point usedCenter = new Point(topLeft.X * Globals.PixelWidth + centerPoint.X, topLeft.Y * Globals.PixelHeight + centerPoint.Y);
+#else
+            Point usedCenter = new Point(topLeft.X * Globals.PixelWidth + terrain.Type.CenterPoint.X, topLeft.Y * Globals.PixelHeight + terrain.Type.CenterPoint.Y);
+#endif
+            return new RenderInfo(usedCenter, render, false, terrain);
         }
 
-        public static (Rectangle, Action<Graphics>, bool) RenderBuilding(GameType gameType, Point topLeft, Size tileSize, double tileScale, Building building)
+        public static RenderInfo RenderBuilding(GameType gameType, Point topLeft, Size tileSize, double tileScale, Building building)
         {
             Color tint = building.Tint;
             Int32 icon = building.Type.FrameOFfset;
@@ -597,7 +631,7 @@ namespace MobiusEditor.Render
             if (tile == null || tile.Image == null)
             {
                 Debug.Print(string.Format("Building {0} ({1}) not found", building.Type.Name, icon));
-                return (Rectangle.Empty, (g) => { }, false);
+                return new RenderInfo(Point.Empty, (g) => { }, false, null);
             }
             Point location = new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height);
             Size maxSize = new Size(building.Type.Size.Width * tileSize.Width, building.Type.Size.Height * tileSize.Height);
@@ -673,11 +707,18 @@ namespace MobiusEditor.Render
                     g.DrawImage(tile.Image, paintBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes);
                 }
             }
+#if BetterRendering
+            Point centerPoint = GeneralUtils.GetOccupiedCenter(building.Type.BaseOccupyMask, new Size(Globals.PixelWidth, Globals.PixelHeight));
+            Point usedCenter = new Point(topLeft.X * Globals.PixelWidth + centerPoint.X, topLeft.Y * Globals.PixelHeight + centerPoint.Y);
+#else
+            Point usedCenter = new Point(topLeft.X * Globals.PixelWidth + building.Type.BaseOccupyBounds.Width * Globals.PixelWidth / 2,
+                                           topLeft.Y * Globals.PixelHeight + (building.Type.BaseOccupyBounds.Height - 1) / 2 * Globals.PixelHeight + Globals.PixelHeight - 1);
+#endif
             // "is flat" is for buildings that have pieces sticking out at the top that should not overlap objects on these cells.
-            return (buildingBounds, render, building.Type.IsFlat);
+            return new RenderInfo(usedCenter, render, building.Type.IsFlat, building);
         }
 
-        public static (Rectangle, Action<Graphics>, bool) RenderInfantry(Point topLeft, Size tileSize, Infantry infantry, InfantryStoppingType infantryStoppingType)
+        public static RenderInfo RenderInfantry(Point topLeft, Size tileSize, Infantry infantry, InfantryStoppingType infantryStoppingType)
         {
             Int32 icon = HumanShape[Facing32[infantry.Direction.ID]];
             ITeamColor teamColor = infantry.Type.CanRemap ? Globals.TheTeamColorManager[infantry.House?.UnitTeamColor] : null;
@@ -692,97 +733,72 @@ namespace MobiusEditor.Render
             {
                 success = Globals.TheTilesetManager.GetTeamColorTileData(infantry.Type.Name, icon, teamColor, out tile, true, false);
             }
-            if (tile != null && tile.Image != null)
+            if (tile == null || tile.Image == null)
             {
-                Size imSize = tile.Image.Size;
-                // These values are experimental, from comparing map editor screenshots to game screenshots. -Nyer
-                Point baseLocation = new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height);
-                Point offset = Point.Empty;
-                Rectangle renderBounds;
-                Rectangle virtualBounds;
-                if (success)
-                {
-                    baseLocation += new Size(tileSize.Width / 2, tileSize.Height / 2);
-                    int infantryCorrectX = tileSize.Width / -12;
-                    int infantryCorrectY = tileSize.Height / 6;
-                    switch (infantryStoppingType)
-                    {
-                        case InfantryStoppingType.UpperLeft:
-                            offset.X = -tileSize.Width / 4 + infantryCorrectX;
-                            offset.Y = -tileSize.Height / 4 + infantryCorrectY;
-                            break;
-                        case InfantryStoppingType.UpperRight:
-                            offset.X = tileSize.Width / 4 + infantryCorrectX;
-                            offset.Y = -tileSize.Height / 4 + infantryCorrectY;
-                            break;
-                        case InfantryStoppingType.LowerLeft:
-                            offset.X = -tileSize.Width / 4 + infantryCorrectX;
-                            offset.Y = tileSize.Height / 4 + infantryCorrectY;
-                            break;
-                        case InfantryStoppingType.LowerRight:
-                            offset.X = tileSize.Width / 4 + infantryCorrectX;
-                            offset.Y = tileSize.Height / 4 + infantryCorrectY;
-                            break;
-                        case InfantryStoppingType.Center:
-                            offset.X = infantryCorrectX;
-                            offset.Y = infantryCorrectY;
-                            break;
-                    }
-                    baseLocation.Offset(offset);
-                    virtualBounds = new Rectangle(
-                        new Point(baseLocation.X - (tile.OpaqueBounds.Width / 2), baseLocation.Y - tile.OpaqueBounds.Height),
-                        tile.OpaqueBounds.Size
-                    );
-                    Size renderSize = new Size(imSize.Width * tileSize.Width / Globals.OriginalTileWidth, imSize.Height * tileSize.Height / Globals.OriginalTileHeight);
-                    renderBounds = new Rectangle(baseLocation - new Size(renderSize.Width / 2, renderSize.Height / 2), renderSize);
-                }
-                else
-                {
-                    if (infantryStoppingType == InfantryStoppingType.UpperRight || infantryStoppingType == InfantryStoppingType.LowerRight)
-                        offset.X += (tileSize.Width * 2 / 3);
-                    if (infantryStoppingType == InfantryStoppingType.LowerLeft || infantryStoppingType == InfantryStoppingType.LowerRight)
-                        offset.Y += (tileSize.Height / 2);
-                    if (infantryStoppingType == InfantryStoppingType.Center)
-                    {
-                        offset.X += (tileSize.Height / 3);
-                        offset.Y += (tileSize.Height / 4);
-                    }
-                    baseLocation.Offset(offset);
-                    Size renderSize = new Size(imSize.Width * tileSize.Width / Globals.OriginalTileWidth, imSize.Height * tileSize.Height / Globals.OriginalTileHeight);
-                    renderSize.Width /= 3;
-                    renderSize.Height /= 2;
-                    renderBounds = new Rectangle(baseLocation, renderSize);
-                    virtualBounds = renderBounds;
-                }
-                Color tint = infantry.Tint;
-                void render(Graphics g)
-                {
-                    ImageAttributes imageAttributes = new ImageAttributes();
-                    if (tint != Color.White)
-                    {
-                        ColorMatrix colorMatrix = new ColorMatrix(new float[][]
-                        {
-                            new float[] {tint.R / 255.0f, 0, 0, 0, 0},
-                            new float[] {0, tint.G / 255.0f, 0, 0, 0},
-                            new float[] {0, 0, tint.B / 255.0f, 0, 0},
-                            new float[] {0, 0, 0, tint.A / 255.0f, 0},
-                            new float[] {0, 0, 0, 0, 1},
-                        }
-                        );
-                        imageAttributes.SetColorMatrix(colorMatrix);
-                    }
-                    g.DrawImage(tile.Image, renderBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes);
-                }
-                return (virtualBounds, render, false);
+                Debug.Print(string.Format("Infantry {0} ({1}) not found", infantry.Type.Name, icon));
+                return new RenderInfo(Point.Empty, (g) => { }, false, infantry);
+            }
+            Size imSize = tile.Image.Size;
+            Point origLocation = new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height);
+            Point renderLocation = origLocation;
+            // Offset is calculated as "pixels" in the old 24-pixel cells.
+            // Start with center
+            Point offset = InfantryGroup.RenderPosition(infantryStoppingType, true);
+            Point offsetBare = InfantryGroup.RenderPosition(infantryStoppingType, false);
+            Size renderSize;
+            if (success)
+            {
+                Point offsetActual = new Point(offset.X * tileSize.Width / Globals.PixelWidth, offset.Y * tileSize.Height / Globals.PixelHeight);
+                renderLocation.Offset(offsetActual);
+                renderSize = new Size(imSize.Width * tileSize.Width / Globals.OriginalTileWidth, imSize.Height * tileSize.Height / Globals.OriginalTileHeight);
             }
             else
             {
-                Debug.Print(string.Format("Infantry {0} ({1}) not found", infantry.Type.Name, icon));
-                return (Rectangle.Empty, (g) => { }, false);
+                Point offsetActual = new Point(offsetBare.X * tileSize.Width / Globals.PixelWidth, offsetBare.Y * tileSize.Height / Globals.PixelHeight);
+                renderLocation.Offset(offsetActual);
+                renderSize = new Size(imSize.Width * tileSize.Width / Globals.OriginalTileWidth, imSize.Height * tileSize.Height / Globals.OriginalTileHeight);
+                renderSize.Width /= 3;
+                renderSize.Height /= 2;
             }
+            Rectangle renderBounds = new Rectangle(renderLocation - new Size(renderSize.Width / 2, renderSize.Height / 2), renderSize);
+            Color tint = infantry.Tint;
+            void render(Graphics g)
+            {
+                ImageAttributes imageAttributes = new ImageAttributes();
+                if (tint != Color.White)
+                {
+                    ColorMatrix colorMatrix = new ColorMatrix(new float[][]
+                    {
+                        new float[] {tint.R / 255.0f, 0, 0, 0, 0},
+                        new float[] {0, tint.G / 255.0f, 0, 0, 0},
+                        new float[] {0, 0, tint.B / 255.0f, 0, 0},
+                        new float[] {0, 0, 0, tint.A / 255.0f, 0},
+                        new float[] {0, 0, 0, 0, 1},
+                    }
+                    );
+                    imageAttributes.SetColorMatrix(colorMatrix);
+                }
+                g.DrawImage(tile.Image, renderBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes);
+                // Test code to visualise original 5-point die face location (green), and corrected infantry base point (feet) location (red).
+                /*/
+                Size pixel = new Size(tileSize.Width / Globals.PixelWidth, tileSize.Height / Globals.PixelHeight);
+                using (SolidBrush sb = new SolidBrush(Color.Red))
+                {
+                    g.FillRectangle(sb, new Rectangle(renderLocation, pixel));
+                }
+                using (SolidBrush sb = new SolidBrush(Color.LimeGreen))
+                {
+                    g.FillRectangle(sb, new Rectangle(new Point(
+                        origLocation.X + offsetBare.X * tileSize.Width / Globals.PixelWidth,
+                        origLocation.Y + (offsetBare.Y * tileSize.Height / Globals.PixelHeight)), pixel));
+                }
+                //*/
+            }
+            // Render position is the feet point, adjusted to 24-pixel cell location.
+            return new RenderInfo(new Point(topLeft.X * Globals.PixelWidth + offset.X, topLeft.Y * Globals.PixelHeight + offset.Y), render, false, infantry);
         }
 
-        public static (Rectangle, Action<Graphics>, bool) RenderUnit(GameType gameType, Point topLeft, Size tileSize, Unit unit)
+        public static RenderInfo RenderUnit(GameType gameType, Point topLeft, Size tileSize, Unit unit)
         {
             int icon = -1;
             if (gameType == GameType.TiberianDawn || gameType == GameType.SoleSurvivor)
@@ -855,7 +871,7 @@ namespace MobiusEditor.Render
             if (tile == null || tile.Image == null)
             {
                 Debug.Print(string.Format("Unit {0} ({1}) not found", unit.Type.Name, icon));
-                return (Rectangle.Empty, (g) => { }, false);
+                return new RenderInfo(Point.Empty, (g) => { }, false, null);
             }
             Size imSize = tile.Image.Size;
             Point location =
@@ -1022,7 +1038,13 @@ namespace MobiusEditor.Render
                     g.DrawImage(unitBm, renderBounds, 0,0, renderBounds.Width, renderBounds.Height, GraphicsUnit.Pixel, imageAttributes);
                 }
             }
-            return (renderBounds, render, false);
+#if BetterRendering
+            Point usedCenter = new Point(topLeft.X * Globals.PixelWidth + Globals.PixelWidth / 2, topLeft.Y * Globals.PixelHeight + Globals.PixelHeight / 2);
+#else
+            // Apparently units pretend their Y-value is the lowest point on a 24x24 bounding box.
+            Point usedCenter = new Point(topLeft.X * Globals.PixelWidth + Globals.PixelWidth / 2, topLeft.Y * Globals.PixelHeight + Globals.PixelHeight - 1);
+#endif
+            return new RenderInfo(usedCenter, render, false, unit);
         }
 
         public static (Rectangle, Action<Graphics>) RenderWaypoint(GameType gameType, bool soloMission, Size tileSize, ITeamColor[] flagColors, Waypoint waypoint)
@@ -1259,7 +1281,7 @@ namespace MobiusEditor.Render
                 {
                     continue;
                 }
-                if (!visibleCells.Contains(location) || (onlyIfBehindObjects && !IsOverlapped(map, location, false)))
+                if (!visibleCells.Contains(location) || (onlyIfBehindObjects && !IsOverlapped(map, location, false, false)))
                 {
                     continue;
                 }
@@ -1321,7 +1343,7 @@ namespace MobiusEditor.Render
                 {
                     continue;
                 }
-                if (onlyIfBehindObjects && !IsOverlapped(map, location, true))
+                if (onlyIfBehindObjects && !IsOverlapped(map, location, true, true))
                 {
                     continue;
                 }
@@ -1347,7 +1369,7 @@ namespace MobiusEditor.Render
                         {
                             using (Graphics ig = Graphics.FromImage(bm))
                             {
-                                RenderInfantry(new Point(1, 1), tileSize, infantry, (InfantryStoppingType)i).Item2(ig);
+                                RenderInfantry(new Point(1, 1), tileSize, infantry, (InfantryStoppingType)i).RenderAction(ig);
                             }
                             paintAreaRel = ImageUtils.GetOutline(tileSize, bm, outlineThickness, alphaThreshold, Globals.UseClassicFiles);
                             paintAreas[id] = paintAreaRel;
@@ -1385,7 +1407,7 @@ namespace MobiusEditor.Render
                 {
                     continue;
                 }
-                if (onlyIfBehindObjects && !IsOverlapped(map, location, true))
+                if (onlyIfBehindObjects && !IsOverlapped(map, location, true, true))
                 {
                     continue;
                 }
@@ -1405,7 +1427,7 @@ namespace MobiusEditor.Render
                     {
                         using (Graphics ig = Graphics.FromImage(bm))
                         {
-                            RenderUnit(gameType, new Point(1, 1), tileSize, toRender).Item2(ig);
+                            RenderUnit(gameType, new Point(1, 1), tileSize, toRender).RenderAction(ig);
                         }
                         paintAreaRel = ImageUtils.GetOutline(tileSize, bm, outlineThickness, alphaThreshold, Globals.UseClassicFiles);
                         paintAreas[id] = paintAreaRel;
@@ -1427,7 +1449,24 @@ namespace MobiusEditor.Render
             }
         }
 
-        private static Boolean IsOverlapped(Map map,  Point location, bool ignoreUnits)
+        private static Boolean IsOverlapped(Map map, Point location, bool ignoreUnits, bool ignoreAfterHalfwayPoint)
+        {
+#if BetterRendering
+            return IsCellOverlapped(map, location, ignoreUnits, ignoreAfterHalfwayPoint);
+#else
+            return IsCellOverlapped(map, location, ignoreUnits, false);
+#endif
+        }
+
+        /// <summary>
+        /// Check if an object is considered overlapped by something on the map.
+        /// </summary>
+        /// <param name="map">Map to check on</param>
+        /// <param name="location">Location to check</param>
+        /// <param name="ignoreUnits">True to ignore unit placement.</param>
+        /// <param name="ignoreAfterHalfwayPoint">Only </param>
+        /// <returns>true if the cell is considered filled enough to overlap things.</returns>
+        private static Boolean IsCellOverlapped(Map map,  Point location, bool ignoreUnits, bool ignoreAfterHalfwayPoint)
         {
             ICellOccupier techno = map.Technos[location];
             // Single-cell occupier. Always pass.
@@ -1451,8 +1490,12 @@ namespace MobiusEditor.Render
                 }
                 ICellOccupier occ = ovl as ICellOccupier;
                 bool[,] opaqueMask = ovl.OpaqueMask;
-                int maskY = opaqueMask.GetLength(0);
-                int maskX = opaqueMask.GetLength(1);
+                int maskY = opaqueMask == null ? 0 :opaqueMask.GetLength(0);
+                int maskX = opaqueMask == null ? 0 : opaqueMask.GetLength(1);
+                if (ignoreAfterHalfwayPoint)
+                {
+                    maskY = (maskY + 1) / 2;
+                }
                 Point? pt = map.Technos[occ];
                 if (!pt.HasValue)
                 {
@@ -1585,7 +1628,7 @@ namespace MobiusEditor.Render
                 Rectangle buildingBounds = new Rectangle(topLeft, building.Type.Size);
                 if (visibleCells.IntersectsWith(buildingBounds))
                 {
-                    RenderRebuildPriorityLabel(graphics, building, topLeft, tileSize, false);
+                    RenderRebuildPriorityLabel(graphics, building, topLeft, tileSize, building.IsPreview);
                 }
             }
         }
@@ -1624,14 +1667,14 @@ namespace MobiusEditor.Render
 
         public static void RenderAllTechnoTriggers(Graphics graphics, Map map, Rectangle visibleCells, Size tileSize, MapLayerFlag layersToRender)
         {
-            RenderAllTechnoTriggers(graphics, map, visibleCells, tileSize, layersToRender, Color.LimeGreen, null, false);
+            RenderAllTechnoTriggers(graphics, map.Technos, visibleCells, tileSize, layersToRender, Color.LimeGreen, null, false);
         }
 
-        public static void RenderAllTechnoTriggers(Graphics graphics, Map map, Rectangle visibleCells, Size tileSize, MapLayerFlag layersToRender, Color color, string toPick, bool excludePick)
+        public static void RenderAllTechnoTriggers(Graphics graphics, OccupierSet<ICellOccupier> mapTechnos, Rectangle visibleCells, Size tileSize, MapLayerFlag layersToRender, Color color, string toPick, bool excludePick)
         {
             double tileScaleHor = tileSize.Width / 128.0;
             float borderSize = Math.Max(0.5f, tileSize.Width / 60.0f);
-            foreach ((Point topLeft, ICellOccupier techno) in map.Technos)
+            foreach ((Point topLeft, ICellOccupier techno) in mapTechnos)
             {
                 Point location = new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height);
                 (string trigger, Rectangle bounds, int alpha)[] triggers = null;

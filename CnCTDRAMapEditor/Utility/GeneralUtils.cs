@@ -510,6 +510,34 @@ namespace MobiusEditor.Utility
             return cellEvaluation;
         }
 
+        public static Point GetOccupiedCenter(bool[,] occupyMask, Size cellSize)
+        {
+            int width = occupyMask.GetLength(1);
+            int height = occupyMask.GetLength(0);
+            int minOccX = int.MaxValue;
+            int maxOccX = -1;
+            int minOccY = int.MaxValue;
+            int maxOccY = -1;
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    if (occupyMask[y, x])
+                    {
+                        minOccX = Math.Min(x, minOccX);
+                        maxOccX = Math.Max(x, maxOccX);
+                        minOccY = Math.Min(y, minOccY);
+                        maxOccY = Math.Max(y, maxOccY);
+                    }
+                }
+            }
+            int usedWidth = (minOccX == int.MaxValue || maxOccX == -1) ? 0 : maxOccX - minOccX + 1;
+            int usedHeight = (minOccY == int.MaxValue || maxOccY == -1) ? 0 : maxOccY - minOccY + 1;
+            int centerX = usedWidth == -1 ? (width * cellSize.Width / 2) : minOccX * cellSize.Width + (usedWidth * cellSize.Width) / 2;
+            int centerY = usedHeight == -1 ? (height * cellSize.Height / 2) : minOccY * cellSize.Height + (usedHeight * cellSize.Height) / 2;
+            return new Point(centerX, centerY);
+        }
+
         public static string ReplaceLinebreaks(string input, char replacement)
         {
             return input
