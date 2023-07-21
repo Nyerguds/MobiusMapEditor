@@ -12,8 +12,17 @@
 // distributed with this program. You should have received a copy of the
 // GNU General Public License along with permitted additional restrictions
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
-#define BetterRendering
+
+// The Y-sorting in the actual game engine is occasionally quite odd and unintuitive, and has edge
+// cases in tree and building overlap which I couldn't get right. The "Better Y-Rendering" code
+// sorts units and buildings by the center-point of their occupied cells, and renders objects from
+// right to left, so right-side shadows on trees overlap stuff to the right of them as expected.
+#define BetterYRendering
+
+// Enabling this will make it ignore the tree positions from the game source code, and instead
+// apply the same "center-point of occupied cells" logic used by the "Better Y-Rendering" code.
 //#define IgnoreTreePositions
+
 using MobiusEditor.Interface;
 using MobiusEditor.Model;
 using MobiusEditor.Utility;
@@ -372,7 +381,7 @@ namespace MobiusEditor.Render
             // Paint logic: sort by "base point" Y, but paint right to left so long shadows (mostly on trees) overlap stuff to the right of them.
             // Paint flat items first (like the repair bay)
             List<RenderInfo> validRendersFlat = overlappingRenderList.Where(obj => obj.RenderedObject != null && obj.IsFlat).ToList();
-#if BetterRendering
+#if BetterYRendering
             foreach (RenderInfo info in validRendersFlat.OrderBy(obj => obj.RenderBasePoint.Y).ThenByDescending(obj => obj.RenderBasePoint.X))
 #else
             foreach (RenderInfo info in validRendersFlat.OrderBy(obj => obj.RenderBasePoint.Y).ThenBy(obj => obj.RenderBasePoint.X))
@@ -382,7 +391,7 @@ namespace MobiusEditor.Render
             }
             // Paint all the rest
             List<RenderInfo> validRenders = overlappingRenderList.Where(obj => obj.RenderedObject != null && !obj.IsFlat).ToList();
-#if BetterRendering
+#if BetterYRendering
             foreach (RenderInfo info in validRenders.OrderBy(obj => obj.RenderBasePoint.Y).ThenByDescending(obj => obj.RenderBasePoint.X))
 #else
             foreach (RenderInfo info in validRenders.OrderBy(obj => obj.RenderBasePoint.Y).ThenBy(obj => obj.RenderBasePoint.X))
@@ -578,12 +587,8 @@ namespace MobiusEditor.Render
             {
                 g.DrawImage(tile.Image, paintBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes);
             }
-#if IgnoreTreePositions
-            Point centerPoint = GeneralUtils.GetOccupiedCenter(terrain.Type.OccupyMask, new Size(Globals.PixelWidth, Globals.PixelHeight));
+            Point centerPoint = GetTerrainRenderPoint(terrain);
             Point usedCenter = new Point(topLeft.X * Globals.PixelWidth + centerPoint.X, topLeft.Y * Globals.PixelHeight + centerPoint.Y);
-#else
-            Point usedCenter = new Point(topLeft.X * Globals.PixelWidth + terrain.Type.CenterPoint.X, topLeft.Y * Globals.PixelHeight + terrain.Type.CenterPoint.Y);
-#endif
             return new RenderInfo(usedCenter, render, false, terrain);
         }
 
@@ -707,13 +712,8 @@ namespace MobiusEditor.Render
                     g.DrawImage(tile.Image, paintBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes);
                 }
             }
-#if BetterRendering
-            Point centerPoint = GeneralUtils.GetOccupiedCenter(building.Type.BaseOccupyMask, new Size(Globals.PixelWidth, Globals.PixelHeight));
+            Point centerPoint = GetBuildingRenderPoint(building);
             Point usedCenter = new Point(topLeft.X * Globals.PixelWidth + centerPoint.X, topLeft.Y * Globals.PixelHeight + centerPoint.Y);
-#else
-            Point usedCenter = new Point(topLeft.X * Globals.PixelWidth + building.Type.BaseOccupyBounds.Width * Globals.PixelWidth / 2,
-                                           topLeft.Y * Globals.PixelHeight + (building.Type.BaseOccupyBounds.Height - 1) / 2 * Globals.PixelHeight + Globals.PixelHeight - 1);
-#endif
             // "is flat" is for buildings that have pieces sticking out at the top that should not overlap objects on these cells.
             return new RenderInfo(usedCenter, render, building.Type.IsFlat, building);
         }
@@ -743,7 +743,7 @@ namespace MobiusEditor.Render
             Point renderLocation = origLocation;
             // Offset is calculated as "pixels" in the old 24-pixel cells.
             // Start with center
-            Point offset = InfantryGroup.RenderPosition(infantryStoppingType, true);
+            Point offset = GetInfantryRenderPoint(infantryStoppingType);
             Point offsetBare = InfantryGroup.RenderPosition(infantryStoppingType, false);
             Size renderSize;
             if (success)
@@ -1038,12 +1038,8 @@ namespace MobiusEditor.Render
                     g.DrawImage(unitBm, renderBounds, 0,0, renderBounds.Width, renderBounds.Height, GraphicsUnit.Pixel, imageAttributes);
                 }
             }
-#if BetterRendering
-            Point usedCenter = new Point(topLeft.X * Globals.PixelWidth + Globals.PixelWidth / 2, topLeft.Y * Globals.PixelHeight + Globals.PixelHeight / 2);
-#else
-            // Apparently units pretend their Y-value is the lowest point on a 24x24 bounding box.
-            Point usedCenter = new Point(topLeft.X * Globals.PixelWidth + Globals.PixelWidth / 2, topLeft.Y * Globals.PixelHeight + Globals.PixelHeight - 1);
-#endif
+            Point centerPoint = GetVehicleRenderPoint();
+            Point usedCenter = new Point(topLeft.X * Globals.PixelWidth + centerPoint.X, topLeft.Y * Globals.PixelHeight + centerPoint.Y);
             return new RenderInfo(usedCenter, render, false, unit);
         }
 
@@ -1160,6 +1156,40 @@ namespace MobiusEditor.Render
             }
             return (renderBounds, render);
         }
+
+        private static Point GetVehicleRenderPoint()
+        {
+#if BetterYRendering
+            return new Point(Globals.PixelWidth / 2, Globals.PixelHeight / 2);
+#else
+            return new Point(Globals.PixelWidth / 2, Globals.PixelHeight - 1);
+#endif
+        }
+
+        private static Point GetInfantryRenderPoint(InfantryStoppingType ist)
+        {
+            return InfantryGroup.RenderPosition(ist, true);
+        }
+
+        private static Point GetTerrainRenderPoint(Terrain terrain)
+        {
+#if IgnoreTreePositions
+            return GeneralUtils.GetOccupiedCenter(terrain.Type.OccupyMask, new Size(Globals.PixelWidth, Globals.PixelHeight));
+#else
+            return terrain.Type.CenterPoint;
+#endif
+        }
+
+        private static Point GetBuildingRenderPoint(Building building)
+        {
+#if BetterYRendering
+            return GeneralUtils.GetOccupiedCenter(building.Type.BaseOccupyMask, new Size(Globals.PixelWidth, Globals.PixelHeight));
+#else
+            return new Point(building.Type.BaseOccupyBounds.Width * Globals.PixelWidth / 2,
+                             (building.Type.BaseOccupyBounds.Height - 1) / 2 * Globals.PixelHeight + Globals.PixelHeight - 1);
+#endif
+        }
+
 
         public static void RenderAllBoundsFromCell<T>(Graphics graphics, Rectangle visibleCells, Size tileSize, IEnumerable<(int, T)> renderList, CellMetrics metrics)
         {
@@ -1281,7 +1311,7 @@ namespace MobiusEditor.Render
                 {
                     continue;
                 }
-                if (!visibleCells.Contains(location) || (onlyIfBehindObjects && !IsOverlapped(map, location, false, false)))
+                if (!visibleCells.Contains(location) || (onlyIfBehindObjects && !IsOverlapped(map, location, false, false, null)))
                 {
                     continue;
                 }
@@ -1343,20 +1373,23 @@ namespace MobiusEditor.Render
                 {
                     continue;
                 }
-                if (onlyIfBehindObjects && !IsOverlapped(map, location, true, true))
+                foreach (InfantryStoppingType ist in InfantryGroup.RenderOrder)
                 {
-                    continue;
-                }
-                for (Int32 i = 0; i < infantryGroup.Infantry.Length; ++i)
-                {
-                    Infantry infantry = infantryGroup.Infantry[i];
+                    Infantry infantry = infantryGroup.Infantry[(int)ist];
                     if (infantry == null)
                     {
                         continue;
                     }
+                    if (onlyIfBehindObjects)
+                    {
+                        if (!IsOverlapped(map, location, true, true, ist))
+                        {
+                            continue;
+                        }
+                    }
                     Color outlineCol = Color.FromArgb(0xA0, Globals.TheTeamColorManager.GetBaseColor(infantry.House?.UnitTeamColor));
                     RegionData paintAreaRel;
-                    String id = infantry.Type.Name + '_' + i + '_' + infantry.Direction.ID;
+                    String id = infantry.Type.Name + '_' + ((int)ist) + '_' + infantry.Direction.ID;
                     if (!paintAreas.TryGetValue(id, out paintAreaRel))
                     {
                         // Clone with full opacity
@@ -1369,7 +1402,7 @@ namespace MobiusEditor.Render
                         {
                             using (Graphics ig = Graphics.FromImage(bm))
                             {
-                                RenderInfantry(new Point(1, 1), tileSize, infantry, (InfantryStoppingType)i).RenderAction(ig);
+                                RenderInfantry(new Point(1, 1), tileSize, infantry, (InfantryStoppingType)ist).RenderAction(ig);
                             }
                             paintAreaRel = ImageUtils.GetOutline(tileSize, bm, outlineThickness, alphaThreshold, Globals.UseClassicFiles);
                             paintAreas[id] = paintAreaRel;
@@ -1407,7 +1440,7 @@ namespace MobiusEditor.Render
                 {
                     continue;
                 }
-                if (onlyIfBehindObjects && !IsOverlapped(map, location, true, true))
+                if (onlyIfBehindObjects && !IsOverlapped(map, location, true, true, null))
                 {
                     continue;
                 }
@@ -1449,12 +1482,12 @@ namespace MobiusEditor.Render
             }
         }
 
-        private static Boolean IsOverlapped(Map map, Point location, bool ignoreUnits, bool ignoreAfterHalfwayPoint)
+        private static Boolean IsOverlapped(Map map, Point location, bool ignoreUnits, bool ignoreAfterHalfwayPoint, InfantryStoppingType? ist)
         {
-#if BetterRendering
-            return IsCellOverlapped(map, location, ignoreUnits, ignoreAfterHalfwayPoint);
+#if BetterYRendering
+            return IsObjectOverlapped(map, location, ignoreUnits, ignoreAfterHalfwayPoint, ist);
 #else
-            return IsCellOverlapped(map, location, ignoreUnits, false);
+            return IsObjectOverlapped(map, location, ignoreUnits, false, null);
 #endif
         }
 
@@ -1464,15 +1497,29 @@ namespace MobiusEditor.Render
         /// <param name="map">Map to check on</param>
         /// <param name="location">Location to check</param>
         /// <param name="ignoreUnits">True to ignore unit placement.</param>
-        /// <param name="ignoreAfterHalfwayPoint">Only </param>
+        /// <param name="ignoreBelowRenderY">Only return true if the overlapper's Y-offset is lower than that of the overlapped object.</param>
+        /// <param name="ist">When filled in, the overlapper is treated as infantry on that location.</param>
         /// <returns>true if the cell is considered filled enough to overlap things.</returns>
-        private static Boolean IsCellOverlapped(Map map,  Point location, bool ignoreUnits, bool ignoreAfterHalfwayPoint)
+        private static Boolean IsObjectOverlapped(Map map, Point location, bool ignoreUnits, bool ignoreBelowRenderY, InfantryStoppingType? ist)
         {
             ICellOccupier techno = map.Technos[location];
             // Single-cell occupier. Always pass.
             if (!ignoreUnits && (techno is Unit || techno is InfantryGroup))
             {
                 return true;
+            }
+            // Since "ignoreunits" is enabled, we assume techno is the object to check for being overlapped.
+            Point centerPoint = Point.Empty;
+            if (ignoreBelowRenderY && techno != null)
+            {
+                if (!ist.HasValue)
+                {
+                    centerPoint = GetVehicleRenderPoint();
+                }
+                else
+                {
+                    centerPoint = GetInfantryRenderPoint(ist.Value);
+                }
             }
             // Logic for multi-cell occupiers; buildings and terrain.
             // Return true if either an occupied cell, or overlayed by graphics deemed opaque.
@@ -1484,7 +1531,8 @@ namespace MobiusEditor.Render
             foreach (ICellOverlapper ovl in technos)
             {
                 Building bld = ovl as Building;
-                if (bld == null && !(ovl is Terrain))
+                Terrain ter = ovl as Terrain;
+                if (bld == null && ter == null)
                 {
                     continue;
                 }
@@ -1492,14 +1540,28 @@ namespace MobiusEditor.Render
                 bool[,] opaqueMask = ovl.OpaqueMask;
                 int maskY = opaqueMask == null ? 0 :opaqueMask.GetLength(0);
                 int maskX = opaqueMask == null ? 0 : opaqueMask.GetLength(1);
-                if (ignoreAfterHalfwayPoint)
-                {
-                    maskY = (maskY + 1) / 2;
-                }
                 Point? pt = map.Technos[occ];
                 if (!pt.HasValue)
                 {
                     continue;
+                }
+                if (ignoreBelowRenderY)
+                {
+                    int technoYOnOverlapper = (location.Y - pt.Value.Y) * Globals.PixelHeight + centerPoint.Y;
+                    int overlapperYValue = 0;
+                    if (bld != null)
+                    {
+                        overlapperYValue = GetBuildingRenderPoint(bld).Y;
+                    }
+                    else if (ter != null)
+                    {
+                        overlapperYValue = GetTerrainRenderPoint(ter).Y;
+                    }
+                    // Techno's Y is further down than overlapper's Y, so techno is drawn over overlapper.
+                    if (technoYOnOverlapper > overlapperYValue)
+                    {
+                        continue;
+                    }
                 }
                 // Get list of points, find current point in the list.
                 Rectangle boundsRect = new Rectangle(pt.Value, new Size(maskX, maskY));

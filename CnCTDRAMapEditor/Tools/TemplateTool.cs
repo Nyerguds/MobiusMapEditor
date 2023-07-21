@@ -1331,6 +1331,12 @@ namespace MobiusEditor.Tools
                 }
                 templateTypeListView.Items[newVal].Selected = true;
                 templateTypeListView.Select();
+                if (newVal == 0)
+                {
+                    // selecting "null" (Clear) doesn't automatically jump to the top, to prevent a misclick
+                    // in the list from messing up the user's scroll position. So we need to do it manually.
+                    templateTypeListView.EnsureVisible(templateTypeListView.SelectedIndices[0]);
+                }
                 TemplateType selected = SelectedTemplateType;
                 if (placementMode && selected != null)
                 {

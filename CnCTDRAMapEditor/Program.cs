@@ -40,7 +40,10 @@ namespace MobiusEditor
         [STAThread]
         static void Main(string[] args)
         {
-            //TryEnableDPIAware();
+            if (Globals.EnableDpiAwareness)
+            {
+                TryEnableDPIAware();
+            }
             // Change current culture to en-US
             if (Thread.CurrentThread.CurrentCulture.Name != "en-US")
             {

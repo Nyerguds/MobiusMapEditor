@@ -550,13 +550,16 @@ Unreleased
 * The Cell Trigger tool's "jump to" function will now also jump to placed objects with the attached trigger, to easily review what uses it.
 * The "jump to" function in Waypoints and Cell Triggers will now properly update the mouse cell info in the bottom bar.
 * The [Briefing] and [Base] sections can now also accept custom ini keys (which can be useful for mods).
-* Undo/redo operations are now blocked while mouse drag operations (moving or drag-placing objects) are in progress.
-* Fixed bug where having a specific tile from a random tiles group selected would show the first tile of the group as placement preview.
-* Added the ability to export map previews without the map templates layer.
+* Undo/redo operations are now blocked while mouse drag operations (moving or drag-placing objects) are in progress, to prevent corrupting the list of undo/redo operations.
+* Fixed bug where having a specific tile from a random tiles group selected would still show the first tile of the group as placement preview.
+* Added the ability to export map previews without the map templates layer. This will give an image with a transparent background.
 * The tooltips showing which trigger criteria are needed for using a trigger in a certain situation will indicate which of the criteria are fulfilled by the currently selected trigger.
-* The tooltips showing which trigger criteria are needed will now say "usable" events/actions rather than "required".
-* The Zoom shortcuts should now work on more keys than just the numpad ones.
-* Fixed issues with how objects overlapped with each other.
-* Fixed a bug where Terrain objects would not show a placement preview on bibs.
-* Fixed a bug where changing the Wall type did not refresh the preview.
+* The tooltips showing trigger criteria will now say "usable" events/actions rather than "required".
+* The Zoom shortcuts now work on more keys than just the numpad ones.
+* Fixed issues with how objects overlapped with each other. This doesn't 100% match the game, but the game's method for doing overlaps is often very strange and unrealistic.
+* Refined the "outlines on overlapped objects" logic to only outline objects that are actually high enough up compared to the other object to be considered overlapped.
+* Fixed a bug where Terrain objects would not show a placement preview over bibs.
+* Fixed a bug in Walls mode where changing to a different type did not refresh the preview.
 * Fixed a bug where switching back to the Terrain tool would show the previously-selected type in the preview, but would not select it in the list.
+* Fixed a bug in Map mode where using the PageUp or Home key to select the Clear terrain would not scroll to the item in the list.
+* Added setting to enable DPI awareness mode, for users with indicator scaling issues.

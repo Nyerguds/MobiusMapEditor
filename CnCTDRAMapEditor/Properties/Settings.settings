@@ -5,6 +5,9 @@
     <Setting Name="UseClassicFiles" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>
+    <Setting Name="EnableDpiAwareness" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
     <Setting Name="ModsToLoadTD" Type="System.String" Scope="Application">
       <Value Profile="(Default)">2844969675;GraphicsFixesTD</Value>
     </Setting>
