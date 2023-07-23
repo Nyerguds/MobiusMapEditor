@@ -159,6 +159,7 @@ namespace MobiusEditor.Tools
             // building = building in its final edited form. Clone for preservation
             Building redoBuilding = building.Clone();
             Building undoBuilding = preEdit;
+            AdjustBuildPriorities(building, preEdit, out Building[] baseBuildings, out int[] buildingPrioritiesOld, out int[] buildingPrioritiesNew);
             if (redoBuilding.DataEquals(undoBuilding))
             {
                 return;
@@ -174,6 +175,15 @@ namespace MobiusEditor.Tools
                     building.Trigger = Trigger.None;
                 }
                 ev.MapPanel.Invalidate(ev.Map, building);
+                if (baseBuildings != null && buildingPrioritiesOld != null && baseBuildings.Length == buildingPrioritiesOld.Length)
+                {
+                    for (Int32 i = 0; i < baseBuildings.Length; ++i)
+                    {
+                        Building bld = baseBuildings[i];
+                        bld.BasePriority = buildingPrioritiesOld[i];
+                        ev.MapPanel.Invalidate(ev.Map, bld);
+                    }
+                }
                 if (ev.Plugin != null)
                 {
                     ev.Plugin.Dirty = origDirtyState;
@@ -188,6 +198,15 @@ namespace MobiusEditor.Tools
                     building.Trigger = Trigger.None;
                 }
                 ev.MapPanel.Invalidate(ev.Map, building);
+                if (baseBuildings != null && buildingPrioritiesNew != null && baseBuildings.Length == buildingPrioritiesNew.Length)
+                {
+                    for (Int32 i = 0; i < baseBuildings.Length; ++i)
+                    {
+                        Building bld = baseBuildings[i];
+                        bld.BasePriority = buildingPrioritiesNew[i];
+                        ev.MapPanel.Invalidate(ev.Map, bld);
+                    }
+                }
                 if (ev.Plugin != null)
                 {
                     ev.Plugin.Dirty = true;
@@ -480,32 +499,7 @@ namespace MobiusEditor.Tools
             }
             if (map.Buildings.Add(location, building))
             {
-                Building[] baseBuildings = null;
-                int[] buildingPrioritiesOld = null;
-                Building[] baseBuildingsOrdered = null;
-                if (building.BasePriority >= 0)
-                {
-                    baseBuildings = map.Buildings.OfType<Building>().Select(x => x.Occupier).Where(x => x.BasePriority >= 0).ToArray();
-                    buildingPrioritiesOld = new int[baseBuildings.Length];
-                    for (Int32 i = 0; i < baseBuildings.Length; ++i)
-                    {
-                        Building baseBuilding = baseBuildings[i];
-                        buildingPrioritiesOld[i] = baseBuilding.BasePriority;
-                        if ((building != baseBuilding) && (baseBuilding.BasePriority >= building.BasePriority))
-                        {
-                            baseBuilding.BasePriority++;
-                        }
-                    }
-                    baseBuildingsOrdered = baseBuildings.OrderBy(x => x.BasePriority).ToArray();
-                    for (int i = 0; i < baseBuildingsOrdered.Length; ++i)
-                    {
-                        baseBuildingsOrdered[i].BasePriority = i;
-                    }
-                    foreach (Building baseBuilding in baseBuildings)
-                    {
-                        mapPanel.Invalidate(map, baseBuilding);
-                    }
-                }
+                AdjustBuildPriorities(building, null, out Building[] baseBuildings, out int[] buildingPrioritiesOld, out int[] buildingPrioritiesNew);
                 mapPanel.Invalidate(map, building);
                 bool origDirtyState = plugin.Dirty;
                 plugin.Dirty = true;
@@ -520,8 +514,8 @@ namespace MobiusEditor.Tools
                             Smudge oldSmudge = e.Map.Smudge[p];
                             if (oldSmudge == null || !oldSmudge.Type.IsAutoBib)
                             {
-                                e.Map.Smudge[p] = eatenSmudge[p];
                                 // DO NOT REMOVE THE POINTS FROM "eatenSmudge": the undo might be done again in the future.
+                                e.Map.Smudge[p] = eatenSmudge[p];
                             }
                         }
                     }
@@ -530,10 +524,11 @@ namespace MobiusEditor.Tools
                         for (Int32 i = 0; i < baseBuildings.Length; ++i)
                         {
                             Building bld = baseBuildings[i];
+                            // current building was removed by undo, so don't bother adjusting it.
                             if (building != bld)
                             {
                                 bld.BasePriority = buildingPrioritiesOld[i];
-                                e.MapPanel.Invalidate(map, bld);
+                                e.MapPanel.Invalidate(e.Map, bld);
                             }
                         }
                     }
@@ -545,12 +540,12 @@ namespace MobiusEditor.Tools
                 void redoAction(UndoRedoEventArgs e)
                 {
                     e.Map.Buildings.Add(location, building);
-                    if (baseBuildingsOrdered != null)
+                    if (baseBuildings != null && buildingPrioritiesNew != null && baseBuildings.Length == buildingPrioritiesNew.Length)
                     {
-                        for (Int32 i = 0; i < baseBuildingsOrdered.Length; ++i)
+                        for (Int32 i = 0; i < baseBuildings.Length; ++i)
                         {
-                            Building bld = baseBuildingsOrdered[i];
-                            bld.BasePriority = i;
+                            Building bld = baseBuildings[i];
+                            bld.BasePriority = buildingPrioritiesNew[i];
                             e.MapPanel.Invalidate(e.Map, bld);
                         }
                     }
@@ -561,6 +556,49 @@ namespace MobiusEditor.Tools
                     }
                 }
                 url.Track(undoAction, redoAction, ToolType.Building);
+            }
+        }
+
+        private void AdjustBuildPriorities(Building building, Building bldPreEdit, out Building[] baseBuildings, out int[] buildingPrioritiesOld, out int[] buildingPrioritiesNew)
+        {
+            buildingPrioritiesOld = null;
+            buildingPrioritiesNew = null;
+            baseBuildings = null;
+            if (building.BasePriority >= 0)
+            {
+                baseBuildings = map.Buildings.OfType<Building>().Where(b => b.Occupier.BasePriority >= 0).OrderBy(b => map.Metrics.GetCell(b.Location)).Select(b => b.Occupier).ToArray();
+                int newPr = Math.Max(0, Math.Min(baseBuildings.Length - 1, building.BasePriority));
+                buildingPrioritiesOld = new int[baseBuildings.Length];
+                buildingPrioritiesNew = new int[baseBuildings.Length];
+                // Save old values.
+                for (Int32 i = 0; i < baseBuildings.Length; ++i)
+                {
+                    Building baseBuilding = baseBuildings[i];
+                    if (building == baseBuilding && bldPreEdit != null)
+                    {
+                        baseBuilding = bldPreEdit;
+                    }
+                    buildingPrioritiesOld[i] = baseBuilding.BasePriority;
+                }
+                // Re-sort, removing inconsistencies
+                List<Building> sortedBuildings = baseBuildings.OrderBy(b => b.BasePriority).ToList();
+                // To ensure the new priority is correct, remove it from the list and re-insert it at the correct location.
+                sortedBuildings.Remove(building);
+                sortedBuildings.Insert(newPr, building);
+                for (Int32 i = 0; i < sortedBuildings.Count; ++i)
+                {
+                    Building baseBuilding = sortedBuildings[i];
+                    baseBuilding.BasePriority = i;
+                }
+                for (Int32 i = 0; i < baseBuildings.Length; ++i)
+                {
+                    Building baseBuilding = baseBuildings[i];
+                    buildingPrioritiesNew[i] = baseBuilding.BasePriority;
+                }
+                foreach (Building baseBuilding in sortedBuildings)
+                {
+                    mapPanel.Invalidate(map, baseBuilding);
+                }
             }
         }
 
@@ -585,7 +623,7 @@ namespace MobiusEditor.Tools
                         buildingPrioritiesOld[i] = baseBuildings[i].BasePriority;
                         baseBuildings[i].BasePriority = i;
                     }
-                    foreach (Building baseBuilding in map.Buildings.OfType<Building>().Select(x => x.Occupier).Where(x => x.BasePriority >= 0))
+                    foreach (Building baseBuilding in baseBuildings)
                     {
                         mapPanel.Invalidate(map, baseBuilding);
                     }
@@ -614,14 +652,14 @@ namespace MobiusEditor.Tools
                 {
                     e.MapPanel.Invalidate(e.Map, building);
                     e.Map.Buildings.Remove(building);
-                    SmudgeTool.RestoreNearbySmudge(map, bibPoints, null);
+                    SmudgeTool.RestoreNearbySmudge(e.Map, bibPoints, null);
                     if (baseBuildings != null)
                     {
                         for (Int32 i = 0; i < baseBuildings.Length; ++i)
                         {
                             Building bld = baseBuildings[i];
                             bld.BasePriority = i;
-                            e.MapPanel.Invalidate(map, bld);
+                            e.MapPanel.Invalidate(e.Map, bld);
                         }
                     }
                     if (e.Plugin != null)

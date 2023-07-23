@@ -563,3 +563,9 @@ Unreleased
 * Fixed a bug where switching back to the Terrain tool would show the previously-selected type in the preview, but would not select it in the list.
 * Fixed a bug in Map mode where using the PageUp or Home key to select the Clear terrain would not scroll to the item in the list.
 * Added setting to enable DPI awareness mode, for users with indicator scaling issues.
+* Triggers on TD Terrain entries are now optional in the ini; terrain entries without trigger part will no longer be skipped as malformed data.
+* When loading a map and objects are detected as overlapping a multi-cell object like a building or tree, on top of giving the cell where the overlap occurred, the system will now also report the placement cell of that object.
+* Overhauled the undo/redo system of building priorities, to remove inconsistencies.
+* Modifying the rebuild priority of a placed building will now adjust the rebuild priorities of the other structures, as already happened when adding and removing them.
+* Fixed bug where two buildings of different types placed on the same cell (e.g. a guard tower on the top-left corner of a repair bay) would not correctly be distinguished as different entries by the rebuild priority system, causing one of them to lose its rebuild status.
+* The "Learning" and "Mercenary" options in the TD Teamtypes editor are now crossed out in the UI, and indicated on the tooltip as having no effect.

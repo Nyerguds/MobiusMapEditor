@@ -73,6 +73,8 @@ namespace MobiusEditor.Model
         private readonly Dictionary<T, Point> occupiers = new Dictionary<T, Point>();
         private readonly T[,] occupierCells;
 
+        public CellMetrics Metrics => metrics;
+
         public T this[Point location] => this[location.X, location.Y];
 
         public T this[int x, int y] => Contains(x, y) ? occupierCells[y, x] : null;

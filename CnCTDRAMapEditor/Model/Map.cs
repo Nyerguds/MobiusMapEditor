@@ -1402,9 +1402,10 @@ namespace MobiusEditor.Model
             return currentMission;
         }
 
-        public ICellOccupier FindBlockingObject(int cell, ICellOccupier obj, out int blockingCell)
+        public ICellOccupier FindBlockingObject(int cell, ICellOccupier obj, out int blockingCell, out int placementCell)
         {
             blockingCell = -1;
+            placementCell = -1;
             if (this.Metrics.GetLocation(cell, out Point p))
             {
                 bool[,] mask;
@@ -1425,6 +1426,7 @@ namespace MobiusEditor.Model
                                 if (!this.Metrics.GetCell(new Point(p.X + x, p.Y + y), out int targetCell))
                                 {
                                     blockingCell = -1;
+                                    placementCell = -1;
                                     return null;
                                 }
                                 ICellOccupier techno = this.Technos[targetCell];
@@ -1432,6 +1434,16 @@ namespace MobiusEditor.Model
                                 if (techno != null || b != null)
                                 {
                                     blockingCell = targetCell;
+                                    Point? blockingOrigin = null;
+                                    if (techno != null)
+                                    {
+                                        blockingOrigin = this.Technos[techno];
+                                    }
+                                    else
+                                    {
+                                        blockingOrigin = this.Buildings[b];
+                                    }
+                                    placementCell = this.Metrics.GetCell(blockingOrigin.Value).Value;
                                     return techno ?? b;
                                 }
                             }
@@ -1450,6 +1462,7 @@ namespace MobiusEditor.Model
                             if (!this.Metrics.GetCell(new Point(p.X + x, p.Y + y), out int targetCell))
                             {
                                 blockingCell = -1;
+                                placementCell = -1;
                                 return null;
                             }
                             ICellOccupier techno = this.Technos[targetCell];
@@ -1457,6 +1470,16 @@ namespace MobiusEditor.Model
                             if (techno != null || b != null)
                             {
                                 blockingCell = targetCell;
+                                Point? blockingOrigin;
+                                if (techno != null)
+                                {
+                                    blockingOrigin = this.Technos[techno];
+                                }
+                                else
+                                {
+                                    blockingOrigin = this.Buildings[b];
+                                }
+                                placementCell = this.Metrics.GetCell(blockingOrigin.Value).Value;
                                 return techno ?? b;
                             }
                         }
@@ -1465,6 +1488,78 @@ namespace MobiusEditor.Model
             }
             return null;
         }
+
+        public void CheckBuildingBlockingCell(int cell, BuildingType buildingType, string reportString, List<string> errors, ref bool modified)
+        {
+            ICellOccupier techno = FindBlockingObject(cell, buildingType, out int blockingCell, out int placementcell);
+            string reportCell = blockingCell == -1 ? "<unknown>" : blockingCell.ToString();
+            if (techno is Building building)
+            {
+                bool onBib = false;
+                if (building.Type.HasBib)
+                {
+                    onBib = true;
+                    Point newPoint = new Point(cell % Metrics.Width, cell / Metrics.Width);
+                    // All cells required for this building
+                    HashSet<Point> errBuildingPoints = OccupierSet<Building>.GetOccupyPoints(newPoint, buildingType.OccupyMask).ToHashSet();
+                    foreach (Point p in OccupierSet<Building>.GetOccupyPoints(Buildings[building].Value, building.Type.BaseOccupyMask))
+                    {
+                        if (errBuildingPoints.Contains(p))
+                        {
+                            // In main area, so not on bib.
+                            onBib = false;
+                            break;
+                        }
+                    }
+                }
+                if (onBib)
+                {
+                    errors.Add(string.Format("{0} overlaps bib of structure '{1}' placed on cell {2} at cell {3}; skipping.", reportString, building.Type.Name, placementcell, reportCell));
+                    modified = true;
+                }
+                else
+                {
+                    errors.Add(string.Format("{0} overlaps structure '{1}' placed on cell {2} at cell {3}; skipping.", reportString, building.Type.Name, placementcell, reportCell));
+                    modified = true;
+                }
+            }
+            else if (techno is Overlay overlay)
+            {
+                errors.Add(string.Format("{0} overlaps overlay '{1}' on cell {2}; skipping.", reportString, overlay.Type.Name, reportCell));
+                modified = true;
+            }
+            else if (techno is Terrain terrain)
+            {
+                errors.Add(string.Format("{0} overlaps terrain '{1}' placed on cell {2} at cell {3}; skipping.", reportString, terrain.Type.Name, placementcell, reportCell));
+                modified = true;
+            }
+            else if (techno is InfantryGroup infantry)
+            {
+                Infantry inf = infantry.Infantry.FirstOrDefault(u => u != null);
+                string infInfo = inf == null ? string.Empty : string.Format(" '{0}'", inf.Type.Name);
+                errors.Add(string.Format("{0} overlaps infantry '{1}' on cell {2}; skipping.", reportString, infInfo, reportCell));
+                modified = true;
+            }
+            else if (techno is Unit unit)
+            {
+                errors.Add(string.Format("{0} overlaps unit '{1}' on cell {2}; skipping.", reportString, unit.Type.Name, reportCell));
+                modified = true;
+            }
+            else
+            {
+                if (blockingCell != -1)
+                {
+                    errors.Add(string.Format("{0} overlaps unknown techno on cell {1}; skipping.", reportString, blockingCell));
+                    modified = true;
+                }
+                else
+                {
+                    errors.Add(string.Format("{0} crosses outside the map bounds; skipping.", reportString));
+                    modified = true;
+                }
+            }
+        }
+
 
         public TGA GeneratePreview(Size previewSize, IGamePlugin plugin, bool renderAll, bool sharpen)
         {
