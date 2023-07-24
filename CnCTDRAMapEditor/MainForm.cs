@@ -2364,12 +2364,19 @@ namespace MobiusEditor
             }
             if (plugin.GameType == GameType.TiberianDawn && plugin.IsMegaMap)
             {
-                //if (DialogResult.Yes != MessageBox.Show("Megamaps are not supported by the C&C Remastered Collection without modding! Are you sure you want to publish a map that will be incompatible with the standard unmodded game?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2))
-                //{
-                //    return;
-                //}
-                MessageBox.Show("Tiberian Dawn megamaps cannot be published to Steam; they are not usable by the C&C Remastered Collection without modding, and may cause issues on the official servers.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
+                if (!plugin.Map.BasicSection.SoloMission)
+                {
+                    MessageBox.Show("Tiberian Dawn multiplayer megamaps cannot be published to Steam; they are not usable by the C&C Remastered Collection without modding, and may cause issues on the official servers.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+                // If the mission is already published on Steam, don't bother asking this and just continue.
+                if (plugin.Map.SteamSection.PublishedFileId == 0
+                        && DialogResult.Yes != MessageBox.Show("Megamaps are not supported by Tiberian Dawn Remastered without modding!" +
+                        " Are you sure you want to publish a mission that will be incompatible with the standard unmodded game?", "Warning",
+                        MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2))
+                {
+                    return;
+                }
             }
             if (!SteamworksUGC.IsInit)
             {
