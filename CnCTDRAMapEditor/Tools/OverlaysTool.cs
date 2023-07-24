@@ -35,7 +35,7 @@ namespace MobiusEditor.Tools
         /// </summary>
         protected override MapLayerFlag ManuallyHandledLayers => MapLayerFlag.OverlapOutlines;
 
-        private readonly TypeListBox overlayTypeComboBox;
+        private readonly TypeListBox overlayTypeListBox;
         private readonly MapPanel overlayTypeMapPanel;
 
         private readonly Dictionary<int, Overlay> undoOverlays = new Dictionary<int, Overlay>();
@@ -78,29 +78,29 @@ namespace MobiusEditor.Tools
                         mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(navigationWidget.MouseCell, new Size(1, 1)), 1, 1));
                     }
                     selectedOverlayType = value;
-                    overlayTypeComboBox.SelectedValue = selectedOverlayType;
+                    overlayTypeListBox.SelectedValue = selectedOverlayType;
                     RefreshPreviewPanel();
                 }
             }
         }
 
-        public OverlaysTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, TypeListBox overlayTypeComboBox, MapPanel overlayTypeMapPanel,
+        public OverlaysTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, TypeListBox overlayTypeListBox, MapPanel overlayTypeMapPanel,
             IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs, ToolType> url)
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
             previewMap = map;
-            this.overlayTypeComboBox = overlayTypeComboBox;
-            this.overlayTypeComboBox.SelectedIndexChanged += OverlayTypeComboBox_SelectedIndexChanged;
+            this.overlayTypeListBox = overlayTypeListBox;
+            this.overlayTypeListBox.SelectedIndexChanged += OverlayTypeListBox_SelectedIndexChanged;
             this.overlayTypeMapPanel = overlayTypeMapPanel;
             this.overlayTypeMapPanel.BackColor = Color.White;
             this.overlayTypeMapPanel.MaxZoom = 1;
             this.overlayTypeMapPanel.SmoothScale = Globals.PreviewSmoothScale;
-            SelectedOverlayType = this.overlayTypeComboBox.Types.First() as OverlayType;
+            SelectedOverlayType = this.overlayTypeListBox.Types.First() as OverlayType;
         }
 
-        private void OverlayTypeComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        private void OverlayTypeListBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            SelectedOverlayType = overlayTypeComboBox.SelectedValue as OverlayType;
+            SelectedOverlayType = overlayTypeListBox.SelectedValue as OverlayType;
         }
 
         private void OverlaysTool_KeyDown(object sender, KeyEventArgs e)
@@ -279,8 +279,8 @@ namespace MobiusEditor.Tools
 
         private void CheckSelectShortcuts(KeyEventArgs e)
         {
-            int maxVal = overlayTypeComboBox.Items.Count - 1;
-            int curVal = overlayTypeComboBox.SelectedIndex;
+            int maxVal = overlayTypeListBox.Items.Count - 1;
+            int curVal = overlayTypeListBox.SelectedIndex;
             int newVal;
             switch (e.KeyCode)
             {
@@ -301,7 +301,7 @@ namespace MobiusEditor.Tools
             }
             if (curVal != newVal)
             {
-                overlayTypeComboBox.SelectedIndex = newVal;
+                overlayTypeListBox.SelectedIndex = newVal;
                 if (placementMode)
                 {
                     mapPanel.Invalidate(map, navigationWidget.MouseCell);
@@ -499,7 +499,7 @@ namespace MobiusEditor.Tools
                 if (disposing)
                 {
                     Deactivate();
-                    overlayTypeComboBox.SelectedIndexChanged -= OverlayTypeComboBox_SelectedIndexChanged;
+                    overlayTypeListBox.SelectedIndexChanged -= OverlayTypeListBox_SelectedIndexChanged;
                 }
                 disposedValue = true;
             }

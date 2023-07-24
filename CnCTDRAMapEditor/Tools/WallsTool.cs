@@ -35,7 +35,7 @@ namespace MobiusEditor.Tools
         /// </summary>
         protected override MapLayerFlag ManuallyHandledLayers => MapLayerFlag.None;
 
-        private readonly TypeListBox wallTypeComboBox;
+        private readonly TypeListBox wallTypeListBox;
         private readonly MapPanel wallTypeMapPanel;
 
         private readonly Dictionary<int, Overlay> undoOverlays = new Dictionary<int, Overlay>();
@@ -78,29 +78,29 @@ namespace MobiusEditor.Tools
                         mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(navigationWidget.MouseCell, new Size(1, 1)), 1, 1));
                     }
                     selectedWallType = value;
-                    wallTypeComboBox.SelectedValue = selectedWallType;
+                    wallTypeListBox.SelectedValue = selectedWallType;
                     RefreshPreviewPanel();
                 }
             }
         }
 
-        public WallsTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, TypeListBox wallTypeComboBox, MapPanel wallTypeMapPanel,
+        public WallsTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, TypeListBox wallTypeListBox, MapPanel wallTypeMapPanel,
             IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs, ToolType> url)
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
             previewMap = map;
-            this.wallTypeComboBox = wallTypeComboBox;
-            this.wallTypeComboBox.SelectedIndexChanged += WallTypeComboBox_SelectedIndexChanged;
+            this.wallTypeListBox = wallTypeListBox;
+            this.wallTypeListBox.SelectedIndexChanged += WallTypeListBox_SelectedIndexChanged;
             this.wallTypeMapPanel = wallTypeMapPanel;
             this.wallTypeMapPanel.BackColor = Color.White;
             this.wallTypeMapPanel.MaxZoom = 1;
             this.wallTypeMapPanel.SmoothScale = Globals.PreviewSmoothScale;
-            SelectedWallType = this.wallTypeComboBox.Types.First() as OverlayType;
+            SelectedWallType = this.wallTypeListBox.Types.First() as OverlayType;
         }
 
-        private void WallTypeComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        private void WallTypeListBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            SelectedWallType = wallTypeComboBox.SelectedValue as OverlayType;
+            SelectedWallType = wallTypeListBox.SelectedValue as OverlayType;
         }
 
         private void WallTool_KeyDown(object sender, KeyEventArgs e)
@@ -427,7 +427,7 @@ namespace MobiusEditor.Tools
             {
                 if (disposing)
                 {
-                    wallTypeComboBox.SelectedIndexChanged -= WallTypeComboBox_SelectedIndexChanged;
+                    wallTypeListBox.SelectedIndexChanged -= WallTypeListBox_SelectedIndexChanged;
                     Deactivate();
                 }
                 disposedValue = true;

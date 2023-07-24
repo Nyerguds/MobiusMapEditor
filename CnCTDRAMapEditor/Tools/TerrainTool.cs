@@ -98,14 +98,14 @@ namespace MobiusEditor.Tools
             }
         }
 
-        public TerrainTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, TypeListBox terrainTypeComboBox, MapPanel terrainTypeMapPanel,
+        public TerrainTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, TypeListBox terrainTypeListBox, MapPanel terrainTypeMapPanel,
             TerrainProperties terrainProperties, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs, ToolType> url)
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
             previewMap = map;
             mockTerrain = new Terrain();
-            this.terrainTypeListBox = terrainTypeComboBox;
-            this.terrainTypeListBox.SelectedIndexChanged += TerrainTypeCombo_SelectedIndexChanged;
+            this.terrainTypeListBox = terrainTypeListBox;
+            this.terrainTypeListBox.SelectedIndexChanged += TerrainTypeListBox_SelectedIndexChanged;
             this.terrainTypeMapPanel = terrainTypeMapPanel;
             this.terrainTypeMapPanel.BackColor = Color.White;
             this.terrainTypeMapPanel.MaxZoom = 1;
@@ -113,7 +113,7 @@ namespace MobiusEditor.Tools
             this.terrainProperties = terrainProperties;
             this.terrainProperties.Terrain = mockTerrain;
             this.terrainProperties.Visible = plugin.Map.TerrainEventTypes.Count > 0;
-            SelectedTerrainType = terrainTypeComboBox.Types.First() as TerrainType;
+            SelectedTerrainType = terrainTypeListBox.Types.First() as TerrainType;
             RefreshPreviewPanel();
         }
 
@@ -202,7 +202,7 @@ namespace MobiusEditor.Tools
             RefreshPreviewPanel();
         }
 
-        private void TerrainTypeCombo_SelectedIndexChanged(object sender, EventArgs e)
+        private void TerrainTypeListBox_SelectedIndexChanged(object sender, EventArgs e)
         {
             SelectedTerrainType = terrainTypeListBox.SelectedValue as TerrainType;
             RefreshPreviewPanel();
@@ -664,7 +664,7 @@ namespace MobiusEditor.Tools
                 {
                     selectedTerrainProperties?.Close();
                     selectedTerrainProperties = null;
-                    terrainTypeListBox.SelectedIndexChanged -= TerrainTypeCombo_SelectedIndexChanged;
+                    terrainTypeListBox.SelectedIndexChanged -= TerrainTypeListBox_SelectedIndexChanged;
                     Deactivate();
                 }
                 disposedValue = true;

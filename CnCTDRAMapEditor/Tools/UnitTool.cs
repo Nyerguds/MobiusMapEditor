@@ -36,7 +36,7 @@ namespace MobiusEditor.Tools
         /// </summary>
         protected override MapLayerFlag ManuallyHandledLayers => MapLayerFlag.TechnoTriggers | MapLayerFlag.EffectRadius | MapLayerFlag.OverlapOutlines;
 
-        private readonly TypeListBox unitTypesBox;
+        private readonly TypeListBox unitTypeListBox;
         private readonly MapPanel unitTypeMapPanel;
         private readonly ObjectProperties objectProperties;
 
@@ -87,7 +87,7 @@ namespace MobiusEditor.Tools
                         mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(navigationWidget.MouseCell, new Size(1, 1)), 1, 1));
                     }
                     selectedUnitType = value;
-                    unitTypesBox.SelectedValue = selectedUnitType;
+                    unitTypeListBox.SelectedValue = selectedUnitType;
                     if (placementMode && (selectedUnitType != null))
                     {
                         mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(navigationWidget.MouseCell, new Size(1, 1)), 1, 1));
@@ -97,7 +97,7 @@ namespace MobiusEditor.Tools
             }
         }
 
-        public UnitTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, TypeListBox unitTypesBox, MapPanel unitTypeMapPanel,
+        public UnitTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, TypeListBox unitTypeListBox, MapPanel unitTypeMapPanel,
             ObjectProperties objectProperties, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs, ToolType> url)
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
@@ -112,9 +112,9 @@ namespace MobiusEditor.Tools
                 Direction = map.UnitDirectionTypes.Where(d => d.Equals(FacingType.North)).First(),
                 Mission = map.GetDefaultMission(unitType)
             };
-            this.unitTypesBox = unitTypesBox;
-            this.unitTypesBox.Types = unitTypes;
-            this.unitTypesBox.SelectedIndexChanged += UnitTypeComboBox_SelectedIndexChanged;
+            this.unitTypeListBox = unitTypeListBox;
+            this.unitTypeListBox.Types = unitTypes;
+            this.unitTypeListBox.SelectedIndexChanged += UnitTypeListBox_SelectedIndexChanged;
             this.unitTypeMapPanel = unitTypeMapPanel;
             this.unitTypeMapPanel.BackColor = Color.White;
             this.unitTypeMapPanel.MaxZoom = 1;
@@ -127,15 +127,15 @@ namespace MobiusEditor.Tools
 
         protected override void UpdateExpansionUnits()
         {
-            int selectedIndex = unitTypesBox.SelectedIndex;
-            UnitType selected = unitTypesBox.SelectedValue as UnitType;
-            unitTypesBox.SelectedIndexChanged -= UnitTypeComboBox_SelectedIndexChanged;
+            int selectedIndex = unitTypeListBox.SelectedIndex;
+            UnitType selected = unitTypeListBox.SelectedValue as UnitType;
+            unitTypeListBox.SelectedIndexChanged -= UnitTypeListBox_SelectedIndexChanged;
             List<UnitType> updatedTypes = plugin.Map.UnitTypes.OrderBy(t => t.ID).ToList();
             if (!updatedTypes.Contains(selected))
             {
                 // Find nearest existing.
                 selected = null;
-                List<UnitType> oldTypes = this.unitTypesBox.Types.Cast<UnitType>().ToList();
+                List<UnitType> oldTypes = this.unitTypeListBox.Types.Cast<UnitType>().ToList();
                 for (int i = selectedIndex; i >= 0; --i)
                 {
                     if (updatedTypes.Contains(oldTypes[i]))
@@ -156,9 +156,9 @@ namespace MobiusEditor.Tools
                     }
                 }
             }
-            unitTypesBox.Types = updatedTypes;
-            unitTypesBox.SelectedIndexChanged += UnitTypeComboBox_SelectedIndexChanged;
-            unitTypesBox.SelectedValue = selected;
+            unitTypeListBox.Types = updatedTypes;
+            unitTypeListBox.SelectedIndexChanged += UnitTypeListBox_SelectedIndexChanged;
+            unitTypeListBox.SelectedValue = selected;
         }
 
         private void MapPanel_MouseDoubleClick(object sender, MouseEventArgs e)
@@ -247,9 +247,9 @@ namespace MobiusEditor.Tools
             mapPanel.Invalidate(map, sender as Unit);
         }
 
-        private void UnitTypeComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        private void UnitTypeListBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            SelectedUnitType = unitTypesBox.SelectedValue as UnitType;
+            SelectedUnitType = unitTypeListBox.SelectedValue as UnitType;
             mockUnit.Mission = map.GetDefaultMission(SelectedUnitType, mockUnit.Mission);
         }
 
@@ -469,8 +469,8 @@ namespace MobiusEditor.Tools
 
         private void CheckSelectShortcuts(KeyEventArgs e)
         {
-            int maxVal = unitTypesBox.Items.Count - 1;
-            int curVal = unitTypesBox.SelectedIndex;
+            int maxVal = unitTypeListBox.Items.Count - 1;
+            int curVal = unitTypeListBox.SelectedIndex;
             int newVal;
             switch (e.KeyCode)
             {
@@ -491,7 +491,7 @@ namespace MobiusEditor.Tools
             }
             if (curVal != newVal)
             {
-                unitTypesBox.SelectedIndex = newVal;
+                unitTypeListBox.SelectedIndex = newVal;
                 if (placementMode)
                 {
                     mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(navigationWidget.MouseCell, new Size(1, 1)), 1, 1));
@@ -735,7 +735,7 @@ namespace MobiusEditor.Tools
                 {
                     selectedObjectProperties?.Close();
                     selectedObjectProperties = null;
-                    unitTypesBox.SelectedIndexChanged -= UnitTypeComboBox_SelectedIndexChanged;
+                    unitTypeListBox.SelectedIndexChanged -= UnitTypeListBox_SelectedIndexChanged;
                     Deactivate();
                 }
                 disposedValue = true;

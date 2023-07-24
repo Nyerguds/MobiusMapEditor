@@ -30,7 +30,7 @@ namespace MobiusEditor.Tools
 {
     public class InfantryTool : ViewTool
     {
-        private readonly TypeListBox infantryTypesBox;
+        private readonly TypeListBox infantryTypeListBox;
         private readonly MapPanel infantryTypeMapPanel;
         private readonly ObjectProperties objectProperties;
 
@@ -87,7 +87,7 @@ namespace MobiusEditor.Tools
                         mapPanel.Invalidate(map, navigationWidget.MouseCell);
                     }
                     selectedInfantryType = value;
-                    infantryTypesBox.SelectedValue = selectedInfantryType;
+                    infantryTypeListBox.SelectedValue = selectedInfantryType;
                     if (placementMode && (selectedInfantryType != null))
                     {
                         mapPanel.Invalidate(map, navigationWidget.MouseCell);
@@ -98,7 +98,7 @@ namespace MobiusEditor.Tools
             }
         }
 
-        public InfantryTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, TypeListBox infantryTypesBox, MapPanel infantryTypeMapPanel,
+        public InfantryTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, TypeListBox infantryTypeListBox, MapPanel infantryTypeMapPanel,
             ObjectProperties objectProperties, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs, ToolType> url)
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
@@ -113,9 +113,9 @@ namespace MobiusEditor.Tools
                 Direction = map.UnitDirectionTypes.Where(d => d.Equals(FacingType.South)).First(),
                 Mission = map.GetDefaultMission(infType)
             };
-            this.infantryTypesBox = infantryTypesBox;
-            this.infantryTypesBox.Types = infTypes;
-            this.infantryTypesBox.SelectedIndexChanged += InfantryTypeComboBox_SelectedIndexChanged;
+            this.infantryTypeListBox = infantryTypeListBox;
+            this.infantryTypeListBox.Types = infTypes;
+            this.infantryTypeListBox.SelectedIndexChanged += InfantryTypeListBox_SelectedIndexChanged;
             this.infantryTypeMapPanel = infantryTypeMapPanel;
             this.infantryTypeMapPanel.BackColor = Color.White;
             this.infantryTypeMapPanel.MaxZoom = 1;
@@ -127,15 +127,15 @@ namespace MobiusEditor.Tools
 
         protected override void UpdateExpansionUnits()
         {
-            int selectedIndex = infantryTypesBox.SelectedIndex;
-            InfantryType selected = infantryTypesBox.SelectedValue as InfantryType;
-            this.infantryTypesBox.SelectedIndexChanged -= InfantryTypeComboBox_SelectedIndexChanged;
+            int selectedIndex = infantryTypeListBox.SelectedIndex;
+            InfantryType selected = infantryTypeListBox.SelectedValue as InfantryType;
+            this.infantryTypeListBox.SelectedIndexChanged -= InfantryTypeListBox_SelectedIndexChanged;
             List<InfantryType> updatedTypes = plugin.Map.InfantryTypes.OrderBy(t => t.ID).ToList();
             if (!updatedTypes.Contains(selected))
             {
                 // Find nearest existing.
                 selected = null;
-                List<InfantryType> oldTypes = this.infantryTypesBox.Types.Cast<InfantryType>().ToList();
+                List<InfantryType> oldTypes = this.infantryTypeListBox.Types.Cast<InfantryType>().ToList();
                 for (int i = selectedIndex; i >= 0; --i)
                 {
                     if (updatedTypes.Contains(oldTypes[i]))
@@ -156,9 +156,9 @@ namespace MobiusEditor.Tools
                     }
                 }
             }
-            this.infantryTypesBox.Types = updatedTypes;
-            this.infantryTypesBox.SelectedIndexChanged += InfantryTypeComboBox_SelectedIndexChanged;
-            infantryTypesBox.SelectedValue = selected;
+            this.infantryTypeListBox.Types = updatedTypes;
+            this.infantryTypeListBox.SelectedIndexChanged += InfantryTypeListBox_SelectedIndexChanged;
+            infantryTypeListBox.SelectedValue = selected;
         }
 
         private void MapPanel_MouseDoubleClick(object sender, MouseEventArgs e)
@@ -252,9 +252,9 @@ namespace MobiusEditor.Tools
             mapPanel.Invalidate(map, (sender as Infantry).InfantryGroup);
         }
 
-        private void InfantryTypeComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        private void InfantryTypeListBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            SelectedInfantryType = infantryTypesBox.SelectedValue as InfantryType;
+            SelectedInfantryType = infantryTypeListBox.SelectedValue as InfantryType;
             mockInfantry.Mission = map.GetDefaultMission(SelectedInfantryType, mockInfantry.Mission);
         }
 
@@ -634,8 +634,8 @@ namespace MobiusEditor.Tools
 
         private void CheckSelectShortcuts(KeyEventArgs e)
         {
-            int maxVal = infantryTypesBox.Items.Count - 1;
-            int curVal = infantryTypesBox.SelectedIndex;
+            int maxVal = infantryTypeListBox.Items.Count - 1;
+            int curVal = infantryTypeListBox.SelectedIndex;
             int newVal;
             switch (e.KeyCode)
             {
@@ -656,7 +656,7 @@ namespace MobiusEditor.Tools
             }
             if (curVal != newVal)
             {
-                infantryTypesBox.SelectedIndex = newVal;
+                infantryTypeListBox.SelectedIndex = newVal;
                 if (placementMode)
                 {
                     mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(navigationWidget.MouseCell, new Size(1, 1)), 1, 1));
@@ -904,7 +904,7 @@ namespace MobiusEditor.Tools
                 {
                     selectedObjectProperties?.Close();
                     selectedObjectProperties = null;
-                    infantryTypesBox.SelectedIndexChanged -= InfantryTypeComboBox_SelectedIndexChanged;
+                    infantryTypeListBox.SelectedIndexChanged -= InfantryTypeListBox_SelectedIndexChanged;
                     Deactivate();
                 }
                 disposedValue = true;

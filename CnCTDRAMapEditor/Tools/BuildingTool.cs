@@ -30,7 +30,7 @@ namespace MobiusEditor.Tools
 {
     public class BuildingTool : ViewTool
     {
-        private readonly TypeListBox buildingTypesBox;
+        private readonly TypeListBox buildingTypeListBox;
         private readonly MapPanel buildingTypeMapPanel;
         private readonly ObjectProperties objectProperties;
 
@@ -89,7 +89,7 @@ namespace MobiusEditor.Tools
                         mapPanel.Invalidate(map, new Rectangle(navigationWidget.MouseCell, selectedBuildingType.OverlapBounds.Size));
                     }
                     selectedBuildingType = value;
-                    buildingTypesBox.SelectedValue = selectedBuildingType;
+                    buildingTypeListBox.SelectedValue = selectedBuildingType;
                     if (placementMode && (selectedBuildingType != null))
                     {
                         mapPanel.Invalidate(map, new Rectangle(navigationWidget.MouseCell, selectedBuildingType.OverlapBounds.Size));
@@ -100,20 +100,20 @@ namespace MobiusEditor.Tools
             }
         }
 
-        public BuildingTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, TypeListBox buildingTypesBox, MapPanel buildingTypeMapPanel,
+        public BuildingTool(MapPanel mapPanel, MapLayerFlag layers, ToolStripStatusLabel statusLbl, TypeListBox buildingTypeListBox, MapPanel buildingTypeMapPanel,
             ObjectProperties objectProperties, IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs, ToolType> url)
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
             previewMap = map;
             mockBuilding = new Building()
             {
-                Type = buildingTypesBox.Types.First() as BuildingType,
+                Type = buildingTypeListBox.Types.First() as BuildingType,
                 House = map.Houses.First().Type,
                 Strength = 256,
                 Direction = map.BuildingDirectionTypes.Where(d => d.Equals(FacingType.North)).First()
             };
-            this.buildingTypesBox = buildingTypesBox;
-            this.buildingTypesBox.SelectedIndexChanged += BuildingTypeComboBox_SelectedIndexChanged;
+            this.buildingTypeListBox = buildingTypeListBox;
+            this.buildingTypeListBox.SelectedIndexChanged += BuildingTypeListBox_SelectedIndexChanged;
             this.buildingTypeMapPanel = buildingTypeMapPanel;
             this.buildingTypeMapPanel.BackColor = Color.White;
             this.buildingTypeMapPanel.MaxZoom = 1;
@@ -233,9 +233,9 @@ namespace MobiusEditor.Tools
             mapPanel.Invalidate(map, sender as Building);
         }
 
-        private void BuildingTypeComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        private void BuildingTypeListBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            SelectedBuildingType = buildingTypesBox.SelectedValue as BuildingType;
+            SelectedBuildingType = buildingTypeListBox.SelectedValue as BuildingType;
         }
 
         private void BuildingTool_KeyDown(object sender, KeyEventArgs e)
@@ -673,8 +673,8 @@ namespace MobiusEditor.Tools
 
         private void CheckSelectShortcuts(KeyEventArgs e)
         {
-            int maxVal = buildingTypesBox.Items.Count - 1;
-            int curVal = buildingTypesBox.SelectedIndex;
+            int maxVal = buildingTypeListBox.Items.Count - 1;
+            int curVal = buildingTypeListBox.SelectedIndex;
             int newVal;
             switch (e.KeyCode)
             {
@@ -695,7 +695,7 @@ namespace MobiusEditor.Tools
             }
             if (curVal != newVal)
             {
-                buildingTypesBox.SelectedIndex = newVal;
+                buildingTypeListBox.SelectedIndex = newVal;
                 BuildingType selected = SelectedBuildingType;
                 if (placementMode && selected != null)
                 {
@@ -998,7 +998,7 @@ namespace MobiusEditor.Tools
                 {
                     selectedObjectProperties?.Close();
                     selectedObjectProperties = null;
-                    buildingTypesBox.SelectedIndexChanged -= BuildingTypeComboBox_SelectedIndexChanged;
+                    buildingTypeListBox.SelectedIndexChanged -= BuildingTypeListBox_SelectedIndexChanged;
                     Deactivate();
                 }
                 disposedValue = true;
