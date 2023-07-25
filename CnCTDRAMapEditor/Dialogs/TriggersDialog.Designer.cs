@@ -607,7 +607,7 @@ namespace MobiusEditor.Dialogs
             // 
             // nameColumnHeader
             // 
-            this.nameColumnHeader.Width = 134;
+            this.nameColumnHeader.Width = 110;
             // 
             // pnlButtons
             // 

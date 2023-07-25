@@ -132,6 +132,7 @@ namespace MobiusEditor.Dialogs
                 }
             }
             triggersListView.EndUpdate();
+            AdjustTriggersListViewColWidth();
         }
 
         private void triggersListView_SelectedIndexChanged(object sender, EventArgs e)
@@ -309,7 +310,7 @@ namespace MobiusEditor.Dialogs
             }
             if (hasChanges)
             {
-                DialogResult dr =  MessageBox.Show(this, "Triggers have been changed! Are you sure you want to cancel?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                DialogResult dr = MessageBox.Show(this, "Triggers have been changed! Are you sure you want to cancel?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
                 if (dr == DialogResult.Yes)
                     return;
                 this.DialogResult = DialogResult.None;
@@ -466,6 +467,7 @@ namespace MobiusEditor.Dialogs
             btnAdd.Enabled = triggers.Count < maxTriggers;
             item.Selected = true;
             triggersListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.EnsureVisible();
+            AdjustTriggersListViewColWidth();
             item.EnsureVisible();
             item.BeginEdit();
         }
@@ -493,6 +495,7 @@ namespace MobiusEditor.Dialogs
             btnAdd.Enabled = triggers.Count < maxTriggers;
             item.Selected = true;
             triggersListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.EnsureVisible();
+            AdjustTriggersListViewColWidth();
             item.EnsureVisible();
             item.BeginEdit();
         }
@@ -524,6 +527,7 @@ namespace MobiusEditor.Dialogs
                 triggerFilter.Trigger = Trigger.None;
                 ApplyFilter(triggerFilter);
             }
+            AdjustTriggersListViewColWidth();
         }
 
         private void triggersListView_AfterLabelEdit(object sender, LabelEditEventArgs e)
@@ -556,19 +560,39 @@ namespace MobiusEditor.Dialogs
             else
             {
                 String oldName = SelectedTrigger.Name;
-                // Go over all triggers to clear any that have this trigger as argument
+                // Go over all triggers to adapt any that have this trigger as argument.
                 RenameInCurrentTriggerActions(oldName, curName);
                 renameActions.Add((oldName, curName));
                 SelectedTrigger.Name = curName;
                 // Normally always false
                 lblTooLong.Visible = curName.Length > maxLength;
-                triggersListView.Items[e.Item].ToolTipText = SelectedTrigger.Name;
+                // Force text in there already so listview width recalculation works.
+                triggersListView.Items[e.Item].Text = curName;
+                triggersListView.Items[e.Item].ToolTipText = curName;
                 if (triggerFilter.FilterTrigger && String.Equals(triggerFilter.Trigger, oldName, StringComparison.OrdinalIgnoreCase))
                 {
                     triggerFilter.Trigger = curName;
                     ApplyFilter(triggerFilter);
                 }
+                AdjustTriggersListViewColWidth();
             }
+        }
+
+        /// <summary>
+        /// Sets the column size to the exact width of the box, or more if there are longer strings inside.
+        /// </summary>
+        private void AdjustTriggersListViewColWidth()
+        {
+            triggersListView.BeginUpdate();
+            triggersListView.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
+            ColumnHeader col = triggersListView.Columns[0];
+            // Doesn't matter if there is a scrollbar; this is always correct.
+            int fullWidth = triggersListView.ClientRectangle.Width;
+            if (col.Width < fullWidth)
+            {
+                col.Width = fullWidth;
+            }
+            triggersListView.EndUpdate();
         }
 
         private void RenameInCurrentTriggerActions(String name, String newName)

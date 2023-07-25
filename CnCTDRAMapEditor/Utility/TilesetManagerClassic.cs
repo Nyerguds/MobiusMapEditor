@@ -11,10 +11,15 @@
 //    TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
 //
 //   0. You just DO WHAT THE FUCK YOU WANT TO.
+
+// When enabled, this shows all failed load attempts that occur in the GetShapeFile function.
+//#define WriteFileLoadDebug
+
 using MobiusEditor.Interface;
 using MobiusEditor.Model;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -236,7 +241,13 @@ namespace MobiusEditor.Utility
                     heights = Enumerable.Repeat(height, len).ToArray();
                 }
             }
-            catch (ArgumentException) { /* ignore */ }
+            catch (FileTypeLoadException e)
+            {
+                /* ignore */
+#if DEBUG && WriteFileLoadDebug
+                Debug.WriteLine("Failed to load file {0} as {1}: {2}", name, e.AttemptedLoadedType, e.Message);
+#endif
+            }
             // Don't try to load as tmp if the filename is .shp
             if (shpData == null && !isShpExt)
             {
@@ -245,7 +256,14 @@ namespace MobiusEditor.Utility
                     // TD map template tileset
                     shpData = ClassicSpriteLoader.GetCcTmpData(fileContents, out widths, out heights);
                 }
-                catch (ArgumentException) { /* ignore */ }
+                catch (FileTypeLoadException e)
+                {
+                    /* ignore */
+#if DEBUG && WriteFileLoadDebug
+                    Debug.WriteLine("Failed to load file {0} as {1}: {2}", name, e.AttemptedLoadedType, e.Message);
+#endif
+                }
+
             }
             if (shpData == null && !isShpExt)
             {
@@ -261,7 +279,13 @@ namespace MobiusEditor.Utility
                         }
                     }
                 }
-                catch (ArgumentException) { /* ignore */ }
+                catch (FileTypeLoadException e)
+                {
+                    /* ignore */
+#if DEBUG && WriteFileLoadDebug
+                    Debug.WriteLine("Failed to load file {0} as {1}: {2}", name, e.AttemptedLoadedType, e.Message);
+#endif
+                }
             }
             // Only try to read Dune II SHP if it's a .shp file.
             if (shpData == null && isShpExt)
@@ -271,7 +295,13 @@ namespace MobiusEditor.Utility
                     // Dune II SHP
                     shpData = ClassicSpriteLoader.GetD2ShpData(fileContents, out widths, out heights);
                 }
-                catch (ArgumentException) { /* ignore */ }
+                catch (FileTypeLoadException e)
+                {
+                    /* ignore */
+#if DEBUG && WriteFileLoadDebug
+                    Debug.WriteLine("Failed to load file {0} as {1}: {2}", name, e.AttemptedLoadedType, e.Message);
+#endif
+                }
             }
             if (shpData == null || shpData.Length == 0)
             {

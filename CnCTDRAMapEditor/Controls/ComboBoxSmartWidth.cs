@@ -48,6 +48,7 @@ namespace MobiusEditor.Controls
                 }
                 if (toCheck.Length <= 0)
                     continue;
+                // Neither of these methods are quite correct. Haven't found anything better though.
                 Int32 newWidth = TextRenderer.MeasureText(toCheck, this.Font).Width;
                 Int32 newWidth2;
                 using (Graphics g = this.CreateGraphics())

@@ -69,7 +69,7 @@ namespace MobiusEditor.TiberianDawn
         public static readonly BuildingType V22 = new BuildingType(44, "v22", "TEXT_STRUCTURE_TITLE_CIV20", 0, 0, 2, 1, null, "Neutral", new [] { TheaterTypes.Desert });
         public static readonly BuildingType V23 = new BuildingType(45, "v23", "TEXT_STRUCTURE_TITLE_CIV21", 0, 0, 1, 1, null, "Neutral", new [] { TheaterTypes.Desert });
         public static readonly BuildingType V24 = new BuildingType(46, "v24", "TEXT_STRUCTURE_TITLE_CIV22", 0, 0, 2, 2, "00 11", "Neutral", new [] { TheaterTypes.Desert });
-        public static readonly BuildingType V25 = new BuildingType(47, "v25", "TEXT_STRUCTURE_TITLE_CIV1", 0, 0, 2, 2, "01 11", "Neutral", new [] { TheaterTypes.Desert });
+        public static readonly BuildingType V25 = new BuildingType(47, "v25", "TEXT_STRUCTURE_TITLE_CIV1B", 0, 0, 2, 2, "01 11", "Neutral", new [] { TheaterTypes.Desert });
         public static readonly BuildingType V26 = new BuildingType(48, "v26", "TEXT_STRUCTURE_TITLE_CIV23", 0, 0, 2, 1, null, "Neutral", new [] { TheaterTypes.Desert });
         public static readonly BuildingType V27 = new BuildingType(49, "v27", "TEXT_STRUCTURE_TITLE_CIV24", 0, 0, 1, 1, null, "Neutral", new [] { TheaterTypes.Desert });
         public static readonly BuildingType V28 = new BuildingType(50, "v28", "TEXT_STRUCTURE_TITLE_CIV25", 0, 0, 1, 1, null, "Neutral", new [] { TheaterTypes.Desert });
@@ -81,7 +81,7 @@ namespace MobiusEditor.TiberianDawn
         public static readonly BuildingType V34 = new BuildingType(56, "v34", "TEXT_STRUCTURE_TITLE_CIV31", 0, 0, 1, 1, null, "Neutral", new [] { TheaterTypes.Desert });
         public static readonly BuildingType V35 = new BuildingType(57, "v35", "TEXT_STRUCTURE_TITLE_CIV32", 0, 0, 1, 1, null, "Neutral", new [] { TheaterTypes.Desert });
         public static readonly BuildingType V36 = new BuildingType(58, "v36", "TEXT_STRUCTURE_TITLE_CIV33", 0, 0, 1, 1, null, "Neutral", new [] { TheaterTypes.Desert });
-        public static readonly BuildingType V37 = new BuildingType(59, "v37", "TEXT_STRUCTURE_TITLE_CIV34", 0, 0, 4, 2, "0111 0111", "Neutral", new [] { TheaterTypes.Desert });
+        public static readonly BuildingType V37 = new BuildingType(59, "v37", "TEXT_STRUCTURE_TITLE_CIV34", 0, 0, 4, 2, "0111 0111", "Neutral", new [] { TheaterTypes.Desert }, BuildingTypeFlag.Flat);
 
         private static readonly BuildingType[] Types;
 

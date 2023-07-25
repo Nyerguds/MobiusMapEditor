@@ -109,6 +109,10 @@ namespace MobiusEditor.Tools
             {
                 EnterPlacementMode();
             }
+            else
+            {
+                CheckSelectShortcuts(e);
+            }
         }
 
         private void WallTool_KeyUp(object sender, KeyEventArgs e)
@@ -279,6 +283,38 @@ namespace MobiusEditor.Tools
             undoOverlays.Clear();
             redoOverlays.Clear();
             url.Track(undoAction, redoAction, ToolType.Wall);
+        }
+
+        private void CheckSelectShortcuts(KeyEventArgs e)
+        {
+            int maxVal = wallTypeListBox.Items.Count - 1;
+            int curVal = wallTypeListBox.SelectedIndex;
+            int newVal;
+            switch (e.KeyCode)
+            {
+                case Keys.Home:
+                    newVal = 0;
+                    break;
+                case Keys.End:
+                    newVal = maxVal;
+                    break;
+                case Keys.PageDown:
+                    newVal = Math.Min(curVal + 1, maxVal);
+                    break;
+                case Keys.PageUp:
+                    newVal = Math.Max(curVal - 1, 0);
+                    break;
+                default:
+                    return;
+            }
+            if (curVal != newVal)
+            {
+                wallTypeListBox.SelectedIndex = newVal;
+                if (placementMode)
+                {
+                    mapPanel.Invalidate(map, navigationWidget.MouseCell);
+                }
+            }
         }
 
         private void EnterPlacementMode()

@@ -39,7 +39,7 @@ namespace MobiusEditor.Model
         SingleFrame    = (1 << 4),
         /// <summary>Does not adjust to house colors.</summary>
         NoRemap        = (1 << 5),
-        /// <summary>Is flat on the ground; anything around will overlap this building's graphics.</summary>
+        /// <summary>The graphics of this building's non-blocking cells are flat on the ground and will never overlap other objects.</summary>
         Flat           = (1 << 6),
         /// <summary>Can show a gap area-of-effect radius indicator.</summary>
         IsGapGenerator = (1 << 7),

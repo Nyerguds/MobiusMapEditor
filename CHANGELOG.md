@@ -569,3 +569,7 @@ Unreleased
 * Modifying the rebuild priority of a placed building will now adjust the rebuild priorities of the other structures, as already happened when adding and removing them.
 * Fixed bug where two buildings of different types placed on the same cell (e.g. a guard tower on the top-left corner of a repair bay) would not correctly be distinguished as different entries by the rebuild priority system, causing one of them to lose its rebuild status.
 * The "Learning" and "Mercenary" options in the TD Teamtypes editor are now crossed out in the UI, and indicated on the tooltip as having no effect.
+* Megamaps for TD can now be published on the Steam workshop, provided they are singleplayer scenarios. They will give a warning about the nonstandard format, though this is not re-shown for the same map on subsequent uploads.
+* Added forgotten PageUp/PageDown/Home/End support to Walls tool.
+* V37 is now seen as a "flat" building, so its top left corner can't overlap other objects.
+* Fixed column resizing in the triggers list so it always maximizes the clickable area to select a trigger, and never gives scrollbars unless needed.

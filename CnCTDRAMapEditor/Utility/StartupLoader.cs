@@ -416,33 +416,35 @@ namespace MobiusEditor.Utility
 
         private static void AddMissingRemasterText(IGameTextManager gtm)
         {
-            // Buildings
-            gtm["TEXT_STRUCTURE_TITLE_OIL_PUMP"] = "Oil Pump";
-            gtm["TEXT_STRUCTURE_TITLE_OIL_TANKER"] = "Oil Tanker";
+            // == Buildings ==
             String fake = " (" + gtm["TEXT_UI_FAKE"] + ")";
             if (!gtm["TEXT_STRUCTURE_RA_WEAF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_WEAF"] += fake;
             if (!gtm["TEXT_STRUCTURE_RA_FACF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_FACF"] += fake;
             if (!gtm["TEXT_STRUCTURE_RA_SYRF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_SYRF"] += fake;
             if (!gtm["TEXT_STRUCTURE_RA_SPEF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_SPEF"] += fake;
             if (!gtm["TEXT_STRUCTURE_RA_DOMF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_DOMF"] += fake;
-            // Overlay
+            // == Civilian buildings ==
+            gtm["TEXT_STRUCTURE_TITLE_OIL_PUMP"] = "Oil Pump";
+            gtm["TEXT_STRUCTURE_TITLE_OIL_TANKER"] = "Oil Tanker";
+            // Church. Extra ID added for classic support. String exists only once in the Remaster, but twice in the classic games.
+            gtm["TEXT_STRUCTURE_TITLE_CIV1B"] = gtm["TEXT_STRUCTURE_TITLE_CIV1"];
+            // Haystacks. Extra ID added for classic support. Remaster only has the string "Haystack", so we'll just copy it.
+            gtm["TEXT_STRUCTURE_TITLE_CIV12B"] = gtm["TEXT_STRUCTURE_TITLE_CIV12"];
+            // == Overlay ==
             gtm["TEXT_OVERLAY_CONCRETE_PAVEMENT"] = "Concrete";
             gtm["TEXT_OVERLAY_CONCRETE_ROAD"] = "Concrete Road";
             gtm["TEXT_OVERLAY_CONCRETE_ROAD_FULL"] = "Concrete Road (full)";
             gtm["TEXT_OVERLAY_TIBERIUM"] = "Tiberium";
             // Sole Survivor Teleporter
             gtm["TEXT_OVERLAY_TELEPORTER"] = "Teleporter";
-            // Haystacks. Extra ID added for classic support. Remaster only has the string "Haystack", so we'll just copy it.
-            gtm["TEXT_STRUCTURE_TITLE_CIV12B"] = gtm["TEXT_STRUCTURE_TITLE_CIV12"];
-            // "Gold" exists as "TEXT_CURRENCY_TACTICAL"
+            // "Gold" exists as "TEXT_CURRENCY_TACTICAL", so it does not need to be added.
             gtm["TEXT_OVERLAY_GEMS"] = "Gems";
             gtm["TEXT_OVERLAY_WCRATE"] = "Wood Crate";
             gtm["TEXT_OVERLAY_SCRATE"] = "Steel Crate";
             gtm["TEXT_OVERLAY_WATER_CRATE"] = "Water Crate";
-            // Terrain
+            // == Terrain ==
             gtm["TEXT_PROP_TITLE_TREES"] = "Trees";
-            gtm["TEXT_PROP_TITLE_TREES"] = "Trees";
-            // Smudge
+            // == Smudge ==
             gtm["TEXT_SMUDGE_CRATER"] = "Crater";
             gtm["TEXT_SMUDGE_SCORCH"] = "Scorch Mark";
             gtm["TEXT_SMUDGE_BIB"] = "Road Bib";

@@ -163,7 +163,7 @@ namespace MobiusEditor.Utility
             { "TEXT_STRUCTURE_TITLE_CIV20", 138 }, // Pablo's Wicked Pub
             { "TEXT_STRUCTURE_TITLE_CIV21", 139 }, // Village Well
             { "TEXT_STRUCTURE_TITLE_CIV22", 140 }, // Camel Trader
-            //{ "TEXT_STRUCTURE_TITLE_CIV1", 141 }, // Church
+            { "TEXT_STRUCTURE_TITLE_CIV1B", 141 }, // Church
             { "TEXT_STRUCTURE_TITLE_CIV23", 142 }, // Ali's House
             { "TEXT_STRUCTURE_TITLE_CIV24", 143 }, // Trader Ted's
             { "TEXT_STRUCTURE_TITLE_CIV25", 144 }, // Menelik's House
@@ -876,7 +876,7 @@ namespace MobiusEditor.Utility
             { "TEXT_STRUCTURE_TITLE_CIV20", 106 }, // Pablo's Wicked Pub
             { "TEXT_STRUCTURE_TITLE_CIV21", 107 }, // Village Well
             { "TEXT_STRUCTURE_TITLE_CIV22", 108 }, // Camel Trader
-            //{ "TEXT_STRUCTURE_TITLE_CIV1", 109 }, // Church
+            { "TEXT_STRUCTURE_TITLE_CIV1B", 109 }, // Church
             { "TEXT_STRUCTURE_TITLE_CIV23", 110 }, // Ali's House
             { "TEXT_STRUCTURE_TITLE_CIV24", 111 }, // Trader Ted's
             { "TEXT_STRUCTURE_TITLE_CIV25", 112 }, // Menelik's House

@@ -642,7 +642,6 @@ namespace MobiusEditor.Dialogs
             e.NewWidth = teamTypesListView.Columns[e.ColumnIndex].Width;
         }
 
-
         private void CalcListColSizes()
         {
             int amount = teamTypesListView.Columns.Count;
@@ -652,9 +651,11 @@ namespace MobiusEditor.Dialogs
             foreach (ColumnHeader col in teamTypesListView.Columns)
             {
                 int cwidth = colWidth;
+                // Adds a single pixel to each column until the remainder is used up.
                 if (remainder > 0)
                 {
-                    width += remainder--;
+                    cwidth++;
+                    remainder--;
                 }
                 col.Width = cwidth;
             }
