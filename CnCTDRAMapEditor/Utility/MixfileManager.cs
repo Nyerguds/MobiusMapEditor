@@ -82,11 +82,30 @@ namespace MobiusEditor.Utility
             }
         }
 
+        /// <summary>
+        /// Registers an archive to be loaded the next time <see cref="Reset(GameType, TheaterType)"/> is called. This overload does not expose Red Alert's extended options.
+        /// </summary>
+        /// <param name="gameType">Game type to register this mix file for.</param>
+        /// <param name="archivePath">Name of the archive.</param>
+        /// <param name="isTheater">True if this is a Theater archive. This excludes the archive from getting loaded on <see cref="Reset(GameType, TheaterType)"/> when it does not match the specified theater.</param>
+        /// <returns>True if the archive file was found.</returns>
+        /// <exception cref="ObjectDisposedException">The MixFileManager is disposed.</exception>
         public bool LoadArchive(GameType gameType, String archivePath, bool isTheater)
         {
             return this.LoadArchive(gameType, archivePath, isTheater, false, false, false);
         }
 
+        /// <summary>
+        /// Registers an archive to be loaded the next time <see cref="Reset(GameType, TheaterType)"/> is called.
+        /// </summary>
+        /// <param name="gameType">Game type to register this mix file for.</param>
+        /// <param name="archivePath">Name of the archive.</param>
+        /// <param name="isTheater">True if this is a Theater archive. This excludes the archive from getting loaded on <see cref="Reset(GameType, TheaterType)"/> when it does not match the specified theater.</param>
+        /// <param name="isContainer">True if this is a container archive that can contain other archives.</param>
+        /// <param name="canBeEmbedded">True if this archive can be read from inside another archive. Note that it will only be searched inside archives loaded before this one.</param>
+        /// <param name="canUseNewFormat">Allow RA's newer mix file format.</param>
+        /// <returns>True if the archive file was found. Note that if it was not found, it might still be loaded from inside another mix file, but this is only handled on Reset.</returns>
+        /// <exception cref="ObjectDisposedException">The MixFileManager is disposed.</exception>
         public bool LoadArchive(GameType gameType, String archivePath, bool isTheater, bool isContainer, bool canBeEmbedded, bool canUseNewFormat)
         {
             if (disposedValue)
@@ -119,6 +138,15 @@ namespace MobiusEditor.Utility
             return canBeEmbedded || File.Exists(fullPath);
         }
 
+        /// <summary>
+        /// Registers archives with a wildcard to be loaded the next time <see cref="Reset(GameType, TheaterType)"/> is called. 
+        /// Will search all available sources for these files, but cannot look inside other .mix files.
+        /// </summary>
+        /// <param name="gameType">Game type to register thee files for.</param>
+        /// <param name="archiveMask">file mask of archive.</param>
+        /// <param name="canUseNewFormat">Allow RA's newer mix file format.</param>
+        /// <returns>The amount of found archives.</returns>
+        /// <exception cref="ObjectDisposedException">The MixFileManager is disposed.</exception>
         public int LoadArchives(GameType gameType, String archiveMask, bool canUseNewFormat)
         {
             if (disposedValue)

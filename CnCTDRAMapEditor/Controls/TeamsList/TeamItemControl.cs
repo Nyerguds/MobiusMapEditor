@@ -91,7 +91,7 @@ namespace MobiusEditor.Controls
             {
                 return;
             }
-            this.Info.Type = ListItem.GetValueFromDropdown(this.cmbTechno, defaultType);
+            this.Info.Type = ListItem.GetValueFromComboBox(this.cmbTechno, defaultType);
         }
 
         private void numAmount_ValueChanged(Object sender, EventArgs e)

@@ -1108,6 +1108,7 @@ namespace MobiusEditor
             GameType gameType = GameType.None;
             string theater = null;
             bool isTdMegaMap = false;
+            bool isSinglePlay = false;
             using (NewMapDialog nmd = new NewMapDialog(withImage))
             {
                 nmd.StartPosition = FormStartPosition.CenterParent;
@@ -1117,7 +1118,8 @@ namespace MobiusEditor
                 }
                 gameType = nmd.GameType;
                 isTdMegaMap = nmd.MegaMap;
-                theater = nmd.TheaterName;
+                isSinglePlay = nmd.SinglePlayer;
+                theater = nmd.Theater;
             }
             if (withImage && imagePath == null)
             {
@@ -1138,7 +1140,7 @@ namespace MobiusEditor
             if (withImage)
                 loading += " from image";
             loadMultiThreader.ExecuteThreaded(
-                () => NewFile(gameType, imagePath, theater, isTdMegaMap, this),
+                () => NewFile(gameType, imagePath, theater, isTdMegaMap, isSinglePlay, this),
                 PostLoad, true,
                 (e, l) => LoadUnloadUi(e, l, loadMultiThreader),
                 loading);
@@ -1521,11 +1523,14 @@ namespace MobiusEditor
         /// <summary>
         /// The separate-threaded part for making a new map.
         /// </summary>
-        /// <param name="gameType"></param>
-        /// <param name="theater"></param>
-        /// <param name="isTdMegaMap"></param>
+        /// <param name="gameType">Game type</param>
+        /// <param name="imagePath">Image path, indicating the map is being created from image</param>
+        /// <param name="theater">Theater of the new map</param>
+        /// <param name="isTdMegaMap">Is megamap</param>
+        /// <param name="isSinglePlay">Is singleplayer scenario</param>
+        /// <param name="showTarget">The form to use as target for showing messages / dialogs on.</param>
         /// <returns></returns>
-        private static MapLoadInfo NewFile(GameType gameType, String imagePath, string theater, bool isTdMegaMap, MainForm showTarget)
+        private static MapLoadInfo NewFile(GameType gameType, String imagePath, string theater, bool isTdMegaMap, bool isSinglePlay, MainForm showTarget)
         {
             int imageWidth = 0;
             int imageHeight = 0;
@@ -1560,6 +1565,7 @@ namespace MobiusEditor
                 // This initialises the theater
                 plugin.New(theater);
                 mapLoaded = true;
+                plugin.Map.BasicSection.SoloMission = isSinglePlay;
                 if (SteamworksUGC.IsInit)
                 {
                     try

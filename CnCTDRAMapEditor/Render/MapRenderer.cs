@@ -415,15 +415,41 @@ namespace MobiusEditor.Render
             if ((layers & MapLayerFlag.Waypoints) != MapLayerFlag.None)
             {
                 // todo avoid overlapping waypoints of the same type?
+                Dictionary<int, int> flagOverlapPoints = new Dictionary<int, int>();
                 HashSet<int> handledPoints = new HashSet<int>();
                 ITeamColor[] flagColors = map.FlagColors;
+                bool isSp = map.BasicSection.SoloMission;
+                int offset = 0;
                 foreach (Waypoint waypoint in map.Waypoints)
                 {
-                    if (!waypoint.Point.HasValue || (locations != null && !locations.Contains(waypoint.Point.Value)))
+                    if (!waypoint.Point.HasValue || (locations != null && !locations.Contains(waypoint.Point.Value)) || !map.Metrics.GetCell(waypoint.Point.Value, out int cell))
                     {
                         continue;
                     }
-                    RenderWaypoint(gameType, map.BasicSection.SoloMission, tileSize, flagColors, waypoint).Item2(graphics);
+                    float alpha = 0.5f;
+                    if (!isSp && Waypoint.GetMpIdFromFlag(waypoint.Flag) != -1)
+                    {
+                        // Flags are always opaque
+                        alpha = 1.0f;
+                        if (!flagOverlapPoints.TryGetValue(cell, out int amount))
+                        {
+                            flagOverlapPoints.Add(cell, 1);
+                        }
+                        else
+                        {
+                            flagOverlapPoints[cell] = amount + 1;
+                        }
+                        offset = amount * 2;
+                    }
+                    else
+                    {
+                        if (handledPoints.Contains(cell))
+                        {
+                            continue;
+                        }
+                        handledPoints.Add(cell);
+                    }
+                    RenderWaypoint(gameType, isSp, tileSize, flagColors, waypoint, alpha, offset).Item2(graphics);
                 }
             }
         }
@@ -441,20 +467,7 @@ namespace MobiusEditor.Render
                 return (Rectangle.Empty, (g) => { });
             }
             Color tint = smudge.Tint;
-            ImageAttributes imageAttributes = new ImageAttributes();
-            if (tint != Color.White)
-            {
-                ColorMatrix colorMatrix = new ColorMatrix(new float[][]
-                {
-                    new float[] {tint.R / 255.0f, 0, 0, 0, 0},
-                    new float[] {0, tint.G / 255.0f, 0, 0, 0},
-                    new float[] {0, 0, tint.B / 255.0f, 0, 0},
-                    new float[] {0, 0, 0, tint.A / 255.0f, 0},
-                    new float[] {0, 0, 0, 0, 1},
-                }
-                );
-                imageAttributes.SetColorMatrix(colorMatrix);
-            }
+
             bool success = Globals.TheTilesetManager.GetTileData(smudge.Type.Name, smudge.Icon, out Tile tile, true, false);
             if (tile != null && tile.Image != null)
             {
@@ -470,7 +483,14 @@ namespace MobiusEditor.Render
                 }
                 void render(Graphics g)
                 {
-                    g.DrawImage(tile.Image, smudgeBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes);
+                    using (ImageAttributes imageAttributes = new ImageAttributes())
+                    {
+                        if (tint != Color.White)
+                        {
+                            imageAttributes.SetColorMatrix(GetColorMatrix(tint, 1.0f, 1.0f));
+                        }
+                        g.DrawImage(tile.Image, smudgeBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes);
+                    }
                 }
                 return (smudgeBounds, render);
             }
@@ -480,6 +500,7 @@ namespace MobiusEditor.Render
                 return (Rectangle.Empty, (g) => { });
             }
         }
+        
 
         public static (Rectangle, Action<Graphics>) RenderOverlay(GameType gameType, Point topLeft, Size tileSize, double tileScale, Overlay overlay)
         {
@@ -496,39 +517,30 @@ namespace MobiusEditor.Render
                 overlayBounds.X += actualTopLeftX;
                 overlayBounds.Y += actualTopLeftY;
                 Color tint = overlay.Tint;
-                // unused atm
-                Single brightness = 1.0f;
                 void render(Graphics g)
                 {
-                    ImageAttributes imageAttributes = new ImageAttributes();
-                    if (tint != Color.White || brightness != 1.0f)
+                    using (ImageAttributes imageAttributes = new ImageAttributes())
                     {
-                        ColorMatrix colorMatrix = new ColorMatrix(new float[][]
+                        if (tint != Color.White)
                         {
-                            new float[] {tint.R * brightness / 255.0f, 0, 0, 0, 0},
-                            new float[] {0, tint.G * brightness / 255.0f, 0, 0, 0},
-                            new float[] {0, 0, tint.B * brightness / 255.0f, 0, 0},
-                            new float[] {0, 0, 0, tint.A / 255.0f, 0},
-                            new float[] {0, 0, 0, 0, 1},
+                            imageAttributes.SetColorMatrix(GetColorMatrix(tint, 1.0f, 1.0f));
                         }
-                        );
-                        imageAttributes.SetColorMatrix(colorMatrix);
-                    }
-                    g.DrawImage(tile.Image, overlayBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes);
-                    if (isTeleport)
-                    {
-                        // Transform ROAD tile into the teleport from SS.
-                        int blackBorderX = Math.Max(1, tileSize.Width / 24);
-                        int blackBorderY = Math.Max(1, tileSize.Height / 24);
-                        int blueWidth = tileSize.Width - blackBorderX * 2;
-                        int blueHeight = tileSize.Height - blackBorderY * 2;
-                        int blackWidth = tileSize.Width - blackBorderX * 4;
-                        int blackHeight = tileSize.Height - blackBorderY * 4;
-                        using (SolidBrush blue = new SolidBrush(Color.FromArgb(92, 164, 200)))
-                        using (SolidBrush black = new SolidBrush(Color.Black))
+                        g.DrawImage(tile.Image, overlayBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes);
+                        if (isTeleport)
                         {
-                            g.FillRectangle(blue, actualTopLeftX + blackBorderX, actualTopLeftY + blackBorderY, blueWidth, blueHeight);
-                            g.FillRectangle(black, actualTopLeftX + blackBorderX * 2, actualTopLeftY + blackBorderY * 2, blackWidth, blackHeight);
+                            // Transform ROAD tile into the teleport from SS.
+                            int blackBorderX = Math.Max(1, tileSize.Width / 24);
+                            int blackBorderY = Math.Max(1, tileSize.Height / 24);
+                            int blueWidth = tileSize.Width - blackBorderX * 2;
+                            int blueHeight = tileSize.Height - blackBorderY * 2;
+                            int blackWidth = tileSize.Width - blackBorderX * 4;
+                            int blackHeight = tileSize.Height - blackBorderY * 4;
+                            using (SolidBrush blue = new SolidBrush(Color.FromArgb(92, 164, 200)))
+                            using (SolidBrush black = new SolidBrush(Color.Black))
+                            {
+                                g.FillRectangle(blue, actualTopLeftX + blackBorderX, actualTopLeftY + blackBorderY, blueWidth, blueHeight);
+                                g.FillRectangle(black, actualTopLeftX + blackBorderX * 2, actualTopLeftY + blackBorderY * 2, blackWidth, blackHeight);
+                            }
                         }
                     }
                 }
@@ -553,19 +565,7 @@ namespace MobiusEditor.Render
                 }
             }
             Color tint = terrain.Tint;
-            ImageAttributes imageAttributes = new ImageAttributes();
-            if (tint != Color.White)
-            {
-                ColorMatrix colorMatrix = new ColorMatrix(new float[][]
-                {
-                    new float[] {tint.R / 255.0f, 0, 0, 0, 0},
-                    new float[] {0, tint.G / 255.0f, 0, 0, 0},
-                    new float[] {0, 0, tint.B / 255.0f, 0, 0},
-                    new float[] {0, 0, 0, tint.A / 255.0f, 0},
-                    new float[] {0, 0, 0, 0, 1},
-                });
-                imageAttributes.SetColorMatrix(colorMatrix);
-            }
+
             Size terrTSize = terrain.Type.Size;
             Size tileISize = tile.Image.Size;
             Point location = new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height);
@@ -585,7 +585,14 @@ namespace MobiusEditor.Render
             Rectangle terrainBounds = new Rectangle(location, maxSize);
             void render(Graphics g)
             {
-                g.DrawImage(tile.Image, paintBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes);
+                using (ImageAttributes imageAttributes = new ImageAttributes())
+                {
+                    if (tint != Color.White)
+                    {
+                        imageAttributes.SetColorMatrix(GetColorMatrix(tint, 1.0f, 1.0f));
+                    }
+                    g.DrawImage(tile.Image, paintBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes);
+                }
             }
             Point centerPoint = GetTerrainRenderPoint(terrain);
             Point usedCenter = new Point(topLeft.X * Globals.PixelWidth + centerPoint.X, topLeft.Y * Globals.PixelHeight + centerPoint.Y);
@@ -668,48 +675,41 @@ namespace MobiusEditor.Render
             }
             void render(Graphics g)
             {
-                ImageAttributes imageAttributes = new ImageAttributes();
-                if (tint != Color.White)
+                using (ImageAttributes imageAttributes = new ImageAttributes())
                 {
-                    ColorMatrix colorMatrix = new ColorMatrix(new float[][]
+                    if (tint != Color.White)
                     {
-                        new float[] {tint.R / 255.0f, 0, 0, 0, 0},
-                        new float[] {0, tint.G / 255.0f, 0, 0, 0},
-                        new float[] {0, 0, tint.B / 255.0f, 0, 0},
-                        new float[] {0, 0, 0, tint.A / 255.0f, 0},
-                        new float[] {0, 0, 0, 0, 1},
+                        imageAttributes.SetColorMatrix(GetColorMatrix(tint, 1.0f, 1.0f));
                     }
-                    );
-                    imageAttributes.SetColorMatrix(colorMatrix);
-                }
-                if (factoryOverlayTile != null)
-                {
-                    // Avoid overlay showing as semiitransparent.
-                    using (Bitmap factory = new Bitmap(maxSize.Width, maxSize.Height))
+                    if (factoryOverlayTile != null)
                     {
-                        factory.SetResolution(96, 96);
-                        using (Graphics factoryG = Graphics.FromImage(factory))
+                        // Avoid factory overlay showing as semitransparent.
+                        using (Bitmap factory = new Bitmap(maxSize.Width, maxSize.Height))
                         {
-                            factoryG.CopyRenderSettingsFrom(g);
-                            Size renderSize = tileISize;
-                            if (!succeeded)
+                            factory.SetResolution(96, 96);
+                            using (Graphics factoryG = Graphics.FromImage(factory))
                             {
-                                renderSize.Width = building.Type.Size.Width * tileSize.Width;
-                                renderSize.Height = building.Type.Size.Height * tileSize.Height;
+                                factoryG.CopyRenderSettingsFrom(g);
+                                Size renderSize = tileISize;
+                                if (!succeeded)
+                                {
+                                    renderSize.Width = building.Type.Size.Width * tileSize.Width;
+                                    renderSize.Height = building.Type.Size.Height * tileSize.Height;
+                                }
+                                Rectangle factBounds = RenderBounds(renderSize, building.Type.Size, tileScale);
+                                Rectangle ovrlBounds = RenderBounds(factoryOverlayTile.Image.Size, building.Type.Size, tileScale);
+                                factoryG.DrawImage(tile.Image, factBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel);
+                                factoryG.DrawImage(factoryOverlayTile.Image, ovrlBounds, 0, 0, factoryOverlayTile.Image.Width, factoryOverlayTile.Image.Height, GraphicsUnit.Pixel);
                             }
-                            Rectangle factBounds = RenderBounds(renderSize, building.Type.Size, tileScale);
-                            Rectangle ovrlBounds = RenderBounds(factoryOverlayTile.Image.Size, building.Type.Size, tileScale);
-                            factoryG.DrawImage(tile.Image, factBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel);
-                            factoryG.DrawImage(factoryOverlayTile.Image, ovrlBounds, 0, 0, factoryOverlayTile.Image.Width, factoryOverlayTile.Image.Height, GraphicsUnit.Pixel);
+                            g.DrawImage(factory, buildingBounds, 0, 0, factory.Width, factory.Height, GraphicsUnit.Pixel, imageAttributes);
                         }
-                        g.DrawImage(factory, buildingBounds, 0, 0, factory.Width, factory.Height, GraphicsUnit.Pixel, imageAttributes);
                     }
-                }
-                else
-                {
-                    paintBounds.X += location.X;
-                    paintBounds.Y += location.Y;
-                    g.DrawImage(tile.Image, paintBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes);
+                    else
+                    {
+                        paintBounds.X += location.X;
+                        paintBounds.Y += location.Y;
+                        g.DrawImage(tile.Image, paintBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes);
+                    }
                 }
             }
             Point centerPoint = GetBuildingRenderPoint(building);
@@ -764,35 +764,28 @@ namespace MobiusEditor.Render
             Color tint = infantry.Tint;
             void render(Graphics g)
             {
-                ImageAttributes imageAttributes = new ImageAttributes();
-                if (tint != Color.White)
+                using (ImageAttributes imageAttributes = new ImageAttributes())
                 {
-                    ColorMatrix colorMatrix = new ColorMatrix(new float[][]
+                    if (tint != Color.White)
                     {
-                        new float[] {tint.R / 255.0f, 0, 0, 0, 0},
-                        new float[] {0, tint.G / 255.0f, 0, 0, 0},
-                        new float[] {0, 0, tint.B / 255.0f, 0, 0},
-                        new float[] {0, 0, 0, tint.A / 255.0f, 0},
-                        new float[] {0, 0, 0, 0, 1},
+                        imageAttributes.SetColorMatrix(GetColorMatrix(tint, 1.0f, 1.0f));
                     }
-                    );
-                    imageAttributes.SetColorMatrix(colorMatrix);
+                    g.DrawImage(tile.Image, renderBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes);
+                    // Test code to visualise original 5-point die face location (green), and corrected infantry base point (feet) location (red).
+                    /*/
+                    Size pixel = new Size(tileSize.Width / Globals.PixelWidth, tileSize.Height / Globals.PixelHeight);
+                    using (SolidBrush sb = new SolidBrush(Color.Red))
+                    {
+                        g.FillRectangle(sb, new Rectangle(renderLocation, pixel));
+                    }
+                    using (SolidBrush sb = new SolidBrush(Color.LimeGreen))
+                    {
+                        g.FillRectangle(sb, new Rectangle(new Point(
+                            origLocation.X + offsetBare.X * tileSize.Width / Globals.PixelWidth,
+                            origLocation.Y + (offsetBare.Y * tileSize.Height / Globals.PixelHeight)), pixel));
+                    }
+                    //*/
                 }
-                g.DrawImage(tile.Image, renderBounds, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel, imageAttributes);
-                // Test code to visualise original 5-point die face location (green), and corrected infantry base point (feet) location (red).
-                /*/
-                Size pixel = new Size(tileSize.Width / Globals.PixelWidth, tileSize.Height / Globals.PixelHeight);
-                using (SolidBrush sb = new SolidBrush(Color.Red))
-                {
-                    g.FillRectangle(sb, new Rectangle(renderLocation, pixel));
-                }
-                using (SolidBrush sb = new SolidBrush(Color.LimeGreen))
-                {
-                    g.FillRectangle(sb, new Rectangle(new Point(
-                        origLocation.X + offsetBare.X * tileSize.Width / Globals.PixelWidth,
-                        origLocation.Y + (offsetBare.Y * tileSize.Height / Globals.PixelHeight)), pixel));
-                }
-                //*/
             }
             // Render position is the feet point, adjusted to 24-pixel cell location.
             return new RenderInfo(new Point(topLeft.X * Globals.PixelWidth + offset.X, topLeft.Y * Globals.PixelHeight + offset.Y), render, false, infantry);
@@ -939,103 +932,97 @@ namespace MobiusEditor.Render
             Color tint = unit.Tint;
             void render(Graphics g)
             {
-                ImageAttributes imageAttributes = new ImageAttributes();
-                if (tint != Color.White)
+                using (ImageAttributes imageAttributes = new ImageAttributes())
                 {
-                    ColorMatrix colorMatrix = new ColorMatrix(new float[][]
+                    if (tint != Color.White)
                     {
-                            new float[] {tint.R / 255.0f, 0, 0, 0, 0},
-                            new float[] {0, tint.G / 255.0f, 0, 0, 0},
-                            new float[] {0, 0, tint.B / 255.0f, 0, 0},
-                            new float[] {0, 0, 0, tint.A / 255.0f, 0},
-                            new float[] {0, 0, 0, 0, 1},
+                        imageAttributes.SetColorMatrix(GetColorMatrix(tint, 1.0f, 1.0f));
                     }
-                    );
-                    imageAttributes.SetColorMatrix(colorMatrix);
-                }
-                // Combine body and turret to one image, then paint it. This is done because it might be semitransparent.
-                using (Bitmap unitBm = new Bitmap(renderBounds.Width, renderBounds.Height))
-                {
-                    unitBm.SetResolution(96, 96);
-                    using (Graphics unitG = Graphics.FromImage(unitBm))
+                    // Combine body and turret to one image, then paint it. This is done because it might be semitransparent.
+                    using (Bitmap unitBm = new Bitmap(renderBounds.Width, renderBounds.Height))
                     {
-                        unitG.CopyRenderSettingsFrom(g);
-                        if (tile != null) {
-                            unitG.DrawImage(tile.Image, renderRect, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel);
-                        }
-                        if (unit.Type.HasTurret)
+                        unitBm.SetResolution(96, 96);
+                        using (Graphics unitG = Graphics.FromImage(unitBm))
                         {
-                            Point turretAdjust = Point.Empty;
-                            Point turret2Adjust = Point.Empty;
-
-                            if (unit.Type.TurretOffset == Int32.MaxValue)
+                            unitG.CopyRenderSettingsFrom(g);
+                            if (tile != null)
                             {
-                                // Special case: MaxValue indicates the turret oFfset is determined by the TurretAdjustOffset table.
-                                turretAdjust = BackTurretAdjust[Facing32[unit.Direction.ID]];
+                                unitG.DrawImage(tile.Image, renderRect, 0, 0, tile.Image.Width, tile.Image.Height, GraphicsUnit.Pixel);
+                            }
+                            if (unit.Type.HasTurret)
+                            {
+                                Point turretAdjust = Point.Empty;
+                                Point turret2Adjust = Point.Empty;
+
+                                if (unit.Type.TurretOffset == Int32.MaxValue)
+                                {
+                                    // Special case: MaxValue indicates the turret oFfset is determined by the TurretAdjustOffset table.
+                                    turretAdjust = BackTurretAdjust[Facing32[unit.Direction.ID]];
+                                    if (unit.Type.HasDoubleTurret)
+                                    {
+                                        // Never actually used for 2 turrets.
+                                        turret2Adjust = BackTurretAdjust[Facing32[(byte)((unit.Direction.ID + DirectionTypes.South.ID) & 0xFF)]];
+                                    }
+                                }
+                                else if (unit.Type.TurretOffset != 0)
+                                {
+                                    // Used by ships and by the transport helicopter.
+                                    int distance = unit.Type.TurretOffset;
+                                    int face = (unit.Direction.ID >> 5) & 7;
+                                    if (unit.Type.IsAircraft)
+                                    {
+                                        // Stretch distance is given by a table.
+                                        distance *= HeliDistanceAdjust[face];
+                                    }
+
+                                    int x = 0;
+                                    int y = 0;
+                                    // For vessels, perspective stretch is simply done as '/ 2'.
+                                    int perspectiveDivide = unit.Type.IsVessel ? 2 : 1;
+                                    MovePoint(ref x, ref y, unit.Direction.ID, distance, perspectiveDivide);
+                                    turretAdjust.X = x;
+                                    turretAdjust.Y = y;
+                                    if (unit.Type.HasDoubleTurret)
+                                    {
+                                        x = 0;
+                                        y = 0;
+                                        MovePoint(ref x, ref y, (byte)((unit.Direction.ID + DirectionTypes.South.ID) & 0xFF), distance, perspectiveDivide);
+                                        turret2Adjust.X = x;
+                                        turret2Adjust.Y = y;
+                                    }
+                                }
+                                // Adjust Y-offset.
+                                turretAdjust.Y += unit.Type.TurretY;
                                 if (unit.Type.HasDoubleTurret)
                                 {
-                                    // Never actually used for 2 turrets.
-                                    turret2Adjust = BackTurretAdjust[Facing32[(byte)((unit.Direction.ID + DirectionTypes.South.ID) & 0xFF)]];
+                                    turret2Adjust.Y += unit.Type.TurretY;
                                 }
-                            }
-                            else if (unit.Type.TurretOffset != 0)
-                            {
-                                // Used by ships and by the transport helicopter.
-                                int distance = unit.Type.TurretOffset;
-                                int face = (unit.Direction.ID >> 5) & 7;
-                                if (unit.Type.IsAircraft)
+                                Point center = new Point(renderBounds.Width / 2, renderBounds.Height / 2);
+
+                                void RenderTurret(Graphics ug, Tile turrTile, Point turrAdjust, Size tSize)
                                 {
-                                    // Stretch distance is given by a table.
-                                    distance *= HeliDistanceAdjust[face];
+                                    Size turretSize = turrTile.Image.Size;
+                                    Size turretRenderSize = new Size(turretSize.Width * tSize.Width / Globals.OriginalTileWidth, turretSize.Height * tSize.Height / Globals.OriginalTileHeight);
+                                    Rectangle turrBounds = new Rectangle(center - new Size(turretRenderSize.Width / 2, turretRenderSize.Height / 2), turretRenderSize);
+                                    turrBounds.Offset(
+                                        turrAdjust.X * tSize.Width / Globals.PixelWidth,
+                                        turrAdjust.Y * tSize.Height / Globals.PixelHeight
+                                    );
+                                    ug.DrawImage(turrTile.Image, turrBounds, 0, 0, turrTile.Image.Width, turrTile.Image.Height, GraphicsUnit.Pixel);
                                 }
 
-                                int x = 0;
-                                int y = 0;
-                                // For vessels, perspective stretch is simply done as '/ 2'.
-                                int perspectiveDivide = unit.Type.IsVessel ? 2 : 1;
-                                MovePoint(ref x, ref y, unit.Direction.ID, distance, perspectiveDivide);
-                                turretAdjust.X = x;
-                                turretAdjust.Y = y;
-                                if (unit.Type.HasDoubleTurret)
+                                if (turretTile != null && turretTile.Image != null)
                                 {
-                                    x = 0;
-                                    y = 0;
-                                    MovePoint(ref x, ref y, (byte)((unit.Direction.ID + DirectionTypes.South.ID) & 0xFF), distance, perspectiveDivide);
-                                    turret2Adjust.X = x;
-                                    turret2Adjust.Y = y;
+                                    RenderTurret(unitG, turretTile, turretAdjust, tileSize);
                                 }
-                            }
-                            // Adjust Y-offset.
-                            turretAdjust.Y += unit.Type.TurretY;
-                            if (unit.Type.HasDoubleTurret)
-                            {
-                                turret2Adjust.Y += unit.Type.TurretY;
-                            }
-                            Point center = new Point(renderBounds.Width / 2, renderBounds.Height / 2);
-
-                            void RenderTurret(Graphics ug, Tile turrTile, Point turrAdjust, Size tSize)
-                            {
-                                Size turretSize = turrTile.Image.Size;
-                                Size turretRenderSize = new Size(turretSize.Width * tSize.Width / Globals.OriginalTileWidth, turretSize.Height * tSize.Height / Globals.OriginalTileHeight);
-                                Rectangle turrBounds = new Rectangle(center - new Size(turretRenderSize.Width / 2, turretRenderSize.Height / 2), turretRenderSize);
-                                turrBounds.Offset(
-                                    turrAdjust.X * tSize.Width / Globals.PixelWidth,
-                                    turrAdjust.Y * tSize.Height / Globals.PixelHeight
-                                );
-                                ug.DrawImage(turrTile.Image, turrBounds, 0, 0, turrTile.Image.Width, turrTile.Image.Height, GraphicsUnit.Pixel);
-                            }
-
-                            if (turretTile != null && turretTile.Image != null)
-                            {
-                                RenderTurret(unitG, turretTile, turretAdjust, tileSize);
-                            }
-                            if (unit.Type.HasDoubleTurret && turret2Tile != null && turret2Tile.Image != null)
-                            {
-                                RenderTurret(unitG, turret2Tile, turret2Adjust, tileSize);
+                                if (unit.Type.HasDoubleTurret && turret2Tile != null && turret2Tile.Image != null)
+                                {
+                                    RenderTurret(unitG, turret2Tile, turret2Adjust, tileSize);
+                                }
                             }
                         }
+                        g.DrawImage(unitBm, renderBounds, 0, 0, renderBounds.Width, renderBounds.Height, GraphicsUnit.Pixel, imageAttributes);
                     }
-                    g.DrawImage(unitBm, renderBounds, 0,0, renderBounds.Width, renderBounds.Height, GraphicsUnit.Pixel, imageAttributes);
                 }
             }
             Point centerPoint = GetVehicleRenderPoint();
@@ -1043,16 +1030,7 @@ namespace MobiusEditor.Render
             return new RenderInfo(usedCenter, render, false, unit);
         }
 
-        public static (Rectangle, Action<Graphics>) RenderWaypoint(GameType gameType, bool soloMission, Size tileSize, ITeamColor[] flagColors, Waypoint waypoint)
-        {
-            // Opacity is normally 0.5 for non-flag waypoint indicators, but is variable because the post-render
-            // actions of the waypoints tool will paint a fully opaque version over the currently selected waypoint.
-            //int mpId = Waypoint.GetMpIdFromFlag(waypoint.Flag);
-            //float defaultOpacity = !soloMission && mpId >= 0 && mpId < flagColors.Length ? 1.0f : 0.5f;
-            return RenderWaypoint(gameType, soloMission, tileSize, flagColors, waypoint, 0.5f);
-        }
-
-        public static (Rectangle, Action<Graphics>) RenderWaypoint(GameType gameType, bool soloMission, Size tileSize, ITeamColor[] flagColors, Waypoint waypoint, float transparencyModifier)
+        public static (Rectangle, Action<Graphics>) RenderWaypoint(GameType gameType, bool soloMission, Size tileSize, ITeamColor[] flagColors, Waypoint waypoint, float transparencyModifier, int offset)
         {
             if (!waypoint.Point.HasValue)
             {
@@ -1065,7 +1043,6 @@ namespace MobiusEditor.Render
             ITeamColor teamColor = null;
             double sizeMultiplier = 1;
             Color tint = waypoint.Tint;
-            float brightness = 1.0f;
             int mpId = Waypoint.GetMpIdFromFlag(waypoint.Flag);
             bool gotTile = false;
             Tile tile;
@@ -1076,7 +1053,7 @@ namespace MobiusEditor.Render
                 icon = 0;
                 teamColor = flagColors[mpId];
                 // Always paint flags as opaque.
-                transparencyModifier = 1.0f;
+                //transparencyModifier = 1.0f;
                 gotTile = Globals.TheTilesetManager.GetTeamColorTileData(tileGraphics, icon, teamColor, out tile);
             }
             else if (gameType == GameType.SoleSurvivor && (waypoint.Flag & WaypointFlag.CrateSpawn) == WaypointFlag.CrateSpawn)
@@ -1136,23 +1113,33 @@ namespace MobiusEditor.Render
                 imgBounds.Height = (int)Math.Round(tileSize.Height / sizeMultiplier);
                 imgBounds.Y = (tile.Image.Height - imgBounds.Height) / 2;
             }
+            // Apply offset
+            int actualOffsetX = offset * tileSize.Width / Globals.PixelWidth;
+            int actualOffsetY = offset * tileSize.Height / Globals.PixelHeight;
+            renderBounds.X += actualOffsetX;
+            renderBounds.Y += actualOffsetY;
+            renderBounds.Width = Math.Max(0, renderBounds.Width - actualOffsetX);
+            renderBounds.Height = Math.Max(0, renderBounds.Height - actualOffsetY);
+            // Optional: crop the image. If not, it scales, which also looks okay
+            //int imageOffsetX = (int)(tile.Image.Width * sizeMultiplier * offset / Globals.PixelWidth);
+            //int imageOffsetY = (int)(tile.Image.Height * sizeMultiplier * offset / Globals.PixelWidth);
+            //imgBounds.Width = Math.Max(0, imgBounds.Width - imageOffsetX);
+            //imgBounds.Height = Math.Max(0, imgBounds.Height - imageOffsetY);
+
             void render(Graphics g)
             {
-                ImageAttributes imageAttributes = new ImageAttributes();
-                // Waypoints get drawn as semitransparent, so always execute this.
-                if (tint != Color.White || brightness != 1.0 || transparencyModifier != 1.0)
+                using (ImageAttributes imageAttributes = new ImageAttributes())
                 {
-                    ColorMatrix colorMatrix = new ColorMatrix(new float[][]
+                    // Waypoints get drawn as semitransparent, so always execute this.
+                    if (tint != Color.White || transparencyModifier != 1.0)
                     {
-                            new float[] {tint.R * brightness / 255.0f, 0, 0, 0, 0},
-                            new float[] {0, tint.G * brightness / 255.0f, 0, 0, 0},
-                            new float[] {0, 0, tint.B * brightness / 255.0f, 0, 0},
-                            new float[] {0, 0, 0, (tint.A * transparencyModifier) / 255.0f, 0},
-                            new float[] {0, 0, 0, 0, 1},
-                    });
-                    imageAttributes.SetColorMatrix(colorMatrix);
+                        imageAttributes.SetColorMatrix(GetColorMatrix(tint, 1.0f, transparencyModifier));
+                    }
+                    if (renderBounds.Width > 0 && renderBounds.Height > 0 && imgBounds.Width > 0 && imgBounds.Height > 0)
+                    {
+                        g.DrawImage(tile.Image, renderBounds, imgBounds.X, imgBounds.Y, imgBounds.Width, imgBounds.Height, GraphicsUnit.Pixel, imageAttributes);
+                    }
                 }
-                g.DrawImage(tile.Image, renderBounds, imgBounds.X, imgBounds.Y, imgBounds.Width, imgBounds.Height, GraphicsUnit.Pixel, imageAttributes);
             }
             return (renderBounds, render);
         }
@@ -1635,7 +1622,7 @@ namespace MobiusEditor.Render
             ITeamColor[] flagColors = map.FlagColors;
             foreach (Waypoint wp in footballWayPoints)
             {
-                RenderWaypoint(gameType, false, tileSize, flagColors, wp).Item2(graphics);
+                RenderWaypoint(gameType, false, tileSize, flagColors, wp, 1.0f, 0).Item2(graphics);
             }
         }
 
@@ -2436,13 +2423,6 @@ namespace MobiusEditor.Render
             if (Globals.TheTilesetManager.GetTileData("trans.icn", 0, out tile) && tile != null) bmWtr = tile.Image; // white
             try
             {
-                var colorMatrix = new ColorMatrix();
-                colorMatrix.Matrix33 = 0.50f;
-                var imageAttributes = new ImageAttributes();
-                imageAttributes.SetColorMatrix(
-                    colorMatrix,
-                    ColorMatrixFlag.Default,
-                    ColorAdjustType.Bitmap);
                 // If the graphics could not be loaded from the clasic files, generate them.
                 if (bmImp == null && cellsVehImpassable.Count > 0)
                 {
@@ -2477,22 +2457,26 @@ namespace MobiusEditor.Render
                         bgr.FillRegion(blueBrush, blueArea);
                     }
                 }
-                // Finally, paint the actual cells.
-                foreach ((int x, int y) in cellsVehImpassable)
+                using (ImageAttributes imageAttributes = new ImageAttributes())
                 {
-                    graphics.DrawImage(bmImp, new Rectangle(tileWidth * x, tileHeight * y, tileWidth, tileHeight), 0, 0, bmImp.Width, bmImp.Height, GraphicsUnit.Pixel, imageAttributes);
-                }
-                foreach ((int x, int y) in cellsUnbuildable)
-                {
-                    graphics.DrawImage(bmUnb, new Rectangle(tileWidth * x, tileHeight * y, tileWidth, tileHeight), 0, 0, bmUnb.Width, bmUnb.Height, GraphicsUnit.Pixel, imageAttributes);
-                }
-                foreach ((int x, int y) in cellsBoatMovable)
-                {
-                    graphics.DrawImage(bmWtr, new Rectangle(tileWidth * x, tileHeight * y, tileWidth, tileHeight), 0, 0, bmWtr.Width, bmWtr.Height, GraphicsUnit.Pixel, imageAttributes);
-                }
-                foreach ((int x, int y) in cellsRiver)
-                {
-                    graphics.DrawImage(bmRiv, new Rectangle(tileWidth * x, tileHeight * y, tileWidth, tileHeight), 0, 0, bmRiv.Width, bmRiv.Height, GraphicsUnit.Pixel, imageAttributes);
+                    imageAttributes.SetColorMatrix(GetColorMatrix(Color.White, 1.0f, 0.50f));
+                    // Finally, paint the actual cells.
+                    foreach ((int x, int y) in cellsVehImpassable)
+                    {
+                        graphics.DrawImage(bmImp, new Rectangle(tileWidth * x, tileHeight * y, tileWidth, tileHeight), 0, 0, bmImp.Width, bmImp.Height, GraphicsUnit.Pixel, imageAttributes);
+                    }
+                    foreach ((int x, int y) in cellsUnbuildable)
+                    {
+                        graphics.DrawImage(bmUnb, new Rectangle(tileWidth * x, tileHeight * y, tileWidth, tileHeight), 0, 0, bmUnb.Width, bmUnb.Height, GraphicsUnit.Pixel, imageAttributes);
+                    }
+                    foreach ((int x, int y) in cellsBoatMovable)
+                    {
+                        graphics.DrawImage(bmWtr, new Rectangle(tileWidth * x, tileHeight * y, tileWidth, tileHeight), 0, 0, bmWtr.Width, bmWtr.Height, GraphicsUnit.Pixel, imageAttributes);
+                    }
+                    foreach ((int x, int y) in cellsRiver)
+                    {
+                        graphics.DrawImage(bmRiv, new Rectangle(tileWidth * x, tileHeight * y, tileWidth, tileHeight), 0, 0, bmRiv.Width, bmRiv.Height, GraphicsUnit.Pixel, imageAttributes);
+                    }
                 }
             }
             finally
@@ -2611,6 +2595,18 @@ namespace MobiusEditor.Render
             int locY = (maxSize.Height - newSize.Height) / 2;
             return new Rectangle((int)Math.Round(locX * scaleFactorX), (int)Math.Round(locY * scaleFactorY),
                 Math.Max(1, (int)Math.Round(newSize.Width * scaleFactorX)), Math.Max(1, (int)Math.Round(newSize.Height * scaleFactorY)));
+        }
+
+        private static ColorMatrix GetColorMatrix(Color tint, float brightnessModifier, float alphaModifier)
+        {
+            return new ColorMatrix(new float[][]
+            {
+                new float[] {tint.R * brightnessModifier / 255.0f, 0, 0, 0, 0},
+                new float[] {0, tint.G * brightnessModifier / 255.0f, 0, 0, 0},
+                new float[] {0, 0, tint.B * brightnessModifier / 255.0f, 0, 0},
+                new float[] {0, 0, 0, tint.A * alphaModifier / 255.0f, 0},
+                new float[] {0, 0, 0, 0, 1},
+            });
         }
     }
 }

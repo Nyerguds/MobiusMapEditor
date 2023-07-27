@@ -525,7 +525,7 @@ namespace MobiusEditor.Tools
             // If the selected waypoint is not a flag, re-render it as opaque.
             if (selected != null && (plugin.Map.BasicSection.SoloMission || (selected.Flag & WaypointFlag.PlayerStart) != WaypointFlag.PlayerStart))
             {
-                MapRenderer.RenderWaypoint(plugin.GameType, true, Globals.MapTileSize, map.FlagColors.ToArray(), selected, 1.0f).Item2(graphics);
+                MapRenderer.RenderWaypoint(plugin.GameType, true, Globals.MapTileSize, map.FlagColors.ToArray(), selected, 1.0f, 0).Item2(graphics);
             }
             // Render those here so they are put over the opaque redraw of the current waypoint.
             MapRenderer.RenderAllTechnoTriggers(graphics, plugin.Map, visibleCells, Globals.MapTileSize, Layers);

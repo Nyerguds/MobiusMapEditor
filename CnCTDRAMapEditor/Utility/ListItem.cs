@@ -25,14 +25,28 @@ namespace MobiusEditor.Utility
             return new ListItem<T>(value, Label);
         }
 
-        public static T GetValueFromDropdown<T>(ComboBox dropdown)
+        public static T GetValueFromComboBox<T>(ComboBox dropdown)
         {
-            return GetValueFromDropdown(dropdown, default(T));
+            return GetValueFromComboBox(dropdown, default(T));
         }
 
-        public static T GetValueFromDropdown<T>(ComboBox dropdown, T defaultValue)
+        public static T GetValueFromComboBox<T>(ComboBox dropdown, T defaultValue)
         {
             if (dropdown.SelectedItem is ListItem<T> li)
+            {
+                return li.Value;
+            }
+            return defaultValue;
+        }
+
+        public static T GetValueFromListBox<T>(ListBox listBox)
+        {
+            return GetValueFromListBox(listBox, default(T));
+        }
+
+        public static T GetValueFromListBox<T>(ListBox listBox, T defaultValue)
+        {
+            if (listBox.SelectedItem is ListItem<T> li)
             {
                 return li.Value;
             }

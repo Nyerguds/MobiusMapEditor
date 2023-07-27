@@ -48,24 +48,17 @@ namespace MobiusEditor.Dialogs
             this.btnOK = new System.Windows.Forms.Button();
             this.flowLayoutPanel2 = new System.Windows.Forms.FlowLayoutPanel();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.flowLayoutPanel3 = new System.Windows.Forms.FlowLayoutPanel();
-            this.radioTD = new System.Windows.Forms.RadioButton();
-            this.radioRA = new System.Windows.Forms.RadioButton();
-            this.radioSS = new System.Windows.Forms.RadioButton();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
-            this.flowLayoutPanel4 = new System.Windows.Forms.FlowLayoutPanel();
-            this.radioTheater1 = new System.Windows.Forms.RadioButton();
-            this.radioTheater2 = new System.Windows.Forms.RadioButton();
-            this.radioTheater3 = new System.Windows.Forms.RadioButton();
             this.chkMegamap = new System.Windows.Forms.CheckBox();
             this.lblWarning = new System.Windows.Forms.Label();
+            this.lbGames = new System.Windows.Forms.ListBox();
+            this.lbTheaters = new System.Windows.Forms.ListBox();
+            this.chkSingleplayer = new System.Windows.Forms.CheckBox();
             this.tableLayoutPanel1.SuspendLayout();
             this.flowLayoutPanel1.SuspendLayout();
             this.flowLayoutPanel2.SuspendLayout();
             this.groupBox1.SuspendLayout();
-            this.flowLayoutPanel3.SuspendLayout();
             this.groupBox2.SuspendLayout();
-            this.flowLayoutPanel4.SuspendLayout();
             this.SuspendLayout();
             // 
             // tableLayoutPanel1
@@ -97,7 +90,7 @@ namespace MobiusEditor.Dialogs
             this.flowLayoutPanel1.Margin = new System.Windows.Forms.Padding(2);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
             this.flowLayoutPanel1.Size = new System.Drawing.Size(352, 27);
-            this.flowLayoutPanel1.TabIndex = 2;
+            this.flowLayoutPanel1.TabIndex = 4;
             // 
             // btnCancel
             // 
@@ -127,6 +120,7 @@ namespace MobiusEditor.Dialogs
             // 
             this.flowLayoutPanel2.Controls.Add(this.groupBox1);
             this.flowLayoutPanel2.Controls.Add(this.groupBox2);
+            this.flowLayoutPanel2.Controls.Add(this.chkSingleplayer);
             this.flowLayoutPanel2.Controls.Add(this.chkMegamap);
             this.flowLayoutPanel2.Controls.Add(this.lblWarning);
             this.flowLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -139,142 +133,37 @@ namespace MobiusEditor.Dialogs
             // 
             // groupBox1
             // 
-            this.groupBox1.Controls.Add(this.flowLayoutPanel3);
+            this.groupBox1.Controls.Add(this.lbGames);
             this.groupBox1.Location = new System.Drawing.Point(2, 2);
             this.groupBox1.Margin = new System.Windows.Forms.Padding(2);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Padding = new System.Windows.Forms.Padding(2);
-            this.groupBox1.Size = new System.Drawing.Size(339, 89);
+            this.groupBox1.Size = new System.Drawing.Size(339, 95);
             this.groupBox1.TabIndex = 0;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Game Type";
             // 
-            // flowLayoutPanel3
-            // 
-            this.flowLayoutPanel3.AutoSize = true;
-            this.flowLayoutPanel3.Controls.Add(this.radioTD);
-            this.flowLayoutPanel3.Controls.Add(this.radioRA);
-            this.flowLayoutPanel3.Controls.Add(this.radioSS);
-            this.flowLayoutPanel3.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.flowLayoutPanel3.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
-            this.flowLayoutPanel3.Location = new System.Drawing.Point(2, 15);
-            this.flowLayoutPanel3.Margin = new System.Windows.Forms.Padding(2);
-            this.flowLayoutPanel3.Name = "flowLayoutPanel3";
-            this.flowLayoutPanel3.Size = new System.Drawing.Size(335, 72);
-            this.flowLayoutPanel3.TabIndex = 0;
-            // 
-            // radioTD
-            // 
-            this.radioTD.AutoSize = true;
-            this.radioTD.Checked = true;
-            this.radioTD.Location = new System.Drawing.Point(2, 2);
-            this.radioTD.Margin = new System.Windows.Forms.Padding(2);
-            this.radioTD.Name = "radioTD";
-            this.radioTD.Size = new System.Drawing.Size(94, 17);
-            this.radioTD.TabIndex = 0;
-            this.radioTD.TabStop = true;
-            this.radioTD.Text = "Tiberian Dawn";
-            this.radioTD.UseVisualStyleBackColor = true;
-            this.radioTD.CheckedChanged += new System.EventHandler(this.radioGameType_CheckedChanged);
-            // 
-            // radioRA
-            // 
-            this.radioRA.AutoSize = true;
-            this.radioRA.Location = new System.Drawing.Point(2, 23);
-            this.radioRA.Margin = new System.Windows.Forms.Padding(2);
-            this.radioRA.Name = "radioRA";
-            this.radioRA.Size = new System.Drawing.Size(69, 17);
-            this.radioRA.TabIndex = 1;
-            this.radioRA.TabStop = true;
-            this.radioRA.Text = "Red Alert";
-            this.radioRA.UseVisualStyleBackColor = true;
-            this.radioRA.CheckedChanged += new System.EventHandler(this.radioGameType_CheckedChanged);
-            // 
-            // radioSS
-            // 
-            this.radioSS.AutoSize = true;
-            this.radioSS.Location = new System.Drawing.Point(2, 44);
-            this.radioSS.Margin = new System.Windows.Forms.Padding(2);
-            this.radioSS.Name = "radioSS";
-            this.radioSS.Size = new System.Drawing.Size(88, 17);
-            this.radioSS.TabIndex = 2;
-            this.radioSS.TabStop = true;
-            this.radioSS.Text = "Sole Survivor";
-            this.radioSS.UseVisualStyleBackColor = true;
-            this.radioSS.CheckedChanged += new System.EventHandler(this.radioGameType_CheckedChanged);
-            // 
             // groupBox2
             // 
             this.groupBox2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this.groupBox2.Controls.Add(this.flowLayoutPanel4);
-            this.groupBox2.Location = new System.Drawing.Point(2, 95);
+            this.groupBox2.Controls.Add(this.lbTheaters);
+            this.groupBox2.Location = new System.Drawing.Point(2, 101);
             this.groupBox2.Margin = new System.Windows.Forms.Padding(2);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Padding = new System.Windows.Forms.Padding(2);
-            this.groupBox2.Size = new System.Drawing.Size(339, 89);
+            this.groupBox2.Size = new System.Drawing.Size(339, 95);
             this.groupBox2.TabIndex = 1;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Theater";
             // 
-            // flowLayoutPanel4
-            // 
-            this.flowLayoutPanel4.AutoSize = true;
-            this.flowLayoutPanel4.Controls.Add(this.radioTheater1);
-            this.flowLayoutPanel4.Controls.Add(this.radioTheater2);
-            this.flowLayoutPanel4.Controls.Add(this.radioTheater3);
-            this.flowLayoutPanel4.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.flowLayoutPanel4.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
-            this.flowLayoutPanel4.Location = new System.Drawing.Point(2, 15);
-            this.flowLayoutPanel4.Margin = new System.Windows.Forms.Padding(2);
-            this.flowLayoutPanel4.Name = "flowLayoutPanel4";
-            this.flowLayoutPanel4.Size = new System.Drawing.Size(335, 72);
-            this.flowLayoutPanel4.TabIndex = 0;
-            // 
-            // radioTheater1
-            // 
-            this.radioTheater1.AutoSize = true;
-            this.radioTheater1.Checked = true;
-            this.radioTheater1.Location = new System.Drawing.Point(2, 2);
-            this.radioTheater1.Margin = new System.Windows.Forms.Padding(2);
-            this.radioTheater1.Name = "radioTheater1";
-            this.radioTheater1.Size = new System.Drawing.Size(56, 17);
-            this.radioTheater1.TabIndex = 0;
-            this.radioTheater1.TabStop = true;
-            this.radioTheater1.Text = "Desert";
-            this.radioTheater1.UseVisualStyleBackColor = true;
-            // 
-            // radioTheater2
-            // 
-            this.radioTheater2.AutoSize = true;
-            this.radioTheater2.Location = new System.Drawing.Point(2, 23);
-            this.radioTheater2.Margin = new System.Windows.Forms.Padding(2);
-            this.radioTheater2.Name = "radioTheater2";
-            this.radioTheater2.Size = new System.Drawing.Size(76, 17);
-            this.radioTheater2.TabIndex = 1;
-            this.radioTheater2.TabStop = true;
-            this.radioTheater2.Text = "Temperate";
-            this.radioTheater2.UseVisualStyleBackColor = true;
-            // 
-            // radioTheater3
-            // 
-            this.radioTheater3.AutoSize = true;
-            this.radioTheater3.Location = new System.Drawing.Point(2, 44);
-            this.radioTheater3.Margin = new System.Windows.Forms.Padding(2);
-            this.radioTheater3.Name = "radioTheater3";
-            this.radioTheater3.Size = new System.Drawing.Size(56, 17);
-            this.radioTheater3.TabIndex = 2;
-            this.radioTheater3.TabStop = true;
-            this.radioTheater3.Text = "Winter";
-            this.radioTheater3.UseVisualStyleBackColor = true;
-            // 
             // chkMegamap
             // 
             this.chkMegamap.AutoSize = true;
-            this.chkMegamap.Location = new System.Drawing.Point(7, 189);
+            this.chkMegamap.Location = new System.Drawing.Point(7, 224);
             this.chkMegamap.Margin = new System.Windows.Forms.Padding(7, 3, 3, 3);
             this.chkMegamap.Name = "chkMegamap";
             this.chkMegamap.Size = new System.Drawing.Size(177, 17);
-            this.chkMegamap.TabIndex = 2;
+            this.chkMegamap.TabIndex = 3;
             this.chkMegamap.Text = "Megamap (Sole Survivor format)";
             this.chkMegamap.UseVisualStyleBackColor = true;
             this.chkMegamap.CheckedChanged += new System.EventHandler(this.chkMegamap_CheckedChanged);
@@ -283,7 +172,7 @@ namespace MobiusEditor.Dialogs
             // 
             this.lblWarning.AutoSize = true;
             this.lblWarning.ForeColor = System.Drawing.Color.Red;
-            this.lblWarning.Location = new System.Drawing.Point(7, 212);
+            this.lblWarning.Location = new System.Drawing.Point(7, 247);
             this.lblWarning.Margin = new System.Windows.Forms.Padding(7, 3, 3, 3);
             this.lblWarning.Name = "lblWarning";
             this.lblWarning.Size = new System.Drawing.Size(331, 26);
@@ -291,6 +180,35 @@ namespace MobiusEditor.Dialogs
             this.lblWarning.Text = "Warning: the Sole Survivor mega map format is not supported by the Remastered Col" +
     "lection without modding.";
             this.lblWarning.Visible = false;
+            // 
+            // lbGames
+            // 
+            this.lbGames.FormattingEnabled = true;
+            this.lbGames.Location = new System.Drawing.Point(5, 18);
+            this.lbGames.Name = "lbGames";
+            this.lbGames.Size = new System.Drawing.Size(326, 69);
+            this.lbGames.TabIndex = 0;
+            this.lbGames.SelectedIndexChanged += new System.EventHandler(this.lbGames_SelectedIndexChanged);
+            // 
+            // lbTheaters
+            // 
+            this.lbTheaters.FormattingEnabled = true;
+            this.lbTheaters.Location = new System.Drawing.Point(5, 18);
+            this.lbTheaters.Name = "lbTheaters";
+            this.lbTheaters.Size = new System.Drawing.Size(326, 69);
+            this.lbTheaters.TabIndex = 0;
+            // 
+            // chkSingleplayer
+            // 
+            this.chkSingleplayer.AutoSize = true;
+            this.chkSingleplayer.Location = new System.Drawing.Point(7, 201);
+            this.chkSingleplayer.Margin = new System.Windows.Forms.Padding(7, 3, 3, 3);
+            this.chkSingleplayer.Name = "chkSingleplayer";
+            this.chkSingleplayer.Size = new System.Drawing.Size(132, 17);
+            this.chkSingleplayer.TabIndex = 2;
+            this.chkSingleplayer.Text = "Single-Player Scenario";
+            this.chkSingleplayer.UseVisualStyleBackColor = true;
+            this.chkSingleplayer.CheckedChanged += new System.EventHandler(this.chkMegamap_CheckedChanged);
             // 
             // NewMapDialog
             // 
@@ -318,13 +236,7 @@ namespace MobiusEditor.Dialogs
             this.flowLayoutPanel2.ResumeLayout(false);
             this.flowLayoutPanel2.PerformLayout();
             this.groupBox1.ResumeLayout(false);
-            this.groupBox1.PerformLayout();
-            this.flowLayoutPanel3.ResumeLayout(false);
-            this.flowLayoutPanel3.PerformLayout();
             this.groupBox2.ResumeLayout(false);
-            this.groupBox2.PerformLayout();
-            this.flowLayoutPanel4.ResumeLayout(false);
-            this.flowLayoutPanel4.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -338,15 +250,10 @@ namespace MobiusEditor.Dialogs
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel2;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.GroupBox groupBox2;
-        private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel3;
-        private System.Windows.Forms.RadioButton radioTD;
-        private System.Windows.Forms.RadioButton radioRA;
-        private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel4;
-        private System.Windows.Forms.RadioButton radioTheater1;
-        private System.Windows.Forms.RadioButton radioTheater2;
-        private System.Windows.Forms.RadioButton radioTheater3;
         private System.Windows.Forms.CheckBox chkMegamap;
-        private System.Windows.Forms.RadioButton radioSS;
         private System.Windows.Forms.Label lblWarning;
+        private System.Windows.Forms.ListBox lbGames;
+        private System.Windows.Forms.ListBox lbTheaters;
+        private System.Windows.Forms.CheckBox chkSingleplayer;
     }
 }

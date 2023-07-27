@@ -303,16 +303,15 @@ namespace MobiusEditor.Utility
                 newBm.SetResolution(96, 96);
                 ColorMatrix colorMatrix = new ColorMatrix();
                 colorMatrix.Matrix33 = 0.5f;
-                var imageAttributes = new ImageAttributes();
-                imageAttributes.SetColorMatrix(
-                    colorMatrix,
-                    ColorMatrixFlag.Default,
-                    ColorAdjustType.Bitmap);
-                using (Graphics g = Graphics.FromImage(newBm))
+                using (ImageAttributes imageAttributes = new ImageAttributes())
                 {
-                    g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-                    g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-                    g.DrawImage(bm, r, 0, 0, bm.Width, bm.Height, GraphicsUnit.Pixel, imageAttributes);
+                    imageAttributes.SetColorMatrix(colorMatrix, ColorMatrixFlag.Default, ColorAdjustType.Bitmap);
+                    using (Graphics g = Graphics.FromImage(newBm))
+                    {
+                        g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                        g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                        g.DrawImage(bm, r, 0, 0, bm.Width, bm.Height, GraphicsUnit.Pixel, imageAttributes);
+                    }
                 }
                 Bitmap oldBm = bm;
                 bm = newBm;

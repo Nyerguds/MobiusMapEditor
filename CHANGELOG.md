@@ -314,7 +314,7 @@ Released on 14 Nov 2022 at 22:25 GMT
 * The damaged state of buildings now works correctly per game; for TD it shows below 50%, for RA it shows at 50%.
 * Changed waypoints to actual map objects, indicated using the green beacon graphic that was already used as icon for the Waypoints editing mode. They can be disabled in the View menu.
 * Waypoint labels are now drawn at the bottom of the cell, in the same style as the building rebuild priority labels. They can be disabled in the View menu, but like the building labels, they will not be drawn if Waypoints are not enabled.
-* Multiplayer starting points are now shown as colored flags. For TD, Nod's metallic blue will be used for the 7th flag (P6). For SS, which has classic colour order configured, metallic gray is the 4th flag (TM3), and the new bright blue is the 7th (TM6). For both TD and SS, the 8th flag has its value hardcoded as the purple from RA.
+* Multiplayer starting points are now shown as colored flags. For TD, Nod's metallic blue will be used for the 7th flag (P6). For SS, which has classic color order configured, metallic gray is the 4th flag (TM3), and the new bright blue is the 7th (TM6). For both TD and SS, the 8th flag has its value hardcoded as the purple from RA.
 * Waypoints now show a preview in placement mode.
 * On Sole Survivor maps, there is a special "Football goal areas" indicator that shows how much area around the flag needs to be left open to be paved with concrete in Football mode. These can be disabled under "View" → "Indicators".
 * The game name of the opened map type is now shown in the title bar.
@@ -392,7 +392,7 @@ Released on 03 Apr 2023 at 19:20 GMT
 * The total map resources value on the resource placement tool will now be calculated correctly (including the game bug that makes the last harvested stage never give any money).
 * The resource placement tool will now specifically show a value for the total map resources accessible inside the map bounds.
 * Reinstated the restriction on placing overlay on the first and last row on the map, to correctly emulate the fact the games do not place overlay there.
-* Added "New map from image" feature, so the rough layout of a map can be designed in an image editor. Each colour in the image can be assigned to a tile.
+* Added "New map from image" feature, so the rough layout of a map can be designed in an image editor. Each color in the image can be assigned to a tile.
 * A new "Safe tile dragging" feature ensures that drag-placing a line of tileset pieces will now tile them without overwriting most of the placed content on each new moved cell.
 * Red Alert Interior Theater no longer allows placing down Smudge types.
 * Double-clicking on map objects with mouse buttons other than the left one will no longer open the object properties.
@@ -532,7 +532,7 @@ Released on 12 Jul 2023 at 08:28 GMT
 * Fixed bugs that crashed the undo/redo function on the waypoints tool.
 * Fixed tree names not getting initialised.
 * Fixed Tiberian Dawn's Blossom Trees showing the "barnacled" state at the start of their mutation, rather than their fully mutated state.
-* Fixed colour corruption that occurred on some systems when showing semitransparent images in Classic mode. All internal image handling now uses 32 bpp images.
+* Fixed color corruption that occurred on some systems when showing semitransparent images in Classic mode. All internal image handling now uses 32 bpp images.
 * Fixed a crash in the mod lookup logic on PCs where Steam isn't installed.
 * Fixed bug where selecting an incorrect C&C Remastered folder would still close the dialog and save the incorrect path after showing the warning.
 * Groups of trees are now indicated as "Trees" instead of "Tree".
@@ -570,6 +570,14 @@ Unreleased
 * Fixed bug where two buildings of different types placed on the same cell (e.g. a guard tower on the top-left corner of a repair bay) would not correctly be distinguished as different entries by the rebuild priority system, causing one of them to lose its rebuild status.
 * The "Learning" and "Mercenary" options in the TD Teamtypes editor are now crossed out in the UI, and indicated on the tooltip as having no effect.
 * Megamaps for TD can now be published on the Steam workshop, provided they are singleplayer scenarios. They will give a warning about the nonstandard format, though this is not re-shown for the same map on subsequent uploads.
-* Added forgotten PageUp/PageDown/Home/End support to Walls tool.
+* Added forgotten PageUp/PageDown/Home/End shortcuts support to Walls tool.
 * V37 is now seen as a "flat" building, so its top left corner can't overlap other objects.
 * Fixed column resizing in the triggers list so it always maximizes the clickable area to select a trigger, and never gives scrollbars unless needed.
+* The mplayer.ini file tweaks are now only applied if RA's Aftermath expansion units are enabled, as it should.
+* The editor will now be allowed to load in classic mode without the RA expansion files present. Any missing graphics will be substituted by dummy graphics.
+* Overhauled the "New Map" dialog using listboxes, to have more consistent tab order control, and to more easily mod in additional games / theaters.
+* Added "Single-Player Scenario" checkbox on the "New Map" dialog.
+* Added remap logic to fix Einstein's colors, using the remap system used by the other civilians.
+* The power evaluation tool now takes buildings' damaged status into account.
+* Multiple overlapping multiplayer flags will now be drawn as multiple flags on one cell, scaling down later overlapping ones.
+* Multiple overlapping non-flag waypoints will no longer show up brighter on the map.

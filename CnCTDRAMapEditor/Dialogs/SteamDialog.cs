@@ -212,7 +212,7 @@ namespace MobiusEditor.Dialogs
             plugin.Map.SteamSection.PreviewFile = txtPreview.Text;
             plugin.Map.SteamSection.Title = txtTitle.Text;
             plugin.Map.SteamSection.Description = GeneralUtils.ReplaceLinebreaks(txtDescription.Text, '@');
-            plugin.Map.SteamSection.VisibilityAsEnum = ListItem.GetValueFromDropdown<ERemoteStoragePublishedFileVisibility>(cmbVisibility);
+            plugin.Map.SteamSection.VisibilityAsEnum = ListItem.GetValueFromComboBox<ERemoteStoragePublishedFileVisibility>(cmbVisibility);
             Directory.CreateDirectory(PublishTempDirectory);
             foreach (var file in new DirectoryInfo(PublishTempDirectory).EnumerateFiles())
             {

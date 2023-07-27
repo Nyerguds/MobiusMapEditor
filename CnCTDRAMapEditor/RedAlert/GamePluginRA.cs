@@ -417,13 +417,16 @@ namespace MobiusEditor.RedAlert
             {
                 UpdateRules(rulesIni, this.Map, forFootprintTest);
             }
-            if (this.aftermathRulesIni != null && expansionEnabled)
+            if (expansionEnabled)
             {
-                UpdateRules(aftermathRulesIni, this.Map, forFootprintTest);
-            }
-            if (this.multiplayRulesIni != null && !isSolo)
-            {
-                UpdateRules(multiplayRulesIni, this.Map, forFootprintTest);
+                if (this.aftermathRulesIni != null)
+                {
+                    UpdateRules(aftermathRulesIni, this.Map, forFootprintTest);
+                }
+                if (this.multiplayRulesIni != null && !isSolo)
+                {
+                    UpdateRules(multiplayRulesIni, this.Map, forFootprintTest);
+                }
             }
             IEnumerable<string> errors = null;
             if (extraTextIni != null)

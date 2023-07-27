@@ -2087,14 +2087,24 @@ namespace MobiusEditor.Model
             {
                 if (housesWithProd.Contains(house.Name))
                 {
-                    powerWithUnbuilt[house.Name] = new int[2];
+                    powerWithUnbuilt[house.Name] = new int[3];
                 }
-                powerWithoutUnbuilt[house.Name] = new int[2];
+                powerWithoutUnbuilt[house.Name] = new int[3];
             }
+            HashSet<String> hasDamagedPowerPlants = new HashSet<string>(StringComparer.CurrentCultureIgnoreCase);
             foreach ((_, Building bld) in this.Buildings.OfType<Building>())
             {
                 int bldUsage = bld.Type.PowerUsage;
-                int bldProd = bld.Type.PowerProduction;
+                int bldProdHealthy = bld.Type.PowerProduction;
+                int bldProdCur = bld.Type.PowerProduction;
+                if (bld.IsPrebuilt)
+                {
+                    if (bld.Strength < 256 && bldProdCur > 0)
+                    {
+                        hasDamagedPowerPlants.Add(bld.House.Name);
+                    }
+                    bldProdCur = bldProdCur * bld.Strength / 256;
+                }
                 int[] housePwr;
                 // These should all belong to the "rebuild house" due to internal property change listeners; no need to explicitly check.
                 if (!bld.IsPrebuilt)
@@ -2104,19 +2114,22 @@ namespace MobiusEditor.Model
                         if (powerWithUnbuilt.TryGetValue(house, out housePwr))
                         {
                             housePwr[0] += bldUsage;
-                            housePwr[1] += bldProd;
+                            housePwr[1] += bldProdHealthy;
+                            housePwr[2] += bldProdHealthy;
                         }
                     }
                 }
                 else if (powerWithUnbuilt.TryGetValue(bld.House.Name, out housePwr))
                 {
                     housePwr[0] += bldUsage;
-                    housePwr[1] += bldProd;
+                    housePwr[1] += bldProdCur;
+                    housePwr[2] += bldProdHealthy;
                 }
                 if (bld.IsPrebuilt && powerWithoutUnbuilt.TryGetValue(bld.House.Name, out housePwr))
                 {
                     housePwr[0] += bldUsage;
-                    housePwr[1] += bldProd;
+                    housePwr[1] += bldProdCur;
+                    housePwr[2] += bldProdHealthy;
                 }
             }
             List<string> info = new List<string>();
@@ -2133,26 +2146,36 @@ namespace MobiusEditor.Model
             {
                 int[] housePwrAll;
                 int[] housePwrBuilt;
-                if (powerWithUnbuilt.TryGetValue(house.Name, out housePwrAll))
+                bool hasDamaged = hasDamagedPowerPlants.Contains(house.Name);
+                if (powerWithoutUnbuilt.TryGetValue(house.Name, out housePwrBuilt))
                 {
-                    powerWithoutUnbuilt.TryGetValue(house.Name, out housePwrBuilt);
-                    int houseUsage = housePwrAll[0]; // PowerUsage;
-                    int houseProd = housePwrAll[1]; // PowerProduction;
+                    StringBuilder houseInfo = new StringBuilder();
                     int houseUsageBuilt = housePwrBuilt[0]; // PowerUsage;
-                    int houseProdBuilt = housePwrBuilt[1]; // PowerProduction;
-
-                    String houseInfo = String.Format("{0}: {1} - Produces {2}, uses {3}. (Without unbuilt: {4} - Produces {5}, uses {6}.)",
-                        house.Name, houseProd < houseUsage ? "!!" : "OK", houseProd, houseUsage,
-                        houseProdBuilt < houseUsageBuilt ? "!!" : "OK", houseProdBuilt, houseUsageBuilt);
-                    info.Add(houseInfo);
-                }
-                else if (powerWithoutUnbuilt.TryGetValue(house.Name, out housePwrBuilt))
-                {
-                    int houseUsageBuilt = housePwrBuilt[0]; // PowerUsage;
-                    int houseProdBuilt = housePwrBuilt[1]; // PowerProduction;
-                    String houseInfo = String.Format("{0}: {1} - Produces {2}, uses {3}.",
-                        house.Name, houseProdBuilt < houseUsageBuilt ? "!!" : "OK", houseProdBuilt, houseUsageBuilt);
-                    info.Add(houseInfo);
+                    int houseProdBuilt = housePwrBuilt[1]; // PowerProduction at actual strength;
+                    int houseProdBuiltHealthy = housePwrBuilt[2]; // PowerProduction when healthy;
+                    houseInfo.Append(house.Name).Append(": ");
+                    bool hasUnbuilt = powerWithUnbuilt.TryGetValue(house.Name, out housePwrAll);
+                    if (hasUnbuilt)
+                    {
+                        int houseUsage = housePwrAll[0]; // PowerUsage;
+                        int houseProd = housePwrAll[1]; // PowerProduction;
+                        int houseProdHealthy = housePwrAll[2]; // PowerProduction when healthy;
+                        houseInfo.Append(houseProd < houseUsage ? "!!" : "OK").Append(" - ");
+                        if (hasDamaged) houseInfo.Append("Has damaged power plants. ");
+                        houseInfo.Append("Produces ").Append(houseProd);
+                        if (hasDamaged)
+                            houseInfo.Append(" currently; ").Append(houseProdHealthy).Append(" at full strength");
+                        houseInfo.Append(", uses ").Append(houseUsage).Append(".");
+                        houseInfo.Append(" Without unbuilt: ");
+                    }
+                    houseInfo.Append(houseProdBuilt < houseUsageBuilt ? "!!" : "OK").Append(" - ");
+                    if (hasDamaged && !hasUnbuilt) houseInfo.Append("Has damaged power plants. ");
+                    houseInfo.Append("Produces ").Append(houseProdBuilt);
+                    if (hasDamaged)
+                        houseInfo.Append(" currently; ").Append(houseProdBuiltHealthy).Append(" at full strength");
+                    houseInfo.Append(", uses ").Append(houseUsageBuilt).Append(".");
+                    
+                    info.Add(houseInfo.ToString());
                 }
             }
             return info;

@@ -327,12 +327,12 @@ namespace MobiusEditor.Utility
             mfm.Reset(GameType.TiberianDawn, null);
             List<string> loadedFiles = mfm.ToList();
             string prefix = tdSsEqual ? "TD/SS: " : "TD: ";
-            if (!loadedFiles.Contains("local.mix") && !loadedFiles.Contains("cclocal.mix")) loadErrors.Add(prefix + "local.mix / cclocal.mix");
-            if (!loadedFiles.Contains("conquer.mix")) loadErrors.Add(prefix + "conquer.mix");
-            if (!loadedFiles.Contains("desert.mix")) loadErrors.Add(prefix + "desert.mix");
-            if (!loadedFiles.Contains("temperat.mix")) loadErrors.Add(prefix + "temperat.mix");
-            if (!loadedFiles.Contains("winter.mix")) loadErrors.Add(prefix + "winter.mix");
-            if (!mfm.FileExists("conquer.eng")) fileLoadErrors.Add(prefix + "conquer.eng");
+            TestMixExists(loadedFiles, loadErrors, prefix, "local.mix", "cclocal.mix");
+            TestMixExists(loadedFiles, loadErrors, prefix, "conquer.mix");
+            TestMixExists(loadedFiles, loadErrors, prefix, "desert.mix");
+            TestMixExists(loadedFiles, loadErrors, prefix, "temperat.mix");
+            TestMixExists(loadedFiles, loadErrors, prefix, "winter.mix");
+            TestFileExists(mfm, loadErrors, prefix, "conquer.eng");
 
             // Sole Survivor
             mfm.LoadArchive(GameType.SoleSurvivor, "local.mix", false);
@@ -350,12 +350,12 @@ namespace MobiusEditor.Utility
                 mfm.Reset(GameType.SoleSurvivor, null);
                 loadedFiles = mfm.ToList();
                 prefix = "SS: ";
-                if (!loadedFiles.Contains("local.mix") && !loadedFiles.Contains("cclocal.mix")) loadErrors.Add(prefix + "local.mix / cclocal.mix");
-                if (!loadedFiles.Contains("conquer.mix")) loadErrors.Add(prefix + "conquer.mix");
-                if (!loadedFiles.Contains("desert.mix")) loadErrors.Add(prefix + "desert.mix");
-                if (!loadedFiles.Contains("temperat.mix")) loadErrors.Add(prefix + "temperat.mix");
-                if (!loadedFiles.Contains("winter.mix")) loadErrors.Add(prefix + "winter.mix");
-                if (!mfm.FileExists("conquer.eng")) fileLoadErrors.Add(prefix + "conquer.eng");
+                TestMixExists(loadedFiles, loadErrors, prefix, "local.mix", "cclocal.mix");
+                TestMixExists(loadedFiles, loadErrors, prefix, "conquer.mix");
+                TestMixExists(loadedFiles, loadErrors, prefix, "desert.mix");
+                TestMixExists(loadedFiles, loadErrors, prefix, "temperat.mix");
+                TestMixExists(loadedFiles, loadErrors, prefix, "winter.mix");
+                TestFileExists(mfm, loadErrors, prefix, "conquer.eng");
             }
             mfm.Reset(GameType.None, null);
         }
@@ -363,7 +363,7 @@ namespace MobiusEditor.Utility
         private static void InitClassicFilesRa(MixfileManager mfm, List<string> loadErrors, List<string> fileLoadErrors, bool forRemaster)
         {
             // Red Alert
-            // Aftermath expand file. Required. Contains latest strings file.
+            // Aftermath expand file. Contains latest strings file and the expansion vehicle graphics.
             mfm.LoadArchive(GameType.RedAlert, "expand2.mix", false, false, false, true);
             // Counterstrike expand file. All graphics from expand are also in expand2.mix,
             // but it could be used in modding to override different files. Not considered vital.
@@ -373,7 +373,7 @@ namespace MobiusEditor.Utility
             mfm.LoadArchive(GameType.RedAlert, "main.mix", false, true, false, true);
             // Needed for theater palettes and the remap settings in palette.cps
             mfm.LoadArchive(GameType.RedAlert, "local.mix", false, false, true, true);
-            // Mod addons
+            // Mod addons. Loaded with a special function.
             mfm.LoadArchives(GameType.RedAlert, "sc*.mix", true);
             // Not normally needed, but in the beta this contains palette.cps.
             mfm.LoadArchive(GameType.RedAlert, "general.mix", false, false, true, true);
@@ -392,26 +392,67 @@ namespace MobiusEditor.Utility
             mfm.Reset(GameType.RedAlert, null);
             List<string> loadedFiles = mfm.ToList();
             const string prefix = "RA: ";
-            if (!loadedFiles.Contains("expand2.mix")) loadErrors.Add(prefix + "expand2.mix");
-            if (!loadedFiles.Contains("local.mix")) loadErrors.Add(prefix + "local.mix");
+            // Allow loading without expansion files.
+            //TestMixExists(loadedFiles, loadErrors, prefix, "expand2.mix");
+            TestMixExists(loadedFiles, loadErrors, prefix, "local.mix");
             if (!forRemaster)
             {
-                if (!loadedFiles.Contains("conquer.mix")) loadErrors.Add(prefix + "conquer.mix");
-                if (!loadedFiles.Contains("lores.mix")) loadErrors.Add(prefix + "lores.mix");
-                if (!loadedFiles.Contains("lores1.mix")) loadErrors.Add(prefix + "lores1.mix");
+                TestMixExists(loadedFiles, loadErrors, prefix, "conquer.mix");
+                TestMixExists(loadedFiles, loadErrors, prefix, "lores.mix");
+                // Allow loading without expansion files.
+                //TestMixExists(loadedFiles, loadErrors, prefix, "lores1.mix");
             }
-            if (!loadedFiles.Contains("temperat.mix")) loadErrors.Add(prefix + "temperat.mix");
-            if (!loadedFiles.Contains("snow.mix")) loadErrors.Add(prefix + "snow.mix");
-            if (!loadedFiles.Contains("interior.mix")) loadErrors.Add(prefix + "interior.mix");
+            TestMixExists(loadedFiles, loadErrors, prefix, "temperat.mix");
+            TestMixExists(loadedFiles, loadErrors, prefix, "snow.mix");
+            TestMixExists(loadedFiles, loadErrors, prefix, "interior.mix");
             if (!forRemaster)
             {
-                if (!mfm.FileExists("palette.cps")) fileLoadErrors.Add(prefix + "palette.cps");
-                if (!mfm.FileExists("conquer.eng")) fileLoadErrors.Add(prefix + "conquer.eng");
+                TestFileExists(mfm, loadErrors,prefix, "palette.cps");
+                TestFileExists(mfm, loadErrors, prefix, "conquer.eng");
             }
-            if (!mfm.FileExists("rules.ini")) fileLoadErrors.Add(prefix + "rules.ini");
-            if (!mfm.FileExists("aftrmath.ini")) fileLoadErrors.Add(prefix + "aftrmath.ini");
-            if (!mfm.FileExists("mplayer.ini")) fileLoadErrors.Add(prefix + "mplayer.ini");
+            TestFileExists(mfm, loadErrors, prefix, "rules.ini");
+            // Allow loading without expansion files.
+            //TestFileExists(mfm, loadErrors,prefix, "aftrmath.ini");
+            //TestFileExists(mfm, loadErrors,prefix, "mplayer.ini");
             mfm.Reset(GameType.None, null);
+        }
+
+        /// <summary>
+        /// Tests if a mix file, or allowed equivalents of the mix file, exist.
+        /// </summary>
+        /// <param name="loadedFiles">The list of mix files loaded by the mixfile manager</param>
+        /// <param name="errors">Current list of errors to potentially add more to.</param>
+        /// <param name="prefix">Prefix string to put before the filename on the newly added error line.</param>
+        /// <param name="fileNames">One or more mix files to check. If multiple are given they are seen as interchangeable; if one exists in <paramref name="loadedFiles"/>, the check passes.</param>
+        private static void TestMixExists(List<string> loadedFiles, List<string> errors, string prefix, params string[] fileNames)
+        {
+            bool anyExist = false;
+            foreach (string fileName in fileNames)
+            {
+                if (loadedFiles.Contains(fileName))
+                {
+                    anyExist = true;
+                }
+            }
+            if (!anyExist)
+            {
+                errors.Add(prefix + String.Join(" / ", fileNames));
+            }
+        }
+
+        /// <summary>
+        /// Tests if a file can be found in the currently loaded mix archives.
+        /// </summary>
+        /// <param name="mixFileManager">Mix file manager</param>
+        /// <param name="errors">Current list of errors to potentially add more to.</param>
+        /// <param name="prefix">Prefix string to put before the filename on the newly added error line.</param>
+        /// <param name="fileName">file name to check.</param>
+        private static void TestFileExists(MixfileManager mixFileManager, List<string> errors, string prefix, string fileName)
+        {
+            if (!mixFileManager.FileExists(fileName))
+            {
+                errors.Add(prefix + fileName);
+            }
         }
 
         private static void AddMissingRemasterText(IGameTextManager gtm)
