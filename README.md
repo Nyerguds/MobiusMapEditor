@@ -61,7 +61,5 @@ Some ideas that might get implemented in the future:
 * A copy & paste function.
 * Support for classic fonts, so 1:1 image exports from Classic mode actually have readable labels.
 * Support for Attack Tarcom orders.
-* Adding info about the selected trigger on the Cell Trigger tool.
 * A filter on waypoints in the Teamtypes
 * Showing linked triggers on the triggers UI
-

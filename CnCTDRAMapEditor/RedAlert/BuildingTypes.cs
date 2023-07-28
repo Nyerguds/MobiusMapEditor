@@ -73,6 +73,7 @@ namespace MobiusEditor.RedAlert
         public static readonly BuildingType V09 = new BuildingType(53, "v09", "TEXT_STRUCTURE_TITLE_CIV9", 0, 0, 1, 1, null, "Neutral", new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, BuildingTypeFlag.NoRemap);
         public static readonly BuildingType V10 = new BuildingType(54, "v10", "TEXT_STRUCTURE_TITLE_CIV10", 0, 0, 1, 1, null, "Neutral", new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, BuildingTypeFlag.NoRemap);
         public static readonly BuildingType V11 = new BuildingType(55, "v11", "TEXT_STRUCTURE_TITLE_CIV11", 0, 0, 1, 1, null, "Neutral", new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, BuildingTypeFlag.NoRemap);
+        // Added additional string ID for string "Haystacks" (plural). Remaster just copies "TEXT_STRUCTURE_TITLE_CIV12".
         public static readonly BuildingType V12 = new BuildingType(56, "v12", "TEXT_STRUCTURE_TITLE_CIV12B", 0, 0, 1, 1, null, "Neutral", new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, BuildingTypeFlag.NoRemap);
         public static readonly BuildingType V13 = new BuildingType(57, "v13", "TEXT_STRUCTURE_TITLE_CIV12", 0, 0, 1, 1, null, "Neutral", new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, BuildingTypeFlag.NoRemap);
         public static readonly BuildingType V14 = new BuildingType(58, "v14", "TEXT_STRUCTURE_TITLE_CIV13", 0, 0, 1, 1, null, "Neutral", new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, BuildingTypeFlag.NoRemap);
@@ -80,6 +81,7 @@ namespace MobiusEditor.RedAlert
         public static readonly BuildingType V16 = new BuildingType(60, "v16", "TEXT_STRUCTURE_TITLE_CIV15", 0, 0, 1, 1, null, "Neutral", new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, BuildingTypeFlag.NoRemap);
         public static readonly BuildingType V17 = new BuildingType(61, "v17", "TEXT_STRUCTURE_TITLE_CIV16", 0, 0, 1, 1, null, "Neutral", new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, BuildingTypeFlag.NoRemap);
         public static readonly BuildingType V18 = new BuildingType(62, "v18", "TEXT_STRUCTURE_TITLE_CIV17", 0, 0, 1, 1, null, "Neutral", new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, BuildingTypeFlag.NoRemap);
+        // Added additional string ID for string "Oil Pump"; was missing entirely.
         public static readonly BuildingType V19 = new BuildingType(63, "v19", "TEXT_STRUCTURE_TITLE_OIL_PUMP", 0, 0, 1, 1, null, "Neutral", BuildingTypeFlag.NoRemap);
         // Desert civilian buildings. Will never show up unless the option to filter theater-illegals is disabled.
         public static readonly BuildingType V20 = new BuildingType(64, "v20", "TEXT_STRUCTURE_TITLE_CIV18", 0, 0, 2, 2, "00 11", "Neutral", new TheaterType[0], BuildingTypeFlag.NoRemap);
@@ -87,6 +89,7 @@ namespace MobiusEditor.RedAlert
         public static readonly BuildingType V22 = new BuildingType(66, "v22", "TEXT_STRUCTURE_TITLE_CIV20", 0, 0, 2, 1, null, "Neutral", new TheaterType[0], BuildingTypeFlag.NoRemap);
         public static readonly BuildingType V23 = new BuildingType(67, "v23", "TEXT_STRUCTURE_TITLE_CIV21", 0, 0, 1, 1, null, "Neutral", new TheaterType[0], BuildingTypeFlag.NoRemap);
         public static readonly BuildingType V24 = new BuildingType(68, "v24", "TEXT_STRUCTURE_TITLE_CIV22", 0, 0, 2, 2, "00 11", "Neutral", new TheaterType[0], BuildingTypeFlag.NoRemap);
+        // Second "Church" string. Can be useful to have this different for classic mods. Remaster just copies "TEXT_STRUCTURE_TITLE_CIV1".
         public static readonly BuildingType V25 = new BuildingType(69, "v25", "TEXT_STRUCTURE_TITLE_CIV1B", 0, 0, 2, 2, "01 11", "Neutral", new TheaterType[0], BuildingTypeFlag.NoRemap);
         public static readonly BuildingType V26 = new BuildingType(70, "v26", "TEXT_STRUCTURE_TITLE_CIV23", 0, 0, 2, 1, null, "Neutral", new TheaterType[0], BuildingTypeFlag.NoRemap);
         public static readonly BuildingType V27 = new BuildingType(71, "v27", "TEXT_STRUCTURE_TITLE_CIV24", 0, 0, 1, 1, null, "Neutral", new TheaterType[0], BuildingTypeFlag.NoRemap);

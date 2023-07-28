@@ -16,13 +16,23 @@ namespace MobiusEditor.RedAlert
 {
 	/// <summary>
 	/// Split off into its own thing to avoid creating clutter in the InfantryTypes class file.
-	/// Copied from CONST.CPP from the original Red Alert source code.
+	/// The civilian remap tables are copied from CONST.CPP from the original Red Alert source code.
 	/// https://github.com/electronicarts/CnC_Remastered_Collection/blob/master/REDALERT/CONST.CPP
+	/// The Einstein one is newly added.
 	/// </summary>
 	public static class InfantryClassicRemap
 	{
-		public static byte[] RemapCiv2 =
-			{
+		/// <summary>
+		/// Remap table for civilian C2. Specific changes:
+		/// 007 => 209,
+		/// 014 => 012,
+		/// 118 => 187,
+		/// 119 => 188,
+		/// 159 => 209,
+		/// 187 => 167,
+		/// 188 => 013
+		/// </summary>
+		public static byte[] RemapCiv2 = {
 			000,001,002,003,004,005,006,209,008,009,010,011,012,013,012,015,	// 000..015
 			016,017,018,019,020,021,022,023,024,025,026,027,028,029,030,031,	// 016..031
 			032,033,034,035,036,037,038,039,040,041,042,043,044,045,046,047,	// 032..047
@@ -40,6 +50,15 @@ namespace MobiusEditor.RedAlert
 			224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,	// 224..239
 			240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255 	// 240..255
 		};
+
+		/// <summary>
+		/// Remap table for civilian C4. Specific changes:
+		/// 007 => 187,
+		/// 109 => 118,
+		/// 111 => 119,
+		/// 206 => 188,
+		/// 210 => 182
+		/// </summary>
 		public static byte[] RemapCiv4 = {
 			000,001,002,003,004,005,006,187,008,009,010,011,012,013,014,015,	// 000..015
 			016,017,018,019,020,021,022,023,024,025,026,027,028,029,030,031,	// 016..031
@@ -58,6 +77,17 @@ namespace MobiusEditor.RedAlert
 			224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,	// 224..239
 			240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255 	// 240..255
 		};
+
+		/// <summary>
+		/// Remap table for civilian C5. Specific changes:
+		/// 007 => 109,
+		/// 012 => 131,
+		/// 109 => 177,
+		/// 111 => 178,
+		/// 200 => 111,
+		/// 206 => 111,
+		/// 210 => 182
+		/// </summary>
 		public static byte[] RemapCiv5 = {
 			000,001,002,003,004,005,006,109,008,009,010,011,131,013,014,015,	// 000..015
 			016,017,018,019,020,021,022,023,024,025,026,027,028,029,030,031,	// 016..031
@@ -76,6 +106,15 @@ namespace MobiusEditor.RedAlert
 			224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,	// 224..239
 			240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255 	// 240..255
 		};
+
+		/// <summary>
+		/// Remap table for civilian C6. Specific changes:
+		/// 007 => 120,
+		/// 014 => 238,
+		/// 118 => 236,
+		/// 119 => 206,
+		/// 159 => 111
+		/// </summary>
 		public static byte[] RemapCiv6 = {
 			000,001,002,003,004,005,006,120,008,009,010,011,012,013,238,015,	// 000..015
 			016,017,018,019,020,021,022,023,024,025,026,027,028,029,030,031,	// 016..031
@@ -94,6 +133,16 @@ namespace MobiusEditor.RedAlert
 			224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,	// 224..239
 			240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255 	// 240..255
 		};
+
+		/// <summary>
+		/// Remap table for civilian C7. Specific changes:
+		/// 014 => 131,
+		/// 118 => 157,
+		/// 119 => 212,
+		/// 159 => 007,
+		/// 187 => 118,
+		/// 188 => 119
+		/// </summary>
 		public static byte[] RemapCiv7 = {
 			000,001,002,003,004,005,006,007,008,009,010,011,012,013,131,015,	// 000..015
 			016,017,018,019,020,021,022,023,024,025,026,027,028,029,030,031,	// 016..031
@@ -112,6 +161,18 @@ namespace MobiusEditor.RedAlert
 			224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,	// 224..239
 			240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255 	// 240..255
 		};
+
+		/// <summary>
+		/// Remap table for civilian C8. Specific changes:
+		/// 007 => 182,
+		/// 014 => 131,
+		/// 118 => 215,
+		/// 119 => 007,
+		/// 159 => 182,
+		/// 187 => 198,
+		/// 188 => 199,
+		/// 200 => 111
+		/// </summary>
 		public static byte[] RemapCiv8 = {
 			000,001,002,003,004,005,006,182,008,009,010,011,012,013,131,015,	// 000..015
 			016,017,018,019,020,021,022,023,024,025,026,027,028,029,030,031,	// 016..031
@@ -132,6 +193,7 @@ namespace MobiusEditor.RedAlert
 		};
 
 		/// <summary>
+		/// Remap table for civilian C9. Specific changes:
 		/// 014 => 007,
 		/// 118 => 163,
 		/// 119 => 165
@@ -159,11 +221,14 @@ namespace MobiusEditor.RedAlert
 		};
 
 		/// <summary>
+		/// Remap table for civilian C10. Specific changes:
 		/// 007 => 137,
 		/// 014 => 015,
 		/// 118 => 129,
+		/// 119 => 131,
 		/// 159 => 137,
-		/// 187 => 163
+		/// 187 => 163,
+		/// 188 => 165
 		/// </summary>
 		public static byte[] RemapCiv10 = {
 			000,001,002,003,004,005,006,137,008,009,010,011,012,013,015,015,	// 000..015
@@ -185,12 +250,12 @@ namespace MobiusEditor.RedAlert
 		};
 
 		/// <summary>
-		/// Fix for the fact the DOS graphics of Einstein use the Mobius graphics.
+		/// Remap table to fix the fact the DOS graphics of Einstein use the Mobius graphics. Specific changes:
 		/// 014 => 120
 		/// 130 => 138
 		/// 131 => 119
 		/// </summary>
-		public static byte[] RemapEins = {
+		public static byte[] RemapEinstein = {
 			000,001,002,003,004,005,006,007,008,009,010,011,012,013,120,015,	// 000..015
 			016,017,018,019,020,021,022,023,024,025,026,027,028,029,030,031,	// 016..031
 			032,033,034,035,036,037,038,039,040,041,042,043,044,045,046,047,	// 032..047

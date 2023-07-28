@@ -35,7 +35,7 @@ namespace MobiusEditor.Model
         IsArmed         = 1 << 3,
         /// <summary>Can harvest resources. This affects the default orders for placing it on the map.</summary>
         IsHarvester     = 1 << 4,
-        /// <summary>Can attack units. This affects the default orders for placing it on the map.</summary>
+        /// <summary>Does not change its colors to that of its owning house..</summary>
         NoRemap         = 1 << 5,
         /// <summary>Is a unit that is filtered out of the lists if expansion units are disabled.</summary>
         IsExpansionUnit = 1 << 6,

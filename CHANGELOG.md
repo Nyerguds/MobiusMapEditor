@@ -563,21 +563,21 @@ Unreleased
 * Fixed a bug where switching back to the Terrain tool would show the previously-selected type in the preview, but would not select it in the list.
 * Fixed a bug in Map mode where using the PageUp or Home key to select the Clear terrain would not scroll to the item in the list.
 * Added setting to enable DPI awareness mode, for users with indicator scaling issues.
-* Triggers on TD Terrain entries are now optional in the ini; terrain entries without trigger part will no longer be skipped as malformed data.
+* Triggers on TD Terrain entries are now optional in the ini; terrain entries without the trigger part will no longer be skipped as malformed data.
 * When loading a map and objects are detected as overlapping a multi-cell object like a building or tree, on top of giving the cell where the overlap occurred, the system will now also report the placement cell of that object.
 * Overhauled the undo/redo system of building priorities, to remove inconsistencies.
 * Modifying the rebuild priority of a placed building will now adjust the rebuild priorities of the other structures, as already happened when adding and removing them.
 * Fixed bug where two buildings of different types placed on the same cell (e.g. a guard tower on the top-left corner of a repair bay) would not correctly be distinguished as different entries by the rebuild priority system, causing one of them to lose its rebuild status.
 * The "Learning" and "Mercenary" options in the TD Teamtypes editor are now crossed out in the UI, and indicated on the tooltip as having no effect.
 * Megamaps for TD can now be published on the Steam workshop, provided they are singleplayer scenarios. They will give a warning about the nonstandard format, though this is not re-shown for the same map on subsequent uploads.
-* Added forgotten PageUp/PageDown/Home/End shortcuts support to Walls tool.
-* V37 is now seen as a "flat" building, so its top left corner can't overlap other objects.
+* Added forgotten PageUp/PageDown/Home/End shortcuts support to the Walls tool.
+* V37 is now seen as a "flat" building, so its top left corner can't overlap other objects. (Sadly, the game does not do this.)
 * Fixed column resizing in the triggers list so it always maximizes the clickable area to select a trigger, and never gives scrollbars unless needed.
 * The mplayer.ini file tweaks are now only applied if RA's Aftermath expansion units are enabled, as it should.
 * The editor will now be allowed to load in classic mode without the RA expansion files present. Any missing graphics will be substituted by dummy graphics.
-* Overhauled the "New Map" dialog using listboxes, to have more consistent tab order control, and to more easily mod in additional games / theaters.
+* Overhauled the "New Map" dialog using list boxes, to have more consistent tab order control, and to allow more easily modding in additional games / theaters.
 * Added "Single-Player Scenario" checkbox on the "New Map" dialog.
-* Added remap logic to fix Einstein's colors, using the remap system used by the other civilians.
-* The power evaluation tool now takes buildings' damaged status into account.
+* Added remap logic to fix Einstein's colors, using the remap system used by the other RA civilians.
+* The power evaluation tool now takes buildings' damaged status into account. when calculating the produced power.
 * Multiple overlapping multiplayer flags will now be drawn as multiple flags on one cell, scaling down later overlapping ones.
 * Multiple overlapping non-flag waypoints will no longer show up brighter on the map.
