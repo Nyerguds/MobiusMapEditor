@@ -194,6 +194,10 @@ namespace MobiusEditor.Model
         public int GetLocation(Infantry infantry)
         {
             int location = -1;
+            if (infantry == null || infantry.InfantryGroup == null)
+            {
+                return location;
+            }
             for (int i = 0; i < infantry.InfantryGroup.Infantry.Length; ++i)
             {
                 if (ReferenceEquals(infantry.InfantryGroup.Infantry[i], infantry))

@@ -52,7 +52,13 @@ namespace MobiusEditor.Tools
             {
                 if (value is Unit un)
                 {
-                    SelectedUnitType = un.Type;
+                    UnitType ut = this.unitTypeListBox.Types.Where(u => u is UnitType unt && unt.ID == un.Type.ID
+                        && String.Equals(unt.Name, un.Type.Name, StringComparison.OrdinalIgnoreCase)).FirstOrDefault() as UnitType;
+                    if (ut != null)
+                    {
+                        SelectedUnitType = ut;
+                    }
+                    un.Type = SelectedUnitType;
                     mockUnit.CloneDataFrom(un);
                     RefreshPreviewPanel();
                 }
@@ -531,17 +537,14 @@ namespace MobiusEditor.Tools
 
         private void PickUnit(Point location)
         {
-            if (map.Metrics.GetCell(location, out int cell))
+            if (map.Technos[location] is Unit unit)
             {
-                if (map.Technos[cell] is Unit unit)
-                {
-                    SelectedUnitType = unit.Type;
-                    mockUnit.House = unit.House;
-                    mockUnit.Strength = unit.Strength;
-                    mockUnit.Direction = unit.Direction;
-                    mockUnit.Mission = unit.Mission;
-                    mockUnit.Trigger = unit.Trigger;
-                }
+                SelectedUnitType = unit.Type;
+                mockUnit.House = unit.House;
+                mockUnit.Strength = unit.Strength;
+                mockUnit.Direction = unit.Direction;
+                mockUnit.Mission = unit.Mission;
+                mockUnit.Trigger = unit.Trigger;
             }
         }
 

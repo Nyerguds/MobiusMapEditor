@@ -68,10 +68,10 @@ namespace MobiusEditor.Model
 
         public T this[int y, int x]
         {
-            get => cells[y, x];
+            get => metrics.Contains(x, y) ? cells[y, x] : default(T);
             set
             {
-                if (!EqualityComparer<T>.Default.Equals(cells[y, x], value))
+                if (metrics.Contains(x, y) && !EqualityComparer<T>.Default.Equals(cells[y, x], value))
                 {
                     var lastValue = cells[y, x];
                     cells[y, x] = value;

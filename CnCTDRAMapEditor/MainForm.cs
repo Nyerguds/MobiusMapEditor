@@ -89,6 +89,9 @@ namespace MobiusEditor
 
         // Save and re-use tool instances
         private Dictionary<ToolType, IToolDialog> toolForms;
+        private GameType oldMockGame;
+        private ToolType oldSelectedTool = ToolType.None;
+        private Dictionary<ToolType, Object> oldMockObjects;
         private ViewToolStripButton[] viewToolStripButtons;
 
         private IGamePlugin plugin;
@@ -139,6 +142,8 @@ namespace MobiusEditor
             this.mapPanel.BackColor = Globals.MapBackColor;
             SetTitle();
             toolForms = new Dictionary<ToolType, IToolDialog>();
+            oldMockGame = GameType.None;
+            oldMockObjects = Globals.RememberToolData ? new Dictionary<ToolType, object>() : null;
             viewToolStripButtons = new ViewToolStripButton[]
             {
                 mapToolStripButton,
@@ -471,10 +476,17 @@ namespace MobiusEditor
 
         private void FileSaveMenuItem_Click(object sender, EventArgs e)
         {
-            SaveAction(false, null, false);
+            SaveAction(false, null, false, false);
         }
 
-        private void SaveAction(bool dontResavePreview, Action afterSaveDone, bool skipValidation)
+        /// <summary>
+        /// Performs the saving action, and optionally executes another action after the save is done.
+        /// </summary>
+        /// <param name="dontResavePreview">Suppress generation of the preview image.</param>
+        /// <param name="afterSaveDone">Action to execute after the save is done.</param>
+        /// <param name="skipValidation">True to skip validation when saving.</param>
+        /// <param name="continueOnError">True to execute <paramref name="afterSaveDone"/> even if errors occurred.</param>
+        private void SaveAction(bool dontResavePreview, Action afterSaveDone, bool skipValidation, bool continueOnError)
         {
             if (plugin == null)
             {
@@ -488,6 +500,10 @@ namespace MobiusEditor
             }
             if (!this.DoValidate())
             {
+                if (continueOnError)
+                {
+                    afterSaveDone();
+                }
                 return;
             }
             var fileInfo = new FileInfo(filename);
@@ -1682,6 +1698,7 @@ namespace MobiusEditor
                 SimpleMultiThreading.RemoveBusyLabel(this);
                 return;
             }
+            IGamePlugin oldPlugin = this.plugin;
             string[] errors = loadInfo.Errors ?? new string[0];
             // Plugin set to null indicates a fatal processing error where no map was loaded at all.
             if (loadInfo.Plugin == null || (loadInfo.Plugin != null && !loadInfo.MapLoaded))
@@ -1728,8 +1745,9 @@ namespace MobiusEditor
                     this.jumpToBounds = Globals.ZoomToBoundsOnLoad;
                 }
                 url.Clear();
-                CleanupTools();
-                RefreshUI();
+                CleanupTools(oldPlugin?.GameType ?? GameType.None);
+                RefreshUI(oldSelectedTool);
+                oldSelectedTool = ToolType.None;
                 //RefreshActiveTool(); // done by UI refresh
                 SetTitle();
                 if (loadInfo.FileName != null)
@@ -1771,9 +1789,13 @@ namespace MobiusEditor
             {
                 url.Clear();
                 // Disable all tools
+                if (ActiveToolType != ToolType.None)
+                {
+                    oldSelectedTool = ActiveToolType;
+                }
                 ActiveToolType = ToolType.None; // Always re-defaults to map anyway, so nicer if nothing is selected during load.
                 this.ActiveControl = null;
-                CleanupTools();
+                CleanupTools(plugin?.GameType ?? GameType.None);
                 // Unlink plugin
                 IGamePlugin pl = plugin;
                 plugin = null;
@@ -1881,12 +1903,22 @@ namespace MobiusEditor
             viewIndicatorsOutlinesMenuItem.Visible = !hasPlugin || plugin.GameType != GameType.SoleSurvivor;
         }
 
-        private void CleanupTools()
+        private void CleanupTools(GameType gameType)
         {
             // Tools
             ClearActiveTool();
+            if (oldMockObjects != null && gameType != GameType.None && toolForms.Count > 0)
+            {
+                oldMockGame = gameType;
+            }
             foreach (var kvp in toolForms)
             {
+                ITool tool;
+                Object obj;
+                if (oldMockObjects != null && gameType != GameType.None && kvp.Value != null && (tool = kvp.Value.GetTool()) != null && (obj = tool.CurrentObject) != null)
+                {
+                    oldMockObjects.Add((kvp.Key), obj);
+                }
                 kvp.Value.Dispose();
             }
             toolForms.Clear();
@@ -1920,10 +1952,11 @@ namespace MobiusEditor
                 activeLayers = MapLayerFlag.None;
             }
             ClearActiveTool();
-            bool found = toolForms.TryGetValue(ActiveToolType, out IToolDialog toolDialog);
+            ToolType curType = ActiveToolType;
+            bool found = toolForms.TryGetValue(curType, out IToolDialog toolDialog);
             if (!found || (toolDialog is Form toolFrm && toolFrm.IsDisposed))
             {
-                switch (ActiveToolType)
+                switch (curType)
                 {
                     case ToolType.Map:
                         {
@@ -1989,7 +2022,7 @@ namespace MobiusEditor
                 }
                 if (toolDialog != null)
                 {
-                    toolForms[ActiveToolType] = toolDialog;
+                    toolForms[curType] = toolDialog;
                 }
             }
             MapLayerFlag active = ActiveLayers;
@@ -2003,10 +2036,23 @@ namespace MobiusEditor
                 activeToolForm = (Form)toolDialog;
                 ITool oldTool = toolDialog.GetTool();
                 Object mockObject = null;
+                bool fromBackup = false;
+                if (oldMockGame != this.plugin.GameType && oldMockObjects != null && oldMockObjects.Count() > 0)
+                {
+                    oldMockObjects.Clear();
+                    oldMockGame = GameType.None;
+                }
                 if (oldTool != null && oldTool.Plugin == plugin)
                 {
                     // Same map edit session; restore old data
                     mockObject = oldTool.CurrentObject;
+                }
+                else if (oldMockGame == this.plugin.GameType && oldMockObjects != null && oldMockObjects.TryGetValue(curType, out object mock))
+                {
+                    mockObject = mock;
+                    // Retrieve once and remove.
+                    oldMockObjects.Remove(curType);
+                    fromBackup = true;
                 }
                 // Creates the actual Tool class
                 toolDialog.Initialize(mapPanel, active, toolStatusLabel, mouseToolTip, plugin, url);
@@ -2020,6 +2066,11 @@ namespace MobiusEditor
                 if (plugin.ActiveHouse != null && mockObject is ITechno techno)
                 {
                     techno.House = plugin.ActiveHouse;
+                }
+                if (fromBackup && mockObject is ITechno trtechno)
+                {
+                    // Do not inherit trigger names from a different session.
+                    trtechno.Trigger = Trigger.None;
                 }
                 // Sets backed up / adjusted object in current tool.
                 if (mockObject != null)
@@ -2048,7 +2099,7 @@ namespace MobiusEditor
             // Refresh toolstrip button checked states
             foreach (var toolStripButton in viewToolStripButtons)
             {
-                toolStripButton.Checked = ActiveToolType == toolStripButton.ToolType;
+                toolStripButton.Checked = curType == toolStripButton.ToolType;
             }
 
             // this somehow fixes the fact that the keyUp and keyDown events of the navigation widget don't come through.
@@ -2425,7 +2476,7 @@ namespace MobiusEditor
             {
                 // This takes care of saving the Steam info into the map.
                 // This specific overload only saves the map, without resaving the preview.
-                SaveAction(true, null, false);
+                SaveAction(true, null, false, false);
             }
         }
 
@@ -2439,7 +2490,7 @@ namespace MobiusEditor
 
         private void MainForm_Shown(object sender, System.EventArgs e)
         {
-            CleanupTools();
+            CleanupTools(GameType.None);
             RefreshUI();
             UpdateUndoRedo();
             if (filename != null)
@@ -2530,7 +2581,7 @@ namespace MobiusEditor
                             }
                             else
                             {
-                                SaveAction(false, nextAction, true);
+                                SaveAction(false, nextAction, true, false);
                             }
                             // Cancel current operation, since stuff after multithreading will take care of the operation.
                             return false;

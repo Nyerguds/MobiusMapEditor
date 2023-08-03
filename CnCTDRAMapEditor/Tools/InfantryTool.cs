@@ -46,7 +46,13 @@ namespace MobiusEditor.Tools
             {
                 if (value is Infantry inf)
                 {
-                    SelectedInfantryType = inf.Type;
+                    InfantryType it = infantryTypeListBox.Types.Where(i => i is InfantryType inft && inft.ID == inf.Type.ID
+                        && String.Equals(inft.Name, inf.Type.Name, StringComparison.OrdinalIgnoreCase)).FirstOrDefault() as InfantryType;
+                    if (it != null)
+                    {
+                        SelectedInfantryType = it;
+                    }
+                    inf.Type = SelectedInfantryType;
                     mockInfantry.CloneDataFrom(inf);
                     RefreshPreviewPanel();
                 }
@@ -337,6 +343,7 @@ namespace MobiusEditor.Tools
                             selectedInfantry.InfantryGroup = infantryGroup;
                             mapPanel.Invalidate(map, infantryGroup);
                         }
+                        // Infantry was indeed moved to target cell.
                         if (infantryGroup == selectedInfantry.InfantryGroup)
                         {
                             if (!startedDragging && selectedInfantryStartStop != i)
@@ -698,22 +705,21 @@ namespace MobiusEditor.Tools
 
         private void PickInfantry(Point location)
         {
-            if (map.Metrics.GetCell(location, out int cell))
+            if (!(map.Technos[location] is InfantryGroup infantryGroup))
             {
-                if (map.Technos[cell] is InfantryGroup infantryGroup)
-                {
-                    var i = InfantryGroup.ClosestStoppingTypes(navigationWidget.MouseSubPixel).Cast<int>().First();
-                    if (infantryGroup.Infantry[i] is Infantry infantry)
-                    {
-                        SelectedInfantryType = infantry.Type;
-                        mockInfantry.House = infantry.House;
-                        mockInfantry.Strength = infantry.Strength;
-                        mockInfantry.Direction = infantry.Direction;
-                        mockInfantry.Mission = infantry.Mission;
-                        mockInfantry.Trigger = infantry.Trigger;
-                    }
-                }
+                return;
             }
+            int i = InfantryGroup.ClosestStoppingTypes(navigationWidget.MouseSubPixel).Cast<int>().First();
+            if (i == -1 || !(infantryGroup.Infantry[i] is Infantry infantry))
+            {
+                return;
+            }
+            SelectedInfantryType = infantry.Type;
+            mockInfantry.House = infantry.House;
+            mockInfantry.Strength = infantry.Strength;
+            mockInfantry.Direction = infantry.Direction;
+            mockInfantry.Mission = infantry.Mission;
+            mockInfantry.Trigger = infantry.Trigger;
         }
 
         private void SelectInfantry(Point location)

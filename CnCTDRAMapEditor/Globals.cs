@@ -37,6 +37,7 @@ namespace MobiusEditor
             CratesOnTop = Properties.Settings.Default.DefaultCratesOnTop;
             // Fine tuning
             ZoomToBoundsOnLoad = Properties.Settings.Default.ZoomToBoundsOnLoad;
+            RememberToolData = Properties.Settings.Default.RememberToolData;
             MapGridColor = Properties.Settings.Default.MapGridColor;
             MapBackColor = Color.FromArgb(255, Properties.Settings.Default.MapBackColor);
             UndoRedoStackSize = Properties.Settings.Default.UndoRedoStackSize;
@@ -45,7 +46,7 @@ namespace MobiusEditor
             ReportMissionDetection = Properties.Settings.Default.ReportMissionDetection;
             EnforceObjectMaximums = Properties.Settings.Default.EnforceObjectMaximums;
             Ignore106Scripting = Properties.Settings.Default.Ignore106Scripting;
-            NoMetaFilesForSinglePlay = Properties.Settings.Default.NoMetaFilesForSinglePlay;
+            ClassicProducesNoMetaFiles = Properties.Settings.Default.ClassicProducesNoMetaFiles;
             ConvertRaObsoleteClear = Properties.Settings.Default.ConvertRaObsoleteClear;
             BlockingBibs = Properties.Settings.Default.BlockingBibs;
             DisableAirUnits = Properties.Settings.Default.DisableAirUnits;
@@ -100,6 +101,7 @@ namespace MobiusEditor
         }
 
         public static bool ZoomToBoundsOnLoad { get; private set; }
+        public static bool RememberToolData { get; private set; }
         public static Color MapGridColor { get; private set; }
         public static Color MapBackColor { get; private set; }
 
@@ -135,7 +137,7 @@ namespace MobiusEditor
         public static bool ReportMissionDetection { get; private set; }
         public static bool EnforceObjectMaximums { get; private set; }
         public static bool Ignore106Scripting { get; private set; }
-        public static bool NoMetaFilesForSinglePlay { get; private set; }
+        public static bool ClassicProducesNoMetaFiles { get; private set; }
         public static bool ConvertRaObsoleteClear { get; private set; }
         public static bool BlockingBibs { get; private set; }
         public static bool DisableAirUnits { get; private set; }

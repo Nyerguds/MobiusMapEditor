@@ -49,9 +49,10 @@ namespace MobiusEditor.Tools
             {
                 if (value is int val)
                 {
-                    currentVal = val;
-                    this.brushSizeNud.Value = (val & 0x7FFFFFFF) | 1;
+                    int actualValue = (int)Math.Max(brushSizeNud.Minimum, Math.Min(brushSizeNud.Maximum, (val & 0x7FFFFFFF) | 1));
+                    this.brushSizeNud.Value = actualValue;
                     this.gemsCheckBox.Checked = ((uint)val & 0x80000000) != 0;
+                    currentVal = gemsCheckBox.Checked ? (int)(0x80000000 | (uint)actualValue) : actualValue;
                 }
             }
         }

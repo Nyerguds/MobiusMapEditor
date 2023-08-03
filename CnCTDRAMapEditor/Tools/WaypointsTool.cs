@@ -48,7 +48,7 @@ namespace MobiusEditor.Tools
             get { return lastSelectedIndex; }
             set
             {
-                if (value is int index)
+                if (value is int index && index >= 0 && waypointCombo.Items.Count > index)
                 {
                     lastSelectedIndex = index;
                     waypointCombo.SelectedIndex = index;

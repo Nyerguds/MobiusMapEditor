@@ -2188,7 +2188,7 @@ namespace MobiusEditor.RedAlert
                     ini.Sections.Remove("Briefing");
                 }
             }
-            foreach (House house in Map.Houses)
+            foreach (Model.House house in Map.Houses)
             {
                 if (house.Type.ID < 0)
                 {
@@ -2197,6 +2197,15 @@ namespace MobiusEditor.RedAlert
                 House gameHouse = (House)house;
                 INISection houseSection = INITools.ParseAndLeaveRemainder(ini, gameHouse.Type.Name, gameHouse, new MapContext(Map, true));
                 house.Enabled = houseSection != null;
+            }
+            House ukr = Map.Houses.Where(h => h.Type == HouseTypes.Ukraine).FirstOrDefault() as House;
+            if (ukr != null && !ukr.Enabled && ini.Sections.Contains("ITALY"))
+            {
+                INISection houseSection = INITools.ParseAndLeaveRemainder(ini, "ITALY", ukr, new MapContext(Map, true));
+                string secName = houseSection.Name;
+                // Will only succeed if anything remained in the house section.
+                ini.Sections.Rename("ITALY", ukr.Type.Name);
+                errors.Add(string.Format("Obsolete house section '{0}' found, and its modern counterpart '{1}' is not present. Interpreting section as '{1}'.", secName, ukr.Type.Name));
             }
             string indexToName<T>(IList<T> list, string index, string defaultValue) where T : INamedType
             {
@@ -2701,7 +2710,7 @@ namespace MobiusEditor.RedAlert
                         // Possibly scan extra ini content for all units/structs/etc with "Name" fields and save them as UTF-8 too? Not sure how the Remaster handles these.
                         GeneralUtils.WriteMultiEncoding(iniText.Split('\n'), mprWriter, dos437, utf8, new[] { ("Steam", null), ("Briefing", "Text"), ("Basic", "Name"), ("Basic", "Author") }, linebreak);
                     }
-                    if (!Map.BasicSection.SoloMission || !Globals.NoMetaFilesForSinglePlay)
+                    if (!Map.BasicSection.SoloMission && (!Globals.UseClassicFiles || !Globals.ClassicProducesNoMetaFiles))
                     {
                         string tgaPath = Path.ChangeExtension(path, ".tga");
                         string jsonPath = Path.ChangeExtension(path, ".json");

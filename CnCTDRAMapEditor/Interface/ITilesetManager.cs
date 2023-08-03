@@ -13,10 +13,11 @@
 //   0. You just DO WHAT THE FUCK YOU WANT TO.
 using MobiusEditor.Model;
 using MobiusEditor.Utility;
+using System;
 
 namespace MobiusEditor.Interface
 {
-    public interface ITilesetManager
+    public interface ITilesetManager: IDisposable
     {
         /// <summary>
         /// Resets the ITilesetManager instance to prepare it for a new game. This clears cached objects

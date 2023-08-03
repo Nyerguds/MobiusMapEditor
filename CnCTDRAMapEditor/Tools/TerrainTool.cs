@@ -52,7 +52,13 @@ namespace MobiusEditor.Tools
             {
                 if (value is Terrain ter)
                 {
-                    SelectedTerrainType = ter.Type;
+                    TerrainType tt = terrainTypeListBox.Types.Where(t => t is TerrainType trt && trt.ID == ter.Type.ID
+                        && String.Equals(trt.Name, ter.Type.Name, StringComparison.OrdinalIgnoreCase)).FirstOrDefault() as TerrainType;
+                    if (tt != null)
+                    {
+                        SelectedTerrainType = tt;
+                    }
+                    ter.Type = SelectedTerrainType;
                     mockTerrain.CloneDataFrom(ter);
                     RefreshPreviewPanel();
                 }
@@ -486,13 +492,10 @@ namespace MobiusEditor.Tools
 
         private void PickTerrain(Point location)
         {
-            if (map.Metrics.GetCell(location, out int cell))
+            if (map.Technos[location] is Terrain terrain)
             {
-                if (map.Technos[cell] is Terrain terrain)
-                {
-                    SelectedTerrainType = terrain.Type;
-                    mockTerrain.Trigger = terrain.Trigger;
-                }
+                SelectedTerrainType = terrain.Type;
+                mockTerrain.Trigger = terrain.Trigger;
             }
         }
 

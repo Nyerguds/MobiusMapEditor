@@ -47,7 +47,7 @@ namespace MobiusEditor.RedAlert
         public static readonly BuildingType Barracks = new BuildingType(21, "barr", "TEXT_STRUCTURE_RA_BARR", 0, 20, 2, 2, null, "USSR", BuildingTypeFlag.Bib);
         public static readonly BuildingType Tent = new BuildingType(22, "tent", "TEXT_STRUCTURE_RA_TENT", 0, 20, 2, 2, null, "Greece", BuildingTypeFlag.Bib);
         public static readonly BuildingType Kennel = new BuildingType(23, "kenn", "TEXT_STRUCTURE_RA_KENN", 0, 10, 1, 1, null, "USSR");
-        public static readonly BuildingType Repair = new BuildingType(24, "fix", "TEXT_STRUCTURE_RA_FIX", 0, 30, 3, 3, "010 111 010", "Greece", BuildingTypeFlag.Flat);
+        public static readonly BuildingType Repair = new BuildingType(24, "fix", "TEXT_STRUCTURE_RA_FIX", 0, 30, 3, 3, "010 111 010", "Greece", BuildingTypeFlag.None, 5);
         public static readonly BuildingType BioLab = new BuildingType(25, "bio", "TEXT_STRUCTURE_RA_BIO", 0, 40, 2, 2, null, "Greece", BuildingTypeFlag.Bib);
         public static readonly BuildingType Mission = new BuildingType(26, "miss", "TEXT_STRUCTURE_RA_MISS", 0, 0, 3, 2, null, "Greece", BuildingTypeFlag.Bib);
         public static readonly BuildingType ShipYard = new BuildingType(27, "syrd", "TEXT_STRUCTURE_RA_SYRD", 0, 30, 3, 3, null, "Greece");
@@ -102,7 +102,7 @@ namespace MobiusEditor.RedAlert
         public static readonly BuildingType V34 = new BuildingType(78, "v34", "TEXT_STRUCTURE_TITLE_CIV31", 0, 0, 1, 1, null, "Neutral", new TheaterType[0], BuildingTypeFlag.NoRemap);
         public static readonly BuildingType V35 = new BuildingType(79, "v35", "TEXT_STRUCTURE_TITLE_CIV32", 0, 0, 1, 1, null, "Neutral", new TheaterType[0], BuildingTypeFlag.NoRemap);
         public static readonly BuildingType V36 = new BuildingType(80, "v36", "TEXT_STRUCTURE_TITLE_CIV33", 0, 0, 1, 1, null, "Neutral", new TheaterType[0], BuildingTypeFlag.NoRemap);
-        public static readonly BuildingType V37 = new BuildingType(81, "v37", "TEXT_STRUCTURE_TITLE_CIV34", 0, 0, 4, 2, "0111 0111", "Neutral", new TheaterType[0], BuildingTypeFlag.NoRemap | BuildingTypeFlag.Flat);
+        public static readonly BuildingType V37 = new BuildingType(81, "v37", "TEXT_STRUCTURE_TITLE_CIV34", 0, 0, 4, 2, "0111 0111", "Neutral", new TheaterType[0], BuildingTypeFlag.NoRemap, 0);
 
         public static readonly BuildingType Barrel = new BuildingType(82, "barl", "TEXT_STRUCTURE_RA_BARL", 0, 0, 1, 1, null, "Neutral", BuildingTypeFlag.NoRemap);
         public static readonly BuildingType Barrel3 = new BuildingType(83, "brl3", "TEXT_STRUCTURE_RA_BRL3", 0, 0, 1, 1, null, "Neutral", BuildingTypeFlag.NoRemap);

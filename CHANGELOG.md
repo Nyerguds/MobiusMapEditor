@@ -571,13 +571,18 @@ Unreleased
 * The "Learning" and "Mercenary" options in the TD Teamtypes editor are now crossed out in the UI, and indicated on the tooltip as having no effect.
 * Megamaps for TD can now be published on the Steam workshop, provided they are singleplayer scenarios. They will give a warning about the nonstandard format, though this is not re-shown for the same map on subsequent uploads.
 * Added forgotten PageUp/PageDown/Home/End shortcuts support to the Walls tool.
-* V37 is now seen as a "flat" building, so its top left corner can't overlap other objects. (Sadly, the game does not do this.)
+* Buildings now all have a set height to control overlaps.
+* Civilian building V37, The Studio, is now seen as a flat building, lower than even the repair bay, so its top left corner can't overlap other objects. (Sadly, the game does not do this.)
 * Fixed column resizing in the triggers list so it always maximizes the clickable area to select a trigger, and never gives scrollbars unless needed.
 * The mplayer.ini file tweaks are now only applied if RA's Aftermath expansion units are enabled, as it should.
 * The editor will now be allowed to load in classic mode without the RA expansion files present. Any missing graphics will be substituted by dummy graphics.
 * Overhauled the "New Map" dialog using list boxes, to have more consistent tab order control, and to allow more easily modding in additional games / theaters.
 * Added "Single-Player Scenario" checkbox on the "New Map" dialog.
 * Added remap logic to fix Einstein's colors, using the remap system used by the other RA civilians.
-* The power evaluation tool now takes buildings' damaged status into account. when calculating the produced power.
+* The power evaluation tool now takes buildings' damaged status into account when calculating the produced power.
 * Multiple overlapping multiplayer flags will now be drawn as multiple flags on one cell, scaling down later overlapping ones.
 * Multiple overlapping non-flag waypoints will no longer show up brighter on the map.
+* Added option to let the editor remember tool selection information between different opened maps of the same type. This option is disabled by default.
+* Left-clicking on smudge no longer copies its properties into the tool, since left-click is needed to change smudge properties.
+* Removed "NoMetaFilesForSinglePlay" option, since the meta files are always 100% useless in single play, and instead added "ClassicProducesNoMetaFiles" to suppress the creation of such files for all maps in classic mode.
+* In old Red Alert maps which use Italy instead of Ukraine, The house settings for [Italy] will now be applied to Ukraine.

@@ -363,7 +363,7 @@ namespace MobiusEditor.Utility
             Color[] pal = currentlyLoadedPalette;
             if (shapeFrame.IsDummy)
             {
-                // Make gray colour semitransparent on dummy graphics.
+                // Make gray colours semitransparent on dummy graphics.
                 pal = new Color[currentlyLoadedPalette.Length];
                 Array.Copy(currentlyLoadedPalette, 0, pal, 0, pal.Length);
                 // EGA palette grayscale colours.
@@ -416,5 +416,26 @@ namespace MobiusEditor.Utility
             frameData.IsDummy = true;
             return frameData;
         }
+
+        #region IDisposable Support
+        private bool disposedValue = false;
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    this.Reset(GameType.None, null);
+                }
+                disposedValue = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+        }
+        #endregion
     }
 }

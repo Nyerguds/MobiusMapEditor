@@ -2157,10 +2157,11 @@ namespace MobiusEditor.Model
                     bool hasUnbuilt = powerWithUnbuilt.TryGetValue(house.Name, out housePwrAll);
                     if (hasUnbuilt)
                     {
+                        houseInfo.Append("With unbuilt: ");
                         int houseUsage = housePwrAll[0]; // PowerUsage;
                         int houseProd = housePwrAll[1]; // PowerProduction;
                         int houseProdHealthy = housePwrAll[2]; // PowerProduction when healthy;
-                        houseInfo.Append(houseProd < houseUsage ? "!!" : "OK").Append(" - ");
+                        houseInfo.Append(houseProd < houseUsage ? "[NOT OK]" : "OK").Append(" - ");
                         if (hasDamaged) houseInfo.Append("Has damaged power plants. ");
                         houseInfo.Append("Produces ").Append(houseProd);
                         if (hasDamaged)
@@ -2168,7 +2169,7 @@ namespace MobiusEditor.Model
                         houseInfo.Append(", uses ").Append(houseUsage).Append(".");
                         houseInfo.Append(" Without unbuilt: ");
                     }
-                    houseInfo.Append(houseProdBuilt < houseUsageBuilt ? "!!" : "OK").Append(" - ");
+                    houseInfo.Append(houseProdBuilt < houseUsageBuilt ? "[NOT OK]" : "OK").Append(" - ");
                     if (hasDamaged && !hasUnbuilt) houseInfo.Append("Has damaged power plants. ");
                     houseInfo.Append("Produces ").Append(houseProdBuilt);
                     if (hasDamaged)

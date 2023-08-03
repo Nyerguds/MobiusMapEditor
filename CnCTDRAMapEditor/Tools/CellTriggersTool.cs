@@ -64,7 +64,10 @@ namespace MobiusEditor.Tools
             {
                 if (value is string trig)
                 {
-                    this.triggerComboBox.SelectedItem = trig;
+                    if (this.triggerComboBox.Items.Contains(trig))
+                    {
+                        this.triggerComboBox.SelectedItem = trig;
+                    }
                 }
             }
         }
@@ -397,30 +400,29 @@ namespace MobiusEditor.Tools
 
         private void PickCellTrigger(Point location)
         {
-            if (map.Metrics.GetCell(location, out int cell))
+            CellTrigger cellTrigger = map.CellTriggers[location];
+            if (cellTrigger == null)
             {
-                var cellTrigger = map.CellTriggers[cell];
-                if (cellTrigger != null)
+                return;
+            }
+            String trigger = cellTrigger.Trigger;
+            triggerComboBox.SelectedItem = trigger;
+            if (!cellTrigBlobCenters.TryGetValue(trigger, out Rectangle[] locations))
+            {
+                return;
+            }
+            currentCellTrig = trigger;
+            currentObj = trigger;
+            currentCellTrigIndex = 0;
+            // If found, make sure clicking the "jump to next use" button
+            // will go to the blob after the currently clicked one.
+            for (Int32 i = 0; i < locations.Length; ++i)
+            {
+                Rectangle triggerLocation = locations[i];
+                if (triggerLocation.Contains(location))
                 {
-                    String trigger = cellTrigger.Trigger;
-                    triggerComboBox.SelectedItem = trigger;
-                    if (cellTrigBlobCenters.TryGetValue(trigger, out Rectangle[] locations))
-                    {
-                        currentCellTrig = trigger;
-                        currentObj = trigger;
-                        currentCellTrigIndex = 0;
-                        // If found, make sure clicking the "jump to next use" button
-                        // will go to the blob after the currently clicked one.
-                        for (Int32 i = 0; i < locations.Length; ++i)
-                        {
-                            Rectangle triggerLocation = locations[i];
-                            if (triggerLocation.Contains(location))
-                            {
-                                currentCellTrigIndex = i + 1;
-                                break;
-                            }
-                        }
-                    }
+                    currentCellTrigIndex = i + 1;
+                    break;
                 }
             }
         }

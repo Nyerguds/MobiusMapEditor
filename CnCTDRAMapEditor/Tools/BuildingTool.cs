@@ -46,7 +46,13 @@ namespace MobiusEditor.Tools
             {
                 if (value is Building bld)
                 {
-                    SelectedBuildingType = bld.Type;
+                    BuildingType bt = buildingTypeListBox.Types.Where(b => b is BuildingType blt && blt.ID == bld.Type.ID
+                        && String.Equals(blt.Name, bld.Type.Name, StringComparison.OrdinalIgnoreCase)).FirstOrDefault() as BuildingType;
+                    if (bt != null)
+                    {
+                        SelectedBuildingType= bt;
+                    }
+                    bld.Type = SelectedBuildingType;
                     mockBuilding.CloneDataFrom(bld);
                     RefreshPreviewPanel();
                 }
@@ -736,21 +742,19 @@ namespace MobiusEditor.Tools
 
         private void PickBuilding(Point location)
         {
-            if (map.Metrics.GetCell(location, out int cell))
+            if (!(map.Buildings[location] is Building building))
             {
-                if (map.Buildings[cell] is Building building)
-                {
-                    SelectedBuildingType = building.Type;
-                    mockBuilding.Strength = building.Strength;
-                    mockBuilding.Direction = building.Direction;
-                    mockBuilding.Trigger = building.Trigger;
-                    mockBuilding.BasePriority = building.BasePriority;
-                    mockBuilding.IsPrebuilt = building.IsPrebuilt;
-                    mockBuilding.House = building.House;
-                    mockBuilding.Sellable = building.Sellable;
-                    mockBuilding.Rebuild = building.Rebuild;
-                }
+                return;
             }
+            SelectedBuildingType = building.Type;
+            mockBuilding.Strength = building.Strength;
+            mockBuilding.Direction = building.Direction;
+            mockBuilding.Trigger = building.Trigger;
+            mockBuilding.BasePriority = building.BasePriority;
+            mockBuilding.IsPrebuilt = building.IsPrebuilt;
+            mockBuilding.House = building.House;
+            mockBuilding.Sellable = building.Sellable;
+            mockBuilding.Rebuild = building.Rebuild;
         }
 
         private void SelectBuilding(Point location)

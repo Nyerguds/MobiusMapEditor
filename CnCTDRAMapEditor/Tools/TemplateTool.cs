@@ -88,15 +88,27 @@ namespace MobiusEditor.Tools
             {
                 if (value is Template tem)
                 {
-                    SelectedTemplateType = tem.Type;
-                    if (tem.Icon < 0)
+                    TemplateType tt = null;
+                    foreach (ListViewItem item in templateTypeListView.Items)
+                    {
+                        if (item.Tag is TemplateType tmt && tmt.ID == tem.Type.ID && String.Equals(tmt.Name, tem.Type.Name, StringComparison.OrdinalIgnoreCase))
+                        {
+                            tt = tmt;
+                            break;
+                        }
+                    }
+                    if (tt != null)
+                    {
+                        SelectedTemplateType = tt;
+                    }
+                    if (tem.Icon < 0 || tt == null || tem.Icon >= tt.IconWidth * tt.IconHeight)
                     {
                         SelectedIcon = null;
                     }
                     else
                     {
                         Point p = new Point(tem.Icon % tem.Type.ThumbnailIconWidth, tem.Icon / tem.Type.ThumbnailIconWidth);
-                        SelectedIcon = p;
+                        SelectedIcon = tt.IconMask[p.Y, p.X] ? p : (Point?)null;
                     }
                 }
             }
@@ -1548,50 +1560,51 @@ namespace MobiusEditor.Tools
 
         public static TemplateType PickTemplate(Map map, Point location, bool wholeTemplate, out Point? selectedIcon)
         {
-            TemplateType picked = null;
             selectedIcon = null;
-            if (map.Metrics.GetCell(location, out int cell))
+            if (!map.Templates.Metrics.Contains(location))
             {
-                Template template = map.Templates[cell];
-                bool groupOwned = false;
-                if (template != null)
+                return null;
+            }
+            Template template = map.Templates[location];
+            TemplateType picked = null;
+            bool groupOwned = false;
+            if (template != null)
+            {
+                if ((template.Type.Flag & TemplateTypeFlag.IsGrouped) != TemplateTypeFlag.None && template.Type.GroupTiles.Length == 1)
                 {
-                    if ((template.Type.Flag & TemplateTypeFlag.IsGrouped) != TemplateTypeFlag.None && template.Type.GroupTiles.Length == 1)
-                    {
-                        groupOwned = true;
-                        string owningType = template.Type.GroupTiles[0];
-                        picked = map.TemplateTypes.Where(t => t.Name.Equals(owningType, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
-                    }
-                    else
-                    {
-                        picked = template.Type;
-                    }
+                    groupOwned = true;
+                    string owningType = template.Type.GroupTiles[0];
+                    picked = map.TemplateTypes.Where(t => t.Name.Equals(owningType, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
                 }
                 else
                 {
-                    picked = map.TemplateTypes.Where(t => t.Name.Equals("clear1", StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+                    picked = template.Type;
                 }
-                TemplateType selected = picked;
-                bool isRandom = selected.IsRandom && selected.NumIcons > 1;
-                if (!wholeTemplate && ((selected.IconWidth * selected.IconHeight) > 1 || isRandom))
+            }
+            else
+            {
+                picked = map.TemplateTypes.Where(t => t.Name.Equals("clear1", StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+            }
+            TemplateType selected = picked;
+            bool isRandom = selected.IsRandom && selected.NumIcons > 1;
+            if (!wholeTemplate && ((selected.IconWidth * selected.IconHeight) > 1 || isRandom))
+            {
+                int icon;
+                if (groupOwned)
                 {
-                    int icon;
-                    if (groupOwned)
-                    {
-                        string origType = template.Type.Name;
-                        icon = Enumerable.Range(0, selected.GroupTiles.Length).FirstOrDefault(i => origType.Equals(selected.GroupTiles[i], StringComparison.InvariantCultureIgnoreCase));
-                    }
-                    else
-                    {
-                        icon = template?.Icon ?? 0;
-                    }
-                    int width = selected.ThumbnailIconWidth;
-                    selectedIcon = new Point(icon % width, icon / width);
+                    string origType = template.Type.Name;
+                    icon = Enumerable.Range(0, selected.GroupTiles.Length).FirstOrDefault(i => origType.Equals(selected.GroupTiles[i], StringComparison.InvariantCultureIgnoreCase));
                 }
                 else
                 {
-                    selectedIcon = null;
+                    icon = template?.Icon ?? 0;
                 }
+                int width = selected.ThumbnailIconWidth;
+                selectedIcon = new Point(icon % width, icon / width);
+            }
+            else
+            {
+                selectedIcon = null;
             }
             return picked;
         }

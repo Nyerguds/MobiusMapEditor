@@ -50,7 +50,13 @@ namespace MobiusEditor.Tools
             {
                 if (value is Smudge sm)
                 {
-                    SelectedSmudgeType = sm.Type;
+                    SmudgeType st = smudgeTypeListBox.Types.Where(s => s is SmudgeType smt && smt.ID == sm.Type.ID
+                        && String.Equals(smt.Name, sm.Type.Name, StringComparison.OrdinalIgnoreCase)).FirstOrDefault() as SmudgeType;
+                    if (st != null)
+                    {
+                        SelectedSmudgeType = st;
+                    }
+                    sm.Type = SelectedSmudgeType;
                     mockSmudge.CloneDataFrom(sm);
                     RefreshPreviewPanel();
                 }
@@ -231,7 +237,7 @@ namespace MobiusEditor.Tools
                     RemoveSmudge(navigationWidget.MouseCell);
                 }
             }
-            else if ((e.Button == MouseButtons.Left) || (e.Button == MouseButtons.Right))
+            else if (e.Button == MouseButtons.Right)
             {
                 PickSmudge(navigationWidget.MouseCell);
             }
@@ -260,7 +266,7 @@ namespace MobiusEditor.Tools
                     mapPanel.Invalidate(map, new Rectangle(e.NewCell, selected.Size));
                 }
             }
-            else if ((e.MouseButtons == MouseButtons.Left) || (e.MouseButtons == MouseButtons.Right))
+            else if (e.MouseButtons == MouseButtons.Right)
             {
                 PickSmudge(e.NewCell);
             }
@@ -576,11 +582,7 @@ namespace MobiusEditor.Tools
 
         private void PickSmudge(Point location)
         {
-            if (!map.Metrics.GetCell(location, out int cell))
-            {
-                return;
-            }
-            var smudge = map.Smudge[cell];
+            var smudge = map.Smudge[location];
             if (smudge == null)
             {
                 return;
@@ -600,7 +602,7 @@ namespace MobiusEditor.Tools
             {
                 mockSmudge.Icon = 0;
                 SelectedSmudgeType = picked;
-                mockSmudge.Icon = Math.Min(smudge.Type.Icons - 1, picked.IsMultiCell ? 0 : smudge.Icon);
+                mockSmudge.Icon = Math.Min(picked.Icons - 1, picked.IsMultiCell ? 0 : smudge.Icon);
             }
         }
 
@@ -655,7 +657,7 @@ namespace MobiusEditor.Tools
             }
             else
             {
-                statusLbl.Text = "Shift to enter placement mode, Left-Click or Right-Click to pick smudge. Double-Click to update smudge properties.";
+                statusLbl.Text = "Shift to enter placement mode, Right-Click to pick smudge. Double-Click to update smudge properties.";
             }
         }
 

@@ -53,7 +53,12 @@ namespace MobiusEditor.Tools
             {
                 if (value is OverlayType ovt)
                 {
-                    SelectedWallType = ovt;
+                    OverlayType ot = wallTypeListBox.Types.Where(o => o is OverlayType ovlt && ovlt.ID == ovt.ID
+                        && String.Equals(ovlt.Name, ovt.Name, StringComparison.OrdinalIgnoreCase)).FirstOrDefault() as OverlayType;
+                    if (ot != null)
+                    {
+                        SelectedWallType = ot;
+                    }
                 }
             }
         }
@@ -351,13 +356,9 @@ namespace MobiusEditor.Tools
 
         private void PickWall(Point location)
         {
-            if (map.Metrics.GetCell(location, out int cell))
+            if (map.Overlay[location] is Overlay overlay && overlay.Type.IsWall)
             {
-                var overlay = map.Overlay[cell];
-                if ((overlay != null) && overlay.Type.IsWall)
-                {
-                    SelectedWallType = overlay.Type;
-                }
+                SelectedWallType = overlay.Type;
             }
         }
 

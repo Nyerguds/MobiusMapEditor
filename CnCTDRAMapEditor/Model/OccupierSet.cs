@@ -144,11 +144,11 @@ namespace MobiusEditor.Model
             OnCleared();
         }
 
-        public bool Contains(int x, int y) => (x >= 0) && (x < occupierCells.GetLength(1)) && (y >= 0) && (y < occupierCells.GetLength(0));
+        public bool Contains(int x, int y) => metrics.Contains(x, y);
 
-        public bool Contains(Point location) => Contains(location.X, location.Y);
+        public bool Contains(Point location) => metrics.Contains(location.X, location.Y);
 
-        public bool Contains(int cell) => metrics.GetLocation(cell, out Point location) && Contains(location);
+        public bool Contains(int cell) => metrics.GetLocation(cell, out Point location) && metrics.Contains(location);
 
         public bool Contains(T occupier) => occupiers.ContainsKey(occupier);
 

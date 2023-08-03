@@ -53,7 +53,12 @@ namespace MobiusEditor.Tools
             {
                 if (value is OverlayType ovt)
                 {
-                    SelectedOverlayType = ovt;
+                    OverlayType ot = overlayTypeListBox.Types.Where(o => o is OverlayType ovlt && ovlt.ID == ovt.ID
+                        && String.Equals(ovlt.Name, ovt.Name, StringComparison.OrdinalIgnoreCase)).FirstOrDefault() as OverlayType;
+                    if (ot != null)
+                    {
+                        SelectedOverlayType = ot;
+                    }
                 }
             }
         }
@@ -343,14 +348,10 @@ namespace MobiusEditor.Tools
 
         private void PickOverlay(Point location)
         {
-            if (map.Metrics.GetCell(location, out int cell))
+            Overlay overlay = map.Overlay[location];
+            if (overlay != null && overlay.Type.IsOverlay)
             {
-                Overlay overlay = map.Overlay[cell];
-                // Nyerguds fix: this should use the same filter as the list fill! Crashed on resources.
-                if ((overlay != null) && overlay.Type.IsOverlay)
-                {
-                    SelectedOverlayType = overlay.Type;
-                }
+                SelectedOverlayType = overlay.Type;
             }
         }
 

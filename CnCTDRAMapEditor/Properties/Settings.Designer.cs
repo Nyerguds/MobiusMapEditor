@@ -151,6 +151,15 @@ namespace MobiusEditor.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool RememberToolData {
+            get {
+                return ((bool)(this["RememberToolData"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("64, 0, 0, 255")]
         public global::System.Drawing.Color MapGridColor {
             get {
@@ -277,6 +286,15 @@ namespace MobiusEditor.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ClassicProducesNoMetaFiles {
+            get {
+                return ((bool)(this["ClassicProducesNoMetaFiles"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool ReportMissionDetection {
             get {
@@ -299,15 +317,6 @@ namespace MobiusEditor.Properties {
         public bool Ignore106Scripting {
             get {
                 return ((bool)(this["Ignore106Scripting"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool NoMetaFilesForSinglePlay {
-            get {
-                return ((bool)(this["NoMetaFilesForSinglePlay"]));
             }
         }
         

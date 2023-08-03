@@ -39,8 +39,6 @@ namespace MobiusEditor.Model
         SingleFrame    = (1 << 4),
         /// <summary>Does not adjust to house colors.</summary>
         NoRemap        = (1 << 5),
-        /// <summary>The graphics of this building's non-blocking cells are flat on the ground and will never overlap other objects.</summary>
-        Flat           = (1 << 6),
         /// <summary>Can show a gap area-of-effect radius indicator.</summary>
         IsGapGenerator = (1 << 7),
     }
@@ -115,10 +113,10 @@ namespace MobiusEditor.Model
         /// <summary>
         /// Indicates buildings that have pieces sticking out at the top that should not overlap the objects on these cells.
         /// </summary>
-        public bool IsFlat => (this.Flag & BuildingTypeFlag.Flat) == BuildingTypeFlag.Flat;
+        public int ZOrder { get; private set; }
         private string nameId;
 
-        public BuildingType(sbyte id, string name, string textId, int powerProd, int powerUse, int storage, int width, int height, string occupyMask, string ownerHouse, TheaterType[] theaters, string factoryOverlay, int frameOffset, String graphicsSource, BuildingTypeFlag flag)
+        public BuildingType(sbyte id, string name, string textId, int powerProd, int powerUse, int storage, int width, int height, string occupyMask, string ownerHouse, TheaterType[] theaters, string factoryOverlay, int frameOffset, String graphicsSource, BuildingTypeFlag flag, int zOrder)
         {
             this.ID = id;
             this.Flag = flag;
@@ -134,12 +132,28 @@ namespace MobiusEditor.Model
             this.OwnerHouse = ownerHouse;
             this.Theaters = theaters;
             this.FactoryOverlay = factoryOverlay;
+            this.ZOrder = zOrder;
             // Check on width and disable if needed. This also calls RecalculateBibs.
             this.HasBib = this.HasBib;
         }
 
+        public BuildingType(sbyte id, string name, string textId, int powerProd, int powerUse, int storage, int width, int height, string occupyMask, string ownerHouse, TheaterType[] theaters, string factoryOverlay, int frameOffset, String graphicsSource, BuildingTypeFlag flag)
+            : this(id, name, textId, powerProd, powerUse, storage, width, height, occupyMask, ownerHouse, theaters, factoryOverlay, frameOffset, graphicsSource, flag, 10)
+        {
+        }
+
         public BuildingType(sbyte id, string name, string textId, int powerProd, int powerUse, int width, int height, string occupyMask, string ownerHouse, TheaterType[] theaters, String graphicsSource, BuildingTypeFlag flag)
             : this(id, name, textId, powerProd, powerUse, 0, width, height, occupyMask, ownerHouse, theaters, null, 0, graphicsSource, flag)
+        {
+        }
+
+        public BuildingType(sbyte id, string name, string textId, int powerProd, int powerUse, int width, int height, string occupyMask, string ownerHouse, TheaterType[] theaters, int zOrder)
+            : this(id, name, textId, powerProd, powerUse, 0, width, height, occupyMask, ownerHouse, theaters, null, 0, null, BuildingTypeFlag.None, zOrder)
+        {
+        }
+
+        public BuildingType(sbyte id, string name, string textId, int powerProd, int powerUse, int width, int height, string occupyMask, string ownerHouse, TheaterType[] theaters, BuildingTypeFlag flag, int zOrder)
+            : this(id, name, textId, powerProd, powerUse, 0, width, height, occupyMask, ownerHouse, theaters, null, 0, null, flag, zOrder)
         {
         }
 
@@ -175,6 +189,16 @@ namespace MobiusEditor.Model
 
         public BuildingType(sbyte id, string name, string textId, int powerProd, int powerUse, int storage, int width, int height, string occupyMask, string ownerHouse, BuildingTypeFlag flag)
             : this(id, name, textId, powerProd, powerUse, storage, width, height, occupyMask, ownerHouse, null, null, 0, null, flag)
+        {
+        }
+
+        public BuildingType(sbyte id, string name, string textId, int powerProd, int powerUse, int width, int height, string occupyMask, string ownerHouse, int zOrder)
+            : this(id, name, textId, powerProd, powerUse, 0, width, height, occupyMask, ownerHouse, null, null, 0, null, BuildingTypeFlag.None, zOrder)
+        {
+        }
+
+        public BuildingType(sbyte id, string name, string textId, int powerProd, int powerUse, int width, int height, string occupyMask, string ownerHouse, BuildingTypeFlag flag, int zOrder)
+            : this(id, name, textId, powerProd, powerUse, 0, width, height, occupyMask, ownerHouse, null, null, 0, null, flag, zOrder)
         {
         }
 
@@ -230,7 +254,7 @@ namespace MobiusEditor.Model
                 theaters = new TheaterType[thLen];
                 Array.Copy(this.Theaters, theaters, thLen);
             }
-            BuildingType newBld = new BuildingType(this.ID, this.Name, this.nameId, this.PowerProduction, this.PowerUsage, this.Storage, baseMaskX, baseMaskY, occupyMask, this.OwnerHouse, theaters, this.FactoryOverlay, this.FrameOFfset, this.GraphicsSource, this.Flag);
+            BuildingType newBld = new BuildingType(this.ID, this.Name, this.nameId, this.PowerProduction, this.PowerUsage, this.Storage, baseMaskX, baseMaskY, occupyMask, this.OwnerHouse, theaters, this.FactoryOverlay, this.FrameOFfset, this.GraphicsSource, this.Flag, this.ZOrder);
             return newBld;
         }
 

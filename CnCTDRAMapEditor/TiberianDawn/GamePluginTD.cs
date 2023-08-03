@@ -2079,7 +2079,7 @@ namespace MobiusEditor.TiberianDawn
                         }
                     }
                     // None of this junk for Sole Survivor.
-                    if (!forSole && (!Map.BasicSection.SoloMission || !Globals.NoMetaFilesForSinglePlay))
+                    if (!forSole && !Map.BasicSection.SoloMission && (!Globals.UseClassicFiles || !Globals.ClassicProducesNoMetaFiles))
                     {
                         string tgaPath = Path.ChangeExtension(path, ".tga");
                         string jsonPath = Path.ChangeExtension(path, ".json");

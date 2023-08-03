@@ -50,6 +50,7 @@ namespace MobiusEditor.Utility
 
     /// <summary>
     /// This class contains the code for loading classic sprite formats; TD/RA SHP, Dune II SHP, TD Template, RA Template, and CPS.
+    /// Most of this code was originally written for the Engie File Converter tool.
     /// </summary>
     public static class ClassicSpriteLoader
     {

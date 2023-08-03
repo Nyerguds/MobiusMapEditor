@@ -44,6 +44,9 @@
     <Setting Name="ZoomToBoundsOnLoad" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>
+    <Setting Name="RememberToolData" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
     <Setting Name="MapGridColor" Type="System.Drawing.Color" Scope="Application">
       <Value Profile="(Default)">64, 0, 0, 255</Value>
     </Setting>
@@ -86,6 +89,9 @@
     <Setting Name="ClassicIgnoresRemasterPaths" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>
+    <Setting Name="ClassicProducesNoMetaFiles" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
     <Setting Name="ReportMissionDetection" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>
@@ -93,9 +99,6 @@
       <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="Ignore106Scripting" Type="System.Boolean" Scope="Application">
-      <Value Profile="(Default)">True</Value>
-    </Setting>
-    <Setting Name="NoMetaFilesForSinglePlay" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="ConvertRaObsoleteClear" Type="System.Boolean" Scope="Application">

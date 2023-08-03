@@ -229,6 +229,16 @@ namespace MobiusEditor.Utility
             return clone;
         }
 
+        public INISection CloneAs(string newName)
+        {
+            INISection clone = new INISection(newName);
+            foreach (KeyValuePair<string, string> item in Keys)
+            {
+                clone[item.Key] = item.Value;
+            }
+            return clone;
+        }
+
         public void Clear()
         {
             Keys.Clear();
@@ -286,6 +296,19 @@ namespace MobiusEditor.Utility
             {
                 return false;
             }
+            Sections[section.Name] = section;
+            return true;
+        }
+
+        public bool Rename(string sectionName, string newSectionName)
+        {
+            INISection section = this[sectionName];
+            if (section == null || Sections.Contains(newSectionName))
+            {
+                return false;
+            }
+            Sections.Remove(sectionName);
+            section = section.CloneAs(newSectionName);
             Sections[section.Name] = section;
             return true;
         }
