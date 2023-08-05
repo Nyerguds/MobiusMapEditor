@@ -545,7 +545,7 @@ Released on 12 Jul 2023 at 08:28 GMT
 
 ### v1.5.0.2:
 
-Unreleased
+Released on 05 Aug 2023 at 13:50 GMT
 
 * The Cell Trigger tool's "jump to" function will now also jump to placed objects with the attached trigger, to easily review what uses it.
 * The "jump to" function in Waypoints and Cell Triggers will now properly update the mouse cell info in the bottom bar.
