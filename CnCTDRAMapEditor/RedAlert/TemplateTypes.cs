@@ -49,6 +49,7 @@ namespace MobiusEditor.RedAlert
         private static readonly string[] WallCornerSouthEastExt = new[] { "wall0036", "wall0038" };
         private static readonly string[] WallTSouthInt = new[] { "wall0043", "wall0045" };
         private static readonly string[] WallTSouthExt = new[] { "wall0044", "wall0046" };
+        private static readonly string[] WallTNorthInt = new[] { "wall0047", "wall0048" };
 
         public static readonly TemplateType Clear = new TemplateType(0, "clear1", 1, 1, new[] { TheaterTypes.Temperate, TheaterTypes.Snow, TheaterTypes.Interior }, null, TemplateTypeFlag.Clear);
         public static readonly TemplateType Water = new TemplateType(1, "w1", 1, 1, new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, null);
@@ -431,8 +432,8 @@ namespace MobiusEditor.RedAlert
         public static readonly TemplateType Wall0044 = new TemplateType(372, "wall0044", 3, 2, new[] { TheaterTypes.Interior }, null, "010 111", WallTSouthExt);
         public static readonly TemplateType Wall0045 = new TemplateType(373, "wall0045", 3, 2, new[] { TheaterTypes.Interior }, null, "010 111", WallTSouthInt);
         public static readonly TemplateType Wall0046 = new TemplateType(374, "wall0046", 3, 2, new[] { TheaterTypes.Interior }, null, "010 111", WallTSouthExt);
-        public static readonly TemplateType Wall0047 = new TemplateType(375, "wall0047", 3, 2, new[] { TheaterTypes.Interior }, null, "111 010");
-        public static readonly TemplateType Wall0048 = new TemplateType(376, "wall0048", 3, 2, new[] { TheaterTypes.Interior }, null, "111 010");
+        public static readonly TemplateType Wall0047 = new TemplateType(375, "wall0047", 3, 2, new[] { TheaterTypes.Interior }, null, "111 010", WallTNorthInt);
+        public static readonly TemplateType Wall0048 = new TemplateType(376, "wall0048", 3, 2, new[] { TheaterTypes.Interior }, null, "111 010", WallTNorthInt);
         public static readonly TemplateType Wall0049 = new TemplateType(377, "wall0049", 3, 3, new[] { TheaterTypes.Interior }, null, "010 111 010");
         public static readonly TemplateType Bridge1h = new TemplateType(378, "bridge1h", 5, 3, new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, null, new[] {"01111 11111 00111", "01111 11111 00100"});
         public static readonly TemplateType Bridge2h = new TemplateType(379, "bridge2h", 5, 2, new[] { TheaterTypes.Temperate, TheaterTypes.Snow }, null, "11110 11111");

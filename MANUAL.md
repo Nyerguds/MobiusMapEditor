@@ -86,7 +86,7 @@ The editor has two kinds of settings; global settings used on every run, and mod
 
 **%localappdata%\Nyerguds\**
 
-This should make you end up in the "AppData\Local\Nyerguds" folder under your Windows user folder. Removing this folder will clear all user settings.
+This should make you end up in the "AppData\Local\Nyerguds" folder under your Windows user folder. Removing this folder will clear all of the editor's user settings.
 
 ## Configuration
 
@@ -100,15 +100,21 @@ This option will not only use the classic graphics, but will also load the class
 
 By default, these files are loaded from a "Classic" folder which is supplied along with the editor. The exact paths can be tweaked in the **ClassicPathTD/RA/SS** settings (see "Editor fine tuning" below). For the exact expected contents of the folders, see the "Classic files listing" section.
 
+### DPI awareness fix
+
+* **EnableDpiAwareness**: Enable DPI awareness mode.
+
+On some machines with high dpi monitors, people might have odd issues where the positioning of the indicators on the map doesn't correctly match the map tiles. If this happens, enabling this option might fix the problem.
+
 ### Mods:
 
 * **ModsToLoadTD** / **ModsToLoadRA** / **ModsToLoadSS**: semicolon (or comma) separated list of mod entries for each supported game.
 
 A mod entry can either be a Steam workshop ID, or a folder name. The paths will initially be looked up in the mods folder of the respective game in the CnCRemastered\mods\ folder under your Documents folder, but the loading system will also check the Steam workshop files for a matching mod. Sole Survivor will use Tiberian Dawn mods. Note that mods can only apply graphical changes from the tileset and house color xml files; the editor can't read any data from compiled dll files. This mods system is mostly meant to apply graphical fixes to the editor.
 
-The **ModsToLoadTD** and **ModsToLoadSS** settings will have the `GraphicsFixesTD` mod set by default, to complete the incomplete TD Remastered graphics set, meaning the mod will automatically be loaded if found. Similarly, the **ModsToLoadRA**  setting will have the `GraphicsFixesRA` mod set. Note that the editor has no way to check whether mods are enabled in the game, so that makes no difference.
+The **ModsToLoadTD** and **ModsToLoadSS** settings will have the `GraphicsFixesTD` mod set by default, to complete the incomplete TD Remastered graphics set, meaning the mod will automatically be loaded if found. Similarly, the **ModsToLoadRA** setting will have the `GraphicsFixesRA` mod set. Note that the editor has no way to check whether mods are enabled in the game, so that makes no difference.
 
-You can find them on the Steam workshop ([GraphicsFixesTD](https://steamcommunity.com/sharedfiles/filedetails/?id=2844969675), [GraphicsFixesRA](https://steamcommunity.com/sharedfiles/filedetails/?id=2978875641)) and on ModDB ([GraphicsFixesTD](https://www.moddb.com/games/command-conquer-remastered/addons/graphicsfixestd), [GraphicsFixesRA](https://www.moddb.com/games/cc-red-alert-remastered/addons/graphicsfixesra)).
+You can find these mods on the Steam workshop ([GraphicsFixesTD](https://steamcommunity.com/sharedfiles/filedetails/?id=2844969675), [GraphicsFixesRA](https://steamcommunity.com/sharedfiles/filedetails/?id=2978875641)) and on ModDB ([GraphicsFixesTD](https://www.moddb.com/games/command-conquer-remastered/addons/graphicsfixestd), [GraphicsFixesRA](https://www.moddb.com/games/cc-red-alert-remastered/addons/graphicsfixesra)).
 
 In classic graphics mode, the editor can still use mods, if they contain classic files in a "ccdata" folder. The 'GraphicsFixesRA' mod has such a classic component, to fix the classic graphics of Einstein and the ant buildings.
 
@@ -126,6 +132,7 @@ In classic graphics mode, the editor can still use mods, if they contain classic
 ### Editor fine tuning:
 
 * **ZoomToBoundsOnLoad**: Defaults to True. When enabled, causes the editor to zoom in to the map bounds when loading an existing map.
+* **RememberToolData**: Defaults to False. When enabled, the item selections and options on the tool windows will be remembered when opening a different or new map for the same game.
 * **MapGridColor**: Color for drawing the map grid, as "A,R,G,B". This includes the alpha value, because the grid is semitransparent by default.
 * **MapBackColor**: Background color for the map screen, as "R,G,B". This defaults to dark grey, so users can see the actual map outline on Red Alert Interior maps.
 * **MapScale**: Scaling multiplier for the size at which assets are rendered on the map. Scaling down the rendered map size will make the UI more responsive. Negative values will enable smooth scaling, which gives nicer graphics but will make the UI noticeable _less_ responsive. Defaults to 0.5.
@@ -136,17 +143,17 @@ In classic graphics mode, the editor can still use mods, if they contain classic
 * **MaxMapTileTextureSize**: Maximum for the size of the tiles shown on the Map tool. Leave on 0 to disable.
 * **UndoRedoStackSize**: The amount of undo/redo actions stored in memory. Defaults to 100.
 * **MinimumClampSize**: Minimum size of the tool window that will automatically be forced to remain in the screen area. If set to 0,0, this will default to the size of the entire tool window.
-* **ClassicPathTD** / **ClassicPathRA** / **ClassicPathSS**: Path to load the classic files from for each of the game types. If the directory entered in this cannot be found, this reverts to predefined subfolders of the editor's location; "Classic\TD" for Tiberian Dawn and Sole Survivor, and "Classic\RA" for Red Alert.
-* **ClassicIgnoresRemasterPaths**: Defaults to True. When enabled, switching the editor to classic mode will make it stop using the Remaster's specific folders under Documents, and default to the program folder instead.
+* **ClassicPathTD** / **ClassicPathRA** / **ClassicPathSS**: Path to load the classic files from for each of the game types when running in Classic Files mode. If the directory entered in this cannot be found, this reverts to predefined subfolders under the editor's location; "Classic\TD" for Tiberian Dawn and Sole Survivor, and "Classic\RA" for Red Alert. If the data is not present at the given location, the editor will refuse to launch.
+* **ClassicIgnoresRemasterPaths**: Defaults to True. When enabled, switching the editor to Classic Files mode will make it stop using the Remaster's specific folders under Documents, and default to the program folder instead.
+* **ClassicProducesNoMetaFiles**: Defaults to False. Suppresses the creation of xml and thumbnail files when in Classic Files mode.
 
 ### Editor behavior tweaks:
 
 These options are all enabled by default, but can be disabled if you wish. Use these at your own risk.
 
-* **ReportMissionDetection**: When detecting that a file is a classic single player mission file because it matches the classic "SCG01EA"-like name pattern and contains win and lose scripts, a note about it is shown in the mission load analysis. When disabled, this note will not cause the errors popup to be shown if it is the only remark in the list.
+* **ReportMissionDetection**: When detecting that a file is a classic single player mission file because it matches the classic "SCG01EA"-like name pattern and contains win and lose scripts, a note about it is shown in the mission load analysis. When disabled, this will only be shown if it is not the only remark in the list.
 * **EnforceObjectMaximums**: Don't allow saving a map if any of the the object amounts exceed the normal internal maximums of the game. Can be disabled in case a mission is specifically meant to be played on a modded game that increases these limits.
 * **Ignore106Scripting**: Don't support the extended scripting added by the C&C95 v1.06 patch. If this option is disabled, additional triggers named UUUU, VVVV and WWWW can also be destroyed with "Dstry Trig" actions.
-* **NoMetaFilesForSinglePlay**: Suppresses the generation of .tga and .json files for single player maps saved to disc, since they are useless clutter and unused by the game. This does not affect Steam uploads. Note that json files for single player maps will now only contain the Home waypoint.
 * **ConvertRaObsoleteClear**: Automatically clear tiles with ID 255 on RA Temperate/Snow maps, or on Interior maps if more than 80% of the area outside the map bounds is filled with it, to fix the fact old versions of RA saved that as Clear terrain. This can be disabled to research changes on old maps.
 * **BlockingBibs**: Bibs block the placement of other structures. Note that if you disable this, you should be careful not to block the build plan of rebuildable AI structures. Also, the games might have issues with walls overlaying building bibs.
 * **DisableAirUnits**: Air unit reading from maps was a disabled feature in the original games. Even though the Remaster re-enabled this, it is buggy and unpredictable, so the editor disables air units by default. Air units put on maps will not appear on the specified cell; they will spawn in the air above it, will either fly off the map or find a nearby building of their House to land at, and (in TD) will usually leave behind an impassable cell on the map under the place where they spawned.
@@ -160,7 +167,7 @@ These options are all enabled by default, but can be disabled if you wish. Use t
 
 ## Classic files listing:
 
-The following files can be read from the configured classic data folders, for running the editor in classic mode. They can also be loaded from mod folders. They will be loaded in the listed order, over all available sources. The basic rule in the game is that the first-loaded files have priority, so this also shows which archives can override the contents of which other archives.
+The following files can be read from the configured classic data folders, for running the editor in classic mode. They can also be loaded from mod folders. They will be loaded in the listed order, from any available sources. The basic rule in the game is that each file name can only be loaded once, and the first-loaded files have priority, so this also shows which archives can override the contents of which other archives.
 
 Files marked with <sup>(*)</sup> are required, though they may not be visible inside the folder if they are embedded inside another archive.
 
@@ -168,9 +175,11 @@ Files marked with <sup>(1)</sup> (the sc*.mix archives) are add-ons. Anything ma
 
 Files marked with <sup>(2)</sup> (RA only) can be embedded inside the ''redalert.mix'' or ''main.mix'' archive.
 
+Note that there is no support for running the editor for one specific game only, while not having the files for the other game(s) available. All data needs to be present to make the editor start up.
+
 ### Tiberian Dawn and Sole Survivor
 
-These are read from the "Classic\TD" subfolder by default.
+These are read from the "Classic\TD" subfolder by default. Note that the editor has not been specifically tested on an actual Sole Survivor folder.
 
 * cclocal.mix (or local.mix) <sup>(*)</sup>
 * sc*.mix <sup>(1)</sup>
@@ -183,7 +192,7 @@ These are read from the "Classic\TD" subfolder by default.
 
 These are read from the "Classic\RA" subfolder by default.
 
-* expand2.mix <sup>(*)</sup>
+* expand2.mix
 * expand.mix
 * redalert.mix
 * main.mix
@@ -192,11 +201,11 @@ These are read from the "Classic\RA" subfolder by default.
 * general.mix <sup>(2)</sup>
 * conquer.mix <sup>(*)</sup> <sup>(2)</sup>
 * lores.mix <sup>(*)</sup> <sup>(2)</sup>
-* lores1.mix <sup>(*)</sup> <sup>(2)</sup>
+* lores1.mix <sup>(2)</sup>
 * interior.mix <sup>(*)</sup> <sup>(2)</sup>
 * snow.mix <sup>(*)</sup> <sup>(2)</sup>
 * temperat.mix <sup>(*)</sup> <sup>(2)</sup>
 
-There is no support for running Red Alert from files that don't include the expansions data. If such a setup would be attempted (e.g. for research purposes, using the beta 0.09c files), the files **expand2.mix** and **lores1.mix** will need to be added before the editor will accept the folder.
+The ''hires.mix'' and ''hires1.mix'' archives are not used; like the RA Remaster, the editor uses the DOS versions of the infantry.
 
-There is also no support for running the editor for one specific game while not having the files for the other game(s) available. All data needs to be present to make the editor start up.
+The expansions data is not strictly required. If given a folder whithout those files, dummy graphics will be shown for the missing objects.

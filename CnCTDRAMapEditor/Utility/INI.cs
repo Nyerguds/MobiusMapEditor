@@ -221,12 +221,7 @@ namespace MobiusEditor.Utility
 
         public INISection Clone()
         {
-            INISection clone = new INISection(this.Name);
-            foreach (KeyValuePair<string, string> item in Keys)
-            {
-                clone[item.Key] = item.Value;
-            }
-            return clone;
+            return CloneAs(this.Name);
         }
 
         public INISection CloneAs(string newName)

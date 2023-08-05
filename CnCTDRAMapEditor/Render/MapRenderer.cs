@@ -718,10 +718,10 @@ namespace MobiusEditor.Render
             Int32 icon = HumanShape[Facing32[infantry.Direction.ID]];
             ITeamColor teamColor = infantry.Type.CanRemap ? Globals.TheTeamColorManager[infantry.House?.UnitTeamColor] : null;
             Tile tile = null;
-            // RA classic infantry remap support.
             bool success;
-            if (infantry.Type.ClassicGraphicsSource != null && Globals.TheTilesetManager is TilesetManagerClassic tsmc)
+            if (Globals.UseClassicFiles && infantry.Type.ClassicGraphicsSource != null && Globals.TheTilesetManager is TilesetManagerClassic tsmc)
             {
+                // RA classic infantry remap support.
                 success = tsmc.GetTeamColorTileData(infantry.Type.Name, icon, teamColor, out tile, true, false, infantry.Type.ClassicGraphicsSource, infantry.Type.ClassicGraphicsRemap);
             }
             else
