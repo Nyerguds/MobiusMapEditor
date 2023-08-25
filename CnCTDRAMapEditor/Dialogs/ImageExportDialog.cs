@@ -99,8 +99,9 @@ namespace MobiusEditor.Dialogs
             int len = names.Length;
             for (int i = 0; i < len; ++i)
             {
-                // Special rules per game. These should be kept identical to those in MainForm.EnableDisableMenuItems
+                // Get layer flag from index. This only works if the flags are incremental bit flags without gaps.
                 MapLayerFlag mlf = (MapLayerFlag)(1 << i);
+                // Special rules per game. These should be kept identical to those in MainForm.EnableDisableMenuItems
                 if (gamePlugin.GameType != GameType.RedAlert && mlf == MapLayerFlag.BuildingFakes
                  || gamePlugin.GameType != GameType.RedAlert && mlf == MapLayerFlag.EffectRadius
                  || gamePlugin.GameType == GameType.SoleSurvivor && mlf == MapLayerFlag.Buildings && Globals.NoOwnedObjectsInSole
@@ -114,7 +115,7 @@ namespace MobiusEditor.Dialogs
                 }
                 ListItem<MapLayerFlag> mli = new ListItem<MapLayerFlag>(mlf, names[i]);
                 int index;
-                if ((MapLayerFlag.MapLayers & mlf) != MapLayerFlag.None || mlf == MapLayerFlag.Template)
+                if ((MapLayerFlag.MapLayers & mlf) != MapLayerFlag.None)
                 {
                     index = layersListBox.Items.Add(mli);
                     if ((layers & mlf) != MapLayerFlag.None)

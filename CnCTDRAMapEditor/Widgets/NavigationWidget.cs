@@ -91,6 +91,10 @@ namespace MobiusEditor.Widgets
 
         public CellMetrics Metrics { get; private set; }
 
+        /// <summary>
+        /// Retrieves the currently visible bounds of the map, rounded down at the lower bounds and rounded up at the higher bounds.
+        /// This is used for optimising the refreshing of map indicators, so they only get painted if visible in the currently shown area.
+        /// </summary>
         public Rectangle VisibleBounds
         {
             get
@@ -154,7 +158,7 @@ namespace MobiusEditor.Widgets
             OnMouseMove(mapPanel.PointToClient(Control.MousePosition));
         }
 
-        private bool IsDragging()
+        public bool IsDragging()
         {
             return includeNavigation && ((Control.MouseButtons & MouseButtons.Middle) != MouseButtons.None || (GetAsyncKeyState(32) & 0x8000) != 0);
         }
@@ -164,7 +168,10 @@ namespace MobiusEditor.Widgets
             startScrollMouseLocation = null;
             startScrollFromLocation = null;
             if (mapPanel != null)
+            {
                 mapPanel.Cursor = currentCursor;
+                mapPanel.SuspendMouseZoom = false;
+            }
         }
 
         private bool CheckIfDragging()
@@ -175,6 +182,7 @@ namespace MobiusEditor.Widgets
                 DisableDragging();
                 return false;
             }
+            mapPanel.SuspendMouseZoom = true;
             if (isDragging && !startScrollMouseLocation.HasValue)
             {
                 startScrollMouseLocation = mapPanel.PointToClient(Control.MousePosition);

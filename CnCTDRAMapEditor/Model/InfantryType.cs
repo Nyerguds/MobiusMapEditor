@@ -22,7 +22,7 @@ namespace MobiusEditor.Model
 {
     public class InfantryType : ITechnoType
     {
-        public sbyte ID { get; private set; }
+        public int ID { get; private set; }
         public string Name { get; private set; }
         public string DisplayName { get; private set; }
         public string OwnerHouse { get; private set; }
@@ -39,7 +39,7 @@ namespace MobiusEditor.Model
         public Bitmap Thumbnail { get; set; }
         private string nameId;
 
-        public InfantryType(sbyte id, string name, string textId, string ownerHouse, string remappedFrom, byte[] remapTable, UnitTypeFlag flags)
+        public InfantryType(int id, string name, string textId, string ownerHouse, string remappedFrom, byte[] remapTable, UnitTypeFlag flags)
         {
             this.ID = id;
             this.Name = name;
@@ -50,11 +50,11 @@ namespace MobiusEditor.Model
             this.ClassicGraphicsRemap = remapTable;
         }
 
-        public InfantryType(sbyte id, string name, string textId, string ownerHouse, UnitTypeFlag flags)
+        public InfantryType(int id, string name, string textId, string ownerHouse, UnitTypeFlag flags)
             : this(id, name, textId, ownerHouse, null, null, flags)
         {
         }
-        public InfantryType(sbyte id, string name, string textId, string ownerHouse)
+        public InfantryType(int id, string name, string textId, string ownerHouse)
         : this(id, name, textId, ownerHouse, null, null, UnitTypeFlag.None)
         {
         }
@@ -65,9 +65,17 @@ namespace MobiusEditor.Model
             {
                 return this == obj;
             }
-            else if (obj is sbyte)
+            else if (obj is sbyte sb)
             {
-                return this.ID == (sbyte)obj;
+                return this.ID == sb;
+            }
+            else if (obj is byte b)
+            {
+                return this.ID == b;
+            }
+            else if (obj is int i)
+            {
+                return this.ID == i;
             }
             else if (obj is string)
             {

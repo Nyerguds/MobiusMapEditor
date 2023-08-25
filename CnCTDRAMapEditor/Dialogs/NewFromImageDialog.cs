@@ -228,22 +228,26 @@ namespace MobiusEditor.Dialogs
                 }
             }
             picZoom.Image = finalImage;
-
             Regex CategoryRegex = new Regex(@"^([a-z]*)", RegexOptions.Compiled);
             string templateCategory(TemplateType template)
             {
-                var m = CategoryRegex.Match(template.Name);
+                Match m = CategoryRegex.Match(template.Name);
                 return m.Success ? m.Groups[1].Value : string.Empty;
+            }
+            TheaterType theater = plugin.Map.Theater;
+            TemplateType clear = plugin.Map.TemplateTypes.Where(t => (t.Flag & TemplateTypeFlag.Clear) == TemplateTypeFlag.Clear).FirstOrDefault();
+            if (clear.Thumbnail == null || !clear.Initialised)
+            {
+                // Clear should ALWAYS be initialised and available, even if missing.
+                clear.Init(plugin.GameType, plugin.Map.Theater, true, false);
             }
             ExplorerComparer expl = new ExplorerComparer();
             var templateTypes = plugin.Map.TemplateTypes
-                .Where(t => t.Thumbnail != null
-                    && t.Theaters.Contains(plugin.Map.Theater)
+                .Where(t => t.Initialised && t.Thumbnail != null
                     && (t.Flag & TemplateTypeFlag.Clear) == TemplateTypeFlag.None
                     && (t.Flag & TemplateTypeFlag.IsGrouped) == TemplateTypeFlag.None)
                 .OrderBy(t => t.Name, expl)
                 .GroupBy(t => templateCategory(t)).OrderBy(g => g.Key, expl);
-            TemplateType clear = plugin.Map.TemplateTypes.Where(t => (t.Flag & TemplateTypeFlag.Clear) == TemplateTypeFlag.Clear).FirstOrDefault();
             lstTemplates.Items.Add(clear.Name);
             // Not sure if the grouping makes the order different, but I'll keep it like in the actual tool.
             foreach (IGrouping<String, TemplateType> group in templateTypes)
@@ -363,6 +367,10 @@ namespace MobiusEditor.Dialogs
                 templateTypeNavigationWidget = null;
             }
             TemplateType selected = SelectedTemplate;
+            if (selected == null)
+            {
+                selected = plugin.Map.TemplateTypes.FirstOrDefault(t => (t.Flag & TemplateTypeFlag.Clear) == TemplateTypeFlag.Clear);
+            }
             if (selected != null && selected.Thumbnail != null && SelectedColor.HasValue)
             {
                 templateTypeMapPanel.MapImage = selected.Thumbnail;

@@ -74,10 +74,11 @@ namespace MobiusEditor.Interface
         bool GetTileData(string name, int shape, out Tile tile);
 
         /// <summary>
-        /// Gets the total amount of shapes available for the requested tile.
+        /// Gets the total amount of shapes available for the requested tile, or -1 if no tileset information was found.
         /// </summary>
         /// <param name="name">Name of the tile to fetch.</param>
         /// <returns>The total amount of shapes available for the requested tile.</returns>
+        /// <remarks>For the Remaster, this is based on xml info. In the classic files, this simply looks at the actual sprite file.</remarks>
         int GetTileDataLength(string name);
     }
 }

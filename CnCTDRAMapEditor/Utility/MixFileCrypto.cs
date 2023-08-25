@@ -3,6 +3,7 @@
 //
 using System;
 using System.IO;
+using System.Linq;
 using System.Numerics;
 
 namespace MobiusEditor.Utility
@@ -39,7 +40,7 @@ namespace MobiusEditor.Utility
             int remainingLength = encryptedBlowfishKey.Length;
             for (int i = 0; i < SIZE_OF_ENCRYPTED_KEY; i += SIZE_OF_RSA_KEY)
             {
-                Byte[] part = new byte[SIZE_OF_RSA_KEY];
+                byte[] part = new byte[SIZE_OF_RSA_KEY];
                 Array.Copy(encryptedBlowfishKey, i, part, 0, Math.Min(remainingLength, SIZE_OF_RSA_KEY));
                 remainingLength -= SIZE_OF_RSA_KEY;
                 // Perform RSA decryption on 40 byte chunks.
@@ -49,9 +50,10 @@ namespace MobiusEditor.Utility
                 int l = decrypted.Length;
                 while (decrypted[--l] == 0) { }
 
-                // Fill output key.
-                Array.ConstrainedCopy(decrypted, 0, decryptedBlowfishKey, j, l + 1);
-                j += l + 1;
+                // Fill output key. Seems this always needs to be 39 or lower.
+                int toWrite = new[] { 39, decryptedBlowfishKey.Length - j, l + 1 }.Min();
+                Array.ConstrainedCopy(decrypted, 0, decryptedBlowfishKey, j, toWrite);
+                j += toWrite;
             }
             return decryptedBlowfishKey;
         }

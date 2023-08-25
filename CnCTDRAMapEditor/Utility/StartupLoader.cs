@@ -1,4 +1,5 @@
 ﻿using MobiusEditor.Interface;
+using MobiusEditor.Model;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -189,6 +190,7 @@ namespace MobiusEditor.Utility
             // Classic main.mix and theater files, for rules reading and template land type detection in RA.
             List<string> loadErrors = new List<string>();
             List<string> fileLoadErrors = new List<string>();
+            InitClassicFilesTdSs(mfm.ClassicFileManager, true, loadErrors, fileLoadErrors, true);
             InitClassicFilesRa(mfm.ClassicFileManager, loadErrors, fileLoadErrors, true);
             if (loadErrors.Count > 0)
             {
@@ -274,7 +276,7 @@ namespace MobiusEditor.Utility
             MixfileManager mfm = new MixfileManager(applicationPath, gameFolders, modpaths);
             List<string> loadErrors = new List<string>();
             List<string> fileLoadErrors = new List<string>();
-            InitClassicFilesTdSs(mfm, tdSsEqual, loadErrors, fileLoadErrors);
+            InitClassicFilesTdSs(mfm, tdSsEqual, loadErrors, fileLoadErrors, false);
             InitClassicFilesRa(mfm, loadErrors, fileLoadErrors, false);
             if (loadErrors.Count > 0)
             {
@@ -311,7 +313,7 @@ namespace MobiusEditor.Utility
             return true;
         }
 
-        private static void InitClassicFilesTdSs(MixfileManager mfm, bool tdSsEqual, List<string> loadErrors, List<string> fileLoadErrors)
+        private static void InitClassicFilesTdSs(MixfileManager mfm, bool tdSsEqual, List<string> loadErrors, List<string> fileLoadErrors, bool forRemaster)
         {
             // This will map the mix files to the respective games, and look for them in the respective folders.
             // Tiberian Dawn
@@ -320,42 +322,82 @@ namespace MobiusEditor.Utility
             // Mod addons
             mfm.LoadArchives(GameType.TiberianDawn, "sc*.mix", false);
             mfm.LoadArchive(GameType.TiberianDawn, "conquer.mix", false);
-            // Tiberian Dawn Theaters
-            mfm.LoadArchive(GameType.TiberianDawn, "desert.mix", true);
-            mfm.LoadArchive(GameType.TiberianDawn, "temperat.mix", true);
-            mfm.LoadArchive(GameType.TiberianDawn, "winter.mix", true);
+            // Tiberian Dawn theaters
+            LoadTheater(mfm, GameType.TiberianDawn, TiberianDawn.TheaterTypes.Desert, false);
+            LoadTheater(mfm, GameType.TiberianDawn, TiberianDawn.TheaterTypes.Temperate, false);
+            LoadTheater(mfm, GameType.TiberianDawn, TiberianDawn.TheaterTypes.Winter, false);
+            // Added CnCNet mod theaters
+            LoadTheater(mfm, GameType.TiberianDawn, TiberianDawn.TheaterTypes.Jungle, false);
+            LoadTheater(mfm, GameType.TiberianDawn, TiberianDawn.TheaterTypes.Snow, false);
+            LoadTheater(mfm, GameType.TiberianDawn, TiberianDawn.TheaterTypes.Caribbean, false);
+            // Check files.
             mfm.Reset(GameType.TiberianDawn, null);
             List<string> loadedFiles = mfm.ToList();
             string prefix = tdSsEqual ? "TD/SS: " : "TD: ";
-            TestMixExists(loadedFiles, loadErrors, prefix, "local.mix", "cclocal.mix");
-            TestMixExists(loadedFiles, loadErrors, prefix, "conquer.mix");
-            TestMixExists(loadedFiles, loadErrors, prefix, "desert.mix");
-            TestMixExists(loadedFiles, loadErrors, prefix, "temperat.mix");
-            TestMixExists(loadedFiles, loadErrors, prefix, "winter.mix");
-            TestFileExists(mfm, loadErrors, prefix, "conquer.eng");
-
+            if (!forRemaster)
+            {
+                TestMixExists(loadedFiles, loadErrors, prefix, "local.mix", "cclocal.mix");
+                TestMixExists(loadedFiles, loadErrors, prefix, "conquer.mix");
+            }
+            // Required theaters
+            TestMixExists(loadedFiles, loadErrors, prefix, TiberianDawn.TheaterTypes.Desert, true);
+            TestMixExists(loadedFiles, loadErrors, prefix, TiberianDawn.TheaterTypes.Temperate, true);
+            TestMixExists(loadedFiles, loadErrors, prefix, TiberianDawn.TheaterTypes.Winter, true);
+            // Optional theaters
+            TestMixExists(loadedFiles, loadErrors, prefix, TiberianDawn.TheaterTypes.Jungle, false);
+            TestMixExists(loadedFiles, loadErrors, prefix, TiberianDawn.TheaterTypes.Snow, false);
+            TestMixExists(loadedFiles, loadErrors, prefix, TiberianDawn.TheaterTypes.Caribbean, false);
+            if (!forRemaster)
+            {
+                TestFileExists(mfm, fileLoadErrors, prefix, "conquer.eng");
+            }
             // Sole Survivor
             mfm.LoadArchive(GameType.SoleSurvivor, "local.mix", false);
             mfm.LoadArchive(GameType.SoleSurvivor, "cclocal.mix", false);
             // Mod addons
             mfm.LoadArchives(GameType.SoleSurvivor, "sc*.mix", false);
             mfm.LoadArchive(GameType.SoleSurvivor, "conquer.mix", false);
-            // Sole Survivor Theaters
-            mfm.LoadArchive(GameType.SoleSurvivor, "desert.mix", true);
-            mfm.LoadArchive(GameType.SoleSurvivor, "temperat.mix", true);
-            mfm.LoadArchive(GameType.SoleSurvivor, "winter.mix", true);
+            // Sole Survivor theaters
+            LoadTheater(mfm, GameType.SoleSurvivor, SoleSurvivor.TheaterTypes.Desert, false);
+            LoadTheater(mfm, GameType.SoleSurvivor, SoleSurvivor.TheaterTypes.Temperate, false);
+            LoadTheater(mfm, GameType.SoleSurvivor, SoleSurvivor.TheaterTypes.Winter, false);
+            // Added CnCNet mod theaters
+            LoadTheater(mfm, GameType.SoleSurvivor, SoleSurvivor.TheaterTypes.Jungle, false);
+            LoadTheater(mfm, GameType.SoleSurvivor, SoleSurvivor.TheaterTypes.Snow, false);
             // Check files
-            if (!tdSsEqual)
+            mfm.Reset(GameType.SoleSurvivor, null);
+            loadedFiles = mfm.ToList();
+            if (tdSsEqual)
             {
-                mfm.Reset(GameType.SoleSurvivor, null);
-                loadedFiles = mfm.ToList();
+                // Theaters still need to get initialised so they are marked as found, but don't repeat any errors in this.
+                TestMixExists(loadedFiles, loadErrors, prefix, SoleSurvivor.TheaterTypes.Desert, false);
+                TestMixExists(loadedFiles, loadErrors, prefix, SoleSurvivor.TheaterTypes.Jungle, false);
+                TestMixExists(loadedFiles, loadErrors, prefix, SoleSurvivor.TheaterTypes.Temperate, false);
+                TestMixExists(loadedFiles, loadErrors, prefix, SoleSurvivor.TheaterTypes.Winter, false);
+                TestMixExists(loadedFiles, loadErrors, prefix, SoleSurvivor.TheaterTypes.Snow, false);
+                TestMixExists(loadedFiles, loadErrors, prefix, SoleSurvivor.TheaterTypes.Caribbean, false);
+            }
+            else
+            {
+                // Check required files.
                 prefix = "SS: ";
-                TestMixExists(loadedFiles, loadErrors, prefix, "local.mix", "cclocal.mix");
-                TestMixExists(loadedFiles, loadErrors, prefix, "conquer.mix");
-                TestMixExists(loadedFiles, loadErrors, prefix, "desert.mix");
-                TestMixExists(loadedFiles, loadErrors, prefix, "temperat.mix");
-                TestMixExists(loadedFiles, loadErrors, prefix, "winter.mix");
-                TestFileExists(mfm, loadErrors, prefix, "conquer.eng");
+                if (!forRemaster)
+                {
+                    TestMixExists(loadedFiles, loadErrors, prefix, "local.mix", "cclocal.mix");
+                    TestMixExists(loadedFiles, loadErrors, prefix, "conquer.mix");
+                }
+                // Required theaters
+                TestMixExists(loadedFiles, loadErrors, prefix, SoleSurvivor.TheaterTypes.Desert, true);
+                TestMixExists(loadedFiles, loadErrors, prefix, SoleSurvivor.TheaterTypes.Temperate, true);
+                TestMixExists(loadedFiles, loadErrors, prefix, SoleSurvivor.TheaterTypes.Winter, true);
+                // Optional theaters
+                TestMixExists(loadedFiles, loadErrors, prefix, SoleSurvivor.TheaterTypes.Jungle, false);
+                TestMixExists(loadedFiles, loadErrors, prefix, SoleSurvivor.TheaterTypes.Snow, false);
+                TestMixExists(loadedFiles, loadErrors, prefix, SoleSurvivor.TheaterTypes.Caribbean, false);
+                if (!forRemaster)
+                {
+                    TestFileExists(mfm, fileLoadErrors, prefix, "conquer.eng");
+                }
             }
             mfm.Reset(GameType.None, null);
         }
@@ -387,7 +429,12 @@ namespace MobiusEditor.Utility
             mfm.LoadArchive(GameType.RedAlert, "temperat.mix", true, false, true, true);
             mfm.LoadArchive(GameType.RedAlert, "snow.mix", true, false, true, true);
             mfm.LoadArchive(GameType.RedAlert, "interior.mix", true, false, true, true);
-
+            // Added CnCNet mod theaters
+            LoadTheater(mfm, GameType.RedAlert, RedAlert.TheaterTypes.Winter, true);
+            LoadTheater(mfm, GameType.RedAlert, RedAlert.TheaterTypes.Desert, true);
+            LoadTheater(mfm, GameType.RedAlert, RedAlert.TheaterTypes.Jungle, true);
+            LoadTheater(mfm, GameType.RedAlert, RedAlert.TheaterTypes.Barren, true);
+            LoadTheater(mfm, GameType.RedAlert, RedAlert.TheaterTypes.Cave, true);
             // Check files
             mfm.Reset(GameType.RedAlert, null);
             List<string> loadedFiles = mfm.ToList();
@@ -402,19 +449,45 @@ namespace MobiusEditor.Utility
                 // Allow loading without expansion files.
                 //TestMixExists(loadedFiles, loadErrors, prefix, "lores1.mix");
             }
-            TestMixExists(loadedFiles, loadErrors, prefix, "temperat.mix");
-            TestMixExists(loadedFiles, loadErrors, prefix, "snow.mix");
-            TestMixExists(loadedFiles, loadErrors, prefix, "interior.mix");
+            // Required theaters
+            TestMixExists(loadedFiles, loadErrors, prefix, RedAlert.TheaterTypes.Temperate, true);
+            TestMixExists(loadedFiles, loadErrors, prefix, RedAlert.TheaterTypes.Snow, true);
+            TestMixExists(loadedFiles, loadErrors, prefix, RedAlert.TheaterTypes.Interior, true);
+            // Optional theaters
+            TestMixExists(loadedFiles, loadErrors, prefix, RedAlert.TheaterTypes.Winter, false);
+            TestMixExists(loadedFiles, loadErrors, prefix, RedAlert.TheaterTypes.Desert, false);
+            TestMixExists(loadedFiles, loadErrors, prefix, RedAlert.TheaterTypes.Jungle, false);
+            TestMixExists(loadedFiles, loadErrors, prefix, RedAlert.TheaterTypes.Barren, false);
+            TestMixExists(loadedFiles, loadErrors, prefix, RedAlert.TheaterTypes.Cave, false);
+
             if (!forRemaster)
             {
-                TestFileExists(mfm, loadErrors,prefix, "palette.cps");
-                TestFileExists(mfm, loadErrors, prefix, "conquer.eng");
+                TestFileExists(mfm, fileLoadErrors, prefix, "palette.cps");
+                TestFileExists(mfm, fileLoadErrors, prefix, "conquer.eng");
             }
-            TestFileExists(mfm, loadErrors, prefix, "rules.ini");
+            TestFileExists(mfm, fileLoadErrors, prefix, "rules.ini");
             // Allow loading without expansion files.
             //TestFileExists(mfm, loadErrors,prefix, "aftrmath.ini");
             //TestFileExists(mfm, loadErrors,prefix, "mplayer.ini");
             mfm.Reset(GameType.None, null);
+        }
+
+        /// <summary>
+        /// Loads the mix file for a theater.
+        /// </summary>
+        /// <param name="mfm">The mixfile manager</param>
+        /// <param name="game">Game the theater belongs to.</param>
+        /// <param name="theater">Theater object.</param>
+        /// <param name="forRa">True if this file can use the new mix format, and can be embedded in another archive.</param>
+        /// <returns>True if the mix file was found as bare file.</returns>
+        private static bool LoadTheater(MixfileManager mfm, GameType game, TheaterType theater, bool forRa)
+        {
+            if (theater == null)
+            {
+                return false;
+            }
+            string name = theater.ClassicTileset + ".mix";
+            return mfm.LoadArchive(game, name, true, false, forRa, forRa);
         }
 
         /// <summary>
@@ -426,6 +499,37 @@ namespace MobiusEditor.Utility
         /// <param name="fileNames">One or more mix files to check. If multiple are given they are seen as interchangeable; if one exists in <paramref name="loadedFiles"/>, the check passes.</param>
         private static void TestMixExists(List<string> loadedFiles, List<string> errors, string prefix, params string[] fileNames)
         {
+            TestMixExists(loadedFiles, errors, prefix, null, true, fileNames);
+        }
+        /// <summary>
+        /// Tests if a theater mix file exist.
+        /// </summary>
+        /// <param name="loadedFiles">The list of mix files loaded by the mixfile manager.</param>
+        /// <param name="errors">Current list of errors to potentially add more to.</param>
+        /// <param name="prefix">Prefix string to put before the filename on the newly added error line.</param>
+        /// <param name="toInit">The theater for which the mix archive ahould be checked. Marks in the theater info whether it was found.</param>
+        /// <param name="giveError">True to add an error in <paramref name="errors"/> if the file is not present.</param>
+        private static void TestMixExists(List<string> loadedFiles, List<string> errors, string prefix, TheaterType toInit, bool giveError)
+        {
+            if (toInit == null)
+            {
+                return;
+            }
+            string name = toInit.ClassicTileset + ".mix";
+            TestMixExists(loadedFiles, errors, prefix, toInit, giveError, name);
+        }
+
+        /// <summary>
+        /// Tests if a mix file, or allowed equivalents of the mix file, exist.
+        /// </summary>
+        /// <param name="loadedFiles">The list of mix files loaded by the mixfile manager.</param>
+        /// <param name="errors">Current list of errors to potentially add more to.</param>
+        /// <param name="prefix">Prefix string to put before the filename on the newly added error line.</param>
+        /// <param name="toInit">If given, indicates that this mix file is the theater archive of a specific theater. Marks in the theater info whether it was found.</param>
+        /// <param name="giveError">True to add an error in <paramref name="errors"/> if the file is not present.</param>
+        /// <param name="fileNames">One or more mix files to check. If multiple are given they are seen as interchangeable; if one exists in <paramref name="loadedFiles"/>, the check passes.</param>
+        private static void TestMixExists(List<string> loadedFiles, List<string> errors, string prefix, TheaterType toInit, bool giveError, params string[] fileNames)
+        {
             bool anyExist = false;
             foreach (string fileName in fileNames)
             {
@@ -434,7 +538,11 @@ namespace MobiusEditor.Utility
                     anyExist = true;
                 }
             }
-            if (!anyExist)
+            if (toInit != null)
+            {
+                toInit.IsClassicMixFound = anyExist;
+            }
+            if (!anyExist && giveError)
             {
                 errors.Add(prefix + String.Join(" / ", fileNames));
             }

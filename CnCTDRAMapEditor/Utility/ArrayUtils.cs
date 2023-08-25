@@ -1,4 +1,17 @@
-﻿using System;
+﻿//         DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
+//                     Version 2, December 2004
+//
+//  Copyright (C) 2004 Sam Hocevar<sam@hocevar.net>
+//
+//  Everyone is permitted to copy and distribute verbatim or modified
+//  copies of this license document, and changing it is allowed as long
+//  as the name is changed.
+//
+//             DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
+//    TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
+//
+//   0. You just DO WHAT THE FUCK YOU WANT TO.
+using System;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -89,7 +102,8 @@ namespace MobiusEditor.Utility
             for (Int32 index = 0; index < bytes; ++index)
             {
                 Int32 offs = startIndex + (littleEndian ? index : lastByte - index);
-                value |= (((UInt64)data[offs]) << (8 * index));
+                // "index << 3" is "index * 8"
+                value |= ((UInt64)data[offs]) << (index << 3);
             }
             return value;
         }
@@ -164,7 +178,8 @@ namespace MobiusEditor.Utility
             for (Int32 index = 0; index < bytes; ++index)
             {
                 Int32 offs = startIndex + (littleEndian ? index : lastByte - index);
-                data[offs] = (Byte) (value >> (8 * index) & 0xFF);
+                // "index << 3" is "index * 8"
+                data[offs] = (Byte)(value >> (index << 3) & 0xFF);
             }
         }
 

@@ -139,10 +139,10 @@ namespace MobiusEditor.Utility
         }
 
         /// <summary>
-        /// Registers archives with a wildcard to be loaded the next time <see cref="Reset(GameType, TheaterType)"/> is called. 
+        /// Registers archives with a wildcard to be loaded the next time <see cref="Reset(GameType, TheaterType)"/> is called.
         /// Will search all available sources for these files, but cannot look inside other .mix files.
         /// </summary>
-        /// <param name="gameType">Game type to register thee files for.</param>
+        /// <param name="gameType">Game type to register the files for.</param>
         /// <param name="archiveMask">file mask of archive.</param>
         /// <param name="canUseNewFormat">Allow RA's newer mix file format.</param>
         /// <returns>The amount of found archives.</returns>
@@ -153,16 +153,16 @@ namespace MobiusEditor.Utility
             {
                 throw new ObjectDisposedException(GetType().FullName);
             }
-            // Doesn't really 'load' the archive, but instead registers it as known filename for this game type.
-            // The actual loading won't happen until a Reset(...) is executed to specify the game to initialise.
             if (gameFolders == null || !gameFolders.TryGetValue(gameType, out string gamePath))
             {
                 return 0;
             }
+            // Doesn't really 'load' the archive, but instead registers it as known filename for this game type.
+            // The actual loading won't happen until a Reset(...) is executed to specify the game to initialise.
             List<string> foundFiles = new List<string>();
             Dictionary<string, string> foundPaths = new Dictionary<string, string>();
             Regex filter = GeneralUtils.FileMaskToRegex(archiveMask);
-            List <MixInfo> archivesForGame;
+            List<MixInfo> archivesForGame;
             if (!gameArchives.TryGetValue(gameType, out archivesForGame))
             {
                 archivesForGame = new List<MixInfo>();
@@ -238,6 +238,11 @@ namespace MobiusEditor.Utility
                 }
                 return file.ReadAllBytes();
             }
+        }
+
+        public bool ClassicFileExists(String path)
+        {
+            return FileExists(path);
         }
 
         public Stream OpenFileClassic(String path)
@@ -389,7 +394,7 @@ namespace MobiusEditor.Utility
                 {
                     mixFile = new Mixfile(localPath, mixToAdd.CanUseNewFormat);
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     return false;
                 }

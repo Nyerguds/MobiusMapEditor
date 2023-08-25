@@ -627,7 +627,7 @@ namespace MobiusEditor.Tools
                         Smudge smudge = new Smudge(mockType, mockType.IsMultiCell ? i : mockSmudge.Icon);
                         smudgeList.Add((i, smudge));
                         mockMetrics.GetLocation(i, out Point p);
-                        var render = MapRenderer.RenderSmudge(map.Theater, p, Globals.PreviewTileSize, Globals.PreviewTileScale, smudge);
+                        var render = MapRenderer.RenderSmudge(p, Globals.PreviewTileSize, Globals.PreviewTileScale, smudge);
                         if (!render.Item1.IsEmpty)
                         {
                             render.Item2(g);

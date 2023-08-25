@@ -586,3 +586,12 @@ Released on 05 Aug 2023 at 13:50 GMT
 * Left-clicking on smudge no longer copies its properties into the tool, since left-click is needed to change smudge properties.
 * Removed "NoMetaFilesForSinglePlay" option, since the meta files are always 100% useless in single play, and instead added "ClassicProducesNoMetaFiles" to suppress the creation of such files for all maps in classic mode.
 * In old Red Alert maps which use Italy instead of Ukraine, The house settings for [Italy] will now be applied to Ukraine.
+
+### v1.5.0.3:
+
+Unreleased
+* Added support for fan-added theaters available in CnCNet: Snow for TD; Desert, Jungle, Barren and Cave for RA. These only work in classic mode, if their theater mix files are found in the configured classic files folder.
+* Mouse zoom is now disabled during drag-scroll operations, since it invariably messed up the position calculations.
+* Map templates, Smudge and Overlay are no longer restricted to specific theaters; if they exist in a theater, they are allowed.
+* Theater-sensitive civilian buildings are no longer restricted to specific theaters; if they exist in a theater, they are allowed. Military buildings, incuding the theater-sensitive Misile Silo and Pillbox in RA, are always usable, no matter whether the theater has graphics for them.
+* On Interior maps, the "ConvertRaObsoleteClear" logic will now generate spots of passable terrain outside the map border on any point where passable terrain touches the border, to allow potential reinforcements to enter the map there.

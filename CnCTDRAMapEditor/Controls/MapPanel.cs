@@ -209,7 +209,9 @@ namespace MobiusEditor.Controls
             AdjustZoom(zoom - (zoom * zoomStep), false);
         }
 
-        private bool smoothScale = Globals.MapSmoothScale;
+        private bool smoothScale;
+        [Category("Behavior")]
+        [DefaultValue(false)]
         public bool SmoothScale
         {
             get => smoothScale;
@@ -226,6 +228,9 @@ namespace MobiusEditor.Controls
         [Category("Behavior")]
         [DefaultValue(false)]
         public bool FocusOnMouseEnter { get; set; }
+
+        [Browsable(false)]
+        public bool SuspendMouseZoom { get; set; }
 
         public event EventHandler<RenderEventArgs> PreRender;
         public event EventHandler<RenderEventArgs> PostRender;
@@ -396,7 +401,10 @@ namespace MobiusEditor.Controls
 
         protected override void OnMouseWheel(MouseEventArgs e)
         {
-            Zoom += (Zoom * ZoomStep * Math.Sign(e.Delta));
+            if (!SuspendMouseZoom)
+            {
+                Zoom += Zoom * ZoomStep * Math.Sign(e.Delta);
+            }
         }
 
         protected override void OnClientSizeChanged(EventArgs e)

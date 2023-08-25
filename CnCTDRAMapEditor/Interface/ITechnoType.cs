@@ -17,7 +17,7 @@ namespace MobiusEditor.Interface
     public interface ITechnoType: IBrowsableType
     {
         /// <summary>Object ID</summary>
-        sbyte ID { get; }
+        int ID { get; }
         /// <summary>Object ini name</summary>
         string Name { get; }
         /// <summary>True if this object has a weapon. This affects the default orders for placing it on the map.</summary>

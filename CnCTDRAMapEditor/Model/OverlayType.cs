@@ -51,10 +51,10 @@ namespace MobiusEditor.Model
     public class OverlayType : ICellOccupier, IBrowsableType
     {
 
-        public sbyte ID { get; private set; }
+        public int ID { get; private set; }
         public string Name { get; private set; }
         public string DisplayName { get; private set; }
-        public TheaterType[] Theaters { get; private set; }
+        public bool ExistsInTheater { get; private set; }
         public OverlayTypeFlag Flag { get; private set; }
         public Bitmap Thumbnail { get; set; }
         public String GraphicsSource { get; private set; }
@@ -76,40 +76,34 @@ namespace MobiusEditor.Model
         /// </summary>
         public bool IsOverlay => (this.Flag & (OverlayTypeFlag.Wall | OverlayTypeFlag.TiberiumOrGold | OverlayTypeFlag.Gems)) == OverlayTypeFlag.None;
 
-        public OverlayType(sbyte id, string name, string textId, TheaterType[] theaters, OverlayTypeFlag flag, String graphicsSource, int forceTileNr, Color tint)
+        public OverlayType(int id, string name, string textId, OverlayTypeFlag flag, String graphicsSource, int forceTileNr, Color tint)
         {
             this.ID = id;
             this.Name = name;
             this.GraphicsSource = graphicsSource == null ? name : graphicsSource;
             this.ForceTileNr = forceTileNr;
             this.nameId = textId;
-            this.Theaters = theaters;
             this.Flag = flag;
             this.Tint = tint;
         }
 
-        public OverlayType(sbyte id, string name, string textId, TheaterType[] theaters, OverlayTypeFlag flag, String graphicsSource, int forceTileNr)
-            : this(id, name, textId, theaters, flag, graphicsSource, forceTileNr, Color.White)
+        public OverlayType(int id, string name, string textId, OverlayTypeFlag flag, String graphicsSource, int forceTileNr)
+            : this(id, name, textId, flag, graphicsSource, forceTileNr, Color.White)
         {
         }
 
-        public OverlayType(sbyte id, string name, string textId, TheaterType[] theaters, OverlayTypeFlag flag, int forceTileNr)
-            :this(id, name, textId, theaters, flag, null, forceTileNr, Color.White)
+        public OverlayType(int id, string name, string textId, OverlayTypeFlag flag, int forceTileNr)
+            : this(id, name, textId, flag, null, forceTileNr, Color.White)
         {
         }
 
-        public OverlayType(sbyte id, string name, string textId, TheaterType[] theaters, OverlayTypeFlag flag)
-            : this(id, name, textId, theaters, flag, null, -1, Color.White)
+        public OverlayType(int id, string name, string textId, OverlayTypeFlag flag)
+            : this(id, name, textId, flag, null, -1, Color.White)
         {
         }
 
-        public OverlayType(sbyte id, string name, string textId, OverlayTypeFlag flag)
-            : this(id, name, textId, null, flag)
-        {
-        }
-
-        public OverlayType(sbyte id, string name, string textId, OverlayTypeFlag flag, int forceTileNr)
-            : this(id, name, textId, null, flag, null, forceTileNr, Color.White)
+        public OverlayType(int id, string name, string textId, int forceTileNr)
+            : this(id, name, textId, OverlayTypeFlag.None, null, forceTileNr, Color.White)
         {
         }
 
@@ -159,9 +153,11 @@ namespace MobiusEditor.Model
                 : idEmpty ? this.GraphicsSource.ToUpperInvariant() : this.nameId;
         }
 
-        public void Init(GameType gameType)
+        public void Init(GameType gameType, TheaterType theater)
         {
             InitDisplayName();
+            this.ExistsInTheater = Globals.TheTilesetManager.GetTileDataLength(this.GraphicsSource) > 0;
+            //this.ExistsInTheater = Globals.TheArchiveManager.ClassicFileExists(this.Name + "." + theater.ClassicExtension) || Globals.TheArchiveManager.ClassicFileExists(this.Name + ".shp");
             var oldImage = this.Thumbnail;
             var tileSize = Globals.PreviewTileSize;
             Bitmap th = new Bitmap(tileSize.Width, tileSize.Height);
@@ -185,6 +181,7 @@ namespace MobiusEditor.Model
         }
         public void Reset()
         {
+            this.ExistsInTheater = false;
             Bitmap oldImage = this.Thumbnail;
             this.Thumbnail = null;
             if (oldImage != null)

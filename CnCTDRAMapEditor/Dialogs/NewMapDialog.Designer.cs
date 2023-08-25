@@ -48,12 +48,12 @@ namespace MobiusEditor.Dialogs
             this.btnOK = new System.Windows.Forms.Button();
             this.flowLayoutPanel2 = new System.Windows.Forms.FlowLayoutPanel();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.groupBox2 = new System.Windows.Forms.GroupBox();
-            this.chkMegamap = new System.Windows.Forms.CheckBox();
-            this.lblWarning = new System.Windows.Forms.Label();
             this.lbGames = new System.Windows.Forms.ListBox();
+            this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.lbTheaters = new System.Windows.Forms.ListBox();
             this.chkSingleplayer = new System.Windows.Forms.CheckBox();
+            this.chkMegamap = new System.Windows.Forms.CheckBox();
+            this.lblWarning = new System.Windows.Forms.Label();
             this.tableLayoutPanel1.SuspendLayout();
             this.flowLayoutPanel1.SuspendLayout();
             this.flowLayoutPanel2.SuspendLayout();
@@ -143,6 +143,15 @@ namespace MobiusEditor.Dialogs
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Game Type";
             // 
+            // lbGames
+            // 
+            this.lbGames.FormattingEnabled = true;
+            this.lbGames.Location = new System.Drawing.Point(5, 18);
+            this.lbGames.Name = "lbGames";
+            this.lbGames.Size = new System.Drawing.Size(326, 69);
+            this.lbGames.TabIndex = 0;
+            this.lbGames.SelectedIndexChanged += new System.EventHandler(this.LbGames_SelectedIndexChanged);
+            // 
             // groupBox2
             // 
             this.groupBox2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
@@ -156,6 +165,27 @@ namespace MobiusEditor.Dialogs
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Theater";
             // 
+            // lbTheaters
+            // 
+            this.lbTheaters.FormattingEnabled = true;
+            this.lbTheaters.Location = new System.Drawing.Point(5, 18);
+            this.lbTheaters.Name = "lbTheaters";
+            this.lbTheaters.Size = new System.Drawing.Size(326, 69);
+            this.lbTheaters.TabIndex = 0;
+            this.lbTheaters.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.LbTheaters_MouseDoubleClick);
+            // 
+            // chkSingleplayer
+            // 
+            this.chkSingleplayer.AutoSize = true;
+            this.chkSingleplayer.Location = new System.Drawing.Point(7, 201);
+            this.chkSingleplayer.Margin = new System.Windows.Forms.Padding(7, 3, 3, 3);
+            this.chkSingleplayer.Name = "chkSingleplayer";
+            this.chkSingleplayer.Size = new System.Drawing.Size(132, 17);
+            this.chkSingleplayer.TabIndex = 2;
+            this.chkSingleplayer.Text = "Single-Player Scenario";
+            this.chkSingleplayer.UseVisualStyleBackColor = true;
+            this.chkSingleplayer.CheckedChanged += new System.EventHandler(this.ChkMegamap_CheckedChanged);
+            // 
             // chkMegamap
             // 
             this.chkMegamap.AutoSize = true;
@@ -166,7 +196,7 @@ namespace MobiusEditor.Dialogs
             this.chkMegamap.TabIndex = 3;
             this.chkMegamap.Text = "Megamap (Sole Survivor format)";
             this.chkMegamap.UseVisualStyleBackColor = true;
-            this.chkMegamap.CheckedChanged += new System.EventHandler(this.chkMegamap_CheckedChanged);
+            this.chkMegamap.CheckedChanged += new System.EventHandler(this.ChkMegamap_CheckedChanged);
             // 
             // lblWarning
             // 
@@ -180,35 +210,6 @@ namespace MobiusEditor.Dialogs
             this.lblWarning.Text = "Warning: the Sole Survivor mega map format is not supported by the Remastered Col" +
     "lection without modding.";
             this.lblWarning.Visible = false;
-            // 
-            // lbGames
-            // 
-            this.lbGames.FormattingEnabled = true;
-            this.lbGames.Location = new System.Drawing.Point(5, 18);
-            this.lbGames.Name = "lbGames";
-            this.lbGames.Size = new System.Drawing.Size(326, 69);
-            this.lbGames.TabIndex = 0;
-            this.lbGames.SelectedIndexChanged += new System.EventHandler(this.lbGames_SelectedIndexChanged);
-            // 
-            // lbTheaters
-            // 
-            this.lbTheaters.FormattingEnabled = true;
-            this.lbTheaters.Location = new System.Drawing.Point(5, 18);
-            this.lbTheaters.Name = "lbTheaters";
-            this.lbTheaters.Size = new System.Drawing.Size(326, 69);
-            this.lbTheaters.TabIndex = 0;
-            // 
-            // chkSingleplayer
-            // 
-            this.chkSingleplayer.AutoSize = true;
-            this.chkSingleplayer.Location = new System.Drawing.Point(7, 201);
-            this.chkSingleplayer.Margin = new System.Windows.Forms.Padding(7, 3, 3, 3);
-            this.chkSingleplayer.Name = "chkSingleplayer";
-            this.chkSingleplayer.Size = new System.Drawing.Size(132, 17);
-            this.chkSingleplayer.TabIndex = 2;
-            this.chkSingleplayer.Text = "Single-Player Scenario";
-            this.chkSingleplayer.UseVisualStyleBackColor = true;
-            this.chkSingleplayer.CheckedChanged += new System.EventHandler(this.chkMegamap_CheckedChanged);
             // 
             // NewMapDialog
             // 

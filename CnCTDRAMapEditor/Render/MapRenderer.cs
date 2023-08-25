@@ -290,9 +290,9 @@ namespace MobiusEditor.Render
                 {
                     Smudge smudge = map.Smudge[topLeft];
                     // Don't render bibs in theaters which don't contain them.
-                    if (smudge != null && smudge.Type.IsAutoBib && (smudge.Type.Theaters == null || smudge.Type.Theaters.Contains(theater)))
+                    if (smudge != null && smudge.Type.IsAutoBib && (!Globals.FilterTheaterObjects || smudge.Type.ExistsInTheater))
                     {
-                        RenderSmudge(theater, topLeft, tileSize, tileScale, smudge).Item2(graphics);
+                        RenderSmudge(topLeft, tileSize, tileScale, smudge).Item2(graphics);
                     }
                 }
             }
@@ -303,7 +303,7 @@ namespace MobiusEditor.Render
                     Smudge smudge = map.Smudge[topLeft];
                     if (smudge != null && !smudge.Type.IsAutoBib)
                     {
-                        RenderSmudge(theater, topLeft, tileSize, tileScale, smudge).Item2(graphics);
+                        RenderSmudge(topLeft, tileSize, tileScale, smudge).Item2(graphics);
                     }
                 }
             }
@@ -453,9 +453,9 @@ namespace MobiusEditor.Render
             Render(gameType, map, graphics, locations, layers, Globals.MapTileScale);
         }
 
-        public static (Rectangle, Action<Graphics>) RenderSmudge(TheaterType theater, Point topLeft, Size tileSize, double tileScale, Smudge smudge)
+        public static (Rectangle, Action<Graphics>) RenderSmudge(Point topLeft, Size tileSize, double tileScale, Smudge smudge)
         {
-            if (Globals.FilterTheaterObjects && smudge.Type.Theaters != null && !smudge.Type.Theaters.Contains(theater))
+            if (Globals.FilterTheaterObjects && !smudge.Type.ExistsInTheater)
             {
                 Debug.Print(string.Format("Smudge {0} ({1}) not available in this theater.", smudge.Type.Name, smudge.Icon));
                 return (Rectangle.Empty, (g) => { });
@@ -470,10 +470,8 @@ namespace MobiusEditor.Render
                 smudgeBounds.Y += topLeft.Y * tileSize.Width;
                 if (!success)
                 {
-                    smudgeBounds.X += (int)Math.Round(smudgeBounds.Width * 0.1f);
-                    smudgeBounds.Y += (int)Math.Round(smudgeBounds.Height * 0.1f);
-                    smudgeBounds.Width = (int)Math.Round(smudgeBounds.Width * 0.8f);
-                    smudgeBounds.Height = (int)Math.Round(smudgeBounds.Height * 0.8f);
+                    smudgeBounds.Width = tileSize.Width;
+                    smudgeBounds.Height = tileSize.Height;
                 }
                 void render(Graphics g)
                 {
@@ -494,7 +492,6 @@ namespace MobiusEditor.Render
                 return (Rectangle.Empty, (g) => { });
             }
         }
-        
 
         public static (Rectangle, Action<Graphics>) RenderOverlay(GameType gameType, Point topLeft, Size tileSize, double tileScale, Overlay overlay)
         {
@@ -634,11 +631,6 @@ namespace MobiusEditor.Render
             }
             ITeamColor teamColor = building.Type.CanRemap ? Globals.TheTeamColorManager[building.House?.BuildingTeamColor] : null;
             bool succeeded = Globals.TheTilesetManager.GetTeamColorTileData(building.Type.GraphicsSource, icon, teamColor, out Tile tile, true, false);
-            if (tile == null || tile.Image == null)
-            {
-                Debug.Print(string.Format("Building {0} ({1}) not found", building.Type.Name, icon));
-                return new RenderInfo(Point.Empty, (g) => { }, 0, null);
-            }
             Point location = new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height);
             Size maxSize = new Size(building.Type.Size.Width * tileSize.Width, building.Type.Size.Height * tileSize.Height);
 
@@ -648,7 +640,7 @@ namespace MobiusEditor.Render
             if (!succeeded)
             {
                 // Stretch dummy graphics over the whole size.
-                paintBounds = new Rectangle(0, 0, (int)Math.Round(bldTSize.Width * tileISize.Width * tileScale), (int)Math.Round(bldTSize.Height * tileISize.Height * tileScale));
+                paintBounds = new Rectangle(0, 0, maxSize.Width, maxSize.Height);
             }
             else
             {
@@ -788,63 +780,70 @@ namespace MobiusEditor.Render
 
         public static RenderInfo RenderUnit(GameType gameType, Point topLeft, Size tileSize, Unit unit)
         {
-            int icon = -1;
-            if (gameType == GameType.TiberianDawn || gameType == GameType.SoleSurvivor)
+            int icon = 0;
+            int bodyFrames = 0;
+            // In TD, damage is when BELOW the threshold. In RA, it's ON the threshold.
+            int healthyMin = gameType == GameType.RedAlert ? 128 : 127;
+            int damagedMin = gameType == GameType.RedAlert ? 64 : 63;
+            FrameUsage frameUsage = unit.Type.BodyFrameUsage;
+            if ((frameUsage & FrameUsage.Frames01Single) != FrameUsage.None)
             {
-                if ((unit.Type == TiberianDawn.UnitTypes.Tric) ||
-                         (unit.Type == TiberianDawn.UnitTypes.Trex) ||
-                         (unit.Type == TiberianDawn.UnitTypes.Rapt) ||
-                         (unit.Type == TiberianDawn.UnitTypes.Steg))
-                {
-                    Int32 facing = ((unit.Direction.ID + 0x10) & 0xFF) >> 5;
-                    icon = BodyShape[facing + ((facing > 0) ? 24 : 0)];
-                }
-                else if ((unit.Type == TiberianDawn.UnitTypes.Hover) ||
-                         (unit.Type == TiberianDawn.UnitTypes.Visceroid))
-                {
-                    icon = 0;
-                }
-                else if (unit.Type == TiberianDawn.UnitTypes.GunBoat)
-                {
-                    icon = BodyShape[Facing32[unit.Direction.ID]];
-                    // East facing is not actually possible to set in missions. This is just the turret facing.
-                    // In TD, damage is when BELOW the threshold. In RA, it's ON the threshold.
-                    if (unit.Strength < 128)
-                        icon += 32;
-                    if (unit.Strength < 64)
-                        icon += 32;
-                }
+                icon = 0;
+                // Not actually determined, but whatever. Single frame units generally have no turret.
+                bodyFrames = 1;
             }
-            else if (gameType == GameType.RedAlert)
+            else if ((frameUsage & FrameUsage.Frames08Cardinal) != FrameUsage.None)
             {
-                if (unit.Type.IsAircraft && unit.Type.IsFixedWing)
-                {
-                    icon = BodyShape[Facing16[unit.Direction.ID] * 2] / 2;
-                }
-                else if (unit.Type.IsVessel)
-                {
-                    if ((unit.Type == RedAlert.UnitTypes.Transport) ||
-                        (unit.Type == RedAlert.UnitTypes.Carrier))
-                    {
-                        icon = 0;
-                    }
-                    else
-                    {
-                        icon = BodyShape[Facing16[unit.Direction.ID] * 2] / 2;
-                    }
-                }
-                else if ((unit.Type == RedAlert.UnitTypes.Ant1) ||
-                        (unit.Type == RedAlert.UnitTypes.Ant2) ||
-                        (unit.Type == RedAlert.UnitTypes.Ant3))
-                {
-                    icon = ((BodyShape[Facing32[unit.Direction.ID]] + 2) / 4) & 0x07;
-                }
+                icon = ((BodyShape[Facing32[unit.Direction.ID]] + 2) / 4) & 0x07;
+                bodyFrames = 8;
             }
-            // Default behaviour for 32-frame units.
-            if (icon == -1)
+            else if ((frameUsage & FrameUsage.Frames16Simple) != FrameUsage.None)
+            {
+                icon = BodyShape[Facing16[unit.Direction.ID] * 2] / 2;
+                bodyFrames = 16;
+            }
+            else if ((frameUsage & FrameUsage.Frames16Symmetrical) != FrameUsage.None)
+            {
+                // Special case for 16-frame rotation saved as 8-frame because it is symmetrical and thus the second half of the frames is the same.
+                icon = (BodyShape[Facing32[unit.Direction.ID]] / 2) & 7;
+                bodyFrames = 8;
+            }
+            else if ((frameUsage & FrameUsage.Frames32Full) != FrameUsage.None || (frameUsage & FrameUsage.FrameUsages) == FrameUsage.None)
             {
                 icon = BodyShape[Facing32[unit.Direction.ID]];
+                bodyFrames = 32;
             }
+            // Special logic for TD gunboat's damaged states.
+            // East facing is not actually possible to set in missions. This is just the turret facing.
+            if ((frameUsage & FrameUsage.DamageStates) != FrameUsage.None)
+            {
+                if (unit.Strength <= healthyMin)
+                    icon += bodyFrames;
+                if (unit.Strength <= damagedMin)
+                    icon += bodyFrames;
+                // Skip three-step damaged frames. In practice this will just go to the east-facing ones though.
+                bodyFrames *= 3;
+            }
+            // Special logic for APC-types with unload frames.
+            if ((frameUsage & FrameUsage.HasUnloadFrames) != FrameUsage.None)
+            {
+                if ((unit.Type.ID & UnitTypeIDMask.Aircraft) == UnitTypeIDMask.Aircraft)
+                {
+                    // Transport heli unload has 4 frames
+                    bodyFrames += 4;
+                }
+                else if ((unit.Type.ID & UnitTypeIDMask.Vessel) == UnitTypeIDMask.Vessel)
+                {
+                    // Boat unload has 4 frames
+                    bodyFrames += 4;
+                }
+                else
+                {
+                    // APC unload has 6 frames.
+                    bodyFrames += 6;
+                }
+            }
+            // Get House color.
             ITeamColor teamColor = null;
             if (unit.House != null && unit.Type.CanRemap)
             {
@@ -855,6 +854,7 @@ namespace MobiusEditor.Render
                 }
                 teamColor = Globals.TheTeamColorManager[teamColorName];
             }
+            // Get body frame
             Globals.TheTilesetManager.GetTeamColorTileData(unit.Type.Name, icon, teamColor, out Tile tile, true, false);
             if (tile == null || tile.Image == null)
             {
@@ -868,61 +868,93 @@ namespace MobiusEditor.Render
             Size renderSize = new Size(imSize.Width * tileSize.Width / Globals.OriginalTileWidth, imSize.Height * tileSize.Height / Globals.OriginalTileHeight);
             Rectangle renderRect = new Rectangle(new Point(0, 0), renderSize);
             Rectangle renderBounds = new Rectangle(location - new Size(renderSize.Width / 2, renderSize.Height / 2), renderSize);
+            // Turret handling
             Tile turretTile = null;
             Tile turret2Tile = null;
+            Point turretAdjust = Point.Empty;
+            Point turret2Adjust = Point.Empty;
             if (unit.Type.HasTurret)
             {
+                FrameUsage turrUsage = unit.Type.TurretFrameUsage;
                 string turretName = unit.Type.Turret ?? unit.Type.Name;
                 string turret2Name = unit.Type.HasDoubleTurret ? unit.Type.SecondTurret ?? unit.Type.Turret ?? unit.Type.Name : null;
-                int turretIcon = unit.Type.Name.Equals(turretName, StringComparison.OrdinalIgnoreCase) ? icon + 32 : icon;
-                int turret2Icon = unit.Type.Name.Equals(turret2Name, StringComparison.OrdinalIgnoreCase) ? icon + 32 : icon;
-                // Special frame handling
-                if (gameType == GameType.RedAlert)
+                int turret1Icon = 0;
+                int turret2Icon = 0;
+                if ((turrUsage & FrameUsage.Frames01Single) != FrameUsage.None)
                 {
-                    if (unit.Type == RedAlert.UnitTypes.Phase)
-                    {
-                        // Compensate for unload frames.
-                        turretIcon += 6;
-                    }
-                    else if (unit.Type == RedAlert.UnitTypes.MGG)
-                    {
-                        // 16-frame rotation, but saved as 8 frames because the other 8 are identical.
-                        turretIcon = 32 + ((icon / 2) & 7);
-                    }
-                    else if (unit.Type == RedAlert.UnitTypes.Tesla)
-                    {
-                        // turret is an animation rather than a rotation; always take the first frame.
-                        turretIcon = 32;
-                    }
+                    turret1Icon = 0;
+                    turret2Icon = 0;
                 }
-                if (unit.Type.IsVessel)
+                else if ((turrUsage & FrameUsage.Frames08Cardinal) != FrameUsage.None)
                 {
-                    // Ships have 32-frame turrets on a 16-frame body.
-                    turretIcon = BodyShape[Facing32[unit.Direction.ID]];
-                    turret2Icon = BodyShape[Facing32[unit.Direction.ID]];
+                    // Never used for a turret, but whatever.
+                    turret1Icon = ((BodyShape[Facing32[unit.Direction.ID]] + 2) / 4) & 0x07;
+                    turret2Icon = turret1Icon;
                 }
-                else if (unit.Type.IsAircraft)
+                else if ((turrUsage & FrameUsage.Frames16Simple) != FrameUsage.None)
                 {
-                    int getRotorIcon(string turrName, int dir, int turrIcon)
-                    {
-                        // Bit-wise ToUpper() for ASCII ;)
-                        if (!String.IsNullOrEmpty(turrName) && (turrName[0] & 0xDF) == 'L')
-                        {
-                            turrIcon = (dir >> 5) % 2 == 1 ? 9 : 5;
-                        }
-                        if (!String.IsNullOrEmpty(turrName) && (turrName[0] & 0xDF) == 'R')
-                        {
-                            turrIcon = (dir >> 5) % 2 == 1 ? 8 : 4;
-                        }
-                        return turrIcon;
-                    }
-                    turretIcon = getRotorIcon(turretName, unit.Direction.ID, turretIcon);
-                    turret2Icon = getRotorIcon(turret2Name, unit.Direction.ID, turret2Icon);
+                    turret1Icon = BodyShape[Facing16[unit.Direction.ID] * 2] / 2;
+                    turret2Icon = turret1Icon;
                 }
+                else if ((turrUsage & FrameUsage.Frames16Symmetrical) != FrameUsage.None)
+                {
+                    // Special case for 16-frame rotation saved as 8-frame because it is symmetrical and thus the second half of the frames is the same (MGG)
+                    turret1Icon = (BodyShape[Facing32[unit.Direction.ID]] / 2) & 7;
+                    turret2Icon = turret1Icon;
+                }
+                else if ((turrUsage & FrameUsage.Frames32Full) != FrameUsage.None)
+                {
+                    turret1Icon = BodyShape[Facing32[unit.Direction.ID]];
+                    turret2Icon = turret1Icon;
+                }
+                else if ((turrUsage & FrameUsage.Rotor) != FrameUsage.None)
+                {
+                    turret1Icon = (unit.Direction.ID >> 5) % 2 == 1 ? 9 : 5;
+                    turret2Icon = (unit.Direction.ID >> 5) % 2 == 1 ? 8 : 4;
+                }
+                // If same as body name, add body frames.
+                turret1Icon = unit.Type.Name.Equals(turretName, StringComparison.OrdinalIgnoreCase) ? bodyFrames + turret1Icon : turret1Icon;
+                turret2Icon = unit.Type.Name.Equals(turret2Name, StringComparison.OrdinalIgnoreCase) ? bodyFrames + turret2Icon : turret2Icon;
                 if (turretName != null)
-                    Globals.TheTilesetManager.GetTeamColorTileData(turretName, turretIcon, teamColor, out turretTile, false, false);
+                    Globals.TheTilesetManager.GetTeamColorTileData(turretName, turret1Icon, teamColor, out turretTile, false, false);
                 if (turret2Name != null)
                     Globals.TheTilesetManager.GetTeamColorTileData(turret2Name, turret2Icon, teamColor, out turret2Tile, false, false);
+                if ((turrUsage & FrameUsage.OnFlatBed) != FrameUsage.None)
+                {
+                    // Special case: MaxValue indicates the turret oFfset is determined by the TurretAdjustOffset table.
+                    turretAdjust = BackTurretAdjust[Facing32[unit.Direction.ID]];
+                    // Never actually used for 2 turrets. Put second turret in the front?
+                    turret2Adjust = BackTurretAdjust[Facing32[(byte)((unit.Direction.ID + DirectionTypes.South.ID) & 0xFF)]];
+                }
+                if (unit.Type.TurretOffset != 0)
+                {
+                    // Used by ships and by the transport helicopter.
+                    int distance = unit.Type.TurretOffset;
+                    int face = (unit.Direction.ID >> 5) & 7;
+                    if (unit.Type.TurretFrameUsage == FrameUsage.Rotor)
+                    {
+                        // Rotor stretch distance is given by a table.
+                        distance *= HeliDistanceAdjust[face];
+                    }
+                    int x = 0;
+                    int y = 0;
+                    // For vessels, perspective stretch is simply done as '/ 2'.
+                    int perspectiveDivide = unit.Type.IsVessel ? 2 : 1;
+                    MovePoint(ref x, ref y, unit.Direction.ID, distance, perspectiveDivide);
+                    turretAdjust.X += x;
+                    turretAdjust.Y += y;
+                    if (unit.Type.HasDoubleTurret)
+                    {
+                        x = 0;
+                        y = 0;
+                        MovePoint(ref x, ref y, (byte)((unit.Direction.ID + DirectionTypes.South.ID) & 0xFF), distance, perspectiveDivide);
+                        turret2Adjust.X += x;
+                        turret2Adjust.Y += y;
+                    }
+                }
+                // Adjust Y-offset.
+                turretAdjust.Y += unit.Type.TurretY;
+                turret2Adjust.Y += unit.Type.TurretY;
             }
             Color tint = unit.Tint;
             void render(Graphics g)
@@ -946,52 +978,6 @@ namespace MobiusEditor.Render
                             }
                             if (unit.Type.HasTurret)
                             {
-                                Point turretAdjust = Point.Empty;
-                                Point turret2Adjust = Point.Empty;
-
-                                if (unit.Type.TurretOffset == Int32.MaxValue)
-                                {
-                                    // Special case: MaxValue indicates the turret oFfset is determined by the TurretAdjustOffset table.
-                                    turretAdjust = BackTurretAdjust[Facing32[unit.Direction.ID]];
-                                    if (unit.Type.HasDoubleTurret)
-                                    {
-                                        // Never actually used for 2 turrets.
-                                        turret2Adjust = BackTurretAdjust[Facing32[(byte)((unit.Direction.ID + DirectionTypes.South.ID) & 0xFF)]];
-                                    }
-                                }
-                                else if (unit.Type.TurretOffset != 0)
-                                {
-                                    // Used by ships and by the transport helicopter.
-                                    int distance = unit.Type.TurretOffset;
-                                    int face = (unit.Direction.ID >> 5) & 7;
-                                    if (unit.Type.IsAircraft)
-                                    {
-                                        // Stretch distance is given by a table.
-                                        distance *= HeliDistanceAdjust[face];
-                                    }
-
-                                    int x = 0;
-                                    int y = 0;
-                                    // For vessels, perspective stretch is simply done as '/ 2'.
-                                    int perspectiveDivide = unit.Type.IsVessel ? 2 : 1;
-                                    MovePoint(ref x, ref y, unit.Direction.ID, distance, perspectiveDivide);
-                                    turretAdjust.X = x;
-                                    turretAdjust.Y = y;
-                                    if (unit.Type.HasDoubleTurret)
-                                    {
-                                        x = 0;
-                                        y = 0;
-                                        MovePoint(ref x, ref y, (byte)((unit.Direction.ID + DirectionTypes.South.ID) & 0xFF), distance, perspectiveDivide);
-                                        turret2Adjust.X = x;
-                                        turret2Adjust.Y = y;
-                                    }
-                                }
-                                // Adjust Y-offset.
-                                turretAdjust.Y += unit.Type.TurretY;
-                                if (unit.Type.HasDoubleTurret)
-                                {
-                                    turret2Adjust.Y += unit.Type.TurretY;
-                                }
                                 Point center = new Point(renderBounds.Width / 2, renderBounds.Height / 2);
 
                                 void RenderTurret(Graphics ug, Tile turrTile, Point turrAdjust, Size tSize)
@@ -1874,7 +1860,7 @@ namespace MobiusEditor.Render
         public static void RenderAllBuildingEffectRadiuses(Graphics graphics, Map map, Rectangle visibleCells, Size tileSize, int effectRadius, Building selected)
         {
             foreach ((Point topLeft, Building building) in map.Buildings.OfType<Building>()
-                .Where(b => (b.Occupier.Type.Flag & BuildingTypeFlag.IsGapGenerator) != BuildingTypeFlag.None))
+                .Where(b => (b.Occupier.Type.Flag & BuildingTypeFlag.GapGenerator) != BuildingTypeFlag.None))
             {
                 RenderBuildingEffectRadius(graphics, visibleCells, tileSize, effectRadius, building, topLeft, selected);
             }
@@ -1882,7 +1868,7 @@ namespace MobiusEditor.Render
 
         public static void RenderBuildingEffectRadius(Graphics graphics, Rectangle visibleCells, Size tileSize, int effectRadius, Building building, Point topLeft, Building selected)
         {
-            if ((building.Type.Flag & BuildingTypeFlag.IsGapGenerator) != BuildingTypeFlag.IsGapGenerator)
+            if ((building.Type.Flag & BuildingTypeFlag.GapGenerator) != BuildingTypeFlag.GapGenerator)
             {
                 return;
             }
@@ -2323,9 +2309,13 @@ namespace MobiusEditor.Render
             List<(int, int)> cellsUnbuildable = new List<(int, int)>();
             List<(int, int)> cellsBoatMovable = new List<(int, int)>();
             List<(int, int)> cellsRiver = new List<(int, int)>();
+            LandType clearLand = LandType.Clear;
             // Possibly fetch the terrain type for clear terrain on this theater?
-            TemplateType clear = plugin.Map.TemplateTypes.Where(t => (t.Flag & TemplateTypeFlag.Clear) == TemplateTypeFlag.Clear).FirstOrDefault();
-            LandType clearLand = clear.LandTypes.Length > 0 ? clear.LandTypes[0] : LandType.Clear;
+            if (!ignoreClear)
+            {
+                TemplateType clear = plugin.Map.TemplateTypes.Where(t => (t.Flag & TemplateTypeFlag.Clear) == TemplateTypeFlag.Clear).FirstOrDefault();
+                clearLand = clear.LandTypes.Length > 0 ? clear.LandTypes[0] : LandType.Clear;
+            }
             // Caching this in advance for all types.
             LandType[] landTypes = (LandType[])Enum.GetValues(typeof(LandType));
             bool[][] passable = new bool[landTypes.Length][];
@@ -2353,16 +2343,7 @@ namespace MobiusEditor.Render
                     }
                     else
                     {
-                        LandType[] types = template.Type.LandTypes;
-                        int icon = (template.Type.Flag & (TemplateTypeFlag.Clear | TemplateTypeFlag.RandomCell)) != TemplateTypeFlag.None ? 0 : template.Icon;
-                        // This should never happen; group tiles should never be placed down on the map.
-                        /*
-                        if ((template.Type.Flag & TemplateTypeFlag.Group) == TemplateTypeFlag.Group && template.Icon < template.Type.GroupTiles.Length)
-                        {
-                            types = plugin.Map.TemplateTypes.FirstOrDefault(t => String.Equals(t.Name, template.Type.GroupTiles[template.Icon]))?.LandTypes;
-                        }
-                        */
-                        land = types != null && icon < types.Length ? types[icon] : LandType.Clear;
+                        land = template.Type.GetLandType(template.Icon);
                     }
                     // Exclude uninitialised terrain
                     if (land != LandType.None)

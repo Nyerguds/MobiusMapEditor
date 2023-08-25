@@ -160,7 +160,7 @@ namespace MobiusEditor.Utility
         public readonly INIKeyValueCollection Keys;
 
         public string Name { get; private set; }
-        
+
         public int Count { get { return Keys.Count; } }
 
         public string this[string key] { get => Keys[key]; set => Keys[key] = value; }
@@ -355,7 +355,7 @@ namespace MobiusEditor.Utility
                 if (entry.Value is INISection section)
                 {
                     clone.Add(section.Clone());
-                }                
+                }
             }
             return clone;
         }

@@ -233,16 +233,29 @@ namespace MobiusEditor.Tools
                 Match m = CategoryRegex.Match(template.Name);
                 return m.Success ? m.Groups[1].Value : string.Empty;
             }
+            TheaterType theater = plugin.Map.Theater;
+            TemplateType clear = plugin.Map.TemplateTypes.Where(t => (t.Flag & TemplateTypeFlag.Clear) == TemplateTypeFlag.Clear).FirstOrDefault();
+            if (clear.Thumbnail == null || !clear.Initialised)
+            {
+                // Clear should ALWAYS be initialised and available, even if missing.
+                clear.Init(plugin.GameType, plugin.Map.Theater, true, false);
+            }
             ExplorerComparer expl = new ExplorerComparer();
+            // Special case: tiles that are not initialised, but are present on the map. Initialise with forced dummy generation.
+            // This is really only for the tile FF "research mode" on RA maps, or if FilterTheaterObjects is disabled.
+            foreach (TemplateType templateType in plugin.Map.Templates.Select(ct => ct.Value?.Type).Distinct().Where(t => t != null && !t.Initialised))
+            {
+                templateType.Init(plugin.GameType, plugin.Map.Theater, true, false);
+            }
             var templateTypes = plugin.Map.TemplateTypes
-                .Where(t => t.Thumbnail != null
-                    && t.Theaters.Contains(plugin.Map.Theater)
+                .Where(t => t.Thumbnail != null && (!Globals.FilterTheaterObjects || t.ExistsInTheater)
                     && (t.Flag & TemplateTypeFlag.Clear) == TemplateTypeFlag.None
                     && (t.Flag & TemplateTypeFlag.IsGrouped) == TemplateTypeFlag.None)
                 .OrderBy(t => t.Name, expl)
                 .GroupBy(t => templateCategory(t)).OrderBy(g => g.Key, expl);
-            var templateTypeImages = templateTypes.SelectMany(g => g).Select(t => t.Thumbnail);
-            TemplateType clear = plugin.Map.TemplateTypes.Where(t => (t.Flag & TemplateTypeFlag.Clear) == TemplateTypeFlag.Clear).FirstOrDefault();
+            List<Bitmap> templateTypeImages = new List<Bitmap>();
+            templateTypeImages.Add(clear.Thumbnail);
+            templateTypeImages.AddRange(templateTypes.SelectMany(g => g).Select(t => t.Thumbnail));
             Screen screen = Screen.FromHandle(mapPanel.Handle) ?? Screen.PrimaryScreen;
             int maxSize = Properties.Settings.Default.MaxMapTileTextureSize;
             if (maxSize == 0)
@@ -253,7 +266,6 @@ namespace MobiusEditor.Tools
             int maxWidth = Math.Min(templateTypeImages.Max(t => t.Width), maxSize);
             int maxHeight = Math.Min(templateTypeImages.Max(t => t.Height), maxSize);
             ImageList imageList = new ImageList();
-            imageList.Images.Add(clear.Thumbnail);
             imageList.Images.AddRange(templateTypeImages.Select(im => im.FitToBoundingBox(maxWidth, maxHeight)).ToArray());
             imageList.ImageSize = new Size(maxWidth, maxHeight);
             imageList.ColorDepth = ColorDepth.Depth24Bit;
@@ -297,7 +309,8 @@ namespace MobiusEditor.Tools
             this.templateTypeMapPanel.MaxZoom = 1;
             this.templateTypeMapPanel.SmoothScale = Globals.PreviewSmoothScale;
             this.mouseTooltip = mouseTooltip;
-            SelectedTemplateType = templateTypes.First().First();
+            // Select first actually-initialised non-clear tile.
+            SelectedTemplateType = templateTypes.FirstOrDefault(gr => gr.Any(t => t.ExistsInTheater))?.FirstOrDefault(t => t.ExistsInTheater);
         }
 
         private void Url_UndoRedoDone(object sender, UndoRedoEventArgs e)
@@ -773,8 +786,7 @@ namespace MobiusEditor.Tools
             Dictionary<int, Template> undoTemplates = new Dictionary<int, Template>();
             Dictionary<int, Template> redoTemplates = new Dictionary<int, Template>();
             Map map = plugin.Map;
-
-            if (map.TemplateTypes.Where(t => t.Theaters == null || t.Theaters.Contains(map.Theater)).All(tm => !tm.IsRandom))
+            if (map.TemplateTypes.Where(t => t.ExistsInTheater && t.IsRandom).Count() == 0)
             {
                 return "This map's theater does not contain randomizable tiles.";
             }
@@ -1005,11 +1017,11 @@ namespace MobiusEditor.Tools
             bool renderGrid = (this.Layers & MapLayerFlag.LandTypes) == MapLayerFlag.LandTypes;
             if (selected != null)
             {
-                if (selected.Thumbnail == null)
+                // Special case: tiles that are not initialised, but are present on the map. Initialise with forced dummy generation.
+                // This is really only for the tile FF "research mode" on RA maps, or if FilterTheaterObjects is disabled.
+                if (selected.Thumbnail == null || !selected.Initialised)
                 {
-                    // Special case: tile is not initialised. Initialise with forced dummy generation.
-                    // This is really only for the tile FF "research mode" on RA maps.
-                    selected.Init(plugin.GameType, plugin.Map.Theater, true);
+                    selected.Init(plugin.GameType, plugin.Map.Theater, true, false);
                 }
                 CellMetrics templateTypeMetrics = new CellMetrics(selected.ThumbnailIconWidth, selected.ThumbnailIconHeight);
                 CellGrid<Template> templates = null;

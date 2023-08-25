@@ -46,7 +46,7 @@ namespace MobiusEditor.Tools.Dialogs
         protected override void InitializeInternal(MapPanel mapPanel, MapLayerFlag activeLayers, ToolStripStatusLabel toolStatusLabel, ToolTip mouseToolTip,
             IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs, ToolType> undoRedoList)
         {
-            TerrainTypeListBox.Types = plugin.Map.TerrainTypes.Where(t => !Globals.FilterTheaterObjects || t.Theaters.Contains(plugin.Map.Theater)).OrderBy(t => t.ID);
+            TerrainTypeListBox.Types = plugin.Map.TerrainTypes.Where(t => !Globals.FilterTheaterObjects || t.Theaters.Contains(plugin.Map.Theater.Name)).OrderBy(t => t.ID);
             Tool = new TerrainTool(mapPanel, activeLayers, toolStatusLabel, TerrainTypeListBox,
                 TerrainTypeMapPanel, TerrainProperties, plugin, undoRedoList);
         }

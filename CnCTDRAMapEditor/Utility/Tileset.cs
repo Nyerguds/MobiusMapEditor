@@ -195,11 +195,11 @@ namespace MobiusEditor.Utility
             {
                 return -1;
             }
-            if (!this.tiles.TryGetValue(name, out Dictionary<int, TileData> shapes))
+            if (!this.tiles.TryGetValue(name, out Dictionary<int, TileData> shapes) || shapes.Where(kv => !kv.Value.IsDummy).Count() == 0)
             {
                 return -1;
             }
-            return shapes.Max(kv => kv.Key) + 1;
+            return shapes.Where(kv => !kv.Value.IsDummy).Max(kv => kv.Key) + 1;
         }
 
     }

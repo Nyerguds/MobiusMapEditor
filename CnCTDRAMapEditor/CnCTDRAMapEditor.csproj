@@ -395,6 +395,7 @@
     <Compile Include="RedAlert\HouseTypes.cs" />
     <Compile Include="RedAlert\InfantryClassicRemap.cs" />
     <Compile Include="RedAlert\InfantryTypes.cs" />
+    <Compile Include="RedAlert\LandIniSection.cs" />
     <Compile Include="RedAlert\MissionTypes.cs" />
     <Compile Include="RedAlert\OverlayTypes.cs" />
     <Compile Include="RedAlert\SmudgeTypes.cs" />
@@ -407,6 +408,7 @@
     <Compile Include="Settings.cs" />
     <Compile Include="SoleSurvivor\GamePluginSS.cs" />
     <Compile Include="SoleSurvivor\OverlayTypes.cs" />
+    <Compile Include="SoleSurvivor\TheaterTypes.cs" />
     <Compile Include="Steamworks.NET\autogen\isteamapplist.cs" />
     <Compile Include="Steamworks.NET\autogen\isteamapps.cs" />
     <Compile Include="Steamworks.NET\autogen\isteamclient.cs" />

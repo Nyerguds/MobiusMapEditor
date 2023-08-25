@@ -20,7 +20,7 @@ namespace MobiusEditor.Tools.Dialogs
             IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs, ToolType> undoRedoList)
         {
             ObjectTypeListBox.Types = plugin.Map.BuildingTypes
-                .Where(t => !Globals.FilterTheaterObjects || t.Theaters == null || t.Theaters.Contains(plugin.Map.Theater))
+                .Where(t => !Globals.FilterTheaterObjects || !t.IsTheaterDependent || t.ExistsInTheater)
                 .OrderBy(t => t.ID);
             Tool = new BuildingTool(mapPanel, activeLayers, toolStatusLabel, ObjectTypeListBox,
                 ObjectTypeMapPanel, ObjectProperties, plugin, undoRedoList);

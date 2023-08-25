@@ -27,6 +27,12 @@ namespace MobiusEditor.RedAlert
         public static readonly TheaterType Temperate = new TheaterType(0, "Temperate", "temperat", "tem", "RA_Terrain_Temperate".Yield().Concat(commonTilesets));
         public static readonly TheaterType Snow = new TheaterType(1, "Snow", "snow", "sno", "RA_Terrain_Snow".Yield().Concat(commonTilesets));
         public static readonly TheaterType Interior = new TheaterType(2, "Interior", "interior", "int", "RA_Terrain_Interior".Yield().Concat(commonTilesets));
+        // CnCNet theaters
+        public static readonly TheaterType Winter = new TheaterType(3, "Winter", "winter", "win", true);
+        public static readonly TheaterType Desert = new TheaterType(4, "Desert", "desert", "des", true);
+        public static readonly TheaterType Jungle = new TheaterType(5, "Jungle", "jungle", "jun", true);
+        public static readonly TheaterType Barren = new TheaterType(6, "Barren", "barren", "bar", true);
+        public static readonly TheaterType Cave = new TheaterType(7, "Cave", "cave", "cav", true);
 
         private static TheaterType[] Types;
 
@@ -40,7 +46,14 @@ namespace MobiusEditor.RedAlert
 
         public static IEnumerable<TheaterType> GetTypes()
         {
-            return Types;
+            if (Globals.UseClassicFiles)
+            {
+                return Types.Where(t => t.IsClassicMixFound);
+            }
+            else
+            {
+                return Types.Where(t => t.Tilesets.Count() > 0);
+            }
         }
     }
 }

@@ -62,7 +62,8 @@ namespace MobiusEditor.Model
 
         OverlayAll = Resources | Walls | Overlay,
         Technos = Terrain | Infantry | Units | Buildings,
-        MapLayers = Terrain | Resources | Walls | Overlay | Smudge | Infantry | Units | Buildings | Waypoints,
+        /// <summary>Listing of layers that are hard-painted onto the map image.</summary>
+        MapLayers = Template | Terrain | Resources | Walls | Overlay | Smudge | Infantry | Units | Buildings | Waypoints,
         /// <summary>Listing of layers that don't need a full map repaint.</summary>
         Indicators = Boundaries | MapSymmetry | MapGrid | WaypointsIndic | FootballArea | CellTriggers
             | TechnoTriggers | BuildingRebuild | BuildingFakes | EffectRadius | WaypointRadius
@@ -189,7 +190,7 @@ namespace MobiusEditor.Model
 
         public Rectangle Bounds
         {
-            get => new Rectangle(this.TopLeft, this.Size);
+            get => this.MapSection.Bounds;
             set { this.MapSection.X = value.Left; this.MapSection.Y = value.Top; this.MapSection.Width = value.Width; this.MapSection.Height = value.Height; }
         }
 
@@ -478,11 +479,12 @@ namespace MobiusEditor.Model
             this.TeamTypes = new List<TeamType>();
             this.HousesIncludingNone = this.HouseTypesIncludingNone.Select(t => { House h = (House)Activator.CreateInstance(this.HouseType, t); h.SetDefault(); return h; }).ToArray();
             this.Houses = this.HousesIncludingNone.Where(h => h.Type.ID >= 0).ToArray();
-            this.Waypoints = waypoints.ToArray();
-            for (int i = 0; i < this.Waypoints.Length; ++i)
+            Waypoint[] wp = waypoints.ToArray();
+            this.Waypoints = new Waypoint[wp.Length];
+            for (int i = 0; i < wp.Length; ++i)
             {
-                // Deep clone, with current metric to allow showing waypoints as cell coordinates.
-                this.Waypoints[i] = new Waypoint(this.Waypoints[i].Name, this.Waypoints[i].Flag, this.Metrics, this.Waypoints[i].Cell);
+                // Deep clone with current metrics, to allow showing waypoints as cell coordinates.
+                this.Waypoints[i] = new Waypoint(wp[i].Name, wp[i].Flag, this.Metrics, wp[i].Cell);
             }
             this.DropZoneRadius = dropZoneRadius;
             this.GapRadius = gapRadius;
@@ -527,19 +529,20 @@ namespace MobiusEditor.Model
         {
             try
             {
-                foreach (TemplateType templateType in this.TemplateTypes.Where(itm => itm.Theaters == null || itm.Theaters.Contains(this.Theater)))
+                foreach (TemplateType templateType in this.TemplateTypes)
                 {
-                    templateType.Init(gameType, this.Theater);
+                    templateType.Init(gameType, this.Theater, Globals.FilterTheaterObjects);
                 }
-                foreach (SmudgeType smudgeType in this.SmudgeTypes.Where(itm => !Globals.FilterTheaterObjects || itm.Theaters == null || itm.Theaters.Contains(this.Theater)))
+                foreach (SmudgeType smudgeType in this.SmudgeTypes)
                 {
-                    smudgeType.Init();
+                    smudgeType.Init(this.Theater);
                 }
-                foreach (OverlayType overlayType in this.OverlayTypes.Where(itm => !Globals.FilterTheaterObjects || itm.Theaters == null || itm.Theaters.Contains(this.Theater)))
+                foreach (OverlayType overlayType in this.OverlayTypes)
                 {
-                    overlayType.Init(gameType);
+                    overlayType.Init(gameType, this.Theater);
                 }
-                foreach (TerrainType terrainType in this.TerrainTypes.Where(itm => !Globals.FilterTheaterObjects || itm.Theaters == null || itm.Theaters.Contains(this.Theater)))
+                string th = this.Theater.Name;
+                foreach (TerrainType terrainType in this.TerrainTypes.Where(itm => !Globals.FilterTheaterObjects || itm.Theaters == null || itm.Theaters.Contains(th)))
                 {
                     terrainType.Init();
                     terrainType.InitDisplayName();
@@ -561,14 +564,10 @@ namespace MobiusEditor.Model
                     techno.InitDisplayName();
                 }
                 DirectionType bldDir = this.UnitDirectionTypes.Where(d => d.Facing == FacingType.North).First();
-                foreach (BuildingType buildingType in this.BuildingTypes.Where(itm => !Globals.FilterTheaterObjects || itm.Theaters == null || itm.Theaters.Contains(this.Theater)))
-                {
-                    buildingType.Init(gameType, this.HouseTypesIncludingNone.Where(h => h.Equals(buildingType.OwnerHouse)).FirstOrDefault(), bldDir);
-                }
-                // Required for initialising all civilian building names shown in "built it" triggers if FilterTheaterObjects is true.
+                // No restriction. All get attempted and dummies are all filled in.
                 foreach (BuildingType buildingType in this.BuildingTypes)
                 {
-                    buildingType.InitDisplayName();
+                    buildingType.Init(gameType, this.HouseTypesIncludingNone.Where(h => h.Equals(buildingType.OwnerHouse)).FirstOrDefault(), bldDir);
                 }
             }
             catch (Exception ex)
@@ -1017,6 +1016,7 @@ namespace MobiusEditor.Model
                 tileIcon = Int32.Parse(m.Groups[2].Value);
             }
             tile = this.TemplateTypes.Where(t => String.Equals(tileType, t.Name, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+            string th = this.Theater.Name;
             if (tile == null)
             {
                 if (!safe)
@@ -1024,11 +1024,11 @@ namespace MobiusEditor.Model
                     throw new ArgumentException(String.Format("Cannot find tile type '{0}'!", tileType), context);
                 }
             }
-            else if (!tile.Theaters.Contains(this.Theater))
+            else if (tile.ExistsInTheater)
             {
                 if (!safe)
                 {
-                    throw new ArgumentException(String.Format("Tile type '{0}' does not exist in theater {1}.", tileType, this.Theater.Name), context);
+                    throw new ArgumentException(String.Format("Tile type '{0}' does not exist in theater {1}.", tileType, th), context);
                 }
                 else
                 {
@@ -1050,7 +1050,7 @@ namespace MobiusEditor.Model
             TemplateType templateType = template?.Type;
             if (templateType != null)
             {
-                sb.AppendFormat(", Template = {0} ({1})", templateType.DisplayName, template.Icon);
+                sb.AppendFormat(", Template = {0} ({1}) ({2})", templateType.DisplayName, template.Icon, template.Type.GetLandType(template.Icon).ToString());
             }
             Smudge smudge = this.Smudge[cell];
             SmudgeType smudgeType = smudge?.Type;
@@ -1606,20 +1606,6 @@ namespace MobiusEditor.Model
             HashSet<Point> locations = this.Metrics.Bounds.Points().ToHashSet();
             Rectangle boundsToUse = crop ? this.Bounds : new Rectangle(Point.Empty, this.Metrics.Size);
             Size originalTileSize = Globals.OriginalTileSize;
-            bool scaleOnWidth = !crop || this.Bounds.Width >= this.Bounds.Height;
-
-            double tileScale = scaleOnWidth ? (double)previewSize.Width / (boundsToUse.Width * originalTileSize.Width) : (double)previewSize.Height / (boundsToUse.Height * originalTileSize.Height);
-
-            Size tmpTileSize = new Size((int)Math.Round(originalTileSize.Width * tileScale), (int)Math.Round(originalTileSize.Height * tileScale));
-            tmpTileSize.Width = (int)Math.Round(Globals.OriginalTileWidth * tileScale);
-            tmpTileSize.Height = (int)Math.Round(Globals.OriginalTileHeight * tileScale);
-            if (scaleOnWidth ? (tmpTileSize.Width * boundsToUse.Width < previewSize.Width) : (tmpTileSize.Height * boundsToUse.Height < previewSize.Height))
-            {
-                tmpTileSize.Width++;
-                tmpTileSize.Height++;
-                tileScale = scaleOnWidth ? (float)tmpTileSize.Width / Globals.OriginalTileWidth : (float)tmpTileSize.Height / Globals.OriginalTileHeight;
-            }
-
             Size renderTileSize = originalTileSize;
             //Size renderTileSize = new Size((int)Math.Round(originalTileSize.Width * tileScale), (int)Math.Round(originalTileSize.Height * tileScale));
             Rectangle mapBounds = new Rectangle(boundsToUse.Left * renderTileSize.Width, boundsToUse.Top * renderTileSize.Height,
@@ -2175,7 +2161,6 @@ namespace MobiusEditor.Model
                     if (hasDamaged)
                         houseInfo.Append(" currently; ").Append(houseProdBuiltHealthy).Append(" at full strength");
                     houseInfo.Append(", uses ").Append(houseUsageBuilt).Append(".");
-                    
                     info.Add(houseInfo.ToString());
                 }
             }

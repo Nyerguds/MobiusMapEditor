@@ -12,6 +12,7 @@
 // distributed with this program. You should have received a copy of the
 // GNU General Public License along with permitted additional restrictions
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
+using MobiusEditor.Utility;
 using System;
 using System.ComponentModel;
 using System.Drawing;
@@ -75,7 +76,7 @@ namespace MobiusEditor.Model
             this.fullHeight = fullSize.Height;
         }
 
-        public void FixBounds()
+        public Rectangle FixBounds()
         {
             int fixedX = Math.Max(1, Math.Min(fullWidth - 2, x));
             int fixedY = Math.Max(1, Math.Min(fullHeight - 2, y));
@@ -86,7 +87,18 @@ namespace MobiusEditor.Model
             Y = fixedY;
             Width = fixedWidth;
             Height = fixedHeight;
+            return Bounds;
         }
+
+        [NonSerializedINIKey]
+        public int FullWidth => fullWidth;
+        [NonSerializedINIKey]
+        public int FullHeight => fullHeight;
+
+        [NonSerializedINIKey]
+        public Rectangle Bounds => new Rectangle(x, y, width, height);
+        [NonSerializedINIKey]
+        public Rectangle FullBounds => new Rectangle(0, 0, fullWidth, fullHeight);
 
         private int x;
         [DefaultValue(1)]

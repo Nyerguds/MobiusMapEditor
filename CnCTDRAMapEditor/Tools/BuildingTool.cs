@@ -799,7 +799,7 @@ namespace MobiusEditor.Tools
                 {
                     foreach (Point point in bibCells.Keys)
                     {
-                        (Rectangle, Action<Graphics>) bibCellRender = MapRenderer.RenderSmudge(map.Theater, point, Globals.PreviewTileSize, Globals.PreviewTileScale, bibCells[point]);
+                        (Rectangle, Action<Graphics>) bibCellRender = MapRenderer.RenderSmudge(point, Globals.PreviewTileSize, Globals.PreviewTileScale, bibCells[point]);
                         bibRender.Add(bibCellRender);
                     }
                 }

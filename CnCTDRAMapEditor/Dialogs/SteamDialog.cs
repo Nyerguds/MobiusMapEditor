@@ -39,7 +39,6 @@ namespace MobiusEditor.Dialogs
         private SimpleMultiThreading multiThreader;
 
         private bool isPublishing = false;
-        SteamSection steamCloneSection = null;
         private bool mapWasPublished = false;
         public bool MapWasPublished => mapWasPublished;
 
@@ -117,14 +116,13 @@ namespace MobiusEditor.Dialogs
             statusUpdateTimer.Dispose();
         }
 
-        protected virtual void OnPublishSuccess()
+        protected virtual void OnPublishSuccess(SteamSection steamCloneSection)
         {
             lblStatus.Text = "Map published.";
             isPublishing = false;
             if (steamCloneSection != null)
             {
                 plugin.Map.SteamSection.PublishedFileId = steamCloneSection.PublishedFileId;
-                steamCloneSection = null;
             }
             mapWasPublished = true;
             UpdatePublishButton();
@@ -261,11 +259,12 @@ namespace MobiusEditor.Dialogs
                 tags.Add("MultiPlayer");
             }
             // Clone to have version without line breaks to give to the Steam publish.
-            steamCloneSection = new SteamSection();
+            SteamSection steamCloneSection = new SteamSection();
             plugin.Map.SteamSection.CopyTo(steamCloneSection, typeof(NonSerializedINIKeyAttribute));
             // Restore original description from control, with actual line breaks instead of '@' replacements.
             steamCloneSection.Description = txtDescription.Text;
-            if (SteamworksUGC.PublishUGC(sendPath, steamCloneSection, tags, OnPublishSuccess, OnOperationFailed))
+            // We need to pass on the clone section to the succes function since it gets the final steam ID filled in by the publish operation.
+            if (SteamworksUGC.PublishUGC(sendPath, steamCloneSection, tags, () => OnPublishSuccess(steamCloneSection), OnOperationFailed))
             {
                 isPublishing = true;
                 lblStatus.Text = SteamworksUGC.CurrentOperation.Status;

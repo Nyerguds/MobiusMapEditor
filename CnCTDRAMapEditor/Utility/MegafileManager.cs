@@ -130,6 +130,14 @@ namespace MobiusEditor.Utility
             }
         }
 
+        public bool ClassicFileExists(string path)
+        {
+            using (Stream file = OpenFileClassic(path))
+            {
+                return file != null;
+            }
+        }
+
         public Stream OpenFileClassic(String path)
         {
             if (disposedValue)

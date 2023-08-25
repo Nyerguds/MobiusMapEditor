@@ -38,10 +38,10 @@ namespace MobiusEditor.Model
     [DebuggerDisplay("{Name}")]
     public class SmudgeType : IBrowsableType
     {
-        public sbyte ID { get; private set; }
+        public int ID { get; private set; }
         public string Name { get; private set; }
         public string DisplayName { get; private set; }
-        public TheaterType[] Theaters { get; private set; }
+        public bool ExistsInTheater { get; private set; }
         public Size Size { get; set; }
         public int Icons { get; set; }
         public SmudgeTypeFlag Flag { get; private set; }
@@ -50,52 +50,8 @@ namespace MobiusEditor.Model
         public Bitmap Thumbnail { get; set; }
         private string nameId;
 
-        public SmudgeType(sbyte id, string name, string textId)
-            : this(id, name, textId, null, new Size(1, 1), 1, SmudgeTypeFlag.None)
-        {
-        }
 
-        public SmudgeType(sbyte id, string name, string textId, TheaterType[] theaters)
-            : this(id, name, textId, theaters, new Size(1, 1), 1, SmudgeTypeFlag.None)
-        {
-        }
-
-        public SmudgeType(sbyte id, string name, string textId, int icons)
-            : this(id, name, textId, null, new Size(1, 1), icons, SmudgeTypeFlag.None)
-        {
-        }
-
-        public SmudgeType(sbyte id, string name, string textId, TheaterType[] theaters, int icons)
-            : this(id, name, textId, theaters, new Size(1, 1), icons, SmudgeTypeFlag.None)
-        {
-        }
-
-        public SmudgeType(sbyte id, string name, string textId, TheaterType[] theaters, Size size, SmudgeTypeFlag flag)
-            : this(id, name, textId, theaters, size, 1, flag)
-        {
-        }
-
-        public SmudgeType(sbyte id, string name, string textId, Size size, SmudgeTypeFlag flag)
-            : this(id, name, textId, null, size, 1, flag)
-        {
-        }
-
-        public SmudgeType(sbyte id, string name, string textId, Size size)
-            : this(id, name, textId, null, size, SmudgeTypeFlag.None)
-        {
-        }
-
-        public SmudgeType(sbyte id, string name, string textId, TheaterType[] theaters, Size size)
-            : this(id, name, textId, theaters, size, SmudgeTypeFlag.None)
-        {
-        }
-
-        public SmudgeType(sbyte id, string name, string textId, Size size, int icons, SmudgeTypeFlag flag)
-            : this(id, name, textId, null, size, icons, flag)
-        {
-        }
-
-        public SmudgeType(sbyte id, string name, string textId, TheaterType[] theaters, Size size, int icons, SmudgeTypeFlag flag)
+        public SmudgeType(int id, string name, string textId, Size size, int icons, SmudgeTypeFlag flag)
         {
             this.ID = id;
             this.Name = name;
@@ -103,7 +59,26 @@ namespace MobiusEditor.Model
             this.Size = size;
             this.Icons = icons;
             this.Flag = flag;
-            this.Theaters = theaters;
+        }
+
+        public SmudgeType(int id, string name, string textId)
+            : this(id, name, textId, new Size(1, 1), 1, SmudgeTypeFlag.None)
+        {
+        }
+
+        public SmudgeType(int id, string name, string textId, int icons)
+            : this(id, name, textId, new Size(1, 1), icons, SmudgeTypeFlag.None)
+        {
+        }
+
+        public SmudgeType(int id, string name, string textId, Size size, SmudgeTypeFlag flag)
+            : this(id, name, textId, size, 1, flag)
+        {
+        }
+
+        public SmudgeType(int id, string name, string textId, Size size)
+            : this(id, name, textId, size, SmudgeTypeFlag.None)
+        {
         }
 
         public override bool Equals(object obj)
@@ -112,9 +87,17 @@ namespace MobiusEditor.Model
             {
                 return ReferenceEquals(this, sm) || (this.ID == sm.ID && this.Name == sm.Name && this.Flag == sm.Flag && this.Size == sm.Size && this.Icons == sm.Icons);
             }
-            else if (obj is sbyte)
+            else if (obj is sbyte sb)
             {
-                return this.ID == (sbyte)obj;
+                return this.ID == sb;
+            }
+            else if (obj is byte b)
+            {
+                return this.ID == b;
+            }
+            else if (obj is int i)
+            {
+                return this.ID == i;
             }
             else if (obj is string)
             {
@@ -140,42 +123,28 @@ namespace MobiusEditor.Model
                 : this.Name.ToUpperInvariant();
         }
 
-        public void Init()
+        public void Init(TheaterType theater)
         {
             InitDisplayName();
-            var oldImage = this.Thumbnail;
+            this.ExistsInTheater = Globals.TheArchiveManager.ClassicFileExists(this.Name + "." + theater.ClassicExtension);
             var tileSize = Globals.PreviewTileSize;
-            Bitmap th = new Bitmap(tileSize.Width * this.Size.Width, tileSize.Height * this.Size.Height);
+            Bitmap oldImage = this.Thumbnail;
+            Bitmap th = new Bitmap(this.Size.Width * Globals.PreviewTileSize.Width, this.Size.Height * Globals.PreviewTileSize.Height);
             th.SetResolution(96, 96);
-            bool found = false;
+            int icon = 0;
             using (Graphics g = Graphics.FromImage(th))
             {
                 MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
-                int icon = 0;
                 for (int y = 0; y < this.Size.Height; y++)
                 {
                     for (int x = 0; x < this.Size.Width; x++)
                     {
-                        if (Globals.TheTilesetManager.GetTileData(this.Name, icon++, out Tile tile))
-                        {
-                            found = true;
-                            Rectangle overlayBounds = MapRenderer.RenderBounds(tile.Image.Size, new Size(1, 1), Globals.PreviewTileScale);
-                            overlayBounds.X += tileSize.Width * x;
-                            overlayBounds.Y += tileSize.Height * y;
-                            g.DrawImage(tile.Image, overlayBounds);
-                        }
+                        Smudge mockSmudge = new Smudge(this) { Icon = icon++ };
+                        MapRenderer.RenderSmudge(new Point(x, y), Globals.PreviewTileSize, Globals.PreviewTileScale, mockSmudge).Item2(g);
                     }
                 }
             }
-            if (found)
-            {
-                this.Thumbnail = th;
-            }
-            else
-            {
-                th.Dispose();
-                this.Thumbnail = null;
-            }
+            this.Thumbnail = th;
             if (oldImage != null)
             {
                 try { oldImage.Dispose(); }
@@ -199,6 +168,7 @@ namespace MobiusEditor.Model
         }
         public void Reset()
         {
+            this.ExistsInTheater = false;
             Bitmap oldImage = this.Thumbnail;
             this.Thumbnail = null;
             if (oldImage != null)

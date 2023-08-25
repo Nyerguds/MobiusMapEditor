@@ -189,9 +189,9 @@ namespace MobiusEditor.Utility
 
         public int GetTileDataLength(string name)
         {
-            if (this.theater == null)
+            if (name == null ||  this.theater == null)
             {
-                return 0;
+                return -1;
             }
             IEnumerable<string> searchTilesets = this.theater.Tilesets;
             foreach (Tileset tileset in tilesets.Join(searchTilesets, x => x.Key, y => y, (x, y) => x.Value))

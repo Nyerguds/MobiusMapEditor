@@ -123,6 +123,7 @@ namespace MobiusEditor
             this.filename = fileToOpen;
 
             InitializeComponent();
+            mapPanel.SmoothScale = Globals.MapSmoothScale;
             // Show on monitor that the mouse is in, since that's where the user is probably looking.
             Screen s = Screen.FromPoint(Cursor.Position);
             Point location = s.Bounds.Location;
@@ -293,11 +294,11 @@ namespace MobiusEditor
                             break;
                         case Keys.Oemplus:
                         case Keys.Add:
-                            viewZoomInMenuItem.PerformClick();
+                            ZoomIn();
                             return true;
                         case Keys.OemMinus:
                         case Keys.Subtract:
-                            viewZoomOutMenuItem.PerformClick();
+                            ZoomOut();
                             return true;
                     }
                     if (delta != Point.Empty)
@@ -341,13 +342,13 @@ namespace MobiusEditor
             switch (typedChar)
             {
                 case '*':
-                    viewZoomResetMenuItem.PerformClick();
+                    ZoomReset();
                     break;
                 case '+':
-                    viewZoomInMenuItem.PerformClick();
+                    ZoomIn();
                     break;
                 case '-':
-                    viewZoomOutMenuItem.PerformClick();
+                    ZoomOut();
                     break;
                 default:
                     handled = false;
@@ -357,6 +358,29 @@ namespace MobiusEditor
             {
                 e.Handled = true;
             }
+        }
+
+        private void ZoomIn()
+        {
+            if (activeTool == null || activeTool.NavigationWidget.IsDragging())
+            {
+                return;
+            }
+            mapPanel.IncreaseZoomStep();
+        }
+
+        private void ZoomOut()
+        {
+            if (activeTool == null || activeTool.NavigationWidget.IsDragging())
+            {
+                return;
+            }
+            mapPanel.IncreaseZoomStep();
+        }
+
+        private void ZoomReset()
+        {
+            mapPanel.Zoom = 1.0;
         }
 
         private void UpdateUndoRedo()
@@ -472,6 +496,16 @@ namespace MobiusEditor
             {
                 OpenFile(selectedFileName);
             }
+        }
+
+        private void FileOpenFromMixMenuItem_Click(object sender, EventArgs e)
+        {
+            PromptSaveMap(OpenFileFromMix, false);
+        }
+
+        private void OpenFileFromMix()
+        {
+            // TODO make mix browsing ui
         }
 
         private void FileSaveMenuItem_Click(object sender, EventArgs e)
@@ -1058,17 +1092,17 @@ namespace MobiusEditor
 
         private void ViewZoomInMenuItem_Click(Object sender, EventArgs e)
         {
-            mapPanel.IncreaseZoomStep();
+            ZoomIn();
         }
 
         private void ViewZoomOutMenuItem_Click(Object sender, EventArgs e)
         {
-            mapPanel.DecreaseZoomStep();
+            ZoomOut();
         }
 
         private void ViewZoomResetMenuItem_Click(Object sender, EventArgs e)
         {
-            mapPanel.Zoom = 1.0;
+            ZoomReset();
         }
 
         private void ViewZoomBoundsMenuItem_Click(Object sender, EventArgs e)
@@ -1098,7 +1132,7 @@ namespace MobiusEditor
             // Viewtool has asked a deliberate refresh; probably the map position jumped without the mouse moving.
             UpdateCellStatusLabel(true);
         }
-        
+
         private void MapPanel_MouseMove(object sender, MouseEventArgs e)
         {
             UpdateCellStatusLabel(false);
@@ -1324,7 +1358,7 @@ namespace MobiusEditor
             {
                 return false;
             }
-            theater = (iniContents["Map"].TryGetValue("Theater") ?? "temperate").ToLower();
+            theater = (iniContents["Map"].TryGetValue("Theater") ?? String.Empty).ToLower();
             switch (fileType)
             {
                 case FileType.INI:
@@ -1628,7 +1662,19 @@ namespace MobiusEditor
             if (mostCommon.Length > 0)
                 mappings.Add(mostCommon[0].ToArgb(), "CLEAR1");
             if (mostCommon.Length > 1)
-                mappings.Add(mostCommon[1].ToArgb(), plugin.Map.Theater.Name == RedAlert.TheaterTypes.Interior.Name ? "FLOR0001:0" : "W1:0");
+            {
+                ExplorerComparer expl = new ExplorerComparer();
+                TheaterType theater = plugin.Map.Theater;
+                TemplateType tt = plugin.Map.TemplateTypes.Where(t => t.ExistsInTheater
+                    //&& (!Globals.FilterTheaterObjects || t.Theaters == null || t.Theaters.Length == 0 || t.Theaters.Contains(plugin.Map.Theater.Name))
+                    && (t.Flag & TemplateTypeFlag.Clear) == TemplateTypeFlag.DefaultFill
+                    && (t.Flag & TemplateTypeFlag.IsGrouped) == TemplateTypeFlag.None)
+                .OrderBy(t => t.Name, expl).FirstOrDefault();
+                if (tt != null)
+                {
+                    mappings.Add(mostCommon[1].ToArgb(), tt.Name + ":0");
+                }
+            }
             using (NewFromImageDialog nfi = new NewFromImageDialog(plugin, imageWidth, imageHeight, imageData, mappings))
             {
                 nfi.StartPosition = FormStartPosition.CenterParent;
@@ -1740,9 +1786,16 @@ namespace MobiusEditor
                 mapPanel.MapImage = plugin.MapImage;
                 filename = loadInfo.FileName;
                 loadedFileType = loadInfo.FileType;
-                lock (jumpToBounds_lock)
+                if (Globals.ZoomToBoundsOnLoad)
                 {
-                    this.jumpToBounds = Globals.ZoomToBoundsOnLoad;
+                    lock (jumpToBounds_lock)
+                    {
+                        this.jumpToBounds = true;
+                    }
+                }
+                else
+                {
+                    ZoomReset();
                 }
                 url.Clear();
                 CleanupTools(oldPlugin?.GameType ?? GameType.None);
@@ -1840,16 +1893,16 @@ namespace MobiusEditor
             availableToolTypes = ToolType.None;
             if (plugin != null)
             {
-                TheaterType th = plugin.Map.Theater;
-                availableToolTypes |= plugin.Map.TemplateTypes.Any(t => t.Theaters == null || t.Theaters.Contains(th)) ? ToolType.Map : ToolType.None;
-                availableToolTypes |= plugin.Map.SmudgeTypes.Any(t => !Globals.FilterTheaterObjects || t.Theaters == null || t.Theaters.Contains(th)) ? ToolType.Smudge : ToolType.None;
-                availableToolTypes |= plugin.Map.OverlayTypes.Any(t => t.IsOverlay && (!Globals.FilterTheaterObjects || t.Theaters == null || t.Theaters.Contains(th))) ? ToolType.Overlay : ToolType.None;
+                string th = plugin.Map.Theater.Name;
+                availableToolTypes |= ToolType.Map; // Should always show clear terrain, no matter what.
+                availableToolTypes |= plugin.Map.SmudgeTypes.Any(t => !Globals.FilterTheaterObjects || t.ExistsInTheater) ? ToolType.Smudge : ToolType.None;
+                availableToolTypes |= plugin.Map.OverlayTypes.Any(t => t.IsOverlay && (!Globals.FilterTheaterObjects || t.ExistsInTheater)) ? ToolType.Overlay : ToolType.None;
                 availableToolTypes |= plugin.Map.TerrainTypes.Any(t => !Globals.FilterTheaterObjects || t.Theaters == null || t.Theaters.Contains(th)) ? ToolType.Terrain : ToolType.None;
                 availableToolTypes |= plugin.Map.InfantryTypes.Any() ? ToolType.Infantry : ToolType.None;
                 availableToolTypes |= plugin.Map.UnitTypes.Any() ? ToolType.Unit : ToolType.None;
-                availableToolTypes |= plugin.Map.BuildingTypes.Any(t => !Globals.FilterTheaterObjects || t.Theaters == null || t.Theaters.Contains(th)) ? ToolType.Building : ToolType.None;
-                availableToolTypes |= plugin.Map.OverlayTypes.Any(t => t.IsResource && (!Globals.FilterTheaterObjects || t.Theaters == null || t.Theaters.Contains(th))) ? ToolType.Resources : ToolType.None;
-                availableToolTypes |= plugin.Map.OverlayTypes.Any(t => t.IsWall && (!Globals.FilterTheaterObjects || t.Theaters == null || t.Theaters.Contains(th))) ? ToolType.Wall : ToolType.None;
+                availableToolTypes |= plugin.Map.BuildingTypes.Any(t => !Globals.FilterTheaterObjects || !t.IsTheaterDependent || t.ExistsInTheater) ? ToolType.Building : ToolType.None;
+                availableToolTypes |= plugin.Map.OverlayTypes.Any(t => t.IsResource && (!Globals.FilterTheaterObjects || t.ExistsInTheater)) ? ToolType.Resources : ToolType.None;
+                availableToolTypes |= plugin.Map.OverlayTypes.Any(t => t.IsWall && (!Globals.FilterTheaterObjects || t.ExistsInTheater)) ? ToolType.Wall : ToolType.None;
                 // Waypoints are always available.
                 availableToolTypes |= ToolType.Waypoint;
                 // Always allow celltrigger tool, even if triggers list is empty; it contains a tooltip saying which trigger types are eligible.
@@ -2416,14 +2469,30 @@ namespace MobiusEditor
             }
             if (plugin.GameType == GameType.SoleSurvivor)
             {
-                MessageBox.Show("Sole Survivor maps cannot be published to Steam; they are not usable by the C&C Remastered Collection.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Sole Survivor maps cannot be published to the Steam Workshop; they are not usable by the C&C Remastered Collection.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
+            }
+            if (plugin.Map.Theater.IsModTheater) // || plugin.Map.Theater.Tilesets.Count() == 0)
+            {
+                if (!plugin.Map.BasicSection.SoloMission)
+                {
+                    MessageBox.Show("This map uses a nonstandard theater that is not usable by the C&C Remastered Collection. To avoid issues, these can not be published to the Steam Workshop.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+                // If the mission is already published on Steam, don't bother asking this and just continue.
+                if (plugin.Map.SteamSection.PublishedFileId == 0
+                        && DialogResult.Yes != MessageBox.Show("This map uses a nonstandard theater that is not usable by the C&C Remastered Collection without modding!" +
+                        " Are you sure you want to publish a mission that will be incompatible with the standard unmodded game?", "Warning",
+                        MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2))
+                {
+                    return;
+                }
             }
             if (plugin.GameType == GameType.TiberianDawn && plugin.IsMegaMap)
             {
                 if (!plugin.Map.BasicSection.SoloMission)
                 {
-                    MessageBox.Show("Tiberian Dawn multiplayer megamaps cannot be published to Steam; they are not usable by the C&C Remastered Collection without modding, and may cause issues on the official servers.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show("Tiberian Dawn multiplayer megamaps cannot be published to the Steam Workshop; they are not usable by the C&C Remastered Collection without modding, and may cause issues on the official servers.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
                 // If the mission is already published on Steam, don't bother asking this and just continue.
@@ -2606,8 +2675,10 @@ namespace MobiusEditor
 
         private void LoadIcons(IGamePlugin plugin)
         {
-            TemplateType template = plugin.Map.TemplateTypes.Where(tt => (tt.Flag & TemplateTypeFlag.Clear) != TemplateTypeFlag.Clear && tt.IconWidth == 1 && tt.IconHeight == 1
-                && (tt.Theaters == null || tt.Theaters.Contains(plugin.Map.Theater)))
+            TheaterType theater = plugin.Map.Theater;
+            string th = theater.Name;
+            TemplateType template = plugin.Map.TemplateTypes.Where(tt => tt.ExistsInTheater && (tt.Flag & TemplateTypeFlag.Clear) != TemplateTypeFlag.Clear
+                && tt.IconWidth == 1 && tt.IconHeight == 1) //&& (tt.Theaters == null || tt.Theaters.Contains(th)))
                 .OrderBy(tt => tt.Name).FirstOrDefault();
             Tile templateTile = null;
             if (template != null)
@@ -2616,28 +2687,40 @@ namespace MobiusEditor
             }
             // For the following, check if the thumbnail was initialised.
             SmudgeType smudge = plugin.Map.SmudgeTypes.Where(sm => !sm.IsAutoBib && sm.Icons == 1 && sm.Size.Width == 1 && sm.Size.Height == 1 && sm.Thumbnail != null
-                && (!Globals.FilterTheaterObjects || sm.Theaters == null || sm.Theaters.Contains(plugin.Map.Theater)))
+                && (!Globals.FilterTheaterObjects || sm.ExistsInTheater))
                 .OrderBy(sm => sm.ID).FirstOrDefault();
+            if (smudge == null)
+            {
+                smudge = plugin.Map.SmudgeTypes.Where(sm => !sm.IsAutoBib && sm.Size.Width == 1 && sm.Size.Height == 1 && sm.Thumbnail != null
+                    && (!Globals.FilterTheaterObjects || sm.ExistsInTheater))
+                    .OrderBy(sm => sm.ID).FirstOrDefault();
+                if (smudge == null)
+                {
+                    smudge = plugin.Map.SmudgeTypes.Where(sm => !sm.IsAutoBib && sm.Thumbnail != null
+                        && (!Globals.FilterTheaterObjects || sm.ExistsInTheater))
+                        .OrderByDescending(sm => sm.ID).FirstOrDefault();
+                }
+            }
             OverlayType overlay = plugin.Map.OverlayTypes.Where(ov => (ov.Flag & OverlayTypeFlag.Crate) != OverlayTypeFlag.None && ov.Thumbnail != null
-                && (!Globals.FilterTheaterObjects || ov.Theaters == null || ov.Theaters.Contains(plugin.Map.Theater)))
+                && (!Globals.FilterTheaterObjects || ov.ExistsInTheater))
                 .OrderBy(ov => ov.ID).FirstOrDefault();
             if (overlay == null)
             {
                 overlay = plugin.Map.OverlayTypes.Where(ov => (ov.Flag & OverlayTypeFlag.Flag) == OverlayTypeFlag.Flag && ov.Thumbnail != null
-                    && (!Globals.FilterTheaterObjects || ov.Theaters == null || ov.Theaters.Contains(plugin.Map.Theater)))
+                    && (!Globals.FilterTheaterObjects || ov.ExistsInTheater))
                     .OrderBy(ov => ov.ID).FirstOrDefault();
             }
             TerrainType terrain = plugin.Map.TerrainTypes.Where(tr => tr.Thumbnail != null &&
-                (!Globals.FilterTheaterObjects || tr.Theaters == null || tr.Theaters.Contains(plugin.Map.Theater)))
+                (!Globals.FilterTheaterObjects || tr.Theaters == null || tr.Theaters.Contains(th)))
                 .OrderBy(tr => tr.ID).FirstOrDefault();
             InfantryType infantry = plugin.Map.InfantryTypes.FirstOrDefault();
             UnitType unit = plugin.Map.UnitTypes.FirstOrDefault();
             BuildingType building = plugin.Map.BuildingTypes.Where(bl => bl.Size.Width == 2 && bl.Size.Height == 2
-                                        && (!Globals.FilterTheaterObjects || bl.Theaters == null || bl.Theaters.Contains(plugin.Map.Theater))).OrderBy(bl => bl.ID).FirstOrDefault();
+                                        && (!Globals.FilterTheaterObjects || !bl.IsTheaterDependent || bl.ExistsInTheater)).OrderBy(bl => bl.ID).FirstOrDefault();
             OverlayType resource = plugin.Map.OverlayTypes.Where(ov => (ov.Flag & OverlayTypeFlag.TiberiumOrGold) == OverlayTypeFlag.TiberiumOrGold
-                                        && (!Globals.FilterTheaterObjects || ov.Theaters == null || ov.Theaters.Contains(plugin.Map.Theater))).OrderBy(ov => ov.ID).FirstOrDefault();
+                                        && (!Globals.FilterTheaterObjects || ov.ExistsInTheater)).OrderBy(ov => ov.ID).FirstOrDefault();
             OverlayType wall = plugin.Map.OverlayTypes.Where(ov => (ov.Flag & OverlayTypeFlag.Wall) == OverlayTypeFlag.Wall
-                                        && (!Globals.FilterTheaterObjects || ov.Theaters == null || ov.Theaters.Contains(plugin.Map.Theater))).OrderBy(ov => ov.ID).FirstOrDefault();
+                                        && (!Globals.FilterTheaterObjects || ov.ExistsInTheater)).OrderBy(ov => ov.ID).FirstOrDefault();
             bool gotBeacon = Globals.TheTilesetManager.GetTileData("beacon", 0, out Tile waypoint);
             if (!gotBeacon)
             {
@@ -2754,7 +2837,6 @@ namespace MobiusEditor
                 }
                 if (performJump)
                 {
-                    //MessageBox.Show("jumping");
                     if (plugin != null && plugin.Map != null && mapPanel.MapImage != null)
                     {
                         Rectangle rect = plugin.Map.Bounds;

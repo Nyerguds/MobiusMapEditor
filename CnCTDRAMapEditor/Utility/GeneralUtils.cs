@@ -347,6 +347,7 @@ namespace MobiusEditor.Utility
         /// from the center cell, and the tile size. Note that this calculates a deliberately rounded-down "center cell", as the game
         /// does it, and then centers the box on that cell, so this does not necessarily match the actual center of the building.
         /// </summary>
+        /// <remarks>This function is used for indicating the area-of-effect circle of special abilities.</remarks>
         /// <param name="cell">The top left cell of the object</param>
         /// <param name="cellsWide">How wide the object is, in cells. Should be at least 1.</param>
         /// <param name="cellsHigh">How high the object is, in cells. Should be at least 1.</param>
@@ -398,26 +399,7 @@ namespace MobiusEditor.Utility
             return argex.ParamName;
         }
 
-        public static bool[] GetMaskFromString(int length, string maskString, char clearChar, params char[] ignoreChars)
-        {
-            bool[] mask = new bool[length];
-            if (String.IsNullOrWhiteSpace(maskString))
-            {
-                mask.Clear(true);
-                return mask;
-            }
-            foreach (char ign in ignoreChars) {
-                maskString = maskString.Replace(ign.ToString(), String.Empty);
-            }
-            int len = Math.Min(maskString.Length, length);
-            for (int i = 0; i < len; ++i)
-            {
-                mask[i] = maskString[i] != clearChar;
-            }
-            return mask;
-        }
-
-        public static bool[,] GetMaskFromString(int width, int height, string maskString)
+        public static bool[,] GetMaskFromString(int width, int height, string maskString, char clearChar, params char[] ignoreChars)
         {
             bool[,] mask = new bool[height, width];
             if (String.IsNullOrWhiteSpace(maskString))
@@ -425,24 +407,26 @@ namespace MobiusEditor.Utility
                 mask.Clear(true);
                 return mask;
             }
+            if (ignoreChars.Length > 0)
+            {
+                Regex clearIgnore = new Regex("[" + Regex.Escape(new String(ignoreChars)) + "]+", RegexOptions.IgnoreCase);
+                maskString = clearIgnore.Replace(maskString, String.Empty);
+            }
             int charIndex = 0;
             for (int y = 0; y < height; ++y)
             {
                 for (int x = 0; x < width; ++x, ++charIndex)
                 {
-                    // The format allows whitespace for clarity. Skip without consequence.
-                    while (charIndex < maskString.Length && maskString[charIndex] == ' ')
-                    {
-                        charIndex++;
-                    }
-                    mask[y, x] = charIndex < maskString.Length && maskString[charIndex] != '0';
+                    mask[y, x] = charIndex < maskString.Length && maskString[charIndex] != clearChar;
                 }
             }
             return mask;
         }
 
-        public static string GetStringFromMask(bool[,] mask)
+        public static string GetStringFromMask(bool[,] mask, char occupiedChar, char clearChar, char? separatorChar)
         {
+            bool hasSeparator = separatorChar.HasValue;
+            char separator = separatorChar ?? ' ';
             int baseMaskY = mask.GetLength(0);
             int baseMaskX = mask.GetLength(1);
             StringBuilder occupyMask = new StringBuilder();
@@ -451,12 +435,11 @@ namespace MobiusEditor.Utility
             {
                 for (var x = 0; x < baseMaskX; ++x)
                 {
-                    occupyMask.Append(mask[y, x] ? 1 : 0);
+                    occupyMask.Append(mask[y, x] ? occupiedChar : clearChar);
                 }
-                // Not really needed, but eh, it's prettier.
-                if (y < lastY)
+                if (y < lastY && hasSeparator)
                 {
-                    occupyMask.Append(" ");
+                    occupyMask.Append(separator);
                 }
             }
             return occupyMask.ToString();
@@ -585,6 +568,7 @@ namespace MobiusEditor.Utility
         {
             return FileMaskToRegex(fileMask, true);
         }
+
         public static Regex FileMaskToRegex(string fileMask, bool ignoreCase)
         {
             String convertedMask = "^" + Regex.Escape(fileMask).Replace("\\*", ".*").Replace("\\?", ".") + "$";

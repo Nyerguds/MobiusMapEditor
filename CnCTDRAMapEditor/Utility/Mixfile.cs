@@ -129,7 +129,7 @@ namespace MobiusEditor.Utility
             {
                 if (readOffset + 88 > mixLength)
                 {
-                    throw new ArgumentException("mixMap", "Not a valid mix file: minimum encrypted header length exceeds file length.");
+                    throw new ArgumentException("Not a valid mix file: minimum encrypted header length exceeds file length.", "mixMap");
                 }
                 header = DecodeHeader(mixMap, mixStart, mixLength, ref readOffset);
             }
@@ -138,7 +138,7 @@ namespace MobiusEditor.Utility
                 headerSize = 6 + (uint)(fileCount * 12);
                 if (readOffset + headerSize > mixLength)
                 {
-                    throw new ArgumentException("mixMap", "Not a valid mix file: header length exceeds file length.");
+                    throw new ArgumentException("Not a valid mix file: header length exceeds file length.", "mixMap");
                 }
                 using (Stream headerStream = this.CreateViewStream(mixMap, mixStart, mixLength, readOffset, headerSize))
                 {
@@ -164,7 +164,7 @@ namespace MobiusEditor.Utility
                 hdrPtr += 12;
                 if (fileOffset + fileLength > mixLength)
                 {
-                    throw new ArgumentException("mixMap", String.Format("Not a valid mix file: file #{0} with id {1:X08} exceeds archive length.", i, fileId));
+                    throw new ArgumentException(String.Format("Not a valid mix file: file #{0} with id {1:X08} exceeds archive length.", i, fileId), "mixMap");
                 }
                 this.mixFileContents.Add(fileId, (fileOffset, fileLength));
             }

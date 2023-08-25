@@ -26,41 +26,42 @@ namespace MobiusEditor.Model
     public enum BuildingTypeFlag
     {
         /// <summary>No flags set.</summary>
-        None           = 0,
+        None             = 0,
         /// <summary>Produces structures.</summary>
-        Factory        = (1 << 0),
+        Factory          = (1 << 0),
         /// <summary>Has a bib attached.</summary>
-        Bib            = (1 << 1),
+        Bib              = (1 << 1),
         /// <summary>Is a fake building.</summary>
-        Fake           = (1 << 2),
+        Fake             = (1 << 2),
         /// <summary>Has a rotating turret, and accepts a Facing value in the ini file.</summary>
-        Turret         = (1 << 3),
+        Turret           = (1 << 3),
         /// <summary>Only has a single frame of graphics.</summary>
-        SingleFrame    = (1 << 4),
+        SingleFrame      = (1 << 4),
         /// <summary>Does not adjust to house colors.</summary>
-        NoRemap        = (1 << 5),
+        NoRemap          = (1 << 5),
         /// <summary>Can show a gap area-of-effect radius indicator.</summary>
-        IsGapGenerator = (1 << 7),
+        GapGenerator     = (1 << 7),
+        /// <summary>Do not show this building in the lists if its graphics were not found in the currently loaded theater.</summary>
+        TheaterDependent = (1 << 8),
     }
 
     public class BuildingType : ICellOverlapper, ICellOccupier, ITechnoType
     {
-        public sbyte ID { get; private set; }
+        public int ID { get; private set; }
         public string Name { get; private set; }
         public string DisplayName { get; private set; }
         public string DisplayNameWithTheaterInfo
         {
             get
             {
-                if (this.Theaters == null)
+                if (!this.IsTheaterDependent || this.ExistsInTheater)
                 {
                     return this.DisplayName;
                 }
-                if (this.Theaters.Length == 0)
+                else
                 {
-                    return this.DisplayName + " (Not in any theaters)";
+                    return this.DisplayName + " (different theater)";
                 }
-                return this.DisplayName + " (" + String.Join(",", this.Theaters.Select(th => th.Name).ToArray()) +")";
             }
         }
 
@@ -97,9 +98,10 @@ namespace MobiusEditor.Model
         }
 
         public string OwnerHouse { get; private set; }
-        public TheaterType[] Theaters { get; private set; }
+        public bool IsTheaterDependent =>  (this.Flag & BuildingTypeFlag.TheaterDependent) == BuildingTypeFlag.TheaterDependent;
         public string FactoryOverlay { get; private set; }
         public Bitmap Thumbnail { get; set; }
+        public bool ExistsInTheater { get; set; }
         public bool IsArmed => false; // Not actually true, but irrelevant for practical purposes; their Mission is not set in the ini file.
         public bool IsAircraft => false;
         public bool IsFixedWing => false;
@@ -116,7 +118,7 @@ namespace MobiusEditor.Model
         public int ZOrder { get; private set; }
         private string nameId;
 
-        public BuildingType(sbyte id, string name, string textId, int powerProd, int powerUse, int storage, int width, int height, string occupyMask, string ownerHouse, TheaterType[] theaters, string factoryOverlay, int frameOffset, String graphicsSource, BuildingTypeFlag flag, int zOrder)
+        public BuildingType(int id, string name, string textId, int powerProd, int powerUse, int storage, int width, int height, string occupyMask, string ownerHouse, string factoryOverlay, int frameOffset, String graphicsSource, BuildingTypeFlag flag, int zOrder)
         {
             this.ID = id;
             this.Flag = flag;
@@ -127,88 +129,62 @@ namespace MobiusEditor.Model
             this.PowerProduction = powerProd;
             this.PowerUsage = powerUse;
             this.Storage = storage;
-            this.BaseOccupyMask = GeneralUtils.GetMaskFromString(width, height, occupyMask);
+            this.BaseOccupyMask = GeneralUtils.GetMaskFromString(width, height, occupyMask, '0', ' ');
             this.Size = new Size(width, height);
             this.OwnerHouse = ownerHouse;
-            this.Theaters = theaters;
             this.FactoryOverlay = factoryOverlay;
             this.ZOrder = zOrder;
             // Check on width and disable if needed. This also calls RecalculateBibs.
             this.HasBib = this.HasBib;
         }
 
-        public BuildingType(sbyte id, string name, string textId, int powerProd, int powerUse, int storage, int width, int height, string occupyMask, string ownerHouse, TheaterType[] theaters, string factoryOverlay, int frameOffset, String graphicsSource, BuildingTypeFlag flag)
-            : this(id, name, textId, powerProd, powerUse, storage, width, height, occupyMask, ownerHouse, theaters, factoryOverlay, frameOffset, graphicsSource, flag, 10)
+        public BuildingType(int id, string name, string textId, int powerProd, int powerUse, int storage, int width, int height, string occupyMask, string ownerHouse, string factoryOverlay, int frameOffset, String graphicsSource, BuildingTypeFlag flag)
+            : this(id, name, textId, powerProd, powerUse, storage, width, height, occupyMask, ownerHouse, factoryOverlay, frameOffset, graphicsSource, flag, 10)
         {
         }
 
-        public BuildingType(sbyte id, string name, string textId, int powerProd, int powerUse, int width, int height, string occupyMask, string ownerHouse, TheaterType[] theaters, String graphicsSource, BuildingTypeFlag flag)
-            : this(id, name, textId, powerProd, powerUse, 0, width, height, occupyMask, ownerHouse, theaters, null, 0, graphicsSource, flag)
+        public BuildingType(int id, string name, string textId, int powerProd, int powerUse, int width, int height, string occupyMask, string ownerHouse, String graphicsSource, BuildingTypeFlag flag)
+            : this(id, name, textId, powerProd, powerUse, 0, width, height, occupyMask, ownerHouse, null, 0, graphicsSource, flag)
         {
         }
 
-        public BuildingType(sbyte id, string name, string textId, int powerProd, int powerUse, int width, int height, string occupyMask, string ownerHouse, TheaterType[] theaters, int zOrder)
-            : this(id, name, textId, powerProd, powerUse, 0, width, height, occupyMask, ownerHouse, theaters, null, 0, null, BuildingTypeFlag.None, zOrder)
+        public BuildingType(int id, string name, string textId, int powerProd, int powerUse, int width, int height, string occupyMask, string ownerHouse, int zOrder)
+            : this(id, name, textId, powerProd, powerUse, 0, width, height, occupyMask, ownerHouse, null, 0, null, BuildingTypeFlag.None, zOrder)
         {
         }
 
-        public BuildingType(sbyte id, string name, string textId, int powerProd, int powerUse, int width, int height, string occupyMask, string ownerHouse, TheaterType[] theaters, BuildingTypeFlag flag, int zOrder)
-            : this(id, name, textId, powerProd, powerUse, 0, width, height, occupyMask, ownerHouse, theaters, null, 0, null, flag, zOrder)
+        public BuildingType(int id, string name, string textId, int powerProd, int powerUse, int width, int height, string occupyMask, string ownerHouse, BuildingTypeFlag flag, int zOrder)
+            : this(id, name, textId, powerProd, powerUse, 0, width, height, occupyMask, ownerHouse, null, 0, null, flag, zOrder)
         {
         }
 
-        public BuildingType(sbyte id, string name, string textId, int powerProd, int powerUse, int width, int height, string occupyMask, string ownerHouse, TheaterType[] theaters, BuildingTypeFlag flag)
-            : this(id, name, textId, powerProd, powerUse, 0, width, height, occupyMask, ownerHouse, theaters, null, 0, null, flag)
+        public BuildingType(int id, string name, string textId, int powerProd, int powerUse, int width, int height, string occupyMask, string ownerHouse, BuildingTypeFlag flag)
+            : this(id, name, textId, powerProd, powerUse, 0, width, height, occupyMask, ownerHouse, null, 0, null, flag)
         {
         }
 
-        public BuildingType(sbyte id, string name, string textId, int powerProd, int powerUse, int storage, int width, int height, string occupyMask, string ownerHouse)
-            : this(id, name, textId, powerProd, powerUse, storage, width, height, occupyMask, ownerHouse, null, null, 0, null, BuildingTypeFlag.None)
+        public BuildingType(int id, string name, string textId, int powerProd, int powerUse, int storage, int width, int height, string occupyMask, string ownerHouse)
+            : this(id, name, textId, powerProd, powerUse, storage, width, height, occupyMask, ownerHouse, null, 0, null, BuildingTypeFlag.None)
         {
         }
 
-        public BuildingType(sbyte id, string name, string textId, int powerProd, int powerUse, int width, int height, string occupyMask, string ownerHouse)
-            : this(id, name, textId, powerProd, powerUse, 0, width, height, occupyMask, ownerHouse, null, null, 0, null, BuildingTypeFlag.None)
+        public BuildingType(int id, string name, string textId, int powerProd, int powerUse, int width, int height, string occupyMask, string ownerHouse)
+            : this(id, name, textId, powerProd, powerUse, 0, width, height, occupyMask, ownerHouse, null, 0, null, BuildingTypeFlag.None)
         {
         }
 
-        public BuildingType(sbyte id, string name, string textId, int powerProd, int powerUse, int width, int height, string occupyMask, string ownerHouse, int frameOffset, BuildingTypeFlag flag)
-            : this(id, name, textId, powerProd, powerUse, 0, width, height, occupyMask, ownerHouse, null, null, frameOffset, null, flag)
+        public BuildingType(int id, string name, string textId, int powerProd, int powerUse, int width, int height, string occupyMask, string ownerHouse, int frameOffset, BuildingTypeFlag flag)
+            : this(id, name, textId, powerProd, powerUse, 0, width, height, occupyMask, ownerHouse, null, frameOffset, null, flag)
         {
         }
 
-        public BuildingType(sbyte id, string name, string textId, int powerProd, int powerUse, int width, int height, string occupyMask, string ownerHouse, string factoryOverlay, string graphicsSource, BuildingTypeFlag flag)
-            : this(id, name, textId, powerProd, powerUse, 0, width, height, occupyMask, ownerHouse, null, factoryOverlay, 0, graphicsSource, flag)
+        public BuildingType(int id, string name, string textId, int powerProd, int powerUse, int width, int height, string occupyMask, string ownerHouse, string factoryOverlay, string graphicsSource, BuildingTypeFlag flag)
+            : this(id, name, textId, powerProd, powerUse, 0, width, height, occupyMask, ownerHouse, factoryOverlay, 0, graphicsSource, flag)
         {
         }
 
-        public BuildingType(sbyte id, string name, string textId, int powerProd, int powerUse, int width, int height, string occupyMask, string ownerHouse, string graphicsSource, BuildingTypeFlag flag)
-            : this(id, name, textId, powerProd, powerUse, 0, width, height, occupyMask, ownerHouse, null, null, 0, graphicsSource, flag)
-        {
-        }
-
-        public BuildingType(sbyte id, string name, string textId, int powerProd, int powerUse, int storage, int width, int height, string occupyMask, string ownerHouse, BuildingTypeFlag flag)
-            : this(id, name, textId, powerProd, powerUse, storage, width, height, occupyMask, ownerHouse, null, null, 0, null, flag)
-        {
-        }
-
-        public BuildingType(sbyte id, string name, string textId, int powerProd, int powerUse, int width, int height, string occupyMask, string ownerHouse, int zOrder)
-            : this(id, name, textId, powerProd, powerUse, 0, width, height, occupyMask, ownerHouse, null, null, 0, null, BuildingTypeFlag.None, zOrder)
-        {
-        }
-
-        public BuildingType(sbyte id, string name, string textId, int powerProd, int powerUse, int width, int height, string occupyMask, string ownerHouse, BuildingTypeFlag flag, int zOrder)
-            : this(id, name, textId, powerProd, powerUse, 0, width, height, occupyMask, ownerHouse, null, null, 0, null, flag, zOrder)
-        {
-        }
-
-        public BuildingType(sbyte id, string name, string textId, int powerProd, int powerUse, int width, int height, string occupyMask, string ownerHouse, BuildingTypeFlag flag)
-            : this(id, name, textId, powerProd, powerUse, 0, width, height, occupyMask, ownerHouse, null, null, 0, null, flag)
-        {
-        }
-
-        public BuildingType(sbyte id, string name, string textId, int powerProd, int powerUse, int width, int height, string occupyMask, string ownerHouse, TheaterType[] theaters)
-            : this(id, name, textId, powerProd, powerUse, 0, width, height, occupyMask, ownerHouse, theaters, null, 0, null, BuildingTypeFlag.None)
+        public BuildingType(int id, string name, string textId, int powerProd, int powerUse, int storage, int width, int height, string occupyMask, string ownerHouse, BuildingTypeFlag flag)
+            : this(id, name, textId, powerProd, powerUse, storage, width, height, occupyMask, ownerHouse, null, 0, null, flag)
         {
         }
 
@@ -246,15 +222,8 @@ namespace MobiusEditor.Model
             // Get original dimensions, and mask in string form.
             int baseMaskY = this.BaseOccupyMask.GetLength(0);
             int baseMaskX = this.BaseOccupyMask.GetLength(1);
-            string occupyMask = GeneralUtils.GetStringFromMask(this.BaseOccupyMask);
-            TheaterType[] theaters = null;
-            if (this.Theaters != null)
-            {
-                int thLen = this.Theaters.Length;
-                theaters = new TheaterType[thLen];
-                Array.Copy(this.Theaters, theaters, thLen);
-            }
-            BuildingType newBld = new BuildingType(this.ID, this.Name, this.nameId, this.PowerProduction, this.PowerUsage, this.Storage, baseMaskX, baseMaskY, occupyMask, this.OwnerHouse, theaters, this.FactoryOverlay, this.FrameOFfset, this.GraphicsSource, this.Flag, this.ZOrder);
+            string occupyMask = GeneralUtils.GetStringFromMask(this.BaseOccupyMask, '1', '0', ' ');
+            BuildingType newBld = new BuildingType(this.ID, this.Name, this.nameId, this.PowerProduction, this.PowerUsage, this.Storage, baseMaskX, baseMaskY, occupyMask, this.OwnerHouse, this.FactoryOverlay, this.FrameOFfset, this.GraphicsSource, this.Flag, this.ZOrder);
             return newBld;
         }
 
@@ -264,9 +233,17 @@ namespace MobiusEditor.Model
             {
                 return this == obj;
             }
-            else if (obj is sbyte)
+            else if (obj is sbyte sb)
             {
-                return this.ID == (sbyte)obj;
+                return this.ID == sb;
+            }
+            else if (obj is byte b)
+            {
+                return this.ID == b;
+            }
+            else if (obj is int i)
+            {
+                return this.ID == i;
             }
             else if (obj is string)
             {
@@ -296,6 +273,7 @@ namespace MobiusEditor.Model
         public void Init(GameType gameType, HouseType house, DirectionType direction)
         {
             this.InitDisplayName();
+            this.ExistsInTheater = Globals.TheTilesetManager.GetTileDataLength(this.GraphicsSource) > 0;
             Bitmap oldImage = this.Thumbnail;
             Building mockBuilding = new Building()
             {
@@ -334,6 +312,7 @@ namespace MobiusEditor.Model
 
         public void Reset()
         {
+            this.ExistsInTheater = false;
             Bitmap oldImage = this.Thumbnail;
             this.Thumbnail = null;
             if (oldImage != null)

@@ -51,6 +51,13 @@ namespace MobiusEditor.Interface
         Byte[] ReadFile(string path);
 
         /// <summary>
+        /// Check whether a file exists in the currently loaded files.
+        /// </summary>
+        /// <param name="path">The internal path of the file to open.</param>
+        /// <returns>True if the file exists.</returns>
+        bool ClassicFileExists(string path);
+
+        /// <summary>
         /// Open a file from the classic folders or archives as Stream.
         /// </summary>
         /// <param name="name">The name of the file to open.</param>
@@ -68,7 +75,7 @@ namespace MobiusEditor.Interface
         /// Resets the archive manager for a new context. This may restrict or re-prioritise where certain files are read from.
         /// </summary>
         /// <param name="gameType">Game type for the new context.</param>
-        /// <param name="theater">Theater for the new context.</param>
+        /// <param name="theater">Theater for the new context. If no theater is given, all theater data will be loaded. This is typically only done for the initial test to see if all data can be found.</param>
         void Reset(GameType gameType, TheaterType theater);
 
     }

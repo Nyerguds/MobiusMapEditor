@@ -50,38 +50,23 @@ namespace MobiusEditor.Dialogs
         private GameType gameType = GameType.TiberianDawn;
         public GameType GameType
         {
-            get
-            {
-                return ListItem.GetValueFromListBox<GameType>(lbGames);
-            }
-            set
-            {
-                lbGames.SelectedIndex = Array.IndexOf(gameTypes, value);
-            }
+            get { return ListItem.GetValueFromListBox<GameType>(lbGames); }
+            set { lbGames.SelectedIndex = Array.IndexOf(gameTypes, value); }
         }
 
         public String Theater
         {
-            get
-            {
-                return ListItem.GetValueFromListBox<TheaterType>(lbTheaters)?.Name;
-            }
+            get { return ListItem.GetValueFromListBox<TheaterType>(lbTheaters)?.Name; }
         }
 
         public bool MegaMap
         {
-            get
-            {
-                return chkMegamap.Checked;
-            }
+            get { return chkMegamap.Checked; }
         }
 
         public bool SinglePlayer
         {
-            get
-            {
-                return chkSingleplayer.Checked && gameType != GameType.SoleSurvivor;
-            }
+            get { return chkSingleplayer.Checked && gameType != GameType.SoleSurvivor; }
         }
 
         public NewMapDialog(bool fromImage)
@@ -96,10 +81,10 @@ namespace MobiusEditor.Dialogs
                 lbGames.Items.Add(new ListItem<GameType>(gt, this.gameTypeNames[gt]));
             }
             lbGames.SelectedIndex = 0;
-            lbGames_SelectedIndexChanged(null, null);
+            LbGames_SelectedIndexChanged(null, null);
         }
 
-        private void lbGames_SelectedIndexChanged(Object sender, EventArgs e)
+        private void LbGames_SelectedIndexChanged(Object sender, EventArgs e)
         {
             if (lbGames.SelectedIndex >= gameTypes.Length)
             {
@@ -137,7 +122,7 @@ namespace MobiusEditor.Dialogs
             AdjustBottomInfo();
         }
 
-        private void chkMegamap_CheckedChanged(Object sender, EventArgs e)
+        private void ChkMegamap_CheckedChanged(Object sender, EventArgs e)
         {
             if (gameType == GameType.TiberianDawn)
             {
@@ -151,6 +136,15 @@ namespace MobiusEditor.Dialogs
             chkSingleplayer.Visible = gameType != GameType.SoleSurvivor;
             chkMegamap.Visible = gameType == GameType.TiberianDawn || gameType == GameType.SoleSurvivor;
             lblWarning.Visible = !Globals.UseClassicFiles && (chkMegamap.Visible && chkMegamap.Checked) && gameType != GameType.SoleSurvivor;
+        }
+
+        private void LbTheaters_MouseDoubleClick(Object sender, MouseEventArgs e)
+        {
+            int index = this.lbTheaters.IndexFromPoint(e.Location);
+            if (index != ListBox.NoMatches)
+            {
+                this.DialogResult = DialogResult.OK;
+            }
         }
     }
 }

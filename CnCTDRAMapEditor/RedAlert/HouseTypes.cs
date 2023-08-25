@@ -33,14 +33,14 @@ namespace MobiusEditor.RedAlert
         public static readonly HouseType Bad = new HouseType(9, "BadGuy", "BAD");
         public static readonly HouseType Neutral = new HouseType(10, "Neutral", "NEUTRAL");
         public static readonly HouseType Special = new HouseType(11, "Special", "SPECIAL");
-        public static readonly HouseType Multi1 = new HouseType(12, "Multi1", WaypointFlag.PlayerStart1, "MULTI1"); // yellow
-        public static readonly HouseType Multi2 = new HouseType(13, "Multi2", WaypointFlag.PlayerStart2, "MULTI2"); // teal
-        public static readonly HouseType Multi3 = new HouseType(14, "Multi3", WaypointFlag.PlayerStart3, "MULTI3"); // red
-        public static readonly HouseType Multi4 = new HouseType(15, "Multi4", WaypointFlag.PlayerStart4, "MULTI4"); // green
-        public static readonly HouseType Multi5 = new HouseType(16, "Multi5", WaypointFlag.PlayerStart5, "MULTI5"); // orange
-        public static readonly HouseType Multi6 = new HouseType(17, "Multi6", WaypointFlag.PlayerStart6, "MULTI7"); // purple; fixed to match actual game.
-        public static readonly HouseType Multi7 = new HouseType(18, "Multi7", WaypointFlag.PlayerStart7, "MULTI6"); // blue; fixed to match actual game.
-        public static readonly HouseType Multi8 = new HouseType(19, "Multi8", WaypointFlag.PlayerStart8, "MULTI8"); // pink
+        public static readonly HouseType Multi1 = new HouseType(12, "Multi1", Waypoint.GetFlagForMpId(0), "MULTI1"); // yellow
+        public static readonly HouseType Multi2 = new HouseType(13, "Multi2", Waypoint.GetFlagForMpId(1), "MULTI2"); // teal
+        public static readonly HouseType Multi3 = new HouseType(14, "Multi3", Waypoint.GetFlagForMpId(2), "MULTI3"); // red
+        public static readonly HouseType Multi4 = new HouseType(15, "Multi4", Waypoint.GetFlagForMpId(3), "MULTI4"); // green
+        public static readonly HouseType Multi5 = new HouseType(16, "Multi5", Waypoint.GetFlagForMpId(4), "MULTI5"); // orange
+        public static readonly HouseType Multi6 = new HouseType(17, "Multi6", Waypoint.GetFlagForMpId(5), "MULTI7"); // purple; fixed to match actual game.
+        public static readonly HouseType Multi7 = new HouseType(18, "Multi7", Waypoint.GetFlagForMpId(6), "MULTI6"); // blue; fixed to match actual game.
+        public static readonly HouseType Multi8 = new HouseType(19, "Multi8", Waypoint.GetFlagForMpId(7), "MULTI8"); // pink
 
         private static readonly HouseType[] Types;
 

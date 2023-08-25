@@ -254,8 +254,6 @@ namespace MobiusEditor.Tools
         private void MapPanel_PostRender(object sender, RenderEventArgs e)
         {
             Rectangle refreshBounds = NavigationWidget.VisibleBounds;
-            // Test to see the optimised bounds-only mode at work.
-            //refreshBounds.Inflate(-4, -4);
             PostRenderMap(e.Graphics, refreshBounds);
             navigationWidget.Render(e.Graphics);
         }

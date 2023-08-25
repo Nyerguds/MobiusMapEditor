@@ -20,7 +20,7 @@ namespace MobiusEditor.Model
 {
     public class HouseType
     {
-        public sbyte ID { get; private set; }
+        public int ID { get; private set; }
 
         public string Name { get; private set; }
 
@@ -32,7 +32,7 @@ namespace MobiusEditor.Model
 
         public IDictionary<string, string> OverrideTeamColors { get; private set; }
 
-        public HouseType(sbyte id, string name, WaypointFlag multiplayIdentifier, string unitTeamColor, string buildingTeamColor, params (string type, string teamColor)[] overrideTeamColors)
+        public HouseType(int id, string name, WaypointFlag multiplayIdentifier, string unitTeamColor, string buildingTeamColor, params (string type, string teamColor)[] overrideTeamColors)
         {
             ID = id;
             Name = name;
@@ -42,21 +42,21 @@ namespace MobiusEditor.Model
             OverrideTeamColors = overrideTeamColors.ToDictionary(x => x.type, x => x.teamColor);
         }
 
-        public HouseType(sbyte id, string name, string unitTeamColor, string buildingTeamColor, params (string type, string teamColor)[] overrideTeamColors)
+        public HouseType(int id, string name, string unitTeamColor, string buildingTeamColor, params (string type, string teamColor)[] overrideTeamColors)
             :this(id, name,  WaypointFlag.None, unitTeamColor, buildingTeamColor, overrideTeamColors)
         {
         }
 
-        public HouseType(sbyte id, string name, string teamColor)
+        public HouseType(int id, string name, string teamColor)
             : this(id, name, WaypointFlag.None, teamColor, teamColor)
         {
         }
-        public HouseType(sbyte id, string name)
+        public HouseType(int id, string name)
             : this(id, name, WaypointFlag.None, null, null)
         {
         }
 
-        public HouseType(sbyte id, string name, WaypointFlag multiplayIdentifier, string teamColor)
+        public HouseType(int id, string name, WaypointFlag multiplayIdentifier, string teamColor)
             : this(id, name, multiplayIdentifier, teamColor, teamColor)
         {
         }
@@ -67,9 +67,17 @@ namespace MobiusEditor.Model
             {
                 return ReferenceEquals(this, obj) || (house.Name == Name && house.ID == ID);
             }
-            else if (obj is sbyte)
+            else if (obj is sbyte sb)
             {
-                return ID == (sbyte)obj;
+                return this.ID == sb;
+            }
+            else if (obj is byte b)
+            {
+                return this.ID == b;
+            }
+            else if (obj is int i)
+            {
+                return this.ID == i;
             }
             else if (obj is string)
             {

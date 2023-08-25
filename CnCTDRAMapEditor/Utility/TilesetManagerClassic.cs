@@ -180,7 +180,7 @@ namespace MobiusEditor.Utility
 
         public int GetTileDataLength(string name)
         {
-            if (name == null)
+            if (name == null || this.theater == null)
             {
                 return -1;
             }

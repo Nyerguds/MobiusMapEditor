@@ -733,7 +733,14 @@ namespace MobiusEditor.TiberianDawn
                 basic.Lose = GeneralUtils.AddRemarks(basic.Lose, movieEmpty, true, toAddRem, remark);
             }
             Map.BasicSection.Player = Map.HouseTypes.Where(t => t.Equals(Map.BasicSection.Player)).FirstOrDefault()?.Name ?? Map.HouseTypes.First().Name;
+            // Map info
+            string theaterStr = ini["Map"]?.TryGetValue("Theater") ?? String.Empty;
             INISection mapSection = INITools.ParseAndLeaveRemainder(ini, "Map", Map.MapSection, new MapContext(Map, false));
+            if (!this.Map.TheaterTypes.Any(thr => String.Equals(thr.Name, theaterStr, StringComparison.OrdinalIgnoreCase)))
+            {
+                errors.Add(String.Format("Theater \"{0}\" could not be found. Defaulting to \"{1}\".", theaterStr, Map.Theater));
+                modified = true;
+            }
             // Also clear megamap indicator.
             if (mapSection.Remove("Version") && mapSection.Keys.Count == 0)
                 ini.Sections.Remove(mapSection.Name);
@@ -741,6 +748,7 @@ namespace MobiusEditor.TiberianDawn
 #if DEBUG
             //MessageBox.Show("Graphics loaded");
 #endif
+            string th = Map.Theater.Name;
             bool skipSoleStuff = forSole && Globals.NoOwnedObjectsInSole;
             INISection briefingSection = ini.Sections["Briefing"];
             if (briefingSection != null)
@@ -1024,7 +1032,7 @@ namespace MobiusEditor.TiberianDawn
                         SmudgeType smudgeType = badCrater ? SmudgeTypes.Crater1 : Map.SmudgeTypes.Where(t => t.Equals(tokens[0]) && !t.IsAutoBib).FirstOrDefault();
                         if (smudgeType != null)
                         {
-                            if (Globals.FilterTheaterObjects && smudgeType.Theaters != null && !smudgeType.Theaters.Contains(Map.Theater))
+                            if (Globals.FilterTheaterObjects && !smudgeType.ExistsInTheater)
                             {
                                 errors.Add(string.Format("Smudge '{0}' is not available in the set theater; skipping.", smudgeType.Name));
                                 modified = true;
@@ -1492,7 +1500,7 @@ namespace MobiusEditor.TiberianDawn
                             modified = true;
                             continue;
                         }
-                        if (Globals.FilterTheaterObjects && buildingType.Theaters != null && !buildingType.Theaters.Contains(Map.Theater))
+                        if (Globals.FilterTheaterObjects && buildingType.IsTheaterDependent && !buildingType.ExistsInTheater)
                         {
                             errors.Add(string.Format("Structure '{0}' is not available in the set theater; skipping.", buildingType.Name));
                             modified = true;
@@ -1623,7 +1631,7 @@ namespace MobiusEditor.TiberianDawn
                             modified = true;
                             continue;
                         }
-                        if (Globals.FilterTheaterObjects && buildingType.Theaters != null && !buildingType.Theaters.Contains(Map.Theater))
+                        if (Globals.FilterTheaterObjects && buildingType.IsTheaterDependent && !buildingType.ExistsInTheater)
                         {
                             errors.Add(string.Format("Base rebuild entry {0} references structure '{1}' which is not available in the set theater; skipping.", key, buildingType.Name));
                             modified = true;
@@ -1687,7 +1695,7 @@ namespace MobiusEditor.TiberianDawn
                     TerrainType terrainType = Map.TerrainTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault();
                     if (terrainType != null)
                     {
-                        if (Globals.FilterTheaterObjects && terrainType.Theaters != null && !terrainType.Theaters.Contains(Map.Theater))
+                        if (Globals.FilterTheaterObjects && terrainType.Theaters != null && !terrainType.Theaters.Contains(th))
                         {
                             errors.Add(string.Format("Terrain '{0}' is not available in the set theater; skipping.", terrainType.Name));
                             modified = true;
@@ -1799,7 +1807,7 @@ namespace MobiusEditor.TiberianDawn
                     OverlayType overlayType = Map.OverlayTypes.Where(t => t.Equals(kvp.Value)).FirstOrDefault();
                     if (overlayType != null)
                     {
-                        if (Globals.FilterTheaterObjects && overlayType.Theaters != null && !overlayType.Theaters.Contains(Map.Theater))
+                        if (Globals.FilterTheaterObjects && !overlayType.ExistsInTheater)
                         {
                             errors.Add(string.Format("Overlay '{0}' is not available in the set theater; skipping.", overlayType.Name));
                             modified = true;
@@ -1941,13 +1949,14 @@ namespace MobiusEditor.TiberianDawn
         {
             List<string> errors = new List<string>();
             Map.Templates.Clear();
+            TemplateType[] templateTypes = GetTemplateTypesAsArray();
             for (int y = 0; y < Map.Metrics.Height; ++y)
             {
                 for (int x = 0; x < Map.Metrics.Width; ++x)
                 {
                     byte typeValue = reader.ReadByte();
                     byte iconValue = reader.ReadByte();
-                    TemplateType templateType = ChecKTemplateType(typeValue, iconValue, x, y, errors, ref modified);
+                    TemplateType templateType = ChecKTemplateType(templateTypes, typeValue, iconValue, x, y, errors, ref modified);
                     Map.Templates[y, x] = (templateType != null) ? new Template { Type = templateType, Icon = iconValue } : null;
                 }
             }
@@ -1958,6 +1967,7 @@ namespace MobiusEditor.TiberianDawn
         {
             List<string> errors = new List<string>();
             Map.Templates.Clear();
+            TemplateType[] templateTypes = GetTemplateTypesAsArray();
             long dataLen = reader.BaseStream.Length;
             int mapLen = Map.Metrics.Length;
             int mapWidth = Map.Metrics.Width;
@@ -1986,15 +1996,25 @@ namespace MobiusEditor.TiberianDawn
                 int x = cell % mapWidth;
                 byte typeValue = reader.ReadByte();
                 byte iconValue = reader.ReadByte();
-                TemplateType templateType = ChecKTemplateType(typeValue, iconValue, x, y, errors, ref modified);
+                TemplateType templateType = ChecKTemplateType(templateTypes, typeValue, iconValue, x, y, errors, ref modified);
                 Map.Templates[y,x] = (templateType != null) ? new Template { Type = templateType, Icon = iconValue } : null;
             }
             return errors;
         }
 
-        protected TemplateType ChecKTemplateType(int typeValue, int iconValue, int x, int y, List<string> errors, ref bool modified)
+        protected TemplateType[] GetTemplateTypesAsArray()
         {
-            TemplateType templateType = Map.TemplateTypes.Where(t => t.Equals(typeValue)).FirstOrDefault();
+            TemplateType[] templateTypes = new TemplateType[0x100];
+            foreach (TemplateType tt in Map.TemplateTypes)
+            {
+                templateTypes[tt.ID] = tt;
+            }
+            return templateTypes;
+        }
+
+        protected TemplateType ChecKTemplateType(TemplateType[] templateTypes, int typeValue, int iconValue, int x, int y, List<string> errors, ref bool modified)
+        {
+            TemplateType templateType = templateTypes[typeValue];
             // Prevent loading of illegal tiles.
             if (templateType != null)
             {
@@ -2003,7 +2023,7 @@ namespace MobiusEditor.TiberianDawn
                     // No explicitly set Clear terrain allowed. Also no explicitly set versions allowed of the "group" dummy entries.
                     templateType = null;
                 }
-                else if (templateType.Theaters != null && !templateType.Theaters.Contains(Map.Theater))
+                else if (!templateType.ExistsInTheater && Globals.FilterTheaterObjects)
                 {
                     errors.Add(String.Format("Template '{0}' at cell [{1},{2}] is not available in the set theater; clearing.", templateType.Name.ToUpper(), x, y));
                     modified = true;

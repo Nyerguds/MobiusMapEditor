@@ -25,7 +25,7 @@ namespace MobiusEditor.Model
     {
         /// <summary>No flags set.</summary>
         None            = 0,
-        /// <summary>Is a fixed-wing airplane. This treats it as 16-frame rotation, and affects the default orders for placing it on the map.</summary>
+        /// <summary>Is a fixed-wing airplane. This affects the default orders for placing it on the map.</summary>
         IsFixedWing     = 1 << 0,
         /// <summary>Has a turret drawn on the unit.</summary>
         HasTurret       = 1 << 1,
@@ -45,15 +45,42 @@ namespace MobiusEditor.Model
         IsJammer        = 1 << 8,
     }
 
+    [Flags]
+    public enum FrameUsage
+    {
+        None                = 0,
+        /// <summary>Specifies that this rotation is the full 32 frames. Generally used for ground units and helicopters, and TD aircraft.</summary>
+        Frames32Full        = 1 << 1,
+        /// <summary>Specifies that this rotation is simplified to 16 frames. Generally used for RA boats/aircraft.</summary>
+        Frames16Simple      = 1 << 2,
+        /// <summary>Specifies that this rotation is 16 frames, but saved as 8-frame because it is symmetrical and thus the second half of the frames is the same.</summary>
+        Frames16Symmetrical = 1 << 3,
+        /// <summary>Specifies that this rotation is cardinal drections only; 8 frames. Generally used for walkers.</summary>
+        Frames08Cardinal    = 1 << 4,
+        /// <summary>Specifies that this unit or turret only shows a single frame.</summary>
+        Frames01Single      = 1 << 5,
+        /// <summary>Specifies that the unit has special damaged states for 50% and 25% (TD Gunboat)</summary>
+        DamageStates        = 1 << 6,
+        /// <summary>Modifier for body frames to determine that there are extra body frames before the turret; adds 4 for air/sea units, and 6 for vehicles.</summary>
+        HasUnloadFrames     = 1 << 7,
+        /// <summary>Specifies that this rotation is a rotor (turret only)</summary>
+        Rotor               = 1 << 8,
+        /// <summary>Specifies that this turret is on a flatbed on the back of the vehicle and should use special positioning logic.</summary>
+        OnFlatBed           = 1 << 9,
+
+        FrameUsages = Frames01Single | Frames08Cardinal | Frames16Simple | Frames16Symmetrical | Frames32Full,
+        FrameModifiers = DamageStates | HasUnloadFrames | Rotor | OnFlatBed
+    }
+
     public static class UnitTypeIDMask
     {
-        public const sbyte Aircraft   = 1 << 5;
-        public const sbyte Vessel     = 1 << 6;
+        public const int Aircraft   = 1 << 5;
+        public const int Vessel = 1 << 6;
     }
 
     public class UnitType : ICellOverlapper, ICellOccupier, ITechnoType
     {
-        public sbyte ID { get; private set; }
+        public int ID { get; private set; }
         public string Name { get; private set; }
         public string DisplayName { get; private set; }
         public string Turret { get; private set; }
@@ -61,6 +88,8 @@ namespace MobiusEditor.Model
         public int TurretOffset { get; private set; }
         public int TurretY { get; private set; }
         public UnitTypeFlag Flag { get; private set; }
+        public FrameUsage BodyFrameUsage { get; private set; }
+        public FrameUsage TurretFrameUsage { get; private set; }
         public Rectangle OverlapBounds => new Rectangle(-1, -1, 3, 3);
         public bool[,] OpaqueMask => new bool[1, 1] { { true } };
         public bool[,] OccupyMask => new bool[1, 1] { { true } };
@@ -79,7 +108,7 @@ namespace MobiusEditor.Model
 
         public Bitmap Thumbnail { get; set; }
 
-        public UnitType(sbyte id, string name, string textId, string ownerHouse, string turret, string turret2, int turrOffset, int turrY, UnitTypeFlag flags) //bool hasTurret, bool isFixedWing, bool isArmed, bool isHarvester)
+        public UnitType(int id, string name, string textId, string ownerHouse, FrameUsage bodyFrameUsage, FrameUsage turrFrameUsage, string turret, string turret2, int turrOffset, int turrY, UnitTypeFlag flags) //bool hasTurret, bool isFixedWing, bool isArmed, bool isHarvester)
         {
             this.ID = id;
             this.Name = name;
@@ -91,25 +120,27 @@ namespace MobiusEditor.Model
             this.TurretOffset = turrOffset;
             this.TurretY = turrY;
             this.Flag = flags;
+            this.BodyFrameUsage = bodyFrameUsage;
+            this.TurretFrameUsage = turrFrameUsage;
         }
 
-        public UnitType(sbyte id, string name, string textId, string ownerHouse, int turrOffset, int turrY, UnitTypeFlag flags) //bool hasTurret, bool isFixedWing, bool isArmed, bool isHarvester)
-             : this(id, name, textId, ownerHouse, null, null, turrOffset, turrY, flags)
+        public UnitType(int id, string name, string textId, string ownerHouse, FrameUsage bodyFrameUsage, FrameUsage turrFrameUsage, int turrOffset, int turrY, UnitTypeFlag flags)
+             : this(id, name, textId, ownerHouse, bodyFrameUsage, turrFrameUsage, null, null, turrOffset, turrY, flags)
         {
         }
 
-        public UnitType(sbyte id, string name, string textId, string ownerHouse, UnitTypeFlag flags) //bool hasTurret, bool isFixedWing, bool isArmed, bool isHarvester)
-             : this(id, name, textId, ownerHouse, null, null, 0, 0, flags)
+        public UnitType(int id, string name, string textId, string ownerHouse, FrameUsage bodyFrameUsage, FrameUsage turrFrameUsage, UnitTypeFlag flags)
+         : this(id, name, textId, ownerHouse, bodyFrameUsage, turrFrameUsage, null, null, 0, 0, flags)
         {
         }
 
-        public UnitType(sbyte id, string name, string textId, string ownerHouse)
-            : this(id, name, textId, ownerHouse, null, null, 0, 0, UnitTypeFlag.None)
+        public UnitType(int id, string name, string textId, string ownerHouse, FrameUsage bodyFrameUsage, UnitTypeFlag flags)
+         : this(id, name, textId, ownerHouse, bodyFrameUsage, FrameUsage.None, null, null, 0, 0, flags)
         {
         }
 
-        public UnitType(sbyte id, string name, string textId)
-            : this(id, name, textId, null, null, null, 0, 0, UnitTypeFlag.None)
+        public UnitType(int id, string name, string textId, string ownerHouse, FrameUsage bodyFrameUsage)
+            : this(id, name, textId, ownerHouse, bodyFrameUsage, FrameUsage.None, null, null, 0, 0, UnitTypeFlag.None)
         {
         }
 

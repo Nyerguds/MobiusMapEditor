@@ -18,21 +18,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace MobiusEditor.TiberianDawn
+namespace MobiusEditor.SoleSurvivor
 {
     public static class TheaterTypes
     {
         private static readonly IEnumerable<string> commonTilesets = new string[] { "TD_Units", "TD_Structures", "TD_VFX", "Common_VFX" };
 
         public static readonly TheaterType Desert = new TheaterType(0, "Desert", "desert", "des", "TD_Terrain_Desert".Yield().Concat(commonTilesets));
+        public static readonly TheaterType Jungle = new TheaterType(1, "Jungle", "jungle", "jun", true);
         public static readonly TheaterType Temperate = new TheaterType(2, "Temperate", "temperat", "tem", "TD_Terrain_Temperate".Yield().Concat(commonTilesets));
         // Winter seems to fall back on Temperate for the Haystack graphics.
         public static readonly TheaterType Winter = new TheaterType(3, "Winter", "winter", "win", "TD_Terrain_Winter".Yield().Concat(commonTilesets).Concat("TD_Terrain_Temperate".Yield()));
-        // Added by 1.06
         public static readonly TheaterType Snow = new TheaterType(4, "Snow", "snow", "sno", true);
-        // Experimental
-        public static readonly TheaterType Jungle = new TheaterType(1, "Jungle", "jungle", "jun", "TD_Terrain_Jungle".Yield().Concat(commonTilesets));
-        public static readonly TheaterType Caribbean = new TheaterType(5, "Caribbean", "caribbea", "car", true);
+        public static readonly TheaterType Caribbean = new TheaterType(4, "Caribbean", "caribbea", "car", true);
 
         private static TheaterType[] Types;
 
@@ -41,7 +39,7 @@ namespace MobiusEditor.TiberianDawn
             Types =
                 (from field in typeof(TheaterTypes).GetFields(BindingFlags.Static | BindingFlags.Public)
                  where field.IsInitOnly && typeof(TheaterType).IsAssignableFrom(field.FieldType)
-                 select field.GetValue(null) as TheaterType).OrderBy(th => th.ID).ToArray();
+                 select field.GetValue(null) as TheaterType).ToArray();
         }
 
         public static IEnumerable<TheaterType> GetTypes()

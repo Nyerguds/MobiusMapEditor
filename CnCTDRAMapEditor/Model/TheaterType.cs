@@ -21,23 +21,40 @@ namespace MobiusEditor.Model
     public class TheaterType
     {
         public sbyte ID { get; private set; }
-
         public string Name { get; private set; }
-
+        /// <summary>Basic filename without extension of the classic tileset files.</summary>
         public string ClassicTileset { get; private set; }
-
+        /// <summary>File extension of the files inside the classic .mix archive.</summary>
         public string ClassicExtension { get; private set; }
+        /// <summary>True if the theater is not an official one.</summary>
+        public bool IsModTheater { get; set; }
+        /// <summary>Used to store the status of the startup checks that see if the theater mix file was found.</summary>
+        public bool IsClassicMixFound { get; set; }
 
         public IEnumerable<string> Tilesets { get; private set; }
 
-        public TheaterType(sbyte id, string name, string classicTileset, string classicExt, IEnumerable<string> tilesets)
+        public TheaterType(sbyte id, string name, string classicTileset, string classicExt, bool modTheater, IEnumerable<string> tilesets)
         {
             ID = id;
             Name = name;
             ClassicTileset = classicTileset;
             ClassicExtension = classicExt;
-            Tilesets = tilesets.Distinct();
+            IsClassicMixFound = false;
+            IsModTheater = modTheater;
+            Tilesets = tilesets?.Distinct() ?? new List<String>();
         }
+
+        public TheaterType(sbyte id, string name, string classicTileset, string classicExt, bool modTheater, params string[] tilesets)
+            : this(id, name, classicTileset, classicExt, modTheater, (IEnumerable<String>)tilesets)
+        { }
+
+        public TheaterType(sbyte id, string name, string classicTileset, string classicExt, IEnumerable<string> tilesets)
+            : this(id, name, classicTileset, classicExt, false, tilesets)
+        { }
+
+        public TheaterType(sbyte id, string name, string classicTileset, string classicExt, params string[] tilesets)
+            : this(id, name, classicTileset, classicExt, false, (IEnumerable<String>)tilesets)
+        { }
 
         public override bool Equals(object obj)
         {

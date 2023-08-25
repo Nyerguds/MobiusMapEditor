@@ -28,6 +28,7 @@ namespace MobiusEditor.Model
         Special      = 1 << 3,
         CrateSpawn   = 1 << 4,
         PlayerStart  = 1 << 5,
+        // Never referenced, but used internally by the flags system.
         PlayerStart1 = PlayerStart | 1 << 6,
         PlayerStart2 = PlayerStart | 1 << 7,
         PlayerStart3 = PlayerStart | 1 << 8,
@@ -42,6 +43,10 @@ namespace MobiusEditor.Model
     {
         public static WaypointFlag GetFlagForMpId(int mpId)
         {
+            if (mpId < 0)
+            {
+                return WaypointFlag.None;
+            }
             return WaypointFlag.PlayerStart | (WaypointFlag)((int)WaypointFlag.PlayerStart << (mpId + 1));
         }
 
