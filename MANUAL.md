@@ -84,7 +84,7 @@ Tiberian Dawn and Sole Survivor only have one water type, which is all passable 
 
 The editor has two kinds of settings; global settings used on every run, and modifiable settings that can get changed during the program run. The global settings are those detailed in the "Configuration" section below. The modifiable settings include things like the game path and window positions, and will automatically get stored under the user-folder. If, for any reason, you would want to clear these settings and start the editor with a clean slate, simply open the File Explorer, paste the following into the address bar and press [enter]:
 
-**%localappdata%\Nyerguds\**
+**%localappdata%\\Nyerguds\\**
 
 This should make you end up in the "AppData\Local\Nyerguds" folder under your Windows user folder. Removing this folder will clear all of the editor's user settings.
 
