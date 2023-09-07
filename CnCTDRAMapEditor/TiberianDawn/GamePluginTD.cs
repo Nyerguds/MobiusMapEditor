@@ -3439,7 +3439,7 @@ namespace MobiusEditor.TiberianDawn
                     UpdateBasePlayerHouse();
                     break;
                 case "SoloMission":
-                    UpdateWaypoints();
+                    Map.UpdateWaypoints();
                     break;
             }
         }
@@ -3466,26 +3466,6 @@ namespace MobiusEditor.TiberianDawn
                     building.House = basePlayer;
                 }
             }
-        }
-
-        protected void UpdateWaypoints()
-        {
-            bool isSolo = Map.BasicSection.SoloMission;
-            HashSet<Point> updated = new HashSet<Point>();
-            for (Int32 i = 0; i < Map.Waypoints.Length; ++i)
-            {
-                Waypoint waypoint = Map.Waypoints[i];
-                if ((waypoint.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart)
-                {
-                    Map.Waypoints[i].Name = isSolo ? i.ToString() : string.Format("P{0}", i);
-                    if (waypoint.Point.HasValue)
-                    {
-                        updated.Add(waypoint.Point.Value);
-                    }
-                }
-            }
-            Map.NotifyWaypointsUpdate();
-            Map.NotifyMapContentsChanged(updated);
         }
 
         #region IDisposable Support

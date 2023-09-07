@@ -3315,7 +3315,7 @@ namespace MobiusEditor.RedAlert
             SaveIniBriefing(ini);
             using (MemoryStream stream = new MemoryStream())
             {
-                using (BinaryWriter writer = new BinaryWriter(stream))
+                using (BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, true))
                 {
                     for (int y = 0; y < Map.Metrics.Height; ++y)
                     {
@@ -3324,7 +3324,7 @@ namespace MobiusEditor.RedAlert
                             Template template = Map.Templates[y, x];
                             if (template != null && (template.Type.Flag & TemplateTypeFlag.Clear) == 0)
                             {
-                                writer.Write(template.Type.ID);
+                                writer.Write((ushort)template.Type.ID);
                             }
                             else
                             {
@@ -3348,19 +3348,20 @@ namespace MobiusEditor.RedAlert
                         }
                     }
                 }
+                stream.Flush();
                 ini.Sections.Remove("MapPack");
                 CompressLCWSection(ini.Sections.Add("MapPack"), stream.ToArray());
             }
             using (MemoryStream stream = new MemoryStream())
             {
-                using (BinaryWriter writer = new BinaryWriter(stream))
+                using (BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, true))
                 {
                     for (int i = 0; i < Map.Metrics.Length; ++i)
                     {
                         Overlay overlay = Map.Overlay[i];
                         if (overlay != null)
                         {
-                            writer.Write(overlay.Type.ID);
+                            writer.Write((byte)overlay.Type.ID);
                         }
                         else
                         {
@@ -3368,6 +3369,7 @@ namespace MobiusEditor.RedAlert
                         }
                     }
                 }
+                stream.Flush();
                 ini.Sections.Remove("OverlayPack");
                 CompressLCWSection(ini.Sections.Add("OverlayPack"), stream.ToArray());
             }
@@ -4486,7 +4488,7 @@ namespace MobiusEditor.RedAlert
                     }
                     break;
                 case "SoloMission":
-                    UpdateWaypoints();
+                    Map.UpdateWaypoints();
                     break;
             }
         }
@@ -4517,26 +4519,6 @@ namespace MobiusEditor.RedAlert
                     building.House = basePlayer;
                 }
             }
-        }
-
-        protected void UpdateWaypoints()
-        {
-            bool isSolo = Map.BasicSection.SoloMission;
-            HashSet<Point> updated = new HashSet<Point>();
-            for (Int32 i = 0; i < Map.Waypoints.Length; ++i)
-            {
-                Waypoint waypoint = Map.Waypoints[i];
-                if ((waypoint.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart)
-                {
-                    Map.Waypoints[i].Name = isSolo ? i.ToString() : string.Format("P{0}", i);
-                    if (waypoint.Point.HasValue)
-                    {
-                        updated.Add(waypoint.Point.Value);
-                    }
-                }
-            }
-            Map.NotifyWaypointsUpdate();
-            Map.NotifyMapContentsChanged(updated);
         }
 
         private void CompressLCWSection(INISection section, byte[] decompressedBytes)

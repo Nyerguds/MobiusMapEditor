@@ -329,16 +329,16 @@ Released on 14 Nov 2022 at 22:25 GMT
 * On Tiberian Dawn maps, the editor will now fall back to Temperate graphics when not finding the Winter graphics for the Haystack buildings/overlays. This happens the same way in the game, since the original igloos that were supposed to be there were sadly not remastered.
 * Fixed a situation where triggers were selectable on unbuilt buildings.
 * Improved the look of the trigger info icon on Terrain object properties and in the Celltriggers window. This was already done on other objects.
-* Added a dialog for the image export where the user can slect the specific layers and set the scale factor. There is a tool to set the dimensions in pixels, but the internally used metric is the scale factor, so the final size will not always match that input.
+* Added a dialog for the image export where the user can select the specific layers and set the scale factor. There is a tool to set the dimensions in pixels, but the internally used metric is the scale factor, so the final size will not always match that input.
 * Middle mouse and space no longer make the cursor change on the map tile preview panel.
 * Added multithreading to all heavy processing functions. This means the window will no longer freeze up while loading or saving maps, but will instead have all functions disabled, while showing a little box that shows what it is doing.
 * In Celltrigger mode, if a selected trigger is already linked to objects, the trigger labels on these objects will be indicated in yellow.
 * Changed references to the "ConcretePavementTD" mod in "CnCTDRAMapEditor.exe.config" to its new name; "GraphicsFixesTD".
-* Changed tool clamping logic to only need a minimum size to remain inside the window, rather than the entire tool. This minimum can be set in the setting "MinimumClampSize" in "CnCTDRAMapEditor.exe.config".
+* Changed tool clamping logic to only need a minimum size to remain inside the screen, rather than the entire tool. This minimum can be set in the setting "MinimumClampSize" in "CnCTDRAMapEditor.exe.config".
 * Steam publish dialog now has buttons to easily copy the map name and briefing from the mission.
 * Steam publish dialog description now properly supports multiline.
 * Steam publish dialog will now properly restore the location of a previously-used custom generated thumbnail.
-* In addition to the Remaster's one "Text=" line briefing, the editor now writes the classic style briefings into maps too, as "1=", "2=", etc. lines split at human-readable length This classic-style briefing can be disabled with the setting "WriteClassicBriefing" in "CnCTDRAMapEditor.exe.config".
+* In addition to the Remaster's one "Text=" line briefing, the editor now writes the classic style briefings into maps too, as "1=", "2=", etc. lines split at human-readable length. This classic-style briefing can be disabled with the setting "WriteClassicBriefing" in "CnCTDRAMapEditor.exe.config".
 * Directions for vehicles are now limited to 8, as they are in the actual game.
 * Re-enabling a building's "prebuilt" status on TD maps will now set the House to the classic opposing House, rather than always defaulting to the first item in the list.
 * Added "Tools" → "Statistics" menu to house the "Power Balance" and "Silo Storage" tools, and added a "Map Objects" tool giving an overview of used objects.
@@ -595,3 +595,4 @@ Unreleased
 * Map templates, Smudge and Overlay are no longer restricted to specific theaters; if they exist in a theater, they are allowed.
 * Theater-sensitive civilian buildings are no longer restricted to specific theaters; if they exist in a theater, they are allowed. Military buildings, incuding the theater-sensitive Misile Silo and Pillbox in RA, are always usable, no matter whether the theater has graphics for them.
 * On Interior maps, the "ConvertRaObsoleteClear" logic will now generate spots of passable terrain outside the map border on any point where passable terrain touches the border, to allow potential reinforcements to enter the map there.
+* The Teamtypes window will no longer show the trigger info label when editing a TD map.

@@ -65,15 +65,6 @@ namespace MobiusEditor.Dialogs
 
             InitializeComponent();
             lblTooLong.Text = "Teamtype length exceeds " + maxLength + " characters!";
-            infoImage = new Bitmap(27, 27);
-            infoImage.SetResolution(96, 96);
-            using (Graphics g = Graphics.FromImage(infoImage))
-            {
-                g.DrawIcon(SystemIcons.Information, new Rectangle(0, 0, infoImage.Width, infoImage.Height));
-            }
-            lblTriggerInfo.Image = infoImage;
-            lblTriggerInfo.ImageAlign = ContentAlignment.MiddleCenter;
-
             int extraWidth = nudRecruitPriority.Width + nudRecruitPriority.Margin.Left + nudRecruitPriority.Margin.Right;
             ttf = new ToolTipFixer(this, toolTip1, 10000, new Dictionary<Type, int> { { typeof(Label), extraWidth } });
 
@@ -81,10 +72,11 @@ namespace MobiusEditor.Dialogs
             {
                 case GameType.TiberianDawn:
                 case GameType.SoleSurvivor:
-                    lblTrigger.Visible = cmbTrigger.Visible = false;
+                    lblTrigger.Visible = cmbTrigger.Visible = lblTriggerInfo.Visible = false;
                     lblWaypoint.Visible = cmbWaypoint.Visible = false;
                     break;
                 case GameType.RedAlert:
+                    infoImage = InitTriggerInfoImage(lblTriggerInfo);
                     chbLearning.Visible = false;
                     chbMercenary.Visible = false;
                     break;
@@ -130,6 +122,19 @@ namespace MobiusEditor.Dialogs
             this.teamMissionTypes = missions.ToArray();
             this.defaultMission = missions.FirstOrDefault();
             teamTypeTableLayoutPanel.Visible = false;
+        }
+
+        private Bitmap InitTriggerInfoImage(Label label)
+        {
+            Bitmap image = new Bitmap(27, 27);
+            image.SetResolution(96, 96);
+            using (Graphics g = Graphics.FromImage(image))
+            {
+                g.DrawIcon(SystemIcons.Information, new Rectangle(0, 0, image.Width, image.Height));
+            }
+            label.Image = image;
+            label.ImageAlign = ContentAlignment.MiddleCenter;
+            return image;
         }
 
         private void LblTriggerInfo_MouseEnter(Object sender, EventArgs e)
@@ -619,12 +624,12 @@ namespace MobiusEditor.Dialogs
             if (disposing && (components != null))
             {
                 lblTriggerInfo.Image = null;
-                try
+                if (infoImage != null)
                 {
-                    infoImage.Dispose();
+                    try { infoImage.Dispose(); }
+                    catch { /*ignore*/}
                     infoImage = null;
                 }
-                catch { /*ignore*/}
                 components.Dispose();
             }
             base.Dispose(disposing);

@@ -1769,6 +1769,26 @@ namespace MobiusEditor.Model
             this.Technos.Remove(e.Occupier);
         }
 
+        public void UpdateWaypoints()
+        {
+            bool isSolo = this.BasicSection.SoloMission;
+            HashSet<Point> updated = new HashSet<Point>();
+            for (Int32 i = 0; i < this.Waypoints.Length; ++i)
+            {
+                Waypoint waypoint = this.Waypoints[i];
+                if ((waypoint.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart)
+                {
+                    this.Waypoints[i].Name = isSolo ? i.ToString() : string.Format("P{0}", i);
+                    if (waypoint.Point.HasValue)
+                    {
+                        updated.Add(waypoint.Point.Value);
+                    }
+                }
+            }
+            this.NotifyWaypointsUpdate();
+            this.NotifyMapContentsChanged(updated);
+        }
+
         public bool RemoveExpansionUnits()
         {
             HashSet<Point> refreshPoints = new HashSet<Point>();

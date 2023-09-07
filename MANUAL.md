@@ -127,7 +127,7 @@ In classic graphics mode, the editor can still use mods, if they contain classic
 * **DefaultOutlineAllCrates**: Default for the option "Tools" → "Options" → "Crate outline indicators show on all crates". When enabled, the crate indicators from the "View" → "Indicators" → "Outlines on overlapped crates" option will show on all crates instead of just those underneath objects or graphics.
 * **DefaultCratesOnTop**: Default for the option "Tools" → "Options" → "Show crates on top of other objects".
 * **DefaultExportScale**: Default scaling multiplier for the size at which an exported image will be generated through "Tools" → "Export As Image". A negative values will set it to smooth scaling. Defaults to -0.5.
-* **DefaultExportScaleClassic**: Default scaling multiplier forexporting images in when using classic graphics. Defaults to 1.0.
+* **DefaultExportScaleClassic**: Default scaling multiplier for exporting images in when using classic graphics. Defaults to 1.0.
 
 ### Editor fine tuning:
 
@@ -145,19 +145,19 @@ In classic graphics mode, the editor can still use mods, if they contain classic
 * **MinimumClampSize**: Minimum size of the tool window that will automatically be forced to remain in the screen area. If set to 0,0, this will default to the size of the entire tool window.
 * **ClassicPathTD** / **ClassicPathRA** / **ClassicPathSS**: Path to load the classic files from for each of the game types when running in Classic Files mode. If the directory entered in this cannot be found, this reverts to predefined subfolders under the editor's location; "Classic\TD" for Tiberian Dawn and Sole Survivor, and "Classic\RA" for Red Alert. If the data is not present at the given location, the editor will refuse to launch.
 * **ClassicIgnoresRemasterPaths**: Defaults to True. When enabled, switching the editor to Classic Files mode will make it stop using the Remaster's specific folders under Documents, and default to the program folder instead.
-* **ClassicProducesNoMetaFiles**: Defaults to False. Suppresses the creation of xml and thumbnail files when in Classic Files mode.
+* **ClassicProducesNoMetaFiles**: Defaults to False. Suppresses the creation of xml and thumbnail files for multiplayer maps when in Classic Files mode.
 
 ### Editor behavior tweaks:
 
-These options are all enabled by default, but can be disabled if you wish. Use these at your own risk.
+These options are all enabled by default, but can be disabled if you wish. Use these at your own risk. Some of these (air units, craters, harvesting) are related to bugs in the games, so they could be disabled when making maps for a mod in which these issues are fixed.
 
 * **ReportMissionDetection**: When detecting that a file is a classic single player mission file because it matches the classic "SCG01EA"-like name pattern and contains win and lose scripts, a note about it is shown in the mission load analysis. When disabled, this will only be shown if it is not the only remark in the list.
 * **EnforceObjectMaximums**: Don't allow saving a map if any of the the object amounts exceed the normal internal maximums of the game. Can be disabled in case a mission is specifically meant to be played on a modded game that increases these limits.
 * **Ignore106Scripting**: Don't support the extended scripting added by the C&C95 v1.06 patch. If this option is disabled, additional triggers named UUUU, VVVV and WWWW can also be destroyed with "Dstry Trig" actions.
 * **ConvertRaObsoleteClear**: Automatically clear tiles with ID 255 on RA Temperate/Snow maps, or on Interior maps if more than 80% of the area outside the map bounds is filled with it, to fix the fact old versions of RA saved that as Clear terrain. This can be disabled to research changes on old maps.
 * **BlockingBibs**: Bibs block the placement of other structures. Note that if you disable this, you should be careful not to block the build plan of rebuildable AI structures. Also, the games might have issues with walls overlaying building bibs.
-* **DisableAirUnits**: Air unit reading from maps was a disabled feature in the original games. Even though the Remaster re-enabled this, it is buggy and unpredictable, so the editor disables air units by default. Air units put on maps will not appear on the specified cell; they will spawn in the air above it, will either fly off the map or find a nearby building of their House to land at, and (in TD) will usually leave behind an impassable cell on the map under the place where they spawned.
-* **ConvertCraters**: Any craters of the types CR2-CR6 placed in missions are bugged in the games, and revert to the smallest size of CR1. This filters them out and converts them to CR1 craters of the specified size, and removes the other crater types from the Smudge choices list.
+* **DisableAirUnits**: Air unit reading from maps was a disabled feature in the original games. Even though the Remaster re-enabled this, it is buggy and unpredictable, so the editor disables air units by default. Air units put on maps will not appear on the specified cell; they will spawn in the air above it, will either fly off the map or find a nearby building of their House to land at, and (in TD) will usually leave behind an impassable cell on the map under the place where they spawned. Note that any "preplaced" Chinook helicopters that might appear in missions are actually flown in by scripts at the start of the mission.
+* **ConvertCraters**: Any craters of the types CR2-CR6 placed in maps are bugged in the games, and revert to the smallest size of CR1. This filters them out and converts them to CR1 craters of the specified size, and removes the other crater types from the Smudge choices list.
 * **FilterTheaterObjects**: Filter out objects that don't belong in the current map's theater. This affects both map loading, and the items visible in the placement lists. Do not turn this off unless you really know what you're doing; having theater-illegal objects on maps may cause situations that crash the game.
 * **WriteClassicBriefing**: In addition to the single-line "Text=" briefing used by the Remaster, also write classic-style briefings into the ini file as "1=", "2=", etc. lines split at human-readable length. This includes the C&C95 v1.06 line break system using ## characters at the end of a line.
 * **ApplyHarvestBug**: The game has a bug where the final harvested stage of a cell yields nothing (or only 3/4th for RA gems). Assume this bug is unfixed when doing the resource calculations.
@@ -171,7 +171,7 @@ The following files can be read from the configured classic data folders, for ru
 
 Files marked with <sup>(*)</sup> are required, though they may not be visible inside the folder if they are embedded inside another archive.
 
-Files marked with <sup>(1)</sup> (the sc*.mix archives) are add-ons. Anything matching the pattern will be read.
+Files marked with <sup>(1)</sup> (the sc*.mix archives) are add-ons. Anything matching the pattern will be read, but they still obey the rule that each archive name is only read from one location.
 
 Files marked with <sup>(2)</sup> (RA only) can be embedded inside the ''redalert.mix'' or ''main.mix'' archive.
 
