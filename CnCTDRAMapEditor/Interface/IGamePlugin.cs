@@ -82,13 +82,13 @@ namespace MobiusEditor.Interface
         /// <param name="extraIniText">The extra ini text to store</param>
         /// <param name="forFootprintTest">Don't apply changes, just test the result for <paramref name="footPrintsChanged"/></param>
         /// <param name="footPrintsChanged">Returns true if any building footprints were changed as a result of the given ini rule tweaks</param>
-        /// <returns>Any errors that occurred while parsing <paramref name="extraIniText"/></returns>
+        /// <returns>Any errors that occurred while parsing <paramref name="extraIniText"/>, or null if nothing went wrong.</returns>
         IEnumerable<string> SetExtraIniText(String extraIniText, out bool footPrintsChanged);
 
         /// <summary>Test if setting extra ini text will result in footprint changes.</summary>
         /// <param name="extraIniText">The extra ini text to evaluate</param>
         /// <param name="footPrintsChanged">Returns true if any building footprints were changed as a result of the given ini rule tweaks</param>
-        /// <returns>Any errors that occurred while parsing <paramref name="extraIniText"/></returns>
+        /// <returns>Any errors that occurred while parsing <paramref name="extraIniText"/>, or null if nothing went wrong.</returns>
         IEnumerable<string> TestSetExtraIniText(String extraIniText, bool isSolo, bool expansionEnabled, out bool footPrintsChanged);
 
         /// <summary>

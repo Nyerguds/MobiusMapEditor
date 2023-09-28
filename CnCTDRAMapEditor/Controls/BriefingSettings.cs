@@ -33,8 +33,9 @@ namespace MobiusEditor.Controls
 
         private void txtBriefing_TextChanged(System.Object sender, System.EventArgs e)
         {
-            string briefing = txtBriefing.Text.Replace('\t', ' ').Trim('\r', '\n', ' ').Replace("\r\n", "\n").Replace("\r", "\n");
+            string briefing = txtBriefing.Text.Replace('\t', ' ').Replace("\r\n", "\n").Replace('\r', '\n').Trim('\n', ' ');
             lblLength.Text = lenText.Trim() + " " + briefing.Length;
+            lblSemicolon.Visible = plugin.GameType == GameType.RedAlert && Globals.WriteClassicBriefing && briefing.Contains(";");
         }
     }
 }

@@ -276,51 +276,63 @@ namespace MobiusEditor.TiberianDawn
 
         public IEnumerable<string> TestSetExtraIniText(String extraIniText, bool isSolo, bool expansionEnabled, out bool footPrintsChanged)
         {
-            return SetExtraIniText(extraIniText, true, out footPrintsChanged);
+            // No such thing in TD as rules that change footprints, unless I add support for the 1.06 mission option.
+            footPrintsChanged = false;
+            return null;
         }
 
         public IEnumerable<string> SetExtraIniText(String extraIniText, bool forFootprintTest, out bool footPrintsChanged)
         {
             footPrintsChanged = false;
-            INI ini = new INI();
+            INI extraTextIni = new INI();
             try
             {
-                ini.Parse(extraIniText ?? String.Empty);
+                extraTextIni.Parse(extraIniText ?? String.Empty);
             }
             catch
             {
                 return null;
             }
             // Remove any sections known and handled / disallowed by the editor.
-            INITools.ClearDataFrom(ini, "Basic", (BasicSection)Map.BasicSection);
-            INITools.ClearDataFrom(ini, "Map", Map.MapSection);
-            if (ini.Sections["Briefing"] is INISection briefSec)
+            INITools.ClearDataFrom(extraTextIni, "Basic", (BasicSection)Map.BasicSection);
+            INITools.ClearDataFrom(extraTextIni, "Map", Map.MapSection);
+            if (extraTextIni.Sections["Briefing"] is INISection briefSec)
             {
                 briefSec.Remove("Text");
                 briefSec.RemoveWhere(k => Regex.IsMatch(k, "^\\d+$"));
+                if (briefSec.Count == 0)
+                {
+                    extraTextIni.Sections.Remove(briefSec.Name);
+                }
             }
-            ini.Sections.Remove("Steam");
-            ini.Sections.Remove("TeamTypes");
-            ini.Sections.Remove("Triggers");
-            ini.Sections.Remove("Terrain");
-            ini.Sections.Remove("Overlay");
-            ini.Sections.Remove("Smudge");
-            ini.Sections.Remove("Infantry");
-            ini.Sections.Remove("Units");
-            ini.Sections.Remove("Aircraft");
-            ini.Sections.Remove("Structures");
-            if (ini.Sections["Base"] is INISection baseSec)
+            extraTextIni.Sections.Remove("Steam");
+            extraTextIni.Sections.Remove("TeamTypes");
+            extraTextIni.Sections.Remove("Triggers");
+            extraTextIni.Sections.Remove("Terrain");
+            extraTextIni.Sections.Remove("Overlay");
+            extraTextIni.Sections.Remove("Smudge");
+            extraTextIni.Sections.Remove("Infantry");
+            extraTextIni.Sections.Remove("Units");
+            extraTextIni.Sections.Remove("Aircraft");
+            extraTextIni.Sections.Remove("Structures");
+            // Digest. Seems to exist in some console maps.
+            extraTextIni.Sections.Remove("Digest");
+            if (extraTextIni.Sections["Base"] is INISection baseSec)
             {
                 baseSec.Remove("Count");
                 baseSec.RemoveWhere(k => Regex.IsMatch(k, "^\\d{3}$"));
+                if (baseSec.Count == 0)
+                {
+                    extraTextIni.Sections.Remove(baseSec.Name);
+                }
             }
-            ini.Sections.Remove("Waypoints");
-            ini.Sections.Remove("CellTriggers");
+            extraTextIni.Sections.Remove("Waypoints");
+            extraTextIni.Sections.Remove("CellTriggers");
             foreach (Model.House house in Map.Houses)
             {
-                INITools.ClearDataFrom(ini, house.Type.Name, (House)house);
+                INITools.ClearDataFrom(extraTextIni, house.Type.Name, (House)house);
             }
-            extraSections = ini.Sections.Count == 0 ? null : ini.Sections;
+            extraSections = extraTextIni.Sections.Count == 0 ? null : extraTextIni.Sections;
             if (!Globals.Ignore106Scripting)
             {
                 // Perhaps support the v1.06 bibs-disabling option in the future? Would need an entire bib-changing logic like RA has though.
@@ -581,12 +593,37 @@ namespace MobiusEditor.TiberianDawn
                         basicSectionDos.Keys["Author"] = basicSectionUtf8.Keys["Author"];
                     }
                 }
-                // Remastered one-line "Text" briefing from [Briefing] section
+                // Remastered one-line "Text" briefing from [Briefing] section.
                 INISection briefSectionUtf8 = utf8Ini.Sections["Briefing"];
                 INISection briefSectionDos = ini.Sections["Briefing"];
-                if (briefSectionUtf8 != null && briefSectionDos != null && briefSectionUtf8.Keys.Contains("Text"))
+                // Use UTF-8 briefing if present. Restore content behind semicolon cut off as 'comment'.
+                if (briefSectionUtf8 != null && briefSectionDos != null)
                 {
-                    briefSectionDos.Keys["Text"] = briefSectionUtf8.Keys["Text"];
+                    if (briefSectionUtf8.Keys.Contains("Text"))
+                    {
+                        string comment = briefSectionUtf8.GetComment("Text");
+                        String briefing = briefSectionUtf8.Keys["Text"];
+                        if (comment != null)
+                        {
+                            briefing = briefing + comment;
+                        }
+                        briefSectionDos.Keys["Text"] = briefing;
+                    }
+                    else
+                    {
+                        int line = 1;
+                        string lineStr = line.ToString();
+                        while (briefSectionDos.Contains(lineStr))
+                        {
+                            string comment = briefSectionDos.GetComment(lineStr);
+                            if (comment != null)
+                            {
+                                briefSectionDos[lineStr] = briefSectionDos[lineStr] + comment;
+                            }
+                            line++;
+                            lineStr = line.ToString();
+                        }
+                    }
                 }
             }
         }
@@ -733,6 +770,8 @@ namespace MobiusEditor.TiberianDawn
                 basic.Lose = GeneralUtils.AddRemarks(basic.Lose, movieEmpty, true, toAddRem, remark);
             }
             Map.BasicSection.Player = Map.HouseTypes.Where(t => t.Equals(Map.BasicSection.Player)).FirstOrDefault()?.Name ?? Map.HouseTypes.First().Name;
+            // Digest. Seems to exist in some console maps.
+            ini.Sections.Remove("Digest");
             // Map info
             string theaterStr = ini["Map"]?.TryGetValue("Theater") ?? String.Empty;
             INISection mapSection = INITools.ParseAndLeaveRemainder(ini, "Map", Map.MapSection, new MapContext(Map, false));
@@ -790,7 +829,7 @@ namespace MobiusEditor.TiberianDawn
                 briefingSection.RemoveWhere(k => Regex.IsMatch(k, "^\\d+$"));
                 if (briefingSection.Keys.Count == 0)
                 {
-                    ini.Sections.Remove("Briefing");
+                    ini.Sections.Remove(briefingSection.Name);
                 }
             }
             INISection steamSection = ini.Sections.Extract("Steam");
@@ -1582,7 +1621,7 @@ namespace MobiusEditor.TiberianDawn
                     }
                 }
             }
-            INISection baseSection = ini.Sections.Extract("Base");
+            INISection baseSection = ini.Sections["Base"];
             string baseCountStr = baseSection != null ? baseSection.TryGetValue("Count") : null;
             if (baseSection != null)
             {
@@ -1677,6 +1716,13 @@ namespace MobiusEditor.TiberianDawn
                         errors.Add(string.Format("Invalid base rebuild priority entry '{0}={1}'.", kvp.Key, kvp.Value));
                         modified = true;
                     }
+                }
+                // Clean out and leave; might contain addon keys.
+                baseSection.Remove("Count");
+                baseSection.RemoveWhere(k => Regex.IsMatch(k, "^\\d{3}$"));
+                if (baseSection.Count == 0)
+                {
+                    ini.Sections.Remove(baseSection.Name);
                 }
             }
             INISection terrainSection = ini.Sections.Extract("Terrain");
@@ -2137,7 +2183,7 @@ namespace MobiusEditor.TiberianDawn
                     using (JsonTextWriter jsonWriter = new JsonTextWriter(new StreamWriter(jsonStream)))
                     using (MegafileBuilder megafileBuilder = new MegafileBuilder(String.Empty, path))
                     {
-                        string iniText = forSole ? ini.ToString() : FixRoad2Save(ini, "\n");
+                        string iniText = forSole ? ini.ToString("\n") : FixRoad2Save(ini, "\n");
                         GeneralUtils.WriteMultiEncoding(iniText.Split('\n'), iniWriter, dos437, utf8, new[] { ("Steam", null), ("Briefing", "Text"), ("Basic", "Name"), ("Basic", "Author") }, linebreak);
                         iniWriter.Flush();
                         iniStream.Position = 0;
@@ -2185,7 +2231,7 @@ namespace MobiusEditor.TiberianDawn
         /// and replaces them with double lines of the ROAD type so the game will apply them correctly.
         /// </summary>
         /// <param name="ini">The generated ini file</param>
-        /// <param name="iniWriter">The stream writer to write the text to.</param>
+        /// <param name="lineEnd">Line end.</param>
         protected string FixRoad2Save(INI ini, string lineEnd)
         {
             // ROAD's second state can only be accessed by applying ROAD overlay to the same cell twice.

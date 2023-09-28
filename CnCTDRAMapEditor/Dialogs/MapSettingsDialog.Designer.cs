@@ -81,7 +81,7 @@ namespace MobiusEditor.Dialogs
             this.flowLayoutPanel1.Location = new System.Drawing.Point(3, 447);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
             this.flowLayoutPanel1.Size = new System.Drawing.Size(594, 34);
-            this.flowLayoutPanel1.TabIndex = 1;
+            this.flowLayoutPanel1.TabIndex = 0;
             // 
             // btnCancel
             // 
@@ -103,7 +103,7 @@ namespace MobiusEditor.Dialogs
             this.btnOK.Margin = new System.Windows.Forms.Padding(2);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(50, 30);
-            this.btnOK.TabIndex = 3;
+            this.btnOK.TabIndex = 1;
             this.btnOK.Text = "&OK";
             this.btnOK.UseVisualStyleBackColor = true;
             // 
@@ -116,7 +116,7 @@ namespace MobiusEditor.Dialogs
             this.settingsTreeView.Location = new System.Drawing.Point(3, 3);
             this.settingsTreeView.Name = "settingsTreeView";
             this.settingsTreeView.Size = new System.Drawing.Size(174, 438);
-            this.settingsTreeView.TabIndex = 2;
+            this.settingsTreeView.TabIndex = 0;
             this.settingsTreeView.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.settingsTreeView_AfterCheck);
             this.settingsTreeView.DrawNode += new System.Windows.Forms.DrawTreeNodeEventHandler(this.settingsTreeView_DrawNode);
             this.settingsTreeView.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.settingsTreeView_AfterSelect);
@@ -128,7 +128,7 @@ namespace MobiusEditor.Dialogs
             this.settingsPanel.Margin = new System.Windows.Forms.Padding(10);
             this.settingsPanel.Name = "settingsPanel";
             this.settingsPanel.Size = new System.Drawing.Size(400, 424);
-            this.settingsPanel.TabIndex = 3;
+            this.settingsPanel.TabIndex = 0;
             // 
             // MapSettingsDialog
             // 

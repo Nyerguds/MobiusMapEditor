@@ -336,7 +336,7 @@ namespace MobiusEditor.RedAlert
                 footPrintsChanged = false;
                 return null;
             }
-            IEnumerable<string> errors = ResetRules(extraTextIni, isSolo, expansionEnabled, forFootprintTest, out footPrintsChanged);
+            IEnumerable<string> errors = ResetMissionRules(extraTextIni, isSolo, expansionEnabled, forFootprintTest, out footPrintsChanged);
             if (!forFootprintTest)
             {
                 extraSections = extraTextIni.Sections.Count == 0 ? null : extraTextIni.Sections;
@@ -349,12 +349,12 @@ namespace MobiusEditor.RedAlert
         /// resets the plugin's rules to their defaults, and then applies any
         /// rules in the given extra ini content to the plugin.
         /// </summary>
-        /// <param name="extraTextIni">Ini content that remains after parsing an ini file. If null, only a rules reset is performed.</param>
+        /// <param name="extraIniText">Ini content that remains after parsing an ini file. If null, only a rules reset is performed.</param>
         /// <param name="footPrintsChanged">Returns true if any building footprints were changed as a result of the ini rule changes.</param>
-        /// <returns>Any errors in parsing the <paramref name="extraTextIni"/> contents.</returns>
-        private IEnumerable<string> ResetRules(INI extraTextIni)
+        /// <returns>Any errors in parsing the <paramref name="extraIniText"/> contents.</returns>
+        private IEnumerable<string> ResetMissionRules(INI extraIniText)
         {
-            return ResetRules(extraTextIni, this.Map.BasicSection.SoloMission, this.Map.BasicSection.ExpansionEnabled, false, out _);
+            return ResetMissionRules(extraIniText, this.Map.BasicSection.SoloMission, this.Map.BasicSection.ExpansionEnabled, false, out _);
         }
 
         /// <summary>
@@ -362,54 +362,62 @@ namespace MobiusEditor.RedAlert
         /// resets the plugin's rules to their defaults, and then applies any
         /// rules in the given extra ini content to the plugin.
         /// </summary>
-        /// <param name="extraTextIni">Ini content that remains after parsing an ini file. If null, only a rules reset is performed.</param>
+        /// <param name="extraIniText">Ini content that remains after parsing an ini file. If null, only a rules reset is performed.</param>
         /// <param name="isSolo">True if this operation should consider this as singleplayer mission.</param>
         /// <param name="expansionEnabled">True if this operation should consider expansions to be enabled.</param>
         /// <param name="forFootprintTest">Don't apply changes, just test the result for <paramref name="footPrintsChanged"/></param>
         /// <param name="footPrintsChanged">Returns true if any building footprints were changed as a result of the ini rule changes.</param>
-        /// <returns>Any errors in parsing the <paramref name="extraTextIni"/> contents.</returns>
-        private IEnumerable<string> ResetRules(INI extraTextIni, bool isSolo, bool expansionEnabled, bool forFootprintTest, out bool footPrintsChanged)
+        /// <returns>Any errors in parsing the <paramref name="extraIniText"/> contents.</returns>
+        private IEnumerable<string> ResetMissionRules(INI extraIniText, bool isSolo, bool expansionEnabled, bool forFootprintTest, out bool footPrintsChanged)
         {
-            if (extraTextIni != null && !forFootprintTest)
+            if (extraIniText != null && !forFootprintTest)
             {
                 // Strip "NewUnitsEnabled" from the Aftermath section.
-                INISection amSection = extraTextIni.Sections["Aftermath"];
+                INISection amSection = extraIniText.Sections["Aftermath"];
                 if (amSection != null)
                 {
                     amSection.Remove("NewUnitsEnabled");
                 }
                 // Remove any sections known and handled / disallowed by the editor.
-                extraTextIni.Sections.Remove("Digest");
-                INITools.ClearDataFrom(extraTextIni, "Basic", (BasicSection)Map.BasicSection);
-                INITools.ClearDataFrom(extraTextIni, "Map", Map.MapSection);
-                extraTextIni.Sections.Remove("Steam");
-                extraTextIni.Sections.Remove("TeamTypes");
-                extraTextIni.Sections.Remove("Trigs");
-                extraTextIni.Sections.Remove("MapPack");
-                extraTextIni.Sections.Remove("Terrain");
-                extraTextIni.Sections.Remove("OverlayPack");
-                extraTextIni.Sections.Remove("Smudge");
-                extraTextIni.Sections.Remove("Units");
-                extraTextIni.Sections.Remove("Aircraft");
-                extraTextIni.Sections.Remove("Ships");
-                extraTextIni.Sections.Remove("Infantry");
-                extraTextIni.Sections.Remove("Structures");
-                if (extraTextIni.Sections["Base"] is INISection baseSec)
+                extraIniText.Sections.Remove("Digest");
+                INITools.ClearDataFrom(extraIniText, "Basic", (BasicSection)Map.BasicSection);
+                INITools.ClearDataFrom(extraIniText, "Map", Map.MapSection);
+                extraIniText.Sections.Remove("Steam");
+                extraIniText.Sections.Remove("TeamTypes");
+                extraIniText.Sections.Remove("Trigs");
+                extraIniText.Sections.Remove("MapPack");
+                extraIniText.Sections.Remove("Terrain");
+                extraIniText.Sections.Remove("OverlayPack");
+                extraIniText.Sections.Remove("Smudge");
+                extraIniText.Sections.Remove("Units");
+                extraIniText.Sections.Remove("Aircraft");
+                extraIniText.Sections.Remove("Ships");
+                extraIniText.Sections.Remove("Infantry");
+                extraIniText.Sections.Remove("Structures");
+                if (extraIniText.Sections["Base"] is INISection baseSec)
                 {
                     baseSec.Remove("Player");
                     baseSec.Remove("Count");
                     baseSec.RemoveWhere(k => Regex.IsMatch(k, "^\\d{3}$"));
+                    if (baseSec.Count == 0)
+                    {
+                        extraIniText.Sections.Remove(baseSec.Name);
+                    }
                 }
-                extraTextIni.Sections.Remove("Waypoints");
-                extraTextIni.Sections.Remove("CellTriggers");
-                if (extraTextIni.Sections["Briefing"] is INISection briefSec)
+                extraIniText.Sections.Remove("Waypoints");
+                extraIniText.Sections.Remove("CellTriggers");
+                if (extraIniText.Sections["Briefing"] is INISection briefSec)
                 {
                     briefSec.Remove("Text");
                     briefSec.RemoveWhere(k => Regex.IsMatch(k, "^\\d+$"));
+                    if (briefSec.Count == 0)
+                    {
+                        extraIniText.Sections.Remove(briefSec.Name);
+                    }
                 }
                 foreach (House house in Map.Houses)
                 {
-                    INITools.ClearDataFrom(extraTextIni, house.Type.Name, house);
+                    INITools.ClearDataFrom(extraIniText, house.Type.Name, house);
                 }
             }
             Dictionary<string, bool> bibBackups = Map.BuildingTypes.ToDictionary(b => b.Name, b => b.HasBib, StringComparer.OrdinalIgnoreCase);
@@ -429,9 +437,9 @@ namespace MobiusEditor.RedAlert
                 }
             }
             IEnumerable<string> errors = null;
-            if (extraTextIni != null)
+            if (extraIniText != null)
             {
-                errors = UpdateRules(extraTextIni, this.Map, forFootprintTest);
+                errors = UpdateRules(extraIniText, this.Map, forFootprintTest);
             }
             footPrintsChanged = false;
             foreach (BuildingType bType in Map.BuildingTypes)
@@ -558,7 +566,7 @@ namespace MobiusEditor.RedAlert
                 Map.BasicSection.Name = emptyMapName;
                 UpdateBasePlayerHouse();
                 // Initialises rules.
-                ResetRules(null);
+                ResetMissionRules(null);
             }
             finally
             {
@@ -582,7 +590,7 @@ namespace MobiusEditor.RedAlert
                         {
                             INI ini = new INI();
                             iniBytes = File.ReadAllBytes(path);
-                            ParseIniContent(ini, iniBytes);
+                            ParseIniContent(ini, iniBytes, errors);
                             forceSingle = SinglePlayRegex.IsMatch(Path.GetFileNameWithoutExtension(path));
                             errors.AddRange(LoadINI(ini, forceSingle, ref modified));
                         }
@@ -601,7 +609,7 @@ namespace MobiusEditor.RedAlert
                                 using (Stream iniStream = megafile.OpenFile(mprFile))
                                 {
                                     iniBytes = iniStream.ReadAllBytes();
-                                    ParseIniContent(ini, iniBytes);
+                                    ParseIniContent(ini, iniBytes, errors);
                                 }
                                 errors.AddRange(LoadINI(ini, false, ref modified));
                             }
@@ -622,8 +630,9 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        private void ParseIniContent(INI ini, Byte[] iniBytes)
+        private void ParseIniContent(INI ini, Byte[] iniBytes, List<string> errors)
         {
+            bool fixedSemicolon = false;
             Encoding encDOS = Encoding.GetEncoding(437);
             string iniText = encDOS.GetString(iniBytes);
             Encoding encUtf8 = new UTF8Encoding(false, false);
@@ -660,10 +669,37 @@ namespace MobiusEditor.RedAlert
                 // Remastered one-line "Text" briefing from [Briefing] section
                 INISection briefSectionUtf8 = utf8Ini.Sections["Briefing"];
                 INISection briefSectionDos = ini.Sections["Briefing"];
+                // Use UTF-8 briefing if present. Restore content behind semicolon cut off as 'comment'.
                 if (briefSectionUtf8 != null && briefSectionDos != null && briefSectionUtf8.Keys.Contains("Text"))
                 {
-                    briefSectionDos.Keys["Text"] = briefSectionUtf8.Keys["Text"];
+                    string comment = briefSectionUtf8.GetComment("Text");
+                    String briefing = briefSectionUtf8.Keys["Text"];
+                    if (comment != null)
+                    {
+                        briefing = briefing + comment;
+                    }
+                    briefSectionDos.Keys["Text"] = briefing;
                 }
+                else if (briefSectionDos != null)
+                {
+                    int line = 1;
+                    string lineStr = line.ToString();
+                    while (briefSectionDos.Contains(lineStr))
+                    {
+                        string comment = briefSectionDos.GetComment(lineStr);
+                        if (comment != null)
+                        {
+                            briefSectionDos[lineStr] = briefSectionDos[lineStr] + comment;
+                            fixedSemicolon = true;
+                        }
+                        line++;
+                        lineStr = line.ToString();
+                    }
+                }
+            }
+            if (fixedSemicolon)
+            {
+                errors.Add("Classic briefing contains semicolons. These are not supported by the classic game and will cut off lines when used.");
             }
         }
 
@@ -715,7 +751,7 @@ namespace MobiusEditor.RedAlert
             Map.Triggers.Clear();
             Map.Triggers.AddRange(triggers);
             // init rules stuff. This needs to be done after all other inits (or on a clone) since it removes normal handled sections.
-            errors.AddRange(this.ResetRules(ini));
+            errors.AddRange(this.ResetMissionRules(ini));
             // Store remaining extra sections.
             extraSections = ini.Sections.Count == 0 ? null : ini.Sections;
             this.CheckSwitchToSolo(forceSoloMission, player, errors);
@@ -2063,8 +2099,6 @@ namespace MobiusEditor.RedAlert
             }
             else
             {
-                baseSection.Remove("Count");
-                baseSection.Remove("Player");
                 int curPriorityVal = 0;
                 for (int i = 0; i < baseCount; i++)
                 {
@@ -2074,7 +2108,6 @@ namespace MobiusEditor.RedAlert
                     {
                         continue;
                     }
-                    baseSection.Remove(key);
                     string[] tokens = value.Split(',');
                     if (tokens.Length != 2)
                     {
@@ -2121,11 +2154,6 @@ namespace MobiusEditor.RedAlert
                     }
                     curPriorityVal++;
                 }
-                foreach (KeyValuePair<string, string> kvp in baseSection)
-                {
-                    errors.Add(string.Format("Invalid base rebuild priority entry '{0}={1}'.", kvp.Key, kvp.Value));
-                    modified = true;
-                }
             }
             // Clean out and leave; might contain addon keys.
             baseSection.Remove("Player");
@@ -2133,7 +2161,7 @@ namespace MobiusEditor.RedAlert
             baseSection.RemoveWhere(k => Regex.IsMatch(k, "^\\d{3}$"));
             if (baseSection.Count == 0)
             {
-                ini.Sections.Remove("Base");
+                ini.Sections.Remove(baseSection.Name);
             }
         }
 
@@ -3447,7 +3475,8 @@ namespace MobiusEditor.RedAlert
                                 nextLength = sb.Length + (cur == "@" || isBreak ? 0 : 1) + cur.Length;
                             }
                         }
-                        finalLines.Add(sb.ToString());
+                        // Classic briefings cannot contain semicolons.
+                        finalLines.Add(sb.Replace(';', ':').ToString());
                     }
                 }
                 for (int i = 0; i < finalLines.Count; ++i)
@@ -4357,10 +4386,12 @@ namespace MobiusEditor.RedAlert
         {
             bool briefLenOvfl = false;
             bool briefLenSplitOvfl = false;
+            // The actual line length cutoff depends on the user resolution and which characters are used, but this is a decent indication.
             const int cutoff = 40;
             string briefText = (briefing ?? String.Empty).Replace('\t', ' ').Trim('\r', '\n', ' ').Replace("\r\n", "\n").Replace("\r", "\n");
             int lines = briefText.Count(c => c == '\n') + 1;
             briefLenOvfl = lines > 25;
+            // If it's already over 25 lines because of the line breaks, don't bother doing the length split logic; it'll be bad anyway.
             if (!briefLenOvfl)
             {
                 // split in lines of 40; that's more or less the average line length in the brief screen.
@@ -4403,17 +4434,32 @@ namespace MobiusEditor.RedAlert
             {
                 message = warn25Lines + "The lines average to about 40 characters per line, and when split that way, your current briefing exceeds that, meaning it will most likely not display correctly in-game.";
             }
-            if (Globals.WriteClassicBriefing && briefText.Length > maxBriefLengthClassic)
+            if (Globals.WriteClassicBriefing)
             {
-                if (message == null)
+                if (briefText.Length > maxBriefLengthClassic)
                 {
-                    message = String.Empty;
+                    if (message == null)
+                    {
+                        message = String.Empty;
+                    }
+                    else
+                    {
+                        message += "\n\n";
+                    }
+                    message += "Classic Red Alert briefings cannot exceed " + maxBriefLengthClassic + " characters. This includes line breaks. This will not affect the mission when playing in the Remaster, but the briefing will be truncated when playing in the original game.";
                 }
-                else
+                if (briefText.Contains(";"))
                 {
-                    message += '\n';
+                    if (message == null)
+                    {
+                        message = String.Empty;
+                    }
+                    else
+                    {
+                        message += "\n\n";
+                    }
+                    message += "Classic Red Alert briefings cannot contain semicolon characters, since they are the ini format's notation for marking all following text on the line as comment. This will not affect the mission when playing in the Remaster, but if kept, they will be replaced by colons in the classic briefing to prevent this issue.";
                 }
-                message += "Classic Red Alert briefings cannot exceed " + maxBriefLengthClassic + " characters. This includes line breaks.\n\nThis will not affect the mission when playing in the Remaster, but the briefing will be truncated when playing in the original game.";
             }
             return message;
         }

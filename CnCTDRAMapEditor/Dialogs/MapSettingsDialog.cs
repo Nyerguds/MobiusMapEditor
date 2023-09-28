@@ -284,7 +284,7 @@ namespace MobiusEditor.Dialogs
             // Check if the changes in added rules, expansion being enabled or the map being singleplayer had any effect on building footprints.
             if (!checkTextOrig.Equals(checkTextNew, StringComparison.OrdinalIgnoreCase) || wasSolo != isSolo || wasExp != isExp)
             {
-                IEnumerable<string> errors = plugin.TestSetExtraIniText(normalised, isSolo, isExp, out footPrintsChanged);
+                plugin.TestSetExtraIniText(normalised, isSolo, isExp, out footPrintsChanged);
             }
             // Check if RA expansion units were disabled.
             bool expansionWarn = plugin.GameType == GameType.RedAlert && wasExp && !isExp;

@@ -28,7 +28,7 @@ namespace MobiusEditor.Utility
     static class INIHelpers
     {
         public static readonly Regex SectionRegex = new Regex(@"^\s*\[([^\]]*)\]", RegexOptions.Compiled);
-        public static readonly Regex KeyValueRegex = new Regex(@"^\s*(.*?)\s*=([^;]*)", RegexOptions.Compiled);
+        public static readonly Regex KeyValueRegex = new Regex(@"^\s*(.*?)\s*=([^;]*?)(\s*;[^\r\n]*)?$", RegexOptions.Compiled);
         public static readonly Regex CommentRegex = new Regex(@"^\s*(#|;)", RegexOptions.Compiled);
 
         public static readonly Func<INIDiffType, string> DiffPrefix = t =>
@@ -49,6 +49,7 @@ namespace MobiusEditor.Utility
     public class INIKeyValueCollection : IEnumerable<KeyValuePair<string, string>>, IEnumerable
     {
         private readonly OrderedDictionary KeyValues;
+        private readonly Dictionary<String, String> Comments;
 
         public string this[string key]
         {
@@ -82,6 +83,7 @@ namespace MobiusEditor.Utility
         public INIKeyValueCollection()
         {
             KeyValues = new OrderedDictionary(StringComparer.OrdinalIgnoreCase);
+            Comments = new Dictionary<String, String>();
         }
 
         public int Count => KeyValues.Count;
@@ -110,6 +112,26 @@ namespace MobiusEditor.Utility
             this[key] = converter.ConvertToString(value);
         }
 
+        public string GetComment(string key)
+        {
+            return this.Comments.TryGetValue(key, out string value) ? value : null;
+        }
+
+        public void SetComment(string key, string value)
+        {
+            if (!KeyValues.Contains(key) || String.IsNullOrEmpty(value))
+            {
+                Comments.Remove(key);
+                return;
+            }
+            // Comments must always start with a semicolon, which can only be preceded by whitespace.
+            if (!value.TrimStart().StartsWith(";"))
+            {
+                value = ";" + value;
+            }
+            this.Comments[key] = value;
+        }
+
         public bool Remove(string key)
         {
             if (!KeyValues.Contains(key))
@@ -117,12 +139,14 @@ namespace MobiusEditor.Utility
                 return false;
             }
             KeyValues.Remove(key);
+            Comments.Remove(key);
             return true;
         }
 
         public void Clear()
         {
             KeyValues.Clear();
+            Comments.Clear();
         }
 
         public IEnumerator<KeyValuePair<string, string>> GetEnumerator()
@@ -151,6 +175,7 @@ namespace MobiusEditor.Utility
             foreach (string key in toRemove)
             {
                 KeyValues.Remove(key);
+                Comments.Remove(key);
             }
         }
     }
@@ -168,6 +193,16 @@ namespace MobiusEditor.Utility
         public string TryGetValue(string key)
         {
             return Keys.TryGetValue(key);
+        }
+
+        public string GetComment(string key)
+        {
+            return Keys.GetComment(key);
+        }
+
+        public void SetComment(string key, string value)
+        {
+            Keys.SetComment(key, value);
         }
 
         public bool Contains(string key)
@@ -196,7 +231,10 @@ namespace MobiusEditor.Utility
                 Match m = INIHelpers.KeyValueRegex.Match(line);
                 if (m.Success)
                 {
-                    Keys[m.Groups[1].Value] = m.Groups[2].Value.Trim();
+                    string key = m.Groups[1].Value;
+                    Keys[key] = m.Groups[2].Value.Trim();
+                    // Comment preserves leading whitespace, so value + comment is exactly the original value.
+                    Keys.SetComment(key, m.Groups[3].Value);
                 }
             }
         }
@@ -251,10 +289,16 @@ namespace MobiusEditor.Utility
 
         public override string ToString()
         {
+            return ToString(false);
+        }
+
+        public string ToString(bool withComment)
+        {
             List<string> lines = new List<string>(Keys.Count);
             foreach (KeyValuePair<string, string> item in Keys)
             {
-                lines.Add(string.Format("{0}={1}", item.Key, item.Value));
+                string comment = withComment ? Keys.GetComment(item.Key) : null;
+                lines.Add(string.Format("{0}={1}{2}", item.Key, item.Value, comment ?? String.Empty));
             }
             return string.Join(Environment.NewLine, lines);
         }
