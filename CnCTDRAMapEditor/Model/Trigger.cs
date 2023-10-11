@@ -139,6 +139,7 @@ namespace MobiusEditor.Model
         {
             return trigger == null || trigger.Equals(None, StringComparison.OrdinalIgnoreCase);
         }
+        public bool UsesEvent2 => EventControl == TriggerMultiStyleType.And || EventControl == TriggerMultiStyleType.Or || EventControl == TriggerMultiStyleType.Linked;
 
         public string Name { get; set; }
 

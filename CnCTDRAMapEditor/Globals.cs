@@ -54,6 +54,7 @@ namespace MobiusEditor
             FilterTheaterObjects = Properties.Settings.Default.FilterTheaterObjects;
             WriteClassicBriefing = Properties.Settings.Default.WriteClassicBriefing;
             ApplyHarvestBug = Properties.Settings.Default.ApplyHarvestBug;
+            FixClassicEinstein = Properties.Settings.Default.FixClassicEinstein;
             NoOwnedObjectsInSole = Properties.Settings.Default.NoOwnedObjectsInSole;
             AdjustSoleTeleports = Properties.Settings.Default.DrawSoleTeleports;
             RestrictSoleLimits = Properties.Settings.Default.RestrictSoleLimits;
@@ -146,6 +147,7 @@ namespace MobiusEditor
         public static bool WriteClassicBriefing { get; private set; }
         public static bool ApplyHarvestBug { get; private set; }
         public static bool NoOwnedObjectsInSole { get; private set; }
+        public static bool FixClassicEinstein { get; private set; }
         public static bool AdjustSoleTeleports { get; private set; }
         public static bool RestrictSoleLimits { get; private set; }
 

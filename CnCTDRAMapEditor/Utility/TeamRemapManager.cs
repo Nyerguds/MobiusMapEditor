@@ -146,7 +146,7 @@ namespace MobiusEditor.Utility
             {
                 cpsData = ClassicSpriteLoader.GetCpsData(cpsFileBytes, out _);
             }
-            catch (ArgumentException)
+            catch (FileTypeLoadException)
             {
                 // Not a valid CPS file; ignore and do nothing.
                 return;
@@ -157,22 +157,16 @@ namespace MobiusEditor.Utility
             Dictionary<string, TeamRemap> raRemapColors = new Dictionary<string, TeamRemap>();
             byte[] remapSource = new byte[16];
             Array.Copy(cpsData, 0, remapSource, 0, 16);
-            bool baseRemapSet = false;
+            currentRemapBaseIndex = remapSource[6];
             for (int y = 0; y < height; ++y)
             {
                 int ptr = 320 * y;
                 String name = this.remapsColorsRa[y];
                 Byte[] remap = new byte[16];
                 Array.Copy(cpsData, ptr, remap, 0, 16);
-                // Apparently the same in RA.
-                byte unitRadarColor = cpsData[ptr + 6];
-                byte buildingRadarColor = cpsData[ptr + 6];
-                if (!baseRemapSet)
-                {
-                    currentRemapBaseIndex = buildingRadarColor;
-                    baseRemapSet = true;
-                }
-                TeamRemap col = new TeamRemap(name, unitRadarColor, buildingRadarColor, remapSource, remap);
+                // Apparently the same for units and buildings in RA.
+                byte radarColor = cpsData[ptr + 6];
+                TeamRemap col = new TeamRemap(name, radarColor, radarColor, remapSource, remap);
                 raRemapColors.Add(name, col);
             }
             foreach (String col in this.remapsColorsRa)

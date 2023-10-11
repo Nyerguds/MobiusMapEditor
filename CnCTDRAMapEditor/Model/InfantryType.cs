@@ -33,8 +33,8 @@ namespace MobiusEditor.Model
         public bool IsExpansionOnly => (this.Flag & UnitTypeFlag.IsExpansionUnit) == UnitTypeFlag.IsExpansionUnit;
         public bool IsHarvester => false;
         public bool CanRemap => (this.Flag & UnitTypeFlag.NoRemap) != UnitTypeFlag.NoRemap;
-        public string ClassicGraphicsSource { get; private set; }
-        public Byte[] ClassicGraphicsRemap { get; private set; }
+        public string ClassicGraphicsSource { get; set; }
+        public Byte[] ClassicGraphicsRemap { get; set; }
 
         public Bitmap Thumbnail { get; set; }
         private string nameId;
@@ -107,12 +107,11 @@ namespace MobiusEditor.Model
         {
             this.InitDisplayName();
             Bitmap oldImage = this.Thumbnail;
-            Tile tile;
             // Initialisation for the special RA civilian remapping logic.
-            if (this.ClassicGraphicsSource != null && Globals.TheTilesetManager is TilesetManagerClassic tsmc)
+            if (this.ClassicGraphicsRemap != null && Globals.TheTilesetManager is TilesetManagerClassic tsmc)
             {
                 // Use special override that 100% makes sure previously-cached versions are cleared, so previous accidental fetches do not corrupt
-                tsmc.GetTeamColorTileData(this.Name, 4, null, out tile, true, false, this.ClassicGraphicsSource, this.ClassicGraphicsRemap, true);
+                tsmc.GetTeamColorTileData(this.Name, 0, null, out _, true, false, this.ClassicGraphicsSource, this.ClassicGraphicsRemap, true);
             }
             Infantry mockInfantry = new Infantry(null)
             {

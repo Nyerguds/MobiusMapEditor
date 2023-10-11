@@ -710,16 +710,8 @@ namespace MobiusEditor.Render
             Int32 icon = HumanShape[Facing32[infantry.Direction.ID]];
             ITeamColor teamColor = infantry.Type.CanRemap ? Globals.TheTeamColorManager[infantry.House?.UnitTeamColor] : null;
             Tile tile = null;
-            bool success;
-            if (Globals.UseClassicFiles && infantry.Type.ClassicGraphicsSource != null && Globals.TheTilesetManager is TilesetManagerClassic tsmc)
-            {
-                // RA classic infantry remap support.
-                success = tsmc.GetTeamColorTileData(infantry.Type.Name, icon, teamColor, out tile, true, false, infantry.Type.ClassicGraphicsSource, infantry.Type.ClassicGraphicsRemap);
-            }
-            else
-            {
-                success = Globals.TheTilesetManager.GetTeamColorTileData(infantry.Type.Name, icon, teamColor, out tile, true, false);
-            }
+            // InfantryType.Init() should have taken care of RA's classic civilian remap mess at this point, and remapped all cached source graphics.
+            bool success = Globals.TheTilesetManager.GetTeamColorTileData(infantry.Type.Name, icon, teamColor, out tile, true, false);
             if (tile == null || tile.Image == null)
             {
                 Debug.Print(string.Format("Infantry {0} ({1}) not found", infantry.Type.Name, icon));

@@ -533,6 +533,10 @@ namespace MobiusEditor.RedAlert
             string[] structureActionTypes = { ActionTypes.TACTION_DESTROY_OBJECT };
             string[] terrainActionTypes = { };
 
+            // Remap classic Einstein DOS graphics to no longer look like Mobius.
+            InfantryType einstein = InfantryTypes.Einstein;
+            einstein.ClassicGraphicsRemap = Globals.FixClassicEinstein ? InfantryClassicRemap.RemapEinstein : null;
+
             Map = new Map(basicSection, null, Constants.MaxSize, typeof(House), houseTypes, null,
                 TheaterTypes.GetTypes(), TemplateTypes.GetTypes(),
                 TerrainTypes.GetTypes(), OverlayTypes.GetTypes(), SmudgeTypes.GetTypes(Globals.ConvertCraters),
@@ -3540,54 +3544,11 @@ namespace MobiusEditor.RedAlert
 
         public string Validate(Boolean forWarnings)
         {
-            StringBuilder sb = new StringBuilder();
             if (forWarnings)
             {
-                // Check if map has name
-                if (this.MapNameIsEmpty(this.Map.BasicSection.Name))
-                {
-                    sb.Append("Map name is empty. If you continue, the filename will be filled in as map name.\n");
-                }
-                // Check if the map or any of the scripting references ants, and if so, if their rules are filled in.
-                UnitType[] antUs = { UnitTypes.Ant1, UnitTypes.Ant2, UnitTypes.Ant3 };
-                BuildingType[] antBRaw = { BuildingTypes.Queen, BuildingTypes.Larva1, BuildingTypes.Larva2 };
-                // Buildings get cloned so equal function doesn't work on the bare blueprints.
-                BuildingType[] antBs = this.Map.BuildingTypes.Where(bt => antBRaw.Any(loc => loc.ID == bt.ID)).ToArray();
-
-                List<BuildingType> usedAntBldTypes = Map.Buildings.OfType<Building>().Where(x => antBs.Contains(x.Occupier.Type)).Select(lb => lb.Occupier.Type).Distinct().ToList();
-                List<UnitType> usedAntUnitTypes = Map.Technos.OfType<Unit>().Where(u => antUs.Contains(u.Occupier.Type)).Select(lb => lb.Occupier.Type).Distinct().ToList();
-                List<UnitType> usedAntsInTeams = Map.TeamTypes.SelectMany(t => t.Classes).Where(cl => antUs.Contains(cl.Type)).Select(cl => cl.Type).OfType<UnitType>().Distinct().ToList();
-                usedAntUnitTypes.AddRange(usedAntsInTeams);
-                // Nothing found.
-                if (usedAntBldTypes.Count == 0 && usedAntUnitTypes.Count == 0)
-                {
-                    return sb.ToString();
-                }
-                bool hasQueen = usedAntBldTypes.Any(bld => bld.ID == BuildingTypes.Queen.ID);
-                List<String> types = new List<string>();
-                foreach (UnitType unit in usedAntUnitTypes)
-                {
-                    if (extraSections == null || !extraSections.Contains(unit.Name))
-                        types.Add(unit.Name.ToUpperInvariant());
-                }
-                foreach (BuildingType bld in usedAntBldTypes)
-                {
-                    if (extraSections == null || !extraSections.Contains(bld.Name))
-                        types.Add(bld.Name.ToUpperInvariant());
-                }
-                if (types.Count == 0)
-                {
-                    return sb.ToString();
-                }
-                sb.Append("The following ant units and structures were found on the map or in the scripting, but have no ini rules set to properly define their stats:\n\n");
-                sb.Append(String.Join(", ", types.ToArray()));
-                string stats = usedAntUnitTypes.Count == 0 ? (hasQueen ? "strength or weapon" : "strength") : "strength, weapon or movement speed";
-                sb.Append("\n\nWithout ini definitions, these things will have no ").Append(stats)
-                    .Append(", and will malfunction in the game. The definitions can be set in Settings → Map Settings → INI Rules & Tweaks.");
-                return sb.ToString();
+                return ValidateForWarnings();
             }
-            sb.Append("Error(s) during map validation:\n");
-            bool ok = true;
+            StringBuilder sb = new StringBuilder();
             int numAircraft = Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsAircraft).Count();
             int numBuildings = Map.Buildings.OfType<Building>().Where(x => x.Occupier.IsPrebuilt).Count();
             int numInfantry = Map.Technos.OfType<InfantryGroup>().Sum(item => item.Occupier.Infantry.Count(i => i != null));
@@ -3601,61 +3562,50 @@ namespace MobiusEditor.RedAlert
             if (!Globals.DisableAirUnits && numAircraft > Constants.MaxAircraft && Globals.EnforceObjectMaximums)
             {
                 sb.Append(string.Format("\nMaximum number of aircraft exceeded ({0} > {1})", numAircraft, Constants.MaxAircraft));
-                ok = false;
             }
             if (numBuildings > Constants.MaxBuildings && Globals.EnforceObjectMaximums)
             {
                 sb.Append(string.Format("\nMaximum number of structures exceeded ({0} > {1})", numBuildings, Constants.MaxBuildings));
-                ok = false;
             }
             if (numInfantry > Constants.MaxInfantry && Globals.EnforceObjectMaximums)
             {
                 sb.Append(string.Format("\nMaximum number of infantry exceeded ({0} > {1})", numInfantry, Constants.MaxInfantry));
-                ok = false;
             }
             if (numTerrain > Constants.MaxTerrain && Globals.EnforceObjectMaximums)
             {
                 sb.Append(string.Format("\nMaximum number of terrain objects exceeded ({0} > {1})", numTerrain, Constants.MaxTerrain));
-                ok = false;
             }
             if (numUnits > Constants.MaxUnits && Globals.EnforceObjectMaximums)
             {
                 sb.Append(string.Format("\nMaximum number of units exceeded ({0} > {1})", numUnits, Constants.MaxUnits));
-                ok = false;
             }
             if (numVessels > Constants.MaxVessels && Globals.EnforceObjectMaximums)
             {
                 sb.Append(string.Format("\nMaximum number of ships exceeded ({0} > {1})", numVessels, Constants.MaxVessels));
-                ok = false;
             }
             if (Map.TeamTypes.Count > Constants.MaxTeams && Globals.EnforceObjectMaximums)
             {
                 sb.Append(string.Format("\nMaximum number of team types exceeded ({0} > {1})", Map.TeamTypes.Count, Constants.MaxTeams));
-                ok = false;
             }
             if (Map.Triggers.Count > Constants.MaxTriggers && Globals.EnforceObjectMaximums)
             {
                 sb.Append(string.Format("\nMaximum number of triggers exceeded ({0} > {1})", Map.Triggers.Count, Constants.MaxTriggers));
-                ok = false;
             }
             if (!Map.BasicSection.SoloMission)
             {
                 if (numStartPoints < 2)
                 {
                     sb.Append("\nSkirmish/Multiplayer maps need at least 2 waypoints for player starting locations.");
-                    ok = false;
                 }
                 if (numBadPoints > 0)
                 {
                     sb.Append("\nSkirmish/Multiplayer maps should not have player start waypoints placed outside the map bound.");
-                    ok = false;
                 }
             }
             Waypoint homeWaypoint = Map.Waypoints.Where(w => (w.Flag & WaypointFlag.Home) == WaypointFlag.Home).FirstOrDefault();
             if (Map.BasicSection.SoloMission && (!homeWaypoint.Cell.HasValue || !Map.Metrics.GetLocation(homeWaypoint.Cell.Value, out Point p) || !Map.Bounds.Contains(p)))
             {
                 sb.Append("\nSingle-player maps need the Home waypoint to be placed, inside the map bounds.");
-                ok = false;
             }
             bool fatal;
             IEnumerable<string> triggerErr = CheckTriggers(this.Map.Triggers, true, true, true, out fatal, false, out bool _);
@@ -3665,9 +3615,254 @@ namespace MobiusEditor.RedAlert
                 {
                     sb.Append("\n").Append(err);
                 }
-                ok = false;
             }
-            return ok ? null : sb.ToString().Trim('\n');
+            if (sb.Length > 0)
+            {
+                sb.Insert(0, "Error(s) during map validation:\n").TrimEnd('\n');
+                return sb.ToString();
+            }
+            return null;
+        }
+
+        private String ValidateForWarnings()
+        {
+            StringBuilder sb = new StringBuilder();
+            // Check if map has name
+            if (this.MapNameIsEmpty(this.Map.BasicSection.Name))
+            {
+                sb.Append("Map name is empty. If you continue, the filename will be filled in as map name.\n");
+            }
+            UnitType[] antUnitTypes = { UnitTypes.Ant1, UnitTypes.Ant2, UnitTypes.Ant3 };
+            BuildingType[] antBuildingTypes = { BuildingTypes.Queen, BuildingTypes.Larva1, BuildingTypes.Larva2 };
+            string[] antWeapons = { "Mandible" };
+            CheckMissingRules(sb, "ant-related", antUnitTypes, null, antBuildingTypes, antWeapons);
+            /*/
+            // Seems all AM units have default rules in aftrmath.ini, so no real point in checking this.
+            if (Map.BasicSection.ExpansionEnabled)
+            {
+                UnitType[] expUnitTypes = Map.UnitTypes.Where(u => u.IsExpansionOnly).ToArray();
+                InfantryType[] expInfTypes = Map.InfantryTypes.Where(u => u.IsExpansionOnly).ToArray();
+                BuildingType[] expBuildingTypes = { };
+                string[] expWeapons = { "AirAssault", "PortaTesla", "TTankZap", "GoodWrench", "SubSCUD", "APTusk", "Democharge" };
+                // Cah't check warheads: it requires having a list of all weapons (or checking literally every section for "Warhead=" I guess).
+                //string[] expWarheads = { "Mechanical" };
+                CheckMissingRules(sb, "Aftermath", expUnitTypes, expInfTypes, expBuildingTypes, expWeapons);
+            }
+            //*/
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Checks if the map or any of the scripting has references to the given types, and if so, if their rules are filled in.
+        /// </summary>
+        /// <param name="sb">StringBuilder to throw the analysis into in case types are missing.</param>
+        /// <param name="context">The types of units/structures/etc being checked. Can be left empty.</param>
+        /// <param name="checkUnitTypes">Unit types to check.</param>
+        /// <param name="checkInfantryTypes">Infantry types to check.</param>
+        /// <param name="checkBuildingTypes">Building types to check.</param>
+        /// <param name="checkWeaponTypes">Weapon types to check.</param>
+        private void CheckMissingRules(StringBuilder sb, string context, UnitType[] checkUnitTypes, InfantryType[] checkInfantryTypes, BuildingType[] checkBuildingTypes, string[] checkWeaponTypes)
+        {
+            context = (context ?? String.Empty).Trim();
+            if (context.Length == 0)
+            {
+                context = null;
+            }
+            // Check used objects on map: units
+            List<UnitType> usedUnits = new List<UnitType>();
+            if (checkUnitTypes != null && checkUnitTypes.Length > 0)
+            {
+                // Resolve potential clones to their local equivalents.
+                UnitType[] testUnitTypes = this.Map.UnitTypes.Where(ut => checkUnitTypes.Any(ct => ct.ID == ut.ID)).ToArray();
+                Dictionary<int, UnitType> testUnitsById = testUnitTypes.ToDictionary(ct => ct.ID);
+                // Find on map
+                List<UnitType> mapUsedUnits = Map.Technos.OfType<Unit>().Where(u => testUnitTypes.Contains(u.Occupier.Type)).Select(lb => lb.Occupier.Type).ToList();
+                // Find in teams
+                List<UnitType> teamUsedUnits = Map.TeamTypes.SelectMany(t => t.Classes).Where(cl => testUnitTypes.Contains(cl.Type)).Select(cl => cl.Type).OfType<UnitType>().ToList();
+                mapUsedUnits.AddRange(teamUsedUnits);
+                // Find in triggers
+                List<UnitType> trigUsedUnits1 = Map.Triggers
+                    .Where(tr => tr.Event1.EventType == EventTypes.TEVENT_BUILD_UNIT && testUnitsById.ContainsKey((int)tr.Event1.Data))
+                    .Select(tr => testUnitsById[(int)tr.Event1.Data]).ToList();
+                mapUsedUnits.AddRange(trigUsedUnits1);
+                List<UnitType> trigUsedUnits2 = Map.Triggers
+                    .Where(tr => tr.UsesEvent2 && tr.Event2.EventType == EventTypes.TEVENT_BUILD_UNIT && testUnitsById.ContainsKey((int)tr.Event2.Data))
+                    .Select(tr => testUnitsById[(int)tr.Event2.Data]).ToList();
+                mapUsedUnits.AddRange(trigUsedUnits2);
+                // Match back to original list
+                usedUnits.AddRange(testUnitTypes.Where(u => mapUsedUnits.Contains(u)));
+            }
+            // Check used objects on map: infantry
+            List<InfantryType> usedInfantry = new List<InfantryType>();
+            if (checkInfantryTypes != null && checkInfantryTypes.Length > 0)
+            {
+                // Resolve potential clones to their local equivalents.
+                InfantryType[] testInfantryTypes = this.Map.InfantryTypes.Where(it => checkInfantryTypes.Any(ct => ct.ID == it.ID)).ToArray();
+                Dictionary<int, InfantryType> testInfantryById = testInfantryTypes.ToDictionary(ct => ct.ID);
+                // Find on map
+                List<InfantryType> mapUsedInfantry = Map.Technos.OfType<InfantryGroup>().SelectMany(ig => ig.Occupier.Infantry).Where(i => i != null && testInfantryTypes.Contains(i.Type)).Select(i => i.Type).ToList();
+                // Find in teams
+                List<InfantryType> teamUsedInfantry = Map.TeamTypes.SelectMany(t => t.Classes).Where(cl => testInfantryTypes.Contains(cl.Type)).Select(cl => cl.Type).OfType<InfantryType>().ToList();
+                mapUsedInfantry.AddRange(teamUsedInfantry);
+                // Find in triggers
+                List<InfantryType> trigUsedInfantry1 = Map.Triggers
+                    .Where(tr => tr.Event1.EventType == EventTypes.TEVENT_BUILD_INFANTRY && testInfantryById.ContainsKey((int)tr.Event1.Data))
+                    .Select(tr => testInfantryById[(int)tr.Event1.Data]).ToList();
+                mapUsedInfantry.AddRange(trigUsedInfantry1);
+                List<InfantryType> trigUsedInfantry2 = Map.Triggers
+                    .Where(tr => tr.UsesEvent2 && tr.Event2.EventType == EventTypes.TEVENT_BUILD_INFANTRY && testInfantryById.ContainsKey((int)tr.Event2.Data))
+                    .Select(tr => testInfantryById[(int)tr.Event2.Data]).ToList();
+                mapUsedInfantry.AddRange(trigUsedInfantry2);
+                // Match back to original list
+                usedInfantry.AddRange(testInfantryTypes.Where(u => mapUsedInfantry.Contains(u)));
+            }
+
+            // Check used objects on map: buildings
+            List<BuildingType> usedBuildings = new List<BuildingType>();
+            if (checkBuildingTypes != null && checkBuildingTypes.Length > 0)
+            {
+                // Resolve potential clones to their local equivalents.
+                BuildingType[] testBuildingTypes = this.Map.BuildingTypes.Where(bt => checkBuildingTypes.Any(ct => ct.ID == bt.ID)).ToArray();
+                Dictionary<int, BuildingType> testBuildingsById = testBuildingTypes.ToDictionary(ct => ct.ID);
+                // Find on map
+                List<BuildingType> mapUsedBuildings = Map.Buildings.OfType<Building>().Where(x => testBuildingTypes.Contains(x.Occupier.Type)).Select(lb => lb.Occupier.Type).ToList();
+                // Find in triggers
+                List<BuildingType> trigUsedBuildings1 = Map.Triggers
+                    .Where(tr => (tr.Event1.EventType == EventTypes.TEVENT_BUILDING_EXISTS || tr.Event1.EventType == EventTypes.TEVENT_BUILD)
+                            && testBuildingsById.ContainsKey((int)tr.Event1.Data)).Select(tr => testBuildingsById[(int)tr.Event1.Data]).ToList();
+                mapUsedBuildings.AddRange(trigUsedBuildings1);
+                List<BuildingType> trigUsedBuildings2 = Map.Triggers
+                    .Where(tr => tr.UsesEvent2 && (tr.Event2.EventType == EventTypes.TEVENT_BUILDING_EXISTS || tr.Event2.EventType == EventTypes.TEVENT_BUILD)
+                            && testBuildingsById.ContainsKey((int)tr.Event2.Data)).Select(tr => testBuildingsById[(int)tr.Event2.Data]).ToList();
+                mapUsedBuildings.AddRange(trigUsedBuildings2);
+                // Match back to original list
+                usedBuildings.AddRange(testBuildingTypes.Where(b => mapUsedBuildings.Contains(b)));
+            }
+            // Determine in which rules to check.
+            List<INISectionCollection> checkSections = new List<INISectionCollection>();
+            if (rulesIni != null)
+                checkSections.Add(rulesIni.Sections);
+            if (Map.BasicSection.ExpansionEnabled && aftermathRulesIni != null)
+                checkSections.Add(aftermathRulesIni.Sections);
+            if (Map.BasicSection.ExpansionEnabled && !Map.BasicSection.SoloMission && multiplayRulesIni != null)
+                checkSections.Add(multiplayRulesIni.Sections);
+            if (extraSections != null)
+                checkSections.Add(extraSections);
+            // weapon checks.
+            List<String> missingWeapons = CheckMissingWeaponRules(checkWeaponTypes, checkSections);
+            // None of the checked items is used on the map, and no used weapons were identified as missing rules.
+            if (usedBuildings.Count == 0 && usedUnits.Count == 0 && usedInfantry.Count == 0 && missingWeapons.Count == 0)
+            {
+                return;
+            }
+            // Build final list of missing objects and object types.
+            List<String> missingTypes = new List<string>();
+            List<String> missingObjTypes = new List<string>();
+            const string unitStr = "unit";
+            bool unitsMissing = false;
+            foreach (UnitType unit in usedUnits)
+            {
+                if (!INISectionCollection.AnyIniSectionContains(unit.Name, checkSections))
+                {
+                    missingObjTypes.Add(unit.Name.ToUpperInvariant() + " (" + unitStr + ")");
+                    unitsMissing = true;
+                }
+            }
+            if (unitsMissing) missingTypes.Add(unitStr);
+            const string infStr = "infantry";
+            bool infantryMissing = false;
+            foreach (InfantryType inf in usedInfantry)
+            {
+                if (!INISectionCollection.AnyIniSectionContains(inf.Name, checkSections))
+                {
+                    missingObjTypes.Add(inf.Name.ToUpperInvariant() + " (" + infStr + ")");
+                    infantryMissing = true;
+                }
+            }
+            if (infantryMissing) missingTypes.Add(infStr);
+            const string bldStr = "building";
+            bool buildingsMissing = false;
+            foreach (BuildingType bld in usedBuildings)
+            {
+                if (!INISectionCollection.AnyIniSectionContains(bld.Name, checkSections))
+                {
+                    missingObjTypes.Add(bld.Name.ToUpperInvariant() + " (" + bldStr + ")");
+                    buildingsMissing = true;
+                }
+            }
+            if (buildingsMissing) missingTypes.Add(bldStr);
+            const string weaponStr = "weapon";
+            foreach (string weapon in missingWeapons)
+            {
+                missingObjTypes.Add(weapon + " (" + weaponStr + ")");
+            }
+            if (missingWeapons.Count > 0) missingTypes.Add(weaponStr);
+            if (missingObjTypes.Count == 0)
+            {
+                return;
+            }
+            bool plural = missingObjTypes.Count > 1;
+            // sb.Append(null) will abort immediately, so it's more efficient than using 'String.Empty'.
+            sb.Append("The following ");
+            sb.Append(context != null ? (context + " ") : null);
+            sb.Append(String.Join("/", missingTypes.ToArray()));
+            sb.Append(" type").Append(plural ? "s are" : " is").Append(" used on the map");
+            sb.Append(unitsMissing || infantryMissing || buildingsMissing ? " or in the scripting" : null);
+            sb.Append(", but ").Append(plural ? "have" : "has").Append(" no ini rules set to properly define ").Append(plural ? "their" : "its").Append(" stats:\n- ");
+            sb.Append(String.Join("\n- ", missingObjTypes.ToArray()));
+            sb.Append("\nWithout ini definition").Append(plural ? "s, these objects" : ", this object").Append(" will have no ");
+            sb.Append(unitsMissing || infantryMissing ? "strength, weapon or movement speed" : buildingsMissing ? "strength or weapon" : "weapon");
+            sb.Append(" stats, and will malfunction in the game. The definitions can be set in Settings → Map Settings → INI Rules & Tweaks.");
+        }
+
+        private List<String> CheckMissingWeaponRules(String[] checkWeaponTypes, List<INISectionCollection> checkSections)
+        {
+            // weapon checks.
+            List<String> missingWeapons = new List<string>();
+            const string primaryIniName = "Primary";
+            const string secondaryIniName = "Secondary";
+            // Make list of all technos
+            List<ITechnoType> allTypes = new List<ITechnoType>();
+            allTypes.AddRange(Map.UnitTypes);
+            allTypes.AddRange(Map.InfantryTypes);
+            allTypes.AddRange(Map.BuildingTypes);
+            // Loop over all weapons to check.
+            foreach (string weaponType in checkWeaponTypes)
+            {
+                if (INISectionCollection.AnyIniSectionContains(weaponType, checkSections))
+                {
+                    // Rules section exist, so there is no problem.
+                    continue;
+                }
+                // Rules section does not exist; check if any units/structures/infantry use the weapon.
+                bool weaponUsed = false;
+                foreach (ITechnoType techno in allTypes)
+                {
+                    string sectionName = techno.Name;
+                    foreach (INISectionCollection inicoll in checkSections)
+                    {
+                        if (inicoll.Contains(sectionName))
+                        {
+                            INISection section = inicoll[sectionName];
+                            String primaryWeapon = section.TryGetValue(primaryIniName);
+                            String secondaryWeapon = section.TryGetValue(secondaryIniName);
+                            // Check if the weapon under investigation is used in this section.
+                            // Since we confirmed it has no rules, it's a problem if it's used.
+                            if (weaponType == primaryWeapon || weaponType == secondaryWeapon)
+                            {
+                                missingWeapons.Add(weaponType);
+                                weaponUsed = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (weaponUsed)
+                    {
+                        break;
+                    }
+                }
+            }
+            return missingWeapons.Distinct().ToList();
         }
 
         public IEnumerable<string> AssessMapItems()

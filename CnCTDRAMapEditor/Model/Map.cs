@@ -784,7 +784,7 @@ namespace MobiusEditor.Model
                     state = 5;
                 }
                 // For some reason the odd and even icons for state 0 are swapped compared to all the others, so
-                // an extra check has to be added for that. Otherwise just "(icon * 2) + 1 - isodd" would suffice.
+                // an extra check has to be added for that. Otherwise just "(state * 2) + 1 - isodd" would suffice.
                 overlay.Icon = state == 0 ? isodd : (state * 2) + 1 - isodd;
 
                 // Possibly todo: add concrete to fill up corners and actually complete the logic as intended?
@@ -1276,7 +1276,7 @@ namespace MobiusEditor.Model
             if (trigger != null)
             {
                 indicatedEvents.Add(trigger.Event1.EventType);
-                if (trigger.EventControl != TriggerMultiStyleType.Only && !TriggerEvent.IsEmpty(trigger.Event2.EventType))
+                if (trigger.UsesEvent2 && !TriggerEvent.IsEmpty(trigger.Event2.EventType))
                 {
                     indicatedEvents.Add(trigger.Event2.EventType);
                 }

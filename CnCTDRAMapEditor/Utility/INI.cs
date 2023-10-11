@@ -416,6 +416,24 @@ namespace MobiusEditor.Utility
         {
             return GetEnumerator();
         }
+
+
+        public static bool AnyIniSectionContains(string section, params INISectionCollection[] collections)
+        {
+            return AnyIniSectionContains(section, (IEnumerable<INISectionCollection>)collections);
+        }
+
+        public static bool AnyIniSectionContains(string section, IEnumerable<INISectionCollection> collections)
+        {
+            foreach (INISectionCollection collection in collections)
+            {
+                if (collection != null && collection.Contains(section))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 
     public partial class INI : IEnumerable<INISection>, IEnumerable

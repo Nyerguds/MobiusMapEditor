@@ -162,8 +162,14 @@ These options are all enabled by default, but can be disabled if you wish. Use t
 * **WriteClassicBriefing**: In addition to the single-line "Text=" briefing used by the Remaster, also write classic-style briefings into the ini file as "1=", "2=", etc. lines split at human-readable length. This includes the C&C95 v1.06 line break system using ## characters at the end of a line.
 * **ApplyHarvestBug**: The game has a bug where the final harvested stage of a cell yields nothing (or only 3/4th for RA gems). Assume this bug is unfixed when doing the resource calculations.
 * **NoOwnedObjectsInSole**: Sole Survivor maps normally don't include placed down units, structures or infantry, so loading and saving them is disabled by default. But it seems some official maps do contain decorative civilian buildings, and old betas of the game could read those, so this option can be disabled for research purposes.
-* **DrawSoleTeleports**: On Sole Survivor maps, draw a black area with blue border over the loaded ROAD graphics to emulate the look of the in-game teleporters.
 * **RestrictSoleLimits**: When analysing / saving Sole Survivor maps, use the original object amount limits of the game, rather than the Remaster's larger values.
+
+### Graphical tweaks:
+
+These don't affect any real behaviour, but change some graphics to look more correct in the editor:
+
+* **FixClassicEinstein**: While the Win95 and remastered versions of Red Alert have Einstein's in-game sprite coloured to match how he appears in the briefings, the DOS version looks identical to Dr. Mobius in Tiberian Dawn. This option fixes the DOS graphics used by Classic mode to also use these colours. Note that the **GraphicsFixesRA** mod also fixes this.
+* **DrawSoleTeleports**: On Sole Survivor maps, draw a black area with blue border over the loaded ROAD graphics to emulate the look of the in-game teleporters.
 
 ## Classic files listing:
 
@@ -206,6 +212,6 @@ These are read from the "Classic\RA" subfolder by default.
 * snow.mix <sup>(*)</sup> <sup>(2)</sup>
 * temperat.mix <sup>(*)</sup> <sup>(2)</sup>
 
-The ''hires.mix'' and ''hires1.mix'' archives are not used; like the RA Remaster, the editor uses the DOS versions of the infantry.
+The ''hires.mix'' and ''hires1.mix'' archives are not used; like the Red Alert Remaster itself, the editor uses the DOS versions of the infantry.
 
 The expansions data is not strictly required. If given a folder whithout those files, dummy graphics will be shown for the missing objects.

@@ -395,18 +395,27 @@ namespace MobiusEditor.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool DrawSoleTeleports {
+        public bool RestrictSoleLimits {
             get {
-                return ((bool)(this["DrawSoleTeleports"]));
+                return ((bool)(this["RestrictSoleLimits"]));
             }
         }
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool RestrictSoleLimits {
+        public bool FixClassicEinstein {
             get {
-                return ((bool)(this["RestrictSoleLimits"]));
+                return ((bool)(this["FixClassicEinstein"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool DrawSoleTeleports {
+            get {
+                return ((bool)(this["DrawSoleTeleports"]));
             }
         }
         

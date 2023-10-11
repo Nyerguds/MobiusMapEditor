@@ -125,10 +125,13 @@
     <Setting Name="NoOwnedObjectsInSole" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="DrawSoleTeleports" Type="System.Boolean" Scope="Application">
+    <Setting Name="RestrictSoleLimits" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="RestrictSoleLimits" Type="System.Boolean" Scope="Application">
+    <Setting Name="FixClassicEinstein" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="DrawSoleTeleports" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="ShowInviteWarning" Type="System.Boolean" Scope="User">

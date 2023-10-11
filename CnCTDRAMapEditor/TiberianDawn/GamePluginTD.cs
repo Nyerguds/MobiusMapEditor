@@ -642,106 +642,110 @@ namespace MobiusEditor.TiberianDawn
             // then finds the FIRST entry for each key. This means the contents of the second line never
             // get read, but those of the first are simply applied twice. For ROAD, however, this is
             // exactly what we want to achieve to unlock its second state, so the bug doesn't matter.
-
-            string[] iniTextArr = iniText.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n');
-            Dictionary<int, int> foundAmounts = new Dictionary<int, int>();
-            Dictionary<int, string> cellTypes = new Dictionary<int, string>();
-            string roadname = OverlayTypes.Road.Name;
-            Regex overlayRegex = new Regex("^\\s*(\\d+)\\s*=\\s*([a-zA-Z0-9]+)\\s*$", RegexOptions.IgnoreCase);
-            string road2name = OverlayTypes.Road2.Name.ToUpper();
-            string road2dummy = "=" + road2name;
-            // Quick and dirty ini parser to find the correct ini section.
-            bool inOverlay = false;
-            for (int i = 0; i < iniTextArr.Length; ++i)
+            OverlayType[] fixTypes = Map.OverlayTypes.Where(ov => (ov.Flag & OverlayTypeFlag.RoadSpecial) != OverlayTypeFlag.None && ov.ForceTileNr == 1 && ov.GraphicsSource != ov.Name).ToArray();
+            foreach (OverlayType road2 in fixTypes)
             {
-                string currLine = iniTextArr[i].Trim();
-                if (currLine.StartsWith("["))
+                string[] iniTextArr = iniText.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n');
+                Dictionary<int, int> foundAmounts = new Dictionary<int, int>();
+                Dictionary<int, string> cellTypes = new Dictionary<int, string>();
+                Regex overlayRegex = new Regex("^\\s*(\\d+)\\s*=\\s*([a-zA-Z0-9]+)\\s*$", RegexOptions.IgnoreCase);
+                string roadname = road2.GraphicsSource;
+                string road2name = road2.Name.ToUpper();
+                string road2dummy = "=" + road2name;
+                // Quick and dirty ini parser to find the correct ini section.
+                bool inOverlay = false;
+                for (int i = 0; i < iniTextArr.Length; ++i)
                 {
-                    if (inOverlay)
+                    string currLine = iniTextArr[i].Trim();
+                    if (currLine.StartsWith("["))
                     {
-                        // We were in Overlay, and passed into the next section. Abort completely.
-                        break;
-                    }
-                    inOverlay = "[Overlay]".Equals(currLine, StringComparison.InvariantCultureIgnoreCase);
-                    continue;
-                }
-                if (!inOverlay)
-                {
-                    continue;
-                }
-                Match match = overlayRegex.Match(currLine);
-                if (match.Success)
-                {
-                    int cellNumber = Int32.Parse(match.Groups[1].Value);
-                    foundAmounts.TryGetValue(cellNumber, out int cur);
-                    foundAmounts[cellNumber] = cur + 1;
-                    // Only add first detected type, just like the game would.
-                    if (cur == 0)
-                    {
-                        cellTypes[cellNumber] = match.Groups[2].Value;
-                    }
-                }
-            }
-            // Only process the ini if any of the detected lines have a found amount of more than one. If references to literal ROAD2 are found,
-            // also process the ini so they can be removed; we do not want those to be accepted as valid type by the editor.
-            if (foundAmounts.All(k => k.Value == 1) && !cellTypes.Values.Contains(OverlayTypes.Road2.Name, StringComparer.OrdinalIgnoreCase))
-            {
-                return iniText;
-            }
-            inOverlay = false;
-            List<string> newIniText = new List<string>();
-            for (int i = 0; i < iniTextArr.Length; ++i)
-            {
-                string currLine = iniTextArr[i].Trim();
-                if (currLine.StartsWith("["))
-                {
-                    inOverlay = "[Overlay]".Equals(currLine, StringComparison.InvariantCultureIgnoreCase);
-                    // No point in detecting anything else off this line, so immediately store and continue.
-                    newIniText.Add(currLine);
-                    continue;
-                }
-                Match match;
-                if (!inOverlay || !(match = overlayRegex.Match(iniTextArr[i])).Success)
-                {
-                    // stuff outside Overlay, empty lines, etc. Store and continue.
-                    newIniText.Add(currLine);
-                    continue;
-                }
-                int cellNumber = Int32.Parse(match.Groups[1].Value);
-                string type = cellTypes.TryGetValue(cellNumber, out type) ? type : null;
-                int amount;
-                // Do not allow actual road2 type cells in the ini.
-                if (type != null && !type.Equals(road2name, StringComparison.InvariantCultureIgnoreCase)
-                    && foundAmounts.TryGetValue(cellNumber, out amount))
-                {
-                    if (amount == 1)
-                    {
-                        newIniText.Add(currLine);
-                    }
-                    else if (amount > 1)
-                    {
-                        if (type.Equals(roadname, StringComparison.InvariantCultureIgnoreCase))
+                        if (inOverlay)
                         {
-                            // Add road2
-                            newIniText.Add(cellNumber + road2dummy);
+                            // We were in Overlay, and passed into the next section. Abort completely.
+                            break;
                         }
-                        else
+                        inOverlay = "[Overlay]".Equals(currLine, StringComparison.InvariantCultureIgnoreCase);
+                        continue;
+                    }
+                    if (!inOverlay)
+                    {
+                        continue;
+                    }
+                    Match match = overlayRegex.Match(currLine);
+                    if (match.Success)
+                    {
+                        int cellNumber = Int32.Parse(match.Groups[1].Value);
+                        foundAmounts.TryGetValue(cellNumber, out int cur);
+                        foundAmounts[cellNumber] = cur + 1;
+                        // Only add first detected type, just like the game would.
+                        if (cur == 0)
                         {
-                            // Some other cell with duped overlay? Just put it in once as it should be.
+                            cellTypes[cellNumber] = match.Groups[2].Value;
+                        }
+                    }
+                }
+                // Only process the ini if any of the detected lines have a found amount of more than one. If references to literal ROAD2 are found,
+                // also process the ini so they can be removed; we do not want those to be accepted as valid type by the editor.
+                if (foundAmounts.All(k => k.Value == 1) && !cellTypes.Values.Contains(road2name, StringComparer.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+                inOverlay = false;
+                List<string> newIniText = new List<string>();
+                for (int i = 0; i < iniTextArr.Length; ++i)
+                {
+                    string currLine = iniTextArr[i].Trim();
+                    if (currLine.StartsWith("["))
+                    {
+                        inOverlay = "[Overlay]".Equals(currLine, StringComparison.InvariantCultureIgnoreCase);
+                        // No point in detecting anything else off this line, so immediately store and continue.
+                        newIniText.Add(currLine);
+                        continue;
+                    }
+                    Match match;
+                    if (!inOverlay || !(match = overlayRegex.Match(iniTextArr[i])).Success)
+                    {
+                        // stuff outside Overlay, empty lines, etc. Store and continue.
+                        newIniText.Add(currLine);
+                        continue;
+                    }
+                    int cellNumber = Int32.Parse(match.Groups[1].Value);
+                    string type = cellTypes.TryGetValue(cellNumber, out type) ? type : null;
+                    int amount;
+                    // Do not allow actual road2 type cells in the ini.
+                    if (type != null && !type.Equals(road2name, StringComparison.InvariantCultureIgnoreCase)
+                        && foundAmounts.TryGetValue(cellNumber, out amount))
+                    {
+                        if (amount == 1)
+                        {
                             newIniText.Add(currLine);
                         }
-                        // Ensures TryGetValue succeeds, but nothing is written for any following matches.
-                        foundAmounts[cellNumber] = -1;
+                        else if (amount > 1)
+                        {
+                            if (type.Equals(roadname, StringComparison.InvariantCultureIgnoreCase))
+                            {
+                                // Add road2
+                                newIniText.Add(cellNumber + road2dummy);
+                            }
+                            else
+                            {
+                                // Some other cell with duped overlay? Just put it in once as it should be.
+                                newIniText.Add(currLine);
+                            }
+                            // Ensures TryGetValue succeeds, but nothing is written for any following matches.
+                            foundAmounts[cellNumber] = -1;
+                        }
+                        // Else, write nothing. This will happen to the entries put to -1, and is used to remove the duplicates.
                     }
-                    // Else, write nothing. This will happen to the entries put to -1, and is used to remove the duplicates.
                 }
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < newIniText.Count; ++i)
+                {
+                    sb.Append(newIniText[i]).Append("\r\n");
+                }
+                iniText = sb.ToString();
             }
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < newIniText.Count; ++i)
-            {
-                sb.Append(newIniText[i]).Append("\r\n");
-            }
-            return sb.ToString();
+            return iniText;
         }
 
         protected virtual List<string> LoadINI(INI ini, bool forceSoloMission, ref bool modified)
@@ -2240,34 +2244,40 @@ namespace MobiusEditor.TiberianDawn
             // then finds the FIRST entry for each key. This means the contents of the second line never
             // get read, but those of the first are simply applied twice. For ROAD, however, this is
             // exactly what we want to achieve to unlock its second state, so the bug doesn't matter.
-            StringBuilder output = new StringBuilder();
-            string roadLine = "=" + OverlayTypes.Road.Name.ToUpperInvariant() + lineEnd;
-            Regex roadDetect = new Regex("^\\s*(\\d+)\\s*=\\s*" + OverlayTypes.Road2.Name + "\\s*$", RegexOptions.IgnoreCase);
-            string[] iniString = ini.ToString("\n").Split('\n');
-            // Quick and dirty ini parser to find the correct ini section.
-            bool inOverlay = false;
-            for (int i = 0; i < iniString.Length; i++)
+            string iniString1 = ini.ToString("\n");
+            OverlayType[] fixTypes = Map.OverlayTypes.Where(ov => (ov.Flag & OverlayTypeFlag.RoadSpecial) != OverlayTypeFlag.None && ov.ForceTileNr > 0 && ov.GraphicsSource != ov.Name).ToArray();
+            foreach (OverlayType road2 in fixTypes)
             {
-                string currLine = iniString[i].Trim();
-                if (currLine.StartsWith("["))
+                string roadLine = "=" + road2.GraphicsSource.ToUpperInvariant() + lineEnd;
+                Regex roadDetect = new Regex("^\\s*(\\d+)\\s*=\\s*" + road2.Name + "\\s*$", RegexOptions.IgnoreCase);
+                StringBuilder output = new StringBuilder();
+                string[] iniString = iniString1.Split('\n');
+                // Quick and dirty ini parser to find the correct ini section.
+                bool inOverlay = false;
+                for (int i = 0; i < iniString.Length; i++)
                 {
-                    inOverlay = "[Overlay]".Equals(currLine, StringComparison.InvariantCultureIgnoreCase);
+                    string currLine = iniString[i].Trim();
+                    if (currLine.StartsWith("["))
+                    {
+                        inOverlay = "[Overlay]".Equals(currLine, StringComparison.InvariantCultureIgnoreCase);
+                    }
+                    Match match;
+                    if (inOverlay && (match = roadDetect.Match(currLine)).Success)
+                    {
+                        string newRoad = match.Groups[1].Value + roadLine;
+                        // Write twice to achieve second state. (Already contains line break.)
+                        output.Append(newRoad);
+                        output.Append(newRoad);
+                    }
+                    else
+                    {
+                        output.Append(currLine);
+                        output.Append(lineEnd);
+                    }
                 }
-                Match match;
-                if (inOverlay && (match = roadDetect.Match(currLine)).Success)
-                {
-                    string newRoad = match.Groups[1].Value + roadLine;
-                    // Write twice to achieve second state. (Already contains line break.)
-                    output.Append(newRoad);
-                    output.Append(newRoad);
-                }
-                else
-                {
-                    output.Append(currLine);
-                    output.Append(lineEnd);
-                }
+                iniString1 = output.ToString();
             }
-            return output.ToString();
+            return iniString1;
         }
 
         protected virtual void SaveINI(INI ini, FileType fileType, string fileName)

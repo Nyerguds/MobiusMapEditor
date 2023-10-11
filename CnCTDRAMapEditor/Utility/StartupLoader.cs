@@ -223,7 +223,7 @@ namespace MobiusEditor.Utility
                 gameTextFilename = string.Format(Globals.GameTextFilenameFormat, "EN-US");
             }
             GameTextManager gtm = new GameTextManager(Globals.TheArchiveManager, gameTextFilename);
-            //gtm.Dump("alltext.txt");
+            //gtm.Dump(Path.Combine(Program.ApplicationPath, "alltext.txt"));
             AddMissingRemasterText(gtm);
             Globals.TheGameTextManager = gtm;
             return true;
@@ -581,8 +581,8 @@ namespace MobiusEditor.Utility
             gtm["TEXT_STRUCTURE_TITLE_CIV12B"] = gtm["TEXT_STRUCTURE_TITLE_CIV12"];
             // == Overlay ==
             gtm["TEXT_OVERLAY_CONCRETE_PAVEMENT"] = "Concrete";
-            gtm["TEXT_OVERLAY_CONCRETE_ROAD"] = "Concrete Road";
-            gtm["TEXT_OVERLAY_CONCRETE_ROAD_FULL"] = "Concrete Road (full)";
+            gtm["TEXT_OVERLAY_ROAD"] = "Road";
+            gtm["TEXT_OVERLAY_ROAD_FULL"] = "Road (full)";
             gtm["TEXT_OVERLAY_TIBERIUM"] = "Tiberium";
             // Sole Survivor Teleporter
             gtm["TEXT_OVERLAY_TELEPORTER"] = "Teleporter";
@@ -603,8 +603,7 @@ namespace MobiusEditor.Utility
         {
             // Classic game text manager does not clear these extra strings when resetting the strings table.
             // TD Overlay
-            gtm["TEXT_OVERLAY_CONCRETE_ROAD"] = "Concrete Road";
-            gtm["TEXT_OVERLAY_CONCRETE_ROAD_FULL"] = "Concrete Road (full)";
+            gtm["TEXT_OVERLAY_ROAD_FULL"] = "Road (full)";
             // Sole Survivor Teleporter
             gtm["TEXT_OVERLAY_TELEPORTER"] = "Teleporter";
             // TD Terrain

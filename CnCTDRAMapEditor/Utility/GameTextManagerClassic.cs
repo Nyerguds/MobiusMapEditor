@@ -69,7 +69,7 @@ namespace MobiusEditor.Utility
             //{ "Inherit previous map", 44 }, // Inherit previous map
             //{ "Clear", 45 }, // Clear
             //{ "Water", 46 }, // Water
-            //{ "Road", 47 }, // Road
+            { "TEXT_OVERLAY_ROAD", 47 }, // Road
             //{ "Tile Object", 48 }, // Tile Object
             //{ "Slope", 49 }, // Slope
             //{ "Brush", 50 }, // Brush
@@ -798,7 +798,7 @@ namespace MobiusEditor.Utility
             //{ "▼", 28 }, // ▼
             //{ "Clear", 29 }, // Clear
             //{ "Water", 30 }, // Water
-            //{ "Road", 31 }, // Road
+            { "TEXT_OVERLAY_ROAD", 31 }, // Road
             //{ "Slope", 32 }, // Slope
             //{ "Patch", 33 }, // Patch
             //{ "River", 34 }, // River
