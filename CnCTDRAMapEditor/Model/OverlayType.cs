@@ -44,7 +44,7 @@ namespace MobiusEditor.Model
         Concrete        = (1 << 7),
         /// <summary>Is a solid object that obstructs placement.</summary>
         Solid           = (1 << 8),
-        /// <summary>Is a pavement type.</summary>
+        /// <summary>Is a special type saved as duplicate lines of a different type.</summary>
         RoadSpecial     = (1 << 9),
         /// <summary>Is a crate.</summary>
         Crate           = WoodCrate | SteelCrate,
