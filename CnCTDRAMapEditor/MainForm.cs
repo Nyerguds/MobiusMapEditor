@@ -375,7 +375,7 @@ namespace MobiusEditor
             {
                 return;
             }
-            mapPanel.IncreaseZoomStep();
+            mapPanel.DecreaseZoomStep();
         }
 
         private void ZoomReset()
