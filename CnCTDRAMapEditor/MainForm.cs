@@ -24,10 +24,14 @@ using Steamworks;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Numerics;
 using System.Reflection;
 using System.Text;
@@ -97,6 +101,8 @@ namespace MobiusEditor
         private IGamePlugin plugin;
         private FileType loadedFileType;
         private string filename;
+        private bool startedUpdate;
+        // Not sure if this lock works; multiple functions can somehow run simultaneously on the same UI update thread?
         private readonly object jumpToBounds_lock = new Object();
         private bool jumpToBounds;
 
@@ -187,9 +193,10 @@ namespace MobiusEditor
         {
             const string noname = "Untitled";
             String mainTitle = GetProgramVersionTitle();
+            string updating = this.startedUpdate ? " [CHECKING FOR UPDATES]" : String.Empty;
             if (plugin == null)
             {
-                this.Text = mainTitle;
+                this.Text = mainTitle + updating;
                 return;
             }
             string mapName = plugin.Map.BasicSection.Name;
@@ -209,14 +216,14 @@ namespace MobiusEditor
             {
                 mapShowName = mapFilename;
             }
-            this.Text = string.Format("{0} [{1}] - {2}{3}", mainTitle, plugin.Name, mapShowName, plugin != null && plugin.Dirty ? " *" : String.Empty);
+            this.Text = string.Format("{0}{1} [{2}] - {3}{4}", mainTitle, updating, plugin.Name, mapShowName, plugin != null && plugin.Dirty ? " *" : String.Empty);
         }
 
         private String GetProgramVersionTitle()
         {
             AssemblyName assn = Assembly.GetExecutingAssembly().GetName();
             System.Version currentVersion = assn.Version;
-            return string.Format("Mobius Editor v{0}", currentVersion);
+            return string.Format(Program.ProgramName + " v{0}", currentVersion);
         }
 
         private void SteamUpdateTimer_Tick(object sender, EventArgs e)
@@ -475,7 +482,7 @@ namespace MobiusEditor
                 ofd.AutoUpgradeEnabled = false;
                 ofd.RestoreDirectory = true;
                 ofd.Filter = String.Join("|", filters);
-                bool classicLogic = Globals.UseClassicFiles && Globals.ClassicIgnoresRemasterPaths;
+                bool classicLogic = Globals.UseClassicFiles && Globals.ClassicNoRemasterLogic;
                 string lastFolder = mru.Files.Select(f => f.DirectoryName).Where(d => Directory.Exists(d)).FirstOrDefault();
                 if (plugin != null)
                 {
@@ -565,7 +572,7 @@ namespace MobiusEditor
             {
                 sfd.AutoUpgradeEnabled = false;
                 sfd.RestoreDirectory = false;
-                bool classicLogic = Globals.UseClassicFiles && Globals.ClassicIgnoresRemasterPaths;
+                bool classicLogic = Globals.UseClassicFiles && Globals.ClassicNoRemasterLogic;
                 string lastFolder = mru.Files.Select(f => f.DirectoryName).Where(d => Directory.Exists(d)).FirstOrDefault();
                 string openFolder = Path.GetDirectoryName(filename);
                 string constFolder = Directory.Exists(plugin.DefaultSaveDirectory) ? plugin.DefaultSaveDirectory : Environment.GetFolderPath(Environment.SpecialFolder.Personal);
@@ -2546,6 +2553,126 @@ namespace MobiusEditor
                 // This takes care of saving the Steam info into the map.
                 // This specific overload only saves the map, without resaving the preview.
                 SaveAction(true, null, false, false);
+            }
+        }
+
+        private void InfoAboutMenuItem_Click(Object sender, EventArgs e)
+        {
+            StringBuilder editorInfo = new StringBuilder();
+            editorInfo.Append(GetProgramVersionTitle()).Append('\n').Append('\n')
+                .Append(Program.ProgramInfo).Append('\n')
+                .Append('\n').Append('\n')
+                .Append("For info and updates, go to \"").Append(infoToolStripMenuItem.Text).Append("\" → \"").Append(InfoWebsiteMenuItem.Text).Append("\"");
+            MessageBox.Show(this,editorInfo.ToString(), GetProgramVersionTitle(), MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        private void InfoWebsiteMenuItem_Click(Object sender, EventArgs e)
+        {
+            Process.Start("https://github.com/" + Program.GithubOwner + "/" + Program.GithubProject);
+        }
+
+        private async void InfoCheckForUpdatesMenuItem_Click(Object sender, EventArgs e)
+        {
+            string title = GetProgramVersionTitle();
+            if (this.startedUpdate)
+            {
+                MessageBox.Show(this, "Update check already started. Please wait.", title, MessageBoxButtons.OK);
+                return;
+            }
+            this.startedUpdate = true;
+            this.SetTitle();
+            const string checkError = "An error occurred when checking the version:";
+            AssemblyName assn = Assembly.GetExecutingAssembly().GetName();
+            System.Version curVer = assn.Version;
+            Uri downloadUri = new Uri("https://api.github.com/repos/" + Program.GithubOwner + "/" + Program.GithubProject + "/releases?per_page=1");
+            //Uri downloadUri = new Uri("https://store.steampowered.com/");
+            byte[] content = null;
+            String returnMessage = null;
+            try
+            {
+                try
+                {
+                    using (HttpClient client = new HttpClient())
+                    using (HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, downloadUri))
+                    {
+                        // GitHub API won't accept the request without header.
+                        ProductInfoHeaderValue productValue = new ProductInfoHeaderValue("GithubProject", curVer.ToString());
+                        ProductInfoHeaderValue commentValue = new ProductInfoHeaderValue("(https://github.com/" + Program.GithubOwner + "/" + Program.GithubProject + ")");
+                        request.Headers.UserAgent.Add(productValue);
+                        request.Headers.UserAgent.Add(commentValue);
+                        HttpResponseMessage response = await client.SendAsync(request);
+                        using (var bytes = new MemoryStream())
+                        {
+                            await response.Content.CopyToAsync(bytes);
+                            content = bytes.ToArray();
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    string type = ex.GetType().Name;
+                    string message = ex.Message;
+                    if (ex.InnerException is WebException wex)
+                    {
+                        type = wex.GetType().Name;
+                        message = wex.Message;
+                    }
+                    returnMessage = checkError + "\n\n" + type + ": " + message;
+                    return;
+                }
+                if (content == null || content.Length == 0)
+                {
+                    returnMessage = checkError + "\n\nThe response from the server contained no data.";
+                    return;
+                }
+                String text = Encoding.UTF8.GetString(content);
+                // search string (can't be bothered parsing) is 
+                Regex regex = new Regex("\"tag_name\":\\s*\"v((\\d+)\\.(\\d+)(\\.(\\d+))?(\\.(\\d+))?)\"");
+                Match match = regex.Match(text);
+                const string dots = " (...)";
+                const int maxLen = 1500 - 6;
+                if (!match.Success)
+                {
+                    if (text.Length > maxLen)
+                    {
+                        text = text.Substring(0, maxLen) + dots;
+                    }
+                    text = text.Trim('\r', '\n');
+                    returnMessage = checkError + " could not find version in returned data.\n\nReturned data:\n" + text;
+                    return;
+                }
+                string versionMajStr = match.Groups[2].Value;
+                string versionMinStr = match.Groups[3].Value;
+                string versionBldStr = match.Groups[5].Value;
+                string versionRevStr = match.Groups[7].Value;
+                int versionMaj = String.IsNullOrEmpty(versionMajStr) ? 0 : Int32.Parse(versionMajStr);
+                int versionMin = String.IsNullOrEmpty(versionMinStr) ? 0 : Int32.Parse(versionMinStr);
+                int versionBld = String.IsNullOrEmpty(versionBldStr) ? 0 : Int32.Parse(versionBldStr);
+                int versionRev = String.IsNullOrEmpty(versionRevStr) ? 0 : Int32.Parse(versionRevStr);
+                System.Version serverVer = new System.Version(versionMaj, versionMin, versionBld, versionRev);
+                StringBuilder versionMessage = new StringBuilder();
+                if (curVer < serverVer)
+                {
+                    versionMessage.Append("A newer version ").Append(serverVer.ToString()).Append(" was released on GitHub.\n\n")
+                        .Append("To get the latest version, go to ")
+                        .Append("\"").Append(infoToolStripMenuItem.Text).Append("\" → \"").Append(InfoWebsiteMenuItem.Text).Append("\"")
+                        .Append(" and check the \"Releases\" section.");
+                }
+                else
+                {
+                    versionMessage.Append("The latest version on GitHub is ").Append(serverVer.ToString()).Append(". ");
+                    versionMessage.Append(curVer == serverVer ? "You are up to date." : "Looks like you're using a super-exclusive unreleased version!");
+                }
+                returnMessage = versionMessage.ToString();
+            }
+            finally
+            {
+                this.startedUpdate = false;
+                this.SetTitle();
+                if (returnMessage != null)
+                {
+                    MessageBox.Show(this, returnMessage, title);
+                }
             }
         }
 

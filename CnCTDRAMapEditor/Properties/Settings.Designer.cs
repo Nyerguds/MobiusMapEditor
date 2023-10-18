@@ -34,6 +34,51 @@ namespace MobiusEditor.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Classic\\TD")]
+        public string ClassicPathTD {
+            get {
+                return ((string)(this["ClassicPathTD"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Classic\\RA")]
+        public string ClassicPathRA {
+            get {
+                return ((string)(this["ClassicPathRA"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Classic\\TD")]
+        public string ClassicPathSS {
+            get {
+                return ((string)(this["ClassicPathSS"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool ClassicNoRemasterLogic {
+            get {
+                return ((bool)(this["ClassicNoRemasterLogic"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ClassicProducesNoMetaFiles {
+            get {
+                return ((bool)(this["ClassicProducesNoMetaFiles"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool EnableDpiAwareness {
             get {
@@ -245,51 +290,6 @@ namespace MobiusEditor.Properties {
         public global::System.Drawing.Size MinimumClampSize {
             get {
                 return ((global::System.Drawing.Size)(this["MinimumClampSize"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Classic\\TD")]
-        public string ClassicPathTD {
-            get {
-                return ((string)(this["ClassicPathTD"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Classic\\RA")]
-        public string ClassicPathRA {
-            get {
-                return ((string)(this["ClassicPathRA"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Classic\\TD")]
-        public string ClassicPathSS {
-            get {
-                return ((string)(this["ClassicPathSS"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool ClassicIgnoresRemasterPaths {
-            get {
-                return ((bool)(this["ClassicIgnoresRemasterPaths"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool ClassicProducesNoMetaFiles {
-            get {
-                return ((bool)(this["ClassicProducesNoMetaFiles"]));
             }
         }
         

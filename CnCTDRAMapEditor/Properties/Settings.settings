@@ -5,6 +5,21 @@
     <Setting Name="UseClassicFiles" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>
+    <Setting Name="ClassicPathTD" Type="System.String" Scope="Application">
+	  <Value Profile="(Default)">Classic\TD</Value>
+	</Setting>
+    <Setting Name="ClassicPathRA" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">Classic\RA</Value>
+    </Setting>
+    <Setting Name="ClassicPathSS" Type="System.String" Scope="Application">
+	  <Value Profile="(Default)">Classic\TD</Value>
+    </Setting>
+    <Setting Name="ClassicNoRemasterLogic" Type="System.Boolean" Scope="Application">
+    <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="ClassicProducesNoMetaFiles" Type="System.Boolean" Scope="Application">
+     <Value Profile="(Default)">False</Value>
+    </Setting>
     <Setting Name="EnableDpiAwareness" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>
@@ -76,21 +91,6 @@
     </Setting>
     <Setting Name="MinimumClampSize" Type="System.Drawing.Size" Scope="Application">
       <Value Profile="(Default)">30, 30</Value>
-    </Setting>
-    <Setting Name="ClassicPathTD" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">Classic\TD</Value>
-    </Setting>
-    <Setting Name="ClassicPathRA" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">Classic\RA</Value>
-    </Setting>
-    <Setting Name="ClassicPathSS" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">Classic\TD</Value>
-    </Setting>
-    <Setting Name="ClassicIgnoresRemasterPaths" Type="System.Boolean" Scope="Application">
-      <Value Profile="(Default)">True</Value>
-    </Setting>
-    <Setting Name="ClassicProducesNoMetaFiles" Type="System.Boolean" Scope="Application">
-      <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="ReportMissionDetection" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>

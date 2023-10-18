@@ -3896,86 +3896,83 @@ namespace MobiusEditor.RedAlert
                 int startPoints = Map.Waypoints.Count(w => w.Cell.HasValue && (w.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart);
                 info.Add(string.Format("Number of set starting points: {0}.", startPoints));
             }
-            const bool assessScripting = true;
-            if (assessScripting)
+            HashSet<int> usedWaypoints = new HashSet<int>();
+            HashSet<int> setWaypoints = Enumerable.Range(0, Map.Waypoints.Length).Where(i => Map.Waypoints[i].Cell.HasValue).ToHashSet();
+            HashSet<string> usedTeams = new HashSet<string>();
+            foreach (TeamType tt in Map.TeamTypes)
             {
-                HashSet<int> usedWaypoints = new HashSet<int>();
-                HashSet<int> setWaypoints = Enumerable.Range(0, Map.Waypoints.Length).Where(i => Map.Waypoints[i].Cell.HasValue).ToHashSet();
-                HashSet<string> usedTeams = new HashSet<string>();
-                foreach (TeamType tt in Map.TeamTypes)
+                string teamName = tt.Name;
+                if (tt.IsAutocreate)
                 {
-                    string teamName = tt.Name;
-                    if (tt.IsAutocreate)
+                    usedTeams.Add(teamName);
+                }
+                else
+                {
+                    foreach (Trigger tr in Map.Triggers)
                     {
-                        usedTeams.Add(teamName);
-                    }
-                    else
-                    {
-                        foreach (Trigger tr in Map.Triggers)
+                        // "else if" is just to not check all; if it's on one then it's already added anyway.
+                        if ((tr.Event1.Team == teamName &&
+                                tr.Event1.EventType == EventTypes.TEVENT_LEAVES_MAP) ||
+                            (tr.Event2.Team == teamName && tr.EventControl != TriggerMultiStyleType.Only &&
+                                tr.Event2.EventType == EventTypes.TEVENT_LEAVES_MAP) ||
+                            (tr.Action1.Team == teamName && (
+                                tr.Action1.ActionType == ActionTypes.TACTION_CREATE_TEAM ||
+                                tr.Action1.ActionType == ActionTypes.TACTION_DESTROY_TEAM ||
+                                tr.Action1.ActionType == ActionTypes.TACTION_REINFORCEMENTS)) ||
+                            (tr.Action2.Team == teamName && (
+                                tr.Action2.ActionType == ActionTypes.TACTION_CREATE_TEAM ||
+                                tr.Action2.ActionType == ActionTypes.TACTION_DESTROY_TEAM ||
+                                tr.Action2.ActionType == ActionTypes.TACTION_REINFORCEMENTS)))
                         {
-                            // "else if" is just to not check all; if it's on one then it's already added anyway.
-                            if ((tr.Event1.Team == teamName &&
-                                    tr.Event1.EventType == EventTypes.TEVENT_LEAVES_MAP) ||
-                                (tr.Event2.Team == teamName && tr.EventControl != TriggerMultiStyleType.Only &&
-                                    tr.Event2.EventType == EventTypes.TEVENT_LEAVES_MAP) ||
-                                (tr.Action1.Team == teamName && (
-                                    tr.Action1.ActionType == ActionTypes.TACTION_CREATE_TEAM ||
-                                    tr.Action1.ActionType == ActionTypes.TACTION_DESTROY_TEAM ||
-                                    tr.Action1.ActionType == ActionTypes.TACTION_REINFORCEMENTS)) ||
-                                (tr.Action2.Team == teamName && (
-                                    tr.Action2.ActionType == ActionTypes.TACTION_CREATE_TEAM ||
-                                    tr.Action2.ActionType == ActionTypes.TACTION_DESTROY_TEAM ||
-                                    tr.Action2.ActionType == ActionTypes.TACTION_REINFORCEMENTS)))
-                            {
-                                usedTeams.Add(teamName);
-                            }
-                        }
-                    }
-                    if (tt.Origin != -1)
-                    {
-                        usedWaypoints.Add(tt.Origin);
-                    }
-                    foreach (TeamTypeMission tm in tt.Missions)
-                    {
-                        if (tm.Mission.ArgType == TeamMissionArgType.Waypoint)
-                        {
-                            usedWaypoints.Add((int)tm.Argument);
+                            usedTeams.Add(teamName);
                         }
                     }
                 }
-                List<string> unusedTeams = Map.TeamTypes.Select(tm => tm.Name).Where(tn => !usedTeams.Contains(tn)).ToList();
-                // Paratrooper Infantry team. This is a special team and thus never 'unused'.
-                unusedTeams.Remove("@PINF");
-                unusedTeams.Sort();
-                string unusedTeamsStr = String.Join(", ", unusedTeams.ToArray());
-                HashSet<int> checkedGlobals = new HashSet<int>();
-                HashSet<int> alteredGlobals = new HashSet<int>();
-                GetUsagesInTriggers(Map.Triggers, checkedGlobals, alteredGlobals, usedWaypoints);
-                alteredGlobals.UnionWith(GetTeamGlobals(Map.TeamTypes));
-                string usedGlobalsStr = String.Join(", ", checkedGlobals.Union(alteredGlobals).OrderBy(g => g).Select(g => g.ToString()).ToArray());
-                string chGlobalsNotEdStr = String.Join(", ", checkedGlobals.Where(g => !alteredGlobals.Contains(g)).OrderBy(g => g).Select(g => g.ToString()).ToArray());
-                string edGlobalsNotChStr = String.Join(", ", alteredGlobals.Where(g => !checkedGlobals.Contains(g)).OrderBy(g => g).Select(g => g.ToString()).ToArray());
-                WaypointFlag toIgnore = WaypointFlag.Home | WaypointFlag.Reinforce | WaypointFlag.Special;
-                string unusedWaypointsStr = String.Join(", ", setWaypoints.OrderBy(w => w)
-                    .Where(w => (Map.Waypoints[w].Flag & toIgnore) == WaypointFlag.None
-                                && !usedWaypoints.Contains(w)).Select(w => Map.Waypoints[w].Name).ToArray());
-                // Prevent illegal data in triggers/teams from crashing the function by adding a range check.
-                int maxWp = Map.Waypoints.Length;
-                string unsetUsedWaypointsStr = String.Join(", ", usedWaypoints.OrderBy(w => w).Where(w => !setWaypoints.Contains(w))
-                    .Select(w => w >= maxWp ? w.ToString() : Map.Waypoints[w].Name).ToArray());
-                string evalEmpty(string str)
+                if (tt.Origin != -1)
                 {
-                    return String.IsNullOrEmpty(str) ? "-" : str;
-                };
-                info.Add(String.Empty);
-                info.Add("Scripting remarks:");
-                info.Add(String.Format("Unused team types: {0}", evalEmpty(unusedTeamsStr)));
-                info.Add(String.Format("Globals used: {0}", evalEmpty(usedGlobalsStr)));
-                info.Add(String.Format("Globals altered but never checked: {0}", evalEmpty(edGlobalsNotChStr)));
-                info.Add(String.Format("Globals checked but never altered: {0}", evalEmpty(chGlobalsNotEdStr)));
-                info.Add(String.Format("Placed waypoints not used in teams or triggers: {0}", evalEmpty(unusedWaypointsStr)));
-                info.Add(String.Format("Empty waypoints used in teams or triggers: {0}", evalEmpty(unsetUsedWaypointsStr)));
+                    usedWaypoints.Add(tt.Origin);
+                }
+                foreach (TeamTypeMission tm in tt.Missions)
+                {
+                    if (tm.Mission.ArgType == TeamMissionArgType.Waypoint && tm.Argument != -1)
+                    {
+                        usedWaypoints.Add((int)tm.Argument);
+                    }
+                }
             }
+            List<string> unusedTeams = Map.TeamTypes.Select(tm => tm.Name).Where(tn => !usedTeams.Contains(tn)).ToList();
+            // Paratrooper Infantry team. This is a special team and thus never 'unused'.
+            unusedTeams.Remove("@PINF");
+            unusedTeams.Sort();
+            string unusedTeamsStr = String.Join(", ", unusedTeams.ToArray());
+            HashSet<int> checkedGlobals = new HashSet<int>();
+            HashSet<int> alteredGlobals = new HashSet<int>();
+            GetUsagesInTriggers(Map.Triggers, checkedGlobals, alteredGlobals, usedWaypoints);
+            alteredGlobals.UnionWith(GetTeamGlobals(Map.TeamTypes));
+            string usedGlobalsStr = String.Join(", ", checkedGlobals.Union(alteredGlobals).OrderBy(g => g).Select(g => g.ToString()).ToArray());
+            string chGlobalsNotEdStr = String.Join(", ", checkedGlobals.Where(g => !alteredGlobals.Contains(g)).OrderBy(g => g).Select(g => g.ToString()).ToArray());
+            string edGlobalsNotChStr = String.Join(", ", alteredGlobals.Where(g => !checkedGlobals.Contains(g)).OrderBy(g => g).Select(g => g.ToString()).ToArray());
+            WaypointFlag toIgnore = WaypointFlag.Home | WaypointFlag.Reinforce | WaypointFlag.Special;
+            string unusedWaypointsStr = String.Join(", ", setWaypoints.OrderBy(w => w)
+                .Where(w => (Map.Waypoints[w].Flag & toIgnore) == WaypointFlag.None
+                            && !usedWaypoints.Contains(w)).Select(w => Map.Waypoints[w].Name).ToArray());
+            // Prevent illegal data in triggers/teams from crashing the function by adding a range check.
+            int maxWp = Map.Waypoints.Length;
+            // This does not filter out the "Special" waypoint, but that's okay. Anyone using (that will know that is to be expected.
+            string unsetUsedWaypointsStr = String.Join(", ", usedWaypoints.OrderBy(w => w).Where(w => !setWaypoints.Contains(w))
+                .Select(w => w >= maxWp ? w.ToString() : Map.Waypoints[w].Name).ToArray());
+            string evalEmpty(string str)
+            {
+                return String.IsNullOrEmpty(str) ? "-" : str;
+            };
+            info.Add(String.Empty);
+            info.Add("Scripting remarks:");
+            info.Add(String.Format("Unused team types: {0}", evalEmpty(unusedTeamsStr)));
+            info.Add(String.Format("Globals used: {0}", evalEmpty(usedGlobalsStr)));
+            info.Add(String.Format("Globals altered but never checked: {0}", evalEmpty(edGlobalsNotChStr)));
+            info.Add(String.Format("Globals checked but never altered: {0}", evalEmpty(chGlobalsNotEdStr)));
+            info.Add(String.Format("Placed waypoints not used in teams or triggers: {0}", evalEmpty(unusedWaypointsStr)));
+            info.Add(String.Format("Empty waypoints used in teams or triggers: {0}", evalEmpty(unsetUsedWaypointsStr)));
             return info;
         }
 
@@ -3999,9 +3996,9 @@ namespace MobiusEditor.RedAlert
                 }
                 if (usedWaypoints != null)
                 {
-                    if (tr.Action1.ActionType == ActionTypes.TACTION_DZ || tr.Action1.ActionType == ActionTypes.TACTION_REVEAL_SOME || tr.Action1.ActionType == ActionTypes.TACTION_REVEAL_ZONE)
+                    if ((tr.Action1.ActionType == ActionTypes.TACTION_DZ || tr.Action1.ActionType == ActionTypes.TACTION_REVEAL_SOME || tr.Action1.ActionType == ActionTypes.TACTION_REVEAL_ZONE) && tr.Action1.Data != -1)
                         usedWaypoints.Add((int)tr.Action1.Data);
-                    if (tr.Action2.ActionType == ActionTypes.TACTION_DZ || tr.Action2.ActionType == ActionTypes.TACTION_REVEAL_SOME || tr.Action2.ActionType == ActionTypes.TACTION_REVEAL_ZONE)
+                    if ((tr.Action2.ActionType == ActionTypes.TACTION_DZ || tr.Action2.ActionType == ActionTypes.TACTION_REVEAL_SOME || tr.Action2.ActionType == ActionTypes.TACTION_REVEAL_ZONE) && tr.Action2.Data != -1)
                         usedWaypoints.Add((int)tr.Action2.Data);
                 }
             }
@@ -4548,7 +4545,7 @@ namespace MobiusEditor.RedAlert
         {
             int maxId = Map.Waypoints.Length - 1;
             long wayPoint = act.Data;
-            if ((wayPoint >= -1 && wayPoint <= maxId) || fatalOnly)
+            if ((wayPoint >= 0 && wayPoint <= maxId) || fatalOnly)
             {
                 return;
             }
@@ -4557,14 +4554,23 @@ namespace MobiusEditor.RedAlert
                 case ActionTypes.TACTION_DZ:
                 case ActionTypes.TACTION_REVEAL_SOME:
                 case ActionTypes.TACTION_REVEAL_ZONE:
-                    if (wayPoint < -1 || wayPoint > maxId)
+                    if (wayPoint < 0 || wayPoint > maxId)
                     {
-                        string error = prefix + "Action " + nr + ": \"" + act.ActionType.TrimEnd('.') + "\" has an illegal waypoint value \"" + act.Data + "\".";
-                        if (fix)
+                        string error = prefix + "Action " + nr + ": \"" + act.ActionType.TrimEnd('.') + "\" ";
+                        if (act.Data == -1)
                         {
-                            act.Data = -1;
-                            wasFixed = true;
-                            error += " Fixing to \"-1\" (None).";
+                            // Special case: warn, don't fix.
+                            error += "has an empty waypoint.";
+                        }
+                        else
+                        {
+                            error += "has an illegal waypoint value \"" + act.Data + "\".";
+                            if (fix)
+                            {
+                                act.Data = -1;
+                                wasFixed = true;
+                                error += " Fixing to \"-1\" (None).";
+                            }
                         }
                         errors.Add(error);
                     }
@@ -4579,84 +4585,83 @@ namespace MobiusEditor.RedAlert
 
         public string EvaluateBriefing(string briefing)
         {
-            bool briefLenOvfl = false;
-            bool briefLenSplitOvfl = false;
-            // The actual line length cutoff depends on the user resolution and which characters are used, but this is a decent indication.
-            const int cutoff = 40;
             string briefText = (briefing ?? String.Empty).Replace('\t', ' ').Trim('\r', '\n', ' ').Replace("\r\n", "\n").Replace("\r", "\n");
-            int lines = briefText.Count(c => c == '\n') + 1;
-            briefLenOvfl = lines > 25;
-            // If it's already over 25 lines because of the line breaks, don't bother doing the length split logic; it'll be bad anyway.
-            if (!briefLenOvfl)
+            StringBuilder message = new StringBuilder();
+            if (!Globals.UseClassicFiles || !Globals.ClassicNoRemasterLogic)
             {
-                // split in lines of 40; that's more or less the average line length in the brief screen.
-                List<string> txtLines = new List<string>();
-                string[] briefLines = briefText.Split('\n');
-                for (int i = 0; i < briefLines.Length; ++i)
+                // The actual line length cutoff depends on the user resolution and which characters are used, but this is a decent indication.
+                const int cutoff = 40;
+                int lines = briefText.Count(c => c == '\n') + 1;
+                bool briefLenOvfl = lines > 25;
+                bool briefLenSplitOvfl = false;
+                // If it's already over 25 lines because of the line breaks, don't bother doing the length split logic; it'll be bad anyway.
+                if (!briefLenOvfl)
                 {
-                    string line = briefLines[i].Trim();
-                    if (line.Length <= cutoff)
+                    // split in lines of 40; that's more or less the average line length in the brief screen.
+                    List<string> txtLines = new List<string>();
+                    string[] briefLines = briefText.Split('\n');
+                    for (int i = 0; i < briefLines.Length; ++i)
                     {
-                        txtLines.Add(line);
-                        continue;
-                    }
-                    string[] splitLine = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                    int wordIndex = 0;
-                    while (wordIndex < splitLine.Length)
-                    {
-                        StringBuilder sb = new StringBuilder();
-                        // Always allow initial word
-                        int nextLength = 0;
-                        while (nextLength < cutoff && wordIndex < splitLine.Length)
+                        string line = briefLines[i].Trim();
+                        if (line.Length <= cutoff)
                         {
-                            if (sb.Length > 0)
-                                sb.Append(' ');
-                            sb.Append(splitLine[wordIndex++]);
-                            nextLength = wordIndex >= splitLine.Length ? 0 : (sb.Length + 1 + splitLine[wordIndex].Length);
+                            txtLines.Add(line);
+                            continue;
                         }
-                        txtLines.Add(sb.ToString());
+                        string[] splitLine = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                        int wordIndex = 0;
+                        while (wordIndex < splitLine.Length)
+                        {
+                            StringBuilder sb = new StringBuilder();
+                            // Always allow initial word
+                            int nextLength = 0;
+                            while (nextLength < cutoff && wordIndex < splitLine.Length)
+                            {
+                                if (sb.Length > 0)
+                                    sb.Append(' ');
+                                sb.Append(splitLine[wordIndex++]);
+                                nextLength = wordIndex >= splitLine.Length ? 0 : (sb.Length + 1 + splitLine[wordIndex].Length);
+                            }
+                            txtLines.Add(sb.ToString());
+                        }
                     }
+                    briefLenSplitOvfl = txtLines.Count > 25;
                 }
-                briefLenSplitOvfl = txtLines.Count > 25;
-            }
-            const string warn25Lines = "Red Alert's briefing screen in the Remaster can only show 25 lines of briefing text. ";
-            string message = null;
-            if (briefLenOvfl)
-            {
-                message = warn25Lines + "Your current briefing exceeds that.";
-            }
-            else if (briefLenSplitOvfl)
-            {
-                message = warn25Lines + "The lines average to about 40 characters per line, and when split that way, your current briefing exceeds that, meaning it will most likely not display correctly in-game.";
+                const string warn25Lines = "Red Alert's briefing screen in the Remaster can only show 25 lines of briefing text. ";
+                if (briefLenOvfl)
+                {
+                    message.Append(warn25Lines).Append("Your current briefing exceeds that.");
+                }
+                else if (briefLenSplitOvfl)
+                {
+                    message.Append(warn25Lines)
+                        .Append("The lines average to about 40 characters per line, and when split that way, your current briefing exceeds that, ")
+                        .Append("meaning it will most likely not display correctly in-game.");
+                }
             }
             if (Globals.WriteClassicBriefing)
             {
                 if (briefText.Length > maxBriefLengthClassic)
                 {
-                    if (message == null)
+                    if (message.Length > 0)
                     {
-                        message = String.Empty;
+                        message.Append("\n\n");
                     }
-                    else
-                    {
-                        message += "\n\n";
-                    }
-                    message += "Classic Red Alert briefings cannot exceed " + maxBriefLengthClassic + " characters. This includes line breaks. This will not affect the mission when playing in the Remaster, but the briefing will be truncated when playing in the original game.";
+                    message.Append("Classic Red Alert briefings cannot exceed ").Append(maxBriefLengthClassic).Append(" characters. This includes line breaks.")
+                        .Append(" This will not affect the mission when playing in the Remaster, but the briefing will be truncated when playing in the original game.");
                 }
                 if (briefText.Contains(";"))
                 {
-                    if (message == null)
+                    if (message.Length > 0)
                     {
-                        message = String.Empty;
+                        message.Append("\n\n");
                     }
-                    else
-                    {
-                        message += "\n\n";
-                    }
-                    message += "Classic Red Alert briefings cannot contain semicolon characters, since they are the ini format's notation for marking all following text on the line as comment. This will not affect the mission when playing in the Remaster, but if kept, they will be replaced by colons in the classic briefing to prevent this issue.";
+                    message.Append("Classic Red Alert briefings cannot contain semicolon characters, since they are the ini format's notation ")
+                        .Append("for marking all following text on the line as comment. This will not affect the mission when playing in the Remaster, ")
+                        .Append("but if kept, they will be replaced by colons in the classic briefing to prevent this issue.");
                 }
             }
-            return message;
+            return message.Length == 0 ? null : message.ToString();
         }
 
         public ITeamColor[] GetFlagColors()

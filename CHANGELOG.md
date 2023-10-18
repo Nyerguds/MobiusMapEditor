@@ -592,10 +592,11 @@ Released on 05 Aug 2023 at 13:50 GMT
 Unreleased
 * Added support for fan-added theaters available in CnCNet: Snow for TD; Desert, Jungle, Barren and Cave for RA. These only work in classic mode, if their theater mix files are found in the configured classic files folder.
 * Mouse zoom is now disabled during drag-scroll operations, since it invariably messed up the position calculations.
-* Map templates, Smudge and Overlay are no longer restricted to specific theaters; if they exist in a theater, they are allowed.
+* Map templates, Smudge and Overlay are no longer restricted to specific theaters; if the files exist in a theater, they are allowed.
 * Theater-sensitive civilian buildings are no longer restricted to specific theaters; if they exist in a theater, they are allowed. Military buildings, incuding the theater-sensitive Misile Silo and Pillbox in RA, are always usable, no matter whether the theater has graphics for them.
 * On Interior maps, the "ConvertRaObsoleteClear" logic will now generate spots of passable terrain outside the map border on any point where passable terrain touches the border, to allow potential reinforcements to enter the map there.
 * The Teamtypes window will no longer show the trigger info label when editing a TD map.
 * Upgraded the logic to detect missing rules for ant-related objects on RA maps, so it includes the Mandible weapon, and checks in triggers too. The check now also goes through the rules files, so when using a rules mod does define these things, no warnings will be shown.
-* Added config option for the behaviour to remap classic Einstein to RA95 colours.
-* Made the stage-2 ROAD exception more generic, so it is more easily reusable and configurable.
+* Added config option for the behaviour to recolour the classic DOS Einstein to RA95/remastered colours.
+* Made the stage-2 ROAD exception more generic, so it is more easily reusable and configurable. (This will be usable later when the editor switches to ini configurations.)
+* Added "Info" menu, containing general program info, a link to the Github website, and an update function.

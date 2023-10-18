@@ -31,7 +31,19 @@ namespace MobiusEditor
 {
     static class Program
     {
-        const string gameId = "1213210";
+        public const string GameId = "1213210";
+        
+        public const string ProgramName = "Mobius Map Editor";
+        public const string GithubOwner = "Nyerguds";
+        public const string GithubProject = "MobiusMapEditor";
+        public const string ProgramInfo =
+            "Originally created by Petroglyph Games for the Command & Conquer: Remastered project, " +
+            "and gracefully released as open source licensed under GPL V3 by Electronic Arts.\n" +
+            "\n" +
+            "Upgraded by Maarten 'Nyerguds' Meuris.\n" +
+            "\n" +
+            "Initial upgrading work started by Rami Pasanen, aka Rampastring.";
+
         public static readonly String ApplicationPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 
         /// <summary>
@@ -66,10 +78,10 @@ namespace MobiusEditor
             // Check if any mods are allowed to override the default stuff to load.
             const string tdModFolder = "Tiberian_Dawn";
             const string raModFolder = "Red_Alert";
-            modPaths.Add(GameType.TiberianDawn, StartupLoader.GetModPaths(gameId, Properties.Settings.Default.ModsToLoadTD, tdModFolder, "TD"));
-            modPaths.Add(GameType.RedAlert, StartupLoader.GetModPaths(gameId, Properties.Settings.Default.ModsToLoadRA, raModFolder, "RA"));
-            modPaths.Add(GameType.SoleSurvivor, StartupLoader.GetModPaths(gameId, Properties.Settings.Default.ModsToLoadSS, tdModFolder, "TD"));
-            String runPath = StartupLoader.GetRemasterRunPath(gameId, !Globals.UseClassicFiles);
+            modPaths.Add(GameType.TiberianDawn, StartupLoader.GetModPaths(GameId, Properties.Settings.Default.ModsToLoadTD, tdModFolder, "TD"));
+            modPaths.Add(GameType.RedAlert, StartupLoader.GetModPaths(GameId, Properties.Settings.Default.ModsToLoadRA, raModFolder, "RA"));
+            modPaths.Add(GameType.SoleSurvivor, StartupLoader.GetModPaths(GameId, Properties.Settings.Default.ModsToLoadSS, tdModFolder, "TD"));
+            String runPath = StartupLoader.GetRemasterRunPath(GameId, !Globals.UseClassicFiles);
             if (runPath != null)
             {
                 // Required for Steam interface to work.

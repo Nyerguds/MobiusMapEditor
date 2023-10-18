@@ -50,6 +50,7 @@ namespace MobiusEditor
             this.fileNewMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.fileNewFromImageMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.fileOpenMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.FileOpenFromMixMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.fileSaveMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.fileSaveAsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem4 = new System.Windows.Forms.ToolStripSeparator();
@@ -121,6 +122,10 @@ namespace MobiusEditor
             this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripSeparator();
             this.developerDebugToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.developerDebugShowOverlapCellsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.infoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.InfoAboutMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.InfoWebsiteMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.InfoCheckForUpdatesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mainStatusStrip = new System.Windows.Forms.StatusStrip();
             this.toolStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.cellStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
@@ -140,7 +145,6 @@ namespace MobiusEditor
             this.cellTriggersToolStripButton = new MobiusEditor.Controls.ViewToolStripButton();
             this.selectToolStripButton = new MobiusEditor.Controls.ViewToolStripButton();
             this.mapPanel = new MobiusEditor.Controls.MapPanel();
-            this.FileOpenFromMixMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mainMenuStrip.SuspendLayout();
             this.mainStatusStrip.SuspendLayout();
             this.mainToolStrip.SuspendLayout();
@@ -155,7 +159,8 @@ namespace MobiusEditor
             this.settingsToolStripMenuItem,
             this.toolsToolStripMenuItem,
             this.viewToolStripMenuItem,
-            this.developerToolStripMenuItem});
+            this.developerToolStripMenuItem,
+            this.infoToolStripMenuItem});
             this.mainMenuStrip.Location = new System.Drawing.Point(0, 0);
             this.mainMenuStrip.Name = "mainMenuStrip";
             this.mainMenuStrip.Size = new System.Drawing.Size(1008, 24);
@@ -205,6 +210,14 @@ namespace MobiusEditor
             this.fileOpenMenuItem.Size = new System.Drawing.Size(214, 22);
             this.fileOpenMenuItem.Text = "&Open...";
             this.fileOpenMenuItem.Click += new System.EventHandler(this.FileOpenMenuItem_Click);
+            // 
+            // FileOpenFromMixMenuItem
+            // 
+            this.FileOpenFromMixMenuItem.Name = "FileOpenFromMixMenuItem";
+            this.FileOpenFromMixMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.X)));
+            this.FileOpenFromMixMenuItem.Size = new System.Drawing.Size(214, 22);
+            this.FileOpenFromMixMenuItem.Text = "Open from Mix...";
+            this.FileOpenFromMixMenuItem.Visible = false;
             // 
             // fileSaveMenuItem
             // 
@@ -839,6 +852,38 @@ namespace MobiusEditor
             this.developerDebugShowOverlapCellsMenuItem.Text = "Show &Overlap cells";
             this.developerDebugShowOverlapCellsMenuItem.CheckedChanged += new System.EventHandler(this.DeveloperDebugShowOverlapCellsMenuItem_CheckedChanged);
             // 
+            // infoToolStripMenuItem
+            // 
+            this.infoToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.InfoAboutMenuItem,
+            this.InfoWebsiteMenuItem,
+            this.InfoCheckForUpdatesMenuItem});
+            this.infoToolStripMenuItem.Name = "infoToolStripMenuItem";
+            this.infoToolStripMenuItem.Size = new System.Drawing.Size(40, 20);
+            this.infoToolStripMenuItem.Text = "Info";
+            // 
+            // InfoAboutMenuItem
+            // 
+            this.InfoAboutMenuItem.Name = "InfoAboutMenuItem";
+            this.InfoAboutMenuItem.Size = new System.Drawing.Size(221, 22);
+            this.InfoAboutMenuItem.Text = "About...";
+            this.InfoAboutMenuItem.Click += new System.EventHandler(this.InfoAboutMenuItem_Click);
+            // 
+            // InfoWebsiteMenuItem
+            // 
+            this.InfoWebsiteMenuItem.Name = "InfoWebsiteMenuItem";
+            this.InfoWebsiteMenuItem.Size = new System.Drawing.Size(221, 22);
+            this.InfoWebsiteMenuItem.Text = "Project website on GitHub...";
+            this.InfoWebsiteMenuItem.Click += new System.EventHandler(this.InfoWebsiteMenuItem_Click);
+            // 
+            // InfoCheckForUpdatesMenuItem
+            // 
+            this.InfoCheckForUpdatesMenuItem.Name = "InfoCheckForUpdatesMenuItem";
+            this.InfoCheckForUpdatesMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.U)));
+            this.InfoCheckForUpdatesMenuItem.Size = new System.Drawing.Size(221, 22);
+            this.InfoCheckForUpdatesMenuItem.Text = "Check for updates...";
+            this.InfoCheckForUpdatesMenuItem.Click += new System.EventHandler(this.InfoCheckForUpdatesMenuItem_Click);
+            // 
             // mainStatusStrip
             // 
             this.mainStatusStrip.ImageScalingSize = new System.Drawing.Size(24, 24);
@@ -1039,14 +1084,6 @@ namespace MobiusEditor
             this.mapPanel.DragEnter += new System.Windows.Forms.DragEventHandler(this.MapPanel_DragEnter);
             this.mapPanel.MouseMove += new System.Windows.Forms.MouseEventHandler(this.MapPanel_MouseMove);
             // 
-            // FileOpenFromMixMenuItem
-            // 
-            this.FileOpenFromMixMenuItem.Name = "FileOpenFromMixMenuItem";
-            this.FileOpenFromMixMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.X)));
-            this.FileOpenFromMixMenuItem.Size = new System.Drawing.Size(214, 22);
-            this.FileOpenFromMixMenuItem.Text = "Open from Mix...";
-            this.FileOpenFromMixMenuItem.Visible = false;
-            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1174,6 +1211,10 @@ namespace MobiusEditor
         private System.Windows.Forms.ToolStripMenuItem viewZoomResetMenuItem;
         private System.Windows.Forms.ToolStripMenuItem viewZoomToBoundsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem FileOpenFromMixMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem infoToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem InfoAboutMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem InfoCheckForUpdatesMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem InfoWebsiteMenuItem;
     }
 }
 

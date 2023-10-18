@@ -95,6 +95,9 @@ The file "CnCTDRAMapEditor.exe.config" contains settings to customise the editor
 ### Using classic files:
 
 * **UseClassicFiles**: Disabled by default, so the editor can ask you for your C&C Remastered game folder, but if you don't own the Remaster, or prefer the classic graphics, simply set this to "True".
+* **ClassicPathTD** / **ClassicPathRA** / **ClassicPathSS**: Path to load the classic files from for each of the game types when running in Classic Files mode. If the directory entered in this cannot be found, this reverts to predefined subfolders under the editor's location; "Classic\TD" for Tiberian Dawn and Sole Survivor, and "Classic\RA" for Red Alert. If the data is not present at the given location, the editor will refuse to launch.
+* **ClassicNoRemasterLogic**: Defaults to False. When enabled, using classic mode will make it stop doing remaster-specific checks (such as briefing screen constraints in RA) or use the Remaster's specific folders under Documents.
+* **ClassicProducesNoMetaFiles**: Defaults to False. Suppresses the creation of xml and thumbnail files for multiplayer maps when in Classic Files mode.
 
 This option will not only use the classic graphics, but will also load the classic game text from the respective game's 'CONQUER.ENG' file, and the Red Alert house colours from 'PALETTE.CPS'.
 
@@ -143,9 +146,6 @@ In classic graphics mode, the editor can still use mods, if they contain classic
 * **MaxMapTileTextureSize**: Maximum for the size of the tiles shown on the Map tool. Leave on 0 to disable.
 * **UndoRedoStackSize**: The amount of undo/redo actions stored in memory. Defaults to 100.
 * **MinimumClampSize**: Minimum size of the tool window that will automatically be forced to remain in the screen area. If set to 0,0, this will default to the size of the entire tool window.
-* **ClassicPathTD** / **ClassicPathRA** / **ClassicPathSS**: Path to load the classic files from for each of the game types when running in Classic Files mode. If the directory entered in this cannot be found, this reverts to predefined subfolders under the editor's location; "Classic\TD" for Tiberian Dawn and Sole Survivor, and "Classic\RA" for Red Alert. If the data is not present at the given location, the editor will refuse to launch.
-* **ClassicIgnoresRemasterPaths**: Defaults to True. When enabled, switching the editor to Classic Files mode will make it stop using the Remaster's specific folders under Documents, and default to the program folder instead.
-* **ClassicProducesNoMetaFiles**: Defaults to False. Suppresses the creation of xml and thumbnail files for multiplayer maps when in Classic Files mode.
 
 ### Editor behavior tweaks:
 
