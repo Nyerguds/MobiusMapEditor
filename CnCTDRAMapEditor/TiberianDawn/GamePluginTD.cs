@@ -3402,7 +3402,6 @@ namespace MobiusEditor.TiberianDawn
 
         public virtual string EvaluateBriefing(string briefing)
         {
-            string message = null;
             if (!Globals.WriteClassicBriefing)
             {
                 return null;
@@ -3412,9 +3411,9 @@ namespace MobiusEditor.TiberianDawn
             briefText = Regex.Replace(briefText, " +", " ");
             if (briefText.Length > maxBriefLengthClassic)
             {
-                message = "Classic Tiberian Dawn briefings cannot exceed " + maxBriefLengthClassic + " characters. This includes line breaks.\n\nThis will not affect the mission when playing in the Remaster, but the briefing will be truncated when playing in the original game.";
+                return "Classic Tiberian Dawn briefings cannot exceed " + maxBriefLengthClassic + " characters. This includes line breaks.\n\nThis will not affect the mission when playing in the Remaster, but the briefing will be truncated when playing in the original game.";
             }
-            return message;
+            return null;
         }
 
         public virtual ITeamColor[] GetFlagColors()

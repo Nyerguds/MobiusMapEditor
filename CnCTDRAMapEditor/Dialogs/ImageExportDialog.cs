@@ -291,7 +291,7 @@ namespace MobiusEditor.Dialogs
                 }
                 else
                 {
-                    bool classicLogic = Globals.UseClassicFiles && Globals.ClassicIgnoresRemasterPaths;
+                    bool classicLogic = Globals.UseClassicFiles && Globals.ClassicNoRemasterLogic;
                     string lastFolder = lastOpenedFolder;
                     string constFolder = Directory.Exists(gamePlugin.DefaultSaveDirectory) ? gamePlugin.DefaultSaveDirectory : Environment.GetFolderPath(Environment.SpecialFolder.Personal);
                     sfd.InitialDirectory = lastFolder ?? (classicLogic ? Program.ApplicationPath : constFolder);
