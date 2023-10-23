@@ -46,6 +46,16 @@ namespace MobiusEditor
 
         public static readonly String ApplicationPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 
+        public static String ProgramVersionTitle
+        {
+            get
+            {
+                AssemblyName assn = Assembly.GetExecutingAssembly().GetName();
+                System.Version currentVersion = assn.Version;
+                return string.Format(ProgramName + " v{0}", currentVersion);
+            }
+        }
+
         /// <summary>
         /// The main entry point for the application.
         /// </summary>

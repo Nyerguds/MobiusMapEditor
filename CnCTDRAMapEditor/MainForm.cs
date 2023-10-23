@@ -192,7 +192,7 @@ namespace MobiusEditor
         private void SetTitle()
         {
             const string noname = "Untitled";
-            String mainTitle = GetProgramVersionTitle();
+            String mainTitle = Program.ProgramVersionTitle;
             string updating = this.startedUpdate ? " [CHECKING FOR UPDATES]" : String.Empty;
             if (plugin == null)
             {
@@ -217,13 +217,6 @@ namespace MobiusEditor
                 mapShowName = mapFilename;
             }
             this.Text = string.Format("{0}{1} [{2}] - {3}{4}", mainTitle, updating, plugin.Name, mapShowName, plugin != null && plugin.Dirty ? " *" : String.Empty);
-        }
-
-        private String GetProgramVersionTitle()
-        {
-            AssemblyName assn = Assembly.GetExecutingAssembly().GetName();
-            System.Version currentVersion = assn.Version;
-            return string.Format(Program.ProgramName + " v{0}", currentVersion);
         }
 
         private void SteamUpdateTimer_Tick(object sender, EventArgs e)
@@ -689,7 +682,7 @@ namespace MobiusEditor
 
         private void EditClearUndoRedoMenuItem_Click(object sender, EventArgs e)
         {
-            if (DialogResult.Yes == MessageBox.Show("This will remove all undo/redo information. Are you sure?", GetProgramVersionTitle(), MessageBoxButtons.YesNo))
+            if (DialogResult.Yes == MessageBox.Show("This will remove all undo/redo information. Are you sure?", Program.ProgramVersionTitle, MessageBoxButtons.YesNo))
             {
                 url.Clear();
             }
@@ -757,7 +750,7 @@ namespace MobiusEditor
                         {
                             using (ErrorMessageBox emb = new ErrorMessageBox())
                             {
-                                emb.Title = GetProgramVersionTitle();
+                                emb.Title = Program.ProgramVersionTitle;
                                 emb.Message = "Errors occurred when applying rule changes:";
                                 emb.Errors = errors;
                                 emb.StartPosition = FormStartPosition.CenterParent;
@@ -1079,7 +1072,7 @@ namespace MobiusEditor
             if (plugin != null)
             {
                 String feedback = TemplateTool.RandomizeTiles(plugin, mapPanel, url);
-                MessageBox.Show(feedback, GetProgramVersionTitle());
+                MessageBox.Show(feedback, Program.ProgramVersionTitle);
             }
         }
 
@@ -2559,11 +2552,11 @@ namespace MobiusEditor
         private void InfoAboutMenuItem_Click(Object sender, EventArgs e)
         {
             StringBuilder editorInfo = new StringBuilder();
-            editorInfo.Append(GetProgramVersionTitle()).Append('\n').Append('\n')
+            editorInfo.Append(Program.ProgramVersionTitle).Append('\n').Append('\n')
                 .Append(Program.ProgramInfo).Append('\n')
                 .Append('\n').Append('\n')
                 .Append("For info and updates, go to \"").Append(infoToolStripMenuItem.Text).Append("\" → \"").Append(InfoWebsiteMenuItem.Text).Append("\"");
-            MessageBox.Show(this,editorInfo.ToString(), GetProgramVersionTitle(), MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show(this,editorInfo.ToString(), Program.ProgramVersionTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void InfoWebsiteMenuItem_Click(Object sender, EventArgs e)
@@ -2573,7 +2566,7 @@ namespace MobiusEditor
 
         private async void InfoCheckForUpdatesMenuItem_Click(Object sender, EventArgs e)
         {
-            string title = GetProgramVersionTitle();
+            string title = Program.ProgramVersionTitle;
             if (this.startedUpdate)
             {
                 MessageBox.Show(this, "Update check already started. Please wait.", title, MessageBoxButtons.OK);
