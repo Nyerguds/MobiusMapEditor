@@ -293,11 +293,11 @@
     <Compile Include="Dialogs\SteamDialog.Designer.cs">
       <DependentUpon>SteamDialog.cs</DependentUpon>
     </Compile>
-    <Compile Include="Dialogs\ThankYou.cs">
+    <Compile Include="Dialogs\ThankYouDialog.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Dialogs\ThankYou.Designer.cs">
-      <DependentUpon>ThankYou.cs</DependentUpon>
+    <Compile Include="Dialogs\ThankYouDialog.Designer.cs">
+      <DependentUpon>ThankYouDialog.cs</DependentUpon>
     </Compile>
     <Compile Include="Dialogs\TriggerFilterDialog.cs">
       <SubType>Form</SubType>
@@ -716,8 +716,8 @@
     <EmbeddedResource Include="Dialogs\SteamDialog.resx">
       <DependentUpon>SteamDialog.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Dialogs\ThankYou.resx">
-      <DependentUpon>ThankYou.cs</DependentUpon>
+    <EmbeddedResource Include="Dialogs\ThankYouDialog.resx">
+      <DependentUpon>ThankYouDialog.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Dialogs\TriggerFilterDialog.resx">
       <DependentUpon>TriggerFilterDialog.cs</DependentUpon>
