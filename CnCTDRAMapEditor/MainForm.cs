@@ -2551,17 +2551,16 @@ namespace MobiusEditor
 
         private void InfoAboutMenuItem_Click(Object sender, EventArgs e)
         {
-            StringBuilder editorInfo = new StringBuilder();
-            editorInfo.Append(Program.ProgramVersionTitle).Append('\n').Append('\n')
-                .Append(Program.ProgramInfo).Append('\n')
-                .Append('\n').Append('\n')
-                .Append("For info and updates, go to \"").Append(infoToolStripMenuItem.Text).Append("\" → \"").Append(InfoWebsiteMenuItem.Text).Append("\"");
-            MessageBox.Show(this,editorInfo.ToString(), Program.ProgramVersionTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
+            using (ThankYouDialog tyForm = new ThankYouDialog())
+            {
+                tyForm.StartPosition = FormStartPosition.CenterParent;
+                tyForm.ShowDialog(this);
+            }
         }
 
         private void InfoWebsiteMenuItem_Click(Object sender, EventArgs e)
         {
-            Process.Start("https://github.com/" + Program.GithubOwner + "/" + Program.GithubProject);
+            Process.Start(Program.GithubUrl);
         }
 
         private async void InfoCheckForUpdatesMenuItem_Click(Object sender, EventArgs e)
@@ -2578,7 +2577,6 @@ namespace MobiusEditor
             AssemblyName assn = Assembly.GetExecutingAssembly().GetName();
             System.Version curVer = assn.Version;
             Uri downloadUri = new Uri("https://api.github.com/repos/" + Program.GithubOwner + "/" + Program.GithubProject + "/releases?per_page=1");
-            //Uri downloadUri = new Uri("https://store.steampowered.com/");
             byte[] content = null;
             String returnMessage = null;
             try

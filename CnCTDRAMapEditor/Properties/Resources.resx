@@ -121,6 +121,18 @@
   <data name="GameIcon00" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\gameicon00.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="Mmg1" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\mmg1.wav;System.IO.MemoryStream, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="Mobius" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\mobius.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Mthanks1" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\mthanks1.wav;System.IO.MemoryStream, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="Mtiber1" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\mtiber1.wav;System.IO.MemoryStream, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="UI_CustomMissionPreviewDefault" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\ui_custommissionpreviewdefault.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>

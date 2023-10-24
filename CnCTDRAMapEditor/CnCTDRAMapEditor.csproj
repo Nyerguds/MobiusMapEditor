@@ -798,6 +798,10 @@
     <Content Include="Licenses\TGASharpLib.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <None Include="Resources\Mthanks1.wav" />
+    <Content Include="Resources\Mmg1.wav" />
+    <Content Include="Resources\Mobius.png" />
+    <None Include="Resources\Mtiber1.wav" />
     <Content Include="Steamworks.NET\redist\steam_api.dll" />
   </ItemGroup>
   <ItemGroup>

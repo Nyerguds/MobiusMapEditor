@@ -126,6 +126,19 @@ namespace MobiusEditor.Utility
             }
         }
 
+        public static string DoubleAmpersands(string input)
+        {
+            if (input == null)
+            {
+                return null;
+            }
+            if (!input.Contains('&'))
+            {
+                return input;
+            }
+            return Regex.Replace(input, "&", "&&");
+        }
+
         /// <summary>
         /// Allows writing an ini file where certain lines are differently encoded.
         /// </summary>
