@@ -21,10 +21,7 @@ namespace MobiusEditor.Dialogs
             InitializeComponent();
             random = new Random((int)(DateTime.Now.Ticks & 0xFFFFFFF));
             this.Text = "About " + Program.ProgramVersionTitle;
-            StringBuilder editorInfo = new StringBuilder();
-            editorInfo.Append("Thank you for using ").Append(Program.ProgramVersionTitle).Append("!\n\n")
-                .Append(Program.ProgramInfo);
-            lblEditorInfo.Text = GeneralUtils.DoubleAmpersands(editorInfo.ToString());
+            txtEditorInfo.Text = GeneralUtils.DoubleAmpersands(Program.ProgramInfo.Replace("\n", "\r\n"));
             lblLink.Text = GeneralUtils.DoubleAmpersands(Program.GithubUrl);
         }
 

@@ -43,7 +43,18 @@ namespace MobiusEditor
             "\n" +
             "Upgraded by Maarten 'Nyerguds' Meuris.\n" +
             "\n" +
-            "Initial upgrading work started by Rami Pasanen, aka Rampastring.";
+            "Initial upgrading work started by Rami Pasanen, aka Rampastring.\n" +
+            "\n" +
+            "Main testers and supporters:\n" +
+            "Chad1233\n" +
+            "DDF3\n" +
+            "Zaptagious\n" +
+            "-GotAPresentForYa\n" +
+            "\n" +
+            "Boundless moral support:\n" +
+            "N3tRunn3r\n" +
+            "\n" +
+            "Thank you for using " + ProgramName + "!";
 
         public static readonly String ApplicationPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 
