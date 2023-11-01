@@ -596,6 +596,9 @@ Unreleased
 * Theater-sensitive civilian buildings are no longer restricted to specific theaters; if they exist in a theater, they are allowed. Military buildings, incuding the theater-sensitive Misile Silo and Pillbox in RA, are always usable, no matter whether the theater has graphics for them.
 * On Interior maps, the "ConvertRaObsoleteClear" logic will now generate spots of passable terrain outside the map border on any point where passable terrain touches the border, to allow potential reinforcements to enter the map there.
 * The Teamtypes window will no longer show the trigger info label when editing a TD map.
+* Added fix for semicolons cutting off briefings.
+* The Base and Briefing sections can no longer remain behind as empty sections in the extra ini rules.
+* The Digest section will now also be removed from TD maps.
 * Upgraded the logic to detect missing rules for ant-related objects on RA maps, so it includes the Mandible weapon, and checks in triggers too. The check now also goes through the rules files, so when using a rules mod does define these things, no warnings will be shown.
 * Added config option for the behaviour to recolour the classic DOS Einstein to RA95/remastered colours.
 * Made the stage-2 ROAD exception more generic, so it is more easily reusable and configurable. (This will be usable later when the editor switches to ini configurations.)
