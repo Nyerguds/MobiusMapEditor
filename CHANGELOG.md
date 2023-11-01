@@ -215,7 +215,7 @@ Released on 05 Sep 2022 at 14:25 UTC
 * Fixed a glitch that made the trigger dropdown of the opened tool stop functioning correctly after editing the triggers.
 * Template 'BRIDGE1H' in RA now shows its full available tileset. Seems this is an odd corner case where Westwood were the ones who forgot to cut it out properly, but that does make its two last tiles valid.
 * The editor will now detect when, on Red Alert maps, the obsolete tile with id 255 is used as 'clear' terrain, and will only show a single message about it. There is an "IgnoreRaObsoleteClear" setting in "CnCTDRAMapEditor.exe.config" to disable filtering out this tile, though that is only useful for research purposes.
-* Fixed the map panel crashing when a repaint is done on an already-closed map. This happenen when a map was opened, then another one was loaded but showed the load errors dialog, and then something (like "Show Desktop") triggered a repaint of the editor.
+* Fixed the map panel crashing when a repaint is done on an already-closed map. This happened when a map was opened, then another one was loaded but showed the load errors dialog, and then something (like "Show Desktop") triggered a repaint of the editor.
 * Changed all scaling settings to floating point numbers, making them much more accurate.
 * Building labels for fake buildings and for the rebuild priority will now scale correctly with the map scaling settings, meaning they should always remain the same size relative to the building.
 * Indicator lines like the map border, cell occupation indicators and the yellow selection box will now scale with the map scaling settings, meaning they don't become bigger when reducing the graphics scale.
@@ -513,11 +513,10 @@ Program bug fixes:
 * Fixed rounding issues in image export dialog, and added cell size info and a tool to set the scale by cell size.
 * The placement grid is now also shown when using the flood-fill function.
 * Fixed the cell selection indicator and the bottom info bar not immediately refreshing when using the arrow keys to scroll around the map.
-* The auto-zoom on map load is now slightly more accurate.
-* Fixed a bug in the dragging logic that made the mouse position and map desynchronise or not work at all when dragging very slowly.* Fixed bugs in the logic to zoom to the map bounds.
+* Fixed a bug in the dragging logic that made the mouse position and map desynchronise or not work at all when dragging very slowly.
+* Fixed bugs in the logic to zoom to the map bounds. It is now slightly more accurate.
 * Fixed crashes that occurred when dragging bibs and buildings out of the right or bottom of the map bounds.
 * Added map load checks on failing to detect the House of units, structures, triggers and teams. This includes a logic for RA to substitute the prerelease House Italy with its final version, Ukraine.
-* Added relevant theaters to theater-specific buildings in the "Built it" trigger event lists.
 * Fixed bug where the radius painting of the placement preview for gap generators wouldn't work correctly because it could get mixed up with buildings set to be built later.
 * The automatic tiling of clear terrain used a logic that was incorrect for the larger maps in Red Alert and Sole Survivor. This has now been fixed.
 * Fixed case difference issues in triggers linked to objects and celltriggers.
@@ -578,7 +577,7 @@ Released on 05 Aug 2023 at 13:50 GMT
 * The editor will now be allowed to load in classic mode without the RA expansion files present. Any missing graphics will be substituted by dummy graphics.
 * Overhauled the "New Map" dialog using list boxes, to have more consistent tab order control, and to allow more easily modding in additional games / theaters.
 * Added "Single-Player Scenario" checkbox on the "New Map" dialog.
-* Added remap logic to fix Einstein's colors, using the remap system used by the other RA civilians.
+* Added remap logic to fix Einstein's colors in classic mode so he doesn't just look like Dr. Mobius. This uses the remap system used by the other RA civilians.
 * The power evaluation tool now takes buildings' damaged status into account when calculating the produced power.
 * Multiple overlapping multiplayer flags will now be drawn as multiple flags on one cell, scaling down later overlapping ones.
 * Multiple overlapping non-flag waypoints will no longer show up brighter on the map.
