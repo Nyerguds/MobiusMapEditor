@@ -3,7 +3,6 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Media;
-using System.Text;
 using System.Windows.Forms;
 
 namespace MobiusEditor.Dialogs
@@ -19,15 +18,20 @@ namespace MobiusEditor.Dialogs
         public ThankYouDialog()
         {
             InitializeComponent();
-            random = new Random((int)(DateTime.Now.Ticks & 0xFFFFFFF));
+            // Compensate for scrollbar so text is still centered.
+            this.txtEditorInfo.Width -= SystemInformation.VerticalScrollBarWidth;
+            this.txtEditorInfo.Left += SystemInformation.VerticalScrollBarWidth;
+            // Init randomizer on current clock ticks.
+            this.random = new Random((int)(DateTime.Now.Ticks & 0xFFFFFFF));
             this.Text = "About " + Program.ProgramVersionTitle;
-            txtEditorInfo.Text = GeneralUtils.DoubleAmpersands(Program.ProgramInfo.Replace("\n", Environment.NewLine));
-            lblLink.Text = GeneralUtils.DoubleAmpersands(Program.GithubUrl);
+            this.txtEditorInfo.Text = Program.ProgramInfo.Replace("\n", Environment.NewLine);
+            // Is re-centered for its new contents in the "shown" event.
+            this.lblLink.Text = GeneralUtils.DoubleAmpersands(Program.GithubUrl);
         }
 
         private void lblImage_Click(Object sender, EventArgs e)
         {
-            this.PlaySoundFile(this.clicks);
+            this.PlaySound(this.clicks);
             if (this.clicks < maxclicks)
             {
                 this.clicks++;
@@ -52,7 +56,7 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        private void PlaySoundFile(int clicks)
+        private void PlaySound(int clicks)
         {
             StopSound();
             using (MemoryStream ms = GetClipFromClicks(clicks))
@@ -70,12 +74,14 @@ namespace MobiusEditor.Dialogs
 
         private MemoryStream GetClipFromClicks(int clicks)
         {
+            // Before reaching maxclicks: take sounds from switch-case, in reverse order.
             if (clicks < maxclicks)
             {
                 return GetClip(maxclicks - clicks - 1);
             }
-            clicks = this.random.Next(maxclicks);
-            return GetClip(clicks);
+            // After reaching maxclicks: take random sound.
+            int randomNr = this.random.Next(maxclicks);
+            return GetClip(randomNr);
         }
 
         private MemoryStream GetClip(int number)
@@ -96,18 +102,8 @@ namespace MobiusEditor.Dialogs
         {
             using (umm)
             {
-                return CopyToBuffer(umm);
+                return GeneralUtils.CopyToMemoryStream(umm);
             }
-        }
-
-        private MemoryStream CopyToBuffer(UnmanagedMemoryStream umm)
-        {
-            byte[] buffer = new byte[umm.Length];
-            umm.Read(buffer, 0, buffer.Length);
-            MemoryStream ms = new MemoryStream();
-            ms.Write(buffer, 0, buffer.Length);
-            ms.Position = 0;
-            return ms;
         }
 
         /// <summary>
@@ -116,22 +112,22 @@ namespace MobiusEditor.Dialogs
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
-            if (disposing && (components != null))
+            if (disposing && (this.components != null))
             {
-                components.Dispose();
-                StopSound();
+                this.components.Dispose();
+                this.StopSound();
             }
             base.Dispose(disposing);
         }
 
         private void ThankYou_FormClosing(Object sender, FormClosingEventArgs e)
         {
-            StopSound();
+            this.StopSound();
         }
 
         private void ThankYouDialog_Shown(Object sender, EventArgs e)
         {
-            lblLink.Left = (this.ClientSize.Width - lblLink.Width) / 2;
+            this.lblLink.Left = (this.ClientSize.Width - this.lblLink.Width) / 2;
         }
 
         private void lblLink_Click(Object sender, EventArgs e)

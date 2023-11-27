@@ -588,5 +588,23 @@ namespace MobiusEditor.Utility
             return new Regex(convertedMask, ignoreCase ? RegexOptions.IgnoreCase : RegexOptions.None);
         }
 
+        public static void CopyStream(Stream input, Stream output)
+        {
+            Byte[] buffer = new Byte[0x8000];
+            Int32 read;
+            while ((read = input.Read(buffer, 0, buffer.Length)) > 0)
+            {
+                output.Write(buffer, 0, read);
+            }
+        }
+
+        public static MemoryStream CopyToMemoryStream(Stream stream)
+        {
+            MemoryStream ms = new MemoryStream();
+            CopyStream(stream, ms);
+            ms.Position = 0;
+            return ms;
+        }
+
     }
 }

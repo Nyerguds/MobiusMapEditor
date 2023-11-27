@@ -49,7 +49,7 @@ namespace MobiusEditor
             "Chad1233\n" +
             "DDF3\n" +
             "Zaptagious\n" +
-            "-GotAPresentForYa\n" +
+            "GotAPresentForYa\n" +
             "\n" +
             "Boundless moral support:\n" +
             "N3tRunn3r\n" +
