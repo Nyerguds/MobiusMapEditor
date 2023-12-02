@@ -28,6 +28,7 @@ namespace MobiusEditor.SoleSurvivor
 
         protected const int cratePoints = 4;
         protected const int teamStartPoints = 8;
+        private readonly GameInfoSole gameTypeInfo = new GameInfoSole();
 
         protected static readonly IEnumerable<string> movieTypesSole = new string[]
         {
@@ -49,9 +50,10 @@ namespace MobiusEditor.SoleSurvivor
             "MAP1",
         };
 
-        public override string Name => "Sole Survivor";
-        public override GameType GameType => GameType.SoleSurvivor;
-        public override bool IsMegaMap => true;
+        public override GameInfo GameInfo => gameTypeInfo;
+        public override string Name => gameTypeInfo.Name;
+        public override GameType GameType => gameTypeInfo.GameType;
+        public override bool IsMegaMap => isMegaMap;
 
         public static bool CheckForSSmap(INI iniContents)
         {

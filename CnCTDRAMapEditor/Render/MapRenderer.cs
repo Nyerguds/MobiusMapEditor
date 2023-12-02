@@ -193,7 +193,7 @@ namespace MobiusEditor.Render
             new Point(1, 2)
         };
 
-        public static void Render(GameType gameType, Map map, Graphics graphics, ISet<Point> locations, MapLayerFlag layers, double tileScale)
+        public static void Render(GameInfo gameInfo, Map map, Graphics graphics, ISet<Point> locations, MapLayerFlag layers, double tileScale)
         {
             // tileScale should always be given so it results in an exact integer tile size. Math.Round was added to account for .999 situations in the floats.
             Size tileSize = new Size(Math.Max(1, (int)Math.Round(Globals.OriginalTileWidth * tileScale)), Math.Max(1, (int)Math.Round(Globals.OriginalTileHeight * tileScale)));
@@ -327,7 +327,7 @@ namespace MobiusEditor.Render
                     bool paintAsOverlay = overlay.Type.IsOverlay && (layers & MapLayerFlag.Overlay) != MapLayerFlag.None;
                     if (paintAsWall || paintAsResource || paintAsOverlay)
                     {
-                        RenderOverlay(gameType, location, tileSize, tileScale, overlay).Item2(graphics);
+                        RenderOverlay(gameInfo, location, tileSize, tileScale, overlay).Item2(graphics);
                     }
                 }
             }
@@ -339,7 +339,7 @@ namespace MobiusEditor.Render
                     {
                         continue;
                     }
-                    overlappingRenderList.Add(RenderBuilding(gameType, topLeft, tileSize, tileScale, building));
+                    overlappingRenderList.Add(RenderBuilding(gameInfo, topLeft, tileSize, tileScale, building));
                 }
             }
             if ((layers & MapLayerFlag.Infantry) != MapLayerFlag.None)
@@ -369,7 +369,7 @@ namespace MobiusEditor.Render
                     {
                         continue;
                     }
-                    overlappingRenderList.Add(RenderUnit(gameType, topLeft, tileSize, unit));
+                    overlappingRenderList.Add(RenderUnit(gameInfo, topLeft, tileSize, unit));
                 }
             }
             if ((layers & MapLayerFlag.Terrain) != MapLayerFlag.None)
@@ -402,7 +402,7 @@ namespace MobiusEditor.Render
                     {
                         continue;
                     }
-                    RenderOverlay(gameType, topLeft, tileSize, tileScale, overlay).Item2(graphics);
+                    RenderOverlay(gameInfo, topLeft, tileSize, tileScale, overlay).Item2(graphics);
                 }
             }
 
@@ -443,14 +443,14 @@ namespace MobiusEditor.Render
                         }
                         handledPoints.Add(cell);
                     }
-                    RenderWaypoint(gameType, isSp, tileSize, flagColors, waypoint, alpha, offset).Item2(graphics);
+                    RenderWaypoint(gameInfo, isSp, tileSize, flagColors, waypoint, alpha, offset).Item2(graphics);
                 }
             }
         }
 
-        public static void Render(GameType gameType, Map map, Graphics graphics, ISet<Point> locations, MapLayerFlag layers)
+        public static void Render(GameInfo gameInfo, Map map, Graphics graphics, ISet<Point> locations, MapLayerFlag layers)
         {
-            Render(gameType, map, graphics, locations, layers, Globals.MapTileScale);
+            Render(gameInfo, map, graphics, locations, layers, Globals.MapTileScale);
         }
 
         public static (Rectangle, Action<Graphics>) RenderSmudge(Point topLeft, Size tileSize, double tileScale, Smudge smudge)
@@ -493,12 +493,12 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static (Rectangle, Action<Graphics>) RenderOverlay(GameType gameType, Point topLeft, Size tileSize, double tileScale, Overlay overlay)
+        public static (Rectangle, Action<Graphics>) RenderOverlay(GameInfo gameInfo, Point topLeft, Size tileSize, double tileScale, Overlay overlay)
         {
             OverlayType ovtype = overlay.Type;
             string name = ovtype.GraphicsSource;
             int icon = ovtype.IsConcrete || ovtype.IsResource || ovtype.IsWall || ovtype.ForceTileNr == -1 ? overlay.Icon : ovtype.ForceTileNr;
-            bool isTeleport = gameType == GameType.SoleSurvivor && ovtype == SoleSurvivor.OverlayTypes.Teleport && Globals.AdjustSoleTeleports;
+            bool isTeleport = gameInfo != null && gameInfo.GameType == GameType.SoleSurvivor && ovtype == SoleSurvivor.OverlayTypes.Teleport && Globals.AdjustSoleTeleports;
             bool success = Globals.TheTilesetManager.GetTileData(name, icon, out Tile tile, true, false);
             if (tile != null && tile.Image != null)
             {
@@ -590,7 +590,7 @@ namespace MobiusEditor.Render
             return new RenderInfo(usedCenter, render, terrain);
         }
 
-        public static RenderInfo RenderBuilding(GameType gameType, Point topLeft, Size tileSize, double tileScale, Building building)
+        public static RenderInfo RenderBuilding(GameInfo gameInfo, Point topLeft, Size tileSize, double tileScale, Building building)
         {
             Color tint = building.Tint;
             Int32 icon = building.Type.FrameOFfset;
@@ -598,14 +598,13 @@ namespace MobiusEditor.Render
             int damageIconOffs = 0;
             int collapseIcon = 0;
             // In TD, damage is when BELOW the threshold. In RA, it's ON the threshold.
-            int healthyMin = gameType == GameType.RedAlert ? 128 : 127;
+            int healthyMin = gameInfo.HitPointsGreenMinimum;
             bool isDamaged = building.Strength <= healthyMin;
             bool hasCollapseFrame = false;
             // Only fetch if damaged. BuildingType.IsSingleFrame is an override for the RA mines. Everything else works with one simple logic.
             if (isDamaged && !building.Type.IsSingleFrame)
             {
                 maxIcon = Globals.TheTilesetManager.GetTileDataLength(building.Type.GraphicsSource);
-                //hasCollapseFrame = (gameType == GameType.TiberianDawn || gameType == GameType.SoleSurvivor) && maxIcon > 1 && maxIcon % 2 == 1;
                 hasCollapseFrame = maxIcon > 1 && maxIcon % 2 == 1;
                 damageIconOffs = (maxIcon + (hasCollapseFrame ? 0 : 1)) / 2;
                 collapseIcon = maxIcon - 1;
@@ -770,13 +769,13 @@ namespace MobiusEditor.Render
             return new RenderInfo(new Point(topLeft.X * Globals.PixelWidth + offset.X, topLeft.Y * Globals.PixelHeight + offset.Y), render, infantry);
         }
 
-        public static RenderInfo RenderUnit(GameType gameType, Point topLeft, Size tileSize, Unit unit)
+        public static RenderInfo RenderUnit(GameInfo gameInfo, Point topLeft, Size tileSize, Unit unit)
         {
             int icon = 0;
             int bodyFrames = 0;
             // In TD, damage is when BELOW the threshold. In RA, it's ON the threshold.
-            int healthyMin = gameType == GameType.RedAlert ? 128 : 127;
-            int damagedMin = gameType == GameType.RedAlert ? 64 : 63;
+            int healthyMin = gameInfo.HitPointsGreenMinimum;
+            int damagedMin = gameInfo.HitPointsYellowMinimum;
             FrameUsage frameUsage = unit.Type.BodyFrameUsage;
             if ((frameUsage & FrameUsage.Frames01Single) != FrameUsage.None)
             {
@@ -1003,7 +1002,7 @@ namespace MobiusEditor.Render
             return new RenderInfo(usedCenter, render, unit);
         }
 
-        public static (Rectangle, Action<Graphics>) RenderWaypoint(GameType gameType, bool soloMission, Size tileSize, ITeamColor[] flagColors, Waypoint waypoint, float transparencyModifier, int offset)
+        public static (Rectangle, Action<Graphics>) RenderWaypoint(GameInfo gameInfo, bool soloMission, Size tileSize, ITeamColor[] flagColors, Waypoint waypoint, float transparencyModifier, int offset)
         {
             if (!waypoint.Point.HasValue)
             {
@@ -1029,7 +1028,7 @@ namespace MobiusEditor.Render
                 //transparencyModifier = 1.0f;
                 gotTile = Globals.TheTilesetManager.GetTeamColorTileData(tileGraphics, icon, teamColor, out tile);
             }
-            else if (gameType == GameType.SoleSurvivor && (waypoint.Flag & WaypointFlag.CrateSpawn) == WaypointFlag.CrateSpawn)
+            else if (gameInfo.GameType == GameType.SoleSurvivor && (waypoint.Flag & WaypointFlag.CrateSpawn) == WaypointFlag.CrateSpawn)
             {
                 isDefaultIcon = false;
                 tileGraphics = "scrate";
@@ -1254,7 +1253,7 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static void RenderAllCrateOutlines(Graphics g, Map map, Rectangle visibleCells, Size tileSize, double tileScale, bool onlyIfBehindObjects)
+        public static void RenderAllCrateOutlines(Graphics g, GameInfo gameInfo, Map map, Rectangle visibleCells, Size tileSize, double tileScale, bool onlyIfBehindObjects)
         {
             // Optimised to only get the paint area once per crate type.
             // Sadly can't easily be cached because everything in this class is static.
@@ -1297,7 +1296,7 @@ namespace MobiusEditor.Render
                     {
                         using (Graphics ig = Graphics.FromImage(bm))
                         {
-                            RenderOverlay(GameType.None, Point.Empty, tileSize, tileScale, toRender).Item2(ig);
+                            RenderOverlay(gameInfo, Point.Empty, tileSize, tileScale, toRender).Item2(ig);
                         }
                         paintAreaRel = ImageUtils.GetOutline(tileSize, bm, outlineThickness, alphaThreshold, Globals.UseClassicFiles);
                         paintAreas[ovlt.Name] = paintAreaRel;
@@ -1384,7 +1383,7 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static void RenderAllVehicleOutlines(Graphics g, GameType gameType, Map map, Rectangle visibleCells, Size tileSize, bool onlyIfBehindObjects)
+        public static void RenderAllVehicleOutlines(Graphics g, GameInfo gameInfo, Map map, Rectangle visibleCells, Size tileSize, bool onlyIfBehindObjects)
         {
             // Optimised to only get the paint area once per crate type.
             // Sadly can't easily be cached because everything in this class is static.
@@ -1420,7 +1419,7 @@ namespace MobiusEditor.Render
                     {
                         using (Graphics ig = Graphics.FromImage(bm))
                         {
-                            RenderUnit(gameType, new Point(1, 1), tileSize, toRender).RenderAction(ig);
+                            RenderUnit(gameInfo, new Point(1, 1), tileSize, toRender).RenderAction(ig);
                         }
                         paintAreaRel = ImageUtils.GetOutline(tileSize, bm, outlineThickness, alphaThreshold, Globals.UseClassicFiles);
                         paintAreas[id] = paintAreaRel;
@@ -1545,9 +1544,9 @@ namespace MobiusEditor.Render
             return false;
         }
 
-        public static void RenderAllFootballAreas(Graphics graphics, Map map, Rectangle visibleCells, Size tileSize, double tileScale, GameType gameType)
+        public static void RenderAllFootballAreas(Graphics graphics, Map map, Rectangle visibleCells, Size tileSize, double tileScale, GameInfo gameInfo)
         {
-            if (gameType != GameType.SoleSurvivor)
+            if (!gameInfo.SupportsMapLayer(MapLayerFlag.FootballArea))
             {
                 return;
             }
@@ -1573,13 +1572,13 @@ namespace MobiusEditor.Render
                     Type = SoleSurvivor.OverlayTypes.Road,
                     Tint = Color.FromArgb(128, Color.White)
                 };
-                RenderOverlay(gameType, p, tileSize, tileScale, footballTerrain).Item2(graphics);
+                RenderOverlay(gameInfo, p, tileSize, tileScale, footballTerrain).Item2(graphics);
             }
         }
 
-        public static void RenderFootballAreaFlags(Graphics graphics, GameType gameType, Map map, Rectangle visibleCells, Size tileSize)
+        public static void RenderFootballAreaFlags(Graphics graphics, GameInfo gameInfo, Map map, Rectangle visibleCells, Size tileSize)
         {
-            if (gameType != GameType.SoleSurvivor)
+            if (!gameInfo.SupportsMapLayer(MapLayerFlag.FootballArea))
             {
                 return;
             }
@@ -1595,7 +1594,7 @@ namespace MobiusEditor.Render
             ITeamColor[] flagColors = map.FlagColors;
             foreach (Waypoint wp in footballWayPoints)
             {
-                RenderWaypoint(gameType, false, tileSize, flagColors, wp, 1.0f, 0).Item2(graphics);
+                RenderWaypoint(gameInfo, false, tileSize, flagColors, wp, 1.0f, 0).Item2(graphics);
             }
         }
 

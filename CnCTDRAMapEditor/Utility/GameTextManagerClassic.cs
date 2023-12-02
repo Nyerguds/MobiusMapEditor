@@ -12,6 +12,7 @@
 //
 //   0. You just DO WHAT THE FUCK YOU WANT TO.
 using MobiusEditor.Interface;
+using MobiusEditor.Model;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -1426,8 +1427,9 @@ namespace MobiusEditor.Utility
             switch (gameType)
             {
                 case GameType.TiberianDawn:
-                case GameType.SoleSurvivor:
                     return StringMappingsTd;
+                case GameType.SoleSurvivor:
+                    return StringMappingsTd; // TODO map out SS's strings file?
                 case GameType.RedAlert:
                     return StringMappingsRa;
             }

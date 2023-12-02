@@ -11,6 +11,8 @@
 //    TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
 //
 //   0. You just DO WHAT THE FUCK YOU WANT TO.
+using MobiusEditor.Model;
+
 namespace MobiusEditor.Interface
 {
     public interface IGameTextManager

@@ -239,7 +239,7 @@ namespace MobiusEditor.Dialogs
             if (clear.Thumbnail == null || !clear.Initialised)
             {
                 // Clear should ALWAYS be initialised and available, even if missing.
-                clear.Init(plugin.GameType, plugin.Map.Theater, true, false);
+                clear.Init(plugin.GameInfo, plugin.Map.Theater, true, false);
             }
             ExplorerComparer expl = new ExplorerComparer();
             var templateTypes = plugin.Map.TemplateTypes

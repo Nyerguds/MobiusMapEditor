@@ -108,7 +108,6 @@ namespace MobiusEditor.Model
                     adjacent.Y--;
                     break;
             }
-
             return Contains(adjacent);
         }
 

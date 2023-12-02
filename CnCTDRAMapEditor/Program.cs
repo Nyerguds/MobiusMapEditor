@@ -15,6 +15,7 @@
 
 using MobiusEditor.Dialogs;
 using MobiusEditor.Interface;
+using MobiusEditor.Model;
 using MobiusEditor.Utility;
 using System;
 using System.Collections.Generic;
@@ -98,11 +99,11 @@ namespace MobiusEditor
             Application.SetCompatibleTextRenderingDefault(false);
             Dictionary<GameType, string[]> modPaths = new Dictionary<GameType, string[]>();
             // Check if any mods are allowed to override the default stuff to load.
-            const string tdModFolder = "Tiberian_Dawn";
-            const string raModFolder = "Red_Alert";
-            modPaths.Add(GameType.TiberianDawn, StartupLoader.GetModPaths(GameId, Properties.Settings.Default.ModsToLoadTD, tdModFolder, "TD"));
-            modPaths.Add(GameType.RedAlert, StartupLoader.GetModPaths(GameId, Properties.Settings.Default.ModsToLoadRA, raModFolder, "RA"));
-            modPaths.Add(GameType.SoleSurvivor, StartupLoader.GetModPaths(GameId, Properties.Settings.Default.ModsToLoadSS, tdModFolder, "TD"));
+            foreach (GameInfo gic in GameTypeFactory.GetGameInfos())
+            {
+                String modFolder = Path.Combine(Globals.ModDirectory, gic.ModFolder);
+                modPaths.Add(gic.GameType, StartupLoader.GetModPaths(GameId, gic.ModsToLoad, modFolder, "TD"));
+            }
             String runPath = StartupLoader.GetRemasterRunPath(GameId, !Globals.UseClassicFiles);
             if (runPath != null)
             {
@@ -166,9 +167,9 @@ namespace MobiusEditor
 
         private enum PROCESS_DPI_AWARENESS
         {
-            Process_DPI_Unaware = 0,
-            Process_System_DPI_Aware = 1,
-            Process_Per_Monitor_DPI_Aware = 2
+            Process_DPI_Unaware           /**/ = 0,
+            Process_System_DPI_Aware      /**/ = 1,
+            Process_Per_Monitor_DPI_Aware /**/ = 2
         }
 
         [DllImport("user32.dll", SetLastError = true)]

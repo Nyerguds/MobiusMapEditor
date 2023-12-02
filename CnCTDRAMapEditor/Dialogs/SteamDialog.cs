@@ -241,15 +241,7 @@ namespace MobiusEditor.Dialogs
                 return;
             }
             var tags = new List<string>();
-            switch (plugin.GameType)
-            {
-                case GameType.TiberianDawn:
-                    tags.Add("TD");
-                    break;
-                case GameType.RedAlert:
-                    tags.Add("RA");
-                    break;
-            }
+            tags.Add(plugin.GameInfo.WorkshopTypeId);
             if (plugin.Map.BasicSection.SoloMission)
             {
                 tags.Add("SinglePlayer");

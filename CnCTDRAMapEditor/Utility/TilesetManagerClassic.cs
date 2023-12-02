@@ -194,7 +194,16 @@ namespace MobiusEditor.Utility
                     return -1;
                 }
             }
-            return shapes.Max(kv => kv.Key) + 1;
+            if (shapes.Where(kv => !kv.Value.IsDummy).Count() == 0)
+            {
+                return -1;
+            }
+            return shapes.Where(kv => !kv.Value.IsDummy).Max(kv => kv.Key) + 1;
+        }
+
+        public bool TileExists(string name)
+        {
+            return GetTileDataLength(name) > 0;
         }
 
         private Dictionary<int, ShapeFrameData> GetShapeFile(String name)

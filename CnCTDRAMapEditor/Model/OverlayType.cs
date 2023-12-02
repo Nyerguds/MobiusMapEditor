@@ -14,10 +14,8 @@
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using MobiusEditor.Interface;
 using MobiusEditor.Render;
-using MobiusEditor.Utility;
 using System;
 using System.Drawing;
-using System.Drawing.Imaging;
 
 namespace MobiusEditor.Model
 {
@@ -25,29 +23,29 @@ namespace MobiusEditor.Model
     public enum OverlayTypeFlag
     {
         /// <summary>No flags set.</summary>
-        None            = 0,
+        None            /**/ = 0,
         /// <summary>Is a basic resource overlay.</summary>
-        TiberiumOrGold  = (1 << 0),
+        TiberiumOrGold  /**/ = 1 << 0,
         /// <summary>Is a high value resource overlay.</summary>
-        Gems            = (1 << 1),
+        Gems            /**/ = 1 << 1,
         /// <summary>Is a wall.</summary>
-        Wall            = (1 << 2),
+        Wall            /**/ = 1 << 2,
         /// <summary>Is a wooden crate. This affects the color of the outline it gets.</summary>
-        WoodCrate       = (1 << 3),
+        WoodCrate       /**/ = 1 << 3,
         /// <summary>Is a steel crate. This affects the color of the outline it gets.</summary>
-        SteelCrate      = (1 << 4),
+        SteelCrate      /**/ = 1 << 4,
         /// <summary>Is the flag placement indicator.</summary>
-        Flag            = (1 << 5),
+        Flag            /**/ = 1 << 5,
         /// <summary>Is a pavement type.</summary>
-        Pavement        = (1 << 6),
+        Pavement        /**/ = 1 << 6,
         /// <summary>Needs to use the special concrete pavement connection logic.</summary>
-        Concrete        = (1 << 7),
+        Concrete        /**/ = 1 << 7,
         /// <summary>Is a solid object that obstructs placement.</summary>
-        Solid           = (1 << 8),
+        Solid           /**/ = 1 << 8,
         /// <summary>Is a special type saved as duplicate lines of a different type.</summary>
-        RoadSpecial     = (1 << 9),
+        RoadSpecial     /**/ = 1 << 9,
         /// <summary>Is a crate.</summary>
-        Crate           = WoodCrate | SteelCrate,
+        Crate           /**/ = WoodCrate | SteelCrate,
     }
 
     public class OverlayType : ICellOccupier, IBrowsableType
@@ -156,11 +154,10 @@ namespace MobiusEditor.Model
                 : idEmpty ? this.GraphicsSource.ToUpperInvariant() : this.nameId;
         }
 
-        public void Init(GameType gameType, TheaterType theater)
+        public void Init(GameInfo gameInfo, TheaterType theater)
         {
             InitDisplayName();
-            this.ExistsInTheater = Globals.TheTilesetManager.GetTileDataLength(this.GraphicsSource) > 0;
-            //this.ExistsInTheater = Globals.TheArchiveManager.ClassicFileExists(this.Name + "." + theater.ClassicExtension) || Globals.TheArchiveManager.ClassicFileExists(this.Name + ".shp");
+            this.ExistsInTheater = Globals.TheTilesetManager.TileExists(this.GraphicsSource);
             var oldImage = this.Thumbnail;
             var tileSize = Globals.PreviewTileSize;
             Bitmap th = new Bitmap(tileSize.Width, tileSize.Height);
@@ -173,7 +170,7 @@ namespace MobiusEditor.Model
                     Icon = tilenr,
                 };
                 MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
-                MapRenderer.RenderOverlay(gameType, Point.Empty, Globals.PreviewTileSize, Globals.PreviewTileScale, mockOverlay).Item2(g);
+                MapRenderer.RenderOverlay(gameInfo, Point.Empty, Globals.PreviewTileSize, Globals.PreviewTileScale, mockOverlay).Item2(g);
             }
             this.Thumbnail = th;
             if (oldImage != null)

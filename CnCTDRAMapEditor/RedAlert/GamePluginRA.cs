@@ -44,6 +44,7 @@ namespace MobiusEditor.RedAlert
         private bool isLoading = false;
 
         private static readonly Regex SinglePlayRegex = new Regex("^SC[A-LN-Z]\\d{2}[EWX][A-EL]$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private readonly GameInfoRedAlert gameTypeInfo = new GameInfoRedAlert();
 
         private const string emptyMapName = "<none>";
         private const string movieEmpty = "<none>";
@@ -262,27 +263,17 @@ namespace MobiusEditor.RedAlert
         };
 
         private static readonly IEnumerable<ITechnoType> fullTechnoTypes;
-
-        public string Name => "Red Alert";
-
-        public GameType GameType => GameType.RedAlert;
-
+        public GameInfo GameInfo => gameTypeInfo;
+        public string Name => gameTypeInfo.Name;
+        public GameType GameType => gameTypeInfo.GameType;
         public string DefaultSaveDirectory => Constants.SaveDirectory;
-
         public static string FileFilter = "Red Alert files (*.mpr;*.ini)|*.mpr;*.ini";
-
         public string SaveFilter => FileFilter;
-
         public string OpenFilter => FileFilter;
-
         public string DefaultExtension => ".mpr";
-
         public HouseType ActiveHouse { get; set; }
-
         public bool IsMegaMap => true;
-
         public Map Map { get; }
-
         public Image MapImage { get; private set; }
 
         private IFeedBackHandler feedBackHandler;
@@ -2057,8 +2048,7 @@ namespace MobiusEditor.RedAlert
                     }
                     else
                     {
-                        string reportStr = string.Format("Structure '{0}' placed on cell {1}", buildingType.Name, cell);
-                        Map.CheckBuildingBlockingCell(cell, buildingType, reportStr, errors, ref modified);
+                        Map.CheckBuildingBlockingCell(cell, buildingType, errors, ref modified);
                     }
                 }
                 else
@@ -4744,7 +4734,7 @@ namespace MobiusEditor.RedAlert
             switch (e.PropertyName)
             {
                 case "Theater":
-                    Map.InitTheater(GameType);
+                    Map.InitTheater(GameInfo);
                     break;
             }
         }

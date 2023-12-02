@@ -729,23 +729,20 @@ namespace MobiusEditor.Utility
 
         private enum CcShpFrameFormat
         {
-            Empty = 0x00,
-            XorChain = 0x20,
-            XorBase = 0x40,
-            XorChainRef = 0x48,
-            Lcw = 0x80,
+            Empty       /**/ = 0x00,
+            XorChain    /**/ = 0x20,
+            XorBase     /**/ = 0x40,
+            XorChainRef /**/ = 0x48,
+            Lcw         /**/ = 0x80,
         }
 
         [Flags]
         private enum Dune2ShpFrameFlags
         {
-            Empty = 0x00,
-            // Bit 1: Contains remap table
-            HasRemapTable = 0x01,
-            // Bit 2: Don't decompress with LCW
-            NoLcw = 0x02,
-            // Bit 3: Has custom remap table size.
-            CustomSizeRemap = 0x04
+            Empty           /**/ = 0,
+            HasRemapTable   /**/ = 1 >> 0, // Bit 1: Contains remap table
+            NoLcw           /**/ = 1 >> 1, // Bit 2: Don't decompress with LCW
+            CustomSizeRemap /**/ = 1 >> 2  // Bit 3: Has custom remap table size.
         }
         #endregion
     }

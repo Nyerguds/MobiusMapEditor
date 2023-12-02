@@ -169,6 +169,7 @@ These options are all enabled by default, but can be disabled if you wish. Use t
 These don't affect any real behaviour, but change some graphics to look more correct in the editor:
 
 * **FixClassicEinstein**: While the Win95 and remastered versions of Red Alert have Einstein's in-game sprite coloured to match how he appears in the briefings, the DOS version looks identical to Dr. Mobius in Tiberian Dawn. This option fixes the DOS graphics used by Classic mode to also use these colours. Note that the **GraphicsFixesRA** mod also fixes this.
+* **FixConcretePavement**: The connection logic of the "CONC" pavement in Tiberian Dawn is seriously bugged in-game. The editor contains a fixed logic, showing the concrete how it was intended to be, filling in side gaps with filler cells. However, be advised that this new logic does not match the actual game. For this reason, it is disabled by default.
 * **DrawSoleTeleports**: On Sole Survivor maps, draw a black area with blue border over the loaded ROAD graphics to emulate the look of the in-game teleporters.
 
 ## Classic files listing:

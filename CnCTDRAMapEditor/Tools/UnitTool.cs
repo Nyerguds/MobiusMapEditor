@@ -574,7 +574,7 @@ namespace MobiusEditor.Tools
                 using (var g = Graphics.FromImage(unitPreview))
                 {
                     MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
-                    RenderInfo render = MapRenderer.RenderUnit(plugin.GameType, new Point(1, 1), Globals.PreviewTileSize, mockUnit);
+                    RenderInfo render = MapRenderer.RenderUnit(plugin.GameInfo, new Point(1, 1), Globals.PreviewTileSize, mockUnit);
                     if (render.RenderedObject != null)
                     {
                         render.RenderAction(g);

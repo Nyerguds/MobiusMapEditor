@@ -333,8 +333,12 @@ namespace MobiusEditor.Controls
         {
             if (building.BasePriority >= 0 && !building.IsPrebuilt)
             {
-                HouseType house = Plugin.Map.GetBaseHouse(Plugin.GameType);
-                if (house.ID < 0)
+                HouseType house = Plugin.Map.GetBaseHouse(Plugin.GameInfo);
+                if (house.ID >= 0)
+                {
+                    building.House = house;
+                }
+                else
                 {
                     // Fix for changing the combobox to one only contain "None".
                     houseComboBox.DataBindings.Clear();
@@ -342,11 +346,6 @@ namespace MobiusEditor.Controls
                     houseComboBox.SelectedIndex = 0;
                     building.House = house;
                     houseComboBox.DataBindings.Add("SelectedValue", obj, "House");
-                }
-                else
-                {
-                    var basePlayer = Plugin.Map.HouseTypes.Where(h => h.Equals(Plugin.Map.BasicSection.BasePlayer)).FirstOrDefault() ?? Plugin.Map.HouseTypes.First();
-                    building.House = basePlayer;
                 }
             }
             else
@@ -358,16 +357,8 @@ namespace MobiusEditor.Controls
                     houseComboBox.DataBindings.Clear();
                     TypeItem<HouseType>[] houses = Plugin.Map.Houses.Select(t => new TypeItem<HouseType>(t.Type.Name, t.Type)).ToArray();
                     houseComboBox.DataSource = houses;
-                    HouseType restoredHouse = null;
-                    if (Plugin.GameType == GameType.TiberianDawn)
-                    {
-                        String opposing = TiberianDawn.HouseTypes.GetClassicOpposingPlayer(Plugin.Map.BasicSection.Player);
-                        restoredHouse = Plugin.Map.Houses.Where(h => h.Type.Equals(opposing)).FirstOrDefault()?.Type;
-                    }
-                    if (restoredHouse == null)
-                    {
-                        restoredHouse = houses.First().Type;
-                    }
+                    String opposing = Plugin.GameInfo.GetClassicOpposingPlayer(Plugin.Map.BasicSection.Player);
+                    HouseType restoredHouse = Plugin.Map.Houses.Where(h => h.Type.Equals(opposing)).FirstOrDefault()?.Type ?? houses.First().Type;
                     building.House = restoredHouse;
                     houseComboBox.DataBindings.Add("SelectedValue", obj, "House");
                 }

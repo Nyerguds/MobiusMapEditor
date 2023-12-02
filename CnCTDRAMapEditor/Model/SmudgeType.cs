@@ -126,6 +126,7 @@ namespace MobiusEditor.Model
         public void Init(TheaterType theater)
         {
             InitDisplayName();
+            // Only evaluate classic tiles, to prevent Interior theater from showing smudge entries.
             this.ExistsInTheater = Globals.TheArchiveManager.ClassicFileExists(this.Name + "." + theater.ClassicExtension);
             var tileSize = Globals.PreviewTileSize;
             Bitmap oldImage = this.Thumbnail;

@@ -52,6 +52,11 @@ namespace MobiusEditor.Utility
             LoadXmlfiles();
         }
 
+        public bool TilesetExists(string tilesetName)
+        {
+            return tilesets.ContainsKey(tilesetName);
+        }
+
         private void LoadXmlfiles()
         {
             HashSet<String> allowedTileSets = this.theater == null ? null : theater.Tilesets.ToHashSet();
@@ -203,6 +208,11 @@ namespace MobiusEditor.Utility
                 }
             }
             return -1;
+        }
+
+        public bool TileExists(string name)
+        {
+            return GetTileDataLength(name) > 0;
         }
 
         #region IDisposable Support

@@ -55,6 +55,7 @@ namespace MobiusEditor
             WriteClassicBriefing = Properties.Settings.Default.WriteClassicBriefing;
             ApplyHarvestBug = Properties.Settings.Default.ApplyHarvestBug;
             FixClassicEinstein = Properties.Settings.Default.FixClassicEinstein;
+            FixConcretePavement = Properties.Settings.Default.FixConcretePavement;
             NoOwnedObjectsInSole = Properties.Settings.Default.NoOwnedObjectsInSole;
             AdjustSoleTeleports = Properties.Settings.Default.DrawSoleTeleports;
             RestrictSoleLimits = Properties.Settings.Default.RestrictSoleLimits;
@@ -148,6 +149,7 @@ namespace MobiusEditor
         public static bool ApplyHarvestBug { get; private set; }
         public static bool NoOwnedObjectsInSole { get; private set; }
         public static bool FixClassicEinstein { get; private set; }
+        public static bool FixConcretePavement { get; private set; }
         public static bool AdjustSoleTeleports { get; private set; }
         public static bool RestrictSoleLimits { get; private set; }
 
@@ -169,6 +171,7 @@ namespace MobiusEditor
         public static IGameTextManager TheGameTextManager;
 
         public static readonly string RootSaveDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), @"CnCRemastered\Local_Custom_Maps");
+        public static readonly string ModDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), @"CnCRemastered\Mods");
 
         // for encrypted mix files.
         public static readonly string PublicKey = "AihRvNoIbTn85FZRYNZRcT+i6KpU+maCsEqr3Q5q+LDB5tH7Tz2qQ38V";

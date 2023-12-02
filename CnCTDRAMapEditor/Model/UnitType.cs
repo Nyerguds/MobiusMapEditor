@@ -14,7 +14,6 @@
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using MobiusEditor.Interface;
 using MobiusEditor.Render;
-using MobiusEditor.Utility;
 using System;
 using System.Drawing;
 
@@ -24,49 +23,49 @@ namespace MobiusEditor.Model
     public enum UnitTypeFlag
     {
         /// <summary>No flags set.</summary>
-        None            = 0,
+        None            /**/ = 0,
         /// <summary>Is a fixed-wing airplane. This affects the default orders for placing it on the map.</summary>
-        IsFixedWing     = 1 << 0,
+        IsFixedWing     /**/ = 1 << 0,
         /// <summary>Has a turret drawn on the unit.</summary>
-        HasTurret       = 1 << 1,
+        HasTurret       /**/ = 1 << 1,
         /// <summary>Needs to render two turrets.</summary>
-        HasDoubleTurret = 1 << 2,
+        HasDoubleTurret /**/ = 1 << 2,
         /// <summary>Can attack units. This affects the default orders for placing it on the map.</summary>
-        IsArmed         = 1 << 3,
+        IsArmed         /**/ = 1 << 3,
         /// <summary>Can harvest resources. This affects the default orders for placing it on the map.</summary>
-        IsHarvester     = 1 << 4,
+        IsHarvester     /**/ = 1 << 4,
         /// <summary>Does not change its colors to that of its owning house..</summary>
-        NoRemap         = 1 << 5,
+        NoRemap         /**/ = 1 << 5,
         /// <summary>Is a unit that is filtered out of the lists if expansion units are disabled.</summary>
-        IsExpansionUnit = 1 << 6,
+        IsExpansionUnit /**/ = 1 << 6,
         /// <summary>Can show a mobile gap area-of-effect radius indicator.</summary>
-        IsGapGenerator  = 1 << 7,
+        IsGapGenerator  /**/ = 1 << 7,
         /// <summary>Can show a radar jamming area-of-effect radius indicator.</summary>
-        IsJammer        = 1 << 8,
+        IsJammer        /**/ = 1 << 8,
     }
 
     [Flags]
     public enum FrameUsage
     {
-        None                = 0,
+        None                /**/ = 0,
         /// <summary>Specifies that this rotation is the full 32 frames. Generally used for ground units and helicopters, and TD aircraft.</summary>
-        Frames32Full        = 1 << 1,
+        Frames32Full        /**/ = 1 << 1,
         /// <summary>Specifies that this rotation is simplified to 16 frames. Generally used for RA boats/aircraft.</summary>
-        Frames16Simple      = 1 << 2,
+        Frames16Simple      /**/ = 1 << 2,
         /// <summary>Specifies that this rotation is 16 frames, but saved as 8-frame because it is symmetrical and thus the second half of the frames is the same.</summary>
-        Frames16Symmetrical = 1 << 3,
+        Frames16Symmetrical /**/ = 1 << 3,
         /// <summary>Specifies that this rotation is cardinal drections only; 8 frames. Generally used for walkers.</summary>
-        Frames08Cardinal    = 1 << 4,
+        Frames08Cardinal    /**/ = 1 << 4,
         /// <summary>Specifies that this unit or turret only shows a single frame.</summary>
-        Frames01Single      = 1 << 5,
+        Frames01Single      /**/ = 1 << 5,
         /// <summary>Specifies that the unit has special damaged states for 50% and 25% (TD Gunboat)</summary>
-        DamageStates        = 1 << 6,
+        DamageStates        /**/ = 1 << 6,
         /// <summary>Modifier for body frames to determine that there are extra body frames before the turret; adds 4 for air/sea units, and 6 for vehicles.</summary>
-        HasUnloadFrames     = 1 << 7,
+        HasUnloadFrames     /**/ = 1 << 7,
         /// <summary>Specifies that this rotation is a rotor (turret only)</summary>
-        Rotor               = 1 << 8,
+        Rotor               /**/ = 1 << 8,
         /// <summary>Specifies that this turret is on a flatbed on the back of the vehicle and should use special positioning logic.</summary>
-        OnFlatBed           = 1 << 9,
+        OnFlatBed           /**/ = 1 << 9,
 
         FrameUsages = Frames01Single | Frames08Cardinal | Frames16Simple | Frames16Symmetrical | Frames32Full,
         FrameModifiers = DamageStates | HasUnloadFrames | Rotor | OnFlatBed
@@ -179,7 +178,7 @@ namespace MobiusEditor.Model
                 : this.Name.ToUpperInvariant();
         }
 
-        public void Init(GameType gameType, HouseType house, DirectionType direction)
+        public void Init(GameInfo gameInfo, HouseType house, DirectionType direction)
         {
             InitDisplayName();
             Bitmap oldImage = this.Thumbnail;
@@ -200,7 +199,7 @@ namespace MobiusEditor.Model
                 using (Graphics g = Graphics.FromImage(bigThumbnail))
                 {
                     MapRenderer.SetRenderSettings(g, Globals.PreviewSmoothScale);
-                    RenderInfo render = MapRenderer.RenderUnit(gameType, new Point(1, 1), Globals.PreviewTileSize, mockUnit);
+                    RenderInfo render = MapRenderer.RenderUnit(gameInfo, new Point(1, 1), Globals.PreviewTileSize, mockUnit);
                     if (render.RenderedObject != null)
                     {
                         render.RenderAction(g);

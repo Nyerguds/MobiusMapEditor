@@ -41,6 +41,7 @@ namespace MobiusEditor.TiberianDawn
 
         protected static readonly Regex SinglePlayRegex = new Regex("^SC[A-LN-Z]\\d{2}\\d?[EWX][A-EL]$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         protected static readonly Regex MovieRegex = new Regex(@"^(?:.*?\\)*(.*?)\.BK2$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private readonly GameInfoTibDawn gameTypeInfo = new GameInfoTibDawn();
 
         protected static readonly IEnumerable<ITechnoType> fullTechnoTypes;
 
@@ -222,9 +223,9 @@ namespace MobiusEditor.TiberianDawn
             "OUTTAKES"
         };
 
-        public virtual string Name => "Tiberian Dawn";
-
-        public virtual GameType GameType => GameType.TiberianDawn;
+        public virtual GameInfo GameInfo => gameTypeInfo;
+        public virtual string Name => gameTypeInfo.Name;
+        public virtual GameType GameType => gameTypeInfo.GameType;
 
         public virtual string DefaultSaveDirectory => Constants.SaveDirectory;
 
@@ -1606,8 +1607,7 @@ namespace MobiusEditor.TiberianDawn
                         }
                         else
                         {
-                            string reportStr = string.Format("Structure '{0}' placed on cell {1}", buildingType.Name, cell);
-                            Map.CheckBuildingBlockingCell(cell, buildingType, reportStr, errors, ref modified);
+                            Map.CheckBuildingBlockingCell(cell, buildingType, errors, ref modified);
                         }
                     }
                     else
@@ -1709,8 +1709,7 @@ namespace MobiusEditor.TiberianDawn
                             };
                             if (!Map.Buildings.Add(location, toRebuild))
                             {
-                                string reportStr = string.Format("Base rebuild entry '{0}', structure '{1}' on cell '{2}'", key, buildingType.Name, cell);
-                                Map.CheckBuildingBlockingCell(cell, buildingType, reportStr, errors, ref modified);
+                                Map.CheckBuildingBlockingCell(cell, buildingType, errors, ref modified, key);
                             }
                         }
                         curPriorityVal++;
@@ -2704,8 +2703,12 @@ namespace MobiusEditor.TiberianDawn
             INISection overlaySection = ini.Sections.Add("Overlay");
             Regex tiberium = new Regex("TI([0-9]|(1[0-2]))", RegexOptions.IgnoreCase);
             Random rd = new Random();
-            foreach (var (cell, overlay) in Map.Overlay.OrderBy(o => o.Cell))
+            foreach ((int cell, Overlay overlay) in Map.Overlay.OrderBy(o => o.Cell))
             {
+                if (Map.IsIgnorableOverlay(overlay))
+                {
+                    continue;
+                }
                 string overlayName = overlay.Type.Name;
                 if (tiberium.IsMatch(overlayName))
                     overlayName = "TI" + rd.Next(1, 13);
@@ -3504,7 +3507,7 @@ namespace MobiusEditor.TiberianDawn
             switch (e.PropertyName)
             {
                 case "Theater":
-                    Map.InitTheater(GameType);
+                    Map.InitTheater(GameInfo);
                     break;
             }
         }

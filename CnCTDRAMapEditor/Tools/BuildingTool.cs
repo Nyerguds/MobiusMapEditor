@@ -781,7 +781,7 @@ namespace MobiusEditor.Tools
         protected override void MapPropertiesChanged()
         {
             HouseType baseHouse;
-            if (!mockBuilding.IsPrebuilt && !mockBuilding.House.Equals(baseHouse = map.GetBaseHouse(plugin.GameType)))
+            if (!mockBuilding.IsPrebuilt && !mockBuilding.House.Equals(baseHouse = map.GetBaseHouse(plugin.GameInfo)))
             {
                 mockBuilding.House = baseHouse;
                 // Doesn't need a refresh call; that's handled by MockBuilding_PropertyChanged
@@ -803,7 +803,7 @@ namespace MobiusEditor.Tools
                         bibRender.Add(bibCellRender);
                     }
                 }
-                RenderInfo render = MapRenderer.RenderBuilding(plugin.GameType, new Point(0, 0), Globals.PreviewTileSize, Globals.PreviewTileScale, mockBuilding);
+                RenderInfo render = MapRenderer.RenderBuilding(plugin.GameInfo, new Point(0, 0), Globals.PreviewTileSize, Globals.PreviewTileScale, mockBuilding);
                 Size previewSize = mockBuilding.OverlapBounds.Size;
                 Bitmap buildingPreview = new Bitmap(previewSize.Width * Globals.PreviewTileWidth, previewSize.Height * Globals.PreviewTileHeight);
                 buildingPreview.SetResolution(96, 96);

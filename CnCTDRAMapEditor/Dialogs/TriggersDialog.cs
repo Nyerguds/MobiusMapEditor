@@ -51,10 +51,10 @@ namespace MobiusEditor.Dialogs
 
         private Trigger SelectedTrigger => SelectedItem?.Tag as Trigger;
 
-        public TriggersDialog(IGamePlugin plugin, int maxTriggers)
+        public TriggersDialog(IGamePlugin plugin)
         {
             this.plugin = plugin;
-            this.maxTriggers = maxTriggers;
+            this.maxTriggers = plugin.GameInfo.MaxTriggers;
             InitializeComponent();
             SetTriggerFilter(new TriggerFilter(plugin));
             lblTooLong.Text = "Trigger length exceeds " + maxLength + " characters!";

@@ -779,18 +779,7 @@ namespace MobiusEditor
             {
                 return;
             }
-            int maxTeams = 0;
-            switch (plugin.GameType)
-            {
-                case GameType.TiberianDawn:
-                case GameType.SoleSurvivor:
-                    maxTeams = TiberianDawn.Constants.MaxTeams;
-                    break;
-                case GameType.RedAlert:
-                    maxTeams = RedAlert.Constants.MaxTeams;
-                    break;
-            }
-            using (TeamTypesDialog ttd = new TeamTypesDialog(plugin, maxTeams))
+            using (TeamTypesDialog ttd = new TeamTypesDialog(plugin))
             {
                 ttd.StartPosition = FormStartPosition.CenterParent;
                 if (ttd.ShowDialog(this) == DialogResult.OK)
@@ -851,18 +840,7 @@ namespace MobiusEditor
             {
                 return;
             }
-            int maxTriggers = 0;
-            switch (plugin.GameType)
-            {
-                case GameType.TiberianDawn:
-                case GameType.SoleSurvivor:
-                    maxTriggers = TiberianDawn.Constants.MaxTriggers;
-                    break;
-                case GameType.RedAlert:
-                    maxTriggers = RedAlert.Constants.MaxTriggers;
-                    break;
-            }
-            using (TriggersDialog td = new TriggersDialog(plugin, maxTriggers))
+            using (TriggersDialog td = new TriggersDialog(plugin))
             {
                 td.StartPosition = FormStartPosition.CenterParent;
                 if (td.ShowDialog(this) == DialogResult.OK)
@@ -1229,11 +1207,33 @@ namespace MobiusEditor
                         // Ignore and just fall through.
                     }
                 }
-                MessageBox.Show(string.Format("Error loading {0}: {1}", fileInfo.Name, "Could not identify map type."), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(string.Format("Error loading {0}: Could not identify map type.", fileInfo.Name), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
+            GameInfo gType = GameTypeFactory.GetGameInfo(gameType);
+            TheaterType[] theaters = gType != null ? gType.AllTheaters: null;
+            TheaterType theaterObj = theaters == null ? null : theaters.Where(th => th.Name.Equals(theater, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+            if (theaterObj == null)
+            {
+                MessageBox.Show(String.Format("Unknown {0} theater \"{1}\"", gType.Name, theater), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            if (!theaterObj.IsAvailable())
+            {
+                string graphicsMode = Globals.UseClassicFiles ? "Classic" : "Remastered";
+                string message = string.Format("Error loading {0}: No assets loaded for {1} theater \"{2}\" in {3} graphics mode.",
+                    fileInfo.Name, gType.Name, theaterObj.Name, graphicsMode);
+                if (Globals.UseClassicFiles)
+                {
+                    message += String.Format("\n\nYou may need to adjust the \"{0}\" setting to point to a game folder containing {1}, or add {1} to the configured folder.",
+                        gType.ClassicFolderSetting, theaterObj.ClassicTileset + ".mix");
+                }
+                MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
             loadMultiThreader.ExecuteThreaded(
-                () => LoadFile(name, fileType, gameType, theater, isMegaMap),
+                () => LoadFile(name, fileType, gType, theater, isMegaMap),
                 PostLoad, true,
                 (e,l) => LoadUnloadUi(e, l, loadMultiThreader),
                 "Loading map");
@@ -1460,114 +1460,35 @@ namespace MobiusEditor
             }
         }
 
-        private static IGamePlugin LoadNewPlugin(GameType gameType, string theater, bool isMegaMap)
+        private static IGamePlugin LoadNewPlugin(GameInfo gameType, string theater, bool isMegaMap)
         {
             return LoadNewPlugin(gameType, theater, isMegaMap, false);
         }
 
-        private static IGamePlugin LoadNewPlugin(GameType gameType, string theater, bool isMegaMap, bool noImage)
+        private static IGamePlugin LoadNewPlugin(GameInfo gameType, string theater, bool isMegaMap, bool noImage)
         {
             // Get plugin type
             IGamePlugin plugin = null;
+            GameType tp = gameType.GameType;
+            plugin = gameType.CreatePlugin(!noImage, isMegaMap);
             RedAlert.GamePluginRA raPlugin = null;
-            if (gameType == GameType.TiberianDawn)
+            if (tp == GameType.RedAlert)
             {
-                plugin = new TiberianDawn.GamePluginTD(!noImage, isMegaMap);
-            }
-            else if (gameType == GameType.RedAlert)
-            {
-                raPlugin = new RedAlert.GamePluginRA(!noImage); // isMegaMap);
-                plugin = raPlugin;
-            }
-            else if (gameType == GameType.SoleSurvivor)
-            {
-                plugin = new SoleSurvivor.GamePluginSS(!noImage, isMegaMap);
+                raPlugin = (RedAlert.GamePluginRA)plugin;
             }
             // Get theater object
             TheaterTypeConverter ttc = new TheaterTypeConverter();
             TheaterType theaterType = ttc.ConvertFrom(new MapContext(plugin.Map, false), theater);
             // Resetting to a specific game type will take care of classic mode.
-            Globals.TheArchiveManager.Reset(gameType, theaterType);
-            Globals.TheGameTextManager.Reset(gameType);
-            Globals.TheTilesetManager.Reset(gameType, theaterType);
-            Globals.TheTeamColorManager.Reset(gameType, theaterType);
+            Globals.TheArchiveManager.Reset(tp, theaterType);
+            Globals.TheGameTextManager.Reset(tp);
+            Globals.TheTilesetManager.Reset(tp, theaterType);
+            Globals.TheTeamColorManager.Reset(tp, theaterType);
             // Load game-specific data
-            if (gameType == GameType.TiberianDawn)
-            {
-                Globals.TheTeamColorManager.Load(@"DATA\XML\CNCTDTEAMCOLORS.XML");
-                AddTeamColorsTD(Globals.TheTeamColorManager);
-            }
-            else if (gameType == GameType.RedAlert && raPlugin != null)
-            {
-                Byte[] rulesFile = Globals.TheArchiveManager.ReadFileClassic("rules.ini");
-                Byte[] rulesUpdFile = Globals.TheArchiveManager.ReadFileClassic("aftrmath.ini");
-                Byte[] rulesMpFile = Globals.TheArchiveManager.ReadFileClassic("mplayer.ini");
-                // This returns errors in original rules files. Ignore for now.
-                raPlugin.ReadRules(rulesFile);
-                raPlugin.ReadExpandRules(rulesUpdFile);
-                raPlugin.ReadMultiRules(rulesMpFile);
-                // Only one will be found.
-                Globals.TheTeamColorManager.Load(@"DATA\XML\CNCRATEAMCOLORS.XML");
-                Globals.TheTeamColorManager.Load("palette.cps");
-                AddTeamColorsRA(Globals.TheTeamColorManager);
-            }
-            else if (gameType == GameType.SoleSurvivor)
-            {
-                Globals.TheTeamColorManager.Load(@"DATA\XML\CNCTDTEAMCOLORS.XML");
-                AddTeamColorsTD(Globals.TheTeamColorManager);
-            }
+            gameType.InitializePlugin(plugin);
             // Needs to be done after the whole init, so colors reading is properly initialised.
             plugin.Map.FlagColors = plugin.GetFlagColors();
             return plugin;
-        }
-
-        private static void AddTeamColorsTD(ITeamColorManager teamColorManager)
-        {
-            // Only applicable for Remastered colors since I can't control those.
-            if (teamColorManager is TeamColorManager tcm)
-            {
-                // Remaster additions / tweaks
-                // Neutral
-                TeamColor teamColorSNeutral = new TeamColor(tcm);
-                teamColorSNeutral.Load(tcm.GetItem("GOOD"), "NEUTRAL");
-                tcm.AddTeamColor(teamColorSNeutral);
-                // Special
-                TeamColor teamColorSpecial = new TeamColor(tcm);
-                teamColorSpecial.Load(tcm.GetItem("GOOD"), "SPECIAL");
-                tcm.AddTeamColor(teamColorSpecial);
-                // Black for unowned.
-                TeamColor teamColorNone = new TeamColor(tcm);
-                teamColorNone.Load("NONE", "BASE_TEAM",
-                    Color.FromArgb(66, 255, 0), Color.FromArgb(0, 255, 56), 0,
-                    new Vector3(0.30f, -1.00f, 0.00f), new Vector3(0f, 1f, 1f), new Vector2(0.0f, 0.1f),
-                    new Vector3(0, 1, 1), new Vector2(0, 1), Color.FromArgb(61, 61, 59));
-                tcm.AddTeamColor(teamColorNone);
-                // Extra color for flag 7: metallic blue.
-                TeamColor teamColorSeven = new TeamColor(tcm);
-                teamColorSeven.Load(tcm.GetItem("BAD_UNIT"), "MULTI7");
-                tcm.AddTeamColor(teamColorSeven);
-                // Extra color for flag 8: copy of RA's purple.
-                TeamColor teamColorEight = new TeamColor(tcm);
-                teamColorEight.Load("MULTI8", "BASE_TEAM",
-                    Color.FromArgb(66, 255, 0), Color.FromArgb(0, 255, 56), 0,
-                    new Vector3(0.410f, 0.300f, 0.000f), new Vector3(0f, 1f, 1f), new Vector2(0.0f, 1.0f),
-                    new Vector3(0, 1, 1), new Vector2(0, 1), Color.FromArgb(77, 13, 255));
-                tcm.AddTeamColor(teamColorEight);
-            }
-        }
-
-        private static void AddTeamColorsRA(ITeamColorManager teamColorManager)
-        {
-            if (teamColorManager is TeamColorManager tcm)
-            {
-                // Remaster additions / tweaks
-                // "Neutral" in RA colors seems broken; makes stuff black, so remove it.
-                tcm.RemoveTeamColor("NEUTRAL");
-                // Special. Technically color "JP" exists for this, but it's wrong.
-                TeamColor teamColorSpecial = new TeamColor(tcm);
-                teamColorSpecial.Load(tcm.GetItem("SPAIN"), "SPECIAL");
-                tcm.AddTeamColor(teamColorSpecial);
-            }
         }
 
         /// <summary>
@@ -1611,7 +1532,8 @@ namespace MobiusEditor
             bool mapLoaded = false;
             try
             {
-                plugin = LoadNewPlugin(gameType, theater, isTdMegaMap);
+                GameInfo gType = GameTypeFactory.GetGameInfo(gameType);
+                plugin = LoadNewPlugin(gType, theater, isTdMegaMap);
                 // This initialises the theater
                 plugin.New(theater);
                 mapLoaded = true;
@@ -1692,7 +1614,7 @@ namespace MobiusEditor
         /// <param name="gameType">Game type (detected in advance)</param>
         /// <param name="isMegaMap">True if this is a megamap.</param>
         /// <returns></returns>
-        private static MapLoadInfo LoadFile(string loadFilename, FileType fileType, GameType gameType, string theater, bool isMegaMap)
+        private static MapLoadInfo LoadFile(string loadFilename, FileType fileType, GameInfo gameType, string theater, bool isMegaMap)
         {
             IGamePlugin plugin = null;
             bool mapLoaded = false;
@@ -1778,7 +1700,6 @@ namespace MobiusEditor
                 // Don't allow re-save as PGM; act as if this is a new map.
                 if (loadInfo.FileType == FileType.PGM || loadInfo.FileType == FileType.MEG)
                 {
-                    bool isRA = loadInfo.Plugin.GameType == GameType.RedAlert;
                     loadInfo.FileType = FileType.INI;
                     loadInfo.FileName = null;
                 }
@@ -1946,14 +1867,14 @@ namespace MobiusEditor
             viewIndicatorsToolStripMenuItem.Enabled = enable;
 
             // Special rules per game. These should be kept identical to those in ImageExportDialog.SetLayers
-            viewIndicatorsBuildingFakeLabelsMenuItem.Visible = !hasPlugin || plugin.GameType == GameType.RedAlert;
-            viewExtraIndicatorsEffectAreaRadiusMenuItem.Visible = !hasPlugin || plugin.GameType == GameType.RedAlert;
-            viewLayersBuildingsMenuItem.Visible = !hasPlugin || plugin.GameType != GameType.SoleSurvivor || !Globals.NoOwnedObjectsInSole;
-            viewLayersUnitsMenuItem.Visible = !hasPlugin || plugin.GameType != GameType.SoleSurvivor || !Globals.NoOwnedObjectsInSole;
-            viewLayersInfantryMenuItem.Visible = !hasPlugin || plugin.GameType != GameType.SoleSurvivor || !Globals.NoOwnedObjectsInSole;
-            viewIndicatorsBuildingRebuildLabelsMenuItem.Visible = !hasPlugin || plugin.GameType != GameType.SoleSurvivor;
-            viewIndicatorsFootballAreaMenuItem.Visible = !hasPlugin || plugin.GameType == GameType.SoleSurvivor;
-            viewIndicatorsOutlinesMenuItem.Visible = !hasPlugin || plugin.GameType != GameType.SoleSurvivor;
+            viewIndicatorsBuildingFakeLabelsMenuItem.Visible = !hasPlugin || plugin.GameInfo.SupportsMapLayer(MapLayerFlag.BuildingFakes);
+            viewExtraIndicatorsEffectAreaRadiusMenuItem.Visible = !hasPlugin || plugin.GameInfo.SupportsMapLayer(MapLayerFlag.EffectRadius);
+            viewLayersBuildingsMenuItem.Visible = !hasPlugin || plugin.GameInfo.SupportsMapLayer(MapLayerFlag.Buildings);
+            viewLayersUnitsMenuItem.Visible = !hasPlugin || plugin.GameInfo.SupportsMapLayer(MapLayerFlag.Units);
+            viewLayersInfantryMenuItem.Visible = !hasPlugin || plugin.GameInfo.SupportsMapLayer(MapLayerFlag.Infantry);
+            viewIndicatorsBuildingRebuildLabelsMenuItem.Visible = !hasPlugin || plugin.GameInfo.SupportsMapLayer(MapLayerFlag.BuildingRebuild);
+            viewIndicatorsFootballAreaMenuItem.Visible = !hasPlugin || plugin.GameInfo.SupportsMapLayer(MapLayerFlag.FootballArea);
+            viewIndicatorsOutlinesMenuItem.Visible = !hasPlugin || plugin.GameInfo.SupportsMapLayer(MapLayerFlag.OverlapOutlines);
         }
 
         private void CleanupTools(GameType gameType)
@@ -2079,11 +2000,6 @@ namespace MobiusEditor
                 }
             }
             MapLayerFlag active = ActiveLayers;
-            // Save some processing by just always removing this one.
-            if (plugin.GameType == GameType.TiberianDawn || plugin.GameType == GameType.SoleSurvivor)
-            {
-                active &= ~MapLayerFlag.BuildingFakes;
-            }
             if (toolDialog != null)
             {
                 activeToolForm = (Form)toolDialog;
@@ -2467,16 +2383,24 @@ namespace MobiusEditor
             {
                 return;
             }
-            if (plugin.GameType == GameType.SoleSurvivor)
+            if (!SteamworksUGC.IsInit)
             {
-                MessageBox.Show("Sole Survivor maps cannot be published to the Steam Workshop; they are not usable by the C&C Remastered Collection.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Steam interface is not initialized. To enable Workshop publishing, log into Steam and restart the editor.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-            if (plugin.Map.Theater.IsModTheater) // || plugin.Map.Theater.Tilesets.Count() == 0)
+            if (plugin.GameInfo.WorkshopTypeId == null)
+            {
+                MessageBox.Show(plugin.GameInfo.Name +  " maps cannot be published to the Steam Workshop; they are not usable by the C&C Remastered Collection.", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            if (plugin.Map.Theater.IsModTheater)
             {
                 if (!plugin.Map.BasicSection.SoloMission)
                 {
-                    MessageBox.Show("This map uses a nonstandard theater that is not usable by the C&C Remastered Collection. To avoid issues, these can not be published to the Steam Workshop.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show("Multiplayer maps with nonstandard theaters cannot be published to the Steam Workshop;" +
+                        " they are not usable by the C&C Remastered Collection without modding, and may cause issues on the official servers.", "Error",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
                 // If the mission is already published on Steam, don't bother asking this and just continue.
@@ -2488,26 +2412,23 @@ namespace MobiusEditor
                     return;
                 }
             }
-            if (plugin.GameType == GameType.TiberianDawn && plugin.IsMegaMap)
+            if (plugin.IsMegaMap && !plugin.GameInfo.MegamapOfficial)
             {
                 if (!plugin.Map.BasicSection.SoloMission)
                 {
-                    MessageBox.Show("Tiberian Dawn multiplayer megamaps cannot be published to the Steam Workshop; they are not usable by the C&C Remastered Collection without modding, and may cause issues on the official servers.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(plugin.GameInfo.Name + " multiplayer megamaps cannot be published to the Steam Workshop;" +
+                        " they are not usable by the C&C Remastered Collection without modding, and may cause issues on the official servers.", "Error",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
                 // If the mission is already published on Steam, don't bother asking this and just continue.
                 if (plugin.Map.SteamSection.PublishedFileId == 0
-                        && DialogResult.Yes != MessageBox.Show("Megamaps are not supported by Tiberian Dawn Remastered without modding!" +
+                        && DialogResult.Yes != MessageBox.Show("Megamaps are not supported by " + plugin.GameInfo.Name + " Remastered without modding!" +
                         " Are you sure you want to publish a mission that will be incompatible with the standard unmodded game?", "Warning",
                         MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2))
                 {
                     return;
                 }
-            }
-            if (!SteamworksUGC.IsInit)
-            {
-                MessageBox.Show("Steam interface is not initialized. To enable Workshop publishing, log into Steam and restart the editor.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
             }
             PromptSaveMap(ShowPublishDialog, false);
         }

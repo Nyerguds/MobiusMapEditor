@@ -24,13 +24,13 @@ namespace MobiusEditor.SoleSurvivor
     {
         private static readonly IEnumerable<string> commonTilesets = new string[] { "TD_Units", "TD_Structures", "TD_VFX", "Common_VFX" };
 
-        public static readonly TheaterType Desert = new TheaterType(0, "Desert", "desert", "des", "TD_Terrain_Desert".Yield().Concat(commonTilesets));
-        public static readonly TheaterType Jungle = new TheaterType(1, "Jungle", "jungle", "jun", true);
-        public static readonly TheaterType Temperate = new TheaterType(2, "Temperate", "temperat", "tem", "TD_Terrain_Temperate".Yield().Concat(commonTilesets));
+        public static readonly TheaterType Desert = new TheaterType(0, "Desert", "desert", "des", "TD_Terrain_Desert", commonTilesets);
+        public static readonly TheaterType Jungle = new TheaterType(1, "Jungle", "jungle", "jun", true, "TD_Terrain_Jungle", commonTilesets);
+        public static readonly TheaterType Temperate = new TheaterType(2, "Temperate", "temperat", "tem", "TD_Terrain_Temperate", commonTilesets);
         // Winter seems to fall back on Temperate for the Haystack graphics.
-        public static readonly TheaterType Winter = new TheaterType(3, "Winter", "winter", "win", "TD_Terrain_Winter".Yield().Concat(commonTilesets).Concat("TD_Terrain_Temperate".Yield()));
-        public static readonly TheaterType Snow = new TheaterType(4, "Snow", "snow", "sno", true);
-        public static readonly TheaterType Caribbean = new TheaterType(4, "Caribbean", "caribbea", "car", true);
+        public static readonly TheaterType Winter = new TheaterType(3, "Winter", "winter", "win", "TD_Terrain_Winter", commonTilesets.Concat("TD_Terrain_Temperate".Yield()));
+        public static readonly TheaterType Snow = new TheaterType(4, "Snow", "snow", "sno", true, "TD_Terrain_Snow", commonTilesets);
+        public static readonly TheaterType Caribbean = new TheaterType(4, "Caribbean", "caribbea", "car", true, "TD_Terrain_Caribbean", commonTilesets);
 
         private static TheaterType[] Types;
 
@@ -42,6 +42,11 @@ namespace MobiusEditor.SoleSurvivor
                  select field.GetValue(null) as TheaterType).ToArray();
         }
 
+        public static IEnumerable<TheaterType> GetAllTypes()
+        {
+            return Types;
+        }
+
         public static IEnumerable<TheaterType> GetTypes()
         {
             if (Globals.UseClassicFiles)
@@ -50,7 +55,7 @@ namespace MobiusEditor.SoleSurvivor
             }
             else
             {
-                return Types.Where(t => t.Tilesets.Count() > 0);
+                return Types.Where(t => t.IsRemasterTilesetFound);
             }
         }
     }

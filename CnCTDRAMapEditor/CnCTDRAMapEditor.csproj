@@ -326,6 +326,7 @@
       <DependentUpon>GameInstallationPathForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Globals.cs" />
+    <Compile Include="Model\GameTypeFactory.cs" />
     <Compile Include="Interface\IBrowsableType.cs" />
     <Compile Include="Interface\ICellOccupier.cs" />
     <Compile Include="Interface\ICellOverlapper.cs" />
@@ -398,6 +399,7 @@
     <Compile Include="RedAlert\Constants.cs" />
     <Compile Include="RedAlert\EventTypes.cs" />
     <Compile Include="RedAlert\GamePluginRA.cs" />
+    <Compile Include="RedAlert\GameInfoRedAlert.cs" />
     <Compile Include="RedAlert\House.cs" />
     <Compile Include="RedAlert\HouseTypes.cs" />
     <Compile Include="RedAlert\InfantryClassicRemap.cs" />
@@ -414,6 +416,7 @@
     <Compile Include="Render\MapRenderer.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="SoleSurvivor\GamePluginSS.cs" />
+    <Compile Include="SoleSurvivor\GameInfoSole.cs" />
     <Compile Include="SoleSurvivor\OverlayTypes.cs" />
     <Compile Include="SoleSurvivor\TheaterTypes.cs" />
     <Compile Include="Steamworks.NET\autogen\isteamapplist.cs" />
@@ -513,6 +516,7 @@
     <Compile Include="TiberianDawn\Constants.cs" />
     <Compile Include="TiberianDawn\EventTypes.cs" />
     <Compile Include="TiberianDawn\GamePluginTD.cs" />
+    <Compile Include="TiberianDawn\GameInfoTibDawn.cs" />
     <Compile Include="TiberianDawn\House.cs" />
     <Compile Include="SoleSurvivor\HouseTypes.cs" />
     <Compile Include="TiberianDawn\HouseTypes.cs" />

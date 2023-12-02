@@ -247,7 +247,7 @@ namespace MobiusEditor.Tools
             using (var g = Graphics.FromImage(mapPanel.MapImage))
             {
                 MapRenderer.SetRenderSettings(g, Globals.MapSmoothScale);
-                MapRenderer.Render(plugin.GameType, RenderMap, g, e.Points?.Where(p => map.Metrics.Contains(p)).ToHashSet(), Layers);
+                MapRenderer.Render(plugin.GameInfo, RenderMap, g, e.Points?.Where(p => map.Metrics.Contains(p)).ToHashSet(), Layers);
             }
         }
 
@@ -302,24 +302,24 @@ namespace MobiusEditor.Tools
             bool renderOverlay = (layersToRender & MapLayerFlag.Overlay) == MapLayerFlag.Overlay;
             if ((layersToRender & MapLayerFlag.OverlapOutlines) == MapLayerFlag.OverlapOutlines && autoHandleOutlines)
             {
-                if ((layersToRender & MapLayerFlag.Infantry) == MapLayerFlag.Infantry)
+                if ((layersToRender & MapLayerFlag.Infantry) == MapLayerFlag.Infantry && plugin.GameInfo.SupportsMapLayer(MapLayerFlag.Infantry))
                 {
                     MapRenderer.RenderAllInfantryOutlines(graphics, map, visibleCells, tileSize, true);
                 }
-                if ((layersToRender & MapLayerFlag.Units) == MapLayerFlag.Units)
+                if ((layersToRender & MapLayerFlag.Units) == MapLayerFlag.Units && plugin.GameInfo.SupportsMapLayer(MapLayerFlag.Units))
                 {
-                    MapRenderer.RenderAllVehicleOutlines(graphics, plugin.GameType, map, visibleCells, tileSize, true);
+                    MapRenderer.RenderAllVehicleOutlines(graphics, plugin.GameInfo, map, visibleCells, tileSize, true);
                 }
                 if (renderOverlay && !Globals.OutlineAllCrates)
                 {
-                    MapRenderer.RenderAllCrateOutlines(graphics, map, visibleCells, tileSize, tileScale, !Globals.OutlineAllCrates);
+                    MapRenderer.RenderAllCrateOutlines(graphics, plugin.GameInfo, map, visibleCells, tileSize, tileScale, !Globals.OutlineAllCrates);
                 }
             }
             // Special case: while it's not handled by OverlapOutlines, tools indicating that they handle the OverlapOutlines
             // manually will also paint this, so of all the outlines, it's drawn last.
             if (renderOverlay  && autoHandleOutlines && Globals.OutlineAllCrates)
             {
-                MapRenderer.RenderAllCrateOutlines(graphics, map, visibleCells, tileSize, tileScale, false);
+                MapRenderer.RenderAllCrateOutlines(graphics, plugin.GameInfo, map, visibleCells, tileSize, tileScale, false);
             }
             if ((layersToRender & MapLayerFlag.CellTriggers) == MapLayerFlag.CellTriggers
                 && (manuallyHandledLayers & MapLayerFlag.CellTriggers) == MapLayerFlag.None)
@@ -327,18 +327,18 @@ namespace MobiusEditor.Tools
                 MapRenderer.RenderCellTriggersSoft(graphics, map, visibleCells, tileSize);
             }
             if ((layersToRender & (MapLayerFlag.Waypoints | MapLayerFlag.FootballArea)) == (MapLayerFlag.Waypoints | MapLayerFlag.FootballArea)
-                && (manuallyHandledLayers & MapLayerFlag.WaypointsIndic) == MapLayerFlag.None && plugin.GameType == GameType.SoleSurvivor)
+                && (manuallyHandledLayers & MapLayerFlag.WaypointsIndic) == MapLayerFlag.None && plugin.GameInfo.SupportsMapLayer(MapLayerFlag.FootballArea))
             {
-                MapRenderer.RenderAllFootballAreas(graphics, map, visibleCells, tileSize, tileScale, plugin.GameType);
-                MapRenderer.RenderFootballAreaFlags(graphics, plugin.GameType, map, visibleCells, tileSize);
+                MapRenderer.RenderAllFootballAreas(graphics, map, visibleCells, tileSize, tileScale, plugin.GameInfo);
+                MapRenderer.RenderFootballAreaFlags(graphics, plugin.GameInfo, map, visibleCells, tileSize);
             }
             if ((layersToRender & (MapLayerFlag.Buildings | MapLayerFlag.EffectRadius)) == (MapLayerFlag.Buildings | MapLayerFlag.EffectRadius)
-                && (manuallyHandledLayers & MapLayerFlag.EffectRadius) == MapLayerFlag.None)
+                && (manuallyHandledLayers & MapLayerFlag.EffectRadius) == MapLayerFlag.None && plugin.GameInfo.SupportsMapLayer(MapLayerFlag.EffectRadius))
             {
                 MapRenderer.RenderAllBuildingEffectRadiuses(graphics, map, visibleCells, tileSize, map.GapRadius, null);
             }
             if ((layersToRender & (MapLayerFlag.Units | MapLayerFlag.EffectRadius)) == (MapLayerFlag.Units | MapLayerFlag.EffectRadius)
-                && (manuallyHandledLayers & MapLayerFlag.EffectRadius) == MapLayerFlag.None)
+                && (manuallyHandledLayers & MapLayerFlag.EffectRadius) == MapLayerFlag.None && plugin.GameInfo.SupportsMapLayer(MapLayerFlag.EffectRadius))
             {
                 MapRenderer.RenderAllUnitEffectRadiuses(graphics, map, visibleCells, tileSize, map.RadarJamRadius, null);
             }
@@ -353,12 +353,12 @@ namespace MobiusEditor.Tools
                 MapRenderer.RenderWayPointIndicators(graphics, map, visibleCells, tileSize, Color.LightGreen, false, true);
             }
             if ((layersToRender & (MapLayerFlag.Buildings | MapLayerFlag.BuildingFakes)) == (MapLayerFlag.Buildings | MapLayerFlag.BuildingFakes)
-                && (manuallyHandledLayers & MapLayerFlag.BuildingFakes) == MapLayerFlag.None)
+                && (manuallyHandledLayers & MapLayerFlag.BuildingFakes) == MapLayerFlag.None && plugin.GameInfo.SupportsMapLayer(MapLayerFlag.BuildingFakes))
             {
                 MapRenderer.RenderAllFakeBuildingLabels(graphics, map, visibleCells, tileSize);
             }
             if ((layersToRender & (MapLayerFlag.Buildings | MapLayerFlag.BuildingRebuild)) == (MapLayerFlag.Buildings | MapLayerFlag.BuildingRebuild)
-                && (manuallyHandledLayers & MapLayerFlag.BuildingRebuild) == MapLayerFlag.None)
+                && (manuallyHandledLayers & MapLayerFlag.BuildingRebuild) == MapLayerFlag.None && plugin.GameInfo.SupportsMapLayer(MapLayerFlag.BuildingRebuild))
             {
                 MapRenderer.RenderAllRebuildPriorityLabels(graphics, map, visibleCells, tileSize);
             }
@@ -381,11 +381,11 @@ namespace MobiusEditor.Tools
                 }
                 if ((layers & MapLayerFlag.Units) == MapLayerFlag.Units)
                 {
-                    MapRenderer.RenderAllVehicleOutlines(graphics, plugin.GameType, map, visibleCells, tileSize, true);
+                    MapRenderer.RenderAllVehicleOutlines(graphics, plugin.GameInfo, map, visibleCells, tileSize, true);
                 }
                 if (renderOverlay && !renderAllCrateOutlines)
                 {
-                    MapRenderer.RenderAllCrateOutlines(graphics, map, visibleCells, tileSize, tileScale, true);
+                    MapRenderer.RenderAllCrateOutlines(graphics, plugin.GameInfo, map, visibleCells, tileSize, tileScale, true);
                 }
             }
             // Special case: while it's not handled by the OverlapOutlines flag being enabled, tools indicating
@@ -393,7 +393,7 @@ namespace MobiusEditor.Tools
             // all the outlines, it's drawn last.
             if (renderOverlay && renderAllCrateOutlines)
             {
-                MapRenderer.RenderAllCrateOutlines(graphics, map, visibleCells, tileSize, tileScale, false);
+                MapRenderer.RenderAllCrateOutlines(graphics, plugin.GameInfo, map, visibleCells, tileSize, tileScale, false);
             }
         }
 

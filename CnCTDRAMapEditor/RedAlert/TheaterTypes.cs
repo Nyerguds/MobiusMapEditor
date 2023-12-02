@@ -24,15 +24,15 @@ namespace MobiusEditor.RedAlert
     {
         private static readonly IEnumerable<string> commonTilesets = new string[] { "RA_Units", "RA_Structures", "RA_VFX", "Common_VFX" };
 
-        public static readonly TheaterType Temperate = new TheaterType(0, "Temperate", "temperat", "tem", "RA_Terrain_Temperate".Yield().Concat(commonTilesets));
-        public static readonly TheaterType Snow = new TheaterType(1, "Snow", "snow", "sno", "RA_Terrain_Snow".Yield().Concat(commonTilesets));
-        public static readonly TheaterType Interior = new TheaterType(2, "Interior", "interior", "int", "RA_Terrain_Interior".Yield().Concat(commonTilesets));
+        public static readonly TheaterType Temperate = new TheaterType(0, "Temperate", "temperat", "tem", "RA_Terrain_Temperate", commonTilesets);
+        public static readonly TheaterType Snow = new TheaterType(1, "Snow", "snow", "sno", "RA_Terrain_Snow", commonTilesets);
+        public static readonly TheaterType Interior = new TheaterType(2, "Interior", "interior", "int", "RA_Terrain_Interior", commonTilesets);
         // CnCNet theaters
-        public static readonly TheaterType Winter = new TheaterType(3, "Winter", "winter", "win", true);
-        public static readonly TheaterType Desert = new TheaterType(4, "Desert", "desert", "des", true);
-        public static readonly TheaterType Jungle = new TheaterType(5, "Jungle", "jungle", "jun", true);
-        public static readonly TheaterType Barren = new TheaterType(6, "Barren", "barren", "bar", true);
-        public static readonly TheaterType Cave = new TheaterType(7, "Cave", "cave", "cav", true);
+        public static readonly TheaterType Winter = new TheaterType(3, "Winter", "winter", "win", true, "RA_Terrain_Winter", commonTilesets);
+        public static readonly TheaterType Desert = new TheaterType(4, "Desert", "desert", "des", true, "RA_Terrain_Desert", commonTilesets);
+        public static readonly TheaterType Jungle = new TheaterType(5, "Jungle", "jungle", "jun", true, "RA_Terrain_Jungle", commonTilesets);
+        public static readonly TheaterType Barren = new TheaterType(6, "Barren", "barren", "bar", true, "RA_Terrain_Barren", commonTilesets);
+        public static readonly TheaterType Cave = new TheaterType(7, "Cave", "cave", "cav", true, "RA_Terrain_Cave", commonTilesets);
 
         private static TheaterType[] Types;
 
@@ -44,6 +44,11 @@ namespace MobiusEditor.RedAlert
                  select field.GetValue(null) as TheaterType).ToArray();
         }
 
+        public static IEnumerable<TheaterType> GetAllTypes()
+        {
+            return Types;
+        }
+        
         public static IEnumerable<TheaterType> GetTypes()
         {
             if (Globals.UseClassicFiles)
@@ -52,7 +57,7 @@ namespace MobiusEditor.RedAlert
             }
             else
             {
-                return Types.Where(t => t.Tilesets.Count() > 0);
+                return Types.Where(t => t.IsRemasterTilesetFound);
             }
         }
     }

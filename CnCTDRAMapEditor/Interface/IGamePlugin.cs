@@ -16,6 +16,7 @@ using MobiusEditor.Model;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 
 namespace MobiusEditor.Interface
 {
@@ -28,16 +29,11 @@ namespace MobiusEditor.Interface
         PGM
     }
 
-    public enum GameType
-    {
-        None,
-        TiberianDawn,
-        RedAlert,
-        SoleSurvivor
-    }
-
     public interface IGamePlugin : IDisposable
     {
+        /// <summary>The game type information object.</summary>
+        GameInfo GameInfo { get; }
+
         /// <summary>Name of the game.</summary>
         string Name { get; }
 

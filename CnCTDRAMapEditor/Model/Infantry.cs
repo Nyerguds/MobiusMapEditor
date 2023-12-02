@@ -25,11 +25,11 @@ namespace MobiusEditor.Model
 {
     public enum InfantryStoppingType
     {
-        Center = 0,
-        UpperLeft = 1,
-        UpperRight = 2,
-        LowerLeft = 3,
-        LowerRight = 4
+        Center     /**/ = 0,
+        UpperLeft  /**/ = 1,
+        UpperRight /**/ = 2,
+        LowerLeft  /**/ = 3,
+        LowerRight /**/ = 4
     }
 
     public class Infantry : ITechno, INotifyPropertyChanged, ICloneable

@@ -22,21 +22,21 @@ namespace MobiusEditor.Model
     public enum WaypointFlag
     {
         None = 0,
-        Flare        = 1 << 0,
-        Home         = 1 << 1,
-        Reinforce    = 1 << 2,
-        Special      = 1 << 3,
-        CrateSpawn   = 1 << 4,
-        PlayerStart  = 1 << 5,
+        Flare        /**/ = 1 << 0,
+        Home         /**/ = 1 << 1,
+        Reinforce    /**/ = 1 << 2,
+        Special      /**/ = 1 << 3,
+        CrateSpawn   /**/ = 1 << 4,
+        PlayerStart  /**/ = 1 << 5,
         // Never referenced, but used internally by the flags system. These eight must be reserved on the bits directly following PlayerStart.
-        PlayerStart1 = PlayerStart | 1 << 6,
-        PlayerStart2 = PlayerStart | 1 << 7,
-        PlayerStart3 = PlayerStart | 1 << 8,
-        PlayerStart4 = PlayerStart | 1 << 9,
-        PlayerStart5 = PlayerStart | 1 << 10,
-        PlayerStart6 = PlayerStart | 1 << 11,
-        PlayerStart7 = PlayerStart | 1 << 12,
-        PlayerStart8 = PlayerStart | 1 << 13,
+        PlayerStart1 /**/ = PlayerStart | 1 << 6,
+        PlayerStart2 /**/ = PlayerStart | 1 << 7,
+        PlayerStart3 /**/ = PlayerStart | 1 << 8,
+        PlayerStart4 /**/ = PlayerStart | 1 << 9,
+        PlayerStart5 /**/ = PlayerStart | 1 << 10,
+        PlayerStart6 /**/ = PlayerStart | 1 << 11,
+        PlayerStart7 /**/ = PlayerStart | 1 << 12,
+        PlayerStart8 /**/ = PlayerStart | 1 << 13,
     }
 
     public class Waypoint : INamedType

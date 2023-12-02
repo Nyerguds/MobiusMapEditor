@@ -592,7 +592,7 @@ Unreleased
 * Added support for fan-added theaters available in CnCNet: Snow for TD; Desert, Jungle, Barren and Cave for RA. These only work in classic mode, if their theater mix files are found in the configured classic files folder.
 * Mouse zoom is now disabled during drag-scroll operations, since it invariably messed up the position calculations.
 * Map templates, Smudge and Overlay are no longer restricted to specific theaters; if the files exist in a theater, they are allowed.
-* Theater-sensitive civilian buildings are no longer restricted to specific theaters; if they exist in a theater, they are allowed. Military buildings, incuding the theater-sensitive Misile Silo and Pillbox in RA, are always usable, no matter whether the theater has graphics for them.
+* Theater-sensitive civilian buildings are no longer restricted to specific theaters; if they exist in a theater, they are allowed. Military buildings, incuding the theater-sensitive Missile Silo and Pillbox in RA, are always usable, no matter whether the theater has graphics for them.
 * On Interior maps, the "ConvertRaObsoleteClear" logic will now generate spots of passable terrain outside the map border on any point where passable terrain touches the border, to allow potential reinforcements to enter the map there.
 * The Teamtypes window will no longer show the trigger info label when editing a TD map.
 * Added fix for semicolons cutting off briefings.
@@ -600,5 +600,5 @@ Unreleased
 * The Digest section will now also be removed from TD maps.
 * Upgraded the logic to detect missing rules for ant-related objects on RA maps, so it includes the Mandible weapon, and checks in triggers too. The check now also goes through the rules files, so when using a rules mod does define these things, no warnings will be shown.
 * Added config option for the behaviour to recolour the classic DOS Einstein to RA95/remastered colours.
-* Made the stage-2 ROAD exception more generic, so it is more easily reusable and configurable. (This will be usable later when the editor switches to ini configurations.)
 * Added "Info" menu, containing general program info, a link to the Github website, and an update function.
+* Fixed the CONC pavement connecting in TD to match the game 100%. There is also an alternate mode available, through the parameter "FixConcretePavement", which shows the pavement as it was intended to be if the game's connection logic actually functioned correctly.

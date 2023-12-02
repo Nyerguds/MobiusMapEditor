@@ -57,10 +57,10 @@ namespace MobiusEditor.Dialogs
         private TeamMission defaultMission;
         private ToolTipFixer ttf;
 
-        public TeamTypesDialog(IGamePlugin plugin, int maxTeams)
+        public TeamTypesDialog(IGamePlugin plugin)
         {
             this.plugin = plugin;
-            this.maxTeams = maxTeams;
+            this.maxTeams = plugin.GameInfo.MaxTeams;
             this.technoTypes = plugin.Map.TeamTechnoTypes;
 
             InitializeComponent();

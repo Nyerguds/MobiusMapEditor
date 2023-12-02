@@ -53,7 +53,8 @@ namespace MobiusEditor.Dialogs
             this.lbTheaters = new System.Windows.Forms.ListBox();
             this.chkSingleplayer = new System.Windows.Forms.CheckBox();
             this.chkMegamap = new System.Windows.Forms.CheckBox();
-            this.lblWarning = new System.Windows.Forms.Label();
+            this.lblWarnMegamap = new System.Windows.Forms.Label();
+            this.lblWarnModTheater = new System.Windows.Forms.Label();
             this.tableLayoutPanel1.SuspendLayout();
             this.flowLayoutPanel1.SuspendLayout();
             this.flowLayoutPanel2.SuspendLayout();
@@ -75,7 +76,7 @@ namespace MobiusEditor.Dialogs
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 13F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(356, 324);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(356, 352);
             this.tableLayoutPanel1.TabIndex = 0;
             // 
             // flowLayoutPanel1
@@ -86,7 +87,7 @@ namespace MobiusEditor.Dialogs
             this.flowLayoutPanel1.Controls.Add(this.btnOK);
             this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.flowLayoutPanel1.FlowDirection = System.Windows.Forms.FlowDirection.RightToLeft;
-            this.flowLayoutPanel1.Location = new System.Drawing.Point(2, 295);
+            this.flowLayoutPanel1.Location = new System.Drawing.Point(2, 323);
             this.flowLayoutPanel1.Margin = new System.Windows.Forms.Padding(2);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
             this.flowLayoutPanel1.Size = new System.Drawing.Size(352, 27);
@@ -122,13 +123,14 @@ namespace MobiusEditor.Dialogs
             this.flowLayoutPanel2.Controls.Add(this.groupBox2);
             this.flowLayoutPanel2.Controls.Add(this.chkSingleplayer);
             this.flowLayoutPanel2.Controls.Add(this.chkMegamap);
-            this.flowLayoutPanel2.Controls.Add(this.lblWarning);
+            this.flowLayoutPanel2.Controls.Add(this.lblWarnMegamap);
+            this.flowLayoutPanel2.Controls.Add(this.lblWarnModTheater);
             this.flowLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.flowLayoutPanel2.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
             this.flowLayoutPanel2.Location = new System.Drawing.Point(2, 2);
             this.flowLayoutPanel2.Margin = new System.Windows.Forms.Padding(2);
             this.flowLayoutPanel2.Name = "flowLayoutPanel2";
-            this.flowLayoutPanel2.Size = new System.Drawing.Size(352, 289);
+            this.flowLayoutPanel2.Size = new System.Drawing.Size(352, 317);
             this.flowLayoutPanel2.TabIndex = 1;
             // 
             // groupBox1
@@ -172,6 +174,7 @@ namespace MobiusEditor.Dialogs
             this.lbTheaters.Name = "lbTheaters";
             this.lbTheaters.Size = new System.Drawing.Size(326, 69);
             this.lbTheaters.TabIndex = 0;
+            this.lbTheaters.SelectedIndexChanged += new System.EventHandler(this.lbTheaters_SelectedIndexChanged);
             this.lbTheaters.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.LbTheaters_MouseDoubleClick);
             // 
             // chkSingleplayer
@@ -198,18 +201,30 @@ namespace MobiusEditor.Dialogs
             this.chkMegamap.UseVisualStyleBackColor = true;
             this.chkMegamap.CheckedChanged += new System.EventHandler(this.ChkMegamap_CheckedChanged);
             // 
-            // lblWarning
+            // lblWarnMegamap
             // 
-            this.lblWarning.AutoSize = true;
-            this.lblWarning.ForeColor = System.Drawing.Color.Red;
-            this.lblWarning.Location = new System.Drawing.Point(7, 247);
-            this.lblWarning.Margin = new System.Windows.Forms.Padding(7, 3, 3, 3);
-            this.lblWarning.Name = "lblWarning";
-            this.lblWarning.Size = new System.Drawing.Size(331, 26);
-            this.lblWarning.TabIndex = 3;
-            this.lblWarning.Text = "Warning: the Sole Survivor mega map format is not supported by the Remastered Col" +
-    "lection without modding.";
-            this.lblWarning.Visible = false;
+            this.lblWarnMegamap.AutoSize = true;
+            this.lblWarnMegamap.ForeColor = System.Drawing.Color.Red;
+            this.lblWarnMegamap.Location = new System.Drawing.Point(7, 247);
+            this.lblWarnMegamap.Margin = new System.Windows.Forms.Padding(7, 3, 3, 3);
+            this.lblWarnMegamap.Name = "lblWarnMegamap";
+            this.lblWarnMegamap.Size = new System.Drawing.Size(331, 26);
+            this.lblWarnMegamap.TabIndex = 3;
+            this.lblWarnMegamap.Text = "Warning: the Sole Survivor mega map format is not supported by the game without m" +
+    "odding.";
+            this.lblWarnMegamap.Visible = false;
+            // 
+            // lblWarnModTheater
+            // 
+            this.lblWarnModTheater.AutoSize = true;
+            this.lblWarnModTheater.ForeColor = System.Drawing.Color.Red;
+            this.lblWarnModTheater.Location = new System.Drawing.Point(7, 279);
+            this.lblWarnModTheater.Margin = new System.Windows.Forms.Padding(7, 3, 3, 3);
+            this.lblWarnModTheater.Name = "lblWarnModTheater";
+            this.lblWarnModTheater.Size = new System.Drawing.Size(333, 26);
+            this.lblWarnModTheater.TabIndex = 3;
+            this.lblWarnModTheater.Text = "Warning: this is a modded theater. It is not supported by the game by default.";
+            this.lblWarnModTheater.Visible = false;
             // 
             // NewMapDialog
             // 
@@ -217,7 +232,7 @@ namespace MobiusEditor.Dialogs
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(356, 324);
+            this.ClientSize = new System.Drawing.Size(356, 352);
             this.ControlBox = false;
             this.Controls.Add(this.tableLayoutPanel1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
@@ -252,9 +267,10 @@ namespace MobiusEditor.Dialogs
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.CheckBox chkMegamap;
-        private System.Windows.Forms.Label lblWarning;
+        private System.Windows.Forms.Label lblWarnMegamap;
         private System.Windows.Forms.ListBox lbGames;
         private System.Windows.Forms.ListBox lbTheaters;
         private System.Windows.Forms.CheckBox chkSingleplayer;
+        private System.Windows.Forms.Label lblWarnModTheater;
     }
 }

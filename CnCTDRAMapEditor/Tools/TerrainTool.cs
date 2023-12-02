@@ -145,7 +145,7 @@ namespace MobiusEditor.Tools
                     mapPanel.Invalidate();
                     selectedTerrainProperties?.Close();
                     // only TD supports triggers ("Attacked" type) on terrain types.
-                    if (plugin.GameType == GameType.TiberianDawn)
+                    if (plugin.Map.TerrainActionTypes.Count > 0 || plugin.Map.TerrainEventTypes.Count > 0)
                     {
                         Terrain preEdit = terrain.Clone();
                         selectedTerrainProperties = new TerrainPropertiesPopup(terrainProperties.Plugin, terrain);
@@ -570,8 +570,9 @@ namespace MobiusEditor.Tools
             }
             else
             {
+                bool hasTerrainTriggers = plugin.Map.TerrainActionTypes.Count > 0 || plugin.Map.TerrainEventTypes.Count > 0;
                 statusLbl.Text = "Shift to enter placement mode, Left-Click drag to move terrain, "
-                    + (plugin.GameType == GameType.TiberianDawn ? "Double-Click to update terrain properties, " : String.Empty)
+                    + (hasTerrainTriggers ? "Double-Click to update terrain properties, " : String.Empty)
                     + "Right-Click to pick terrain";
             }
         }

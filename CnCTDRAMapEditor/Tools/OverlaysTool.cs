@@ -209,15 +209,18 @@ namespace MobiusEditor.Tools
             if (map.Metrics.GetCell(location, out int cell))
             {
                 Overlay overlay = new Overlay { Type = selected, Icon = 0 };
-                if (map.Overlay[location] == null)
+                Overlay cur = map.Overlay[location];
+                if (cur == null || Map.IsIgnorableOverlay(cur))
                 {
                     if (!undoOverlays.ContainsKey(cell))
                     {
                         undoOverlays[cell] = map.Overlay[cell];
                     }
                     map.Overlay[cell] = overlay;
+                    Rectangle refreshArea = Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1);
+                    map.UpdateConcreteOverlays(refreshArea.Points().ToHashSet());
                     redoOverlays[cell] = overlay;
-                    mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1));
+                    mapPanel.Invalidate(map, refreshArea);
                 }
             }
         }
@@ -227,15 +230,17 @@ namespace MobiusEditor.Tools
             if (map.Metrics.GetCell(location, out int cell))
             {
                 Overlay overlay = map.Overlay[cell];
-                if (overlay?.Type.IsOverlay ?? false)
+                if (overlay != null && overlay.Type.IsOverlay && !Map.IsIgnorableOverlay(overlay))
                 {
                     if (!undoOverlays.ContainsKey(cell))
                     {
                         undoOverlays[cell] = map.Overlay[cell];
                     }
                     map.Overlay[cell] = null;
+                    Rectangle refreshArea = Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1);
+                    map.UpdateConcreteOverlays(refreshArea.Points().ToHashSet());
                     redoOverlays[cell] = null;
-                    mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1));
+                    mapPanel.Invalidate(map, refreshArea);
                 }
             }
         }
@@ -349,7 +354,7 @@ namespace MobiusEditor.Tools
         private void PickOverlay(Point location)
         {
             Overlay overlay = map.Overlay[location];
-            if (overlay != null && overlay.Type.IsOverlay)
+            if (overlay != null && overlay.Type.IsOverlay && !Map.IsIgnorableOverlay(overlay))
             {
                 SelectedOverlayType = overlay.Type;
             }
@@ -368,7 +373,7 @@ namespace MobiusEditor.Tools
                     Type = overlayType,
                     Icon = 0
                 };
-                (Rectangle, Action<Graphics>) render = MapRenderer.RenderOverlay(plugin.GameType, new Point(0,0), Globals.PreviewTileSize, Globals.PreviewTileScale, mockOverlay);
+                (Rectangle, Action<Graphics>) render = MapRenderer.RenderOverlay(plugin.GameInfo, new Point(0,0), Globals.PreviewTileSize, Globals.PreviewTileScale, mockOverlay);
                 if (!render.Item1.IsEmpty)
                 {
                     using (Graphics g = Graphics.FromImage(overlayPreview))
@@ -433,10 +438,13 @@ namespace MobiusEditor.Tools
             {
                 navigationWidget.MouseoverSize = new Size(1, 1);
             }
-            if (previewMap.Overlay[cell] == null)
+            Overlay onCell = previewMap.Overlay[cell];
+            if (onCell == null || Map.IsIgnorableOverlay(onCell))
             {
                 previewMap.Overlay[cell] = new Overlay { Type = SelectedOverlayType, Icon = 0, Tint = Color.FromArgb(128, SelectedOverlayType.Tint) };
-                mapPanel.Invalidate(previewMap, Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1));
+                Rectangle refreshArea = Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1);
+                previewMap.UpdateConcreteOverlays(refreshArea.Points().ToHashSet());
+                mapPanel.Invalidate(previewMap, refreshArea);
             }
         }
 
@@ -451,7 +459,7 @@ namespace MobiusEditor.Tools
             int secondRowStartCell = map.Metrics.Width;
             int lastRowStartCell = map.Metrics.Length - map.Metrics.Width;
             MapRenderer.RenderAllBoundsFromCell(graphics, boundRenderCells, Globals.MapTileSize,
-                previewMap.Overlay.Where(x => x.Value.Type.IsOverlay && x.Cell >= secondRowStartCell && x.Cell < lastRowStartCell), previewMap.Metrics);
+                previewMap.Overlay.Where(x => x.Value.Type.IsOverlay && x.Cell >= secondRowStartCell && x.Cell < lastRowStartCell && !Map.IsIgnorableOverlay(x.Value)), previewMap.Metrics);
         }
 
         public override void Activate()

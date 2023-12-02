@@ -2,8 +2,8 @@
 {
     public enum BooleanStringStyle
     {
-        YesNo = 0,
-        TrueFalse = 1,
-        OneZero = 2
+        YesNo     /**/ = 0,
+        TrueFalse /**/ = 1,
+        OneZero   /**/ = 2
     }
 }

@@ -238,14 +238,14 @@ namespace MobiusEditor.Tools
             if (clear.Thumbnail == null || !clear.Initialised)
             {
                 // Clear should ALWAYS be initialised and available, even if missing.
-                clear.Init(plugin.GameType, plugin.Map.Theater, true, false);
+                clear.Init(plugin.GameInfo, plugin.Map.Theater, true, false);
             }
             ExplorerComparer expl = new ExplorerComparer();
             // Special case: tiles that are not initialised, but are present on the map. Initialise with forced dummy generation.
             // This is really only for the tile FF "research mode" on RA maps, or if FilterTheaterObjects is disabled.
             foreach (TemplateType templateType in plugin.Map.Templates.Select(ct => ct.Value?.Type).Distinct().Where(t => t != null && !t.Initialised))
             {
-                templateType.Init(plugin.GameType, plugin.Map.Theater, true, false);
+                templateType.Init(plugin.GameInfo, plugin.Map.Theater, true, false);
             }
             var templateTypes = plugin.Map.TemplateTypes
                 .Where(t => t.Thumbnail != null && (!Globals.FilterTheaterObjects || t.ExistsInTheater)
@@ -1021,7 +1021,7 @@ namespace MobiusEditor.Tools
                 // This is really only for the tile FF "research mode" on RA maps, or if FilterTheaterObjects is disabled.
                 if (selected.Thumbnail == null || !selected.Initialised)
                 {
-                    selected.Init(plugin.GameType, plugin.Map.Theater, true, false);
+                    selected.Init(plugin.GameInfo, plugin.Map.Theater, true, false);
                 }
                 CellMetrics templateTypeMetrics = new CellMetrics(selected.ThumbnailIconWidth, selected.ThumbnailIconHeight);
                 CellGrid<Template> templates = null;

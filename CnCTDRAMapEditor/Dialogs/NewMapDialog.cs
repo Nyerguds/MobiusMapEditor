@@ -12,7 +12,6 @@
 // distributed with this program. You should have received a copy of the
 // GNU General Public License along with permitted additional restrictions
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
-using MobiusEditor.Interface;
 using MobiusEditor.Model;
 using MobiusEditor.Utility;
 using System;
@@ -24,30 +23,12 @@ namespace MobiusEditor.Dialogs
 {
     public partial class NewMapDialog : Form
     {
-        private GameType[] gameTypes = new[]
-        {
-            GameType.TiberianDawn,
-            GameType.RedAlert,
-            GameType.SoleSurvivor
-        };
+        private readonly GameInfo[] gameInfos;
+        private readonly GameType[] gameTypes;
+        private bool loading = false;
+        private bool[] optionalsChecked;
+        private bool theaterChanged = false;
 
-        private Dictionary<GameType, String> gameTypeNames = new Dictionary<GameType, string>
-        {
-            { GameType.TiberianDawn, "Tiberian Dawn" },
-            { GameType.RedAlert, "Red Alert" },
-            { GameType.SoleSurvivor, "Sole Survivor" }
-        };
-
-        private Dictionary<GameType, TheaterType[]> theaters = new Dictionary<GameType, TheaterType[]>()
-        {
-            { GameType.TiberianDawn, TiberianDawn.TheaterTypes.GetTypes().ToArray() },
-            { GameType.RedAlert, RedAlert.TheaterTypes.GetTypes().ToArray() },
-            { GameType.SoleSurvivor, TiberianDawn.TheaterTypes.GetTypes().ToArray() }
-        };
-
-        private bool tdMegaMapChecked = false;
-
-        private GameType gameType = GameType.TiberianDawn;
         public GameType GameType
         {
             get { return ListItem.GetValueFromListBox<GameType>(lbGames); }
@@ -61,16 +42,27 @@ namespace MobiusEditor.Dialogs
 
         public bool MegaMap
         {
-            get { return chkMegamap.Checked; }
+            get
+            {
+                GameInfo gi = gameInfos[(int)GameType];
+                return gi.MegamapSupport && (!gi.MegamapOptional || chkMegamap.Checked);
+            }
         }
 
         public bool SinglePlayer
         {
-            get { return chkSingleplayer.Checked && gameType != GameType.SoleSurvivor; }
+            get
+            {
+                GameInfo gi = gameInfos[(int)GameType];
+                return chkSingleplayer.Checked && gi.HasSinglePlayer;
+            }
         }
 
         public NewMapDialog(bool fromImage)
         {
+            this.gameInfos = GameTypeFactory.GetGameInfos();
+            this.gameTypes = GameTypeFactory.GetGameTypes();
+            optionalsChecked = new bool[this.gameTypes.Length];
             InitializeComponent();
             if (fromImage)
             {
@@ -78,7 +70,7 @@ namespace MobiusEditor.Dialogs
             }
             foreach (GameType gt in this.gameTypes)
             {
-                lbGames.Items.Add(new ListItem<GameType>(gt, this.gameTypeNames[gt]));
+                lbGames.Items.Add(new ListItem<GameType>(gt, this.gameInfos[(int)gt].Name));
             }
             lbGames.SelectedIndex = 0;
             LbGames_SelectedIndexChanged(null, null);
@@ -86,56 +78,87 @@ namespace MobiusEditor.Dialogs
 
         private void LbGames_SelectedIndexChanged(Object sender, EventArgs e)
         {
-            if (lbGames.SelectedIndex >= gameTypes.Length)
+            try
             {
-                lbGames.SelectedIndex = 0;
-                return;
-            }
-            String selectedTheater = lbTheaters.Text;
-            gameType = gameTypes[lbGames.SelectedIndex];
-            lbTheaters.Items.Clear();
-            int selectIndex = -1;
-            if (theaters.TryGetValue(gameType, out TheaterType[] ttypes))
-            {
+                loading = true;
+                if (lbGames.SelectedIndex >= gameTypes.Length)
+                {
+                    lbGames.SelectedIndex = 0;
+                    return;
+                }
+                String selectedTheater = lbTheaters.Text;
+                GameType gameType = GameType;
+                lbTheaters.Items.Clear();
+                int selectIndex = -1;
+                GameInfo gi = gameInfos[(int)gameType];
+                TheaterType[] ttypes = gi.AvailableTheaters;
                 for (Int32 i = 0; i < ttypes.Length; ++i)
                 {
                     TheaterType tt = ttypes[i];
                     lbTheaters.Items.Add(new ListItem<TheaterType>(tt, tt.Name));
-                    if (String.Equals(selectedTheater, tt.Name, StringComparison.OrdinalIgnoreCase))
+                    if (theaterChanged && String.Equals(selectedTheater, tt.Name, StringComparison.OrdinalIgnoreCase))
                     {
                         selectIndex = i;
                     }
                 }
+                lbTheaters.SelectedIndex = selectIndex != -1 ? selectIndex : 0;
+                if (!gi.MegamapSupport)
+                {
+                    chkMegamap.Checked = false;
+                    chkMegamap.Visible = false;
+                }
+                else
+                {
+                    if (gi.MegamapOptional)
+                    {
+                        chkMegamap.Visible = true;
+                        chkMegamap.Checked = gi.MegamapDefault || optionalsChecked[(int)gameType];
+                    }
+                    else
+                    {
+                        chkMegamap.Visible = false;
+                        chkMegamap.Checked = true;
+                    }
+                }
+                AdjustBottomInfo();
             }
-            lbTheaters.SelectedIndex = selectIndex != -1 ? selectIndex : 0;
-            switch (gameType)
+            finally
             {
-                case GameType.TiberianDawn:
-                    chkMegamap.Checked = tdMegaMapChecked;
-                    break;
-                case GameType.RedAlert:
-                    break;
-                case GameType.SoleSurvivor:
-                    chkMegamap.Checked = true;
-                    break;
+                loading = false;
             }
+        }
+
+        private void lbTheaters_SelectedIndexChanged(Object sender, EventArgs e)
+        {
             AdjustBottomInfo();
+            if (!loading)
+            {
+                theaterChanged = true;
+            }
+
         }
 
         private void ChkMegamap_CheckedChanged(Object sender, EventArgs e)
         {
-            if (gameType == GameType.TiberianDawn)
+            GameType gameType = GameType;
+            GameInfo gi = gameInfos[(int)gameType];
+            if (gi.MegamapSupport && gi.MegamapOptional && !gi.MegamapDefault)
             {
-                tdMegaMapChecked = chkMegamap.Checked;
+                optionalsChecked[(int)gameType] = chkMegamap.Checked;
             }
             AdjustBottomInfo();
         }
 
         private void AdjustBottomInfo()
         {
-            chkSingleplayer.Visible = gameType != GameType.SoleSurvivor;
-            chkMegamap.Visible = gameType == GameType.TiberianDawn || gameType == GameType.SoleSurvivor;
-            lblWarning.Visible = !Globals.UseClassicFiles && (chkMegamap.Visible && chkMegamap.Checked) && gameType != GameType.SoleSurvivor;
+            GameType gameType = GameType;
+            GameInfo gi = gameInfos[(int)gameType];
+            chkSingleplayer.Visible = gi.HasSinglePlayer;
+            bool allowMegamap = gi.MegamapSupport && gi.MegamapOptional;
+            chkMegamap.Visible = allowMegamap;
+            lblWarnMegamap.Visible = allowMegamap && chkMegamap.Checked && !gi.MegamapOfficial;
+            TheaterType selected = ListItem.GetValueFromListBox<TheaterType>(lbTheaters);
+            lblWarnModTheater.Visible = selected != null && selected.IsModTheater;
         }
 
         private void LbTheaters_MouseDoubleClick(Object sender, MouseEventArgs e)

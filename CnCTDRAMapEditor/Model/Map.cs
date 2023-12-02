@@ -34,31 +34,31 @@ namespace MobiusEditor.Model
     [Flags]
     public enum MapLayerFlag: int
     {
-        None            = 0,
-        Template        = 1 << 00,
-        Terrain         = 1 << 01,
-        Infantry        = 1 << 02,
-        Units           = 1 << 03,
-        Buildings       = 1 << 04,
-        Overlay         = 1 << 05,
-        Walls           = 1 << 06,
-        Resources       = 1 << 07,
-        Smudge          = 1 << 08,
-        Waypoints       = 1 << 09,
+        None            /**/ = 0,
+        Template        /**/ = 1 << 00,
+        Terrain         /**/ = 1 << 01,
+        Infantry        /**/ = 1 << 02,
+        Units           /**/ = 1 << 03,
+        Buildings       /**/ = 1 << 04,
+        Overlay         /**/ = 1 << 05,
+        Walls           /**/ = 1 << 06,
+        Resources       /**/ = 1 << 07,
+        Smudge          /**/ = 1 << 08,
+        Waypoints       /**/ = 1 << 09,
 
-        Boundaries      = 1 << 10,
-        MapSymmetry     = 1 << 11,
-        MapGrid         = 1 << 12,
-        WaypointsIndic  = 1 << 13,
-        FootballArea    = 1 << 14,
-        CellTriggers    = 1 << 15,
-        TechnoTriggers  = 1 << 16,
-        BuildingRebuild = 1 << 17,
-        BuildingFakes   = 1 << 18,
-        EffectRadius    = 1 << 19,
-        WaypointRadius  = 1 << 20,
-        OverlapOutlines = 1 << 21,
-        LandTypes       = 1 << 22,
+        Boundaries      /**/ = 1 << 10,
+        MapSymmetry     /**/ = 1 << 11,
+        MapGrid         /**/ = 1 << 12,
+        WaypointsIndic  /**/ = 1 << 13,
+        FootballArea    /**/ = 1 << 14,
+        CellTriggers    /**/ = 1 << 15,
+        TechnoTriggers  /**/ = 1 << 16,
+        BuildingRebuild /**/ = 1 << 17,
+        BuildingFakes   /**/ = 1 << 18,
+        EffectRadius    /**/ = 1 << 19,
+        WaypointRadius  /**/ = 1 << 20,
+        OverlapOutlines /**/ = 1 << 21,
+        LandTypes       /**/ = 1 << 22,
 
         OverlayAll = Resources | Walls | Overlay,
         Technos = Terrain | Infantry | Units | Buildings,
@@ -103,11 +103,42 @@ namespace MobiusEditor.Model
 
     public class Map : ICloneable
     {
+        /// <summary>
+        /// Enum specifying how filled a cell of concrete is.
+        /// </summary>
+        [Flags]
+        private enum ConcFill
+        {
+            None   /**/ = 0,
+            Center /**/ = 1 << 0,
+            Top    /**/ = 1 << 1,
+            Bottom /**/ = 1 << 2,
+        }
+
+        /// <summary>
+        /// Enum for adjacent positions around a concrete cell to refresh, representing the positions as bits.
+        /// </summary>
+        [Flags]
+        private enum ConcAdj
+        {
+            None       /**/ = 0,
+            Top        /**/ = 1 << 0,
+            TopSide    /**/ = 1 << 1,
+            Side       /**/ = 1 << 2,
+            BottomSide /**/ = 1 << 3,
+            Bottom     /**/ = 1 << 4,
+        }
+
         private static readonly int randomSeed;
+        private static Dictionary<ConcFill, int> concreteStateToIcon = new Dictionary<ConcFill, int>();
 
         static Map()
         {
             randomSeed = Guid.NewGuid().GetHashCode();
+            concreteStateToIcon = iconFillStates.Select((value, index) => new { value, index })
+                      .ToDictionary(pair => pair.value, pair => pair.index);
+            // Add default, since it does not appear in the cellStates.
+            concreteStateToIcon.Add(ConcFill.None, 0);
         }
 
         // Keep this list synchronised with the MapLayerFlag enum
@@ -141,6 +172,26 @@ namespace MobiusEditor.Model
 
         private static int[] tiberiumStages = new int[] { 0, 1, 3, 4, 6, 7, 8, 10, 11 };
         private static int[] gemStages = new int[] { 0, 0, 0, 1, 1, 1, 2, 2, 2 };
+        /// <summary>Facings to check for adjacent cells around even-cell concrete. The order in this array matches the bits order in the ConcAdj enum.</summary>
+        private static FacingType[] concreteCheckEven = { FacingType.North, FacingType.NorthWest, FacingType.West, FacingType.SouthWest, FacingType.South };
+        /// <summary>Facings to check for adjacent cells around odd-cell concrete. The order in this array matches the bits order in the ConcAdj enum.</summary>
+        private static FacingType[] concreteCheckOdd = { FacingType.North, FacingType.NorthEast, FacingType.East, FacingType.SouthEast, FacingType.South };
+
+        /// <summary>
+        /// Represents the order of the different fill states inside the CONC sprite file.
+        /// Each state has two icons; one for odd and one for even cells. Note that for some
+        /// reason, the first state has these switched on the sprite; it has the even graphics first.
+        /// </summary>
+        private static ConcFill[] iconFillStates = {
+            /* 0 */ ConcFill.Center,
+            /* 1 */ ConcFill.Center | ConcFill.Bottom | ConcFill.Top,
+            /* 2 */ ConcFill.Top,
+            /* 3 */ ConcFill.Bottom,
+            /* 4 */ ConcFill.Center | ConcFill.Bottom,
+            /* 5 */ ConcFill.Center | ConcFill.Top,
+            /* 6 */ ConcFill.Bottom | ConcFill.Top,
+        };
+
         private static Regex tileInfoSplitRegex = new Regex("^([^:]+):(\\d+)$", RegexOptions.Compiled);
 
         private int updateCount = 0;
@@ -165,6 +216,8 @@ namespace MobiusEditor.Model
                 this.MapContentsChanged(this, new MapRefreshEventArgs(refreshPoints));
             }
         }
+
+        public bool HasConcreteOverlays { get; private set; }
 
         public readonly BasicSection BasicSection;
 
@@ -193,6 +246,8 @@ namespace MobiusEditor.Model
             get => this.MapSection.Bounds;
             set { this.MapSection.X = value.Left; this.MapSection.Y = value.Top; this.MapSection.Width = value.Width; this.MapSection.Height = value.Height; }
         }
+
+        public bool ForPreview { get; private set; }
 
         public readonly Type HouseType;
 
@@ -490,6 +545,8 @@ namespace MobiusEditor.Model
             this.GapRadius = gapRadius;
             this.RadarJamRadius = jamRadius;
             this.CellTriggers = new CellGrid<CellTrigger>(this.Metrics);
+            // Optimisation: used to disable irrelevant logic
+            this.HasConcreteOverlays = this.OverlayTypes.Any(ovl => ovl.IsConcrete);
 
             this.MapSection.SetDefault();
             this.BriefingSection.SetDefault();
@@ -525,13 +582,13 @@ namespace MobiusEditor.Model
             }
         }
 
-        public void InitTheater(GameType gameType)
+        public void InitTheater(GameInfo gameInfo)
         {
             try
             {
                 foreach (TemplateType templateType in this.TemplateTypes)
                 {
-                    templateType.Init(gameType, this.Theater, Globals.FilterTheaterObjects);
+                    templateType.Init(gameInfo, this.Theater, Globals.FilterTheaterObjects);
                 }
                 foreach (SmudgeType smudgeType in this.SmudgeTypes)
                 {
@@ -539,7 +596,7 @@ namespace MobiusEditor.Model
                 }
                 foreach (OverlayType overlayType in this.OverlayTypes)
                 {
-                    overlayType.Init(gameType, this.Theater);
+                    overlayType.Init(gameInfo, this.Theater);
                 }
                 string th = this.Theater.Name;
                 foreach (TerrainType terrainType in this.TerrainTypes.Where(itm => !Globals.FilterTheaterObjects || itm.Theaters == null || itm.Theaters.Contains(th)))
@@ -556,7 +613,7 @@ namespace MobiusEditor.Model
                 DirectionType unitDir = this.UnitDirectionTypes.Where(d => d.Facing == FacingType.SouthWest).First();
                 foreach (UnitType unitType in this.AllUnitTypes)
                 {
-                    unitType.Init(gameType, this.HouseTypesIncludingNone.Where(h => h.Equals(unitType.OwnerHouse)).FirstOrDefault(), unitDir);
+                    unitType.Init(gameInfo, this.HouseTypesIncludingNone.Where(h => h.Equals(unitType.OwnerHouse)).FirstOrDefault(), unitDir);
                 }
                 // Required for initialising air unit names for teamtypes if DisableAirUnits is true.
                 foreach (ITechnoType techno in this.AllTeamTechnoTypes)
@@ -567,7 +624,7 @@ namespace MobiusEditor.Model
                 // No restriction. All get attempted and dummies are all filled in.
                 foreach (BuildingType buildingType in this.BuildingTypes)
                 {
-                    buildingType.Init(gameType, this.HouseTypesIncludingNone.Where(h => h.Equals(buildingType.OwnerHouse)).FirstOrDefault(), bldDir);
+                    buildingType.Init(gameInfo, this.HouseTypesIncludingNone.Where(h => h.Equals(buildingType.OwnerHouse)).FirstOrDefault(), bldDir);
                 }
             }
             catch (Exception ex)
@@ -598,7 +655,6 @@ namespace MobiusEditor.Model
             if (this.invalidateLayers.TryGetValue(MapLayerFlag.Overlay, out locations))
             {
                 this.UpdateConcreteOverlays(locations);
-                //UpdateConcreteOverlays_ORIG(locations);
             }
             if (this.invalidateOverlappers)
             {
@@ -740,76 +796,385 @@ namespace MobiusEditor.Model
             }
         }
 
-        private void UpdateConcreteOverlays(ISet<Point> locations)
+        public static bool IsIgnorableOverlay(Overlay overlay)
         {
-            foreach ((Int32 cell, Overlay overlay) in this.Overlay.IntersectsWithCells(locations).Where(o => o.Value.Type.IsConcrete))
+            if (overlay == null)
+                return true;
+            if (overlay.Type.IsConcrete && (GetConcState(overlay) & ConcFill.Center) == ConcFill.None)
             {
-                // Cells to check around the current cell. In order: top, topnext, next, bottomnext, bottom
-                FacingType[] even = { FacingType.North, FacingType.NorthWest, FacingType.West, FacingType.SouthWest, FacingType.South };
-                FacingType[] odd = { FacingType.North, FacingType.NorthEast, FacingType.East, FacingType.SouthEast, FacingType.South };
-                int isodd = cell & 1;
-                FacingType[] adjCells = isodd != 0 ? odd : even;
-                Boolean[] conc = new bool[adjCells.Length];
+                // Filler cell. Ignore.
+                return true;
+            }
+            return false;
+        }
+
+        public void UpdateConcreteOverlays(ISet<Point> locations)
+        {
+            if (!this.HasConcreteOverlays)
+            {
+                return;
+            }
+            if (Globals.FixConcretePavement)
+            {
+                UpdateConcreteOverlaysCorrect(locations, false);
+            }
+            else
+            {
+                UpdateConcreteOverlaysGame(locations);
+                //UpdateConcreteOverlays_ORIG(locations);
+            }
+        }
+
+        private void UpdateConcreteOverlaysCorrect(ISet<Point> locations, bool forExtraCells)
+        {
+            // Add the points around extra cells
+            HashSet<Point> updateLocations = new HashSet<Point>(locations);
+            HashSet<Point> newExtraCellsToAdd = new HashSet<Point>();
+            foreach ((Point pt, Overlay overlay) in this.Overlay.IntersectsWithPoints(locations).Where(o => o.Value.Type.IsConcrete))
+            {
+                if (IsIgnorableOverlay(overlay))
+                {
+                    newExtraCellsToAdd.Add(pt);
+                }
+            }
+            HashSet<Point> allExtraCells = new HashSet<Point>();
+            // Add all locations that are adjacent to extra cells in a way that can affect them.
+            while (newExtraCellsToAdd.Count > 0)
+            {
+                HashSet<Point> loopList = new HashSet<Point>(newExtraCellsToAdd);
+                newExtraCellsToAdd.Clear();
+                foreach ((Point pt, Overlay overlay) in this.Overlay.IntersectsWithPoints(loopList).Where(o => o.Value.Type.IsConcrete))
+                {
+                    if (!IsIgnorableOverlay(overlay))
+                    {
+                        continue;
+                    }
+                    FacingType[] adjCells = pt.X % 2 == 1 ? concreteCheckOdd : concreteCheckEven;
+                    for (int i = 0; i < adjCells.Length; i++)
+                    {
+                        if (!this.Metrics.Adjacent(pt, adjCells[i], out Point adjacent))
+                        {
+                            continue;
+                        }
+                        Overlay adj = this.Overlay[adjacent];
+                        if (adj != null && adj.Type.IsConcrete)
+                        {
+                            updateLocations.Add(adjacent);
+                            if (IsIgnorableOverlay(overlay) && !allExtraCells.Contains(pt))
+                            {
+                                newExtraCellsToAdd.Add(pt);
+                                allExtraCells.Add(pt);
+                            }
+                        }
+                    }
+                }
+            }
+            Dictionary<int, ConcFill> addedCells = new Dictionary<int, ConcFill>();
+            Dictionary<int, OverlayType> ovlTypes = new Dictionary<int, OverlayType>();
+            HashSet<int> toRemove = new HashSet<int>();
+            foreach ((Int32 cell, Overlay overlay) in this.Overlay.IntersectsWithCells(updateLocations).Where(o => o.Value.Type.IsConcrete))
+            {
+                if (IsIgnorableOverlay(overlay))
+                {
+                    if (!forExtraCells)
+                    {
+                        toRemove.Add(cell);
+                    }
+                    continue;
+                }
+                // Cells to check around the current cell. In order: top, top-aside, aside, bottom-aside, bottom
+                bool isodd = cell % 2 == 1;
+                FacingType[] adjCells = isodd ? concreteCheckOdd : concreteCheckEven;
+                ConcAdj mask = ConcAdj.None;
+                int[] cells = new int[adjCells.Length];
                 for (int i = 0; i < adjCells.Length; i++)
                 {
                     Overlay neighbor = this.Overlay.Adjacent(cell, adjCells[i]);
+                    cells[i] = -1;
+                    if (this.Metrics.Adjacent(cell, adjCells[i], out int adjacent))
+                        cells[i] = adjacent;
                     if (neighbor?.Type == overlay.Type)
                     {
-                        int ic = overlay.Icon;
-                        if (ic < 4 || (ic > 7 && ic < 12))
+                        if ((GetConcState(neighbor) & ConcFill.Center) != ConcFill.None)
                         {
-                            conc[i] = true;
+                            mask |= (ConcAdj)(1 << i);
                         }
                     }
                 }
                 // Unified logic so the operation becomes identical for the even and odd cells.
                 // This still isn't a 100% match with the game, but that's because the version in-game is a buggy mess.
-                bool top = conc[0];
-                bool topnext = conc[1];
-                bool next = conc[2];
-                bool bottomnext = conc[3];
-                bool bottom = conc[4];
+                bool top = (mask & ConcAdj.Top) != ConcAdj.None;
+                bool topSide = (mask & ConcAdj.TopSide) != ConcAdj.None;
+                bool side = (mask & ConcAdj.Side) != ConcAdj.None;
+                bool bottomSide = (mask & ConcAdj.BottomSide) != ConcAdj.None;
+                bool bottom = (mask & ConcAdj.Bottom) != ConcAdj.None;
 
-                int state = 0;
-                if (top && next || topnext && next)
-                {
-                    state = bottom ? 1 : 5;
-                }
-                else if (bottom && next || bottom && bottomnext)
-                {
-                    state = topnext ? 1 : 4;
-                }
-                else if (top && topnext)
-                {
-                    state = 5;
-                }
-                // For some reason the odd and even icons for state 0 are swapped compared to all the others, so
-                // an extra check has to be added for that. Otherwise just "(state * 2) + 1 - isodd" would suffice.
-                overlay.Icon = state == 0 ? isodd : (state * 2) + 1 - isodd;
+                // Logic to fill the main cell. Standard for a placed cell is to fill the center.
+                ConcFill fillState = ConcFill.Center;
+#if false
+                // OLD LOGIC: Does not fill triangles between two vertical cells
+                // If two out of three of top, side and top-side are filled, fill the top.
+                if ((side && (topSide || top)) || (topSide && (side || top)))
+                    fillState |= ConcFill.Top;
+                // If two out of three of bottom, side and bottom-side are filled, fill the bottom.
+                if ((side && (bottomSide || bottom)) || (bottomSide && (side || bottom)))
+                    fillState |= ConcFill.Bottom;
 
-                // Possibly todo: add concrete to fill up corners and actually complete the logic as intended?
-                // This would require that all logic in the editor treats these corner states (2 and 3) as 'expendable',
-                // automatically overwriting them with other overlay, walls or tiberium, and not saving them in the ini.
+                // Logic to fill in edge cells. See what the currently evaluated cell will add to it.
+                int cellTop = cells[0];
+                int cellSide = cells[2];
+                int cellBottom = cells[4];
+                // If top cell is clear, and current cell has its top filled, then side and top-side are added, so add bottom connection piece in top cell.
+                ConcFill fillStateTop = ConcFill.None;
+                if (!top && (fillState & ConcFill.Top) != 0)
+                    fillStateTop |= ConcFill.Bottom;
+                // If bottom cell is clear, and current cell has its bottom filled, then side and bottom-side are added, so add top connection piece in bottom cell.
+                ConcFill fillStateBottom = ConcFill.None;
+                if (!bottom && (fillState & ConcFill.Bottom) != 0)
+                    fillStateBottom |= ConcFill.Top;
+                // join side aside-top
+                // If side cell is clear, and current cell has its top filled, then top and top-side are added, so add top connection piece in side cell.
+                ConcFill fillStateSide = ConcFill.None;
+                if (!side && (fillState & ConcFill.Top) != 0)
+                    fillStateSide |= ConcFill.Top;
+                // If side cell is clear, and current cell has its bottom filled, then bottom and bottom-side are added, so add bottom connection piece in side cell.
+                if (!side && (fillState & ConcFill.Bottom) != 0)
+                    fillStateSide |= ConcFill.Bottom;
+#else
+                // NEW LOGIC: Fills triangle between two vertical cells
+                // If cell at top, connect. If not, still connect if the two in front are filled.
+                if (top || (topSide && side))
+                {
+                    fillState |= ConcFill.Top;
+                }
+                // If cell at bottom, connect. If not, still connect if the two in front are filled.
+                if (bottom || (bottomSide && side))
+                {
+                    fillState |= ConcFill.Bottom;
+                }
+                // Logic to fill in edge cells. See what the currently evaluated cell will add to it.
+                int cellTop = cells[0];
+                int cellSide = cells[2];
+                int cellBottom = cells[4];
+                ConcFill fillStateTop = ConcFill.None;
+                if (!top && (fillState & ConcFill.Top) != 0)
+                {
+                    fillStateTop |= ConcFill.Bottom;
+                }
+                ConcFill fillStateBottom = ConcFill.None;
+                if (!bottom && (fillState & ConcFill.Bottom) != 0)
+                {
+                    fillStateBottom |= ConcFill.Top;
+                }
+                ConcFill fillStateSide = ConcFill.None;
+                if (!side)
+                {
+                    if (topSide && top)
+                        fillStateSide |= ConcFill.Top;
+                    if (bottomSide && bottom)
+                        fillStateSide |= ConcFill.Bottom;
+                }
+#endif
+                // Only update if this is not for side cells.
+                if (!forExtraCells)
+                {
+                    overlay.Icon = GetConcIcon(fillState, isodd);
+                }
+                // add concrete to fill up corners, completely fixing the way it should look.
+                if (fillStateTop != ConcFill.None && cellTop != -1)
+                {
+                    ConcFill current = addedCells.ContainsKey(cellTop) ? addedCells[cellTop] : ConcFill.None;
+                    addedCells[cellTop] = current | fillStateTop;
+                    ovlTypes[cellTop] = overlay.Type;
+                }
+                if (fillStateBottom != ConcFill.None && cellBottom != -1)
+                {
+                    ConcFill current = addedCells.ContainsKey(cellBottom) ? addedCells[cellBottom] : ConcFill.None;
+                    addedCells[cellBottom] = current | fillStateBottom;
+                    ovlTypes[cellBottom] = overlay.Type;
+                }
+                if (fillStateSide != ConcFill.None && cellSide != -1)
+                {
+                    ConcFill current = addedCells.ContainsKey(cellSide) ? addedCells[cellSide] : ConcFill.None;
+                    addedCells[cellSide] = current | fillStateSide;
+                    ovlTypes[cellSide] = overlay.Type;
+                }
             }
+            List<int> addCells = addedCells.Keys.ToList();
+            addCells.Sort();
+            HashSet<Point> addedPoints = new HashSet<Point>();
+            foreach (Int32 cell in addCells)
+            {
+                Point? pt = Metrics.GetLocation(cell);
+                toRemove.Remove(cell);
+                // Only allow updating the actual given points.
+                if (forExtraCells && pt != null && !locations.Contains(pt.Value))
+                    continue;
+                OverlayType toMake = ovlTypes[cell];
+                ConcFill addState = addedCells[cell];
+                Overlay ovl = this.Overlay[cell];
+                bool isNew = ovl == null;
+                if (isNew)
+                {
+                    ovl = new Overlay();
+                    ovl.Type = toMake;
+                }
+                else
+                {
+                    if (ovl.Type != toMake || !IsIgnorableOverlay(ovl))
+                    {
+                        continue;
+                    }
+                }
+                ovl.Icon = GetConcIcon(addState, cell % 2 == 1);
+                if (isNew)
+                {
+                    this.Overlay[cell] = ovl;
+                }
+                if (!forExtraCells && pt.HasValue)
+                {
+                    addedPoints.Add(pt.Value);
+                }
+            }
+            foreach (Int32 cell in toRemove)
+            {
+                this.Overlay[cell] = null;
+            }
+            if (!forExtraCells && addedPoints.Count > 0)
+            {
+                UpdateConcreteOverlaysCorrect(addedPoints, true);
+            }
+        }
+
+        private void UpdateConcreteOverlaysGame(ISet<Point> locations)
+        {
+            foreach ((Int32 cell, Overlay overlay) in this.Overlay.IntersectsWithCells(locations).Where(o => o.Value.Type.IsConcrete))
+            {
+                bool isodd = (cell & 1) == 1;
+                // Cells to check around the current cell. In order: top, top side, side, bottom side, bottom
+                FacingType[] adjCells = isodd ? concreteCheckOdd : concreteCheckEven;
+                ConcAdj mask = 0;
+                for (int i = 0; i < adjCells.Length; i++)
+                {
+                    Overlay neighbor = this.Overlay.Adjacent(cell, adjCells[i]);
+                    if (neighbor != null && neighbor.Type.IsConcrete && !IsIgnorableOverlay(overlay))
+                    {
+                        mask |= (ConcAdj)(1 << i);
+                    }
+                }
+                ConcFill fillState = ConcFill.Center;
+                // Not trying to find any logic in this; it's a mess. I just copied all these cases from screenshots.
+                if (isodd)
+                {
+                    switch (mask)
+                    {
+                        case (ConcAdj.Top | ConcAdj.TopSide | ConcAdj.Side | ConcAdj.BottomSide | ConcAdj.Bottom):
+                        case (ConcAdj.TopSide | ConcAdj.Side | ConcAdj.BottomSide | ConcAdj.Bottom):
+                        case (ConcAdj.TopSide | ConcAdj.Side | ConcAdj.Bottom):
+                        case (ConcAdj.Top | ConcAdj.TopSide | ConcAdj.Side | ConcAdj.Bottom):
+                        case (ConcAdj.Top | ConcAdj.Side | ConcAdj.BottomSide | ConcAdj.Bottom):
+                        case (ConcAdj.Top | ConcAdj.Side | ConcAdj.Bottom):
+                            fillState |= ConcFill.Top | ConcFill.Bottom;
+                            break;
+                        case (ConcAdj.Top | ConcAdj.TopSide | ConcAdj.Side | ConcAdj.BottomSide):
+                        case (ConcAdj.Top | ConcAdj.TopSide | ConcAdj.BottomSide | ConcAdj.Bottom):
+                        case (ConcAdj.TopSide | ConcAdj.Side | ConcAdj.BottomSide):
+                        case (ConcAdj.Top | ConcAdj.TopSide | ConcAdj.Side):
+                        case (ConcAdj.Top | ConcAdj.Side | ConcAdj.BottomSide):
+                        case (ConcAdj.TopSide | ConcAdj.BottomSide):
+                        case (ConcAdj.Top | ConcAdj.TopSide | ConcAdj.Bottom):
+                        case (ConcAdj.Top | ConcAdj.TopSide | ConcAdj.BottomSide):
+                        case (ConcAdj.Top | ConcAdj.TopSide):
+                        case (ConcAdj.TopSide | ConcAdj.Side):
+                        case (ConcAdj.TopSide):
+                        case (ConcAdj.Top | ConcAdj.Side):
+                            fillState |= ConcFill.Top;
+                            break;
+                        case (ConcAdj.Side | ConcAdj.BottomSide | ConcAdj.Bottom):
+                        case (ConcAdj.Side | ConcAdj.Bottom):
+                            fillState |= ConcFill.Bottom;
+                            break;
+                    }
+                }
+                else
+                {
+                    switch (mask)
+                    {
+                        case (ConcAdj.Top | ConcAdj.TopSide | ConcAdj.Side | ConcAdj.BottomSide | ConcAdj.Bottom):
+                        case (ConcAdj.TopSide | ConcAdj.Side | ConcAdj.BottomSide | ConcAdj.Bottom):
+                        case (ConcAdj.Top | ConcAdj.TopSide | ConcAdj.BottomSide | ConcAdj.Bottom):
+                        case (ConcAdj.TopSide | ConcAdj.Side | ConcAdj.Bottom):
+                        case (ConcAdj.TopSide | ConcAdj.BottomSide | ConcAdj.Bottom):
+                        case (ConcAdj.Top | ConcAdj.TopSide | ConcAdj.Side | ConcAdj.Bottom):
+                        case (ConcAdj.Top | ConcAdj.Side | ConcAdj.BottomSide | ConcAdj.Bottom):
+                        case (ConcAdj.Top | ConcAdj.Side | ConcAdj.Bottom):
+                            fillState |= ConcFill.Top | ConcFill.Bottom;
+                            break;
+                        case (ConcAdj.Top | ConcAdj.TopSide | ConcAdj.Side | ConcAdj.BottomSide):
+                        case (ConcAdj.TopSide | ConcAdj.Side | ConcAdj.BottomSide):
+                        case (ConcAdj.Top | ConcAdj.Side | ConcAdj.BottomSide):
+                        case (ConcAdj.Top | ConcAdj.TopSide | ConcAdj.Side):
+                        case (ConcAdj.TopSide | ConcAdj.Side):
+                        case (ConcAdj.TopSide | ConcAdj.BottomSide):
+                        case (ConcAdj.Top | ConcAdj.TopSide | ConcAdj.Bottom):
+                        case (ConcAdj.Top | ConcAdj.TopSide | ConcAdj.BottomSide):
+                        case (ConcAdj.Top | ConcAdj.TopSide):
+                        case (ConcAdj.Top | ConcAdj.Side):
+                        case (ConcAdj.TopSide):
+                            fillState |= ConcFill.Top;
+                            break;
+                        case (ConcAdj.Side | ConcAdj.BottomSide | ConcAdj.Bottom):
+                        case (ConcAdj.Top | ConcAdj.BottomSide | ConcAdj.Bottom):
+                        case (ConcAdj.Side | ConcAdj.Bottom):
+                        case (ConcAdj.BottomSide | ConcAdj.Bottom):
+                            fillState |= ConcFill.Bottom;
+                            break;
+                    }
+                }
+                overlay.Icon = GetConcIcon(fillState, isodd);
+            }
+        }
+
+        private static ConcFill GetConcState(Overlay conc)
+        {
+            if (!conc.Type.IsConcrete)
+            {
+                return ConcFill.None;
+            }
+            int val = conc.Icon / 2;
+            if (val < 0 || val > iconFillStates.Length)
+            {
+                return ConcFill.None;
+            }
+            return iconFillStates[val];
+        }
+
+        private static int GetConcIcon(ConcFill fillState, bool isOdd)
+        {
+            int odd = isOdd ? 1 : 0;
+            concreteStateToIcon.TryGetValue(fillState, out int val);
+            // For some reason the odd and even icons for state 0 are swapped compared to all the others, so
+            // an extra check has to be added for that. Otherwise just "(state * 2) + 1 - odd" would suffice.
+            return val == 0 ? odd : (val * 2) + 1 - odd;
         }
 
         private enum ConcreteEnum
         {
-            C_NONE = -1,
-            C_LEFT = 0,
-            C_RIGHT = 1,
-            C_RIGHT_UPDOWN = 2,
-            C_LEFT_UPDOWN = 3,
-            C_UP_RIGHT = 4,
-            C_UP_LEFT = 5,
-            C_DOWN_RIGHT = 6,
-            C_DOWN_LEFT = 7,
-            C_RIGHT_DOWN = 8,
-            C_LEFT_DOWN = 9,
-            C_RIGHT_UP = 10,
-            C_LEFT_UP = 11,
-            C_UPDOWN_RIGHT = 12,
-            C_UPDOWN_LEFT = 13
+            C_NONE         /**/ = -1,
+            C_LEFT         /**/ = 0,
+            C_RIGHT        /**/ = 1,
+            C_RIGHT_UPDOWN /**/ = 2,
+            C_LEFT_UPDOWN  /**/ = 3,
+            C_UP_RIGHT     /**/ = 4,
+            C_UP_LEFT      /**/ = 5,
+            C_DOWN_RIGHT   /**/ = 6,
+            C_DOWN_LEFT    /**/ = 7,
+            C_RIGHT_DOWN   /**/ = 8,
+            C_LEFT_DOWN    /**/ = 9,
+            C_RIGHT_UP     /**/ = 10,
+            C_LEFT_UP      /**/ = 11,
+            C_UPDOWN_RIGHT /**/ = 12,
+            C_UPDOWN_LEFT  /**/ = 13
         }
 
         private void UpdateConcreteOverlays_ORIG(ISet<Point> locations)
@@ -834,16 +1199,16 @@ namespace MobiusEditor.Model
                         }
                     }
                 }
-                const int OF_N  = 0x01;
+                const int OF_N = 0x01;
                 const int OF_NE = 0x02;
-                const int OF_E  = 0x04;
+                const int OF_E = 0x04;
                 const int OF_SE = 0x08;
-                const int OF_S  = 0x10;
-                const int EF_N  = 0x01;
+                const int OF_S = 0x10;
+                const int EF_N = 0x01;
                 const int EF_NW = 0x10;
-                const int EF_W  = 0x08;
+                const int EF_W = 0x08;
                 const int EF_SW = 0x04;
-                const int EF_S  = 0x02;
+                const int EF_S = 0x02;
                 ConcreteEnum icon = 0;
                 if (isodd != 0)
                 {
@@ -927,7 +1292,7 @@ namespace MobiusEditor.Model
             }
         }
 
-        public void SetMapTemplatesRaw(byte[] data, int width, int height, Dictionary<int,string> types, string fillType)
+        public void SetMapTemplatesRaw(byte[] data, int width, int height, Dictionary<int, string> types, string fillType)
         {
             int maxY = Math.Min(this.Metrics.Height, height);
             int maxX = Math.Min(this.Metrics.Width, width);
@@ -995,7 +1360,7 @@ namespace MobiusEditor.Model
                     {
                         this.Templates[y, x] = new Template { Type = fillTile, Icon = fillIcon };
                     }
-                    offset+=4;
+                    offset += 4;
                 }
                 lineOffset += stride;
             }
@@ -1069,6 +1434,10 @@ namespace MobiusEditor.Model
                 else
                 {
                     sb.AppendFormat(", Overlay = {0}", overlayType.DisplayName);
+                    if (IsIgnorableOverlay(overlay))
+                    {
+                        sb.Append(" (corner filler)");
+                    }
                 }
             }
             Terrain terrain = this.Technos[location] as Terrain;
@@ -1101,16 +1470,19 @@ namespace MobiusEditor.Model
             return sb.ToString();
         }
 
-        public HouseType GetBaseHouse(GameType gameType)
+        public HouseType GetBaseHouse(GameInfo gameInfo)
         {
             House noneHouse = this.HousesIncludingNone.Where(h => h.Type.ID < 0).FirstOrDefault();
-            if (noneHouse != null && gameType == GameType.TiberianDawn)
+            if (noneHouse != null)
             {
                 return noneHouse.Type;
             }
             else
             {
-                return this.HouseTypes.Where(h => h.Equals(this.BasicSection.BasePlayer)).FirstOrDefault() ?? this.HouseTypes.First();
+                String oppos = gameInfo.GetClassicOpposingPlayer(this.BasicSection.Player);
+                return this.HouseTypes.Where(h => h.Equals(this.BasicSection.BasePlayer)).FirstOrDefault()
+                    ?? this.HouseTypes.Where(h => h.Equals(oppos)).FirstOrDefault()
+                    ?? this.HouseTypes.First();
             }
         }
 
@@ -1161,7 +1533,9 @@ namespace MobiusEditor.Model
                 this.TiberiumOrGoldValue, this.GemValue)
             {
                 TopLeft = TopLeft,
-                Size = Size
+                Size = Size,
+                // Allows functions to check whether they are being applied on the real map or the preview map.
+                ForPreview = ForPreview
             };
             map.BeginUpdate();
             this.MapSection.CopyTo(map.MapSection);
@@ -1305,7 +1679,7 @@ namespace MobiusEditor.Model
             if (hasEvents)
             {
                 tooltip.Append("Usable trigger events:");
-                foreach(string evt in filteredEvents)
+                foreach (string evt in filteredEvents)
                 {
                     string showEvt = evt.TrimEnd('.');
                     if (indicatedEvents.Contains(evt))
@@ -1404,24 +1778,33 @@ namespace MobiusEditor.Model
 
         public ICellOccupier FindBlockingObject(int cell, ICellOccupier obj, out int blockingCell, out int placementCell)
         {
+            return FindBlockingObject(cell, obj, out blockingCell, out placementCell, out _);
+        }
+
+        public ICellOccupier FindBlockingObject(int cell, ICellOccupier obj, out int blockingCell, out int placementCell, out bool onBib)
+        {
+            onBib = false;
             blockingCell = -1;
             placementCell = -1;
+            HashSet<Point> bibIgnoreCells = new HashSet<Point>();
             if (this.Metrics.GetLocation(cell, out Point p))
             {
-                bool[,] mask;
-                int ylen;
-                int xlen;
-                // First check bounds without bib.
+                bool[,] occupyMask = obj.OccupyMask;
+                int ylenOcMask = occupyMask.GetLength(0);
+                int xlenOcMask = occupyMask.GetLength(1);
+                // First check building bounds without bib.
                 if (obj is BuildingType bld)
                 {
-                    mask = bld.BaseOccupyMask;
-                    ylen = mask.GetLength(0);
-                    xlen = mask.GetLength(1);
+                    bool[,] mask = bld.BaseOccupyMask;
+                    int ylenMask = mask.GetLength(0);
+                    int xlenMask = mask.GetLength(1);
+                    int ylen = Math.Max(ylenMask, ylenOcMask);
+                    int xlen = Math.Max(xlenMask, xlenOcMask);
                     for (Int32 y = 0; y < ylen; ++y)
                     {
                         for (Int32 x = 0; x < xlen; ++x)
                         {
-                            if (mask[y, x])
+                            if (y < ylenMask && x < xlenMask && mask[y, x])
                             {
                                 if (!this.Metrics.GetCell(new Point(p.X + x, p.Y + y), out int targetCell))
                                 {
@@ -1434,30 +1817,31 @@ namespace MobiusEditor.Model
                                 if (techno != null || b != null)
                                 {
                                     blockingCell = targetCell;
-                                    Point? blockingOrigin = null;
-                                    if (techno != null)
-                                    {
-                                        blockingOrigin = this.Technos[techno];
-                                    }
-                                    else
-                                    {
-                                        blockingOrigin = this.Buildings[b];
-                                    }
+                                    Point? blockingOrigin = techno != null ? this.Technos[techno] : this.Buildings[b];
                                     placementCell = this.Metrics.GetCell(blockingOrigin.Value).Value;
+                                    onBib = false;
                                     return techno ?? b;
                                 }
                             }
+                            else if (y < ylenOcMask && x < xlenOcMask && occupyMask[y, x])
+                            {
+                                // On bib, not on main space.
+                                bibIgnoreCells.Add(new Point(x, y));
+                            }
                         }
                     }
-                }
-                mask = obj.OccupyMask;
-                ylen = mask.GetLength(0);
-                xlen = mask.GetLength(1);
-                for (Int32 y = 0; y < ylen; ++y)
-                {
-                    for (Int32 x = 0; x < xlen; ++x)
+                    // If this is a building, and bibs don't block, that's all we need to check for this.
+                    if (!Globals.BlockingBibs)
                     {
-                        if (mask[y, x])
+                        return null;
+                    }
+                }
+                // Check all other types, and building bibs.
+                for (Int32 y = 0; y < ylenOcMask; ++y)
+                {
+                    for (Int32 x = 0; x < xlenOcMask; ++x)
+                    {
+                        if (occupyMask[y, x])
                         {
                             if (!this.Metrics.GetCell(new Point(p.X + x, p.Y + y), out int targetCell))
                             {
@@ -1470,17 +1854,22 @@ namespace MobiusEditor.Model
                             if (techno != null || b != null)
                             {
                                 blockingCell = targetCell;
-                                Point? blockingOrigin;
-                                if (techno != null)
-                                {
-                                    blockingOrigin = this.Technos[techno];
-                                }
-                                else
+                                Point? blockingOrigin = null;
+                                if (b != null)
                                 {
                                     blockingOrigin = this.Buildings[b];
+                                    onBib = true;
                                 }
-                                placementCell = this.Metrics.GetCell(blockingOrigin.Value).Value;
-                                return techno ?? b;
+                                else if (!bibIgnoreCells.Contains(new Point(x, y)))
+                                {
+                                    // For checking non-building technos on a building's area, ignore the unoccupied bib cells.
+                                    blockingOrigin = this.Technos[techno];
+                                }
+                                if (blockingOrigin.HasValue)
+                                {
+                                    placementCell = this.Metrics.GetCell(blockingOrigin.Value).Value;
+                                    return techno ?? b;
+                                }
                             }
                         }
                     }
@@ -1489,9 +1878,25 @@ namespace MobiusEditor.Model
             return null;
         }
 
-        public void CheckBuildingBlockingCell(int cell, BuildingType buildingType, string reportString, List<string> errors, ref bool modified)
+        public void CheckBuildingBlockingCell(int cell, BuildingType buildingType, List<string> errors, ref bool modified)
         {
-            ICellOccupier techno = FindBlockingObject(cell, buildingType, out int blockingCell, out int placementcell);
+            CheckBuildingBlockingCell(cell, buildingType, errors, ref modified, null);
+        }
+
+        public void CheckBuildingBlockingCell(int cell, BuildingType buildingType, List<string> errors, ref bool modified, string rebuildIndex)
+        {
+            ICellOccupier techno = FindBlockingObject(cell, buildingType, out int blockingCell, out int placementcell, out bool isbib);
+            String reportString;
+            if (rebuildIndex != null)
+            {
+                String bibRemark = isbib ? "Bib area of b" : "B";
+                reportString = String.Format("{0}ase rebuild entry '{1}', structure '{2}' on cell '{3}'", bibRemark, rebuildIndex, buildingType.Name, cell);
+            }
+            else
+            {
+                String bibRemark = isbib ? "Bib area of s" : "S";
+                reportString = String.Format("{0}tructure '{1}' placed on cell {2}", bibRemark, buildingType.Name, cell);
+            }
             string reportCell = blockingCell == -1 ? "<unknown>" : blockingCell.ToString();
             if (techno is Building building)
             {
@@ -1514,7 +1919,7 @@ namespace MobiusEditor.Model
                 }
                 if (onBib)
                 {
-                    errors.Add(string.Format("{0} overlaps bib of structure '{1}' placed on cell {2} at cell {3}; skipping.", reportString, building.Type.Name, placementcell, reportCell));
+                    errors.Add(string.Format("{0} overlaps bib area of structure '{1}' placed on cell {2} at cell {3}; skipping.", reportString, building.Type.Name, placementcell, reportCell));
                     modified = true;
                 }
                 else
@@ -1619,7 +2024,7 @@ namespace MobiusEditor.Model
                 using (Graphics g = Graphics.FromImage(fullBitmap))
                 {
                     MapRenderer.SetRenderSettings(g, smooth);
-                    MapRenderer.Render(plugin.GameType, this, g, locations, toRender, 1);
+                    MapRenderer.Render(plugin.GameInfo, this, g, locations, toRender, 1);
                     if ((toRender & MapLayerFlag.Indicators) != 0)
                     {
                         ViewTool.PostRenderMap(g, plugin, this, 1, toRender, MapLayerFlag.None, false, plugin.Map.Metrics.Bounds);
@@ -1676,6 +2081,10 @@ namespace MobiusEditor.Model
             if (e.Value?.Type.IsWall ?? false)
             {
                 this.Buildings.Add(e.Location, e.Value);
+            }
+            if (e.Value?.Type.IsConcrete ?? false)
+            {
+                //this.UpdateConcreteOverlays(Rectangle.Inflate(new Rectangle(e.Location, new Size(1, 1)), 1, 1).Points().ToHashSet());
             }
             if (this.updating)
             {

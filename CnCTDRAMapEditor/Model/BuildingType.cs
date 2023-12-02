@@ -26,23 +26,23 @@ namespace MobiusEditor.Model
     public enum BuildingTypeFlag
     {
         /// <summary>No flags set.</summary>
-        None             = 0,
+        None             /**/ = 0,
         /// <summary>Produces structures.</summary>
-        Factory          = (1 << 0),
+        Factory          /**/ = 1 << 0,
         /// <summary>Has a bib attached.</summary>
-        Bib              = (1 << 1),
+        Bib              /**/ = 1 << 1,
         /// <summary>Is a fake building.</summary>
-        Fake             = (1 << 2),
+        Fake             /**/ = 1 << 2,
         /// <summary>Has a rotating turret, and accepts a Facing value in the ini file.</summary>
-        Turret           = (1 << 3),
+        Turret           /**/ = 1 << 3,
         /// <summary>Only has a single frame of graphics.</summary>
-        SingleFrame      = (1 << 4),
+        SingleFrame      /**/ = 1 << 4,
         /// <summary>Does not adjust to house colors.</summary>
-        NoRemap          = (1 << 5),
+        NoRemap          /**/ = 1 << 5,
         /// <summary>Can show a gap area-of-effect radius indicator.</summary>
-        GapGenerator     = (1 << 7),
+        GapGenerator     /**/ = 1 << 7,
         /// <summary>Do not show this building in the lists if its graphics were not found in the currently loaded theater.</summary>
-        TheaterDependent = (1 << 8),
+        TheaterDependent /**/ = 1 << 8,
     }
 
     public class BuildingType : ICellOverlapper, ICellOccupier, ITechnoType
@@ -113,10 +113,13 @@ namespace MobiusEditor.Model
         public bool IsSingleFrame => (this.Flag & BuildingTypeFlag.SingleFrame) == BuildingTypeFlag.SingleFrame;
         public bool CanRemap => (this.Flag & BuildingTypeFlag.NoRemap) != BuildingTypeFlag.NoRemap;
         /// <summary>
-        /// Indicates buildings that have pieces sticking out at the top that should not overlap the objects on these cells.
+        /// Value for Z-sorting; can be used to make buildings specifically show as "flatter" others so pieces sticking out at the top don't overlap objects on these cells.
         /// </summary>
         public int ZOrder { get; private set; }
         private string nameId;
+        public static Int32 ZOrderDefault = 10;
+        public static Int32 ZOrderPaved = 5;
+        public static Int32 ZOrderFlat = 0;
 
         public BuildingType(int id, string name, string textId, int powerProd, int powerUse, int storage, int width, int height, string occupyMask, string ownerHouse, string factoryOverlay, int frameOffset, String graphicsSource, BuildingTypeFlag flag, int zOrder)
         {
@@ -139,7 +142,7 @@ namespace MobiusEditor.Model
         }
 
         public BuildingType(int id, string name, string textId, int powerProd, int powerUse, int storage, int width, int height, string occupyMask, string ownerHouse, string factoryOverlay, int frameOffset, String graphicsSource, BuildingTypeFlag flag)
-            : this(id, name, textId, powerProd, powerUse, storage, width, height, occupyMask, ownerHouse, factoryOverlay, frameOffset, graphicsSource, flag, 10)
+            : this(id, name, textId, powerProd, powerUse, storage, width, height, occupyMask, ownerHouse, factoryOverlay, frameOffset, graphicsSource, flag, ZOrderDefault)
         {
         }
 
@@ -270,10 +273,10 @@ namespace MobiusEditor.Model
                 : this.Name.ToUpperInvariant();
         }
 
-        public void Init(GameType gameType, HouseType house, DirectionType direction)
+        public void Init(GameInfo gameInfo, HouseType house, DirectionType direction)
         {
             this.InitDisplayName();
-            this.ExistsInTheater = Globals.TheTilesetManager.GetTileDataLength(this.GraphicsSource) > 0;
+            this.ExistsInTheater = Globals.TheTilesetManager.TileExists(this.GraphicsSource);
             Bitmap oldImage = this.Thumbnail;
             Building mockBuilding = new Building()
             {
@@ -282,7 +285,7 @@ namespace MobiusEditor.Model
                 Strength = 256,
                 Direction = direction
             };
-            RenderInfo render = MapRenderer.RenderBuilding(gameType, Point.Empty, Globals.PreviewTileSize, Globals.PreviewTileScale, mockBuilding);
+            RenderInfo render = MapRenderer.RenderBuilding(gameInfo, Point.Empty, Globals.PreviewTileSize, Globals.PreviewTileScale, mockBuilding);
             if (render.RenderedObject != null)
             {
                 Bitmap th = new Bitmap(this.Size.Width * Globals.PreviewTileSize.Width, this.Size.Height * Globals.PreviewTileSize.Height);

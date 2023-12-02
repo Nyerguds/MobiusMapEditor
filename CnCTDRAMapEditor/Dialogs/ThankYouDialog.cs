@@ -77,6 +77,7 @@ namespace MobiusEditor.Dialogs
             // Before reaching maxclicks: take sounds from switch-case, in reverse order.
             if (clicks < maxclicks)
             {
+                // For a max of 5, this sends 4, 3, 2, 1, 0; three defaults, then the two specials.
                 return GetClip(maxclicks - clicks - 1);
             }
             // After reaching maxclicks: take random sound.

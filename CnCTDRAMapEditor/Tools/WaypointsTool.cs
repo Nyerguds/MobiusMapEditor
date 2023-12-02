@@ -517,23 +517,24 @@ namespace MobiusEditor.Tools
             Waypoint selected = waypointCombo.SelectedItem as Waypoint;
             Waypoint dummySelected = null;
             Waypoint[] selectedRange = selected != null ? new [] { selected } : new Waypoint[] { };
-            if (plugin.GameType == GameType.SoleSurvivor && (Layers & MapLayerFlag.FootballArea) == MapLayerFlag.FootballArea)
+            if ((Layers & MapLayerFlag.FootballArea) == MapLayerFlag.FootballArea && plugin.GameInfo.SupportsMapLayer(MapLayerFlag.FootballArea))
             {
-                MapRenderer.RenderAllFootballAreas(graphics, map, visibleCells, Globals.MapTileSize, Globals.MapTileScale, plugin.GameType);
-                MapRenderer.RenderFootballAreaFlags(graphics, plugin.GameType, map, visibleCells, Globals.MapTileSize);
+                MapRenderer.RenderAllFootballAreas(graphics, map, visibleCells, Globals.MapTileSize, Globals.MapTileScale, plugin.GameInfo);
+                MapRenderer.RenderFootballAreaFlags(graphics, plugin.GameInfo, map, visibleCells, Globals.MapTileSize);
             }
             // If the selected waypoint is not a flag, re-render it as opaque.
             if (selected != null && (plugin.Map.BasicSection.SoloMission || (selected.Flag & WaypointFlag.PlayerStart) != WaypointFlag.PlayerStart))
             {
-                MapRenderer.RenderWaypoint(plugin.GameType, true, Globals.MapTileSize, map.FlagColors.ToArray(), selected, 1.0f, 0).Item2(graphics);
+                MapRenderer.RenderWaypoint(plugin.GameInfo, true, Globals.MapTileSize, map.FlagColors.ToArray(), selected, 1.0f, 0).Item2(graphics);
             }
             // Render those here so they are put over the opaque redraw of the current waypoint.
             MapRenderer.RenderAllTechnoTriggers(graphics, plugin.Map, visibleCells, Globals.MapTileSize, Layers);
 
             MapRenderer.RenderAllBoundsFromCell(graphics, boundRenderCells, Globals.MapTileSize,
                 map.Waypoints.Where(wp => wp != selected && wp.Cell.HasValue).Select(wp => wp.Cell.Value), map.Metrics, Color.Orange);
-            // For TD, always render reveal waypoint.
-            bool renderAll = plugin.GameType != GameType.RedAlert || (Layers & MapLayerFlag.WaypointRadius) == MapLayerFlag.WaypointRadius;
+            // If the plugin has a dedicated "flare" waypoint, then it is hardcoded and the only one, and should always be rendered.
+            bool renderAll = plugin.Map.Waypoints.Any(wp => (wp.Flag & WaypointFlag.Flare) != WaypointFlag.None)
+                || (Layers & MapLayerFlag.WaypointRadius) == MapLayerFlag.WaypointRadius;
             MapRenderer.RenderAllWayPointRevealRadiuses(graphics, plugin, map, boundRenderCells, Globals.MapTileSize, selected, !renderAll);
             MapRenderer.RenderWayPointIndicators(graphics, map, visibleCells, Globals.MapTileSize, Color.LightGreen, false, true, selectedRange);
             if (selected != null)

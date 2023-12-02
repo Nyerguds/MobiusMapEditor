@@ -28,42 +28,42 @@ namespace MobiusEditor.Model
     public enum TemplateTypeFlag
     {
         /// <summary>No flags set.</summary>
-        None           = 0,
+        None           /**/ = 0,
         /// <summary>Used to filter out default terrain.</summary>
-        Clear          = 1 << 0,
+        Clear          /**/ = 1 << 0,
         /// <summary>Default fill tile to use. Can be defined multiple times to ensure each theater contains a valid one; when requested, the lowest-id one will be used.</summary>
-        DefaultFill        = 1 << 1,
+        DefaultFill    /**/ = 1 << 1,
         /// <summary>This tileset is 1x1, and any additional tiles it contains are treated as randomisable alternate tiles, not as parts of a larger shape.</summary>
-        RandomCell     = (1 << 2),
+        RandomCell     /**/ = 1 << 2,
         /// <summary>
         /// This is a virtual tileset group, used to group together loose equivalent 1x1 tiles as randomisable. It should never actually be placed down on the map.
         /// TemplateType.GroupTiles will contain all tiles that are part of this group.
         /// </summary>
-        Group          = RandomCell | (1 << 3),
+        Group          /**/ = RandomCell | (1 << 3),
         /// <summary>
         /// This tile is a 1x1 tile that has a bunch of equivalent alternates, and because of that, it is grouped in a virtual tileset group as randomisable.
         /// TemplateType.GroupTiles will contain the group it belongs to, so picking it from the map can easily select the containing group instead.
         /// </summary>
-        IsGrouped      = (1 << 4),
+        IsGrouped      /**/ = 1 << 4,
         /// <summary>
         /// This tileset has equivalent tilesets, and when drag-placing this, it will switch to randomly placing the alternates as well.
         /// TemplateType.GroupTiles contains all equivalents that can be used.
         /// </summary>
-        HasEquivalents = (1 << 5),
+        HasEquivalents /**/ = 1 << 5,
     }
 
     public enum LandType
     {
-        None = 0,  // Uninitialised.
-        Clear,     // "Clear" terrain.
-        Road,      // Road terrain.
-        Water,     // Water.
-        Rock,      // Impassable rock.
-        //Wall,      // Wall (blocks movement).
-        //Tiberium,  // Tiberium field.
-        Beach,     // Beach terrain.
-        Rough,     // Rocky terrain.
-        River,     // Rocky riverbed.
+        None = 0,   // Uninitialised.
+        Clear,      // "Clear" terrain.
+        Road,       // Road terrain.
+        Water,      // Water.
+        Rock,       // Impassable rock.
+        //Wall,     // Wall (blocks movement).
+        //Tiberium, // Tiberium field.
+        Beach,      // Beach terrain.
+        Rough,      // Rocky terrain.
+        River,      // Rocky riverbed.
     }
 
     public class TemplateType : IBrowsableType
@@ -460,12 +460,12 @@ namespace MobiusEditor.Model
             // Do nothing. Templates have no real UI names.
         }
 
-        public void Init(GameType gameType, TheaterType theater, bool onlyIfFound)
+        public void Init(GameInfo gameInfo, TheaterType theater, bool onlyIfFound)
         {
-            Init(gameType, theater, false, onlyIfFound);
+            Init(gameInfo, theater, false, onlyIfFound);
         }
 
-        public void Init(GameType gameType, TheaterType theater, bool forceDummy, bool onlyIfFound)
+        public void Init(GameInfo gameInfo, TheaterType theater, bool forceDummy, bool onlyIfFound)
         {
             this.ExistsInTheater = false;
             this.Initialised = false;
@@ -476,6 +476,7 @@ namespace MobiusEditor.Model
             bool maskInit = false;
             bool fileInit = false;
             Bitmap oldImage = Thumbnail;
+            GameType gameType = gameInfo.GameType;
             if (gameType == GameType.TiberianDawn || gameType == GameType.SoleSurvivor)
             {
                 // Possibly read mask init from TD tiles rather than use hardcoded data? Not done atm.
