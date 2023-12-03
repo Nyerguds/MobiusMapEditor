@@ -217,7 +217,10 @@ namespace MobiusEditor.Model
             }
         }
 
-        public bool HasConcreteOverlays { get; private set; }
+        public bool ConcreteOverlaysAvailable { get; private set; }
+        public bool CrateOverlaysAvailable { get; private set; }
+        public bool FlareWaypointAvailable { get; private set; }
+        public bool ExpansionUnitsAvailable { get; private set; }
 
         public readonly BasicSection BasicSection;
 
@@ -545,8 +548,15 @@ namespace MobiusEditor.Model
             this.GapRadius = gapRadius;
             this.RadarJamRadius = jamRadius;
             this.CellTriggers = new CellGrid<CellTrigger>(this.Metrics);
-            // Optimisation: used to disable irrelevant logic
-            this.HasConcreteOverlays = this.OverlayTypes.Any(ovl => ovl.IsConcrete);
+
+            // Optimisation: checks on what is inside the given data, used to prevent unnecessary logic from executing.
+            this.ConcreteOverlaysAvailable = this.OverlayTypes.Any(ovl => ovl.IsConcrete);
+            this.CrateOverlaysAvailable = this.OverlayTypes.Any(ovl => ovl.IsCrate);
+            this.FlareWaypointAvailable = this.Waypoints.Any(wpt => (wpt.Flag & WaypointFlag.Flare) != WaypointFlag.None);
+            this.ExpansionUnitsAvailable = BuildingTypes.Any(tt => tt.IsExpansionOnly)
+                || AllInfantryTypes.Any(tt => tt.IsExpansionOnly)
+                || TerrainTypes.Any(tt => tt.IsExpansionOnly)
+                || AllUnitTypes.Any(tt => tt.IsExpansionOnly);
 
             this.MapSection.SetDefault();
             this.BriefingSection.SetDefault();
@@ -810,7 +820,7 @@ namespace MobiusEditor.Model
 
         public void UpdateConcreteOverlays(ISet<Point> locations)
         {
-            if (!this.HasConcreteOverlays)
+            if (!this.ConcreteOverlaysAvailable)
             {
                 return;
             }
@@ -1389,7 +1399,7 @@ namespace MobiusEditor.Model
                     throw new ArgumentException(String.Format("Cannot find tile type '{0}'!", tileType), context);
                 }
             }
-            else if (tile.ExistsInTheater)
+            else if (!tile.ExistsInTheater)
             {
                 if (!safe)
                 {
@@ -2074,11 +2084,11 @@ namespace MobiusEditor.Model
 
         private void Overlay_CellChanged(object sender, CellChangedEventArgs<Overlay> e)
         {
-            if (e.OldValue?.Type.IsWall ?? false)
+            if (e.OldValue != null && (e.OldValue.Type.IsWall || e.OldValue.Type.IsSolid))
             {
                 this.Buildings.Remove(e.OldValue);
             }
-            if (e.Value?.Type.IsWall ?? false)
+            if (e.Value != null && (e.Value.Type.IsWall || e.Value.Type.IsSolid))
             {
                 this.Buildings.Add(e.Location, e.Value);
             }

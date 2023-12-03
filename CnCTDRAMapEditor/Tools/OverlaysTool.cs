@@ -160,6 +160,16 @@ namespace MobiusEditor.Tools
             ExitPlacementMode();
         }
 
+        private void MapPanel_MouseWheel(Object sender, MouseEventArgs e)
+        {
+            if (e.Delta == 0 || (Control.ModifierKeys & Keys.Control) == Keys.None)
+            {
+                return;
+            }
+            KeyEventArgs keyArgs = new KeyEventArgs(e.Delta > 0 ? Keys.PageUp : Keys.PageDown);
+            CheckSelectShortcuts(keyArgs);
+        }
+
         private void MapPanel_MouseMove(object sender, MouseEventArgs e)
         {
             if (!placementMode && (Control.ModifierKeys == Keys.Shift))
@@ -206,22 +216,27 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-            if (map.Metrics.GetCell(location, out int cell))
+            if (!map.Metrics.GetCell(location, out int cell))
             {
-                Overlay overlay = new Overlay { Type = selected, Icon = 0 };
-                Overlay cur = map.Overlay[location];
-                if (cur == null || Map.IsIgnorableOverlay(cur))
+                return;
+            }
+            Overlay overlay = new Overlay { Type = selected, Icon = 0 };
+            Overlay cur = map.Overlay[location];
+            if (selected.IsSolid && (!map.Technos.CanAdd(cell, overlay) || !map.Buildings.CanAdd(cell, overlay)))
+            {
+                return;
+            }
+            if (cur == null || Map.IsIgnorableOverlay(cur))
+            {
+                if (!undoOverlays.ContainsKey(cell))
                 {
-                    if (!undoOverlays.ContainsKey(cell))
-                    {
-                        undoOverlays[cell] = map.Overlay[cell];
-                    }
-                    map.Overlay[cell] = overlay;
-                    Rectangle refreshArea = Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1);
-                    map.UpdateConcreteOverlays(refreshArea.Points().ToHashSet());
-                    redoOverlays[cell] = overlay;
-                    mapPanel.Invalidate(map, refreshArea);
+                    undoOverlays[cell] = map.Overlay[cell];
                 }
+                map.Overlay[cell] = overlay;
+                Rectangle refreshArea = Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1);
+                map.UpdateConcreteOverlays(refreshArea.Points().ToHashSet());
+                redoOverlays[cell] = overlay;
+                mapPanel.Invalidate(map, refreshArea);
             }
         }
 
@@ -439,12 +454,23 @@ namespace MobiusEditor.Tools
                 navigationWidget.MouseoverSize = new Size(1, 1);
             }
             Overlay onCell = previewMap.Overlay[cell];
+            Overlay overlay = new Overlay { Type = selected, Icon = 0, Tint = Color.FromArgb(128, selected.Tint) };
             if (onCell == null || Map.IsIgnorableOverlay(onCell))
             {
-                previewMap.Overlay[cell] = new Overlay { Type = SelectedOverlayType, Icon = 0, Tint = Color.FromArgb(128, SelectedOverlayType.Tint) };
+                if (selected.IsSolid && (!previewMap.Technos.CanAdd(cell, overlay) || (!previewMap.Buildings.CanAdd(cell, overlay))))
+                {
+                    navigationWidget.MouseoverSize = new Size(1, 1);
+                    return;
+                }
+                previewMap.Overlay[cell] = overlay;
                 Rectangle refreshArea = Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1);
                 previewMap.UpdateConcreteOverlays(refreshArea.Points().ToHashSet());
                 mapPanel.Invalidate(previewMap, refreshArea);
+            }
+            else if (onCell != null && onCell.Type != selected)
+            {
+                navigationWidget.MouseoverSize = new Size(1, 1);
+                return;
             }
         }
 
@@ -470,6 +496,7 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseUp += MapPanel_MouseUp;
             this.mapPanel.MouseMove += MapPanel_MouseMove;
             this.mapPanel.MouseLeave += MapPanel_MouseLeave;
+            this.mapPanel.MouseWheel += MapPanel_MouseWheel;
             (this.mapPanel as Control).KeyDown += OverlaysTool_KeyDown;
             (this.mapPanel as Control).KeyUp += OverlaysTool_KeyUp;
             this.navigationWidget.BoundsMouseCellChanged += MouseoverWidget_MouseCellChanged;
@@ -493,6 +520,7 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseUp -= MapPanel_MouseUp;
             this.mapPanel.MouseMove -= MapPanel_MouseMove;
             this.mapPanel.MouseLeave -= MapPanel_MouseLeave;
+            this.mapPanel.MouseWheel -= MapPanel_MouseWheel;
             (this.mapPanel as Control).KeyDown -= OverlaysTool_KeyDown;
             (this.mapPanel as Control).KeyUp -= OverlaysTool_KeyUp;
             this.navigationWidget.BoundsMouseCellChanged -= MouseoverWidget_MouseCellChanged;

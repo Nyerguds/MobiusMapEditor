@@ -75,6 +75,10 @@ namespace MobiusEditor.Utility
             {
                 throw new ObjectDisposedException(GetType().FullName);
             }
+            if (path == null)
+            {
+                return false;
+            }
             // TODO check mod paths first? Not sure; files tend to need mixfiles
             using (Stream str = this.OpenFile(path))
             {

@@ -20,6 +20,9 @@
     <Setting Name="ClassicProducesNoMetaFiles" Type="System.Boolean" Scope="Application">
      <Value Profile="(Default)">False</Value>
     </Setting>
+    <Setting Name="ForceLanguage" Type="System.String" Scope="Application">
+      <Value Profile="(Default)"></Value>
+    </Setting>
     <Setting Name="EnableDpiAwareness" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>

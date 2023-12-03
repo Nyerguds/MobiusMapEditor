@@ -133,6 +133,16 @@ namespace MobiusEditor.Tools
             ExitPlacementMode();
         }
 
+        private void MapPanel_MouseWheel(Object sender, MouseEventArgs e)
+        {
+            if (e.Delta == 0 || (Control.ModifierKeys & Keys.Control) == Keys.None)
+            {
+                return;
+            }
+            KeyEventArgs keyArgs = new KeyEventArgs(e.Delta > 0 ? Keys.PageUp : Keys.PageDown);
+            CheckSelectShortcuts(keyArgs);
+        }
+
         private void MapPanel_MouseDown(object sender, MouseEventArgs e)
         {
             Point mouseCell = navigationWidget.MouseCell;
@@ -398,11 +408,16 @@ namespace MobiusEditor.Tools
             {
                 navigationWidget.MouseoverSize = new Size(1, 1);
             }
-            var overlay = new Overlay { Type = selected, Icon = 0, Tint = Color.FromArgb(128, Color.FromArgb(128, selected.Tint)) };
+            Overlay onCell = previewMap.Overlay[cell];
+            Overlay overlay = new Overlay { Type = selected, Icon = 0, Tint = Color.FromArgb(128, Color.FromArgb(128, selected.Tint)) };
             if (previewMap.Technos.CanAdd(cell, overlay) && previewMap.Buildings.CanAdd(cell, overlay))
             {
                 previewMap.Overlay[cell] = overlay;
                 mapPanel.Invalidate(previewMap, Rectangle.Inflate(new Rectangle(location, new Size(1, 1)), 1, 1));
+            }
+            else if (onCell == null || onCell.Type != selected)
+            {
+                navigationWidget.MouseoverSize = new Size(1, 1);
             }
         }
 
@@ -427,6 +442,7 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseUp += MapPanel_MouseUp;
             this.mapPanel.MouseMove += MapPanel_MouseMove;
             this.mapPanel.MouseLeave += MapPanel_MouseLeave;
+            this.mapPanel.MouseWheel += MapPanel_MouseWheel;
             (this.mapPanel as Control).KeyDown += WallTool_KeyDown;
             (this.mapPanel as Control).KeyUp += WallTool_KeyUp;
             this.navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
@@ -450,6 +466,7 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseUp -= MapPanel_MouseUp;
             this.mapPanel.MouseMove -= MapPanel_MouseMove;
             this.mapPanel.MouseLeave -= MapPanel_MouseLeave;
+            this.mapPanel.MouseWheel -= MapPanel_MouseWheel;
             (this.mapPanel as Control).KeyDown -= WallTool_KeyDown;
             (this.mapPanel as Control).KeyUp -= WallTool_KeyUp;
             this.navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;

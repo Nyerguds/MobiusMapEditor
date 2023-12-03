@@ -68,7 +68,7 @@ namespace MobiusEditor.Dialogs
             int extraWidth = nudRecruitPriority.Width + nudRecruitPriority.Margin.Left + nudRecruitPriority.Margin.Right;
             ttf = new ToolTipFixer(this, toolTip1, 10000, new Dictionary<Type, int> { { typeof(Label), extraWidth } });
 
-            switch (plugin.GameType)
+            switch (plugin.GameInfo.GameType)
             {
                 case GameType.TiberianDawn:
                 case GameType.SoleSurvivor:

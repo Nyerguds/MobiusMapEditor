@@ -124,6 +124,16 @@ namespace MobiusEditor.Tools
             ExitPlacementMode();
         }
 
+        private void MapPanel_MouseWheel(Object sender, MouseEventArgs e)
+        {
+            if (e.Delta == 0 || (Control.ModifierKeys & Keys.Control) == Keys.None)
+            {
+                return;
+            }
+            KeyEventArgs keyArgs = new KeyEventArgs(e.Delta > 0 ? Keys.PageUp : Keys.PageDown);
+            CheckSelectShortcuts(keyArgs);
+        }
+
         private void MapPanel_MouseDoubleClick(object sender, MouseEventArgs e)
         {
             if (Control.ModifierKeys != Keys.None || e.Button != MouseButtons.Left)
@@ -732,6 +742,7 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseMove += MapPanel_MouseMove;
             this.mapPanel.MouseDoubleClick += MapPanel_MouseDoubleClick;
             this.mapPanel.MouseLeave += MapPanel_MouseLeave;
+            this.mapPanel.MouseWheel += MapPanel_MouseWheel;
             (this.mapPanel as Control).KeyDown += SmudgeTool_KeyDown;
             (this.mapPanel as Control).KeyUp += SmudgeTool_KeyUp;
             this.navigationWidget.BoundsMouseCellChanged += MouseoverWidget_MouseCellChanged;
@@ -756,6 +767,7 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseMove -= MapPanel_MouseMove;
             this.mapPanel.MouseDoubleClick -= MapPanel_MouseDoubleClick;
             this.mapPanel.MouseLeave -= MapPanel_MouseLeave;
+            this.mapPanel.MouseWheel -= MapPanel_MouseWheel;
             (this.mapPanel as Control).KeyDown -= SmudgeTool_KeyDown;
             (this.mapPanel as Control).KeyUp -= SmudgeTool_KeyUp;
             this.navigationWidget.BoundsMouseCellChanged -= MouseoverWidget_MouseCellChanged;

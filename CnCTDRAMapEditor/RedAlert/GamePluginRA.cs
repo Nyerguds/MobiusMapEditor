@@ -31,22 +31,12 @@ namespace MobiusEditor.RedAlert
 {
     class GamePluginRA : IGamePlugin
     {
-        private const int maxBriefLengthClassic = 1022;
-        private const int briefLineCutoffClassic = 74;
-        private const int multiStartPoints = 8;
-
-        private const int DefaultGoldValue = 25;
-        private const int DefaultGemValue = 50;
-        private const int DefaultDropZoneRadius = 4;
-        private const int DefaultGapRadius = 10;
-        private const int DefaultJamRadius = 15;
         private readonly IEnumerable<string> movieTypes;
         private bool isLoading = false;
 
         private static readonly Regex SinglePlayRegex = new Regex("^SC[A-LN-Z]\\d{2}[EWX][A-EL]$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private readonly GameInfoRedAlert gameTypeInfo = new GameInfoRedAlert();
 
-        private const string emptyMapName = "<none>";
         private const string movieEmpty = "<none>";
         private const string RemarkOld = " (Classic only)";
 
@@ -263,16 +253,10 @@ namespace MobiusEditor.RedAlert
         };
 
         private static readonly IEnumerable<ITechnoType> fullTechnoTypes;
+
         public GameInfo GameInfo => gameTypeInfo;
-        public string Name => gameTypeInfo.Name;
-        public GameType GameType => gameTypeInfo.GameType;
-        public string DefaultSaveDirectory => Constants.SaveDirectory;
-        public static string FileFilter = "Red Alert files (*.mpr;*.ini)|*.mpr;*.ini";
-        public string SaveFilter => FileFilter;
-        public string OpenFilter => FileFilter;
-        public string DefaultExtension => ".mpr";
-        public HouseType ActiveHouse { get; set; }
         public bool IsMegaMap => true;
+        public HouseType ActiveHouse { get; set; }
         public Map Map { get; }
         public Image MapImage { get; private set; }
 
@@ -422,9 +406,9 @@ namespace MobiusEditor.RedAlert
                 {
                     UpdateRules(aftermathRulesIni, this.Map, forFootprintTest);
                 }
-                if (this.multiplayRulesIni != null && !isSolo)
+                if (this.aftermathMpRulesIni != null && !isSolo)
                 {
-                    UpdateRules(multiplayRulesIni, this.Map, forFootprintTest);
+                    UpdateRules(aftermathMpRulesIni, this.Map, forFootprintTest);
                 }
             }
             IEnumerable<string> errors = null;
@@ -451,7 +435,7 @@ namespace MobiusEditor.RedAlert
 
         private INI rulesIni;
         private INI aftermathRulesIni;
-        private INI multiplayRulesIni;
+        private INI aftermathMpRulesIni;
 
         // Any time a new plugin is made it starts with these defaults. They are then further adapted by the rule reads.
         private readonly LandIniSection LandClear = new LandIniSection(90, 80, 60, 00, true);
@@ -472,6 +456,47 @@ namespace MobiusEditor.RedAlert
             fullTechnoTypes = InfantryTypes.GetTypes().Cast<ITechnoType>().Concat(UnitTypes.GetTypes(false).Cast<ITechnoType>());
         }
 
+        public IEnumerable<string> Initialize()
+        {
+            List<string> errors = new List<string>();
+            // This returns errors in original rules files. Ignore for now.
+            this.rulesIni = ReadRulesFile(Globals.TheArchiveManager.ReadFileClassic("rules.ini"));
+            errors.AddRange(UpdateRules(rulesIni, this.Map, false));
+            this.aftermathRulesIni = ReadRulesFile(Globals.TheArchiveManager.ReadFileClassic("aftrmath.ini"));
+            if (this.Map.BasicSection.ExpansionEnabled && this.aftermathRulesIni != null)
+            {
+                errors.AddRange(UpdateRules(aftermathRulesIni, this.Map, false));
+            }
+            this.aftermathMpRulesIni = ReadRulesFile(Globals.TheArchiveManager.ReadFileClassic("mplayer.ini"));
+            if (this.aftermathMpRulesIni != null && this.Map.BasicSection.ExpansionEnabled && !this.Map.BasicSection.SoloMission)
+            {
+                errors.AddRange(UpdateRules(aftermathMpRulesIni, this.Map, false));
+            }
+            // Only one will be found.
+            Globals.TheTeamColorManager.Load(@"DATA\XML\CNCRATEAMCOLORS.XML");
+            Globals.TheTeamColorManager.Load("palette.cps");
+            AddTeamColorsRA(Globals.TheTeamColorManager);
+            return errors;
+        }
+
+        private static void AddTeamColorsRA(ITeamColorManager teamColorManager)
+        {
+            // Only applicable for Remastered colors since I can't control those.
+            if (teamColorManager is TeamColorManager tcm)
+            {
+                // "Neutral" in RA colors seems broken; makes stuff black, so remove it.
+                tcm.RemoveTeamColor("NEUTRAL");
+                TeamColor colSpain = tcm.GetItem("SPAIN");
+                if (colSpain != null)
+                {
+                    // Special. Technically color "JP" exists for this, but it's wrong. Clone Spain instead.
+                    TeamColor teamColorSpecial = new TeamColor(tcm);
+                    teamColorSpecial.Load(colSpain, "SPECIAL");
+                    tcm.AddTeamColor(teamColorSpecial);
+                }
+            }
+        }
+
         public GamePluginRA()
             : this(true)
         {
@@ -479,8 +504,8 @@ namespace MobiusEditor.RedAlert
 
         public GamePluginRA(bool mapImage)
         {
-            IEnumerable<Waypoint> playerWaypoints = Enumerable.Range(0, multiStartPoints).Select(i => new Waypoint(string.Format("P{0}", i), Waypoint.GetFlagForMpId(i)));
-            IEnumerable<Waypoint> generalWaypoints = Enumerable.Range(multiStartPoints, 98 - multiStartPoints).Select(i => new Waypoint(i.ToString()));
+            IEnumerable<Waypoint> playerWaypoints = Enumerable.Range(0, Constants.MultiStartPoints).Select(i => new Waypoint(string.Format("P{0}", i), Waypoint.GetFlagForMpId(i)));
+            IEnumerable<Waypoint> generalWaypoints = Enumerable.Range(Constants.MultiStartPoints, 98 - Constants.MultiStartPoints).Select(i => new Waypoint(i.ToString()));
             Waypoint[] specialWaypoints = new Waypoint[] { new Waypoint("Home", WaypointFlag.Home), new Waypoint("Reinf.", WaypointFlag.Reinforce), new Waypoint("Special", WaypointFlag.Special) };
             IEnumerable<Waypoint> waypoints = playerWaypoints.Concat(generalWaypoints).Concat(specialWaypoints);
             List<string> movies = new List<string>(movieTypesRa);
@@ -536,8 +561,8 @@ namespace MobiusEditor.RedAlert
                 MissionTypes.GetTypes(), MissionTypes.MISSION_GUARD, MissionTypes.MISSION_STOP, MissionTypes.MISSION_HARVEST,
                 MissionTypes.MISSION_UNLOAD, DirectionTypes.GetMainTypes(), DirectionTypes.GetAllTypes(), InfantryTypes.GetTypes(),
                 UnitTypes.GetTypes(Globals.DisableAirUnits), BuildingTypes.GetTypes(), TeamMissionTypes.GetTypes(),
-                fullTechnoTypes, waypoints, DefaultDropZoneRadius, DefaultGapRadius, DefaultJamRadius, movieTypes, movieEmpty, themeTypes, themeEmpty,
-                DefaultGoldValue, DefaultGemValue);
+                fullTechnoTypes, waypoints, Constants.DefaultDropZoneRadius, Constants.DefaultGapRadius, Constants.DefaultJamRadius, movieTypes, movieEmpty, themeTypes, themeEmpty,
+                Constants.DefaultGoldValue, Constants.DefaultGemValue);
             Map.BasicSection.PropertyChanged += BasicSection_PropertyChanged;
             Map.MapSection.PropertyChanged += MapSection_PropertyChanged;
             if (mapImage)
@@ -558,7 +583,7 @@ namespace MobiusEditor.RedAlert
                 Map.TopLeft = new Point(1, 1);
                 Map.Size = Map.Metrics.Size - new Size(2, 2);
                 Map.BasicSection.Player = Map.HouseTypes.FirstOrDefault()?.Name;
-                Map.BasicSection.Name = emptyMapName;
+                Map.BasicSection.Name = Constants.EmptyMapName;
                 UpdateBasePlayerHouse();
                 // Initialises rules.
                 ResetMissionRules(null);
@@ -2522,36 +2547,6 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        public IEnumerable<string> ReadRules(Byte[] rulesFile)
-        {
-            this.rulesIni = ReadRulesFile(rulesFile);
-            if (this.rulesIni != null)
-            {
-                return UpdateRules(rulesIni, this.Map, false);
-            }
-            return null;
-        }
-
-        public IEnumerable<string> ReadExpandRules(Byte[] rulesFile)
-        {
-            this.aftermathRulesIni = ReadRulesFile(rulesFile);
-            if (this.aftermathRulesIni != null && this.Map.BasicSection.ExpansionEnabled)
-            {
-                return UpdateRules(aftermathRulesIni, this.Map, false);
-            }
-            return null;
-        }
-
-        public IEnumerable<string> ReadMultiRules(Byte[] rulesFile)
-        {
-            this.multiplayRulesIni = ReadRulesFile(rulesFile);
-            if (this.multiplayRulesIni != null && !this.Map.BasicSection.SoloMission)
-            {
-                return UpdateRules(multiplayRulesIni, this.Map, false);
-            }
-            return null;
-        }
-
         private INI ReadRulesFile(Byte[] rulesFile)
         {
             if (rulesFile == null)
@@ -2735,15 +2730,15 @@ namespace MobiusEditor.RedAlert
         {
             List<string> errors = new List<string>();
             int? goldVal = GetIntRulesValue(ini, "General", "GoldValue", false, errors);
-            map.TiberiumOrGoldValue = goldVal ?? DefaultGoldValue;
+            map.TiberiumOrGoldValue = goldVal ?? Constants.DefaultGoldValue;
             int? gemVal = GetIntRulesValue(ini, "General", "GemValue", false, errors);
-            map.GemValue = gemVal ?? DefaultGemValue;
+            map.GemValue = gemVal ?? Constants.DefaultGemValue;
             int? radius = GetIntRulesValue(ini, "General", "DropZoneRadius", false, errors);
-            map.DropZoneRadius = radius ?? DefaultDropZoneRadius;
+            map.DropZoneRadius = radius ?? Constants.DefaultDropZoneRadius;
             int? gapRadius = GetIntRulesValue(ini, "General", "GapRadius", false, errors);
-            map.GapRadius = gapRadius ?? DefaultGapRadius;
+            map.GapRadius = gapRadius ?? Constants.DefaultGapRadius;
             int? jamRadius = GetIntRulesValue(ini, "General", "RadarJamRadius", false, errors);
-            map.RadarJamRadius = jamRadius ?? DefaultJamRadius;
+            map.RadarJamRadius = jamRadius ?? Constants.DefaultJamRadius;
             return errors;
         }
 
@@ -3425,13 +3420,13 @@ namespace MobiusEditor.RedAlert
             briefingSection["Text"] = briefText;
             if (Globals.WriteClassicBriefing)
             {
-                if (briefText.Length > maxBriefLengthClassic)
+                if (briefText.Length > Constants.MaxBriefLengthClassic)
                 {
-                    briefText = briefText.Substring(0, maxBriefLengthClassic);
+                    briefText = briefText.Substring(0, Constants.MaxBriefLengthClassic);
                 }
                 List<string> finalLines = new List<string>();
                 string line = briefText;
-                if (line.Length <= briefLineCutoffClassic)
+                if (line.Length <= Constants.BriefLineCutoffClassic)
                 {
                     finalLines.Add(line);
                 }
@@ -3445,7 +3440,7 @@ namespace MobiusEditor.RedAlert
                         // Always allow initial word
                         int nextLength = 0;
                         bool isBreak = false;
-                        while (nextLength < briefLineCutoffClassic && wordIndex < splitLine.Length)
+                        while (nextLength < Constants.BriefLineCutoffClassic && wordIndex < splitLine.Length)
                         {
                             String cur = splitLine[wordIndex];
                             bool wasBreak = isBreak;
@@ -3618,7 +3613,7 @@ namespace MobiusEditor.RedAlert
         {
             StringBuilder sb = new StringBuilder();
             // Check if map has name
-            if (this.MapNameIsEmpty(this.Map.BasicSection.Name))
+            if (this.GameInfo.MapNameIsEmpty(this.Map.BasicSection.Name))
             {
                 sb.Append("Map name is empty. If you continue, the filename will be filled in as map name.\n");
             }
@@ -3734,8 +3729,8 @@ namespace MobiusEditor.RedAlert
                 checkSections.Add(rulesIni.Sections);
             if (Map.BasicSection.ExpansionEnabled && aftermathRulesIni != null)
                 checkSections.Add(aftermathRulesIni.Sections);
-            if (Map.BasicSection.ExpansionEnabled && !Map.BasicSection.SoloMission && multiplayRulesIni != null)
-                checkSections.Add(multiplayRulesIni.Sections);
+            if (Map.BasicSection.ExpansionEnabled && !Map.BasicSection.SoloMission && aftermathMpRulesIni != null)
+                checkSections.Add(aftermathMpRulesIni.Sections);
             if (extraSections != null)
                 checkSections.Add(extraSections);
             // weapon checks.
@@ -4566,92 +4561,6 @@ namespace MobiusEditor.RedAlert
                     }
                     break;
             }
-        }
-
-        public bool MapNameIsEmpty(string name)
-        {
-            return String.IsNullOrEmpty(name) || emptyMapName.Equals(name, StringComparison.OrdinalIgnoreCase);
-        }
-
-        public string EvaluateBriefing(string briefing)
-        {
-            string briefText = (briefing ?? String.Empty).Replace('\t', ' ').Trim('\r', '\n', ' ').Replace("\r\n", "\n").Replace("\r", "\n");
-            StringBuilder message = new StringBuilder();
-            if (!Globals.UseClassicFiles || !Globals.ClassicNoRemasterLogic)
-            {
-                // The actual line length cutoff depends on the user resolution and which characters are used, but this is a decent indication.
-                const int cutoff = 40;
-                int lines = briefText.Count(c => c == '\n') + 1;
-                bool briefLenOvfl = lines > 25;
-                bool briefLenSplitOvfl = false;
-                // If it's already over 25 lines because of the line breaks, don't bother doing the length split logic; it'll be bad anyway.
-                if (!briefLenOvfl)
-                {
-                    // split in lines of 40; that's more or less the average line length in the brief screen.
-                    List<string> txtLines = new List<string>();
-                    string[] briefLines = briefText.Split('\n');
-                    for (int i = 0; i < briefLines.Length; ++i)
-                    {
-                        string line = briefLines[i].Trim();
-                        if (line.Length <= cutoff)
-                        {
-                            txtLines.Add(line);
-                            continue;
-                        }
-                        string[] splitLine = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                        int wordIndex = 0;
-                        while (wordIndex < splitLine.Length)
-                        {
-                            StringBuilder sb = new StringBuilder();
-                            // Always allow initial word
-                            int nextLength = 0;
-                            while (nextLength < cutoff && wordIndex < splitLine.Length)
-                            {
-                                if (sb.Length > 0)
-                                    sb.Append(' ');
-                                sb.Append(splitLine[wordIndex++]);
-                                nextLength = wordIndex >= splitLine.Length ? 0 : (sb.Length + 1 + splitLine[wordIndex].Length);
-                            }
-                            txtLines.Add(sb.ToString());
-                        }
-                    }
-                    briefLenSplitOvfl = txtLines.Count > 25;
-                }
-                const string warn25Lines = "Red Alert's briefing screen in the Remaster can only show 25 lines of briefing text. ";
-                if (briefLenOvfl)
-                {
-                    message.Append(warn25Lines).Append("Your current briefing exceeds that.");
-                }
-                else if (briefLenSplitOvfl)
-                {
-                    message.Append(warn25Lines)
-                        .Append("The lines average to about 40 characters per line, and when split that way, your current briefing exceeds that, ")
-                        .Append("meaning it will most likely not display correctly in-game.");
-                }
-            }
-            if (Globals.WriteClassicBriefing)
-            {
-                if (briefText.Length > maxBriefLengthClassic)
-                {
-                    if (message.Length > 0)
-                    {
-                        message.Append("\n\n");
-                    }
-                    message.Append("Classic Red Alert briefings cannot exceed ").Append(maxBriefLengthClassic).Append(" characters. This includes line breaks.")
-                        .Append(" This will not affect the mission when playing in the Remaster, but the briefing will be truncated when playing in the original game.");
-                }
-                if (briefText.Contains(";"))
-                {
-                    if (message.Length > 0)
-                    {
-                        message.Append("\n\n");
-                    }
-                    message.Append("Classic Red Alert briefings cannot contain semicolon characters, since they are the ini format's notation ")
-                        .Append("for marking all following text on the line as comment. This will not affect the mission when playing in the Remaster, ")
-                        .Append("but if kept, they will be replaced by colons in the classic briefing to prevent this issue.");
-                }
-            }
-            return message.Length == 0 ? null : message.ToString();
         }
 
         public ITeamColor[] GetFlagColors()

@@ -243,7 +243,7 @@ namespace MobiusEditor.Dialogs
             }
             ExplorerComparer expl = new ExplorerComparer();
             var templateTypes = plugin.Map.TemplateTypes
-                .Where(t => t.Initialised && t.Thumbnail != null
+                .Where(t => t.ExistsInTheater && t.Thumbnail != null
                     && (t.Flag & TemplateTypeFlag.Clear) == TemplateTypeFlag.None
                     && (t.Flag & TemplateTypeFlag.IsGrouped) == TemplateTypeFlag.None)
                 .OrderBy(t => t.Name, expl)

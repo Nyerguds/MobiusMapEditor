@@ -34,18 +34,12 @@ namespace MobiusEditor.TiberianDawn
     {
         protected bool isMegaMap = false;
 
-        protected const int maxBriefLengthClassic = 510;
-        protected const int briefLineCutoffClassic = 74;
-        protected const int multiStartPoints = 8;
-        protected const int tiberiumValue = 25;
-
         protected static readonly Regex SinglePlayRegex = new Regex("^SC[A-LN-Z]\\d{2}\\d?[EWX][A-EL]$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         protected static readonly Regex MovieRegex = new Regex(@"^(?:.*?\\)*(.*?)\.BK2$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private readonly GameInfoTibDawn gameTypeInfo = new GameInfoTibDawn();
 
         protected static readonly IEnumerable<ITechnoType> fullTechnoTypes;
 
-        protected const string emptyMapName = "None";
         protected const string movieEmpty = "x";
         protected readonly IEnumerable<string> movieTypes;
 
@@ -224,25 +218,9 @@ namespace MobiusEditor.TiberianDawn
         };
 
         public virtual GameInfo GameInfo => gameTypeInfo;
-        public virtual string Name => gameTypeInfo.Name;
-        public virtual GameType GameType => gameTypeInfo.GameType;
-
-        public virtual string DefaultSaveDirectory => Constants.SaveDirectory;
-
-        public static string FileFilter = "Tiberian Dawn files (*.ini;*.bin)|*.ini;*.bin";
-
-        public virtual string OpenFilter => FileFilter;
-
-        public virtual string SaveFilter => FileFilter;
-
-        public virtual string DefaultExtension => ".ini";
-
         public virtual HouseType ActiveHouse { get; set; }
-
         public virtual bool IsMegaMap => isMegaMap;
-
         public virtual Map Map { get; protected set; }
-
         public virtual Image MapImage { get; protected set; }
 
         protected IFeedBackHandler feedBackHandler;
@@ -346,6 +324,56 @@ namespace MobiusEditor.TiberianDawn
             return INITools.CheckForIniInfo(iniContents, "Map", "Version", "1");
         }
 
+        public IEnumerable<string> Initialize()
+        {
+            Globals.TheTeamColorManager.Load(@"DATA\XML\CNCTDTEAMCOLORS.XML");
+            AddTeamColorsTD(Globals.TheTeamColorManager);
+            return new List<string>();
+        }
+
+        public static void AddTeamColorsTD(ITeamColorManager teamColorManager)
+        {
+            // Only applicable for Remastered colors since I can't control those.
+            if (teamColorManager is TeamColorManager tcm)
+            {
+                TeamColor colGoodGuy = tcm.GetItem("GOOD");
+                TeamColor colBadUnits = tcm.GetItem("BAD_UNIT");
+                string baseVariant = colGoodGuy?.Variant?? "BASE_TEAM";
+                if (colGoodGuy != null)
+                {
+                    // Neutral
+                    TeamColor teamColorSNeutral = new TeamColor(tcm);
+                    teamColorSNeutral.Load(colGoodGuy, "NEUTRAL");
+                    tcm.AddTeamColor(teamColorSNeutral);
+                    // Special
+                    TeamColor teamColorSpecial = new TeamColor(tcm);
+                    teamColorSpecial.Load(colGoodGuy, "SPECIAL");
+                    tcm.AddTeamColor(teamColorSpecial);
+                }
+                // Black for unowned.
+                TeamColor teamColorNone = new TeamColor(tcm);
+                teamColorNone.Load("NONE", baseVariant,
+                    Color.FromArgb(66, 255, 0), Color.FromArgb(0, 255, 56), 0,
+                    new Vector3(0.30f, -1.00f, 0.00f), new Vector3(0f, 1f, 1f), new Vector2(0.0f, 0.1f),
+                    new Vector3(0, 1, 1), new Vector2(0, 1), Color.FromArgb(61, 61, 59));
+                tcm.AddTeamColor(teamColorNone);
+                if (colBadUnits != null)
+                {
+                    // Extra color for flag 7: metallic blue.
+                    TeamColor teamColorSeven = new TeamColor(tcm);
+                    teamColorSeven.Load(colBadUnits, "MULTI7");
+                    tcm.AddTeamColor(teamColorSeven);
+                }
+                // Extra color for flag 8: copy of RA's purple.
+                TeamColor teamColorEight = new TeamColor(tcm);
+                teamColorEight.Load("MULTI8", baseVariant,
+                    Color.FromArgb(66, 255, 0), Color.FromArgb(0, 255, 56), 0,
+                    new Vector3(0.410f, 0.300f, 0.000f), new Vector3(0f, 1f, 1f), new Vector2(0.0f, 1.0f),
+                    new Vector3(0, 1, 1), new Vector2(0, 1), Color.FromArgb(77, 13, 255));
+                tcm.AddTeamColor(teamColorEight);
+            }
+        }
+
         static GamePluginTD()
         {
             fullTechnoTypes = InfantryTypes.GetTypes().Cast<ITechnoType>().Concat(UnitTypes.GetTypes(false).Cast<ITechnoType>());
@@ -398,8 +426,8 @@ namespace MobiusEditor.TiberianDawn
             :this()
         {
             this.isMegaMap = megaMap;
-            IEnumerable<Waypoint> playerWaypoints = Enumerable.Range(0, multiStartPoints).Select(i => new Waypoint(string.Format("P{0}", i), Waypoint.GetFlagForMpId(i)));
-            IEnumerable<Waypoint> generalWaypoints = Enumerable.Range(multiStartPoints, 25 - multiStartPoints).Select(i => new Waypoint(i.ToString()));
+            IEnumerable<Waypoint> playerWaypoints = Enumerable.Range(0, Constants.MultiStartPoints).Select(i => new Waypoint(string.Format("P{0}", i), Waypoint.GetFlagForMpId(i)));
+            IEnumerable<Waypoint> generalWaypoints = Enumerable.Range(Constants.MultiStartPoints, 25 - Constants.MultiStartPoints).Select(i => new Waypoint(i.ToString()));
             Waypoint[] specialWaypoints = new Waypoint[] { new Waypoint("Flare", WaypointFlag.Flare), new Waypoint("Home", WaypointFlag.Home), new Waypoint("Reinf.", WaypointFlag.Reinforce) };
             Waypoint[] waypoints = playerWaypoints.Concat(generalWaypoints).Concat(specialWaypoints).ToArray();
             BasicSection basicSection = new BasicSection();
@@ -441,7 +469,7 @@ namespace MobiusEditor.TiberianDawn
                 MissionTypes.GetTypes(), MissionTypes.MISSION_GUARD, MissionTypes.MISSION_STOP, MissionTypes.MISSION_HARVEST,
                 MissionTypes.MISSION_UNLOAD, DirectionTypes.GetMainTypes(), DirectionTypes.GetAllTypes(), InfantryTypes.GetTypes(),
                 UnitTypes.GetTypes(Globals.DisableAirUnits), BuildingTypes.GetTypes(), TeamMissionTypes.GetTypes(),
-                fullTechnoTypes, waypoints, 4, 0, 0, movieTypes, movieEmpty, themeTypes, themeEmpty, tiberiumValue, 0);
+                fullTechnoTypes, waypoints, 4, 0, 0, movieTypes, movieEmpty, themeTypes, themeEmpty, Constants.TiberiumValue, 0);
             Map.BasicSection.PropertyChanged += BasicSection_PropertyChanged;
             Map.MapSection.PropertyChanged += MapSection_PropertyChanged;
             if (mapImage)
@@ -458,7 +486,7 @@ namespace MobiusEditor.TiberianDawn
             Map.Theater = Map.TheaterTypes.Where(t => t.Equals(theater)).FirstOrDefault() ?? Map.TheaterTypes.FirstOrDefault() ?? TheaterTypes.Desert;
             Map.TopLeft = new Point(1, 1);
             Map.Size = Map.Metrics.Size - new Size(2, 2);
-            Map.BasicSection.Name = emptyMapName;
+            Map.BasicSection.Name = Constants.EmptyMapName;
             UpdateBasePlayerHouse();
         }
 
@@ -506,7 +534,7 @@ namespace MobiusEditor.TiberianDawn
                             }
                             else
                             {
-                                errors.Add(String.Format("'{0}' does not have the correct size for a " + this.Name + " .bin file.", Path.GetFileName(binPath)));
+                                errors.Add(String.Format("'{0}' does not have the correct size for a " + this.GameInfo.Name + " .bin file.", Path.GetFileName(binPath)));
                                 modified = true;
                                 Map.Templates.Clear();
                             }
@@ -537,7 +565,7 @@ namespace MobiusEditor.TiberianDawn
                             }
                             else
                             {
-                                errors.Add(String.Format("'{0}' does not have the correct size for a " + this.Name + " .bin file.", Path.GetFileName(binFile)));
+                                errors.Add(String.Format("'{0}' does not have the correct size for a " + this.GameInfo.Name + " .bin file.", Path.GetFileName(binFile)));
                                 modified = true;
                                 Map.Templates.Clear();
                             }
@@ -2387,9 +2415,9 @@ namespace MobiusEditor.TiberianDawn
             briefingSection["Text"] = briefText.Replace("\n", "@");
             if (Globals.WriteClassicBriefing)
             {
-                if (briefText.Length > maxBriefLengthClassic)
+                if (briefText.Length > Constants.MaxBriefLengthClassic)
                 {
-                    briefText = briefText.Substring(0, maxBriefLengthClassic);
+                    briefText = briefText.Substring(0, Constants.MaxBriefLengthClassic);
                 }
                 string[] lines = briefText.Split('\n');
                 List<string> finalLines = new List<string>();
@@ -2401,7 +2429,7 @@ namespace MobiusEditor.TiberianDawn
                     {
                         line += "##";
                     }
-                    if (line.Length <= briefLineCutoffClassic)
+                    if (line.Length <= Constants.BriefLineCutoffClassic)
                     {
                         finalLines.Add(line);
                         continue;
@@ -2413,7 +2441,7 @@ namespace MobiusEditor.TiberianDawn
                         StringBuilder sb = new StringBuilder();
                         // Always allow initial word
                         int nextLength = 0;
-                        while (nextLength < briefLineCutoffClassic && wordIndex < splitLine.Length)
+                        while (nextLength < Constants.BriefLineCutoffClassic && wordIndex < splitLine.Length)
                         {
                             if (sb.Length > 0)
                                 sb.Append(' ');
@@ -2845,7 +2873,7 @@ namespace MobiusEditor.TiberianDawn
             if (forWarnings)
             {
                 // Check if map has name
-                if (this.MapNameIsEmpty(this.Map.BasicSection.Name))
+                if (this.GameInfo.MapNameIsEmpty(this.Map.BasicSection.Name))
                 {
                     return "Map name is empty. If you continue, the filename will be filled in as map name.";
                 }
@@ -3396,27 +3424,6 @@ namespace MobiusEditor.TiberianDawn
                 }
             }
             return errors;
-        }
-
-        public virtual bool MapNameIsEmpty(string name)
-        {
-            return String.IsNullOrEmpty(name) || emptyMapName.Equals(name, StringComparison.OrdinalIgnoreCase);
-        }
-
-        public virtual string EvaluateBriefing(string briefing)
-        {
-            if (!Globals.WriteClassicBriefing)
-            {
-                return null;
-            }
-            string briefText = (briefing ?? String.Empty).Replace('\t', ' ').Trim('\r', '\n', ' ').Replace("\r\n", "\n").Replace("\r", "\n");
-            // Remove duplicate spaces
-            briefText = Regex.Replace(briefText, " +", " ");
-            if (briefText.Length > maxBriefLengthClassic)
-            {
-                return "Classic Tiberian Dawn briefings cannot exceed " + maxBriefLengthClassic + " characters. This includes line breaks.\n\nThis will not affect the mission when playing in the Remaster, but the briefing will be truncated when playing in the original game.";
-            }
-            return null;
         }
 
         public virtual ITeamColor[] GetFlagColors()

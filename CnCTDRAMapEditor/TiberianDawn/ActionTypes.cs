@@ -20,27 +20,27 @@ namespace MobiusEditor.TiberianDawn
 {
     public static class ActionTypes
     {
-        public const string ACTION_NONE = "None";
-        public const string ACTION_WIN = "Win";
-        public const string ACTION_LOSE = "Lose";
-        public const string ACTION_BEGIN_PRODUCTION = "Production";
-        public const string ACTION_CREATE_TEAM = "Create Team";
-        public const string ACTION_DESTROY_TEAM = "Dstry Teams";
-        public const string ACTION_ALL_HUNT = "All to Hunt";
-        public const string ACTION_REINFORCEMENTS = "Reinforce.";
-        public const string ACTION_DZ = "DZ at 'Z'";
-        public const string ACTION_AIRSTRIKE = "Airstrike";
-        public const string ACTION_NUKE = "Nuclear Missile";
-        public const string ACTION_ION = "Ion Cannon";
-        public const string ACTION_DESTROY_XXXX = "Dstry Trig 'XXXX'";
-        public const string ACTION_DESTROY_YYYY = "Dstry Trig 'YYYY'";
-        public const string ACTION_DESTROY_ZZZZ = "Dstry Trig 'ZZZZ'";
-        public const string ACTION_DESTROY_UUUU = "Dstry Trig 'UUUU'";
-        public const string ACTION_DESTROY_VVVV = "Dstry Trig 'VVVV'";
-        public const string ACTION_DESTROY_WWWW = "Dstry Trig 'WWWW'";
-        public const string ACTION_AUTOCREATE = "Autocreate";
-        public const string ACTION_WINLOSE = "Cap=Win/Des=Lose";
-        public const string ACTION_ALLOWWIN = "Allow Win";
+        public const string ACTION_NONE             /**/ = "None";
+        public const string ACTION_WIN              /**/ = "Win";
+        public const string ACTION_LOSE             /**/ = "Lose";
+        public const string ACTION_BEGIN_PRODUCTION /**/ = "Production";
+        public const string ACTION_CREATE_TEAM      /**/ = "Create Team";
+        public const string ACTION_DESTROY_TEAM     /**/ = "Dstry Teams";
+        public const string ACTION_ALL_HUNT         /**/ = "All to Hunt";
+        public const string ACTION_REINFORCEMENTS   /**/ = "Reinforce.";
+        public const string ACTION_DZ               /**/ = "DZ at 'Z'";
+        public const string ACTION_AIRSTRIKE        /**/ = "Airstrike";
+        public const string ACTION_NUKE             /**/ = "Nuclear Missile";
+        public const string ACTION_ION              /**/ = "Ion Cannon";
+        public const string ACTION_DESTROY_XXXX     /**/ = "Dstry Trig 'XXXX'";
+        public const string ACTION_DESTROY_YYYY     /**/ = "Dstry Trig 'YYYY'";
+        public const string ACTION_DESTROY_ZZZZ     /**/ = "Dstry Trig 'ZZZZ'";
+        public const string ACTION_DESTROY_UUUU     /**/ = "Dstry Trig 'UUUU'";
+        public const string ACTION_DESTROY_VVVV     /**/ = "Dstry Trig 'VVVV'";
+        public const string ACTION_DESTROY_WWWW     /**/ = "Dstry Trig 'WWWW'";
+        public const string ACTION_AUTOCREATE       /**/ = "Autocreate";
+        public const string ACTION_WINLOSE          /**/ = "Cap=Win/Des=Lose";
+        public const string ACTION_ALLOWWIN         /**/ = "Allow Win";
 
         private static readonly string[] Types;
 

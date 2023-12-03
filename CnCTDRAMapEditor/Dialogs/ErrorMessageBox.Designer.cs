@@ -43,26 +43,33 @@ namespace MobiusEditor.Dialogs
         private void InitializeComponent()
         {
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this.tableLayoutPanel3 = new System.Windows.Forms.TableLayoutPanel();
+            this.flowLayoutPanel4 = new System.Windows.Forms.FlowLayoutPanel();
             this.lblMessage = new System.Windows.Forms.Label();
+            this.flowLayoutPanel5 = new System.Windows.Forms.FlowLayoutPanel();
+            this.lblWordWrap = new System.Windows.Forms.Label();
             this.txtErrors = new System.Windows.Forms.TextBox();
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
+            this.flowLayoutPanel3 = new System.Windows.Forms.FlowLayoutPanel();
+            this.btnWordWrap = new System.Windows.Forms.Button();
+            this.btnCopy = new System.Windows.Forms.Button();
             this.flowLayoutPanel2 = new System.Windows.Forms.FlowLayoutPanel();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOk = new System.Windows.Forms.Button();
-            this.flowLayoutPanel3 = new System.Windows.Forms.FlowLayoutPanel();
-            this.btnCopy = new System.Windows.Forms.Button();
-            this.btnWordWrap = new System.Windows.Forms.Button();
             this.tableLayoutPanel1.SuspendLayout();
+            this.tableLayoutPanel3.SuspendLayout();
+            this.flowLayoutPanel4.SuspendLayout();
+            this.flowLayoutPanel5.SuspendLayout();
             this.tableLayoutPanel2.SuspendLayout();
-            this.flowLayoutPanel2.SuspendLayout();
             this.flowLayoutPanel3.SuspendLayout();
+            this.flowLayoutPanel2.SuspendLayout();
             this.SuspendLayout();
             // 
             // tableLayoutPanel1
             // 
             this.tableLayoutPanel1.ColumnCount = 1;
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.Controls.Add(this.lblMessage, 0, 0);
+            this.tableLayoutPanel1.Controls.Add(this.tableLayoutPanel3, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.txtErrors, 0, 1);
             this.tableLayoutPanel1.Controls.Add(this.tableLayoutPanel2, 0, 2);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -76,24 +83,74 @@ namespace MobiusEditor.Dialogs
             this.tableLayoutPanel1.Size = new System.Drawing.Size(684, 361);
             this.tableLayoutPanel1.TabIndex = 0;
             // 
+            // tableLayoutPanel3
+            // 
+            this.tableLayoutPanel3.ColumnCount = 2;
+            this.tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
+            this.tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
+            this.tableLayoutPanel3.Controls.Add(this.flowLayoutPanel4, 0, 0);
+            this.tableLayoutPanel3.Controls.Add(this.flowLayoutPanel5, 1, 0);
+            this.tableLayoutPanel3.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanel3.Location = new System.Drawing.Point(3, 3);
+            this.tableLayoutPanel3.Name = "tableLayoutPanel3";
+            this.tableLayoutPanel3.RowCount = 1;
+            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tableLayoutPanel3.Size = new System.Drawing.Size(678, 20);
+            this.tableLayoutPanel3.TabIndex = 5;
+            // 
+            // flowLayoutPanel4
+            // 
+            this.flowLayoutPanel4.AutoSize = true;
+            this.flowLayoutPanel4.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.flowLayoutPanel4.Controls.Add(this.lblMessage);
+            this.flowLayoutPanel4.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.flowLayoutPanel4.Location = new System.Drawing.Point(0, 0);
+            this.flowLayoutPanel4.Margin = new System.Windows.Forms.Padding(0);
+            this.flowLayoutPanel4.Name = "flowLayoutPanel4";
+            this.flowLayoutPanel4.Size = new System.Drawing.Size(197, 20);
+            this.flowLayoutPanel4.TabIndex = 3;
+            // 
             // lblMessage
             // 
             this.lblMessage.AutoSize = true;
-            this.lblMessage.Location = new System.Drawing.Point(3, 0);
+            this.lblMessage.Location = new System.Drawing.Point(3, 3);
+            this.lblMessage.Margin = new System.Windows.Forms.Padding(3);
             this.lblMessage.Name = "lblMessage";
             this.lblMessage.Size = new System.Drawing.Size(191, 13);
-            this.lblMessage.TabIndex = 1;
+            this.lblMessage.TabIndex = 2;
             this.lblMessage.Text = "The following errors were encountered:";
+            // 
+            // flowLayoutPanel5
+            // 
+            this.flowLayoutPanel5.AutoSize = true;
+            this.flowLayoutPanel5.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.flowLayoutPanel5.Controls.Add(this.lblWordWrap);
+            this.flowLayoutPanel5.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.flowLayoutPanel5.FlowDirection = System.Windows.Forms.FlowDirection.RightToLeft;
+            this.flowLayoutPanel5.Location = new System.Drawing.Point(197, 0);
+            this.flowLayoutPanel5.Margin = new System.Windows.Forms.Padding(0);
+            this.flowLayoutPanel5.Name = "flowLayoutPanel5";
+            this.flowLayoutPanel5.Size = new System.Drawing.Size(481, 20);
+            this.flowLayoutPanel5.TabIndex = 2;
+            // 
+            // lblWordWrap
+            // 
+            this.lblWordWrap.Location = new System.Drawing.Point(378, 3);
+            this.lblWordWrap.Margin = new System.Windows.Forms.Padding(3);
+            this.lblWordWrap.Name = "lblWordWrap";
+            this.lblWordWrap.Size = new System.Drawing.Size(100, 13);
+            this.lblWordWrap.TabIndex = 3;
+            this.lblWordWrap.Text = "Word wrap: [OFF]";
             // 
             // txtErrors
             // 
             this.txtErrors.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.txtErrors.Location = new System.Drawing.Point(3, 16);
+            this.txtErrors.Location = new System.Drawing.Point(3, 29);
             this.txtErrors.Multiline = true;
             this.txtErrors.Name = "txtErrors";
             this.txtErrors.ReadOnly = true;
             this.txtErrors.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.txtErrors.Size = new System.Drawing.Size(678, 306);
+            this.txtErrors.Size = new System.Drawing.Size(678, 293);
             this.txtErrors.TabIndex = 0;
             // 
             // tableLayoutPanel2
@@ -110,6 +167,39 @@ namespace MobiusEditor.Dialogs
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel2.Size = new System.Drawing.Size(678, 30);
             this.tableLayoutPanel2.TabIndex = 2;
+            // 
+            // flowLayoutPanel3
+            // 
+            this.flowLayoutPanel3.AutoSize = true;
+            this.flowLayoutPanel3.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.flowLayoutPanel3.Controls.Add(this.btnWordWrap);
+            this.flowLayoutPanel3.Controls.Add(this.btnCopy);
+            this.flowLayoutPanel3.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.flowLayoutPanel3.Location = new System.Drawing.Point(0, 0);
+            this.flowLayoutPanel3.Margin = new System.Windows.Forms.Padding(0);
+            this.flowLayoutPanel3.Name = "flowLayoutPanel3";
+            this.flowLayoutPanel3.Size = new System.Drawing.Size(234, 30);
+            this.flowLayoutPanel3.TabIndex = 3;
+            // 
+            // btnWordWrap
+            // 
+            this.btnWordWrap.Location = new System.Drawing.Point(3, 3);
+            this.btnWordWrap.Name = "btnWordWrap";
+            this.btnWordWrap.Size = new System.Drawing.Size(111, 23);
+            this.btnWordWrap.TabIndex = 1;
+            this.btnWordWrap.Text = "Toggle &Word Wrap";
+            this.btnWordWrap.UseVisualStyleBackColor = true;
+            this.btnWordWrap.Click += new System.EventHandler(this.btnWordWrap_Click);
+            // 
+            // btnCopy
+            // 
+            this.btnCopy.Location = new System.Drawing.Point(120, 3);
+            this.btnCopy.Name = "btnCopy";
+            this.btnCopy.Size = new System.Drawing.Size(111, 23);
+            this.btnCopy.TabIndex = 1;
+            this.btnCopy.Text = "&Copy to Clipboard";
+            this.btnCopy.UseVisualStyleBackColor = true;
+            this.btnCopy.Click += new System.EventHandler(this.btnCopy_Click);
             // 
             // flowLayoutPanel2
             // 
@@ -145,39 +235,6 @@ namespace MobiusEditor.Dialogs
             this.btnOk.Text = "&OK";
             this.btnOk.UseVisualStyleBackColor = true;
             // 
-            // flowLayoutPanel3
-            // 
-            this.flowLayoutPanel3.AutoSize = true;
-            this.flowLayoutPanel3.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.flowLayoutPanel3.Controls.Add(this.btnWordWrap);
-            this.flowLayoutPanel3.Controls.Add(this.btnCopy);
-            this.flowLayoutPanel3.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.flowLayoutPanel3.Location = new System.Drawing.Point(0, 0);
-            this.flowLayoutPanel3.Margin = new System.Windows.Forms.Padding(0);
-            this.flowLayoutPanel3.Name = "flowLayoutPanel3";
-            this.flowLayoutPanel3.Size = new System.Drawing.Size(234, 30);
-            this.flowLayoutPanel3.TabIndex = 3;
-            // 
-            // btnCopy
-            // 
-            this.btnCopy.Location = new System.Drawing.Point(120, 3);
-            this.btnCopy.Name = "btnCopy";
-            this.btnCopy.Size = new System.Drawing.Size(111, 23);
-            this.btnCopy.TabIndex = 1;
-            this.btnCopy.Text = "&Copy to Clipboard";
-            this.btnCopy.UseVisualStyleBackColor = true;
-            this.btnCopy.Click += new System.EventHandler(this.btnCopy_Click);
-            // 
-            // btnWordWrap
-            // 
-            this.btnWordWrap.Location = new System.Drawing.Point(3, 3);
-            this.btnWordWrap.Name = "btnWordWrap";
-            this.btnWordWrap.Size = new System.Drawing.Size(111, 23);
-            this.btnWordWrap.TabIndex = 1;
-            this.btnWordWrap.Text = "Toggle &Word Wrap";
-            this.btnWordWrap.UseVisualStyleBackColor = true;
-            this.btnWordWrap.Click += new System.EventHandler(this.btnWordWrap_Click);
-            // 
             // ErrorMessageBox
             // 
             this.AcceptButton = this.btnOk;
@@ -189,6 +246,7 @@ namespace MobiusEditor.Dialogs
             this.Icon = global::MobiusEditor.Properties.Resources.GameIcon00;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
+            this.MinimumSize = new System.Drawing.Size(450, 250);
             this.Name = "ErrorMessageBox";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
@@ -198,10 +256,15 @@ namespace MobiusEditor.Dialogs
             this.Shown += new System.EventHandler(this.ErrorMessageBox_Shown);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
+            this.tableLayoutPanel3.ResumeLayout(false);
+            this.tableLayoutPanel3.PerformLayout();
+            this.flowLayoutPanel4.ResumeLayout(false);
+            this.flowLayoutPanel4.PerformLayout();
+            this.flowLayoutPanel5.ResumeLayout(false);
             this.tableLayoutPanel2.ResumeLayout(false);
             this.tableLayoutPanel2.PerformLayout();
-            this.flowLayoutPanel2.ResumeLayout(false);
             this.flowLayoutPanel3.ResumeLayout(false);
+            this.flowLayoutPanel2.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -210,7 +273,6 @@ namespace MobiusEditor.Dialogs
 
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.TextBox txtErrors;
-        private System.Windows.Forms.Label lblMessage;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel2;
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel3;
         private System.Windows.Forms.Button btnWordWrap;
@@ -218,5 +280,10 @@ namespace MobiusEditor.Dialogs
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel2;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnOk;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel3;
+        private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel4;
+        private System.Windows.Forms.Label lblMessage;
+        private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel5;
+        private System.Windows.Forms.Label lblWordWrap;
     }
 }

@@ -263,31 +263,7 @@ namespace MobiusEditor.Tools
             }
             else if (triggerComboBox.Enabled)
             {
-                int maxVal = triggerComboBox.Items.Count - 1;
-                int curVal = triggerComboBox.SelectedIndex;
-                int newVal = curVal;
-                switch (e.KeyCode)
-                {
-                    case Keys.Home:
-                        newVal = 0;
-                        break;
-                    case Keys.End:
-                        newVal = maxVal;
-                        break;
-                    case Keys.PageDown:
-                        newVal = Math.Min(curVal + 1, maxVal);
-                        break;
-                    case Keys.PageUp:
-                        newVal = Math.Max(curVal - 1, 0);
-                        break;
-                    case Keys.Enter:
-                        JumpToNextBlob();
-                        break;
-                }
-                if (curVal != newVal)
-                {
-                    triggerComboBox.SelectedIndex = newVal;
-                }
+                CheckSelectShortcuts(e);
             }
         }
 
@@ -302,6 +278,16 @@ namespace MobiusEditor.Tools
         private void MapPanel_MouseLeave(object sender, EventArgs e)
         {
             ExitPlacementMode();
+        }
+
+        private void MapPanel_MouseWheel(Object sender, MouseEventArgs e)
+        {
+            if (e.Delta == 0 || (Control.ModifierKeys & Keys.Control) == Keys.None)
+            {
+                return;
+            }
+            KeyEventArgs keyArgs = new KeyEventArgs(e.Delta > 0 ? Keys.PageUp : Keys.PageDown);
+            CheckSelectShortcuts(keyArgs);
         }
 
         private void MapPanel_MouseMove(object sender, MouseEventArgs e)
@@ -471,6 +457,35 @@ namespace MobiusEditor.Tools
             url.Track(undoAction, redoAction, ToolType.CellTrigger);
         }
 
+        private void CheckSelectShortcuts(KeyEventArgs e)
+        {
+            int maxVal = triggerComboBox.Items.Count - 1;
+            int curVal = triggerComboBox.SelectedIndex;
+            int newVal = curVal;
+            switch (e.KeyCode)
+            {
+                case Keys.Home:
+                    newVal = 0;
+                    break;
+                case Keys.End:
+                    newVal = maxVal;
+                    break;
+                case Keys.PageDown:
+                    newVal = Math.Min(curVal + 1, maxVal);
+                    break;
+                case Keys.PageUp:
+                    newVal = Math.Max(curVal - 1, 0);
+                    break;
+                case Keys.Enter:
+                    JumpToNextBlob();
+                    break;
+            }
+            if (curVal != newVal)
+            {
+                triggerComboBox.SelectedIndex = newVal;
+            }
+        }
+
         private void TriggerCombo_SelectedIndexChanged(Object sender, EventArgs e)
         {
             string selected = triggerComboBox.SelectedItem as string;
@@ -588,6 +603,7 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseUp += MapPanel_MouseUp;
             this.mapPanel.MouseMove += MapPanel_MouseMove;
             this.mapPanel.MouseLeave += MapPanel_MouseLeave;
+            this.mapPanel.MouseWheel += MapPanel_MouseWheel;
             (this.mapPanel as Control).KeyDown += CellTriggersTool_KeyDown;
             (this.mapPanel as Control).KeyUp += CellTriggersTool_KeyUp;
             this.navigationWidget.BoundsMouseCellChanged += MouseoverWidget_MouseCellChanged;
@@ -614,6 +630,7 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseUp -= MapPanel_MouseUp;
             this.mapPanel.MouseMove -= MapPanel_MouseMove;
             this.mapPanel.MouseLeave -= MapPanel_MouseLeave;
+            this.mapPanel.MouseWheel -= MapPanel_MouseWheel;
             (this.mapPanel as Control).KeyDown -= CellTriggersTool_KeyDown;
             (this.mapPanel as Control).KeyUp -= CellTriggersTool_KeyUp;
             this.navigationWidget.BoundsMouseCellChanged -= MouseoverWidget_MouseCellChanged;

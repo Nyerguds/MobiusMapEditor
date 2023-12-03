@@ -821,6 +821,16 @@ namespace MobiusEditor.Tools
             ExitAllModes();
         }
 
+        private void MapPanel_MouseWheel(Object sender, MouseEventArgs e)
+        {
+            if (e.Delta == 0 || (Control.ModifierKeys & Keys.Control) == Keys.None)
+            {
+                return;
+            }
+            KeyEventArgs keyArgs = new KeyEventArgs(e.Delta > 0 ? Keys.PageUp : Keys.PageDown);
+            CheckSelectShortcuts(keyArgs);
+        }
+
         private void MapPanel_MouseMove(object sender, MouseEventArgs e)
         {
             if (!placementMode && (Control.ModifierKeys == Keys.Shift))
@@ -1940,6 +1950,7 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseUp += MapPanel_MouseUp;
             this.mapPanel.MouseMove += MapPanel_MouseMove;
             this.mapPanel.MouseLeave += MapPanel_MouseLeave;
+            this.mapPanel.MouseWheel += MapPanel_MouseWheel;
             (this.mapPanel as Control).KeyDown += TemplateTool_KeyDown;
             (this.mapPanel as Control).KeyUp += TemplateTool_KeyUp;
             this.navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
@@ -1967,6 +1978,7 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseUp -= MapPanel_MouseUp;
             this.mapPanel.MouseMove -= MapPanel_MouseMove;
             this.mapPanel.MouseLeave -= MapPanel_MouseLeave;
+            this.mapPanel.MouseWheel -= MapPanel_MouseWheel;
             (this.mapPanel as Control).KeyDown -= TemplateTool_KeyDown;
             (this.mapPanel as Control).KeyUp -= TemplateTool_KeyUp;
             this.navigationWidget.CurrentCursor = Cursors.Default;

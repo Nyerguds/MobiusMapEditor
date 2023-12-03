@@ -16,6 +16,7 @@ using MobiusEditor.Interface;
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Globalization;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Xml;
@@ -132,9 +133,9 @@ namespace MobiusEditor.Utility
             if (lowerBoundsNode != null)
             {
                 lowerBounds = Color.FromArgb(
-                    (int)(float.Parse(lowerBoundsNode.SelectSingleNode("R").InnerText) * 255),
-                    (int)(float.Parse(lowerBoundsNode.SelectSingleNode("G").InnerText) * 255),
-                    (int)(float.Parse(lowerBoundsNode.SelectSingleNode("B").InnerText) * 255)
+                    (int)(float.Parse(lowerBoundsNode.SelectSingleNode("R").InnerText, CultureInfo.InvariantCulture) * 255),
+                    (int)(float.Parse(lowerBoundsNode.SelectSingleNode("G").InnerText, CultureInfo.InvariantCulture) * 255),
+                    (int)(float.Parse(lowerBoundsNode.SelectSingleNode("B").InnerText, CultureInfo.InvariantCulture) * 255)
                 );
             }
 
@@ -142,9 +143,9 @@ namespace MobiusEditor.Utility
             if (upperBoundsNode != null)
             {
                 this.upperBounds = Color.FromArgb(
-                    (int)(float.Parse(upperBoundsNode.SelectSingleNode("R").InnerText) * 255),
-                    (int)(float.Parse(upperBoundsNode.SelectSingleNode("G").InnerText) * 255),
-                    (int)(float.Parse(upperBoundsNode.SelectSingleNode("B").InnerText) * 255)
+                    (int)(float.Parse(upperBoundsNode.SelectSingleNode("R").InnerText, CultureInfo.InvariantCulture) * 255),
+                    (int)(float.Parse(upperBoundsNode.SelectSingleNode("G").InnerText, CultureInfo.InvariantCulture) * 255),
+                    (int)(float.Parse(upperBoundsNode.SelectSingleNode("B").InnerText, CultureInfo.InvariantCulture) * 255)
                 );
             }
 
@@ -158,9 +159,9 @@ namespace MobiusEditor.Utility
             if (hsvShiftNode != null)
             {
                 this.hsvShift = new Vector3(
-                    float.Parse(hsvShiftNode.SelectSingleNode("X").InnerText),
-                    float.Parse(hsvShiftNode.SelectSingleNode("Y").InnerText),
-                    float.Parse(hsvShiftNode.SelectSingleNode("Z").InnerText)
+                    float.Parse(hsvShiftNode.SelectSingleNode("X").InnerText, CultureInfo.InvariantCulture),
+                    float.Parse(hsvShiftNode.SelectSingleNode("Y").InnerText, CultureInfo.InvariantCulture),
+                    float.Parse(hsvShiftNode.SelectSingleNode("Z").InnerText, CultureInfo.InvariantCulture)
                 );
             }
 
@@ -168,9 +169,9 @@ namespace MobiusEditor.Utility
             if (inputLevelsNode != null)
             {
                 this.inputLevels = new Vector3(
-                    float.Parse(inputLevelsNode.SelectSingleNode("X").InnerText),
-                    float.Parse(inputLevelsNode.SelectSingleNode("Y").InnerText),
-                    float.Parse(inputLevelsNode.SelectSingleNode("Z").InnerText)
+                    float.Parse(inputLevelsNode.SelectSingleNode("X").InnerText, CultureInfo.InvariantCulture),
+                    float.Parse(inputLevelsNode.SelectSingleNode("Y").InnerText, CultureInfo.InvariantCulture),
+                    float.Parse(inputLevelsNode.SelectSingleNode("Z").InnerText, CultureInfo.InvariantCulture)
                 );
             }
 
@@ -178,8 +179,8 @@ namespace MobiusEditor.Utility
             if (outputLevelsNode != null)
             {
                 this.outputLevels = new Vector2(
-                    float.Parse(outputLevelsNode.SelectSingleNode("X").InnerText),
-                    float.Parse(outputLevelsNode.SelectSingleNode("Y").InnerText)
+                    float.Parse(outputLevelsNode.SelectSingleNode("X").InnerText, CultureInfo.InvariantCulture),
+                    float.Parse(outputLevelsNode.SelectSingleNode("Y").InnerText, CultureInfo.InvariantCulture)
                 );
             }
 
@@ -187,9 +188,9 @@ namespace MobiusEditor.Utility
             if (overallInputLevelsNode != null)
             {
                 this.overallInputLevels = new Vector3(
-                    float.Parse(overallInputLevelsNode.SelectSingleNode("X").InnerText),
-                    float.Parse(overallInputLevelsNode.SelectSingleNode("Y").InnerText),
-                    float.Parse(overallInputLevelsNode.SelectSingleNode("Z").InnerText)
+                    float.Parse(overallInputLevelsNode.SelectSingleNode("X").InnerText, CultureInfo.InvariantCulture),
+                    float.Parse(overallInputLevelsNode.SelectSingleNode("Y").InnerText, CultureInfo.InvariantCulture),
+                    float.Parse(overallInputLevelsNode.SelectSingleNode("Z").InnerText, CultureInfo.InvariantCulture)
                 );
             }
 
@@ -197,8 +198,8 @@ namespace MobiusEditor.Utility
             if (outputLevelsNode != null)
             {
                 this.overallOutputLevels = new Vector2(
-                    float.Parse(overallOutputLevelsNode.SelectSingleNode("X").InnerText),
-                    float.Parse(overallOutputLevelsNode.SelectSingleNode("Y").InnerText)
+                    float.Parse(overallOutputLevelsNode.SelectSingleNode("X").InnerText, CultureInfo.InvariantCulture),
+                    float.Parse(overallOutputLevelsNode.SelectSingleNode("Y").InnerText, CultureInfo.InvariantCulture)
                 );
             }
 
@@ -206,9 +207,9 @@ namespace MobiusEditor.Utility
             if (radarMapColorNode != null)
             {
                 this.radarMapColor = Color.FromArgb(
-                    (int)(float.Parse(radarMapColorNode.SelectSingleNode("R").InnerText) * 255),
-                    (int)(float.Parse(radarMapColorNode.SelectSingleNode("G").InnerText) * 255),
-                    (int)(float.Parse(radarMapColorNode.SelectSingleNode("B").InnerText) * 255)
+                    (int)(float.Parse(radarMapColorNode.SelectSingleNode("R").InnerText, CultureInfo.InvariantCulture) * 255),
+                    (int)(float.Parse(radarMapColorNode.SelectSingleNode("G").InnerText, CultureInfo.InvariantCulture) * 255),
+                    (int)(float.Parse(radarMapColorNode.SelectSingleNode("B").InnerText, CultureInfo.InvariantCulture) * 255)
                 );
             }
         }

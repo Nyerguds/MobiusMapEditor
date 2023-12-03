@@ -49,7 +49,7 @@ namespace MobiusEditor.Dialogs
             this.eventControlNames = eventControlNames;
             this.currentTrigs = (currentTrigs??new string[0]).Where(st => !String.IsNullOrWhiteSpace(st)).ToArray();
             this.plugin = plugin;
-            this.isRA = this.plugin.GameType == GameType.RedAlert;
+            this.isRA = this.plugin.GameInfo.GameType == GameType.RedAlert;
             InitializeComponent();
             this.chkPersistenceType.Text = persistenceLabel;
         }

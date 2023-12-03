@@ -234,6 +234,7 @@ namespace MobiusEditor.Controls
 
         public event EventHandler<RenderEventArgs> PreRender;
         public event EventHandler<RenderEventArgs> PostRender;
+        public new event MouseEventHandler MouseWheel;
 
         public MapPanel()
         {
@@ -401,10 +402,11 @@ namespace MobiusEditor.Controls
 
         protected override void OnMouseWheel(MouseEventArgs e)
         {
-            if (!SuspendMouseZoom)
+            if (!SuspendMouseZoom && ((Control.ModifierKeys & (Keys.Control | Keys.Alt)) == Keys.None))
             {
                 Zoom += Zoom * ZoomStep * Math.Sign(e.Delta);
             }
+            MouseWheel?.Invoke(this, e);
         }
 
         protected override void OnClientSizeChanged(EventArgs e)

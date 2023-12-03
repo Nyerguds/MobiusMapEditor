@@ -19,7 +19,6 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Numerics;
 
 namespace MobiusEditor.SoleSurvivor
 {
@@ -51,8 +50,6 @@ namespace MobiusEditor.SoleSurvivor
         };
 
         public override GameInfo GameInfo => gameTypeInfo;
-        public override string Name => gameTypeInfo.Name;
-        public override GameType GameType => gameTypeInfo.GameType;
         public override bool IsMegaMap => isMegaMap;
 
         public static bool CheckForSSmap(INI iniContents)
@@ -132,7 +129,7 @@ namespace MobiusEditor.SoleSurvivor
                 MissionTypes.GetTypes(), MissionTypes.MISSION_GUARD, MissionTypes.MISSION_STOP,
                 MissionTypes.MISSION_HARVEST, MissionTypes.MISSION_UNLOAD, DirectionTypes.GetMainTypes(),
                 DirectionTypes.GetAllTypes(), infantry, units, buildings, TeamMissionTypes.GetTypes(), fullTechnoTypes,
-                waypoints, 4, 0, 0, movies, movieEmpty, themeTypesSole, themeEmpty, tiberiumValue, 0);
+                waypoints, 4, 0, 0, movies, movieEmpty, themeTypesSole, themeEmpty, Constants.TiberiumValue, 0);
             Map.MapSection.PropertyChanged += MapSection_PropertyChanged;
             // Clean up this mess.
             foreach (Model.House house in Map.Houses)
@@ -275,11 +272,6 @@ namespace MobiusEditor.SoleSurvivor
             int startPoints = Map.Waypoints.Count(w => w.Cell.HasValue && (w.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart);
             info.Add(string.Format("Number of set starting points: {0}.", startPoints));
             return info;
-        }
-
-        public override string EvaluateBriefing(string briefing)
-        {
-            return null;
         }
 
         public override ITeamColor[] GetFlagColors()

@@ -43,7 +43,7 @@ namespace MobiusEditor.Controls
             maxUnitsNud.DataBindings.Add("Value", houseSettingsTracker, "MaxUnit");
             edgeComboBox.DataBindings.Add("SelectedItem", houseSettingsTracker, "Edge");
 
-            switch (plugin.GameType)
+            switch (plugin.GameInfo.GameType)
             {
                 case GameType.TiberianDawn:
                 case GameType.SoleSurvivor:

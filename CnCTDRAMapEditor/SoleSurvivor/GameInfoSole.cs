@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.IO;
 using System.Linq;
 using MobiusEditor.Interface;
 using MobiusEditor.Model;
@@ -12,7 +14,11 @@ namespace MobiusEditor.SoleSurvivor
     {
         public override GameType GameType => GameType.SoleSurvivor;
         public override String Name => "Sole Survivor";
-        public override String ModFolder => "Tiberian_Dawn";
+        public override string DefaultSaveDirectory => Path.Combine(Globals.RootSaveDirectory, "Tiberian_Dawn");
+        public override string OpenFilter => Constants.FileFilter;
+        public override string SaveFilter => Constants.FileFilter;
+        public override string DefaultExtension => ".ini";
+        public override string ModFolder => Path.Combine(Globals.ModDirectory, "Tiberian_Dawn");
         public override String ModIdentifier => "TD";
         public override String ModsToLoad => Properties.Settings.Default.ModsToLoadTD;
         public override String ModsToLoadSetting => "ModsToLoadTD";
@@ -34,12 +40,6 @@ namespace MobiusEditor.SoleSurvivor
         public override int HitPointsGreenMinimum => 127;
         public override int HitPointsYellowMinimum => 63;
         public override IGamePlugin CreatePlugin(Boolean mapImage, Boolean megaMap) => new GamePluginSS(mapImage, megaMap);
-
-        public override void InitializePlugin(IGamePlugin plugin)
-        {
-            Globals.TheTeamColorManager.Load(@"DATA\XML\CNCTDTEAMCOLORS.XML");
-            GameInfoTibDawn.AddTeamColorsTD(Globals.TheTeamColorManager);
-        }
 
         public override void InitClassicFiles(MixfileManager mfm, List<string> loadErrors, List<string> fileLoadErrors, bool forRemaster)
         {
@@ -86,6 +86,34 @@ namespace MobiusEditor.SoleSurvivor
                  && mlf != MapLayerFlag.Units
                  && mlf != MapLayerFlag.Infantry
                  && mlf != MapLayerFlag.BuildingRebuild));
+        }
+
+        public override Tile GetWaypointIcon()
+        {
+            return GetTile("beacon", 0, "mouse", 12);
+        }
+
+        public override Tile GetCellTriggerIcon()
+        {
+            return GetTile("mine", 3, "mine.shp", 3);
+        }
+
+        public override Bitmap GetSelectIcon()
+        {
+            // Remaster: Chronosphere cursor from TEXTURES_SRGB.MEG
+            // Alt: @"DATA\ART\TEXTURES\SRGB\ICON_IONCANNON_15.DDS
+            // Classic: Ion Cannon cursor
+            return GetTexture(@"DATA\ART\TEXTURES\SRGB\ICON_SELECT_GREEN_04.DDS", "mouse", 118);
+        }
+
+        public override string EvaluateBriefing(string briefing)
+        {
+            return null;
+        }
+
+        public override bool MapNameIsEmpty(string name)
+        {
+            return String.IsNullOrEmpty(name) || Constants.EmptyMapName.Equals(name, StringComparison.OrdinalIgnoreCase);
         }
     }
 }

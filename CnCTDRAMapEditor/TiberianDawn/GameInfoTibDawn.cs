@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Text.RegularExpressions;
 using MobiusEditor.Interface;
 using MobiusEditor.Model;
 using MobiusEditor.Utility;
@@ -13,7 +15,11 @@ namespace MobiusEditor.TiberianDawn
     {
         public override GameType GameType => GameType.TiberianDawn;
         public override string Name => "Tiberian Dawn";
-        public override string ModFolder => "Tiberian_Dawn";
+        public override string DefaultSaveDirectory => Path.Combine(Globals.RootSaveDirectory, "Tiberian_Dawn");
+        public override string OpenFilter => Constants.FileFilter;
+        public override string SaveFilter => Constants.FileFilter;
+        public override string DefaultExtension => ".ini";
+        public override string ModFolder => Path.Combine(Globals.ModDirectory, "Tiberian_Dawn");
         public override string ModIdentifier => "TD";
         public override string ModsToLoad => Properties.Settings.Default.ModsToLoadTD;
         public override string ModsToLoadSetting => "ModsToLoadTD";
@@ -35,12 +41,6 @@ namespace MobiusEditor.TiberianDawn
         public override int HitPointsGreenMinimum => 127;
         public override int HitPointsYellowMinimum => 63;
         public override IGamePlugin CreatePlugin(Boolean mapImage, Boolean megaMap) => new GamePluginTD(mapImage, megaMap);
-
-        public override void InitializePlugin(IGamePlugin plugin)
-        {
-            Globals.TheTeamColorManager.Load(@"DATA\XML\CNCTDTEAMCOLORS.XML");
-            AddTeamColorsTD(Globals.TheTeamColorManager);
-        }
 
         public override void InitClassicFiles(MixfileManager mfm, List<string> loadErrors, List<string> fileLoadErrors, bool forRemaster)
         {
@@ -84,40 +84,43 @@ namespace MobiusEditor.TiberianDawn
                 && mlf != MapLayerFlag.FootballArea;
         }
 
-
-        public static void AddTeamColorsTD(ITeamColorManager teamColorManager)
+        public override Tile GetWaypointIcon()
         {
-            // Only applicable for Remastered colors since I can't control those.
-            if (teamColorManager is TeamColorManager tcm)
+            return GetTile("beacon", 0, "mouse", 12);
+        }
+
+        public override Tile GetCellTriggerIcon()
+        {
+            return GetTile("mine", 3, "mine.shp", 3);
+        }
+
+        public override Bitmap GetSelectIcon()
+        {
+            // Remaster: Chronosphere cursor from TEXTURES_SRGB.MEG
+            // Alt: @"DATA\ART\TEXTURES\SRGB\ICON_IONCANNON_15.DDS
+            // Classic: Ion Cannon cursor
+            return GetTexture(@"DATA\ART\TEXTURES\SRGB\ICON_SELECT_GREEN_04.DDS", "mouse", 118);
+        }
+
+        public override string EvaluateBriefing(string briefing)
+        {
+            if (!Globals.WriteClassicBriefing)
             {
-                // Remaster additions / tweaks
-                // Neutral
-                TeamColor teamColorSNeutral = new TeamColor(tcm);
-                teamColorSNeutral.Load(tcm.GetItem("GOOD"), "NEUTRAL");
-                tcm.AddTeamColor(teamColorSNeutral);
-                // Special
-                TeamColor teamColorSpecial = new TeamColor(tcm);
-                teamColorSpecial.Load(tcm.GetItem("GOOD"), "SPECIAL");
-                tcm.AddTeamColor(teamColorSpecial);
-                // Black for unowned.
-                TeamColor teamColorNone = new TeamColor(tcm);
-                teamColorNone.Load("NONE", "BASE_TEAM",
-                    Color.FromArgb(66, 255, 0), Color.FromArgb(0, 255, 56), 0,
-                    new Vector3(0.30f, -1.00f, 0.00f), new Vector3(0f, 1f, 1f), new Vector2(0.0f, 0.1f),
-                    new Vector3(0, 1, 1), new Vector2(0, 1), Color.FromArgb(61, 61, 59));
-                tcm.AddTeamColor(teamColorNone);
-                // Extra color for flag 7: metallic blue.
-                TeamColor teamColorSeven = new TeamColor(tcm);
-                teamColorSeven.Load(tcm.GetItem("BAD_UNIT"), "MULTI7");
-                tcm.AddTeamColor(teamColorSeven);
-                // Extra color for flag 8: copy of RA's purple.
-                TeamColor teamColorEight = new TeamColor(tcm);
-                teamColorEight.Load("MULTI8", "BASE_TEAM",
-                    Color.FromArgb(66, 255, 0), Color.FromArgb(0, 255, 56), 0,
-                    new Vector3(0.410f, 0.300f, 0.000f), new Vector3(0f, 1f, 1f), new Vector2(0.0f, 1.0f),
-                    new Vector3(0, 1, 1), new Vector2(0, 1), Color.FromArgb(77, 13, 255));
-                tcm.AddTeamColor(teamColorEight);
+                return null;
             }
+            string briefText = (briefing ?? String.Empty).Replace('\t', ' ').Trim('\r', '\n', ' ').Replace("\r\n", "\n").Replace("\r", "\n");
+            // Remove duplicate spaces
+            briefText = Regex.Replace(briefText, " +", " ");
+            if (briefText.Length > Constants.MaxBriefLengthClassic)
+            {
+                return "Classic Tiberian Dawn briefings cannot exceed " + Constants.MaxBriefLengthClassic + " characters. This includes line breaks.\n\nThis will not affect the mission when playing in the Remaster, but the briefing will be truncated when playing in the original game.";
+            }
+            return null;
+        }
+
+        public override bool MapNameIsEmpty(string name)
+        {
+            return String.IsNullOrEmpty(name) || Constants.EmptyMapName.Equals(name, StringComparison.OrdinalIgnoreCase);
         }
     }
 }

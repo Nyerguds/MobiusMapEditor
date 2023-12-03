@@ -20,33 +20,34 @@ using System.Windows.Forms;
 
 namespace MobiusEditor.Utility
 {
-    public class MRU
+    public class MRU: IDisposable
     {
+        private bool _disposed;
         private readonly RegistryKey registryKey;
         private readonly int maxFiles;
-
         private readonly List<FileInfo> files = new List<FileInfo>();
-
-        public FileInfo[] Files => files.ToArray();
-
         private readonly ToolStripMenuItem menu;
         private readonly ToolStripMenuItem[] fileItems;
+
+        public FileInfo[] Files => files.ToArray();
+        public bool Disposed => _disposed;
 
         public event EventHandler<FileInfo> FileSelected;
 
         public MRU(string registryPath, int maxFiles, ToolStripMenuItem menu)
         {
-            var subKey = Registry.CurrentUser;
+            RegistryKey subKey = Registry.CurrentUser;
             foreach (var key in registryPath.Split('\\'))
             {
+                RegistryKey oldKey = subKey;
                 subKey = subKey.CreateSubKey(key, true);
+                try { oldKey.Dispose(); }
+                catch { /* ignore */ }
             }
             registryKey = subKey.CreateSubKey("MRU");
-
             this.maxFiles = maxFiles;
             this.menu = menu;
             this.menu.DropDownItems.Clear();
-
             fileItems = new ToolStripMenuItem[maxFiles];
             for (var i = 0; i < fileItems.Length; ++i)
             {
@@ -54,13 +55,14 @@ namespace MobiusEditor.Utility
                 fileItem.Visible = false;
                 menu.DropDownItems.Add(fileItem);
             }
-
             LoadMRU();
             ShowMRU();
         }
 
         public void Add(FileInfo file)
         {
+            if (_disposed)
+                throw new ObjectDisposedException("MRU");
             files.RemoveAll(f => f.FullName == file.FullName);
             files.Insert(0, file);
 
@@ -68,15 +70,15 @@ namespace MobiusEditor.Utility
             {
                 files.RemoveAt(files.Count - 1);
             }
-
             SaveMRU();
             ShowMRU();
         }
 
         public void Remove(FileInfo file)
         {
+            if (_disposed)
+                throw new ObjectDisposedException("MRU");
             files.RemoveAll(f => f.FullName == file.FullName);
-
             SaveMRU();
             ShowMRU();
         }
@@ -112,8 +114,7 @@ namespace MobiusEditor.Utility
             {
                 var file = files[i];
                 var fileItem = fileItems[i];
-
-                fileItem.Text = string.Format("&{0} {1}", i + 1, file.FullName);
+                fileItem.Text = string.Format("&{0} {1}", i + 1, file.FullName.Replace("&", "&&"));
                 fileItem.Tag = file;
                 fileItem.Click -= FileItem_Click;
                 fileItem.Click += FileItem_Click;
@@ -122,7 +123,6 @@ namespace MobiusEditor.Utility
             for (var i = files.Count; i < maxFiles; ++i)
             {
                 var fileItem = fileItems[i];
-
                 fileItem.Visible = false;
                 fileItem.Click -= FileItem_Click;
             }
@@ -132,6 +132,16 @@ namespace MobiusEditor.Utility
         private void FileItem_Click(object sender, EventArgs e)
         {
             FileSelected?.Invoke(this, (sender as ToolStripMenuItem).Tag as FileInfo);
+        }
+
+        public void Dispose()
+        {
+            if (!_disposed)
+            {
+                try { registryKey.Dispose(); }
+                catch { /* ignore */ }
+                _disposed = true;
+            }
         }
     }
 }

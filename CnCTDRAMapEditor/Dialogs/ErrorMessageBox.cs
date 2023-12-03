@@ -52,11 +52,18 @@ namespace MobiusEditor.Dialogs
         {
             InitializeComponent();
             btnCancel.Visible = showCancel;
+            SetWrap(txtErrors.WordWrap);
             if (!showCancel)
             {
                 // Enables "esc" for closing the form.
                 this.CancelButton = btnOk;
             }
+        }
+
+        private void SetWrap(Boolean wrap)
+        {
+            txtErrors.WordWrap = wrap;
+            lblWordWrap.Text = String.Format("Word wrap: [{0}]", wrap ? "ON" : "OFF");
         }
 
         private void btnCopy_Click(object sender, EventArgs e)
@@ -66,7 +73,7 @@ namespace MobiusEditor.Dialogs
 
         private void btnWordWrap_Click(Object sender, EventArgs e)
         {
-            txtErrors.WordWrap = !txtErrors.WordWrap;
+            SetWrap(!txtErrors.WordWrap);
         }
 
         private void ErrorMessageBox_Shown(Object sender, EventArgs e)

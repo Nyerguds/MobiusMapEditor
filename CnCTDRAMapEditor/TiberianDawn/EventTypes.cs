@@ -20,23 +20,23 @@ namespace MobiusEditor.TiberianDawn
 {
     public static class EventTypes
     {
-        public const string EVENT_NONE = "None";
-        public const string EVENT_PLAYER_ENTERED = "Player Enters";
-        public const string EVENT_DISCOVERED = "Discovered";
-        public const string EVENT_ATTACKED = "Attacked";
-        public const string EVENT_DESTROYED = "Destroyed";
-        public const string EVENT_ANY = "Any";
-        public const string EVENT_HOUSE_DISCOVERED = "House Discov.";
-        public const string EVENT_UNITS_DESTROYED = "Units Destr.";
-        public const string EVENT_BUILDINGS_DESTROYED = "Bldgs Destr.";
-        public const string EVENT_ALL_DESTROYED = "All Destr.";
-        public const string EVENT_CREDITS = "Credits";
-        public const string EVENT_TIME = "Time";
-        public const string EVENT_NBUILDINGS_DESTROYED = "# Bldgs Dstr.";
-        public const string EVENT_NUNITS_DESTROYED = "# Units Dstr.";
-        public const string EVENT_NOFACTORIES = "No Factories";
-        public const string EVENT_EVAC_CIVILIAN = "Civ. Evac.";
-        public const string EVENT_BUILD = "Built It";
+        public const string EVENT_NONE                 /**/ = "None";
+        public const string EVENT_PLAYER_ENTERED       /**/ = "Player Enters";
+        public const string EVENT_DISCOVERED           /**/ = "Discovered";
+        public const string EVENT_ATTACKED             /**/ = "Attacked";
+        public const string EVENT_DESTROYED            /**/ = "Destroyed";
+        public const string EVENT_ANY                  /**/ = "Any";
+        public const string EVENT_HOUSE_DISCOVERED     /**/ = "House Discov.";
+        public const string EVENT_UNITS_DESTROYED      /**/ = "Units Destr.";
+        public const string EVENT_BUILDINGS_DESTROYED  /**/ = "Bldgs Destr.";
+        public const string EVENT_ALL_DESTROYED        /**/ = "All Destr.";
+        public const string EVENT_CREDITS              /**/ = "Credits";
+        public const string EVENT_TIME                 /**/ = "Time";
+        public const string EVENT_NBUILDINGS_DESTROYED /**/ = "# Bldgs Dstr.";
+        public const string EVENT_NUNITS_DESTROYED     /**/ = "# Units Dstr.";
+        public const string EVENT_NOFACTORIES          /**/ = "No Factories";
+        public const string EVENT_EVAC_CIVILIAN        /**/ = "Civ. Evac.";
+        public const string EVENT_BUILD                /**/ = "Built It";
 
         private static readonly string[] Types;
 

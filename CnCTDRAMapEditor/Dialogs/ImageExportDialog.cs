@@ -101,16 +101,6 @@ namespace MobiusEditor.Dialogs
             {
                 // Get layer flag from index. This only works if the flags are incremental bit flags without gaps.
                 MapLayerFlag mlf = (MapLayerFlag)(1 << i);
-                // Special rules per game. These should be kept identical to those in MainForm.EnableDisableMenuItems
-                
-                /*if (gamePlugin.GameType != GameType.RedAlert && mlf == MapLayerFlag.BuildingFakes
-                 || gamePlugin.GameType != GameType.RedAlert && mlf == MapLayerFlag.EffectRadius
-                 || gamePlugin.GameType == GameType.SoleSurvivor && mlf == MapLayerFlag.Buildings && Globals.NoOwnedObjectsInSole
-                 || gamePlugin.GameType == GameType.SoleSurvivor && mlf == MapLayerFlag.Units && Globals.NoOwnedObjectsInSole
-                 || gamePlugin.GameType == GameType.SoleSurvivor && mlf == MapLayerFlag.Infantry && Globals.NoOwnedObjectsInSole
-                 || gamePlugin.GameType == GameType.SoleSurvivor && mlf == MapLayerFlag.BuildingRebuild
-                 || gamePlugin.GameType != GameType.SoleSurvivor && mlf == MapLayerFlag.FootballArea
-                 || gamePlugin.GameType == GameType.SoleSurvivor && mlf == MapLayerFlag.OverlapOutlines)*/
                 if (!gamePlugin.GameInfo.SupportsMapLayer(mlf))
                 {
                     continue;
@@ -295,7 +285,8 @@ namespace MobiusEditor.Dialogs
                 {
                     bool classicLogic = Globals.UseClassicFiles && Globals.ClassicNoRemasterLogic;
                     string lastFolder = lastOpenedFolder;
-                    string constFolder = Directory.Exists(gamePlugin.DefaultSaveDirectory) ? gamePlugin.DefaultSaveDirectory : Environment.GetFolderPath(Environment.SpecialFolder.Personal);
+                    string defFolder = gamePlugin.GameInfo.DefaultSaveDirectory;
+                    string constFolder = Directory.Exists(defFolder) ? defFolder : Environment.GetFolderPath(Environment.SpecialFolder.Personal);
                     sfd.InitialDirectory = lastFolder ?? (classicLogic ? Program.ApplicationPath : constFolder);
                 }
                 if (sfd.ShowDialog(this) == DialogResult.OK)
@@ -332,6 +323,7 @@ namespace MobiusEditor.Dialogs
             }
             using (ImageExportedDialog imexd = new ImageExportedDialog(path))
             {
+                imexd.StartPosition = FormStartPosition.CenterParent;
                 if (imexd.ShowDialog(this) == DialogResult.OK)
                 {
                     this.DialogResult = DialogResult.OK;

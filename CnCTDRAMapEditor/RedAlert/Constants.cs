@@ -19,17 +19,28 @@ namespace MobiusEditor.RedAlert
 {
     public static class Constants
     {
-        public static readonly string SaveDirectory = Path.Combine(Globals.RootSaveDirectory, "Red_Alert");
-
         public static readonly Size MaxSize = new Size(128, 128);
 
-        public const int MaxAircraft = 100;
-        public const int MaxVessels = 100;
-        public const int MaxBuildings = 500;
-        public const int MaxInfantry = 500;
-        public const int MaxTerrain = 500;
-        public const int MaxUnits = 500;
-        public const int MaxTeams = 60;
-        public const int MaxTriggers = 80;
+        public const string FileFilter = "Red Alert files (*.mpr;*.ini)|*.mpr;*.ini";
+
+        public const int MaxBriefLengthClassic = 1022;
+        public const int BriefLineCutoffClassic = 74;
+        public const int MultiStartPoints = 8;
+
+        public const int DefaultGoldValue = 25;
+        public const int DefaultGemValue = 50;
+        public const int DefaultDropZoneRadius = 4;
+        public const int DefaultGapRadius = 10;
+        public const int DefaultJamRadius = 15;
+        public const string EmptyMapName = "<none>";
+
+        public const int MaxAircraft  /**/ = 100;
+        public const int MaxVessels   /**/ = 100;
+        public const int MaxBuildings /**/ = 500;
+        public const int MaxInfantry  /**/ = 500;
+        public const int MaxTerrain   /**/ = 500;
+        public const int MaxUnits     /**/ = 500;
+        public const int MaxTeams     /**/ = 60;
+        public const int MaxTriggers  /**/ = 80;
     }
 }

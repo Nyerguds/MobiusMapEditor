@@ -72,6 +72,10 @@ namespace MobiusEditor.Utility
             {
                 throw new ObjectDisposedException(GetType().FullName);
             }
+            if (path == null)
+            {
+                return false;
+            }
             if (modPathsPerGame != null && modPathsPerGame.TryGetValue(CurrentGameType, out string[] modPaths) && modPaths != null && modPaths.Length > 0)
             {
                 foreach (string modPath in modPaths)

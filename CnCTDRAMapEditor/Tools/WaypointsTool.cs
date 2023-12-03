@@ -176,6 +176,16 @@ namespace MobiusEditor.Tools
             ExitPlacementMode();
         }
 
+        private void MapPanel_MouseWheel(Object sender, MouseEventArgs e)
+        {
+            if (e.Delta == 0 || (Control.ModifierKeys & Keys.Control) == Keys.None)
+            {
+                return;
+            }
+            KeyEventArgs keyArgs = new KeyEventArgs(e.Delta > 0 ? Keys.PageUp : Keys.PageDown);
+            CheckSelectShortcuts(keyArgs);
+        }
+
         private void MapPanel_MouseMove(object sender, MouseEventArgs e)
         {
             if (!placementMode && (Control.ModifierKeys == Keys.Shift))
@@ -533,8 +543,7 @@ namespace MobiusEditor.Tools
             MapRenderer.RenderAllBoundsFromCell(graphics, boundRenderCells, Globals.MapTileSize,
                 map.Waypoints.Where(wp => wp != selected && wp.Cell.HasValue).Select(wp => wp.Cell.Value), map.Metrics, Color.Orange);
             // If the plugin has a dedicated "flare" waypoint, then it is hardcoded and the only one, and should always be rendered.
-            bool renderAll = plugin.Map.Waypoints.Any(wp => (wp.Flag & WaypointFlag.Flare) != WaypointFlag.None)
-                || (Layers & MapLayerFlag.WaypointRadius) == MapLayerFlag.WaypointRadius;
+            bool renderAll = plugin.Map.FlareWaypointAvailable || (Layers & MapLayerFlag.WaypointRadius) == MapLayerFlag.WaypointRadius;
             MapRenderer.RenderAllWayPointRevealRadiuses(graphics, plugin, map, boundRenderCells, Globals.MapTileSize, selected, !renderAll);
             MapRenderer.RenderWayPointIndicators(graphics, map, visibleCells, Globals.MapTileSize, Color.LightGreen, false, true, selectedRange);
             if (selected != null)
@@ -625,6 +634,7 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseDown += MapPanel_MouseDown;
             this.mapPanel.MouseMove += MapPanel_MouseMove;
             this.mapPanel.MouseLeave += MapPanel_MouseLeave;
+            this.mapPanel.MouseWheel += MapPanel_MouseWheel;
             this.map.WaypointsUpdated += this.Map_WaypointsUpdated;
             this.navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
             this.url.Undone += Url_UndoRedoDone;
@@ -648,6 +658,7 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseDown -= MapPanel_MouseDown;
             this.mapPanel.MouseMove -= MapPanel_MouseMove;
             this.mapPanel.MouseLeave -= MapPanel_MouseLeave;
+            this.mapPanel.MouseWheel -= MapPanel_MouseWheel;
             (this.mapPanel as Control).KeyDown -= WaypointsTool_KeyDown;
             (this.mapPanel as Control).KeyUp -= WaypointsTool_KeyUp;
             this.navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;

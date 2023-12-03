@@ -58,7 +58,7 @@ namespace MobiusEditor.Controls
             playerComboBox.DataBindings.Add("SelectedItem", basicSection, "Player");
             authorTxt.DataBindings.Add("Text", basicSection, "Author");
             themeComboBox.DataBindings.Add("SelectedItem", basicSection, "Theme");
-            switch (plugin.GameType)
+            switch (plugin.GameInfo.GameType)
             {
                 case GameType.TiberianDawn:
                     isSinglePlayerCheckBox.DataBindings.DefaultDataSourceUpdateMode = DataSourceUpdateMode.OnPropertyChanged;

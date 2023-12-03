@@ -60,7 +60,7 @@ namespace MobiusEditor.Model
 
         public TriggerFilter(IGamePlugin plugin)
         {
-            this.gameType = plugin.GameType;
+            this.gameType = plugin.GameInfo.GameType;
             this.map = plugin.Map;
         }
 

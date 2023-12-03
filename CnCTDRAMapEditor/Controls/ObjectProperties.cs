@@ -231,7 +231,7 @@ namespace MobiusEditor.Controls
                         directionLabel.Visible = directionVisible;
                         directionComboBox.Visible = directionVisible;
                         missionLabel.Visible = missionComboBox.Visible = false;
-                        switch (Plugin.GameType)
+                        switch (Plugin.GameInfo.GameType)
                         {
                             case GameType.TiberianDawn:
                                 {

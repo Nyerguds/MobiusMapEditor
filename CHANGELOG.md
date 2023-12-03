@@ -602,3 +602,11 @@ Unreleased
 * Added config option for the behaviour to recolour the classic DOS Einstein to RA95/remastered colours.
 * Added "Info" menu, containing general program info, a link to the Github website, and an update function.
 * Fixed the CONC pavement connecting in TD to match the game 100%. There is also an alternate mode available, through the parameter "FixConcretePavement", which shows the pavement as it was intended to be if the game's connection logic actually functioned correctly.
+* Renamed RA trigger "Destroyed, Fakes, All..." to "All Fakes Destroyed".
+* Prefixed all RA "Text Trigger" options with the expansion they belong to.
+* Fixed "Auto Base Building..." trigger; its on and off values were switched.
+* All argument lists for trigger Events and Actions that contain a "None" item will now select that by default.
+* The tool window is now always hidden while a dialog is opened.
+* Fixed ampersands not showing in recent files.
+* Added indicator of line wrap mode in text dialog.
+* Added [Ctrl]+scrollwheel for going through item lists.

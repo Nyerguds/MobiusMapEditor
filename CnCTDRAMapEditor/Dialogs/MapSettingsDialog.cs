@@ -103,16 +103,16 @@ namespace MobiusEditor.Dialogs
             settingsTreeView.BeginUpdate();
             settingsTreeView.Nodes.Clear();
             settingsTreeView.Nodes.Add("BASIC", "Basic");
-            if (this.plugin.GameType == GameType.RedAlert && isSoloMission)
+            if (this.plugin.GameInfo.GameType == GameType.RedAlert && isSoloMission)
             {
                 settingsTreeView.Nodes.Add("SCENARIO", "Scenario");
             }
-            else if (this.plugin.GameType == GameType.SoleSurvivor)
+            if (this.plugin.GameInfo.GameType == GameType.SoleSurvivor)
             {
                 settingsTreeView.Nodes.Add("CRATES", "Crates");
             }
             settingsTreeView.Nodes.Add("RULES", "INI Rules && Tweaks");
-            if (this.plugin.GameType != GameType.SoleSurvivor)
+            if (this.plugin.GameInfo.GameType != GameType.SoleSurvivor)
             {
                 settingsTreeView.Nodes.Add("BRIEFING", "Briefing");
             }
@@ -170,7 +170,7 @@ namespace MobiusEditor.Dialogs
                     scenPanel.Dock = DockStyle.Fill;
                     break;
                 case "RULES":
-                    RulesSettings rulesPanel = new RulesSettings(ExtraIniText, this.plugin.GameType == GameType.RedAlert);
+                    RulesSettings rulesPanel = new RulesSettings(ExtraIniText, this.plugin.GameInfo.GameType == GameType.RedAlert);
                     rulesPanel.TextNeedsUpdating += this.RulesPanel_TextNeedsUpdating;
                     settingsPanel.Controls.Add(rulesPanel);
                     rulesPanel.Dock = DockStyle.Fill;
@@ -256,7 +256,7 @@ namespace MobiusEditor.Dialogs
             briefingSettingsTracker.TryGetMember("Briefing", out object brf);
             if (brf is String brief)
             {
-                string message = plugin.EvaluateBriefing(brief);
+                string message = plugin.GameInfo.EvaluateBriefing(brief);
                 if (!String.IsNullOrEmpty(message))
                 {
                     message += "\n\nPress Cancel to go back and edit the briefing, or OK to ignore the issue and continue.";
@@ -287,7 +287,7 @@ namespace MobiusEditor.Dialogs
                 plugin.TestSetExtraIniText(normalised, isSolo, isExp, out footPrintsChanged);
             }
             // Check if RA expansion units were disabled.
-            bool expansionWarn = plugin.GameType == GameType.RedAlert && wasExp && !isExp;
+            bool expansionWarn = plugin.Map.ExpansionUnitsAvailable && wasExp && !isExp;
             bool hasExpUnits = false;
             if (expansionWarn)
             {

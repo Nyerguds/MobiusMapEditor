@@ -226,11 +226,20 @@ namespace MobiusEditor.Utility
             }
             Globals.TheTeamColorManager = new TeamColorManager(mfm);
             // Text manager.
-            var cultureName = CultureInfo.CurrentUICulture.Name;
-            var gameTextFilename = string.Format(Globals.GameTextFilenameFormat, cultureName.ToUpper());
+            const string fallbackCulture = "EN-US";
+            string gameTextFilename = null;
+            if (!String.IsNullOrEmpty(Globals.ForceLanguage))
+            {
+                gameTextFilename = string.Format(Globals.GameTextFilenameFormat, Globals.ForceLanguage.ToUpper());
+            }
+            if (gameTextFilename == null || !Globals.TheArchiveManager.FileExists(gameTextFilename))
+            {
+                var cultureName = CultureInfo.CurrentUICulture.Name;
+                gameTextFilename = string.Format(Globals.GameTextFilenameFormat, cultureName.ToUpper());
+            }
             if (!Globals.TheArchiveManager.FileExists(gameTextFilename))
             {
-                gameTextFilename = string.Format(Globals.GameTextFilenameFormat, "EN-US");
+                gameTextFilename = string.Format(Globals.GameTextFilenameFormat, fallbackCulture.ToUpper());
             }
             GameTextManager gtm = new GameTextManager(Globals.TheArchiveManager, gameTextFilename);
             //gtm.Dump(Path.Combine(Program.ApplicationPath, "alltext.txt"));

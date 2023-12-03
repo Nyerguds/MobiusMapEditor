@@ -164,6 +164,16 @@ namespace MobiusEditor.Tools
             ExitPlacementMode();
         }
 
+        private void MapPanel_MouseWheel(Object sender, MouseEventArgs e)
+        {
+            if (e.Delta == 0 || (Control.ModifierKeys & Keys.Control) == Keys.None)
+            {
+                return;
+            }
+            KeyEventArgs keyArgs = new KeyEventArgs(e.Delta > 0 ? Keys.PageUp : Keys.PageDown);
+            ResourceTool_KeyDown(sender, keyArgs);
+        }
+
         private void MapPanel_MouseUp(object sender, MouseEventArgs e)
         {
             if (placementMode)
@@ -417,6 +427,7 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseDown += MapPanel_MouseDown;
             this.mapPanel.MouseUp += MapPanel_MouseUp;
             this.mapPanel.MouseLeave += MapPanel_MouseLeave;
+            this.mapPanel.MouseWheel += MapPanel_MouseWheel;
             (this.mapPanel as Control).KeyDown += ResourceTool_KeyDown;
             (this.mapPanel as Control).KeyUp += ResourcesTool_KeyUpDown;
             this.navigationWidget.BoundsMouseCellChanged += MouseoverWidget_MouseCellChanged;
@@ -441,6 +452,7 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseDown -= MapPanel_MouseDown;
             this.mapPanel.MouseUp -= MapPanel_MouseUp;
             this.mapPanel.MouseLeave -= MapPanel_MouseLeave;
+            this.mapPanel.MouseWheel -= MapPanel_MouseWheel;
             (this.mapPanel as Control).KeyDown -= ResourceTool_KeyDown;
             (this.mapPanel as Control).KeyUp -= ResourcesTool_KeyUpDown;
             this.navigationWidget.BoundsMouseCellChanged -= MouseoverWidget_MouseCellChanged;

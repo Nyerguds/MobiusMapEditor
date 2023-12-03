@@ -25,6 +25,7 @@ namespace MobiusEditor.Dialogs
 {
     public partial class TriggersDialog : Form
     {
+        private const long defaultData = -1;
         private const int maxLength = 4;
         private readonly IGamePlugin plugin;
         private readonly int maxTriggers;
@@ -58,7 +59,7 @@ namespace MobiusEditor.Dialogs
             InitializeComponent();
             SetTriggerFilter(new TriggerFilter(plugin));
             lblTooLong.Text = "Trigger length exceeds " + maxLength + " characters!";
-            switch (plugin.GameType)
+            switch (plugin.GameInfo.GameType)
             {
                 case GameType.TiberianDawn:
                 case GameType.SoleSurvivor:
@@ -166,7 +167,7 @@ namespace MobiusEditor.Dialogs
                 action1ComboBox.SelectedItem = SelectedTrigger.Action1.ActionType;
                 UpdateTriggerActionControls(SelectedTrigger.Action1, action1Nud, action1ValueComboBox, act1);
                 SelectedTrigger.Action1.FillDataFrom(act1);
-                switch (plugin.GameType)
+                switch (plugin.GameInfo.GameType)
                 {
                     case GameType.TiberianDawn:
                     case GameType.SoleSurvivor:
@@ -600,7 +601,7 @@ namespace MobiusEditor.Dialogs
             // You never know if someone makes a circular trigger...
             Trigger curr = SelectedTrigger;
             bool updateUi = curr != null && curr.Action1.Trigger == name || curr.Action2.Trigger == name;
-            if (plugin.GameType != GameType.RedAlert)
+            if (plugin.GameInfo.GameType != GameType.RedAlert)
             {
                 return;
             }
@@ -623,7 +624,7 @@ namespace MobiusEditor.Dialogs
 
         private void typeComboBox_SelectedValueChanged(object sender, EventArgs e)
         {
-            if (plugin.GameType == GameType.RedAlert && SelectedTrigger != null)
+            if (plugin.GameInfo.GameType == GameType.RedAlert && SelectedTrigger != null)
             {
                 var eventType = (TriggerMultiStyleType)typeComboBox.SelectedValue;
                 bool hasEvent2 = eventType != TriggerMultiStyleType.Only;
@@ -715,20 +716,20 @@ namespace MobiusEditor.Dialogs
             eventValueComboBox.DataSource = null;
             eventValueComboBox.DisplayMember = null;
             eventValueComboBox.ValueMember = null;
-            long data = triggerEventData == null ? 0 : triggerEventData.Data;
+            long data = triggerEventData == null ? defaultData : triggerEventData.Data;
             string team = triggerEventData == null ? TeamType.None : triggerEventData.Team;
             if (triggerEvent != null)
             {
                 if (triggerEventData == null)
                 {
-                    triggerEvent.Data = 0;
+                    triggerEvent.Data = defaultData;
                     triggerEvent.Team = TeamType.None;
                 }
                 else
                 {
                     triggerEvent.FillDataFrom(triggerEventData);
                 }
-                switch (plugin.GameType)
+                switch (plugin.GameInfo.GameType)
                 {
                     case GameType.TiberianDawn:
                     case GameType.SoleSurvivor:
@@ -888,14 +889,14 @@ namespace MobiusEditor.Dialogs
             actionValueComboBox.DataSource = null;
             actionValueComboBox.DisplayMember = null;
             actionValueComboBox.ValueMember = null;
-            long data = triggerActionData == null ? 0 : triggerActionData.Data;
+            long data = triggerActionData == null ? defaultData : triggerActionData.Data;
             string team = triggerActionData == null ? TeamType.None : triggerActionData.Team;
             string trig = triggerActionData == null ? Trigger.None : triggerActionData.Trigger;
             if (triggerAction != null)
             {
                 if (triggerActionData == null)
                 {
-                    triggerAction.Data = 0;
+                    triggerAction.Data = defaultData;
                     triggerAction.Trigger = Trigger.None;
                     triggerAction.Team = TeamType.None;
                 }
@@ -903,7 +904,7 @@ namespace MobiusEditor.Dialogs
                 {
                     triggerAction.FillDataFrom(triggerActionData);
                 }
-                switch (plugin.GameType)
+                switch (plugin.GameInfo.GameType)
                 {
                     case GameType.RedAlert:
                         switch (triggerAction.ActionType)
@@ -1032,7 +1033,7 @@ namespace MobiusEditor.Dialogs
                                 actionValueComboBox.Visible = true;
                                 actionValueComboBox.DisplayMember = "Label";
                                 actionValueComboBox.ValueMember = "Value";
-                                var trueFalseData = new long[] { 0, 1 }.Select(b => new ListItem<long>(b, b == 0 ? "On" : "Off")).ToArray();
+                                var trueFalseData = new long[] { 0, 1 }.Select(b => new ListItem<long>(b, b == 0 ? "Off" : "On")).ToArray();
                                 actionValueComboBox.DataSource = trueFalseData;
                                 actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
                                 actionValueComboBox.SelectedValue = ListItem.CheckInList(data, trueFalseData);
@@ -1041,7 +1042,8 @@ namespace MobiusEditor.Dialogs
                                 actionValueComboBox.Visible = true;
                                 actionValueComboBox.DisplayMember = "Label";
                                 actionValueComboBox.ValueMember = "Value";
-                                var txtData = RedAlert.ActionDataTypes.TextDesc.Select((t, i) => new ListItem<long>(i + 1, "[" + (i + 1).ToString("000") + "] " + t)).ToArray();
+                                var txtData = RedAlert.ActionDataTypes.TextDesc
+                                    .Select((t, i) => new ListItem<long>(i + 1, (i + 1).ToString("000") + " " + t)).ToArray();
                                 actionValueComboBox.DataSource = txtData;
                                 actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
                                 actionValueComboBox.SelectedValue = ListItem.CheckInList(data, txtData);

@@ -26,6 +26,7 @@ namespace MobiusEditor
         {
             // Startup options
             UseClassicFiles = Properties.Settings.Default.UseClassicFiles;
+            ForceLanguage = Properties.Settings.Default.ForceLanguage;
             EnableDpiAwareness = Properties.Settings.Default.EnableDpiAwareness;
             ClassicNoRemasterLogic = Properties.Settings.Default.ClassicNoRemasterLogic;
             // Defaults
@@ -73,7 +74,7 @@ namespace MobiusEditor
         public const int PixelWidth = 24;
         public const int PixelHeight = 24;
 
-        public static string DataPath { get; set; }
+        public static string ForceLanguage { get; set; }
 
         public static bool UseClassicFiles { get; set; }
         public static bool ClassicNoRemasterLogic { get; set; }

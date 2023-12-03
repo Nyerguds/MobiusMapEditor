@@ -101,8 +101,7 @@ namespace MobiusEditor
             // Check if any mods are allowed to override the default stuff to load.
             foreach (GameInfo gic in GameTypeFactory.GetGameInfos())
             {
-                String modFolder = Path.Combine(Globals.ModDirectory, gic.ModFolder);
-                modPaths.Add(gic.GameType, StartupLoader.GetModPaths(GameId, gic.ModsToLoad, modFolder, "TD"));
+                modPaths.Add(gic.GameType, StartupLoader.GetModPaths(GameId, gic.ModsToLoad, gic.ModFolder, gic.ModIdentifier));
             }
             String runPath = StartupLoader.GetRemasterRunPath(GameId, !Globals.UseClassicFiles);
             if (runPath != null)

@@ -200,9 +200,9 @@ namespace MobiusEditor
                 return;
             }
             string mapName = plugin.Map.BasicSection.Name;
-            bool mapNameEmpty = plugin.MapNameIsEmpty(mapName);
+            bool mapNameEmpty = plugin.GameInfo.MapNameIsEmpty(mapName);
             bool fileNameEmpty = filename == null;
-            string mapFilename = "\"" + (fileNameEmpty ? noname + plugin.DefaultExtension : Path.GetFileName(filename)) + "\"";
+            string mapFilename = "\"" + (fileNameEmpty ? noname + plugin.GameInfo.DefaultExtension : Path.GetFileName(filename)) + "\"";
             string mapShowName;
             if (!mapNameEmpty && !fileNameEmpty)
             {
@@ -216,7 +216,7 @@ namespace MobiusEditor
             {
                 mapShowName = mapFilename;
             }
-            this.Text = string.Format("{0}{1} [{2}] - {3}{4}", mainTitle, updating, plugin.Name, mapShowName, plugin != null && plugin.Dirty ? " *" : String.Empty);
+            this.Text = string.Format("{0}{1} [{2}] - {3}{4}", mainTitle, updating, plugin.GameInfo.Name, mapShowName, plugin != null && plugin.Dirty ? " *" : String.Empty);
         }
 
         private void SteamUpdateTimer_Tick(object sender, EventArgs e)
@@ -442,6 +442,7 @@ namespace MobiusEditor
             base.OnClosed(e);
             steamUpdateTimer.Stop();
             steamUpdateTimer.Dispose();
+            mru.Dispose();
         }
 
         private void FileNewMenuItem_Click(object sender, EventArgs e)
@@ -465,11 +466,12 @@ namespace MobiusEditor
             SimpleMultiThreading.RemoveBusyLabel(this);
             List<string> filters = new List<string>();
             filters.Add("All supported types (*.ini;*.bin;*.mpr;*.pgm)|*.ini;*.bin;*.mpr;*.pgm");
-            filters.Add(TiberianDawn.GamePluginTD.FileFilter);
-            filters.Add(RedAlert.GamePluginRA.FileFilter);
+            filters.Add(TiberianDawn.Constants.FileFilter);
+            filters.Add(RedAlert.Constants.FileFilter);
             filters.Add("PGM files (*.pgm)|*.pgm");
             filters.Add("All files (*.*)|*.*");
             string selectedFileName = null;
+            ClearActiveTool();
             using (OpenFileDialog ofd = new OpenFileDialog())
             {
                 ofd.AutoUpgradeEnabled = false;
@@ -480,7 +482,8 @@ namespace MobiusEditor
                 if (plugin != null)
                 {
                     string openFolder = Path.GetDirectoryName(filename);
-                    string constFolder = Directory.Exists(plugin.DefaultSaveDirectory) ? plugin.DefaultSaveDirectory : Environment.GetFolderPath(Environment.SpecialFolder.Personal);
+                    string defFolder = plugin.GameInfo.DefaultSaveDirectory;
+                    string constFolder = Directory.Exists(defFolder) ? defFolder : Environment.GetFolderPath(Environment.SpecialFolder.Personal);
                     ofd.InitialDirectory = openFolder ?? lastFolder ?? (classicLogic ? Program.ApplicationPath : constFolder);
                 }
                 else
@@ -495,6 +498,10 @@ namespace MobiusEditor
             if (selectedFileName != null)
             {
                 OpenFile(selectedFileName);
+            }
+            else
+            {
+                RefreshActiveTool();
             }
         }
 
@@ -560,6 +567,7 @@ namespace MobiusEditor
             {
                 return;
             }
+            ClearActiveTool();
             string savePath = null;
             using (SaveFileDialog sfd = new SaveFileDialog())
             {
@@ -568,9 +576,10 @@ namespace MobiusEditor
                 bool classicLogic = Globals.UseClassicFiles && Globals.ClassicNoRemasterLogic;
                 string lastFolder = mru.Files.Select(f => f.DirectoryName).Where(d => Directory.Exists(d)).FirstOrDefault();
                 string openFolder = Path.GetDirectoryName(filename);
-                string constFolder = Directory.Exists(plugin.DefaultSaveDirectory) ? plugin.DefaultSaveDirectory : Environment.GetFolderPath(Environment.SpecialFolder.Personal);
+                string defFolder = plugin.GameInfo.DefaultSaveDirectory;
+                string constFolder = Directory.Exists(defFolder) ? defFolder : Environment.GetFolderPath(Environment.SpecialFolder.Personal);
                 var filters = new List<string>();
-                filters.Add(plugin.SaveFilter);
+                filters.Add(plugin.GameInfo.SaveFilter);
                 filters.Add("All files (*.*)|*.*");
                 sfd.InitialDirectory = openFolder ?? lastFolder ?? (classicLogic ? Program.ApplicationPath : constFolder);
                 sfd.Filter = string.Join("|", filters);
@@ -578,7 +587,7 @@ namespace MobiusEditor
                 {
                     sfd.FileName = Path.GetFileName(filename);
                 }
-                else if (!plugin.MapNameIsEmpty(plugin.Map.BasicSection.Name))
+                else if (!plugin.GameInfo.MapNameIsEmpty(plugin.Map.BasicSection.Name))
                 {
                     sfd.FileName = Path.GetFileName(plugin.Map.BasicSection.Name);
                 }
@@ -589,7 +598,14 @@ namespace MobiusEditor
             }
             if (savePath == null)
             {
-                afterSaveDone?.Invoke();
+                if (afterSaveDone != null)
+                {
+                    afterSaveDone.Invoke();
+                }
+                else
+                {
+                    RefreshActiveTool();
+                }
             }
             else
             {
@@ -682,10 +698,12 @@ namespace MobiusEditor
 
         private void EditClearUndoRedoMenuItem_Click(object sender, EventArgs e)
         {
+            ClearActiveTool();
             if (DialogResult.Yes == MessageBox.Show("This will remove all undo/redo information. Are you sure?", Program.ProgramVersionTitle, MessageBoxButtons.YesNo))
             {
                 url.Clear();
             }
+            RefreshActiveTool();
         }
 
         private void SettingsMapSettingsMenuItem_Click(object sender, EventArgs e)
@@ -699,7 +717,7 @@ namespace MobiusEditor
             PropertyTracker<BasicSection> basicSettings = new PropertyTracker<BasicSection>(plugin.Map.BasicSection);
             PropertyTracker<BriefingSection> briefingSettings = new PropertyTracker<BriefingSection>(plugin.Map.BriefingSection);
             PropertyTracker<SoleSurvivor.CratesSection> cratesSettings = null;
-            if (plugin.GameType == GameType.SoleSurvivor && plugin is SoleSurvivor.GamePluginSS ssPlugin)
+            if (plugin.GameInfo.GameType == GameType.SoleSurvivor && plugin is SoleSurvivor.GamePluginSS ssPlugin)
             {
                 cratesSettings = new PropertyTracker<SoleSurvivor.CratesSection>(ssPlugin.CratesSection);
             }
@@ -711,6 +729,7 @@ namespace MobiusEditor
             bool multiStatusChanged = false;
             bool iniTextChanged = false;
             bool footPrintsChanged = false;
+            ClearActiveTool();
             using (MapSettingsDialog msd = new MapSettingsDialog(plugin, basicSettings, briefingSettings, cratesSettings, houseSettingsTrackers, extraIniText))
             {
                 msd.StartPosition = FormStartPosition.CenterParent;
@@ -763,6 +782,7 @@ namespace MobiusEditor
                     plugin.Dirty = hasChanges;
                 }
             }
+            RefreshActiveTool();
             if (footPrintsChanged || amStatusChanged)
             {
                 // If Aftermath units were disabled, we can't guarantee none of them are still in
@@ -779,6 +799,7 @@ namespace MobiusEditor
             {
                 return;
             }
+            ClearActiveTool();
             using (TeamTypesDialog ttd = new TeamTypesDialog(plugin))
             {
                 ttd.StartPosition = FormStartPosition.CenterParent;
@@ -796,42 +817,45 @@ namespace MobiusEditor
                     bool origDirtyState = plugin.Dirty;
                     void undoAction(UndoRedoEventArgs ev)
                     {
+                        ClearActiveTool();
                         DialogResult dr = MessageBox.Show(this, "This will undo all teamtype editing actions you performed. Are you sure you want to continue?",
                             "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
                         if (dr == DialogResult.No)
                         {
                             ev.Cancelled = true;
-                            return;
                         }
-                        if (ev.Plugin != null)
+                        else if (ev.Plugin != null)
                         {
                             ev.Map.Triggers = oldTriggers;
                             ev.Map.TeamTypes.Clear();
                             ev.Map.TeamTypes.AddRange(oldTeamTypes);
                             ev.Plugin.Dirty = origDirtyState;
                         }
+                        RefreshActiveTool();
                     }
                     void redoAction(UndoRedoEventArgs ev)
                     {
+                        ClearActiveTool();
                         DialogResult dr = MessageBox.Show(this, "This will redo all teamtype editing actions you undid. Are you sure you want to continue?",
                             "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
                         if (dr == DialogResult.No)
                         {
                             ev.Cancelled = true;
-                            return;
                         }
-                        if (ev.Plugin != null)
+                        else if (ev.Plugin != null)
                         {
                             ev.Map.TeamTypes.Clear();
                             ev.Map.TeamTypes.AddRange(newTeamTypes);
                             ev.Map.Triggers = newTriggers;
                             ev.Plugin.Dirty = true;
                         }
+                        RefreshActiveTool();
                     }
                     url.Track(undoAction, redoAction, ToolType.None);
                     plugin.Dirty = true;
                 }
             }
+            RefreshActiveTool();
         }
 
         private void SettingsTriggersMenuItem_Click(object sender, EventArgs e)
@@ -840,6 +864,7 @@ namespace MobiusEditor
             {
                 return;
             }
+            ClearActiveTool();
             using (TriggersDialog td = new TriggersDialog(plugin))
             {
                 td.StartPosition = FormStartPosition.CenterParent;
@@ -862,11 +887,13 @@ namespace MobiusEditor
                         plugin.Dirty = true;
                         void undoAction(UndoRedoEventArgs ev)
                         {
+                            ClearActiveTool();
                             DialogResult dr = MessageBox.Show(this, "This will undo all trigger editing actions you performed. Are you sure you want to continue?",
                                 "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
                             if (dr == DialogResult.No)
                             {
                                 ev.Cancelled = true;
+                                RefreshActiveTool();
                                 return;
                             }
                             foreach (Object obj in undoList.Keys)
@@ -896,14 +923,17 @@ namespace MobiusEditor
                             }
                             // Repaint map labels
                             ev.MapPanel?.Invalidate();
+                            RefreshActiveTool();
                         }
                         void redoAction(UndoRedoEventArgs ev)
                         {
+                            ClearActiveTool();
                             DialogResult dr = MessageBox.Show(this, "This will redo all trigger editing actions you undid. Are you sure you want to continue?",
                                 "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
                             if (dr == DialogResult.No)
                             {
                                 ev.Cancelled = true;
+                                RefreshActiveTool();
                                 return;
                             }
                             foreach (Object obj in redoList.Keys)
@@ -932,6 +962,7 @@ namespace MobiusEditor
                             }
                             // Repaint map labels
                             ev.MapPanel?.Invalidate();
+                            RefreshActiveTool();
                         }
                         // These changes can affect a whole lot of tools.
                         url.Track(undoAction, redoAction, ToolType.Terrain | ToolType.Infantry | ToolType.Unit | ToolType.Building | ToolType.CellTrigger);
@@ -940,6 +971,7 @@ namespace MobiusEditor
                     }
                 }
             }
+            RefreshActiveTool();
         }
 
         private void ToolsOptionsBoundsObstructFillMenuItem_CheckedChanged(Object sender, EventArgs e)
@@ -1003,6 +1035,7 @@ namespace MobiusEditor
             {
                 return;
             }
+            ClearActiveTool();
             using (ErrorMessageBox emb = new ErrorMessageBox())
             {
                 emb.Title = "Map objects";
@@ -1011,6 +1044,7 @@ namespace MobiusEditor
                 emb.StartPosition = FormStartPosition.CenterParent;
                 emb.ShowDialog(this);
             }
+            RefreshActiveTool();
         }
 
         private void ToolsStatsPowerMenuItem_Click(Object sender, EventArgs e)
@@ -1019,6 +1053,7 @@ namespace MobiusEditor
             {
                 return;
             }
+            ClearActiveTool();
             using (ErrorMessageBox emb = new ErrorMessageBox())
             {
                 emb.Title = "Power usage";
@@ -1027,6 +1062,7 @@ namespace MobiusEditor
                 emb.StartPosition = FormStartPosition.CenterParent;
                 emb.ShowDialog(this);
             }
+            RefreshActiveTool();
         }
 
         private void ToolsStatsStorageMenuItem_Click(Object sender, EventArgs e)
@@ -1035,6 +1071,7 @@ namespace MobiusEditor
             {
                 return;
             }
+            ClearActiveTool();
             using (ErrorMessageBox emb = new ErrorMessageBox())
             {
                 emb.Title = "Silo storage";
@@ -1043,14 +1080,17 @@ namespace MobiusEditor
                 emb.StartPosition = FormStartPosition.CenterParent;
                 emb.ShowDialog(this);
             }
+            RefreshActiveTool();
         }
 
         private void ToolsRandomizeTilesMenuItem_Click(Object sender, EventArgs e)
         {
             if (plugin != null)
             {
+                ClearActiveTool();
                 String feedback = TemplateTool.RandomizeTiles(plugin, mapPanel, url);
                 MessageBox.Show(feedback, Program.ProgramVersionTitle);
+                RefreshActiveTool();
             }
         }
 
@@ -1060,12 +1100,14 @@ namespace MobiusEditor
             {
                 return;
             }
+            ClearActiveTool();
             string lastFolder = mru.Files.Select(f => f.DirectoryName).Where(d => Directory.Exists(d)).FirstOrDefault();
             using (ImageExportDialog imex = new ImageExportDialog(plugin, activeLayers, filename, lastFolder))
             {
                 imex.StartPosition = FormStartPosition.CenterParent;
                 imex.ShowDialog(this);
             }
+            RefreshActiveTool();
         }
 
         private void ViewZoomInMenuItem_Click(Object sender, EventArgs e)
@@ -1100,8 +1142,10 @@ namespace MobiusEditor
             }
             else
             {
+                ClearActiveTool();
                 MessageBox.Show(string.Format("Error loading {0}: the file was not found.", e.Name), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 mru.Remove(e);
+                RefreshActiveTool();
             }
         }
 
@@ -1142,6 +1186,7 @@ namespace MobiusEditor
                 nmd.StartPosition = FormStartPosition.CenterParent;
                 if (nmd.ShowDialog(this) != DialogResult.OK)
                 {
+                    RefreshActiveTool();
                     return;
                 }
                 gameType = nmd.GameType;
@@ -1158,6 +1203,7 @@ namespace MobiusEditor
                     ofd.Filter = "Image Files (*.png, *.bmp, *.gif)|*.png;*.bmp;*.gif|All Files (*.*)|*.*";
                     if (ofd.ShowDialog() != DialogResult.OK)
                     {
+                        RefreshActiveTool();
                         return;
                     }
                     imagePath = ofd.FileName;
@@ -1181,6 +1227,7 @@ namespace MobiusEditor
 
         private void OpenFile(String fileName)
         {
+            ClearActiveTool();
             var fileInfo = new FileInfo(fileName);
             String name = fileInfo.FullName;
             if (!IdentifyMap(name, out FileType fileType, out GameType gameType, out bool isMegaMap, out string theater))
@@ -1208,6 +1255,7 @@ namespace MobiusEditor
                     }
                 }
                 MessageBox.Show(string.Format("Error loading {0}: Could not identify map type.", fileInfo.Name), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                RefreshActiveTool();
                 return;
             }
             GameInfo gType = GameTypeFactory.GetGameInfo(gameType);
@@ -1216,22 +1264,27 @@ namespace MobiusEditor
             if (theaterObj == null)
             {
                 MessageBox.Show(String.Format("Unknown {0} theater \"{1}\"", gType.Name, theater), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                RefreshActiveTool();
                 return;
             }
             if (!theaterObj.IsAvailable())
             {
                 string graphicsMode = Globals.UseClassicFiles ? "Classic" : "Remastered";
-                string message = string.Format("Error loading {0}: No assets loaded for {1} theater \"{2}\" in {3} graphics mode.",
+                string message = string.Format("Error loading {0}: No assets found for {1} theater \"{2}\" in {3} graphics mode.",
                     fileInfo.Name, gType.Name, theaterObj.Name, graphicsMode);
                 if (Globals.UseClassicFiles)
                 {
                     message += String.Format("\n\nYou may need to adjust the \"{0}\" setting to point to a game folder containing {1}, or add {1} to the configured folder.",
                         gType.ClassicFolderSetting, theaterObj.ClassicTileset + ".mix");
                 }
+                else
+                {
+                    message += "\n\nYou may need to switch to Classic graphics mode by enabling the \"UseClassicFiles\" setting to use this theater.";
+                }
                 MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                RefreshActiveTool();
                 return;
             }
-
             loadMultiThreader.ExecuteThreaded(
                 () => LoadFile(name, fileType, gType, theater, isMegaMap),
                 PostLoad, true,
@@ -1265,7 +1318,7 @@ namespace MobiusEditor
                     fileType = FileType.INI;
                 }
             }
-            if (plugin.MapNameIsEmpty(plugin.Map.BasicSection.Name))
+            if (plugin.GameInfo.MapNameIsEmpty(plugin.Map.BasicSection.Name))
             {
                 plugin.Map.BasicSection.Name = Path.GetFileNameWithoutExtension(saveFilename);
             }
@@ -1460,32 +1513,26 @@ namespace MobiusEditor
             }
         }
 
-        private static IGamePlugin LoadNewPlugin(GameInfo gameType, string theater, bool isMegaMap)
+        private static IGamePlugin LoadNewPlugin(GameInfo gameInfo, string theater, bool isMegaMap)
         {
-            return LoadNewPlugin(gameType, theater, isMegaMap, false);
+            return LoadNewPlugin(gameInfo, theater, isMegaMap, false);
         }
 
-        private static IGamePlugin LoadNewPlugin(GameInfo gameType, string theater, bool isMegaMap, bool noImage)
+        private static IGamePlugin LoadNewPlugin(GameInfo gameInfo, string theater, bool isMegaMap, bool noImage)
         {
+            GameType gameType = gameInfo.GameType;
             // Get plugin type
-            IGamePlugin plugin = null;
-            GameType tp = gameType.GameType;
-            plugin = gameType.CreatePlugin(!noImage, isMegaMap);
-            RedAlert.GamePluginRA raPlugin = null;
-            if (tp == GameType.RedAlert)
-            {
-                raPlugin = (RedAlert.GamePluginRA)plugin;
-            }
+            IGamePlugin plugin = gameInfo.CreatePlugin(!noImage, isMegaMap);
             // Get theater object
             TheaterTypeConverter ttc = new TheaterTypeConverter();
             TheaterType theaterType = ttc.ConvertFrom(new MapContext(plugin.Map, false), theater);
             // Resetting to a specific game type will take care of classic mode.
-            Globals.TheArchiveManager.Reset(tp, theaterType);
-            Globals.TheGameTextManager.Reset(tp);
-            Globals.TheTilesetManager.Reset(tp, theaterType);
-            Globals.TheTeamColorManager.Reset(tp, theaterType);
+            Globals.TheArchiveManager.Reset(gameType, theaterType);
+            Globals.TheGameTextManager.Reset(gameType);
+            Globals.TheTilesetManager.Reset(gameType, theaterType);
+            Globals.TheTeamColorManager.Reset(gameType, theaterType);
             // Load game-specific data
-            gameType.InitializePlugin(plugin);
+            plugin.Initialize();
             // Needs to be done after the whole init, so colors reading is properly initialised.
             plugin.Map.FlagColors = plugin.GetFlagColors();
             return plugin;
@@ -1601,7 +1648,9 @@ namespace MobiusEditor
             {
                 nfi.StartPosition = FormStartPosition.CenterParent;
                 if (nfi.ShowDialog(showTarget) == DialogResult.Cancel)
+                {
                     return null;
+                }
                 return nfi.Mappings;
             }
         }
@@ -1611,16 +1660,16 @@ namespace MobiusEditor
         /// </summary>
         /// <param name="loadFilename">File to load.</param>
         /// <param name="fileType">Type of the loaded file (detected in advance).</param>
-        /// <param name="gameType">Game type (detected in advance)</param>
+        /// <param name="gameInfo">Game type info (detected in advance)</param>
         /// <param name="isMegaMap">True if this is a megamap.</param>
         /// <returns></returns>
-        private static MapLoadInfo LoadFile(string loadFilename, FileType fileType, GameInfo gameType, string theater, bool isMegaMap)
+        private static MapLoadInfo LoadFile(string loadFilename, FileType fileType, GameInfo gameInfo, string theater, bool isMegaMap)
         {
             IGamePlugin plugin = null;
             bool mapLoaded = false;
             try
             {
-                plugin = LoadNewPlugin(gameType, theater, isMegaMap);
+                plugin = LoadNewPlugin(gameInfo, theater, isMegaMap);
                 string[] errors = plugin.Load(loadFilename, fileType).ToArray();
                 mapLoaded = true;
                 return new MapLoadInfo(loadFilename, fileType, plugin, errors, true);
@@ -1664,6 +1713,7 @@ namespace MobiusEditor
             {
                 // Absolute abort
                 SimpleMultiThreading.RemoveBusyLabel(this);
+                RefreshActiveTool();
                 return;
             }
             IGamePlugin oldPlugin = this.plugin;
@@ -1680,6 +1730,7 @@ namespace MobiusEditor
                 // In case of actual error, remove label.
                 SimpleMultiThreading.RemoveBusyLabel(this);
                 MessageBox.Show(string.Format("Error loading {0}: {1}", loadInfo.FileName ?? "new map", String.Join("\n", errors)), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                RefreshActiveTool();
             }
             else
             {
@@ -1719,7 +1770,7 @@ namespace MobiusEditor
                     ZoomReset();
                 }
                 url.Clear();
-                CleanupTools(oldPlugin?.GameType ?? GameType.None);
+                CleanupTools(oldPlugin?.GameInfo?.GameType ?? GameType.None);
                 RefreshUI(oldSelectedTool);
                 oldSelectedTool = ToolType.None;
                 //RefreshActiveTool(); // done by UI refresh
@@ -1745,12 +1796,20 @@ namespace MobiusEditor
                 filename = saveInfo.FileName;
                 SetTitle();
                 mru.Add(fileInfo);
-                afterSaveDone?.Invoke();
+                if (afterSaveDone != null)
+                {
+                    afterSaveDone.Invoke();
+                }
+                else
+                {
+                    RefreshActiveTool();
+                }
             }
             else
             {
                 MessageBox.Show(string.Format("Error saving {0}: {1}", saveInfo.FileName, saveInfo.Error, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error));
-                mru.Remove(fileInfo);
+                //mru.Remove(fileInfo);
+                RefreshActiveTool();
             }
         }
 
@@ -1769,7 +1828,7 @@ namespace MobiusEditor
                 }
                 ActiveToolType = ToolType.None; // Always re-defaults to map anyway, so nicer if nothing is selected during load.
                 this.ActiveControl = null;
-                CleanupTools(plugin?.GameType ?? GameType.None);
+                CleanupTools(plugin?.GameInfo?.GameType ?? GameType.None);
                 // Unlink plugin
                 IGamePlugin pl = plugin;
                 plugin = null;
@@ -2006,7 +2065,7 @@ namespace MobiusEditor
                 ITool oldTool = toolDialog.GetTool();
                 Object mockObject = null;
                 bool fromBackup = false;
-                if (oldMockGame != this.plugin.GameType && oldMockObjects != null && oldMockObjects.Count() > 0)
+                if (oldMockGame != this.plugin.GameInfo.GameType && oldMockObjects != null && oldMockObjects.Count() > 0)
                 {
                     oldMockObjects.Clear();
                     oldMockGame = GameType.None;
@@ -2016,7 +2075,7 @@ namespace MobiusEditor
                     // Same map edit session; restore old data
                     mockObject = oldTool.CurrentObject;
                 }
-                else if (oldMockGame == this.plugin.GameType && oldMockObjects != null && oldMockObjects.TryGetValue(curType, out object mock))
+                else if (oldMockGame == this.plugin.GameInfo.GameType && oldMockObjects != null && oldMockObjects.TryGetValue(curType, out object mock))
                 {
                     mockObject = mock;
                     // Retrieve once and remove.
@@ -2444,6 +2503,7 @@ namespace MobiusEditor
             {
                 return;
             }
+            ClearActiveTool();
             // Check if we need to save.
             ulong oldId = plugin.Map.SteamSection.PublishedFileId;
             string oldName = plugin.Map.SteamSection.Title;
@@ -2468,15 +2528,21 @@ namespace MobiusEditor
                 // This specific overload only saves the map, without resaving the preview.
                 SaveAction(true, null, false, false);
             }
+            else
+            {
+                RefreshActiveTool();
+            }
         }
 
         private void InfoAboutMenuItem_Click(Object sender, EventArgs e)
         {
+            ClearActiveTool();
             using (ThankYouDialog tyForm = new ThankYouDialog())
             {
                 tyForm.StartPosition = FormStartPosition.CenterParent;
                 tyForm.ShowDialog(this);
             }
+            RefreshActiveTool();
         }
 
         private void InfoWebsiteMenuItem_Click(Object sender, EventArgs e)
@@ -2583,7 +2649,9 @@ namespace MobiusEditor
                 this.SetTitle();
                 if (returnMessage != null)
                 {
+                    ClearActiveTool();
                     MessageBox.Show(this, returnMessage, title);
+                    RefreshActiveTool();
                 }
             }
         }
@@ -2673,6 +2741,7 @@ namespace MobiusEditor
 #endif
             if (plugin?.Dirty ?? false)
             {
+                ClearActiveTool();
                 var message = string.IsNullOrEmpty(filename) ? "Save new map?" : string.Format("Save map '{0}'?", filename);
                 var result = MessageBox.Show(message, "Save", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
                 switch (result)
@@ -2691,18 +2760,27 @@ namespace MobiusEditor
                             {
                                 SaveAction(false, nextAction, true, false);
                             }
+                            if (nextAction == null)
+                            {
+                                RefreshActiveTool();
+                            }
                             // Cancel current operation, since stuff after multithreading will take care of the operation.
                             return false;
                         }
                     case DialogResult.No:
                         break;
                     case DialogResult.Cancel:
+                        RefreshActiveTool();
                         return false;
                 }
             }
             if (!onlyAfterSave && nextAction != null)
             {
                 nextAction();
+            }
+            else
+            {
+                RefreshActiveTool();
             }
             return true;
         }
@@ -2760,18 +2838,8 @@ namespace MobiusEditor
                                         && (!Globals.FilterTheaterObjects || ov.ExistsInTheater)).OrderBy(ov => ov.ID).FirstOrDefault();
             OverlayType wall = plugin.Map.OverlayTypes.Where(ov => (ov.Flag & OverlayTypeFlag.Wall) == OverlayTypeFlag.Wall
                                         && (!Globals.FilterTheaterObjects || ov.ExistsInTheater)).OrderBy(ov => ov.ID).FirstOrDefault();
-            bool gotBeacon = Globals.TheTilesetManager.GetTileData("beacon", 0, out Tile waypoint);
-            if (!gotBeacon)
-            {
-                // Beacon only exists in rematered graphics. Get fallback.
-                int icn = plugin.GameType == GameType.RedAlert ? 15 : 12;
-                Globals.TheTilesetManager.GetTileData("mouse", icn, out waypoint);
-            }
-            Globals.TheTilesetManager.GetTileData("mine.shp", 3, out Tile cellTrigger);
-            if (cellTrigger == null)
-            {
-                Globals.TheTilesetManager.GetTileData("mine", 3, out cellTrigger);
-            }
+            Tile waypoint = plugin.GameInfo.GetWaypointIcon();
+            Tile cellTrigger = plugin.GameInfo.GetCellTriggerIcon();
             LoadNewIcon(mapToolStripButton, templateTile?.Image, plugin, 0);
             LoadNewIcon(smudgeToolStripButton, smudge?.Thumbnail, plugin, 1);
             //LoadNewIcon(overlayToolStripButton, overlayTile?.Image, plugin, 2);
@@ -2784,37 +2852,14 @@ namespace MobiusEditor
             LoadNewIcon(wallsToolStripButton, wall?.Thumbnail, plugin, 8);
             LoadNewIcon(waypointsToolStripButton, waypoint?.Image, plugin, 9);
             LoadNewIcon(cellTriggersToolStripButton, cellTrigger?.Image, plugin, 10);
-            if (Globals.TheTilesetManager is TilesetManager tsm)
+            // Tiles are cached and disposed at the end, but if you fetch raw textures directly, an unmanaged clone is returned.
+            // Since LoadNewIcon clones that one too, the one we get here needs to be cleaned up.
+            using (Bitmap select = plugin.GameInfo.GetSelectIcon())
             {
-                // The Texture manager returns a clone of its own cached image. The Tileset manager caches those clones again,
-                // and is responsible for their cleanup, but if we use it directly it needs to be disposed.
-                // Alt: @"DATA\ART\TEXTURES\SRGB\ICON_IONCANNON_15.DDS
-                // Chronosphere cursor from TEXTURES_SRGB.MEG
-                using (Bitmap select = tsm.TextureManager.GetTexture(@"DATA\ART\TEXTURES\SRGB\ICON_SELECT_GREEN_04.DDS", null, false).Item1)
-                {
-                    LoadNewIcon(selectToolStripButton, select, plugin, 11, false);
-                }
-            }
-            else if (Globals.UseClassicFiles)
-            {
-                if (plugin.GameType == GameType.TiberianDawn || plugin.GameType == GameType.SoleSurvivor)
-                {
-                    // Ion Cannon cursor
-                    if (Globals.TheTilesetManager.GetTileData("mouse", 118, out Tile tile) && tile != null && tile.Image != null)
-                    {
-                        LoadNewIcon(selectToolStripButton, tile.Image, plugin, 11, false);
-                    }
-                }
-                else if (plugin.GameType == GameType.RedAlert)
-                {
-                    // Chronosphere cursor
-                    if (Globals.TheTilesetManager.GetTileData("mouse", 101, out Tile tile) && tile != null && tile.Image != null)
-                    {
-                        LoadNewIcon(selectToolStripButton, tile.Image, plugin, 11, false);
-                    }
-                }
+                LoadNewIcon(selectToolStripButton, select, plugin, 11, false);
             }
         }
+
         private void LoadNewIcon(ViewToolStripButton button, Bitmap image, IGamePlugin plugin, int index)
         {
             LoadNewIcon(button, image, plugin, index, true);
@@ -2835,7 +2880,7 @@ namespace MobiusEditor
                 }
                 return;
             }
-            string id = ((int)plugin.GameType)  + "_"
+            string id = ((int)plugin.GameInfo.GameType)  + "_"
                 + Enumerable.Range(0, plugin.Map.TheaterTypes.Count).FirstOrDefault(i => plugin.Map.TheaterTypes[i].ID.Equals(plugin.Map.Theater.ID))
                 + "_" + index;
             if (theaterIcons.TryGetValue(id, out Bitmap bm))

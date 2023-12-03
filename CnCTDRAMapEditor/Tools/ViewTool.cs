@@ -310,7 +310,7 @@ namespace MobiusEditor.Tools
                 {
                     MapRenderer.RenderAllVehicleOutlines(graphics, plugin.GameInfo, map, visibleCells, tileSize, true);
                 }
-                if (renderOverlay && !Globals.OutlineAllCrates)
+                if (renderOverlay && !Globals.OutlineAllCrates && plugin.Map.CrateOverlaysAvailable)
                 {
                     MapRenderer.RenderAllCrateOutlines(graphics, plugin.GameInfo, map, visibleCells, tileSize, tileScale, !Globals.OutlineAllCrates);
                 }
