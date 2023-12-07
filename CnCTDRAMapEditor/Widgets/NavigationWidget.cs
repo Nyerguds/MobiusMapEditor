@@ -71,14 +71,13 @@ namespace MobiusEditor.Widgets
                     return;
                 }
                 penColor = value;
-                Pen p = defaultMouseoverPen;
-                defaultMouseoverPen = null;
+                Pen p = this.defaultMouseoverPen;
+                this.defaultMouseoverPen = new Pen(value, Math.Max(1, CellSize.Width / 16));
                 if (p != null)
                 {
                     try { p.Dispose(); }
                     catch { /* Ignore*/ }
                 }
-                this.defaultMouseoverPen = new Pen(value, Math.Max(1, CellSize.Width / 16));
             }
         }
 
@@ -126,7 +125,7 @@ namespace MobiusEditor.Widgets
         public Size MouseoverSize
         {
             get => mouseoverSize;
-            set => mouseoverSize = !value.IsEmpty ? new Size(value.Width | 1, value.Height | 1) : Size.Empty;
+            set => mouseoverSize = value.IsEmpty ? Size.Empty : new Size(value.Width | 1, value.Height | 1);
         }
 
         public SizeF ZoomedCellSize
@@ -372,6 +371,12 @@ namespace MobiusEditor.Widgets
                 if (disposing)
                 {
                     Deactivate();
+                    if (this.defaultMouseoverPen != null)
+                    {
+                        try { this.defaultMouseoverPen.Dispose(); }
+                        catch { /* Ignore*/ }
+                    }
+                    this.defaultMouseoverPen = null;
                 }
                 disposedValue = true;
             }

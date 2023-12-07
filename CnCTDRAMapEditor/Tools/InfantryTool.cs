@@ -689,6 +689,7 @@ namespace MobiusEditor.Tools
             }
             placementMode = true;
             navigationWidget.MouseoverSize = Size.Empty;
+            navigationWidget.PenColor = Color.Yellow;
             if (SelectedInfantryType != null)
             {
                 mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(navigationWidget.MouseCell, new Size(1, 1)), 1, 1));
@@ -705,6 +706,7 @@ namespace MobiusEditor.Tools
             }
             placementMode = false;
             navigationWidget.MouseoverSize = new Size(1, 1);
+            navigationWidget.PenColor = Color.Yellow;
             if (SelectedInfantryType != null)
             {
                 mapPanel.Invalidate(map, Rectangle.Inflate(new Rectangle(navigationWidget.MouseCell, new Size(1, 1)), 1, 1));
@@ -814,10 +816,12 @@ namespace MobiusEditor.Tools
         {
             base.PreRenderMap();
             previewMap = map.Clone(true);
+            navigationWidget.PenColor = Color.Yellow;
             if (!placementMode)
             {
                 return;
             }
+            navigationWidget.MouseoverSize = Size.Empty;
             var location = navigationWidget.MouseCell;
             if (SelectedInfantryType == null)
             {
@@ -829,6 +833,7 @@ namespace MobiusEditor.Tools
             }
             InfantryGroup infantryGroup;
             var techno = previewMap.Technos[cell];
+            bool placeable = false;
             if (techno == null)
             {
                 infantryGroup = new InfantryGroup();
@@ -848,9 +853,15 @@ namespace MobiusEditor.Tools
                         infantry.Tint = Color.FromArgb(128, Color.White);
                         infantry.IsPreview = true;
                         infantryGroup.Infantry[i] = infantry;
+                        placeable = true;
                         break;
                     }
                 }
+            }
+            if (!placeable)
+            {
+                navigationWidget.MouseoverSize = new Size(1, 1);
+                navigationWidget.PenColor = Color.Red;
             }
         }
 
@@ -880,6 +891,7 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseMove += MapPanel_MouseMove;
             this.mapPanel.MouseLeave += MapPanel_MouseLeave;
             this.mapPanel.MouseWheel += MapPanel_MouseWheel;
+            this.mapPanel.SuspendMouseZoomKeys = Keys.Control;
             (this.mapPanel as Control).KeyDown += InfantryTool_KeyDown;
             (this.mapPanel as Control).KeyUp += InfantryTool_KeyUp;
             this.navigationWidget.BoundsMouseCellChanged += MouseoverWidget_MouseCellChanged;
@@ -906,6 +918,7 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseMove -= MapPanel_MouseMove;
             this.mapPanel.MouseLeave -= MapPanel_MouseLeave;
             this.mapPanel.MouseWheel -= MapPanel_MouseWheel;
+            this.mapPanel.SuspendMouseZoomKeys = Keys.None;
             (this.mapPanel as Control).KeyDown -= InfantryTool_KeyDown;
             (this.mapPanel as Control).KeyUp -= InfantryTool_KeyUp;
             this.navigationWidget.BoundsMouseCellChanged -= MouseoverWidget_MouseCellChanged;

@@ -599,7 +599,8 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-            var location = navigationWidget.MouseCell;
+            navigationWidget.MouseoverSize = Size.Empty;
+            Point location = navigationWidget.MouseCell;
             if (previewMap.Metrics.Contains(location))
             {
                 var terrain = mockTerrain.Clone();
@@ -620,7 +621,43 @@ namespace MobiusEditor.Tools
             Rectangle boundRenderCells = visibleCells;
             boundRenderCells.Inflate(1, 1);
             boundRenderCells.Intersect(map.Metrics.Bounds);
-            MapRenderer.RenderAllOccupierBounds(graphics, boundRenderCells, Globals.MapTileSize, previewMap.Technos.OfType<Terrain>());
+            Point location = navigationWidget.MouseCell;
+            // Render green outline for any terrain object already placed on the real map.
+            MapRenderer.RenderAllOccupierBoundsGreen(graphics, boundRenderCells, Globals.MapTileSize, map.Technos.OfType<Terrain>());
+            IEnumerable<Point> highlightPoints = null;
+            IEnumerable<(Point, Terrain)> place = null;
+            TerrainType selectedType = SelectedTerrainType;
+            // Determine overlap cells, and whether to render the current place preview outline.
+            if (placementMode && selectedType != null)
+            {
+                List<Point> occupyPoints = OccupierSet.GetOccupyPoints(location, selectedType.OccupyMask).ToList();
+                Boolean isCurrent = map.Technos.OfType<Terrain>().Any(lo => lo.Location == location && lo.Occupier.Type == selectedType);
+                // If there is already a terrain object of this exact type placed on the current location, don't render anything extra.
+                if (!isCurrent)
+                {
+                    // List overlapped points to indicate obstructions.
+                    highlightPoints = occupyPoints.Where(p => map.Technos[p] != null);
+                    // Store info on where to render backup preview outline.
+                    place = (location, mockTerrain).Yield();
+                }
+            }
+            // Render green outline of current terrain object.
+            if (place != null)
+            {
+                MapRenderer.RenderAllOccupierBoundsGreen(graphics, boundRenderCells, Globals.MapTileSize, place);
+            }
+            // Render thin red obstructed cells of all other terrain objects.
+            MapRenderer.RenderAllOccupierCellsRed(graphics, boundRenderCells, Globals.MapTileSize, map.Technos.OfType<Terrain>());
+            // Render thin blue obstructed cells of preview terrain object.
+            if (place != null)
+            {
+                MapRenderer.RenderAllOccupierBounds(graphics, boundRenderCells, Globals.MapTileSize, place, Color.Transparent, Color.Blue);
+            }
+            // Render thick red over obstructed cells.
+            if (highlightPoints != null)
+            {
+                MapRenderer.RenderAllBoundsFromPoint(graphics, boundRenderCells, Globals.MapTileSize, highlightPoints, Color.Red);
+            }
             if ((Layers & MapLayerFlag.TechnoTriggers) == MapLayerFlag.TechnoTriggers)
             {
                 MapRenderer.RenderAllTechnoTriggers(graphics, previewMap, visibleCells, Globals.MapTileSize, Layers);
@@ -638,9 +675,12 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseDoubleClick += MapPanel_MouseDoubleClick;
             this.mapPanel.MouseLeave += MapPanel_MouseLeave;
             this.mapPanel.MouseWheel += MapPanel_MouseWheel;
+            this.mapPanel.SuspendMouseZoomKeys = Keys.Control;
             (this.mapPanel as Control).KeyDown += TerrainTool_KeyDown;
             (this.mapPanel as Control).KeyUp += TerrainTool_KeyUp;
             this.navigationWidget.BoundsMouseCellChanged += MouseoverWidget_MouseCellChanged;
+            this.navigationWidget.MouseoverSize = new Size(1, 1);
+            this.navigationWidget.PenColor = Color.Yellow;
             this.UpdateStatus();
             this.RefreshPreviewPanel();
         }
@@ -664,6 +704,7 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseDoubleClick -= MapPanel_MouseDoubleClick;
             this.mapPanel.MouseLeave -= MapPanel_MouseLeave;
             this.mapPanel.MouseWheel -= MapPanel_MouseWheel;
+            this.mapPanel.SuspendMouseZoomKeys = Keys.None;
             (this.mapPanel as Control).KeyDown -= TerrainTool_KeyDown;
             (this.mapPanel as Control).KeyUp -= TerrainTool_KeyUp;
             this.navigationWidget.BoundsMouseCellChanged -= MouseoverWidget_MouseCellChanged;

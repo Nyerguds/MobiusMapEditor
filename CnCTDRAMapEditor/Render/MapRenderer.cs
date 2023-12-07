@@ -1204,12 +1204,22 @@ namespace MobiusEditor.Render
             }
         }
 
+        public static void RenderAllOccupierBoundsGreen<T>(Graphics graphics, Rectangle visibleCells, Size tileSize, IEnumerable<(Point, T)> occupiers) where T : ICellOccupier, ICellOverlapper
+        {
+            RenderAllOccupierBounds(graphics, visibleCells, tileSize, occupiers, Color.Green, Color.Transparent);
+        }
+
+        public static void RenderAllOccupierCellsRed<T>(Graphics graphics, Rectangle visibleCells, Size tileSize, IEnumerable<(Point, T)> occupiers) where T : ICellOccupier, ICellOverlapper
+        {
+            RenderAllOccupierBounds(graphics, visibleCells, tileSize, occupiers, Color.Transparent, Color.Red);
+        }
+
         public static void RenderAllOccupierBounds<T>(Graphics graphics, Rectangle visibleCells, Size tileSize, IEnumerable<(Point, T)> occupiers) where T : ICellOccupier, ICellOverlapper
         {
             RenderAllOccupierBounds(graphics, visibleCells, tileSize, occupiers, Color.Green, Color.Red);
         }
 
-        public static void RenderAllOccupierBounds<T>(Graphics graphics, Rectangle visibleCells, Size tileSize, IEnumerable<(Point, T)> occupiers, Color boundsColor, Color OccupierColor) where T: ICellOccupier, ICellOverlapper
+        public static void RenderAllOccupierBounds<T>(Graphics graphics, Rectangle visibleCells, Size tileSize, IEnumerable<(Point, T)> occupiers, Color boundsColor, Color occupierColor) where T : ICellOccupier, ICellOverlapper
         {
             float boundsPenSize = Math.Max(1, tileSize.Width / 16.0f);
             float occupyPenSize = Math.Max(0.5f, tileSize.Width / 32.0f);
@@ -1217,28 +1227,37 @@ namespace MobiusEditor.Render
             {
                 boundsPenSize += 2;
             }
-            using (Pen boundsPen = new Pen(boundsColor, boundsPenSize))
-            using (Pen occupyPen = new Pen(OccupierColor, occupyPenSize))
+            if (boundsColor.A != 0)
             {
-                foreach ((Point topLeft, T occupier) in occupiers)
+                using (Pen boundsPen = new Pen(boundsColor, boundsPenSize))
                 {
-                    Rectangle typeBounds = occupier.OverlapBounds;
-                    Rectangle bounds = new Rectangle(
-                        new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height),
-                        new Size(typeBounds.Width * tileSize.Width, typeBounds.Height * tileSize.Height)
-                    );
-                    graphics.DrawRectangle(boundsPen, bounds);
-                }
-                foreach ((Point topLeft, T occupier) in occupiers)
-                {
-                    bool[,] occupyMask = occupier is Building bl ? bl.Type.BaseOccupyMask : occupier.OccupyMask;
-
-                    for (Int32 y = 0; y < occupyMask.GetLength(0); ++y)
+                    foreach ((Point topLeft, T occupier) in occupiers)
                     {
-                        for (Int32 x = 0; x < occupyMask.GetLength(1); ++x)
+                        Rectangle typeBounds = occupier.OverlapBounds;
+                        Rectangle bounds = new Rectangle(
+                            new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height),
+                            new Size(typeBounds.Width * tileSize.Width, typeBounds.Height * tileSize.Height)
+                        );
+                        graphics.DrawRectangle(boundsPen, bounds);
+                    }
+                }
+            }
+            if (occupierColor.A != 0)
+            {
+                using (Pen occupyPen = new Pen(occupierColor, occupyPenSize))
+                {
+                    foreach ((Point topLeft, T occupier) in occupiers)
+                    {
+                        bool[,] occupyMask = occupier is Building bl ? bl.Type.BaseOccupyMask : occupier.OccupyMask;
+
+                        for (Int32 y = 0; y < occupyMask.GetLength(0); ++y)
                         {
-                            if (occupyMask[y, x])
+                            for (Int32 x = 0; x < occupyMask.GetLength(1); ++x)
                             {
+                                if (!occupyMask[y, x])
+                                {
+                                    continue;
+                                }
                                 Rectangle occupyCellBounds = new Rectangle(new Point(topLeft.X + x, topLeft.Y + y), new Size(1, 1));
                                 Rectangle occupyBounds = new Rectangle(
                                     new Point((topLeft.X + x) * tileSize.Width, (topLeft.Y + y) * tileSize.Height), tileSize);

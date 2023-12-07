@@ -231,9 +231,11 @@ namespace MobiusEditor.Controls
 
         [Browsable(false)]
         public bool SuspendMouseZoom { get; set; }
+        public Keys SuspendMouseZoomKeys { get; set; }
 
         public event EventHandler<RenderEventArgs> PreRender;
         public event EventHandler<RenderEventArgs> PostRender;
+        /// <summary>OnMouseWheel overrides mouse handling completely, so this needs to be specifically implemented here.</summary>
         public new event MouseEventHandler MouseWheel;
 
         public MapPanel()
@@ -402,7 +404,7 @@ namespace MobiusEditor.Controls
 
         protected override void OnMouseWheel(MouseEventArgs e)
         {
-            if (!SuspendMouseZoom && ((Control.ModifierKeys & (Keys.Control | Keys.Alt)) == Keys.None))
+            if (!SuspendMouseZoom && ((Control.ModifierKeys & SuspendMouseZoomKeys) == Keys.None))
             {
                 Zoom += Zoom * ZoomStep * Math.Sign(e.Delta);
             }

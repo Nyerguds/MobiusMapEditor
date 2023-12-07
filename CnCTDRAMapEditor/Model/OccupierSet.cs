@@ -102,7 +102,7 @@ namespace MobiusEditor.Model
                 return false;
             }
 
-            var occupyPoints = GetOccupyPoints(location, occupyMask).ToArray();
+            var occupyPoints = OccupierSet.GetOccupyPoints(location, occupyMask).ToArray();
             return !occupyPoints.Any(p => !Contains(p) || (this[p] != null));
         }
 
@@ -198,7 +198,7 @@ namespace MobiusEditor.Model
                 return false;
             }
 
-            var occupyPoints = GetOccupyPoints(location, occupyMask).ToArray();
+            var occupyPoints = OccupierSet.GetOccupyPoints(location, occupyMask).ToArray();
             if (occupyPoints.Any(p => !Contains(p) || (this[p] != null)))
             {
                 return false;
@@ -232,7 +232,10 @@ namespace MobiusEditor.Model
             }
             return true;
         }
+    }
 
+    public static class OccupierSet
+    {
         public static IEnumerable<Point> GetOccupyPoints(Point location, bool[,] occupyMask)
         {
             int ydim = occupyMask.GetLength(0);
@@ -249,6 +252,6 @@ namespace MobiusEditor.Model
             }
         }
 
-        private static IEnumerable<Point> GetOccupyPoints(Point location, T occupier) => GetOccupyPoints(location, occupier.OccupyMask);
+        public static IEnumerable<Point> GetOccupyPoints(Point location, ICellOccupier occupier) => GetOccupyPoints(location, occupier.OccupyMask);
     }
 }

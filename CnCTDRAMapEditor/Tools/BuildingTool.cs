@@ -914,7 +914,43 @@ namespace MobiusEditor.Tools
             {
                 MapRenderer.RenderAllUnitEffectRadiuses(graphics, previewMap, boundRenderCells, Globals.MapTileSize, map.RadarJamRadius, null);
             }
-            MapRenderer.RenderAllOccupierBounds(graphics, boundRenderCells, Globals.MapTileSize, previewMap.Buildings.OfType<Building>());
+            Point location = navigationWidget.MouseCell;
+            // Render green outline for any building already placed on the real map.
+            MapRenderer.RenderAllOccupierBoundsGreen(graphics, boundRenderCells, Globals.MapTileSize, map.Buildings.OfType<Building>());
+            IEnumerable<Point> highlightPoints = null;
+            IEnumerable<(Point, Building)> place = null;
+            BuildingType selectedType = SelectedBuildingType;
+            // Determine overlap cells, and whether to render the current place preview outline.
+            if (placementMode && selectedType != null)
+            {
+                List<Point> occupyPoints = OccupierSet.GetOccupyPoints(location, selectedType.BaseOccupyMask).ToList();
+                Boolean isCurrent = map.Technos.OfType<Building>().Any(lo => lo.Location == location && lo.Occupier.Type == selectedType);
+                // If there is already a building of this exact type placed on the current location, don't render anything extra.
+                if (!isCurrent)
+                {
+                    // List overlapped points to indicate obstructions.
+                    highlightPoints = occupyPoints.Where(p => map.Technos[p] != null || (Globals.BlockingBibs && (map.Smudge[p]?.Type.IsAutoBib ?? false)));
+                    // Store info on where to render backup preview outline.
+                    place = (location, mockBuilding).Yield();
+                }
+            }
+            // Render green outline of current building.
+            if (place != null)
+            {
+                MapRenderer.RenderAllOccupierBoundsGreen(graphics, boundRenderCells, Globals.MapTileSize, place);
+            }
+            // Render thin red obstructed cells of all other buildings.
+            MapRenderer.RenderAllOccupierCellsRed(graphics, boundRenderCells, Globals.MapTileSize, map.Technos.OfType<Building>());
+            // Render thin blue obstructed cells of preview building.
+            if (place != null)
+            {
+                MapRenderer.RenderAllOccupierBounds(graphics, boundRenderCells, Globals.MapTileSize, place, Color.Transparent, Color.Blue);
+            }
+            // Render thick red over obstructed cells.
+            if (highlightPoints != null)
+            {
+                MapRenderer.RenderAllBoundsFromPoint(graphics, boundRenderCells, Globals.MapTileSize, highlightPoints, Color.Red);
+            }
             Building selected = null;
             Point? loc = null;
             if (selectedBuilding != null && selectedBuildingStartLocation.HasValue)
@@ -972,9 +1008,12 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseMove += MapPanel_MouseMove;
             this.mapPanel.MouseLeave += MapPanel_MouseLeave;
             this.mapPanel.MouseWheel += MapPanel_MouseWheel;
+            this.mapPanel.SuspendMouseZoomKeys = Keys.Control;
             (this.mapPanel as Control).KeyDown += BuildingTool_KeyDown;
             (this.mapPanel as Control).KeyUp += BuildingTool_KeyUp;
             this.navigationWidget.BoundsMouseCellChanged += MouseoverWidget_MouseCellChanged;
+            this.navigationWidget.MouseoverSize = new Size(1, 1);
+            this.navigationWidget.PenColor = Color.Yellow;
             this.UpdateStatus();
             this.RefreshPreviewPanel();
         }
@@ -998,6 +1037,7 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseMove -= MapPanel_MouseMove;
             this.mapPanel.MouseLeave -= MapPanel_MouseLeave;
             this.mapPanel.MouseWheel -= MapPanel_MouseWheel;
+            this.mapPanel.SuspendMouseZoomKeys = Keys.None;
             (this.mapPanel as Control).KeyDown -= BuildingTool_KeyDown;
             (this.mapPanel as Control).KeyUp -= BuildingTool_KeyUp;
             this.navigationWidget.BoundsMouseCellChanged -= MouseoverWidget_MouseCellChanged;

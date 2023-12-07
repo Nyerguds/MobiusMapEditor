@@ -1916,8 +1916,8 @@ namespace MobiusEditor.Model
                     onBib = true;
                     Point newPoint = new Point(cell % Metrics.Width, cell / Metrics.Width);
                     // All cells required for this building
-                    HashSet<Point> errBuildingPoints = OccupierSet<Building>.GetOccupyPoints(newPoint, buildingType.OccupyMask).ToHashSet();
-                    foreach (Point p in OccupierSet<Building>.GetOccupyPoints(Buildings[building].Value, building.Type.BaseOccupyMask))
+                    HashSet<Point> errBuildingPoints = OccupierSet.GetOccupyPoints(newPoint, buildingType).ToHashSet();
+                    foreach (Point p in OccupierSet.GetOccupyPoints(Buildings[building].Value, building.Type.BaseOccupyMask))
                     {
                         if (errBuildingPoints.Contains(p))
                         {

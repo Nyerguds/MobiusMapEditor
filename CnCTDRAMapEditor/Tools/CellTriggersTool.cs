@@ -370,6 +370,7 @@ namespace MobiusEditor.Tools
             }
             placementMode = true;
             mapPanel.Invalidate(map, navigationWidget.MouseCell);
+            navigationWidget.PenColor = Color.Yellow;
             UpdateStatus();
         }
 
@@ -381,6 +382,7 @@ namespace MobiusEditor.Tools
             }
             placementMode = false;
             mapPanel.Invalidate(map, navigationWidget.MouseCell);
+            navigationWidget.PenColor = Color.Yellow;
             UpdateStatus();
         }
 
@@ -559,6 +561,11 @@ namespace MobiusEditor.Tools
                 previewMap.CellTriggers[location] = new CellTrigger(selected);
                 // Tint is not actually used; a lower alpha just indicates that it is a preview item.
                 previewMap.CellTriggers[location].Tint = Color.FromArgb(128, Color.White);
+                navigationWidget.PenColor = Color.Yellow;
+            }
+            else if (celltr.Trigger != selected)
+            {
+                navigationWidget.PenColor = Color.Red;
             }
         }
 
@@ -604,6 +611,7 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseMove += MapPanel_MouseMove;
             this.mapPanel.MouseLeave += MapPanel_MouseLeave;
             this.mapPanel.MouseWheel += MapPanel_MouseWheel;
+            this.mapPanel.SuspendMouseZoomKeys = Keys.Control;
             (this.mapPanel as Control).KeyDown += CellTriggersTool_KeyDown;
             (this.mapPanel as Control).KeyUp += CellTriggersTool_KeyUp;
             this.navigationWidget.BoundsMouseCellChanged += MouseoverWidget_MouseCellChanged;
@@ -631,6 +639,7 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseMove -= MapPanel_MouseMove;
             this.mapPanel.MouseLeave -= MapPanel_MouseLeave;
             this.mapPanel.MouseWheel -= MapPanel_MouseWheel;
+            this.mapPanel.SuspendMouseZoomKeys = Keys.None;
             (this.mapPanel as Control).KeyDown -= CellTriggersTool_KeyDown;
             (this.mapPanel as Control).KeyUp -= CellTriggersTool_KeyUp;
             this.navigationWidget.BoundsMouseCellChanged -= MouseoverWidget_MouseCellChanged;

@@ -2783,7 +2783,7 @@ namespace MobiusEditor.RedAlert
             {
                 foreach ((Point p, Building b) in buildings)
                 {
-                    refreshPoints.UnionWith(OccupierSet<Building>.GetOccupyPoints(p, b.OccupyMask));
+                    refreshPoints.UnionWith(OccupierSet.GetOccupyPoints(p, b));
                     map.Buildings.Remove(b);
                 }
             }
@@ -2858,7 +2858,7 @@ namespace MobiusEditor.RedAlert
             // Try re-adding the buildings.
             foreach ((Point p, Building b) in buildings)
             {
-                refreshPoints.UnionWith(OccupierSet<Building>.GetOccupyPoints(p, b.OccupyMask));
+                refreshPoints.UnionWith(OccupierSet.GetOccupyPoints(p, b));
                 map.Buildings.Add(p, b);
             }
             map.NotifyRulesChanges(refreshPoints);
@@ -2885,14 +2885,14 @@ namespace MobiusEditor.RedAlert
             bType.HasBib = hasBib;
             foreach ((Point p, Building b) in foundBuildings)
             {
-                IEnumerable<Point> buildingPoints = OccupierSet<Building>.GetOccupyPoints(p, b.OccupyMask);
+                IEnumerable<Point> buildingPoints = OccupierSet.GetOccupyPoints(p, b);
                 // Clear any walls that may now end up on the bib.
                 if (Globals.BlockingBibs)
                 {
                     foreach (Point bldPoint in buildingPoints)
                     {
                         Overlay ovl = map.Overlay[bldPoint];
-                        if (ovl != null && ovl.Type.IsWall)
+                        if (ovl != null && (ovl.Type.IsWall || ovl.Type.IsSolid))
                         {
                             Rectangle toRefresh = new Rectangle(bldPoint, new Size(1, 1));
                             toRefresh.Inflate(1, 1);

@@ -635,6 +635,7 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseMove += MapPanel_MouseMove;
             this.mapPanel.MouseLeave += MapPanel_MouseLeave;
             this.mapPanel.MouseWheel += MapPanel_MouseWheel;
+            this.mapPanel.SuspendMouseZoomKeys = Keys.Control;
             this.map.WaypointsUpdated += this.Map_WaypointsUpdated;
             this.navigationWidget.MouseCellChanged += MouseoverWidget_MouseCellChanged;
             this.url.Undone += Url_UndoRedoDone;
@@ -659,11 +660,12 @@ namespace MobiusEditor.Tools
             this.mapPanel.MouseMove -= MapPanel_MouseMove;
             this.mapPanel.MouseLeave -= MapPanel_MouseLeave;
             this.mapPanel.MouseWheel -= MapPanel_MouseWheel;
+            this.mapPanel.SuspendMouseZoomKeys = Keys.None;
             (this.mapPanel as Control).KeyDown -= WaypointsTool_KeyDown;
             (this.mapPanel as Control).KeyUp -= WaypointsTool_KeyUp;
             this.navigationWidget.MouseCellChanged -= MouseoverWidget_MouseCellChanged;
-            this.url.Undone += Url_UndoRedoDone;
-            this.url.Redone += Url_UndoRedoDone;
+            this.url.Undone -= Url_UndoRedoDone;
+            this.url.Redone -= Url_UndoRedoDone;
         }
 
         #region IDisposable Support
