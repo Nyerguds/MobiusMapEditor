@@ -101,19 +101,16 @@ namespace MobiusEditor.Model
             {
                 return null;
             }
-
-            var map = (context as MapContext).Map;
-            var alliesMask = (AlliesMask)value;
-
-            var allies = new List<string>(map.Houses.Length);
+            Map map = (context as MapContext).Map;
+            AlliesMask alliesMask = (AlliesMask)value;
+            List<string> allies = new List<string>(map.HousesForAlliances.Length);
             foreach (var id in alliesMask)
             {
-                if (map.Houses.Where(h => h.Type.Equals((sbyte)id)).FirstOrDefault() is House house)
+                if (map.HousesForAlliances.Where(h => h.Type.Equals((sbyte)id)).FirstOrDefault() is House house)
                 {
                     allies.Add(house.Type.Name);
                 }
             }
-
             return string.Join(",", allies);
         }
 
@@ -123,14 +120,12 @@ namespace MobiusEditor.Model
             {
                 return null;
             }
-
-            var map = (context as MapContext).Instance as Map;
-            var alliesMask = new AlliesMask(0);
-
-            var allies = (value as string).Split(',');
+            Map map = (context as MapContext).Instance as Map;
+            AlliesMask alliesMask = new AlliesMask(0);
+            string[] allies = (value as string).Split(',');
             foreach (var ally in allies)
             {
-                if (map.Houses.Where(h => h.Type.Equals(ally)).FirstOrDefault() is House house)
+                if (map.HousesForAlliances.Where(h => h.Type.Equals(ally)).FirstOrDefault() is House house)
                 {
                     alliesMask.Set(house.Type.ID);
                 }

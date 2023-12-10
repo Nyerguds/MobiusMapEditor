@@ -41,6 +41,9 @@ namespace MobiusEditor.RedAlert
         public static readonly HouseType Multi6 = new HouseType(17, "Multi6", Waypoint.GetFlagForMpId(5), "MULTI7"); // purple; fixed to match actual game.
         public static readonly HouseType Multi7 = new HouseType(18, "Multi7", Waypoint.GetFlagForMpId(6), "MULTI6"); // blue; fixed to match actual game.
         public static readonly HouseType Multi8 = new HouseType(19, "Multi8", Waypoint.GetFlagForMpId(7), "MULTI8"); // pink
+        // Special group houses; these can be set in house alliances.
+        public static readonly HouseType Allies = new HouseType(20, "Allies", HouseTypeFlag.ForAlliances | HouseTypeFlag.Special, "GREECE");
+        public static readonly HouseType Soviet = new HouseType(21, "Soviet", HouseTypeFlag.ForAlliances | HouseTypeFlag.Special, "USSR");
 
         private static readonly HouseType[] Types;
 
@@ -64,7 +67,7 @@ namespace MobiusEditor.RedAlert
 
         public static string GetClassicOpposingPlayer(string player)
         {
-            return (USSR.Equals(player) || Ukraine.Equals(player) || Bad.Equals(player)) ? Greece.Name : USSR.Name;
+            return (Soviet.Equals(player) || USSR.Equals(player) || Ukraine.Equals(player) || Bad.Equals(player)) ? Greece.Name : USSR.Name;
         }
     }
 }

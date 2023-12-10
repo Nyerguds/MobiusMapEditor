@@ -519,7 +519,7 @@ namespace MobiusEditor.RedAlert
             BasicSection basicSection = new BasicSection();
             basicSection.SetDefault();
             IEnumerable<HouseType> houseTypes = HouseTypes.GetTypes();
-            basicSection.Player = houseTypes.First().Name;
+            basicSection.Player = houseTypes.Where(ht => (ht.Flags & HouseTypeFlag.Special) == HouseTypeFlag.None).First().Name;
             basicSection.BasePlayer = HouseTypes.GetBasePlayer(basicSection.Player);
             string[] cellEventTypes =
             {
@@ -3319,15 +3319,30 @@ namespace MobiusEditor.RedAlert
                     waypointsSection[i.ToString()] = waypoint.Cell.Value.ToString();
                 }
             }
-            foreach (House house in Map.Houses)
+            foreach (Model.House house in Map.Houses.Where(h => (h.Type.Flags & HouseTypeFlag.Special) == 0).OrderBy(h => h.Type.ID))
             {
-                if (house.Type.ID < 0)
-                {
-                    continue;
-                }
                 House gameHouse = (House)house;
                 bool enabled = house.Enabled;
-                INITools.FillAndReAdd(ini, gameHouse.Type.Name, gameHouse, new MapContext(Map, false), enabled);
+                string name = gameHouse.Type.Name;
+                INISection houseSection = INITools.FillAndReAdd(ini, gameHouse.Type.Name, gameHouse, new MapContext(Map, false), enabled);
+                // Current house is not in its own alliances list. Fix that.
+                if (houseSection != null && !gameHouse.Allies.Contains(gameHouse.Type.ID))
+                {
+                    HashSet<String> allies = (houseSection.TryGetValue("Allies") ?? String.Empty)
+                        .Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                        .Distinct(StringComparer.InvariantCultureIgnoreCase)
+                        .ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+                    if (!allies.Contains(name))
+                    {
+                        allies.Add(name);
+                        List<string> alliesBuild = new List<string>();
+                        foreach (Model.House houseAll in Map.HousesForAlliances.Where(h => allies.Contains(h.Type.Name)))
+                        {
+                            alliesBuild.Add(houseAll.Type.Name);
+                        }
+                        houseSection["Allies"] = String.Join(",", alliesBuild.ToArray());
+                    }
+                }
             }
             SaveIniBriefing(ini);
             using (MemoryStream stream = new MemoryStream())
@@ -4120,7 +4135,7 @@ namespace MobiusEditor.RedAlert
             {
                 Map.BasicSection.BasePlayer = HouseTypes.GetBasePlayer(Map.BasicSection.Player);
             }
-            HouseType rebuildHouse = Map.HouseTypesIncludingNone.Where(h => h.Name == Map.BasicSection.BasePlayer).FirstOrDefault();
+            HouseType rebuildHouse = Map.HouseTypes.Where(h => h.Name == Map.BasicSection.BasePlayer).FirstOrDefault();
             housesWithProd.Add(rebuildHouse.Name);
             return housesWithProd;
         }
@@ -4656,7 +4671,7 @@ namespace MobiusEditor.RedAlert
                 // Updating BasePlayer will trigger PropertyChanged and re-call this function, so no need to continue here.
                 return;
             }
-            HouseType basePlayer = Map.HouseTypesIncludingNone.Where(h => h.Equals(Map.BasicSection.BasePlayer)).FirstOrDefault() ?? Map.HouseTypes.First();
+            HouseType basePlayer = Map.HouseTypesIncludingSpecials.Where(h => h.Equals(Map.BasicSection.BasePlayer)).FirstOrDefault() ?? Map.HouseTypes.First();
             foreach (var (_, building) in Map.Buildings.OfType<Building>())
             {
                 if (!building.IsPrebuilt)

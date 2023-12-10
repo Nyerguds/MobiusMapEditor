@@ -18,6 +18,19 @@ using System.Linq;
 
 namespace MobiusEditor.Model
 {
+    [Flags]
+    public enum HouseTypeFlag
+    {
+        /// <summary>No flags set.</summary>
+        None          /**/ = 0,
+        /// <summary>Is a special House, not used for normal lists.</summary>
+        Special       /**/ = 1 << 1,
+        /// <summary>Is used for alliances.</summary>
+        ForAlliances  /**/ = 1 << 2,
+        /// <summary>Special empty House, used if the plugin does not assign any House to unbuilt structures.</summary>
+        BaseHouse    /**/ = 1 << 3,
+    }
+
     public class HouseType
     {
         public int ID { get; private set; }
@@ -30,34 +43,47 @@ namespace MobiusEditor.Model
 
         public WaypointFlag MultiplayIdentifier { get; private set; }
 
+        public HouseTypeFlag Flags { get; private set; }
+
         public IDictionary<string, string> OverrideTeamColors { get; private set; }
 
-        public HouseType(int id, string name, WaypointFlag multiplayIdentifier, string unitTeamColor, string buildingTeamColor, params (string type, string teamColor)[] overrideTeamColors)
+        public HouseType(int id, string name, WaypointFlag multiplayIdentifier, HouseTypeFlag flags, string unitTeamColor, string buildingTeamColor, params (string type, string teamColor)[] overrideTeamColors)
         {
-            ID = id;
-            Name = name;
-            MultiplayIdentifier = multiplayIdentifier;
-            UnitTeamColor = unitTeamColor;
-            BuildingTeamColor = buildingTeamColor;
-            OverrideTeamColors = overrideTeamColors.ToDictionary(x => x.type, x => x.teamColor);
+            this.ID = id;
+            this.Name = name;
+            this.MultiplayIdentifier = multiplayIdentifier;
+            this.Flags = flags;
+            this.UnitTeamColor = unitTeamColor;
+            this.BuildingTeamColor = buildingTeamColor;
+            this.OverrideTeamColors = overrideTeamColors.ToDictionary(x => x.type, x => x.teamColor);
         }
 
         public HouseType(int id, string name, string unitTeamColor, string buildingTeamColor, params (string type, string teamColor)[] overrideTeamColors)
-            :this(id, name,  WaypointFlag.None, unitTeamColor, buildingTeamColor, overrideTeamColors)
+            :this(id, name,  WaypointFlag.None, HouseTypeFlag.ForAlliances, unitTeamColor, buildingTeamColor, overrideTeamColors)
+        {
+        }
+
+        public HouseType(int id, string name, HouseTypeFlag flags, string teamColor)
+            : this(id, name, WaypointFlag.None, flags, teamColor, teamColor)
         {
         }
 
         public HouseType(int id, string name, string teamColor)
-            : this(id, name, WaypointFlag.None, teamColor, teamColor)
+            : this(id, name, WaypointFlag.None, HouseTypeFlag.ForAlliances, teamColor, teamColor)
         {
         }
         public HouseType(int id, string name)
-            : this(id, name, WaypointFlag.None, null, null)
+            : this(id, name, WaypointFlag.None, HouseTypeFlag.ForAlliances, null, null)
         {
         }
 
         public HouseType(int id, string name, WaypointFlag multiplayIdentifier, string teamColor)
-            : this(id, name, multiplayIdentifier, teamColor, teamColor)
+            : this(id, name, multiplayIdentifier, HouseTypeFlag.ForAlliances, teamColor, teamColor)
+        {
+        }
+
+        public HouseType(int id, string name, WaypointFlag multiplayIdentifier, HouseTypeFlag flags, string teamColor)
+            : this(id, name, multiplayIdentifier, flags, teamColor, teamColor)
         {
         }
 

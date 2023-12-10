@@ -90,7 +90,7 @@ namespace MobiusEditor.Dialogs
         {
             if (e.PropertyName == "SoloMission")
             {
-                if (basicSettingsTracker.TryGetMember("SoloMission", out object result) && (result is bool solo))
+                if (basicSettingsTracker.TryGetMember("SoloMission", out bool solo))
                 {
                     ResetSettingsTree(solo);
                 }
@@ -187,6 +187,8 @@ namespace MobiusEditor.Dialogs
                         PlayerSettings playerPanel = new PlayerSettings(plugin, houseSettingsTrackers[player]);
                         settingsPanel.Controls.Add(playerPanel);
                         playerPanel.Dock = DockStyle.Fill;
+                        // Needs special init because the alliances listbox's selection doesn't play nice when resizing as part of the docking.
+                        playerPanel.InitAlliances();
                     }
                     break;
             }

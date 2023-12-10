@@ -17,7 +17,6 @@ using MobiusEditor.Model;
 using MobiusEditor.Utility;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -26,18 +25,16 @@ namespace MobiusEditor.Controls
     public partial class PlayerSettings : UserControl
     {
         private readonly PropertyTracker<House> houseSettingsTracker;
-        private readonly dynamic house;
+        IGamePlugin plugin;
+        private bool initDone = false;
 
         public PlayerSettings(IGamePlugin plugin, PropertyTracker<House> houseSettingsTracker)
         {
+            this.plugin = plugin;
             this.houseSettingsTracker = houseSettingsTracker;
-            house = houseSettingsTracker;
-
             InitializeComponent();
-
             edgeComboBox.Items.Clear();
             edgeComboBox.Items.AddRange(Globals.MapEdges.ToArray());
-
             creditsNud.DataBindings.Add("Value", houseSettingsTracker, "Credits");
             maxBuildingsNud.DataBindings.Add("Value", houseSettingsTracker, "MaxBuilding");
             maxUnitsNud.DataBindings.Add("Value", houseSettingsTracker, "MaxUnit");
@@ -61,27 +58,66 @@ namespace MobiusEditor.Controls
                     playerControlCheckBox.DataBindings.Add("Checked", houseSettingsTracker, "PlayerControl");
                     break;
             }
+        }
 
+        /// <summary>
+        /// Call this after the control is added, to ensure all resize and selecting weirdness is complete.
+        /// </summary>
+        public void InitAlliances()
+        {
+            playersListBox.BeginUpdate();
+            playersListBox.SelectedIndexChanged -= playersListBox_SelectedIndexChanged;
             playersListBox.Items.Clear();
-            playersListBox.Items.AddRange(plugin.Map.Houses.Select(h => h.Type.Name).ToArray());
-
-            var selectedIndices = new List<int>();
-            foreach (var id in house.Allies)
+            ListItem<int>[] housesArray = plugin.Map.HousesForAlliances.Select(h => new ListItem<int>(h.Type.ID, h.Type.Name)).ToArray();
+            playersListBox.Items.AddRange(housesArray);
+            if (houseSettingsTracker.TryGetMember("Allies", out AlliesMask mask))
             {
-                playersListBox.SetSelected(id, true);
+                foreach (var id in mask)
+                {
+                    int index = ListItem.GetIndexInList(id, housesArray);
+                    if (index != -1)
+                    {
+                        playersListBox.SetSelected(index, true);
+                    }
+                }
             }
-
+            initDone = true;
+            playersListBox_Resize(playersListBox, new EventArgs());
+            playersListBox.EndUpdate();
             playersListBox.SelectedIndexChanged += playersListBox_SelectedIndexChanged;
         }
 
         private void playersListBox_SelectedIndexChanged(object sender, EventArgs e)
         {
             var allies = 0;
-            foreach (int selectedIndex in playersListBox.SelectedIndices)
+            foreach (ListItem<int> selectedItem in playersListBox.SelectedItems)
             {
-                allies |= 1 << selectedIndex;
+                allies |= 1 << selectedItem.Value;
             }
-            house.Allies = new AlliesMask(allies);
+            houseSettingsTracker.TrySetMember("Allies", new AlliesMask(allies));
+        }
+
+        private void playersListBox_Resize(Object sender, EventArgs e)
+        {
+            if (!initDone)
+                return;
+            int min = -1;
+            int max = -1;
+            foreach (int index in playersListBox.SelectedIndices)
+            {
+                min = min == -1 ? index : Math.Min(min, index);
+                max = max == -1 ? index : Math.Max(max, index);
+            }
+            if (min == -1 || max == -1)
+            {
+                playersListBox.TopIndex = 0;
+                return;
+            }
+            int diff = max - min + 1;
+            int items = (playersListBox.ClientRectangle.Height + (playersListBox.ItemHeight - 1)) / playersListBox.ItemHeight;
+            int itemDiff = (items - diff) / 2;
+            playersListBox.TopIndex = Math.Max(0, min - itemDiff);
+            playersListBox.Invalidate();
         }
     }
 }

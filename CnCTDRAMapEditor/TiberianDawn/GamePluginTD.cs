@@ -434,7 +434,7 @@ namespace MobiusEditor.TiberianDawn
             basicSection.SetDefault();
             IEnumerable<HouseType> houseTypes = HouseTypes.GetTypes();
             basicSection.Player = houseTypes.Where(h => h.ID > -1).First().Name;
-            basicSection.BasePlayer = HouseTypes.GetBasePlayer(basicSection.Player);
+            basicSection.BasePlayer = HouseTypes.None.Name;
             string[] cellEventTypes = new[]
             {
                 EventTypes.EVENT_PLAYER_ENTERED,
@@ -1613,8 +1613,9 @@ namespace MobiusEditor.TiberianDawn
                             modified = true;
                             newBld.House = defHouse;
                         }
-                        if (Map.Buildings.Add(cell, newBld))
+                        if (Map.Buildings.CanAdd(cell, newBld) && Map.Technos.CanAdd(cell, newBld, newBld.Type.BaseOccupyMask))
                         {
+                            Map.Buildings.Add(cell, newBld);
                             if (!caseTrigs.ContainsKey(tokens[5]))
                             {
                                 errors.Add(string.Format("Structure '{0}' on cell {1} links to unknown trigger '{2}'; clearing trigger.", buildingType.Name, cell, tokens[5]));
@@ -1735,9 +1736,13 @@ namespace MobiusEditor.TiberianDawn
                                 BasePriority = curPriorityVal,
                                 IsPrebuilt = false
                             };
-                            if (!Map.Buildings.Add(location, toRebuild))
+                            if (!Map.Buildings.CanAdd(location, toRebuild) || !Map.Technos.CanAdd(location, toRebuild, toRebuild.Type.BaseOccupyMask))
                             {
                                 Map.CheckBuildingBlockingCell(cell, buildingType, errors, ref modified, key);
+                            }
+                            else
+                            {
+                                Map.Buildings.Add(location, toRebuild);
                             }
                         }
                         curPriorityVal++;
@@ -2713,13 +2718,29 @@ namespace MobiusEditor.TiberianDawn
         protected IEnumerable<INISection> SaveIniHouses(INI ini)
         {
             List<INISection> houseSections = new List<INISection>();
-            foreach (Model.House house in Map.Houses.Where(h => h.Type.ID >= 0).OrderBy(h => h.Type.ID))
+            foreach (Model.House house in Map.Houses.Where(h => (h.Type.Flags & HouseTypeFlag.Special) == 0).OrderBy(h => h.Type.ID))
             {
                 House gameHouse = (House)house;
                 bool enabled = house.Enabled;
-                INISection houseSection = INITools.FillAndReAdd(ini, gameHouse.Type.Name, gameHouse, new MapContext(Map, false), enabled);
-                if (houseSection != null)
+                string name = gameHouse.Type.Name;
+                INISection houseSection = INITools.FillAndReAdd(ini, name, gameHouse, new MapContext(Map, false), enabled);
+                // Current house is not in its own alliances list. Fix that.
+                if (houseSection != null && !gameHouse.Allies.Contains(gameHouse.Type.ID))
                 {
+                    HashSet<String> allies = (houseSection.TryGetValue("Allies") ?? String.Empty)
+                        .Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                        .Distinct(StringComparer.InvariantCultureIgnoreCase)
+                        .ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+                    if (!allies.Contains(name))
+                    {
+                        allies.Add(name);
+                        List<string> alliesBuild = new List<string>();
+                        foreach (HouseType houseAll in Map.HouseTypesIncludingSpecials.Where(h => allies.Contains(h.Name)))
+                        {
+                            alliesBuild.Add(houseAll.Name);
+                        }
+                        houseSection["Allies"] = String.Join(",", alliesBuild.ToArray());
+                    }
                     houseSections.Add(houseSection);
                 }
             }
@@ -3521,8 +3542,13 @@ namespace MobiusEditor.TiberianDawn
 
         protected void UpdateBasePlayerHouse()
         {
-            Map.BasicSection.BasePlayer = HouseTypes.GetBasePlayer(Map.BasicSection.Player);
-            HouseType basePlayer = Map.HouseTypesIncludingNone.Where(h => h.Equals(Map.BasicSection.BasePlayer)).FirstOrDefault() ?? Map.HouseTypes.First();
+            HouseType basePlayer = Map.HouseNone?.Type ?? Map.HouseTypes.FirstOrDefault();
+            if (basePlayer == null)
+            {
+                return;
+            }
+            // Unused in TD, but whatever.
+            Map.BasicSection.BasePlayer = basePlayer.Name;
             // Not really needed now BasePlayer House is always "None", but whatever.
             foreach (var (_, building) in Map.Buildings.OfType<Building>())
             {

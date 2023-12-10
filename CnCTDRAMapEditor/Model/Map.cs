@@ -256,7 +256,7 @@ namespace MobiusEditor.Model
 
         public readonly HouseType[] HouseTypes;
 
-        public readonly HouseType[] HouseTypesIncludingNone;
+        public readonly HouseType[] HouseTypesIncludingSpecials;
 
         public ITeamColor[] FlagColors { get; set; }
 
@@ -398,8 +398,9 @@ namespace MobiusEditor.Model
         public readonly List<TeamType> TeamTypes;
 
         public House[] Houses;
-
-        public House[] HousesIncludingNone;
+        public House[] HousesIncludingSpecials;
+        public House[] HousesForAlliances;
+        public House HouseNone;
 
         public string MovieEmpty;
         public readonly List<string> MovieTypes;
@@ -480,8 +481,8 @@ namespace MobiusEditor.Model
             this.MapSection = new MapSection(cellSize);
             this.BasicSection = basicSection;
             this.HouseType = houseType;
-            this.HouseTypesIncludingNone = houseTypes.ToArray();
-            this.HouseTypes = this.HouseTypesIncludingNone.Where(h => h.ID >= 0).ToArray();
+            this.HouseTypesIncludingSpecials = houseTypes.ToArray();
+            this.HouseTypes = this.HouseTypesIncludingSpecials.Where(h => (h.Flags & HouseTypeFlag.Special) == 0).ToArray();
             this.FlagColors = flagColors == null ? new ITeamColor[8] : flagColors;
             this.TheaterTypes = new List<TheaterType>(theaterTypes);
             this.TemplateTypes = new List<TemplateType>(templateTypes);
@@ -535,8 +536,14 @@ namespace MobiusEditor.Model
             this.Overlappers = new OverlapperSet<ICellOverlapper>(this.Metrics);
             this.triggers = new List<Trigger>();
             this.TeamTypes = new List<TeamType>();
-            this.HousesIncludingNone = this.HouseTypesIncludingNone.Select(t => { House h = (House)Activator.CreateInstance(this.HouseType, t); h.SetDefault(); return h; }).ToArray();
-            this.Houses = this.HousesIncludingNone.Where(h => h.Type.ID >= 0).ToArray();
+            this.HousesIncludingSpecials = this.HouseTypesIncludingSpecials.Select(t => { House h = (House)Activator.CreateInstance(this.HouseType, t); h.SetDefault(); return h; }).ToArray();
+            this.Houses = this.HousesIncludingSpecials.Where(h => (h.Type.Flags & (HouseTypeFlag.Special)) == 0).ToArray();
+            // Build houses list for allies. Special houses not shown in the normal houses lists (e.g. 'Allies' and 'Soviet') are put first.
+            List<House> housesAlly = this.HousesIncludingSpecials.Where(h => (h.Type.Flags & (HouseTypeFlag.ForAlliances)) != 0).ToList();
+            List<House> housesAllySpecial = housesAlly.Where(h => (h.Type.Flags & (HouseTypeFlag.Special)) != 0).OrderBy(h => h.Type.ID).ToList();
+            List<House> housesAllyNormal = housesAlly.Where(h => (h.Type.Flags & (HouseTypeFlag.Special)) == 0).OrderBy(h => h.Type.ID).ToList();
+            this.HousesForAlliances = housesAllySpecial.Concat(housesAllyNormal).ToArray();
+            this.HouseNone = this.HousesIncludingSpecials.Where(h => (h.Type.Flags & (HouseTypeFlag.BaseHouse)) != 0).FirstOrDefault();
             Waypoint[] wp = waypoints.ToArray();
             this.Waypoints = new Waypoint[wp.Length];
             for (int i = 0; i < wp.Length; ++i)
@@ -618,12 +625,12 @@ namespace MobiusEditor.Model
                 DirectionType infDir = this.UnitDirectionTypes.Where(d => d.Facing == FacingType.South).First();
                 foreach (InfantryType infantryType in this.AllInfantryTypes)
                 {
-                    infantryType.Init(this.HouseTypesIncludingNone.Where(h => h.Equals(infantryType.OwnerHouse)).FirstOrDefault(), infDir);
+                    infantryType.Init(this.HouseTypesIncludingSpecials.Where(h => h.Equals(infantryType.OwnerHouse)).FirstOrDefault(), infDir);
                 }
                 DirectionType unitDir = this.UnitDirectionTypes.Where(d => d.Facing == FacingType.SouthWest).First();
                 foreach (UnitType unitType in this.AllUnitTypes)
                 {
-                    unitType.Init(gameInfo, this.HouseTypesIncludingNone.Where(h => h.Equals(unitType.OwnerHouse)).FirstOrDefault(), unitDir);
+                    unitType.Init(gameInfo, this.HouseTypesIncludingSpecials.Where(h => h.Equals(unitType.OwnerHouse)).FirstOrDefault(), unitDir);
                 }
                 // Required for initialising air unit names for teamtypes if DisableAirUnits is true.
                 foreach (ITechnoType techno in this.AllTeamTechnoTypes)
@@ -634,7 +641,7 @@ namespace MobiusEditor.Model
                 // No restriction. All get attempted and dummies are all filled in.
                 foreach (BuildingType buildingType in this.BuildingTypes)
                 {
-                    buildingType.Init(gameInfo, this.HouseTypesIncludingNone.Where(h => h.Equals(buildingType.OwnerHouse)).FirstOrDefault(), bldDir);
+                    buildingType.Init(gameInfo, this.HouseTypesIncludingSpecials.Where(h => h.Equals(buildingType.OwnerHouse)).FirstOrDefault(), bldDir);
                 }
             }
             catch (Exception ex)
@@ -1482,18 +1489,15 @@ namespace MobiusEditor.Model
 
         public HouseType GetBaseHouse(GameInfo gameInfo)
         {
-            House noneHouse = this.HousesIncludingNone.Where(h => h.Type.ID < 0).FirstOrDefault();
-            if (noneHouse != null)
+            if (this.HouseNone != null)
             {
-                return noneHouse.Type;
+                return this.HouseNone.Type;
             }
-            else
-            {
-                String oppos = gameInfo.GetClassicOpposingPlayer(this.BasicSection.Player);
-                return this.HouseTypes.Where(h => h.Equals(this.BasicSection.BasePlayer)).FirstOrDefault()
-                    ?? this.HouseTypes.Where(h => h.Equals(oppos)).FirstOrDefault()
-                    ?? this.HouseTypes.First();
-            }
+            String oppos = gameInfo.GetClassicOpposingPlayer(this.BasicSection.Player);
+            return this.HouseTypes.Where(h => h.Equals(this.BasicSection.BasePlayer)).FirstOrDefault()
+                ?? this.HouseTypes.Where(h => h.Equals(oppos)).FirstOrDefault()
+                ?? this.HouseTypes.First();
+
         }
 
         private void RemoveBibs(Building building)
@@ -1533,7 +1537,7 @@ namespace MobiusEditor.Model
             }
             // This is a shallow clone; the map is new, but the placed contents all still reference the original objects.
             // These shallow copies are used for map preview during editing, where dummy objects can be added without any issue.
-            Map map = new Map(this.BasicSection, this.Theater, this.Metrics.Size, this.HouseType, this.HouseTypesIncludingNone,
+            Map map = new Map(this.BasicSection, this.Theater, this.Metrics.Size, this.HouseType, this.HouseTypesIncludingSpecials,
                 this.FlagColors, this.TheaterTypes, this.TemplateTypes, this.TerrainTypes, this.OverlayTypes, this.SmudgeTypes,
                 this.EventTypes, this.CellEventTypes, this.UnitEventTypes, this.BuildingEventTypes, this.TerrainEventTypes,
                 this.ActionTypes, this.CellActionTypes, this.UnitActionTypes, this.BuildingActionTypes, this.TerrainActionTypes,
@@ -1545,7 +1549,7 @@ namespace MobiusEditor.Model
                 TopLeft = TopLeft,
                 Size = Size,
                 // Allows functions to check whether they are being applied on the real map or the preview map.
-                ForPreview = ForPreview
+                ForPreview = forPreview
             };
             map.BeginUpdate();
             this.MapSection.CopyTo(map.MapSection);

@@ -43,6 +43,7 @@ namespace MobiusEditor.Controls
         private void InitializeComponent()
         {
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this.playerControlLbl = new System.Windows.Forms.Label();
             this.iqNud = new MobiusEditor.Controls.EnhNumericUpDown();
             this.techLevelNud = new MobiusEditor.Controls.EnhNumericUpDown();
             this.maxVesselsNud = new MobiusEditor.Controls.EnhNumericUpDown();
@@ -61,7 +62,6 @@ namespace MobiusEditor.Controls
             this.maxUnitsNud = new MobiusEditor.Controls.EnhNumericUpDown();
             this.label5 = new System.Windows.Forms.Label();
             this.playersListBox = new System.Windows.Forms.ListBox();
-            this.playerControlLbl = new System.Windows.Forms.Label();
             this.playerControlCheckBox = new System.Windows.Forms.CheckBox();
             this.tableLayoutPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.iqNud)).BeginInit();
@@ -115,6 +115,15 @@ namespace MobiusEditor.Controls
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.Size = new System.Drawing.Size(329, 372);
             this.tableLayoutPanel1.TabIndex = 2;
+            // 
+            // playerControlLbl
+            // 
+            this.playerControlLbl.AutoSize = true;
+            this.playerControlLbl.Location = new System.Drawing.Point(3, 209);
+            this.playerControlLbl.Name = "playerControlLbl";
+            this.playerControlLbl.Size = new System.Drawing.Size(72, 13);
+            this.playerControlLbl.TabIndex = 27;
+            this.playerControlLbl.Text = "Player Control";
             // 
             // iqNud
             // 
@@ -307,15 +316,7 @@ namespace MobiusEditor.Controls
             this.playersListBox.SelectionMode = System.Windows.Forms.SelectionMode.MultiSimple;
             this.playersListBox.Size = new System.Drawing.Size(100, 134);
             this.playersListBox.TabIndex = 18;
-            // 
-            // playerControlLbl
-            // 
-            this.playerControlLbl.AutoSize = true;
-            this.playerControlLbl.Location = new System.Drawing.Point(3, 209);
-            this.playerControlLbl.Name = "playerControlLbl";
-            this.playerControlLbl.Size = new System.Drawing.Size(72, 13);
-            this.playerControlLbl.TabIndex = 27;
-            this.playerControlLbl.Text = "Player Control";
+            this.playersListBox.Resize += new System.EventHandler(this.playersListBox_Resize);
             // 
             // playerControlCheckBox
             // 

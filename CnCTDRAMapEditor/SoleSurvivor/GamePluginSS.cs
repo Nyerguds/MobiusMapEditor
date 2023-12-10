@@ -76,7 +76,6 @@ namespace MobiusEditor.SoleSurvivor
             Waypoint[] waypoints = crateWaypoints.Concat(teamWaypoints).Concat(generalWaypoints).Concat(specialWaypoints).ToArray();
             TiberianDawn.BasicSection basicSection = new TiberianDawn.BasicSection();
             basicSection.SetDefault();
-            List<HouseType> houseTypes = HouseTypes.GetTypes().ToList();
             basicSection.Player = HouseTypes.Admin.Name;
             // Irrelevant for Sole. Rebuilding options will be disabled in the editor.
             basicSection.BasePlayer = HouseTypes.GetBasePlayer(basicSection.Player);
@@ -121,7 +120,7 @@ namespace MobiusEditor.SoleSurvivor
             ExplorerComparer sorter = new ExplorerComparer();
             movies.Sort(sorter);
             Size mapSize = !megaMap ? Constants.MaxSize : Constants.MaxSizeMega;
-            Map = new Map(basicSection, null, mapSize, typeof(TiberianDawn.House), houseTypes,
+            Map = new Map(basicSection, null, mapSize, typeof(TiberianDawn.House), HouseTypes.GetTypes(),
                 null, TheaterTypes.GetTypes(), TemplateTypes.GetTypes(),
                 TerrainTypes.GetTypes(), OverlayTypes.GetTypes(), SmudgeTypes.GetTypes(Globals.ConvertCraters),
                 EventTypes.GetTypes(), cellEventTypes, unitEventTypes, structureEventTypes, terrainEventTypes,
@@ -155,6 +154,26 @@ namespace MobiusEditor.SoleSurvivor
         protected override List<string> LoadINI(INI ini, bool forceSoloMission, ref bool modified)
         {
             List<string> errors = LoadINI(ini, forceSoloMission, true, ref modified);
+            // Cleanup of all multi houses in ini. The "overflow houses" are the ones beyond Multi4. They aren't put
+            // in the alliances list due to the fact alliances are handled as bit flags and thus can't go beyond 32.
+            List<Model.House> overflowHouses = Map.Houses.Where(h => (h.Type.Flags & HouseTypeFlag.ForAlliances) == 0).ToList();
+            bool allEnabled = true;
+            If all of them are enabled this indicates a default map with its default houses spam, so clean it up.
+            foreach (Model.House house in overflowHouses)
+            {
+                if (!house.Enabled)
+                {
+                    allEnabled = false;
+                    break;
+                }
+            }
+            if (allEnabled)
+            {
+                foreach (Model.House house in overflowHouses)
+                {
+                    house.Enabled = false;
+                }
+            }
             INISection cratesIniSection = extraSections.Extract("Crates");
             if (cratesIniSection != null)
             {

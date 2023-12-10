@@ -143,7 +143,6 @@ namespace MobiusEditor.Utility
             return true;
         }
 
-
         public bool TryGetMember(string memberName, out object result)
         {
             if (!trackableProperties.TryGetValue(memberName, out PropertyInfo property))
@@ -151,11 +150,27 @@ namespace MobiusEditor.Utility
                 result = null;
                 return false;
             }
-
             if (!propertyValues.TryGetValue(memberName, out result))
             {
                 result = property.GetValue(Object);
             }
+            return true;
+        }
+
+        public bool TryGetMember<U>(string memberName, out U result)
+        {
+            result = default;
+            if (!trackableProperties.TryGetValue(memberName, out PropertyInfo property) || !typeof(U).IsAssignableFrom(property.PropertyType))
+            {
+                return false;
+            }
+            Object value;
+            if (propertyValues.TryGetValue(memberName, out value))
+            {
+                result = (U)value;
+                return true;
+            }
+            result = (U)property.GetValue(Object);
             return true;
         }
 

@@ -22,7 +22,7 @@ namespace MobiusEditor.TiberianDawn
     public static class HouseTypes
     {
         /// <summary>Special House added for buildings without owner; those in the rebuild list that are not on the map.</summary>
-        public static readonly HouseType None = new HouseType(-1, House.None, "NONE");
+        public static readonly HouseType None = new HouseType(-1, House.None, HouseTypeFlag.BaseHouse | HouseTypeFlag.Special, "NONE");
         // Normal Houses
         public static readonly HouseType Good = new HouseType(0, "GoodGuy", "GOOD");
         public static readonly HouseType Bad = new HouseType(1, "BadGuy", "BAD_UNIT", "BAD_STRUCTURE", ("harv", "BAD_STRUCTURE"), ("mcv", "BAD_STRUCTURE"));
