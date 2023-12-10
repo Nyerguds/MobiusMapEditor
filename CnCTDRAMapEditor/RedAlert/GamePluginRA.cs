@@ -2450,7 +2450,7 @@ namespace MobiusEditor.RedAlert
         {
             foreach (Model.House house in Map.Houses)
             {
-                if (house.Type.ID < 0)
+                if ((house.Type.Flags & HouseTypeFlag.Special) != HouseTypeFlag.None)
                 {
                     continue;
                 }
@@ -3120,7 +3120,7 @@ namespace MobiusEditor.RedAlert
                 if (teamType.IsReinforcable) flags |= 0x10;
                 List<string> tokens = new List<string>
                 {
-                    teamType.House.ID.ToString(),
+                    teamType.House?.ID.ToString() ?? "-1",
                     flags.ToString(),
                     teamType.RecruitPriority.ToString(),
                     teamType.InitNum.ToString(),
@@ -3319,7 +3319,7 @@ namespace MobiusEditor.RedAlert
                     waypointsSection[i.ToString()] = waypoint.Cell.Value.ToString();
                 }
             }
-            foreach (Model.House house in Map.Houses.Where(h => (h.Type.Flags & HouseTypeFlag.Special) == 0).OrderBy(h => h.Type.ID))
+            foreach (Model.House house in Map.Houses.Where(h => (h.Type.Flags & HouseTypeFlag.Special) == HouseTypeFlag.None).OrderBy(h => h.Type.ID))
             {
                 House gameHouse = (House)house;
                 bool enabled = house.Enabled;

@@ -133,7 +133,7 @@ namespace MobiusEditor.SoleSurvivor
             // Clean up this mess.
             foreach (Model.House house in Map.Houses)
             {
-                if (house.Type.ID >= HouseTypes.Multi1.ID)
+                if ((house.Type.Flags & HouseTypeFlag.ForAlliances) == HouseTypeFlag.None)
                 {
                     house.Enabled = false;
                 }
@@ -156,9 +156,9 @@ namespace MobiusEditor.SoleSurvivor
             List<string> errors = LoadINI(ini, forceSoloMission, true, ref modified);
             // Cleanup of all multi houses in ini. The "overflow houses" are the ones beyond Multi4. They aren't put
             // in the alliances list due to the fact alliances are handled as bit flags and thus can't go beyond 32.
-            List<Model.House> overflowHouses = Map.Houses.Where(h => (h.Type.Flags & HouseTypeFlag.ForAlliances) == 0).ToList();
+            List<Model.House> overflowHouses = Map.Houses.Where(h => (h.Type.Flags & HouseTypeFlag.ForAlliances) == HouseTypeFlag.None).ToList();
             bool allEnabled = true;
-            If all of them are enabled this indicates a default map with its default houses spam, so clean it up.
+            // If all of them are enabled this indicates a default map with its default houses spam, so clean it up.
             foreach (Model.House house in overflowHouses)
             {
                 if (!house.Enabled)

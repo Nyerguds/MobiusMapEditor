@@ -433,7 +433,7 @@ namespace MobiusEditor.TiberianDawn
             BasicSection basicSection = new BasicSection();
             basicSection.SetDefault();
             IEnumerable<HouseType> houseTypes = HouseTypes.GetTypes();
-            basicSection.Player = houseTypes.Where(h => h.ID > -1).First().Name;
+            basicSection.Player = houseTypes.Where(h => (h.Flags & HouseTypeFlag.Special) == HouseTypeFlag.None).First().Name;
             basicSection.BasePlayer = HouseTypes.None.Name;
             string[] cellEventTypes = new[]
             {
@@ -1991,7 +1991,7 @@ namespace MobiusEditor.TiberianDawn
             string defaultEdge = Globals.MapEdges.FirstOrDefault() ?? string.Empty;
             foreach (Model.House house in Map.Houses)
             {
-                if (house.Type.ID < 0)
+                if ((house.Type.Flags & HouseTypeFlag.Special) != HouseTypeFlag.None)
                 {
                     continue;
                 }
@@ -2718,7 +2718,7 @@ namespace MobiusEditor.TiberianDawn
         protected IEnumerable<INISection> SaveIniHouses(INI ini)
         {
             List<INISection> houseSections = new List<INISection>();
-            foreach (Model.House house in Map.Houses.Where(h => (h.Type.Flags & HouseTypeFlag.Special) == 0).OrderBy(h => h.Type.ID))
+            foreach (Model.House house in Map.Houses.Where(h => (h.Type.Flags & HouseTypeFlag.Special) == HouseTypeFlag.None).OrderBy(h => h.Type.ID))
             {
                 House gameHouse = (House)house;
                 bool enabled = house.Enabled;
@@ -3154,7 +3154,7 @@ namespace MobiusEditor.TiberianDawn
             // Tiberian Dawn logic: find AIs with construction yard and Production trigger.
             HashSet<string> housesWithCY = new HashSet<string>();
             foreach ((_, Building bld) in Map.Buildings.OfType<Building>().Where(b => b.Occupier.IsPrebuilt &&
-                b.Occupier.House.ID >= 0 && (b.Occupier.Type.Flag & BuildingTypeFlag.Factory) == BuildingTypeFlag.Factory))
+                (b.Occupier.House.Flags & HouseTypeFlag.Special) != HouseTypeFlag.None && (b.Occupier.Type.Flag & BuildingTypeFlag.Factory) == BuildingTypeFlag.Factory))
             {
                 housesWithCY.Add(bld.House.Name);
             }

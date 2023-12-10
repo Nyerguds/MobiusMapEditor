@@ -173,7 +173,8 @@ namespace MobiusEditor.Model
         public House(HouseType type)
         {
             Type = type;
-            Allies = new AlliesMask(1 << Type.ID);
+            // If id exceeds the bit mask size of 32, ignore and set to 0.
+            Allies = new AlliesMask(Type.ID >= 32 ? 0 : (1 << Type.ID));
         }
     }
 }

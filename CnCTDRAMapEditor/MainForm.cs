@@ -1722,7 +1722,7 @@ namespace MobiusEditor
             if (loadInfo.Plugin == null || (loadInfo.Plugin != null && !loadInfo.MapLoaded))
             {
                 // Attempted to load file, loading went OK, but map was not loaded.
-#if NOT DEBUG
+#if !DEBUG
                 if (loadInfo.FileName != null && loadInfo.Plugin != null && !loadInfo.MapLoaded)
                 {
                     var fileInfo = new FileInfo(loadInfo.FileName);
