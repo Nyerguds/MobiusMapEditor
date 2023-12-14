@@ -12,9 +12,9 @@ Updates are regularly posted on my little corner of [the C&C Tiberian Dawn Remas
 
 ### Screenshots
 
-![Editor running in Remastered mode](/readme_images/mobius_remastered.png "Editor running in Remastered mode" | width=800)
+![Editor running in Remastered mode](/readme_images/mobius_remastered.png "Editor running in Remastered mode")
 
-![Editor running in Classic mode](/readme_images/mobius_classic.png "Editor running in Classic mode" | width=800)
+![Editor running in Classic mode](/readme_images/mobius_classic.png "Editor running in Classic mode")
 
 ### Contributing
 
