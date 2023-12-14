@@ -10,6 +10,12 @@ As of v1.5.0.0, the editor does not require the C&C Remaster; if the C&C Remaste
 
 Updates are regularly posted on my little corner of [the C&C Tiberian Dawn Remastered Multiplayer Discord server](https://discord.gg/m4wcAZd).
 
+### Screenshots
+
+![Editor running in Remastered mode](/readme_images/mobius_remastered.png "Editor running in Remastered mode" | width=800)
+
+![Editor running in Classic mode](/readme_images/mobius_classic.png "Editor running in Classic mode" | width=800)
+
 ### Contributing
 
 Right now, I'm not really looking into making this a joint project. Specific bug reports and suggestions are always welcome though, but post them as issues.

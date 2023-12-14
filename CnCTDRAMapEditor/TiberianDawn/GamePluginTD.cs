@@ -3206,9 +3206,9 @@ namespace MobiusEditor.TiberianDawn
             return housesWithProd;
         }
 
-        public virtual int[] GetRevealRadiusForWaypoints(Map map, bool forLargeReveal)
+        public virtual int[] GetRevealRadiusForWaypoints(bool forLargeReveal)
         {
-            Waypoint[] waypoints = map.Waypoints;
+            Waypoint[] waypoints = Map.Waypoints;
             int length = waypoints.Length;
             int[] flareRadius = new int[length];
             if (!forLargeReveal)

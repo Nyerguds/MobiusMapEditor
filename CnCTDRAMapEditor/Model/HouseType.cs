@@ -53,6 +53,8 @@ namespace MobiusEditor.Model
             this.Name = name;
             this.MultiplayIdentifier = multiplayIdentifier;
             this.Flags = flags;
+            // Alliances not supported for house IDs larger than 32.
+            if (id >= 32) Flags &= ~HouseTypeFlag.ForAlliances;
             this.UnitTeamColor = unitTeamColor;
             this.BuildingTeamColor = buildingTeamColor;
             this.OverrideTeamColors = overrideTeamColors.ToDictionary(x => x.type, x => x.teamColor);

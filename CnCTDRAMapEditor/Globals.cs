@@ -28,6 +28,7 @@ namespace MobiusEditor
             UseClassicFiles = Properties.Settings.Default.UseClassicFiles;
             ForceLanguage = Properties.Settings.Default.ForceLanguage;
             EnableDpiAwareness = Properties.Settings.Default.EnableDpiAwareness;
+            CheckUpdatesOnStartup = Properties.Settings.Default.CheckUpdatesOnStartup;
             ClassicNoRemasterLogic = Properties.Settings.Default.ClassicNoRemasterLogic;
             // Defaults
             BoundsObstructFill = Properties.Settings.Default.DefaultBoundsObstructFill;
@@ -79,6 +80,7 @@ namespace MobiusEditor
         public static bool UseClassicFiles { get; set; }
         public static bool ClassicNoRemasterLogic { get; set; }
         public static bool EnableDpiAwareness { get; set; }
+        public static bool CheckUpdatesOnStartup { get; set; }
         public static bool BoundsObstructFill { get; set; }
         public static bool TileDragProtect { get; set; }
         public static bool TileDragRandomize { get; set; }

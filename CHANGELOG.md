@@ -594,19 +594,20 @@ Unreleased
 * Map templates, Smudge and Overlay are no longer restricted to specific theaters; if the files exist in a theater, they are allowed.
 * Theater-sensitive civilian buildings are no longer restricted to specific theaters; if they exist in a theater, they are allowed. Military buildings, incuding the theater-sensitive Missile Silo and Pillbox in RA, are always usable, no matter whether the theater has graphics for them.
 * On Interior maps, the "ConvertRaObsoleteClear" logic will now generate spots of passable terrain outside the map border on any point where passable terrain touches the border, to allow potential reinforcements to enter the map there.
-* The Teamtypes window will no longer show the trigger info label when editing a TD map.
-* Added fix for semicolons cutting off briefings.
+* When editing a TD map, the Teamtypes window will no longer show the trigger info label, since TD Teamtypes can't have a linked trigger.
+* Added fix for semicolons cutting off briefings in TD, and a warning in RA.
 * The Base and Briefing sections can no longer remain behind as empty sections in the extra ini rules.
-* The Digest section will now also be removed from TD maps.
-* Upgraded the logic to detect missing rules for ant-related objects on RA maps, so it includes the Mandible weapon, and checks in triggers too. The check now also goes through the rules files, so when using a rules mod does define these things, no warnings will be shown.
+* The Digest section will now also be removed from TD / SS maps.
+* Upgraded the logic to detect missing rules for ant-related objects on RA maps, so it includes the Mandible weapon, and checks in triggers too. The check now also goes through the rules files, so when using a rules mod that does define these things, no warnings will be shown.
 * Added config option for the behaviour to recolour the classic DOS Einstein to RA95/remastered colours.
-* Added "Info" menu, containing general program info, a link to the Github website, and an update function.
+* Added "Info" menu, containing general program info, a link to the Github website, and an update check function.
 * Fixed the CONC pavement connecting in TD to match the game 100%. There is also an alternate mode available, through the parameter "FixConcretePavement", which shows the pavement as it was intended to be if the game's connection logic actually functioned correctly.
 * Renamed RA trigger "Destroyed, Fakes, All..." to "All Fakes Destroyed".
 * Prefixed all RA "Text Trigger" options with the expansion they belong to.
-* Fixed "Auto Base Building..." trigger; its on and off values were switched.
+* Fixed RA's "Auto Base Building..." trigger; its on and off values were switched.
 * All argument lists for trigger Events and Actions that contain a "None" item will now select that by default.
 * The tool window is now always hidden while a dialog is opened.
-* Fixed ampersands not showing in recent files.
+* Fixed ampersands not showing in the "Recent Files" menu.
 * Added indicator of line wrap mode in text dialog.
 * Added [Ctrl]+scrollwheel for going through item lists.
+* Added update checker on startup.

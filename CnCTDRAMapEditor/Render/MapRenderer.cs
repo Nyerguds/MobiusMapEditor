@@ -1976,8 +1976,8 @@ namespace MobiusEditor.Render
 
         public static void RenderAllWayPointRevealRadiuses(Graphics graphics, IGamePlugin plugin, Map map, Rectangle visibleCells, Size tileSize, Waypoint selectedItem, bool onlySelected)
         {
-            int[] wpReveal1 = plugin.GetRevealRadiusForWaypoints(map, false);
-            int[] wpReveal2 = plugin.GetRevealRadiusForWaypoints(map, true);
+            int[] wpReveal1 = plugin.GetRevealRadiusForWaypoints(false);
+            int[] wpReveal2 = plugin.GetRevealRadiusForWaypoints(true);
             Waypoint[] allWaypoints = map.Waypoints;
             for (int i = 0; i < allWaypoints.Length; i++)
             {

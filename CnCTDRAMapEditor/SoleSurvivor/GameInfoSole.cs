@@ -75,7 +75,7 @@ namespace MobiusEditor.SoleSurvivor
             }
         }
 
-        public override string GetClassicOpposingPlayer(string player) => HouseTypes.GetTypes().FirstOrDefault()?.Name;
+        public override string GetClassicOpposingPlayer(string player) => HouseTypes.GetClassicOpposingPlayer(player);
 
         public override bool SupportsMapLayer(MapLayerFlag mlf)
         {

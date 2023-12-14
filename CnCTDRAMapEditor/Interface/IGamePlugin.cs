@@ -48,33 +48,40 @@ namespace MobiusEditor.Interface
 
         /// <summary>Initialises this plugin after it has been created, and all resource managers have been reset.</summary>
         IEnumerable<string> Initialize();
+
         /// <summary>Get any unmanaged sections from the mission file so they can be edited by the user.</summary>
         /// <returns>All unmanaged sections from the mission file, as text.</returns>
         string GetExtraIniText();
+
         /// <summary>Store extra ini text after it has been edited by the user.</summary>
         /// <param name="extraIniText">The extra ini text to store</param>
         /// <param name="forFootprintTest">Don't apply changes, just test the result for <paramref name="footPrintsChanged"/></param>
         /// <param name="footPrintsChanged">Returns true if any building footprints were changed as a result of the given ini rule tweaks</param>
         /// <returns>Any errors that occurred while parsing <paramref name="extraIniText"/>, or null if nothing went wrong.</returns>
         IEnumerable<string> SetExtraIniText(String extraIniText, out bool footPrintsChanged);
+
         /// <summary>Test if setting extra ini text will result in footprint changes.</summary>
         /// <param name="extraIniText">The extra ini text to evaluate</param>
         /// <param name="footPrintsChanged">Returns true if any building footprints were changed as a result of the given ini rule tweaks</param>
         /// <returns>Any errors that occurred while parsing <paramref name="extraIniText"/>, or null if nothing went wrong.</returns>
         IEnumerable<string> TestSetExtraIniText(String extraIniText, bool isSolo, bool expansionEnabled, out bool footPrintsChanged);
+
         /// <summary>Create a new map in the chosen theater.</summary>
         /// <param name="theater">The name of the theater to use.</param>
         void New(string theater);
+
         /// <summary>Load a map.</summary>
         /// <param name="path">Path of the map to load.</param>
         /// <param name="fileType">File type of the actual file in the path, so accompanying files can be loaded correctly.</param>
         /// <returns>Any issues encountered when loading the map.</returns>
         IEnumerable<string> Load(string path, FileType fileType);
+
         /// <summary>Save the current map to the given path, with the given file type.</summary>
         /// <param name="path">Path of the map to save.</param>
         /// <param name="fileType">File type of the actual file in the path, so accompanying files can be saved correctly.</param>
         /// <returns>true if the saving succeeded.</returns>
         bool Save(string path, FileType fileType);
+
         /// <summary>Save the current map to the given path, with the given file type.</summary>
         /// <param name="path">Path of the map to save.</param>
         /// <param name="fileType">File type of the actual file in the path, so accompanying files can be saved correctly.</param>
@@ -82,22 +89,29 @@ namespace MobiusEditor.Interface
         /// <param name="dontResavePreview">True to not resave the preview on disc when doing the save operation.</param>
         /// <returns>true if the saving succeeded.</returns>
         bool Save(string path, FileType fileType, Bitmap customPreview, bool dontResavePreview);
+
         /// <summary>Validate the map to see if there are any blocking errors preventing it from saving.</summary>
         /// <param name="forWarnings">true if this is not the actual map validation, but a check that should return any warnings to show that the user can still choose to ignore.</param>
         /// <returns>Null if the validation succeeded, else a string containing the problems that occurred..</returns>
         string Validate(Boolean forWarnings);
+
         /// <summary>Generates an overview of how many items are on the map and how many are allowed, and does a trigger analysis.</summary>
         /// <returns>The generated map items overview.</returns>
         IEnumerable<string> AssessMapItems();
+
         /// <summary>Retrieves a hash set of all houses for which production is started by triggers.</summary>
         /// <returns>A hash set of all houses for which production is started by triggers.</returns>
         HashSet<string> GetHousesWithProduction();
+
         /// <summary>Returns an array containing the reveal radius for each waypoint on the map.</summary>
-        /// <param name="map">The map to gheck the waypoints on.</param>
         /// <param name="forLargeReveal">False for small flare reveal, true for large area reveal.</param>
         /// <returns></returns>
-        int[] GetRevealRadiusForWaypoints(Map map, bool forLargeReveal);
-        /// <summary>Check whether there are any errors in the currect scripting. This is not put on GameInfo since it checks things whether used waypoints are placed down on the map.</summary>
+        int[] GetRevealRadiusForWaypoints(bool forLargeReveal);
+
+        /// <summary>
+        /// Check whether there are any errors in the currect scripting.
+        /// This is not put in GameInfo because it depends on map info like the waypoints.
+        /// </summary>
         /// <param name="triggers">List of triggers to check.</param>
         /// <param name="includeExternalData">True to fetch extra data from the map, such as map objects that triggers can be linked to.</param>
         /// <param name="prefixNames">True to prefix the trigger name before every line. If false, each trigger's analysis will be preceded with a header line containing the trigger name.</param>

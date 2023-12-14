@@ -78,7 +78,7 @@ namespace MobiusEditor.SoleSurvivor
             basicSection.SetDefault();
             basicSection.Player = HouseTypes.Admin.Name;
             // Irrelevant for Sole. Rebuilding options will be disabled in the editor.
-            basicSection.BasePlayer = HouseTypes.GetBasePlayer(basicSection.Player);
+            basicSection.BasePlayer = HouseTypes.Admin.Name;
             // Specific to Sole.
             cratesSection = new CratesSection();
             cratesSection.SetDefault();

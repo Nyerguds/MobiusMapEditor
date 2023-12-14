@@ -520,7 +520,7 @@ namespace MobiusEditor.RedAlert
             basicSection.SetDefault();
             IEnumerable<HouseType> houseTypes = HouseTypes.GetTypes();
             basicSection.Player = houseTypes.Where(ht => (ht.Flags & HouseTypeFlag.Special) == HouseTypeFlag.None).First().Name;
-            basicSection.BasePlayer = HouseTypes.GetBasePlayer(basicSection.Player);
+            basicSection.BasePlayer = HouseTypes.GetClassicOpposingPlayer(basicSection.Player);
             string[] cellEventTypes =
             {
                 EventTypes.TEVENT_CROSS_HORIZONTAL,
@@ -814,7 +814,7 @@ namespace MobiusEditor.RedAlert
             HouseType player = Map.HouseTypes.Where(t => t.Equals(plName)).FirstOrDefault() ?? Map.HouseTypes.First();
             plName = player.Name;
             Map.BasicSection.Player = plName;
-            Map.BasicSection.BasePlayer = HouseTypes.GetBasePlayer(plName);
+            Map.BasicSection.BasePlayer = HouseTypes.GetClassicOpposingPlayer(plName);
             return player;
         }
 
@@ -4133,29 +4133,29 @@ namespace MobiusEditor.RedAlert
             HashSet<string> housesWithProd = new HashSet<string>();
             if (Map.BasicSection.BasePlayer == null)
             {
-                Map.BasicSection.BasePlayer = HouseTypes.GetBasePlayer(Map.BasicSection.Player);
+                Map.BasicSection.BasePlayer = HouseTypes.GetClassicOpposingPlayer(Map.BasicSection.Player);
             }
             HouseType rebuildHouse = Map.HouseTypes.Where(h => h.Name == Map.BasicSection.BasePlayer).FirstOrDefault();
             housesWithProd.Add(rebuildHouse.Name);
             return housesWithProd;
         }
 
-        public int[] GetRevealRadiusForWaypoints(Map map, bool forLargeReveal)
+        public int[] GetRevealRadiusForWaypoints(bool forLargeReveal)
         {
-            Waypoint[] waypoints = map.Waypoints;
+            Waypoint[] waypoints = Map.Waypoints;
             int length = waypoints.Length;
             int[] flareRadius = new int[length];
             for (int i = 0; i < length; i++)
             {
                 string actionType = forLargeReveal ? ActionTypes.TACTION_REVEAL_SOME : ActionTypes.TACTION_DZ;
-                foreach (Trigger trigger in map.Triggers)
+                foreach (Trigger trigger in Map.Triggers)
                 {
                     if ((actionType.Equals(trigger.Action1.ActionType, StringComparison.OrdinalIgnoreCase)
                         && trigger.Action1.Data == i)
                         || (actionType.Equals(trigger.Action2.ActionType, StringComparison.OrdinalIgnoreCase)
                         && trigger.Action2.Data == i))
                     {
-                        flareRadius[i] = forLargeReveal ? map.GapRadius : map.DropZoneRadius;
+                        flareRadius[i] = forLargeReveal ? Map.GapRadius : Map.DropZoneRadius;
                     }
                 }
             }
@@ -4667,7 +4667,7 @@ namespace MobiusEditor.RedAlert
         {
             if (Map.BasicSection.BasePlayer == null)
             {
-                Map.BasicSection.BasePlayer = HouseTypes.GetBasePlayer(Map.BasicSection.Player);
+                Map.BasicSection.BasePlayer = HouseTypes.GetClassicOpposingPlayer(Map.BasicSection.Player);
                 // Updating BasePlayer will trigger PropertyChanged and re-call this function, so no need to continue here.
                 return;
             }

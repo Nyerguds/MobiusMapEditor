@@ -80,6 +80,16 @@ namespace MobiusEditor.Model
             return tile;
         }
 
+        /// <summary>
+        /// Retrieves a bitmap from the tileset manager. Depending on whether classic or remastered graphics
+        /// are used, the first or last two args will be used.
+        /// </summary>
+        /// <param name="remasterTexturePath">Path of th texture in the remastered tilesets.</param>
+        /// <param name="classicSprite">Classic sprite to load.</param>
+        /// <param name="classicicon">Frame to use from the classic sprite.</param>
+        /// <returns>
+        /// The requested image. This is a clone of the image in the internal texture manager, and should be disposed after use.
+        /// </returns>
         protected Bitmap GetTexture(string remasterTexturePath, string classicSprite, int classicicon)
         {
             if (!Globals.UseClassicFiles && Globals.TheTilesetManager is TilesetManager tsm)
@@ -88,13 +98,11 @@ namespace MobiusEditor.Model
                 // and is responsible for their cleanup, but if we use the Texture manager directly, it needs to be disposed.
                 return tsm.TextureManager.GetTexture(remasterTexturePath, null, false).Item1;
             }
-            else if (Globals.UseClassicFiles)
+            else if (Globals.UseClassicFiles && Globals.TheTilesetManager.GetTileData(classicSprite, classicicon, out Tile tile)
+                && tile != null && tile.Image != null)
             {
-                if (Globals.TheTilesetManager.GetTileData(classicSprite, classicicon, out Tile tile) && tile != null && tile.Image != null)
-                {
-                    // Clone so it's equivalent to remaster one and can be used in a Using block:
-                    return new Bitmap(tile.Image);
-                }
+                // Clone this, so it's equivalent to the remaster one and can be used in a Using block.
+                return new Bitmap(tile.Image);
             }
             return null;
         }

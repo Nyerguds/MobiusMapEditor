@@ -101,6 +101,7 @@ namespace MobiusEditor
         private IGamePlugin plugin;
         private FileType loadedFileType;
         private string filename;
+        private bool shouldCheckUpdate;
         private bool startedUpdate;
         // Not sure if this lock works; multiple functions can somehow run simultaneously on the same UI update thread?
         private readonly object jumpToBounds_lock = new Object();
@@ -1714,6 +1715,10 @@ namespace MobiusEditor
                 // Absolute abort
                 SimpleMultiThreading.RemoveBusyLabel(this);
                 RefreshActiveTool();
+                if (this.shouldCheckUpdate)
+                {
+                    CheckForUpdates(true);
+                }
                 return;
             }
             IGamePlugin oldPlugin = this.plugin;
@@ -1782,6 +1787,10 @@ namespace MobiusEditor
                     var fileInfo = new FileInfo(loadInfo.FileName);
                     mru.Add(fileInfo);
                 }
+            }
+            if (this.shouldCheckUpdate)
+            {
+                CheckForUpdates(true);
             }
         }
 
@@ -2552,8 +2561,14 @@ namespace MobiusEditor
             Process.Start(Program.GithubUrl);
         }
 
-        private async void InfoCheckForUpdatesMenuItem_Click(Object sender, EventArgs e)
+        private void InfoCheckForUpdatesMenuItem_Click(Object sender, EventArgs e)
         {
+            CheckForUpdates(false);
+        }
+
+        private async void CheckForUpdates(bool onlyShowWhenNew)
+        {
+            this.shouldCheckUpdate = false;
             string title = Program.ProgramVersionTitle;
             if (this.startedUpdate)
             {
@@ -2562,6 +2577,8 @@ namespace MobiusEditor
             }
             this.startedUpdate = true;
             this.SetTitle();
+            bool newFound = false;
+            string tag = null;
             const string checkError = "An error occurred when checking the version:";
             AssemblyName assn = Assembly.GetExecutingAssembly().GetName();
             System.Version curVer = assn.Version;
@@ -2580,7 +2597,7 @@ namespace MobiusEditor
                         ProductInfoHeaderValue commentValue = new ProductInfoHeaderValue("(https://github.com/" + Program.GithubOwner + "/" + Program.GithubProject + ")");
                         request.Headers.UserAgent.Add(productValue);
                         request.Headers.UserAgent.Add(commentValue);
-                        HttpResponseMessage response = await client.SendAsync(request);
+                        using (HttpResponseMessage response = await client.SendAsync(request))
                         using (var bytes = new MemoryStream())
                         {
                             await response.Content.CopyToAsync(bytes);
@@ -2606,8 +2623,8 @@ namespace MobiusEditor
                     return;
                 }
                 String text = Encoding.UTF8.GetString(content);
-                // search string (can't be bothered parsing) is 
-                Regex regex = new Regex("\"tag_name\":\\s*\"v((\\d+)\\.(\\d+)(\\.(\\d+))?(\\.(\\d+))?)\"");
+                // search string (can't be bothered parsing) is
+                Regex regex = new Regex("\"tag_name\":\\s*\"(v((\\d+)\\.(\\d+)(\\.(\\d+))?(\\.(\\d+))?))\"");
                 Match match = regex.Match(text);
                 const string dots = " (...)";
                 const int maxLen = 1500 - 6;
@@ -2621,10 +2638,11 @@ namespace MobiusEditor
                     returnMessage = checkError + " could not find version in returned data.\n\nReturned data:\n" + text;
                     return;
                 }
-                string versionMajStr = match.Groups[2].Value;
-                string versionMinStr = match.Groups[3].Value;
-                string versionBldStr = match.Groups[5].Value;
-                string versionRevStr = match.Groups[7].Value;
+                tag = match.Groups[1].Value;
+                string versionMajStr = match.Groups[3].Value;
+                string versionMinStr = match.Groups[4].Value;
+                string versionBldStr = match.Groups[6].Value;
+                string versionRevStr = match.Groups[8].Value;
                 int versionMaj = String.IsNullOrEmpty(versionMajStr) ? 0 : Int32.Parse(versionMajStr);
                 int versionMin = String.IsNullOrEmpty(versionMinStr) ? 0 : Int32.Parse(versionMinStr);
                 int versionBld = String.IsNullOrEmpty(versionBldStr) ? 0 : Int32.Parse(versionBldStr);
@@ -2633,10 +2651,9 @@ namespace MobiusEditor
                 StringBuilder versionMessage = new StringBuilder();
                 if (curVer < serverVer)
                 {
+                    newFound = true;
                     versionMessage.Append("A newer version ").Append(serverVer.ToString()).Append(" was released on GitHub.\n\n")
-                        .Append("To get the latest version, go to ")
-                        .Append("\"").Append(infoToolStripMenuItem.Text).Append("\" → \"").Append(InfoWebsiteMenuItem.Text).Append("\"")
-                        .Append(" and check the \"Releases\" section.");
+                        .Append("Press \"OK\" to open the download page of the latest version.");
                 }
                 else
                 {
@@ -2649,10 +2666,20 @@ namespace MobiusEditor
             {
                 this.startedUpdate = false;
                 this.SetTitle();
-                if (returnMessage != null)
+                if (returnMessage != null && (!onlyShowWhenNew || newFound))
                 {
                     ClearActiveTool();
-                    MessageBox.Show(this, returnMessage, title);
+                    if (!newFound)
+                    {
+                        MessageBox.Show(this, returnMessage, title);
+                    }
+                    else
+                    {
+                        if (DialogResult.OK == MessageBox.Show(this, returnMessage, title, MessageBoxButtons.OKCancel, MessageBoxIcon.None, MessageBoxDefaultButton.Button1))
+                        {
+                            Process.Start(Program.GithubUrl + "/releases/tag/" + tag);
+                        }
+                    }
                     RefreshActiveTool();
                 }
             }
@@ -2672,7 +2699,14 @@ namespace MobiusEditor
             RefreshUI();
             UpdateUndoRedo();
             if (filename != null)
+            {
+                this.shouldCheckUpdate = Globals.CheckUpdatesOnStartup;
                 OpenFile(filename);
+            }
+            else if (Globals.CheckUpdatesOnStartup)
+            {
+                CheckForUpdates(true);
+            }
         }
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)

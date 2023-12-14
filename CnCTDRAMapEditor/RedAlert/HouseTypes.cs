@@ -21,26 +21,26 @@ namespace MobiusEditor.RedAlert
 {
     public static class HouseTypes
     {
-        public static readonly HouseType Spain = new HouseType(0, "Spain", "SPAIN");
-        public static readonly HouseType Greece = new HouseType(1, "Greece", "GREECE");
-        public static readonly HouseType USSR = new HouseType(2, "USSR", "USSR");
-        public static readonly HouseType England = new HouseType(3, "England", "ENGLAND");
-        public static readonly HouseType Ukraine = new HouseType(4, "Ukraine", "UKRAINE");
-        public static readonly HouseType Germany = new HouseType(5, "Germany", "GERMANY");
-        public static readonly HouseType France = new HouseType(6, "France", "FRANCE");
-        public static readonly HouseType Turkey = new HouseType(7, "Turkey", "TURKEY");
-        public static readonly HouseType Good = new HouseType(8, "GoodGuy", "GOOD");
-        public static readonly HouseType Bad = new HouseType(9, "BadGuy", "BAD");
-        public static readonly HouseType Neutral = new HouseType(10, "Neutral", "NEUTRAL");
-        public static readonly HouseType Special = new HouseType(11, "Special", "SPECIAL");
-        public static readonly HouseType Multi1 = new HouseType(12, "Multi1", Waypoint.GetFlagForMpId(0), "MULTI1"); // yellow
-        public static readonly HouseType Multi2 = new HouseType(13, "Multi2", Waypoint.GetFlagForMpId(1), "MULTI2"); // teal
-        public static readonly HouseType Multi3 = new HouseType(14, "Multi3", Waypoint.GetFlagForMpId(2), "MULTI3"); // red
-        public static readonly HouseType Multi4 = new HouseType(15, "Multi4", Waypoint.GetFlagForMpId(3), "MULTI4"); // green
-        public static readonly HouseType Multi5 = new HouseType(16, "Multi5", Waypoint.GetFlagForMpId(4), "MULTI5"); // orange
-        public static readonly HouseType Multi6 = new HouseType(17, "Multi6", Waypoint.GetFlagForMpId(5), "MULTI7"); // purple; fixed to match actual game.
-        public static readonly HouseType Multi7 = new HouseType(18, "Multi7", Waypoint.GetFlagForMpId(6), "MULTI6"); // blue; fixed to match actual game.
-        public static readonly HouseType Multi8 = new HouseType(19, "Multi8", Waypoint.GetFlagForMpId(7), "MULTI8"); // pink
+        public static readonly HouseType Spain = new HouseType(0, "Spain", HouseTypeFlag.ForAlliances, "SPAIN");
+        public static readonly HouseType Greece = new HouseType(1, "Greece", HouseTypeFlag.ForAlliances, "GREECE");
+        public static readonly HouseType USSR = new HouseType(2, "USSR", HouseTypeFlag.ForAlliances, "USSR");
+        public static readonly HouseType England = new HouseType(3, "England", HouseTypeFlag.ForAlliances, "ENGLAND");
+        public static readonly HouseType Ukraine = new HouseType(4, "Ukraine", HouseTypeFlag.ForAlliances, "UKRAINE");
+        public static readonly HouseType Germany = new HouseType(5, "Germany", HouseTypeFlag.ForAlliances, "GERMANY");
+        public static readonly HouseType France = new HouseType(6, "France", HouseTypeFlag.ForAlliances, "FRANCE");
+        public static readonly HouseType Turkey = new HouseType(7, "Turkey", HouseTypeFlag.ForAlliances, "TURKEY");
+        public static readonly HouseType Good = new HouseType(8, "GoodGuy", HouseTypeFlag.ForAlliances, "GOOD");
+        public static readonly HouseType Bad = new HouseType(9, "BadGuy", HouseTypeFlag.ForAlliances, "BAD");
+        public static readonly HouseType Neutral = new HouseType(10, "Neutral", HouseTypeFlag.ForAlliances, "NEUTRAL");
+        public static readonly HouseType Special = new HouseType(11, "Special", HouseTypeFlag.ForAlliances, "SPECIAL");
+        public static readonly HouseType Multi1 = new HouseType(12, "Multi1", Waypoint.GetFlagForMpId(0), HouseTypeFlag.ForAlliances, "MULTI1"); // yellow
+        public static readonly HouseType Multi2 = new HouseType(13, "Multi2", Waypoint.GetFlagForMpId(1), HouseTypeFlag.ForAlliances , "MULTI2"); // teal
+        public static readonly HouseType Multi3 = new HouseType(14, "Multi3", Waypoint.GetFlagForMpId(2), HouseTypeFlag.ForAlliances , "MULTI3"); // red
+        public static readonly HouseType Multi4 = new HouseType(15, "Multi4", Waypoint.GetFlagForMpId(3), HouseTypeFlag.ForAlliances , "MULTI4"); // green
+        public static readonly HouseType Multi5 = new HouseType(16, "Multi5", Waypoint.GetFlagForMpId(4), HouseTypeFlag.ForAlliances , "MULTI5"); // orange
+        public static readonly HouseType Multi6 = new HouseType(17, "Multi6", Waypoint.GetFlagForMpId(5), HouseTypeFlag.ForAlliances , "MULTI7"); // purple; fixed to match actual game.
+        public static readonly HouseType Multi7 = new HouseType(18, "Multi7", Waypoint.GetFlagForMpId(6), HouseTypeFlag.ForAlliances , "MULTI6"); // blue; fixed to match actual game.
+        public static readonly HouseType Multi8 = new HouseType(19, "Multi8", Waypoint.GetFlagForMpId(7), HouseTypeFlag.ForAlliances , "MULTI8"); // pink
         // Special group houses; these can be set in house alliances.
         public static readonly HouseType Allies = new HouseType(20, "Allies", HouseTypeFlag.ForAlliances | HouseTypeFlag.Special, "GREECE");
         public static readonly HouseType Soviet = new HouseType(21, "Soviet", HouseTypeFlag.ForAlliances | HouseTypeFlag.Special, "USSR");
@@ -58,11 +58,6 @@ namespace MobiusEditor.RedAlert
         public static IEnumerable<HouseType> GetTypes()
         {
             return Types;
-        }
-
-        public static string GetBasePlayer(string player)
-        {
-            return GetClassicOpposingPlayer(player);
         }
 
         public static string GetClassicOpposingPlayer(string player)

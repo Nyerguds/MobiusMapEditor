@@ -562,8 +562,8 @@ namespace MobiusEditor.Tools
                 {
                     MapRenderer.RenderWayPointIndicators(graphics, map, visibleCells, Globals.MapTileSize, Color.Yellow, true, false, new[] { dummySelected });
                     // Need to do this manually since it's an extra waypoint not normally on the list, and it uses the radius data of the original waypoint to place.
-                    int[] wpReveal1 = plugin.GetRevealRadiusForWaypoints(map, false);
-                    int[] wpReveal2 = plugin.GetRevealRadiusForWaypoints(map, true);
+                    int[] wpReveal1 = plugin.GetRevealRadiusForWaypoints(false);
+                    int[] wpReveal2 = plugin.GetRevealRadiusForWaypoints(true);
                     if (wpReveal1[selectedIndex] != 0)
                     {
                         MapRenderer.RenderWayPointRevealRadius(graphics, map.Metrics, boundRenderCells, Globals.MapTileSize, Color.Yellow, true, true, wpReveal1[selectedIndex], dummySelected);
