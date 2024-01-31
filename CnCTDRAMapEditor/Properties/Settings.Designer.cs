@@ -79,10 +79,10 @@ namespace MobiusEditor.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("None")]
-        public string ForceLanguage {
+        [global::System.Configuration.DefaultSettingValueAttribute("Auto")]
+        public string EditorLanguage {
             get {
-                return ((string)(this["ForceLanguage"]));
+                return ((string)(this["EditorLanguage"]));
             }
         }
         

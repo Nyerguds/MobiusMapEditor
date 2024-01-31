@@ -588,11 +588,12 @@ Released on 05 Aug 2023 at 13:50 GMT
 
 ### v1.5.0.3:
 
-Unreleased
-* Added support for fan-added theaters available in CnCNet: Snow for TD; Desert, Jungle, Barren and Cave for RA. These only work in classic mode, if their theater mix files are found in the configured classic files folder.
+Released on 31 Jan 2023 at 20:50 GMT
+
+* Added support for fan-added theaters available in CnCNet: Snow for TD; Desert, Jungle, Barren and Cave for RA. These only work in classic mode, and if their theater mix files are found in the configured classic files folder.
 * Mouse zoom is now disabled during drag-scroll operations, since it invariably messed up the position calculations.
 * Map templates, Smudge and Overlay are no longer restricted to specific theaters; if the files exist in a theater, they are allowed.
-* Theater-sensitive civilian buildings are no longer restricted to specific theaters; if they exist in a theater, they are allowed. Military buildings, incuding the theater-sensitive Missile Silo and Pillbox in RA, are always usable, no matter whether the theater has graphics for them.
+* Theater-sensitive civilian buildings are no longer restricted to specific theaters; if they exist in a theater, they are allowed. Military buildings, including the theater-sensitive Missile Silo and Pillbox in RA, are always usable, no matter whether the theater has graphics for them.
 * On Interior maps, the "ConvertRaObsoleteClear" logic will now generate spots of passable terrain outside the map border on any point where passable terrain touches the border, to allow potential reinforcements to enter the map there.
 * When editing a TD map, the Teamtypes window will no longer show the trigger info label, since TD Teamtypes can't have a linked trigger.
 * Added fix for semicolons cutting off briefings in TD, and a warning in RA.
@@ -601,7 +602,8 @@ Unreleased
 * Upgraded the logic to detect missing rules for ant-related objects on RA maps, so it includes the Mandible weapon, and checks in triggers too. The check now also goes through the rules files, so when using a rules mod that does define these things, no warnings will be shown.
 * Added config option for the behaviour to recolour the classic DOS Einstein to RA95/remastered colours.
 * Added "Info" menu, containing general program info, a link to the Github website, and an update check function.
-* Fixed the CONC pavement connecting in TD to match the game 100%. There is also an alternate mode available, through the parameter "FixConcretePavement", which shows the pavement as it was intended to be if the game's connection logic actually functioned correctly.
+* Added update check on startup. This option can be turned off using the "CheckUpdatesOnStartup" option in the config file.
+* Fixed the CONC pavement connecting in TD to completely match the way the game does it. There is also an alternate mode available, through the parameter "FixConcretePavement", which shows the pavement as it was intended to be if the game's connection logic actually functioned correctly.
 * Renamed RA trigger "Destroyed, Fakes, All..." to "All Fakes Destroyed".
 * Prefixed all RA "Text Trigger" options with the expansion they belong to.
 * Fixed RA's "Auto Base Building..." trigger; its on and off values were switched.
@@ -610,4 +612,5 @@ Unreleased
 * Fixed ampersands not showing in the "Recent Files" menu.
 * Added indicator of line wrap mode in text dialog.
 * Added [Ctrl]+scrollwheel for going through item lists.
-* Added update checker on startup.
+* Added an "EditorLanguage" option that can be used to change the language of the game text loaded in the editor. The default value is "Auto", which makes it autodetect the language using the system language.
+* Added an option to control the behaviour of allowing walls as structures, with an owner. Since this is a behavior tweaks option, and those are all enabled by default, it is called "DontAllowWallsAsBuildings".

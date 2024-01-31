@@ -13,6 +13,7 @@ namespace MobiusEditor.Utility
 {
     public static class StartupLoader
     {
+        private const string DEFAULT_CULTURE = "EN-US";
 
         public static string[] GetModPaths(string steamId, string modstoLoad, string modsFolder, string modIdentifier)
         {
@@ -226,30 +227,70 @@ namespace MobiusEditor.Utility
             }
             Globals.TheTeamColorManager = new TeamColorManager(mfm);
             // Text manager.
-            const string fallbackCulture = "EN-US";
-            string gameTextFilename = null;
-            string forcedLanguage = (Globals.ForceLanguage ?? String.Empty).Trim().ToUpperInvariant();
-            // Force to setting.
-            if (!String.IsNullOrEmpty(forcedLanguage) && !"NONE".Equals(forcedLanguage, StringComparison.OrdinalIgnoreCase))
+
+            string cultureName = (Globals.EditorLanguage ?? String.Empty).Trim().ToUpperInvariant();
+            switch (cultureName)
             {
-                gameTextFilename = string.Format(Globals.GameTextFilenameFormat, forcedLanguage);
+                case "AUTO":
+                    cultureName = FindCompatibleCulture(mfm);
+                    break;
+                case "":
+                case "NONE":
+                case "DEFAULT":
+                    cultureName = DEFAULT_CULTURE;
+                    break;
             }
-            // Not forced, or not found: fall back to system language.
-            if (gameTextFilename == null || !Globals.TheArchiveManager.FileExists(gameTextFilename))
+            string gameTextFilename = string.Format(Globals.GameTextFilenameFormat, cultureName.ToUpper());
+            if (!Globals.TheArchiveManager.FileExists(gameTextFilename))
             {
-                var cultureName = CultureInfo.CurrentUICulture.Name;
+                cultureName = DEFAULT_CULTURE;
                 gameTextFilename = string.Format(Globals.GameTextFilenameFormat, cultureName.ToUpper());
-            }
-            // Not found: fall back to default English.
-            if (gameTextFilename == null || !Globals.TheArchiveManager.FileExists(gameTextFilename))
-            {
-                gameTextFilename = string.Format(Globals.GameTextFilenameFormat, fallbackCulture.ToUpper());
             }
             GameTextManager gtm = new GameTextManager(Globals.TheArchiveManager, gameTextFilename);
             //gtm.Dump(Path.Combine(Program.ApplicationPath, "alltext.txt"));
             AddMissingRemasterText(gtm);
             Globals.TheGameTextManager = gtm;
             return true;
+        }
+
+        private static String FindCompatibleCulture(MegafileManager mfm)
+        {
+            string currentCulture = CultureInfo.CurrentUICulture.Name.ToUpper();
+            if (mfm.FileExists(String.Format(Globals.GameTextFilenameFormat, currentCulture)))
+            {
+                return currentCulture;
+            }
+            Regex stringsFileMatch = new Regex(
+                String.Format(Regex.Escape(Globals.GameTextFilenameFormat).Replace(Regex.Escape("{0}"), "{0}"),
+                                "([a-zA-Z\\-]+)"), RegexOptions.Compiled);
+            List<String> supportedCultures = new List<String>();
+            foreach (string filename in mfm)
+            {
+                Match match = stringsFileMatch.Match(filename);
+                if (match.Success)
+                {
+                    supportedCultures.Add(match.Groups[1].Value.ToUpperInvariant());
+                }
+            }
+            if (supportedCultures.Contains(currentCulture))
+            {
+                return currentCulture;
+            }
+            List<string> languages = new List<string>();
+            string lang = currentCulture.Split('-')[0];
+            languages.Add(lang);
+            if (!"EN".Equals(lang))
+                languages.Add("EN");
+            foreach (string language in languages)
+            {
+                foreach (string cultureName in supportedCultures)
+                {
+                    string cultureLang = cultureName.Split('-')[0];
+                    if (language.Equals(cultureLang))
+                        return cultureName;
+                }
+            }
+            return DEFAULT_CULTURE;
         }
 
         public static bool LoadEditorClassic(string applicationPath, Dictionary<GameType, string[]> modpaths)

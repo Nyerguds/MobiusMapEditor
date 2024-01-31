@@ -116,7 +116,7 @@ The default "Classic\TD" and "Classic\RA" folders are supplied along with the ed
 ### General editor options
 
 * **EnableDpiAwareness**: On some machines with high dpi monitors, people might have odd issues where the positioning of the indicators on the map doesn't correctly match the map tiles. If this happens, enabling this option might fix the problem.
-* **ForceLanguage**: If empty or set to "None", in Remastered mode, the editor will attempt to use the language of the system to load the game assets, if it matches one of the translation that is available in the Remastered Collection. If you don't want this behaviour, this setting can be used to force the editor to use a specific language. Set it to "EN-US" for English.
+* **EditorLanguage**: This option can change the language the editor loads for the remastered game text to name the objects in the editor by specifying a culture code in a format such as "EN-US". This only works for languages that are supported by the C&C Remaster as in-game language. When set to "Auto", it will attempt to use the system language, or the nearest supported one that matches it. To force the default English language, you can leave the setting empty, or use "Default" or "None". The supported languages of the game are: EN-US, DE-DE, ES-ES, FR-FR, KO-KR, PL-PL, RU-RU, ZH-CN, ZH-TW.
 * **CheckUpdatesOnStartup**: Enabled by default. Will make the editor notify users if a new version is available.
 
 ### Mods:
@@ -179,7 +179,7 @@ These options are all enabled by default, but can be disabled if you wish. Use t
 
 These don't affect any real behaviour, but change some graphics to look more correct in the editor:
 
-* **FixClassicEinstein**: While the Win95 and remastered versions of Red Alert have Einstein's in-game sprite coloured to match how he appears in the briefings, the DOS version looks identical to Dr. Mobius in Tiberian Dawn. This option fixes the DOS graphics used by Classic mode to also use these colours. Note that the **GraphicsFixesRA** mod also fixes this.
+* **FixClassicEinstein**: While the Win95 and remastered versions of Red Alert have Einstein's in-game sprite coloured to match how he appears in the briefings, the DOS version (which the editor and the game use) looks identical to Dr. Mobius in Tiberian Dawn. This option makes the editor shuffle around some colours in the classic DOS sprite so it matches that same colour scheme. Note that the **GraphicsFixesRA** mod also fixes this.
 * **FixConcretePavement**: The connection logic of the "CONC" pavement in Tiberian Dawn is seriously bugged in-game. The editor contains a fixed logic, showing the concrete how it was intended to be, filling in side gaps with filler cells. However, be advised that this new logic does not match the actual game. For this reason, it is disabled by default.
 * **DrawSoleTeleports**: On Sole Survivor maps, draw a black area with blue border over the loaded ROAD graphics to emulate the look of the in-game teleporters.
 
