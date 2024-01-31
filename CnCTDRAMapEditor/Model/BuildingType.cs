@@ -5,7 +5,7 @@
 // software: you can redistribute it and/or modify it under the terms of
 // the GNU General Public License as published by the Free Software Foundation,
 // either version 3 of the License, or (at your option) any later version.
-
+//
 // The Command & Conquer Map Editor and corresponding source code is distributed
 // in the hope that it will be useful, but with permitted additional restrictions
 // under Section 7 of the GPL. See the GNU General Public License in LICENSE.TXT
@@ -43,6 +43,8 @@ namespace MobiusEditor.Model
         GapGenerator     /**/ = 1 << 7,
         /// <summary>Do not show this building in the lists if its graphics were not found in the currently loaded theater.</summary>
         TheaterDependent /**/ = 1 << 8,
+        /// <summary>This building type s a wall. Only show if placing walls as buildings is enabled.</summary>
+        Wall             /**/ = 1 << 9,
     }
 
     public class BuildingType : ICellOverlapper, ICellOccupier, ITechnoType
@@ -112,8 +114,9 @@ namespace MobiusEditor.Model
         public bool HasTurret => (this.Flag & BuildingTypeFlag.Turret) == BuildingTypeFlag.Turret;
         public bool IsSingleFrame => (this.Flag & BuildingTypeFlag.SingleFrame) == BuildingTypeFlag.SingleFrame;
         public bool CanRemap => (this.Flag & BuildingTypeFlag.NoRemap) != BuildingTypeFlag.NoRemap;
+        public bool IsWall => (this.Flag & BuildingTypeFlag.Wall) == BuildingTypeFlag.Wall;
         /// <summary>
-        /// Value for Z-sorting; can be used to make buildings specifically show as "flatter" others so pieces sticking out at the top don't overlap objects on these cells.
+        /// Value for Z-sorting; can be used to make buildings specifically show as "flatter" than others so pieces sticking out at the top don't overlap objects on these cells.
         /// </summary>
         public int ZOrder { get; private set; }
         private string nameId;
@@ -285,7 +288,7 @@ namespace MobiusEditor.Model
                 Strength = 256,
                 Direction = direction
             };
-            RenderInfo render = MapRenderer.RenderBuilding(gameInfo, Point.Empty, Globals.PreviewTileSize, Globals.PreviewTileScale, mockBuilding);
+            RenderInfo render = MapRenderer.RenderBuilding(gameInfo, null, Point.Empty, Globals.PreviewTileSize, Globals.PreviewTileScale, mockBuilding);
             if (render.RenderedObject != null)
             {
                 Bitmap th = new Bitmap(this.Size.Width * Globals.PreviewTileSize.Width, this.Size.Height * Globals.PreviewTileSize.Height);

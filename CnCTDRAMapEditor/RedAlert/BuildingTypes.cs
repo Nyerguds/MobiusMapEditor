@@ -5,7 +5,7 @@
 // software: you can redistribute it and/or modify it under the terms of
 // the GNU General Public License as published by the Free Software Foundation,
 // either version 3 of the License, or (at your option) any later version.
-
+//
 // The Command & Conquer Map Editor and corresponding source code is distributed
 // in the hope that it will be useful, but with permitted additional restrictions
 // under Section 7 of the GPL. See the GNU General Public License in LICENSE.TXT
@@ -55,13 +55,23 @@ namespace MobiusEditor.RedAlert
         public static readonly BuildingType MissileSilo = new BuildingType(29, "mslo", "TEXT_STRUCTURE_RA_MSLO", 0, 100, 2, 1, null, "Greece");
         public static readonly BuildingType ForwardCom = new BuildingType(30, "fcom", "TEXT_STRUCTURE_RA_FCOM", 0, 200, 2, 2, "00 11", "USSR", BuildingTypeFlag.Bib);
         public static readonly BuildingType Tesla = new BuildingType(31, "tsla", "TEXT_STRUCTURE_RA_TSLA", 0, 150, 1, 2, "0 1", "USSR");
+        // Fake buildings
         public static readonly BuildingType FakeWeapon = new BuildingType(32, "weaf", "TEXT_STRUCTURE_RA_WEAF", 0, 2, 3, 2, null, "Greece", "weap2", "weap", BuildingTypeFlag.Bib | BuildingTypeFlag.Fake);
         public static readonly BuildingType FakeConst = new BuildingType(33, "facf", "TEXT_STRUCTURE_RA_FACF", 0, 2, 3, 3, null, "Greece", "fact", BuildingTypeFlag.Bib | BuildingTypeFlag.Fake);
         public static readonly BuildingType FakeShipYard = new BuildingType(34, "syrf", "TEXT_STRUCTURE_RA_SYRF", 0, 2, 3, 3, null, "Greece", "syrd", BuildingTypeFlag.Fake);
         public static readonly BuildingType FakeSubPen = new BuildingType(35, "spef", "TEXT_STRUCTURE_RA_SPEF", 0, 2, 3, 3, null, "USSR", "spen", BuildingTypeFlag.Fake);
         public static readonly BuildingType FakeCommand = new BuildingType(36, "domf", "TEXT_STRUCTURE_RA_DOMF", 0, 2, 2, 2, null, "Greece", "dome", BuildingTypeFlag.Bib | BuildingTypeFlag.Fake);
+        // Added "walls-as-buildings"
+        public static readonly BuildingType Sandbag = new BuildingType(37, "sbag", "TEXT_STRUCTURE_RA_SBAG", 0, 0, 1, 1, null, "Greece", BuildingTypeFlag.Wall | BuildingTypeFlag.NoRemap);
+        public static readonly BuildingType Cyclone = new BuildingType(38, "cycl", "TEXT_STRUCTURE_RA_CYCL", 0, 0, 1, 1, null, "Greece", BuildingTypeFlag.Wall | BuildingTypeFlag.NoRemap);
+        public static readonly BuildingType Brick = new BuildingType(39, "brik", "TEXT_STRUCTURE_RA_BRIK", 0, 0, 1, 1, null, "Greece", BuildingTypeFlag.Wall | BuildingTypeFlag.NoRemap);
+        public static readonly BuildingType Barbwire = new BuildingType(40, "barb", "TEXT_STRUCTURE_RA_BARB", 0, 0, 1, 1, null, "Greece", BuildingTypeFlag.Wall | BuildingTypeFlag.NoRemap);
+        public static readonly BuildingType Wood = new BuildingType(41, "wood", "TEXT_STRUCTURE_RA_WOOD", 0, 0, 1, 1, null, "Greece", BuildingTypeFlag.Wall | BuildingTypeFlag.NoRemap);
+        public static readonly BuildingType Fence = new BuildingType(42, "fenc", "TEXT_STRUCTURE_RA_FENC", 0, 0, 1, 1, null, "Greece", BuildingTypeFlag.Wall | BuildingTypeFlag.NoRemap);
+        // Mines
         public static readonly BuildingType AVMine = new BuildingType(43, "minv", "TEXT_STRUCTURE_RA_MINV", 0, 0, 1, 1, null, "Greece", BuildingTypeFlag.SingleFrame);
         public static readonly BuildingType APMine = new BuildingType(44, "minp", "TEXT_STRUCTURE_RA_MINP", 0, 0, 1, 1, null, "Greece", BuildingTypeFlag.SingleFrame);
+        // Civilian buildings
         public static readonly BuildingType V01 = new BuildingType(45, "v01", "TEXT_STRUCTURE_TITLE_CIV1", 0, 0, 2, 2, "00 11", "Neutral", BuildingTypeFlag.NoRemap | BuildingTypeFlag.TheaterDependent);
         public static readonly BuildingType V02 = new BuildingType(46, "v02", "TEXT_STRUCTURE_TITLE_CIV2", 0, 0, 2, 2, "00 11", "Neutral", BuildingTypeFlag.NoRemap | BuildingTypeFlag.TheaterDependent);
         public static readonly BuildingType V03 = new BuildingType(47, "v03", "TEXT_STRUCTURE_TITLE_CIV3", 0, 0, 2, 2, "01 11", "Neutral", BuildingTypeFlag.NoRemap | BuildingTypeFlag.TheaterDependent);
@@ -123,7 +133,7 @@ namespace MobiusEditor.RedAlert
         public static IEnumerable<BuildingType> GetTypes()
         {
             // Always preserve originals
-            return Types.Select(b => b.Clone());
+            return Types.Where(b => Globals.AllowWallBuildings || !b.IsWall).Select(b => b.Clone());
         }
     }
 

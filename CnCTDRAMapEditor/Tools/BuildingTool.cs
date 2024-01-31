@@ -5,7 +5,7 @@
 // software: you can redistribute it and/or modify it under the terms of
 // the GNU General Public License as published by the Free Software Foundation,
 // either version 3 of the License, or (at your option) any later version.
-
+//
 // The Command & Conquer Map Editor and corresponding source code is distributed
 // in the hope that it will be useful, but with permitted additional restrictions
 // under Section 7 of the GPL. See the GNU General Public License in LICENSE.TXT
@@ -77,6 +77,7 @@ namespace MobiusEditor.Tools
         private Building selectedBuilding;
         private Point? selectedBuildingStartLocation;
         private Dictionary<Point, Smudge> selectedBuildingEatenSmudge;
+        private Dictionary<Point, Overlay> selectedBuildingEatenOverlay;
         private Point selectedBuildingPivot;
         private bool startedDragging;
 
@@ -92,13 +93,17 @@ namespace MobiusEditor.Tools
                 {
                     if (placementMode && (selectedBuildingType != null))
                     {
-                        mapPanel.Invalidate(map, new Rectangle(navigationWidget.MouseCell, selectedBuildingType.OverlapBounds.Size));
+                        Rectangle toRefresh = new Rectangle(navigationWidget.MouseCell, selectedBuildingType.OverlapBounds.Size);
+                        if (selectedBuildingType.IsWall) toRefresh.Inflate(1, 1);
+                        mapPanel.Invalidate(map, toRefresh);
                     }
                     selectedBuildingType = value;
                     buildingTypeListBox.SelectedValue = selectedBuildingType;
                     if (placementMode && (selectedBuildingType != null))
                     {
-                        mapPanel.Invalidate(map, new Rectangle(navigationWidget.MouseCell, selectedBuildingType.OverlapBounds.Size));
+                        Rectangle toRefresh = new Rectangle(navigationWidget.MouseCell, selectedBuildingType.OverlapBounds.Size);
+                        if (selectedBuildingType.IsWall) toRefresh.Inflate(1, 1);
+                        mapPanel.Invalidate(map, toRefresh);
                     }
                     mockBuilding.Type = selectedBuildingType;
                     RefreshPreviewPanel();
@@ -180,14 +185,15 @@ namespace MobiusEditor.Tools
                 {
                     building.Trigger = Trigger.None;
                 }
-                ev.MapPanel.Invalidate(ev.Map, building);
+                InvalidateBuildingArea(ev.MapPanel, ev.Map, building);
+                
                 if (baseBuildings != null && buildingPrioritiesOld != null && baseBuildings.Length == buildingPrioritiesOld.Length)
                 {
                     for (Int32 i = 0; i < baseBuildings.Length; ++i)
                     {
                         Building bld = baseBuildings[i];
                         bld.BasePriority = buildingPrioritiesOld[i];
-                        ev.MapPanel.Invalidate(ev.Map, bld);
+                        InvalidateBuildingArea(ev.MapPanel, ev.Map, bld);
                     }
                 }
                 if (ev.Plugin != null)
@@ -203,14 +209,14 @@ namespace MobiusEditor.Tools
                 {
                     building.Trigger = Trigger.None;
                 }
-                ev.MapPanel.Invalidate(ev.Map, building);
+                InvalidateBuildingArea(ev.MapPanel, ev.Map, building);
                 if (baseBuildings != null && buildingPrioritiesNew != null && baseBuildings.Length == buildingPrioritiesNew.Length)
                 {
                     for (Int32 i = 0; i < baseBuildings.Length; ++i)
                     {
                         Building bld = baseBuildings[i];
                         bld.BasePriority = buildingPrioritiesNew[i];
-                        ev.MapPanel.Invalidate(ev.Map, bld);
+                        InvalidateBuildingArea(ev.MapPanel, ev.Map, bld);
                     }
                 }
                 if (ev.Plugin != null)
@@ -236,7 +242,7 @@ namespace MobiusEditor.Tools
 
         private void SelectedBuilding_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            mapPanel.Invalidate(map, sender as Building);
+            InvalidateBuildingArea(mapPanel, map, sender as Building);
         }
 
         private void BuildingTypeListBox_SelectedIndexChanged(object sender, EventArgs e)
@@ -320,6 +326,7 @@ namespace MobiusEditor.Tools
             {
                 AddMoveUndoTracking(selectedBuilding, selectedBuildingStartLocation.Value);
                 selectedBuildingEatenSmudge = null;
+                selectedBuildingEatenOverlay = null;
                 selectedBuilding = null;
                 selectedBuildingStartLocation = null;
                 selectedBuildingPivot = Point.Empty;
@@ -329,10 +336,29 @@ namespace MobiusEditor.Tools
             }
         }
 
+        private static void InvalidateBuildingArea(MapPanel mapPanel, Map map, Building building)
+        {
+            if (building.Type.IsWall)
+            {
+                Rectangle? current = map.Overlappers[building];
+                if (current.HasValue)
+                {
+                    Rectangle refreshArea = Rectangle.Inflate(current.Value, 1, 1);
+                    //map.UpdateWallOverlays(refreshArea.Points().ToHashSet());
+                    mapPanel.Invalidate(map, refreshArea);
+                }
+            }
+            else
+            {
+                mapPanel.Invalidate(map, building);
+            }
+        }
+
         private void AddMoveUndoTracking(Building toMove, Point startLocation)
         {
             Point? finalLocation = map.Buildings[toMove];
-            Dictionary<Point, Smudge> eaten = selectedBuildingEatenSmudge.ToDictionary(p => p.Key, p => p.Value);
+            Dictionary<Point, Smudge> eatenSm = selectedBuildingEatenSmudge?.ToDictionary(p => p.Key, p => p.Value);
+            Dictionary<Point, Overlay> eatenOv = selectedBuildingEatenOverlay?.ToDictionary(p => p.Key, p => p.Value);
             if (!finalLocation.HasValue || finalLocation.Value == selectedBuildingStartLocation)
             {
                 return;
@@ -342,22 +368,35 @@ namespace MobiusEditor.Tools
             Point endLocation = finalLocation.Value;
             void undoAction(UndoRedoEventArgs ev)
             {
-                ev.MapPanel.Invalidate(ev.Map, toMove);
+                InvalidateBuildingArea(ev.MapPanel, ev.Map, toMove);
                 ev.Map.Buildings.Remove(toMove);
-                if (eaten != null)
+                if (eatenSm != null)
                 {
-                    foreach (Point p in eaten.Keys)
+                    foreach (Point p in eatenSm.Keys)
                     {
                         Smudge oldSmudge = ev.Map.Smudge[p];
                         if (oldSmudge == null || !oldSmudge.Type.IsAutoBib)
                         {
-                            ev.Map.Smudge[p] = eaten[p];
+                            ev.Map.Smudge[p] = eatenSm[p];
+                            // DO NOT REMOVE THE POINTS FROM "eaten": the undo might be done again in the future.
+                        }
+                    }
+                }
+                if (eatenOv != null)
+                {
+                    foreach (Point p in eatenOv.Keys)
+                    {
+                        Overlay oldOverlay = ev.Map.Overlay[p];
+                        if (oldOverlay == null || Map.IsIgnorableOverlay(oldOverlay))
+                        {
+                            ev.Map.Overlay[p] = eatenOv[p];
                             // DO NOT REMOVE THE POINTS FROM "eaten": the undo might be done again in the future.
                         }
                     }
                 }
                 ev.Map.Buildings.Add(startLocation, toMove);
-                ev.MapPanel.Invalidate(ev.Map, toMove);
+                InvalidateBuildingArea(ev.MapPanel, ev.Map, toMove);
+                //ev.MapPanel.Invalidate(ev.Map, toMove);
                 if (ev.Plugin != null)
                 {
                     ev.Plugin.Dirty = origDirtyState;
@@ -365,22 +404,34 @@ namespace MobiusEditor.Tools
             }
             void redoAction(UndoRedoEventArgs ev)
             {
-                ev.MapPanel.Invalidate(ev.Map, toMove);
+                InvalidateBuildingArea(ev.MapPanel, ev.Map, toMove);
                 ev.Map.Buildings.Remove(toMove);
-                if (eaten != null)
+                if (eatenSm != null)
                 {
-                    foreach (Point p in eaten.Keys)
+                    foreach (Point p in eatenSm.Keys)
                     {
                         Smudge oldSmudge = ev.Map.Smudge[p];
                         if (oldSmudge == null || !oldSmudge.Type.IsAutoBib)
                         {
-                            ev.Map.Smudge[p] = eaten[p];
+                            ev.Map.Smudge[p] = null;
+                            // DO NOT REMOVE THE POINTS FROM "eaten": the undo might be done again in the future.
+                        }
+                    }
+                }
+                if (eatenOv != null)
+                {
+                    foreach (Point p in eatenOv.Keys)
+                    {
+                        Overlay oldOverlay = ev.Map.Overlay[p];
+                        if (oldOverlay == null || Map.IsIgnorableOverlay(oldOverlay))
+                        {
+                            ev.Map.Overlay[p] = null;
                             // DO NOT REMOVE THE POINTS FROM "eaten": the undo might be done again in the future.
                         }
                     }
                 }
                 ev.Map.Buildings.Add(endLocation, toMove);
-                ev.MapPanel.Invalidate(ev.Map, toMove);
+                InvalidateBuildingArea(ev.MapPanel, ev.Map, toMove);
                 if (ev.Plugin != null)
                 {
                     ev.Plugin.Dirty = true;
@@ -395,8 +446,16 @@ namespace MobiusEditor.Tools
             {
                 if (SelectedBuildingType != null)
                 {
-                    mapPanel.Invalidate(map, new Rectangle(e.OldCell, SelectedBuildingType.OverlapBounds.Size));
-                    mapPanel.Invalidate(map, new Rectangle(e.NewCell, SelectedBuildingType.OverlapBounds.Size));
+                    Rectangle oldRect = new Rectangle(e.OldCell, SelectedBuildingType.OverlapBounds.Size);
+                    Rectangle newRect = new Rectangle(e.NewCell, SelectedBuildingType.OverlapBounds.Size);
+                    if (SelectedBuildingType.IsWall)
+                    {
+                        oldRect.Inflate(1, 1);
+                        newRect.Inflate(1, 1);
+                    }
+                    HashSet<Point> points = oldRect.Points().ToHashSet();
+                    points.UnionWith(newRect.Points());
+                    mapPanel.Invalidate(map, points);
                 }
             }
             else if (selectedBuilding != null)
@@ -409,11 +468,31 @@ namespace MobiusEditor.Tools
                 Building toMove = selectedBuilding;
                 Point oldLocation = map.Buildings[toMove].Value;
                 Point newLocation = new Point(Math.Max(0, e.NewCell.X - selectedBuildingPivot.X), Math.Max(0, e.NewCell.Y - selectedBuildingPivot.Y));
-                mapPanel.Invalidate(map, toMove);
+                InvalidateBuildingArea(mapPanel, map, toMove);
                 Point[] oldBibPoints = null;
                 Point[] newBibPoints = null;
                 Point[] allBibPoints = null;
                 Dictionary<Point, Smudge> refreshList = new Dictionary<Point, Smudge>();
+                if (toMove.Type.IsWall)
+                {
+                    if (selectedBuildingEatenOverlay == null)
+                    {
+                        selectedBuildingEatenOverlay = new Dictionary<Point, Overlay>();
+                    }
+                    if (selectedBuildingEatenOverlay.ContainsKey(e.OldCell))
+                    {
+                        Overlay eatenOvl = selectedBuildingEatenOverlay[e.OldCell];
+                        map.Overlay[e.OldCell] = eatenOvl;
+                        selectedBuildingEatenOverlay.Remove(e.OldCell);
+                    }
+                    Overlay toEatOvl = map.Overlay[e.NewCell];
+                    // Do not allow eating solid overlays
+                    if (toEatOvl != null && !toEatOvl.Type.IsWall && !toEatOvl.Type.IsSolid)
+                    {
+                        selectedBuildingEatenOverlay.Add(e.NewCell, toEatOvl);
+                        map.Overlay[e.NewCell] = null;
+                    }
+                }
                 if (toMove.Type.HasBib)
                 {
                     oldBibPoints = map.Smudge.IntersectsWithCells(toMove.BibCells).Where(x => x.Value.Type.IsAutoBib)
@@ -465,12 +544,14 @@ namespace MobiusEditor.Tools
                 }
                 if (map.Technos.CanAdd(newLocation, toMove, toMove.Type.BaseOccupyMask) && map.Buildings.Add(newLocation, toMove))
                 {
-                    mapPanel.Invalidate(map, toMove);
+                    InvalidateBuildingArea(mapPanel, map, toMove);
                 }
                 else
                 {
                     map.Buildings.Add(oldLocation, toMove);
+                    InvalidateBuildingArea(mapPanel, map, toMove);
                 }
+                // smudge refresh
                 mapPanel.Invalidate(map, refreshList.Keys);
             }
             else if (e.MouseButtons == MouseButtons.Right)
@@ -513,16 +594,25 @@ namespace MobiusEditor.Tools
                     }
                 }
             }
+            Overlay eatenOverlay = building.Type.IsWall ? map.Overlay[location] : null;
             if (map.Buildings.Add(location, building))
             {
                 AdjustBuildPriorities(building, null, out Building[] baseBuildings, out int[] buildingPrioritiesOld, out int[] buildingPrioritiesNew);
-                mapPanel.Invalidate(map, building);
+                if (eatenOverlay != null)
+                {
+                    map.Overlay[location] = null;
+                }
+                InvalidateBuildingArea(mapPanel, map, building);
                 bool origDirtyState = plugin.Dirty;
                 plugin.Dirty = true;
                 void undoAction(UndoRedoEventArgs e)
                 {
-                    e.MapPanel.Invalidate(e.Map, building);
+                    InvalidateBuildingArea(e.MapPanel, e.Map, building);
                     e.Map.Buildings.Remove(building);
+                    if (eatenOverlay != null)
+                    {
+                        map.Overlay[location] = eatenOverlay;
+                    }
                     if (eatenSmudge != null)
                     {
                         foreach (Point p in eatenSmudge.Keys)
@@ -544,7 +634,7 @@ namespace MobiusEditor.Tools
                             if (building != bld)
                             {
                                 bld.BasePriority = buildingPrioritiesOld[i];
-                                e.MapPanel.Invalidate(e.Map, bld);
+                                InvalidateBuildingArea(e.MapPanel, e.Map, bld);
                             }
                         }
                     }
@@ -556,16 +646,20 @@ namespace MobiusEditor.Tools
                 void redoAction(UndoRedoEventArgs e)
                 {
                     e.Map.Buildings.Add(location, building);
+                    if (eatenOverlay != null)
+                    {
+                        map.Overlay[location] = null;
+                    }
                     if (baseBuildings != null && buildingPrioritiesNew != null && baseBuildings.Length == buildingPrioritiesNew.Length)
                     {
                         for (Int32 i = 0; i < baseBuildings.Length; ++i)
                         {
                             Building bld = baseBuildings[i];
                             bld.BasePriority = buildingPrioritiesNew[i];
-                            e.MapPanel.Invalidate(e.Map, bld);
+                            InvalidateBuildingArea(e.MapPanel, e.Map, bld);
                         }
                     }
-                    e.MapPanel.Invalidate(e.Map, building);
+                    InvalidateBuildingArea(e.MapPanel, e.Map, building);
                     if (e.Plugin != null)
                     {
                         e.Plugin.Dirty = true;
@@ -627,7 +721,7 @@ namespace MobiusEditor.Tools
                 int[] buildingPrioritiesOld = null;
 
                 Point[] bibPoints = building.GetBib(actualPoint, map.SmudgeTypes)?.Keys?.ToArray();
-                mapPanel.Invalidate(map, building);
+                InvalidateBuildingArea(mapPanel, map, building);
                 map.Buildings.Remove(building);
                 SmudgeTool.RestoreNearbySmudge(map, bibPoints, null);
                 if (building.BasePriority >= 0)
@@ -641,7 +735,7 @@ namespace MobiusEditor.Tools
                     }
                     foreach (Building baseBuilding in baseBuildings)
                     {
-                        mapPanel.Invalidate(map, baseBuilding);
+                        InvalidateBuildingArea(mapPanel, map, baseBuilding);
                     }
                 }
                 bool origDirtyState = plugin.Dirty;
@@ -655,7 +749,7 @@ namespace MobiusEditor.Tools
                         {
                             Building bld = baseBuildings[i];
                             bld.BasePriority = buildingPrioritiesOld[i];
-                            e.MapPanel.Invalidate(e.Map, bld);
+                            InvalidateBuildingArea(e.MapPanel, e.Map, bld);
                         }
                     }
                     e.MapPanel.Invalidate(e.Map, building);
@@ -666,7 +760,7 @@ namespace MobiusEditor.Tools
                 }
                 void redoAction(UndoRedoEventArgs e)
                 {
-                    e.MapPanel.Invalidate(e.Map, building);
+                    InvalidateBuildingArea(e.MapPanel, e.Map, building);
                     e.Map.Buildings.Remove(building);
                     SmudgeTool.RestoreNearbySmudge(e.Map, bibPoints, null);
                     if (baseBuildings != null)
@@ -675,7 +769,7 @@ namespace MobiusEditor.Tools
                         {
                             Building bld = baseBuildings[i];
                             bld.BasePriority = i;
-                            e.MapPanel.Invalidate(e.Map, bld);
+                            InvalidateBuildingArea(e.MapPanel, e.Map, bld);
                         }
                     }
                     if (e.Plugin != null)
@@ -711,11 +805,31 @@ namespace MobiusEditor.Tools
             }
             if (curVal != newVal)
             {
+                BuildingType selectedOld = SelectedBuildingType;
                 buildingTypeListBox.SelectedIndex = newVal;
-                BuildingType selected = SelectedBuildingType;
-                if (placementMode && selected != null)
+                BuildingType selectedNew = SelectedBuildingType;
+                if (placementMode)
                 {
-                    mapPanel.Invalidate(map, new Rectangle(navigationWidget.MouseCell, selected.OverlapBounds.Size));
+                    HashSet<Point> refreshArea = new HashSet<Point>();
+                    if (selectedNew != null)
+                    {
+                        Rectangle refresh = new Rectangle(navigationWidget.MouseCell, selectedNew.OverlapBounds.Size);
+                        if (selectedNew.IsWall)
+                        {
+                            refresh.Inflate(1, 1);
+                        }
+                        refreshArea.Union(new Rectangle(navigationWidget.MouseCell, selectedNew.OverlapBounds.Size).Points());
+                    }
+                    if (selectedOld != null)
+                    {
+                        Rectangle refresh = new Rectangle(navigationWidget.MouseCell, selectedOld.OverlapBounds.Size);
+                        if (selectedOld.IsWall)
+                        {
+                            refresh.Inflate(1, 1);
+                        }
+                        refreshArea.Union(new Rectangle(navigationWidget.MouseCell, selectedNew.OverlapBounds.Size).Points());
+                    }
+                    mapPanel.Invalidate(map, refreshArea);
                 }
             }
         }
@@ -728,9 +842,12 @@ namespace MobiusEditor.Tools
             }
             placementMode = true;
             navigationWidget.MouseoverSize = Size.Empty;
-            if (SelectedBuildingType != null)
+            BuildingType selected = SelectedBuildingType;
+            if (selected != null)
             {
-                mapPanel.Invalidate(map, new Rectangle(navigationWidget.MouseCell, SelectedBuildingType.OverlapBounds.Size));
+                Rectangle refresh = new Rectangle(navigationWidget.MouseCell, selected.OverlapBounds.Size);
+                if (selected.IsWall) refresh.Inflate(1, 1);
+                mapPanel.Invalidate(map, refresh);
             }
             UpdateStatus();
         }
@@ -743,28 +860,44 @@ namespace MobiusEditor.Tools
             }
             placementMode = false;
             navigationWidget.MouseoverSize = new Size(1, 1);
-            if (SelectedBuildingType != null)
+            BuildingType selected = SelectedBuildingType;
+            if (selected != null)
             {
-                mapPanel.Invalidate(map, new Rectangle(navigationWidget.MouseCell, SelectedBuildingType.OverlapBounds.Size));
+                Rectangle refresh = new Rectangle(navigationWidget.MouseCell, selected.OverlapBounds.Size);
+                if (selected.IsWall) refresh.Inflate(1, 1);
+                mapPanel.Invalidate(map, refresh);
             }
             UpdateStatus();
         }
 
         private void PickBuilding(Point location)
         {
-            if (!(map.Buildings[location] is Building building))
+            BuildingType newPicked = null;
+            Building building = map.Buildings[location] as Building;
+            if (building != null)
             {
-                return;
+                newPicked = building.Type;
             }
-            SelectedBuildingType = building.Type;
-            mockBuilding.Strength = building.Strength;
-            mockBuilding.Direction = building.Direction;
-            mockBuilding.Trigger = building.Trigger;
-            mockBuilding.BasePriority = building.BasePriority;
-            mockBuilding.IsPrebuilt = building.IsPrebuilt;
-            mockBuilding.House = building.House;
-            mockBuilding.Sellable = building.Sellable;
-            mockBuilding.Rebuild = building.Rebuild;
+            else if (Globals.AllowWallBuildings && map.Overlay[location] is Overlay overlay && overlay.Type.IsWall)
+            {
+                string wType = overlay.Type.Name;
+                newPicked = map.BuildingTypes.FirstOrDefault(bl => bl.IsWall && String.Equals(bl.Name, wType, StringComparison.OrdinalIgnoreCase));
+            }
+            if (newPicked != null)
+            {
+                SelectedBuildingType = newPicked;
+            }
+            if (building != null)
+            {
+                mockBuilding.Strength = building.Strength;
+                mockBuilding.Direction = building.Direction;
+                mockBuilding.Trigger = building.Trigger;
+                mockBuilding.BasePriority = building.BasePriority;
+                mockBuilding.IsPrebuilt = building.IsPrebuilt;
+                mockBuilding.House = building.House;
+                mockBuilding.Sellable = building.Sellable;
+                mockBuilding.Rebuild = building.Rebuild;
+            }
         }
 
         private void SelectBuilding(Point location)
@@ -813,7 +946,7 @@ namespace MobiusEditor.Tools
                         bibRender.Add(bibCellRender);
                     }
                 }
-                RenderInfo render = MapRenderer.RenderBuilding(plugin.GameInfo, new Point(0, 0), Globals.PreviewTileSize, Globals.PreviewTileScale, mockBuilding);
+                RenderInfo render = MapRenderer.RenderBuilding(plugin.GameInfo, null, new Point(0, 0), Globals.PreviewTileSize, Globals.PreviewTileScale, mockBuilding);
                 Size previewSize = mockBuilding.OverlapBounds.Size;
                 Bitmap buildingPreview = new Bitmap(previewSize.Width * Globals.PreviewTileWidth, previewSize.Height * Globals.PreviewTileHeight);
                 buildingPreview.SetResolution(96, 96);
@@ -898,7 +1031,11 @@ namespace MobiusEditor.Tools
             building.IsPreview = true;
             if (previewMap.Technos.CanAdd(location, building, building.Type.BaseOccupyMask) && previewMap.Buildings.Add(location, building))
             {
-                mapPanel.Invalidate(previewMap, building);
+                if (building.Type.IsWall)
+                {
+                    previewMap.Overlay[location] = null;
+                }
+                InvalidateBuildingArea(mapPanel, previewMap, building);
             }
         }
 

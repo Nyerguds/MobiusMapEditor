@@ -374,7 +374,7 @@ namespace MobiusEditor.Utility
             this.CurrentTheater = theater;
             currentMixFiles = foundMixFiles;
             currentMixNames = foundMixFiles.Select(info => info.Key).ToList();
-            HashSet<string> foundNames = currentMixNames.ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+            HashSet<string> foundNames = currentMixNames.ToHashSet(StringComparer.OrdinalIgnoreCase);
             currentMixFileInfo.Clear();
             currentMixFileInfo.AddRange(newMixFileInfo.Where(mi => foundNames.Contains(mi.Name)));
         }
@@ -382,7 +382,7 @@ namespace MobiusEditor.Utility
         private bool AddMixFileIfPresent(Dictionary<String, Mixfile> readMixFiles, List<MixInfo> readMixNames, MixInfo mixToAdd, string readFolder)
         {
             // 1. Look for file in given folder
-            // 2. if 'canBeEmbedded', look for file inside archives inside mix files list
+            // 2. if 'CanBeEmbedded', look for file inside archives inside mix files list
             // 3. If found in either, add to list of read mix files
             //if (File.Exists(newMixPath)) { }
             string mixName = mixToAdd.Name;

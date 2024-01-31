@@ -5,13 +5,17 @@
 // software: you can redistribute it and/or modify it under the terms of
 // the GNU General Public License as published by the Free Software Foundation,
 // either version 3 of the License, or (at your option) any later version.
-
+//
 // The Command & Conquer Map Editor and corresponding source code is distributed
 // in the hope that it will be useful, but with permitted additional restrictions
 // under Section 7 of the GPL. See the GNU General Public License in LICENSE.TXT
 // distributed with this program. You should have received a copy of the
 // GNU General Public License along with permitted additional restrictions
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
+
+// EDITMODE: uncomment this to edit the form in the visual editor
+//#define EDITMODE
+
 using System;
 using System.Drawing;
 using System.Reflection;
@@ -24,12 +28,19 @@ using MobiusEditor.Utility;
 
 namespace MobiusEditor.Tools.Dialogs
 {
-    public partial class CellTriggersToolDialog : ToolDialog<CellTriggersTool>
+    public partial class CellTriggersToolDialog :
+#if !EDITMODE
+        ToolDialog<CellTriggersTool>
+#else
+        Form
+#endif
     {
         private Bitmap infoImage;
 
         public CellTriggersToolDialog(Form parentForm)
-            : base(parentForm)
+#if !EDITMODE
+        : base(parentForm)
+#endif
         {
             InitializeComponent();
             infoImage = new Bitmap(27, 27);
@@ -41,14 +52,14 @@ namespace MobiusEditor.Tools.Dialogs
             lblTriggerTypesInfo.Image = infoImage;
             lblTriggerTypesInfo.ImageAlign = ContentAlignment.MiddleCenter;
         }
-
+#if !EDITMODE
         protected override void InitializeInternal(MapPanel mapPanel, MapLayerFlag activeLayers, ToolStripStatusLabel toolStatusLabel, ToolTip mouseToolTip,
             IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs, ToolType> undoRedoList)
         {
             Tool = new CellTriggersTool(mapPanel, activeLayers, toolStatusLabel, triggerComboBox, btnJumpTo, plugin, undoRedoList);
             Tool.OnTriggerToolTipChanged += this.Tool_OnTriggerToolTipChanged;
         }
-
+#endif
         private void Tool_OnTriggerToolTipChanged(Object sender, EventArgs e)
         {
             Point pt = MousePosition;
@@ -63,6 +74,7 @@ namespace MobiusEditor.Tools.Dialogs
 
         private void LblTriggerTypesInfo_MouseEnter(Object sender, EventArgs e)
         {
+#if !EDITMODE
             Control target = sender as Control;
             if (target == null || Tool == null || Tool.TriggerToolTip == null)
             {
@@ -75,6 +87,7 @@ namespace MobiusEditor.Tools.Dialogs
             // private void SetTool(IWin32Window win, string text, TipInfo.Type type, Point position)
             m.Invoke(toolTip1, new object[] { target, Tool.TriggerToolTip, 2, resPoint });
             //this.toolTip1.Show(triggerToolTip, target, target.Width, 0, 10000);
+#endif
         }
 
         private void LblTriggerInfo_MouseLeave(Object sender, EventArgs e)

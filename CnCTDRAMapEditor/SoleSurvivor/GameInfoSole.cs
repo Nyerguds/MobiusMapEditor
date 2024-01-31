@@ -79,21 +79,19 @@ namespace MobiusEditor.SoleSurvivor
 
         public override bool SupportsMapLayer(MapLayerFlag mlf)
         {
-            return mlf != MapLayerFlag.BuildingFakes
-                && mlf != MapLayerFlag.EffectRadius
-                && (!Globals.NoOwnedObjectsInSole ||
-                   (mlf != MapLayerFlag.Buildings
-                 && mlf != MapLayerFlag.Units
-                 && mlf != MapLayerFlag.Infantry
-                 && mlf != MapLayerFlag.BuildingRebuild));
+            MapLayerFlag badLayers = MapLayerFlag.BuildingFakes | MapLayerFlag.EffectRadius;
+            if (Globals.NoOwnedObjectsInSole) {
+                badLayers |= MapLayerFlag.Buildings | MapLayerFlag.Units | MapLayerFlag.Infantry | MapLayerFlag.BuildingRebuild;
+            }
+            return mlf == (mlf & ~badLayers);
         }
 
-        public override Tile GetWaypointIcon()
+        public override Bitmap GetWaypointIcon()
         {
             return GetTile("beacon", 0, "mouse", 12);
         }
 
-        public override Tile GetCellTriggerIcon()
+        public override Bitmap GetCellTriggerIcon()
         {
             return GetTile("mine", 3, "mine.shp", 3);
         }

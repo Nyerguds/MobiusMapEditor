@@ -38,9 +38,7 @@ namespace MobiusEditor.Controls
         protected override void OnMeasureItem(MeasureItemEventArgs e)
         {
             base.OnMeasureItem(e);
-
-            var typeItem = Items[e.Index] as TypeItem<IBrowsableType>;
-            if (typeItem?.Type != null)
+            if (e.Index >= 0 && e.Index < Items.Count && Items[e.Index] is TypeItem<IBrowsableType> typeItem && typeItem.Type != null)
             {
                 StringFormat stringFormat = new StringFormat
                 {
@@ -58,46 +56,37 @@ namespace MobiusEditor.Controls
 
             e.DrawBackground();
 
-            if ((e.Index >= 0) && (e.Index < Items.Count))
+            if (e.Index >= 0 && e.Index < Items.Count && Items[e.Index] is TypeItem<IBrowsableType> typeItem && typeItem.Type != null)
             {
-                var typeItem = Items[e.Index] as TypeItem<IBrowsableType>;
-                if (typeItem?.Type != null)
+                StringFormat stringFormat = new StringFormat
                 {
-                    StringFormat stringFormat = new StringFormat
+                    LineAlignment = StringAlignment.Center
+                };
+                Brush textColor = ((e.State & DrawItemState.Selected) == DrawItemState.Selected) ? SystemBrushes.HighlightText : SystemBrushes.WindowText;
+                SizeF textSize = e.Graphics.MeasureString(typeItem.Name, Font, e.Bounds.Width, stringFormat);
+                // To int, with leniency for rounding errors.
+                int textSizeInt = (int)textSize.Width + (textSize.Width % 1 < 0.01 ? 0 : 1);
+                e.Graphics.DrawString(typeItem.Name, Font, textColor, e.Bounds, stringFormat);
+                if ((e.State & DrawItemState.ComboBoxEdit) == DrawItemState.None)
+                {
+                    Image thumbnail = typeItem.Type.Thumbnail ?? MissingThumbnail;
+                    int thumbnailWidth = Math.Min(e.Bounds.Width - textSizeInt, thumbnail.Width);
+                    int thumbnailHeight = Math.Min(e.Bounds.Height, thumbnail.Height);
+                    double widthRatio = (e.Bounds.Width - textSizeInt) / (double)thumbnail.Width;
+                    double heightRatio = e.Bounds.Height / (double)thumbnail.Height;
+                    if (heightRatio < widthRatio)
                     {
-                        LineAlignment = StringAlignment.Center
-                    };
-
-                    var textColor = ((e.State & DrawItemState.Selected) == DrawItemState.Selected) ? SystemBrushes.HighlightText : SystemBrushes.WindowText;
-                    var textSize = e.Graphics.MeasureString(typeItem.Name, Font, e.Bounds.Width, stringFormat);
-                    // To int, with leniency for rounding errors.
-                    var textSizeInt = (int)textSize.Width + (textSize.Width % 1 < 0.01 ? 0 : 1);
-                    e.Graphics.DrawString(typeItem.Name, Font, textColor, e.Bounds, stringFormat);
-
-                    if ((e.State & DrawItemState.ComboBoxEdit) == DrawItemState.None)
-                    {
-                        var thumbnail = typeItem.Type.Thumbnail ?? MissingThumbnail;
-                        var thumbnailWidth = Math.Min(e.Bounds.Width - textSizeInt, thumbnail.Width);
-                        var thumbnailHeight = Math.Min(e.Bounds.Height, thumbnail.Height);
-
-                        double widthRatio = (e.Bounds.Width - textSizeInt) / (double)thumbnail.Width;
-                        double heightRatio = e.Bounds.Height / (double)thumbnail.Height;
-                        if (heightRatio < widthRatio)
-                        {
-                            thumbnailWidth = (int)Math.Round(thumbnail.Width * heightRatio);
-                        }
-                        else
-                        {
-                            thumbnailHeight = (int)Math.Round(thumbnail.Height * widthRatio);
-                        }
-
-                        var thumbnailSize = new Size(thumbnailWidth, thumbnailHeight);
-                        var thumbnailBounds = new Rectangle(new Point(e.Bounds.Right - thumbnailSize.Width, e.Bounds.Top), thumbnailSize);
-                        e.Graphics.DrawImage(thumbnail, thumbnailBounds);
+                        thumbnailWidth = (int)Math.Round(thumbnail.Width * heightRatio);
                     }
+                    else
+                    {
+                        thumbnailHeight = (int)Math.Round(thumbnail.Height * widthRatio);
+                    }
+                    var thumbnailSize = new Size(thumbnailWidth, thumbnailHeight);
+                    var thumbnailBounds = new Rectangle(new Point(e.Bounds.Right - thumbnailSize.Width, e.Bounds.Top), thumbnailSize);
+                    e.Graphics.DrawImage(thumbnail, thumbnailBounds);
                 }
             }
-
             e.DrawFocusRectangle();
         }
 

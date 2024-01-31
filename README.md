@@ -2,7 +2,7 @@
 
 ## Project
 
-Mobius Map Editor is an enhanced version of the map editor supplied with the Command & Conquer Remastered Collection, based on the source code released by Electronic Arts.
+Mobius Map Editor is an enhanced version of the map editor supplied with the Command & Conquer Remastered Collection, based on [the source code released by Electronic Arts](https://github.com/electronicarts/CnC_Remastered_Collection/).
 
 The editor can edit maps for Command & Conquer Tiberian Dawn, Sole Survivor and Red Alert. The goal of the project is to improve the usability and convenience of the map editor, fix bugs, improve and clean its code-base, enhance compatibility with different kinds of systems and enhance the editor's support for mods.
 

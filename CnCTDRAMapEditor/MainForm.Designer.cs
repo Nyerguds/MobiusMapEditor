@@ -5,7 +5,7 @@
 // software: you can redistribute it and/or modify it under the terms of
 // the GNU General Public License as published by the Free Software Foundation,
 // either version 3 of the License, or (at your option) any later version.
-
+//
 // The Command & Conquer Map Editor and corresponding source code is distributed
 // in the hope that it will be useful, but with permitted additional restrictions
 // under Section 7 of the GPL. See the GNU General Public License in LICENSE.TXT
@@ -1150,13 +1150,14 @@ namespace MobiusEditor
         private MobiusEditor.Controls.ViewToolStripButton resourcesToolStripButton;
         private MobiusEditor.Controls.ViewToolStripButton wallsToolStripButton;
         private MobiusEditor.Controls.ViewToolStripButton waypointsToolStripButton;
-        private Controls.MapPanel mapPanel;
+        private MobiusEditor.Controls.ViewToolStripButton cellTriggersToolStripButton;
+        private MobiusEditor.Controls.ViewToolStripButton selectToolStripButton;
+        private MobiusEditor.Controls.MapPanel mapPanel;
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem3;
         private System.Windows.Forms.ToolStripMenuItem fileRecentFilesMenuItem;
         private System.Windows.Forms.ToolStripMenuItem fileSaveMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem4;
         private System.Windows.Forms.ToolStripMenuItem developerGoToINIMenuItem;
-        private MobiusEditor.Controls.ViewToolStripButton cellTriggersToolStripButton;
         private System.Windows.Forms.ToolStripMenuItem settingsTeamTypesMenuItem;
         private System.Windows.Forms.ToolStripMenuItem settingsTriggersMenuItem;
         private System.Windows.Forms.ToolStripMenuItem viewLayersToolStripMenuItem;
@@ -1183,7 +1184,6 @@ namespace MobiusEditor
         private System.Windows.Forms.ToolStripMenuItem viewIndicatorsCellTriggersMenuItem;
         private System.Windows.Forms.ToolStripMenuItem editClearUndoRedoMenuItem;
         private System.Windows.Forms.ToolStripMenuItem toolsRandomizeTilesMenuItem;
-        private Controls.ViewToolStripButton selectToolStripButton;
         private System.Windows.Forms.ToolStripMenuItem viewIndicatorsFootballAreaMenuItem;
         private System.Windows.Forms.ToolStripMenuItem statisticsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem toolsStatsGameObjectsMenuItem;

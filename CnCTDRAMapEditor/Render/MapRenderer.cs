@@ -5,7 +5,7 @@
 // software: you can redistribute it and/or modify it under the terms of
 // the GNU General Public License as published by the Free Software Foundation,
 // either version 3 of the License, or (at your option) any later version.
-
+//
 // The Command & Conquer Map Editor and corresponding source code is distributed
 // in the hope that it will be useful, but with permitted additional restrictions
 // under Section 7 of the GPL. See the GNU General Public License in LICENSE.TXT
@@ -339,7 +339,7 @@ namespace MobiusEditor.Render
                     {
                         continue;
                     }
-                    overlappingRenderList.Add(RenderBuilding(gameInfo, topLeft, tileSize, tileScale, building));
+                    overlappingRenderList.Add(RenderBuilding(gameInfo, map, topLeft, tileSize, tileScale, building));
                 }
             }
             if ((layers & MapLayerFlag.Infantry) != MapLayerFlag.None)
@@ -590,7 +590,7 @@ namespace MobiusEditor.Render
             return new RenderInfo(usedCenter, render, terrain);
         }
 
-        public static RenderInfo RenderBuilding(GameInfo gameInfo, Point topLeft, Size tileSize, double tileScale, Building building)
+        public static RenderInfo RenderBuilding(GameInfo gameInfo, Map map, Point topLeft, Size tileSize, double tileScale, Building building)
         {
             Color tint = building.Tint;
             Int32 icon = building.Type.FrameOFfset;
@@ -602,7 +602,7 @@ namespace MobiusEditor.Render
             bool isDamaged = building.Strength <= healthyMin;
             bool hasCollapseFrame = false;
             // Only fetch if damaged. BuildingType.IsSingleFrame is an override for the RA mines. Everything else works with one simple logic.
-            if (isDamaged && !building.Type.IsSingleFrame)
+            if (isDamaged && !building.Type.IsSingleFrame && !building.Type.IsWall)
             {
                 maxIcon = Globals.TheTilesetManager.GetTileDataLength(building.Type.GraphicsSource);
                 hasCollapseFrame = maxIcon > 1 && maxIcon % 2 == 1;
@@ -616,6 +616,10 @@ namespace MobiusEditor.Render
                 {
                     icon += damageIconOffs;
                 }
+            }
+            else if (building.Type.IsWall)
+            {
+                icon += GetBuildingOverlayIcon(map, topLeft, building);
             }
             else
             {
@@ -702,6 +706,44 @@ namespace MobiusEditor.Render
             // "Z-Order" is for sorting buildings as floor level (0), flat on the floor (5), or sticking out of the floor (default; 10).
             // It determines whether pieces on unoccupied cells should overlap objects on these cells or be drawn below them.
             return new RenderInfo(usedCenter, render, building.Type.ZOrder, building);
+        }
+
+        private static int GetBuildingOverlayIcon(Map map, Point topLeft, Building building)
+        {
+            if (!building.Type.IsWall || map == null)
+            {
+                return 0;
+            }
+            BuildingType bt = building.Type;
+
+            bool hasNorthWall = (map.Metrics.Adjacent(topLeft, FacingType.North, out Point north) ? map.Buildings[north] as Building : null)?.Type == bt;
+            bool hasEastWall = (map.Metrics.Adjacent(topLeft, FacingType.East, out Point east) ? map.Buildings[east] as Building : null)?.Type == bt;
+            bool hasSouthWall = (map.Metrics.Adjacent(topLeft, FacingType.South, out Point south) ? map.Buildings[south] as Building : null)?.Type == bt;
+            bool hasWestWall = (map.Metrics.Adjacent(topLeft, FacingType.West, out Point west) ? map.Buildings[west] as Building : null)?.Type == bt;
+
+            String btName = bt.Name;
+            hasNorthWall |= map.Overlay.Adjacent(topLeft, FacingType.North)?.Type.Name == btName;
+            hasEastWall |= map.Overlay.Adjacent(topLeft, FacingType.East)?.Type.Name == btName;
+            hasSouthWall |= map.Overlay.Adjacent(topLeft, FacingType.South)?.Type.Name == btName;
+            hasWestWall |= map.Overlay.Adjacent(topLeft, FacingType.West)?.Type.Name == btName;
+            int icon = 0;
+            if (hasNorthWall)
+            {
+                icon |= 1;
+            }
+            if (hasEastWall)
+            {
+                icon |= 2;
+            }
+            if (hasSouthWall)
+            {
+                icon |= 4;
+            }
+            if (hasWestWall)
+            {
+                icon |= 8;
+            }
+            return icon;
         }
 
         public static RenderInfo RenderInfantry(Point topLeft, Size tileSize, Infantry infantry, InfantryStoppingType infantryStoppingType)

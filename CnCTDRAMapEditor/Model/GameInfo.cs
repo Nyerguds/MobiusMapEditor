@@ -8,10 +8,11 @@ using System.Drawing;
 namespace MobiusEditor.Model
 {
     /// <summary>
-    /// <para>The GameInfo class is meant to get rid of logic checking the <see cref="Model.GameType"/> enum
-    /// and centralise it all in a set of game-specific classes instead. The main
-    /// principle of this class, as opposed to an <see cref="IGamePlugin"/> implementation, is
-    /// that <b>it contains no variable data</b>. Its creation does not initialise anything.
+    /// <para>The GameInfo class is meant to get rid of most of the logic checking the
+    /// <see cref="Model.GameType"/> enum and instead centralise it all in a set of game-specific
+    /// classes implementating this one. The main principle of this class, as opposed to an
+    /// <see cref="IGamePlugin"/> implementation, is that <b>it contains no variable data</b>.
+    /// Its creation does not initialise anything.
     /// </para><para>
     /// It has properties and methods that fetch game-specific information or execute
     /// game-specific logic, but returns results based either on hardcoded data, or
@@ -53,31 +54,48 @@ namespace MobiusEditor.Model
         #region functions
         public abstract IGamePlugin CreatePlugin(bool mapImage, bool megaMap);
         public abstract void InitClassicFiles(MixfileManager mfm, List<string> loadErrors, List<string> fileLoadErrors, bool forRemaster);
+        /// <summary>Retrieves the typical opposing player for the given House name, e.g. for TD, GoodGuy will give BadGuy.</summary>
+        /// <param name="player">The player to get the opposing player for.</param>
+        /// <returns>The typical opposing player for the given House.</returns>
         public abstract string GetClassicOpposingPlayer(string player);
+        /// <summary>Checks if the given map layer is relevant for this game type.</summary>
+        /// <param name="mlf">The map layer flag to check.</param>
+        /// <returns>True if the given layer is used for this game.</returns>
         public abstract bool SupportsMapLayer(MapLayerFlag mlf);
-        public abstract Tile GetWaypointIcon();
-        public abstract Tile GetCellTriggerIcon();
+        /// <summary>Fetches the waypoint icon for the UI. This returns a new image that needs to be disposed afterwards.</summary>
+        /// <returns>The waypoints UI icon</returns>
+        public abstract Bitmap GetWaypointIcon();
+        /// <summary>Fetches the celltriggers icon for the UI. This returns a new image that needs to be disposed afterwards.</summary>
+        /// <returns>The celltriggers UI icon</returns>
+        public abstract Bitmap GetCellTriggerIcon();
+        /// <summary>Fetches the qelect-mode icon for the UI. This returns a new image that needs to be disposed afterwards.</summary>
+        /// <returns>The select mode UI icon</returns>
         public abstract Bitmap GetSelectIcon();
         /// <summary>Checks whether the briefing has any kind of issues concerning length or supported characters.</summary>
         /// <param name="briefing">The briefing to check</param>
         /// <returns>Null if everything is okay, otherwise any issues to show on the user interface.</returns>
         public abstract string EvaluateBriefing(string briefing);
-        /// <summary>Checks whether the name has a default map name that is considered empty by this game plugin.</summary>
+        /// <summary>Checks whether the map has a default map name that is considered empty by this game type.</summary>
         /// <param name="name">Map name to check.</param>
-        /// <returns>True if the given name is considered empty by this game plugin.</returns>
+        /// <returns>True if the given name is considered empty by this game type.</returns>
         public abstract bool MapNameIsEmpty(string name);
         #endregion
 
         #region protected functions
-        protected Tile GetTile(string remasterSprite, int remastericon, string classicSprite, int classicicon)
+        protected Bitmap GetTile(string remasterSprite, int remastericon, string classicSprite, int classicicon)
         {
             Tile tile;
-            if (!Globals.UseClassicFiles && Globals.TheTilesetManager.GetTileData(remasterSprite, remastericon, out tile))
+            if (!Globals.UseClassicFiles)
             {
-                return tile;
+                if (Globals.TheTilesetManager.GetTileData(remasterSprite, remastericon, out tile) && tile != null && tile.Image != null)
+                    return new Bitmap(tile.Image);
             }
-            Globals.TheTilesetManager.GetTileData(classicSprite, classicicon, out tile);
-            return tile;
+            else
+            {
+                if (Globals.TheTilesetManager.GetTileData(classicSprite, classicicon, out tile) && tile != null && tile.Image != null)
+                    return new Bitmap(tile.Image);
+            }
+            return null;
         }
 
         /// <summary>

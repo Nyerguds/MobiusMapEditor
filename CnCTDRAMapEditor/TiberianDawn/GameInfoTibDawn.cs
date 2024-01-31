@@ -79,17 +79,16 @@ namespace MobiusEditor.TiberianDawn
         
         public override bool SupportsMapLayer(MapLayerFlag mlf)
         {
-            return mlf != MapLayerFlag.BuildingFakes
-                && mlf != MapLayerFlag.EffectRadius
-                && mlf != MapLayerFlag.FootballArea;
+            MapLayerFlag badLayers = MapLayerFlag.BuildingFakes | MapLayerFlag.EffectRadius | MapLayerFlag.FootballArea;
+            return mlf == (mlf & ~badLayers);
         }
 
-        public override Tile GetWaypointIcon()
+        public override Bitmap GetWaypointIcon()
         {
             return GetTile("beacon", 0, "mouse", 12);
         }
 
-        public override Tile GetCellTriggerIcon()
+        public override Bitmap GetCellTriggerIcon()
         {
             return GetTile("mine", 3, "mine.shp", 3);
         }

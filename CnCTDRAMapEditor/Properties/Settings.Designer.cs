@@ -12,7 +12,7 @@ namespace MobiusEditor.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "17.2.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "17.8.0.0")]
     internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
@@ -79,7 +79,7 @@ namespace MobiusEditor.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        [global::System.Configuration.DefaultSettingValueAttribute("None")]
         public string ForceLanguage {
             get {
                 return ((string)(this["ForceLanguage"]));
@@ -223,7 +223,7 @@ namespace MobiusEditor.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("64, 0, 0, 255")]
+        [global::System.Configuration.DefaultSettingValueAttribute("40, 0, 0, 255")]
         public global::System.Drawing.Color MapGridColor {
             get {
                 return ((global::System.Drawing.Color)(this["MapGridColor"]));
@@ -398,6 +398,15 @@ namespace MobiusEditor.Properties {
         public bool ApplyHarvestBug {
             get {
                 return ((bool)(this["ApplyHarvestBug"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool DontAllowWallsAsBuildings {
+            get {
+                return ((bool)(this["DontAllowWallsAsBuildings"]));
             }
         }
         
@@ -611,6 +620,18 @@ namespace MobiusEditor.Properties {
             }
             set {
                 this["ApplicationVersion"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string LastCheckVersion {
+            get {
+                return ((string)(this["LastCheckVersion"]));
+            }
+            set {
+                this["LastCheckVersion"] = value;
             }
         }
     }

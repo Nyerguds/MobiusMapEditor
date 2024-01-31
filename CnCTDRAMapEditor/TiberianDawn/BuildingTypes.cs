@@ -5,7 +5,7 @@
 // software: you can redistribute it and/or modify it under the terms of
 // the GNU General Public License as published by the Free Software Foundation,
 // either version 3 of the License, or (at your option) any later version.
-
+//
 // The Command & Conquer Map Editor and corresponding source code is distributed
 // in the hope that it will be useful, but with permitted additional restrictions
 // under Section 7 of the GPL. See the GNU General Public License in LICENSE.TXT
@@ -87,6 +87,12 @@ namespace MobiusEditor.TiberianDawn
         public static readonly BuildingType V36 = new BuildingType(58, "v36", "TEXT_STRUCTURE_TITLE_CIV33", 0, 0, 1, 1, null, "Neutral", BuildingTypeFlag.TheaterDependent);
         public static readonly BuildingType V37 = new BuildingType(59, "v37", "TEXT_STRUCTURE_TITLE_CIV34", 0, 0, 4, 2, "0111 0111", "Neutral", BuildingTypeFlag.TheaterDependent, BuildingType.ZOrderFlat);
 
+        public static readonly BuildingType Sandbag = new BuildingType(60, "sbag", "TEXT_STRUCTURE_TITLE_GDI_SANDBAGS", 0, 0, 1, 1, null, "Goodguy", BuildingTypeFlag.Wall | BuildingTypeFlag.NoRemap);
+        public static readonly BuildingType Cyclone = new BuildingType(61, "cycl", "TEXT_STRUCTURE_TITLE_GDI_CHAIN_LINK", 0, 0, 1, 1, null, "Goodguy", BuildingTypeFlag.Wall | BuildingTypeFlag.NoRemap);
+        public static readonly BuildingType Brick = new BuildingType(62, "brik", "TEXT_STRUCTURE_TITLE_GDI_CONCRETE", 0, 0, 1, 1, null, "Goodguy", BuildingTypeFlag.Wall | BuildingTypeFlag.NoRemap);
+        public static readonly BuildingType Barbwire = new BuildingType(63, "barb", "TEXT_STRUCTURE_RA_BARB", 0, 0, 1, 1, null, "Goodguy", BuildingTypeFlag.Wall | BuildingTypeFlag.NoRemap);
+        public static readonly BuildingType Wood = new BuildingType(64, "wood", "TEXT_STRUCTURE_TD_WOOD", 0, 0, 1, 1, null, "Goodguy", BuildingTypeFlag.Wall | BuildingTypeFlag.NoRemap);
+
         private static readonly BuildingType[] Types;
 
         static BuildingTypes()
@@ -99,8 +105,8 @@ namespace MobiusEditor.TiberianDawn
 
         public static IEnumerable<BuildingType> GetTypes()
         {
-            // Always preserve originals
-            return Types.Select(b => b.Clone());
+            // Always preserve originals by cloning. Filter out wall buildings if needed.
+            return Types.Where(b => Globals.AllowWallBuildings || !b.IsWall).Select(b => b.Clone());
         }
     }
 }

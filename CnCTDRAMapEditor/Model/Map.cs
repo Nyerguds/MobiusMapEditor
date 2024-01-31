@@ -5,7 +5,7 @@
 // software: you can redistribute it and/or modify it under the terms of
 // the GNU General Public License as published by the Free Software Foundation,
 // either version 3 of the License, or (at your option) any later version.
-
+//
 // The Command & Conquer Map Editor and corresponding source code is distributed
 // in the hope that it will be useful, but with permitted additional restrictions
 // under Section 7 of the GPL. See the GNU General Public License in LICENSE.TXT
@@ -669,6 +669,10 @@ namespace MobiusEditor.Model
             {
                 this.UpdateWallOverlays(locations);
             }
+            if (Globals.AllowWallBuildings && this.invalidateLayers.TryGetValue(MapLayerFlag.Buildings, out locations))
+            {
+                this.UpdateWallOverlays(locations);
+            }
             if (this.invalidateLayers.TryGetValue(MapLayerFlag.Overlay, out locations))
             {
                 this.UpdateConcreteOverlays(locations);
@@ -784,31 +788,24 @@ namespace MobiusEditor.Model
             }
         }
 
-        private void UpdateWallOverlays(ISet<Point> locations)
+        public void UpdateWallOverlays(ISet<Point> locations)
         {
             foreach ((Point location, Overlay overlay) in this.Overlay.IntersectsWithPoints(locations).Where(o => o.Value.Type.IsWall))
             {
-                Overlay northWall = this.Overlay.Adjacent(location, FacingType.North);
-                Overlay eastWall = this.Overlay.Adjacent(location, FacingType.East);
-                Overlay southWall = this.Overlay.Adjacent(location, FacingType.South);
-                Overlay westWall = this.Overlay.Adjacent(location, FacingType.West);
-                int icon = 0;
-                if (northWall?.Type == overlay.Type)
+                OverlayType ovt = overlay.Type;
+                bool hasNorthWall = this.Overlay.Adjacent(location, FacingType.North)?.Type == ovt;
+                bool hasEastWall = this.Overlay.Adjacent(location, FacingType.East)?.Type == ovt;
+                bool hasSouthWall = this.Overlay.Adjacent(location, FacingType.South)?.Type == ovt;
+                bool hasWestWall = this.Overlay.Adjacent(location, FacingType.West)?.Type == ovt;
+                if (Globals.AllowWallBuildings)
                 {
-                    icon |= 1;
+                    String ovtName = overlay.Type.Name;
+                    hasNorthWall |= (this.Metrics.Adjacent(location, FacingType.North, out Point north) ? this.Buildings[north] as Building : null)?.Type.Name == ovtName;
+                    hasEastWall |= (this.Metrics.Adjacent(location, FacingType.East, out Point east) ? this.Buildings[east] as Building : null)?.Type.Name == ovtName;
+                    hasSouthWall |= (this.Metrics.Adjacent(location, FacingType.South, out Point south) ? this.Buildings[south] as Building : null)?.Type.Name == ovtName;
+                    hasWestWall |= (this.Metrics.Adjacent(location, FacingType.West, out Point west) ? this.Buildings[west] as Building : null)?.Type.Name == ovtName;
                 }
-                if (eastWall?.Type == overlay.Type)
-                {
-                    icon |= 2;
-                }
-                if (southWall?.Type == overlay.Type)
-                {
-                    icon |= 4;
-                }
-                if (westWall?.Type == overlay.Type)
-                {
-                    icon |= 8;
-                }
+                int icon = (hasNorthWall ? 1 : 0) | (hasEastWall ? 2 : 0) | (hasSouthWall ? 4 : 0) | (hasWestWall ? 8 : 0);
                 overlay.Icon = icon;
             }
         }
@@ -1397,7 +1394,7 @@ namespace MobiusEditor.Model
                 tileType = m.Groups[1].Value;
                 tileIcon = Int32.Parse(m.Groups[2].Value);
             }
-            tile = this.TemplateTypes.Where(t => String.Equals(tileType, t.Name, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+            tile = this.TemplateTypes.Where(t => String.Equals(tileType, t.Name, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
             string th = this.Theater.Name;
             if (tile == null)
             {
@@ -2176,6 +2173,12 @@ namespace MobiusEditor.Model
             {
                 this.Technos.Add(e.Location, e.Occupier, building.Type.BaseOccupyMask);
                 this.AddBibs(e.Location, building);
+                if (building.Type.IsWall)
+                {
+                    Rectangle toRefresh = new Rectangle(e.Location, building.Type.OverlapBounds.Size);
+                    toRefresh.Inflate(1, 1);
+                    this.UpdateWallOverlays(toRefresh.Points().ToHashSet());
+                }
             }
             else
             {
@@ -2188,6 +2191,12 @@ namespace MobiusEditor.Model
             if (e.Occupier is Building building)
             {
                 this.RemoveBibs(building);
+                if (building.Type.IsWall)
+                {
+                    Rectangle toRefresh = new Rectangle(e.Location, building.Type.OverlapBounds.Size);
+                    toRefresh.Inflate(1, 1);
+                    this.UpdateWallOverlays(toRefresh.Points().ToHashSet());
+                }
             }
             this.Technos.Remove(e.Occupier);
         }
@@ -2510,8 +2519,8 @@ namespace MobiusEditor.Model
 
         public IEnumerable<string> AssessPower(HashSet<string> housesWithProd)
         {
-            Dictionary<String, int[]> powerWithUnbuilt = new Dictionary<string, int[]>(StringComparer.CurrentCultureIgnoreCase);
-            Dictionary<String, int[]> powerWithoutUnbuilt = new Dictionary<string, int[]>(StringComparer.CurrentCultureIgnoreCase);
+            Dictionary<String, int[]> powerWithUnbuilt = new Dictionary<string, int[]>(StringComparer.OrdinalIgnoreCase);
+            Dictionary<String, int[]> powerWithoutUnbuilt = new Dictionary<string, int[]>(StringComparer.OrdinalIgnoreCase);
             foreach (HouseType house in this.HouseTypes)
             {
                 if (housesWithProd.Contains(house.Name))
@@ -2520,7 +2529,7 @@ namespace MobiusEditor.Model
                 }
                 powerWithoutUnbuilt[house.Name] = new int[3];
             }
-            HashSet<String> hasDamagedPowerPlants = new HashSet<string>(StringComparer.CurrentCultureIgnoreCase);
+            HashSet<String> hasDamagedPowerPlants = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach ((_, Building bld) in this.Buildings.OfType<Building>())
             {
                 int bldUsage = bld.Type.PowerUsage;
@@ -2612,8 +2621,8 @@ namespace MobiusEditor.Model
 
         public IEnumerable<string> AssessStorage(HashSet<string> housesWithProd)
         {
-            Dictionary<String, int> storageWithUnbuilt = new Dictionary<string, int>(StringComparer.CurrentCultureIgnoreCase);
-            Dictionary<String, int> storageWithoutUnbuilt = new Dictionary<string, int>(StringComparer.CurrentCultureIgnoreCase);
+            Dictionary<String, int> storageWithUnbuilt = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            Dictionary<String, int> storageWithoutUnbuilt = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             foreach (HouseType house in this.HouseTypes)
             {
                 if (housesWithProd.Contains(house.Name))

@@ -5,7 +5,7 @@
 // software: you can redistribute it and/or modify it under the terms of
 // the GNU General Public License as published by the Free Software Foundation,
 // either version 3 of the License, or (at your option) any later version.
-
+//
 // The Command & Conquer Map Editor and corresponding source code is distributed
 // in the hope that it will be useful, but with permitted additional restrictions
 // under Section 7 of the GPL. See the GNU General Public License in LICENSE.TXT
@@ -116,7 +116,7 @@ namespace MobiusEditor
         private SimpleMultiThreading loadMultiThreader;
         private SimpleMultiThreading saveMultiThreader;
         public Label StatusLabel { get; set; }
-        private Point lastInfoPoint = new Point(-1,-1);
+        private Point lastInfoPoint = new Point(-1, -1);
         private Point lastInfoSubPixelPoint = new Point(-1, -1);
         private String lastDescription = null;
 
@@ -1171,7 +1171,8 @@ namespace MobiusEditor
             {
                 NewFile(withImage, imagePath);
             }
-            else {
+            else
+            {
                 PromptSaveMap(() => NewFile(withImage, imagePath), false);
             }
         }
@@ -1260,7 +1261,7 @@ namespace MobiusEditor
                 return;
             }
             GameInfo gType = GameTypeFactory.GetGameInfo(gameType);
-            TheaterType[] theaters = gType != null ? gType.AllTheaters: null;
+            TheaterType[] theaters = gType != null ? gType.AllTheaters : null;
             TheaterType theaterObj = theaters == null ? null : theaters.Where(th => th.Name.Equals(theater, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
             if (theaterObj == null)
             {
@@ -1289,7 +1290,7 @@ namespace MobiusEditor
             loadMultiThreader.ExecuteThreaded(
                 () => LoadFile(name, fileType, gType, theater, isMegaMap),
                 PostLoad, true,
-                (e,l) => LoadUnloadUi(e, l, loadMultiThreader),
+                (e, l) => LoadUnloadUi(e, l, loadMultiThreader),
                 "Loading map");
         }
 
@@ -1477,6 +1478,7 @@ namespace MobiusEditor
             fileRecentFilesMenuItem.Enabled = enableUI;
             viewLayersToolStripMenuItem.Enabled = enableUI;
             viewIndicatorsToolStripMenuItem.Enabled = enableUI;
+            InfoCheckForUpdatesMenuItem.Enabled = enableUI;
             if (!enableUI)
             {
                 Unload();
@@ -1497,6 +1499,7 @@ namespace MobiusEditor
             fileRecentFilesMenuItem.Enabled = enableUI;
             viewLayersToolStripMenuItem.Enabled = enableUI;
             viewIndicatorsToolStripMenuItem.Enabled = enableUI;
+            InfoCheckForUpdatesMenuItem.Enabled = enableUI;
             EnableDisableMenuItems(enableUI);
             mapPanel.Enabled = enableUI;
             if (enableUI)
@@ -1596,7 +1599,7 @@ namespace MobiusEditor
                 }
                 if (imageData != null)
                 {
-                    Dictionary<int, string> types = (Dictionary<int, string>) showTarget
+                    Dictionary<int, string> types = (Dictionary<int, string>)showTarget
                         .Invoke((FunctionInvoker)(() => ShowNewFromImageDialog(plugin, imageWidth, imageHeight, imageData, showTarget)));
                     if (types == null)
                     {
@@ -2292,7 +2295,7 @@ namespace MobiusEditor
             ActiveLayers = layers;
         }
 
-#endregion
+        #endregion
 
         private void mainToolStripButton_Click(object sender, EventArgs e)
         {
@@ -2460,7 +2463,7 @@ namespace MobiusEditor
             }
             if (plugin.GameInfo.WorkshopTypeId == null)
             {
-                MessageBox.Show(plugin.GameInfo.Name +  " maps cannot be published to the Steam Workshop; they are not usable by the C&C Remastered Collection.", "Error",
+                MessageBox.Show(plugin.GameInfo.Name + " maps cannot be published to the Steam Workshop; they are not usable by the C&C Remastered Collection.", "Error",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
@@ -2572,7 +2575,10 @@ namespace MobiusEditor
             string title = Program.ProgramVersionTitle;
             if (this.startedUpdate)
             {
-                MessageBox.Show(this, "Update check already started. Please wait.", title, MessageBoxButtons.OK);
+                if (!onlyShowWhenNew)
+                {
+                    MessageBox.Show(this, "Update check already started. Please wait.", title, MessageBoxButtons.OK);
+                }
                 return;
             }
             this.startedUpdate = true;
@@ -2582,7 +2588,7 @@ namespace MobiusEditor
             const string checkError = "An error occurred when checking the version:";
             AssemblyName assn = Assembly.GetExecutingAssembly().GetName();
             System.Version curVer = assn.Version;
-            Uri downloadUri = new Uri("https://api.github.com/repos/" + Program.GithubOwner + "/" + Program.GithubProject + "/releases?per_page=1");
+            Uri downloadUri = new Uri(Program.GithubVerCheckUrl);
             byte[] content = null;
             String returnMessage = null;
             try
@@ -2593,10 +2599,8 @@ namespace MobiusEditor
                     using (HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, downloadUri))
                     {
                         // GitHub API won't accept the request without header.
-                        ProductInfoHeaderValue productValue = new ProductInfoHeaderValue("GithubProject", curVer.ToString());
-                        ProductInfoHeaderValue commentValue = new ProductInfoHeaderValue("(https://github.com/" + Program.GithubOwner + "/" + Program.GithubProject + ")");
-                        request.Headers.UserAgent.Add(productValue);
-                        request.Headers.UserAgent.Add(commentValue);
+                        request.Headers.UserAgent.Add(new ProductInfoHeaderValue("GithubProject", curVer.ToString()));
+                        request.Headers.UserAgent.Add(new ProductInfoHeaderValue("(" + Program.GithubUrl + ")"));
                         using (HttpResponseMessage response = await client.SendAsync(request))
                         using (var bytes = new MemoryStream())
                         {
@@ -2609,10 +2613,16 @@ namespace MobiusEditor
                 {
                     string type = ex.GetType().Name;
                     string message = ex.Message;
+                    // if the inner is a web exception, use that; it is more descriptive than the generic "an error occurred" one from the HttpRequestException.
                     if (ex.InnerException is WebException wex)
                     {
                         type = wex.GetType().Name;
                         message = wex.Message;
+                        // Default "The remote name could not be resolved" message you get when not connected to the internet.
+                        if ((UInt32)wex.HResult == 0x80131509)
+                        {
+                            message += "\n\nPlease ensure you are connected to the internet.";
+                        }
                     }
                     returnMessage = checkError + "\n\n" + type + ": " + message;
                     return;
@@ -2630,11 +2640,11 @@ namespace MobiusEditor
                 const int maxLen = 1500 - 6;
                 if (!match.Success)
                 {
+                    text = text.Trim('\r', '\n');
                     if (text.Length > maxLen)
                     {
                         text = text.Substring(0, maxLen) + dots;
                     }
-                    text = text.Trim('\r', '\n');
                     returnMessage = checkError + " could not find version in returned data.\n\nReturned data:\n" + text;
                     return;
                 }
@@ -2648,6 +2658,17 @@ namespace MobiusEditor
                 int versionBld = String.IsNullOrEmpty(versionBldStr) ? 0 : Int32.Parse(versionBldStr);
                 int versionRev = String.IsNullOrEmpty(versionRevStr) ? 0 : Int32.Parse(versionRevStr);
                 System.Version serverVer = new System.Version(versionMaj, versionMin, versionBld, versionRev);
+                System.Version.TryParse(Properties.Settings.Default.LastCheckVersion, out System.Version lastChecked);
+                bool isDifferent = serverVer != lastChecked;
+                if (onlyShowWhenNew && !isDifferent)
+                {
+                    return;
+                }
+                if (isDifferent)
+                {
+                    Properties.Settings.Default.LastCheckVersion = serverVer.ToString();
+                    Properties.Settings.Default.Save();
+                }
                 StringBuilder versionMessage = new StringBuilder();
                 if (curVer < serverVer)
                 {
@@ -2874,8 +2895,6 @@ namespace MobiusEditor
                                         && (!Globals.FilterTheaterObjects || ov.ExistsInTheater)).OrderBy(ov => ov.ID).FirstOrDefault();
             OverlayType wall = plugin.Map.OverlayTypes.Where(ov => (ov.Flag & OverlayTypeFlag.Wall) == OverlayTypeFlag.Wall
                                         && (!Globals.FilterTheaterObjects || ov.ExistsInTheater)).OrderBy(ov => ov.ID).FirstOrDefault();
-            Tile waypoint = plugin.GameInfo.GetWaypointIcon();
-            Tile cellTrigger = plugin.GameInfo.GetCellTriggerIcon();
             LoadNewIcon(mapToolStripButton, templateTile?.Image, plugin, 0);
             LoadNewIcon(smudgeToolStripButton, smudge?.Thumbnail, plugin, 1);
             //LoadNewIcon(overlayToolStripButton, overlayTile?.Image, plugin, 2);
@@ -2886,14 +2905,14 @@ namespace MobiusEditor
             LoadNewIcon(buildingToolStripButton, building?.Thumbnail, plugin, 6);
             LoadNewIcon(resourcesToolStripButton, resource?.Thumbnail, plugin, 7);
             LoadNewIcon(wallsToolStripButton, wall?.Thumbnail, plugin, 8);
-            LoadNewIcon(waypointsToolStripButton, waypoint?.Image, plugin, 9);
-            LoadNewIcon(cellTriggersToolStripButton, cellTrigger?.Image, plugin, 10);
-            // Tiles are cached and disposed at the end, but if you fetch raw textures directly, an unmanaged clone is returned.
-            // Since LoadNewIcon clones that one too, the one we get here needs to be cleaned up.
+            // These functions return a new image that needs to be disposed afterwards.
+            // Since LoadNewIcon clones it, we can just immediately dispose it here.
+            using (Bitmap waypoint = plugin.GameInfo.GetWaypointIcon())
+                LoadNewIcon(waypointsToolStripButton, waypoint, plugin, 9);
+            using (Bitmap cellTrigger = plugin.GameInfo.GetCellTriggerIcon())
+                LoadNewIcon(cellTriggersToolStripButton, cellTrigger, plugin, 10);
             using (Bitmap select = plugin.GameInfo.GetSelectIcon())
-            {
                 LoadNewIcon(selectToolStripButton, select, plugin, 11, false);
-            }
         }
 
         private void LoadNewIcon(ViewToolStripButton button, Bitmap image, IGamePlugin plugin, int index)
@@ -2916,7 +2935,7 @@ namespace MobiusEditor
                 }
                 return;
             }
-            string id = ((int)plugin.GameInfo.GameType)  + "_"
+            string id = ((int)plugin.GameInfo.GameType) + "_"
                 + Enumerable.Range(0, plugin.Map.TheaterTypes.Count).FirstOrDefault(i => plugin.Map.TheaterTypes[i].ID.Equals(plugin.Map.Theater.ID))
                 + "_" + index;
             if (theaterIcons.TryGetValue(id, out Bitmap bm))

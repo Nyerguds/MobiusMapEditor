@@ -5,7 +5,7 @@
 // software: you can redistribute it and/or modify it under the terms of
 // the GNU General Public License as published by the Free Software Foundation,
 // either version 3 of the License, or (at your option) any later version.
-
+//
 // The Command & Conquer Map Editor and corresponding source code is distributed
 // in the hope that it will be useful, but with permitted additional restrictions
 // under Section 7 of the GPL. See the GNU General Public License in LICENSE.TXT
@@ -107,6 +107,11 @@ namespace MobiusEditor.Utility
         public static Point CenterPoint(this Rectangle rectangle)
         {
             return new Point(rectangle.X + rectangle.Width / 2, rectangle.Y + rectangle.Height / 2);
+        }
+
+        public static Point TopLeft(this Rectangle rectangle)
+        {
+            return new Point(rectangle.X, rectangle.Y);
         }
 
         public static IEnumerable<Point> Points(this Rectangle rectangle)

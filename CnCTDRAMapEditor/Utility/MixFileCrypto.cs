@@ -59,7 +59,6 @@ namespace MobiusEditor.Utility
         }
     }
 
-
     /// <summary>
     /// Read-only stream that implements Blowfish decryption of an underlying stream.
     /// </summary>

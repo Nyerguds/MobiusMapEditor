@@ -34,11 +34,19 @@ Some editing modes will have their own specific shortcuts, like the ones to sele
 
 Note that these hotkeys only work when the main window is selected; if you click on the tool window to select it, all keys will work as expected inside the selected controls.
 
+### Sole Survivor and Megamaps
+
+Some of you might remember Sole Survivor; the rather obscure death match arena spinoff of Command & Conquer 1. It's a game in which you control a single unit, collect crates to upgrade that unit, and kill your enemies. The game engine is a trimmed version of the Tiberian Dawn one with the base building and harvesting parts disabled, but it has one interesting upgrade that the original game didn't have: its battle arena maps are 128x128; the same size as Red Alert's maps.
+
+Some mod makers found that an interesting feature, since it means there is an official Tiberian Dawn megamap format, and so, some mods on the C&C Remastered workshop, like [CFE Patch Redux](https://steamcommunity.com/sharedfiles/filedetails/?id=2239875646), and [john_drak's updated branch of it](https://steamcommunity.com/sharedfiles/filedetails/?id=3002363531), support this format. The [Vanilla Conquer](https://github.com/TheAssemblyArmada/Vanilla-Conquer) project, which reconstructed the original Tiberian Dawn source code from the remaster code, also supports it. And so, I decided to support it in this editor too, to make larger maps and missions that are playable on these.
+
+In recent years, quite some progress has been made in getting Sole Survivor's server-side infrastructure running again, and so, the game might soon actually be playable again. So for that reason, actual support for Sole Survivor was added as well, including its own special waypoints and map options.
+
 ### The "New from image" function
 
 The editor contains a function to create a new map starting from an image, also usable with the drag-and-drop feature. This is not some magical conversion tool, however; it needs to be used in a very specific way.
 
-The function is meant to allow map makers to plan out the layout of their map in an image editor, with more tools available in terms of symmetry, copy-pasting, drawing straight lines, drawing curves, etc. Each pixel on the image represents one cell, so the image should be the size of a full map; 64x64 for Tiberian Dawn, and 128x128 for Red Alert. If the image is smaller, it will be expanded with black. If it is larger, only the upper left corner will be used.
+The function is meant to allow map makers to plan out the layout of their map in an image editor, with more tools available in terms of symmetry, copy-pasting, drawing straight lines, drawing curves, etc. Each pixel on the image represents one cell, so the image should be the size of a full map; 64x64 for Tiberian Dawn, and 128x128 for Red Alert and Sole Survivor (and Tiberian Dawn megamaps). If the image is smaller, it will be expanded with black. If it is larger, only the upper left corner will be used.
 
 After selecting the map type and the image, a dialog will be shown where colors can be mapped to a specific tileset icon type. This function only handles distinct colors, so avoid using tools that use smooth color transitions; the final image should probably only contain some 3-10 distinct colors. Note that the alpha factor of the colors will be ignored.
 
@@ -90,24 +98,26 @@ This should make you end up in the "AppData\Local\Nyerguds" folder under your Wi
 
 ## Configuration
 
-The file "CnCTDRAMapEditor.exe.config" contains settings to customise the editor. This is what they do:
+The file "CnCTDRAMapEditor.exe.config" contains settings to customise the editor. This is what they do.
+
+Note that this listing is updated as I develop. If options mentioned in this list do not exist in the settings file, chances are they refer to features that are already implemented in the source code on GitHub, but not yet released in a new version to download.
 
 ### Using classic files:
 
 * **UseClassicFiles**: Disabled by default, so the editor can ask you for your C&C Remastered game folder, but if you don't own the Remaster, or prefer the classic graphics, simply set this to "True".
-* **ClassicPathTD** / **ClassicPathRA** / **ClassicPathSS**: Path to load the classic files from for each of the game types when running in Classic Files mode. If the directory entered in this cannot be found, this reverts to predefined subfolders under the editor's location; "Classic\TD" for Tiberian Dawn and Sole Survivor, and "Classic\RA" for Red Alert. If the data is not present at the given location, the editor will refuse to launch.
+* **ClassicPathTD** / **ClassicPathRA** / **ClassicPathSS**: Path to load the classic files from for each of the game types when running in Classic Files mode. If the directory entered in this cannot be found, this reverts to predefined subfolders under the editor's location; "Classic\TD" for Tiberian Dawn and Sole Survivor, and "Classic\RA" for Red Alert. If these folders are not found either, the editor will check if it is ran from the C&C Remastered folder, by checking for the existence of the classic folders inside the CNCDATA folder. If the data is not present at the given location, the editor will refuse to launch in classic mode.
 * **ClassicNoRemasterLogic**: Defaults to False. When enabled, using classic mode will make it stop doing remaster-specific checks (such as briefing screen constraints in RA) or use the Remaster's specific folders under Documents.
 * **ClassicProducesNoMetaFiles**: Defaults to False. Suppresses the creation of xml and thumbnail files for multiplayer maps when in Classic Files mode.
 
-This option will not only use the classic graphics, but will also load the classic game text from the respective game's 'CONQUER.ENG' file, and the Red Alert house colours from 'PALETTE.CPS'.
+Using classic files will not only use the classic graphics, but will also load the classic game text from the respective game's 'CONQUER.ENG' file, and the Red Alert house colours from 'PALETTE.CPS'.
 
-By default, these files are loaded from a "Classic" folder which is supplied along with the editor. The exact paths can be tweaked in the **ClassicPathTD/RA/SS** settings (see "Editor fine tuning" below). For the exact expected contents of the folders, see the "Classic files listing" section.
+The default "Classic\TD" and "Classic\RA" folders are supplied along with the editor, so it is immediately usable in classic mode. The contents of these folders were taken from the official freeware releases of the games, supplemented with some files from the Red Alert expansion packs. For the exact expected contents of the folders, see the "Classic files listing" section below.
 
-### DPI awareness fix
+### General editor options
 
-* **EnableDpiAwareness**: Enable DPI awareness mode.
-
-On some machines with high dpi monitors, people might have odd issues where the positioning of the indicators on the map doesn't correctly match the map tiles. If this happens, enabling this option might fix the problem.
+* **EnableDpiAwareness**: On some machines with high dpi monitors, people might have odd issues where the positioning of the indicators on the map doesn't correctly match the map tiles. If this happens, enabling this option might fix the problem.
+* **ForceLanguage**: If empty or set to "None", in Remastered mode, the editor will attempt to use the language of the system to load the game assets, if it matches one of the translation that is available in the Remastered Collection. If you don't want this behaviour, this setting can be used to force the editor to use a specific language. Set it to "EN-US" for English.
+* **CheckUpdatesOnStartup**: Enabled by default. Will make the editor notify users if a new version is available.
 
 ### Mods:
 
@@ -161,6 +171,7 @@ These options are all enabled by default, but can be disabled if you wish. Use t
 * **FilterTheaterObjects**: Filter out objects that don't belong in the current map's theater. This affects both map loading, and the items visible in the placement lists. Do not turn this off unless you really know what you're doing; having theater-illegal objects on maps may cause situations that crash the game.
 * **WriteClassicBriefing**: In addition to the single-line "Text=" briefing used by the Remaster, also write classic-style briefings into the ini file as "1=", "2=", etc. lines split at human-readable length. This includes the C&C95 v1.06 line break system using ## characters at the end of a line.
 * **ApplyHarvestBug**: The game has a bug where the final harvested stage of a cell yields nothing (or only 3/4th for RA gems). Assume this bug is unfixed when doing the resource calculations.
+* **DontAllowWallsAsBuildings**: if this option is set to False, buildings will show up in the Buildings list as well, from where they can be placed down as player-owned buildings. This allows selling them, but it is generally not advised since it bloats the ini file.
 * **NoOwnedObjectsInSole**: Sole Survivor maps normally don't include placed down units, structures or infantry, so loading and saving them is disabled by default. But it seems some official maps do contain decorative civilian buildings, and old betas of the game could read those, so this option can be disabled for research purposes.
 * **RestrictSoleLimits**: When analysing / saving Sole Survivor maps, use the original object amount limits of the game, rather than the Remaster's larger values.
 

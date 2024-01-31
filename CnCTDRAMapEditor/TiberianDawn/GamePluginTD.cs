@@ -5,7 +5,7 @@
 // software: you can redistribute it and/or modify it under the terms of
 // the GNU General Public License as published by the Free Software Foundation,
 // either version 3 of the License, or (at your option) any later version.
-
+//
 // The Command & Conquer Map Editor and corresponding source code is distributed
 // in the hope that it will be useful, but with permitted additional restrictions
 // under Section 7 of the GPL. See the GNU General Public License in LICENSE.TXT
@@ -2729,8 +2729,8 @@ namespace MobiusEditor.TiberianDawn
                 {
                     HashSet<String> allies = (houseSection.TryGetValue("Allies") ?? String.Empty)
                         .Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
-                        .Distinct(StringComparer.InvariantCultureIgnoreCase)
-                        .ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+                        .Distinct(StringComparer.OrdinalIgnoreCase)
+                        .ToHashSet(StringComparer.OrdinalIgnoreCase);
                     if (!allies.Contains(name))
                     {
                         allies.Add(name);

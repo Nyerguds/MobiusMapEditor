@@ -5,7 +5,7 @@
 // software: you can redistribute it and/or modify it under the terms of
 // the GNU General Public License as published by the Free Software Foundation,
 // either version 3 of the License, or (at your option) any later version.
-
+//
 // The Command & Conquer Map Editor and corresponding source code is distributed
 // in the hope that it will be useful, but with permitted additional restrictions
 // under Section 7 of the GPL. See the GNU General Public License in LICENSE.TXT
@@ -38,6 +38,7 @@ namespace MobiusEditor
         public const string GithubOwner = "Nyerguds";
         public const string GithubProject = "MobiusMapEditor";
         public const string GithubUrl = "https://github.com/" + GithubOwner + "/" + GithubProject;
+        public const string GithubVerCheckUrl = "https://api.github.com/repos/" + GithubOwner + "/" + GithubProject + "/releases?per_page=1";
         public const string ProgramInfo =
             "Originally created by Petroglyph Games for the Command & Conquer: Remastered project, " +
             "and gracefully released as open source licensed under GPL V3 by Electronic Arts.\n" +
@@ -93,6 +94,7 @@ namespace MobiusEditor
                     CopyLastUserConfig(Properties.Settings.Default.ApplicationVersion, v => Properties.Settings.Default.ApplicationVersion = v);
                 }
                 Properties.Settings.Default.ApplicationVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+                Properties.Settings.Default.LastCheckVersion = null;
                 Properties.Settings.Default.Save();
             }
             Application.EnableVisualStyles();
@@ -125,7 +127,6 @@ namespace MobiusEditor
             bool steamEnabled = false;
             if (SteamworksUGC.IsSteamBuild)
             {
-                // Ignore result from this.
                 steamEnabled = SteamworksUGC.Init();
             }
             if (steamEnabled & Properties.Settings.Default.ShowInviteWarning)

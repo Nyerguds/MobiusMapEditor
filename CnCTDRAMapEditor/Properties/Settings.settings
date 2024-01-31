@@ -6,22 +6,22 @@
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="ClassicPathTD" Type="System.String" Scope="Application">
-	  <Value Profile="(Default)">Classic\TD</Value>
-	</Setting>
+      <Value Profile="(Default)">Classic\TD</Value>
+    </Setting>
     <Setting Name="ClassicPathRA" Type="System.String" Scope="Application">
       <Value Profile="(Default)">Classic\RA</Value>
     </Setting>
     <Setting Name="ClassicPathSS" Type="System.String" Scope="Application">
-	  <Value Profile="(Default)">Classic\TD</Value>
+      <Value Profile="(Default)">Classic\TD</Value>
     </Setting>
     <Setting Name="ClassicNoRemasterLogic" Type="System.Boolean" Scope="Application">
-    <Value Profile="(Default)">True</Value>
+      <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="ClassicProducesNoMetaFiles" Type="System.Boolean" Scope="Application">
-     <Value Profile="(Default)">False</Value>
+      <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="ForceLanguage" Type="System.String" Scope="Application">
-      <Value Profile="(Default)"></Value>
+      <Value Profile="(Default)">None</Value>
     </Setting>
     <Setting Name="CheckUpdatesOnStartup" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
@@ -69,7 +69,7 @@
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="MapGridColor" Type="System.Drawing.Color" Scope="Application">
-      <Value Profile="(Default)">64, 0, 0, 255</Value>
+      <Value Profile="(Default)">40, 0, 0, 255</Value>
     </Setting>
     <Setting Name="MapBackColor" Type="System.Drawing.Color" Scope="Application">
       <Value Profile="(Default)">32, 32, 32</Value>
@@ -128,6 +128,9 @@
     <Setting Name="ApplyHarvestBug" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>
+    <Setting Name="DontAllowWallsAsBuildings" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
     <Setting Name="NoOwnedObjectsInSole" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>
@@ -183,6 +186,9 @@
       <Value Profile="(Default)">0, 0</Value>
     </Setting>
     <Setting Name="ApplicationVersion" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="LastCheckVersion" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
   </Settings>

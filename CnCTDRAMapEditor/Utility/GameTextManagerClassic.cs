@@ -1365,10 +1365,11 @@ namespace MobiusEditor.Utility
 
         public string GetString(string key)
         {
-            if (gameTextAdditions.TryGetValue(key, out string overrStr))
+            if (gameTextAdditions.TryGetValue(key, out string overrStr) && overrStr != null)
             {
                 return overrStr;
             }
+            // Don't return dummy generated from code string; the calling systems are responsible for generating those.
             if (stringsFile == null || gameTextMapping == null || !gameTextMapping.TryGetValue(key, out int val) || val < 0 || val >= stringsFile.Count)
             {
                 return null;

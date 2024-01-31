@@ -16,12 +16,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.MemoryMappedFiles;
-using System.Linq;
 using System.Numerics;
 
 namespace MobiusEditor.Utility
 {
-    public class Mixfile: IDisposable
+    public class Mixfile : IDisposable
     {
         private static readonly string PublicKey = "AihRvNoIbTn85FZRYNZRcT+i6KpU+maCsEqr3Q5q+LDB5tH7Tz2qQ38V";
         private static readonly string PrivateKey = "AigKVje8mROcR8QixnxUEF5b29Curkq01DNDWCdOG99XBqH79OaCiTCB";
@@ -37,7 +36,7 @@ namespace MobiusEditor.Utility
         private uint dataStart;
 
         public Mixfile(string mixPath)
-            :this(mixPath, true)
+            : this(mixPath, true)
         {
         }
 
@@ -91,8 +90,7 @@ namespace MobiusEditor.Utility
                 {
                     if (!handleAdvanced)
                     {
-                        throw new ArgumentException("mixMap", "This mix file can't be one with extended header format.");
-
+                        throw new ArgumentException("mixMap", "This mix file can't be of the type with extended header format.");
                     }
                     hasFlags = true;
                     readOffset += 2;

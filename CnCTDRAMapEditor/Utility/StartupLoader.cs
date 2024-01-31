@@ -75,7 +75,7 @@ namespace MobiusEditor.Utility
                     }
                 }
             }
-            return modPaths.Distinct(StringComparer.CurrentCultureIgnoreCase).ToArray();
+            return modPaths.Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
         }
 
         private static bool CheckAddonPathModType(string addonModPath, string contentFile, Regex modregex)
@@ -228,16 +228,20 @@ namespace MobiusEditor.Utility
             // Text manager.
             const string fallbackCulture = "EN-US";
             string gameTextFilename = null;
-            if (!String.IsNullOrEmpty(Globals.ForceLanguage))
+            string forcedLanguage = (Globals.ForceLanguage ?? String.Empty).Trim().ToUpperInvariant();
+            // Force to setting.
+            if (!String.IsNullOrEmpty(forcedLanguage) && !"NONE".Equals(forcedLanguage, StringComparison.OrdinalIgnoreCase))
             {
-                gameTextFilename = string.Format(Globals.GameTextFilenameFormat, Globals.ForceLanguage.ToUpper());
+                gameTextFilename = string.Format(Globals.GameTextFilenameFormat, forcedLanguage);
             }
+            // Not forced, or not found: fall back to system language.
             if (gameTextFilename == null || !Globals.TheArchiveManager.FileExists(gameTextFilename))
             {
                 var cultureName = CultureInfo.CurrentUICulture.Name;
                 gameTextFilename = string.Format(Globals.GameTextFilenameFormat, cultureName.ToUpper());
             }
-            if (!Globals.TheArchiveManager.FileExists(gameTextFilename))
+            // Not found: fall back to default English.
+            if (gameTextFilename == null || !Globals.TheArchiveManager.FileExists(gameTextFilename))
             {
                 gameTextFilename = string.Format(Globals.GameTextFilenameFormat, fallbackCulture.ToUpper());
             }
@@ -264,8 +268,18 @@ namespace MobiusEditor.Utility
                 String pathFull = Path.GetFullPath(Path.Combine(applicationPath, gic.ClassicFolder));
                 if (!Directory.Exists(pathFull))
                 {
-                    path = "Classic\\TD\\";
+                    // Revert to default.
+                    path = gic.ClassicFolderDefault;
                     pathFull = Path.GetFullPath(Path.Combine(applicationPath, path));
+                    if (!Directory.Exists(pathFull))
+                    {
+                        // As last-ditch effort, try to see if applicationPath is the remastered game folder.
+                        pathFull = Path.GetFullPath(Path.Combine(applicationPath, gic.ClassicFolderRemaster));
+                        if (Directory.Exists(pathFull))
+                        {
+                            path = gic.ClassicFolderRemaster;
+                        }
+                    }
                 }
                 gameFolders.Add(gi, path);
             }

@@ -5,7 +5,7 @@
 // software: you can redistribute it and/or modify it under the terms of
 // the GNU General Public License as published by the Free Software Foundation,
 // either version 3 of the License, or (at your option) any later version.
-
+//
 // The Command & Conquer Map Editor and corresponding source code is distributed
 // in the hope that it will be useful, but with permitted additional restrictions
 // under Section 7 of the GPL. See the GNU General Public License in LICENSE.TXT
@@ -46,6 +46,7 @@ namespace MobiusEditor
             MinimumClampSize = Properties.Settings.Default.MinimumClampSize;
             // Behavior tweaks
             ReportMissionDetection = Properties.Settings.Default.ReportMissionDetection;
+            AllowWallBuildings = !Properties.Settings.Default.DontAllowWallsAsBuildings;
             EnforceObjectMaximums = Properties.Settings.Default.EnforceObjectMaximums;
             Ignore106Scripting = Properties.Settings.Default.Ignore106Scripting;
             ClassicProducesNoMetaFiles = Properties.Settings.Default.ClassicProducesNoMetaFiles;
@@ -140,6 +141,7 @@ namespace MobiusEditor
         public static Size MinimumClampSize { get; private set; }
 
         public static bool ReportMissionDetection { get; private set; }
+        public static bool AllowWallBuildings { get; private set; }
         public static bool EnforceObjectMaximums { get; private set; }
         public static bool Ignore106Scripting { get; private set; }
         public static bool ClassicProducesNoMetaFiles { get; private set; }

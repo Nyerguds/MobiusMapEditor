@@ -230,7 +230,7 @@ namespace MobiusEditor.Utility
                         for (int l = 'a'; l <= 'z'; ++l)
                         {
                             name = String.Concat((char)i, (char)j, (char)k, (char)l);
-                            if (!currentList.Contains(name, StringComparer.InvariantCultureIgnoreCase) && !reservedNames.Contains(name, StringComparer.OrdinalIgnoreCase))
+                            if (!currentList.Contains(name, StringComparer.OrdinalIgnoreCase) && !reservedNames.Contains(name, StringComparer.OrdinalIgnoreCase))
                             {
                                 return name;
                             }

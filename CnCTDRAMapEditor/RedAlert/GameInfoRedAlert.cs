@@ -103,15 +103,15 @@ namespace MobiusEditor.RedAlert
 
         public override bool SupportsMapLayer(MapLayerFlag mlf)
         {
-            return mlf != MapLayerFlag.FootballArea;
+            return mlf == (mlf & ~MapLayerFlag.FootballArea);
         }
 
-        public override Tile GetWaypointIcon()
+        public override Bitmap GetWaypointIcon()
         {
             return GetTile("beacon", 0, "mouse", 15);
         }
 
-        public override Tile GetCellTriggerIcon()
+        public override Bitmap GetCellTriggerIcon()
         {
             return GetTile("mine", 3, "mine.shp", 3);
         }
