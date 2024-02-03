@@ -755,7 +755,7 @@ namespace MobiusEditor.Render
             bool success = Globals.TheTilesetManager.GetTeamColorTileData(infantry.Type.GraphicsSource, icon, teamColor, out tile, true, false);
             if (tile == null || tile.Image == null)
             {
-                Debug.Print(string.Format("Infantry {0} graphics ({2}, frame {1}) not found", infantry.Type.Name, infantry.Type.GraphicsSource, icon));
+                Debug.Print(string.Format("Infantry {0} graphics ({1}, frame {2}) not found", infantry.Type.Name, infantry.Type.GraphicsSource, icon));
                 return new RenderInfo(Point.Empty, (g) => { }, infantry);
             }
             Size imSize = tile.Image.Size;
