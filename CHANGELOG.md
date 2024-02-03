@@ -620,4 +620,4 @@ Released on 31 Jan 2023 at 20:50 GMT
 
 Unreleased.
 
-* Added a fix that prevented the Red Alert civilian "C3" fro; loading, and that prevented the Einstein folour fix from working.
+* Added a fix that prevented the Red Alert civilian "C3" from loading, and that prevented the Einstein folour fix from working.
