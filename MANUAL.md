@@ -113,6 +113,10 @@ Using classic files will not only use the classic graphics, but will also load t
 
 The default "Classic\TD" and "Classic\RA" folders are supplied along with the editor, so it is immediately usable in classic mode. The contents of these folders were taken from the official freeware releases of the games, supplemented with some files from the Red Alert expansion packs. For the exact expected contents of the folders, see the "Classic files listing" section below.
 
+The extra theaters available for Tiberian Dawn and Red Alert in the upgraded community releases of the classic games are supported if their mix files are found in the configured folders. To achieve this, you can either copy the theater .mix archives from the classic install folder into into the classic folder provided with the editor (see "Classic files listing" section below for the exact names), or point the **ClassicPathTD** / **ClassicPathRA** folder to your own classic game install folder.
+
+Note that for Red Alert, the editor uses the DOS versions of the infantry sprites, and the community version of Red Alert does not contain those for the expansion pack infantry. To amend this, copy the "lores1.mix" file from "Classic\RA\" into the Red Alert game folder. This will not have any effect on the game itself; it only uses the connents of "hires1.mix".
+
 ### General editor options
 
 * **EnableDpiAwareness**: On some machines with high dpi monitors, people might have odd issues where the positioning of the indicators on the map doesn't correctly match the map tiles. If this happens, enabling this option might fix the problem.
@@ -187,11 +191,12 @@ These don't affect any real behaviour, but change some graphics to look more cor
 
 The following files can be read from the configured classic data folders, for running the editor in classic mode. They can also be loaded from mod folders. They will be loaded in the listed order, from any available sources. The basic rule in the game is that each file name can only be loaded once, and the first-loaded files have priority, so this also shows which archives can override the contents of which other archives.
 
-Files marked with <sup>(*)</sup> are required, though they may not be visible inside the folder if they are embedded inside another archive.
+Some files have special markings added to them. This is what they mean:
 
-Files marked with <sup>(1)</sup> (the sc*.mix archives) are add-ons. Anything matching the pattern will be read, but they still obey the rule that each archive name is only read from one location.
-
-Files marked with <sup>(2)</sup> (RA only) can be embedded inside the ''redalert.mix'' or ''main.mix'' archive.
+* (*) - Required, though they may not be visible inside the folder if they are embedded inside another archive.
+* (1) - Add-ons (the sc*.mix archives). Anything matching the pattern will be read, but they obey the general game rule that each archive name is only read from one location.
+* (2) - Archives that might be embedded inside the ''redalert.mix'' or ''main.mix'' archive. (RA only)
+* (+) - Extra theaters added in the fan-patched community releases of the games.
 
 Note that there is no support for running the editor for one specific game only, while not having the files for the other game(s) available. All data needs to be present to make the editor start up.
 
@@ -205,6 +210,7 @@ These are read from the "Classic\TD" subfolder by default. Note that the editor 
 * desert.mix <sup>(*)</sup>
 * temperat.mix <sup>(*)</sup>
 * winter.mix <sup>(*)</sup>
+* snow.mix <sup>(+)</sup>
 
 ### Red Alert
 
@@ -223,6 +229,11 @@ These are read from the "Classic\RA" subfolder by default.
 * interior.mix <sup>(*)</sup> <sup>(2)</sup>
 * snow.mix <sup>(*)</sup> <sup>(2)</sup>
 * temperat.mix <sup>(*)</sup> <sup>(2)</sup>
+* winter.mix <sup>(+)</sup>
+* desert.mix <sup>(+)</sup>
+* jungle.mix <sup>(+)</sup>
+* barren.mix <sup>(+)</sup>
+* cave.mix <sup>(+)</sup>
 
 The ''hires.mix'' and ''hires1.mix'' archives are not used; like the Red Alert Remaster itself, the editor uses the DOS versions of the infantry.
 

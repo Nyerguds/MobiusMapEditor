@@ -614,3 +614,10 @@ Released on 31 Jan 2023 at 20:50 GMT
 * Added [Ctrl]+scrollwheel for going through item lists.
 * Added an "EditorLanguage" option that can be used to change the language of the game text loaded in the editor. The default value is "Auto", which makes it autodetect the language using the system language.
 * Added an option to control the behaviour of allowing walls as structures, with an owner. Since this is a behavior tweaks option, and those are all enabled by default, it is called "DontAllowWallsAsBuildings".
+
+
+### v1.5.0.4:
+
+Unreleased.
+
+* Added a fix that prevented the Red Alert civilian "C3" fro; loading, and that prevented the Einstein folour fix from working.

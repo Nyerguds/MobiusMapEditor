@@ -752,10 +752,10 @@ namespace MobiusEditor.Render
             ITeamColor teamColor = infantry.Type.CanRemap ? Globals.TheTeamColorManager[infantry.House?.UnitTeamColor] : null;
             Tile tile = null;
             // InfantryType.Init() should have taken care of RA's classic civilian remap mess at this point, and remapped all cached source graphics.
-            bool success = Globals.TheTilesetManager.GetTeamColorTileData(infantry.Type.Name, icon, teamColor, out tile, true, false);
+            bool success = Globals.TheTilesetManager.GetTeamColorTileData(infantry.Type.GraphicsSource, icon, teamColor, out tile, true, false);
             if (tile == null || tile.Image == null)
             {
-                Debug.Print(string.Format("Infantry {0} ({1}) not found", infantry.Type.Name, icon));
+                Debug.Print(string.Format("Infantry {0} graphics ({2}, frame {1}) not found", infantry.Type.Name, infantry.Type.GraphicsSource, icon));
                 return new RenderInfo(Point.Empty, (g) => { }, infantry);
             }
             Size imSize = tile.Image.Size;

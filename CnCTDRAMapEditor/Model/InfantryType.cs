@@ -24,6 +24,7 @@ namespace MobiusEditor.Model
     {
         public int ID { get; private set; }
         public string Name { get; private set; }
+        public string GraphicsSource { get; set; }
         public string DisplayName { get; private set; }
         public string OwnerHouse { get; private set; }
         public UnitTypeFlag Flag { get; private set; }
@@ -43,6 +44,7 @@ namespace MobiusEditor.Model
         {
             this.ID = id;
             this.Name = name;
+            this.GraphicsSource = name;
             this.nameId = textId;
             this.OwnerHouse = ownerHouse;
             this.Flag = flags;
@@ -108,10 +110,13 @@ namespace MobiusEditor.Model
             this.InitDisplayName();
             Bitmap oldImage = this.Thumbnail;
             // Initialisation for the special RA civilian remapping logic.
-            if (this.ClassicGraphicsRemap != null && Globals.TheTilesetManager is TilesetManagerClassic tsmc)
+            if (((this.ClassicGraphicsSource != null && !String.Equals(this.Name, this.ClassicGraphicsSource, StringComparison.OrdinalIgnoreCase))
+                || this.ClassicGraphicsRemap != null) && Globals.TheTilesetManager is TilesetManagerClassic tsmc)
             {
+                string actualSprite = this.ClassicGraphicsSource ?? this.Name;
                 // Use special override that 100% makes sure previously-cached versions are cleared, so previous accidental fetches do not corrupt
-                tsmc.GetTeamColorTileData(this.Name, 0, null, out _, true, false, this.ClassicGraphicsSource, this.ClassicGraphicsRemap, true);
+                this.GraphicsSource = actualSprite + " (override for infantry "+ this.Name + ")";
+                tsmc.GetTeamColorTileData(this.GraphicsSource, 0, null, out _, true, false, actualSprite, this.ClassicGraphicsRemap, true);
             }
             Infantry mockInfantry = new Infantry(null)
             {
