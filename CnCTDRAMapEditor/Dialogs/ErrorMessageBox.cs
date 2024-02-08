@@ -34,7 +34,7 @@ namespace MobiusEditor.Dialogs
 
         public IEnumerable<string> Errors
         {
-            set { txtErrors.Text = string.Join(Environment.NewLine, value); }
+            set { txtErrors.Text = value == null ? String.Empty : string.Join(Environment.NewLine, value); }
             get { return (txtErrors.Text ?? String.Empty).Replace("\r\n", "\n").Replace('\r', '\n').Split('\n'); }
         }
 
@@ -43,6 +43,7 @@ namespace MobiusEditor.Dialogs
             set { txtErrors.WordWrap = value; }
             get { return txtErrors.WordWrap; }
         }
+
         public ErrorMessageBox()
             :this(false)
         {

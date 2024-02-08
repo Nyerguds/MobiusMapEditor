@@ -43,8 +43,6 @@ namespace MobiusEditor
     public partial class MainForm : Form, IFeedBackHandler, IHasStatusLabel
     {
 
-        public delegate Object FunctionInvoker();
-
         private Dictionary<string, Bitmap> theaterIcons = new Dictionary<string, Bitmap>();
 
         private static readonly ToolType[] toolTypes;
@@ -1599,8 +1597,8 @@ namespace MobiusEditor
                 }
                 if (imageData != null)
                 {
-                    Dictionary<int, string> types = (Dictionary<int, string>)showTarget
-                        .Invoke((FunctionInvoker)(() => ShowNewFromImageDialog(plugin, imageWidth, imageHeight, imageData, showTarget)));
+                    Dictionary<int, string> types = (Dictionary<int, string>)showTarget.Invoke(
+                        new Func<Dictionary<int, string>>(() => ShowNewFromImageDialog(plugin, imageWidth, imageHeight, imageData, showTarget)));
                     if (types == null)
                     {
                         return null;
