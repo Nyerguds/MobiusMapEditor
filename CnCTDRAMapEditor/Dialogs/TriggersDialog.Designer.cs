@@ -91,6 +91,7 @@ namespace MobiusEditor.Dialogs
             this.tsmiRenameTrigger = new System.Windows.Forms.ToolStripMenuItem();
             this.tsmiCloneTrigger = new System.Windows.Forms.ToolStripMenuItem();
             this.tsmiRemoveTrigger = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.tableLayoutPanel1.SuspendLayout();
             this.settingsPanel.SuspendLayout();
             this.triggersTableLayoutPanel.SuspendLayout();
@@ -364,7 +365,7 @@ namespace MobiusEditor.Dialogs
             this.typeComboBox.Size = new System.Drawing.Size(240, 21);
             this.typeComboBox.TabIndex = 7;
             this.typeComboBox.ValueMember = "Value";
-            this.typeComboBox.SelectedValueChanged += new System.EventHandler(this.typeComboBox_SelectedValueChanged);
+            this.typeComboBox.SelectedValueChanged += new System.EventHandler(this.TypeComboBox_SelectedValueChanged);
             // 
             // event1ComboBox
             // 
@@ -412,6 +413,9 @@ namespace MobiusEditor.Dialogs
             this.teamComboBox.Name = "teamComboBox";
             this.teamComboBox.Size = new System.Drawing.Size(240, 21);
             this.teamComboBox.TabIndex = 22;
+            this.teamComboBox.SelectedIndexChanged += new System.EventHandler(this.teamComboBox_SelectedIndexChanged);
+            this.teamComboBox.MouseEnter += new System.EventHandler(this.TeamComboBox_MouseEnter);
+            this.teamComboBox.MouseLeave += new System.EventHandler(this.TeamComboBox_MouseLeave);
             // 
             // event1Flp
             // 
@@ -539,6 +543,9 @@ namespace MobiusEditor.Dialogs
             this.action1ValueComboBox.Name = "action1ValueComboBox";
             this.action1ValueComboBox.Size = new System.Drawing.Size(166, 21);
             this.action1ValueComboBox.TabIndex = 1;
+            this.action1ValueComboBox.SelectedIndexChanged += new System.EventHandler(this.Action1ValueComboBox_SelectedIndexChanged);
+            this.action1ValueComboBox.MouseEnter += new System.EventHandler(this.Action1ValueComboBox_MouseEnter);
+            this.action1ValueComboBox.MouseLeave += new System.EventHandler(this.TeamComboBox_MouseLeave);
             // 
             // action2Flp
             // 
@@ -581,6 +588,9 @@ namespace MobiusEditor.Dialogs
             this.action2ValueComboBox.Name = "action2ValueComboBox";
             this.action2ValueComboBox.Size = new System.Drawing.Size(166, 21);
             this.action2ValueComboBox.TabIndex = 1;
+            this.action2ValueComboBox.SelectedIndexChanged += new System.EventHandler(this.Action2ValueComboBox_SelectedIndexChanged);
+            this.action2ValueComboBox.MouseEnter += new System.EventHandler(this.Action2ValueComboBox_MouseEnter);
+            this.action2ValueComboBox.MouseLeave += new System.EventHandler(this.TeamComboBox_MouseLeave);
             // 
             // triggersListView
             // 
@@ -809,5 +819,6 @@ namespace MobiusEditor.Dialogs
         private System.Windows.Forms.Button btnSetFilter;
         private System.Windows.Forms.Label lblFilterDetails;
         private System.Windows.Forms.Button btnAdd;
+        private System.Windows.Forms.ToolTip toolTip1;
     }
 }

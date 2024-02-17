@@ -45,19 +45,19 @@ namespace MobiusEditor.RedAlert
         public static readonly UnitType DemoTruck = new UnitType(20, "dtrk", "TEXT_UNIT_RA_DTRK", "USSR", FrameUsage.Frames32Full, UnitTypeFlag.IsArmed | UnitTypeFlag.IsExpansionUnit);
         public static readonly UnitType Phase = new UnitType(21, "stnk", "TEXT_UNIT_RA_STNK", "Greece", FrameUsage.Frames32Full | FrameUsage.HasUnloadFrames, FrameUsage.Frames32Full, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret | UnitTypeFlag.IsExpansionUnit);
 
-        public static readonly UnitType Tran = new UnitType(0 | UnitTypeIDMask.Aircraft, "tran", "TEXT_UNIT_RA_TRAN", "USSR", FrameUsage.Frames32Full | FrameUsage.HasUnloadFrames, FrameUsage.Rotor, "LROTOR", "RROTOR", 1, -2, UnitTypeFlag.HasTurret | UnitTypeFlag.HasDoubleTurret);
+        public static readonly UnitType Tran = new UnitType(0 | UnitTypeIDMask.Aircraft, "tran", "TEXT_UNIT_RA_TRAN", "USSR", FrameUsage.Frames32Full | FrameUsage.HasUnloadFrames, FrameUsage.Rotor, "lrotor", "rrotor", 1, -2, UnitTypeFlag.HasTurret | UnitTypeFlag.HasDoubleTurret);
         public static readonly UnitType Badr = new UnitType(1 | UnitTypeIDMask.Aircraft, "badr", "TEXT_UNIT_RA_BADR", "USSR", FrameUsage.Frames16Simple, UnitTypeFlag.IsFixedWing);
         public static readonly UnitType U2 = new UnitType(2 | UnitTypeIDMask.Aircraft, "u2", "TEXT_UNIT_RA_U2", "USSR", FrameUsage.Frames16Simple, UnitTypeFlag.IsFixedWing);
         public static readonly UnitType Mig = new UnitType(3 | UnitTypeIDMask.Aircraft, "mig", "TEXT_UNIT_RA_MIG", "USSR", FrameUsage.Frames16Simple, UnitTypeFlag.IsFixedWing | UnitTypeFlag.IsArmed);
         public static readonly UnitType Yak = new UnitType(4 | UnitTypeIDMask.Aircraft, "yak", "TEXT_UNIT_RA_YAK", "USSR", FrameUsage.Frames16Simple, UnitTypeFlag.IsFixedWing | UnitTypeFlag.IsArmed);
-        public static readonly UnitType Heli = new UnitType(5 | UnitTypeIDMask.Aircraft, "heli", "TEXT_UNIT_RA_HELI", "Greece", FrameUsage.Frames32Full, FrameUsage.Rotor, "LROTOR", null, 0, -2, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
-        public static readonly UnitType Hind = new UnitType(6 | UnitTypeIDMask.Aircraft, "hind", "TEXT_UNIT_RA_HIND", "USSR", FrameUsage.Frames32Full, FrameUsage.Rotor, "LROTOR", null, 0, -2, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
+        public static readonly UnitType Heli = new UnitType(5 | UnitTypeIDMask.Aircraft, "heli", "TEXT_UNIT_RA_HELI", "Greece", FrameUsage.Frames32Full, FrameUsage.Rotor, "lrotor", null, 0, -2, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
+        public static readonly UnitType Hind = new UnitType(6 | UnitTypeIDMask.Aircraft, "hind", "TEXT_UNIT_RA_HIND", "USSR", FrameUsage.Frames32Full, FrameUsage.Rotor, "lrotor", null, 0, -2, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
 
         public static readonly UnitType Submarine = new UnitType(0 | UnitTypeIDMask.Vessel, "ss", "TEXT_UNIT_RA_SS", "USSR", FrameUsage.Frames16Simple, FrameUsage.Frames32Full, UnitTypeFlag.IsArmed);
-        public static readonly UnitType Destroyer = new UnitType(1 | UnitTypeIDMask.Vessel, "dd", "TEXT_UNIT_RA_DD", "Greece", FrameUsage.Frames16Simple, FrameUsage.Frames32Full, "SSAM", null, -8, -4, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
-        public static readonly UnitType Cruiser = new UnitType(2 | UnitTypeIDMask.Vessel, "ca", "TEXT_UNIT_RA_CA", "Greece", FrameUsage.Frames16Simple, FrameUsage.Frames32Full, "TURR", "TURR", 22, -4, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret | UnitTypeFlag.HasDoubleTurret);
+        public static readonly UnitType Destroyer = new UnitType(1 | UnitTypeIDMask.Vessel, "dd", "TEXT_UNIT_RA_DD", "Greece", FrameUsage.Frames16Simple, FrameUsage.Frames32Full, "ssam", null, -8, -4, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
+        public static readonly UnitType Cruiser = new UnitType(2 | UnitTypeIDMask.Vessel, "ca", "TEXT_UNIT_RA_CA", "Greece", FrameUsage.Frames16Simple, FrameUsage.Frames32Full, "turr", "turr", 22, -4, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret | UnitTypeFlag.HasDoubleTurret);
         public static readonly UnitType Transport = new UnitType(3 | UnitTypeIDMask.Vessel, "lst", "TEXT_UNIT_RA_LST", "Greece", FrameUsage.Frames01Single | FrameUsage.HasUnloadFrames);
-        public static readonly UnitType PTBoat = new UnitType(4 | UnitTypeIDMask.Vessel, "pt", "TEXT_UNIT_RA_PT", "Greece", FrameUsage.Frames16Simple, FrameUsage.Frames32Full, "MGUN", null, 14, 1, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
+        public static readonly UnitType PTBoat = new UnitType(4 | UnitTypeIDMask.Vessel, "pt", "TEXT_UNIT_RA_PT", "Greece", FrameUsage.Frames16Simple, FrameUsage.Frames32Full, "mgun", null, 14, 1, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
         public static readonly UnitType MissileSubmarine = new UnitType(5 | UnitTypeIDMask.Vessel, "msub", "TEXT_UNIT_RA_MSUB", "USSR", FrameUsage.Frames16Simple, UnitTypeFlag.IsArmed | UnitTypeFlag.IsExpansionUnit);
         public static readonly UnitType Carrier = new UnitType(6 | UnitTypeIDMask.Vessel, "carr", "TEXT_UNIT_RA_CARR", "Greece", FrameUsage.Frames01Single, UnitTypeFlag.IsExpansionUnit);
 
