@@ -16,11 +16,12 @@ using MobiusEditor.Interface;
 using MobiusEditor.Render;
 using MobiusEditor.Utility;
 using System;
+using System.Diagnostics;
 using System.Drawing;
-using System.Linq;
 
 namespace MobiusEditor.Model
 {
+    [DebuggerDisplay("{Name}")]
     public class TerrainType : ITechnoType, ICellOverlapper, ICellOccupier
     {
         public int ID { get; private set; }

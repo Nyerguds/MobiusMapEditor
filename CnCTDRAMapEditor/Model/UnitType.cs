@@ -15,6 +15,7 @@
 using MobiusEditor.Interface;
 using MobiusEditor.Render;
 using System;
+using System.Diagnostics;
 using System.Drawing;
 
 namespace MobiusEditor.Model
@@ -77,6 +78,7 @@ namespace MobiusEditor.Model
         public const int Vessel = 1 << 6;
     }
 
+    [DebuggerDisplay("{Name}")]
     public class UnitType : ICellOverlapper, ICellOccupier, ITechnoType
     {
         public int ID { get; private set; }

@@ -500,7 +500,7 @@ namespace MobiusEditor.TiberianDawn
             INI ini = new INI();
             List<string> errors = new List<string>();
             bool modified = false;
-            bool forceSingle = false;
+            bool tryCheckSingle = false;
             Byte[] iniBytes;
             switch (fileType)
             {
@@ -515,8 +515,8 @@ namespace MobiusEditor.TiberianDawn
                     }
                     iniBytes = File.ReadAllBytes(iniPath);
                     ParseIniContent(ini, iniBytes, forSole);
-                    forceSingle = !forSole && SinglePlayRegex.IsMatch(Path.GetFileNameWithoutExtension(path));
-                    errors.AddRange(LoadINI(ini, forceSingle, ref modified));
+                    tryCheckSingle = !forSole && SinglePlayRegex.IsMatch(Path.GetFileNameWithoutExtension(path));
+                    errors.AddRange(LoadINI(ini, tryCheckSingle, ref modified));
                     if (!File.Exists(binPath))
                     {
                         errors.Add(String.Format("No .bin file found for file '{0}'. Using empty map.", Path.GetFileName(path)));
@@ -777,12 +777,12 @@ namespace MobiusEditor.TiberianDawn
             return iniText;
         }
 
-        protected virtual List<string> LoadINI(INI ini, bool forceSoloMission, ref bool modified)
+        protected virtual List<string> LoadINI(INI ini, bool tryCheckSoloMission, ref bool modified)
         {
-            return LoadINI(ini, forceSoloMission, false, ref modified);
+            return LoadINI(ini, tryCheckSoloMission, false, ref modified);
         }
 
-        protected List<string> LoadINI(INI ini, bool forceSoloMission, bool forSole, ref bool modified)
+        protected List<string> LoadINI(INI ini, bool tryCheckSoloMission, bool forSole, ref bool modified)
         {
             List<string> errors = new List<string>();
             Map.BeginUpdate();
@@ -885,29 +885,33 @@ namespace MobiusEditor.TiberianDawn
                             errors.Add(string.Format("TeamType '{0}' has a name that is longer than 8 characters. This will not be corrected by the loading process, but should be addressed, since it can make the teams fail to read correctly, and might even crash the game.", kvp.Key));
                         }
                         TeamType teamType = new TeamType { Name = kvp.Key };
-                        List<string> tokens = kvp.Value.Split(',').ToList();
-                        teamType.House = Map.HouseTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault();
+                        string[] tokens = kvp.Value.Split(',');
+                        string houseStr = tokens[(int)TeamTypeOptions.House];
+                        teamType.House = Map.HouseTypes.Where(t => t.Equals(houseStr)).FirstOrDefault();
                         if (teamType.House == null)
                         {
                             HouseType defHouse = Map.HouseTypes.First();
-                            errors.Add(string.Format("Teamtype '{0}' references unknown house '{1}'; clearing to '{2}'.", kvp.Key, tokens[0], defHouse.Name));
+                            errors.Add(string.Format("Teamtype '{0}' references unknown house '{1}'; clearing to '{2}'.", kvp.Key, houseStr, defHouse.Name));
                             modified = true;
                             teamType.House = defHouse;
                         }
-                        tokens.RemoveAt(0);
-                        teamType.IsRoundAbout = int.Parse(tokens[0]) != 0; tokens.RemoveAt(0);
-                        teamType.IsLearning = int.Parse(tokens[0]) != 0; tokens.RemoveAt(0);
-                        teamType.IsSuicide = int.Parse(tokens[0]) != 0; tokens.RemoveAt(0);
-                        teamType.IsAutocreate = int.Parse(tokens[0]) != 0; tokens.RemoveAt(0);
-                        teamType.IsMercenary = int.Parse(tokens[0]) != 0; tokens.RemoveAt(0);
-                        teamType.RecruitPriority = int.Parse(tokens[0]); tokens.RemoveAt(0);
-                        teamType.MaxAllowed = byte.Parse(tokens[0]); tokens.RemoveAt(0);
-                        teamType.InitNum = byte.Parse(tokens[0]); tokens.RemoveAt(0);
-                        teamType.Fear = byte.Parse(tokens[0]); tokens.RemoveAt(0);
-                        int numClasses = int.Parse(tokens[0]); tokens.RemoveAt(0);
-                        for (int i = 0; i < Math.Min(Globals.MaxTeamClasses, numClasses); ++i)
+                        teamType.IsRoundAbout = int.Parse(tokens[(int)TeamTypeOptions.IsRoundAbout]) != 0;
+                        teamType.IsLearning = int.Parse(tokens[(int)TeamTypeOptions.IsLearning]) != 0;
+                        teamType.IsSuicide = int.Parse(tokens[(int)TeamTypeOptions.IsSuicide]) != 0;
+                        teamType.IsAutocreate = int.Parse(tokens[(int)TeamTypeOptions.IsAutocreate]) != 0;
+                        teamType.IsMercenary = int.Parse(tokens[(int)TeamTypeOptions.IsMercenary]) != 0;
+                        teamType.RecruitPriority = int.Parse(tokens[(int)TeamTypeOptions.RecruitPriority]);
+                        teamType.MaxAllowed = byte.Parse(tokens[(int)TeamTypeOptions.MaxAllowed]);
+                        teamType.InitNum = byte.Parse(tokens[(int)TeamTypeOptions.InitNum]);
+                        teamType.Fear = byte.Parse(tokens[(int)TeamTypeOptions.Fear]);
+                        int numClasses = int.Parse(tokens[(int)TeamTypeOptions.Classes]);
+                        int classesIndex = (int)TeamTypeOptions.Classes + 1;
+                        int classesIndexEnd = classesIndex + numClasses;
+                        int classesMax = Math.Min(Globals.MaxTeamClasses, numClasses);
+                        int classesIndexMax = classesIndex + classesMax;
+                        for (int i = classesIndex; i < classesIndexMax; ++i)
                         {
-                            string[] classTokens = tokens[0].Split(':'); tokens.RemoveAt(0);
+                            string[] classTokens = tokens[i].Split(':');
                             if (classTokens.Length == 2)
                             {
                                 ITechnoType type = fullTechnoTypes.Where(t => t.Name.Equals(classTokens[0], StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
@@ -926,14 +930,23 @@ namespace MobiusEditor.TiberianDawn
                             }
                             else
                             {
-                                errors.Add(string.Format("Team '{0}' has wrong number of tokens for class index {1} (expecting 2).", kvp.Key, i));
+                                errors.Add(string.Format("Team '{0}' has wrong number of tokens for class index {1} (has {2}, expecting 2).", kvp.Key, i, classTokens.Length));
                                 modified = true;
                             }
                         }
-                        int numMissions = int.Parse(tokens[0]); tokens.RemoveAt(0);
-                        for (int i = 0; i < Math.Min(Globals.MaxTeamMissions, numMissions); ++i)
+                        if (numClasses > Globals.MaxTeamClasses)
                         {
-                            string[] missionTokens = tokens[0].Split(':'); tokens.RemoveAt(0);
+                            errors.Add(string.Format("Team '{0}' has more classes than the game can handle (has {1}, maximum is {2}).", kvp.Key, numClasses, Globals.MaxTeamClasses));
+                            modified = true;
+                        }
+                        int numMissions = int.Parse(tokens[classesIndexEnd]);
+                        int missionsIndex = classesIndexEnd + 1;
+                        int missionsIndexEnd = missionsIndex + numMissions;
+                        int missionsMax = Math.Min(Globals.MaxTeamMissions, numMissions);
+                        int missionsIndexMax = missionsIndex + missionsMax;
+                        for (int i = missionsIndex; i < missionsIndexMax; ++i)
+                        {
+                            string[] missionTokens = tokens[i].Split(':');
                             if (missionTokens.Length == 2)
                             {
                                 // fix mission case sensitivity issues.
@@ -941,10 +954,39 @@ namespace MobiusEditor.TiberianDawn
                                 teamMissionTypes.TryGetValue(missionTokens[0], out mission);
                                 if (mission != null)
                                 {
-                                    // I'll allow any value for Attack Tarcom; you never know.
-                                    if (!Int32.TryParse(missionTokens[1], out int arg) || (mission != TeamMissionTypes.AttackTarcom && arg < 0))
+                                    string argError = null;
+                                    string argStr = missionTokens[1];
+                                    if (!Int32.TryParse(argStr, out int arg))
                                     {
-                                        errors.Add(string.Format("Team '{0}', orders index {1} ('{2}') has an incorrect value '{3}'. Reverting to 0.", kvp.Key, i, mission.Mission, missionTokens[1]));
+                                        argError = string.Format("Team '{0}', orders index {1} ('{2}') has a non-numeric value '{3}'. Reverting to 0.", kvp.Key, i, mission.Mission, argStr);
+                                    }
+                                    else if (mission.ArgType == TeamMissionArgType.Time && arg < 0)
+                                    {
+                                        argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value '{3}' for a Time argument. Reverting to 0.", kvp.Key, i, mission.Mission, argStr);
+                                    }
+                                    else if (mission.ArgType == TeamMissionArgType.Waypoint && (arg < -1 || arg > Map.Waypoints.Length))
+                                    {
+                                        argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value '{3}' for a Waypoint argument. Reverting to 0.", kvp.Key, i, mission.Mission, argStr);
+                                    }
+                                    else if (mission.ArgType == TeamMissionArgType.OptionsList && (arg < 0 || arg > mission.DropdownOptions.Max(vl => vl.Value))) // Not actually used in TD.
+                                    {
+                                        argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value '{3}' for the available options. Reverting to 0.", kvp.Key, i, mission.Mission, argStr);
+                                    }
+                                    else if (mission.ArgType == TeamMissionArgType.MapCell && (arg < 0 || arg >= Map.Metrics.Length))
+                                    {
+                                        argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value '{3}' for a Cell argument. Reverting to 0.", kvp.Key, i, mission.Mission, argStr);
+                                    }
+                                    else if (mission.ArgType == TeamMissionArgType.MissionNumber && (arg < 0 || arg > missionsMax))
+                                    {
+                                        argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value '{3}' for an orders index argument. Reverting to 0.", kvp.Key, i, mission.Mission, argStr);
+                                    }
+                                    else if (mission.ArgType == TeamMissionArgType.Tarcom && arg < 0)
+                                    {
+                                        argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value '{3}' for a Tarcom argument. Reverting to 0.", kvp.Key, i, mission.Mission, argStr);
+                                    }
+                                    if (argError != null)
+                                    {
+                                        errors.Add(argError);
                                         modified = true;
                                         arg = 0;
                                     }
@@ -958,17 +1000,24 @@ namespace MobiusEditor.TiberianDawn
                             }
                             else
                             {
-                                errors.Add(string.Format("Team '{0}' has wrong number of tokens for orders index {1} (expecting 2).", kvp.Key, i));
+                                errors.Add(string.Format("Team '{0}' has wrong number of tokens for orders index {1} (has {2}, expecting 2).", kvp.Key, i, missionTokens.Length));
                                 modified = true;
                             }
                         }
-                        if (tokens.Count > 0)
+                        if (numMissions > Globals.MaxTeamMissions)
                         {
-                            teamType.IsReinforcable = int.Parse(tokens[0]) != 0; tokens.RemoveAt(0);
+                            errors.Add(string.Format("Team '{0}' has more orders than the game can handle (has {1}, maximum is {2}).", kvp.Key, numMissions, Globals.MaxTeamMissions));
+                            modified = true;
                         }
-                        if (tokens.Count > 0)
+                        int reinforceIndex = missionsIndexEnd;
+                        if (tokens.Length > reinforceIndex)
                         {
-                            teamType.IsPrebuilt = int.Parse(tokens[0]) != 0; tokens.RemoveAt(0);
+                            teamType.IsReinforcable = int.Parse(tokens[reinforceIndex]) != 0;
+                        }
+                        int prebuiltIndex = missionsIndexEnd + 1;
+                        if (tokens.Length > prebuiltIndex)
+                        {
+                            teamType.IsPrebuilt = int.Parse(tokens[prebuiltIndex]) != 0;
                         }
                         Map.TeamTypes.Add(teamType);
                     }
@@ -2012,7 +2061,7 @@ namespace MobiusEditor.TiberianDawn
             Map.Triggers.AddRange(triggers);
             Map.TeamTypes.Sort((x, y) => comparer.Compare(x.Name, y.Name));
             extraSections = ini.Sections.Clone();
-            bool switchedToSolo = !forSole && forceSoloMission && !basic.SoloMission
+            bool switchedToSolo = !forSole && tryCheckSoloMission && !basic.SoloMission
                 && ((triggers.Any(t => t.Action1.ActionType == ActionTypes.ACTION_WIN) && triggers.Any(t => t.Action1.ActionType == ActionTypes.ACTION_LOSE))
                     || triggers.Any(t => t.Event1.EventType == EventTypes.EVENT_ANY && t.Action1.ActionType == ActionTypes.ACTION_WINLOSE));
             if (switchedToSolo)
@@ -3445,6 +3494,39 @@ namespace MobiusEditor.TiberianDawn
                 }
             }
             return errors;
+        }
+
+
+        public string TriggerSummary(Trigger trigger, List<Trigger> currentTriggers)
+        {
+            const string trigFormat = "{0}: {1}, {2} → {3} ({4})";
+            string evt = trigger.Event1.EventType ?? TriggerEvent.None;
+            bool isDataEvent = evt == EventTypes.EVENT_CREDITS
+                            || evt == EventTypes.EVENT_TIME
+                            || evt == EventTypes.EVENT_NBUILDINGS_DESTROYED
+                            || evt == EventTypes.EVENT_NUNITS_DESTROYED
+                            || evt == EventTypes.EVENT_BUILD;
+            if (isDataEvent)
+            {
+                string data = trigger.Event1.Data.ToString();
+                if (evt == EventTypes.EVENT_BUILD)
+                {
+                    BuildingType bt = Map.BuildingTypes.FirstOrDefault(b => b.ID == trigger.Event1.Data);
+                    if (bt != null)
+                        data = bt.Name;
+                }
+                evt = String.Format(GameInfo.TRIG_ARG_FORMAT, evt, data);
+            }
+            string act = trigger.Action1.ActionType ?? TriggerAction.None;
+            bool isTeamAction = act == ActionTypes.ACTION_CREATE_TEAM
+                             || act == ActionTypes.ACTION_DESTROY_TEAM
+                             || act == ActionTypes.ACTION_REINFORCEMENTS;
+            if (isTeamAction)
+            {
+                act = String.Format(GameInfo.TRIG_ARG_FORMAT, act, trigger.Action1.Team ?? TeamType.None);
+            }
+            string persistence = GameInfo.PERSISTENCE_NAMES[(int)trigger.PersistentType];
+            return String.Format(trigFormat, trigger.Name, trigger.House, evt, act, persistence);
         }
 
         public virtual ITeamColor[] GetFlagColors()

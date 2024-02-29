@@ -122,6 +122,12 @@ namespace MobiusEditor.Interface
         /// <returns>A summation of the encountered issues.</returns>
         IEnumerable<string> CheckTriggers(IEnumerable<Trigger> triggers, bool includeExternalData, bool prefixNames, bool fatalOnly, out bool fatal, bool fix, out bool wasFixed);
 
+        /// <summary>Gives a readable string that shows the contents of a trigger.</summary>
+        /// <param name="trigger">The trigger to summarise</param>
+        /// <param name="currentTriggers">List of current triggers. This makes it usable in the trigger edit screen, taking unsaved data into account.</param>
+        /// <returns>The summarisation of the trigger</returns>
+        string TriggerSummary(Trigger trigger, List<Trigger> currentTriggers);
+
         /// <summary>Re-initialises the flag colors for this game.</summary>
         /// <returns>The team colors</returns>
         ITeamColor[] GetFlagColors();

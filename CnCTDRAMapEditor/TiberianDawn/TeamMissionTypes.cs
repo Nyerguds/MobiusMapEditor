@@ -31,7 +31,7 @@ namespace MobiusEditor.TiberianDawn
         public static readonly TeamMission MoveToCell = new TeamMission(6, "Move to Cell", TeamMissionArgType.MapCell);
         public static readonly TeamMission Retreat = new TeamMission(7, "Retreat", TeamMissionArgType.Time);
         public static readonly TeamMission Guard = new TeamMission(8, "Guard", TeamMissionArgType.Time);
-        public static readonly TeamMission Loop = new TeamMission(9, "Loop", TeamMissionArgType.OrderNumber);
+        public static readonly TeamMission Loop = new TeamMission(9, "Loop", TeamMissionArgType.MissionNumber);
         public static readonly TeamMission AttackTarcom = new TeamMission(10, "Attack Tarcom", TeamMissionArgType.Tarcom);
         public static readonly TeamMission Unload = new TeamMission(11, "Unload", TeamMissionArgType.Waypoint);
 
@@ -49,6 +49,20 @@ namespace MobiusEditor.TiberianDawn
         {
             return Types;
         }
+    }
 
+    public enum TeamTypeOptions
+    {
+        House = 0,
+        IsRoundAbout = 1,
+        IsLearning = 2,
+        IsSuicide = 3,
+        IsAutocreate = 4,
+        IsMercenary = 5,
+        RecruitPriority = 6,
+        MaxAllowed = 7,
+        InitNum = 8,
+        Fear = 9,
+        Classes = 10,
     }
 }

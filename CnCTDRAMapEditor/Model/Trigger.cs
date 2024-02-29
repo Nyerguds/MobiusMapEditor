@@ -16,6 +16,7 @@ using MobiusEditor.Interface;
 using MobiusEditor.Utility;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace MobiusEditor.Model
 {
@@ -34,6 +35,7 @@ namespace MobiusEditor.Model
         Linked /**/ = 3  // E1 => A1; E2 => A2
     }
 
+    [DebuggerDisplay("{EventType}: {Data}/{Team}")]
     public class TriggerEvent : ICloneable, IEquatable<TriggerEvent>
     {
         public static readonly string None = "None";
@@ -80,6 +82,7 @@ namespace MobiusEditor.Model
         }
     }
 
+    [DebuggerDisplay("{ActionType}: {Data}/{Team}/{Trigger}")]
     public class TriggerAction : ICloneable, IEquatable<TriggerAction>
     {
         public static readonly string None = "None";
@@ -131,6 +134,7 @@ namespace MobiusEditor.Model
         }
     }
 
+    [DebuggerDisplay("{EventControl}: EV1:{Event1} | EV2:{Event2} -> AC1{Action1} | AC2:{Action2}, {PersistentType}")]
     public class Trigger : INamedType, ICloneable, IEquatable<Trigger>
     {
         public static readonly string None = "None";

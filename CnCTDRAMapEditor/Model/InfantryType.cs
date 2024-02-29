@@ -16,10 +16,12 @@ using MobiusEditor.Interface;
 using MobiusEditor.Render;
 using MobiusEditor.Utility;
 using System;
+using System.Diagnostics;
 using System.Drawing;
 
 namespace MobiusEditor.Model
 {
+    [DebuggerDisplay("{Name}")]
     public class InfantryType : ITechnoType
     {
         public int ID { get; private set; }

@@ -15,10 +15,12 @@
 using MobiusEditor.Interface;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace MobiusEditor.Model
 {
+    [DebuggerDisplay("{Type}: {Count}")]
     public class TeamTypeClass : ICloneable, IEquatable<TeamTypeClass>
     {
         public ITechnoType Type { get; set; }
@@ -56,11 +58,12 @@ namespace MobiusEditor.Model
         Waypoint,
         OptionsList,
         MapCell,
-        OrderNumber,
+        MissionNumber,
         GlobalNumber,
         Tarcom,
     }
 
+    [DebuggerDisplay("{Mission} ({ArgType})")]
     public class TeamMission : ICloneable, IEquatable<TeamMission>
     {
         public int ID { get; private set; }
@@ -135,6 +138,7 @@ namespace MobiusEditor.Model
         }
     }
 
+    [DebuggerDisplay("{Name}: {House}, {Classes}, {Missions}")]
     public class TeamType : INamedType, ICloneable
     {
         public static readonly string None = "None";

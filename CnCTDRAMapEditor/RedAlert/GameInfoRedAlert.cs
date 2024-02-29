@@ -209,5 +209,6 @@ namespace MobiusEditor.RedAlert
         {
             return String.IsNullOrEmpty(name) || Constants.EmptyMapName.Equals(name, StringComparison.OrdinalIgnoreCase);
         }
+
     }
 }

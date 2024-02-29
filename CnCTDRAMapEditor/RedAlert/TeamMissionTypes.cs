@@ -27,7 +27,7 @@ namespace MobiusEditor.RedAlert
         public static readonly TeamMission Move = new TeamMission(3, "Move to Waypoint...", TeamMissionArgType.Waypoint);
         public static readonly TeamMission Movecell = new TeamMission(4, "Move to Cell...", TeamMissionArgType.MapCell);
         public static readonly TeamMission Guard = new TeamMission(5, "Guard Area...", TeamMissionArgType.Time);
-        public static readonly TeamMission Loop = new TeamMission(6, "Jump to Order #...", TeamMissionArgType.OrderNumber);
+        public static readonly TeamMission Loop = new TeamMission(6, "Jump to Order #...", TeamMissionArgType.MissionNumber);
         public static readonly TeamMission AttackTarcom = new TeamMission(7, "Attack Tarcom...", TeamMissionArgType.Tarcom);
         public static readonly TeamMission Unload = new TeamMission(8, "Unload", TeamMissionArgType.None);
         public static readonly TeamMission Deploy = new TeamMission(9, "Deploy", TeamMissionArgType.None);
@@ -53,5 +53,17 @@ namespace MobiusEditor.RedAlert
         {
             return Types;
         }
+    }
+
+    public enum TeamTypeOptions
+    {
+        House = 0,
+        Flags = 1,
+        RecruitPriority = 2,
+        InitNum = 3,
+        MaxAllowed = 4,
+        Origin = 5,
+        Trigger = 6,
+        Classes = 7,
     }
 }

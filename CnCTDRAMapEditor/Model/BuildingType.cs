@@ -16,6 +16,7 @@ using MobiusEditor.Interface;
 using MobiusEditor.Render;
 using MobiusEditor.Utility;
 using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 
@@ -47,6 +48,7 @@ namespace MobiusEditor.Model
         Wall             /**/ = 1 << 9,
     }
 
+    [DebuggerDisplay("{Name}")]
     public class BuildingType : ICellOverlapper, ICellOccupier, ITechnoType
     {
         public int ID { get; private set; }

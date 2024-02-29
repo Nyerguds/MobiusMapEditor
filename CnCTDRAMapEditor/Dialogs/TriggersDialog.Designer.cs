@@ -314,6 +314,8 @@ namespace MobiusEditor.Dialogs
             this.action1ComboBox.Size = new System.Drawing.Size(141, 21);
             this.action1ComboBox.TabIndex = 16;
             this.action1ComboBox.SelectedIndexChanged += new System.EventHandler(this.Action1ComboBox_SelectedIndexChanged);
+            this.action1ComboBox.MouseEnter += new System.EventHandler(this.Action1ComboBox_MouseEnter);
+            this.action1ComboBox.MouseLeave += new System.EventHandler(this.ToolTipComboBox_MouseLeave);
             // 
             // action2ComboBox
             // 
@@ -415,7 +417,7 @@ namespace MobiusEditor.Dialogs
             this.teamComboBox.TabIndex = 22;
             this.teamComboBox.SelectedIndexChanged += new System.EventHandler(this.teamComboBox_SelectedIndexChanged);
             this.teamComboBox.MouseEnter += new System.EventHandler(this.TeamComboBox_MouseEnter);
-            this.teamComboBox.MouseLeave += new System.EventHandler(this.TeamComboBox_MouseLeave);
+            this.teamComboBox.MouseLeave += new System.EventHandler(this.ToolTipComboBox_MouseLeave);
             // 
             // event1Flp
             // 
@@ -545,7 +547,7 @@ namespace MobiusEditor.Dialogs
             this.action1ValueComboBox.TabIndex = 1;
             this.action1ValueComboBox.SelectedIndexChanged += new System.EventHandler(this.Action1ValueComboBox_SelectedIndexChanged);
             this.action1ValueComboBox.MouseEnter += new System.EventHandler(this.Action1ValueComboBox_MouseEnter);
-            this.action1ValueComboBox.MouseLeave += new System.EventHandler(this.TeamComboBox_MouseLeave);
+            this.action1ValueComboBox.MouseLeave += new System.EventHandler(this.ToolTipComboBox_MouseLeave);
             // 
             // action2Flp
             // 
@@ -590,7 +592,7 @@ namespace MobiusEditor.Dialogs
             this.action2ValueComboBox.TabIndex = 1;
             this.action2ValueComboBox.SelectedIndexChanged += new System.EventHandler(this.Action2ValueComboBox_SelectedIndexChanged);
             this.action2ValueComboBox.MouseEnter += new System.EventHandler(this.Action2ValueComboBox_MouseEnter);
-            this.action2ValueComboBox.MouseLeave += new System.EventHandler(this.TeamComboBox_MouseLeave);
+            this.action2ValueComboBox.MouseLeave += new System.EventHandler(this.ToolTipComboBox_MouseLeave);
             // 
             // triggersListView
             // 

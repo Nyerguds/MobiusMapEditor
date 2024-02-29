@@ -620,4 +620,6 @@ Released on 31 Jan 2023 at 20:50 GMT
 
 Unreleased.
 
-* Added a fix that prevented the Red Alert civilian "C3" from loading, and that prevented the Einstein folour fix from working.
+* Added a fix that prevented the Red Alert civilian "C3" from loading, and that prevented the Einstein colour fix from working.
+* Added tooltips to Triggers editor giving a summary of teamtypes and triggers used as trigger arguments. This includes a tooltip on the trigger action on Tiberian Dawn's "Destroy Trigger" and "DZ at 'Z'" actions, respectively showing info on the corresponding trigger and the flare waypoint.
+* Added checks and warnings on teamtype arguments, and on the limits of units/orders list lengths.

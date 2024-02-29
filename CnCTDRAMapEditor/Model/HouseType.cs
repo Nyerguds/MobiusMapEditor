@@ -14,6 +14,7 @@
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace MobiusEditor.Model
@@ -31,6 +32,7 @@ namespace MobiusEditor.Model
         BaseHouse    /**/ = 1 << 3,
     }
 
+    [DebuggerDisplay("{Name}")]
     public class HouseType
     {
         public int ID { get; private set; }

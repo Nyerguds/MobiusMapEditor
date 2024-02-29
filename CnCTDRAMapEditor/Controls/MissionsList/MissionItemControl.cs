@@ -125,7 +125,7 @@ namespace MobiusEditor.Controls
                 case TeamMissionArgType.MapCell:
                     SetUpNumValue(0, mapSize - 1, 1, value, this.tooltip, "Map cell");
                     break;
-                case TeamMissionArgType.OrderNumber:
+                case TeamMissionArgType.MissionNumber:
                     SetUpNumValue(0, Int32.MaxValue, 1, value, this.tooltip, "0-based index in this orders list");
                     break;
                 case TeamMissionArgType.GlobalNumber:

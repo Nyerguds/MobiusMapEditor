@@ -25,6 +25,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using System.Windows.Forms.Design;
 using TGASharpLib;
 
 namespace MobiusEditor.RedAlert
@@ -601,7 +602,7 @@ namespace MobiusEditor.RedAlert
             {
                 isLoading = true;
                 List<string> errors = new List<string>();
-                bool forceSingle = false;
+                bool tryCheckSingle = false;
                 Byte[] iniBytes;
                 switch (fileType)
                 {
@@ -611,8 +612,8 @@ namespace MobiusEditor.RedAlert
                             INI ini = new INI();
                             iniBytes = File.ReadAllBytes(path);
                             ParseIniContent(ini, iniBytes, errors);
-                            forceSingle = SinglePlayRegex.IsMatch(Path.GetFileNameWithoutExtension(path));
-                            errors.AddRange(LoadINI(ini, forceSingle, ref modified));
+                            tryCheckSingle = SinglePlayRegex.IsMatch(Path.GetFileNameWithoutExtension(path));
+                            errors.AddRange(LoadINI(ini, tryCheckSingle, ref modified));
                         }
                         break;
                     case FileType.MEG:
@@ -723,7 +724,7 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        private IEnumerable<string> LoadINI(INI ini, bool forceSoloMission, ref bool modified)
+        private IEnumerable<string> LoadINI(INI ini, bool tryCheckSoloMission, ref bool modified)
         {
             List<string> errors = new List<string>();
             Map.BeginUpdate();
@@ -766,7 +767,7 @@ namespace MobiusEditor.RedAlert
             this.UpdateBasePlayerHouse();
             triggers.Sort((x, y) => comparer.Compare(x.Name, y.Name));
             this.ClearUnusedTriggerArguments(triggers);
-            this.CheckTriggersGlobals(triggers, teamTypes, checkUnitTrigs, errors, ref modified);
+            this.CheckTriggersGlobals(triggers, teamTypes, errors, ref modified);
             // Apply triggers in a way that won't trigger the notifications.
             Map.Triggers.Clear();
             Map.Triggers.AddRange(triggers);
@@ -774,7 +775,7 @@ namespace MobiusEditor.RedAlert
             errors.AddRange(this.ResetMissionRules(ini));
             // Store remaining extra sections.
             extraSections = ini.Sections.Count == 0 ? null : ini.Sections;
-            this.CheckSwitchToSolo(forceSoloMission, player, errors);
+            this.CheckSwitchToSolo(tryCheckSoloMission, player, errors);
             Map.EndUpdate();
             return errors;
         }
@@ -882,31 +883,35 @@ namespace MobiusEditor.RedAlert
                         errors.Add(string.Format("TeamType '{0}' has a name that is longer than 8 characters. This will not be corrected by the loading process, but should be addressed, since it can make the teams fail to read correctly, and might even crash the game.", kvp.Key));
                     }
                     TeamType teamType = new TeamType { Name = kvp.Key };
-                    List<string> tokens = kvp.Value.Split(',').ToList();
-                    teamType.House = Map.HouseTypes.Where(t => t.Equals(sbyte.Parse(tokens[0]))).FirstOrDefault();
+                    string[] tokens = kvp.Value.Split(',');
+                    string houseStr = tokens[(int)TeamTypeOptions.House];
+                    teamType.House = Map.HouseTypes.Where(t => t.Equals(sbyte.Parse(houseStr))).FirstOrDefault();
                     if (teamType.House == null)
                     {
                         HouseType defHouse = Map.HouseTypes.First();
-                        errors.Add(string.Format("Team '{0}' has unknown house ID '{1}'; clearing to '{2}'.", kvp.Key, tokens[0], defHouse.Name));
+                        errors.Add(string.Format("Team '{0}' has unknown house ID '{1}'; clearing to '{2}'.", kvp.Key, houseStr, defHouse.Name));
                         modified = true;
                         teamType.House = defHouse;
                     }
-                    tokens.RemoveAt(0);
-                    int flags = int.Parse(tokens[0]); tokens.RemoveAt(0);
+                    int flags = int.Parse(tokens[(int)TeamTypeOptions.Flags]);
                     teamType.IsRoundAbout = (flags & 0x01) != 0;
                     teamType.IsSuicide = (flags & 0x02) != 0;
                     teamType.IsAutocreate = (flags & 0x04) != 0;
                     teamType.IsPrebuilt = (flags & 0x08) != 0;
                     teamType.IsReinforcable = (flags & 0x10) != 0;
-                    teamType.RecruitPriority = int.Parse(tokens[0]); tokens.RemoveAt(0);
-                    teamType.InitNum = byte.Parse(tokens[0]); tokens.RemoveAt(0);
-                    teamType.MaxAllowed = byte.Parse(tokens[0]); tokens.RemoveAt(0);
-                    teamType.Origin = int.Parse(tokens[0]); tokens.RemoveAt(0);
-                    teamType.Trigger = tokens[0]; tokens.RemoveAt(0);
-                    int numClasses = int.Parse(tokens[0]); tokens.RemoveAt(0);
-                    for (int i = 0; i < Math.Min(Globals.MaxTeamClasses, numClasses); ++i)
+                    teamType.RecruitPriority = int.Parse(tokens[(int)TeamTypeOptions.RecruitPriority]);
+                    teamType.InitNum = byte.Parse(tokens[(int)TeamTypeOptions.InitNum]);
+                    teamType.MaxAllowed = byte.Parse(tokens[(int)TeamTypeOptions.MaxAllowed]);
+                    teamType.Origin = int.Parse(tokens[(int)TeamTypeOptions.Origin]);
+                    teamType.Trigger = tokens[(int)TeamTypeOptions.Trigger];
+                    int numClasses = int.Parse(tokens[(int)TeamTypeOptions.Classes]);
+                    int classesIndex = (int)TeamTypeOptions.Classes + 1;
+                    int classesIndexEnd = classesIndex + numClasses;
+                    int classesMax = Math.Min(Globals.MaxTeamClasses, numClasses);
+                    int classesIndexMax = classesIndex + classesMax;
+                    for (int i = classesIndex; i < classesIndexMax; ++i)
                     {
-                        string[] classTokens = tokens[0].Split(':'); tokens.RemoveAt(0);
+                        string[] classTokens = tokens[i].Split(':');
                         if (classTokens.Length == 2)
                         {
                             ITechnoType type = fullTechnoTypes.Where(t => t.Equals(classTokens[0])).FirstOrDefault();
@@ -933,24 +938,62 @@ namespace MobiusEditor.RedAlert
                             modified = true;
                         }
                     }
-                    int numMissions = int.Parse(tokens[0]); tokens.RemoveAt(0);
-                    for (int i = 0; i < Math.Min(Globals.MaxTeamMissions, numMissions); ++i)
+                    if (numClasses > Globals.MaxTeamClasses)
                     {
-                        string[] missionTokens = tokens[0].Split(':'); tokens.RemoveAt(0);
+                        errors.Add(string.Format("Team '{0}' has more classes than the game can handle (has {1}, maximum is {2}).", kvp.Key, numClasses, Globals.MaxTeamClasses));
+                        modified = true;
+                    }
+                    int numMissions = int.Parse(tokens[classesIndexEnd]);
+                    int missionsIndex = classesIndexEnd + 1;
+                    int missionsIndexEnd = missionsIndex + numMissions;
+                    int missionsMax = Math.Min(Globals.MaxTeamMissions, numMissions);
+                    int missionsIndexMax = missionsIndex + missionsMax;
+                    for (int i = missionsIndex; i < missionsIndexMax; ++i)
+                    {
+                        string[] missionTokens = tokens[i].Split(':');
                         if (missionTokens.Length == 2)
                         {
                             TeamMission mission = indexToType(Map.TeamMissionTypes, missionTokens[0], true);
                             if (mission != null)
                             {
-                                if (Int32.TryParse(missionTokens[1], out int arg))
+                                string argError = null;
+                                string argStr = missionTokens[1];
+                                if (!Int32.TryParse(argStr, out int arg))
                                 {
-                                    teamType.Missions.Add(new TeamTypeMission { Mission = mission, Argument = arg });
+                                    argError = string.Format("Team '{0}', orders index {1} ('{2}') has a non-numeric value '{3}'. Reverting to 0.", kvp.Key, i, mission.Mission, argStr);
                                 }
-                                else
+                                else if (mission.ArgType == TeamMissionArgType.Time && arg < 0)
                                 {
-                                    errors.Add(string.Format("Team '{0}', orders index {1} ('{2}') has an incorrect value '{3}'.", kvp.Key, i, mission, missionTokens[1]));
+                                    argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value '{3}' for a Time argument. Reverting to 0.", kvp.Key, i, mission.Mission, argStr);
+                                }
+                                else if (mission.ArgType == TeamMissionArgType.Waypoint && (arg < -1 || arg > Map.Waypoints.Length))
+                                {
+                                    argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value '{3}' for a Waypoint argument. Reverting to 0.", kvp.Key, i, mission.Mission, argStr);
+                                }
+                                else if (mission.ArgType == TeamMissionArgType.OptionsList && (arg < 0 || arg > mission.DropdownOptions.Max(vl => vl.Value)))
+                                {
+                                    argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value '{3}' for the available options. Reverting to 0.", kvp.Key, i, mission.Mission, argStr);
+                                }
+                                else if (mission.ArgType == TeamMissionArgType.MapCell && (arg < 0 || arg >= Map.Metrics.Length))
+                                {
+                                    argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value '{3}' for a Cell argument. Reverting to 0.", kvp.Key, i, mission.Mission, argStr);
+                                }
+                                else if (mission.ArgType == TeamMissionArgType.MissionNumber && (arg < 0 || arg > missionsMax))
+                                {
+                                    argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value '{3}' for an orders index argument. Reverting to 0.", kvp.Key, i, mission.Mission, argStr);
+                                }
+                                else if (mission.ArgType == TeamMissionArgType.Tarcom && arg < 0)
+                                {
+                                    argError = string.Format("Team '{0}', orders index {1} ('{2}') has a bad value '{3}' for a Tarcom argument. Reverting to 0.", kvp.Key, i, mission.Mission, argStr);
+                                }
+                                // Note: globals are deliberately NOT checked here; the CheckTriggersGlobals logic takes care of checking that.
+                                if (argError != null)
+                                {
+                                    errors.Add(argError);
                                     modified = true;
+                                    arg = 0;
                                 }
+                                teamType.Missions.Add(new TeamTypeMission { Mission = mission, Argument = arg });
                             }
                             else
                             {
@@ -963,6 +1006,11 @@ namespace MobiusEditor.RedAlert
                             errors.Add(string.Format("Team '{0}' has wrong number of tokens for orders index {1} (expecting 2).", kvp.Key, i));
                             modified = true;
                         }
+                    }
+                    if (numMissions > Globals.MaxTeamMissions)
+                    {
+                        errors.Add(string.Format("Team '{0}' has more orders than the game can handle (has {1}, maximum is {2}).", kvp.Key, numMissions, Globals.MaxTeamMissions));
+                        modified = true;
                     }
                     teamTypes.Add(teamType);
                 }
@@ -2500,7 +2548,15 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        private void CheckTriggersGlobals(List<Trigger> triggers, List<TeamType> teamTypes, HashSet<String> checkUnitTrigs, List<String> errors, ref Boolean modified)
+        /// <summary>
+        /// Checks the globals used in triggers and teamtypes, and if any out-of-range values are used,
+        /// attempts to find unused ones, and substitutes all usages of these illegal values by unused ones.
+        /// </summary>
+        /// <param name="triggers">List of all read triggers</param>
+        /// <param name="teamTypes">List of all read team types</param>
+        /// <param name="errors">List to add errors to.</param>
+        /// <param name="modified">Returns true if any fixes were made.</param>
+        private void CheckTriggersGlobals(List<Trigger> triggers, List<TeamType> teamTypes, List<String> errors, ref Boolean modified)
         {
             // Keep track of corrected globals.
             List<int> availableGlobals;
@@ -2519,10 +2575,10 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        private void CheckSwitchToSolo(Boolean forceSoloMission, HouseType player, List<String> errors)
+        private void CheckSwitchToSolo(Boolean tryCheckSoloMission, HouseType player, List<String> errors)
         {
             bool switchedToSolo = false;
-            if (forceSoloMission && !Map.BasicSection.SoloMission)
+            if (tryCheckSoloMission && !Map.BasicSection.SoloMission)
             {
                 int playerId = player.ID;
                 bool hasWinTrigger =
@@ -4259,10 +4315,10 @@ namespace MobiusEditor.RedAlert
                 for (Int32 i = 0; i < team.Missions.Count; i++)
                 {
                     TeamTypeMission ttm = team.Missions[i];
-                    if (ttm.Mission.Mission == TeamMissionTypes.SetGlobal.Mission && (ttm.Argument < 0 || ttm.Argument > 29))
+                    if (ttm.Mission.Mission == TeamMissionTypes.SetGlobal.Mission && (ttm.Argument < 0 || ttm.Argument > Constants.HighestGlobal))
                     {
-                        string error = String.Format("Team \"{0}\" Order {1} has an illegal global value \"{2}\": Globals only go from 0 to 29.",
-                            team.Name, i + 1, ttm.Argument);
+                        string error = String.Format("Team \"{0}\" Order {1} has an illegal global value \"{2}\": Globals only go from 0 to {3}.",
+                            team.Name, i + 1, ttm.Argument, Constants.HighestGlobal);
                         int fixedVal = -1;
                         if (fixedGlobals != null && fixedGlobals.TryGetValue(ttm.Argument, out int fixVal))
                         {
@@ -4274,7 +4330,7 @@ namespace MobiusEditor.RedAlert
                             availableGlobals.RemoveAt(0);
                             fixedGlobals.Add(ttm.Argument, fixedVal);
                         }
-                        ttm.Argument = fixedVal == -1 ? ttm.Argument.Restrict(0, 29) : fixedVal;
+                        ttm.Argument = fixedVal == -1 ? ttm.Argument.Restrict(0, Constants.HighestGlobal) : fixedVal;
                         wasFixed = true;
                         error += fixedVal == -1 ? (" Fixed to \"" + ttm.Argument + "\".") : (" Fixed to available global \"" + fixedVal + "\".");
                         errors.Add(error);
@@ -4338,9 +4394,10 @@ namespace MobiusEditor.RedAlert
             {
                 case EventTypes.TEVENT_GLOBAL_SET:
                 case EventTypes.TEVENT_GLOBAL_CLEAR:
-                    if (evnt.Data < 0 || evnt.Data > 29)
+                    if (evnt.Data < 0 || evnt.Data > Constants.HighestGlobal)
                     {
-                        string error = prefix + "Event " + nr + " has an illegal global value \"" + evnt.Data + "\": Globals only go from 0 to 29.";
+                        string error = String.Format("{0}Event \"{1}\" has an illegal global value \"{2}\": Globals only go from 0 to {3}.",
+                            prefix, nr, evnt.Data, Constants.HighestGlobal);
                         if (fix)
                         {
                             int fixedVal = -1;
@@ -4354,7 +4411,7 @@ namespace MobiusEditor.RedAlert
                                 availableGlobals.RemoveAt(0);
                                 fixedGlobals.Add(evnt.Data, fixedVal);
                             }
-                            evnt.Data = fixedVal == -1 ? evnt.Data.Restrict(0, 29) : fixedVal;
+                            evnt.Data = fixedVal == -1 ? evnt.Data.Restrict(0, Constants.HighestGlobal) : fixedVal;
                             wasFixed = true;
                             error += fixedVal == -1 ? (" Fixed to \"" + evnt.Data + "\".") : (" Fixed to available global \"" + evnt.Data + "\".");
                         }
@@ -4478,9 +4535,10 @@ namespace MobiusEditor.RedAlert
             {
                 case ActionTypes.TACTION_SET_GLOBAL:
                 case ActionTypes.TACTION_CLEAR_GLOBAL:
-                    if (action.Data < 0 || action.Data > 29)
+                    if (action.Data < 0 || action.Data > Constants.HighestGlobal)
                     {
-                        string error = prefix + "Action " + nr + " has an illegal global value \""+ action.Data + "\": Globals only go from 0 to 29.";
+                        string error = String.Format("{0}Action \"{1}\" has an illegal global value \"{2}\": Globals only go from 0 to {3}.",
+                            prefix, nr, action.Data, Constants.HighestGlobal);
                         if (fix)
                         {
                             int fixedVal = -1;
@@ -4494,7 +4552,7 @@ namespace MobiusEditor.RedAlert
                                 availableGlobals.RemoveAt(0);
                                 globalFixes.Add(action.Data, fixedVal);
                             }
-                            action.Data = fixedVal == -1 ? action.Data.Restrict(0, 29) : fixedVal;
+                            action.Data = fixedVal == -1 ? action.Data.Restrict(0, Constants.HighestGlobal) : fixedVal;
                             wasFixed = true;
                             error += fixedVal == -1 ? (" Fixed to \"" + action.Data + "\".") : (" Fixed to available global \"" + action.Data + "\".");
                         }
@@ -4576,6 +4634,162 @@ namespace MobiusEditor.RedAlert
                     }
                     break;
             }
+        }
+
+        public string TriggerSummary(Trigger trigger, List<Trigger> currentTriggers)
+        {
+            string[] eventControlStrings =
+            {
+                    "{0} → {2}",
+                    "{0} AND {1} → {2}",
+                    "{0} OR {1} → {2}",
+                    "{0} → {2}; {1} → {3}",
+            };
+            string[] persistenceNames = { "first triggered", "all triggered", "each triggering" };
+
+            // name, house, event control, repeat status
+            const string trigFormat = "{0}: {1}, {2} ({3})";
+
+            string evtControlFormat = eventControlStrings[(int)trigger.EventControl];
+            string persistence = persistenceNames[(int)trigger.PersistentType];
+            string evt1 = GetEventString(trigger.Event1);
+            string evt2 = GetEventString(trigger.Event2);
+            string act1 = GetActionString(trigger.Action1, currentTriggers);
+            string act2 = GetActionString(trigger.Action2, currentTriggers);
+            if (trigger.EventControl != TriggerMultiStyleType.Linked
+                && !TriggerAction.None.Equals(act2, StringComparison.OrdinalIgnoreCase))
+            {
+                act1 = act1 + " + " + act2;
+            }
+            string evtControl = String.Format(evtControlFormat, evt1, evt2, act1, act2);
+            return String.Format(trigFormat, trigger.Name, trigger.House, evtControl, persistence);
+        }
+
+        private String GetEventString(TriggerEvent evt)
+        {
+            String eventStr = (evt.EventType ?? TriggerEvent.None).TrimEnd('.');
+            String eventArg = null;
+            switch (evt.EventType)
+            {
+                case EventTypes.TEVENT_LEAVES_MAP:
+                    eventArg = evt.Team ?? TeamType.None;
+                    break;
+                case EventTypes.TEVENT_PLAYER_ENTERED:
+                case EventTypes.TEVENT_CROSS_HORIZONTAL:
+                case EventTypes.TEVENT_CROSS_VERTICAL:
+                case EventTypes.TEVENT_ENTERS_ZONE:
+                case EventTypes.TEVENT_LOW_POWER:
+                case EventTypes.TEVENT_THIEVED:
+                case EventTypes.TEVENT_HOUSE_DISCOVERED:
+                case EventTypes.TEVENT_BUILDINGS_DESTROYED:
+                case EventTypes.TEVENT_UNITS_DESTROYED:
+                case EventTypes.TEVENT_ALL_DESTROYED:
+                    Model.House house = Map.Houses.FirstOrDefault(h => h.Type.ID == evt.Data);
+                    eventArg = house?.Type?.Name ?? House.None;
+                    break;
+                case EventTypes.TEVENT_BUILDING_EXISTS:
+                case EventTypes.TEVENT_BUILD:
+                    BuildingType bt = Map.BuildingTypes.FirstOrDefault(b => b.ID == evt.Data);
+                    eventArg = bt?.Name ?? evt.Data.ToString();
+                    break;
+                case EventTypes.TEVENT_BUILD_UNIT:
+                    UnitType ut = Map.UnitTypes.FirstOrDefault(u => u.IsGroundUnit && u.ID == evt.Data);
+                    eventArg = ut?.Name ?? evt.Data.ToString();
+                    break;
+                case EventTypes.TEVENT_BUILD_INFANTRY:
+                    InfantryType it = Map.InfantryTypes.FirstOrDefault(i => i.ID == evt.Data);
+                    eventArg = it?.Name ?? evt.Data.ToString();
+                    break;
+                case EventTypes.TEVENT_BUILD_AIRCRAFT:
+                    UnitType at = Map.UnitTypes.FirstOrDefault(a => a.IsAircraft && a.ID == evt.Data);
+                    eventArg = at?.Name ?? evt.Data.ToString();
+                    break;
+                case EventTypes.TEVENT_NUNITS_DESTROYED:
+                case EventTypes.TEVENT_NBUILDINGS_DESTROYED:
+                case EventTypes.TEVENT_CREDITS:
+                case EventTypes.TEVENT_TIME:
+                case EventTypes.TEVENT_GLOBAL_SET:
+                case EventTypes.TEVENT_GLOBAL_CLEAR:
+                    eventArg = evt.Data.ToString();
+                    break;
+            }
+            return eventArg == null ? eventStr : String.Format(GameInfo.TRIG_ARG_FORMAT, eventStr, eventArg);
+        }
+
+        private String GetActionString(TriggerAction act, List<Trigger> currentTriggers)
+        {
+            String actionStr = (act.ActionType ?? TriggerAction.None).TrimEnd('.');
+            String actionArg = null;
+            switch (act.ActionType)
+            {
+                case ActionTypes.TACTION_CREATE_TEAM:
+                case ActionTypes.TACTION_DESTROY_TEAM:
+                case ActionTypes.TACTION_REINFORCEMENTS:
+                    actionArg = act.Team ?? TeamType.None;
+                    break;
+                case ActionTypes.TACTION_WIN:
+                case ActionTypes.TACTION_LOSE:
+                case ActionTypes.TACTION_BEGIN_PRODUCTION:
+                case ActionTypes.TACTION_FIRE_SALE:
+                case ActionTypes.TACTION_AUTOCREATE:
+                case ActionTypes.TACTION_ALL_HUNT:
+                    Model.House house = Map.Houses.FirstOrDefault(h => h.Type.ID == act.Data);
+                    actionArg = house?.Type?.Name ?? House.None;
+                    break;
+                case ActionTypes.TACTION_FORCE_TRIGGER:
+                case ActionTypes.TACTION_DESTROY_TRIGGER:
+                    return String.Format(GameInfo.TRIG_ARG_FORMAT, act, act.Trigger ?? Trigger.None);
+                case ActionTypes.TACTION_DZ:
+                case ActionTypes.TACTION_REVEAL_SOME:
+                case ActionTypes.TACTION_REVEAL_ZONE:
+                    Waypoint z = act.Data >= 0 && act.Data < Map.Waypoints.Length ? Map.Waypoints[act.Data] : null;
+                    String wpSummary = act.Data.ToString();
+                    if (z == null)
+                        wpSummary += " [Bad value]";
+                    else if (!z.Point.HasValue)
+                        wpSummary += " [Not set]";
+                    else
+                    {
+                        Point p = z.Point.Value;
+                        wpSummary = String.Format("{0} [{1},{2}] (cell {3})", wpSummary, p.X, p.Y, z.Cell.Value);
+                    }
+                    actionArg = wpSummary;
+                    break;
+                case ActionTypes.TACTION_1_SPECIAL:
+                case ActionTypes.TACTION_FULL_SPECIAL:
+                    actionArg = act.Data >= 0 && act.Data < ActionDataTypes.SuperTypes.Length ? ActionDataTypes.SuperTypes[act.Data] : "??";
+                    break;
+                case ActionTypes.TACTION_PLAY_MUSIC:
+                    actionArg = act.Data >= 0 && act.Data < Map.ThemeTypes.Count ? Map.ThemeTypes[(int)act.Data] : "??";
+                    break;
+                case ActionTypes.TACTION_PLAY_MOVIE:
+                    actionArg = act.Data >= 0 && act.Data < Map.MovieTypes.Count ? Map.MovieTypes[(int)act.Data] : "??";
+                    break;
+                case ActionTypes.TACTION_PLAY_SOUND:
+                    actionArg = act.Data >= 0 && act.Data < ActionDataTypes.VocNames.Length ? ActionDataTypes.VocNames[(int)act.Data] : "??";
+                    break;
+                case ActionTypes.TACTION_PLAY_SPEECH:
+                    actionArg = act.Data >= 0 && act.Data < ActionDataTypes.VoxNames.Length ? ActionDataTypes.VoxNames[(int)act.Data] : "??";
+                    break;
+                case ActionTypes.TACTION_PREFERRED_TARGET:
+                    int count = TeamMissionTypes.Attack.DropdownOptions.Count(vl => vl.Value == act.Data);
+                    actionArg = count == 0 ? "??" : TeamMissionTypes.Attack.DropdownOptions.First(t => t.Value == act.Data).Label;
+                    break;
+                case ActionTypes.TACTION_BASE_BUILDING:
+                    actionArg = act.Data == 0 ? "Off" : act.Data == 1 ? "On" : "??";
+                    break;
+                case ActionTypes.TACTION_TEXT_TRIGGER:
+                    actionArg = act.Data.ToString("000") + " " + (act.Data >= 1 && act.Data <= ActionDataTypes.TextDesc.Length ? ActionDataTypes.TextDesc[(int)act.Data - 1] : "(??)");
+                    break;
+                case ActionTypes.TACTION_ADD_TIMER:
+                case ActionTypes.TACTION_SUB_TIMER:
+                case ActionTypes.TACTION_SET_TIMER:
+                case ActionTypes.TACTION_SET_GLOBAL:
+                case ActionTypes.TACTION_CLEAR_GLOBAL:
+                    actionArg = act.Data.ToString();
+                    break;
+            }
+            return actionArg == null ? actionStr : String.Format(GameInfo.TRIG_ARG_FORMAT, actionStr, actionArg);
         }
 
         public ITeamColor[] GetFlagColors()

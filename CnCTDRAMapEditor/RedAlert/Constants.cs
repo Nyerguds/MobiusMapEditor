@@ -42,5 +42,7 @@ namespace MobiusEditor.RedAlert
         public const int MaxUnits     /**/ = 500;
         public const int MaxTeams     /**/ = 60;
         public const int MaxTriggers  /**/ = 80;
+        // The length of the globals array is 30, so this is the maximum index.
+        public const int HighestGlobal   /**/ = 29;
     }
 }

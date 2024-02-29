@@ -21,6 +21,8 @@ namespace MobiusEditor.Model
     /// </summary>
     public abstract class GameInfo
     {
+        public const string TRIG_ARG_FORMAT = "{0}: {1}";
+        public string[] PERSISTENCE_NAMES = { "first triggered", "all triggered", "each triggering" };
         #region properties
         public abstract GameType GameType { get; }
         public abstract string Name { get; }
