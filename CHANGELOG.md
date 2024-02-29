@@ -601,6 +601,12 @@ Released on 31 Jan 2023 at 20:50 GMT
 * The Digest section will now also be removed from TD / SS maps.
 * Upgraded the logic to detect missing rules for ant-related objects on RA maps, so it includes the Mandible weapon, and checks in triggers too. The check now also goes through the rules files, so when using a rules mod that does define these things, no warnings will be shown.
 * Added config option for the behaviour to recolour the classic DOS Einstein to RA95/remastered colours.
+* Added code to filter out special houses (e.g. "None") by HouseTypeFlag rather than using hardcoded exceptions.
+* Fixed the alliances list in the house settings scrolling past the first selected alliance.
+* The Alliances list now uses a specific list for alliance-houses, which is filtered and sorted to potentially include special houses.
+* Red Alert now allows the special grouping Houses "Allies" and "Soviet" in their alliances list.
+* Houses now always automatically add their own house name in their alliances list if it is missing.
+* Sole Survivor maps with all multi-Houses enabled will now have all those beyond Multi4 disabled on map load, to avoid needlessly expanding the ini.
 * Added "Info" menu, containing general program info, a link to the Github website, and an update check function.
 * Added update check on startup. This option can be turned off using the "CheckUpdatesOnStartup" option in the config file.
 * Fixed the CONC pavement connecting in TD to completely match the way the game does it. There is also an alternate mode available, through the parameter "FixConcretePavement", which shows the pavement as it was intended to be if the game's connection logic actually functioned correctly.
