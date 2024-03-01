@@ -2,6 +2,7 @@
 using MobiusEditor.Model;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -21,34 +22,41 @@ namespace MobiusEditor.Utility
             Regex modregex = new Regex("\"game_type\"\\s*:\\s*\"" + modIdentifier + "\"");
             const string contentFile = "ccmod.json";
             string[] steamLibraryFolders = SteamAssist.GetLibraryFoldersForAppId(steamId);
-            string[] mods = (modstoLoad ?? String.Empty).Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+            string[] mods = (modstoLoad ?? String.Empty).Split(new char[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+            // Not using Dictionary<> because I want to preserve the order of the folders.
+            HashSet<string> foundMods = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             List<string> modPaths = new List<string>();
             for (int i = 0; i < mods.Length; ++i)
             {
                 string modDef = mods[i].Trim();
-                if (String.IsNullOrEmpty(modDef))
+                if (String.IsNullOrEmpty(modDef) || foundMods.Contains(modDef))
                 {
                     continue;
                 }
                 string addonModPath;
                 // Lookup by Steam ID. Only happens if it's numeric.
-                if (numbersOnly.IsMatch(modDef))
+                if (numbersOnly.IsMatch(modDef) && steamLibraryFolders != null)
                 {
-                    addonModPath = SteamAssist.TryGetSteamWorkshopFolder(steamId, modDef, contentFile, null);
+                    addonModPath = SteamAssist.GetWorkshopFolder(steamLibraryFolders, steamId, modDef, contentFile, null, out string addonModBasePath);
+                    //SteamAssist.TryGetSteamWorkshopFolder(steamId, modDef, contentFile, null);
                     if (addonModPath != null)
                     {
-                        if (CheckAddonPathModType(addonModPath, contentFile, modregex))
+                        addonModPath = Path.GetFullPath(addonModPath);
+                        addonModBasePath = Path.GetFullPath(addonModBasePath);
+                        string modId = addonModPath.Substring(addonModBasePath.Length).Trim(new[] { '/', '\\' });
+                        if (CheckAddonPathModType(addonModPath, contentFile, modregex) && !String.IsNullOrEmpty(modId) && !foundMods.Contains(modId))
                         {
+                            foundMods.Add(modId);
                             modPaths.Add(addonModPath);
                         }
+                        continue;
                     }
-                    // don't bother checking more on a numbers-only entry.
-                    continue;
                 }
-                // Lookup by folder name
+                // Lookup by folder name. Look in local mod folders (under user 'Documents') first.
                 addonModPath = Path.Combine(modsFolder, modDef);
                 if (CheckAddonPathModType(addonModPath, contentFile, modregex))
                 {
+                    foundMods.Add(modDef);
                     modPaths.Add(addonModPath);
                     // Found in local mods; don't check Steam ones.
                     continue;
@@ -70,6 +78,8 @@ namespace MobiusEditor.Utility
                         addonModPath = Path.Combine(modPth, modDef);
                         if (CheckAddonPathModType(addonModPath, contentFile, modregex))
                         {
+                            // Don't need to check on 'foundMods'; it's done at the loop start.
+                            foundMods.Add(modDef);
                             modPaths.Add(addonModPath);
                             break;
                         }
@@ -434,6 +444,7 @@ namespace MobiusEditor.Utility
                 if (loadedFiles.Contains(fileName))
                 {
                     anyExist = true;
+                    break;
                 }
             }
             if (toInit != null)

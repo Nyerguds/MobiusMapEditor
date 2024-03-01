@@ -54,18 +54,21 @@ namespace MobiusEditor.Utility
             return GetGameFolder(foundLibraryFolders, steamId, identifyingFiles);
         }
 
-
         /// <summary>
-        /// Attempts to retrieve the folder that a Steam game's workshop items are installed in, by scanning the Steam library information.
+        /// Scans the workshop files for the given Steam game ID for a mod. If <paramref name="contentFile"/> is given,
+        /// a file with that name must exist somewhere inside the folder or its subfolders for it to be accepted. If no <paramref name="contentFile"/>
+        /// is given, the function will return the base folder. Otherwise, the folder in which the first match of <paramref name="contentFile"/> is found is returned.
         /// </summary>
-        /// <param name="steamId">Steam game ID</param>
-        /// <param name="wsId">Steam workshop ID</param>
-        /// <param name="contentFile">Filename that must exist somewhere inside the workshop folder. If <paramref name="contentFolder"/> is given, it is only searched inside that folder.</param>
-        /// <param name="contentFolder">Optional. If given, the <paramref name="contentFile"/> must be in this subfolder under the Steam item.</param>
-        /// <returns>The first found workshop folder that matches the criteria and that exists.</returns>
-        /// <exception cref="ArgumentNullException"></exception>
-        public static String TryGetSteamWorkshopFolder(string steamId, string wsId, string contentFile, string contentFolder)
+        /// <param name="steamId">The Steam game ID.</param>
+        /// <param name="workShopId">The Steam workshop ID.</param>
+        /// <param name="contentFile">A filename that must exist somewhere inside the workshop folder. If given, the subfolder in which the file was found is returned.</param>
+        /// <param name="contentFolder">If given, <paramref name="contentFile"/> needs to be in this exact subfolder.</param>
+        /// <param name="baseFolder">Returns the base folder of the workshop item.</param>
+        /// <returns>The folder in which the requested file was found under the requested workshop id folder, or null if no existing match was found.</returns>
+        /// <exception cref="ArgumentNullException">if steamId is null</exception>
+        public static String GetWorkshopFolder(string steamId, string workShopId, string contentFile, string contentFolder, out string baseFolder)
         {
+            baseFolder = null;
             if (steamId == null)
             {
                 throw new ArgumentNullException("steamId");
@@ -80,7 +83,73 @@ namespace MobiusEditor.Utility
             {
                 return null;
             }
-            return GetWorkshopFolder(foundLibraryFolders, steamId, wsId, contentFile, contentFolder);
+            return GetWorkshopFolder(foundLibraryFolders, steamId, workShopId, contentFile, contentFolder, out baseFolder);
+        }
+
+        /// <summary>
+        /// Scans the given Steam library folders for a mod under the given Steam game ID. If <paramref name="contentFile"/> is given,
+        /// a file with that name must exist somewhere inside the folder or its subfolders for it to be accepted. If no <paramref name="contentFile"/>
+        /// is given, the function will return the base folder. Otherwise, the folder in which the first match of <paramref name="contentFile"/> is found is returned.
+        /// </summary>
+        /// <param name="libraryFolders">A list of Steam library folders. Use this overload if they were already fetched using <see cref="GetLibraryFoldersForAppId"/>.</param>
+        /// <param name="steamId">The Steam game ID.</param>
+        /// <param name="workShopId">The Steam workshop ID.</param>
+        /// <param name="contentFile">A filename that must exist somewhere inside the workshop folder. If given, the subfolder in which the file was found is returned.</param>
+        /// <param name="contentFolder">If given, <paramref name="contentFile"/> needs to be in this exact subfolder.</param>
+        /// <param name="baseFolder">Returns the base folder of the workshop item.</param>
+        /// <returns>The folder in which the requested file was found under the requested workshop id folder, or null if no existing match was found.</returns>
+        /// <exception cref="ArgumentNullException">if steamId is null</exception>
+        public static string GetWorkshopFolder(IEnumerable<string> libraryFolders, string steamId, string workShopId, string contentFile, string contentFolder, out string baseFolder)
+        {
+            if (steamId == null)
+            {
+                throw new ArgumentNullException("steamId");
+            }
+            if (libraryFolders == null)
+            {
+                baseFolder = null;
+                return null;
+            }
+            foreach (string path in libraryFolders)
+            {
+                string modPath = Path.GetFullPath(Path.Combine(path, "steamapps", "workshop", "content", steamId, workShopId));
+                if (!Directory.Exists(modPath))
+                {
+                    continue;
+                }
+                // No file to check; just accept the path.
+                if (String.IsNullOrEmpty(contentFile))
+                {
+                    baseFolder = modPath;
+                    return modPath;
+                }
+                // If given, it needs to match exactly.
+                if (!String.IsNullOrEmpty(contentFolder))
+                {
+                    string folderPath = Path.Combine(modPath, contentFolder);
+                    string contentFilePath = Path.Combine(folderPath, contentFile);
+                    if (!File.Exists(contentFilePath))
+                    {
+                        continue;
+                    }
+                    baseFolder = modPath;
+                    return folderPath;
+                }
+                // check all folders.
+                string[] workshopFiles = Directory.GetFiles(modPath, contentFile, SearchOption.AllDirectories);
+                Array.Sort(workshopFiles);
+                for (int i = 0; i < workshopFiles.Length; ++i)
+                {
+                    string foundFile = workshopFiles[i];
+                    if (contentFile.Equals(Path.GetFileName(foundFile), StringComparison.OrdinalIgnoreCase))
+                    {
+                        baseFolder = modPath;
+                        return Path.GetDirectoryName(foundFile);
+                    }
+                }
+            }
+            baseFolder = null;
+            return null;
         }
 
         /// <summary>
@@ -355,55 +424,5 @@ namespace MobiusEditor.Utility
             }
             return null;
         }
-
-
-
-        /// <summary>
-        /// Scans the given Steam library folders for a mod under the given Steam game ID.
-        /// </summary>
-        /// <param name="libraryFolders">A list of Steam library folders.</param>
-        /// <param name="steamId">Steam game ID.</param>
-        /// <param name="wsId">Steam workshop ID</param>
-        /// <param name="contentFile">Filename that must exist somewhere inside the workshop folder. If <paramref name="contentFolder"/> is given, it is only searched inside that folder.</param>
-        /// <param name="contentFolder">Optional. If given, the <paramref name="contentFile"/> must be in this subfolder under the Steam item.</param>
-        /// <returns>The first matching game folder for that id that is found, or null if no existing match was found.<</returns>
-        private static string GetWorkshopFolder(IEnumerable<string> libraryFolders, string steamId, string wsId, string contentFile, string contentFolder)
-        {
-            if (steamId == null)
-            {
-                throw new ArgumentNullException("steamId");
-            }
-            if (contentFile == null)
-            {
-                throw new ArgumentNullException("contentFile");
-            }
-            if (libraryFolders == null)
-            {
-                return null;
-            }
-            foreach (string path in libraryFolders)
-            {
-                string modPath = Path.Combine(path, "steamapps", "workshop", "content", steamId, wsId);
-                if (!Directory.Exists(modPath))
-                {
-                    continue;
-                }
-                // If given, it needs to match.
-                if (!String.IsNullOrEmpty(contentFolder))
-                {
-                    string folderPath = Path.Combine(modPath, contentFolder);
-                    return File.Exists(Path.Combine(folderPath, contentFile)) ? folderPath : null;
-                }
-                string[] workshopFiles = Directory.GetFiles(modPath, contentFile, SearchOption.AllDirectories);
-                for (int i = 0; i < workshopFiles.Length; ++i)
-                {
-                    string foundFile = workshopFiles[i];
-                    if (contentFile.Equals(Path.GetFileName(foundFile), StringComparison.OrdinalIgnoreCase))
-                        return Path.GetDirectoryName(foundFile);
-                }
-            }
-            return null;
-        }
-
     }
 }
