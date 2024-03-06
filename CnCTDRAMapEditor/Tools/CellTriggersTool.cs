@@ -596,7 +596,7 @@ namespace MobiusEditor.Tools
             }
             else
             {
-                statusLbl.Text = "Shift to enter placement mode, Left-Click or Right-Click to pick cell trigger";
+                statusLbl.Text = "Shift to enter placement mode, Left-Click or Right-Click to pick cell trigger, Enter to jump to next trigger usage";
             }
         }
 

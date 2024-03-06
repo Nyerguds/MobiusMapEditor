@@ -12,9 +12,11 @@ If the C&C Remastered Collection is not installed on your PC, a warning will be 
 
 ## Usage
 
-The creators of the map editor have chosen to build a manual into the editor, but it might not be immediately obvious. Look at the bottom bar, and it will tell you for the currently selected editing type what your mouse buttons will do, and which modifier keys will change to different editing modes. Once you hold down such a key, the bottom bar text will change, further explaining what your mouse buttons will do in this specific mode. Several types of objects can also be dragged around, and will change the bottom bar text accordingly when the mouse button is pressed down on an object.
+The creators of the map editor have chosen to build a manual into the editor, but it might not be immediately obvious. Look at the bottom bar, and it will tell you for the currently selected editing type what your mouse buttons will do, and which modifier keys will change to different editing modes. Once you hold down such a key, the bottom bar text will change, further explaining what your mouse buttons will do in this specific mode.
 
-Besides that, the scroll wheel will allow zooming in and out, and holding down either the middle mouse button or the space bar will allow you to quickly drag-scroll around the map.
+In general, holding down \[Shift\] will activate placement mode, and in that mode, left click will place an object, and right clicking on an object will remove it. Outside placement mode, double-clicking an object will open its properties, holding down the left mouse button on an object will allow dragging it around, and right-clicking an object will copy its properties to the tool window's placement template. These controls may vary a bit from type to type; for example, the Properties window doesn't exist for all object types, and in Resources mode, placement mode is always active.
+
+As for basic navigation, the controls are fairly straightforward: the scroll wheel and the \[Plus\] and \[Minus\] keys allow zooming in and out, arrow keys will pan around the map, and holding down either the middle mouse button or the space bar allows quickly drag-panning around the map. Some special shortcuts for zooming can be found in the View → Zoom menu; the \* key will reset the zoom to the full map, and \[Ctrl\]+\[D\] will zoom the editor to just the area of the map's configured map bounds area plus one extra cell border around it. Note that you can zoom out farther than the full map; this was done to allow placing map template pieces partially outside the map from the top and left sides of the map.
 
 Specific options about the map and the scripting elements can be found in the "Settings" menu:
 
@@ -28,11 +30,13 @@ The triggers dialog contains a "Check" button that will check if any configurati
 
 You can switch between the different editing modes using the six first letters on the top two rows on your keyboard; Q-W-E-R-T-Y and A-S-D-F-G on classic a US qwerty keyboard. Note that these keys are interpreted positionally on the keyboard, meaning that they will work in the intended logical way on different-region keyboard, like the German 'qwertz' and French 'azerty'.
 
-Besides those, PageUp and PageDown have been universally implemented to let you switch to the next / previous item on the current editing tool's selection list, with Home and End going to the start and end of the list. This also works for increasing/decreasing the resource placement size in Resources mode.
+As is standard in most programs, Undo and Redo are linked to \[Ctrl\]+\[Z\] and \[Ctrl\]+\[Y\] respectivelt. Note that the Undo/Redo history includes edits to Triggers and Teamtypes, though since those are large operations, a warning will be shown before an undo on those is applied. Some actions in the Map settings, such as enabling the *Aftermath* expansion units or changing ini rules, are deemed too drastic to support in the Undo/Redo system, and will clear the current edit history.
 
-Some editing modes will have their own specific shortcuts, like the ones to select specific special waypoints in Waypoints mode. Those will be indicated in the bottom bar along with the mouse function modifiers.
+Besides those, PageUp and PageDown have been universally implemented to let you switch to the previous / next item on the current editing tool's selection list, with Home and End going to the start and end of the list. This also works for increasing/decreasing the resource placement size in Resources mode. Holding down the \[Ctrl\] key and using the mouse scroll wheel has the same previous / next item function.
 
-Note that these hotkeys only work when the main window is selected; if you click on the tool window to select it, all keys will work as expected inside the selected controls.
+Some editing modes will have their own specific shortcuts; in Map mode, holding down the \[Ctrl\] key will allow modifying the map border, and \[Ctrl\]+\[Alt\] allows using the flood fill feature. In Waypoints mode, pressing \[Shift\] plus the starting letter of a special waypoint will act as shortcut for quickly selecting it. In Waypoints and Celltriggers modes, the \[Enter\] key functions as shortcut for the "Jump To" function. All such mode-dependent shortcuts will be indicated in the bottom bar along with the mouse function modifiers.
+
+Note that these hotkeys only work when the main window is selected; if you click on the tool window to select it, all keys will work as expected inside the selected controls. Also note that the tool window will automatically deselect when the mouse is moved over the main editor area, to avoid having to click the main window to activate its normal functioning.
 
 ### Sole Survivor and Megamaps
 
@@ -90,11 +94,11 @@ Tiberian Dawn and Sole Survivor only have one water type, which is all passable 
 
 ## Local settings storage
 
-The editor has two kinds of settings; global settings used on every run, and modifiable settings that can get changed during the program run. The global settings are those detailed in the "Configuration" section below. The modifiable settings include things like the game path and window positions, and will automatically get stored under the user-folder. If, for any reason, you would want to clear these settings and start the editor with a clean slate, simply open the File Explorer, paste the following into the address bar and press [enter]:
+The editor has two kinds of settings; global settings used on every run, and modifiable settings that can get changed during the program run. The global settings are those detailed in the "Configuration" section below. The modifiable settings include things like the game path and window positions, and will automatically get stored under the user-folder. If, for any reason, you would want to clear these settings and start the editor with a clean slate, simply open the File Explorer, paste the following into the address bar and press \[Enter\]:
 
 **\%localappdata\%\\Nyerguds\\**
 
-This should make you end up in the "AppData\Local\Nyerguds" folder under your Windows user folder. Removing this folder will clear all of the editor's user settings.
+This should make you end up in the "AppData\\Local\\Nyerguds" folder under your Windows user folder. Removing this folder will clear all of the editor's user settings.
 
 ## Configuration
 
@@ -105,17 +109,17 @@ Note that this listing is updated as I develop. If options mentioned in this lis
 ### Using classic files:
 
 * **UseClassicFiles**: Disabled by default, so the editor can ask you for your C&C Remastered game folder, but if you don't own the Remaster, or prefer the classic graphics, simply set this to "True".
-* **ClassicPathTD** / **ClassicPathRA** / **ClassicPathSS**: Path to load the classic files from for each of the game types when running in Classic Files mode. If the directory entered in this cannot be found, this reverts to predefined subfolders under the editor's location; "Classic\TD" for Tiberian Dawn and Sole Survivor, and "Classic\RA" for Red Alert. If these folders are not found either, the editor will check if it is ran from the C&C Remastered folder, by checking for the existence of the classic folders inside the CNCDATA folder. If the data is not present at the given location, the editor will refuse to launch in classic mode.
+* **ClassicPathTD** / **ClassicPathRA** / **ClassicPathSS**: Path to load the classic files from for each of the game types when running in Classic Files mode. If the directory entered in this cannot be found, this reverts to predefined subfolders under the editor's location; "Classic\\TD" for Tiberian Dawn and Sole Survivor, and "Classic\\RA" for Red Alert. If these folders are not found either, the editor will check if it is ran from the C&C Remastered folder, by checking for the existence of the classic folders inside the CNCDATA folder. If the data is not present at the given location, the editor will refuse to launch in classic mode.
 * **ClassicNoRemasterLogic**: Defaults to False. When enabled, using classic mode will make it stop doing remaster-specific checks (such as briefing screen constraints in RA) or use the Remaster's specific folders under Documents.
 * **ClassicProducesNoMetaFiles**: Defaults to False. Suppresses the creation of xml and thumbnail files for multiplayer maps when in Classic Files mode.
 
 Using classic files will not only use the classic graphics, but will also load the classic game text from the respective game's 'CONQUER.ENG' file, and the Red Alert house colours from 'PALETTE.CPS'.
 
-The default "Classic\TD" and "Classic\RA" folders are supplied along with the editor, so it is immediately usable in classic mode. The contents of these folders were taken from the official freeware releases of the games, supplemented with some files from the Red Alert expansion packs. For the exact expected contents of the folders, see the "Classic files listing" section below.
+The default "Classic\\TD" and "Classic\\RA" folders are supplied along with the editor, so it is immediately usable in classic mode. The contents of these folders were taken from the official freeware releases of the games, supplemented with some files from the Red Alert expansion packs. For the exact expected contents of the folders, see the "Classic files listing" section below.
 
 The extra theaters available for Tiberian Dawn and Red Alert in the upgraded community releases of the classic games are supported if their mix files are found in the configured folders. To achieve this, you can either copy the theater .mix archives from the classic install folder into into the classic folder provided with the editor (see "Classic files listing" section below for the exact names), or point the **ClassicPathTD** / **ClassicPathRA** folder to your own classic game install folder.
 
-Note that for Red Alert, the editor uses the DOS versions of the infantry sprites, and the community version of Red Alert does not contain those for the expansion pack infantry. To amend this, copy the "lores1.mix" file from "Classic\RA\" into the Red Alert game folder. This will not have any effect on the game itself; it only uses the connents of "hires1.mix".
+Note that for Red Alert, the editor uses the DOS versions of the infantry sprites, and the community version of Red Alert does not contain those for the expansion pack infantry. To amend this, copy the "lores1.mix" file from "Classic\\RA\\" into the Red Alert game folder. This will not have any effect on the game itself; it only uses the connents of "hires1.mix".
 
 ### General editor options
 
@@ -127,7 +131,7 @@ Note that for Red Alert, the editor uses the DOS versions of the infantry sprite
 
 * **ModsToLoadTD** / **ModsToLoadRA** / **ModsToLoadSS**: semicolon (or comma) separated list of mod entries for each supported game.
 
-A mod entry can either be a Steam workshop ID, or a folder name. The paths will initially be looked up in the mods folder of the respective game in the CnCRemastered\mods\ folder under your Documents folder, but the loading system will also check the Steam workshop files for a matching mod. Sole Survivor will use Tiberian Dawn mods. Note that mods can only apply graphical changes from the tileset and house color xml files; the editor can't read any data from compiled dll files. This mods system is mostly meant to apply graphical fixes to the editor.
+A mod entry can either be a Steam workshop ID, or a folder name. The paths will initially be looked up in the mods folder of the respective game in the CnCRemastered\\mods\\ folder under your Documents folder, but the loading system will also check the Steam workshop files for a matching mod. Sole Survivor will use Tiberian Dawn mods. Note that mods can only apply graphical changes from the tileset and house color xml files; the editor can't read any data from compiled dll files. This mods system is mostly meant to apply graphical fixes to the editor.
 
 The **ModsToLoadTD** and **ModsToLoadSS** settings will have the `GraphicsFixesTD` mod set by default, to complete the incomplete TD Remastered graphics set, meaning the mod will automatically be loaded if found. Similarly, the **ModsToLoadRA** setting will have the `GraphicsFixesRA` mod set. Note that the editor has no way to check whether mods are enabled in the game, so that makes no difference.
 
@@ -137,10 +141,10 @@ In classic graphics mode, the editor can still use mods, if they contain classic
 
 ### Defaults:
 
-* **DefaultBoundsObstructFill**: Default for the option "Tools" → "Options" → "Flood fill is obstructed by map bounds".  When enabled, and filling map tiles with [Ctrl]+[Shift]+[Click], the map boundary acts as border blocking the fill spread. This applies both inside and outside the border.
+* **DefaultBoundsObstructFill**: Default for the option "Tools" → "Options" → "Flood fill is obstructed by map bounds".  When enabled, and filling map tiles with \[Ctrl\]+\[Shift\]+\[Click\], the map boundary acts as border blocking the fill spread. This applies both inside and outside the border.
 * **DefaultTileDragProtect**: Default for the option "Tools" → "Options" → "Drag-place map tiles without smearing". When placing tiles in map mode, and dragging around the mouse, this option will make sure a new tileset block is only placed after fully leaving the previously-placed blocks inside that one mouse action.
 * **DefaultTileDragRandomize**: Default for the option "Tools" → "Options" → "Randomize drag-placed map tiles". When placing a tile and holding down the mouse to drag more, this will make the subsequently placed tiles randomize between equivalents of the same size.
-* **DefaultShowPlacementGrid**: Default for the option "Tools" → "Options" → "Show grid when placing / moving". This option enables showing the map grid when in placement mode (and/or holding down [Shift]) or when dragging a placed down object to a different location.
+* **DefaultShowPlacementGrid**: Default for the option "Tools" → "Options" → "Show grid when placing / moving". This option enables showing the map grid when in placement mode (and/or holding down \[Shift\]) or when dragging a placed down object to a different location.
 * **DefaultOutlineAllCrates**: Default for the option "Tools" → "Options" → "Crate outline indicators show on all crates". When enabled, the crate indicators from the "View" → "Indicators" → "Outlines on overlapped crates" option will show on all crates instead of just those underneath objects or graphics.
 * **DefaultCratesOnTop**: Default for the option "Tools" → "Options" → "Show crates on top of other objects".
 * **DefaultExportScale**: Default scaling multiplier for the size at which an exported image will be generated through "Tools" → "Export As Image". A negative values will set it to smooth scaling. Defaults to -0.5.
@@ -202,7 +206,7 @@ Note that there is no support for running the editor for one specific game only,
 
 ### Tiberian Dawn and Sole Survivor
 
-These are read from the "Classic\TD" subfolder by default. Note that the editor has not been specifically tested on an actual Sole Survivor folder.
+These are read from the "Classic\\TD" subfolder by default. Note that the editor has not been specifically tested on an actual Sole Survivor folder.
 
 * cclocal.mix (or local.mix) <sup>(*)</sup>
 * sc*.mix <sup>(1)</sup>
@@ -214,7 +218,7 @@ These are read from the "Classic\TD" subfolder by default. Note that the editor 
 
 ### Red Alert
 
-These are read from the "Classic\RA" subfolder by default.
+These are read from the "Classic\\RA" subfolder by default.
 
 * expand2.mix
 * expand.mix

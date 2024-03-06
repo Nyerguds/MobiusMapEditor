@@ -19,16 +19,16 @@ Released on 08 Jul 2022 at 21:37 UTC
 * Added CONC and ROAD pavement to TD. They have no graphics, but at least now they are accepted by the editor and not discarded as errors.
 * Sorted all items in the lists (except map tiles) by key, which is usually a lot more straightforward.
 * Split off specific separate list for techno types usable in teamtypes.
-* Removed the Aircraft from the placeable units in TD. [NOTE: made into a setting in v1.4.3.0]
+* Removed the Aircraft from the placeable units in TD. \[NOTE: made into a setting in v1.4.3.0\]
 * Removed irrelevant orders from the unit missions list (Selling, Missile, etc).
 * Fixed case sensitivity related crashes in TD teamtypes.
 * TD triggers without a teamtype will now automatically get "None" filled in as teamtype, fixing the malfunctioning of their repeat status.
-* Added [Ctrl]+[N], [Ctrl]+[O], [Ctrl]+[S] etc. shortcuts for the File menu.
+* Added \[Ctrl\]+\[N\], \[Ctrl\]+\[O\], \[Ctrl\]+\[S\] etc. shortcuts for the File menu.
 * Fixed double indicator on map tile selection window.
 * Fixed smudge reading in TD to allow 5 crater stages.
 * Added tool window to adjust crater stage.
 * Fixed TD terrain objects not saving their trigger. Note that only "Attacked" triggers work on them.
-* RA "Spied by..." trigger event now shows the House to select. [NOTE: reverted in v1.4.4.0]
+* RA "Spied by..." trigger event now shows the House to select. \[NOTE: reverted in v1.4.4.0\]
 * Added "Add" buttons in triggers and teamtypes dialogs.
 * Fixed tab order in triggers and teamtypes dialogs.
 * Fixed crash in "already exists" messages for triggers and teamtypes.
@@ -58,7 +58,7 @@ Released on 13 Jul 2022 at 07:35 UTC
 * Triggers and teamtypes dialogs now warn when cancelling if changes were made.
 * "Add" button in triggers and teamtypes dialogs gets disabled when the internal maximum amount of items for the type is reached.
 * Changed the default build level in TD maps from 99 to 98. Level 99 allows building illegal objects that can break the game.
-* The Briefing text area will now accept [Enter] for adding line breaks without this closing the window. Previously, [Ctrl]+[Enter] had to be used for this, which is pretty awkward.
+* The Briefing text area will now accept \[Enter\] for adding line breaks without this closing the window. Previously, \[Ctrl\]+\[Enter\] had to be used for this, which is pretty awkward.
 * The Briefing text area now has a scrollbar.
 * Fixed placement of illegal tiles caused by incorrect filtering on which tiles from a template should be included. This is the problem which caused tiles that showed as black blocks in classic graphics. It is also the problem that made RA maps contain indestructible bridges.
 * Map tile placement can now be dragged, allowing easily filling an area with water or other tiles. This also works for removing tiles.
@@ -79,14 +79,14 @@ Released on 14 Jul 2022 at 20:22 UTC
 * Added \*.ini to the list of possible extensions for saving RA maps, to support opening pre-Remaster missions.
 * If a building has no direction to set and shows no dropdown for it, the "Direction" label is now also removed.
 * Structure graphics are now correctly centered on their full building size.
-* The damaged state of buildings is now shown at strength values of 128 and below, rather than only below that value. [NOTE: adjusted further in v1.4.4.0]
+* The damaged state of buildings is now shown at strength values of 128 and below, rather than only below that value. \[NOTE: adjusted further in v1.4.4.0\]
 * Damaged states now work correctly on all buildings, with a vastly simpler and more general internal logic.
 * Using the mouse wheel will now change the strength of objects in increments of 4.
 * IQ of all Houses in RA now defaults to 0.
 * Fixed TD Gunboat facing and damage states logic.
 * Fixed bug causing bad refresh when previewing the placement of a single cell selected from a template with an empty top right corner cell.
 * The "clear1" tile is now explicitly shown in the tiles list. It acts as 1x1 eraser.
-* Teamtype "Priority" value (recruit priority) is now capped at 15. [NOTE: reverted in v1.4.0.3]
+* Teamtype "Priority" value (recruit priority) is now capped at 15. \[NOTE: reverted in v1.4.0.3; did not reflect reality\]
 
 ### v1.4.0.3:
 
@@ -100,11 +100,11 @@ Released on 27 Jul 2022 at 09:47 UTC
 * Added "Theme" to the map settings.
 * Removed "Percent" from the map settings. It is an unused Dune II leftover.
 * Added "Classic only" labels to "Carryover Money" and "Theme" to indicate these options will only work when playing the missions in the original game.
-* All videos available in the Remaster are now shown in the video lists in the "Map settings" dialog. [NOTE: reverted for RA in v1.4.1.0]
+* All videos available in the Remaster are now shown in the video lists in the "Map settings" dialog. \[NOTE: reverted for RA in v1.4.1.0\]
 * Added missing entries (videos not included in the Remaster) to the RA and TD video lists, with a 'Classic only' indicator.
 * In the teamtypes dialog, the rather confusing use of the internal name "Missions" was changed to a more intuitive "Orders".
 * Added tooltips for all teamtype options.
-* Teamtype orders now show a tooltip on the Argument field indicating the meaning of the value to give, and, if needed, the possible values to choose from. [NOTE: replaced by choice lists in v1.4.1.0]
+* Teamtype orders now show a tooltip on the Argument field indicating the meaning of the value to give, and, if needed, the possible values to choose from. \[NOTE: replaced by choice lists in v1.4.1.0\]
 * Fixed tab order of the teamtype options.
 * The dropdowns in the grids in the teamtypes dialog now respond without having to click multiple times.
 * Removed the previously-added cap on the teamtype "Priority" value after feedback from users and checking the source code.
@@ -122,15 +122,15 @@ Released on 20 Aug 2022 at 22:37 UTC
 * Terrain objects will now only pop up a properties box for setting a trigger on TD maps.
 * Optimised loading so the editor will skip loading objects from different theaters.
 * User settings (game folder, invite warning, and the dialog locations) will now be properly ported over from previous versions.
-* Added support for loading mod xml info and graphics through the "ModsToLoad" setting in "CnCTDRAMapEditor.exe.config". The syntax is a semicolon-separated list, with each entry either a Steam workshop ID, or a folder under "Documents\CnCRemastered\Mods\". As folder, the path must contain the "Tiberian_Dawn" or "Red_Alert" part at the start. That prefix folder will also be used as consistency check for the mod type as defined inside "ccmod.json". Mods given by folder name will also be looked up in the Steam workshop folders, with the prefix folder used only for the consistency check. Mods do NOT have to be enabled in the game to work in the editor. [NOTE: game prefix requirement for paths removed when this was split into settings per game in v1.4.4.0]
-* Added support for the unique pattern of TD's "conc" pavement. You will need the "ConcretePavementTD" mod to actually see that, though. This mod is filled in by default in the editor's mod loading settings, meaning it will automatically be used if found. [NOTE: mod name changed to GraphicsFixesTD in v1.4.4.0]
+* Added support for loading mod xml info and graphics through the "ModsToLoad" setting in "CnCTDRAMapEditor.exe.config". The syntax is a semicolon-separated list, with each entry either a Steam workshop ID, or a folder under "Documents\CnCRemastered\Mods\". As folder, the path must contain the "Tiberian_Dawn" or "Red_Alert" part at the start. That prefix folder will also be used as consistency check for the mod type as defined inside "ccmod.json". Mods given by folder name will also be looked up in the Steam workshop folders, with the prefix folder used only for the consistency check. Mods do NOT have to be enabled in the game to work in the editor. \[NOTE: game prefix requirement for paths removed when this was split into settings per game in v1.4.4.0\]
+* Added support for the unique pattern of TD's "conc" pavement. You will need the "ConcretePavementTD" mod to actually see that, though. This mod is filled in by default in the editor's mod loading settings, meaning it will automatically be used if found. \[NOTE: mod name changed to GraphicsFixesTD in v1.4.4.0\]
 * Fixed loading and saving of the videos set in the map options dialog, so no more errors pop up there.
 * Reverted videos list for Red Alert; the game can only handle videos that are in its internal hardcoded list.
 * Made video names freely editable for TD missions. Any mod-added video in TD is playable from missions. Be warned that when a video is not found, this may cause the game to hang for several minutes.
 * The preview selection in the Steam publish dialog will now open in the correct folder.
 * The new setting "NoMetaFilesForSinglePlay" in "CnCTDRAMapEditor.exe.config" will suppress the generation of .json and .TGA file when saving single player missions to disc. Not writing them is now the default behavior. This does not affect the Steam workshop upload behavior.
 * The rendered previews will now show all map contents, to give a better representation of what is on the map. Note that for single play missions, this preview is generated in the folder but is optional.
-* Removed crater types CR2 to CR6; they don't work correctly in either game and will just show the smallest size of CR1. Any craters of other types encountered on map load will now be converted to CR1. [NOTE: made into a setting in v1.4.3.0]
+* Removed crater types CR2 to CR6; they don't work correctly in either game and will just show the smallest size of CR1. Any craters of other types encountered on map load will now be converted to CR1. \[NOTE: made into a setting in v1.4.3.0\]
 * The teamtypes dialog no longer uses data grids for its teams and orders.
 * Teamtypes now show full names for unit types.
 * The input for arguments for orders in the teamtypes dialog now correctly adapts to the type of each order, giving dropdowns for special choices lists and for waypoints.
@@ -139,7 +139,7 @@ Released on 20 Aug 2022 at 22:37 UTC
 * Fixed the fact trigger Events and Actions retained their argument data when changing their type, meaning the UI would pick the equivalent data on whatever list or control popped up for the new type.
 * RA triggers now show human-readable data for the Event and Action arguments.
 * The editor no longer locks up when the triggers dialog shows an empty list of teamtypes or (previously-saved) triggers because none were made yet.
-* Removed Aircraft section handling. Aircraft were never able to be pre-placed in the original game, and the re-enabled sections in the Remasters have issues; aircraft will still spawn in the air and fly somewhere close. [NOTE: made into a setting in v1.4.3.0]
+* Removed Aircraft section handling. Aircraft were never able to be pre-placed in the original game, and the re-enabled sections in the Remasters have issues; aircraft will still spawn in the air and fly somewhere close. \[NOTE: made into a setting in v1.4.3.0\]
 * Like walls, overlay placement and removing can now be dragged to affect multiple cells.
 * All waypoint will now be shown with their coordinates.
 * Added "Jump to" button on the waypoints tool. This will only have any effect when zoomed in.
@@ -192,7 +192,7 @@ Released on 22 Aug 2022 at 09:28 UTC
 * The Red Alert teamtype order "Guard Area" now correctly has 'time' as argument type, rather than a waypoint.
 * Added a system to detect singleplayer missions from the original games and automatically mark them as singleplayer if they conform to the classic naming scheme for singleplayer missions, and contain a Lose and Win trigger.
 * Functions asking to save unsaved changes (New/Open/Publish/Close) will now actually abort if you choose to save the unsaved opened map but it doesn't pass the basic waypoints validation, rather than giving the validation fail message and then continuing anyway.
-* The title of the window will now show "Untitled.ini" or "Untitled.mpr" when you have a new but unsaved map opened. [NOTE: changed from filename to map name in v1.4.4.0]
+* The title of the window will now show "Untitled.ini" or "Untitled.mpr" when you have a new but unsaved map opened. \[NOTE: changed from filename to map name in v1.4.4.0\]
 * The title of the window will now show an asterisk behind the filename to indicate that the current file has unsaved changes.
 * Maps loaded from file are now seen as 'modified' if any issues were detected that made the editor change or discard data during the loading process.
 * The triggers check feedback (TD only) now also uses the large window used for showing the map load errors.
@@ -210,8 +210,8 @@ Released on 05 Sep 2022 at 14:25 UTC
 * Vehicle previews are now shown in a more dynamic south-west facing.
 * When a map is opened, the editor will load theater-specific icons into the toolstrip.
 * Resource placement is now disabled in Interior theater.
-* Map loading now checks if map objects exist in the specified theater. [NOTE: made into a setting in v1.4.3.0]
-* An image export function has been added. This will mirror the current items enabled in the "View" menu. Its size is determined by the "ExportScale" setting in "CnCTDRAMapEditor.exe.config". [NOTE: made into a full dialog, with the setting changed to DefaultExportScale, in v1.4.4.0]
+* Map loading now checks if map objects exist in the specified theater. \[NOTE: made into a setting in v1.4.3.0\]
+* An image export function has been added. This will mirror the current items enabled in the "View" menu. Its size is determined by the "ExportScale" setting in "CnCTDRAMapEditor.exe.config". \[NOTE: made into a full dialog, with the setting changed to DefaultExportScale, in v1.4.4.0\]
 * Fixed a glitch that made the trigger dropdown of the opened tool stop functioning correctly after editing the triggers.
 * Template 'BRIDGE1H' in RA now shows its full available tileset. Seems this is an odd corner case where Westwood were the ones who forgot to cut it out properly, but that does make its two last tiles valid.
 * The editor will now detect when, on Red Alert maps, the obsolete tile with id 255 is used as 'clear' terrain, and will only show a single message about it. There is an "IgnoreRaObsoleteClear" setting in "CnCTDRAMapEditor.exe.config" to disable filtering out this tile, though that is only useful for research purposes.
@@ -223,7 +223,7 @@ Released on 05 Sep 2022 at 14:25 UTC
 * When Aftermath units are detected on map load, but the Aftermath units setting was not enabled in the ini, the loading system will enable the Aftermath units setting.
 * All waypoints in the triggers and teamtypes dialogs now show their coordinates.
 * Vastly optimised map bounds dragging.
-* Map bounds dragging will no longer revert when releasing the [Ctrl] key before the mouse button.
+* Map bounds dragging will no longer revert when releasing the \[Ctrl\] key before the mouse button.
 * The label shown when dragging the map border now appears on the inside of the bounds, exactly a cell away from the bounds, and only updates on every cell change.
 * Map bounds dragging will change the border at the moment you cross the halfway point between cells, rather than when entering a new cell, making it much more intuitive.
 * Drag-scrolling, which is normally middle mouse button, now also works by holding down the space bar, to support devices (like laptops touch pads) without middle mouse button.
@@ -233,9 +233,9 @@ Released on 05 Sep 2022 at 14:25 UTC
 * Teamtypes in Red Alert maps now filter out the triggers list to unit-applicable triggers only.
 * Teamtypes and triggers can now be selected by clicking anywhere on their row, rather than having to click specifically on the text in the row.
 * The check on multiplayer waypoints being placed down now correctly checks only the specific player start waypoints, rather than just any waypoints including the special singleplay ones.
-* The possible multiplayer waypoints to place on a map now go from 0 to 15. [NOTE: reverted in v1.4.3.2]
+* The possible multiplayer waypoints to place on a map now go from 0 to 15. \[NOTE: reverted in v1.4.3.2\]
 * If the map is marked as single player scenario, the first waypoints are no longer indicated as player start positions with a "P" prefix.
-* Mods will now only be loaded for maps targeted at their respective game, meaning common assets can be overridden differently by TD and RA mods. [NOTE: mod settings split up per game in v1.4.4.0]
+* Mods will now only be loaded for maps targeted at their respective game, meaning common assets can be overridden differently by TD and RA mods. \[NOTE: mod settings split up per game in v1.4.4.0\]
 
 ### v1.4.3.0:
 
@@ -250,7 +250,7 @@ Released on 13 Sep 2022 at 21:46 GMT
 * Undo/Redo actions can be cleared using a new option in the Edit menu. This can be used in case too many might make the editor laggy.
 * Disabling Aftermath units will now clear the Undo/Redo history, to avoid conflicts.
 * Fixed undo/redo of map bounds dragging; it was severely bugged and often reduced the bounds to minimum size.
-* Fixed bug where tool windows can be closed with [Alt]+[F4], causing the editor to crash when trying to re-open them.
+* Fixed bug where tool windows can be closed with \[Alt\]+\[F4\], causing the editor to crash when trying to re-open them.
 * Fixed tab order on the "New Map" dialog, so the radio buttons are selected by default.
 * Mobile Radar Jammer and Mobile Gap Generator now show different facings for their "turrets".
 * Fixed a bug in the power balance tool which made it ignore the first House.
@@ -259,7 +259,7 @@ Released on 13 Sep 2022 at 21:46 GMT
 * Added a rules editing field for RA maps that allows editing/adding ini sections not handled by the editor. Changing building bibs, power and resource storage in this will immediately affect the editor.
 * Dragging a building's bib over smudge will no longer remove the smudge, unless it's actually placed down on it.
 * Undoing a building's placement or moving will now restore any smudge the building's bib replaced.
-* Added map template flood fill mode ([Ctrl]+[Shift]+[Left-Click]) and flood fill clear mode ([Ctrl]+[Shift]+[Right-Click]).
+* Added map template flood fill mode (\[Ctrl\]+\[Shift\]+\[Left-Click\]) and flood fill clear mode (\[Ctrl\]+\[Shift\]+\[Right-Click\]).
 * Enabling/disabling Indicator items in the View menu no longer does a full refresh of the map, making it nearly instant.
 * Added options to re-enable Aircraft and full craters list.
 * Changed all tweak options to have True as default value.
@@ -274,9 +274,9 @@ Released on 13 Sep 2022 at 21:46 GMT
 * For RA, changing the "Base" House in the map settings will now also change the House on the preview pane if it is not set as Prebuilt.
 * Improved the system to detect blocking objects on map load.
 * The "Sellable" and "Rebuild" options for RA buildings are now disabled if the structure is not set as Prebuilt.
-* While holding [Ctrl] in Map mode to enable bounds editing mode, diagonals will now be drawn inside the bounds rectangle to easily see the center. [NOTE: expanded to full map symmetry indicators in v1.4.4.0]
-* While holding [Ctrl] in Map mode to enable bounds editing mode, the whole bounds rectangle can now be moved by clicking inside it and dragging it around.
-* While holding [Ctrl] in Map mode to enable bounds editing mode, you will no longer select tiles when clicking.
+* While holding \[Ctrl\] in Map mode to enable bounds editing mode, diagonals will now be drawn inside the bounds rectangle to easily see the center. \[NOTE: expanded to full map symmetry indicators in v1.4.4.0\]
+* While holding \[Ctrl\] in Map mode to enable bounds editing mode, the whole bounds rectangle can now be moved by clicking inside it and dragging it around.
+* While holding \[Ctrl\] in Map mode to enable bounds editing mode, you will no longer select tiles when clicking.
 
 ### v1.4.3.1:
 
@@ -297,15 +297,15 @@ Released on 14 Sep 2022 at 21:20 GMT
 
 Released on 14 Nov 2022 at 22:25 GMT
 
-* When your mouse cursor is inside the map bounds and you press [Ctrl] in Map mode to enable bounds editing mode, your cursor will now immediately change to the Move cursor, without requiring any mouse movement.
+* When your mouse cursor is inside the map bounds and you press \[Ctrl\] in Map mode to enable bounds editing mode, your cursor will now immediately change to the Move cursor, without requiring any mouse movement.
 * The status bar at the bottom will now explicitly mention the sub-position of the infantry under the mouse cursor.
 * When loading a map, if a map's file name identifies it as classic single player mission, this will no longer mark the mission as "modified" by the loading process. This will make it simpler to open classic maps for reference without getting a save prompt on close. Do note that lots of classic maps contain errors in triggers being linked to wrong objects, and the automatic fixes for that **will** still mark the map as modified.
 * Fixed issues with the editor window getting focused simply by moving the mouse over it. The main window can steal focus from the tool window, but not from other applications.
-* In Waypoints and Cell Triggers editing mode, the PageUp, PageDown, Home and End keys will now let you go through the dropdown items list. PageUp and PageDown will act as normal arrow keys.
-* In Waypoints editing mode, pressing [Shift] and a key will select special waypoints: [F]lare, [H]ome, [R]einforce, [S]pecial.
+* In Waypoints and Cell Triggers editing mode, the \[PageUp\], \[PageDown\], \[Home\] and \[End\] keys will now let you go through the dropdown items list. \[PageUp\] and \[PageDown\] will act as normal arrow keys.
+* In Waypoints editing mode, pressing \[Shift\] and a key will select special waypoints: \[F\]lare, \[H\]ome, \[R\]einforce, \[S\]pecial.
 * The shortcut keys to select the different editing modes (normally Q, W, E, R, T, Y, A, S, D, F, G) now work on keyboard position, meaning they will also work in the same logical way on AZERTY keyboards.
 * Fixed bug where the checked states of the Houses in the Map Settings would reset when changing the "Single-Player" checkbox.
-* The [Aftermath] section is no longer ignored in the map settings' Rules editor, so Aftermath detail settings can be added. The actual "NewUnitsEnabled" setting in this is ignored, though; toggling the expansion units can only be done in the Basic settings.
+* The \[Aftermath\] section is no longer ignored in the map settings' Rules editor, so Aftermath detail settings can be added. The actual "NewUnitsEnabled" setting in this is ignored, though; toggling the expansion units can only be done in the Basic settings.
 * Undo/Redo tracking will now also undo the map's modified-status.
 * Added support for the C&C95 v1.06 briefing line split format.
 * Added Tiberian Dawn Megamap support. (Sole Survivor map type)
@@ -319,9 +319,9 @@ Released on 14 Nov 2022 at 22:25 GMT
 * On Sole Survivor maps, there is a special "Football goal areas" indicator that shows how much area around the flag needs to be left open to be paved with concrete in Football mode. These can be disabled under "View" → "Indicators".
 * The game name of the opened map type is now shown in the title bar.
 * Changed the editor name in the title to "Mobius Map Editor".
-* Red Alert maps are now specifically detected on the presence of the "[MapPack]" section. If this is not present, and there is no .bin file, it loads as TD map without map templates.
+* Red Alert maps are now specifically detected on the presence of the "\[MapPack\]" section. If this is not present, and there is no .bin file, it loads as TD map without map templates.
 * Restricted Red Alert trigger and teamtype names to the same lengths as Tiberian Dawn; 4 for triggers, 8 for Teamtypes.
-* Pressing [Enter] in Waypoints mode will now jump to the selected waypoint.
+* Pressing \[Enter\] in Waypoints mode will now jump to the selected waypoint.
 * Fixed a bug in the overlap detection system that made it always give "&lt;unknown&gt;" for the overlapped cell on Terrain objects.
 * Split mods up into ModsToLoadTD, ModsToLoadRA and ModsToLoadSS. Entries in the list no longer require the game folder prefix.
 * The Civilian buildings V12 and V13 (haystacks) are now also available in TD Winter theater.
@@ -350,7 +350,7 @@ Released on 14 Nov 2022 at 22:25 GMT
 * Trigger and teamtype editing actions are now added to the undo/redo history. They will give a warning with a message box when undoing or redoing.
 * Fixed the fact the maximum number of triggers was set to 200 for Red Alert, instead of 80.
 * Red Alert globals are now limited to 0 to 29, since that is how they are defined in the game code.
-* The editor now specifically checks for the presence of the [Basic] and [Map] sections to see whether a file is indeed a C&C map.
+* The editor now specifically checks for the presence of the \[Basic\] and \[Map\] sections to see whether a file is indeed a C&C map.
 * Added checks on triggers containing Events or Actions that don't have their required House/Teamtype/Trigger filled in.
 * The automatic clearing of the obsolete clear terrain in RA1 will no longer mark the map as modified.
 * Red Alert solo mission detection now correctly takes into account win and lose triggers set to non-player houses.
@@ -377,7 +377,7 @@ Released on 03 Apr 2023 at 19:20 GMT
 * Increased the size of waypoint labels.
 * When holding the mouse over a bib, the status bar will now also show if it is attached to a building.
 * The "Rules" section in the map settings has been renamed to "INI Rules & Tweaks", and is now also available for TD.
-* Custom ini keys that are added to the [Basic] and [Map] sections, and to any of the House sections, are now preserved, and editable in the "INI Rules & Tweaks" section. This will allow passive support for modded features.
+* Custom ini keys that are added to the \[Basic\] and \[Map\] sections, and to any of the House sections, are now preserved, and editable in the "INI Rules & Tweaks" section. This will allow passive support for modded features.
 * Previews are now shown for Celltrigger placement.
 * Fixed errors in the detection of Aftermath expansion units on maps.
 * Fixed map load collision detection of multi-cell objects to detect crossing outside the map.
@@ -414,7 +414,7 @@ Released on 03 Apr 2023 at 19:20 GMT
 * Added automatic logic for Red Alert maps to fix corrupted tiles such as the "indestructible" bridges, rather than just clearing them.
 * Skipping over disabled sections in the ini (like the Aircraft) now adds a remark to the errors list and marks the map as modified, to alert the user that data will be lost on re-save.
 * Added detection for incorrect use of the "Allow Win" action in Tiberian Dawn.
-* Fixed reading of [Base] entries; it should loop over all 3-digit integers up to the "Count" value, not parse the keys as integers.
+* Fixed reading of \[Base\] entries; it should loop over all 3-digit integers up to the "Count" value, not parse the keys as integers.
 * Fixed triggers list corrupting on the Terrain tool when editing the triggers after the Terrain tool had already been loaded.
 * Fixed trigger not showing on the preview for placing down a Terrain object.
 * The trigger on the placement preview of a Unit, Building, Infantry or Terrain object is now shown as semitransparent.
@@ -455,8 +455,8 @@ Feature updates:
 * Added an option under "Extra Indicators" to show the map tile passability. This will also be shown on the map tile tool's preview pane.
 * Preview generation will now add waypoint flags to multiplayer maps.
 * Changed "outlines on overlapped crates" option to "outlines on overlapped objects", and made it work for units and infantry too.
-* Pressing the PageUp and PageDown buttons while the main window is selected will now consistently move through the tool's item choices, in all editing modes.
-* Removed [ and ] as shortcuts to affect resource paint size because they did not work consistently on foreign keyboards. The functionality was also changed to PageUp and PageDown.
+* Pressing the \[PageUp\] and \[PageDown\] buttons while the main window is selected will now consistently move through the tool's item choices, in all editing modes.
+* Removed \[ and \] as shortcuts to affect resource paint size because they did not work consistently on foreign keyboards. The functionality was also changed to \[PageUp\] and \[PageDown\].
 * The Resources tool no longer evaluates resources placed outside the map bounds. Resources outside the map are now always shown at their minimum size, and tinted red, to indicate they don't have any impact on the map.
 * Added a reference to the GraphicsFixesRA mod in the ModsToLoadRA setting.
 * Added "EnforceObjectMaximums" setting that can be disabled to remove save checks on the game engine's object maximums.
@@ -548,7 +548,7 @@ Released on 05 Aug 2023 at 13:50 GMT
 
 * The Cell Trigger tool's "jump to" function will now also jump to placed objects with the attached trigger, to easily review what uses it.
 * The "jump to" function in Waypoints and Cell Triggers will now properly update the mouse cell info in the bottom bar.
-* The [Briefing] and [Base] sections can now also accept custom ini keys (which can be useful for mods).
+* The \[Briefing\] and \[Base\] sections can now also accept custom ini keys (which can be useful for mods).
 * Undo/redo operations are now blocked while mouse drag operations (moving or drag-placing objects) are in progress, to prevent corrupting the list of undo/redo operations.
 * Fixed bug where having a specific tile from a random tiles group selected would still show the first tile of the group as placement preview.
 * Added the ability to export map previews without the map templates layer. This will give an image with a transparent background.
@@ -560,7 +560,7 @@ Released on 05 Aug 2023 at 13:50 GMT
 * Fixed a bug where Terrain objects would not show a placement preview over bibs.
 * Fixed a bug in Walls mode where changing to a different type did not refresh the preview.
 * Fixed a bug where switching back to the Terrain tool would show the previously-selected type in the preview, but would not select it in the list.
-* Fixed a bug in Map mode where using the PageUp or Home key to select the Clear terrain would not scroll to the item in the list.
+* Fixed a bug in Map mode where using the \[PageUp\] or \[Home\] key to select the Clear terrain would not scroll to the item in the list.
 * Added setting to enable DPI awareness mode, for users with indicator scaling issues.
 * Triggers on TD Terrain entries are now optional in the ini; terrain entries without the trigger part will no longer be skipped as malformed data.
 * When loading a map and objects are detected as overlapping a multi-cell object like a building or tree, on top of giving the cell where the overlap occurred, the system will now also report the placement cell of that object.
@@ -569,7 +569,7 @@ Released on 05 Aug 2023 at 13:50 GMT
 * Fixed bug where two buildings of different types placed on the same cell (e.g. a guard tower on the top-left corner of a repair bay) would not correctly be distinguished as different entries by the rebuild priority system, causing one of them to lose its rebuild status.
 * The "Learning" and "Mercenary" options in the TD Teamtypes editor are now crossed out in the UI, and indicated on the tooltip as having no effect.
 * Megamaps for TD can now be published on the Steam workshop, provided they are singleplayer scenarios. They will give a warning about the nonstandard format, though this is not re-shown for the same map on subsequent uploads.
-* Added forgotten PageUp/PageDown/Home/End shortcuts support to the Walls tool.
+* Added forgotten \[PageUp\]/\[PageDown\]/\[Home\]/\[End\] shortcuts support to the Walls tool.
 * Buildings now all have a set height to control overlaps.
 * Civilian building V37, The Studio, is now seen as a flat building, lower than even the repair bay, so its top left corner can't overlap other objects. (Sadly, the game does not do this.)
 * Fixed column resizing in the triggers list so it always maximizes the clickable area to select a trigger, and never gives scrollbars unless needed.
@@ -584,7 +584,7 @@ Released on 05 Aug 2023 at 13:50 GMT
 * Added option to let the editor remember tool selection information between different opened maps of the same type. This option is disabled by default.
 * Left-clicking on smudge no longer copies its properties into the tool, since left-click is needed to change smudge properties.
 * Removed "NoMetaFilesForSinglePlay" option, since the meta files are always 100% useless in single play, and instead added "ClassicProducesNoMetaFiles" to suppress the creation of such files for all maps in classic mode.
-* In old Red Alert maps which use Italy instead of Ukraine, The house settings for [Italy] will now be applied to Ukraine.
+* In old Red Alert maps which use Italy instead of Ukraine, The house settings for \[Italy\] will now be applied to Ukraine.
 
 ### v1.5.0.3:
 
@@ -617,7 +617,7 @@ Released on 31 Jan 2023 at 20:50 GMT
 * The tool window is now always hidden while a dialog is opened.
 * Fixed ampersands not showing in the "Recent Files" menu.
 * Added indicator of line wrap mode in text dialog.
-* Added [Ctrl]+scrollwheel for going through item lists.
+* Added \[Ctrl\]+scrollwheel for going through item lists.
 * Added an "EditorLanguage" option that can be used to change the language of the game text loaded in the editor. The default value is "Auto", which makes it autodetect the language using the system language.
 * Added an option to control the behaviour of allowing walls as structures, with an owner. Since this is a behavior tweaks option, and those are all enabled by default, it is called "DontAllowWallsAsBuildings".
 
@@ -630,3 +630,4 @@ Unreleased.
 * Added tooltips to Triggers editor giving a summary of teamtypes and triggers used as trigger arguments. This includes a tooltip on the trigger action on Tiberian Dawn's "Destroy Trigger" and "DZ at 'Z'" actions, respectively showing info on the corresponding trigger and the flare waypoint.
 * Added checks and warnings on teamtype arguments, and on the limits of units/orders list lengths.
 * Added system to avoid loading the same mod from both the workshop items and from the local mods under the Documents folder. If given by name, local mods are given priority.
+* The \[Enter\] shortcut for the "Jump To" function is now indicated in the status bar in Waypoints and Celltriggers mode.
