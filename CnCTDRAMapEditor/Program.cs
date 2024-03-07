@@ -32,7 +32,7 @@ namespace MobiusEditor
 {
     static class Program
     {
-        public const string GameId = "1213210";
+        public const string SteamGameId = "1213210";
         
         public const string ProgramName = "Mobius Map Editor";
         public const string GithubOwner = "Nyerguds";
@@ -57,18 +57,12 @@ namespace MobiusEditor
             "N3tRunn3r\n" +
             "\n" +
             "Thank you for using " + ProgramName + "!";
+        public const string ClassicInstructions = "To skip this dialog and always start with the classic graphics, edit {0}.config and set the \"{1}\" setting to True.";
+        public const string ClassicSetting = "UseClassicFiles";
 
-        public static readonly String ApplicationPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        public static readonly string ApplicationPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 
-        public static String ProgramVersionTitle
-        {
-            get
-            {
-                AssemblyName assn = Assembly.GetExecutingAssembly().GetName();
-                System.Version currentVersion = assn.Version;
-                return string.Format(ProgramName + " v{0}", currentVersion);
-            }
-        }
+        public static readonly string ProgramVersionTitle = ProgramName + " v" + Assembly.GetExecutingAssembly().GetName().Version;
 
         /// <summary>
         /// The main entry point for the application.
@@ -103,9 +97,9 @@ namespace MobiusEditor
             // Check if any mods are allowed to override the default stuff to load.
             foreach (GameInfo gic in GameTypeFactory.GetGameInfos())
             {
-                modPaths.Add(gic.GameType, StartupLoader.GetModPaths(GameId, gic.ModsToLoad, gic.ModFolder, gic.ModIdentifier));
+                modPaths.Add(gic.GameType, StartupLoader.GetModPaths(SteamGameId, gic.ModsToLoad, gic.ModFolder, gic.ModIdentifier));
             }
-            String runPath = StartupLoader.GetRemasterRunPath(GameId, !Globals.UseClassicFiles);
+            String runPath = StartupLoader.GetRemasterRunPath(SteamGameId, !Globals.UseClassicFiles);
             if (runPath != null)
             {
                 // Required for Steam interface to work.

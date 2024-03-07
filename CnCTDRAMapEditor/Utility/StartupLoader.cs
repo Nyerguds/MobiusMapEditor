@@ -150,9 +150,10 @@ namespace MobiusEditor.Utility
             {
                 using (GameInstallationPathForm gameInstallationPathForm = new GameInstallationPathForm())
                 {
+                    string exeFile = Path.GetFileName(Program.ApplicationPath);
+                    string labelInfo = String.Format(Program.ClassicInstructions, exeFile, Program.ClassicSetting);
                     gameInstallationPathForm.StartPosition = FormStartPosition.CenterScreen;
-                    gameInstallationPathForm.LabelInfo =
-                        "To skip this dialog and always start with the classic graphics, edit CnCTDRAMapEditor.exe.config and set the \"UseClassicFiles\" setting to True.";
+                    gameInstallationPathForm.LabelInfo = labelInfo;
                     switch (gameInstallationPathForm.ShowDialog())
                     {
                         case DialogResult.OK:

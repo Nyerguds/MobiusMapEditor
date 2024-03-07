@@ -2957,7 +2957,7 @@ namespace MobiusEditor
             }
         }
 
-        private void mapPanel_PostRender(Object sender, RenderEventArgs e)
+        private void MapPanel_PostRender(object sender, RenderEventArgs e)
         {
             // Only clear this after all rendering is complete.
             if (!loadMultiThreader.IsExecuting && !saveMultiThreader.IsExecuting)

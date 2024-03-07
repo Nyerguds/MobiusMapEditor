@@ -4,9 +4,9 @@
 
 **DO NOT unpack this in the C&C Remastered Collection's install folder.** It is absolutely unnecessary to overwrite any files of the installed game.
 
-Simply unpack the editor into a new folder on your disk somewhere. On first startup, it will automatically try to detect the folder in which the game is installed, and if it can't find it, it will show a popup asking you to locate it. Note that this autodetect only works on Steam installations of the game.
+Simply unpack the editor into a new folder on your disk somewhere. On first startup, it will automatically try to detect the folder in which the game is installed, and if it can't find it, it will show a dialog asking you to locate it. Note that this autodetect only works on Steam installations of the game.
 
-If the C&C Remastered Collection is not installed on your PC, a warning will be shown telling you it will start in Classic Files mode instead, using the assets of the original 90's games. To suppress this warning, you can edit the config file and enable the option to always use classic graphics. (See the "Configuration" section below.)
+If the C&C Remastered Collection is not installed on your PC, you can use the "Continue with classic graphics" button on the dialog to start the editor without the Remastered graphics. To suppress the "Select game path" dialog and instead automatically start with classic graphics, you can edit the config file and enable the option to always use classic graphics. (See the "Configuration" section below.)
 
 ---
 
@@ -14,7 +14,7 @@ If the C&C Remastered Collection is not installed on your PC, a warning will be 
 
 The creators of the map editor have chosen to build a manual into the editor, but it might not be immediately obvious. Look at the bottom bar, and it will tell you for the currently selected editing type what your mouse buttons will do, and which modifier keys will change to different editing modes. Once you hold down such a key, the bottom bar text will change, further explaining what your mouse buttons will do in this specific mode.
 
-In general, holding down \[Shift\] will activate placement mode, and in that mode, left clicking will place an object, and right clicking on an object will remove it. Outside placement mode, double-clicking an object will open its properties, holding down the left mouse button on an object will allow dragging it around, and right-clicking an object will make it the currently selected object in the tool window, including all its specifically-set properties (such as House, Strength, Trigger…). These controls may vary a bit; for example, the Properties window doesn't exist for all object types, and in Resources mode, placement mode is always active.
+In general, holding down \[Shift\] will activate placement mode, and in that mode, left clicking will place an object, and right clicking on an object will remove it. Outside placement mode, double-clicking an object will open its properties, holding down the left mouse button on an object will allow dragging it around, and right-clicking an object will make it the currently selected object in the tool window, including all its specifically-set properties (such as House, Strength, Trigger…). These controls may vary a bit; not all object types can be dragged, not all object types have properties to edit, and for Resources, the placement mode is always active.
 
 As for basic navigation, the controls are fairly straightforward: the scroll wheel and the \[Plus\] and \[Minus\] keys allow zooming in and out, arrow keys will pan around the map, and holding down either the middle mouse button or the space bar allows quickly drag-panning around the map. Some special shortcuts for zooming can be found in the View → Zoom menu; the \[\*\] key will reset the zoom to the full map, and \[Ctrl\]+\[D\] will zoom the editor to the map's bounds area plus one extra cell border around it. Note that you can zoom out farther than the full map; this was done to allow placing map template pieces partially outside the map from the top and left sides of the map.
 

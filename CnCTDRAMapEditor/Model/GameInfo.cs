@@ -64,13 +64,13 @@ namespace MobiusEditor.Model
         /// <param name="mlf">The map layer flag to check.</param>
         /// <returns>True if the given layer is used for this game.</returns>
         public abstract bool SupportsMapLayer(MapLayerFlag mlf);
-        /// <summary>Fetches the waypoint icon for the UI. This returns a new image that needs to be disposed afterwards.</summary>
+        /// <summary>Fetches the Waypoints-mode icon for the UI. This returns a new image that needs to be disposed afterwards.</summary>
         /// <returns>The waypoints UI icon</returns>
         public abstract Bitmap GetWaypointIcon();
-        /// <summary>Fetches the celltriggers icon for the UI. This returns a new image that needs to be disposed afterwards.</summary>
+        /// <summary>Fetches the Celltriggers-mode icon for the UI. This returns a new image that needs to be disposed afterwards.</summary>
         /// <returns>The celltriggers UI icon</returns>
         public abstract Bitmap GetCellTriggerIcon();
-        /// <summary>Fetches the qelect-mode icon for the UI. This returns a new image that needs to be disposed afterwards.</summary>
+        /// <summary>Fetches the Select-mode icon for the UI. This returns a new image that needs to be disposed afterwards.</summary>
         /// <returns>The select mode UI icon</returns>
         public abstract Bitmap GetSelectIcon();
         /// <summary>Checks whether the briefing has any kind of issues concerning length or supported characters.</summary>
