@@ -148,7 +148,7 @@ In classic graphics mode, the editor can still use mods, if they contain classic
 * **DefaultOutlineAllCrates**: Default for the option "Tools" → "Options" → "Crate outline indicators show on all crates". When enabled, the crate indicators from the "View" → "Indicators" → "Outlines on overlapped crates" option will show on all crates instead of just those underneath objects or graphics.
 * **DefaultCratesOnTop**: Default for the option "Tools" → "Options" → "Show crates on top of other objects".
 * **DefaultExportScale**: Default scaling multiplier for the size at which an exported image will be generated through "Tools" → "Export As Image". A negative values will set it to smooth scaling. Defaults to -0.5.
-* **DefaultExportScaleClassic**: Default scaling multiplier for exporting images in when using classic graphics. Defaults to 1.0.
+* **DefaultExportScaleClassic**: Default scaling multiplier for exporting images when using classic graphics. Defaults to 1.0.
 
 ### Editor fine tuning:
 
@@ -158,7 +158,8 @@ In classic graphics mode, the editor can still use mods, if they contain classic
 * **MapBackColor**: Background color for the map screen, as "R,G,B". This defaults to dark grey, so users can see the actual map outline on Red Alert Interior maps.
 * **MapScale**: Scaling multiplier for the size at which assets are rendered on the map. Scaling down the rendered map size will make the UI more responsive. Negative values will enable smooth scaling, which gives nicer graphics but will make the UI noticeable _less_ responsive. Defaults to 0.5.
 * **MapScaleClassic**: Scaling multiplier when using classic graphics. Defaults to 1.0.
-* **PreviewScale**: Scaling multiplier for the size at which assets are rendered on the preview tools. Negative values will enable smooth scaling, but this usually doesn't look good on the upscaled preview graphics. Defaults to 1. This value is automatically adjusted for Classic mode by multiplying it with 128/24.
+* **PreviewScale**: Scaling multiplier for the size at which assets are rendered on the preview tools. Negative values will enable smooth scaling, but this usually doesn't look good on the upscaled preview graphics. Defaults to 1.
+* **PreviewScaleClassic** Scaling multiplier for the preview tools when using classic graphics. Defaults to 5.333 (128/24), which upscales the objects to match the size they have in Remastered graphics.
 * **ObjectToolItemSizeMultiplier**: Floating-point multiplication factor for downsizing the item icons on the selection lists on the tool windows.
 * **TemplateToolTextureSizeMultiplier**: Floating-point multiplication factor for the size of tiles shown on the Map tool. This scaling is somehow done relative to the screen size; not sure.
 * **MaxMapTileTextureSize**: Maximum for the size of the tiles shown on the Map tool. Leave on 0 to disable.

@@ -118,21 +118,8 @@ namespace MobiusEditor
         public static int MapTileHeight => Math.Max(1, (int)Math.Round(OriginalTileHeight * MapTileScale));
         public static Size MapTileSize => new Size(MapTileWidth, MapTileHeight);
 
-        public static double PreviewTileScale
-        {
-            get
-            {
-                double prevTileScale = Math.Max(GetMinScale(), Math.Abs(Properties.Settings.Default.PreviewScale));
-                if (UseClassicFiles)
-                {
-                    // Adjust to classic graphics' considerably smaller overall size
-                    prevTileScale = prevTileScale * 128 / 24;
-                }
-                return prevTileScale;
-
-            }
-        }
-        public static bool PreviewSmoothScale => Properties.Settings.Default.PreviewScale < 0;
+        public static double PreviewTileScale =>  Math.Max(GetMinScale(), Math.Abs(UseClassicFiles ? Properties.Settings.Default.PreviewScaleClassic : Properties.Settings.Default.PreviewScale));
+        public static bool PreviewSmoothScale => (UseClassicFiles ? Properties.Settings.Default.PreviewScaleClassic : Properties.Settings.Default.PreviewScale) < 0;
         public static int PreviewTileWidth => Math.Max(1, (int)Math.Round(OriginalTileWidth * PreviewTileScale));
         public static int PreviewTileHeight => (int)Math.Round(OriginalTileHeight * PreviewTileScale);
         public static Size PreviewTileSize => new Size(PreviewTileWidth, PreviewTileHeight);
@@ -157,7 +144,6 @@ namespace MobiusEditor
         public static bool FixConcretePavement { get; private set; }
         public static bool AdjustSoleTeleports { get; private set; }
         public static bool RestrictSoleLimits { get; private set; }
-
 
         public static readonly Size MapPreviewSize = new Size(512, 512);
         public static readonly Size WorkshopPreviewSize = new Size(512, 512);

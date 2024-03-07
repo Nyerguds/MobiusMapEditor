@@ -83,6 +83,9 @@
     <Setting Name="PreviewScale" Type="System.Double" Scope="Application">
       <Value Profile="(Default)">1</Value>
     </Setting>
+    <Setting Name="PreviewScaleClassic" Type="System.Double" Scope="Application">
+      <Value Profile="(Default)">5.333</Value>
+    </Setting>
     <Setting Name="ObjectToolItemSizeMultiplier" Type="System.Double" Scope="Application">
       <Value Profile="(Default)">0.3</Value>
     </Setting>
