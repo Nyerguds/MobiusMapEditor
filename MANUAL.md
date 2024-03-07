@@ -119,7 +119,7 @@ The default "Classic\\TD" and "Classic\\RA" folders are supplied along with the 
 
 The extra theaters available for Tiberian Dawn and Red Alert in the upgraded community releases of the classic games are supported if their mix files are found in the configured folders. To achieve this, you can either copy the theater .mix archives from the classic install folder into into the classic folder provided with the editor (see "Classic files listing" section below for the exact names), or point the **ClassicPathTD** / **ClassicPathRA** folder to your own classic game install folder.
 
-Note that for Red Alert, the editor uses the DOS versions of the infantry sprites, and the community version of Red Alert does not contain those for the expansion pack infantry. To amend this, copy the "lores1.mix" file from "Classic\\RA\\" into the Red Alert game folder. This will not have any effect on the game itself; it only uses the connents of "hires1.mix".
+Note that for Red Alert, the editor uses the DOS versions of the infantry sprites, and the community version of Red Alert does not contain those for the expansion pack infantry. To amend this, copy the "lores1.mix" file from "Classic\\RA\\" into the Red Alert game folder. This will not have any effect on the game itself; it only uses the contents of "hires1.mix".
 
 ### General editor options
 
@@ -131,7 +131,7 @@ Note that for Red Alert, the editor uses the DOS versions of the infantry sprite
 
 * **ModsToLoadTD** / **ModsToLoadRA** / **ModsToLoadSS**: semicolon (or comma) separated list of mod entries for each supported game.
 
-A mod entry can either be a Steam workshop ID, or a folder name. The paths will initially be looked up in the mods folder of the respective game in the CnCRemastered\\mods\\ folder under your Documents folder, but the loading system will also check the Steam workshop files for a matching mod. Sole Survivor will use Tiberian Dawn mods. Note that mods can only apply graphical changes from the tileset and house color xml files; the editor can't read any data from compiled dll files. This mods system is mostly meant to apply graphical fixes to the editor.
+A mod entry can either be a Steam workshop ID, or a folder name. Steam workshop IDs are looked up in the game's downloaded Workshop items. Folder names will initially be looked up in the mods folder of the respective game in the CnCRemastered\\mods\\ folder under your Documents folder, but if nothing is found there, the loading system will also check the Steam workshop files for a matching mod. Sole Survivor will use Tiberian Dawn mods. Note that mods can only apply graphical changes from the tileset and house color xml files; the editor can't read any data from compiled dll files. This mods system is mostly meant to apply graphical fixes to the editor.
 
 The **ModsToLoadTD** and **ModsToLoadSS** settings will have the `GraphicsFixesTD` mod set by default, to complete the incomplete TD Remastered graphics set, meaning the mod will automatically be loaded if found. Similarly, the **ModsToLoadRA** setting will have the `GraphicsFixesRA` mod set. Note that the editor has no way to check whether mods are enabled in the game, so that makes no difference.
 
