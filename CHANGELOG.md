@@ -71,9 +71,9 @@ Released on 13 Jul 2022 at 07:35 UTC
 
 Released on 14 Jul 2022 at 20:22 UTC
 
-* Fixed the bug that cleared all map templates on save in v1.4.0.1 (whoops).
-* Fixed the bug in the teamtypes list that showed the wrong context menu options on right click.
-* Fixed the bug that the status bar did not show the map placement shortcuts hints on initial load.
+* Fixed bug that cleared all map templates on save in v1.4.0.1 (whoops).
+* Fixed bug in the teamtypes list that showed the wrong context menu options on right click.
+* Fixed bug that the status bar did not show the map placement shortcuts hints on initial load.
 * The editor no longer exits if it cannot connect to Steam. Instead, workshop publishing will simply be disabled if the Steamworks interface can't be initialised.
 * The texture manager will now properly dispose all loaded image objects when a different map is loaded.
 * Added \*.ini to the list of possible extensions for saving RA maps, to support opening pre-Remaster missions.
@@ -136,7 +136,7 @@ Released on 20 Aug 2022 at 22:37 UTC
 * The input for arguments for orders in the teamtypes dialog now correctly adapts to the type of each order, giving dropdowns for special choices lists and for waypoints.
 * The waypoints that can be selected for an RA teamtype now correctly start from -1 as "(none)".
 * Fixed color of "Special" in RA to have the same color as Spain.
-* Fixed the fact trigger Events and Actions retained their argument data when changing their type, meaning the UI would pick the equivalent data on whatever list or control popped up for the new type.
+* Fixed trigger Events and Actions retaining their argument data when changing their type, causing the UI to pick the equivalent data on whatever list or control popped up for the new type.
 * RA triggers now show human-readable data for the Event and Action arguments.
 * The editor no longer locks up when the triggers dialog shows an empty list of teamtypes or (previously-saved) triggers because none were made yet.
 * Removed Aircraft section handling. Aircraft were never able to be pre-placed in the original game, and the re-enabled sections in the Remasters have issues; aircraft will still spawn in the air and fly somewhere close. \[NOTE: made into a setting in v1.4.3.0\]
@@ -253,10 +253,10 @@ Released on 13 Sep 2022 at 21:46 GMT
 * Fixed bug where tool windows can be closed with \[Alt\]+\[F4\], causing the editor to crash when trying to re-open them.
 * Fixed tab order on the "New Map" dialog, so the radio buttons are selected by default.
 * Mobile Radar Jammer and Mobile Gap Generator now show different facings for their "turrets".
-* Fixed a bug in the power balance tool which made it ignore the first House.
-* Added a silo storage capacity tool.
-* Added a section in the map settings for scenario-specific options in RA maps.
-* Added a rules editing field for RA maps that allows editing/adding ini sections not handled by the editor. Changing building bibs, power and resource storage in this will immediately affect the editor.
+* Fixed bug in the power balance tool which made it ignore the first House.
+* Added silo storage capacity tool.
+* Added section in the map settings for scenario-specific options in RA maps.
+* Added rules editing field for RA maps that allows editing/adding ini sections not handled by the editor. Changing building bibs, power and resource storage in this will immediately affect the editor.
 * Dragging a building's bib over smudge will no longer remove the smudge, unless it's actually placed down on it.
 * Undoing a building's placement or moving will now restore any smudge the building's bib replaced.
 * Added map template flood fill mode (\[Ctrl\]+\[Shift\]+\[Left-Click\]) and flood fill clear mode (\[Ctrl\]+\[Shift\]+\[Right-Click\]).
@@ -322,7 +322,7 @@ Released on 14 Nov 2022 at 22:25 GMT
 * Red Alert maps are now specifically detected on the presence of the "\[MapPack\]" section. If this is not present, and there is no .bin file, it loads as TD map without map templates.
 * Restricted Red Alert trigger and teamtype names to the same lengths as Tiberian Dawn; 4 for triggers, 8 for Teamtypes.
 * Pressing \[Enter\] in Waypoints mode will now jump to the selected waypoint.
-* Fixed a bug in the overlap detection system that made it always give "&lt;unknown&gt;" for the overlapped cell on Terrain objects.
+* Fixed bug in the overlap detection system that made it always give "&lt;unknown&gt;" for the overlapped cell on Terrain objects.
 * Split mods up into ModsToLoadTD, ModsToLoadRA and ModsToLoadSS. Entries in the list no longer require the game folder prefix.
 * The Civilian buildings V12 and V13 (haystacks) are now also available in TD Winter theater.
 * The trigger "Any: Cap=Win,Des=Lose" is now also seen as flag to autodetect classic single play scenarios.
@@ -343,12 +343,12 @@ Released on 14 Nov 2022 at 22:25 GMT
 * Re-enabling a building's "prebuilt" status on TD maps will now set the House to the classic opposing House, rather than always defaulting to the first item in the list.
 * Added "Tools" → "Statistics" menu to house the "Power Balance" and "Silo Storage" tools, and added a "Map Objects" tool giving an overview of used objects.
 * Renaming triggers and teamtypes will now correctly apply the renames to all things linking to them.
-* Fixed a bug on RA triggers where Event 2 was not hidden if the first opened trigger was one that should hide it.
+* Fixed bug on RA triggers where Event 2 was not hidden if the first opened trigger was one that should hide it.
 * Added the ability to clone triggers and teamtypes.
 * For Red Alert speech and sound triggers, the original filenames are now shown alongside the description.
 * For Red Alert text triggers, the text ID is now shown in front of the text.
 * Trigger and teamtype editing actions are now added to the undo/redo history. They will give a warning with a message box when undoing or redoing.
-* Fixed the fact the maximum number of triggers was set to 200 for Red Alert, instead of 80.
+* Fixed the maximum number of triggers being set to 200 for Red Alert, instead of 80.
 * Red Alert globals are now limited to 0 to 29, since that is how they are defined in the game code.
 * The editor now specifically checks for the presence of the \[Basic\] and \[Map\] sections to see whether a file is indeed a C&C map.
 * Added checks on triggers containing Events or Actions that don't have their required House/Teamtype/Trigger filled in.
@@ -492,10 +492,10 @@ Program bug fixes:
 * Applied DPI changes that might fix issues with objects drawing weirdly on some people's systems.
 * Fixed an issue where RA triggers with waypoint "None" set in them would have that value corrupted to 255 after a reload of the map, causing other systems in the editor to crash.
 * Fixed mixup between actions and events in the TD trigger reading checks.
-* Fixed a bug in the resource value calculation for gems.
+* Fixed bug in the resource value calculation for gems.
 * Rule errors that occur after closing the Map settings dialog will now show in a window with scrollable area, just like the errors shown when opening a maps.
 * Added missing overlap checks to buildings on the rebuild-list, so they can no longer disappear on map load without any warning.
-* Fixed a bug in the Team Types window where the amount of added classes and orders would not unlock when maxed out on the previously selected item.
+* Fixed bug in the Team Types window where the amount of added classes and orders would not unlock when maxed out on the previously selected item.
 * Added missing names for items that were lacking them in the available game text resources.
 * Harvestable resource will now show the actual name of the graphics they're showing, rather than always showing "TI01" / "GOLD01" / "GEM01".
 * Changed TD Technology Center to its real name, instead of "Prison".
@@ -513,7 +513,7 @@ Program bug fixes:
 * Fixed rounding issues in image export dialog, and added cell size info and a tool to set the scale by cell size.
 * The placement grid is now also shown when using the flood-fill function.
 * Fixed the cell selection indicator and the bottom info bar not immediately refreshing when using the arrow keys to scroll around the map.
-* Fixed a bug in the dragging logic that made the mouse position and map desynchronise or not work at all when dragging very slowly.
+* Fixed bug in the dragging logic that made the mouse position and map desynchronise or not work at all when dragging very slowly.
 * Fixed bugs in the logic to zoom to the map bounds. It is now slightly more accurate.
 * Fixed crashes that occurred when dragging bibs and buildings out of the right or bottom of the map bounds.
 * Added map load checks on failing to detect the House of units, structures, triggers and teams. This includes a logic for RA to substitute the prerelease House Italy with its final version, Ukraine.
@@ -626,8 +626,9 @@ Released on 31 Jan 2023 at 20:50 GMT
 
 Unreleased.
 
-* Added a fix that prevented the Red Alert civilian "C3" from loading, and that prevented the Einstein colour fix from working.
+* Fixed bug that prevented the Red Alert civilian "C3" from loading, and that prevented the Einstein colour fix from working.
 * Added tooltips to Triggers editor giving a summary of teamtypes and triggers used as trigger arguments. This includes a tooltip on the trigger action on Tiberian Dawn's "Destroy Trigger" and "DZ at 'Z'" actions, respectively showing info on the corresponding trigger and the flare waypoint.
 * Added checks and warnings on teamtype arguments, and on the limits of units/orders list lengths.
 * Added system to avoid loading the same mod from both the workshop items and from the local mods under the Documents folder. If given by name, local mods are given priority.
 * The \[Enter\] shortcut for the "Jump To" function is now indicated in the status bar in Waypoints and Celltriggers mode.
+* Fixed Red Alert map load not giving feedback on the removal of Aircraft.

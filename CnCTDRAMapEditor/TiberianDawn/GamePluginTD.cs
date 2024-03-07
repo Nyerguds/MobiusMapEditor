@@ -822,6 +822,8 @@ namespace MobiusEditor.TiberianDawn
 #endif
             string th = Map.Theater.Name;
             bool skipSoleStuff = forSole && Globals.NoOwnedObjectsInSole;
+            const string consultManual = "If you don't know why, please consult the manual's explanation of the \"{0}\" setting.";
+            string disabledObjExplSole = skipSoleStuff ? String.Format(consultManual, "NoOwnedObjectsInSole") : String.Empty;
             INISection briefingSection = ini.Sections["Briefing"];
             if (briefingSection != null)
             {
@@ -1206,7 +1208,7 @@ namespace MobiusEditor.TiberianDawn
                     {
                         int amount = infantrySection.Count();
                         bool isOne = amount == 1;
-                        errors.Add(string.Format("Owned objects in Sole Survivor are disabled. {0} [Infantry] {1} skipped.", amount, isOne ? "entry was" : "entries were"));
+                        errors.Add(string.Format("Owned objects in Sole Survivor are disabled. {0} [Infantry] {1} skipped. {2}", amount, isOne ? "entry was" : "entries were", disabledObjExplSole));
                         modified = true;
                         break;
                     }
@@ -1361,7 +1363,7 @@ namespace MobiusEditor.TiberianDawn
                     {
                         int amount = unitsSection.Count();
                         bool isOne = amount == 1;
-                        errors.Add(string.Format("Owned objects in Sole Survivor are disabled. {0} [Units] {1} skipped.", amount, isOne ? "entry was" : "entries were"));
+                        errors.Add(string.Format("Owned objects in Sole Survivor are disabled. {0} [Units] {1} skipped. {2}", amount, isOne ? "entry was" : "entries were", disabledObjExplSole));
                         modified = true;
                         break;
                     }
@@ -1498,7 +1500,8 @@ namespace MobiusEditor.TiberianDawn
                         int amount = aircraftSection.Count();
                         bool isOne = amount == 1;
                         string disabledObj = skipSoleStuff ? "Owned objects in Sole Survivor" : "Aircraft";
-                        errors.Add(string.Format("{0} are disabled. {1} [Aircraft] {2} skipped.", disabledObj, amount, isOne ? "entry was" : "entries were"));
+                        string disabledObjExpl = String.Format(consultManual, skipSoleStuff ? "NoOwnedObjectsInSole" : "DisableAirUnits");
+                        errors.Add(string.Format("{0} are disabled. {1} [Aircraft] {2} skipped. {3}", disabledObj, amount, isOne ? "entry was" : "entries were", disabledObjExpl));
                         modified = true;
                         break;
                     }
@@ -1607,7 +1610,7 @@ namespace MobiusEditor.TiberianDawn
                     {
                         int amount = structuresSection.Count();
                         bool isOne = amount == 1;
-                        errors.Add(string.Format("Owned objects in Sole Survivor are disabled. {0} [Structures] {1} skipped.", amount, isOne ? "entry was" : "entries were"));
+                        errors.Add(string.Format("Owned objects in Sole Survivor are disabled. {0} [Structures] {1} skipped. {2}", amount, isOne ? "entry was" : "entries were", disabledObjExplSole));
                         modified = true;
                         break;
                     }
@@ -1713,7 +1716,7 @@ namespace MobiusEditor.TiberianDawn
                     if (skipSoleStuff)
                     {
                         // Ignore error. Just indicate it's skipped.
-                        errors.Add(string.Format("Owned objects in Sole Survivor are disabled. [Base] section is skipped."));
+                        errors.Add("Owned objects in Sole Survivor are disabled. [Base] section is skipped. " + disabledObjExplSole);
                     }
                     else
                     {
@@ -1723,7 +1726,8 @@ namespace MobiusEditor.TiberianDawn
                 }
                 else if (skipSoleStuff && baseCount > 0)
                 {
-                    errors.Add(string.Format("Owned objects in Sole Survivor are disabled. [Base] section is skipped."));
+                    bool isOne = baseCount == 1;
+                    errors.Add(String.Format("Owned objects in Sole Survivor are disabled. {0} [Base] {1} skipped. {2}", baseCount, isOne ? "entry was" : "entries were", disabledObjExplSole));
                     modified = true;
                 }
                 else

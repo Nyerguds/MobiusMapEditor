@@ -1600,8 +1600,16 @@ namespace MobiusEditor.RedAlert
             // Classic game does not support this, so I'm leaving this out by default.
             // It is always extracted, so it doesn't end up with the "extra sections"
             INISection aircraftSection = ini.Sections.Extract("Aircraft");
-            if (Globals.DisableAirUnits || aircraftSection == null)
+            int amount = aircraftSection == null ? 0 : aircraftSection.Count();
+            if (amount == 0)
             {
+                return;
+            }
+            if (Globals.DisableAirUnits)
+            {
+                bool isOne = amount == 1;
+                errors.Add(string.Format("Aircraft are disabled. {0} [Aircraft] {1} skipped. If you don't know why, please consult the manual's explanation of the \"DisableAirUnits\" setting.", amount, isOne ? "entry was" : "entries were"));
+                modified = true;
                 return;
             }
             foreach (KeyValuePair<string, string> kvp in aircraftSection)
