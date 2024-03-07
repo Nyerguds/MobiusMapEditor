@@ -19,6 +19,15 @@ using System.Text;
 
 namespace MobiusEditor.Utility
 {
+    /// <summary>
+    /// <para>This class reads the classic TD/RA strings file, and allows retrieving requested strings by text ID.
+    /// To accomplish this, it contains mappings of the text IDs used in the C&amp;C Remastered Collection with the
+    /// corresponding numeric indices in the classic strings file. Of course, not all classic strings are
+    /// available through this system, but all strings used in the editor should be covered here. Any string
+    /// IDs that have no match in the classic files should be added in the
+    /// <see cref="StartupLoader.AddMissingClassicText(IGameTextManager)"/> function.</para>
+    /// <para>When editing this class, always make sure none of the mappings contain duplicate keys.</para>
+    /// </summary>
     public class GameTextManagerClassic : IGameTextManager
     {
         private static readonly Dictionary<string, int> StringMappingsTd = new Dictionary<string, int>

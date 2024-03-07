@@ -2,7 +2,6 @@
 using MobiusEditor.Model;
 using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -107,7 +106,7 @@ namespace MobiusEditor.Utility
             }
         }
 
-        public static String GetRemasterRunPath(string gameId, bool askIfNotFound)
+        public static string GetRemasterRunPath(string gameId, bool askIfNotFound)
         {
             // Do a test for CONFIG.MEG
             string runPath = null;
@@ -263,7 +262,7 @@ namespace MobiusEditor.Utility
             return true;
         }
 
-        private static String FindCompatibleCulture(MegafileManager mfm)
+        private static string FindCompatibleCulture(MegafileManager mfm)
         {
             string currentCulture = CultureInfo.CurrentUICulture.Name.ToUpper();
             if (mfm.FileExists(String.Format(Globals.GameTextFilenameFormat, currentCulture)))
@@ -273,7 +272,7 @@ namespace MobiusEditor.Utility
             Regex stringsFileMatch = new Regex(
                 String.Format(Regex.Escape(Globals.GameTextFilenameFormat).Replace(Regex.Escape("{0}"), "{0}"),
                                 "([a-zA-Z\\-]+)"), RegexOptions.Compiled);
-            List<String> supportedCultures = new List<String>();
+            List<string> supportedCultures = new List<string>();
             foreach (string filename in mfm)
             {
                 Match match = stringsFileMatch.Match(filename);
@@ -310,13 +309,13 @@ namespace MobiusEditor.Utility
             // The order of load determines the file priority; only the first found occurrence of a file is used.
             GameType[] gameTypes = GameTypeFactory.GetGameTypes();
             GameInfo[] gameTypeInfo = new GameInfo[gameTypes.Length];
-            Dictionary<GameType, String> gameFolders = new Dictionary<GameType, string>();
+            Dictionary<GameType, string> gameFolders = new Dictionary<GameType, string>();
             foreach (GameType gi in gameTypes)
             {
                 GameInfo gic = GameTypeFactory.GetGameInfo(gi);
                 gameTypeInfo[(int)gic.GameType] = gic;
-                String path = gic.ClassicFolder;
-                String pathFull = Path.GetFullPath(Path.Combine(applicationPath, gic.ClassicFolder));
+                string path = gic.ClassicFolder;
+                string pathFull = Path.GetFullPath(Path.Combine(applicationPath, gic.ClassicFolder));
                 if (!Directory.Exists(pathFull))
                 {
                     // Revert to default.
@@ -472,10 +471,15 @@ namespace MobiusEditor.Utility
             }
         }
 
+        /// <summary>
+        /// Adds / corrects strings that are either missing or incomplete in the Remaster for their intended use
+        /// in the map editor.
+        /// </summary>
+        /// <param name="gtm">The game text manager to apply these changes on.</param>
         private static void AddMissingRemasterText(IGameTextManager gtm)
         {
             // == Buildings ==
-            String fake = " (" + gtm["TEXT_UI_FAKE"] + ")";
+            string fake = " (" + gtm["TEXT_UI_FAKE"] + ")";
             if (!gtm["TEXT_STRUCTURE_RA_WEAF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_WEAF"] += fake;
             if (!gtm["TEXT_STRUCTURE_RA_FACF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_FACF"] += fake;
             if (!gtm["TEXT_STRUCTURE_RA_SYRF"].EndsWith(fake)) gtm["TEXT_STRUCTURE_RA_SYRF"] += fake;
@@ -508,6 +512,13 @@ namespace MobiusEditor.Utility
             gtm["TEXT_SMUDGE_BIB"] = "Road Bib";
         }
 
+        /// <summary>
+        /// Adds strings that are missing in the classic files. Note that unlike for Remastered text,
+        /// the strings in this function cannot be composed from other strings; the actual strings files differ
+        /// per game, and this function is called before any maps are opened, meaning no game is chosen yet,
+        /// and no actual game files are loaded.
+        /// </summary>
+        /// <param name="gtm">The game text manager to apply these changes on.</param>
         private static void AddMissingClassicText(IGameTextManager gtm)
         {
             // Classic game text manager does not clear these extra strings when resetting the strings table.

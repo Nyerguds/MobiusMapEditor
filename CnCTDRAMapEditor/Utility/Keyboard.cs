@@ -37,7 +37,7 @@ namespace MobiusEditor.Utility
         Number5        /**/ = 0x06,
         /// <summary>6 ^</summary>
         Number6        /**/ = 0x07,
-        /// <summary>7 &</summary>
+        /// <summary>7 &amp;</summary>
         Number7        /**/ = 0x08,
         /// <summary>8 *</summary>
         Number8        /**/ = 0x09,

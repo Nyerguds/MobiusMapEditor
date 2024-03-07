@@ -144,7 +144,7 @@ namespace MobiusEditor.Utility
         }
 
         /// <summary>
-        /// Retrieves the C&C1/RA1 SHP frames.
+        /// Retrieves the C&amp;C1/RA1 SHP frames.
         /// </summary>
         /// <param name="fileData">Original file data.</param>
         /// <param name="palette">Color palette</param>
@@ -155,7 +155,7 @@ namespace MobiusEditor.Utility
         }
 
         /// <summary>
-        /// Retrieves the C&C1/RA1 SHP frames.
+        /// Retrieves the C&amp;C1/RA1 SHP frames.
         /// </summary>
         /// <param name="fileData">Original file data.</param>
         /// <param name="palette">Color palette</param>
@@ -198,7 +198,7 @@ namespace MobiusEditor.Utility
         }
 
         /// <summary>
-        /// Retrieves the C&C1 / RA1 SHP image data.
+        /// Retrieves the C&amp;C1 / RA1 SHP image data.
         /// </summary>
         /// <param name="fileData">File data</param>
         /// <param name="width">The width of all frames</param>
@@ -377,7 +377,7 @@ namespace MobiusEditor.Utility
         }
 
         /// <summary>
-        /// Retrieves the Dune II SHP image data. (used for mouse cursors in C&C1/RA1)
+        /// Retrieves the Dune II SHP image data. (used for mouse cursors in C&amp;C1/RA1)
         /// </summary>
         /// <param name="fileData">File data</param>
         /// <param name="widths">The widths of all frames</param>

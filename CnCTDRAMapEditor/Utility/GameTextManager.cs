@@ -21,6 +21,11 @@ using System.Text;
 
 namespace MobiusEditor.Utility
 {
+    /// <summary>
+    /// This class reads C&amp;C Remastered Collection strings file, and allows retrieving requested strings by text ID.
+    /// Any string IDs that have no match in the Remastered files should be added in the
+    /// <see cref="StartupLoader.AddMissingRemasterText(IGameTextManager)"/> function.
+    /// </summary>
     public class GameTextManager: IGameTextManager
     {
         private readonly Dictionary<string, string> gameText = new Dictionary<string, string>();

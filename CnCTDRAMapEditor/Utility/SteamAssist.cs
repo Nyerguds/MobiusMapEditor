@@ -363,7 +363,7 @@ namespace MobiusEditor.Utility
         /// <param name="libraryFolders">A list of Steam library folders.</param>
         /// <param name="steamId">Steam game ID.</param>
         /// <param name="identifyingFiles">Optional list of files that need to be present inside the found game folder.</param>
-        /// <returns>The first matching game folder for that id that is found, or null if no existing match was found.<</returns>
+        /// <returns>The first matching game folder for that id that is found, or null if no existing match was found.</returns>
         private static string GetGameFolder(IEnumerable<string> libraryFolders, string steamId, params string[] identifyingFiles)
         {
             if (steamId == null)

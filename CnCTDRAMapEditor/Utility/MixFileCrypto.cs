@@ -20,7 +20,7 @@ namespace MobiusEditor.Utility
         public const int SIZE_OF_ENCRYPTED_KEY = 80;
 
         /// <summary>
-        /// Byte length of an RSA key used in C&C.
+        /// Byte length of an RSA key used in C&amp;C.
         /// </summary>
         public const int SIZE_OF_RSA_KEY = 40;
 
@@ -70,7 +70,7 @@ namespace MobiusEditor.Utility
         public const int SIZE_OF_BLOCK = 8;
 
         /// <summary>
-        /// Byte length of a Blowfish key used in C&C.
+        /// Byte length of a Blowfish key used in C&amp;C.
         /// </summary>
         public const int SIZE_OF_BLOWFISH_KEY = 56;
 

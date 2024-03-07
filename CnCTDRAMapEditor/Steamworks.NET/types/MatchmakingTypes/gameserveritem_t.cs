@@ -67,28 +67,28 @@ namespace Steamworks
 			m_szGameTags = Encoding.UTF8.GetBytes(tags + '\0');
 		}
 
-		public servernetadr_t m_NetAdr;										///< IP/Query Port/Connection Port for this server
-		public int m_nPing;													///< current ping time in milliseconds
+		public servernetadr_t m_NetAdr;										// < IP/Query Port/Connection Port for this server
+		public int m_nPing;													// < current ping time in milliseconds
 		[MarshalAs(UnmanagedType.I1)]
-		public bool m_bHadSuccessfulResponse;								///< server has responded successfully in the past
+		public bool m_bHadSuccessfulResponse;								// < server has responded successfully in the past
 		[MarshalAs(UnmanagedType.I1)]
-		public bool m_bDoNotRefresh;										///< server is marked as not responding and should no longer be refreshed
+		public bool m_bDoNotRefresh;										// < server is marked as not responding and should no longer be refreshed
 		[MarshalAs(UnmanagedType.ByValArray, SizeConst = Constants.k_cbMaxGameServerGameDir)]
-		private byte[] m_szGameDir;											///< current game directory
+		private byte[] m_szGameDir;											// < current game directory
 		[MarshalAs(UnmanagedType.ByValArray, SizeConst = Constants.k_cbMaxGameServerMapName)]
-		private byte[] m_szMap;												///< current map
+		private byte[] m_szMap;												// < current map
 		[MarshalAs(UnmanagedType.ByValArray, SizeConst = Constants.k_cbMaxGameServerGameDescription)]
-		private byte[] m_szGameDescription;									///< game description
-		public uint m_nAppID;												///< Steam App ID of this server
-		public int m_nPlayers;												///< total number of players currently on the server.  INCLUDES BOTS!!
-		public int m_nMaxPlayers;											///< Maximum players that can join this server
-		public int m_nBotPlayers;											///< Number of bots (i.e simulated players) on this server
+		private byte[] m_szGameDescription;									// < game description
+		public uint m_nAppID;												// < Steam App ID of this server
+		public int m_nPlayers;												// < total number of players currently on the server.  INCLUDES BOTS!!
+		public int m_nMaxPlayers;											// < Maximum players that can join this server
+		public int m_nBotPlayers;											// < Number of bots (i.e simulated players) on this server
 		[MarshalAs(UnmanagedType.I1)]
-		public bool m_bPassword;											///< true if this server needs a password to join
+		public bool m_bPassword;											// < true if this server needs a password to join
 		[MarshalAs(UnmanagedType.I1)]
-		public bool m_bSecure;												///< Is this server protected by VAC
-		public uint m_ulTimeLastPlayed;										///< time (in unix time) when this server was last played on (for favorite/history servers)
-		public int	m_nServerVersion;										///< server version as reported to Steam
+		public bool m_bSecure;												// < Is this server protected by VAC
+		public uint m_ulTimeLastPlayed;										// < time (in unix time) when this server was last played on (for favorite/history servers)
+		public int	m_nServerVersion;										// < server version as reported to Steam
 
 		// Game server name
 		[MarshalAs(UnmanagedType.ByValArray, SizeConst = Constants.k_cbMaxGameServerName)]
