@@ -124,9 +124,9 @@ namespace MobiusEditor.Interface
 
         /// <summary>Gives a readable string that shows the contents of a trigger.</summary>
         /// <param name="trigger">The trigger to summarise</param>
-        /// <param name="currentTriggers">List of current triggers. This makes it usable in the trigger edit screen, taking unsaved data into account.</param>
+        /// <param name="withLineBreaks">True to format the trigger info with line breaks.</param>
         /// <returns>The summarisation of the trigger</returns>
-        string TriggerSummary(Trigger trigger, List<Trigger> currentTriggers);
+        string TriggerSummary(Trigger trigger, bool withLineBreaks);
 
         /// <summary>Re-initialises the flag colors for this game.</summary>
         /// <returns>The team colors</returns>

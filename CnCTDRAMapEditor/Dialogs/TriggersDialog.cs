@@ -42,6 +42,7 @@ namespace MobiusEditor.Dialogs
                 "Event1 → Action1; Event2 → Action2",
         };
 
+        /// <summary>Argument types to generate a special tooltip for.</summary>
         private enum ArgType
         {
             None,
@@ -57,6 +58,7 @@ namespace MobiusEditor.Dialogs
         public List<(String Name1, String Name2)> RenameActions => renameActions;
         private ArgType actionArgTypeRa1 = ArgType.None;
         private ArgType actionArgTypeRa2 = ArgType.None;
+        private Control tooltipShownOn = null;
 
         private ListViewItem SelectedItem => (triggersListView.SelectedItems.Count > 0) ? triggersListView.SelectedItems[0] : null;
 
@@ -703,14 +705,26 @@ namespace MobiusEditor.Dialogs
         private void Action1ComboBox_MouseEnter(object sender, EventArgs e)
         {
             Control target = sender as Control;
-            string trigDescrTd = CheckTdDestroyTrigger(SelectedTrigger?.Action1);
+            string trigDescrTd = CheckTdSpecialTrigger(SelectedTrigger?.Action1);
             if (trigDescrTd != null)
             {
                 ShowToolTip(target, trigDescrTd);
             }
+            else
+            {
+                HideToolTip(target);
+            }
         }
 
-        private string CheckTdDestroyTrigger(TriggerAction action)
+        private void Action1ComboBox_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (tooltipShownOn != sender)
+            {
+                Action1ComboBox_MouseEnter(sender, e);
+            }
+        }
+
+        private string CheckTdSpecialTrigger(TriggerAction action)
         {
             if (plugin.GameInfo.GameType != GameType.TiberianDawn
                 || action == null || action.ActionType == null)
@@ -738,10 +752,10 @@ namespace MobiusEditor.Dialogs
                 }
                 else
                 {
-                    return plugin.TriggerSummary(toDestr, triggers);
+                    return plugin.TriggerSummary(toDestr, true);
                 }
             }
-            if (isFlare)
+            else if (isFlare)
             {
                 String wp = "Waypoint 'Z' (flare): ";
                 Waypoint z = plugin.Map.Waypoints.FirstOrDefault(w => (w.Flag & WaypointFlag.Flare) != WaypointFlag.None);
@@ -771,6 +785,18 @@ namespace MobiusEditor.Dialogs
             if (actionValueLabel != null)
             {
                 ShowToolTip(valCombo, actionValueLabel);
+            }
+            else
+            {
+                HideToolTip(valCombo);
+            }
+        }
+
+        private void Action1ValueComboBox_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (tooltipShownOn != sender)
+            {
+                Action1ValueComboBox_MouseEnter(sender, e);
             }
         }
 
@@ -810,9 +836,21 @@ namespace MobiusEditor.Dialogs
             {
                 ShowToolTip(valCombo, actionValueLabel);
             }
+            else
+            {
+                HideToolTip(valCombo);
+            }
         }
 
-        private void teamComboBox_SelectedIndexChanged(Object sender, EventArgs e)
+        private void Action2ValueComboBox_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (tooltipShownOn != sender)
+            {
+                Action2ValueComboBox_MouseEnter(sender, e);
+            }
+        }
+
+        private void TeamComboBox_SelectedIndexChanged(Object sender, EventArgs e)
         {
             ComboBox teamCombo = sender as ComboBox;
             if (teamCombo.ClientRectangle.Contains(teamCombo.PointToClient(Cursor.Position)))
@@ -829,12 +867,25 @@ namespace MobiusEditor.Dialogs
             {
                 ShowToolTip(teamCombo, teamDescrTd);
             }
+            else
+            {
+                this.HideToolTip(teamCombo);
+            }
         }
+
+        private void TeamComboBox_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (tooltipShownOn != sender)
+            {
+                TeamComboBox_MouseEnter(sender, e);
+            }
+        }
+
 
         private void ToolTipComboBox_MouseLeave(Object sender, EventArgs e)
         {
             Control target = sender as Control;
-            this.toolTip1.Hide(target);
+            this.HideToolTip(target);
         }
 
         private void RemoveFromLayout(TableLayoutPanel panel, Label lblname, ComboBox cmbselect, FlowLayoutPanel flpargs)
@@ -1234,7 +1285,7 @@ namespace MobiusEditor.Dialogs
                 }
                 if (!tooltipShown && !dontHideTooltip)
                 {
-                    this.toolTip1.Hide(actionValueComboBox);
+                    this.HideToolTip(actionValueComboBox);
                 }
             }
         }
@@ -1299,14 +1350,14 @@ namespace MobiusEditor.Dialogs
         private string RefreshTriggerLabel(String triggerName)
         {
             Trigger trigger = triggers.FirstOrDefault(t => t.Name.Equals(triggerName, StringComparison.OrdinalIgnoreCase));
-            return trigger == null ? null : plugin.TriggerSummary(trigger, triggers); ;
+            return trigger == null ? null : plugin.TriggerSummary(trigger, true);
         }
 
         private void ShowToolTip(Control target, string message)
         {
             if (target == null || message == null)
             {
-                this.toolTip1.Hide(target);
+                this.HideToolTip(target);
                 return;
             }
             Point resPoint = target.PointToScreen(new Point(0, target.Height));
@@ -1314,7 +1365,21 @@ namespace MobiusEditor.Dialogs
                        BindingFlags.Instance | BindingFlags.NonPublic);
             // private void SetTool(IWin32Window win, string text, TipInfo.Type type, Point position)
             m.Invoke(toolTip1, new object[] { target, message, 2, resPoint });
+            this.tooltipShownOn = target;
             //this.toolTip1.Show(triggerToolTip, target, target.Width, 0, 10000);
+        }
+
+        private void HideToolTip(Control target)
+        {
+            if (this.tooltipShownOn != null)
+            {
+                this.toolTip1.Hide(this.tooltipShownOn);
+            }
+            if (target != null)
+            {
+                this.toolTip1.Hide(target);
+            }
+            tooltipShownOn = null;
         }
     }
 }

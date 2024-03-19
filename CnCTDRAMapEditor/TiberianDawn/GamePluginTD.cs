@@ -3500,10 +3500,13 @@ namespace MobiusEditor.TiberianDawn
             return errors;
         }
 
-
-        public string TriggerSummary(Trigger trigger, List<Trigger> currentTriggers)
+        public string TriggerSummary(Trigger trigger, bool withLineBreaks)
         {
-            const string trigFormat = "{0}: {1}, {2} → {3} ({4})";
+            string trigFormat = "{0}: {1}, {2}, {3} → {4}";
+            if (withLineBreaks)
+            {
+                trigFormat = "{0}: {1}, {2},\n{3} → {4}";
+            }
             string evt = trigger.Event1.EventType ?? TriggerEvent.None;
             bool isDataEvent = evt == EventTypes.EVENT_CREDITS
                             || evt == EventTypes.EVENT_TIME
@@ -3530,7 +3533,7 @@ namespace MobiusEditor.TiberianDawn
                 act = String.Format(GameInfo.TRIG_ARG_FORMAT, act, trigger.Action1.Team ?? TeamType.None);
             }
             string persistence = GameInfo.PERSISTENCE_NAMES[(int)trigger.PersistentType];
-            return String.Format(trigFormat, trigger.Name, trigger.House, evt, act, persistence);
+            return String.Format(trigFormat, trigger.Name, trigger.House, persistence, evt, act);
         }
 
         public virtual ITeamColor[] GetFlagColors()

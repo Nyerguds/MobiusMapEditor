@@ -4644,33 +4644,30 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        public string TriggerSummary(Trigger trigger, List<Trigger> currentTriggers)
+        public string TriggerSummary(Trigger trigger, bool withLineBreaks)
         {
-            string[] eventControlStrings =
+            string[][] eventControlStrings =
             {
-                    "{0} → {2}",
-                    "{0} AND {1} → {2}",
-                    "{0} OR {1} → {2}",
-                    "{0} → {2}; {1} → {3}",
+                    new[] { "{0} → {2}" ,"{0}\n  → {2}" },
+                    new[] { "{0} AND {1} → {2}",  "{0} AND {1}\n  → {2}"},
+                    new[] { "{0} OR {1} → {2}",  "{0} OR {1}\n  → {2}"},
+                    new[] { "{0} → {2}; {1} → {3}",  "{0} → {2};\n{1} → {3}" },
             };
-            string[] persistenceNames = { "first triggered", "all triggered", "each triggering" };
-
-            // name, house, event control, repeat status
-            const string trigFormat = "{0}: {1}, {2} ({3})";
-
-            string evtControlFormat = eventControlStrings[(int)trigger.EventControl];
-            string persistence = persistenceNames[(int)trigger.PersistentType];
+            // name, house, repeat status, event control
+            string trigFormat = !withLineBreaks ? "{0}: {1}, {2}, {3}" : "{0}: {1}, {2},\n{3}";
+            string evtControlFormat = eventControlStrings[(int)trigger.EventControl][!withLineBreaks ? 0 : 1];
+            string persistence = GameInfo.PERSISTENCE_NAMES[(int)trigger.PersistentType];
             string evt1 = GetEventString(trigger.Event1);
             string evt2 = GetEventString(trigger.Event2);
-            string act1 = GetActionString(trigger.Action1, currentTriggers);
-            string act2 = GetActionString(trigger.Action2, currentTriggers);
+            string act1 = GetActionString(trigger.Action1);
+            string act2 = GetActionString(trigger.Action2);
             if (trigger.EventControl != TriggerMultiStyleType.Linked
                 && !TriggerAction.None.Equals(act2, StringComparison.OrdinalIgnoreCase))
             {
                 act1 = act1 + " + " + act2;
             }
             string evtControl = String.Format(evtControlFormat, evt1, evt2, act1, act2);
-            return String.Format(trigFormat, trigger.Name, trigger.House, evtControl, persistence);
+            return String.Format(trigFormat, trigger.Name, trigger.House, persistence, evtControl);
         }
 
         private String GetEventString(TriggerEvent evt)
@@ -4724,7 +4721,7 @@ namespace MobiusEditor.RedAlert
             return eventArg == null ? eventStr : String.Format(GameInfo.TRIG_ARG_FORMAT, eventStr, eventArg);
         }
 
-        private String GetActionString(TriggerAction act, List<Trigger> currentTriggers)
+        private String GetActionString(TriggerAction act)
         {
             String actionStr = (act.ActionType ?? TriggerAction.None).TrimEnd('.');
             String actionArg = null;
