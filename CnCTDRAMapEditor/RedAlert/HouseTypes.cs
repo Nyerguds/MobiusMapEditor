@@ -21,18 +21,18 @@ namespace MobiusEditor.RedAlert
 {
     public static class HouseTypes
     {
-        public static readonly HouseType Spain = new HouseType(0, "Spain", HouseTypeFlag.ForAlliances, "SPAIN");
-        public static readonly HouseType Greece = new HouseType(1, "Greece", HouseTypeFlag.ForAlliances, "GREECE");
-        public static readonly HouseType USSR = new HouseType(2, "USSR", HouseTypeFlag.ForAlliances, "USSR");
-        public static readonly HouseType England = new HouseType(3, "England", HouseTypeFlag.ForAlliances, "ENGLAND");
-        public static readonly HouseType Ukraine = new HouseType(4, "Ukraine", HouseTypeFlag.ForAlliances, "UKRAINE");
-        public static readonly HouseType Germany = new HouseType(5, "Germany", HouseTypeFlag.ForAlliances, "GERMANY");
-        public static readonly HouseType France = new HouseType(6, "France", HouseTypeFlag.ForAlliances, "FRANCE");
-        public static readonly HouseType Turkey = new HouseType(7, "Turkey", HouseTypeFlag.ForAlliances, "TURKEY");
-        public static readonly HouseType Good = new HouseType(8, "GoodGuy", HouseTypeFlag.ForAlliances, "GOOD");
-        public static readonly HouseType Bad = new HouseType(9, "BadGuy", HouseTypeFlag.ForAlliances, "BAD");
-        public static readonly HouseType Neutral = new HouseType(10, "Neutral", HouseTypeFlag.ForAlliances, "NEUTRAL");
-        public static readonly HouseType Special = new HouseType(11, "Special", HouseTypeFlag.ForAlliances, "SPECIAL");
+        public static readonly HouseType Spain = new HouseType(0, "Spain", "TEXT_FACTION_NAME_FACTION_3", HouseTypeFlag.ForAlliances, "SPAIN");
+        public static readonly HouseType Greece = new HouseType(1, "Greece", "TEXT_FACTION_NAME_FACTION_4", HouseTypeFlag.ForAlliances, "GREECE");
+        public static readonly HouseType USSR = new HouseType(2, "USSR", "TEXT_FACTION_NAME_FACTION_5", HouseTypeFlag.ForAlliances, "USSR");
+        public static readonly HouseType England = new HouseType(3, "England", "TEXT_FACTION_NAME_FACTION_6",HouseTypeFlag.ForAlliances, "ENGLAND");
+        public static readonly HouseType Ukraine = new HouseType(4, "Ukraine", "TEXT_FACTION_NAME_FACTION_7",HouseTypeFlag.ForAlliances, "UKRAINE");
+        public static readonly HouseType Germany = new HouseType(5, "Germany", "TEXT_FACTION_NAME_FACTION_8",HouseTypeFlag.ForAlliances, "GERMANY");
+        public static readonly HouseType France = new HouseType(6, "France", "TEXT_FACTION_NAME_FACTION_9",HouseTypeFlag.ForAlliances, "FRANCE");
+        public static readonly HouseType Turkey = new HouseType(7, "Turkey", "TEXT_FACTION_NAME_FACTION_10", HouseTypeFlag.ForAlliances, "TURKEY");
+        public static readonly HouseType Good = new HouseType(8, "GoodGuy", "TEXT_FACTION_NAME_FACTION_1", HouseTypeFlag.ForAlliances, "GOOD");
+        public static readonly HouseType Bad = new HouseType(9, "BadGuy", "TEXT_FACTION_NAME_FACTION_2", HouseTypeFlag.ForAlliances, "BAD");
+        public static readonly HouseType Neutral = new HouseType(10, "Neutral", "TEXT_UNIT_TITLE_CIVILIAN", HouseTypeFlag.ForAlliances, "NEUTRAL");
+        public static readonly HouseType Special = new HouseType(11, "Special", "TEXT_FACTION_NAME_FACTION_JURASSIC", HouseTypeFlag.ForAlliances, "SPECIAL");
         public static readonly HouseType Multi1 = new HouseType(12, "Multi1", Waypoint.GetFlagForMpId(0), HouseTypeFlag.ForAlliances, "MULTI1"); // yellow
         public static readonly HouseType Multi2 = new HouseType(13, "Multi2", Waypoint.GetFlagForMpId(1), HouseTypeFlag.ForAlliances, "MULTI2"); // teal
         public static readonly HouseType Multi3 = new HouseType(14, "Multi3", Waypoint.GetFlagForMpId(2), HouseTypeFlag.ForAlliances, "MULTI3"); // red

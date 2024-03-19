@@ -22,13 +22,13 @@ namespace MobiusEditor.TiberianDawn
     public static class HouseTypes
     {
         /// <summary>Special House added for buildings without owner; those in the rebuild list that are not on the map.</summary>
-        public static readonly HouseType None = new HouseType(-1, House.None, HouseTypeFlag.BaseHouse | HouseTypeFlag.Special, "NONE");
+        public static readonly HouseType None = new HouseType(-1, House.None, null, HouseTypeFlag.BaseHouse | HouseTypeFlag.Special, "NONE");
         // Normal Houses
-        public static readonly HouseType Good = new HouseType(0, "GoodGuy", "GOOD");
-        public static readonly HouseType Bad = new HouseType(1, "BadGuy", "BAD_UNIT", "BAD_STRUCTURE", ("harv", "BAD_STRUCTURE"), ("mcv", "BAD_STRUCTURE"));
+        public static readonly HouseType Good = new HouseType(0, "GoodGuy", "TEXT_GLOBAL_DEFENSE_INITIATIVE", "GOOD");
+        public static readonly HouseType Bad = new HouseType(1, "BadGuy", "TEXT_BROTHERHOOD_OF_NOD", "BAD_UNIT", "BAD_STRUCTURE", ("harv", "BAD_STRUCTURE"), ("mcv", "BAD_STRUCTURE"));
         // Added actual recoloring
-        public static readonly HouseType Neutral = new HouseType(2, "Neutral", "NEUTRAL");
-        public static readonly HouseType Special = new HouseType(3, "Special", "SPECIAL");
+        public static readonly HouseType Neutral = new HouseType(2, "Neutral", "TEXT_UNIT_TITLE_CIVILIAN", "NEUTRAL");
+        public static readonly HouseType Special = new HouseType(3, "Special", "TEXT_FACTION_NAME_FACTION_JURASSIC", "SPECIAL");
         // Fixed to match actual game. Seems they messed up the naming of the colors in the xml files by taking the color definitions from the C&C
         // game code in order, arbitrarily naming those "Multi1" to "Multi6", and then correctly applying those obviously wrongly named colors to
         // the multi-Houses in the Remastered game. The editor code logically assumed they were named after their House, and thus got it all wrong.

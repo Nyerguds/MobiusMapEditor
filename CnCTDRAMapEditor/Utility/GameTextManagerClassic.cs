@@ -1147,14 +1147,14 @@ namespace MobiusEditor.Utility
             { "TEXT_STRUCTURE_RA_PBOX", 366 }, // Pillbox
             { "TEXT_STRUCTURE_RA_HBOX", 367 }, // Camo. Pillbox
             { "TEXT_STRUCTURE_RA_PDOX", 368 }, // Chronosphere
-            { "TEXT_TTS_FACTION_NAME_6", 369 }, // England
-            { "TEXT_TTS_FACTION_NAME_8", 370 }, // Germany
-            { "TEXT_TTS_FACTION_NAME_3", 371 }, // Spain
-            { "TEXT_TTS_FACTION_NAME_5", 372 }, // Russia
-            { "TEXT_TTS_FACTION_NAME_7", 373 }, // Ukraine
-            { "TEXT_TTS_FACTION_NAME_4", 374 }, // Greece
-            { "TEXT_TTS_FACTION_NAME_9", 375 }, // France
-            { "TEXT_TTS_FACTION_NAME_10", 376 }, // Turkey
+            { "TEXT_FACTION_NAME_FACTION_6", 369 }, // England
+            { "TEXT_FACTION_NAME_FACTION_8", 370 }, // Germany
+            { "TEXT_FACTION_NAME_FACTION_3", 371 }, // Spain
+            { "TEXT_FACTION_NAME_FACTION_5", 372 }, // Russia
+            { "TEXT_FACTION_NAME_FACTION_7", 373 }, // Ukraine
+            { "TEXT_FACTION_NAME_FACTION_4", 374 }, // Greece
+            { "TEXT_FACTION_NAME_FACTION_9", 375 }, // France
+            { "TEXT_FACTION_NAME_FACTION_10", 376 }, // Turkey
             //{ "Shore", 377 }, // Shore
             //{ "Select Object", 378 }, // Select Object
             { "TEXT_UNIT_RA_SS", 379 }, // Submarine
@@ -1237,8 +1237,8 @@ namespace MobiusEditor.Utility
             //{ "Bridge", 456 }, // Bridge
             { "TEXT_STRUCTURE_RA_BARL", 457 }, // Barrel
             { "TEXT_STRUCTURE_RA_BRL3", 457 }, // Barrel
-            // ("Friendly", 458), // Friendly
-            // ("Enemy", 459), // Enemy
+            { "TEXT_FACTION_NAME_FACTION_1", 458 }, // Friendly
+            { "TEXT_FACTION_NAME_FACTION_2", 459 }, // Enemy
             { "TEXT_CURRENCY_TACTICAL", 460 }, // Gold
             { "TEXT_OVERLAY_GEMS", 461 }, // Gems
             //{ "Title Movie", 462 }, // Title Movie
