@@ -34,6 +34,7 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Drawing.Text;
 using System.Linq;
+using System.Text;
 
 namespace MobiusEditor.Render
 {
@@ -2092,22 +2093,32 @@ namespace MobiusEditor.Render
 
         public static void RenderCellTriggersSoft(Graphics graphics, Map map, Rectangle visibleCells, Size tileSize, params String[] specifiedToExclude)
         {
-            RenderCellTriggers(graphics, map, visibleCells, tileSize, Color.Black, Color.White, Color.White, 0.75f, false, true, specifiedToExclude);
+            RenderCellTriggers(graphics, map, visibleCells, tileSize, Color.Black, Color.Silver, Color.White, 0.75f, false, true, specifiedToExclude);
         }
 
         public static void RenderCellTriggersHard(Graphics graphics, Map map, Rectangle visibleCells, Size tileSize, params String[] specifiedToExclude)
         {
-            RenderCellTriggers(graphics, map, visibleCells, tileSize, Color.Black, Color.White, Color.White, 1, false, true, specifiedToExclude);
+            RenderCellTriggers(graphics, map, visibleCells, tileSize, Color.Black, Color.Silver, Color.White, 1, false, true, specifiedToExclude);
         }
 
         public static void RenderCellTriggersSelected(Graphics graphics, Map map, Rectangle visibleCells, Size tileSize, params String[] specifiedToDraw)
         {
-            RenderCellTriggers(graphics, map, visibleCells, tileSize, Color.Black, Color.Yellow, Color.Yellow, 1, true, false, specifiedToDraw);
+            RenderCellTriggers(graphics, map, visibleCells, tileSize, Color.Black, Color.FromArgb(0xFF, 0xC0, 0xC0, 0x00), Color.Yellow, 1, true, false, specifiedToDraw);
         }
 
-        public static void RenderCellTriggers(Graphics graphics, Map map, Rectangle visibleCells, Size tileSize, Color fillColor, Color borderColor, Color textColor, double alphaAdjust, bool thickborder, bool excludeSpecified, params String[] specified)
+        public static void RenderCellTriggers(Graphics graphics, Map map, Rectangle visibleCells, Size tileSize, Color fillColor, Color borderColor, Color textColor, double alphaAdjust, bool thickborder, bool excludeSpecified, params string[] specified)
         {
             // For bounds, add one more cell to get all borders showing.
+            bool hiResGraphics = true;
+            const string classicFont = "scorefnt.fnt";
+            ITeamColor scoreCol = null;
+            if (Globals.TheTilesetManager is TilesetManagerClassic tsmc)
+            {
+                hiResGraphics = false;
+                int color = tsmc.GetClosestColorIndex(textColor);
+                byte[] remapIndices = 0.Yield().Concat(Enumerable.Repeat(color, 15)).Select(b => (byte)b).ToArray();
+                scoreCol = new TeamRemap("Score_" + textColor.ToArgb().ToString("X4"), 0, 0, 0, remapIndices);
+            }
             Rectangle boundRenderCells = visibleCells;
             boundRenderCells.Inflate(1, 1);
             boundRenderCells.Intersect(map.Metrics.Bounds);
@@ -2115,10 +2126,10 @@ namespace MobiusEditor.Render
             List<(Point p, CellTrigger cellTrigger)> toRender = new List<(Point p, CellTrigger cellTrigger)>();
             HashSet<string> toRenderSet = new HashSet<string>();
             List<(Point p, CellTrigger cellTrigger)> boundsToDraw = new List<(Point p, CellTrigger cellTrigger)>();
-            foreach ((Int32 cell, CellTrigger cellTrigger) in map.CellTriggers.OrderBy(c => c.Cell))
+            foreach ((int cell, CellTrigger cellTrigger) in map.CellTriggers.OrderBy(c => c.Cell))
             {
-                Int32 x = cell % map.Metrics.Width;
-                Int32 y = cell / map.Metrics.Width;
+                int x = cell % map.Metrics.Width;
+                int y = cell / map.Metrics.Width;
                 if (!boundRenderCells.Contains(x, y))
                 {
                     continue;
@@ -2128,6 +2139,7 @@ namespace MobiusEditor.Render
                 {
                     continue;
                 }
+                // Allow better alpha control by detecting previews but not using that alpha.
                 bool isPreview = cellTrigger.Tint.A != 255;
                 Point p = new Point(x, y);
                 if (visibleCells.Contains(x, y))
@@ -2145,6 +2157,8 @@ namespace MobiusEditor.Render
             {
                 return Color.FromArgb(Math.Max(0, Math.Min(0xFF, (int)Math.Round(baseAlpha * alphaMul, MidpointRounding.AwayFromZero))), col);
             };
+            int sizeW = hiResGraphics ? 128 : tileSize.Width;
+            int sizeH = hiResGraphics ? 128 : tileSize.Height;
             // Actual balance is fixed; border is 1, text is 1/2, background is 3/8. The original alpha inside the given colours is ignored.
             fillColor = ApplyAlpha(fillColor, 0x60, alphaAdjust);
             borderColor = ApplyAlpha(borderColor, 0xFF, alphaAdjust);
@@ -2152,14 +2166,14 @@ namespace MobiusEditor.Render
             Color previewFillColor = ApplyAlpha(fillColor, 0x60, alphaAdjust / 2);
             Color previewBorderColor = ApplyAlpha(borderColor, 0xFF, alphaAdjust / 2);
             Color previewTextColor = ApplyAlpha(textColor, 0x80, alphaAdjust / 2);
-
+            Color previewAdjustColor = ApplyAlpha(Color.White, 0x80, alphaAdjust / 2);
+            // Render each trigger once, and just paint the rendered image multiple times.
+            Dictionary<string, Bitmap> backRenders = new Dictionary<string, Bitmap>();
             Dictionary<string, Bitmap> renders = new Dictionary<string, Bitmap>();
             try
             {
-                int sizeW = 128;
-                int sizeH = 128;
                 double tileScaleHor = sizeW / 128.0;
-                Rectangle tileBounds = new Rectangle(0, 0, sizeW - 1, sizeH - 1);
+                Rectangle tileBounds = new Rectangle(0, 0, sizeW, sizeH);
                 using (SolidBrush prevCellTriggersBackgroundBrush = new SolidBrush(previewFillColor))
                 using (SolidBrush prevCellTriggersBrush = new SolidBrush(previewTextColor))
                 using (SolidBrush cellTriggersBackgroundBrush = new SolidBrush(fillColor))
@@ -2176,40 +2190,67 @@ namespace MobiusEditor.Render
                         bool isPreview = trigPart[1] == "P";
                         Color textCol = isPreview ? previewTextColor : textColor;
 
+                        Bitmap fillbm = new Bitmap(sizeW, sizeH);
                         Bitmap bm = new Bitmap(sizeW, sizeH);
                         using (Graphics ctg = Graphics.FromImage(bm))
+                        using (Graphics fillctg = Graphics.FromImage(fillbm))
                         {
-                            SetRenderSettings(ctg, true);
+                            SetRenderSettings(ctg, hiResGraphics);
+                            SetRenderSettings(fillctg, hiResGraphics);
                             Rectangle textBounds = new Rectangle(Point.Empty, tileBounds.Size);
                             StringFormat stringFormat = new StringFormat
                             {
                                 Alignment = StringAlignment.Center,
                                 LineAlignment = StringAlignment.Center
                             };
-                            //*/
-                            ctg.FillRectangle(isPreview ? prevCellTriggersBackgroundBrush : cellTriggersBackgroundBrush, textBounds);
+                            fillctg.FillRectangle(isPreview ? prevCellTriggersBackgroundBrush : cellTriggersBackgroundBrush, textBounds);
                             using (Bitmap textBm = new Bitmap(sizeW, sizeH))
                             {
                                 using (Graphics textGr = Graphics.FromImage(textBm))
-                                using (Font font = ctg.GetAdjustedFont(text, SystemFonts.DefaultFont, textBounds.Width, textBounds.Height,
-                                    Math.Max(1, (int)Math.Round(24 * tileScaleHor)), Math.Max(1, (int)Math.Round(48 * tileScaleHor)), stringFormat, true))
                                 {
-                                    // If not set, the text will not use alpha
-                                    textGr.TextRenderingHint = TextRenderingHint.SingleBitPerPixel;
-                                    textGr.DrawString(text, font, isPreview ? prevCellTriggersBrush : cellTriggersBrush, textBounds, stringFormat);
+                                    if (hiResGraphics)
+                                    {
+                                        using (Font font = ctg.GetAdjustedFont(text, SystemFonts.DefaultFont, textBounds.Width, textBounds.Height,
+                                            Math.Max(1, (int)Math.Round(24 * tileScaleHor)), Math.Max(1, (int)Math.Round(48 * tileScaleHor)), stringFormat, true))
+                                        {
+                                            SetRenderSettings(ctg, hiResGraphics);
+                                            // If not set, the text will not use alpha
+                                            textGr.TextRenderingHint = TextRenderingHint.SingleBitPerPixel;
+                                            textGr.DrawString(text, font, isPreview ? prevCellTriggersBrush : cellTriggersBrush, textBounds, stringFormat);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        int[] indices = Encoding.ASCII.GetBytes(text).Select(x => (int)x).ToArray();
+                                        // TODO add alpha!
+
+                                        using (ImageAttributes imageAttributes = new ImageAttributes())
+                                        {
+                                            if (isPreview)
+                                            {
+                                                imageAttributes.SetColorMatrix(GetColorMatrix(previewAdjustColor, 1.0f, 1.0f));
+                                            }
+                                            using (Bitmap txt = RenderTextFromSprite(map, textColor, classicFont, scoreCol, tileBounds.Size, indices))
+                                            {
+                                                Rectangle paintBounds = new Rectangle(Point.Empty, tileSize);
+                                                textGr.DrawImage(txt, textBounds, 0,0, tileBounds.Width, tileBounds.Height, GraphicsUnit.Pixel, imageAttributes);
+                                            }
+                                        }
+                                    }
                                 }
                                 // Clear background under text to make it more transparent. There are probably more elegant ways to do this, but this works.
                                 RegionData textInline = ImageUtils.GetOutline(new Size(sizeW, sizeH), textBm, 0.00f, (byte)Math.Max(0, textCol.A - 1), true);
                                 using (Region clearArea = new Region(textInline))
                                 using (Brush clear = new SolidBrush(Color.Transparent))
                                 {
-                                    ctg.CompositingMode = CompositingMode.SourceCopy;
-                                    ctg.FillRegion(clear, clearArea);
-                                    ctg.CompositingMode = CompositingMode.SourceOver;
+                                    fillctg.CompositingMode = CompositingMode.SourceCopy;
+                                    fillctg.FillRegion(clear, clearArea);
+                                    fillctg.CompositingMode = CompositingMode.SourceOver;
                                 }
-                                ctg.DrawImage(textBm, new Rectangle(0, 0, sizeW, sizeH), 0, 0, sizeW, sizeH, GraphicsUnit.Pixel);
+                                ctg.DrawImage(textBm, 0, 0);
                             }
                         }
+                        backRenders.Add(trigger, fillbm);
                         renders.Add(trigger, bm);
                     }
                 }
@@ -2218,15 +2259,38 @@ namespace MobiusEditor.Render
                 var backupInterpolationMode = graphics.InterpolationMode;
                 var backupSmoothingMode = graphics.SmoothingMode;
                 var backupPixelOffsetMode = graphics.PixelOffsetMode;
-                SetRenderSettings(graphics, true);
+                SetRenderSettings(graphics, hiResGraphics);
+
+                foreach ((Point p, CellTrigger cellTrigger) in toRender)
+                {
+                    bool isPreview = cellTrigger.Tint.A != 255;
+                    string requestName = cellTrigger.Trigger + "=" + (isPreview ? 'P' : 'N');
+                    if (backRenders.TryGetValue(requestName, out Bitmap fillCtBm))
+                    {
+                        graphics.DrawImage(fillCtBm, p.X * tileSize.Width, p.Y * tileSize.Height);
+                    }
+                }
+
+                float borderSize = Math.Max(0.5f, tileSize.Width / 60.0f);
+                float thickBorderSize = Math.Max(1f, tileSize.Width / 20.0f);
+                using (Pen prevBorderPen = new Pen(previewBorderColor, thickborder ? thickBorderSize : borderSize))
+                using (Pen borderPen = new Pen(borderColor, thickborder ? thickBorderSize : borderSize))
+                {
+                    foreach ((Point p, CellTrigger cellTrigger) in boundsToDraw)
+                    {
+                        bool isPreview = cellTrigger.Tint.A != 255;
+                        Rectangle bounds = new Rectangle(new Point(p.X * tileSize.Width, p.Y * tileSize.Height), tileSize);
+                        graphics.DrawRectangle(isPreview ? prevBorderPen : borderPen, bounds);
+                    }
+                }
+
                 foreach ((Point p, CellTrigger cellTrigger) in toRender)
                 {
                     bool isPreview = cellTrigger.Tint.A != 255;
                     string requestName = cellTrigger.Trigger + "=" + (isPreview ? 'P' : 'N');
                     if (renders.TryGetValue(requestName, out Bitmap ctBm))
                     {
-                        Rectangle renderBounds = new Rectangle(p.X * tileSize.Width, p.Y * tileSize.Height, tileSize.Width, tileSize.Height);
-                        graphics.DrawImage(ctBm, renderBounds, tileBounds, GraphicsUnit.Pixel);
+                        graphics.DrawImage(ctBm, p.X * tileSize.Width, p.Y * tileSize.Height);
                     }
                 }
                 graphics.CompositingQuality = backupCompositingQuality;
@@ -2242,18 +2306,6 @@ namespace MobiusEditor.Render
                 {
                     try { bms[i].Dispose(); }
                     catch { /* ignore */ }
-                }
-            }
-            float borderSize = Math.Max(0.5f, tileSize.Width / 60.0f);
-            float thickBorderSize = Math.Max(1f, tileSize.Width / 20.0f);
-            using (Pen prevBorderPen = new Pen(previewBorderColor, thickborder ? thickBorderSize : borderSize))
-            using (Pen borderPen = new Pen(borderColor, thickborder ? thickBorderSize : borderSize))
-            {
-                foreach ((Point p, CellTrigger cellTrigger) in boundsToDraw)
-                {
-                    bool isPreview = cellTrigger.Tint.A != 255;
-                    Rectangle bounds = new Rectangle(new Point(p.X * tileSize.Width, p.Y * tileSize.Height), tileSize);
-                    graphics.DrawRectangle(isPreview ? prevBorderPen : borderPen, bounds);
                 }
             }
         }
@@ -2629,6 +2681,83 @@ namespace MobiusEditor.Render
             int locY = (maxSize.Height - newSize.Height) / 2;
             return new Rectangle((int)Math.Round(locX * scaleFactorX), (int)Math.Round(locY * scaleFactorY),
                 Math.Max(1, (int)Math.Round(newSize.Width * scaleFactorX)), Math.Max(1, (int)Math.Round(newSize.Height * scaleFactorY)));
+        }
+
+        private static Bitmap RenderTextFromSprite(Map map, Color textColor, string fontsprite, ITeamColor remap, Size bounds, int[] shapes)
+        {
+            int nrOfChars = shapes.Length;
+            if (nrOfChars == 0)
+            {
+                return null;
+            }
+            Tile[] tiles = new Tile[nrOfChars];
+            int maxwidth = bounds.Width;
+            int maxHeight = bounds.Height;
+            int lineSize = 0;
+            for (int i = 0; i < nrOfChars; ++i)
+            {
+                if (Globals.TheTilesetManager.GetTeamColorTileData(fontsprite, shapes[i], remap, out Tile character))
+                {
+                    tiles[i] = character;
+                    maxwidth = Math.Max(maxwidth, character.Image.Width);
+                    maxHeight = Math.Max(maxHeight, character.Image.Height);
+                    lineSize = Math.Max(lineSize, character.Image.Height);
+                }
+            }
+            int lineHeight = 0;
+            int usedWidth = 0;
+            int curWidth = 0;
+            Bitmap bitmap = new Bitmap(maxwidth, maxHeight, PixelFormat.Format32bppArgb);
+            using (Graphics g = Graphics.FromImage(bitmap))
+            {
+                for (int i = 0; i < nrOfChars; ++i)
+                {
+                    usedWidth = Math.Max(usedWidth, curWidth);
+                    if (curWidth >= maxwidth)
+                    {
+                        lineHeight += lineSize;
+                        if (lineHeight >= maxHeight)
+                        {
+                            break;
+                        }
+                        usedWidth = Math.Max(usedWidth, curWidth);
+                        curWidth = 0;
+                    }
+                    Tile curChar = tiles[i];
+                    int nextWidth = curWidth + curChar.Image.Width;
+                    if (nextWidth > maxwidth)
+                    {
+                        lineHeight += lineSize;
+                        if (lineHeight >= maxHeight)
+                        {
+                            break;
+                        }
+                        curWidth = 0;
+                    }
+                    else
+                    {
+                        usedWidth = Math.Max(usedWidth, nextWidth);
+                    }
+                    g.DrawImage(curChar.Image, curWidth, lineHeight);
+                    curWidth = nextWidth;
+                }
+            }
+            lineHeight += lineSize;
+            // Chop off if it exceeds bounds.
+            if (maxwidth > bounds.Width || maxHeight > bounds.Height || lineHeight < bounds.Height || usedWidth < bounds.Width)
+            {
+                Bitmap curBm = bitmap;
+                Bitmap newBm = new Bitmap(bounds.Width, bounds.Height, PixelFormat.Format32bppArgb);
+                int height = Math.Max((bounds.Height - lineHeight) / 2, 0);
+                int width = Math.Max((bounds.Width - usedWidth) / 2, 0);
+                using (Graphics g = Graphics.FromImage(newBm)) {
+                    g.DrawImage(curBm, width, height);
+                }
+                try { curBm.Dispose(); }
+                catch { /* ignore */ }
+                bitmap = newBm;
+            }
+            return bitmap;
         }
 
         private static ColorMatrix GetColorMatrix(Color tint, float brightnessModifier, float alphaModifier)

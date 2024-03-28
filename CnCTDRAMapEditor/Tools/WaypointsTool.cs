@@ -345,6 +345,8 @@ namespace MobiusEditor.Tools
             int selected = waypointCombo.SelectedIndex;
             if (selected != -1)
             {
+                navigationWidget.MouseoverSize = Size.Empty;
+                navigationWidget.PenColor = Color.Red;
                 Waypoint[] wp = map.Waypoints;
                 var waypoint = wp[selected];
                 if (waypoint.Cell.HasValue)
@@ -362,6 +364,8 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
+            navigationWidget.MouseoverSize = new Size(1, 1);
+            navigationWidget.PenColor = Color.Yellow;
             placementMode = false;
             int selected = waypointCombo.SelectedIndex;
             if (selected != -1)

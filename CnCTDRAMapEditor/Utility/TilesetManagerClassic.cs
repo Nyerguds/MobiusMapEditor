@@ -84,6 +84,15 @@ namespace MobiusEditor.Utility
             this.currentlyLoadedPalette = TeamRemapManager.GetPaletteForTheater(this.archiveManager, theater);
         }
 
+        public int GetClosestColorIndex(Color color)
+        {
+            if (currentlyLoadedPalette == null)
+            {
+                return 0;
+            }
+            return ImageUtils.GetClosestPaletteIndexMatch(color, this.currentlyLoadedPalette, 0.Yield());
+        }
+
         public Boolean GetTeamColorTileData(String name, Int32 shape, ITeamColor teamColor, out Tile tile, Boolean generateFallback, Boolean onlyIfDefined, string remapGraphicsSource, byte[] remapTable, bool clearCachedVersion)
         {
             tile = null;
@@ -209,6 +218,7 @@ namespace MobiusEditor.Utility
         private Dictionary<int, ShapeFrameData> GetShapeFile(String name)
         {
             bool isShpExt = false;
+            bool isFntExt = false;
             Byte[] fileContents = null;
             // If it has an extension, force it.
             if (Path.HasExtension(name))
@@ -219,16 +229,25 @@ namespace MobiusEditor.Utility
                 {
                     return null;
                 }
+                String ext = Path.GetExtension(name);
+                isShpExt = ".shp".Equals(ext, StringComparison.OrdinalIgnoreCase);
+                isFntExt = ".fnt".Equals(ext, StringComparison.OrdinalIgnoreCase);
+
             }
-            // Try theater extension, then ".shp".
+            // Try theater extension, then ".shp", then ".fnt".
             if (fileContents == null)
             {
                 fileContents = archiveManager.ReadFile(name + "." + theater.ClassicExtension);
             }
             if (fileContents == null)
             {
-                isShpExt = true;
                 fileContents = archiveManager.ReadFile(name + ".shp");
+                isShpExt = fileContents != null;
+            }
+            if (fileContents == null)
+            {
+                fileContents = archiveManager.ReadFile(name + ".fnt");
+                isFntExt = fileContents != null;
             }
             if (fileContents == null)
             {
@@ -237,28 +256,31 @@ namespace MobiusEditor.Utility
             int[] widths = null;
             int[] heights = null;
             Byte[][] shpData = null;
-            try
+            if (!isFntExt)
             {
-                // TD/RA SHP file
-                int width;
-                int height;
-                shpData = ClassicSpriteLoader.GetCcShpData(fileContents, out width, out height);
-                if (shpData != null)
+                try
                 {
-                    int len = shpData.Length;
-                    widths = Enumerable.Repeat(width, len).ToArray();
-                    heights = Enumerable.Repeat(height, len).ToArray();
+                    // TD/RA SHP file
+                    int width;
+                    int height;
+                    shpData = ClassicSpriteLoader.GetCcShpData(fileContents, out width, out height);
+                    if (shpData != null)
+                    {
+                        int len = shpData.Length;
+                        widths = Enumerable.Repeat(width, len).ToArray();
+                        heights = Enumerable.Repeat(height, len).ToArray();
+                    }
                 }
-            }
-            catch (FileTypeLoadException e)
-            {
-                /* ignore */
+                catch (FileTypeLoadException e)
+                {
+                    /* ignore */
 #if DEBUG && WriteFileLoadDebug
                 Debug.WriteLine("Failed to load file {0} as {1}: {2}", name, e.AttemptedLoadedType, e.Message);
 #endif
+                }
             }
             // Don't try to load as tmp if the filename is .shp
-            if (shpData == null && !isShpExt)
+            if (shpData == null && !isShpExt && !isFntExt)
             {
                 try
                 {
@@ -274,7 +296,7 @@ namespace MobiusEditor.Utility
                 }
 
             }
-            if (shpData == null && !isShpExt)
+            if (shpData == null && !isShpExt && !isFntExt)
             {
                 try
                 {
@@ -303,6 +325,25 @@ namespace MobiusEditor.Utility
                 {
                     // Dune II SHP
                     shpData = ClassicSpriteLoader.GetD2ShpData(fileContents, out widths, out heights);
+                }
+                catch (FileTypeLoadException e)
+                {
+                    /* ignore */
+#if DEBUG && WriteFileLoadDebug
+                    Debug.WriteLine("Failed to load file {0} as {1}: {2}", name, e.AttemptedLoadedType, e.Message);
+#endif
+                }
+            }
+            // Only try to read font file if it's a .fnt file.
+            if (shpData == null && isFntExt)
+            {
+                try
+                {
+                    // Font file
+                    int height;
+                    shpData = ClassicSpriteLoader.GetCCFontData(fileContents, out widths, out height);
+                    int len = shpData.Length;
+                    heights = Enumerable.Repeat(height, len).ToArray();
                 }
                 catch (FileTypeLoadException e)
                 {
@@ -343,7 +384,9 @@ namespace MobiusEditor.Utility
         private Tile RemapShapeFile(Dictionary<Int32, ShapeFrameData> shapeFile, Int32 shape, ITeamColor teamColor, bool generateFallback, out ShapeFrameData shapeFrame)
         {
             String teamColorName = teamColor == null ? String.Empty : teamColor.Name;
-            if (!shapeFile.TryGetValue(shape, out shapeFrame))
+            if (!shapeFile.TryGetValue(shape, out shapeFrame)
+                || shapeFrame.FrameData == null || shapeFrame.FrameData.Length == 0
+                || shapeFrame.Width == 0 || shapeFrame.Height == 0)
             {
                 if (!generateFallback)
                 {

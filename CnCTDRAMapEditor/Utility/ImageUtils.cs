@@ -387,6 +387,17 @@ namespace MobiusEditor.Utility
         }
 
         /// <summary>
+        /// Gets the minimum stride required for containing an image of the given width and bits per pixel.
+        /// </summary>
+        /// <param name="width">Image width.</param>
+        /// <param name="bitsLength">bits length of each pixel.</param>
+        /// <returns>The minimum stride required for containing an image of the given width and bits per pixel.</returns>
+        public static Int32 GetMinimumStride(Int32 width, Int32 bitsLength)
+        {
+            return ((bitsLength * width) + 7) / 8;
+        }
+
+        /// <summary>
         /// Copies a piece out of an 8-bit image. The stride of the output will always equal the width.
         /// </summary>
         /// <param name="imageData">Byte data of the image.</param>
@@ -495,6 +506,73 @@ namespace MobiusEditor.Utility
                 }
             }
             return finalFileData;
+        }
+
+        /// <summary>
+        /// Converts given raw image data for a paletted image to 8-bit, so we have a simple one-byte-per-pixel format to work with.
+        /// Stride is assumed to be the minimum needed to contain the data. Output stride will be the same as the width.
+        /// </summary>
+        /// <param name="fileData">The file data.</param>
+        /// <param name="width">Width of the image.</param>
+        /// <param name="height">Height of the image.</param>
+        /// <param name="start">Start offset of the image data in the fileData parameter.</param>
+        /// <param name="bitsLength">Amount of bits used by one pixel.</param>
+        /// <param name="bigEndian">True if the bits in the original image data are stored as big-endian.</param>
+        /// <returns>The image data in a 1-byte-per-pixel format, with a stride exactly the same as the width.</returns>
+        public static Byte[] ConvertTo8Bit(Byte[] fileData, Int32 width, Int32 height, Int32 start, Int32 bitsLength, Boolean bigEndian)
+        {
+            Int32 stride = GetMinimumStride(width, bitsLength);
+            return ConvertTo8Bit(fileData, width, height, start, bitsLength, bigEndian, ref stride);
+        }
+
+        /// <summary>
+        /// Converts given raw image data for a paletted image to 8-bit, so we have a simple one-byte-per-pixel format to work with.
+        /// The new stride at the end of the operation will always equal the width.
+        /// </summary>
+        /// <param name="fileData">The file data.</param>
+        /// <param name="width">Width of the image.</param>
+        /// <param name="height">Height of the image.</param>
+        /// <param name="start">Start offset of the image data in the fileData parameter.</param>
+        /// <param name="bitsLength">Amount of bits used by one pixel.</param>
+        /// <param name="bigEndian">True if the bits in the original image data are stored as big-endian.</param>
+        /// <param name="stride">Stride used in the original image data. Will be adjusted to the new stride value, which will always equal the width.</param>
+        /// <returns>The image data in a 1-byte-per-pixel format, with a stride exactly the same as the width.</returns>
+        public static Byte[] ConvertTo8Bit(Byte[] fileData, Int32 width, Int32 height, Int32 start, Int32 bitsLength, Boolean bigEndian, ref Int32 stride)
+        {
+            if (bitsLength != 1 && bitsLength != 2 && bitsLength != 4 && bitsLength != 8)
+                throw new ArgumentOutOfRangeException("Cannot handle image data with " + bitsLength + "bits per pixel.");
+            // Full array
+            Byte[] data8bit = new Byte[width * height];
+            // Amount of runs that end up on the same pixel
+            Int32 parts = 8 / bitsLength;
+            // Amount of bytes to read per width
+            Int32 newStride = width;
+            // Bit mask for reducing read and shifted data to actual bits length
+            Int32 bitmask = (1 << bitsLength) - 1;
+            Int32 size = stride * height;
+            // File check, and getting actual data.
+            if (start + size > fileData.Length)
+                throw new IndexOutOfRangeException("Data exceeds array bounds!");
+            // Actual conversion process.
+            for (Int32 y = 0; y < height; ++y)
+            {
+                for (Int32 x = 0; x < width; ++x)
+                {
+                    // This will hit the same byte multiple times
+                    Int32 indexXbit = start + y * stride + x / parts;
+                    // This will always get a new index
+                    Int32 index8bit = y * newStride + x;
+                    // Amount of bits to shift the data to get to the current pixel data
+                    Int32 shift = (x % parts) * bitsLength;
+                    // Reversed for big-endian
+                    if (bigEndian)
+                        shift = 8 - shift - bitsLength;
+                    // Get data and store it.
+                    data8bit[index8bit] = (Byte)((fileData[indexXbit] >> shift) & bitmask);
+                }
+            }
+            stride = newStride;
+            return data8bit;
         }
 
         public static Rectangle CalculateOpaqueBounds(Bitmap bitmap)
@@ -783,5 +861,30 @@ namespace MobiusEditor.Utility
             return rData;
         }
 
+        public static int GetClosestPaletteIndexMatch(Color col, Color[] colorPalette, IEnumerable<int> excludedindexes)
+        {
+            int colorMatch = 0;
+            int leastDistance = int.MaxValue;
+            int red = col.R;
+            int green = col.G;
+            int blue = col.B;
+            for (int i = 0; i < colorPalette.Length; ++i)
+            {
+                if (excludedindexes != null && excludedindexes.Contains(i))
+                    continue;
+                Color paletteColor = colorPalette[i];
+                int redDistance = paletteColor.R - red;
+                int greenDistance = paletteColor.G - green;
+                int blueDistance = paletteColor.B - blue;
+                int distance = (redDistance * redDistance) + (greenDistance * greenDistance) + (blueDistance * blueDistance);
+                if (distance >= leastDistance)
+                    continue;
+                colorMatch = i;
+                leastDistance = distance;
+                if (distance == 0)
+                    return i;
+            }
+            return colorMatch;
+        }
     }
 }

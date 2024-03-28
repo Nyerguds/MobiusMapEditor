@@ -24,24 +24,24 @@ namespace MobiusEditor.Utility
     public class FileTypeLoadException : Exception
     {
         /// <summary>USed to store the attempted load type in the Data dictionary to allow serialization.</summary>
-        protected readonly String DataAttemptedLoadedType = "AttemptedLoadedType";
+        protected readonly string DataAttemptedLoadedType = "AttemptedLoadedType";
 
         /// <summary>File type that was attempted to be loaded and threw this exception.</summary>
-        public String AttemptedLoadedType
+        public string AttemptedLoadedType
         {
-            get { return this.Data[this.DataAttemptedLoadedType] as String; }
+            get { return this.Data[this.DataAttemptedLoadedType] as string; }
             set { this.Data[this.DataAttemptedLoadedType] = value; }
         }
 
         public FileTypeLoadException() { }
-        public FileTypeLoadException(String message) : base(message) { }
-        public FileTypeLoadException(String message, Exception innerException) : base(message, innerException) { }
-        public FileTypeLoadException(String message, String attemptedLoadedType)
+        public FileTypeLoadException(string message) : base(message) { }
+        public FileTypeLoadException(string message, Exception innerException) : base(message, innerException) { }
+        public FileTypeLoadException(string message, string attemptedLoadedType)
             : base(message)
         {
             this.AttemptedLoadedType = attemptedLoadedType;
         }
-        public FileTypeLoadException(String message, String attemptedLoadedType, Exception innerException)
+        public FileTypeLoadException(string message, string attemptedLoadedType, Exception innerException)
             : base(message, innerException)
         {
             this.AttemptedLoadedType = attemptedLoadedType;
@@ -59,9 +59,9 @@ namespace MobiusEditor.Utility
         static ClassicSpriteLoader()
         {
             // Build an easy lookup table for this, so no calculations are ever needed for it later.
-            for (Int32 i = 0; i < 64; ++i)
+            for (int i = 0; i < 64; ++i)
             {
-                ConvertToEightBit[i] = (byte)Math.Round(i * 255.0 / 63.0, MidpointRounding.ToEven);
+                ConvertToEightBit[i] = (byte)Math.Round(i * 255.0 / 63.0, MidpointRounding.AwayFromZero);
             }
         }
 
@@ -70,9 +70,9 @@ namespace MobiusEditor.Utility
         /// </summary>
         /// <param name="fileData">Original file data.</param>
         /// <returns>The raw 8-bit linear image data in a 64000 byte array.</returns>
-        public static Bitmap LoadCpsFile(Byte[] fileData)
+        public static Bitmap LoadCpsFile(byte[] fileData)
         {
-            Byte[] imageData = GetCpsData(fileData, out Color[] palette);
+            byte[] imageData = GetCpsData(fileData, out Color[] palette);
             if (palette == null)
                 palette = Enumerable.Range(0, 0x100).Select(i => Color.FromArgb(i, i, i)).ToArray();
             return ImageUtils.BuildImage(imageData, 320, 200, 320, PixelFormat.Format8bppIndexed, palette, null);
@@ -84,7 +84,7 @@ namespace MobiusEditor.Utility
         /// <param name="fileData">Original file data.</param>
         /// <returns>The raw 8-bit linear image data in a 64000 byte array.</returns>
         /// <exception cref="FileTypeLoadException">Thrown when parsing failed, indicating this is not a valid file of this format.</exception>
-        public static Byte[] GetCpsData(Byte[] fileData, out Color[] palette)
+        public static byte[] GetCpsData(byte[] fileData, out Color[] palette)
         {
             int dataLen = fileData.Length;
             if (dataLen < 10)
@@ -100,22 +100,22 @@ namespace MobiusEditor.Utility
                 throw new FileTypeLoadException("LZW and RLE compression are not supported.", "CPS file");
             if (fileSize != dataLen)
                 throw new FileTypeLoadException("File size in header does not match.", "CPS file");
-            Int32 bufferSize = ArrayUtils.ReadInt32FromByteArrayLe(fileData, 4);
-            Int32 paletteLength = ArrayUtils.ReadInt16FromByteArrayLe(fileData, 8);
+            int bufferSize = ArrayUtils.ReadInt32FromByteArrayLe(fileData, 4);
+            int paletteLength = ArrayUtils.ReadInt16FromByteArrayLe(fileData, 8);
             if (bufferSize != 64000)
                 throw new FileTypeLoadException("Unknown CPS type.", "fileData");
             if (paletteLength > 0)
             {
-                Int32 palStart = 10;
+                int palStart = 10;
                 if (paletteLength % 3 != 0)
                     throw new FileTypeLoadException("Bad length for 6-bit CPS palette.", "CPS file");
-                Int32 colors = paletteLength / 3;
+                int colors = paletteLength / 3;
                 palette = LoadSixBitPalette(fileData, palStart, colors);
             }
             else
                 palette = null;
-            Byte[] imageData;
-            Int32 dataOffset = 10 + paletteLength;
+            byte[] imageData;
+            int dataOffset = 10 + paletteLength;
             if (compression == 0 && dataLen < dataOffset + bufferSize)
                 throw new FileTypeLoadException("File is not long enough to contain the image data.", "CPS file");
             try
@@ -123,11 +123,11 @@ namespace MobiusEditor.Utility
                 switch (compression)
                 {
                     case 0:
-                        imageData = new Byte[bufferSize];
+                        imageData = new byte[bufferSize];
                         Array.Copy(fileData, dataOffset, imageData, 0, bufferSize);
                         break;
                     case 4:
-                        imageData = new Byte[bufferSize];
+                        imageData = new byte[bufferSize];
                         WWCompression.LcwDecompress(fileData, ref dataOffset, imageData, 0);
                         break;
                     default:
@@ -149,7 +149,7 @@ namespace MobiusEditor.Utility
         /// <param name="fileData">Original file data.</param>
         /// <param name="palette">Color palette</param>
         /// <returns>The SHP file's frames as bitmaps.</returns>
-        public static Bitmap[] LoadCCShpFile(Byte[] fileData, Color[] palette)
+        public static Bitmap[] LoadCCShpFile(byte[] fileData, Color[] palette)
         {
             return LoadCCShpFile(fileData, palette, null);
         }
@@ -161,9 +161,9 @@ namespace MobiusEditor.Utility
         /// <param name="palette">Color palette</param>
         /// <param name="remapTable">Optional remap table. Give null for no remapping.</param>
         /// <returns>The SHP file's frames as bitmaps.</returns>
-        public static Bitmap[] LoadCCShpFile(Byte[] fileData, Color[] palette, byte[] remapTable)
+        public static Bitmap[] LoadCCShpFile(byte[] fileData, Color[] palette, byte[] remapTable)
         {
-            Byte[][] frameData;
+            byte[][] frameData;
             int width;
             int height;
             try
@@ -180,7 +180,7 @@ namespace MobiusEditor.Utility
             {
                 for (int i = 0; i < length; ++i)
                 {
-                    Byte[] curFrame = frameData[i];
+                    byte[] curFrame = frameData[i];
                     for (int j = 0; j < frameLength; j++)
                     {
                         curFrame[i] = remapTable[curFrame[i]];
@@ -205,31 +205,31 @@ namespace MobiusEditor.Utility
         /// <param name="height">The height of all frames</param>
         /// <returns>An array of byte arrays containing the 8-bit image data for each frame.</returns>
         /// <exception cref="FileTypeLoadException">Thrown when parsing failed, indicating this is not a valid file of this format.</exception>
-        public static Byte[][] GetCcShpData(Byte[] fileData, out int width, out int height)
+        public static byte[][] GetCcShpData(byte[] fileData, out int width, out int height)
         {
             // OffsetInfo / ShapeFileHeader
-            Int32 hdrSize = 0x0E;
+            int hdrSize = 0x0E;
             if (fileData.Length < hdrSize)
                 throw new FileTypeLoadException("File is not long enough for header.", "TD/RA SHP file");
-            UInt16 hdrFrames = ArrayUtils.ReadUInt16FromByteArrayLe(fileData, 0);
+            ushort hdrFrames = ArrayUtils.ReadUInt16FromByteArrayLe(fileData, 0);
             //UInt16 hdrXPos = ArrayUtils.ReadUInt16FromByteArrayLe(fileData, 2);
             //UInt16 hdrYPos = ArrayUtils.ReadUInt16FromByteArrayLe(fileData, 4);
-            UInt16 hdrWidth = ArrayUtils.ReadUInt16FromByteArrayLe(fileData, 6);
-            UInt16 hdrHeight = ArrayUtils.ReadUInt16FromByteArrayLe(fileData, 8);
+            ushort hdrWidth = ArrayUtils.ReadUInt16FromByteArrayLe(fileData, 6);
+            ushort hdrHeight = ArrayUtils.ReadUInt16FromByteArrayLe(fileData, 8);
             //UInt16 hdrDeltaSize = ArrayUtils.ReadUInt16FromByteArrayLe(fileData, 0x0A);
             //UInt16 hdrFlags = ArrayUtils.ReadUInt16FromByteArrayLe(fileData, 0x0C);
             if (hdrFrames == 0) // Can be TS SHP; it identifies with an empty first byte IIRC.
                 throw new FileTypeLoadException("Not a C&C1/RA1 SHP file.", "TD/RA SHP file");
             if (hdrWidth == 0 || hdrHeight == 0)
                 throw new FileTypeLoadException("Illegal values in header.", "TD/RA SHP file");
-            Dictionary<Int32, Int32> offsetIndices = new Dictionary<Int32, Int32>();
-            Int32 offsSize = 8;
-            Int32 fileSizeOffs = hdrSize + offsSize * (hdrFrames + 1);
+            Dictionary<int, int> offsetIndices = new Dictionary<int, int>();
+            int offsSize = 8;
+            int fileSizeOffs = hdrSize + offsSize * (hdrFrames + 1);
             if (fileData.Length < hdrSize + offsSize * (hdrFrames + 2))
                 throw new FileTypeLoadException("File is not long enough to read the entire frames header.", "TD/RA SHP file");
 
-            Int32 fileSize = (Int32)ArrayUtils.ReadIntFromByteArray(fileData, fileSizeOffs, 3, true);
-            Boolean hasLoopFrame;
+            int fileSize = (int)ArrayUtils.ReadIntFromByteArray(fileData, fileSizeOffs, 3, true);
+            bool hasLoopFrame;
             if (fileSize != 0)
             {
                 hasLoopFrame = true;
@@ -239,29 +239,29 @@ namespace MobiusEditor.Utility
             {
                 hasLoopFrame = false;
                 fileSizeOffs -= offsSize;
-                fileSize = (Int32)ArrayUtils.ReadIntFromByteArray(fileData, fileSizeOffs, 3, true);
+                fileSize = (int)ArrayUtils.ReadIntFromByteArray(fileData, fileSizeOffs, 3, true);
             }
-            Byte[][] frames = new Byte[hdrFrames][];
+            byte[][] frames = new byte[hdrFrames][];
             CCShpOffsetInfo[] offsets = new CCShpOffsetInfo[hdrFrames];
             if (fileData.Length != fileSize)
                 throw new FileTypeLoadException("File size does not match size value in header.", "TD/RA SHP file");
             List<CcShpFrameFormat> frameFormats = Enum.GetValues(typeof(CcShpFrameFormat)).Cast<CcShpFrameFormat>().ToList();
-            byte[][] framesList = new Byte[hasLoopFrame ? hdrFrames - 1 : hdrFrames][];
+            byte[][] framesList = new byte[hasLoopFrame ? hdrFrames - 1 : hdrFrames][];
             width = hdrWidth;
             height = hdrHeight;
             // Frames decompression
-            Int32 curOffs = hdrSize;
-            Int32 frameSize = hdrWidth * hdrHeight;
+            int curOffs = hdrSize;
+            int frameSize = hdrWidth * hdrHeight;
             // Read is always safe; we already checked that the header size is inside the file bounds.
             CCShpOffsetInfo currentFrame = CCShpOffsetInfo.Read(fileData, curOffs);
             if (currentFrame.DataFormat != CcShpFrameFormat.Lcw)
                 throw new FileTypeLoadException("Error on frame 0: first frame needs to be LCW.", "TD/RA SHP file");
             if (currentFrame.ReferenceFormat != CcShpFrameFormat.Empty)
                 throw new FileTypeLoadException("Error on frame 0: LCW with illegal reference format.", "TD/RA SHP file");
-            Int32 lastKeyFrameNr = 0;
+            int lastKeyFrameNr = 0;
             CCShpOffsetInfo lastKeyFrame = currentFrame;
-            Int32 frameOffs = currentFrame.DataOffset;
-            for (Int32 i = 0; i < hdrFrames; ++i)
+            int frameOffs = currentFrame.DataOffset;
+            for (int i = 0; i < hdrFrames; ++i)
             {
                 if (!offsetIndices.ContainsKey(currentFrame.DataOffset))
                 {
@@ -274,13 +274,13 @@ namespace MobiusEditor.Utility
                     throw new FileTypeLoadException("Error on frame " + (i + 1) + ": Unknown frame type \"" + nextFrame.DataFormat.ToString("X2") + "\".", "TD/RA SHP file");
                 if (!frameFormats.Contains(nextFrame.ReferenceFormat))
                     throw new FileTypeLoadException("Error on frame " + (i + 1) + ": Unknown reference type \"" + nextFrame.ReferenceFormat.ToString("X2") + "\".", "TD/RA SHP file");
-                Int32 frameOffsEnd = nextFrame.DataOffset;
-                Int32 frameStart = frameOffs;
+                int frameOffsEnd = nextFrame.DataOffset;
+                int frameStart = frameOffs;
                 CcShpFrameFormat frameOffsFormat = currentFrame.DataFormat;
                 //Int32 dataLen = frameOffsEnd - frameOffs;
                 if (frameOffs > fileData.Length || frameOffsEnd > fileData.Length)
                     throw new FileTypeLoadException("Error on frame " + i + ": File is too small to contain all frame data.", "TD/RA SHP file");
-                Byte[] frame = new Byte[frameSize];
+                byte[] frame = new byte[frameSize];
                 switch (frameOffsFormat)
                 {
                     case CcShpFrameFormat.Lcw:
@@ -307,13 +307,13 @@ namespace MobiusEditor.Utility
                             throw new FileTypeLoadException("Error on frame " + i + ": XOR base frames can only reference LCW frames.", "TD/RA SHP file");
                         // 0x40 = XOR with a previous frame. Could technically reference anything, but normally only references the last LCW "keyframe".
                         // This load method ignores the format saved in ReferenceFormat since the decompressed frame is stored already.
-                        Int32 refIndex;
+                        int refIndex;
                         if (lastKeyFrame.DataOffset == currentFrame.ReferenceOffset)
                             refIndex = lastKeyFrameNr;
                         else if (!offsetIndices.TryGetValue(currentFrame.ReferenceOffset, out refIndex))
                         {
                             // not found as referenced frame, but in the file anyway?? Whatever; if it's LCW, just read it.
-                            Int32 readOffs = currentFrame.ReferenceOffset;
+                            int readOffs = currentFrame.ReferenceOffset;
                             if (readOffs >= fileData.Length)
                                 throw new FileTypeLoadException("Error on frame " + i + ": File is too small to contain all frame data.", "TD/RA SHP file");
                             WWCompression.LcwDecompress(fileData, ref readOffs, frame, 0);
@@ -329,7 +329,7 @@ namespace MobiusEditor.Utility
                         throw new FileTypeLoadException("Error on frame " + i + ": Unknown frame type \"" + frameOffsFormat.ToString("X2") + "\".", "TD/RA SHP file");
                 }
                 frames[i] = frame;
-                Boolean brokenLoop = false;
+                bool brokenLoop = false;
                 if (hasLoopFrame && i + 1 == hdrFrames)
                 {
                     brokenLoop = !frame.SequenceEqual(frames[0]);
@@ -352,9 +352,9 @@ namespace MobiusEditor.Utility
         /// </summary>
         /// <param name="fileData">Original file data.</param>
         /// <returns>The SHP file's frames as bitmaps.</returns>
-        public static Bitmap[] LoadD2ShpFile(Byte[] fileData, Color[] palette)
+        public static Bitmap[] LoadD2ShpFile(byte[] fileData, Color[] palette)
         {
-            Byte[][] frameData;
+            byte[][] frameData;
             int[] widths;
             int[] heights;
             try
@@ -384,22 +384,22 @@ namespace MobiusEditor.Utility
         /// <param name="heights">The heights of all frames</param>
         /// <returns>An array of byte arrays containing the 8-bit image data for each frame.</returns>
         /// <exception cref="ArgumentException">Thrown when parsing failed, indicating this is not a valid file of this format.</exception>
-        public static Byte[][] GetD2ShpData(Byte[] fileData, out int[] widths, out int[] heights)
+        public static byte[][] GetD2ShpData(byte[] fileData, out int[] widths, out int[] heights)
         {
             // OffsetInfo / ShapeFileHeader
             if (fileData.Length < 6)
                 throw new FileTypeLoadException("Not long enough for header.", "Dune II SHP file");
-            Int32 hdrFrames = ArrayUtils.ReadUInt16FromByteArrayLe(fileData, 0);
+            int hdrFrames = ArrayUtils.ReadUInt16FromByteArrayLe(fileData, 0);
             if (hdrFrames == 0)
                 throw new FileTypeLoadException("Not a Dune II SHP file", "Dune II SHP file");
             if (fileData.Length < 2 + (hdrFrames + 1) * 2)
                 throw new FileTypeLoadException("Not long enough for frames index.", "Dune II SHP file");
             // Length. Done -2 because everything that follows is relative to the location after the header
-            UInt32 endoffset = (UInt32)fileData.Length;
-            Boolean isVersion107;
+            uint endoffset = (uint)fileData.Length;
+            bool isVersion107;
             // test v1.00 first, since it might accidentally be possible that the offset 2x as far happens to contain data matching the file end address.
             // However, in 32-bit addressing, it is impossible for even partial addresses halfway down the array to ever match the file end value.
-            if (endoffset < UInt16.MaxValue && (endoffset >= 2 + (hdrFrames + 1) * 2 && ArrayUtils.ReadUInt16FromByteArrayLe(fileData, 2 + hdrFrames * 2) == endoffset))
+            if (endoffset < ushort.MaxValue && (endoffset >= 2 + (hdrFrames + 1) * 2 && ArrayUtils.ReadUInt16FromByteArrayLe(fileData, 2 + hdrFrames * 2) == endoffset))
                 isVersion107 = false;
             else if (endoffset >= 2 + (hdrFrames + 1) * 4 && ArrayUtils.ReadUInt32FromByteArrayLe(fileData, 2 + hdrFrames * 4) == endoffset - 2)
                 isVersion107 = true;
@@ -413,16 +413,16 @@ namespace MobiusEditor.Utility
             widths = new int[hdrFrames];
             heights = new int[hdrFrames];
 
-            Boolean[] remapped = new Boolean[hdrFrames];
-            Boolean[] notCompressed = new Boolean[hdrFrames];
+            bool[] remapped = new bool[hdrFrames];
+            bool[] notCompressed = new bool[hdrFrames];
             // Frames
-            Int32 curOffs = 2;
-            Int32 readLen = isVersion107 ? 4 : 2;
-            Int32 nextOFfset = (Int32)ArrayUtils.ReadIntFromByteArray(fileData, curOffs, readLen, true);
-            for (Int32 i = 0; i < hdrFrames; ++i)
+            int curOffs = 2;
+            int readLen = isVersion107 ? 4 : 2;
+            int nextOFfset = (int)ArrayUtils.ReadIntFromByteArray(fileData, curOffs, readLen, true);
+            for (int i = 0; i < hdrFrames; ++i)
             {
                 // Set current read address to previously-fetched "next entry" address
-                Int32 readOffset = nextOFfset;
+                int readOffset = nextOFfset;
                 // Reached end; process completed.
                 if (endoffset == readOffset)
                     break;
@@ -433,38 +433,38 @@ namespace MobiusEditor.Utility
                 // Set header ptr to next address
                 curOffs += readLen;
                 // Read next entry address, to act as end of current entry.
-                nextOFfset = (Int32)ArrayUtils.ReadIntFromByteArray(fileData, curOffs, readLen, true);
+                nextOFfset = (int)ArrayUtils.ReadIntFromByteArray(fileData, curOffs, readLen, true);
 
                 // Compensate for header size
-                Int32 realReadOffset = readOffset;
+                int realReadOffset = readOffset;
                 if (isVersion107)
                     realReadOffset += 2;
 
                 Dune2ShpFrameFlags frameFlags = (Dune2ShpFrameFlags)ArrayUtils.ReadUInt16FromByteArrayLe(fileData, realReadOffset + 0x00);
-                Byte frmSlices = fileData[realReadOffset + 0x02];
-                UInt16 frmWidth = ArrayUtils.ReadUInt16FromByteArrayLe(fileData, realReadOffset + 0x03);
-                Byte frmHeight = fileData[realReadOffset + 0x05];
+                byte frmSlices = fileData[realReadOffset + 0x02];
+                ushort frmWidth = ArrayUtils.ReadUInt16FromByteArrayLe(fileData, realReadOffset + 0x03);
+                byte frmHeight = fileData[realReadOffset + 0x05];
                 // Size of all frame data: header, lookup table, and compressed data.
-                UInt16 frmDataSize = ArrayUtils.ReadUInt16FromByteArrayLe(fileData, realReadOffset + 0x06);
-                UInt16 frmZeroCompressedSize = ArrayUtils.ReadUInt16FromByteArrayLe(fileData, realReadOffset + 0x08);
+                ushort frmDataSize = ArrayUtils.ReadUInt16FromByteArrayLe(fileData, realReadOffset + 0x06);
+                ushort frmZeroCompressedSize = ArrayUtils.ReadUInt16FromByteArrayLe(fileData, realReadOffset + 0x08);
                 realReadOffset += 0x0A;
                 // Bit 1: Contains remap palette
                 // Bit 2: Don't decompress with LCW
                 // Bit 3: Has custom remap palette size.
-                Boolean hasRemap = (frameFlags & Dune2ShpFrameFlags.HasRemapTable) != 0;
-                Boolean noLcw = (frameFlags & Dune2ShpFrameFlags.NoLcw) != 0;
+                bool hasRemap = (frameFlags & Dune2ShpFrameFlags.HasRemapTable) != 0;
+                bool noLcw = (frameFlags & Dune2ShpFrameFlags.NoLcw) != 0;
                 notCompressed[i] = noLcw;
-                Boolean customRemap = (frameFlags & Dune2ShpFrameFlags.CustomSizeRemap) != 0;
+                bool customRemap = (frameFlags & Dune2ShpFrameFlags.CustomSizeRemap) != 0;
                 remapped[i] = hasRemap;
-                Int32 curEndOffset = readOffset + frmDataSize;
+                int curEndOffset = readOffset + frmDataSize;
                 if (curEndOffset > endoffset) // curEndOffset > nextOFfset
                     throw new FileTypeLoadException("Illegal address in frame indices.", "Dune II SHP file");
                 // I assume this is illegal...?
                 if (frmWidth == 0 || frmHeight == 0)
                     throw new FileTypeLoadException("Illegal values in frame header.", "Dune II SHP file");
 
-                Int32 remapSize;
-                Byte[] remapTable;
+                int remapSize;
+                byte[] remapTable;
                 if (hasRemap)
                 {
                     if (customRemap)
@@ -474,7 +474,7 @@ namespace MobiusEditor.Utility
                     }
                     else
                         remapSize = 16;
-                    remapTable = new Byte[remapSize];
+                    remapTable = new byte[remapSize];
                     Array.Copy(fileData, realReadOffset, remapTable, 0, remapSize);
                     realReadOffset += remapSize;
                 }
@@ -486,19 +486,19 @@ namespace MobiusEditor.Utility
                     if (customRemap)
                         realReadOffset++;
                 }
-                Byte[] zeroDecompressData = new Byte[frmZeroCompressedSize];
+                byte[] zeroDecompressData = new byte[frmZeroCompressedSize];
                 if (noLcw)
                 {
                     Array.Copy(fileData, realReadOffset, zeroDecompressData, 0, frmZeroCompressedSize);
                 }
                 else
                 {
-                    Byte[] lcwDecompressData = new Byte[frmZeroCompressedSize * 3];
-                    Int32 predictedEndOff = realReadOffset + frmDataSize - remapSize;
+                    byte[] lcwDecompressData = new byte[frmZeroCompressedSize * 3];
+                    int predictedEndOff = realReadOffset + frmDataSize - remapSize;
                     if (customRemap)
                         predictedEndOff--;
-                    Int32 lcwReadOffset = realReadOffset;
-                    Int32 decompressedSize = WWCompression.LcwDecompress(fileData, ref lcwReadOffset, lcwDecompressData, 0);
+                    int lcwReadOffset = realReadOffset;
+                    int decompressedSize = WWCompression.LcwDecompress(fileData, ref lcwReadOffset, lcwDecompressData, 0);
                     if (decompressedSize != frmZeroCompressedSize)
                         throw new FileTypeLoadException("LCW decompression failed.", "Dune II SHP file");
                     if (lcwReadOffset > predictedEndOff)
@@ -506,15 +506,15 @@ namespace MobiusEditor.Utility
                     Array.Copy(lcwDecompressData, zeroDecompressData, frmZeroCompressedSize);
 
                 }
-                Int32 refOffs = 0;
-                Byte[] fullFrame = WWCompression.RleZeroD2Decompress(zeroDecompressData, ref refOffs, frmWidth, frmSlices);
+                int refOffs = 0;
+                byte[] fullFrame = WWCompression.RleZeroD2Decompress(zeroDecompressData, ref refOffs, frmWidth, frmSlices);
                 if (remapTable != null)
                 {
-                    Byte[] remap = remapTable;
-                    Int32 remapLen = remap.Length;
-                    for (Int32 j = 0; j < fullFrame.Length; ++j)
+                    byte[] remap = remapTable;
+                    int remapLen = remap.Length;
+                    for (int j = 0; j < fullFrame.Length; ++j)
                     {
-                        Byte val = fullFrame[j];
+                        byte val = fullFrame[j];
                         if (val < remapLen)
                             fullFrame[j] = remap[val];
                         else
@@ -528,29 +528,29 @@ namespace MobiusEditor.Utility
             return framesList;
         }
 
-        public static Byte[][] GetCcTmpData(Byte[] fileData, out int[] widths, out int[] heights)
+        public static byte[][] GetCcTmpData(byte[] fileData, out int[] widths, out int[] heights)
         {
-            Int32 fileLen = fileData.Length;
+            int fileLen = fileData.Length;
             if (fileLen < 0x20)
                 throw new FileTypeLoadException("File is not long enough to be a C&C Template file.", "TD TMP file");
-            Int16 hdrWidth = ArrayUtils.ReadInt16FromByteArrayLe(fileData, 0x00);
-            Int16 hdrHeight = ArrayUtils.ReadInt16FromByteArrayLe(fileData, 0x02);
+            short hdrWidth = ArrayUtils.ReadInt16FromByteArrayLe(fileData, 0x00);
+            short hdrHeight = ArrayUtils.ReadInt16FromByteArrayLe(fileData, 0x02);
             // Amount of icons to form the full icon set. Not necessarily the same as the amount of actual icons.
-            Int16 hdrCount = ArrayUtils.ReadInt16FromByteArrayLe(fileData, 0x04);
+            short hdrCount = ArrayUtils.ReadInt16FromByteArrayLe(fileData, 0x04);
             // Always 0
-            Int16 hdrAllocated = ArrayUtils.ReadInt16FromByteArrayLe(fileData, 0x06);
-            Int32 hdrSize = ArrayUtils.ReadInt32FromByteArrayLe(fileData, 0x08);
+            short hdrAllocated = ArrayUtils.ReadInt16FromByteArrayLe(fileData, 0x06);
+            int hdrSize = ArrayUtils.ReadInt32FromByteArrayLe(fileData, 0x08);
             // Offset of start of actual icon data. Generally always 0x20
-            Int32 hdrIconsPtr = ArrayUtils.ReadInt32FromByteArrayLe(fileData, 0x0C);
+            int hdrIconsPtr = ArrayUtils.ReadInt32FromByteArrayLe(fileData, 0x0C);
             // Offset of start of palette data. Probably always 0.
-            Int32 hdrPalettesPtr = ArrayUtils.ReadInt32FromByteArrayLe(fileData, 0x10);
+            int hdrPalettesPtr = ArrayUtils.ReadInt32FromByteArrayLe(fileData, 0x10);
             // Offset of remaps data. Dune II leftover of 4 bit to 8 bit translation tables.
             // Always fixed value 0x0D1AFFFF, which makes no sense as ptr.
-            Int32 hdrRemapsPtr = ArrayUtils.ReadInt32FromByteArrayLe(fileData, 0x14);
+            int hdrRemapsPtr = ArrayUtils.ReadInt32FromByteArrayLe(fileData, 0x14);
             // Offset of 'transparency flags'? Generally points to an empty array at the end of the file.
-            Int32 hdrTransFlagPtr = ArrayUtils.ReadInt32FromByteArrayLe(fileData, 0x18);
+            int hdrTransFlagPtr = ArrayUtils.ReadInt32FromByteArrayLe(fileData, 0x18);
             // Offset of actual icon set definition, defining for each index which icon data to use. FF for none.
-            Int32 hdrMapPtr = ArrayUtils.ReadInt32FromByteArrayLe(fileData, 0x1C);
+            int hdrMapPtr = ArrayUtils.ReadInt32FromByteArrayLe(fileData, 0x1C);
             // File size check
             if (hdrSize != fileData.Length)
                 throw new FileTypeLoadException("File size in header does not match.", "TD TMP file");
@@ -565,31 +565,31 @@ namespace MobiusEditor.Utility
             // Checking if data is all inside the file
             if (hdrIconsPtr >= fileLen || (hdrMapPtr + hdrCount) > fileLen)
                 throw new FileTypeLoadException("Invalid header values: indices outside file range.", "TD TMP file");
-            Int32 tileSize = hdrWidth * hdrHeight;
+            int tileSize = hdrWidth * hdrHeight;
             // Maps the available images onto the full iconset definition
-            Byte[] map = new Byte[hdrCount];
+            byte[] map = new byte[hdrCount];
             Array.Copy(fileData, hdrMapPtr, map, 0, hdrCount);
             // Get max index plus one for real images count. Nothing in the file header actually specifies this directly.
-            Int32 actualImages = map.Max(x => x == 0xFF ? -1 : x) + 1;
+            int actualImages = map.Max(x => x == 0xFF ? -1 : x) + 1;
             if (hdrTransFlagPtr + actualImages > fileLen)
                 throw new FileTypeLoadException("Invalid header values: indices outside file range.", "TD TMP file");
             if (hdrIconsPtr + actualImages * tileSize > fileLen)
                 throw new FileTypeLoadException("Tile image data outside file range.", "TD TMP file");
-            Byte[] imagesIndex = new Byte[actualImages];
+            byte[] imagesIndex = new byte[actualImages];
             Array.Copy(fileData, hdrTransFlagPtr, imagesIndex, 0, actualImages);
-            Byte[][] tiles = new Byte[hdrCount][];
+            byte[][] tiles = new byte[hdrCount][];
             widths = new int[hdrCount];
             heights = new int[hdrCount];
-            Boolean[] tileUseList = new Boolean[map.Length];
-            for (Int32 i = 0; i < map.Length; ++i)
+            bool[] tileUseList = new bool[map.Length];
+            for (int i = 0; i < map.Length; ++i)
             {
-                Byte dataIndex = map[i];
-                Boolean used = dataIndex != 0xFF;
+                byte dataIndex = map[i];
+                bool used = dataIndex != 0xFF;
                 tileUseList[i] = used;
-                Byte[] tileData = new Byte[tileSize];
+                byte[] tileData = new byte[tileSize];
                 if (used)
                 {
-                    Int32 offset = hdrIconsPtr + dataIndex * tileSize;
+                    int offset = hdrIconsPtr + dataIndex * tileSize;
                     if ((offset + tileSize) > fileLen)
                         throw new FileTypeLoadException("Tile data outside file range.", "TD TMP file");
                     Array.Copy(fileData, offset, tileData, 0, tileSize);
@@ -601,34 +601,34 @@ namespace MobiusEditor.Utility
             return tiles;
         }
 
-        public static Byte[][] GetRaTmpData(Byte[] fileData, out int[] widths, out int[] heights, out byte[] landTypesInfo, out Boolean[] tileUseList, out int headerWidth, out int headerHeight)
+        public static byte[][] GetRaTmpData(byte[] fileData, out int[] widths, out int[] heights, out byte[] landTypesInfo, out bool[] tileUseList, out int headerWidth, out int headerHeight)
         {
-            Int32 fileLen = fileData.Length;
+            int fileLen = fileData.Length;
             if (fileLen < 0x28)
-                throw new FileTypeLoadException("File is not long enough to be a C&C Template file.", "RA TMP file");
-            Int16 hdrWidth = ArrayUtils.ReadInt16FromByteArrayLe(fileData, 0x00);
-            Int16 hdrHeight = ArrayUtils.ReadInt16FromByteArrayLe(fileData, 0x02);
+                throw new FileTypeLoadException("File is not long enough to be an RA Template file.", "RA TMP file");
+            short hdrWidth = ArrayUtils.ReadInt16FromByteArrayLe(fileData, 0x00);
+            short hdrHeight = ArrayUtils.ReadInt16FromByteArrayLe(fileData, 0x02);
             // Amount of icons to form the full icon set. Not necessarily the same as the amount of actual icons.
-            Int16 hdrCount = ArrayUtils.ReadInt16FromByteArrayLe(fileData, 0x04);
+            short hdrCount = ArrayUtils.ReadInt16FromByteArrayLe(fileData, 0x04);
             // Always 0
-            Int16 hdrAllocated = ArrayUtils.ReadInt16FromByteArrayLe(fileData, 0x06);
+            short hdrAllocated = ArrayUtils.ReadInt16FromByteArrayLe(fileData, 0x06);
             // New in RA
             headerWidth = ArrayUtils.ReadInt16FromByteArrayLe(fileData, 0x08);
             headerHeight = ArrayUtils.ReadInt16FromByteArrayLe(fileData, 0x0A);
-            Int32 hdrSize = ArrayUtils.ReadInt32FromByteArrayLe(fileData, 0x0C);
+            int hdrSize = ArrayUtils.ReadInt32FromByteArrayLe(fileData, 0x0C);
             // Offset of start of actual icon data. Generally always 0x20
-            Int32 hdrIconsPtr = ArrayUtils.ReadInt32FromByteArrayLe(fileData, 0x10);
+            int hdrIconsPtr = ArrayUtils.ReadInt32FromByteArrayLe(fileData, 0x10);
             // Offset of start of palette data. Probably always 0.
-            Int32 hdrPalettesPtr = ArrayUtils.ReadInt32FromByteArrayLe(fileData, 0x14);
+            int hdrPalettesPtr = ArrayUtils.ReadInt32FromByteArrayLe(fileData, 0x14);
             // Offset of remaps data. Dune II leftover of 4 bit to 8 bit translation tables.
             // Always seems to be 0x2C730FXX (with values differing for the lowest byte), which makes no sense as ptr.
-            Int32 hdrRemapsPtr = ArrayUtils.ReadInt32FromByteArrayLe(fileData, 0x18);
+            int hdrRemapsPtr = ArrayUtils.ReadInt32FromByteArrayLe(fileData, 0x18);
             // Offset of 'transparency flags'? Generally points to an empty array at the end of the file.
-            Int32 hdrTransFlagPtr = ArrayUtils.ReadInt32FromByteArrayLe(fileData, 0x1C);
+            int hdrTransFlagPtr = ArrayUtils.ReadInt32FromByteArrayLe(fileData, 0x1C);
             // Offset of 'color' map, indicating the terrain type for each type. This includes unused cells, which are usually indicated as 0.
-            Int32 hdrColorMapPtr = ArrayUtils.ReadInt32FromByteArrayLe(fileData, 0x20);
+            int hdrColorMapPtr = ArrayUtils.ReadInt32FromByteArrayLe(fileData, 0x20);
             // Offset of actual icon set definition, defining for each index which icon data to use. FF for none.
-            Int32 hdrMapPtr = ArrayUtils.ReadInt32FromByteArrayLe(fileData, 0x24);
+            int hdrMapPtr = ArrayUtils.ReadInt32FromByteArrayLe(fileData, 0x24);
             // File size check
             if (hdrSize != fileData.Length)
                 throw new FileTypeLoadException("File size in header does not match.", "RA TMP file");
@@ -643,35 +643,35 @@ namespace MobiusEditor.Utility
             // Checking if data is all inside the file
             if (hdrIconsPtr >= fileLen || (hdrMapPtr + hdrCount) > fileLen)
                 throw new FileTypeLoadException("Invalid header values: indices outside file range.", "RA TMP file");
-            Int32 tileSize = hdrWidth * hdrHeight;
+            int tileSize = hdrWidth * hdrHeight;
             // Maps the available images onto the full iconset definition
-            Byte[] map = new Byte[hdrCount];
+            byte[] map = new byte[hdrCount];
             Array.Copy(fileData, hdrMapPtr, map, 0, hdrCount);
-            landTypesInfo = new Byte[Math.Max(1, headerWidth) * Math.Max(1, headerHeight)];
+            landTypesInfo = new byte[Math.Max(1, headerWidth) * Math.Max(1, headerHeight)];
             if (hdrMapPtr + landTypesInfo.Length > fileLen)
                 throw new FileTypeLoadException("Invalid header values: land types outside file range.", "RA TMP file");
             Array.Copy(fileData, hdrColorMapPtr, landTypesInfo, 0, landTypesInfo.Length);
             // Get max index plus one for real images count. Nothing in the file header actually specifies this directly.
-            Int32 actualImages = map.Max(x => x == 0xff ? -1 : x) + 1;
+            int actualImages = map.Max(x => x == 0xff ? -1 : x) + 1;
             if (hdrTransFlagPtr + actualImages > fileLen)
                 throw new FileTypeLoadException("Invalid header values: indices outside file range.", "RA TMP file");
             if (hdrIconsPtr + actualImages * tileSize > fileLen)
                 throw new FileTypeLoadException("Tile image data outside file range.", "RA TMP file");
-            Byte[] imagesIndex = new Byte[actualImages];
+            byte[] imagesIndex = new byte[actualImages];
             Array.Copy(fileData, hdrTransFlagPtr, imagesIndex, 0, actualImages);
-            Byte[][] tiles = new Byte[hdrCount][];
+            byte[][] tiles = new byte[hdrCount][];
             widths = new int[hdrCount];
             heights = new int[hdrCount];
-            tileUseList = new Boolean[map.Length];
-            for (Int32 i = 0; i < map.Length; ++i)
+            tileUseList = new bool[map.Length];
+            for (int i = 0; i < map.Length; ++i)
             {
-                Byte dataIndex = map[i];
-                Boolean used = dataIndex != 0xFF;
+                byte dataIndex = map[i];
+                bool used = dataIndex != 0xFF;
                 tileUseList[i] = used;
-                Byte[] tileData = new Byte[tileSize];
+                byte[] tileData = new byte[tileSize];
                 if (used)
                 {
-                    Int32 offset = hdrIconsPtr + dataIndex * tileSize;
+                    int offset = hdrIconsPtr + dataIndex * tileSize;
                     if ((offset + tileSize) > fileLen)
                         throw new FileTypeLoadException("Tile data outside file range.", "RA TMP file");
                     Array.Copy(fileData, offset, tileData, 0, tileSize);
@@ -683,7 +683,140 @@ namespace MobiusEditor.Utility
             return tiles;
         }
 
-        public static Color[] LoadSixBitPalette(Byte[] fileData, int palStart, int colors)
+        /// <summary>
+        /// Retrieves the Dune II SHP frames.
+        /// </summary>
+        /// <param name="fileData">Original file data.</param>
+        /// <returns>The SHP file's frames as bitmaps.</returns>
+        public static Bitmap[] LoadFontFile(byte[] fileData, Color[] palette, byte[] subPalette, byte[] indices)
+        {
+            byte[][] frameData;
+            int[] widths;
+            int height;
+            try
+            {
+                frameData = frameData = GetCCFontData(fileData, out widths, out height);
+            }
+            catch (ArgumentException)
+            {
+                return null;
+            }
+            if (palette == null)
+                palette = Enumerable.Range(0, 0x10).Select(i => Color.FromArgb(i, i, i)).ToArray();
+            else if (palette.Length == 0x100 && subPalette != null && subPalette.Length == 0x10)
+            {
+                Color[] fontPalette = new Color[0x10];
+                for (int i = 0; i < 0x10; ++i)
+                {
+                    fontPalette[i] = palette[subPalette[i]];
+                }
+                palette = fontPalette;
+            }
+            int length = frameData.Length;
+            Bitmap[] frames = new Bitmap[length];
+            HashSet<int> indicesSet = indices == null ? null : indices.Select(x => (int)x).ToHashSet();
+            for (int i = 0; i < length; ++i)
+            {
+                if (indicesSet != null && !indicesSet.Contains(i))
+                {
+                    continue;
+                }
+                frames[i] = ImageUtils.BuildImage(frameData[i], widths[i], height, widths[i], PixelFormat.Format4bppIndexed, palette, Color.Black);
+            }
+            return frames;
+        }
+
+        public static byte[][] GetCCFontData(byte[] fileData, out int[] widths, out int height)
+        {
+            int fileLength = fileData.Length;
+            if (fileLength < 0x14)
+                throw new FileTypeLoadException();
+            int fontHeaderLength = (ushort)ArrayUtils.ReadIntFromByteArray(fileData, 0x00, 2, true);
+            if (fontHeaderLength != fileLength)
+                throw new FileTypeLoadException("File is not long enough to be an C&C Font file.", "Font file");
+            byte fontHeaderCompress = fileData[0x02];
+            //Byte dataBlocks = fileData[0x03];
+            //Int16 infoBlockOffset = (UInt16)ArrayUtils.ReadIntFromByteArray(fileData, 0x04, 2, true);
+            int fontHeaderOffsetBlockOffset = (ushort)ArrayUtils.ReadIntFromByteArray(fileData, 0x06, 2, true);
+            int fontHeaderWidthBlockOffset = (ushort)ArrayUtils.ReadIntFromByteArray(fileData, 0x08, 2, true);
+            // use this for pos on TS format
+            int fontHeaderDataBlockOffset = (ushort)ArrayUtils.ReadIntFromByteArray(fileData, 0x0A, 2, true);
+            int fontHeaderHeightOffset = (ushort)ArrayUtils.ReadIntFromByteArray(fileData, 0x0C, 2, true);
+            //UInt16 unknown0E = (UInt16)ArrayUtils.ReadIntFromByteArray(fileData, 0x0E, 2, true);
+            //Byte AlwaysZero = fileData[0x10];
+            int nrOfSymbols;
+            if (fontHeaderCompress == 0x02)
+            {
+                throw new FileTypeLoadException("This is Tiberian Sun font format!", "Font file");
+            }
+            else if (fontHeaderCompress == 0x00)
+            {
+                nrOfSymbols = fileData[0x11] + 1; // "last symbol" byte, so actual amount is this value + 1.
+            }
+            else
+                throw new FileTypeLoadException(string.Format("Unknown font type identifier, '{0}'.", fontHeaderCompress), "Font file");
+            height = fileData[0x12]; // MaxHeight
+            int width = fileData[0x13]; // MaxWidth
+            if (fontHeaderOffsetBlockOffset + nrOfSymbols * 2 > fileLength)
+                throw new FileTypeLoadException("File data too short for offsets list!", "Font file");
+            if (fontHeaderWidthBlockOffset + nrOfSymbols > fileLength)
+                throw new FileTypeLoadException("File data too short for symbol widths list starting from offset!", "Font file");
+            if (fontHeaderHeightOffset + nrOfSymbols * 2 > fileLength)
+                throw new FileTypeLoadException("File data too short for symbol heights list!", "Font file");
+
+            //FontDataOffset
+            int[] fontDataOffsetsList = new int[nrOfSymbols];
+            for (int i = 0; i < nrOfSymbols; ++i)
+                fontDataOffsetsList[i] = (ushort)ArrayUtils.ReadIntFromByteArray(fileData, fontHeaderOffsetBlockOffset + i * 2, 2, true);
+            List<byte> widthsList = new List<byte>();
+            for (int i = 0; i < nrOfSymbols; ++i)
+            {
+                byte fWidth = fileData[fontHeaderWidthBlockOffset + i];
+                if (fWidth > width)
+                {
+                    // Font width has no real impact anyway. Allow this.
+                    width = fWidth;
+                }
+                widthsList.Add(fWidth);
+            }
+            List<byte> yOffsetsList = new List<byte>();
+            List<byte> heightsList = new List<byte>();
+            for (int i = 0; i < nrOfSymbols; ++i)
+            {
+                yOffsetsList.Add(fileData[fontHeaderHeightOffset + i * 2]);
+                byte fHeight = fileData[fontHeaderHeightOffset + i * 2 + 1];
+                if (fHeight > height)
+                    throw new FileTypeLoadException(string.Format("Illegal value '{0}' in symbol heights list at entry #{1}: the value is larger than global height '{2}'.", fHeight, i, height));
+                heightsList.Add(fHeight);
+            }
+            // End of FileTypeLoadExceptions. After this, assume the type is identified.
+            byte[][] fontList = new byte[nrOfSymbols][];
+            bool[] trmask = new bool[] { true };
+            for (int i = 0; i < nrOfSymbols; ++i)
+            {
+                int start = fontDataOffsetsList[i];
+                byte sbWidth = widthsList[i];
+                byte sbHeight = heightsList[i];
+                byte yOffset = yOffsetsList[i];
+                
+                byte[] dataFullFrame;
+                try
+                {
+                    byte[] data8Bit = ImageUtils.ConvertTo8Bit(fileData, sbWidth, sbHeight, start, 4, false);
+                    dataFullFrame = new byte[sbWidth * height];
+                    ImageUtils.PasteOn8bpp(dataFullFrame, sbWidth, height, sbWidth, data8Bit, sbWidth, sbHeight, sbWidth, new Rectangle(0, yOffset, sbWidth, sbHeight), trmask, true);
+                }
+                catch (IndexOutOfRangeException ex)
+                {
+                    throw new IndexOutOfRangeException(string.Format("Data for font entry #{0} exceeds file bounds!", i), ex);
+                }
+                fontList[i] = dataFullFrame;
+            }
+            widths = widthsList.Select(x => (int)x).ToArray();
+            return fontList;
+        }
+
+        public static Color[] LoadSixBitPalette(byte[] fileData, int palStart, int colors)
         {
             Color[] palette = Enumerable.Repeat(Color.Black, colors).ToArray();
             // Palette data should always be be 0x300 long, but this code works regardless of that.
@@ -704,12 +837,12 @@ namespace MobiusEditor.Utility
 
         private class CCShpOffsetInfo
         {
-            public Int32 DataOffset { get; set; }
+            public int DataOffset { get; set; }
             public CcShpFrameFormat DataFormat { get; set; }
-            public Int32 ReferenceOffset { get; set; }
+            public int ReferenceOffset { get; set; }
             public CcShpFrameFormat ReferenceFormat { get; set; }
 
-            public CCShpOffsetInfo(Int32 dataOffset, CcShpFrameFormat dataFormat, Int32 referenceOffset, CcShpFrameFormat referenceFormat)
+            public CCShpOffsetInfo(int dataOffset, CcShpFrameFormat dataFormat, int referenceOffset, CcShpFrameFormat referenceFormat)
             {
                 this.DataOffset = dataOffset;
                 this.DataFormat = dataFormat;
@@ -717,11 +850,11 @@ namespace MobiusEditor.Utility
                 this.ReferenceFormat = referenceFormat;
             }
 
-            public static CCShpOffsetInfo Read(Byte[] fileData, Int32 offset)
+            public static CCShpOffsetInfo Read(byte[] fileData, int offset)
             {
-                Int32 dataOffset = (Int32)ArrayUtils.ReadIntFromByteArray(fileData, offset, 3, true);
+                int dataOffset = (int)ArrayUtils.ReadIntFromByteArray(fileData, offset, 3, true);
                 CcShpFrameFormat dataFormat = (CcShpFrameFormat)fileData[offset + 3];
-                Int32 referenceOffset = (Int32)ArrayUtils.ReadIntFromByteArray(fileData, offset + 4, 3, true);
+                int referenceOffset = (int)ArrayUtils.ReadIntFromByteArray(fileData, offset + 4, 3, true);
                 CcShpFrameFormat referenceFormat = (CcShpFrameFormat)fileData[offset + 7];
                 return new CCShpOffsetInfo(dataOffset, dataFormat, referenceOffset, referenceFormat);
             }

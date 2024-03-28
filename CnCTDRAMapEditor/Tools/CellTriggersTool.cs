@@ -368,6 +368,8 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
+            navigationWidget.MouseoverSize = Size.Empty;
+            navigationWidget.PenColor = Color.Red;
             placementMode = true;
             mapPanel.Invalidate(map, navigationWidget.MouseCell);
             navigationWidget.PenColor = Color.Yellow;
@@ -380,6 +382,8 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
+            navigationWidget.MouseoverSize = new Size(1, 1);
+            navigationWidget.PenColor = Color.Yellow;
             placementMode = false;
             mapPanel.Invalidate(map, navigationWidget.MouseCell);
             navigationWidget.PenColor = Color.Yellow;
