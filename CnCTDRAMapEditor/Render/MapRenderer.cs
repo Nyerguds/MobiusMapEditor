@@ -594,7 +594,7 @@ namespace MobiusEditor.Render
         public static RenderInfo RenderBuilding(GameInfo gameInfo, Map map, Point topLeft, Size tileSize, double tileScale, Building building)
         {
             Color tint = building.Tint;
-            Int32 icon = building.Type.FrameOFfset;
+            Int32 icon = building.Type.FrameOffset;
             int maxIcon = 0;
             int damageIconOffs = 0;
             int collapseIcon = 0;
@@ -955,7 +955,7 @@ namespace MobiusEditor.Render
                     Globals.TheTilesetManager.GetTeamColorTileData(turret2Name, turret2Icon, teamColor, out turret2Tile, false, false);
                 if ((turrUsage & FrameUsage.OnFlatBed) != FrameUsage.None)
                 {
-                    // Special case: MaxValue indicates the turret oFfset is determined by the TurretAdjustOffset table.
+                    // OnFlatBed indicates the turret oFfset is determined by the BackTurretAdjust table.
                     turretAdjust = BackTurretAdjust[Facing32[unit.Direction.ID]];
                     // Never actually used for 2 turrets. Put second turret in the front?
                     turret2Adjust = BackTurretAdjust[Facing32[(byte)((unit.Direction.ID + DirectionTypes.South.ID) & 0xFF)]];
@@ -1748,13 +1748,14 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static void RenderAllTechnoTriggers(Graphics graphics, Map map, Rectangle visibleCells, Size tileSize, MapLayerFlag layersToRender)
+        public static void RenderAllTechnoTriggers(Graphics graphics, GameInfo gameInfo, Map map, Rectangle visibleCells, Size tileSize, MapLayerFlag layersToRender)
         {
-            RenderAllTechnoTriggers(graphics, map.Technos, visibleCells, tileSize, layersToRender, Color.LimeGreen, null, false);
+            RenderAllTechnoTriggers(graphics, gameInfo, map.Technos, visibleCells, tileSize, layersToRender, Color.LimeGreen, null, false);
         }
 
-        public static void RenderAllTechnoTriggers(Graphics graphics, OccupierSet<ICellOccupier> mapTechnos, Rectangle visibleCells, Size tileSize, MapLayerFlag layersToRender, Color color, string toPick, bool excludePick)
+        public static void RenderAllTechnoTriggers(Graphics graphics, GameInfo gameInfo, OccupierSet<ICellOccupier> mapTechnos, Rectangle visibleCells, Size tileSize, MapLayerFlag layersToRender, Color color, string toPick, bool excludePick)
         {
+            // TODO use gameInfo to get techno triggers font and render them in classic mode.
             double tileScaleHor = tileSize.Width / 128.0;
             float borderSize = Math.Max(0.5f, tileSize.Width / 60.0f);
             foreach ((Point topLeft, ICellOccupier techno) in mapTechnos)
@@ -2091,33 +2092,32 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static void RenderCellTriggersSoft(Graphics graphics, Map map, Rectangle visibleCells, Size tileSize, params String[] specifiedToExclude)
+        public static void RenderCellTriggersSoft(Graphics graphics, GameInfo gameInfo, Map map, Rectangle visibleCells, Size tileSize, params String[] specifiedToExclude)
         {
-            RenderCellTriggers(graphics, map, visibleCells, tileSize, Color.Black, Color.Silver, Color.White, 0.75f, false, true, specifiedToExclude);
+            RenderCellTriggers(graphics, gameInfo, map, visibleCells, tileSize, Color.Black, Color.Silver, Color.White, 0.75f, false, true, specifiedToExclude);
         }
 
-        public static void RenderCellTriggersHard(Graphics graphics, Map map, Rectangle visibleCells, Size tileSize, params String[] specifiedToExclude)
+        public static void RenderCellTriggersHard(Graphics graphics, GameInfo gameInfo, Map map, Rectangle visibleCells, Size tileSize, params String[] specifiedToExclude)
         {
-            RenderCellTriggers(graphics, map, visibleCells, tileSize, Color.Black, Color.Silver, Color.White, 1, false, true, specifiedToExclude);
+            RenderCellTriggers(graphics, gameInfo, map, visibleCells, tileSize, Color.Black, Color.Silver, Color.White, 1, false, true, specifiedToExclude);
         }
 
-        public static void RenderCellTriggersSelected(Graphics graphics, Map map, Rectangle visibleCells, Size tileSize, params String[] specifiedToDraw)
+        public static void RenderCellTriggersSelected(Graphics graphics, GameInfo gameInfo, Map map, Rectangle visibleCells, Size tileSize, params String[] specifiedToDraw)
         {
-            RenderCellTriggers(graphics, map, visibleCells, tileSize, Color.Black, Color.FromArgb(0xFF, 0xC0, 0xC0, 0x00), Color.Yellow, 1, true, false, specifiedToDraw);
+            RenderCellTriggers(graphics, gameInfo, map, visibleCells, tileSize, Color.Black, Color.FromArgb(0xFF, 0xC0, 0xC0, 0x00), Color.Yellow, 1, true, false, specifiedToDraw);
         }
 
-        public static void RenderCellTriggers(Graphics graphics, Map map, Rectangle visibleCells, Size tileSize, Color fillColor, Color borderColor, Color textColor, double alphaAdjust, bool thickborder, bool excludeSpecified, params string[] specified)
+        public static void RenderCellTriggers(Graphics graphics, GameInfo gameInfo, Map map, Rectangle visibleCells, Size tileSize, Color fillColor, Color borderColor, Color textColor, double alphaAdjust, bool thickborder, bool excludeSpecified, params string[] specified)
         {
             // For bounds, add one more cell to get all borders showing.
             bool hiResGraphics = true;
-            const string classicFont = "scorefnt.fnt";
+            string classicFont = null;
             ITeamColor scoreCol = null;
             if (Globals.TheTilesetManager is TilesetManagerClassic tsmc)
             {
                 hiResGraphics = false;
-                int color = tsmc.GetClosestColorIndex(textColor);
-                byte[] remapIndices = 0.Yield().Concat(Enumerable.Repeat(color, 15)).Select(b => (byte)b).ToArray();
-                scoreCol = new TeamRemap("Score_" + textColor.ToArgb().ToString("X4"), 0, 0, 0, remapIndices);
+                classicFont = gameInfo.ClassicFontTriggers;
+                scoreCol = gameInfo.GetClassicFontTriggerRemap(tsmc, textColor);
             }
             Rectangle boundRenderCells = visibleCells;
             boundRenderCells.Inflate(1, 1);
@@ -2157,16 +2157,23 @@ namespace MobiusEditor.Render
             {
                 return Color.FromArgb(Math.Max(0, Math.Min(0xFF, (int)Math.Round(baseAlpha * alphaMul, MidpointRounding.AwayFromZero))), col);
             };
-            int sizeW = hiResGraphics ? 128 : tileSize.Width;
-            int sizeH = hiResGraphics ? 128 : tileSize.Height;
-            // Actual balance is fixed; border is 1, text is 1/2, background is 3/8. The original alpha inside the given colours is ignored.
+            int sizeW = tileSize.Width;
+            int sizeH = tileSize.Height;
+            
+            // Actual balance is fixed; border is 1, text is 1/2, background is 3/8. The original alpha inside the given colors is ignored.
             fillColor = ApplyAlpha(fillColor, 0x60, alphaAdjust);
             borderColor = ApplyAlpha(borderColor, 0xFF, alphaAdjust);
             textColor = ApplyAlpha(textColor, 0x80, alphaAdjust);
+            // for classic fonts
+            Color adjustColor = ApplyAlpha(Color.White, 0x80, alphaAdjust);
+            
+            // Preview versions
             Color previewFillColor = ApplyAlpha(fillColor, 0x60, alphaAdjust / 2);
             Color previewBorderColor = ApplyAlpha(borderColor, 0xFF, alphaAdjust / 2);
             Color previewTextColor = ApplyAlpha(textColor, 0x80, alphaAdjust / 2);
+            // for classic fonts
             Color previewAdjustColor = ApplyAlpha(Color.White, 0x80, alphaAdjust / 2);
+
             // Render each trigger once, and just paint the rendered image multiple times.
             Dictionary<string, Bitmap> backRenders = new Dictionary<string, Bitmap>();
             Dictionary<string, Bitmap> renders = new Dictionary<string, Bitmap>();
@@ -2214,7 +2221,7 @@ namespace MobiusEditor.Render
                                             Math.Max(1, (int)Math.Round(24 * tileScaleHor)), Math.Max(1, (int)Math.Round(48 * tileScaleHor)), stringFormat, true))
                                         {
                                             SetRenderSettings(ctg, hiResGraphics);
-                                            // If not set, the text will not use alpha
+                                            // If not set, the text will have ugly black fades at the edges.
                                             textGr.TextRenderingHint = TextRenderingHint.SingleBitPerPixel;
                                             textGr.DrawString(text, font, isPreview ? prevCellTriggersBrush : cellTriggersBrush, textBounds, stringFormat);
                                         }
@@ -2222,15 +2229,10 @@ namespace MobiusEditor.Render
                                     else
                                     {
                                         int[] indices = Encoding.ASCII.GetBytes(text).Select(x => (int)x).ToArray();
-                                        // TODO add alpha!
-
                                         using (ImageAttributes imageAttributes = new ImageAttributes())
                                         {
-                                            if (isPreview)
-                                            {
-                                                imageAttributes.SetColorMatrix(GetColorMatrix(previewAdjustColor, 1.0f, 1.0f));
-                                            }
-                                            using (Bitmap txt = RenderTextFromSprite(map, textColor, classicFont, scoreCol, tileBounds.Size, indices))
+                                            imageAttributes.SetColorMatrix(GetColorMatrix(isPreview ? previewAdjustColor : adjustColor, 1.0f, 1.0f));
+                                            using (Bitmap txt = RenderTextFromSprite(classicFont, scoreCol, tileBounds.Size, indices))
                                             {
                                                 Rectangle paintBounds = new Rectangle(Point.Empty, tileSize);
                                                 textGr.DrawImage(txt, textBounds, 0,0, tileBounds.Width, tileBounds.Height, GraphicsUnit.Pixel, imageAttributes);
@@ -2239,7 +2241,7 @@ namespace MobiusEditor.Render
                                     }
                                 }
                                 // Clear background under text to make it more transparent. There are probably more elegant ways to do this, but this works.
-                                RegionData textInline = ImageUtils.GetOutline(new Size(sizeW, sizeH), textBm, 0.00f, (byte)Math.Max(0, textCol.A - 1), true);
+                                RegionData textInline = ImageUtils.GetOutline(new Size(sizeW, sizeH), textBm, 0.00f, (byte)Math.Max(0, textCol.A - 1), false);
                                 using (Region clearArea = new Region(textInline))
                                 using (Brush clear = new SolidBrush(Color.Transparent))
                                 {
@@ -2529,7 +2531,7 @@ namespace MobiusEditor.Render
                 else if (cellsRiver.Count > 0)
                 {
                     Byte[] imgData = ImageUtils.GetImageData(bmImp, out int stride, PixelFormat.Format32bppArgb, true);
-                    // Replace colours, retain alpha.
+                    // Replace colors, retain alpha.
                     for (int i = 0; i < imgData.Length; i += 4)
                     {
                         if (imgData[i + 3] == 0)
@@ -2683,7 +2685,7 @@ namespace MobiusEditor.Render
                 Math.Max(1, (int)Math.Round(newSize.Width * scaleFactorX)), Math.Max(1, (int)Math.Round(newSize.Height * scaleFactorY)));
         }
 
-        private static Bitmap RenderTextFromSprite(Map map, Color textColor, string fontsprite, ITeamColor remap, Size bounds, int[] shapes)
+        private static Bitmap RenderTextFromSprite(string fontsprite, ITeamColor remap, Size bounds, int[] shapes)
         {
             int nrOfChars = shapes.Length;
             if (nrOfChars == 0)
@@ -2696,7 +2698,7 @@ namespace MobiusEditor.Render
             int lineSize = 0;
             for (int i = 0; i < nrOfChars; ++i)
             {
-                if (Globals.TheTilesetManager.GetTeamColorTileData(fontsprite, shapes[i], remap, out Tile character))
+                if (Globals.TheTilesetManager.GetTeamColorTileData(fontsprite, shapes[i], remap, true, out Tile character))
                 {
                     tiles[i] = character;
                     maxwidth = Math.Max(maxwidth, character.Image.Width);

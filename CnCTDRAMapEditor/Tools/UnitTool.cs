@@ -596,7 +596,7 @@ namespace MobiusEditor.Tools
                         CellMetrics tm = new CellMetrics(3, 3);
                         OccupierSet<ICellOccupier> technoSet = new OccupierSet<ICellOccupier>(tm);
                         technoSet.Add(4, mockUnit);
-                        MapRenderer.RenderAllTechnoTriggers(g, technoSet, tm.Bounds, Globals.PreviewTileSize, Layers, Color.LimeGreen, null, false);
+                        MapRenderer.RenderAllTechnoTriggers(g, plugin.GameInfo, technoSet, tm.Bounds, Globals.PreviewTileSize, Layers, Color.LimeGreen, null, false);
                     }
                 }
                 unitTypeMapPanel.MapImage = unitPreview;
@@ -668,7 +668,7 @@ namespace MobiusEditor.Tools
             MapRenderer.RenderAllBoundsFromPoint(graphics, boundRenderCells, Globals.MapTileSize, previewMap.Technos.OfType<Unit>());
             if ((Layers & MapLayerFlag.TechnoTriggers) == MapLayerFlag.TechnoTriggers)
             {
-                MapRenderer.RenderAllTechnoTriggers(graphics, previewMap, visibleCells, Globals.MapTileSize, Layers);
+                MapRenderer.RenderAllTechnoTriggers(graphics, plugin.GameInfo, previewMap, visibleCells, Globals.MapTileSize, Layers);
             }
             Unit selected = null;
             Point? loc = null;

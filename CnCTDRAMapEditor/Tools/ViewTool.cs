@@ -324,7 +324,7 @@ namespace MobiusEditor.Tools
             if ((layersToRender & MapLayerFlag.CellTriggers) == MapLayerFlag.CellTriggers
                 && (manuallyHandledLayers & MapLayerFlag.CellTriggers) == MapLayerFlag.None)
             {
-                MapRenderer.RenderCellTriggersSoft(graphics, map, visibleCells, tileSize);
+                MapRenderer.RenderCellTriggersSoft(graphics, plugin.GameInfo, map, visibleCells, tileSize);
             }
             if ((layersToRender & (MapLayerFlag.Waypoints | MapLayerFlag.FootballArea)) == (MapLayerFlag.Waypoints | MapLayerFlag.FootballArea)
                 && (manuallyHandledLayers & MapLayerFlag.WaypointsIndic) == MapLayerFlag.None && plugin.GameInfo.SupportsMapLayer(MapLayerFlag.FootballArea))
@@ -365,7 +365,7 @@ namespace MobiusEditor.Tools
             if ((layersToRender & MapLayerFlag.TechnoTriggers) == MapLayerFlag.TechnoTriggers
                 && (manuallyHandledLayers & MapLayerFlag.TechnoTriggers) == MapLayerFlag.None)
             {
-                MapRenderer.RenderAllTechnoTriggers(graphics, map, visibleCells, tileSize, layersToRender);
+                MapRenderer.RenderAllTechnoTriggers(graphics, plugin.GameInfo, map, visibleCells, tileSize, layersToRender);
             }
         }
 

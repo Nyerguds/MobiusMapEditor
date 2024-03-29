@@ -6,7 +6,7 @@
 
 Simply unpack the editor into a new folder on your disk somewhere. On first startup, it will automatically try to detect the folder in which the game is installed, and if it can't find it, it will show a dialog asking you to locate it. Note that this autodetect only works on Steam installations of the game.
 
-If the C&C Remastered Collection is not installed on your PC, you can use the "Continue with classic graphics" button on the dialog to start the editor without the Remastered graphics. To suppress the "Select game path" dialog and instead automatically start with classic graphics, you can edit the config file and enable the option to always use classic graphics. (See the "Configuration" section below.)
+If the C&C Remastered Collection is not installed on your PC, you can use the "Continue with classic graphics" button on the dialog to start the editor without the Remastered graphics. To suppress the "Select game path" dialog and instead automatically start with classic graphics, you can edit the config file in a text editor and enable the option to always use classic graphics. (See the "Configuration" section below.)
 
 ---
 
@@ -58,7 +58,7 @@ The result of this is obviously not an immediately usable map. It will produce a
 
 ### Randomizable tiles
 
-In Red Alert's Interior theater, the editor unlocks access to an unused game feature, namely, the ability to use the random alternates that exist in most of the Interior theater's 1x1 tile types. None of the original game maps ever use these alternates, but both the original game and the remaster can perfectly show them if they are present in maps.
+In Red Alert's Interior theater, the editor unlocks access to an unused game feature, namely, the ability to use the alternate versions that exist in most of the Interior theater's 1x1 tile types. None of the original game maps ever use these alternates, but both the original game and the remaster can perfectly show them if they are present in maps.
 
 On the preview window, such tiles will be indicated with a light blue grid drawn over them. When you have such a tile type selected, placing down a tile will randomly place one of the available tiles. Of course, just as with any other tile, you can right-click on the map (or left-click on the preview window) to select a specific tile to place, which will disable the randomizing feature. Right-clicking in the preview window will remove the specifically-selected cell and re-enable the randomization.
 
@@ -102,7 +102,7 @@ This should make you end up in the "AppData\\Local\\Nyerguds" folder under your 
 
 ## Configuration
 
-The file "CnCTDRAMapEditor.exe.config" contains settings to customise the editor. This is what they do.
+The file "CnCTDRAMapEditor.exe.config" contains settings to customise the editor. The file is in xml format, meaning it can be opened in any text editor. This section details what its settings do.
 
 Note that this listing is updated as I develop. If options mentioned in this list do not exist in the settings file, chances are they refer to features that are already implemented in the source code on GitHub, but not yet released in a new version to download.
 
@@ -131,9 +131,9 @@ Note that for Red Alert, the editor uses the DOS versions of the infantry sprite
 
 * **ModsToLoadTD** / **ModsToLoadRA** / **ModsToLoadSS**: semicolon (or comma) separated list of mod entries for each supported game.
 
-A mod entry can either be a Steam workshop ID, or a folder name. Steam workshop IDs are looked up in the game's downloaded Workshop items. Folder names will initially be looked up in the mods folder of the respective game in the CnCRemastered\\mods\\ folder under your Documents folder, but if nothing is found there, the loading system will also check the Steam workshop files for a matching mod. Sole Survivor will use Tiberian Dawn mods. Note that mods can only apply graphical changes from the tileset and house color xml files; the editor can't read any data from compiled dll files. This mods system is mostly meant to apply graphical fixes to the editor.
+These refer to mods in the format defined by the Command & Conquer Remastered Collection. A mod entry can either be a Steam workshop ID, or a folder name. Steam workshop IDs are looked up in the game's downloaded Workshop items. Folder names will initially be looked up in the mods folder of the respective game in the CnCRemastered\\mods\\ folder under your Documents folder, but if nothing is found there, the loading system will also check the Steam workshop files for a matching mod. Sole Survivor will use Tiberian Dawn mods. Note that mods can only apply graphical changes from the tileset and house color xml files; the editor can't read any data from compiled dll files. This mods system is mostly meant to apply graphical fixes to the editor.
 
-The **ModsToLoadTD** and **ModsToLoadSS** settings will have the `GraphicsFixesTD` mod set by default, to complete the incomplete TD Remastered graphics set, meaning the mod will automatically be loaded if found. Similarly, the **ModsToLoadRA** setting will have the `GraphicsFixesRA` mod set. Note that the editor has no way to check whether mods are enabled in the game, so that makes no difference.
+The **ModsToLoadTD** and **ModsToLoadSS** settings will have the `GraphicsFixesTD` mod set by default, to complete the incomplete TD Remastered graphics set, meaning the mod will automatically be loaded if found. Similarly, the **ModsToLoadRA** setting will have the `GraphicsFixesRA` mod set. Note that the editor has no way to check whether mods are enabled in the Remastered Collection games, so that makes no difference.
 
 You can find these mods on the Steam workshop ([GraphicsFixesTD](https://steamcommunity.com/sharedfiles/filedetails/?id=2844969675), [GraphicsFixesRA](https://steamcommunity.com/sharedfiles/filedetails/?id=2978875641)) and on ModDB ([GraphicsFixesTD](https://www.moddb.com/games/command-conquer-remastered/addons/graphicsfixestd), [GraphicsFixesRA](https://www.moddb.com/games/cc-red-alert-remastered/addons/graphicsfixesra)).
 
@@ -171,7 +171,7 @@ In classic graphics mode, the editor can still use mods, if they contain classic
 These options are all enabled by default, but can be disabled if you wish. Use these at your own risk. Some of these (air units, craters, harvesting) are related to bugs in the games, so they could be disabled when making maps for a mod in which these issues are fixed.
 
 * **ReportMissionDetection**: When detecting that a file is a classic single player mission file because it matches the classic "SCG01EA"-like name pattern and contains win and lose scripts, a note about it is shown in the mission load analysis. When disabled, this will only be shown if it is not the only remark in the list.
-* **EnforceObjectMaximums**: Don't allow saving a map if any of the the object amounts exceed the normal internal maximums of the game. Can be disabled in case a mission is specifically meant to be played on a modded game that increases these limits.
+* **EnforceObjectMaximums**: Don't allow saving a map if any of the object amounts exceed the normal internal maximums of the game. Can be disabled in case a mission is specifically meant to be played on a modded game that increases these limits.
 * **Ignore106Scripting**: Don't support the extended scripting added by the C&C95 v1.06 patch. If this option is disabled, additional triggers named UUUU, VVVV and WWWW can also be destroyed with "Dstry Trig" actions.
 * **ConvertRaObsoleteClear**: Automatically clear tiles with ID 255 on RA Temperate/Snow maps, or on Interior maps if more than 80% of the area outside the map bounds is filled with it, to fix the fact old versions of RA saved that as Clear terrain. This can be disabled to research changes on old maps.
 * **BlockingBibs**: Bibs block the placement of other structures. Note that if you disable this, you should be careful not to block the build plan of rebuildable AI structures. Also, the games might have issues with walls overlaying building bibs.

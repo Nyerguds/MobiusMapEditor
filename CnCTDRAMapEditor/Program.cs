@@ -57,7 +57,7 @@ namespace MobiusEditor
             "N3tRunn3r\n" +
             "\n" +
             "Thank you for using " + ProgramName + "!";
-        public const string ClassicInstructions = "To skip this dialog and always start with the classic graphics, edit {0}.config and set the \"{1}\" setting to True.";
+        public const string ClassicInstructions = "To skip this dialog and always start with the classic graphics, edit {0}.config in a text editor and set the \"{1}\" setting to True.";
         public const string ClassicSetting = "UseClassicFiles";
 
         public static readonly string ApplicationPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);

@@ -631,4 +631,6 @@ Unreleased.
 * Added checks and warnings on teamtype arguments, and on the limits of units/orders list lengths.
 * Added system to avoid loading the same mod from both the workshop items and from the local mods under the Documents folder. If given by name, local mods are given priority.
 * The \[Enter\] shortcut for the "Jump To" function is now indicated in the status bar in Waypoints and Celltriggers mode.
+* Added a specific "PreviewScaleClassic" setting.
 * Fixed Red Alert map load not giving feedback on the removal of Aircraft.
+* Added an indicator on the Autocreate option on Teams if the Max Allowed setting is set to 0.

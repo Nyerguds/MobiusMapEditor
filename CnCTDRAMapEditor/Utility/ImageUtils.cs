@@ -351,7 +351,7 @@ namespace MobiusEditor.Utility
         /// <returns>The most common color found in the image. If there are multiple with the same frequency, the first one that was encountered is returned.</returns>
         public static Color[] FindMostCommonColors(int amount, byte[] imageData, int width, int height, int stride)
         {
-            // Store colour frequencies in a dictionary.
+            // Store color frequencies in a dictionary.
             if (amount < 0)
                 amount = Int32.MaxValue;
             Dictionary<Color, Int32> colorFreq = new Dictionary<Color, Int32>();
@@ -365,12 +365,12 @@ namespace MobiusEditor.Utility
                 // and increase the line start with the stride at the end of each y iteration.
                 for (Int32 x = 0; x < width; ++x)
                 {
-                    //Get colour components out. "ARGB" is actually the order in the final integer which is read as little-endian, so the real order is BGRA.
+                    //Get color components out. "ARGB" is actually the order in the final integer which is read as little-endian, so the real order is BGRA.
                     Color col = Color.FromArgb(imageData[inputOffs + 3], imageData[inputOffs + 2], imageData[inputOffs + 1], imageData[inputOffs]);
                     // Only look at nontransparent pixels; cut off at 127.
                     if (col.A > 127)
                     {
-                        // Save as pure colour without alpha
+                        // Save as pure color without alpha
                         Color bareCol = Color.FromArgb(255, col);
                         if (!colorFreq.ContainsKey(bareCol))
                             colorFreq.Add(bareCol, 1);

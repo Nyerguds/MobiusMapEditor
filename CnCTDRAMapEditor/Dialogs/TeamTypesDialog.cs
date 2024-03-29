@@ -65,9 +65,13 @@ namespace MobiusEditor.Dialogs
 
             InitializeComponent();
             lblTooLong.Text = "Teamtype length exceeds " + maxLength + " characters!";
-            int extraWidth = nudRecruitPriority.Width + nudRecruitPriority.Margin.Left + nudRecruitPriority.Margin.Right;
-            ttf = new ToolTipFixer(this, toolTip1, 10000, new Dictionary<Type, int> { { typeof(Label), extraWidth } });
-
+            int extraWidthDropdowns = nudRecruitPriority.Width + nudRecruitPriority.Margin.Left + nudRecruitPriority.Margin.Right;
+            int extraWidthCheckboxes = nudRecruitPriority.Width - chbAutocreate.Width;
+            ttf = new ToolTipFixer(this, toolTip1, 10000, new Dictionary<Type, int>
+            {
+                { typeof(Label), extraWidthDropdowns },
+                { typeof(CheckBox), extraWidthCheckboxes }
+            });
             switch (plugin.GameInfo.GameType)
             {
                 case GameType.TiberianDawn:
@@ -611,7 +615,37 @@ namespace MobiusEditor.Dialogs
                 milMissions.TabStop = SelectedTeamType.Missions.Count > 0;
                 btnAddMission.Enabled = SelectedTeamType.Missions.Count < Globals.MaxTeamMissions;
             }
+        }
 
+        private void chbAutocreate_CheckedChanged(object sender, EventArgs e)
+        {
+            CheckMaxAllowed();
+        }
+
+        private void maxAllowedNud_ValueChanged(object sender, EventArgs e)
+        {
+            CheckMaxAllowed();
+        }
+
+        private void maxAllowedNud_ValueEntered(object sender, ValueEnteredEventArgs e)
+        {
+            CheckMaxAllowed();
+        }
+
+        private void nudInitNum_Validating(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            CheckMaxAllowed();
+        }
+
+        private void maxAllowedNud_ValueUpDown(object sender, Controls.UpDownEventArgs e)
+        {
+            CheckMaxAllowed();
+        }
+
+        private void CheckMaxAllowed()
+        {
+            bool err = maxAllowedNud.Value == 0 && chbAutocreate.Checked;
+            errorProvider1.SetError(chbAutocreate, err ? "The AI will not produce teams where \"Max Allowed\" is set to 0." : null);
         }
 
         /// <summary>

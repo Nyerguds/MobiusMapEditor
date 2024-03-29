@@ -1772,7 +1772,10 @@ namespace MobiusEditor.TiberianDawn
                         Point location = new Point((coord >> 8) & 0x7F, (coord >> 24) & 0x7F);
                         if (Map.Buildings.OfType<Building>().Where(x => x.Location == location && x.Occupier.Type.ID == buildingType.ID).FirstOrDefault().Occupier is Building building)
                         {
-                            building.BasePriority = curPriorityVal;
+                            if (building.BasePriority == -1)
+                            {
+                                building.BasePriority = curPriorityVal;
+                            }
                         }
                         else
                         {

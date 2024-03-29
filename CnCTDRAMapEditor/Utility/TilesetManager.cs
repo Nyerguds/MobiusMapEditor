@@ -182,6 +182,11 @@ namespace MobiusEditor.Utility
             return GetTeamColorTileData(name, shape, teamColor, out int fps, out tile, false, false);
         }
 
+        public bool GetTeamColorTileData(string name, int shape, ITeamColor teamColor, bool ignoreShadow, out Tile tile)
+        {
+            return GetTeamColorTileData(name, shape, teamColor, out int fps, out tile, false, false);
+        }
+
         public bool GetTileData(string name, int shape, out Tile tile, bool generateFallback, bool onlyIfDefined)
         {
             return GetTeamColorTileData(name, shape, null, out tile, generateFallback, onlyIfDefined);

@@ -73,7 +73,7 @@ namespace MobiusEditor.Utility
                 Int32 offset = lineOffset;
                 for (Int32 x = 0; x < width; ++x)
                 {
-                    // get colour
+                    // get color
                     Byte blu = data[offset + 0];
                     Byte grn = data[offset + 1];
                     Byte red = data[offset + 2];

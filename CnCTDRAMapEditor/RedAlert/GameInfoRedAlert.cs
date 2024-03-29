@@ -28,6 +28,7 @@ namespace MobiusEditor.RedAlert
         public override string ClassicFolderDefault => "Classic\\RA\\";
         public override string ClassicFolderSetting => "ClassicPathRA";
         public override string ClassicStringsFile => "conquer.eng";
+        public override string ClassicFontTriggers => "scorefnt.fnt";
         public override TheaterType[] AllTheaters => TheaterTypes.GetAllTypes().ToArray();
         public override TheaterType[] AvailableTheaters => TheaterTypes.GetTypes().ToArray();
         public override bool MegamapSupport => true;
@@ -208,6 +209,11 @@ namespace MobiusEditor.RedAlert
         public override bool MapNameIsEmpty(string name)
         {
             return String.IsNullOrEmpty(name) || Constants.EmptyMapName.Equals(name, StringComparison.OrdinalIgnoreCase);
+        }
+
+        public override TeamRemap GetClassicFontTriggerRemap(TilesetManagerClassic tsmc, Color textColor)
+        {
+            return GetClassicFontRemapSimple(ClassicFontTriggers, tsmc, textColor);
         }
 
     }

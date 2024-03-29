@@ -28,6 +28,7 @@ namespace MobiusEditor.SoleSurvivor
         public override String ClassicFolderDefault => "Classic\\SS\\";
         public override String ClassicFolderSetting => "ClassicPathSS";
         public override String ClassicStringsFile => "conquer.eng";
+        public override string ClassicFontTriggers => "scorefnt.fnt";
         public override TheaterType[] AllTheaters => TheaterTypes.GetAllTypes().ToArray();
         public override TheaterType[] AvailableTheaters => TheaterTypes.GetTypes().ToArray();
         public override bool MegamapSupport => true;
@@ -112,6 +113,11 @@ namespace MobiusEditor.SoleSurvivor
         public override bool MapNameIsEmpty(string name)
         {
             return String.IsNullOrEmpty(name) || Constants.EmptyMapName.Equals(name, StringComparison.OrdinalIgnoreCase);
+        }
+
+        public override TeamRemap GetClassicFontTriggerRemap(TilesetManagerClassic tsmc, Color textColor)
+        {
+            return GetClassicFontRemapSimple(ClassicFontTriggers, tsmc, textColor);
         }
     }
 }

@@ -3,6 +3,7 @@ using MobiusEditor.Utility;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 // Special. Technically color "JP" exists for this, but it's wrong. Clone Spain instead.
 
 namespace MobiusEditor.Model
@@ -40,6 +41,7 @@ namespace MobiusEditor.Model
         public abstract string ClassicFolderDefault { get; }
         public abstract string ClassicFolderSetting { get; }
         public abstract string ClassicStringsFile { get; }
+        public abstract string ClassicFontTriggers { get; }
         public abstract TheaterType[] AllTheaters { get; }
         public abstract TheaterType[] AvailableTheaters { get; }
         public abstract bool MegamapSupport { get; }
@@ -81,6 +83,12 @@ namespace MobiusEditor.Model
         /// <param name="name">Map name to check.</param>
         /// <returns>True if the given name is considered empty by this game type.</returns>
         public abstract bool MapNameIsEmpty(string name);
+        /// <summary>Generates a remap object for the given color index.</summary>
+        /// <param name="tsmc">classic tileset manager to look up the colour on.</param>
+        /// <param name="textColor">colour for the font text.</param>
+        /// <returns>A remap object with a unique name, for the given color index</returns>
+        public abstract TeamRemap GetClassicFontTriggerRemap(TilesetManagerClassic tsmc, Color textColor);
+
         #endregion
 
         #region protected functions
@@ -125,6 +133,14 @@ namespace MobiusEditor.Model
                 return new Bitmap(tile.Image);
             }
             return null;
+        }
+
+        protected TeamRemap GetClassicFontRemapSimple(string fontName, TilesetManagerClassic tsmc, Color textColor)
+        {
+            int color = tsmc.GetClosestColorIndex(textColor, false);
+            // Extremely simple: all indices except 0 remap to the given colour.
+            byte[] remapIndices = 0.Yield().Concat(Enumerable.Repeat(color, 15)).Select(b => (byte)b).ToArray();
+            return new TeamRemap(fontName + "_" + textColor.ToArgb().ToString("X4"), 0, 0, 0, remapIndices);
         }
         #endregion
 

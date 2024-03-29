@@ -71,7 +71,7 @@ namespace MobiusEditor.Model
 
         public BuildingTypeFlag Flag { get; private set; }
         public String GraphicsSource { get; private set; }
-        public int FrameOFfset { get; private set; }
+        public int FrameOffset { get; private set; }
         public int PowerUsage { get; set; }
         public int PowerProduction { get; set; }
         public int Storage { get; set; }
@@ -130,7 +130,7 @@ namespace MobiusEditor.Model
         {
             this.ID = id;
             this.Flag = flag;
-            this.FrameOFfset = frameOffset;
+            this.FrameOffset = frameOffset;
             this.Name = name;
             this.GraphicsSource = graphicsSource ?? name;
             this.nameId = textId;
@@ -231,7 +231,7 @@ namespace MobiusEditor.Model
             int baseMaskY = this.BaseOccupyMask.GetLength(0);
             int baseMaskX = this.BaseOccupyMask.GetLength(1);
             string occupyMask = GeneralUtils.GetStringFromMask(this.BaseOccupyMask, '1', '0', ' ');
-            BuildingType newBld = new BuildingType(this.ID, this.Name, this.nameId, this.PowerProduction, this.PowerUsage, this.Storage, baseMaskX, baseMaskY, occupyMask, this.OwnerHouse, this.FactoryOverlay, this.FrameOFfset, this.GraphicsSource, this.Flag, this.ZOrder);
+            BuildingType newBld = new BuildingType(this.ID, this.Name, this.nameId, this.PowerProduction, this.PowerUsage, this.Storage, baseMaskX, baseMaskY, occupyMask, this.OwnerHouse, this.FactoryOverlay, this.FrameOffset, this.GraphicsSource, this.Flag, this.ZOrder);
             return newBld;
         }
 

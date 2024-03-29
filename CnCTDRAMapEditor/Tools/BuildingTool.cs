@@ -980,7 +980,7 @@ namespace MobiusEditor.Tools
                         CellMetrics tm = new CellMetrics(mockBuilding.Type.OverlapBounds.Size);
                         OccupierSet<ICellOccupier> technoSet = new OccupierSet<ICellOccupier>(tm);
                         technoSet.Add(0, mockBuilding);
-                        MapRenderer.RenderAllTechnoTriggers(g, technoSet, tm.Bounds, Globals.PreviewTileSize, Layers, Color.LimeGreen, null, false);
+                        MapRenderer.RenderAllTechnoTriggers(g, plugin.GameInfo, technoSet, tm.Bounds, Globals.PreviewTileSize, Layers, Color.LimeGreen, null, false);
                     }
                 }
                 buildingTypeMapPanel.MapImage = buildingPreview;
@@ -1130,7 +1130,7 @@ namespace MobiusEditor.Tools
             }
             if ((Layers & MapLayerFlag.TechnoTriggers) == MapLayerFlag.TechnoTriggers)
             {
-                MapRenderer.RenderAllTechnoTriggers(graphics, previewMap, visibleCells, Globals.MapTileSize, Layers);
+                MapRenderer.RenderAllTechnoTriggers(graphics, plugin.GameInfo, previewMap, visibleCells, Globals.MapTileSize, Layers);
             }
         }
 

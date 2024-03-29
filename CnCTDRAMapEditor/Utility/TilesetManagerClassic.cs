@@ -53,6 +53,7 @@ namespace MobiusEditor.Utility
         private IArchiveManager archiveManager;
         private TheaterType theater;
         private Color[] currentlyLoadedPalette;
+        private Color[] currentlyLoadedPaletteBare;
 
         public TilesetManagerClassic(IArchiveManager archiveManager)
         {
@@ -81,19 +82,49 @@ namespace MobiusEditor.Utility
                 throw new InvalidOperationException("The archive manager is not reset to the given game; cannot load the correct files.");
             }
             this.theater = theater;
-            this.currentlyLoadedPalette = TeamRemapManager.GetPaletteForTheater(this.archiveManager, theater);
+            Color[] pal = TeamRemapManager.GetPaletteForTheater(this.archiveManager, theater);
+            int palLength = 0x100;
+            this.currentlyLoadedPaletteBare = new Color[0x100];
+            this.currentlyLoadedPalette = new Color[0x100];
+            for (Int32 i = 0; i < pal.Length && i < palLength; ++i)
+            {
+                this.currentlyLoadedPalette[i] = pal[i];
+                this.currentlyLoadedPaletteBare[i] = pal[i];
+            }
+            ApplySpecialColors(this.currentlyLoadedPalette, true, true);
+            ApplySpecialColors(this.currentlyLoadedPaletteBare, true, false);
         }
 
-        public int GetClosestColorIndex(Color color)
+        protected void ApplySpecialColors(Color[] colors, bool adjustTrans, bool adjustShadow)
+        {
+            if (adjustTrans)
+            {
+                // Set background transparent
+                colors[0] = Color.FromArgb(0x00, colors[0]);
+            }
+            if (adjustShadow)
+            {
+                // Set shadow color to semitransparent black. Classic fading table remapping is impossible for this since the editor's main bitmap is high color.
+                colors[4] = Color.FromArgb(0x80, Color.Black);
+            }
+        }
+
+        /// <summary>
+        /// Finds the nearest color on the palette matching the given color.
+        /// </summary>
+        /// <param name="color">Color to find</param>
+        /// <param name="includeShadowColor">Use the palette where the shadow color is adjusted to semitransparent black.</param>
+        /// <returns></returns>
+        public int GetClosestColorIndex(Color color, bool includeShadowColor)
         {
             if (currentlyLoadedPalette == null)
             {
                 return 0;
             }
-            return ImageUtils.GetClosestPaletteIndexMatch(color, this.currentlyLoadedPalette, 0.Yield());
+            return ImageUtils.GetClosestPaletteIndexMatch(color, includeShadowColor ? this.currentlyLoadedPaletteBare : this.currentlyLoadedPalette , 0.Yield());
         }
 
-        public Boolean GetTeamColorTileData(String name, Int32 shape, ITeamColor teamColor, out Tile tile, Boolean generateFallback, Boolean onlyIfDefined, string remapGraphicsSource, byte[] remapTable, bool clearCachedVersion)
+        public Boolean GetTeamColorTileData(String name, Int32 shape, ITeamColor teamColor, out Tile tile, Boolean generateFallback, Boolean onlyIfDefined, Boolean withShadow, string remapGraphicsSource, byte[] remapTable, bool clearCachedVersion)
         {
             tile = null;
             String teamColorName = teamColor == null ? String.Empty : (teamColor.Name ?? String.Empty);
@@ -126,7 +157,7 @@ namespace MobiusEditor.Utility
             }
             if (shapeFile != null)
             {
-                tile = this.RemapShapeFile(shapeFile, shape, teamColor, generateFallback, out shapeFrame);
+                tile = this.RemapShapeFile(shapeFile, shape, teamColor, generateFallback, withShadow, out shapeFrame);
             }
             else
             {
@@ -156,7 +187,7 @@ namespace MobiusEditor.Utility
                     }
                 }
                 // Remaps the tile, and takes care of caching it and possibly generating dummies.
-                tile = this.RemapShapeFile(shapeFile, shape, teamColor, generateFallback, out shapeFrame);
+                tile = this.RemapShapeFile(shapeFile, shape, teamColor, generateFallback, withShadow, out shapeFrame);
             }
             // shapeFrame is ALWAYS filled in if tile isn't null;
             return tile != null && !shapeFrame.IsDummy;
@@ -164,27 +195,32 @@ namespace MobiusEditor.Utility
 
         public Boolean GetTeamColorTileData(String name, Int32 shape, ITeamColor teamColor, out Tile tile, Boolean generateFallback, Boolean onlyIfDefined, string remapGraphicsSource, byte[] remapTable)
         {
-            return GetTeamColorTileData(name, shape, teamColor, out tile, generateFallback, onlyIfDefined, remapGraphicsSource, remapTable, false);
+            return GetTeamColorTileData(name, shape, teamColor, out tile, generateFallback, onlyIfDefined, true, remapGraphicsSource, remapTable, false);
         }
 
         public Boolean GetTeamColorTileData(String name, Int32 shape, ITeamColor teamColor, out Tile tile, Boolean generateFallback, Boolean onlyIfDefined)
         {
-            return GetTeamColorTileData(name, shape, teamColor, out tile, generateFallback, onlyIfDefined, null, null, false);
+            return GetTeamColorTileData(name, shape, teamColor, out tile, generateFallback, onlyIfDefined, true, null, null, false);
         }
 
         public Boolean GetTileData(String name, Int32 shape, out Tile tile, Boolean generateFallback, Boolean onlyIfDefined)
         {
-            return GetTeamColorTileData(name, shape, null, out tile, generateFallback, onlyIfDefined, null, null, false);
+            return GetTeamColorTileData(name, shape, null, out tile, generateFallback, onlyIfDefined, true, null, null, false);
         }
 
         public Boolean GetTeamColorTileData(String name, Int32 shape, ITeamColor teamColor, out Tile tile)
         {
-            return GetTeamColorTileData(name, shape, teamColor, out tile, false, false, null, null, false);
+            return GetTeamColorTileData(name, shape, teamColor, out tile, false, false, true, null, null, false);
+        }
+
+        public bool GetTeamColorTileData(string name, int shape, ITeamColor teamColor, bool ignoreShadow, out Tile tile)
+        {
+            return GetTeamColorTileData(name, shape, teamColor, out tile, false, false, !ignoreShadow, null, null, false);
         }
 
         public Boolean GetTileData(String name, Int32 shape, out Tile tile)
         {
-            return GetTeamColorTileData(name, shape, null, out tile, false, false, null, null, false);
+            return GetTeamColorTileData(name, shape, null, out tile, false, false, true, null, null, false);
         }
 
         public int GetTileDataLength(string name)
@@ -381,9 +417,13 @@ namespace MobiusEditor.Utility
             return shapeFile;
         }
 
-        private Tile RemapShapeFile(Dictionary<Int32, ShapeFrameData> shapeFile, Int32 shape, ITeamColor teamColor, bool generateFallback, out ShapeFrameData shapeFrame)
+        private Tile RemapShapeFile(Dictionary<Int32, ShapeFrameData> shapeFile, Int32 shape, ITeamColor teamColor, bool generateFallback, bool withShadow, out ShapeFrameData shapeFrame)
         {
             String teamColorName = teamColor == null ? String.Empty : teamColor.Name;
+            if (!withShadow)
+            {
+                teamColorName += " no-shadow";
+            }
             if (!shapeFile.TryGetValue(shape, out shapeFrame)
                 || shapeFrame.FrameData == null || shapeFrame.FrameData.Length == 0
                 || shapeFrame.Width == 0 || shapeFrame.Height == 0)
@@ -412,13 +452,13 @@ namespace MobiusEditor.Utility
                 teamColor.ApplyToImage(dataRemap, width, height, 1, width, opaqueBounds);
                 data = dataRemap;
             }
-            Color[] pal = currentlyLoadedPalette;
+            Color[] pal = withShadow ? currentlyLoadedPalette : currentlyLoadedPaletteBare;
             if (shapeFrame.IsDummy)
             {
-                // Make gray colours semitransparent on dummy graphics.
+                // Make gray colors semitransparent on dummy graphics.
                 pal = new Color[currentlyLoadedPalette.Length];
                 Array.Copy(currentlyLoadedPalette, 0, pal, 0, pal.Length);
-                // EGA palette grayscale colours.
+                // EGA palette grayscale colors.
                 pal[12] = Color.FromArgb(0x80, pal[12]);
                 pal[13] = Color.FromArgb(0x80, pal[13]);
                 pal[14] = Color.FromArgb(0x80, pal[14]);

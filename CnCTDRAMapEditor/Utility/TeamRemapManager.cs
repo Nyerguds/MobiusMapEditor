@@ -35,7 +35,7 @@ namespace MobiusEditor.Utility
         public static readonly TeamRemap RemapTdLtBlue = new TeamRemap("MULTI6", 201, 203, 176, new byte[] { 161, 200, 201, 202, 204, 205, 206, 12, 201, 202, 203, 204, 205, 115, 198, 114 });
         public static readonly TeamRemap RemapTdYellow = new TeamRemap("MULTI1", 5, 157, 176, new byte[] { 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191 });
         public static readonly TeamRemap RemapTdRed = new TeamRemap("MULTI3", 127, 123, 176, new byte[] { 127, 126, 125, 124, 122, 46, 120, 47, 125, 124, 123, 122, 42, 121, 120, 120 });
-        // Extra colours added for flags. With thanks to Kilkakon.
+        // Extra colors added for flags. With thanks to Kilkakon.
         public static readonly TeamRemap RemapTdBrown = new TeamRemap("MULTI7", 146, 209, 176, new byte[] { 146, 152, 209, 151, 173, 150, 173, 183, 146, 152, 209, 151, 173, 150, 173, 183 });
         public static readonly TeamRemap RemapTdBurgundy = new TeamRemap("MULTI8", 214, 213, 176, new byte[] { 132, 133, 134, 213, 214, 121, 120, 12, 133, 134, 213, 214, 121, 174, 120, 199 });
         // 'Too fleshy' according to Chad1233, so I took Burgundy instead.
@@ -231,10 +231,6 @@ namespace MobiusEditor.Utility
             {
                 colors = ClassicSpriteLoader.LoadSixBitPalette(pal, 0, 0x100);
             }
-            // Set background transparent
-            colors[0] = Color.FromArgb(0x00, colors[0]);
-            // Set shadow color to semitransparent black. I'm not gonna mess around with classic fading table remapping for this.
-            colors[4] = Color.FromArgb(0x80, Color.Black);
             return colors;
         }
     }

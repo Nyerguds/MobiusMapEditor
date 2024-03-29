@@ -23,7 +23,7 @@ using System.Threading.Tasks;
 
 namespace MobiusEditor.Utility
 {
-    class TeamRemap : ITeamColor
+    public class TeamRemap : ITeamColor
     {
         public string Name { get; private set; }
         public byte UnitRadarColor { get; private set; }

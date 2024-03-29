@@ -779,7 +779,7 @@ namespace MobiusEditor.Tools
                         ifg.Infantry[(int)InfantryStoppingType.Center] = mockInfantry;
                         mockInfantry.InfantryGroup = ifg;
                         technoSet.Add(0, ifg);
-                        MapRenderer.RenderAllTechnoTriggers(g, technoSet, tm.Bounds, Globals.PreviewTileSize, Layers, Color.LimeGreen, null, false);
+                        MapRenderer.RenderAllTechnoTriggers(g, plugin.GameInfo, technoSet, tm.Bounds, Globals.PreviewTileSize, Layers, Color.LimeGreen, null, false);
                         mockInfantry.InfantryGroup = null;
                     }
                 }
@@ -876,7 +876,7 @@ namespace MobiusEditor.Tools
             this.HandlePaintOutlines(graphics, previewMap, visibleCells, Globals.MapTileSize, Globals.MapTileScale, this.Layers);
             if ((Layers & (MapLayerFlag.Infantry | MapLayerFlag.TechnoTriggers)) == (MapLayerFlag.Infantry | MapLayerFlag.TechnoTriggers))
             {
-                MapRenderer.RenderAllTechnoTriggers(graphics, previewMap, visibleCells, Globals.MapTileSize, Layers);
+                MapRenderer.RenderAllTechnoTriggers(graphics, plugin.GameInfo, previewMap, visibleCells, Globals.MapTileSize, Layers);
             }
         }
 

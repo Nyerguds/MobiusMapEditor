@@ -118,7 +118,7 @@ namespace MobiusEditor.Model
                 string actualSprite = this.ClassicGraphicsSource ?? this.Name;
                 // Use special override that 100% makes sure previously-cached versions are cleared, so previous accidental fetches do not corrupt
                 this.GraphicsSource = actualSprite + " (override for infantry "+ this.Name + ")";
-                tsmc.GetTeamColorTileData(this.GraphicsSource, 0, null, out _, true, false, actualSprite, this.ClassicGraphicsRemap, true);
+                tsmc.GetTeamColorTileData(this.GraphicsSource, 0, null, out _, true, false, true, actualSprite, this.ClassicGraphicsRemap, true);
             }
             Infantry mockInfantry = new Infantry(null)
             {

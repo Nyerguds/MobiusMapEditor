@@ -542,7 +542,7 @@ namespace MobiusEditor.Tools
                 MapRenderer.RenderWaypoint(plugin.GameInfo, true, Globals.MapTileSize, map.FlagColors.ToArray(), selected, 1.0f, 0).Item2(graphics);
             }
             // Render those here so they are put over the opaque redraw of the current waypoint.
-            MapRenderer.RenderAllTechnoTriggers(graphics, plugin.Map, visibleCells, Globals.MapTileSize, Layers);
+            MapRenderer.RenderAllTechnoTriggers(graphics, plugin.GameInfo, plugin.Map, visibleCells, Globals.MapTileSize, Layers);
 
             MapRenderer.RenderAllBoundsFromCell(graphics, boundRenderCells, Globals.MapTileSize,
                 map.Waypoints.Where(wp => wp != selected && wp.Cell.HasValue).Select(wp => wp.Cell.Value), map.Metrics, Color.Orange);
