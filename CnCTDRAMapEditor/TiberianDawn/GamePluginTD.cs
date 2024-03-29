@@ -1770,16 +1770,21 @@ namespace MobiusEditor.TiberianDawn
                             continue;
                         }
                         Point location = new Point((coord >> 8) & 0x7F, (coord >> 24) & 0x7F);
+                        bool canPlace = Map.Metrics.GetCell(location, out int cell);
                         if (Map.Buildings.OfType<Building>().Where(x => x.Location == location && x.Occupier.Type.ID == buildingType.ID).FirstOrDefault().Occupier is Building building)
                         {
                             if (building.BasePriority == -1)
                             {
                                 building.BasePriority = curPriorityVal;
                             }
+                            else
+                            {
+                                errors.Add(string.Format("Base rebuild entry '{0}' is a duplicate entry for structure '{0}' on cell '{1}'; skipping.", buildingType.Name, cell));
+                            }
                         }
                         else
                         {
-                            if (!Map.Metrics.GetCell(location, out int cell))
+                            if (!canPlace)
                             {
                                 errors.Add(string.Format("Base rebuild entry '{0}', structure '{1}' cannot be placed at cell '{2}'; skipping.", key, buildingType.Name, cell));
                             }

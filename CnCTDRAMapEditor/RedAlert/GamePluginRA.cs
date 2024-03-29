@@ -2213,8 +2213,13 @@ namespace MobiusEditor.RedAlert
                     Map.Metrics.GetLocation(cell, out Point location);
                     if (Map.Buildings.OfType<Building>().Where(x => x.Location == location && x.Occupier.Type.ID == buildingType.ID).FirstOrDefault().Occupier is Building building)
                     {
-                        if (building.BasePriority == -1) {
+                        if (building.BasePriority == -1)
+                        {
                             building.BasePriority = curPriorityVal;
+                        }
+                        else
+                        {
+                            errors.Add(string.Format("Duplicate base rebuild entry for structure '{0}' on cell '{1}'; skipping.", buildingType.Name, cell));
                         }
                     }
                     else
