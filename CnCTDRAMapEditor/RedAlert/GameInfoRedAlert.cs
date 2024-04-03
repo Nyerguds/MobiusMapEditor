@@ -40,6 +40,7 @@ namespace MobiusEditor.RedAlert
         public override int MaxTeams => Constants.MaxTeams;
         public override int HitPointsGreenMinimum => 128;
         public override int HitPointsYellowMinimum => 64;
+        public override OverlayTypeFlag OverlayIconType => OverlayTypeFlag.Crate;
         public override IGamePlugin CreatePlugin(Boolean mapImage, Boolean megaMap) => new GamePluginRA(mapImage);
 
         public override void InitClassicFiles(MixfileManager mfm, List<string> loadErrors, List<string> fileLoadErrors, bool forRemaster)

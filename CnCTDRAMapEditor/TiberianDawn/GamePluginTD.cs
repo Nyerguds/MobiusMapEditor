@@ -1958,6 +1958,11 @@ namespace MobiusEditor.TiberianDawn
                         }
                         Map.Overlay[cell] = new Overlay { Type = overlayType, Icon = 0 };
                     }
+                    else if (OverlayTypes.Squishy.Equals(kvp.Value))
+                    {
+                        errors.Add(string.Format("Overlay '{0}' is disabled in the editor. Check the setting DisableSquishMark in the .config file.", OverlayTypes.Squishy.Name));
+                        modified = true;
+                    }
                     else
                     {
                         errors.Add(string.Format("Overlay '{0}' references unknown overlay.", kvp.Value));

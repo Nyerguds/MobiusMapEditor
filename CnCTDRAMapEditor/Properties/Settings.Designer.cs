@@ -386,6 +386,15 @@ namespace MobiusEditor.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool DisableSquishMark {
+            get {
+                return ((bool)(this["DisableSquishMark"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool FilterTheaterObjects {
             get {
                 return ((bool)(this["FilterTheaterObjects"]));
@@ -413,9 +422,9 @@ namespace MobiusEditor.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool DontAllowWallsAsBuildings {
+        public bool OverlayWallsOnly {
             get {
-                return ((bool)(this["DontAllowWallsAsBuildings"]));
+                return ((bool)(this["OverlayWallsOnly"]));
             }
         }
         

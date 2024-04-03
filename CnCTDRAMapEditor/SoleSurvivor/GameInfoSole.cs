@@ -13,21 +13,21 @@ namespace MobiusEditor.SoleSurvivor
     public class GameInfoSole : GameInfo
     {
         public override GameType GameType => GameType.SoleSurvivor;
-        public override String Name => "Sole Survivor";
+        public override string Name => "Sole Survivor";
         public override string DefaultSaveDirectory => Path.Combine(Globals.RootSaveDirectory, "Tiberian_Dawn");
         public override string OpenFilter => Constants.FileFilter;
         public override string SaveFilter => Constants.FileFilter;
         public override string DefaultExtension => ".ini";
         public override string ModFolder => Path.Combine(Globals.ModDirectory, "Tiberian_Dawn");
-        public override String ModIdentifier => "TD";
-        public override String ModsToLoad => Properties.Settings.Default.ModsToLoadTD;
-        public override String ModsToLoadSetting => "ModsToLoadTD";
+        public override string ModIdentifier => "TD";
+        public override string ModsToLoad => Properties.Settings.Default.ModsToLoadTD;
+        public override string ModsToLoadSetting => "ModsToLoadTD";
         public override string WorkshopTypeId => null;
-        public override String ClassicFolder => Properties.Settings.Default.ClassicPathSS;
+        public override string ClassicFolder => Properties.Settings.Default.ClassicPathSS;
         public override string ClassicFolderRemaster => "CNCDATA\\TIBERIAN_DAWN\\CD1";
-        public override String ClassicFolderDefault => "Classic\\SS\\";
-        public override String ClassicFolderSetting => "ClassicPathSS";
-        public override String ClassicStringsFile => "conquer.eng";
+        public override string ClassicFolderDefault => "Classic\\SS\\";
+        public override string ClassicFolderSetting => "ClassicPathSS";
+        public override string ClassicStringsFile => "conquer.eng";
         public override string ClassicFontTriggers => "scorefnt.fnt";
         public override TheaterType[] AllTheaters => TheaterTypes.GetAllTypes().ToArray();
         public override TheaterType[] AvailableTheaters => TheaterTypes.GetTypes().ToArray();
@@ -40,7 +40,8 @@ namespace MobiusEditor.SoleSurvivor
         public override int MaxTeams => Constants.MaxTeams;
         public override int HitPointsGreenMinimum => 127;
         public override int HitPointsYellowMinimum => 63;
-        public override IGamePlugin CreatePlugin(Boolean mapImage, Boolean megaMap) => new GamePluginSS(mapImage, megaMap);
+        public override OverlayTypeFlag OverlayIconType => OverlayTypeFlag.FlagPlace;
+        public override IGamePlugin CreatePlugin(bool mapImage, bool megaMap) => new GamePluginSS(mapImage, megaMap);
 
         public override void InitClassicFiles(MixfileManager mfm, List<string> loadErrors, List<string> fileLoadErrors, bool forRemaster)
         {

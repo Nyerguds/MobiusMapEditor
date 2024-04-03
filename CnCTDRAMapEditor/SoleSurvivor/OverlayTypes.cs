@@ -14,6 +14,7 @@
 using MobiusEditor.Model;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Reflection;
 
@@ -40,10 +41,8 @@ namespace MobiusEditor.SoleSurvivor
         public static readonly OverlayType Tiberium11 /**/ = new OverlayType(16, "ti11", "TEXT_OVERLAY_TIBERIUM", OverlayTypeFlag.TiberiumOrGold, 11);
         public static readonly OverlayType Tiberium12 /**/ = new OverlayType(17, "ti12", "TEXT_OVERLAY_TIBERIUM", OverlayTypeFlag.TiberiumOrGold, 11);
         public static readonly OverlayType Teleport   /**/ = new OverlayType(18, "road", "TEXT_OVERLAY_TELEPORTER", 1);
-        // Unusable in SS from ini since it has the same name as ROAD. Added here and forced to frame 1 because it is used in football fields.
-        public static readonly OverlayType Road       /**/ = new OverlayType(19, "road", "TEXT_OVERLAY_CONCRETE_ROAD", 1);
-        // Not available to place down sadly: even the ini read for it in the game code only succeeds if 'IsGross' is enabled.
-        //public static readonly OverlayType Squishy = new OverlayType(20, "SQUISH", OverlayTypeFlag.Decoration);
+        // Not available to place down sadly: even the ini read for it in the game code only succeeds if 'IsGross' is enabled, and the spawn code for IsGross is broken.
+        public static readonly OverlayType Squishy    /**/ = new OverlayType(19, "squish", "TEXT_OVERLAY_SQUISH_MARK", OverlayTypeFlag.Pavement | OverlayTypeFlag.Gross);
         public static readonly OverlayType V12        /**/ = new OverlayType(21, "v12", "TEXT_STRUCTURE_TITLE_CIV12B", OverlayTypeFlag.Solid);
         public static readonly OverlayType V13        /**/ = new OverlayType(22, "v13", "TEXT_STRUCTURE_TITLE_CIV12", OverlayTypeFlag.Solid);
         public static readonly OverlayType V14        /**/ = new OverlayType(23, "v14", "TEXT_STRUCTURE_TITLE_CIV13", OverlayTypeFlag.Solid);
@@ -51,22 +50,27 @@ namespace MobiusEditor.SoleSurvivor
         public static readonly OverlayType V16        /**/ = new OverlayType(25, "v16", "TEXT_STRUCTURE_TITLE_CIV15", OverlayTypeFlag.Solid);
         public static readonly OverlayType V17        /**/ = new OverlayType(26, "v17", "TEXT_STRUCTURE_TITLE_CIV16", OverlayTypeFlag.Solid);
         public static readonly OverlayType V18        /**/ = new OverlayType(27, "v18", "TEXT_STRUCTURE_TITLE_CIV17", OverlayTypeFlag.Solid);
-        public static readonly OverlayType FlagSpot   /**/ = new OverlayType(28, "fpls", "TEXT_CF_ONHOVER_SPOT", OverlayTypeFlag.Flag | OverlayTypeFlag.Pavement);
+        public static readonly OverlayType FlagSpot   /**/ = new OverlayType(28, "fpls", "TEXT_CF_ONHOVER_SPOT", OverlayTypeFlag.FlagPlace | OverlayTypeFlag.Pavement);
         // Not placeable in SS.
-        //public static readonly OverlayType WoodCrate = new OverlayType(29, "wcrate", "Wooden Crate", OverlayTypeFlag.Crate);
-        //public static readonly OverlayType SteelCrate = new OverlayType(30, "scrate", "Steel Crate", OverlayTypeFlag.Crate);
-        //public static readonly OverlayType ArmageddonCrate = new OverlayType(31, "acrate", "Armageddon Crate", null, OverlayTypeFlag.Crate, "scrate", -1, Color.Red);
-        //public static readonly OverlayType HealCrate = new OverlayType(32, "hcrate", "Heal Crate", null, OverlayTypeFlag.Crate, "scrate", -1, Color.Green);
+        //public static readonly OverlayType WoodCrate  /**/ = new OverlayType(29, "wcrate", "Wooden Crate", OverlayTypeFlag.Crate);
+        //public static readonly OverlayType SteelCrate /**/ = new OverlayType(30, "scrate", "Steel Crate", OverlayTypeFlag.Crate);
+        //public static readonly OverlayType ArmagCrate /**/ = new OverlayType(31, "acrate", "Armageddon Crate", OverlayTypeFlag.Crate, "scrate", -1, Color.Red);
+        //public static readonly OverlayType HealCrate  /**/ = new OverlayType(32, "hcrate", "Heal Crate", OverlayTypeFlag.Crate, "scrate", -1, Color.Green);
+        // Unusable from ini in SS since it has the same ini name as the teleport. Added here and forced to frame 1 because it is used in football fields.
+        public static readonly OverlayType Road       /**/ = new OverlayType(33, "road", "TEXT_OVERLAY_CONCRETE_ROAD", 1);
 
         private static OverlayType[] Types;
 
         static OverlayTypes()
         {
             // ROAD is filtered out of this, but is available to the program for painting the football fields.
-            Types =
+            List<OverlayType> types =
                 (from field in typeof(OverlayTypes).GetFields(BindingFlags.Static | BindingFlags.Public)
                  where field.IsInitOnly && typeof(OverlayType).IsAssignableFrom(field.FieldType)
-                 select field.GetValue(null) as OverlayType).Where(t => t.ID != 19).OrderBy(t => t.ID).ToArray();
+                 select field.GetValue(null) as OverlayType).Where(t => t.ID != 19).OrderBy(t => t.ID).ToList();
+            // Unusable from ini in SS since it has the same ini name as the teleport.
+            types.Remove(Road);
+            Types = types.ToArray();
         }
 
         public static IEnumerable<OverlayType> GetTypes()

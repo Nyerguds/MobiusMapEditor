@@ -2857,31 +2857,13 @@ namespace MobiusEditor
             {
                 Globals.TheTilesetManager.GetTileData(template.Name, template.GetIconIndex(template.GetFirstValidIcon()), out templateTile);
             }
-            // For the following, check if the thumbnail was initialised.
-            SmudgeType smudge = plugin.Map.SmudgeTypes.Where(sm => !sm.IsAutoBib && sm.Icons == 1 && sm.Size.Width == 1 && sm.Size.Height == 1 && sm.Thumbnail != null
+            SmudgeType smudge = plugin.Map.SmudgeTypes.Where(sm => !sm.IsAutoBib && sm.Size.Width == 1 && sm.Size.Height == 1 && sm.Thumbnail != null
                 && (!Globals.FilterTheaterObjects || sm.ExistsInTheater))
-                .OrderBy(sm => sm.ID).FirstOrDefault();
-            if (smudge == null)
-            {
-                smudge = plugin.Map.SmudgeTypes.Where(sm => !sm.IsAutoBib && sm.Size.Width == 1 && sm.Size.Height == 1 && sm.Thumbnail != null
-                    && (!Globals.FilterTheaterObjects || sm.ExistsInTheater))
-                    .OrderBy(sm => sm.ID).FirstOrDefault();
-                if (smudge == null)
-                {
-                    smudge = plugin.Map.SmudgeTypes.Where(sm => !sm.IsAutoBib && sm.Thumbnail != null
-                        && (!Globals.FilterTheaterObjects || sm.ExistsInTheater))
-                        .OrderByDescending(sm => sm.ID).FirstOrDefault();
-                }
-            }
-            OverlayType overlay = plugin.Map.OverlayTypes.Where(ov => (ov.Flag & OverlayTypeFlag.Crate) != OverlayTypeFlag.None && ov.Thumbnail != null
+                .OrderBy(sm => sm.Icons).ThenBy(sm => sm.ID).FirstOrDefault();
+            
+            OverlayType overlay = plugin.Map.OverlayTypes.Where(ov => (ov.Flag & plugin.GameInfo.OverlayIconType) != OverlayTypeFlag.None && ov.Thumbnail != null
                 && (!Globals.FilterTheaterObjects || ov.ExistsInTheater))
                 .OrderBy(ov => ov.ID).FirstOrDefault();
-            if (overlay == null)
-            {
-                overlay = plugin.Map.OverlayTypes.Where(ov => (ov.Flag & OverlayTypeFlag.Flag) == OverlayTypeFlag.Flag && ov.Thumbnail != null
-                    && (!Globals.FilterTheaterObjects || ov.ExistsInTheater))
-                    .OrderBy(ov => ov.ID).FirstOrDefault();
-            }
             TerrainType terrain = plugin.Map.TerrainTypes.Where(tr => tr.Thumbnail != null &&
                 (!Globals.FilterTheaterObjects || tr.Theaters == null || tr.Theaters.Contains(th)))
                 .OrderBy(tr => tr.ID).FirstOrDefault();

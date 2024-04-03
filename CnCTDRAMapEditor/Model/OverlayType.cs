@@ -35,7 +35,7 @@ namespace MobiusEditor.Model
         /// <summary>Is a steel crate. This affects the color of the outline it gets.</summary>
         SteelCrate      /**/ = 1 << 4,
         /// <summary>Is the flag placement indicator.</summary>
-        Flag            /**/ = 1 << 5,
+        FlagPlace       /**/ = 1 << 5,
         /// <summary>Is a pavement type.</summary>
         Pavement        /**/ = 1 << 6,
         /// <summary>Needs to use the special concrete pavement connection logic.</summary>
@@ -44,6 +44,8 @@ namespace MobiusEditor.Model
         Solid           /**/ = 1 << 8,
         /// <summary>Is a special type saved as duplicate lines of a different type.</summary>
         RoadSpecial     /**/ = 1 << 9,
+        /// <summary>Is something a bit gruesome.</summary>
+        Gross           /**/ = 1 << 10,
         /// <summary>Is a crate.</summary>
         Crate           /**/ = WoodCrate | SteelCrate,
     }
@@ -68,7 +70,8 @@ namespace MobiusEditor.Model
         public bool IsSolid => (this.Flag & OverlayTypeFlag.Solid) != OverlayTypeFlag.None;
         public bool IsConcrete => (this.Flag & OverlayTypeFlag.Concrete) != OverlayTypeFlag.None;
         public bool IsCrate => (this.Flag & OverlayTypeFlag.Crate) != OverlayTypeFlag.None;
-        public bool IsFlag => (this.Flag & OverlayTypeFlag.Flag) != OverlayTypeFlag.None;
+        public bool IsFlag => (this.Flag & OverlayTypeFlag.FlagPlace) != OverlayTypeFlag.None;
+        public bool IsGross => (this.Flag & OverlayTypeFlag.Gross) != OverlayTypeFlag.None;
         public Color Tint { get; set; } = Color.White;
         private string nameId;
 

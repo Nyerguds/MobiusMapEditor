@@ -53,6 +53,8 @@ namespace MobiusEditor.Model
         public abstract int MaxTeams { get; }
         public abstract int HitPointsGreenMinimum { get; }
         public abstract int HitPointsYellowMinimum { get; }
+        /// <summary>Preferred type of overlay to use as UI icon</summary>
+        public abstract OverlayTypeFlag OverlayIconType { get; }
         #endregion
 
         #region functions

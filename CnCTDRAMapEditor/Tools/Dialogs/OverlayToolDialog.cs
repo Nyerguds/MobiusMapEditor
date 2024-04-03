@@ -20,8 +20,7 @@ namespace MobiusEditor.Tools.Dialogs
             IGamePlugin plugin, UndoRedoList<UndoRedoEventArgs, ToolType> undoRedoList)
         {
             GenericTypeListBox.Types = plugin.Map.OverlayTypes.
-                Where(t => t.IsOverlay && (!Globals.FilterTheaterObjects || t.ExistsInTheater)).
-                OrderBy(t => t.ID);
+                Where(t => t.IsOverlay && (!Globals.FilterTheaterObjects || t.ExistsInTheater));
 
             Tool = new OverlaysTool(mapPanel, activeLayers, toolStatusLabel,
                 GenericTypeListBox, GenericTypeMapPanel, plugin, undoRedoList);

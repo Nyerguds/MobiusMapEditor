@@ -122,6 +122,9 @@
     <Setting Name="ConvertCraters" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>
+    <Setting Name="DisableSquishMark" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
     <Setting Name="FilterTheaterObjects" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>
@@ -131,7 +134,7 @@
     <Setting Name="ApplyHarvestBug" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="DontAllowWallsAsBuildings" Type="System.Boolean" Scope="Application">
+    <Setting Name="OverlayWallsOnly" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="NoOwnedObjectsInSole" Type="System.Boolean" Scope="Application">

@@ -46,7 +46,7 @@ namespace MobiusEditor
             MinimumClampSize = Properties.Settings.Default.MinimumClampSize;
             // Behavior tweaks
             ReportMissionDetection = Properties.Settings.Default.ReportMissionDetection;
-            AllowWallBuildings = !Properties.Settings.Default.DontAllowWallsAsBuildings;
+            AllowWallBuildings = !Properties.Settings.Default.OverlayWallsOnly;
             EnforceObjectMaximums = Properties.Settings.Default.EnforceObjectMaximums;
             Ignore106Scripting = Properties.Settings.Default.Ignore106Scripting;
             ClassicProducesNoMetaFiles = Properties.Settings.Default.ClassicProducesNoMetaFiles;
@@ -54,6 +54,7 @@ namespace MobiusEditor
             BlockingBibs = Properties.Settings.Default.BlockingBibs;
             DisableAirUnits = Properties.Settings.Default.DisableAirUnits;
             ConvertCraters = Properties.Settings.Default.ConvertCraters;
+            DisableSquishMark = Properties.Settings.Default.DisableSquishMark;
             FilterTheaterObjects = Properties.Settings.Default.FilterTheaterObjects;
             WriteClassicBriefing = Properties.Settings.Default.WriteClassicBriefing;
             ApplyHarvestBug = Properties.Settings.Default.ApplyHarvestBug;
@@ -142,6 +143,7 @@ namespace MobiusEditor
         public static bool NoOwnedObjectsInSole { get; private set; }
         public static bool FixClassicEinstein { get; private set; }
         public static bool FixConcretePavement { get; private set; }
+        public static bool DisableSquishMark { get; private set; }
         public static bool AdjustSoleTeleports { get; private set; }
         public static bool RestrictSoleLimits { get; private set; }
 

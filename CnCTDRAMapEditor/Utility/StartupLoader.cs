@@ -497,6 +497,7 @@ namespace MobiusEditor.Utility
             gtm["TEXT_OVERLAY_CONCRETE_PAVEMENT"] = "Concrete";
             gtm["TEXT_OVERLAY_ROAD"] = "Road";
             gtm["TEXT_OVERLAY_ROAD_FULL"] = "Road (full)";
+            gtm["TEXT_OVERLAY_SQUISH_MARK"] = "Squish mark";
             gtm["TEXT_OVERLAY_TIBERIUM"] = "Tiberium";
             // Sole Survivor Teleporter
             gtm["TEXT_OVERLAY_TELEPORTER"] = "Teleporter";

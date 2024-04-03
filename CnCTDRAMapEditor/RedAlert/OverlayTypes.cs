@@ -41,7 +41,7 @@ namespace MobiusEditor.RedAlert
         public static readonly OverlayType V16 = new OverlayType(17, "v16", "TEXT_STRUCTURE_TITLE_CIV15", OverlayTypeFlag.Solid);
         public static readonly OverlayType V17 = new OverlayType(18, "v17", "TEXT_STRUCTURE_TITLE_CIV16", OverlayTypeFlag.Solid);
         public static readonly OverlayType V18 = new OverlayType(19, "v18", "TEXT_STRUCTURE_TITLE_CIV17", OverlayTypeFlag.Solid);
-        public static readonly OverlayType FlagSpot = new OverlayType(20, "fpls", "TEXT_CF_ONHOVER_SPOT", OverlayTypeFlag.Flag | OverlayTypeFlag.Pavement);
+        public static readonly OverlayType FlagSpot = new OverlayType(20, "fpls", "TEXT_CF_ONHOVER_SPOT", OverlayTypeFlag.FlagPlace | OverlayTypeFlag.Pavement);
         public static readonly OverlayType WoodCrate = new OverlayType(21, "wcrate", "TEXT_OVERLAY_WCRATE", OverlayTypeFlag.WoodCrate);
         public static readonly OverlayType SteelCrate = new OverlayType(22, "scrate", "TEXT_OVERLAY_SCRATE", OverlayTypeFlag.SteelCrate);
         public static readonly OverlayType Fence = new OverlayType(23, "fenc", "TEXT_STRUCTURE_RA_FENC", OverlayTypeFlag.Wall);

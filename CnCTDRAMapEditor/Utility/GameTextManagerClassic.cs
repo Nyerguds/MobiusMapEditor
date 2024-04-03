@@ -101,7 +101,7 @@ namespace MobiusEditor.Utility
             { "TEXT_OVERLAY_TIBERIUM", 66 }, // Tiberium
             //{ "Tiberium On", 67 }, // Tiberium On
             //{ "Tiberium Off", 68 }, // Tiberium Off
-            //{ "Squish mark", 69 }, // Squish mark
+            { "TEXT_OVERLAY_SQUISH_MARK", 69 }, // Squish mark
             { "TEXT_SMUDGE_CRATER", 70 }, // Crater
             { "TEXT_SMUDGE_SCORCH", 71 }, // Scorch Mark
             //{ "BRIGHTNESS:", 72 }, // BRIGHTNESS:
@@ -825,7 +825,7 @@ namespace MobiusEditor.Utility
             //{ "Abort Mission", 45 }, // Abort Mission
             //{ "Exit Game", 46 }, // Exit Game
             //{ "Options", 47 }, // Options
-            //{ "Squish mark", 48 }, // Squish mark
+            { "TEXT_OVERLAY_SQUISH_MARK", 48 }, // Squish mark
             { "TEXT_SMUDGE_CRATER", 49 }, // Crater
             { "TEXT_SMUDGE_SCORCH", 50 }, // Scorch Mark
             //{ "BRIGHTNESS:", 51 }, // BRIGHTNESS:
