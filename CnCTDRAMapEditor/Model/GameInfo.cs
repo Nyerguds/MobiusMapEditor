@@ -90,6 +90,9 @@ namespace MobiusEditor.Model
         /// <param name="textColor">colour for the font text.</param>
         /// <returns>A remap object with a unique name, for the given color index</returns>
         public abstract TeamRemap GetClassicFontTriggerRemap(TilesetManagerClassic tsmc, Color textColor);
+        /// <summary>Get all possible game files that could be present inside the game's mix archives.</summary>
+        /// <returns>All filenames used by the game.</returns>
+        public abstract IEnumerable<string> GetGameFiles();
 
         #endregion
 
@@ -143,6 +146,18 @@ namespace MobiusEditor.Model
             // Extremely simple: all indices except 0 remap to the given colour.
             byte[] remapIndices = 0.Yield().Concat(Enumerable.Repeat(color, 15)).Select(b => (byte)b).ToArray();
             return new TeamRemap(fontName + "_" + textColor.ToArgb().ToString("X4"), 0, 0, 0, remapIndices);
+        }
+
+        protected string GetMissionName(char side, int number, string suffix)
+        {
+            return GetMissionName(side, number, suffix, '\0');
+        }
+        
+        protected string GetMissionName(char side, int number, string suffix, char aftermathLetter)
+        {
+            const string formatNormal = "SC{0}{1:00}{2}";
+            const string formatAm = "SC{0}{3}{2}";
+            return String.Format(aftermathLetter == '\0' ? formatNormal : formatAm, side, number, suffix, aftermathLetter);
         }
         #endregion
 

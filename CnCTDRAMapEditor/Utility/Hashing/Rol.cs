@@ -16,6 +16,7 @@ using System.Text;
 
 namespace MobiusEditor.Utility.Hashing
 {
+    /// <summary>ROL hashing algorithm (TD/RA)</summary>
     public class HashRol1 : Rol
     {
         public override UInt32 GetNameIdCorrectCase(String name)

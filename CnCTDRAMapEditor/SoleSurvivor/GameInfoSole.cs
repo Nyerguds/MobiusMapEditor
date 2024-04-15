@@ -120,5 +120,18 @@ namespace MobiusEditor.SoleSurvivor
         {
             return GetClassicFontRemapSimple(ClassicFontTriggers, tsmc, textColor);
         }
+
+        public override IEnumerable<string> GetGameFiles()
+        {
+            const string iniExt = ".ini";
+            const string binExt = ".bin";
+            for (int i = 0; i < 1000; ++i)
+            {
+                string missionName = GetMissionName('s', i, "ea");
+                yield return missionName + iniExt;
+                yield return missionName + binExt;
+            }
+
+        }
     }
 }

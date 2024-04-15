@@ -174,6 +174,7 @@ namespace MobiusEditor.Utility
                 tileData[name] = shapeFile;
                 // System to fix RA's remapped infantry. Since everything is cached, this only works if the very
                 // first call to fetch these graphics is guaranteed to pass along the graphics source and remap info.
+                // To ensure correct behaviour, "name" should be given a unique string that doesn't match any real graphics.
                 if (remapTable != null && remapTable.Length >= 0x100)
                 {
                     foreach (int key in shapeFile.Keys)
@@ -370,7 +371,7 @@ namespace MobiusEditor.Utility
 #endif
                 }
             }
-            // Only try to read font file if it's a .fnt file.
+            // Only try to read font file if it's either explicitly requested as .fnt file, or found as .fnt file.
             if (shpData == null && isFntExt)
             {
                 try

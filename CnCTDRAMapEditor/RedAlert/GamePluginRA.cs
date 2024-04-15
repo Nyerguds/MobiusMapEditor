@@ -25,7 +25,6 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
-using System.Windows.Forms.Design;
 using TGASharpLib;
 
 namespace MobiusEditor.RedAlert
@@ -40,6 +39,7 @@ namespace MobiusEditor.RedAlert
 
         private const string movieEmpty = "<none>";
         private const string RemarkOld = " (Classic only)";
+        private const string RemarkNew = " (Remaster only)";
 
         private static readonly IEnumerable<string> movieTypesRemarksOld = new string[]
         {
@@ -48,8 +48,6 @@ namespace MobiusEditor.RedAlert
             "SIZZLE",   //MISSING
             "SIZZLE2",  //MISSING
         };
-
-        private const string RemarkNew = " (Remaster only)";
 
         private static readonly IEnumerable<string> movieTypesRemarksNew = new string[]
         {
@@ -252,6 +250,9 @@ namespace MobiusEditor.RedAlert
             "TRACTION",
             "WASTELND"
         };
+
+        public static IEnumerable<string> Movies => movieTypesRa;
+        public static IEnumerable<string> Themes => themeTypes;
 
         private static readonly IEnumerable<ITechnoType> fullTechnoTypes;
 
@@ -509,11 +510,17 @@ namespace MobiusEditor.RedAlert
             IEnumerable<Waypoint> generalWaypoints = Enumerable.Range(Constants.MultiStartPoints, 98 - Constants.MultiStartPoints).Select(i => new Waypoint(i.ToString()));
             Waypoint[] specialWaypoints = new Waypoint[] { new Waypoint("Home", WaypointFlag.Home), new Waypoint("Reinf.", WaypointFlag.Reinforce), new Waypoint("Special", WaypointFlag.Special) };
             IEnumerable<Waypoint> waypoints = playerWaypoints.Concat(generalWaypoints).Concat(specialWaypoints);
+            // Do not load these from the .meg archive; RA movies list is 100% fixed.
             List<string> movies = new List<string>(movieTypesRa);
             for (int i = 0; i < movies.Count; ++i)
             {
-                string vidName = GeneralUtils.AddRemarks(movies[i], movieEmpty, true, movieTypesRemarksOld, RemarkOld);
-                movies[i] = GeneralUtils.AddRemarks(vidName, movieEmpty, true, movieTypesRemarksNew, RemarkNew);
+                string vidName = GeneralUtils.AddRemarks(movies[i], movieEmpty, true, movieTypesRemarksOld, RemarkOld, out bool changed);
+                // Only add one remark.
+                if (!changed)
+                {
+                    vidName = GeneralUtils.AddRemarks(movies[i], movieEmpty, true, movieTypesRemarksNew, RemarkNew);
+                }
+                movies[i] = vidName;
             }
             movies.Insert(0, movieEmpty);
             movieTypes = movies.ToArray();
@@ -551,8 +558,7 @@ namespace MobiusEditor.RedAlert
             string[] terrainActionTypes = { };
 
             // Remap classic Einstein DOS graphics to no longer look like Mobius.
-            InfantryType einstein = InfantryTypes.Einstein;
-            einstein.ClassicGraphicsRemap = Globals.FixClassicEinstein ? InfantryClassicRemap.RemapEinstein : null;
+            InfantryTypes.Einstein.ClassicGraphicsRemap = Globals.FixClassicEinstein ? InfantryClassicRemap.RemapEinstein : null;
 
             Map = new Map(basicSection, null, Constants.MaxSize, typeof(House), houseTypes, null,
                 TheaterTypes.GetTypes(), TemplateTypes.GetTypes(),

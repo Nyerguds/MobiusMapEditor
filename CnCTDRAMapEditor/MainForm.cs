@@ -20,6 +20,7 @@ using MobiusEditor.Model;
 using MobiusEditor.Tools;
 using MobiusEditor.Tools.Dialogs;
 using MobiusEditor.Utility;
+using MobiusEditor.Utility.Hashing;
 using Steamworks;
 using System;
 using System.Collections.Generic;
@@ -44,6 +45,7 @@ namespace MobiusEditor
     {
 
         private Dictionary<string, Bitmap> theaterIcons = new Dictionary<string, Bitmap>();
+        private Dictionary<uint, string> generatedMixIds = null;
 
         private static readonly ToolType[] toolTypes;
 
@@ -511,7 +513,59 @@ namespace MobiusEditor
 
         private void OpenFileFromMix()
         {
-            // TODO make mix browsing ui
+            if (generatedMixIds == null)
+            {
+                HashRol1 hasher = new HashRol1();
+                generatedMixIds = new Dictionary<uint, string>();
+                foreach (GameInfo gic in GameTypeFactory.GetGameInfos())
+                {
+                    foreach (string filename in gic.GetGameFiles())
+                    {
+                        uint hash = hasher.GetNameIdCorrectCase(filename.ToUpperInvariant());
+                        if (!generatedMixIds.ContainsKey(hash))
+                            generatedMixIds.Add(hash, filename);
+                    }
+                }
+            }
+            string selectedFileName = null;
+            using (OpenFileDialog ofd = new OpenFileDialog())
+            {
+                ofd.AutoUpgradeEnabled = false;
+                ofd.RestoreDirectory = true;
+                ofd.Filter = "MIX archives (*.mix)|*.mix";
+                bool classicLogic = Globals.UseClassicFiles && Globals.ClassicNoRemasterLogic;
+                string lastFolder = mru.Files.Select(f => f.DirectoryName).Where(d => Directory.Exists(d)).FirstOrDefault();
+                if (plugin != null)
+                {
+                    string openFolder = Path.GetDirectoryName(filename);
+                    string defFolder = plugin.GameInfo.DefaultSaveDirectory;
+                    string constFolder = Directory.Exists(defFolder) ? defFolder : Environment.GetFolderPath(Environment.SpecialFolder.Personal);
+                    ofd.InitialDirectory = openFolder ?? lastFolder ?? (classicLogic ? Program.ApplicationPath : constFolder);
+                }
+                else
+                {
+                    ofd.InitialDirectory = lastFolder ?? (classicLogic ? Program.ApplicationPath : Globals.RootSaveDirectory);
+                }
+                if (ofd.ShowDialog() == DialogResult.OK)
+                {
+                    selectedFileName = ofd.FileName;
+                }
+            }
+            if (selectedFileName == null)
+            {
+                return;
+            }
+            Mixfile mixfile;
+            try
+            {
+                mixfile = new Mixfile(selectedFileName);
+            }
+            catch
+            {
+                return;
+            }
+            List<MixFileInfo> mixFileInfo = MixContentAnalysis.AnalyseFiles(mixfile, generatedMixIds);
+            // TODO open mix browsing ui
         }
 
         private void FileSaveMenuItem_Click(object sender, EventArgs e)

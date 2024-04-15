@@ -41,6 +41,8 @@ namespace MobiusEditor.TiberianDawn
         protected static readonly IEnumerable<ITechnoType> fullTechnoTypes;
 
         protected const string movieEmpty = "x";
+        private const string RemarkOld = " (Classic only)";
+        private const string RemarkNew = " (Remaster only)";
         protected readonly IEnumerable<string> movieTypes;
 
         protected static readonly IEnumerable<string> movieTypesTD = new string[]
@@ -159,15 +161,15 @@ namespace MobiusEditor.TiberianDawn
             "VISOR",
         };
 
-        protected static readonly IEnumerable<string> movieTypesAdditional = new string[]
+        protected static readonly IEnumerable<string> movieTypesRemarksOld = new string[]
         {
-            "BODYBAGS (Classic only)",
-            "REFINT (Classic only)",
-            "REFINERY (Classic only)",
-            "SIZZLE (Classic only)",
-            "SIZZLE2 (Classic only)",
-            "TRAILER (Classic only)",
-            "TRTKIL_D (Classic only)",
+            "BODYBAGS",
+            "REFINT",
+            "REFINERY",
+            "SIZZLE",
+            "SIZZLE2",
+            "TRAILER",
+            "TRTKIL_D",
         };
 
         protected const string themeEmpty = "No Theme";
@@ -216,6 +218,9 @@ namespace MobiusEditor.TiberianDawn
             "NOD_MAP1",
             "OUTTAKES"
         };
+
+        public static IEnumerable<string> Movies => movieTypesTD;
+        public static IEnumerable<string> Themes => themeTypes;
 
         public virtual GameInfo GameInfo => gameTypeInfo;
         public virtual HouseType ActiveHouse { get; set; }
@@ -398,20 +403,20 @@ namespace MobiusEditor.TiberianDawn
                     }
                 }
             }
-            // Preparation for decoupling from remaster files.
+            // In case this isn't the remaster, just add all known videos.
             if (movies.Count == 0)
             {
                 movies.UnionWith(movieTypesTD);
             }
-            foreach (string mov in movieTypesAdditional)
+            else
             {
-                string movName = GeneralUtils.TrimRemarks(mov, true, ';', '(');
-                if (movies.FirstOrDefault(m => m.Equals(movName, StringComparison.OrdinalIgnoreCase)) == null)
-                {
-                    movies.Add(mov);
-                }
+                movies.UnionWith(movieTypesRemarksOld);
             }
             List<string> finalMovies = movies.ToList();
+            for (int i = 0; i < finalMovies.Count; ++i)
+            {
+                finalMovies[i] = AddVideoRemarks(finalMovies[i]);
+            }
             finalMovies.Sort(new ExplorerComparer());
             finalMovies.Insert(0, movieEmpty);
             movieTypes = finalMovies.ToArray();
@@ -580,6 +585,18 @@ namespace MobiusEditor.TiberianDawn
                 this.Dirty = true;
             }
             return errors;
+        }
+        
+        private string AddVideoRemarks(string videoName)
+        {
+            if (movieEmpty.Equals(videoName))
+                return videoName;
+            String newName = GeneralUtils.AddRemarks(videoName, movieEmpty, true, movieTypesRemarksOld, RemarkOld, out bool changed);
+            if (!changed)
+            {
+                newName = GeneralUtils.AddRemarks(videoName, movieEmpty, true, movieTypesTD, RemarkNew, true);
+            }
+            return newName;
         }
 
         private void ParseIniContent(INI ini, Byte[] iniBytes, Boolean forSole)
@@ -790,17 +807,14 @@ namespace MobiusEditor.TiberianDawn
             INISection basicSection = INITools.ParseAndLeaveRemainder(ini, "Basic", Map.BasicSection, new MapContext(Map, false));
             if (basicSection != null)
             {
-                char[] cutfrom = { ';', '(' };
-                string[] toAddRem = movieTypesAdditional.Select(vid => GeneralUtils.TrimRemarks(vid, true, cutfrom)).ToArray();
-                const string remark = " (Classic only)";
-                basic.Intro = GeneralUtils.AddRemarks(basic.Intro, movieEmpty, true, toAddRem, remark);
-                basic.Brief = GeneralUtils.AddRemarks(basic.Brief, movieEmpty, true, toAddRem, remark);
-                basic.Action = GeneralUtils.AddRemarks(basic.Action, movieEmpty, true, toAddRem, remark);
-                basic.Win = GeneralUtils.AddRemarks(basic.Win, movieEmpty, true, toAddRem, remark);
-                basic.Win2 = GeneralUtils.AddRemarks(basic.Win2, movieEmpty, true, toAddRem, remark);
-                basic.Win3 = GeneralUtils.AddRemarks(basic.Win3, movieEmpty, true, toAddRem, remark);
-                basic.Win4 = GeneralUtils.AddRemarks(basic.Win4, movieEmpty, true, toAddRem, remark);
-                basic.Lose = GeneralUtils.AddRemarks(basic.Lose, movieEmpty, true, toAddRem, remark);
+                basic.Intro = AddVideoRemarks(basic.Intro);
+                basic.Brief = AddVideoRemarks(basic.Brief);
+                basic.Action = AddVideoRemarks(basic.Action);
+                basic.Win = AddVideoRemarks(basic.Win);
+                basic.Win2 = AddVideoRemarks(basic.Win2);
+                basic.Win3 = AddVideoRemarks(basic.Win3);
+                basic.Win4 = AddVideoRemarks(basic.Win4);
+                basic.Lose = AddVideoRemarks(basic.Lose);
             }
             Map.BasicSection.Player = Map.HouseTypes.Where(t => t.Equals(Map.BasicSection.Player)).FirstOrDefault()?.Name ?? Map.HouseTypes.First().Name;
             // Digest. Seems to exist in some console maps.

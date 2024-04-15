@@ -287,6 +287,12 @@
     <Compile Include="Dialogs\NewMapDialog.Designer.cs">
       <DependentUpon>NewMapDialog.cs</DependentUpon>
     </Compile>
+    <Compile Include="Dialogs\OpenFromMixDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialogs\OpenFromMixDialog.Designer.cs">
+      <DependentUpon>OpenFromMixDialog.cs</DependentUpon>
+    </Compile>
     <Compile Include="Dialogs\SteamDialog.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -629,6 +635,7 @@
     <Compile Include="Utility\Megafile.cs" />
     <Compile Include="Utility\MegafileBuilder.cs" />
     <Compile Include="Utility\MegafileManager.cs" />
+    <Compile Include="Utility\MixContentAnalysis.cs" />
     <Compile Include="Utility\Mixfile.cs" />
     <Compile Include="Utility\MixFileCrypto.cs" />
     <Compile Include="Utility\MixfileManager.cs" />
@@ -717,6 +724,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Dialogs\NewMapDialog.resx">
       <DependentUpon>NewMapDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\OpenFromMixDialog.resx">
+      <DependentUpon>OpenFromMixDialog.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Dialogs\SteamDialog.resx">
       <DependentUpon>SteamDialog.cs</DependentUpon>

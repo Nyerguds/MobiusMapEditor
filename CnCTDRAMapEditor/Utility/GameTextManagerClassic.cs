@@ -1392,7 +1392,7 @@ namespace MobiusEditor.Utility
             this.gameTextPaths = gameTextPaths;
         }
 
-        private List<byte[]> LoadFile(byte[] fileData)
+        public static List<byte[]> LoadFile(byte[] fileData)
         {
             if (fileData == null)
             {

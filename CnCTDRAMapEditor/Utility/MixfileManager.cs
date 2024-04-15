@@ -32,7 +32,7 @@ namespace MobiusEditor.Utility
             public bool IsTheater { get; set; }
             public bool CanUseNewFormat { get; set; }
 
-            public MixInfo(String name, bool isContainer, bool canBeEmbedded, bool isTheater, Boolean canUseNewFormat)
+            public MixInfo(string name, bool isContainer, bool canBeEmbedded, bool isTheater, bool canUseNewFormat)
             {
                 this.Name = name;
                 this.IsContainer = isContainer;
@@ -56,7 +56,7 @@ namespace MobiusEditor.Utility
 
         public TheaterType CurrentTheater { get; private set; }
 
-        public MixfileManager(String applicationPath, Dictionary<GameType, String> gameFolders, Dictionary<GameType, string[]> modPaths)
+        public MixfileManager(string applicationPath, Dictionary<GameType, string> gameFolders, Dictionary<GameType, string[]> modPaths)
         {
             this.applicationPath = applicationPath ?? Path.GetFullPath(".");
             this.gameFolders = gameFolders;
@@ -69,7 +69,7 @@ namespace MobiusEditor.Utility
             this.modPathsPerGame = modPaths;
         }
 
-        public bool FileExists(String path)
+        public bool FileExists(string path)
         {
             if (disposedValue)
             {
@@ -94,7 +94,7 @@ namespace MobiusEditor.Utility
         /// <param name="isTheater">True if this is a Theater archive. This excludes the archive from getting loaded on <see cref="Reset(GameType, TheaterType)"/> when it does not match the specified theater.</param>
         /// <returns>True if the archive file was found.</returns>
         /// <exception cref="ObjectDisposedException">The MixFileManager is disposed.</exception>
-        public bool LoadArchive(GameType gameType, String archivePath, bool isTheater)
+        public bool LoadArchive(GameType gameType, string archivePath, bool isTheater)
         {
             return this.LoadArchive(gameType, archivePath, isTheater, false, false, false);
         }
@@ -110,7 +110,7 @@ namespace MobiusEditor.Utility
         /// <param name="canUseNewFormat">Allow RA's newer mix file format.</param>
         /// <returns>True if the archive file was found. Note that if it was not found, it might still be loaded from inside another mix file, but this is only handled on Reset.</returns>
         /// <exception cref="ObjectDisposedException">The MixFileManager is disposed.</exception>
-        public bool LoadArchive(GameType gameType, String archivePath, bool isTheater, bool isContainer, bool canBeEmbedded, bool canUseNewFormat)
+        public bool LoadArchive(GameType gameType, string archivePath, bool isTheater, bool isContainer, bool canBeEmbedded, bool canUseNewFormat)
         {
             if (disposedValue)
             {
@@ -129,7 +129,7 @@ namespace MobiusEditor.Utility
                 gameArchives[gameType] = archivesForGame;
             }
             // Not using hash map since order and iteration will be important.
-            if (archivesForGame.FindIndex(info => String.Equals(info.Name, archivePath, StringComparison.InvariantCultureIgnoreCase)) == -1)
+            if (archivesForGame.FindIndex(info => string.Equals(info.Name, archivePath, StringComparison.InvariantCultureIgnoreCase)) == -1)
             {
                 archivesForGame.Add(new MixInfo(archivePath, isContainer, canBeEmbedded, isTheater, canUseNewFormat));
             }
@@ -137,7 +137,7 @@ namespace MobiusEditor.Utility
             {
                 gamePath = Path.Combine(applicationPath, gamePath);
             }
-            String fullPath = Path.Combine(gamePath, archivePath);
+            string fullPath = Path.Combine(gamePath, archivePath);
             // Mod paths might still add it, but this initial check is returned.
             return canBeEmbedded || File.Exists(fullPath);
         }
@@ -151,7 +151,7 @@ namespace MobiusEditor.Utility
         /// <param name="canUseNewFormat">Allow RA's newer mix file format.</param>
         /// <returns>The amount of found archives.</returns>
         /// <exception cref="ObjectDisposedException">The MixFileManager is disposed.</exception>
-        public int LoadArchives(GameType gameType, String archiveMask, bool canUseNewFormat)
+        public int LoadArchives(GameType gameType, string archiveMask, bool canUseNewFormat)
         {
             if (disposedValue)
             {
@@ -192,7 +192,7 @@ namespace MobiusEditor.Utility
                 // In each mod folder, try to read all mix files.
                 foreach (string modPath in modPaths)
                 {
-                    String mixPath = Path.Combine(modPath, "ccdata");
+                    string mixPath = Path.Combine(modPath, "ccdata");
                     if (!Directory.Exists(mixPath))
                     {
                         continue;
@@ -227,12 +227,12 @@ namespace MobiusEditor.Utility
             return counter;
         }
 
-        public Stream OpenFile(String path)
+        public Stream OpenFile(string path)
         {
             return OpenFile(path, CurrentGameType, currentMixFileInfo);
         }
 
-        public Byte[] ReadFile(string path)
+        public byte[] ReadFile(string path)
         {
             using (Stream file = OpenFile(path, CurrentGameType, currentMixFileInfo))
             {
@@ -244,22 +244,22 @@ namespace MobiusEditor.Utility
             }
         }
 
-        public bool ClassicFileExists(String path)
+        public bool ClassicFileExists(string path)
         {
             return FileExists(path);
         }
 
-        public Stream OpenFileClassic(String path)
+        public Stream OpenFileClassic(string path)
         {
             return OpenFile(path, CurrentGameType, currentMixFileInfo);
         }
 
-        public Byte[] ReadFileClassic(string path)
+        public byte[] ReadFileClassic(string path)
         {
             return ReadFile(path);
         }
 
-        private Stream OpenFile(String path, GameType gameType, List<MixInfo> mixFilesInfo)
+        private Stream OpenFile(string path, GameType gameType, List<MixInfo> mixFilesInfo)
         {
             if (disposedValue)
             {
@@ -351,11 +351,11 @@ namespace MobiusEditor.Utility
                     foreach (MixInfo mixInfo in newMixFileInfo)
                     {
                         // Only load one theater mix file.
-                        if (theaterMixFile != null && mixInfo.IsTheater && !String.Equals(theaterMixFile, mixInfo.Name, StringComparison.InvariantCultureIgnoreCase))
+                        if (theaterMixFile != null && mixInfo.IsTheater && !string.Equals(theaterMixFile, mixInfo.Name, StringComparison.InvariantCultureIgnoreCase))
                         {
                             continue;
                         }
-                        String mixPath = Path.Combine(modPath, "ccdata");
+                        string mixPath = Path.Combine(modPath, "ccdata");
                         // This automatically excludes already-loaded files.
                         this.AddMixFileIfPresent(foundMixFiles, newMixFileInfo, mixInfo, mixPath);
                     }
@@ -363,7 +363,7 @@ namespace MobiusEditor.Utility
             }
             foreach (MixInfo mixInfo in newMixFileInfo)
             {
-                if (theaterMixFile != null && mixInfo.IsTheater && !String.Equals(theaterMixFile, mixInfo.Name, StringComparison.InvariantCultureIgnoreCase))
+                if (theaterMixFile != null && mixInfo.IsTheater && !string.Equals(theaterMixFile, mixInfo.Name, StringComparison.InvariantCultureIgnoreCase))
                 {
                     continue;
                 }
@@ -379,7 +379,7 @@ namespace MobiusEditor.Utility
             currentMixFileInfo.AddRange(newMixFileInfo.Where(mi => foundNames.Contains(mi.Name)));
         }
 
-        private bool AddMixFileIfPresent(Dictionary<String, Mixfile> readMixFiles, List<MixInfo> readMixNames, MixInfo mixToAdd, string readFolder)
+        private bool AddMixFileIfPresent(Dictionary<string, Mixfile> readMixFiles, List<MixInfo> readMixNames, MixInfo mixToAdd, string readFolder)
         {
             // 1. Look for file in given folder
             // 2. if 'CanBeEmbedded', look for file inside archives inside mix files list

@@ -28,7 +28,7 @@ namespace MobiusEditor.Utility
     static class INIHelpers
     {
         public static readonly Regex SectionRegex = new Regex(@"^\s*\[([^\]]*)\]", RegexOptions.Compiled);
-        public static readonly Regex KeyValueRegex = new Regex(@"^\s*(.*?)\s*=([^;]*?)(\s*;[^\r\n]*)?$", RegexOptions.Compiled);
+        public static readonly Regex KeyValueRegex = new Regex(@"^\s*(.+?)\s*=([^;]*?)(\s*;.*)?$", RegexOptions.Compiled);
         public static readonly Regex CommentRegex = new Regex(@"^\s*(#|;)", RegexOptions.Compiled);
 
         public static readonly Func<INIDiffType, string> DiffPrefix = t =>
@@ -458,20 +458,17 @@ namespace MobiusEditor.Utility
                 {
                     break;
                 }
-
                 Match m = INIHelpers.SectionRegex.Match(line);
                 if (m.Success)
                 {
                     currentSection = Sections.Add(m.Groups[1].Value);
                 }
-
                 if (currentSection != null)
                 {
                     if (INIHelpers.CommentRegex.Match(line).Success)
                     {
                         continue;
                     }
-
                     currentSection.Parse(line);
                 }
             }

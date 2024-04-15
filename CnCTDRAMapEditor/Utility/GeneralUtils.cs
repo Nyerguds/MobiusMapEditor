@@ -269,20 +269,81 @@ namespace MobiusEditor.Utility
         /// <param name="trimSource">True to trim the source before adding the remark.</param>
         /// <param name="valuesToDetect">List of values to add the remark to. Case-insensitive.</param>
         /// <param name="remarkToAdd">Remark to add to the detected values.</param>
-        /// <returns></returns>
-        public static string AddRemarks(string value, string defaultVal, Boolean trimSource, IEnumerable<string> valuesToDetect, string remarkToAdd)
+        /// <param name="changed">returns true if the remark was added.</param>
+        /// <returns>The value string, possibly with the remark added.</returns>
+        public static string AddRemarks(string value, string defaultVal, bool trimSource, IEnumerable<string> valuesToDetect, string remarkToAdd)
         {
+            return AddRemarks(value, defaultVal, trimSource, valuesToDetect, remarkToAdd, false, out _);
+        }
+
+        /// <summary>
+        /// If the given value is one of the values inside the given list, then add the remark to its end. Otherwise, return the original string.
+        /// </summary>
+        /// <param name="value">Value to evaluate.</param>
+        /// <param name="defaultVal">Value to return if the input is empty.</param>
+        /// <param name="trimSource">True to trim the source before adding the remark.</param>
+        /// <param name="valuesToDetect">List of values to add the remark to. Case-insensitive.</param>
+        /// <param name="remarkToAdd">Remark to add to the detected values.</param>
+        /// <param name="changed">returns true if the remark was added.</param>
+        /// <returns>The value string, possibly with the remark added.</returns>
+        public static string AddRemarks(string value, string defaultVal, bool trimSource, IEnumerable<string> valuesToDetect, string remarkToAdd, out bool changed)
+        {
+            return AddRemarks(value, defaultVal, trimSource, valuesToDetect, remarkToAdd, false, out changed);
+        }
+
+        /// <summary>
+        /// If the given value is one of the values inside the given list, then add the remark to its end. Otherwise, return the original string.
+        /// </summary>
+        /// <param name="value">Value to evaluate.</param>
+        /// <param name="defaultVal">Value to return if the input is empty.</param>
+        /// <param name="trimSource">True to trim the source before adding the remark.</param>
+        /// <param name="valuesToDetect">List of values to add the remark to. Case-insensitive.</param>
+        /// <param name="remarkToAdd">Remark to add to the detected values.</param>
+        /// <param name="negativeCheck">True to add the remark if the value is not in the list of values to detect.</param>
+        /// <param name="changed">returns true if the remark was added.</param>
+        /// <returns>The value string, possibly with the remark added.</returns>
+        public static string AddRemarks(string value, string defaultVal, bool trimSource, IEnumerable<string> valuesToDetect, string remarkToAdd, bool negativeCheck)
+        {
+            return AddRemarks(value, defaultVal, trimSource, valuesToDetect, remarkToAdd, negativeCheck, out _);
+        }
+
+        /// <summary>
+        /// If the given value is one of the values inside the given list, then add the remark to its end. Otherwise, return the original string.
+        /// </summary>
+        /// <param name="value">Value to evaluate.</param>
+        /// <param name="defaultVal">Value to return if the input is empty.</param>
+        /// <param name="trimSource">True to trim the source before adding the remark.</param>
+        /// <param name="valuesToDetect">List of values to add the remark to. Case-insensitive.</param>
+        /// <param name="remarkToAdd">Remark to add to the detected values.</param>
+        /// <param name="negativeCheck">True to add the remark if the value is not in the list of values to detect.</param>
+        /// <param name="changed">returns true if the remark was added.</param>
+        /// <returns>The value string, possibly with the remark added.</returns>
+        public static string AddRemarks(string value, string defaultVal, bool trimSource, IEnumerable<string> valuesToDetect, string remarkToAdd, bool negativeCheck, out bool changed)
+        {
+            changed = false;
             if (String.IsNullOrEmpty(value))
                 return defaultVal;
             string valTrimmed = value;
             if (trimSource)
                 valTrimmed = valTrimmed.Trim();
+            bool found = false;
             foreach (string val in valuesToDetect)
             {
                 if ((val ?? String.Empty).Trim().Equals(value, StringComparison.InvariantCultureIgnoreCase))
                 {
-                    return valTrimmed + remarkToAdd;
+                    found = true;
+                    break;
                 }
+            }
+            if (!negativeCheck && found)
+            {
+                changed = true;
+                return valTrimmed + remarkToAdd;
+            }
+            if (negativeCheck && !found)
+            {
+                changed = true;
+                return valTrimmed + remarkToAdd;
             }
             return value;
         }

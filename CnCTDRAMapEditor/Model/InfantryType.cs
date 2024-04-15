@@ -111,13 +111,14 @@ namespace MobiusEditor.Model
         {
             this.InitDisplayName();
             Bitmap oldImage = this.Thumbnail;
-            // Initialisation for the special RA civilian remapping logic.
+            // Initialisation for the special RA civilian remapping logic. Normally, code should never check the type of the tileset manager
+            // and use a specific one, but this is a special case that'd be more convoluted to get around by implementing it generally.
             if (((this.ClassicGraphicsSource != null && !String.Equals(this.Name, this.ClassicGraphicsSource, StringComparison.OrdinalIgnoreCase))
                 || this.ClassicGraphicsRemap != null) && Globals.TheTilesetManager is TilesetManagerClassic tsmc)
             {
                 string actualSprite = this.ClassicGraphicsSource ?? this.Name;
-                // Use special override that 100% makes sure previously-cached versions are cleared, so previous accidental fetches do not corrupt
-                this.GraphicsSource = actualSprite + " (override for infantry "+ this.Name + ")";
+                // Use special override that 100% makes sure previously-cached versions are cleared, so previous accidental fetches do not corrupt it.
+                this.GraphicsSource = actualSprite + " (override for infantry "+ this.Name.ToUpperInvariant() + ")";
                 tsmc.GetTeamColorTileData(this.GraphicsSource, 0, null, out _, true, false, true, actualSprite, this.ClassicGraphicsRemap, true);
             }
             Infantry mockInfantry = new Infantry(null)

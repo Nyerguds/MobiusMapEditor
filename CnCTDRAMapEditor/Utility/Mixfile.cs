@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.MemoryMappedFiles;
+using System.Linq;
 using System.Numerics;
 
 namespace MobiusEditor.Utility
@@ -74,6 +75,74 @@ namespace MobiusEditor.Utility
             // Copy reference to parent map. The "CreateViewStream" function takes care of reading the right parts from it.
             this.mixFileMap = container.mixFileMap;
             this.ReadMixHeader(this.mixFileMap, offset, this.fileLength, handleAdvanced);
+        }
+
+        public Mixfile(Mixfile container, uint nameId)
+            : this(container, nameId, true)
+        {
+        }
+
+        public Mixfile(Mixfile container, uint nameId, bool handleAdvanced)
+        {
+            this.IsEmbedded = true;
+            this.MixFileName = container.MixFileName + " -> " + nameId;
+            if (!container.GetFileInfo(nameId, out uint offset, out uint length))
+            {
+                throw new FileNotFoundException(nameId + " was not found inside this mix archive.");
+            }
+            this.fileStart = offset;
+            this.fileLength = length;
+            // Copy reference to parent map. The "CreateViewStream" function takes care of reading the right parts from it.
+            this.mixFileMap = container.mixFileMap;
+            this.ReadMixHeader(this.mixFileMap, offset, this.fileLength, handleAdvanced);
+        }
+
+        public List<UInt32> GetFileIds()
+        {
+            return this.mixFileContents.Keys.OrderBy(k => k).ToList();
+        }
+
+        public uint GetFileId(string filename)
+        {
+            return this.hashRol.GetNameId(filename);
+        }
+
+        public bool GetFileInfo(string filename, out uint offset, out uint length)
+        {
+            uint fileId = GetFileId(filename);
+            return GetFileInfo(fileId, out offset, out length);
+        }
+
+        public bool GetFileInfo(uint fileId, out uint offset, out uint length)
+        {
+            offset = 0;
+            length = 0;
+            (uint Offset, uint Length) fileLoc;
+            if (!this.mixFileContents.TryGetValue(fileId, out fileLoc))
+            {
+                return false;
+            }
+            offset = fileLoc.Offset + this.dataStart;
+            length = fileLoc.Length;
+            return true;
+        }
+
+        public Stream OpenFile(string filename)
+        {
+            if (!this.GetFileInfo(filename, out uint offset, out uint length))
+            {
+                return null;
+            }
+            return this.CreateViewStream(this.mixFileMap, this.fileStart, this.fileLength, offset, length);
+        }
+
+        public Stream OpenFile(uint fileId)
+        {
+            if (!this.GetFileInfo(fileId, out uint offset, out uint length))
+            {
+                return null;
+            }
+            return this.CreateViewStream(this.mixFileMap, this.fileStart, this.fileLength, offset, length);
         }
 
         private void ReadMixHeader(MemoryMappedFile mixMap, long mixStart, long mixLength, bool handleAdvanced)
@@ -167,30 +236,6 @@ namespace MobiusEditor.Utility
                 }
                 this.mixFileContents.Add(fileId, (fileOffset, fileLength));
             }
-        }
-
-        public bool GetFileInfo(string filename, out uint offset, out uint length)
-        {
-            offset = 0;
-            length = 0;
-            uint fileId = this.hashRol.GetNameId(filename);
-            (uint Offset, uint Length) fileLoc;
-            if (!this.mixFileContents.TryGetValue(fileId, out fileLoc))
-            {
-                return false;
-            }
-            offset = fileLoc.Offset + this.dataStart;
-            length = fileLoc.Length;
-            return true;
-        }
-
-        public Stream OpenFile(string path)
-        {
-            if (!this.GetFileInfo(path, out uint offset, out uint length))
-            {
-                return null;
-            }
-            return this.CreateViewStream(this.mixFileMap, this.fileStart, this.fileLength, offset, length);
         }
 
         /// <summary>

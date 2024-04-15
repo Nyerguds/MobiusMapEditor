@@ -217,5 +217,154 @@ namespace MobiusEditor.RedAlert
             return GetClassicFontRemapSimple(ClassicFontTriggers, tsmc, textColor);
         }
 
+        private static string[] gameFiles = new string[]
+        {
+
+        };
+
+        public override IEnumerable<string> GetGameFiles()
+        {
+            const string iniExt = ".ini";
+            char[] sides = { 'g', 'u' };
+            string[] suffixes = { "ea", "eb", "ec" };
+            string mainSuffix = suffixes[0];
+            // Campaign and expansion missions
+            for (int c = 0; c < sides.Length; ++c)
+            {
+                char campaign = sides[c];
+                for (int i = 1; i < 100; ++i)
+                {
+                    for (int s = 0; s < suffixes.Length; ++s)
+                    {
+                        yield return GetMissionName(campaign, i, suffixes[s]) + iniExt;
+                    }
+                }
+            }
+            // Ant campaign missions
+            for (int i = 1; i < 20; ++i)
+            {
+                yield return GetMissionName('a', i, mainSuffix) + iniExt;
+            }
+            // Multiplayer maps. Not sure how high this accepts; official ones go to 130.
+            for (int i = 0; i < 150; ++i)
+            {
+                yield return GetMissionName('m', i, mainSuffix) + iniExt;
+            }
+            // Aftermath multiplayer maps.
+            for (char c = 'a'; c < 'n'; ++c)
+            {
+                for (int i = 0; i < 10; ++i)
+                {
+                    yield return GetMissionName('m', i, mainSuffix, c) + iniExt;
+                }
+            }
+            // Remaining multiplayer maps above 150. Added later so they definitely don't get preferred in case of name collisions with the AM ones.
+            for (int i = 150; i < 1000; ++i)
+            {
+                yield return GetMissionName('m', i, mainSuffix) + iniExt;
+            }
+
+            // Graphics used in the editor
+
+            const string shpExt = ".shp";
+            string[] theaterExts = TheaterTypes.GetAllTypes().Where(th => !th.IsModTheater).Select(tt => "." + tt.ClassicExtension.Trim('.')).ToArray();
+            string[] extraThExts = TheaterTypes.GetAllTypes().Where(th => th.IsModTheater).Select(tt => "." + tt.ClassicExtension.Trim('.')).ToArray();
+
+            // Templates
+            foreach (TemplateType tmp in TemplateTypes.GetTypes())
+            {
+                string name = tmp.Name;
+                for (int i = 0; i < theaterExts.Length; ++i)
+                {
+                    yield return name + theaterExts[i];
+                }
+            }
+            foreach (TemplateType tmp in TemplateTypes.GetTypes())
+            {
+                string name = tmp.Name;
+                for (int i = 0; i < extraThExts.Length; ++i)
+                {
+                    yield return name + extraThExts[i];
+                }
+            }
+            // Buildings, with icons and build-up animations
+            foreach (BuildingType bt in BuildingTypes.GetTypes())
+            {
+                string name = bt.Name;
+                yield return name + shpExt;
+                yield return name + "make" + shpExt;
+                yield return name + "icon" + shpExt;
+                for (int i = 0; i < theaterExts.Length; ++i)
+                {
+                    string thExt = theaterExts[i];
+                    yield return name + thExt;
+                    yield return name + "make" + thExt;
+                }
+            }
+            foreach (BuildingType bt in BuildingTypes.GetTypes())
+            {
+                string name = bt.Name;
+                for (int i = 0; i < extraThExts.Length; ++i)
+                {
+                    string thExt = extraThExts[i];
+                    yield return name + thExt;
+                    yield return name + "make" + thExt;
+                }
+            }
+            // Smudge
+            foreach (SmudgeType sm in SmudgeTypes.GetTypes(false))
+            {
+                string name = sm.Name;
+                for (int i = 0; i < theaterExts.Length; ++i)
+                {
+                    yield return name + theaterExts[i];
+                }
+            }
+            foreach (SmudgeType sm in SmudgeTypes.GetTypes(false))
+            {
+                string name = sm.Name;
+                for (int i = 0; i < extraThExts.Length; ++i)
+                {
+                    yield return name + extraThExts[i];
+                }
+            }
+            // Terrain
+            foreach (TerrainType tr in TerrainTypes.GetTypes())
+            {
+                string name = tr.Name;
+                for (int i = 0; i < theaterExts.Length; ++i)
+                {
+                    yield return name + theaterExts[i];
+                }
+            }
+            foreach (TerrainType tr in TerrainTypes.GetTypes())
+            {
+                string name = tr.Name;
+                for (int i = 0; i < extraThExts.Length; ++i)
+                {
+                    yield return name + extraThExts[i];
+                }
+            }
+            // Infantry
+            foreach (InfantryType it in InfantryTypes.GetTypes())
+            {
+                string name = it.Name;
+                yield return name + shpExt;
+                yield return name + "icon" + shpExt;
+            }
+            // Units
+            foreach (UnitType un in UnitTypes.GetTypes(false))
+            {
+                string name = un.Name;
+                yield return name + shpExt;
+                yield return name + "icon" + shpExt;
+            }
+            // overlay
+            foreach (OverlayType ov in OverlayTypes.GetTypes())
+            {
+                yield return ov.Name + shpExt;
+            }
+        }
+
     }
 }
