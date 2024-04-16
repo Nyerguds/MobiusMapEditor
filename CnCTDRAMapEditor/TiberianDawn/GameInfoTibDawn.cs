@@ -1,11 +1,22 @@
-﻿using System;
+﻿//         DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
+//                     Version 2, December 2004
+//
+//  Copyright (C) 2004 Sam Hocevar<sam@hocevar.net>
+//
+//  Everyone is permitted to copy and distribute verbatim or modified
+//  copies of this license document, and changing it is allowed as long
+//  as the name is changed.
+//
+//             DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
+//    TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
+//
+//   0. You just DO WHAT THE FUCK YOU WANT TO.
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Numerics;
 using System.Text.RegularExpressions;
-using System.Xml.Linq;
 using MobiusEditor.Interface;
 using MobiusEditor.Model;
 using MobiusEditor.Utility;
@@ -132,6 +143,22 @@ namespace MobiusEditor.TiberianDawn
 
         public override IEnumerable<string> GetGameFiles()
         {
+            foreach (string name in GetMissionFiles())
+            {
+                yield return name;
+            }
+            foreach (string name in GetGraphicsFiles(TheaterTypes.GetAllTypes()))
+            {
+                yield return name;
+            }
+            foreach (string name in GetMediaFiles())
+            {
+                yield return name;
+            }
+        }
+
+        public static IEnumerable<string> GetMissionFiles()
+        {
             const string iniExt = ".ini";
             const string binExt = ".bin";
             const string cpsExt = ".cps";
@@ -186,13 +213,15 @@ namespace MobiusEditor.TiberianDawn
                 yield return missionName + iniExt;
                 yield return missionName + binExt;
             }
-            
-            // Graphics used in the editor
+        }
 
+        public static IEnumerable<string> GetGraphicsFiles(IEnumerable<TheaterType> theaterTypes)
+        {
             const string shpExt = ".shp";
-            string[] theaterExts = TheaterTypes.GetAllTypes().Where(th => !th.IsModTheater).Select(tt => "." + tt.ClassicExtension.Trim('.')).ToArray();
-            string[] extraThExts = TheaterTypes.GetAllTypes().Where(th => th.IsModTheater).Select(tt => "." + tt.ClassicExtension.Trim('.')).ToArray();
-            
+            string[] theaterExts = theaterTypes.Where(th => !th.IsModTheater).Select(tt => "." + tt.ClassicExtension.Trim('.')).ToArray();
+            string[] extraThExts = theaterTypes.Where(th => th.IsModTheater).Select(tt => "." + tt.ClassicExtension.Trim('.')).ToArray();
+            // Files used / listed in the editor data
+
             // Templates
             foreach (TemplateType tmp in TemplateTypes.GetTypes())
             {
@@ -309,10 +338,33 @@ namespace MobiusEditor.TiberianDawn
                     yield return name + "icnh" + extraThExts[i];
                 }
             }
-            // overlay
+            // Overlay
             foreach (OverlayType ov in OverlayTypes.GetTypes())
             {
                 yield return ov.Name + shpExt;
+            }
+        }
+
+        public static IEnumerable<string> GetMediaFiles()
+        {
+            const string vqaExt = ".vqa";
+            const string vqpExt = ".vqp";
+            const string audExt = ".aud";
+            const string varExt = ".var";
+            // Videos
+            foreach (string vidName in GamePluginTD.Movies)
+            {
+                yield return vidName.ToLowerInvariant() + vqaExt;
+                yield return vidName.ToLowerInvariant() + vqpExt;
+            }
+            // Music
+            foreach (string audName in GamePluginTD.Themes)
+            {
+                yield return audName.ToLowerInvariant() + audExt;
+            }
+            foreach (string audName in GamePluginTD.Themes)
+            {
+                yield return audName.ToLowerInvariant() + varExt;
             }
         }
     }

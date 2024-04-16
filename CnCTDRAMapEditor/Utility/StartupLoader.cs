@@ -451,7 +451,7 @@ namespace MobiusEditor.Utility
             {
                 toInit.IsClassicMixFound = anyExist;
             }
-            if (!anyExist && giveError)
+            if (!anyExist && giveError && errors != null)
             {
                 errors.Add(prefix + String.Join(" / ", fileNames));
             }

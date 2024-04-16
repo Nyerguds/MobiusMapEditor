@@ -49,7 +49,7 @@ namespace MobiusEditor.Utility
     public class INIKeyValueCollection : IEnumerable<KeyValuePair<string, string>>, IEnumerable
     {
         private readonly OrderedDictionary KeyValues;
-        private readonly Dictionary<String, String> Comments;
+        private readonly Dictionary<string, string> Comments;
 
         public string this[string key]
         {
@@ -83,7 +83,7 @@ namespace MobiusEditor.Utility
         public INIKeyValueCollection()
         {
             KeyValues = new OrderedDictionary(StringComparer.OrdinalIgnoreCase);
-            Comments = new Dictionary<String, String>();
+            Comments = new Dictionary<string, string>();
         }
 
         public int Count => KeyValues.Count;
@@ -114,7 +114,7 @@ namespace MobiusEditor.Utility
 
         public string GetComment(string key)
         {
-            return this.Comments.TryGetValue(key, out string value) ? value : null;
+            return Comments.TryGetValue(key, out string value) ? value : null;
         }
 
         public void SetComment(string key, string value)
@@ -129,7 +129,7 @@ namespace MobiusEditor.Utility
             {
                 value = ";" + value;
             }
-            this.Comments[key] = value;
+            Comments[key] = value;
         }
 
         public bool Remove(string key)

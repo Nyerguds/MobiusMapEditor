@@ -29,7 +29,7 @@ namespace MobiusEditor.Model
         public string ClassicTileset { get; private set; }
         /// <summary>File extension of the files inside the classic .mix archive.</summary>
         public string ClassicExtension { get; private set; }
-        /// <summary>True if the theater is not an official one.</summary>
+        /// <summary>True if the theater is not an official one. If false, this theater is required to be available (see <see cref="IsAvailable"/>) by the startup checks.</summary>
         public bool IsModTheater { get; set; }
         /// <summary>Used to store the status of the startup checks that see if the theater mix file was found.</summary>
         public bool IsClassicMixFound { get; set; }
@@ -81,6 +81,12 @@ namespace MobiusEditor.Model
             return base.Equals(obj);
         }
 
+        /// <summary>
+        /// Returns true if this theater is considered to be available for use.
+        /// In Remastered mode, this means <see cref="IsRemasterTilesetFound"/> is true.
+        /// In Classic mode, it means <see cref="IsClassicMixFound"/> is true.
+        /// </summary>
+        /// <returns>True if this theater is available for use.</returns>
         public bool IsAvailable()
         {
             return Globals.UseClassicFiles ? this.IsClassicMixFound : this.IsRemasterTilesetFound;

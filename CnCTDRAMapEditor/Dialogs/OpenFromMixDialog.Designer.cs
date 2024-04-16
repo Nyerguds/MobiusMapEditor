@@ -32,9 +32,9 @@
             this.nameColumnHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.typeColumnHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.infoColumnHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.cancelButton = new System.Windows.Forms.Button();
-            this.okButton = new System.Windows.Forms.Button();
-            this.btnClose = new System.Windows.Forms.Button();
+            this.btnCancel = new System.Windows.Forms.Button();
+            this.btnOpen = new System.Windows.Forms.Button();
+            this.btnCloseFile = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // mixContentsListView
@@ -59,12 +59,15 @@
             this.mixContentsListView.TabIndex = 1;
             this.mixContentsListView.UseCompatibleStateImageBehavior = false;
             this.mixContentsListView.View = System.Windows.Forms.View.Details;
+            this.mixContentsListView.ColumnWidthChanging += new System.Windows.Forms.ColumnWidthChangingEventHandler(this.mixContentsListView_ColumnWidthChanging);
+            this.mixContentsListView.SizeChanged += new System.EventHandler(this.MixContentsListView_SizeChanged);
+            this.mixContentsListView.DoubleClick += new System.EventHandler(this.MixContentsListView_DoubleClick);
             // 
             // nameColumnHeader
             // 
-            this.nameColumnHeader.Tag = "-100";
+            this.nameColumnHeader.Tag = "-200";
             this.nameColumnHeader.Text = "Name";
-            this.nameColumnHeader.Width = 100;
+            this.nameColumnHeader.Width = 200;
             // 
             // typeColumnHeader
             // 
@@ -78,45 +81,49 @@
             this.infoColumnHeader.Text = "Info";
             this.infoColumnHeader.Width = 100;
             // 
-            // cancelButton
+            // btnCancel
             // 
-            this.cancelButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.cancelButton.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.cancelButton.Location = new System.Drawing.Point(697, 426);
-            this.cancelButton.Name = "cancelButton";
-            this.cancelButton.Size = new System.Drawing.Size(75, 23);
-            this.cancelButton.TabIndex = 2;
-            this.cancelButton.Text = "Cancel";
-            this.cancelButton.UseVisualStyleBackColor = true;
+            this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this.btnCancel.Location = new System.Drawing.Point(697, 426);
+            this.btnCancel.Name = "btnCancel";
+            this.btnCancel.Size = new System.Drawing.Size(75, 23);
+            this.btnCancel.TabIndex = 2;
+            this.btnCancel.Text = "Cancel";
+            this.btnCancel.UseVisualStyleBackColor = true;
             // 
-            // okButton
+            // btnOpen
             // 
-            this.okButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.okButton.Location = new System.Drawing.Point(616, 426);
-            this.okButton.Name = "okButton";
-            this.okButton.Size = new System.Drawing.Size(75, 23);
-            this.okButton.TabIndex = 3;
-            this.okButton.Text = "Open";
-            this.okButton.UseVisualStyleBackColor = true;
+            this.btnOpen.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnOpen.Location = new System.Drawing.Point(616, 426);
+            this.btnOpen.Name = "btnOpen";
+            this.btnOpen.Size = new System.Drawing.Size(75, 23);
+            this.btnOpen.TabIndex = 3;
+            this.btnOpen.Text = "Open";
+            this.btnOpen.UseVisualStyleBackColor = true;
+            this.btnOpen.Click += new System.EventHandler(this.btnOpen_Click);
             // 
-            // btnClose
+            // btnCloseFile
             // 
-            this.btnClose.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.btnClose.Location = new System.Drawing.Point(12, 426);
-            this.btnClose.Name = "btnClose";
-            this.btnClose.Size = new System.Drawing.Size(75, 23);
-            this.btnClose.TabIndex = 3;
-            this.btnClose.Text = "Close";
-            this.btnClose.UseVisualStyleBackColor = true;
+            this.btnCloseFile.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.btnCloseFile.Enabled = false;
+            this.btnCloseFile.Location = new System.Drawing.Point(12, 426);
+            this.btnCloseFile.Name = "btnCloseFile";
+            this.btnCloseFile.Size = new System.Drawing.Size(88, 23);
+            this.btnCloseFile.TabIndex = 3;
+            this.btnCloseFile.Text = "Back to parent";
+            this.btnCloseFile.UseVisualStyleBackColor = true;
+            this.btnCloseFile.Click += new System.EventHandler(this.BtnCloseFile_Click);
             // 
             // OpenFromMixDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.CancelButton = this.btnCancel;
             this.ClientSize = new System.Drawing.Size(784, 461);
-            this.Controls.Add(this.btnClose);
-            this.Controls.Add(this.okButton);
-            this.Controls.Add(this.cancelButton);
+            this.Controls.Add(this.btnCloseFile);
+            this.Controls.Add(this.btnOpen);
+            this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.mixContentsListView);
             this.Icon = global::MobiusEditor.Properties.Resources.GameIcon00;
             this.Name = "OpenFromMixDialog";
@@ -133,8 +140,8 @@
         private System.Windows.Forms.ColumnHeader nameColumnHeader;
         private System.Windows.Forms.ColumnHeader typeColumnHeader;
         private System.Windows.Forms.ColumnHeader infoColumnHeader;
-        private System.Windows.Forms.Button cancelButton;
-        private System.Windows.Forms.Button okButton;
-        private System.Windows.Forms.Button btnClose;
+        private System.Windows.Forms.Button btnCancel;
+        private System.Windows.Forms.Button btnOpen;
+        private System.Windows.Forms.Button btnCloseFile;
     }
 }

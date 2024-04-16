@@ -762,20 +762,22 @@ namespace MobiusEditor.Render
             Size imSize = tile.Image.Size;
             Point origLocation = new Point(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height);
             Point renderLocation = origLocation;
+            Point offset;
             // Offset is calculated as "pixels" in the old 24-pixel cells.
-            // Start with center
-            Point offset = GetInfantryRenderPoint(infantryStoppingType);
-            Point offsetBare = InfantryGroup.RenderPosition(infantryStoppingType, false);
             Size renderSize;
             if (success)
             {
+                // Actual graphics: get tweaked positions accounting for the shape of the infantry and the fact the theoretical positions are at their feet.
+                offset = GetInfantryRenderPoint(infantryStoppingType);
                 Point offsetActual = new Point(offset.X * tileSize.Width / Globals.PixelWidth, offset.Y * tileSize.Height / Globals.PixelHeight);
                 renderLocation.Offset(offsetActual);
                 renderSize = new Size(imSize.Width * tileSize.Width / Globals.OriginalTileWidth, imSize.Height * tileSize.Height / Globals.OriginalTileHeight);
             }
             else
             {
-                Point offsetActual = new Point(offsetBare.X * tileSize.Width / Globals.PixelWidth, offsetBare.Y * tileSize.Height / Globals.PixelHeight);
+                // Dummy graphics: use theoretical positions.
+                offset = InfantryGroup.RenderPosition(infantryStoppingType, false);
+                Point offsetActual = new Point(offset.X * tileSize.Width / Globals.PixelWidth, offset.Y * tileSize.Height / Globals.PixelHeight);
                 renderLocation.Offset(offsetActual);
                 renderSize = new Size(imSize.Width * tileSize.Width / Globals.OriginalTileWidth, imSize.Height * tileSize.Height / Globals.OriginalTileHeight);
                 renderSize.Width /= 3;

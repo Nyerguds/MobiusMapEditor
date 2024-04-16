@@ -21,7 +21,7 @@ using System.Numerics;
 
 namespace MobiusEditor.Utility
 {
-    public class Mixfile : IDisposable
+    public class Mixfiles : IDisposable
     {
         private static readonly string PublicKey = "AihRvNoIbTn85FZRYNZRcT+i6KpU+maCsEqr3Q5q+LDB5tH7Tz2qQ38V";
         private static readonly string PrivateKey = "AigKVje8mROcR8QixnxUEF5b29Curkq01DNDWCdOG99XBqH79OaCiTCB";
@@ -40,12 +40,12 @@ namespace MobiusEditor.Utility
         private uint dataStart;
         private MemoryMappedFile mixFileMap;
 
-        public Mixfile(string mixPath)
+        public Mixfiles(string mixPath)
             : this(mixPath, true)
         {
         }
 
-        public Mixfile(string mixPath, bool handleAdvanced)
+        public Mixfiles(string mixPath, bool handleAdvanced)
         {
             FileInfo mixFile = new FileInfo(mixPath);
             this.fileStart = 0;
@@ -57,12 +57,12 @@ namespace MobiusEditor.Utility
             this.ReadMixHeader(this.mixFileMap, this.fileStart, this.fileLength, handleAdvanced);
         }
 
-        public Mixfile(Mixfile container, string name)
+        public Mixfiles(Mixfiles container, string name)
             : this(container, name, true)
         {
         }
 
-        public Mixfile(Mixfile container, string name, bool handleAdvanced)
+        public Mixfiles(Mixfiles container, string name, bool handleAdvanced)
         {
             this.IsEmbedded = true;
             this.MixFileName = container.MixFileName + " -> " + name;
@@ -77,12 +77,12 @@ namespace MobiusEditor.Utility
             this.ReadMixHeader(this.mixFileMap, offset, this.fileLength, handleAdvanced);
         }
 
-        public Mixfile(Mixfile container, uint nameId)
+        public Mixfiles(Mixfiles container, uint nameId)
             : this(container, nameId, true)
         {
         }
 
-        public Mixfile(Mixfile container, uint nameId, bool handleAdvanced)
+        public Mixfiles(Mixfiles container, uint nameId, bool handleAdvanced)
         {
             this.IsEmbedded = true;
             this.MixFileName = container.MixFileName + " -> " + nameId;
@@ -234,7 +234,15 @@ namespace MobiusEditor.Utility
                 {
                     throw new ArgumentException(String.Format("Not a valid mix file: file #{0} with id {1:X08} exceeds archive length.", i, fileId), "mixMap");
                 }
-                this.mixFileContents.Add(fileId, (fileOffset, fileLength));
+                if (!this.mixFileContents.ContainsKey(fileId))
+                {
+                    this.mixFileContents.Add(fileId, (fileOffset, fileLength));
+                }
+                else
+                {
+                    // nchires.mix has this???
+                    //this.mixFileContents.Add(fileId + 1, (fileOffset, fileLength));
+                }
             }
         }
 
@@ -344,5 +352,22 @@ namespace MobiusEditor.Utility
             this.Dispose(true);
         }
         #endregion
+    }
+
+    public class MixEntry
+    {
+        public string DisplayName => Name ?? '[' + Id.ToString("X4") + ']';
+        public string Name;
+        public uint Id;
+        public uint Offset;
+        public uint Length;
+        public MixContentType Type = MixContentType.Unknown;
+        public string Info;
+        public string SortName => Name ?? "zzzzzzzzzzzz " + Id.ToString("X4");
+
+        public override string ToString()
+        {
+            return DisplayName + " (" + Type.ToString() + ")";
+        }
     }
 }

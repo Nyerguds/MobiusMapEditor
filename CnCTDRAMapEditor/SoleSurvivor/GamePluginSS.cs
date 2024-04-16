@@ -36,7 +36,6 @@ namespace MobiusEditor.SoleSurvivor
 
         protected static readonly IEnumerable<string> themeTypesSole = new string[]
         {
-            "No Theme",
             "WORKREMX",
             "CRSHNVOX",
             "DEPTHCHG",
@@ -48,6 +47,10 @@ namespace MobiusEditor.SoleSurvivor
             "CREEPING",
             "MAP1",
         };
+
+
+        public static new IEnumerable<string> Movies => movieTypesSole;
+        public static new IEnumerable<string> Themes => themeTypesSole;
 
         public override GameInfo GameInfo => gameTypeInfo;
         public override bool IsMegaMap => isMegaMap;
@@ -128,7 +131,8 @@ namespace MobiusEditor.SoleSurvivor
                 MissionTypes.GetTypes(), MissionTypes.MISSION_GUARD, MissionTypes.MISSION_STOP,
                 MissionTypes.MISSION_HARVEST, MissionTypes.MISSION_UNLOAD, DirectionTypes.GetMainTypes(),
                 DirectionTypes.GetAllTypes(), infantry, units, buildings, TeamMissionTypes.GetTypes(), fullTechnoTypes,
-                waypoints, 4, 0, 0, movies, movieEmpty, themeTypesSole, themeEmpty, Constants.TiberiumValue, 0);
+                waypoints, movies, movieEmpty, themeEmpty.Yield().Concat(themeTypesSole), themeEmpty,
+                4, 0, 0, Constants.TiberiumValue, 0);
             Map.MapSection.PropertyChanged += MapSection_PropertyChanged;
             // Clean up this mess.
             foreach (Model.House house in Map.Houses)

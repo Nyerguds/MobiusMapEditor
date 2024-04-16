@@ -59,6 +59,13 @@ namespace MobiusEditor.Model
 
         #region functions
         public abstract IGamePlugin CreatePlugin(bool mapImage, bool megaMap);
+        /// <summary>
+        /// Initialises the classic files for this game. If <paramref name="forRemaster"/> is false, this should do more detailed checks on which assets are required.
+        /// </summary>
+        /// <param name="mfm">MixfileManager to load the archives into.</param>
+        /// <param name="loadErrors">List of load errors. </param>
+        /// <param name="fileLoadErrors"></param>
+        /// <param name="forRemaster"></param>
         public abstract void InitClassicFiles(MixfileManager mfm, List<string> loadErrors, List<string> fileLoadErrors, bool forRemaster);
         /// <summary>Retrieves the typical opposing player for the given House name, e.g. for TD, GoodGuy will give BadGuy.</summary>
         /// <param name="player">The player to get the opposing player for.</param>
@@ -148,15 +155,15 @@ namespace MobiusEditor.Model
             return new TeamRemap(fontName + "_" + textColor.ToArgb().ToString("X4"), 0, 0, 0, remapIndices);
         }
 
-        protected string GetMissionName(char side, int number, string suffix)
+        protected static string GetMissionName(char side, int number, string suffix)
         {
             return GetMissionName(side, number, suffix, '\0');
         }
         
-        protected string GetMissionName(char side, int number, string suffix, char aftermathLetter)
+        protected static string GetMissionName(char side, int number, string suffix, char aftermathLetter)
         {
-            const string formatNormal = "SC{0}{1:00}{2}";
-            const string formatAm = "SC{0}{3}{2}";
+            const string formatNormal = "sc{0}{1:00}{2}";
+            const string formatAm = "sc{0}{3}{1}{2}";
             return String.Format(aftermathLetter == '\0' ? formatNormal : formatAm, side, number, suffix, aftermathLetter);
         }
         #endregion

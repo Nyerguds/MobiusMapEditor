@@ -473,10 +473,11 @@ namespace MobiusEditor.Model
             IEnumerable<string> eventTypes, IEnumerable<string> cellEventTypes, IEnumerable<string> unitEventTypes, IEnumerable<string> buildingEventTypes, IEnumerable<string> terrainEventTypes,
             IEnumerable<string> actionTypes, IEnumerable<string> cellActionTypes, IEnumerable<string> unitActionTypes, IEnumerable<string> buildingActionTypes, IEnumerable<string> terrainActionTypes,
             IEnumerable<string> missionTypes, string armedMission, string unarmedMission, string harvestMission, string aircraftMission,
-            IEnumerable<DirectionType> unitDirectionTypes, IEnumerable<DirectionType> buildingDirectionTypes, IEnumerable<InfantryType> infantryTypes,
-            IEnumerable<UnitType> unitTypes, IEnumerable<BuildingType> buildingTypes, IEnumerable<TeamMission> teamMissionTypes, IEnumerable<ITechnoType> teamTechnoTypes,
-            IEnumerable<Waypoint> waypoints, int dropZoneRadius, int gapRadius, int jamRadius, IEnumerable<string> movieTypes, string emptyMovie, IEnumerable<string> themeTypes, string emptyTheme,
-            int tiberiumOrGoldValue, int gemValue)
+            IEnumerable<DirectionType> unitDirectionTypes, IEnumerable<DirectionType> buildingDirectionTypes,
+            IEnumerable<InfantryType> infantryTypes, IEnumerable<UnitType> unitTypes, IEnumerable<BuildingType> buildingTypes,
+            IEnumerable<TeamMission> teamMissionTypes, IEnumerable<ITechnoType> teamTechnoTypes, IEnumerable<Waypoint> waypoints,
+            IEnumerable<string> movieTypes, string emptyMovie, IEnumerable<string> themeTypes, string emptyTheme,
+            int dropZoneRadius, int gapRadius, int jamRadius, int tiberiumOrGoldValue, int gemValue)
         {
             this.MapSection = new MapSection(cellSize);
             this.BasicSection = basicSection;
@@ -1540,8 +1541,8 @@ namespace MobiusEditor.Model
                 this.ActionTypes, this.CellActionTypes, this.UnitActionTypes, this.BuildingActionTypes, this.TerrainActionTypes,
                 this.MissionTypes, this.inputMissionArmed, this.inputMissionUnarmed, this.inputMissionHarvest, this.inputMissionAircraft,
                 this.UnitDirectionTypes, this.BuildingDirectionTypes, this.AllInfantryTypes, this.AllUnitTypes, this.BuildingTypes, this.TeamMissionTypes,
-                this.AllTeamTechnoTypes, wpPreview, this.DropZoneRadius, this.GapRadius, this.RadarJamRadius, this.MovieTypes, this.MovieEmpty, this.ThemeTypes, this.ThemeEmpty,
-                this.TiberiumOrGoldValue, this.GemValue)
+                this.AllTeamTechnoTypes, wpPreview, this.MovieTypes, this.MovieEmpty, this.ThemeTypes, this.ThemeEmpty,
+                this.DropZoneRadius, this.GapRadius, this.RadarJamRadius, this.TiberiumOrGoldValue, this.GemValue)
             {
                 TopLeft = TopLeft,
                 Size = Size,

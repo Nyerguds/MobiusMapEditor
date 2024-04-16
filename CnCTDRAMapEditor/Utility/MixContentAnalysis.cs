@@ -15,10 +15,10 @@ namespace MobiusEditor.Utility
         private const String xccCheck = "XCC by Olaf van der Spek";
         private const uint xccId = 0x54C2D545;
 
-        public static List<MixFileInfo> AnalyseFiles(Mixfile current, Dictionary<uint, string> encodedFilenames)
+        public static List<MixEntry> AnalyseFiles(Mixfiles current, Dictionary<uint, string> encodedFilenames)
         {
             List<uint> filesList = current.GetFileIds();
-            List<MixFileInfo> fileInfo = new List<MixFileInfo>();
+            List<MixEntry> fileInfo = new List<MixEntry>();
             Dictionary<uint, string> xccInfoFilenames = null;
             // Check if there's an xcc filenames database.
             foreach (uint fileId in filesList)
@@ -27,10 +27,11 @@ namespace MobiusEditor.Utility
                 {
                     if (fileId == xccId && length < 500000 && length > 0x34)
                     {
-                        MixFileInfo mixInfo = new MixFileInfo()
+                        MixEntry mixInfo = new MixEntry()
                         {
                             Name = "local mix database.dat",
                             Id = fileId,
+                            Type = MixContentType.XccNames,
                             Offset = offset,
                             Length = length,
                             Info = "XCC filenames database"
@@ -94,13 +95,33 @@ namespace MobiusEditor.Utility
                         continue;
                     }
                     string name = null;
+                    //uint fileIdm1 = fileId == 0 ? 0 : fileId - 1;
                     if (xccInfoFilenames == null || !xccInfoFilenames.TryGetValue(fileId, out name)) {
                         if (!encodedFilenames.TryGetValue(fileId, out name))
                         {
                             name = null;
+                            /*/
+                            if (xccInfoFilenames == null || !xccInfoFilenames.TryGetValue(fileIdm1, out name))
+                            {
+                                if (!encodedFilenames.TryGetValue(fileIdm1, out name))
+                                {
+
+                                    name = null;
+                                }
+                            }
+                            if (name != null)
+                            {
+                                name += " (+)";
+                            }
+                            else if (filesList.Contains(fileIdm1))
+                            {
+                                MixFileInfo dummy = new MixFileInfo() { Id = fileIdm1 };
+                                name = dummy.DisplayName + " (+)";
+                            }
+                            //*/
                         }
                     }
-                    MixFileInfo mixInfo = new MixFileInfo()
+                    MixEntry mixInfo = new MixEntry()
                     {
                         Name = name,
                         Id = fileId,
@@ -117,7 +138,7 @@ namespace MobiusEditor.Utility
             return fileInfo.OrderBy(x => x.SortName).ToList();
         }
 
-        private static void TryIdentifyFile(Stream fileStream, MixFileInfo mixInfo, Mixfile source)
+        private static void TryIdentifyFile(Stream fileStream, MixEntry mixInfo, Mixfiles source)
         {
             long fileLengthFull = fileStream.Length;
             byte[] fileContents = null;
@@ -164,7 +185,7 @@ namespace MobiusEditor.Utility
                 {
                     Byte[][] shpData = ClassicSpriteLoader.GetRaTmpData(fileContents, out int[] widths, out int[] heights, out byte[] landTypesInfo, out bool[] tileUseList, out int headerWidth, out int headerHeight);
                     mixInfo.Type = MixContentType.TmpRa;
-                    mixInfo.Info = String.Format("RA Template; {1}x{2}", headerWidth, headerHeight);
+                    mixInfo.Info = String.Format("RA Template; {0}x{1}", headerWidth, headerHeight);
                     return;
                 }
                 catch (FileTypeLoadException) { /* ignore */ }
@@ -223,7 +244,8 @@ namespace MobiusEditor.Utility
                             mixInfo.Info = "TD Map" + mapDesc;
                             return;
                         }
-                        else if (!ini.Sections.Any(s => s.Name.IndexOfAny(badIniHeaderRange) > 0))
+                        else if (!ini.Sections.Any(s => s.Name.IndexOfAny(badIniHeaderRange) > 0
+                            || s.Keys.Any(k => k.Key.IndexOfAny(badIniHeaderRange) > 0 || k.Value.IndexOfAny(badIniHeaderRange) > 0)))
                         {
                             mixInfo.Type = MixContentType.Ini;
                             mixInfo.Info = String.Format("INI file (unknown type)");
@@ -234,10 +256,15 @@ namespace MobiusEditor.Utility
                 catch { /* ignore */ }
                 try
                 {
-                    List<byte[]> stringAddresses = GameTextManagerClassic.LoadFile(fileContents);
-                    mixInfo.Type = MixContentType.Strings;
-                    mixInfo.Info = String.Format("Strings File; {0} entries", stringAddresses.Count);
-                    return;
+                    List<ushort> indices = new List<ushort>();
+                    List<byte[]> strings = GameTextManagerClassic.LoadFile(fileContents, indices, true);
+                    bool hasBadChars = strings.Any(str => str.Any(b => badTextRange.Contains(b)));
+                    if (indices.Count > 0 && !hasBadChars && indices[0] - indices.Count * 2 == 0 && strings.Any(s => s.Length > 0))
+                    {
+                        mixInfo.Type = MixContentType.Strings;
+                        mixInfo.Info = String.Format("Strings File; {0} entries", strings.Count);
+                        return;
+                    }
                 }
                 catch (ArgumentOutOfRangeException) { /* ignore */ }
                 string text = null;
@@ -333,7 +360,7 @@ namespace MobiusEditor.Utility
                 bool newType = false;
                 if (!string.IsNullOrEmpty(mixInfo.Name))
                 {
-                    using (Mixfile mf = new Mixfile(source, mixInfo.Name))
+                    using (Mixfiles mf = new Mixfiles(source, mixInfo.Name))
                     {
                         mixContents = mf.FileCount;
                         encrypted = mf.HasEncryption;
@@ -342,7 +369,7 @@ namespace MobiusEditor.Utility
                 }
                 else
                 {
-                    using (Mixfile mf = new Mixfile(source, mixInfo.Id))
+                    using (Mixfiles mf = new Mixfiles(source, mixInfo.Id))
                     {
                         mixContents = mf.FileCount;
                         encrypted = mf.HasEncryption;
@@ -352,7 +379,7 @@ namespace MobiusEditor.Utility
                 if (mixContents > -1)
                 {
                     mixInfo.Type = MixContentType.Mix;
-                    mixInfo.Info = "Mix file; " + (newType ? ("new format; " + (encrypted ? string.Empty : "not ") + "encrypted; ") : string.Empty) + mixContents + "files.";
+                    mixInfo.Info = "Mix file; " + (newType ? ("new format; " + (encrypted ? string.Empty : "not ") + "encrypted; ") : string.Empty) + mixContents + " files.";
                     return;
                 }
             }
@@ -385,23 +412,7 @@ namespace MobiusEditor.Utility
         Pcx,
         Palette,
         PalTbl,
-    }
-
-    public class MixFileInfo
-    {
-        public string DisplayName => Name ?? '[' + Id.ToString("X4") + ']';
-        public string Name;
-        public uint Id;
-        public uint Offset;
-        public uint Length;
-        public MixContentType Type = MixContentType.Unknown;
-        public string Info;
-        public string SortName => Name ?? " " + Id.ToString("X4");
-
-        public override string ToString()
-        {
-            return DisplayName + " (" + Type.ToString() + ")";
-        }
+        XccNames
     }
 
 

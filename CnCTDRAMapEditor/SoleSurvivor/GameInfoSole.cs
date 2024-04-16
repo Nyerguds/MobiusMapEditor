@@ -1,4 +1,17 @@
-﻿using System;
+﻿//         DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
+//                     Version 2, December 2004
+//
+//  Copyright (C) 2004 Sam Hocevar<sam@hocevar.net>
+//
+//  Everyone is permitted to copy and distribute verbatim or modified
+//  copies of this license document, and changing it is allowed as long
+//  as the name is changed.
+//
+//             DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
+//    TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
+//
+//   0. You just DO WHAT THE FUCK YOU WANT TO.
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -123,6 +136,18 @@ namespace MobiusEditor.SoleSurvivor
 
         public override IEnumerable<string> GetGameFiles()
         {
+            foreach (string name in GetMissionFiles())
+            {
+                yield return name;
+            }
+            foreach (string name in GameInfoTibDawn.GetGraphicsFiles(TheaterTypes.GetAllTypes()))
+            {
+                yield return name;
+            }
+        }
+
+        public static IEnumerable<string> GetMissionFiles()
+        {
             const string iniExt = ".ini";
             const string binExt = ".bin";
             for (int i = 0; i < 1000; ++i)
@@ -131,7 +156,24 @@ namespace MobiusEditor.SoleSurvivor
                 yield return missionName + iniExt;
                 yield return missionName + binExt;
             }
+        }
 
+        public static IEnumerable<string> GetMediaFiles()
+        {
+            const string vqaExt = ".vqa";
+            const string vqpExt = ".vqp";
+            const string audExt = ".aud";
+            // Videos
+            foreach (string vidName in GamePluginSS.Movies)
+            {
+                yield return vidName.ToLowerInvariant() + vqaExt;
+                yield return vidName.ToLowerInvariant() + vqpExt;
+            }
+            // Music
+            foreach (string audName in GamePluginSS.Themes)
+            {
+                yield return audName.ToLowerInvariant() + audExt;
+            }
         }
     }
 }

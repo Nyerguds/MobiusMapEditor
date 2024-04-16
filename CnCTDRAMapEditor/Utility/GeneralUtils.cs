@@ -261,29 +261,32 @@ namespace MobiusEditor.Utility
             return value;
         }
 
+
         /// <summary>
-        /// If the given value is one of the values inside the given list, then add the remark to its end. Otherwise, return the original string.
+        /// Adds a remark to the end of the given value if it is one of the values inside the given list.
+        /// If no remark is added, the original value is returned.
         /// </summary>
         /// <param name="value">Value to evaluate.</param>
-        /// <param name="defaultVal">Value to return if the input is empty.</param>
-        /// <param name="trimSource">True to trim the source before adding the remark.</param>
-        /// <param name="valuesToDetect">List of values to add the remark to. Case-insensitive.</param>
-        /// <param name="remarkToAdd">Remark to add to the detected values.</param>
-        /// <param name="changed">returns true if the remark was added.</param>
+        /// <param name="defaultVal">If <paramref name="value"/> is empty, this value is returned.</param>
+        /// <param name="trimSource">True to trim the source before adding the remark. This does not affect the list check, only the output.</param>
+        /// <param name="valuesToDetect">List of values to check to see if the remark should be added. Case-insensitive.</param>
+        /// <param name="remarkToAdd">Remark to add if <paramref name="value"/> matches the criteria.</param>
         /// <returns>The value string, possibly with the remark added.</returns>
         public static string AddRemarks(string value, string defaultVal, bool trimSource, IEnumerable<string> valuesToDetect, string remarkToAdd)
         {
             return AddRemarks(value, defaultVal, trimSource, valuesToDetect, remarkToAdd, false, out _);
         }
 
+
         /// <summary>
-        /// If the given value is one of the values inside the given list, then add the remark to its end. Otherwise, return the original string.
+        /// Adds a remark to the end of the given value if it is one of the values inside the given list.
+        /// If no remark is added, the original value is returned.
         /// </summary>
         /// <param name="value">Value to evaluate.</param>
-        /// <param name="defaultVal">Value to return if the input is empty.</param>
-        /// <param name="trimSource">True to trim the source before adding the remark.</param>
-        /// <param name="valuesToDetect">List of values to add the remark to. Case-insensitive.</param>
-        /// <param name="remarkToAdd">Remark to add to the detected values.</param>
+        /// <param name="defaultVal">If <paramref name="value"/> is empty, this value is returned.</param>
+        /// <param name="trimSource">True to trim the source before adding the remark. This does not affect the list check, only the output.</param>
+        /// <param name="valuesToDetect">List of values to check to see if the remark should be added. Case-insensitive.</param>
+        /// <param name="remarkToAdd">Remark to add if <paramref name="value"/> matches the criteria.</param>
         /// <param name="changed">returns true if the remark was added.</param>
         /// <returns>The value string, possibly with the remark added.</returns>
         public static string AddRemarks(string value, string defaultVal, bool trimSource, IEnumerable<string> valuesToDetect, string remarkToAdd, out bool changed)
@@ -291,16 +294,17 @@ namespace MobiusEditor.Utility
             return AddRemarks(value, defaultVal, trimSource, valuesToDetect, remarkToAdd, false, out changed);
         }
 
+
         /// <summary>
-        /// If the given value is one of the values inside the given list, then add the remark to its end. Otherwise, return the original string.
+        /// Adds a remark to the end of the given value if it is one of the values inside the given list. If <paramref name="negativeCheck"/> is enabled,
+        /// the remark is only added if the value does not appear in the list. If no remark is added, the original value is returned.
         /// </summary>
         /// <param name="value">Value to evaluate.</param>
-        /// <param name="defaultVal">Value to return if the input is empty.</param>
-        /// <param name="trimSource">True to trim the source before adding the remark.</param>
-        /// <param name="valuesToDetect">List of values to add the remark to. Case-insensitive.</param>
-        /// <param name="remarkToAdd">Remark to add to the detected values.</param>
-        /// <param name="negativeCheck">True to add the remark if the value is not in the list of values to detect.</param>
-        /// <param name="changed">returns true if the remark was added.</param>
+        /// <param name="defaultVal">If <paramref name="value"/> is empty, this value is returned.</param>
+        /// <param name="trimSource">True to trim the source before adding the remark. This does not affect the list check, only the output.</param>
+        /// <param name="valuesToDetect">List of values to check to see if the remark should be added. Case-insensitive.</param>
+        /// <param name="remarkToAdd">Remark to add if <paramref name="value"/> matches the criteria.</param>
+        /// <param name="negativeCheck">True to only add the remark if <paramref name="value"/> does <b>not</b> occur in <paramref name="valuesToDetect"/>.</param>
         /// <returns>The value string, possibly with the remark added.</returns>
         public static string AddRemarks(string value, string defaultVal, bool trimSource, IEnumerable<string> valuesToDetect, string remarkToAdd, bool negativeCheck)
         {
@@ -308,14 +312,15 @@ namespace MobiusEditor.Utility
         }
 
         /// <summary>
-        /// If the given value is one of the values inside the given list, then add the remark to its end. Otherwise, return the original string.
+        /// Adds a remark to the end of the given value if it is one of the values inside the given list. If <paramref name="negativeCheck"/> is enabled,
+        /// the remark is only added if the value does not appear in the list. If no remark is added, the original value is returned.
         /// </summary>
         /// <param name="value">Value to evaluate.</param>
-        /// <param name="defaultVal">Value to return if the input is empty.</param>
-        /// <param name="trimSource">True to trim the source before adding the remark.</param>
-        /// <param name="valuesToDetect">List of values to add the remark to. Case-insensitive.</param>
-        /// <param name="remarkToAdd">Remark to add to the detected values.</param>
-        /// <param name="negativeCheck">True to add the remark if the value is not in the list of values to detect.</param>
+        /// <param name="defaultVal">If <paramref name="value"/> is empty, this value is returned.</param>
+        /// <param name="trimSource">True to trim the source before adding the remark. This does not affect the list check, only the output.</param>
+        /// <param name="valuesToDetect">List of values to check to see if the remark should be added. Case-insensitive.</param>
+        /// <param name="remarkToAdd">Remark to add if <paramref name="value"/> matches the criteria.</param>
+        /// <param name="negativeCheck">True to only add the remark if <paramref name="value"/> does <b>not</b> occur in <paramref name="valuesToDetect"/>.</param>
         /// <param name="changed">returns true if the remark was added.</param>
         /// <returns>The value string, possibly with the remark added.</returns>
         public static string AddRemarks(string value, string defaultVal, bool trimSource, IEnumerable<string> valuesToDetect, string remarkToAdd, bool negativeCheck, out bool changed)
@@ -327,20 +332,19 @@ namespace MobiusEditor.Utility
             if (trimSource)
                 valTrimmed = valTrimmed.Trim();
             bool found = false;
-            foreach (string val in valuesToDetect)
+            if (valuesToDetect != null)
             {
-                if ((val ?? String.Empty).Trim().Equals(value, StringComparison.InvariantCultureIgnoreCase))
+                foreach (string val in valuesToDetect)
                 {
+                    if (val == null || !val.Equals(value, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        continue;
+                    }
                     found = true;
                     break;
                 }
             }
-            if (!negativeCheck && found)
-            {
-                changed = true;
-                return valTrimmed + remarkToAdd;
-            }
-            if (negativeCheck && !found)
+            if ((!negativeCheck && found) || (negativeCheck && !found))
             {
                 changed = true;
                 return valTrimmed + remarkToAdd;
@@ -519,7 +523,16 @@ namespace MobiusEditor.Utility
             return occupyMask.ToString();
         }
 
-        public static Boolean[,] FindOpaqueCells(Bitmap image, Size size, int maxPercentage, int borderPercentage, int minAlpha)
+        /// <summary>
+        /// Chops up an image into cells and determines for each cell if it can be considered "mostly opaque".
+        /// </summary>
+        /// <param name="image">Image to scan.</param>
+        /// <param name="size">Size of the object in cells.</param>
+        /// <param name="minPercentage">Minimum percentage of pixels that need to be opaque before the cell is considered opaque.</param>
+        /// <param name="borderPercentage">Percentage of the width/height of the cell to ignore as outer border.</param>
+        /// <param name="minAlpha">Minimum alpha value to consider a pixel to be opaque.</param>
+        /// <returns></returns>
+        public static Boolean[,] FindOpaqueCells(Bitmap image, Size size, int minPercentage, int borderPercentage, int minAlpha)
         {
             int width = image.Width;
             int height = image.Height;
@@ -538,7 +551,7 @@ namespace MobiusEditor.Utility
                     int cellWidth = cellRect.Width;
                     int cellHeight = cellRect.Height;
                     int cellPixels = cellWidth * cellHeight;
-                    int threshold = cellPixels * maxPercentage / 100;
+                    int threshold = cellPixels * minPercentage / 100;
                     int stride;
                     Byte[] data = ImageUtils.GetImageData(image, out stride, ref cellRect, PixelFormat.Format32bppArgb, true);
                     int opaquePixels = 0;
@@ -553,6 +566,7 @@ namespace MobiusEditor.Utility
                                 opaquePixels++;
                                 if (opaquePixels > threshold)
                                 {
+                                    // Abort loop by setting y to max.
                                     cellY = cellHeight;
                                     break;
                                 }

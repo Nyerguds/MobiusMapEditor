@@ -1,4 +1,17 @@
-﻿using System;
+﻿//         DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
+//                     Version 2, December 2004
+//
+//  Copyright (C) 2004 Sam Hocevar<sam@hocevar.net>
+//
+//  Everyone is permitted to copy and distribute verbatim or modified
+//  copies of this license document, and changing it is allowed as long
+//  as the name is changed.
+//
+//             DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
+//    TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
+//
+//   0. You just DO WHAT THE FUCK YOU WANT TO.
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -217,12 +230,53 @@ namespace MobiusEditor.RedAlert
             return GetClassicFontRemapSimple(ClassicFontTriggers, tsmc, textColor);
         }
 
-        private static string[] gameFiles = new string[]
+        private static readonly string[] embeddedMixFiles = new string[]
+        {
+            "allies.mix",
+            "russian.mix",
+            "conquer.mix",
+            "edhi.mix",
+            "edlo.mix",
+            "general.mix",
+            "movies1.mix",
+            "movies2.mix",
+            "scores.mix",
+            "sounds.mix",
+            "editor.mix",
+            "local.mix",
+            "lores.mix",
+            "lores1.mix",
+            "hires.mix",
+            "hires1.mix",
+            "nchires.mix",
+            "speech.mix",
+        };
+        private static readonly string[] additionalFiles = new string[]
         {
 
         };
 
         public override IEnumerable<string> GetGameFiles()
+        {
+            foreach (string name in GetMissionFiles())
+            {
+                yield return name;
+            }
+            foreach (string name in GetGraphicsFiles(TheaterTypes.GetAllTypes()))
+            {
+                yield return name;
+            }
+            foreach (string name in GetMediaFiles())
+            {
+                yield return name;
+            }
+            foreach (string name in embeddedMixFiles)
+            {
+                yield return name;
+            }
+        }
+
+        public static IEnumerable<string> GetMissionFiles()
         {
             const string iniExt = ".ini";
             char[] sides = { 'g', 'u' };
@@ -263,13 +317,15 @@ namespace MobiusEditor.RedAlert
             {
                 yield return GetMissionName('m', i, mainSuffix) + iniExt;
             }
+        }
 
-            // Graphics used in the editor
+        public static IEnumerable<string> GetGraphicsFiles(IEnumerable<TheaterType> theaterTypes)
+        {
+            // Files used / listed in the editor data
 
             const string shpExt = ".shp";
-            string[] theaterExts = TheaterTypes.GetAllTypes().Where(th => !th.IsModTheater).Select(tt => "." + tt.ClassicExtension.Trim('.')).ToArray();
-            string[] extraThExts = TheaterTypes.GetAllTypes().Where(th => th.IsModTheater).Select(tt => "." + tt.ClassicExtension.Trim('.')).ToArray();
-
+            string[] theaterExts = theaterTypes.Where(th => !th.IsModTheater).Select(tt => "." + tt.ClassicExtension.Trim('.')).ToArray();
+            string[] extraThExts = theaterTypes.Where(th => th.IsModTheater).Select(tt => "." + tt.ClassicExtension.Trim('.')).ToArray();
             // Templates
             foreach (TemplateType tmp in TemplateTypes.GetTypes())
             {
@@ -359,10 +415,28 @@ namespace MobiusEditor.RedAlert
                 yield return name + shpExt;
                 yield return name + "icon" + shpExt;
             }
-            // overlay
+            // Overlay
             foreach (OverlayType ov in OverlayTypes.GetTypes())
             {
                 yield return ov.Name + shpExt;
+            }
+        }
+
+        public static IEnumerable<string> GetMediaFiles()
+        {
+            const string vqaExt = ".vqa";
+            const string vqpExt = ".vqp";
+            const string audExt = ".aud";
+            // Videos
+            foreach (string vidName in GamePluginRA.MoviesClassic)
+            {
+                yield return vidName.ToLowerInvariant() + vqaExt;
+                yield return vidName.ToLowerInvariant() + vqpExt;
+            }
+            // Music
+            foreach (string audName in GamePluginRA.Themes)
+            {
+                yield return audName.ToLowerInvariant() + audExt;
             }
         }
 

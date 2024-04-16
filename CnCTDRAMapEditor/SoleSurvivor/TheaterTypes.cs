@@ -29,8 +29,8 @@ namespace MobiusEditor.SoleSurvivor
         public static readonly TheaterType Temperate = new TheaterType(2, "Temperate", "temperat", "tem", "TD_Terrain_Temperate", commonTilesets);
         // Winter seems to fall back on Temperate for the Haystack graphics.
         public static readonly TheaterType Winter = new TheaterType(3, "Winter", "winter", "win", "TD_Terrain_Winter", commonTilesets.Concat("TD_Terrain_Temperate".Yield()));
-        public static readonly TheaterType Snow = new TheaterType(4, "Snow", "snow", "sno", true, "TD_Terrain_Snow", commonTilesets);
-        public static readonly TheaterType Caribbean = new TheaterType(4, "Caribbean", "caribbea", "car", true, "TD_Terrain_Caribbean", commonTilesets);
+        //public static readonly TheaterType Snow = new TheaterType(4, "Snow", "snow", "sno", true, "TD_Terrain_Snow", commonTilesets);
+        //public static readonly TheaterType Caribbean = new TheaterType(5, "Caribbean", "caribbea", "car", true, "TD_Terrain_Caribbean", commonTilesets);
 
         private static TheaterType[] Types;
 
@@ -39,7 +39,7 @@ namespace MobiusEditor.SoleSurvivor
             Types =
                 (from field in typeof(TheaterTypes).GetFields(BindingFlags.Static | BindingFlags.Public)
                  where field.IsInitOnly && typeof(TheaterType).IsAssignableFrom(field.FieldType)
-                 select field.GetValue(null) as TheaterType).ToArray();
+                 select field.GetValue(null) as TheaterType).OrderBy(th => th.ID).ToArray();
         }
 
         public static IEnumerable<TheaterType> GetAllTypes()

@@ -34,15 +34,15 @@ namespace MobiusEditor.TiberianDawn
     {
         protected bool isMegaMap = false;
 
-        protected static readonly Regex SinglePlayRegex = new Regex("^SC[A-LN-Z]\\d{2}\\d?[EWX][A-EL]$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        protected static readonly Regex MovieRegex = new Regex(@"^(?:.*?\\)*(.*?)\.BK2$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        protected static readonly Regex singlePlayRegex = new Regex("^SC[A-LN-Z]\\d{2}\\d?[EWX][A-EL]$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        protected static readonly Regex movieRegex = new Regex(@"^(?:.*?\\)*(.*?)\.BK2$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private readonly GameInfoTibDawn gameTypeInfo = new GameInfoTibDawn();
 
         protected static readonly IEnumerable<ITechnoType> fullTechnoTypes;
 
         protected const string movieEmpty = "x";
-        private const string RemarkOld = " (Classic only)";
-        private const string RemarkNew = " (Remaster only)";
+        protected const string remarkOld = " (Classic only)";
+        protected const string remarkNew = " (Remaster only)";
         protected readonly IEnumerable<string> movieTypes;
 
         protected static readonly IEnumerable<string> movieTypesTD = new string[]
@@ -176,7 +176,6 @@ namespace MobiusEditor.TiberianDawn
 
         protected static readonly IEnumerable<string> themeTypes = new string[]
         {
-            "No Theme",
             "AIRSTRIK",
             "80MX226M",
             "CHRG226M",
@@ -395,7 +394,7 @@ namespace MobiusEditor.TiberianDawn
                 {
                     foreach (string filename in megafile)
                     {
-                        Match m = MovieRegex.Match(filename);
+                        Match m = movieRegex.Match(filename);
                         if (m.Success)
                         {
                             movies.Add(m.Groups[1].ToString());
@@ -474,7 +473,8 @@ namespace MobiusEditor.TiberianDawn
                 MissionTypes.GetTypes(), MissionTypes.MISSION_GUARD, MissionTypes.MISSION_STOP, MissionTypes.MISSION_HARVEST,
                 MissionTypes.MISSION_UNLOAD, DirectionTypes.GetMainTypes(), DirectionTypes.GetAllTypes(), InfantryTypes.GetTypes(),
                 UnitTypes.GetTypes(Globals.DisableAirUnits), BuildingTypes.GetTypes(), TeamMissionTypes.GetTypes(),
-                fullTechnoTypes, waypoints, 4, 0, 0, movieTypes, movieEmpty, themeTypes, themeEmpty, Constants.TiberiumValue, 0);
+                fullTechnoTypes, waypoints, movieTypes, movieEmpty, themeEmpty.Yield().Concat(themeTypes), themeEmpty,
+                4, 0, 0, Constants.TiberiumValue, 0);
             Map.BasicSection.PropertyChanged += BasicSection_PropertyChanged;
             Map.MapSection.PropertyChanged += MapSection_PropertyChanged;
             if (mapImage)
@@ -520,7 +520,7 @@ namespace MobiusEditor.TiberianDawn
                     }
                     iniBytes = File.ReadAllBytes(iniPath);
                     ParseIniContent(ini, iniBytes, forSole);
-                    tryCheckSingle = !forSole && SinglePlayRegex.IsMatch(Path.GetFileNameWithoutExtension(path));
+                    tryCheckSingle = !forSole && singlePlayRegex.IsMatch(Path.GetFileNameWithoutExtension(path));
                     errors.AddRange(LoadINI(ini, tryCheckSingle, ref modified));
                     if (!File.Exists(binPath))
                     {
@@ -591,10 +591,10 @@ namespace MobiusEditor.TiberianDawn
         {
             if (movieEmpty.Equals(videoName))
                 return videoName;
-            String newName = GeneralUtils.AddRemarks(videoName, movieEmpty, true, movieTypesRemarksOld, RemarkOld, out bool changed);
+            String newName = GeneralUtils.AddRemarks(videoName, movieEmpty, true, movieTypesRemarksOld, remarkOld, out bool changed);
             if (!changed)
             {
-                newName = GeneralUtils.AddRemarks(videoName, movieEmpty, true, movieTypesTD, RemarkNew, true);
+                newName = GeneralUtils.AddRemarks(videoName, movieEmpty, true, movieTypesTD, remarkNew, true);
             }
             return newName;
         }

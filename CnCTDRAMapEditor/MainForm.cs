@@ -523,7 +523,7 @@ namespace MobiusEditor
                     {
                         uint hash = hasher.GetNameIdCorrectCase(filename.ToUpperInvariant());
                         if (!generatedMixIds.ContainsKey(hash))
-                            generatedMixIds.Add(hash, filename);
+                            generatedMixIds.Add(hash, filename.ToLowerInvariant());
                     }
                 }
             }
@@ -555,17 +555,24 @@ namespace MobiusEditor
             {
                 return;
             }
-            Mixfile mixfile;
+            Mixfiles mixfile;
             try
             {
-                mixfile = new Mixfile(selectedFileName);
+                mixfile = new Mixfiles(selectedFileName);
             }
             catch
             {
                 return;
             }
-            List<MixFileInfo> mixFileInfo = MixContentAnalysis.AnalyseFiles(mixfile, generatedMixIds);
-            // TODO open mix browsing ui
+            using (OpenFromMixDialog mixDialog = new OpenFromMixDialog(mixfile, generatedMixIds))
+            {
+                mixDialog.StartPosition = FormStartPosition.CenterParent;
+                mixDialog.ShowDialog();
+                // Extract data
+                // mixDialog.MissionFile
+                // mixDialog.MapFile
+                // Somehow load from bytes? Crap, there's currently no support for that, is there? Maybe in the pgm archive stuff...
+            }
         }
 
         private void FileSaveMenuItem_Click(object sender, EventArgs e)

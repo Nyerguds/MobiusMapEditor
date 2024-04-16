@@ -34,19 +34,20 @@ namespace MobiusEditor.RedAlert
         private readonly IEnumerable<string> movieTypes;
         private bool isLoading = false;
 
-        private static readonly Regex SinglePlayRegex = new Regex("^SC[A-LN-Z]\\d{2}[EWX][A-EL]$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex singlePlayRegex = new Regex("^SC[A-LN-Z]\\d{2}[EWX][A-EL]$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private readonly GameInfoRedAlert gameTypeInfo = new GameInfoRedAlert();
 
         private const string movieEmpty = "<none>";
-        private const string RemarkOld = " (Classic only)";
-        private const string RemarkNew = " (Remaster only)";
+        private const string remarkOld = " (Classic only)";
+        private const string remarkNew = " (Remaster only)";
 
         private static readonly IEnumerable<string> movieTypesRemarksOld = new string[]
         {
             "SHIPYARD", // MISSING
             "ENGLISH",  // High res. Intro
-            "SIZZLE",   //MISSING
-            "SIZZLE2",  //MISSING
+            "SIZZLE",   // MISSING
+            "SIZZLE2",  // MISSING
+            "TRAILER"   // MISSING
         };
 
         private static readonly IEnumerable<string> movieTypesRemarksNew = new string[]
@@ -175,8 +176,9 @@ namespace MobiusEditor.RedAlert
             "SOVIET9",
             "BEACHEAD",
             "SOVIET14",
-            "SIZZLE",   //MISSING
-            "SIZZLE2",  //MISSING
+            "SIZZLE",   // MISSING
+            "SIZZLE2",  // MISSING
+            // "TRAILER",  // MISSING
             "ANTEND",
             "ANTINTRO",
             //2019/11/12 JAS - Added for Retaliation movies
@@ -209,7 +211,6 @@ namespace MobiusEditor.RedAlert
 
         private static readonly IEnumerable<string> themeTypes = new string[]
         {
-            "No Theme",
             "BIGF226M",
             "CRUS226M",
             "FAC1226M",
@@ -252,6 +253,7 @@ namespace MobiusEditor.RedAlert
         };
 
         public static IEnumerable<string> Movies => movieTypesRa;
+        public static IEnumerable<string> MoviesClassic => movieTypesRa.Where(mv => !movieTypesRemarksNew.Contains(mv));
         public static IEnumerable<string> Themes => themeTypes;
 
         private static readonly IEnumerable<ITechnoType> fullTechnoTypes;
@@ -514,11 +516,11 @@ namespace MobiusEditor.RedAlert
             List<string> movies = new List<string>(movieTypesRa);
             for (int i = 0; i < movies.Count; ++i)
             {
-                string vidName = GeneralUtils.AddRemarks(movies[i], movieEmpty, true, movieTypesRemarksOld, RemarkOld, out bool changed);
+                string vidName = GeneralUtils.AddRemarks(movies[i], movieEmpty, true, movieTypesRemarksOld, remarkOld, out bool changed);
                 // Only add one remark.
                 if (!changed)
                 {
-                    vidName = GeneralUtils.AddRemarks(movies[i], movieEmpty, true, movieTypesRemarksNew, RemarkNew);
+                    vidName = GeneralUtils.AddRemarks(movies[i], movieEmpty, true, movieTypesRemarksNew, remarkNew);
                 }
                 movies[i] = vidName;
             }
@@ -568,8 +570,8 @@ namespace MobiusEditor.RedAlert
                 MissionTypes.GetTypes(), MissionTypes.MISSION_GUARD, MissionTypes.MISSION_STOP, MissionTypes.MISSION_HARVEST,
                 MissionTypes.MISSION_UNLOAD, DirectionTypes.GetMainTypes(), DirectionTypes.GetAllTypes(), InfantryTypes.GetTypes(),
                 UnitTypes.GetTypes(Globals.DisableAirUnits), BuildingTypes.GetTypes(), TeamMissionTypes.GetTypes(),
-                fullTechnoTypes, waypoints, Constants.DefaultDropZoneRadius, Constants.DefaultGapRadius, Constants.DefaultJamRadius, movieTypes, movieEmpty, themeTypes, themeEmpty,
-                Constants.DefaultGoldValue, Constants.DefaultGemValue);
+                fullTechnoTypes, waypoints, movieTypes, movieEmpty, themeEmpty.Yield().Concat(themeTypes), themeEmpty,
+                Constants.DefaultDropZoneRadius, Constants.DefaultGapRadius, Constants.DefaultJamRadius, Constants.DefaultGoldValue, Constants.DefaultGemValue);
             Map.BasicSection.PropertyChanged += BasicSection_PropertyChanged;
             Map.MapSection.PropertyChanged += MapSection_PropertyChanged;
             if (mapImage)
@@ -618,7 +620,7 @@ namespace MobiusEditor.RedAlert
                             INI ini = new INI();
                             iniBytes = File.ReadAllBytes(path);
                             ParseIniContent(ini, iniBytes, errors);
-                            tryCheckSingle = SinglePlayRegex.IsMatch(Path.GetFileNameWithoutExtension(path));
+                            tryCheckSingle = singlePlayRegex.IsMatch(Path.GetFileNameWithoutExtension(path));
                             errors.AddRange(LoadINI(ini, tryCheckSingle, ref modified));
                         }
                         break;
@@ -703,7 +705,7 @@ namespace MobiusEditor.RedAlert
                     String briefing = briefSectionUtf8.Keys["Text"];
                     if (comment != null)
                     {
-                        briefing = briefing + comment;
+                        briefing += comment;
                     }
                     briefSectionDos.Keys["Text"] = briefing;
                 }
@@ -796,25 +798,25 @@ namespace MobiusEditor.RedAlert
                 List<string> movies = new List<string>(movieTypesRa);
                 for (int i = 0; i < movies.Count; ++i)
                 {
-                    string vidName = GeneralUtils.AddRemarks(movies[i], movieEmpty, true, movieTypesRemarksOld, RemarkOld);
-                    movies[i] = GeneralUtils.AddRemarks(vidName, movieEmpty, true, movieTypesRemarksNew, RemarkNew);
+                    string vidName = GeneralUtils.AddRemarks(movies[i], movieEmpty, true, movieTypesRemarksOld, remarkOld);
+                    movies[i] = GeneralUtils.AddRemarks(vidName, movieEmpty, true, movieTypesRemarksNew, remarkNew);
                 }
                 movies.Insert(0, movieEmpty);
-                basic.Intro = GeneralUtils.AddRemarks(GeneralUtils.AddRemarks(basic.Intro, movieEmpty, true, movieTypesRemarksOld, RemarkOld), movieEmpty, true, movieTypesRemarksNew, RemarkNew);
+                basic.Intro = GeneralUtils.AddRemarks(GeneralUtils.AddRemarks(basic.Intro, movieEmpty, true, movieTypesRemarksOld, remarkOld), movieEmpty, true, movieTypesRemarksNew, remarkNew);
                 basic.Intro = GeneralUtils.FilterToExisting(basic.Intro, movieEmpty, true, movies);
-                basic.Brief = GeneralUtils.AddRemarks(GeneralUtils.AddRemarks(basic.Brief, movieEmpty, true, movieTypesRemarksOld, RemarkOld), movieEmpty, true, movieTypesRemarksNew, RemarkNew);
+                basic.Brief = GeneralUtils.AddRemarks(GeneralUtils.AddRemarks(basic.Brief, movieEmpty, true, movieTypesRemarksOld, remarkOld), movieEmpty, true, movieTypesRemarksNew, remarkNew);
                 basic.Brief = GeneralUtils.FilterToExisting(basic.Brief, movieEmpty, true, movies);
-                basic.Action = GeneralUtils.AddRemarks(GeneralUtils.AddRemarks(basic.Action, movieEmpty, true, movieTypesRemarksOld, RemarkOld), movieEmpty, true, movieTypesRemarksNew, RemarkNew);
+                basic.Action = GeneralUtils.AddRemarks(GeneralUtils.AddRemarks(basic.Action, movieEmpty, true, movieTypesRemarksOld, remarkOld), movieEmpty, true, movieTypesRemarksNew, remarkNew);
                 basic.Action = GeneralUtils.FilterToExisting(basic.Action, movieEmpty, true, movies);
-                basic.Win = GeneralUtils.AddRemarks(GeneralUtils.AddRemarks(basic.Win, movieEmpty, true, movieTypesRemarksOld, RemarkOld), movieEmpty, true, movieTypesRemarksNew, RemarkNew);
+                basic.Win = GeneralUtils.AddRemarks(GeneralUtils.AddRemarks(basic.Win, movieEmpty, true, movieTypesRemarksOld, remarkOld), movieEmpty, true, movieTypesRemarksNew, remarkNew);
                 basic.Win = GeneralUtils.FilterToExisting(basic.Win, movieEmpty, true, movies);
-                basic.Win2 = GeneralUtils.AddRemarks(GeneralUtils.AddRemarks(basic.Win2, movieEmpty, true, movieTypesRemarksOld, RemarkOld), movieEmpty, true, movieTypesRemarksNew, RemarkNew);
+                basic.Win2 = GeneralUtils.AddRemarks(GeneralUtils.AddRemarks(basic.Win2, movieEmpty, true, movieTypesRemarksOld, remarkOld), movieEmpty, true, movieTypesRemarksNew, remarkNew);
                 basic.Win2 = GeneralUtils.FilterToExisting(basic.Win2, movieEmpty, true, movies);
-                basic.Win3 = GeneralUtils.AddRemarks(GeneralUtils.AddRemarks(basic.Win3, movieEmpty, true, movieTypesRemarksOld, RemarkOld), movieEmpty, true, movieTypesRemarksNew, RemarkNew);
+                basic.Win3 = GeneralUtils.AddRemarks(GeneralUtils.AddRemarks(basic.Win3, movieEmpty, true, movieTypesRemarksOld, remarkOld), movieEmpty, true, movieTypesRemarksNew, remarkNew);
                 basic.Win3 = GeneralUtils.FilterToExisting(basic.Win3, movieEmpty, true, movies);
-                basic.Win4 = GeneralUtils.AddRemarks(GeneralUtils.AddRemarks(basic.Win4, movieEmpty, true, movieTypesRemarksOld, RemarkOld), movieEmpty, true, movieTypesRemarksNew, RemarkNew);
+                basic.Win4 = GeneralUtils.AddRemarks(GeneralUtils.AddRemarks(basic.Win4, movieEmpty, true, movieTypesRemarksOld, remarkOld), movieEmpty, true, movieTypesRemarksNew, remarkNew);
                 basic.Win4 = GeneralUtils.FilterToExisting(basic.Win4, movieEmpty, true, movies);
-                basic.Lose = GeneralUtils.AddRemarks(GeneralUtils.AddRemarks(basic.Lose, movieEmpty, true, movieTypesRemarksOld, RemarkOld), movieEmpty, true, movieTypesRemarksNew, RemarkNew);
+                basic.Lose = GeneralUtils.AddRemarks(GeneralUtils.AddRemarks(basic.Lose, movieEmpty, true, movieTypesRemarksOld, remarkOld), movieEmpty, true, movieTypesRemarksNew, remarkNew);
                 basic.Lose = GeneralUtils.FilterToExisting(basic.Lose, movieEmpty, true, movies);
             }
             string plName = Map.BasicSection.Player;

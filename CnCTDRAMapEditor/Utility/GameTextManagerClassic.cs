@@ -1366,7 +1366,7 @@ namespace MobiusEditor.Utility
                     // File manager should be initialised for a specific game so it only opens the files
                     // for that game. So a request for "conquer.eng" should always go to the right place.
                     byte[] file = archiveManager.ReadFile(gameTextFile);
-                    stringsFile = LoadFile(file);
+                    stringsFile = LoadFile(file, null, false);
                 }
                 catch { /*ignore; just gonna be empty I guess */ }
             }
@@ -1392,7 +1392,7 @@ namespace MobiusEditor.Utility
             this.gameTextPaths = gameTextPaths;
         }
 
-        public static List<byte[]> LoadFile(byte[] fileData)
+        public static List<byte[]> LoadFile(byte[] fileData, List<ushort> indices, bool strict)
         {
             if (fileData == null)
             {
@@ -1400,22 +1400,33 @@ namespace MobiusEditor.Utility
             }
             int len = fileData.Length;
             if (len < 2)
+            {
                 throw new ArgumentOutOfRangeException("fileData", "File is too short to contain any entries!");
+            }
             // Map all covered content to prevent data overlaps. Though I guess technically
             // the format could support it... but let's not go into that contrived madness.
             bool[] covered = new bool[len];
             bool[] coveredIndex = new bool[len];
             int ptr = 0;
             List<byte[]> strings = new List<byte[]>();
+            ushort prev = 0;
             while (ptr + 2 <= len && !covered[ptr])
             {
                 ushort cur = (ushort)(fileData[ptr] | (fileData[ptr + 1] << 8));
+                if (strict && prev >= cur)
+                {
+                    throw new ArgumentOutOfRangeException("fileData", "String indices are not in logical order.");
+                }
                 coveredIndex[ptr] = true;
                 coveredIndex[ptr + 1] = true;
                 if (cur >= len)
+                {
                     throw new ArgumentOutOfRangeException("fileData", "File contains addresses larger than the file's size.");
+                }
                 if (coveredIndex[cur])
+                {
                     throw new ArgumentOutOfRangeException("fileData", "Index refers to previously-read data inside index table.");
+                }
                 int end = cur;
                 while (end < len && fileData[end] != 0)
                     end++;
@@ -1423,6 +1434,10 @@ namespace MobiusEditor.Utility
                 byte[] curStr = new byte[curStrLen];
                 Array.Copy(fileData, cur, curStr, 0, curStrLen);
                 strings.Add(curStr);
+                if (indices != null)
+                {
+                    indices.Add(cur);
+                }
                 // Account for the 0 at the end. All strings should have this.
                 end++;
                 for (int i = cur; i < end && i < len; ++i)
