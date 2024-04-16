@@ -18,9 +18,6 @@ using System.IO;
 using System.IO.MemoryMappedFiles;
 using System.Linq;
 using System.Numerics;
-using System.Reflection;
-using System.Xml.Linq;
-using static System.Net.WebRequestMethods;
 
 namespace MobiusEditor.Utility
 {

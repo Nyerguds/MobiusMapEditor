@@ -45,7 +45,7 @@ namespace MobiusEditor.Dialogs
                 () => MixContentAnalysis.AnalyseFiles(current, this.encodedFilenames, () => this.CheckAbort()),
                 (list) => FillList(list), true,
                 (bl, str) => EnableDisableUi(bl, str, analysisMultiThreader),
-                "Analysing MIX Contents");
+                "Analyzing MIX Contents");
         }
 
         private bool CheckAbort()
@@ -89,7 +89,7 @@ namespace MobiusEditor.Dialogs
             OpenCurrentlySelected();
         }
 
-        private void btnCancel_Click(object sender, EventArgs e)
+        private void BtnCancel_Click(object sender, EventArgs e)
         {
             if (analysisMultiThreader.IsExecuting)
             {
@@ -101,12 +101,12 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        private void btnOpen_Click(object sender, EventArgs e)
+        private void BtnOpen_Click(object sender, EventArgs e)
         {
             OpenCurrentlySelected();
         }
 
-        private void mixContentsListView_KeyDown(object sender, KeyEventArgs e)
+        private void MixContentsListView_KeyDown(object sender, KeyEventArgs e)
         {
             switch (e.KeyData) {
                 case Keys.Enter:
@@ -156,17 +156,17 @@ namespace MobiusEditor.Dialogs
             }
             else if (type == MixContentType.MapTd || type == MixContentType.MapSole)
             {
-                if (selected.Name != null)
+                if (selected.Name == null)
                 {
-                    // Inform user that accompanying .bin is impossible to find without name, and ssk if user wants to open blank map with this terrain.
+                    // Inform user that accompanying bin is impossible to find without name, and ask if user wants to open it on a blank terrain map.
                 }
                 // try to find accompanying .bin file
             }
             else if (type == MixContentType.Bin || type == MixContentType.BinSole)
             {
-                if (selected.Name != null)
+                if (selected.Name == null)
                 {
-                    // Inform user that accompanying ini is impossible to find without name, and ssk if user wants to open blank map with this terrain.
+                    // Inform user that accompanying ini is impossible to find without name, and ask if user wants to open an empty map with this terrain.
                 }
                 // try to find accompanying .ini file
             }
@@ -224,7 +224,7 @@ namespace MobiusEditor.Dialogs
                     return;
                 }
                 float totalColumnWidth = 0;
-                int totalAvailablewidth = listView.ClientRectangle.Width;
+                int totalAvailablewidth = listView.ClientRectangle.Width - 1;
                 int availablewidth = totalAvailablewidth;
                 int columns = listView.Columns.Count;
                 int[] tagWidths = new int[columns];

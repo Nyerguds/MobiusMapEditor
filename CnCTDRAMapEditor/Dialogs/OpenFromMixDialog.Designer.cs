@@ -62,7 +62,7 @@
             this.mixContentsListView.ColumnWidthChanging += new System.Windows.Forms.ColumnWidthChangingEventHandler(this.mixContentsListView_ColumnWidthChanging);
             this.mixContentsListView.SizeChanged += new System.EventHandler(this.MixContentsListView_SizeChanged);
             this.mixContentsListView.DoubleClick += new System.EventHandler(this.MixContentsListView_DoubleClick);
-            this.mixContentsListView.KeyDown += new System.Windows.Forms.KeyEventHandler(this.mixContentsListView_KeyDown);
+            this.mixContentsListView.KeyDown += new System.Windows.Forms.KeyEventHandler(this.MixContentsListView_KeyDown);
             // 
             // nameColumnHeader
             // 
@@ -92,7 +92,7 @@
             this.btnCancel.TabIndex = 2;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
-            this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
+            this.btnCancel.Click += new System.EventHandler(this.BtnCancel_Click);
             // 
             // btnOpen
             // 
@@ -103,7 +103,7 @@
             this.btnOpen.TabIndex = 3;
             this.btnOpen.Text = "Open";
             this.btnOpen.UseVisualStyleBackColor = true;
-            this.btnOpen.Click += new System.EventHandler(this.btnOpen_Click);
+            this.btnOpen.Click += new System.EventHandler(this.BtnOpen_Click);
             // 
             // btnCloseFile
             // 
@@ -128,8 +128,9 @@
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.mixContentsListView);
             this.Icon = global::MobiusEditor.Properties.Resources.GameIcon00;
+            this.MinimumSize = new System.Drawing.Size(500, 300);
             this.Name = "OpenFromMixDialog";
-            this.Text = "Open From Mix file";
+            this.Text = "Open from Mix file";
             this.Load += new System.EventHandler(this.OpenFromMixDialog_Load);
             this.ResumeLayout(false);
 

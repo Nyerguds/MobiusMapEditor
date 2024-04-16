@@ -1,4 +1,5 @@
-﻿using MobiusEditor.Utility.Hashing;
+﻿using MobiusEditor.Model;
+using MobiusEditor.Utility.Hashing;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -198,33 +199,53 @@ namespace MobiusEditor.Utility
                             string mapheight = map.TryGetValue("Height") ?? "?";
                             string mapTheater = map.TryGetValue("Theater") ?? "?";
                             string mapName = bas.TryGetValue("Name");
-                            string mapDesc = String.Format("; {0}x{1}, {2}", mapWidth, mapheight, mapTheater);
+                            List<string> mapDesc = new List<string>();
+                            mapDesc.Add(String.Format("; {0}x{1}", mapWidth, mapheight));
+                            MixContentType mapType = MixContentType.MapTd;
                             if (SoleSurvivor.GamePluginSS.CheckForSSmap(ini))
+                                mapType = MixContentType.MapSole;
+                            else if (RedAlert.GamePluginRA.CheckForRAMap(ini))
+                                mapType = MixContentType.MapRa;
+                            mixInfo.Type = mapType;
+                            IEnumerable<HouseType> houses = null;
+                            IEnumerable<TheaterType> theaters = null;
+                            switch (mapType)
                             {
-                                mixInfo.Type = MixContentType.MapSole;
-                                if (!String.IsNullOrEmpty(mapName))
+                                case MixContentType.MapTd:
+                                    houses = TiberianDawn.HouseTypes.GetTypes();
+                                    theaters = TiberianDawn.TheaterTypes.GetTypes();
+                                    mixInfo.Info = "TD Map";
+                                    break;
+                                case MixContentType.MapSole:
+                                    theaters = SoleSurvivor.TheaterTypes.GetTypes();
+                                    mixInfo.Info = "Sole Map";
+                                    break;
+                                case MixContentType.MapRa:
+                                    houses = RedAlert.HouseTypes.GetTypes();
+                                    theaters = RedAlert.TheaterTypes.GetTypes();
+                                    mixInfo.Info = "RA Map";
+                                    break;
+                            }
+                            TheaterType theater = theaters.FirstOrDefault(th => th.Name.Equals(mapTheater, StringComparison.OrdinalIgnoreCase));
+                            mapDesc.Add(theater != null ? theater.Name : mapTheater);
+                            String mapDescr;
+                            if (mapType != MixContentType.MapSole)
+                            {
+                                string mapPlayer = bas.TryGetValue("Player");
+                                bool notMulti = mapPlayer != null && !mapPlayer.StartsWith("Multi", StringComparison.OrdinalIgnoreCase);
+                                bool hasBrief = ini["Briefing"] != null && ini["Briefing"].Keys.Count > 0;
+                                if (hasBrief || notMulti)
                                 {
-                                    mapDesc += ": \"" + mapName + "\"";
+                                    HouseType house = houses.FirstOrDefault(hs => hs.Name.Equals(mapPlayer, StringComparison.OrdinalIgnoreCase));
+                                    mapDesc.Add(house != null ? house.Name : mapPlayer);
                                 }
-                                mixInfo.Info = "Sole Map" + mapDesc;
-                                return;
                             }
-                            string mapPlayer = bas.TryGetValue("Player");
-                            bool notMulti = mapPlayer != null && !mapPlayer.StartsWith("Multi", StringComparison.OrdinalIgnoreCase);
-                            bool hasBrief = ini["Briefing"] != null && ini["Briefing"].Keys.Count > 0;
-                            string mapDesc2 = (hasBrief || notMulti ? mapPlayer : String.Empty) + (String.IsNullOrEmpty(mapName) ? String.Empty : ": \"" + mapName + "\"");
-                            if (mapDesc2.Length > 0)
+                            mapDescr = String.Join(", ", mapDesc.ToArray());
+                            if (!String.IsNullOrEmpty(mapName))
                             {
-                                mapDesc += ", " + mapDesc2;
+                                mapDescr += ": \"" + mapName + "\"";
                             }
-                            if (RedAlert.GamePluginRA.CheckForRAMap(ini))
-                            {
-                                mixInfo.Type = MixContentType.MapRa;
-                                mixInfo.Info = "RA Map" + mapDesc;
-                                return;
-                            }
-                            mixInfo.Type = MixContentType.MapTd;
-                            mixInfo.Info = "TD Map" + mapDesc;
+                            mixInfo.Info += mapDescr;
                             return;
                         }
                         else if (!ini.Sections.Any(s => s.Name.IndexOfAny(badIniHeaderRange) > 0
@@ -306,7 +327,7 @@ namespace MobiusEditor.Utility
                     if (isMap)
                     {
                         mixInfo.Type = MixContentType.Bin;
-                        mixInfo.Info = "Tiberian Dawn / Sole Survivor 64x64 Map";
+                        mixInfo.Info = "Tiberian Dawn 64x64 Map";
                         return;
                     }
                 }
