@@ -555,10 +555,10 @@ namespace MobiusEditor
             {
                 return;
             }
-            Mixfiles mixfile;
+            MixFile mixfile;
             try
             {
-                mixfile = new Mixfiles(selectedFileName);
+                mixfile = new MixFile(selectedFileName);
             }
             catch
             {

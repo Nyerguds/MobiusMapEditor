@@ -636,7 +636,7 @@
     <Compile Include="Utility\MegafileBuilder.cs" />
     <Compile Include="Utility\MegafileManager.cs" />
     <Compile Include="Utility\MixContentAnalysis.cs" />
-    <Compile Include="Utility\Mixfiles.cs" />
+    <Compile Include="Utility\MixFile.cs" />
     <Compile Include="Utility\MixFileCrypto.cs" />
     <Compile Include="Utility\MixfileManager.cs" />
     <Compile Include="Utility\MRU.cs" />

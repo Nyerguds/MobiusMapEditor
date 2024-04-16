@@ -48,7 +48,7 @@ namespace MobiusEditor.Utility
         private Dictionary<GameType, List<MixInfo>> gameArchives;
         private readonly List<MixInfo> currentMixFileInfo = new List<MixInfo>();
         private List<string> currentMixNames = new List<string>();
-        private Dictionary<string, Mixfiles> currentMixFiles;
+        private Dictionary<string, MixFile> currentMixFiles;
 
         public string LoadRoot { get { return applicationPath; } }
 
@@ -296,7 +296,7 @@ namespace MobiusEditor.Utility
             // embedded mix files into account, since they are loaded in the Reset function.
             foreach (MixInfo mixInfo in mixFilesInfo)
             {
-                if (currentMixFiles != null && currentMixFiles.TryGetValue(mixInfo.Name, out Mixfiles archive))
+                if (currentMixFiles != null && currentMixFiles.TryGetValue(mixInfo.Name, out MixFile archive))
                 {
                     Stream stream = archive.OpenFile(path);
                     if (stream != null)
@@ -318,7 +318,7 @@ namespace MobiusEditor.Utility
             // Clean up previously loaded files.
             if (currentMixFiles != null)
             {
-                foreach (Mixfiles oldMixFile in currentMixFiles.Values)
+                foreach (MixFile oldMixFile in currentMixFiles.Values)
                 {
                     try
                     {
@@ -342,7 +342,7 @@ namespace MobiusEditor.Utility
                 gamePath = Path.Combine(applicationPath, gamePath);
             }
             List<MixInfo> newMixFileInfo = gameArchives.Where(kv => kv.Key == gameType).SelectMany(kv => kv.Value).ToList();
-            Dictionary<string, Mixfiles> foundMixFiles = new Dictionary<string, Mixfiles>();
+            Dictionary<string, MixFile> foundMixFiles = new Dictionary<string, MixFile>();
             if (modPathsPerGame != null && modPathsPerGame.TryGetValue(gameType, out string[] modPaths) && modPaths != null && modPaths.Length > 0)
             {
                 // In each mod folder, try to read all mix files.
@@ -379,7 +379,7 @@ namespace MobiusEditor.Utility
             currentMixFileInfo.AddRange(newMixFileInfo.Where(mi => foundNames.Contains(mi.Name)));
         }
 
-        private bool AddMixFileIfPresent(Dictionary<string, Mixfiles> readMixFiles, List<MixInfo> readMixNames, MixInfo mixToAdd, string readFolder)
+        private bool AddMixFileIfPresent(Dictionary<string, MixFile> readMixFiles, List<MixInfo> readMixNames, MixInfo mixToAdd, string readFolder)
         {
             // 1. Look for file in given folder
             // 2. if 'CanBeEmbedded', look for file inside archives inside mix files list
@@ -391,12 +391,12 @@ namespace MobiusEditor.Utility
                 return false;
             }
             string localPath = Path.Combine(readFolder, mixName);
-            Mixfiles mixFile = null;
+            MixFile mixFile = null;
             if (File.Exists(localPath))
             {
                 try
                 {
-                    mixFile = new Mixfiles(localPath, mixToAdd.CanUseNewFormat);
+                    mixFile = new MixFile(localPath, mixToAdd.CanUseNewFormat);
                 }
                 catch (Exception ex)
                 {
@@ -407,13 +407,13 @@ namespace MobiusEditor.Utility
             {
                 foreach (MixInfo readArchive in readMixNames)
                 {
-                    if (readArchive.IsContainer && readMixFiles.TryGetValue(readArchive.Name, out Mixfiles container))
+                    if (readArchive.IsContainer && readMixFiles.TryGetValue(readArchive.Name, out MixFile container))
                     {
                         // Check if file exists
                         if (container.GetFileInfo(mixName, out _, out _))
                         {
                             // Create as embedded mix file
-                            mixFile = new Mixfiles(container, mixName, mixToAdd.CanUseNewFormat);
+                            mixFile = new MixFile(container, mixName, mixToAdd.CanUseNewFormat);
                         }
                     }
                 }

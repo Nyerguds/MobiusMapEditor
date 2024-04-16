@@ -21,7 +21,7 @@ using System.Numerics;
 
 namespace MobiusEditor.Utility
 {
-    public class Mixfiles : IDisposable
+    public class MixFile : IDisposable
     {
         private static readonly string PublicKey = "AihRvNoIbTn85FZRYNZRcT+i6KpU+maCsEqr3Q5q+LDB5tH7Tz2qQ38V";
         private static readonly string PrivateKey = "AigKVje8mROcR8QixnxUEF5b29Curkq01DNDWCdOG99XBqH79OaCiTCB";
@@ -40,12 +40,12 @@ namespace MobiusEditor.Utility
         private uint dataStart;
         private MemoryMappedFile mixFileMap;
 
-        public Mixfiles(string mixPath)
+        public MixFile(string mixPath)
             : this(mixPath, true)
         {
         }
 
-        public Mixfiles(string mixPath, bool handleAdvanced)
+        public MixFile(string mixPath, bool handleAdvanced)
         {
             FileInfo mixFile = new FileInfo(mixPath);
             this.fileStart = 0;
@@ -57,12 +57,12 @@ namespace MobiusEditor.Utility
             this.ReadMixHeader(this.mixFileMap, this.fileStart, this.fileLength, handleAdvanced);
         }
 
-        public Mixfiles(Mixfiles container, string name)
+        public MixFile(MixFile container, string name)
             : this(container, name, true)
         {
         }
 
-        public Mixfiles(Mixfiles container, string name, bool handleAdvanced)
+        public MixFile(MixFile container, string name, bool handleAdvanced)
         {
             this.IsEmbedded = true;
             this.MixFileName = container.MixFileName + " -> " + name;
@@ -77,12 +77,12 @@ namespace MobiusEditor.Utility
             this.ReadMixHeader(this.mixFileMap, offset, this.fileLength, handleAdvanced);
         }
 
-        public Mixfiles(Mixfiles container, uint nameId)
+        public MixFile(MixFile container, uint nameId)
             : this(container, nameId, true)
         {
         }
 
-        public Mixfiles(Mixfiles container, uint nameId, bool handleAdvanced)
+        public MixFile(MixFile container, uint nameId, bool handleAdvanced)
         {
             this.IsEmbedded = true;
             this.MixFileName = container.MixFileName + " -> " + nameId;

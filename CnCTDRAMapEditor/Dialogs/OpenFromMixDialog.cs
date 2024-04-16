@@ -11,15 +11,15 @@ namespace MobiusEditor.Dialogs
     public partial class OpenFromMixDialog : Form, IHasStatusLabel
     {
         private bool resizing = false;
-        private List<Mixfiles> openedMixFiles = new List<Mixfiles>();
-        private Mixfiles baseMix;
+        private List<MixFile> openedMixFiles = new List<MixFile>();
+        private MixFile baseMix;
         private Dictionary<uint, string> encodedFilenames;
         private List<MixEntry> currentMixInfo;
         private SimpleMultiThreading analysisMultiThreader;
 
         public Label StatusLabel { get; set; }
 
-        public OpenFromMixDialog(Mixfiles baseMix, Dictionary<uint, string> encodedFilenames)
+        public OpenFromMixDialog(MixFile baseMix, Dictionary<uint, string> encodedFilenames)
         {
             InitializeComponent();
             this.encodedFilenames = encodedFilenames;
@@ -31,7 +31,7 @@ namespace MobiusEditor.Dialogs
 
         private void LoadMixContents()
         {
-            Mixfiles current = GetCurrentMix();
+            MixFile current = GetCurrentMix();
             if (current == null)
             {
                 FillList(null);
@@ -56,7 +56,7 @@ namespace MobiusEditor.Dialogs
             
         }
 
-        private Mixfiles GetCurrentMix()
+        private MixFile GetCurrentMix()
         {
             return openedMixFiles.LastOrDefault();
         }
@@ -80,11 +80,11 @@ namespace MobiusEditor.Dialogs
             MixEntry selected = mixContentsListView.SelectedItems[0].Tag as MixEntry;
             if (selected.Type == MixContentType.Mix)
             {
-                Mixfiles current = GetCurrentMix();
-                Mixfiles subMix = null;
+                MixFile current = GetCurrentMix();
+                MixFile subMix = null;
                 try
                 {
-                    subMix = selected.Name != null ? new Mixfiles(current, selected.Name) : new Mixfiles(current, selected.Id);
+                    subMix = selected.Name != null ? new MixFile(current, selected.Name) : new MixFile(current, selected.Id);
                 }
                 catch
                 {
@@ -103,7 +103,7 @@ namespace MobiusEditor.Dialogs
             {
                 return;
             }
-            Mixfiles current = GetCurrentMix();
+            MixFile current = GetCurrentMix();
             openedMixFiles.Remove(current);
             btnCloseFile.Enabled = openedMixFiles.Count > 1;
             LoadMixContents();

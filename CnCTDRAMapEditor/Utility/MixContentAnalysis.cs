@@ -15,7 +15,7 @@ namespace MobiusEditor.Utility
         private const String xccCheck = "XCC by Olaf van der Spek";
         private const uint xccId = 0x54C2D545;
 
-        public static List<MixEntry> AnalyseFiles(Mixfiles current, Dictionary<uint, string> encodedFilenames)
+        public static List<MixEntry> AnalyseFiles(MixFile current, Dictionary<uint, string> encodedFilenames)
         {
             List<uint> filesList = current.GetFileIds();
             List<MixEntry> fileInfo = new List<MixEntry>();
@@ -138,7 +138,7 @@ namespace MobiusEditor.Utility
             return fileInfo.OrderBy(x => x.SortName).ToList();
         }
 
-        private static void TryIdentifyFile(Stream fileStream, MixEntry mixInfo, Mixfiles source)
+        private static void TryIdentifyFile(Stream fileStream, MixEntry mixInfo, MixFile source)
         {
             long fileLengthFull = fileStream.Length;
             byte[] fileContents = null;
@@ -360,7 +360,7 @@ namespace MobiusEditor.Utility
                 bool newType = false;
                 if (!string.IsNullOrEmpty(mixInfo.Name))
                 {
-                    using (Mixfiles mf = new Mixfiles(source, mixInfo.Name))
+                    using (MixFile mf = new MixFile(source, mixInfo.Name))
                     {
                         mixContents = mf.FileCount;
                         encrypted = mf.HasEncryption;
@@ -369,7 +369,7 @@ namespace MobiusEditor.Utility
                 }
                 else
                 {
-                    using (Mixfiles mf = new Mixfiles(source, mixInfo.Id))
+                    using (MixFile mf = new MixFile(source, mixInfo.Id))
                     {
                         mixContents = mf.FileCount;
                         encrypted = mf.HasEncryption;
