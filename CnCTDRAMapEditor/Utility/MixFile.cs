@@ -18,6 +18,9 @@ using System.IO;
 using System.IO.MemoryMappedFiles;
 using System.Linq;
 using System.Numerics;
+using System.Reflection;
+using System.Xml.Linq;
+using static System.Net.WebRequestMethods;
 
 namespace MobiusEditor.Utility
 {
@@ -26,10 +29,11 @@ namespace MobiusEditor.Utility
         private static readonly string PublicKey = "AihRvNoIbTn85FZRYNZRcT+i6KpU+maCsEqr3Q5q+LDB5tH7Tz2qQ38V";
         private static readonly string PrivateKey = "AigKVje8mROcR8QixnxUEF5b29Curkq01DNDWCdOG99XBqH79OaCiTCB";
 
-        private Dictionary<uint, (uint Offset, uint Length)> mixFileContents = new Dictionary<uint, (uint, uint)>();
+        private Dictionary<uint, MixEntry[]> mixFileContents = new Dictionary<uint, MixEntry[]>();
         private HashRol1 hashRol = new HashRol1();
 
         public string MixFileName { get; private set; }
+        public string FileName { get; private set; }
         public int FileCount { get; private set; }
         public bool IsNewFormat { get; private set; }
         public bool IsEmbedded { get; private set; }
@@ -37,7 +41,6 @@ namespace MobiusEditor.Utility
         public bool HasChecksum { get; private set; }
         private long fileStart;
         private long fileLength;
-        private uint dataStart;
         private MemoryMappedFile mixFileMap;
 
         public MixFile(string mixPath)
@@ -51,6 +54,7 @@ namespace MobiusEditor.Utility
             this.fileStart = 0;
             this.fileLength = mixFile.Length;
             this.MixFileName = mixPath;
+            this.FileName = Path.GetFileName(mixPath);
             this.mixFileMap = MemoryMappedFile.CreateFromFile(
                 new FileStream(mixPath, FileMode.Open, FileAccess.Read, FileShare.Read),
                 null, 0, MemoryMappedFileAccess.Read, HandleInheritability.None, false);
@@ -58,23 +62,35 @@ namespace MobiusEditor.Utility
         }
 
         public MixFile(MixFile container, string name)
-            : this(container, name, true)
+            : this(container, new MixEntry(name), true)
         {
         }
 
         public MixFile(MixFile container, string name, bool handleAdvanced)
+            : this(container, new MixEntry(name), handleAdvanced)
+        {
+        }
+
+        public MixFile(MixFile container, MixEntry entry)
+            : this(container, entry, true)
+        {
+        }
+
+        public MixFile(MixFile container, MixEntry entry, bool handleAdvanced)
         {
             this.IsEmbedded = true;
-            this.MixFileName = container.MixFileName + " -> " + name;
-            if (!container.GetFileInfo(name, out uint offset, out uint length))
+            MixEntry actualEntry = container.VerifyInternal(entry);
+            if (actualEntry == null)
             {
-                throw new FileNotFoundException(name + " was not found inside this mix archive.");
+                throw new FileNotFoundException(entry.Name + " was not found inside this mix archive.");
             }
-            this.fileStart = offset;
-            this.fileLength = length;
+            this.MixFileName = container.MixFileName + " -> " + entry.Name;
+            this.FileName = entry.Name;
+            this.fileStart = actualEntry.Offset;
+            this.fileLength = actualEntry.Length;
             // Copy reference to parent map. The "CreateViewStream" function takes care of reading the right parts from it.
             this.mixFileMap = container.mixFileMap;
-            this.ReadMixHeader(this.mixFileMap, offset, this.fileLength, handleAdvanced);
+            this.ReadMixHeader(this.mixFileMap, actualEntry.Offset, this.fileLength, handleAdvanced);
         }
 
         public MixFile(MixFile container, uint nameId)
@@ -104,27 +120,49 @@ namespace MobiusEditor.Utility
 
         public uint GetFileId(string filename)
         {
-            return this.hashRol.GetNameId(filename);
+            return hashRol.GetNameId(filename);
         }
 
-        public bool GetFileInfo(string filename, out uint offset, out uint length)
+        private bool GetFileInfo(string filename, out uint offset, out uint length)
         {
             uint fileId = GetFileId(filename);
             return GetFileInfo(fileId, out offset, out length);
         }
 
-        public bool GetFileInfo(uint fileId, out uint offset, out uint length)
+        private bool GetFileInfo(uint fileId, out uint offset, out uint length)
         {
             offset = 0;
             length = 0;
-            (uint Offset, uint Length) fileLoc;
-            if (!this.mixFileContents.TryGetValue(fileId, out fileLoc))
+            MixEntry[] fileInfo;
+            if (!this.mixFileContents.TryGetValue(fileId, out fileInfo) || fileInfo.Length == 0)
             {
                 return false;
             }
-            offset = fileLoc.Offset + this.dataStart;
-            length = fileLoc.Length;
+            offset = fileInfo[0].Offset;
+            length = fileInfo[0].Length;
             return true;
+        }
+
+        public MixEntry[] GetFullFileInfo(uint fileId)
+        {
+            MixEntry[] fileInfo;
+            if (!this.mixFileContents.TryGetValue(fileId, out fileInfo) || fileInfo.Length == 0)
+            {
+                return null;
+            }
+            MixEntry[] returnInfo = new MixEntry[fileInfo.Length];
+            for (int i = 0; i < fileInfo.Length; ++i)
+            {
+                MixEntry entry = fileInfo[i];
+                // MixEntry objects given externally are adjusted for content offset. Those used internally are not.
+                returnInfo[i] = new MixEntry(entry.Id, entry.Offset, entry.Length);
+            }
+            return returnInfo;
+        }
+
+        public MixEntry[] GetFullFileInfo(string filename)
+        {
+            return GetFullFileInfo(GetFileId(filename));
         }
 
         public Stream OpenFile(string filename)
@@ -143,6 +181,38 @@ namespace MobiusEditor.Utility
                 return null;
             }
             return this.CreateViewStream(this.mixFileMap, this.fileStart, this.fileLength, offset, length);
+        }
+
+        public Stream OpenFile(MixEntry fileInfo)
+        {
+            MixEntry requestedInfo = VerifyInternal(fileInfo);
+            if (requestedInfo == null)
+            {
+                return null;
+            }
+            // MixEntry objects given externally are adjusted for content offset. Those used internally are not.
+            return this.CreateViewStream(this.mixFileMap, this.fileStart, this.fileLength, requestedInfo.Offset, requestedInfo.Length);
+        }
+
+        private MixEntry VerifyInternal(MixEntry entry)
+        {
+            MixEntry[] fileInfos = this.GetFullFileInfo(entry.Id);
+            if (fileInfos == null || fileInfos.Length == 0)
+            {
+                return null;
+            }
+            if (entry.Offset <= 0)
+            {
+                //Dummy entry or illegal entry. Return first.
+                return fileInfos[0];
+            }
+            // MixEntry objects given externally are adjusted for content offset. Those used internally are not.
+            MixEntry requestedInfo = fileInfos.FirstOrDefault(fi => fi.Offset == entry.Offset);
+            if (requestedInfo == null)
+            {
+                return null;
+            }
+            return requestedInfo;
         }
 
         private void ReadMixHeader(MemoryMappedFile mixMap, long mixStart, long mixLength, bool handleAdvanced)
@@ -220,28 +290,32 @@ namespace MobiusEditor.Utility
                 }
                 readOffset += headerSize;
             }
-            // Store so files can correctly be offset to the end of the header
-            this.dataStart = readOffset;
+            // To adjust offsets to the end of the header
+            uint dataStart = readOffset;
             // Skip to file table
             int hdrPtr = 6;
             for (int i = 0; i < FileCount; ++i)
             {
                 uint fileId = ArrayUtils.ReadUInt32FromByteArrayLe(header, hdrPtr);
-                uint fileOffset = ArrayUtils.ReadUInt32FromByteArrayLe(header, hdrPtr + 4);
+                uint fileOffset = ArrayUtils.ReadUInt32FromByteArrayLe(header, hdrPtr + 4) + dataStart;
                 uint fileLength = ArrayUtils.ReadUInt32FromByteArrayLe(header, hdrPtr + 8);
                 hdrPtr += 12;
                 if (fileOffset + fileLength > mixLength)
                 {
                     throw new ArgumentException(String.Format("Not a valid mix file: file #{0} with id {1:X08} exceeds archive length.", i, fileId), "mixMap");
                 }
-                if (!this.mixFileContents.ContainsKey(fileId))
+                MixEntry entry = new MixEntry(fileId, fileOffset, fileLength);
+                MixEntry[] existing;
+                if (!this.mixFileContents.TryGetValue(fileId, out existing))
                 {
-                    this.mixFileContents.Add(fileId, (fileOffset, fileLength));
+                    this.mixFileContents.Add(fileId, new[] { entry });
                 }
                 else
                 {
-                    // nchires.mix has this???
-                    //this.mixFileContents.Add(fileId + 1, (fileOffset, fileLength));
+                    MixEntry[] newForId = new MixEntry[existing.Length + 1];
+                    Array.Copy(existing, newForId, existing.Length);
+                    newForId[existing.Length] = entry;
+                    this.mixFileContents[fileId] = newForId;
                 }
             }
         }
@@ -364,6 +438,25 @@ namespace MobiusEditor.Utility
         public MixContentType Type = MixContentType.Unknown;
         public string Info;
         public string SortName => Name ?? "zzzzzzzzzzzz " + Id.ToString("X4");
+
+        public MixEntry()
+        { }
+
+        public MixEntry(string filename)
+        {
+            HashRol1 hashRol = new HashRol1();
+            Id = hashRol.GetNameId(filename);
+            Name = filename;
+            Offset = 0;
+            Length = 0;
+        }
+
+        public MixEntry(uint id, uint offset, uint length)
+        {
+            Id = id;
+            Offset = offset;
+            Length = length;
+        }
 
         public override string ToString()
         {

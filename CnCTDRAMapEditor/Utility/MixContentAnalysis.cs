@@ -15,7 +15,7 @@ namespace MobiusEditor.Utility
         private const String xccCheck = "XCC by Olaf van der Spek";
         private const uint xccId = 0x54C2D545;
 
-        public static List<MixEntry> AnalyseFiles(MixFile current, Dictionary<uint, string> encodedFilenames)
+        public static List<MixEntry> AnalyseFiles(MixFile current, Dictionary<uint, string> encodedFilenames, Func<bool> checkAbort)
         {
             List<uint> filesList = current.GetFileIds();
             List<MixEntry> fileInfo = new List<MixEntry>();
@@ -23,25 +23,25 @@ namespace MobiusEditor.Utility
             // Check if there's an xcc filenames database.
             foreach (uint fileId in filesList)
             {
-                if (current.GetFileInfo(fileId, out uint offset, out uint length))
+                if (checkAbort != null && checkAbort())
                 {
-                    if (fileId == xccId && length < 500000 && length > 0x34)
+                    return null;
+                }
+                MixEntry[] entries = current.GetFullFileInfo(fileId);
+                if (entries != null)
+                {
+                    MixEntry entry = entries[0];
+                    if (fileId == xccId && entry.Length < 500000 && entry.Length > 0x34)
                     {
-                        MixEntry mixInfo = new MixEntry()
-                        {
-                            Name = "local mix database.dat",
-                            Id = fileId,
-                            Type = MixContentType.XccNames,
-                            Offset = offset,
-                            Length = length,
-                            Info = "XCC filenames database"
-                        };
-                        fileInfo.Add(mixInfo);
+                        entry.Name = "local mix database.dat";
+                        entry.Type = MixContentType.XccNames;
+                        entry.Info = "XCC filenames database";
+                        fileInfo.Add(entry);
                         using (Stream file = current.OpenFile(fileId))
                         {
-                            Byte[] fileContents = new byte[length];
+                            Byte[] fileContents = new byte[entry.Length];
                             file.Seek(0, SeekOrigin.Begin);
-                            file.Read(fileContents, 0, (int)length);
+                            file.Read(fileContents, 0, (int)entry.Length);
                             Byte[] xccPattern = Encoding.ASCII.GetBytes(xccCheck);
                             try
                             {
@@ -58,7 +58,7 @@ namespace MobiusEditor.Utility
                                 if (isXccHeader)
                                 {
                                     fileSize = fileContents[0x20] | (fileContents[0x21] << 8) | (fileContents[0x22] << 16) | (fileContents[0x23] << 24);
-                                    if (fileSize != length)
+                                    if (fileSize != entry.Length)
                                     {
                                         isXccHeader = false;
                                     }
@@ -87,8 +87,9 @@ namespace MobiusEditor.Utility
             }
             foreach (uint fileId in filesList)
             {
-                if (current.GetFileInfo(fileId, out uint offset, out uint length))
-                {
+                MixEntry[] entries = current.GetFullFileInfo(fileId);
+                for (int i = 0; i < entries.Length; ++i) {
+                    MixEntry mixInfo = entries[i];
                     if (fileId == xccId && xccInfoFilenames != null)
                     {
                         // if the xcc info is filled in, this is already added
@@ -100,34 +101,16 @@ namespace MobiusEditor.Utility
                         if (!encodedFilenames.TryGetValue(fileId, out name))
                         {
                             name = null;
-                            /*/
-                            if (xccInfoFilenames == null || !xccInfoFilenames.TryGetValue(fileIdm1, out name))
-                            {
-                                if (!encodedFilenames.TryGetValue(fileIdm1, out name))
-                                {
-
-                                    name = null;
-                                }
-                            }
-                            if (name != null)
-                            {
-                                name += " (+)";
-                            }
-                            else if (filesList.Contains(fileIdm1))
-                            {
-                                MixFileInfo dummy = new MixFileInfo() { Id = fileIdm1 };
-                                name = dummy.DisplayName + " (+)";
-                            }
-                            //*/
                         }
                     }
-                    MixEntry mixInfo = new MixEntry()
+                    if (name != null)
                     {
-                        Name = name,
-                        Id = fileId,
-                        Offset = offset,
-                        Length = length,
-                    };
+                        if (i > 0)
+                        {
+                            name += " (" + i + ")";
+                        }
+                        mixInfo.Name = name;
+                    }
                     fileInfo.Add(mixInfo);
                     using (Stream file = current.OpenFile(fileId))
                     {
@@ -358,23 +341,11 @@ namespace MobiusEditor.Utility
                 int mixContents = -1;
                 bool encrypted = false;
                 bool newType = false;
-                if (!string.IsNullOrEmpty(mixInfo.Name))
+                using (MixFile mf = new MixFile(source, mixInfo))
                 {
-                    using (MixFile mf = new MixFile(source, mixInfo.Name))
-                    {
-                        mixContents = mf.FileCount;
-                        encrypted = mf.HasEncryption;
-                        newType = mf.IsNewFormat;
-                    }
-                }
-                else
-                {
-                    using (MixFile mf = new MixFile(source, mixInfo.Id))
-                    {
-                        mixContents = mf.FileCount;
-                        encrypted = mf.HasEncryption;
-                        newType = mf.IsNewFormat;
-                    }
+                    mixContents = mf.FileCount;
+                    encrypted = mf.HasEncryption;
+                    newType = mf.IsNewFormat;
                 }
                 if (mixContents > -1)
                 {

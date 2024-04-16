@@ -274,6 +274,11 @@ namespace MobiusEditor.RedAlert
             {
                 yield return name;
             }
+            const string mixExt = ".mix";
+            foreach (TheaterType theater in TheaterTypes.GetAllTypes())
+            {
+                yield return theater.ClassicTileset + mixExt;
+            }
         }
 
         public static IEnumerable<string> GetMissionFiles()

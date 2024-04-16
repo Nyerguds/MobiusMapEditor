@@ -62,6 +62,7 @@
             this.mixContentsListView.ColumnWidthChanging += new System.Windows.Forms.ColumnWidthChangingEventHandler(this.mixContentsListView_ColumnWidthChanging);
             this.mixContentsListView.SizeChanged += new System.EventHandler(this.MixContentsListView_SizeChanged);
             this.mixContentsListView.DoubleClick += new System.EventHandler(this.MixContentsListView_DoubleClick);
+            this.mixContentsListView.KeyDown += new System.Windows.Forms.KeyEventHandler(this.mixContentsListView_KeyDown);
             // 
             // nameColumnHeader
             // 
@@ -91,6 +92,7 @@
             this.btnCancel.TabIndex = 2;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
+            this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
             // 
             // btnOpen
             // 
@@ -129,7 +131,6 @@
             this.Name = "OpenFromMixDialog";
             this.Text = "Open From Mix file";
             this.Load += new System.EventHandler(this.OpenFromMixDialog_Load);
-            this.Shown += new System.EventHandler(this.OpenFromMixDialog_Shown);
             this.ResumeLayout(false);
 
         }

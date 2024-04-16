@@ -1,6 +1,4 @@
-﻿using MobiusEditor.Controls;
-using MobiusEditor.Interface;
-using MobiusEditor.Utility;
+﻿using MobiusEditor.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,21 +10,28 @@ namespace MobiusEditor.Dialogs
     {
         private bool resizing = false;
         private List<MixFile> openedMixFiles = new List<MixFile>();
-        private MixFile baseMix;
         private Dictionary<uint, string> encodedFilenames;
-        private List<MixEntry> currentMixInfo;
         private SimpleMultiThreading analysisMultiThreader;
+        private string titleMain;
+        private readonly object abortLockObj = new object();
+        private bool abortRequested = false;
+
 
         public Label StatusLabel { get; set; }
 
         public OpenFromMixDialog(MixFile baseMix, Dictionary<uint, string> encodedFilenames)
         {
             InitializeComponent();
+            titleMain = this.Text;
             this.encodedFilenames = encodedFilenames;
-            this.baseMix = baseMix;
             openedMixFiles.Add(baseMix);
             analysisMultiThreader = new SimpleMultiThreading(this);
             analysisMultiThreader.ProcessingLabelBorder = BorderStyle.Fixed3D;
+        }
+
+        private void SetTitle()
+        {
+            this.Text = titleMain + " - " + string.Join(" -> ", openedMixFiles.Select(mix => mix.FileName).ToArray());
         }
 
         private void LoadMixContents()
@@ -37,23 +42,41 @@ namespace MobiusEditor.Dialogs
                 FillList(null);
             }
             analysisMultiThreader.ExecuteThreaded(
-                () => MixContentAnalysis.AnalyseFiles(current, this.encodedFilenames),
+                () => MixContentAnalysis.AnalyseFiles(current, this.encodedFilenames, () => this.CheckAbort()),
                 (list) => FillList(list), true,
                 (bl, str) => EnableDisableUi(bl, str, analysisMultiThreader),
                 "Analysing MIX Contents");
         }
 
+        private bool CheckAbort()
+        {
+            Boolean abort = false;
+            lock (abortLockObj)
+            {
+                abort = abortRequested;
+            }
+            return abort;
+        }
+
         private void EnableDisableUi(bool enableUI, string label, SimpleMultiThreading currentMultiThreader)
         {
+            this.mixContentsListView.Enabled = enableUI;
+            this.btnOpen.Enabled = enableUI;
             if (!enableUI)
             {
+                this.btnCloseFile.Enabled = false;
                 currentMultiThreader.CreateBusyLabel(this, label);
             }
             else
             {
                 SimpleMultiThreading.RemoveBusyLabel(this);
+                btnCloseFile.Enabled = openedMixFiles.Count > 1;
+                if (mixContentsListView.Items.Count > 0)
+                {
+                    mixContentsListView.Select();
+                    mixContentsListView.Items[0].Selected = true;
+                }
             }
-            
         }
 
         private MixFile GetCurrentMix()
@@ -66,9 +89,38 @@ namespace MobiusEditor.Dialogs
             OpenCurrentlySelected();
         }
 
+        private void btnCancel_Click(object sender, EventArgs e)
+        {
+            if (analysisMultiThreader.IsExecuting)
+            {
+                lock (abortLockObj)
+                {
+                    abortRequested = true;
+                }
+                analysisMultiThreader.AbortThreadedOperation(5000);
+            }
+        }
+
         private void btnOpen_Click(object sender, EventArgs e)
         {
             OpenCurrentlySelected();
+        }
+
+        private void mixContentsListView_KeyDown(object sender, KeyEventArgs e)
+        {
+            switch (e.KeyData) {
+                case Keys.Enter:
+                    OpenCurrentlySelected();
+                    break;
+                case Keys.Back:
+                    CloseCurrentMixFile();
+                    break;
+            }
+        }
+
+        private void BtnCloseFile_Click(object sender, EventArgs e)
+        {
+            CloseCurrentMixFile();
         }
 
         private void OpenCurrentlySelected()
@@ -78,7 +130,8 @@ namespace MobiusEditor.Dialogs
                 return;
             }
             MixEntry selected = mixContentsListView.SelectedItems[0].Tag as MixEntry;
-            if (selected.Type == MixContentType.Mix)
+            MixContentType type = selected.Type;
+            if (type == MixContentType.Mix)
             {
                 MixFile current = GetCurrentMix();
                 MixFile subMix = null;
@@ -88,16 +141,38 @@ namespace MobiusEditor.Dialogs
                 }
                 catch
                 {
-                    // Ignore for now.
+                    // Not sure how this would ever be possible; detection works by successfully opening it.
                 }
-                if(subMix != null)
-                openedMixFiles.Add(subMix);
+                if (subMix != null)
+                {
+                    openedMixFiles.Add(subMix);
+                }
                 LoadMixContents();
                 btnCloseFile.Enabled = openedMixFiles.Count > 1;
             }
+            else if (type == MixContentType.MapRa)
+            {
+                // Open that mofo!
+            }
+            else if (type == MixContentType.MapTd || type == MixContentType.MapSole)
+            {
+                if (selected.Name != null)
+                {
+                    // Inform user that accompanying .bin is impossible to find without name, and ssk if user wants to open blank map with this terrain.
+                }
+                // try to find accompanying .bin file
+            }
+            else if (type == MixContentType.Bin || type == MixContentType.BinSole)
+            {
+                if (selected.Name != null)
+                {
+                    // Inform user that accompanying ini is impossible to find without name, and ssk if user wants to open blank map with this terrain.
+                }
+                // try to find accompanying .ini file
+            }
         }
 
-        private void BtnCloseFile_Click(object sender, EventArgs e)
+        private void CloseCurrentMixFile()
         {
             if (openedMixFiles.Count <= 1)
             {
@@ -109,22 +184,16 @@ namespace MobiusEditor.Dialogs
             LoadMixContents();
         }
 
-        private void OpenFromMixDialog_Load(object sender, EventArgs e)
-        {
-            if (currentMixInfo != null)
-            {
-                FillList(currentMixInfo);
-            }
-        }
-
         private void FillList(List<MixEntry> mixInfo)
         {
-            mixContentsListView.BeginUpdate();
-            mixContentsListView.Items.Clear();
             if (mixInfo == null)
             {
+                mixContentsListView.Items.Clear();
                 return;
             }
+            SetTitle();
+            mixContentsListView.BeginUpdate();
+            mixContentsListView.Items.Clear();
             int nrofFiles = mixInfo.Count;
             for (int i = 0; i < nrofFiles; ++i)
             {
@@ -228,7 +297,7 @@ namespace MobiusEditor.Dialogs
             }
         }
 
-        private void OpenFromMixDialog_Shown(object sender, EventArgs e)
+        private void OpenFromMixDialog_Load(object sender, EventArgs e)
         {
             MixContentsListView_SizeChanged(mixContentsListView, EventArgs.Empty);
             LoadMixContents();

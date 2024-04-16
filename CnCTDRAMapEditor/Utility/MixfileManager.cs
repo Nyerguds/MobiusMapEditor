@@ -410,10 +410,13 @@ namespace MobiusEditor.Utility
                     if (readArchive.IsContainer && readMixFiles.TryGetValue(readArchive.Name, out MixFile container))
                     {
                         // Check if file exists
-                        if (container.GetFileInfo(mixName, out _, out _))
+                        MixEntry[] allInfo = container.GetFullFileInfo(mixName);
+                        if (allInfo != null && allInfo.Length > 0)
                         {
+                            MixEntry info = allInfo[0];
+                            info.Name = mixName;
                             // Create as embedded mix file
-                            mixFile = new MixFile(container, mixName, mixToAdd.CanUseNewFormat);
+                            mixFile = new MixFile(container, info, mixToAdd.CanUseNewFormat);
                         }
                     }
                 }
