@@ -612,12 +612,12 @@ namespace MobiusEditor.RedAlert
                 List<string> errors = new List<string>();
                 bool tryCheckSingle = false;
                 Byte[] iniBytes;
+                INI ini = new INI();
                 switch (fileType)
                 {
                     case FileType.INI:
                     case FileType.BIN:
                         {
-                            INI ini = new INI();
                             iniBytes = File.ReadAllBytes(path);
                             ParseIniContent(ini, iniBytes, errors);
                             tryCheckSingle = singlePlayRegex.IsMatch(Path.GetFileNameWithoutExtension(path));
@@ -634,7 +634,6 @@ namespace MobiusEditor.RedAlert
                                 {
                                     throw new ApplicationException("Cannot find the necessary file inside the " + Path.GetFileName(path) + " archive.");
                                 }
-                                INI ini = new INI();
                                 using (Stream iniStream = megafile.OpenFile(mprFile))
                                 {
                                     iniBytes = iniStream.ReadAllBytes();
@@ -643,6 +642,12 @@ namespace MobiusEditor.RedAlert
                                 errors.AddRange(LoadINI(ini, false, ref modified));
                             }
                         }
+                        break;
+                    case FileType.MIX:
+                        iniBytes = GeneralUtils.GetFileFromMixPath(path, FileType.INI, out string iniFileName);
+                        ParseIniContent(ini, iniBytes, errors);
+                        tryCheckSingle = singlePlayRegex.IsMatch(Path.GetFileNameWithoutExtension(iniFileName));
+                        errors.AddRange(LoadINI(ini, tryCheckSingle, ref modified));
                         break;
                     default:
                         throw new NotSupportedException("Unsupported filetype.");

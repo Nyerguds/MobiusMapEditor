@@ -1,7 +1,9 @@
 ﻿using MobiusEditor.Utility;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Windows.Forms;
 
 namespace MobiusEditor.Dialogs
@@ -12,10 +14,11 @@ namespace MobiusEditor.Dialogs
         private List<MixFile> openedMixFiles = new List<MixFile>();
         private Dictionary<uint, string> encodedFilenames;
         private SimpleMultiThreading analysisMultiThreader;
+        List<MixEntry> currentMixInfo;
         private string titleMain;
         private readonly object abortLockObj = new object();
         private bool abortRequested = false;
-
+        public string SelectedFile { get; set; }
 
         public Label StatusLabel { get; set; }
 
@@ -42,10 +45,10 @@ namespace MobiusEditor.Dialogs
                 FillList(null);
             }
             analysisMultiThreader.ExecuteThreaded(
-                () => MixContentAnalysis.AnalyseFiles(current, this.encodedFilenames, () => this.CheckAbort()),
+                () => MixContentAnalysis.AnalyseFiles(current, this.encodedFilenames, true, () => this.CheckAbort()),
                 (list) => FillList(list), true,
                 (bl, str) => EnableDisableUi(bl, str, analysisMultiThreader),
-                "Analyzing MIX Contents");
+                "MIX content analysis in progress");
         }
 
         private bool CheckAbort()
@@ -130,6 +133,7 @@ namespace MobiusEditor.Dialogs
                 return;
             }
             MixEntry selected = mixContentsListView.SelectedItems[0].Tag as MixEntry;
+            string name = selected.Name;
             MixContentType type = selected.Type;
             if (type == MixContentType.Mix)
             {
@@ -137,7 +141,7 @@ namespace MobiusEditor.Dialogs
                 MixFile subMix = null;
                 try
                 {
-                    subMix = selected.Name != null ? new MixFile(current, selected.Name) : new MixFile(current, selected.Id);
+                    subMix = name != null ? new MixFile(current, name) : new MixFile(current, selected.Id);
                 }
                 catch
                 {
@@ -153,22 +157,50 @@ namespace MobiusEditor.Dialogs
             else if (type == MixContentType.MapRa)
             {
                 // Open that mofo!
+                SelectedFile = GeneralUtils.BuildMixPath(openedMixFiles, selected.Name ?? selected.IdString);
+                this.DialogResult = DialogResult.OK;
             }
             else if (type == MixContentType.MapTd || type == MixContentType.MapSole)
             {
-                if (selected.Name == null)
+                String iniName = name;
+                string binName;
+                if (name == null)
                 {
                     // Inform user that accompanying bin is impossible to find without name, and ask if user wants to open it on a blank terrain map.
+                    binName = String.Empty;
                 }
-                // try to find accompanying .bin file
+                else
+                {
+                    // try to find accompanying .bin file
+                    binName = Path.GetFileNameWithoutExtension(iniName) + ".bin";
+                    MixEntry binEntry = currentMixInfo.FirstOrDefault(me => binName.Equals(me.Name, StringComparison.OrdinalIgnoreCase));
+                    if (binEntry == null)
+                    {
+                        // Inform user that accompanying bin was not found, and ask if user wants to open it on a blank terrain map.
+                        binName = String.Empty;
+                    }
+                }
+                SelectedFile = GeneralUtils.BuildMixPath(openedMixFiles, iniName, binName);
+                this.DialogResult = DialogResult.OK;
             }
             else if (type == MixContentType.Bin || type == MixContentType.BinSole)
             {
-                if (selected.Name == null)
+                String binName = name;
+                if (name == null)
                 {
-                    // Inform user that accompanying ini is impossible to find without name, and ask if user wants to open an empty map with this terrain.
+                    // Inform user that accompanying ini is impossible to find without name, and that a map can't be opened without ini.
+                    return;
                 }
                 // try to find accompanying .ini file
+                string iniName = Path.GetFileNameWithoutExtension(binName) + ".ini";
+                MixEntry iniEntry = currentMixInfo.FirstOrDefault(me => iniName.Equals(me.Name, StringComparison.OrdinalIgnoreCase));
+                if (iniEntry == null)
+                {
+                    // Inform user that accompanying bin was not found, and that a map can't be opened without ini.
+                    return;
+                }
+                SelectedFile = GeneralUtils.BuildMixPath(openedMixFiles, iniName, binName);
+                this.DialogResult = DialogResult.OK;
             }
         }
 
@@ -186,6 +218,7 @@ namespace MobiusEditor.Dialogs
 
         private void FillList(List<MixEntry> mixInfo)
         {
+            currentMixInfo = mixInfo;
             if (mixInfo == null)
             {
                 mixContentsListView.Items.Clear();
@@ -204,7 +237,7 @@ namespace MobiusEditor.Dialogs
                 };
                 item.SubItems.Add(mixFileInfo.Type.ToString());
                 item.SubItems.Add(mixFileInfo.Info);
-                mixContentsListView.Items.Add(item).ToolTipText = mixFileInfo.Name;
+                mixContentsListView.Items.Add(item).ToolTipText = mixFileInfo.Name ?? mixFileInfo.IdString;
             }
             mixContentsListView.EndUpdate();
         }

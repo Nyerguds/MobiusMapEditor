@@ -38,6 +38,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using System.Xml.Linq;
 
 namespace MobiusEditor
 {
@@ -555,23 +556,26 @@ namespace MobiusEditor
             {
                 return;
             }
-            MixFile mixfile;
+            string toOpen = null;
             try
             {
-                mixfile = new MixFile(selectedFileName);
+                using (MixFile mixfile = new MixFile(selectedFileName))
+                using (OpenFromMixDialog mixDialog = new OpenFromMixDialog(mixfile, generatedMixIds))
+                {
+                    mixDialog.StartPosition = FormStartPosition.CenterParent;
+                    if (mixDialog.ShowDialog() == DialogResult.OK)
+                    {
+                        toOpen = mixDialog.SelectedFile;
+                    }
+                }
             }
             catch
             {
                 return;
             }
-            using (OpenFromMixDialog mixDialog = new OpenFromMixDialog(mixfile, generatedMixIds))
+            if (!string.IsNullOrEmpty(toOpen))
             {
-                mixDialog.StartPosition = FormStartPosition.CenterParent;
-                mixDialog.ShowDialog();
-                // Extract data
-                // mixDialog.MissionFile
-                // mixDialog.MapFile
-                // Somehow load from bytes? Crap, there's currently no support for that, is there? Maybe in the pgm archive stuff...
+                OpenFile(toOpen);
             }
         }
 
@@ -594,7 +598,7 @@ namespace MobiusEditor
                 afterSaveDone?.Invoke();
                 return;
             }
-            if (string.IsNullOrEmpty(filename) || !Directory.Exists(Path.GetDirectoryName(filename)))
+            if (string.IsNullOrEmpty(filename) || !Directory.Exists(Path.GetDirectoryName(filename)) || (loadedFileType == FileType.MIX))
             {
                 SaveAsAction(afterSaveDone, skipValidation);
                 return;
@@ -1289,11 +1293,36 @@ namespace MobiusEditor
         private void OpenFile(String fileName)
         {
             ClearActiveTool();
-            var fileInfo = new FileInfo(fileName);
-            String name = fileInfo.FullName;
-            if (!IdentifyMap(name, out FileType fileType, out GameType gameType, out bool isMegaMap, out string theater))
+            bool isMix = !String.IsNullOrEmpty(fileName) && fileName.Contains('?');
+            String loadName = fileName;
+            String fullname = fileName;
+            String shortName;
+            if (!isMix)
             {
-                string extension = Path.GetExtension(name).TrimStart('.');
+                FileInfo fileInfo = new FileInfo(fileName);
+                loadName = fileInfo.FullName;
+                fullname = fileInfo.FullName;
+                shortName = fileInfo.Name;
+            }
+            else
+            {
+                string[] nameParts = fileName.Split('?');
+                string[] mixparts = nameParts[0].Split(';');
+                FileInfo fileInfo = new FileInfo(mixparts[0]);
+                string mixParts = String.Join(" -> ", mixparts.Skip(1));
+                string iniName = nameParts.Length > 1 ? " -> " + nameParts[1].Split(';')[0] : null;
+                loadName = fileInfo.FullName + mixParts;
+                fullname = fileInfo.FullName + mixParts;
+                shortName = fileInfo.Name;
+                if (iniName != null)
+                {
+                    fullname += iniName;
+                    shortName += iniName;
+                }
+            }
+            if (!IdentifyMap(fileName, out FileType fileType, out GameType gameType, out bool isMegaMap, out string theater))
+            {
+                string extension = Path.GetExtension(loadName).TrimStart('.');
                 // No point in supporting jpeg here; the mapping needs distinct colours without fades.
                 if ("PNG".Equals(extension, StringComparison.OrdinalIgnoreCase)
                     || "BMP".Equals(extension, StringComparison.OrdinalIgnoreCase)
@@ -1303,11 +1332,11 @@ namespace MobiusEditor
                 {
                     try
                     {
-                        using (Bitmap bm = new Bitmap(name))
+                        using (Bitmap bm = new Bitmap(loadName))
                         {
                             // Don't need to do anything except open this to confirm it's supported
                         }
-                        NewFileAsk(true, name, true);
+                        NewFileAsk(true, loadName, true);
                         return;
                     }
                     catch
@@ -1315,7 +1344,7 @@ namespace MobiusEditor
                         // Ignore and just fall through.
                     }
                 }
-                MessageBox.Show(string.Format("Error loading {0}: Could not identify map type.", fileInfo.Name), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(string.Format("Error loading {0}: Could not identify map type.", shortName), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 RefreshActiveTool();
                 return;
             }
@@ -1332,7 +1361,7 @@ namespace MobiusEditor
             {
                 string graphicsMode = Globals.UseClassicFiles ? "Classic" : "Remastered";
                 string message = string.Format("Error loading {0}: No assets found for {1} theater \"{2}\" in {3} graphics mode.",
-                    fileInfo.Name, gType.Name, theaterObj.Name, graphicsMode);
+                    fullname, gType.Name, theaterObj.Name, graphicsMode);
                 if (Globals.UseClassicFiles)
                 {
                     message += String.Format("\n\nYou may need to adjust the \"{0}\" setting to point to a game folder containing {1}, or add {1} to the configured folder.",
@@ -1347,7 +1376,7 @@ namespace MobiusEditor
                 return;
             }
             loadMultiThreader.ExecuteThreaded(
-                () => LoadFile(name, fileType, gType, theater, isMegaMap),
+                () => LoadFile(fileName, fileType, gType, theater, isMegaMap),
                 PostLoad, true,
                 (e, l) => LoadUnloadUi(e, l, loadMultiThreader),
                 "Loading map");
@@ -1403,6 +1432,15 @@ namespace MobiusEditor
             gameType = GameType.None;
             theater = null;
             isMegaMap = false;
+            string fullFilename = loadFilename;
+            bool isMixFile = loadFilename.Contains('?');
+            if (isMixFile)
+            {
+                fileType = FileType.MIX;
+                string[] pathparts = fullFilename.Split('?');
+                string[] mixparts = pathparts[0].Split(';');
+                loadFilename = mixparts[0];
+            }
             try
             {
                 if (!File.Exists(loadFilename))
@@ -1414,21 +1452,24 @@ namespace MobiusEditor
             {
                 return false;
             }
-            switch (Path.GetExtension(loadFilename).ToLower())
+            if (fileType != FileType.MIX)
             {
-                case ".ini":
-                case ".mpr":
-                    fileType = FileType.INI;
-                    break;
-                case ".bin":
-                    fileType = FileType.BIN;
-                    break;
-                case ".pgm":
-                    fileType = FileType.PGM;
-                    break;
-                case ".meg":
-                    fileType = FileType.MEG;
-                    break;
+                switch (Path.GetExtension(loadFilename).ToLower())
+                {
+                    case ".ini":
+                    case ".mpr":
+                        fileType = FileType.INI;
+                        break;
+                    case ".bin":
+                        fileType = FileType.BIN;
+                        break;
+                    case ".pgm":
+                        fileType = FileType.PGM;
+                        break;
+                    case ".meg":
+                        fileType = FileType.MEG;
+                        break;
+                }
             }
             INI iniContents = null;
             bool iniWasFetched = false;
@@ -1463,10 +1504,9 @@ namespace MobiusEditor
                     }
                 }
             }
-            string iniFile = fileType != FileType.BIN ? loadFilename : Path.ChangeExtension(loadFilename, ".ini");
             if (!iniWasFetched)
             {
-                iniContents = GeneralUtils.GetIniContents(iniFile, fileType);
+                iniContents = GeneralUtils.GetIniContents(fullFilename, fileType);
             }
             if (iniContents == null || !INITools.CheckForIniInfo(iniContents, "Map") || !INITools.CheckForIniInfo(iniContents, "Basic"))
             {
@@ -1476,13 +1516,14 @@ namespace MobiusEditor
             switch (fileType)
             {
                 case FileType.INI:
+                case FileType.MIX:
                     {
                         gameType = RedAlert.GamePluginRA.CheckForRAMap(iniContents) ? GameType.RedAlert : GameType.TiberianDawn;
                         break;
                     }
                 case FileType.BIN:
                     {
-                        gameType = File.Exists(iniFile) ? GameType.TiberianDawn : GameType.None;
+                        gameType = File.Exists(Path.ChangeExtension(loadFilename, ".ini")) ? GameType.TiberianDawn : GameType.None;
                         break;
                     }
                 case FileType.PGM:
@@ -1783,14 +1824,41 @@ namespace MobiusEditor
                 }
                 return;
             }
-            IGamePlugin oldPlugin = this.plugin;
+            bool isMix = loadInfo.FileName.Contains('?');
+                IGamePlugin oldPlugin = this.plugin;
             string[] errors = loadInfo.Errors ?? new string[0];
             // Plugin set to null indicates a fatal processing error where no map was loaded at all.
+            string feedbackPath = loadInfo.FileName;
+            string feedbackName;
+            string reportName = loadInfo.FileName;
+            string resaveName = loadInfo.FileName;
+            FileType resaveType = loadInfo.FileType;
+            if (isMix)
+            {
+                string[] parts = feedbackPath.Split('?');
+                string[] mixParts = parts[0].Split(';');
+                string mixName = mixParts[0];
+                reportName = mixName;
+                feedbackPath = String.Join(" -> ", mixParts);
+                mixParts[0] = Path.GetFileName(mixName);
+                feedbackName = String.Join(" -> ", mixParts);
+                if (parts.Length > 1)
+                {
+                    reportName = parts[1].Split(';')[0];
+                    feedbackName += " -> " + reportName;
+                    feedbackPath += " -> " + reportName;
+                    resaveName = Path.Combine(Path.GetDirectoryName(mixName), reportName);
+                }
+            }
+            else
+            {
+                feedbackName = Path.GetFileName(feedbackPath);
+            }
             if (loadInfo.Plugin == null || (loadInfo.Plugin != null && !loadInfo.MapLoaded))
             {
                 // Attempted to load file, loading went OK, but map was not loaded.
 #if !DEBUG
-                if (loadInfo.FileName != null && loadInfo.Plugin != null && !loadInfo.MapLoaded)
+                if (!isMix && loadInfo.FileName != null && loadInfo.Plugin != null && !loadInfo.MapLoaded)
                 {
                     var fileInfo = new FileInfo(loadInfo.FileName);
                     mru.Remove(fileInfo);
@@ -1798,7 +1866,7 @@ namespace MobiusEditor
 #endif
                 // In case of actual error, remove label.
                 SimpleMultiThreading.RemoveBusyLabel(this);
-                MessageBox.Show(string.Format("Error loading {0}: {1}", loadInfo.FileName ?? "new map", String.Join("\n", errors)), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(string.Format("Error loading {0}: {1}", feedbackPath ?? "new map", String.Join("\n", errors)), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 RefreshActiveTool();
             }
             else
@@ -1810,7 +1878,7 @@ namespace MobiusEditor
                 {
                     using (ErrorMessageBox emb = new ErrorMessageBox())
                     {
-                        emb.Title = "Error Report - " + Path.GetFileName(loadInfo.FileName);
+                        emb.Title = "Error Report - " + feedbackName;
                         emb.Errors = errors;
                         emb.StartPosition = FormStartPosition.CenterParent;
                         emb.ShowDialog(this);
@@ -1820,13 +1888,13 @@ namespace MobiusEditor
                 // Don't allow re-save as PGM; act as if this is a new map.
                 if (loadInfo.FileType == FileType.PGM || loadInfo.FileType == FileType.MEG)
                 {
-                    loadInfo.FileType = FileType.INI;
+                    resaveType = FileType.INI;
                     loadInfo.FileName = null;
                 }
 #endif
                 mapPanel.MapImage = plugin.MapImage;
-                filename = loadInfo.FileName;
-                loadedFileType = loadInfo.FileType;
+                filename = resaveName;
+                loadedFileType = resaveType;
                 if (Globals.ZoomToBoundsOnLoad)
                 {
                     lock (jumpToBounds_lock)
@@ -1844,7 +1912,9 @@ namespace MobiusEditor
                 oldSelectedTool = ToolType.None;
                 //RefreshActiveTool(); // done by UI refresh
                 SetTitle();
-                if (loadInfo.FileName != null)
+                // TODO maybe allow saving this for mix files but display it in menus appropriately?
+                // Would need an entire overhaul of the MRU class.
+                if (!isMix && loadInfo.FileName != null)
                 {
                     var fileInfo = new FileInfo(loadInfo.FileName);
                     mru.Add(fileInfo);

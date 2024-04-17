@@ -236,11 +236,7 @@ namespace MobiusEditor.Utility
         {
             using (Stream file = OpenFile(path, CurrentGameType, currentMixFileInfo))
             {
-                if (file == null)
-                {
-                    return null;
-                }
-                return file.ReadAllBytes();
+                return file?.ReadAllBytes();
             }
         }
 

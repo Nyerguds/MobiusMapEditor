@@ -530,19 +530,9 @@ namespace MobiusEditor.TiberianDawn
                     }
                     else
                     {
-                        using (BinaryReader binReader = new BinaryReader(new FileStream(binPath, FileMode.Open, FileAccess.Read)))
+                        using (FileStream fs = new FileStream(binPath, FileMode.Open, FileAccess.Read))
                         {
-                            long mapLen = binReader.BaseStream.Length;
-                            if ((!isMegaMap && mapLen == 0x2000) || (isMegaMap && mapLen % 4 == 0))
-                            {
-                                errors.AddRange(!isMegaMap ? LoadBinaryClassic(binReader, ref modified) : LoadBinaryMega(binReader, ref modified));
-                            }
-                            else
-                            {
-                                errors.Add(String.Format("'{0}' does not have the correct size for a " + this.GameInfo.Name + " .bin file.", Path.GetFileName(binPath)));
-                                modified = true;
-                                Map.Templates.Clear();
-                            }
+                            ReadBinFromStream(fs, Path.GetFileName(binPath), errors, ref modified);
                         }
                     }
                     break;
@@ -558,22 +548,26 @@ namespace MobiusEditor.TiberianDawn
                         }
                         using (Stream iniStream = megafile.OpenFile(iniFile))
                         using (Stream binStream = megafile.OpenFile(binFile))
-                        using (BinaryReader binReader = new BinaryReader(binStream))
                         {
                             iniBytes = iniStream.ReadAllBytes();
                             ParseIniContent(ini, iniBytes, forSole);
                             errors.AddRange(LoadINI(ini, false, ref modified));
-                            long mapLen = binReader.BaseStream.Length;
-                            if ((!isMegaMap && mapLen == 0x2000) || (isMegaMap && mapLen % 4 == 0))
-                            {
-                                errors.AddRange(!isMegaMap ? LoadBinaryClassic(binReader, ref modified) : LoadBinaryMega(binReader, ref modified));
-                            }
-                            else
-                            {
-                                errors.Add(String.Format("'{0}' does not have the correct size for a " + this.GameInfo.Name + " .bin file.", Path.GetFileName(binFile)));
-                                modified = true;
-                                Map.Templates.Clear();
-                            }
+                            ReadBinFromStream(binStream, Path.GetFileName(binFile), errors, ref modified);
+                        }
+                    }
+                    break;
+                case FileType.MIX:
+                    // uses combined path of "c:\mixfile.mix;submix1.mix;submix2.mix?file.ini;file.bin"
+                    // If bin is missing its filename is simply empty or missing.
+                    iniBytes = GeneralUtils.GetFileFromMixPath(path, FileType.INI, out string iniFileName);
+                    ParseIniContent(ini, iniBytes, forSole);
+                    errors.AddRange(LoadINI(ini, false, ref modified));
+                    byte[] binBytes = GeneralUtils.GetFileFromMixPath(path, FileType.BIN, out string binFilename);
+                    if (binBytes != null)
+                    {
+                        using (MemoryStream binStream = new MemoryStream(binBytes))
+                        {
+                            ReadBinFromStream(binStream, binFilename, errors, ref modified);
                         }
                     }
                     break;
@@ -586,7 +580,26 @@ namespace MobiusEditor.TiberianDawn
             }
             return errors;
         }
-        
+
+        private void ReadBinFromStream(Stream stream, string filename, List<string> errors, ref bool modified)
+        {
+            // don't close stream after read; that's the responsibility of the calling code.
+            using (BinaryReader binReader = new BinaryReader(stream, Encoding.UTF8, true))
+            {
+                long mapLen = binReader.BaseStream.Length;
+                if ((!isMegaMap && mapLen == 0x2000) || (isMegaMap && mapLen % 4 == 0))
+                {
+                    errors.AddRange(!isMegaMap ? LoadBinaryClassic(binReader, ref modified) : LoadBinaryMega(binReader, ref modified));
+                }
+                else
+                {
+                    errors.Add(String.Format("'{0}' does not have the correct size for a " + this.GameInfo.Name + " .bin file.", filename));
+                    modified = true;
+                    Map.Templates.Clear();
+                }
+            }
+        }
+
         private string AddVideoRemarks(string videoName)
         {
             if (movieEmpty.Equals(videoName))

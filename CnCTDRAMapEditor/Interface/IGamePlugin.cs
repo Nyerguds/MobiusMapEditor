@@ -26,7 +26,8 @@ namespace MobiusEditor.Interface
         INI,
         BIN,
         MEG,
-        PGM
+        PGM,
+        MIX
     }
 
     public interface IGamePlugin : IDisposable
