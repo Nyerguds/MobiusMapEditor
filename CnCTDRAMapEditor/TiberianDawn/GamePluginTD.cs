@@ -516,6 +516,7 @@ namespace MobiusEditor.TiberianDawn
                     if (!File.Exists(iniPath))
                     {
                         // Should never happen; this gets filtered out in the game type detection.
+                        // todo maybe allow this to open a map only?
                         throw new ApplicationException("Cannot find an ini file to load for " + Path.GetFileName(path) + ".");
                     }
                     iniBytes = File.ReadAllBytes(iniPath);
@@ -540,35 +541,49 @@ namespace MobiusEditor.TiberianDawn
                 case FileType.PGM:
                     using (Megafile megafile = new Megafile(path))
                     {
-                        string iniFile = megafile.Where(p => Path.GetExtension(p).ToLower() == ".ini").FirstOrDefault();
-                        string binFile = megafile.Where(p => Path.GetExtension(p).ToLower() == ".bin").FirstOrDefault();
-                        if (iniFile == null || binFile == null)
+                        string iniFileName = megafile.Where(p => Path.GetExtension(p).ToLower() == ".ini").FirstOrDefault();
+                        string binFileName = megafile.Where(p => Path.GetExtension(p).ToLower() == ".bin").FirstOrDefault();
+                        if (iniFileName == null || binFileName == null)
                         {
                             throw new ApplicationException("Cannot find the necessary files inside the " + Path.GetFileName(path) + " archive.");
                         }
-                        using (Stream iniStream = megafile.OpenFile(iniFile))
-                        using (Stream binStream = megafile.OpenFile(binFile))
+                        using (Stream iniStream = megafile.OpenFile(iniFileName))
+                        using (Stream binStream = megafile.OpenFile(binFileName))
                         {
                             iniBytes = iniStream.ReadAllBytes();
                             ParseIniContent(ini, iniBytes, forSole);
                             errors.AddRange(LoadINI(ini, false, ref modified));
-                            ReadBinFromStream(binStream, Path.GetFileName(binFile), errors, ref modified);
+                            ReadBinFromStream(binStream, Path.GetFileName(binFileName), errors, ref modified);
                         }
                     }
                     break;
                 case FileType.MIX:
                     // uses combined path of "c:\mixfile.mix;submix1.mix;submix2.mix?file.ini;file.bin"
                     // If bin is missing its filename is simply empty or missing.
-                    iniBytes = GeneralUtils.GetFileFromMixPath(path, FileType.INI, out string iniFileName);
-                    ParseIniContent(ini, iniBytes, forSole);
-                    tryCheckSingle = !forSole && (singlePlayRegex.IsMatch(Path.GetFileNameWithoutExtension(iniFileName)) || GeneralUtils.IdCheck.IsMatch(iniFileName));
-                    errors.AddRange(LoadINI(ini, tryCheckSingle, ref modified));
-                    byte[] binBytes = GeneralUtils.GetFileFromMixPath(path, FileType.BIN, out string binFilename);
-                    if (binBytes != null)
+                    MixPath.GetComponentsViewable(path, out string[] mixParts, out string[] filenameParts);
+                    iniBytes = MixPath.ReadFile(path, FileType.INI, out MixEntry iniFileEntry);
+                    if (iniBytes == null)
                     {
-                        using (MemoryStream binStream = new MemoryStream(binBytes))
+                        // todo maybe allow this to open a map only?
+                        throw new ApplicationException("Cannot find the necessary files inside the archive " + Path.GetFileName(mixParts[0]) + ".");
+                    }
+                    ParseIniContent(ini, iniBytes, forSole);
+                    tryCheckSingle = !forSole && (iniFileEntry.Name == null || singlePlayRegex.IsMatch(Path.GetFileNameWithoutExtension(iniFileEntry.Name)));
+                    errors.AddRange(LoadINI(ini, tryCheckSingle, ref modified));
+                    using (MixFile mainMix = MixPath.OpenMixPath(path, FileType.BIN, out MixFile contentMix, out MixEntry fileEntry))
+                    {
+                        if (mainMix != null)
                         {
-                            ReadBinFromStream(binStream, binFilename, errors, ref modified);
+                            using (Stream binStream = contentMix.OpenFile(fileEntry))
+                            {
+                                ReadBinFromStream(binStream, fileEntry.Name ?? fileEntry.IdString, errors, ref modified);
+                            }
+                        }
+                        else
+                        {
+                            errors.Add(String.Format("No .bin file found for file '{0}'. Using empty map.", iniFileEntry.Name ?? iniFileEntry.IdString));
+                            modified = true;
+                            Map.Templates.Clear();
                         }
                     }
                     break;

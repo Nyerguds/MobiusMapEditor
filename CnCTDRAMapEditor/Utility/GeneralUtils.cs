@@ -50,18 +50,6 @@ namespace MobiusEditor.Utility
 
     public static class GeneralUtils
     {
-        public static readonly Regex IdCheck = new Regex("\\[([0-9A-F]{8})\\]");
-
-        public static string BuildMixPath(List<MixFile> mixFiles, params string[] files)
-        {
-            string[] mixArr = new string[mixFiles.Count];
-            for (int i = 0; i < mixFiles.Count; ++i)
-            {
-                mixArr[i] = mixFiles[i].FilePath;
-            }
-            return String.Join(";", mixArr) + "?" + String.Join(";", files);
-        }
-
         /// <summary>
         /// Returns the contents of the ini, or null if no ini content could be found in the file.
         /// </summary>
@@ -98,7 +86,7 @@ namespace MobiusEditor.Utility
                         }
                         break;
                     case FileType.MIX:
-                        byte[] iniBytes = GetFileFromMixPath(path, FileType.INI, out _);
+                        byte[] iniBytes = MixPath.ReadFile(path, FileType.INI, out _);
                         if (iniBytes != null)
                         {
                             iniContents = encDOS.GetString(iniBytes);
@@ -116,62 +104,6 @@ namespace MobiusEditor.Utility
             catch
             {
                 return null;
-            }
-        }
-
-        public static byte[] GetFileFromMixPath(string path, FileType fileType, out string filename)
-        {
-            filename = null;
-            string[] pathparts = path.Split('?');
-            if (pathparts.Length < 2)
-            {
-                return null;
-            }
-            string[] mixparts = pathparts[0].Split(';');
-            string[] fileparts = pathparts[1].Split(';');
-            switch (fileType)
-            {
-                case FileType.INI:
-                    filename = fileparts[0];
-                    break;
-                case FileType.BIN:
-                    filename = fileparts.Length < 2 ? String.Empty : fileparts[1];
-                    break;
-            }
-            if (String.IsNullOrEmpty(filename))
-            {
-                return null;
-            }
-            using (MixFile mainMix = new MixFile(mixparts[0]))
-            {
-                MixFile openMix = mainMix;
-                int len = mixparts.Length;
-                for (int i = 1; i < len; ++i)
-                {
-                    string subMix = mixparts[i];
-                    Match mixIdMatch = IdCheck.Match(subMix);
-                    uint mixId = 0;
-                    bool mixIsId = mixIdMatch.Success;
-                    if (mixIsId)
-                    {
-                        mixId = UInt32.Parse(mixIdMatch.Groups[1].Value, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
-                    }
-                    MixEntry[] entries = mixIsId ? openMix.GetFullFileInfo(mixId) : openMix.GetFullFileInfo(subMix);
-                    if (entries != null && entries.Length != 0)
-                    {
-                        MixEntry newmixfile = entries[0];
-                        // no need to keep track of those; they don't need to get disposed anyway.
-                        openMix = new MixFile(openMix, newmixfile);
-                    }
-                }
-                Match idMatch = IdCheck.Match(filename);
-                uint id = 0;
-                bool isId = idMatch.Success;
-                if (isId)
-                {
-                    id = UInt32.Parse(idMatch.Groups[1].Value, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
-                }
-                return isId ? openMix.ReadFile(id) : openMix.ReadFile(filename);
             }
         }
 

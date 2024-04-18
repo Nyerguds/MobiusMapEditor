@@ -142,6 +142,11 @@ namespace MobiusEditor.TiberianDawn
             return GetClassicFontRemapSimple(ClassicFontTriggers, tsmc, textColor);
         }
 
+        private static readonly string[] additionalFiles = new string[]
+        {
+
+        };
+
         public override IEnumerable<string> GetGameFiles()
         {
             foreach (string name in GetMissionFiles())
@@ -153,6 +158,10 @@ namespace MobiusEditor.TiberianDawn
                 yield return name;
             }
             foreach (string name in GetMediaFiles())
+            {
+                yield return name;
+            }
+            foreach (string name in additionalFiles)
             {
                 yield return name;
             }

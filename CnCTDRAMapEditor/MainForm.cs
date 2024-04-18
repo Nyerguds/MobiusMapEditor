@@ -33,19 +33,17 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Numerics;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
-using System.Xml.Linq;
 
 namespace MobiusEditor
 {
     public partial class MainForm : Form, IFeedBackHandler, IHasStatusLabel
     {
 
-        const string noname = "Untitled";
+        const string MAP_UNTITLED = "Untitled";
         private Dictionary<string, Bitmap> theaterIcons = new Dictionary<string, Bitmap>();
         private Dictionary<uint, string> generatedMixIds = null;
 
@@ -206,7 +204,7 @@ namespace MobiusEditor
             bool mapNameEmpty = gi.MapNameIsEmpty(mapName);
             bool fileNameEmpty = filename == null;
             string mapFilename = "\""
-                + (fileNameEmpty ? noname + (loadedFileType == FileType.MIX ? gi.DefaultExtensionFromMix : gi.DefaultExtension) : Path.GetFileName(filename))
+                + (fileNameEmpty ? MAP_UNTITLED + (loadedFileType == FileType.MIX ? gi.DefaultExtensionFromMix : gi.DefaultExtension) : Path.GetFileName(filename))
                 + "\"";
             string mapShowName;
             if (!mapNameEmpty && !fileNameEmpty)
@@ -658,7 +656,7 @@ namespace MobiusEditor
                 else
                 {
                     string name = gi.MapNameIsEmpty(plugin.Map.BasicSection.Name)
-                        ? noname
+                        ? MAP_UNTITLED
                         : string.Join("_", plugin.Map.BasicSection.Name.Split(Path.GetInvalidFileNameChars()));
                     sfd.FileName = name + (loadedFileType == FileType.MIX ? gi.DefaultExtensionFromMix : gi.DefaultExtension);
                 }
@@ -1301,33 +1299,23 @@ namespace MobiusEditor
         {
             ClearActiveTool();
             bool isMix = !String.IsNullOrEmpty(fileName) && fileName.Contains('?');
-            String loadName = fileName;
-            String fullname = fileName;
-            String shortName;
+            string loadName = fileName;
+            string feedbackName = fileName;
+            bool nameIsId = false;
             if (!isMix)
             {
                 FileInfo fileInfo = new FileInfo(fileName);
                 loadName = fileInfo.FullName;
-                fullname = fileInfo.FullName;
-                shortName = fileInfo.Name;
+                feedbackName = fileInfo.FullName;
             }
             else
             {
-                string[] nameParts = fileName.Split('?');
-                string[] mixparts = nameParts[0].Split(';');
-                FileInfo fileInfo = new FileInfo(mixparts[0]);
-                string mixParts = String.Join(" -> ", mixparts.Skip(1));
-                string iniName = nameParts.Length > 1 ? " -> " + nameParts[1].Split(';')[0] : null;
-                loadName = fileInfo.FullName + " -> " + mixParts;
-                fullname = fileInfo.FullName + " -> " + mixParts;
-                shortName = fileInfo.Name + " -> " + mixParts;
-                if (iniName != null)
-                {
-                    fullname += iniName;
-                    shortName += iniName;
-                }
+                MixPath.GetComponentsViewable(fileName, out string[] mixParts, out _);
+                FileInfo fileInfo = new FileInfo(mixParts[0]);
+                loadName = fileInfo.FullName;
+                feedbackName = MixPath.GetFileNameReadable(fileName, false, out nameIsId);
             }
-            if (!IdentifyMap(fileName, out FileType fileType, out GameType gameType, out bool isMegaMap, out string theater))
+            if (!IdentifyMap(fileName, out FileType fileType, out GameType gameType, out bool isMegaMap, out string theater) && !isMix)
             {
                 string extension = Path.GetExtension(loadName).TrimStart('.');
                 // No point in supporting jpeg here; the mapping needs distinct colours without fades.
@@ -1351,7 +1339,7 @@ namespace MobiusEditor
                         // Ignore and just fall through.
                     }
                 }
-                MessageBox.Show(string.Format("Error loading {0}: Could not identify map type.", shortName), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(string.Format("Error loading {0}: Could not identify map type.", feedbackName), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 RefreshActiveTool();
                 return;
             }
@@ -1368,7 +1356,7 @@ namespace MobiusEditor
             {
                 string graphicsMode = Globals.UseClassicFiles ? "Classic" : "Remastered";
                 string message = string.Format("Error loading {0}: No assets found for {1} theater \"{2}\" in {3} graphics mode.",
-                    fullname, gType.Name, theaterObj.Name, graphicsMode);
+                    feedbackName, gType.Name, theaterObj.Name, graphicsMode);
                 if (Globals.UseClassicFiles)
                 {
                     message += String.Format("\n\nYou may need to adjust the \"{0}\" setting to point to a game folder containing {1}, or add {1} to the configured folder.",
@@ -1444,9 +1432,8 @@ namespace MobiusEditor
             if (isMixFile)
             {
                 fileType = FileType.MIX;
-                string[] pathparts = fullFilename.Split('?');
-                string[] mixparts = pathparts[0].Split(';');
-                loadFilename = mixparts[0];
+                MixPath.GetComponents(fullFilename, out string[] mixParts, out string[] filenameParts);
+                loadFilename = mixParts[0];
             }
             try
             {
@@ -1834,33 +1821,35 @@ namespace MobiusEditor
             bool isMix = loadInfo.FileName.Contains('?');
             IGamePlugin oldPlugin = this.plugin;
             string[] errors = loadInfo.Errors ?? new string[0];
-            // Plugin set to null indicates a fatal processing error where no map was loaded at all.
             string feedbackPath = loadInfo.FileName;
-            string feedbackName;
-            string reportName = loadInfo.FileName;
+            string feedbackNameShort;
+            bool regenerateSaveName = false;
             string resaveName = loadInfo.FileName;
             FileType resaveType = loadInfo.FileType;
             if (isMix)
             {
-                string[] parts = feedbackPath.Split('?');
-                string[] mixParts = parts[0].Split(';');
-                string mixName = mixParts[0];
-                reportName = mixName;
-                feedbackPath = String.Join(" -> ", mixParts);
-                mixParts[0] = Path.GetFileName(mixName);
-                feedbackName = String.Join(" -> ", mixParts);
-                if (parts.Length > 1)
+                feedbackPath = MixPath.GetFileNameReadable(loadInfo.FileName, false, out regenerateSaveName);
+                feedbackNameShort = MixPath.GetFileNameReadable(loadInfo.FileName, true, out _);
+                MixPath.GetComponentsViewable(feedbackPath, out string[] mixParts, out string[] filenameParts);
+                FileInfo fileInfo = new FileInfo(mixParts[0]);
+                string mixName = fileInfo.FullName;
+                string loadedName = filenameParts[0];
+                if (String.IsNullOrEmpty(loadedName) && filenameParts.Length > 1 && !String.IsNullOrEmpty(filenameParts[1]))
                 {
-                    reportName = parts[1].Split(';')[0];
-                    feedbackName += " -> " + reportName;
-                    feedbackPath += " -> " + reportName;
-                    resaveName = Path.Combine(Path.GetDirectoryName(mixName), reportName);
+                    // Use the .bin file.
+                    loadedName = filenameParts[1];
                 }
+                String resavePath = Path.GetDirectoryName(mixName);
+                if (String.IsNullOrEmpty(loadedName))
+                    regenerateSaveName = true;
+                // If the name gets regenerated from map name, add a dummy name for now so it can extract the path at least.
+                resaveName = Path.Combine(resavePath, regenerateSaveName ? MAP_UNTITLED + ".ini" : loadedName);
             }
             else
             {
-                feedbackName = Path.GetFileName(feedbackPath);
+                feedbackNameShort = Path.GetFileName(feedbackPath);
             }
+            // Plugin set to null indicates a fatal processing error where no map was loaded at all.
             if (loadInfo.Plugin == null || (loadInfo.Plugin != null && !loadInfo.MapLoaded))
             {
                 // Attempted to load file, loading went OK, but map was not loaded.
@@ -1878,15 +1867,12 @@ namespace MobiusEditor
             }
             else
             {
-                if (isMix)
+                if (isMix && regenerateSaveName)
                 {
                     GameInfo gi = loadInfo.Plugin.GameInfo;
-                    if (GeneralUtils.IdCheck.IsMatch(reportName))
-                    {
-                        string mapName = loadInfo.Plugin.Map.BasicSection.Name;
-                        mapName = gi.MapNameIsEmpty(mapName) ? noname : string.Join("_", mapName.Split(Path.GetInvalidFileNameChars()));
-                        resaveName = Path.Combine(Path.GetDirectoryName(resaveName), mapName + gi.DefaultExtensionFromMix);
-                    }
+                    string mapName = loadInfo.Plugin.Map.BasicSection.Name;
+                    mapName = gi.MapNameIsEmpty(mapName) ? MAP_UNTITLED : string.Join("_", mapName.Split(Path.GetInvalidFileNameChars()));
+                    resaveName = Path.Combine(Path.GetDirectoryName(resaveName), mapName + gi.DefaultExtensionFromMix);
                 }
                 this.plugin = loadInfo.Plugin;
                 plugin.FeedBackHandler = this;
@@ -1895,7 +1881,7 @@ namespace MobiusEditor
                 {
                     using (ErrorMessageBox emb = new ErrorMessageBox())
                     {
-                        emb.Title = "Error Report - " + feedbackName;
+                        emb.Title = "Error Report - " + feedbackNameShort;
                         emb.Errors = errors;
                         emb.StartPosition = FormStartPosition.CenterParent;
                         emb.ShowDialog(this);

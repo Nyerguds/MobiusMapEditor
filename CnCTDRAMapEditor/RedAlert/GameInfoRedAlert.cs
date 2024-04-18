@@ -17,6 +17,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Xml.Linq;
 using MobiusEditor.Interface;
 using MobiusEditor.Model;
 using MobiusEditor.Utility;
@@ -252,25 +253,32 @@ namespace MobiusEditor.RedAlert
             "nchires.mix",
             "speech.mix",
         };
-        private static readonly string[] additionalFiles = new string[]
+
+        private static readonly string[] additionalTheaterFiles = new string[]
+        {
+            "moveflsh",
+            "corpse1",
+            "corpse2",
+            "corpse3",
+            "electro",
+        };
+
+        // Mostly animations
+        private static readonly string[] additionalShpFiles = new string[]
         {
 
         };
 
+        //These are usually unused files. All the rest ends up in ActionDataTypes (though it's also not a great place for that).
+        private static readonly string[] additionalFiles = new string[]
+        {
+            "dogw6.aud",
+            "await_r.aud",
+            "araziod.aud",
+        };
+
         public override IEnumerable<string> GetGameFiles()
         {
-            foreach (string name in GetMissionFiles())
-            {
-                yield return name;
-            }
-            foreach (string name in GetGraphicsFiles(TheaterTypes.GetAllTypes()))
-            {
-                yield return name;
-            }
-            foreach (string name in GetMediaFiles())
-            {
-                yield return name;
-            }
             foreach (string name in embeddedMixFiles)
             {
                 yield return name;
@@ -279,6 +287,26 @@ namespace MobiusEditor.RedAlert
             foreach (TheaterType theater in TheaterTypes.GetAllTypes())
             {
                 yield return theater.ClassicTileset + mixExt;
+            }
+            foreach (string name in GetMissionFiles())
+            {
+                yield return name;
+            }
+            foreach (string name in GetGraphicsFiles(TheaterTypes.GetAllTypes()))
+            {
+                yield return name;
+            }
+            foreach (string name in GetAudioFiles())
+            {
+                yield return name;
+            }
+            foreach (string name in GetMediaFiles())
+            {
+                yield return name;
+            }
+            foreach (string name in additionalFiles)
+            {
+                yield return name;
             }
         }
 
@@ -331,7 +359,6 @@ namespace MobiusEditor.RedAlert
 
             const string shpExt = ".shp";
             string[] theaterExts = theaterTypes.Where(th => !th.IsModTheater).Select(tt => "." + tt.ClassicExtension.Trim('.')).ToArray();
-            string[] extraThExts = theaterTypes.Where(th => th.IsModTheater).Select(tt => "." + tt.ClassicExtension.Trim('.')).ToArray();
             // Templates
             foreach (TemplateType tmp in TemplateTypes.GetTypes())
             {
@@ -339,14 +366,6 @@ namespace MobiusEditor.RedAlert
                 for (int i = 0; i < theaterExts.Length; ++i)
                 {
                     yield return name + theaterExts[i];
-                }
-            }
-            foreach (TemplateType tmp in TemplateTypes.GetTypes())
-            {
-                string name = tmp.Name;
-                for (int i = 0; i < extraThExts.Length; ++i)
-                {
-                    yield return name + extraThExts[i];
                 }
             }
             // Buildings, with icons and build-up animations
@@ -363,16 +382,6 @@ namespace MobiusEditor.RedAlert
                     yield return name + "make" + thExt;
                 }
             }
-            foreach (BuildingType bt in BuildingTypes.GetTypes())
-            {
-                string name = bt.Name;
-                for (int i = 0; i < extraThExts.Length; ++i)
-                {
-                    string thExt = extraThExts[i];
-                    yield return name + thExt;
-                    yield return name + "make" + thExt;
-                }
-            }
             // Smudge
             foreach (SmudgeType sm in SmudgeTypes.GetTypes(false))
             {
@@ -382,14 +391,6 @@ namespace MobiusEditor.RedAlert
                     yield return name + theaterExts[i];
                 }
             }
-            foreach (SmudgeType sm in SmudgeTypes.GetTypes(false))
-            {
-                string name = sm.Name;
-                for (int i = 0; i < extraThExts.Length; ++i)
-                {
-                    yield return name + extraThExts[i];
-                }
-            }
             // Terrain
             foreach (TerrainType tr in TerrainTypes.GetTypes())
             {
@@ -397,14 +398,6 @@ namespace MobiusEditor.RedAlert
                 for (int i = 0; i < theaterExts.Length; ++i)
                 {
                     yield return name + theaterExts[i];
-                }
-            }
-            foreach (TerrainType tr in TerrainTypes.GetTypes())
-            {
-                string name = tr.Name;
-                for (int i = 0; i < extraThExts.Length; ++i)
-                {
-                    yield return name + extraThExts[i];
                 }
             }
             // Infantry
@@ -421,10 +414,111 @@ namespace MobiusEditor.RedAlert
                 yield return name + shpExt;
                 yield return name + "icon" + shpExt;
             }
+            // Overlay: can be both shp and theater-dependent.
+            foreach (OverlayType ov in OverlayTypes.GetTypes())
+            {
+                string name = ov.Name;
+                yield return name + shpExt;
+                for (int i = 0; i < theaterExts.Length; ++i)
+                {
+                    yield return name + theaterExts[i];
+                }
+            }
+            // Additional .shp graphics
+            foreach (string gfx in additionalShpFiles)
+            {
+                yield return gfx + shpExt;
+            }
+            // Additional theater-specific files
+            foreach (string gfx in additionalTheaterFiles)
+            {
+                for (int i = 0; i < theaterExts.Length; ++i)
+                {
+                    yield return gfx + theaterExts[i];
+                }
+            }
+
+            // Extra theaters are loaded last; when it comes to collisions the official theaters come first.
+
+            string[] extraThExts = theaterTypes.Where(th => th.IsModTheater).Select(tt => "." + tt.ClassicExtension.Trim('.')).ToArray();
+            // Templates
+            foreach (TemplateType tmp in TemplateTypes.GetTypes())
+            {
+                string name = tmp.Name;
+                for (int i = 0; i < extraThExts.Length; ++i)
+                {
+                    yield return name + extraThExts[i];
+                }
+            }
+            // Buildings, with icons and build-up animations
+            foreach (BuildingType bt in BuildingTypes.GetTypes())
+            {
+                string name = bt.Name;
+                for (int i = 0; i < extraThExts.Length; ++i)
+                {
+                    string thExt = extraThExts[i];
+                    yield return name + thExt;
+                    yield return name + "make" + thExt;
+                }
+            }
+            // Smudge
+            foreach (SmudgeType sm in SmudgeTypes.GetTypes(false))
+            {
+                string name = sm.Name;
+                for (int i = 0; i < extraThExts.Length; ++i)
+                {
+                    yield return name + extraThExts[i];
+                }
+            }
+            // Terrain
+            foreach (TerrainType tr in TerrainTypes.GetTypes())
+            {
+                string name = tr.Name;
+                for (int i = 0; i < extraThExts.Length; ++i)
+                {
+                    yield return name + extraThExts[i];
+                }
+            }
             // Overlay
             foreach (OverlayType ov in OverlayTypes.GetTypes())
             {
-                yield return ov.Name + shpExt;
+                string name = ov.Name;
+                for (int i = 0; i < extraThExts.Length; ++i)
+                {
+                    yield return name + extraThExts[i];
+                }
+            }
+            // Additional theater-specific files
+            foreach (string gfx in additionalTheaterFiles)
+            {
+                for (int i = 0; i < extraThExts.Length; ++i)
+                {
+                    yield return gfx + extraThExts[i];
+                }
+            }
+        }
+
+        public static IEnumerable<string> GetAudioFiles()
+        {
+            const string audExt = ".aud";
+            foreach (string voc in ActionDataTypes.VocNames)
+            {
+                yield return voc + audExt;
+            }
+            foreach (string vox in ActionDataTypes.UnitVocNames)
+            {
+                yield return vox + ".v00";
+                yield return vox + ".v01";
+                yield return vox + ".v02";
+                yield return vox + ".v03";
+                yield return vox + ".r00";
+                yield return vox + ".r01";
+                yield return vox + ".r02";
+                yield return vox + ".r03";
+            }
+            foreach (string vox in ActionDataTypes.VoxNames)
+            {
+                yield return vox + audExt;
             }
         }
 

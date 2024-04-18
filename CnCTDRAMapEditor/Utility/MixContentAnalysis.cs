@@ -190,7 +190,7 @@ namespace MobiusEditor.Utility
             {
                 Byte[][] shpData = ClassicSpriteLoader.GetCcShpData(fileContents, out int width, out int height);
                 mixInfo.Type = MixContentType.ShpTd;
-                mixInfo.Info = String.Format("C&C SHP; {0} frames, {1}x{2}", shpData.Length, width, height);
+                mixInfo.Info = String.Format("C&C SHP; {0} frame{1}, {2}x{3}", shpData.Length, shpData.Length == 1? string.Empty : "s", width, height);
                 return true;
             }
             catch (FileTypeLoadException) { /* ignore */ }
@@ -203,7 +203,7 @@ namespace MobiusEditor.Utility
             {
                 Byte[][] shpData = ClassicSpriteLoader.GetD2ShpData(fileContents, out int[] widths, out int[] heights);
                 mixInfo.Type = MixContentType.ShpD2;
-                mixInfo.Info = String.Format("Dune II SHP; {0} frames, {1}x{2}", shpData.Length, widths.Max(), heights.Max());
+                mixInfo.Info = String.Format("Dune II SHP; {0} frame{1}, {2}x{3}", shpData.Length, shpData.Length == 1 ? string.Empty : "s", widths.Max(), heights.Max());
                 return true;
             }
             catch (FileTypeLoadException) { /* ignore */ }
@@ -229,7 +229,7 @@ namespace MobiusEditor.Utility
             {
                 Byte[][] shpData = ClassicSpriteLoader.GetCcTmpData(fileContents, out int[] widths, out int[] heights);
                 mixInfo.Type = MixContentType.TmpTd;
-                mixInfo.Info = String.Format("C&C Template; {0} frames", shpData.Length);
+                mixInfo.Info = String.Format("C&C Template; {0} frame{1}", shpData.Length, shpData.Length == 1 ? string.Empty : "s");
                 return true;
             }
             catch (FileTypeLoadException) { /* ignore */ }

@@ -639,6 +639,7 @@
     <Compile Include="Utility\MixFile.cs" />
     <Compile Include="Utility\MixFileCrypto.cs" />
     <Compile Include="Utility\MixfileManager.cs" />
+    <Compile Include="Utility\MixPath.cs" />
     <Compile Include="Utility\MRU.cs" />
     <Compile Include="Utility\PropertyTracker.cs" />
     <Compile Include="Event\MapRefreshEventArgs.cs" />

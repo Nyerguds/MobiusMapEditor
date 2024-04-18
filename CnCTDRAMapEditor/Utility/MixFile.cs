@@ -18,7 +18,6 @@ using System.IO;
 using System.IO.MemoryMappedFiles;
 using System.Linq;
 using System.Numerics;
-using System.Xml.Linq;
 
 namespace MobiusEditor.Utility
 {
@@ -30,9 +29,12 @@ namespace MobiusEditor.Utility
         private Dictionary<uint, MixEntry[]> mixFileContents = new Dictionary<uint, MixEntry[]>();
         private HashRol1 hashRol = new HashRol1();
 
-        public string MixFileName { get; private set; }
+        /// <summary>Path the file was loaded from. For embedded mix files, this will be the original path with the deeper opened mix file(s) indicated behind " -&gt; ".</summary>
         public string FilePath { get; private set; }
+        /// <summary>Filename to display. Will be null if it is loaded by id from inside another mix archive and its name is not known.</summary>
         public string FileName { get; private set; }
+        /// <summary>File ID in case <see href="FileName"/> is not available.</summary>
+        public uint FileId { get; private set; }
         public int FileCount { get; private set; }
         public bool IsNewFormat { get; private set; }
         public bool IsEmbedded { get; private set; }
@@ -52,9 +54,9 @@ namespace MobiusEditor.Utility
             FileInfo mixFile = new FileInfo(mixPath);
             this.fileStart = 0;
             this.fileLength = mixFile.Length;
-            this.MixFileName = mixPath;
             this.FilePath = mixPath;
             this.FileName = Path.GetFileName(mixPath);
+            this.FileId = hashRol.GetNameId(FileName);
             this.mixFileMap = MemoryMappedFile.CreateFromFile(
                 new FileStream(mixPath, FileMode.Open, FileAccess.Read, FileShare.Read),
                 null, 0, MemoryMappedFileAccess.Read, HandleInheritability.None, false);
@@ -95,9 +97,9 @@ namespace MobiusEditor.Utility
             {
                 throw new FileNotFoundException(name + " was not found inside this mix archive.");
             }
-            this.MixFileName = container.MixFileName + " -> " + name;
-            this.FilePath = name;
-            this.FileName = name;
+            this.FilePath = container.FilePath + " -> " + name;
+            this.FileName = entry.Name;
+            this.FileId = entry.Id;
             this.fileStart = actualEntry.Offset;
             this.fileLength = actualEntry.Length;
             // Copy reference to parent map. The "CreateViewStream" function takes care of reading the right parts from it.

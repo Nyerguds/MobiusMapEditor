@@ -157,49 +157,49 @@ namespace MobiusEditor.Dialogs
             else if (type == MixContentType.MapRa)
             {
                 // Open that mofo!
-                SelectedFile = GeneralUtils.BuildMixPath(openedMixFiles, selected.Name ?? selected.IdString);
+                SelectedFile = MixPath.BuildMixPath(openedMixFiles, selected);
                 this.DialogResult = DialogResult.OK;
             }
             else if (type == MixContentType.MapTd || type == MixContentType.MapSole)
             {
-                String iniName = name;
-                string binName;
+                MixEntry iniEntry = selected;
+                MixEntry binEntry;
                 if (name == null)
                 {
-                    // Inform user that accompanying bin is impossible to find without name, and ask if user wants to open it on a blank terrain map.
-                    binName = String.Empty;
+                    // TODO Inform user that accompanying bin is impossible to find without name, and ask if user wants to open it on a blank terrain map.
+                    binEntry = null;
                 }
                 else
                 {
                     // try to find accompanying .bin file
-                    binName = Path.GetFileNameWithoutExtension(iniName) + ".bin";
-                    MixEntry binEntry = currentMixInfo.FirstOrDefault(me => binName.Equals(me.Name, StringComparison.OrdinalIgnoreCase));
+                    string binName = Path.GetFileNameWithoutExtension(name) + ".bin";
+                    binEntry = currentMixInfo.FirstOrDefault(me => binName.Equals(me.Name, StringComparison.OrdinalIgnoreCase));
                     if (binEntry == null)
                     {
-                        // Inform user that accompanying bin was not found, and ask if user wants to open it on a blank terrain map.
-                        binName = String.Empty;
+                        // TODO Inform user that accompanying bin was not found, and ask if user wants to open it on a blank terrain map.
                     }
                 }
-                SelectedFile = GeneralUtils.BuildMixPath(openedMixFiles, iniName, binName);
+                SelectedFile = MixPath.BuildMixPath(openedMixFiles, iniEntry, binEntry);
                 this.DialogResult = DialogResult.OK;
             }
             else if (type == MixContentType.Bin || type == MixContentType.BinSole)
             {
-                String binName = name;
+                MixEntry iniEntry;
+                MixEntry binEntry = selected;
                 if (name == null)
                 {
-                    // Inform user that accompanying ini is impossible to find without name, and that a map can't be opened without ini.
+                    // TODO Inform user that accompanying ini is impossible to find without name, and that a map can't be opened without ini.
                     return;
                 }
                 // try to find accompanying .ini file
-                string iniName = Path.GetFileNameWithoutExtension(binName) + ".ini";
-                MixEntry iniEntry = currentMixInfo.FirstOrDefault(me => iniName.Equals(me.Name, StringComparison.OrdinalIgnoreCase));
+                string iniName = Path.GetFileNameWithoutExtension(name) + ".ini";
+                iniEntry = currentMixInfo.FirstOrDefault(me => iniName.Equals(me.Name, StringComparison.OrdinalIgnoreCase));
                 if (iniEntry == null)
                 {
-                    // Inform user that accompanying bin was not found, and that a map can't be opened without ini.
+                    // TODO Inform user that accompanying bin was not found, and that a map can't be opened without ini.
                     return;
                 }
-                SelectedFile = GeneralUtils.BuildMixPath(openedMixFiles, iniName, binName);
+                SelectedFile = MixPath.BuildMixPath(openedMixFiles, iniEntry, binEntry);
                 this.DialogResult = DialogResult.OK;
             }
         }

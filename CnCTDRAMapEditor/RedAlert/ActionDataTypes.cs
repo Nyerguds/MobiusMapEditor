@@ -1154,5 +1154,23 @@ namespace MobiusEditor.RedAlert
             QUARRY_POWER,         // Attack power facilities.
             QUARRY_FAKES,         // Prefer to attack fake buildings.
         };
+
+        public static readonly string[] UnitVocNames = new[]
+        {
+            "ACKNO",
+            "AFFIRM1",
+            "AWAIT1",
+            "EAFFIRM1",
+            "EENGIN1",
+            "NOPROB",
+            "OVEROUT",
+            "READY",
+            "REPORT1",
+            "RITAWAY",
+            "ROGER",
+            "UGOTIT",
+            "VEHIC1",
+            "YESSIR1",
+        };
     }
 }

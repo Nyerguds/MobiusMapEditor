@@ -135,6 +135,11 @@ namespace MobiusEditor.SoleSurvivor
             return GetClassicFontRemapSimple(ClassicFontTriggers, tsmc, textColor);
         }
 
+        private static readonly string[] additionalFiles = new string[]
+        {
+
+        };
+
         public override IEnumerable<string> GetGameFiles()
         {
             foreach (string name in GetMissionFiles())
@@ -142,6 +147,10 @@ namespace MobiusEditor.SoleSurvivor
                 yield return name;
             }
             foreach (string name in GameInfoTibDawn.GetGraphicsFiles(TheaterTypes.GetAllTypes()))
+            {
+                yield return name;
+            }
+            foreach (string name in additionalFiles)
             {
                 yield return name;
             }
