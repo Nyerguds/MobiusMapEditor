@@ -31,6 +31,7 @@ namespace MobiusEditor.SoleSurvivor
         public override string OpenFilter => Constants.FileFilter;
         public override string SaveFilter => Constants.FileFilter;
         public override string DefaultExtension => ".ini";
+        public override string DefaultExtensionFromMix => ".ini";
         public override string ModFolder => Path.Combine(Globals.ModDirectory, "Tiberian_Dawn");
         public override string ModIdentifier => "TD";
         public override string ModsToLoad => Properties.Settings.Default.ModsToLoadTD;

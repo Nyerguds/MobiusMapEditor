@@ -646,7 +646,7 @@ namespace MobiusEditor.RedAlert
                     case FileType.MIX:
                         iniBytes = GeneralUtils.GetFileFromMixPath(path, FileType.INI, out string iniFileName);
                         ParseIniContent(ini, iniBytes, errors);
-                        tryCheckSingle = singlePlayRegex.IsMatch(Path.GetFileNameWithoutExtension(iniFileName));
+                        tryCheckSingle = singlePlayRegex.IsMatch(Path.GetFileNameWithoutExtension(iniFileName)) || GeneralUtils.IdCheck.IsMatch(iniFileName);
                         errors.AddRange(LoadINI(ini, tryCheckSingle, ref modified));
                         break;
                     default:

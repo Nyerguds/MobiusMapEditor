@@ -561,7 +561,8 @@ namespace MobiusEditor.TiberianDawn
                     // If bin is missing its filename is simply empty or missing.
                     iniBytes = GeneralUtils.GetFileFromMixPath(path, FileType.INI, out string iniFileName);
                     ParseIniContent(ini, iniBytes, forSole);
-                    errors.AddRange(LoadINI(ini, false, ref modified));
+                    tryCheckSingle = !forSole && (singlePlayRegex.IsMatch(Path.GetFileNameWithoutExtension(iniFileName)) || GeneralUtils.IdCheck.IsMatch(iniFileName));
+                    errors.AddRange(LoadINI(ini, tryCheckSingle, ref modified));
                     byte[] binBytes = GeneralUtils.GetFileFromMixPath(path, FileType.BIN, out string binFilename);
                     if (binBytes != null)
                     {

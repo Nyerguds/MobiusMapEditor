@@ -31,6 +31,7 @@ namespace MobiusEditor.Model
         public abstract string SaveFilter { get; }
         public abstract string OpenFilter { get; }
         public abstract string DefaultExtension { get; }
+        public abstract string DefaultExtensionFromMix { get; }
         public abstract string ModFolder { get; }
         public abstract string ModIdentifier { get; }
         public abstract string ModsToLoad { get; }

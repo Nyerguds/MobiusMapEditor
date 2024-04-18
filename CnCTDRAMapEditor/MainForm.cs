@@ -45,6 +45,7 @@ namespace MobiusEditor
     public partial class MainForm : Form, IFeedBackHandler, IHasStatusLabel
     {
 
+        const string noname = "Untitled";
         private Dictionary<string, Bitmap> theaterIcons = new Dictionary<string, Bitmap>();
         private Dictionary<uint, string> generatedMixIds = null;
 
@@ -193,7 +194,6 @@ namespace MobiusEditor
 
         private void SetTitle()
         {
-            const string noname = "Untitled";
             String mainTitle = Program.ProgramVersionTitle;
             string updating = this.startedUpdate ? " [CHECKING FOR UPDATES]" : String.Empty;
             if (plugin == null)
@@ -202,9 +202,12 @@ namespace MobiusEditor
                 return;
             }
             string mapName = plugin.Map.BasicSection.Name;
-            bool mapNameEmpty = plugin.GameInfo.MapNameIsEmpty(mapName);
+            GameInfo gi = plugin.GameInfo;
+            bool mapNameEmpty = gi.MapNameIsEmpty(mapName);
             bool fileNameEmpty = filename == null;
-            string mapFilename = "\"" + (fileNameEmpty ? noname + plugin.GameInfo.DefaultExtension : Path.GetFileName(filename)) + "\"";
+            string mapFilename = "\""
+                + (fileNameEmpty ? noname + (loadedFileType == FileType.MIX ? gi.DefaultExtensionFromMix : gi.DefaultExtension) : Path.GetFileName(filename))
+                + "\"";
             string mapShowName;
             if (!mapNameEmpty && !fileNameEmpty)
             {
@@ -218,7 +221,7 @@ namespace MobiusEditor
             {
                 mapShowName = mapFilename;
             }
-            this.Text = string.Format("{0}{1} [{2}] - {3}{4}", mainTitle, updating, plugin.GameInfo.Name, mapShowName, plugin != null && plugin.Dirty ? " *" : String.Empty);
+            this.Text = string.Format("{0}{1} [{2}] - {3}{4}", mainTitle, updating, gi.Name, mapShowName, plugin != null && plugin.Dirty ? " *" : String.Empty);
         }
 
         private void SteamUpdateTimer_Tick(object sender, EventArgs e)
@@ -598,7 +601,7 @@ namespace MobiusEditor
                 afterSaveDone?.Invoke();
                 return;
             }
-            if (string.IsNullOrEmpty(filename) || !Directory.Exists(Path.GetDirectoryName(filename)) || (loadedFileType == FileType.MIX))
+            if (string.IsNullOrEmpty(filename) || !Directory.Exists(Path.GetDirectoryName(filename)) || loadedFileType == FileType.MIX)
             {
                 SaveAsAction(afterSaveDone, skipValidation);
                 return;
@@ -635,15 +638,16 @@ namespace MobiusEditor
             string savePath = null;
             using (SaveFileDialog sfd = new SaveFileDialog())
             {
+                GameInfo gi = plugin.GameInfo;
                 sfd.AutoUpgradeEnabled = false;
                 sfd.RestoreDirectory = false;
                 bool classicLogic = Globals.UseClassicFiles && Globals.ClassicNoRemasterLogic;
                 string lastFolder = mru.Files.Select(f => f.DirectoryName).Where(d => Directory.Exists(d)).FirstOrDefault();
                 string openFolder = Path.GetDirectoryName(filename);
-                string defFolder = plugin.GameInfo.DefaultSaveDirectory;
+                string defFolder = gi.DefaultSaveDirectory;
                 string constFolder = Directory.Exists(defFolder) ? defFolder : Environment.GetFolderPath(Environment.SpecialFolder.Personal);
                 var filters = new List<string>();
-                filters.Add(plugin.GameInfo.SaveFilter);
+                filters.Add(gi.SaveFilter);
                 filters.Add("All files (*.*)|*.*");
                 sfd.InitialDirectory = openFolder ?? lastFolder ?? (classicLogic ? Program.ApplicationPath : constFolder);
                 sfd.Filter = string.Join("|", filters);
@@ -651,9 +655,12 @@ namespace MobiusEditor
                 {
                     sfd.FileName = Path.GetFileName(filename);
                 }
-                else if (!plugin.GameInfo.MapNameIsEmpty(plugin.Map.BasicSection.Name))
+                else
                 {
-                    sfd.FileName = Path.GetFileName(plugin.Map.BasicSection.Name);
+                    string name = gi.MapNameIsEmpty(plugin.Map.BasicSection.Name)
+                        ? noname
+                        : string.Join("_", plugin.Map.BasicSection.Name.Split(Path.GetInvalidFileNameChars()));
+                    sfd.FileName = name + (loadedFileType == FileType.MIX ? gi.DefaultExtensionFromMix : gi.DefaultExtension);
                 }
                 if (sfd.ShowDialog(this) == DialogResult.OK)
                 {
@@ -1311,9 +1318,9 @@ namespace MobiusEditor
                 FileInfo fileInfo = new FileInfo(mixparts[0]);
                 string mixParts = String.Join(" -> ", mixparts.Skip(1));
                 string iniName = nameParts.Length > 1 ? " -> " + nameParts[1].Split(';')[0] : null;
-                loadName = fileInfo.FullName + mixParts;
-                fullname = fileInfo.FullName + mixParts;
-                shortName = fileInfo.Name;
+                loadName = fileInfo.FullName + " -> " + mixParts;
+                fullname = fileInfo.FullName + " -> " + mixParts;
+                shortName = fileInfo.Name + " -> " + mixParts;
                 if (iniName != null)
                 {
                     fullname += iniName;
@@ -1825,7 +1832,7 @@ namespace MobiusEditor
                 return;
             }
             bool isMix = loadInfo.FileName.Contains('?');
-                IGamePlugin oldPlugin = this.plugin;
+            IGamePlugin oldPlugin = this.plugin;
             string[] errors = loadInfo.Errors ?? new string[0];
             // Plugin set to null indicates a fatal processing error where no map was loaded at all.
             string feedbackPath = loadInfo.FileName;
@@ -1871,6 +1878,16 @@ namespace MobiusEditor
             }
             else
             {
+                if (isMix)
+                {
+                    GameInfo gi = loadInfo.Plugin.GameInfo;
+                    if (GeneralUtils.IdCheck.IsMatch(reportName))
+                    {
+                        string mapName = loadInfo.Plugin.Map.BasicSection.Name;
+                        mapName = gi.MapNameIsEmpty(mapName) ? noname : string.Join("_", mapName.Split(Path.GetInvalidFileNameChars()));
+                        resaveName = Path.Combine(Path.GetDirectoryName(resaveName), mapName + gi.DefaultExtensionFromMix);
+                    }
+                }
                 this.plugin = loadInfo.Plugin;
                 plugin.FeedBackHandler = this;
                 LoadIcons(plugin);

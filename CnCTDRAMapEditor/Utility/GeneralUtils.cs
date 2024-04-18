@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -49,6 +50,7 @@ namespace MobiusEditor.Utility
 
     public static class GeneralUtils
     {
+        public static readonly Regex IdCheck = new Regex("\\[([0-9A-F]{8})\\]");
 
         public static string BuildMixPath(List<MixFile> mixFiles, params string[] files)
         {
@@ -147,7 +149,14 @@ namespace MobiusEditor.Utility
                 for (int i = 1; i < len; ++i)
                 {
                     string subMix = mixparts[i];
-                    MixEntry[] entries = openMix.GetFullFileInfo(subMix);
+                    Match mixIdMatch = IdCheck.Match(subMix);
+                    uint mixId = 0;
+                    bool mixIsId = mixIdMatch.Success;
+                    if (mixIsId)
+                    {
+                        mixId = UInt32.Parse(mixIdMatch.Groups[1].Value, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+                    }
+                    MixEntry[] entries = mixIsId ? openMix.GetFullFileInfo(mixId) : openMix.GetFullFileInfo(subMix);
                     if (entries != null && entries.Length != 0)
                     {
                         MixEntry newmixfile = entries[0];
@@ -155,13 +164,12 @@ namespace MobiusEditor.Utility
                         openMix = new MixFile(openMix, newmixfile);
                     }
                 }
-                Regex idCheck = new Regex("\\[([0-F]{8})\\]");
-                Match idMatch = idCheck.Match(filename);
+                Match idMatch = IdCheck.Match(filename);
                 uint id = 0;
                 bool isId = idMatch.Success;
                 if (isId)
                 {
-                    id = UInt32.Parse(idMatch.Groups[1].Value);
+                    id = UInt32.Parse(idMatch.Groups[1].Value, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
                 }
                 return isId ? openMix.ReadFile(id) : openMix.ReadFile(filename);
             }

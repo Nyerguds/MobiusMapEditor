@@ -31,6 +31,7 @@ namespace MobiusEditor.RedAlert
         public override string SaveFilter => Constants.FileFilter;
         public override string OpenFilter => Constants.FileFilter;
         public override string DefaultExtension => ".mpr";
+        public override string DefaultExtensionFromMix => ".ini";
         public override string ModFolder => Path.Combine(Globals.ModDirectory, "Red_Alert");
         public override string ModIdentifier => "RA";
         public override string ModsToLoad => Properties.Settings.Default.ModsToLoadRA;

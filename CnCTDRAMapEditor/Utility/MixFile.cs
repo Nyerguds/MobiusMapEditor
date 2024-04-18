@@ -71,6 +71,16 @@ namespace MobiusEditor.Utility
         {
         }
 
+        public MixFile(MixFile container, uint nameId)
+            : this(container, new MixEntry(nameId, 0, 0), true)
+        {
+        }
+
+        public MixFile(MixFile container, uint nameId, bool handleAdvanced)
+            : this(container, new MixEntry(nameId, 0, 0), handleAdvanced)
+        {
+        }
+
         public MixFile(MixFile container, MixEntry entry)
             : this(container, entry, true)
         {
@@ -83,7 +93,7 @@ namespace MobiusEditor.Utility
             MixEntry actualEntry = container.VerifyInternal(entry);
             if (actualEntry == null)
             {
-                throw new FileNotFoundException(entry.Name + " was not found inside this mix archive.");
+                throw new FileNotFoundException(name + " was not found inside this mix archive.");
             }
             this.MixFileName = container.MixFileName + " -> " + name;
             this.FilePath = name;
@@ -93,26 +103,6 @@ namespace MobiusEditor.Utility
             // Copy reference to parent map. The "CreateViewStream" function takes care of reading the right parts from it.
             this.mixFileMap = container.mixFileMap;
             this.ReadMixHeader(this.mixFileMap, actualEntry.Offset, this.fileLength, handleAdvanced);
-        }
-
-        public MixFile(MixFile container, uint nameId)
-            : this(container, nameId, true)
-        {
-        }
-
-        public MixFile(MixFile container, uint nameId, bool handleAdvanced)
-        {
-            this.IsEmbedded = true;
-            this.MixFileName = container.MixFileName + " -> " + nameId;
-            if (!container.GetFileInfo(nameId, out uint offset, out uint length))
-            {
-                throw new FileNotFoundException(nameId + " was not found inside this mix archive.");
-            }
-            this.fileStart = offset;
-            this.fileLength = length;
-            // Copy reference to parent map. The "CreateViewStream" function takes care of reading the right parts from it.
-            this.mixFileMap = container.mixFileMap;
-            this.ReadMixHeader(this.mixFileMap, offset, this.fileLength, handleAdvanced);
         }
 
         public List<uint> GetFileIds()
