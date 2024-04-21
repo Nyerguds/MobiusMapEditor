@@ -20,19 +20,22 @@ using System.Windows.Forms;
 
 namespace MobiusEditor.Utility
 {
+    /// <summary>
+    /// System to keep track of Most Recently Used files.
+    /// </summary>
     public class MRU: IDisposable
     {
         private bool _disposed;
         private readonly RegistryKey registryKey;
         private readonly int maxFiles;
-        private readonly List<FileInfo> files = new List<FileInfo>();
+        private readonly List<string> files = new List<string>();
         private readonly ToolStripMenuItem menu;
         private readonly ToolStripMenuItem[] fileItems;
 
-        public FileInfo[] Files => files.ToArray();
+        public string[] Files => files.ToArray();
         public bool Disposed => _disposed;
 
-        public event EventHandler<FileInfo> FileSelected;
+        public event EventHandler<string> FileSelected;
 
         public MRU(string registryPath, int maxFiles, ToolStripMenuItem menu)
         {
@@ -59,11 +62,14 @@ namespace MobiusEditor.Utility
             ShowMRU();
         }
 
-        public void Add(FileInfo file)
+        /// <summary>Adds a path to the MRU.</summary>
+        /// <param name="file">Path to add.</param>
+        /// <exception cref="ObjectDisposedException">The MRU is disposed.</exception>
+        public void Add(string file)
         {
             if (_disposed)
                 throw new ObjectDisposedException("MRU");
-            files.RemoveAll(f => f.FullName == file.FullName);
+            files.RemoveAll(f => f == file);
             files.Insert(0, file);
 
             if (files.Count > maxFiles)
@@ -74,13 +80,39 @@ namespace MobiusEditor.Utility
             ShowMRU();
         }
 
-        public void Remove(FileInfo file)
+        /// <summary>Removes a path from the MRU.</summary>
+        /// <param name="file">Path to add.</param>
+        /// <exception cref="ObjectDisposedException">The MRU is disposed.</exception>
+        public void Remove(string file)
         {
             if (_disposed)
                 throw new ObjectDisposedException("MRU");
-            files.RemoveAll(f => f.FullName == file.FullName);
+            files.RemoveAll(f => f == file);
             SaveMRU();
             ShowMRU();
+        }
+
+        /// <summary>Checks if an MRU path exists, either as mix path or as file path.</summary>
+        /// <param name="path">A mix path or file path from the MRU to check.</param>
+        /// <returns>True if it is a file path and the file exists, or it is a mix path and all components in the mix path exist.</returns>
+        public static bool CheckIfExist(string path)
+        {
+            bool isMix = path.IndexOf('?') != -1;
+            return (isMix && MixPath.PathIsValid(path)) || (!isMix && File.Exists(path));
+        }
+
+        /// <summary>Gets the FileInfo for this path. For mix paths, this uses the path of the mix archive.</summary>
+        /// <param name="path">A mix path or file path from the MRU to get the base file info for.</param>
+        /// <returns></returns>
+        public static FileInfo GetBaseFileInfo(string path)
+        {
+            bool isMix = path.IndexOf('?') != -1;
+            if (isMix)
+            {
+                MixPath.GetComponents(path, out string[] mixParts, out _);
+                path = mixParts[0];
+            }
+            return new FileInfo(path);
         }
 
         private void LoadMRU()
@@ -91,7 +123,7 @@ namespace MobiusEditor.Utility
                 string fileName = registryKey.GetValue(i.ToString()) as string;
                 if (!string.IsNullOrEmpty(fileName))
                 {
-                    files.Add(new FileInfo(fileName));
+                    files.Add(fileName);
                 }
             }
         }
@@ -100,7 +132,7 @@ namespace MobiusEditor.Utility
         {
             for (var i = 0; i < files.Count; ++i)
             {
-                registryKey.SetValue(i.ToString(), files[i].FullName);
+                registryKey.SetValue(i.ToString(), files[i]);
             }
             for (var i = files.Count; i < maxFiles; ++i)
             {
@@ -114,7 +146,9 @@ namespace MobiusEditor.Utility
             {
                 var file = files[i];
                 var fileItem = fileItems[i];
-                fileItem.Text = string.Format("&{0} {1}", i + 1, file.FullName.Replace("&", "&&"));
+                bool isMix = file.IndexOf('?') != -1;
+                string fileText = isMix ? MixPath.GetFileNameReadable(file, false, out _) : file;
+                fileItem.Text = string.Format("&{0} {1}", i + 1, fileText.Replace("&", "&&"));
                 fileItem.Tag = file;
                 fileItem.Click -= FileItem_Click;
                 fileItem.Click += FileItem_Click;
@@ -131,7 +165,7 @@ namespace MobiusEditor.Utility
 
         private void FileItem_Click(object sender, EventArgs e)
         {
-            FileSelected?.Invoke(this, (sender as ToolStripMenuItem).Tag as FileInfo);
+            FileSelected?.Invoke(this, (sender as ToolStripMenuItem).Tag as string);
         }
 
         public void Dispose()

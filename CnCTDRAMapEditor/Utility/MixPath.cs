@@ -49,11 +49,22 @@ namespace MobiusEditor.Utility
                 mixArr[ind++] = GetMixFileName(mixFile);
             }
             string[] filesArr = new string[files.Length];
-            for (int i = 0; i < files.Length; i++)
+            for (int i = 0; i < files.Length; ++i)
             {
                 MixEntry file = files[i];
                 filesArr[i] = GetMixEntryName(file);
             }
+            return BuildMixPath(mixArr, filesArr);
+        }
+
+        /// <summary>
+        /// Builds the mix file chain and mix content entries into the mix file path format "x:\path\mixfile.mix;submix1.mix;submix2.mix?file.ini;file.bin".
+        /// </summary>
+        /// <param name="mixArr">Array of the mix hierarchy, starting with the physical file on disk, and continuing with deeper mix files opened inside to get to the actual files.</param>
+        /// <param name="filesArr">Array with the names of the actual files found in the deepest mix file in the chain.</param>
+        /// <returns></returns>
+        public static string BuildMixPath(string[] mixArr, string[] filesArr)
+        {
             return String.Join(";", mixArr) + "?" + String.Join(";", filesArr);
         }
 
@@ -66,6 +77,10 @@ namespace MobiusEditor.Utility
         /// <param name="filenameParts">The files to open that can be found in the deepest mix file in the chain. Normally a .ini on the first index and a .bin on the second.</param>
         public static void GetComponents(string path, out string[] mixParts, out string[] filenameParts)
         {
+            if (path == null)
+            {
+                path = string.Empty;
+            }
             int index = path.IndexOf('?');
             string mixString = index == -1 ? String.Empty : path.Substring(0, index);
             mixParts = mixString.Split(';');
@@ -85,7 +100,7 @@ namespace MobiusEditor.Utility
         {
             GetComponents(path, out mixParts, out filenameParts);
             // Only check on IDs starting from the second entry; first should be an absolute path.
-            for (int i = 1; i < mixParts.Length; i++)
+            for (int i = 1; i < mixParts.Length; ++i)
             {
                 string mixPart = mixParts[i];
                 Match mixId = FilePathIdPattern.Match(mixPart);
@@ -94,7 +109,7 @@ namespace MobiusEditor.Utility
                     mixParts[i] = "[" + mixId.Groups[1].Value + "]";
                 }
             }
-            for (int i = 0; i < filenameParts.Length; i++)
+            for (int i = 0; i < filenameParts.Length; ++i)
             {
                 string filenamePart = filenameParts[i];
                 Match filenameId = FilePathIdPattern.Match(filenamePart);
@@ -139,26 +154,51 @@ namespace MobiusEditor.Utility
             return fullName;
         }
 
-        /// <summary>Opens a mix path and checks if the files involved are all present.</summary>
+        /// <summary>Opens a mix path and checks if the files involved are all present. If the files to open are a pair, this checks them both.</summary>
         /// <param name="path">Mix file path block, in the format "x:\path\mixfile.mix;submix1.mix;submix2.mix?file.ini;file.bin"</param>
-        /// <param name="fileType">File type to open; INI or BIN, to refer to the first or second internal file (after the question mark in the path).</param>
         /// <returns>True if the mix file exists, and the internal file could be found inside.</returns>
-        public static bool PathIsValid(string path, FileType fileType)
+        public static bool PathIsValid(string path)
         {
-            using (MixFile mainMix = OpenMixPath(path, fileType, out MixFile contentMix, out MixEntry fileEntry))
+            GetComponents(path, out string[] mixParts, out string[] filenameParts);
+            List<FileType> toCheck = new List<FileType>();
+            if (filenameParts.Length > 0 && !String.IsNullOrEmpty(filenameParts[0]))
             {
-                if (mainMix != null && contentMix != null && fileEntry != null)
+                toCheck.Add(FileType.INI);
+            }
+            if (filenameParts.Length > 1 && !String.IsNullOrEmpty(filenameParts[1]))
+            {
+                toCheck.Add(FileType.BIN);
+            }
+            int checks = toCheck.Count;
+            if (checks == 0)
+            {
+                return false;
+            }
+            bool[] checkOk = new bool[checks];
+            for (int i = 0; i < checks; ++i)
+            {
+                using (MixFile mainMix = OpenMixPath(path, toCheck[i], out MixFile contentMix, out MixEntry fileEntry))
                 {
-                    // Don't even need to really open it; the fact fileEntry was found is enough.
-                    return true;
+                    if (mainMix != null && contentMix != null && fileEntry != null)
+                    {
+                        // Don't even need to really open it; the fact fileEntry was found is enough.
+                        checkOk[i] = true;
+                    }
                 }
             }
-            return false;
+            for (int i = 0; i < checks; ++i)
+            {
+                if (!checkOk[i])
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         /// <summary>Opens a mix path and reads the requested file to a byte array.</summary>
         /// <param name="path">Mix file path block, in the format "x:\path\mixfile.mix;submix1.mix;submix2.mix?file.ini;file.bin"</param>
-        /// <param name="fileType">File type to open; INI or BIN, to refer to the first or second internal file (after the question mark in the path).</param>
+        /// <param name="fileType">File type to open; INI or BIN, to refer to the first or second internal file (after the question mark in the path). Specify "None" to use the first one that is filled in.</param></param>
         /// <param name="fileEntry"></param>
         /// <returns>A byte array containing the file contents of the target file, or null if some component in the chain could not be found.</returns>
         public static byte[] ReadFile(string path, FileType fileType, out MixEntry fileEntry)
@@ -178,7 +218,7 @@ namespace MobiusEditor.Utility
         /// for the actual content mix to request the file on, and the mix content info to use to request the file.
         /// </summary>
         /// <param name="path">Mix file path block, in the format "x:\path\mixfile.mix;submix1.mix;submix2.mix?file.ini;file.bin"</param>
-        /// <param name="fileType">File type to open; INI or BIN, to refer to the first or second internal file (after the question mark in the path).</param>
+        /// <param name="fileType">File type to open; INI or BIN, to refer to the first or second internal file (after the question mark in the path). Specify "None" to use the first one that is filled in.</param>
         /// <param name="contentMix">Output parameter for the actual mix file to request the <paramref name="fileEntry"/> on.</param>
         /// <param name="fileEntry">Output parameter for the mix entry file info to use to request access to read the file from <paramref name="contentMix"/>. If available as name and not as id, the filename from the parsed path is filled in on this.</param>
         /// <returns>The main mix file that should be disposed after the file contents have been read from the <paramref name="contentMix"/> file, or null if some component in the chain could not be found.</returns>
@@ -186,12 +226,13 @@ namespace MobiusEditor.Utility
         {
             contentMix = null;
             fileEntry = null;
-            string[] pathparts = path.Split('?');
-            if (pathparts.Length < 2)
+            GetComponents(path, out string[] mixParts, out string[] filenameParts);
+            if (mixParts == null || mixParts.Length == 0 || mixParts[0] == null || mixParts[0].Length == 0
+                || filenameParts == null || filenameParts.Length == 0
+                || (filenameParts[0] == null || mixParts[0].Length == 0) && (filenameParts[1] == null || mixParts[1].Length == 0))
             {
                 return null;
             }
-            GetComponents(path, out string[] mixParts, out string[] filenameParts);
             string baseMixFile = mixParts[0];
             string filename = null;
             switch (fileType)
@@ -202,6 +243,14 @@ namespace MobiusEditor.Utility
                 case FileType.BIN:
                     filename = filenameParts.Length < 2 ? String.Empty : filenameParts[1];
                     break;
+                case FileType.None:
+                    filename = filenameParts[0];
+                    if (String.IsNullOrEmpty(filename) && filenameParts.Length > 1)
+                    {
+                        filename = filenameParts[1];
+                    }
+                    break;
+
             }
             if (String.IsNullOrEmpty(filename))
             {

@@ -481,7 +481,7 @@ namespace MobiusEditor
                 ofd.RestoreDirectory = true;
                 ofd.Filter = String.Join("|", filters);
                 bool classicLogic = Globals.UseClassicFiles && Globals.ClassicNoRemasterLogic;
-                string lastFolder = mru.Files.Select(f => f.DirectoryName).Where(d => Directory.Exists(d)).FirstOrDefault();
+                string lastFolder = mru.Files.Select(f => MRU.GetBaseFileInfo(f).DirectoryName).Where(d => Directory.Exists(d)).FirstOrDefault();
                 if (plugin != null)
                 {
                     string openFolder = Path.GetDirectoryName(filename);
@@ -536,7 +536,7 @@ namespace MobiusEditor
                 ofd.RestoreDirectory = true;
                 ofd.Filter = "MIX archives (*.mix)|*.mix";
                 bool classicLogic = Globals.UseClassicFiles && Globals.ClassicNoRemasterLogic;
-                string lastFolder = mru.Files.Select(f => f.DirectoryName).Where(d => Directory.Exists(d)).FirstOrDefault();
+                string lastFolder = mru.Files.Select(f => MRU.GetBaseFileInfo(f).DirectoryName).Where(d => Directory.Exists(d)).FirstOrDefault();
                 if (plugin != null)
                 {
                     string openFolder = Path.GetDirectoryName(filename);
@@ -640,7 +640,7 @@ namespace MobiusEditor
                 sfd.AutoUpgradeEnabled = false;
                 sfd.RestoreDirectory = false;
                 bool classicLogic = Globals.UseClassicFiles && Globals.ClassicNoRemasterLogic;
-                string lastFolder = mru.Files.Select(f => f.DirectoryName).Where(d => Directory.Exists(d)).FirstOrDefault();
+                string lastFolder = mru.Files.Select(f => MRU.GetBaseFileInfo(f).DirectoryName).Where(d => Directory.Exists(d)).FirstOrDefault();
                 string openFolder = Path.GetDirectoryName(filename);
                 string defFolder = gi.DefaultSaveDirectory;
                 string constFolder = Directory.Exists(defFolder) ? defFolder : Environment.GetFolderPath(Environment.SpecialFolder.Personal);
@@ -1170,7 +1170,7 @@ namespace MobiusEditor
                 return;
             }
             ClearActiveTool();
-            string lastFolder = mru.Files.Select(f => f.DirectoryName).Where(d => Directory.Exists(d)).FirstOrDefault();
+            string lastFolder = mru.Files.Select(f => MRU.GetBaseFileInfo(f).DirectoryName).Where(d => Directory.Exists(d)).FirstOrDefault();
             using (ImageExportDialog imex = new ImageExportDialog(plugin, activeLayers, filename, lastFolder))
             {
                 imex.StartPosition = FormStartPosition.CenterParent;
@@ -1203,17 +1203,17 @@ namespace MobiusEditor
             mapPanel.Refresh();
         }
 
-        private void Mru_FileSelected(object sender, FileInfo e)
+        private void Mru_FileSelected(object sender, string name)
         {
-            if (File.Exists(e.FullName))
+            if (MRU.CheckIfExist(name))
             {
-                OpenFileAsk(e.FullName);
+                OpenFileAsk(name);
             }
             else
             {
                 ClearActiveTool();
-                MessageBox.Show(string.Format("Error loading {0}: the file was not found.", e.Name), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                mru.Remove(e);
+                MessageBox.Show(string.Format("Error loading {0}: the file was not found.", name), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                mru.Remove(name);
                 RefreshActiveTool();
             }
         }
@@ -1830,7 +1830,7 @@ namespace MobiusEditor
             {
                 feedbackPath = MixPath.GetFileNameReadable(loadInfo.FileName, false, out regenerateSaveName);
                 feedbackNameShort = MixPath.GetFileNameReadable(loadInfo.FileName, true, out _);
-                MixPath.GetComponentsViewable(feedbackPath, out string[] mixParts, out string[] filenameParts);
+                MixPath.GetComponentsViewable(loadInfo.FileName, out string[] mixParts, out string[] filenameParts);
                 FileInfo fileInfo = new FileInfo(mixParts[0]);
                 string mixName = fileInfo.FullName;
                 string loadedName = filenameParts[0];
@@ -1915,12 +1915,16 @@ namespace MobiusEditor
                 oldSelectedTool = ToolType.None;
                 //RefreshActiveTool(); // done by UI refresh
                 SetTitle();
-                // TODO maybe allow saving this for mix files but display it in menus appropriately?
-                // Would need an entire overhaul of the MRU class.
-                if (!isMix && loadInfo.FileName != null)
+                if (loadInfo.FileName != null)
                 {
-                    var fileInfo = new FileInfo(loadInfo.FileName);
-                    mru.Add(fileInfo);
+                    string saveName = loadInfo.FileName;
+                    if (isMix)
+                    {
+                        MixPath.GetComponents(loadInfo.FileName, out string[] mixParts, out string[] filenameParts);
+                        mixParts[0] = new FileInfo(mixParts[0]).FullName;
+                        saveName = MixPath.BuildMixPath(mixParts, filenameParts);
+                    }
+                    mru.Add(saveName);
                 }
             }
             if (this.shouldCheckUpdate)
@@ -1939,9 +1943,9 @@ namespace MobiusEditor
                     MessageBox.Show(string.Format("Map file exceeds the maximum size of {0} bytes.", Globals.MaxMapSize), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
                 plugin.Dirty = false;
-                filename = saveInfo.FileName;
+                filename = fileInfo.FullName;
                 SetTitle();
-                mru.Add(fileInfo);
+                mru.Add(fileInfo.FullName);
                 if (afterSaveDone != null)
                 {
                     afterSaveDone.Invoke();
