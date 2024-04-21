@@ -1,0 +1,29 @@
+# Set the default behavior, in case people don't have core.autocrlf set.
+* text=auto
+
+# Explicitly declare text files you want to always be normalized and converted
+# to native line endings on checkout.
+*.cs       text
+*.md       text
+*.txt      text
+
+# Even though some of these are specific Visual Studio files, they're all
+#  XML files, so I doubt line endings matter to anything interpreting them.
+*.xml      text
+*.yml      text
+*.resx     text
+*.csproj   text
+*.settings text
+
+# Declare files that will always have CRLF line endings on checkout.
+*.sln      text eol=crlf
+# The line breaks in app.config are preserved for the final .exe.config, so
+# force this to crlf so builds aren't affected by the system doing the build.
+*.config   text eol=crlf
+
+# Denote all files that are truly binary and should not be modified.
+*.png      binary
+*.jpg      binary
+*.ico      binary
+*.wav      binary
+*.dll      binary
