@@ -242,6 +242,7 @@ namespace MobiusEditor.Dialogs
                     item.BackColor = Color.FromArgb(0xFF, 0xD0, 0xFF, 0xD0); //Color.LightGreen;
                 }
                 item.SubItems.Add(mixFileInfo.Type.ToString());
+                item.SubItems.Add(mixFileInfo.Length.ToString());
                 item.SubItems.Add(mixFileInfo.Info);
                 mixContentsListView.Items.Add(item).ToolTipText = mixFileInfo.Name ?? mixFileInfo.IdString;
             }

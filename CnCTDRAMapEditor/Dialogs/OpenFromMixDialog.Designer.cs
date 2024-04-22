@@ -35,6 +35,7 @@
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOpen = new System.Windows.Forms.Button();
             this.btnCloseFile = new System.Windows.Forms.Button();
+            this.SizeColumnHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.SuspendLayout();
             // 
             // mixContentsListView
@@ -45,6 +46,7 @@
             this.mixContentsListView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.nameColumnHeader,
             this.typeColumnHeader,
+            this.SizeColumnHeader,
             this.infoColumnHeader});
             this.mixContentsListView.FullRowSelect = true;
             this.mixContentsListView.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
@@ -66,15 +68,15 @@
             // 
             // nameColumnHeader
             // 
-            this.nameColumnHeader.Tag = "-200";
+            this.nameColumnHeader.Tag = "-160";
             this.nameColumnHeader.Text = "Name";
-            this.nameColumnHeader.Width = 200;
+            this.nameColumnHeader.Width = 160;
             // 
             // typeColumnHeader
             // 
-            this.typeColumnHeader.Tag = "-100";
+            this.typeColumnHeader.Tag = "-80";
             this.typeColumnHeader.Text = "Type";
-            this.typeColumnHeader.Width = 100;
+            this.typeColumnHeader.Width = 80;
             // 
             // infoColumnHeader
             // 
@@ -117,6 +119,12 @@
             this.btnCloseFile.UseVisualStyleBackColor = true;
             this.btnCloseFile.Click += new System.EventHandler(this.BtnCloseFile_Click);
             // 
+            // SizeColumnHeader
+            // 
+            this.SizeColumnHeader.Tag = "-80";
+            this.SizeColumnHeader.Text = "Size";
+            this.SizeColumnHeader.Width = 80;
+            // 
             // OpenFromMixDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -145,5 +153,6 @@
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnOpen;
         private System.Windows.Forms.Button btnCloseFile;
+        private System.Windows.Forms.ColumnHeader SizeColumnHeader;
     }
 }

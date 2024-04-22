@@ -520,7 +520,7 @@ namespace MobiusEditor
             }
             try
             {
-                // attempt top open, nothing else.
+                // attempt to open, nothing else.
                 using (MixFile mixfile = new MixFile(selectedFile)) { /* do nothing. */ }
             }
             catch

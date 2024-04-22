@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.IO.Pipes;
 using System.Linq;
 using System.Text;
 
@@ -18,6 +19,7 @@ namespace MobiusEditor.Utility
             .Where(v => v != 16 && v != 17 && v != 30 && v != 31 && v != '\t' && v != '\r' && v != '\n' && v != ' ').Select(i => (byte)i).ToHashSet();
         private const String xccCheck = "XCC by Olaf van der Spek";
         private const uint xccId = 0x54C2D545;
+        private const uint maxProcessed = 0x500000;
 
         public static List<MixEntry> AnalyseFiles(MixFile current, Dictionary<uint, string> encodedFilenames, bool preferMissions, Func<bool> checkAbort)
         {
@@ -35,7 +37,7 @@ namespace MobiusEditor.Utility
                 if (entries != null)
                 {
                     MixEntry entry = entries[0];
-                    if (fileId == xccId && entry.Length < 500000 && entry.Length > 0x34)
+                    if (fileId == xccId && entry.Length < maxProcessed && entry.Length > 0x34)
                     {
                         entry.Name = "local mix database.dat";
                         entry.Type = MixContentType.XccNames;
@@ -122,15 +124,18 @@ namespace MobiusEditor.Utility
         private static void TryIdentifyFile(Stream fileStream, MixEntry mixInfo, MixFile source, bool preferMissions)
         {
             long fileLengthFull = fileStream.Length;
-            byte[] fileContents = null;
-            int fileLength = 0;
             mixInfo.Type = MixContentType.Unknown;
-            if (fileLengthFull < 0x500000)
+            // Very strict requirements, and jumps over the majority of file contents while checking, so check this first.
+            if (IdentifyAud(fileStream, mixInfo))
+                return;
+            // These types analyse the full file from byte array. I'm restricting the buffer for them to 5mb; they shouldn't need more.
+            if (fileLengthFull <= maxProcessed)
             {
-                fileLength = (int)fileLengthFull;
-                fileContents = new byte[fileLength];
+                int fileLength = (int)fileLengthFull;
+                Byte[] fileContents = new byte[fileLength];
                 fileStream.Seek(0, SeekOrigin.Begin);
                 fileStream.Read(fileContents, 0, fileLength);
+                fileStream.Seek(0, SeekOrigin.Begin);
                 if (preferMissions)
                 {
                     if (IdentifyIni(fileContents, mixInfo))
@@ -161,10 +166,9 @@ namespace MobiusEditor.Utility
                 if (!preferMissions && IdentifyMap(fileContents, mixInfo))
                     return;
             }
-            // File is either above 5 MB, or none of the above types.
-            fileStream.Seek(0, SeekOrigin.Begin);
             try
             {
+                // Check if it's a mix file
                 int mixContents = -1;
                 bool encrypted = false;
                 bool newType = false;
@@ -414,6 +418,69 @@ namespace MobiusEditor.Utility
             return false;
         }
 
+        private static bool IdentifyAud(Stream fileStream, MixEntry mixInfo)
+        {
+            long fileLength = fileStream.Length;
+            if (fileLength <= 12)
+            {
+                return false;
+            }
+            // File is either above 5 MB, or none of the above types.
+            // AUD file:
+            // 00  Int16 frequency
+            // 02  Int32 Size
+            // 06  Int32 outputSize
+            // 0A  Byte flags
+            // 0B  Byte compression
+            // ----12 bytes
+            byte[] header = new byte[12];
+            byte[] chunk = new byte[8];
+            fileStream.Read(header, 0, header.Length);
+            int frequency = ArrayUtils.ReadUInt16FromByteArrayLe(header, 0);
+            int fileSize = ArrayUtils.ReadInt32FromByteArrayLe(header, 2);
+            int uncompressedSize = ArrayUtils.ReadInt32FromByteArrayLe(header, 6);
+            int flags = header[10];
+            bool isStereo = (flags & 1) != 0;
+            bool is16Bit = (flags & 2) != 0;
+            int compression = header[11];
+            int ptr = 12;
+            // Gonna need at least one DEAF sequence to confirm it's AUD.
+            if (fileSize == 0 || fileLength != fileSize + ptr || (compression != 01 && compression != 99))
+            {
+                return false;
+            }
+            int chunks = 0;
+            int outputLength = 0;
+            while (ptr < fileLength)
+            {
+                if (ptr + 8 > fileLength)
+                {
+                    // padded bytes? Don't allow.
+                    return false;
+                }
+                fileStream.Seek(ptr, SeekOrigin.Begin);
+                fileStream.Read(chunk, 0, chunk.Length);
+                int chunkLength = ArrayUtils.ReadInt16FromByteArrayLe(chunk, 0);
+                int chunkOutputLength = ArrayUtils.ReadInt16FromByteArrayLe(chunk, 2);
+                int id = ArrayUtils.ReadInt16FromByteArrayLe(chunk, 4);
+                if (id != 0x0000DEAF)
+                {
+                    return false;
+                }
+                chunks++;
+                outputLength += chunkOutputLength;
+                ptr += 8 + chunkLength;
+            }
+            if (uncompressedSize != outputLength)
+            {
+                return false;
+            }
+            mixInfo.Type = MixContentType.Audio;
+            mixInfo.Info = String.Format("Audio file; {0} Hz, {1}-bit {2}, compression {3}, {4} chunks.",
+                frequency, is16Bit ? 16 : 8, isStereo ? "stereo" : "mono", compression, chunks);
+            return true;
+        }
+
         private static bool IdentifyMap(byte[] fileContents, MixEntry mixInfo)
         {
             int highestTdMapVal = TiberianDawn.TemplateTypes.GetTypes().Max(t => (int)t.ID);
@@ -485,6 +552,7 @@ namespace MobiusEditor.Utility
         Pcx,
         Palette,
         PalTbl,
+        Audio,
         XccNames
     }
 
