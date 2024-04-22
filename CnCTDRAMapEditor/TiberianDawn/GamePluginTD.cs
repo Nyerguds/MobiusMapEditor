@@ -1750,8 +1750,9 @@ namespace MobiusEditor.TiberianDawn
                 }
             }
             INISection baseSection = ini.Sections["Base"];
-            string baseCountStr = baseSection != null ? baseSection.TryGetValue("Count") : null;
-            if (baseSection != null)
+            string baseCountStr = baseSection?.TryGetValue("Count");
+            // if it's just an empty [Base] header with nothing below, ignore.
+            if (baseSection != null && baseSection.Keys.Count > 0)
             {
                 baseSection.Remove("Count");
                 if (!Int32.TryParse(baseCountStr, out int baseCount))

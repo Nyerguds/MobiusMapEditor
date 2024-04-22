@@ -269,6 +269,24 @@ namespace MobiusEditor.RedAlert
 
         };
 
+        private static readonly string[] unitVocNames = new[]
+        {
+            "ACKNO",
+            "AFFIRM1",
+            "AWAIT1",
+            "EAFFIRM1",
+            "EENGIN1",
+            "NOPROB",
+            "OVEROUT",
+            "READY",
+            "REPORT1",
+            "RITAWAY",
+            "ROGER",
+            "UGOTIT",
+            "VEHIC1",
+            "YESSIR1",
+        };
+
         //These are usually unused files. All the rest ends up in ActionDataTypes (though it's also not a great place for that).
         private static readonly string[] additionalFiles = new string[]
         {
@@ -505,7 +523,7 @@ namespace MobiusEditor.RedAlert
             {
                 yield return voc + audExt;
             }
-            foreach (string vox in ActionDataTypes.UnitVocNames)
+            foreach (string vox in unitVocNames)
             {
                 yield return vox + ".v00";
                 yield return vox + ".v01";

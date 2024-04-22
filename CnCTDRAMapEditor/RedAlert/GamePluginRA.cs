@@ -2176,7 +2176,8 @@ namespace MobiusEditor.RedAlert
                 }
             }
             Map.BasicSection.BasePlayer = basePlayer.Name;
-            if (baseSection == null)
+            // if it's just an empty [Base] header with nothing below, ignore.
+            if (baseSection == null || baseSection.Keys.Count == 0)
             {
                 return;
             }

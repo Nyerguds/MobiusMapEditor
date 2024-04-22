@@ -1,6 +1,7 @@
 ﻿using MobiusEditor.Utility;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -48,7 +49,7 @@ namespace MobiusEditor.Dialogs
                 () => MixContentAnalysis.AnalyseFiles(current, this.encodedFilenames, true, () => this.CheckAbort()),
                 (list) => FillList(list), true,
                 (bl, str) => EnableDisableUi(bl, str, analysisMultiThreader),
-                "MIX content analysis in progress");
+                "Analysis in progress");
         }
 
         private bool CheckAbort()
@@ -231,10 +232,15 @@ namespace MobiusEditor.Dialogs
             for (int i = 0; i < nrofFiles; ++i)
             {
                 MixEntry mixFileInfo = mixInfo[i];
+                MixContentType mt = mixFileInfo.Type;
                 var item = new ListViewItem(mixFileInfo.DisplayName)
                 {
-                    Tag = mixFileInfo
+                    Tag = mixFileInfo,
                 };
+                if (mt == MixContentType.MapTd || mt == MixContentType.Bin || mt == MixContentType.BinSole || mt == MixContentType.MapRa)
+                {
+                    item.BackColor = Color.FromArgb(0xFF, 0xD0, 0xFF, 0xD0); //Color.LightGreen;
+                }
                 item.SubItems.Add(mixFileInfo.Type.ToString());
                 item.SubItems.Add(mixFileInfo.Info);
                 mixContentsListView.Items.Add(item).ToolTipText = mixFileInfo.Name ?? mixFileInfo.IdString;

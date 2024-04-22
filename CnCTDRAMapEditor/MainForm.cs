@@ -467,12 +467,15 @@ namespace MobiusEditor
         {
             // Always remove the label when showing an Open File dialog.
             SimpleMultiThreading.RemoveBusyLabel(this);
-            List<string> filters = new List<string>();
-            filters.Add("All supported types (*.ini;*.bin;*.mpr;*.pgm)|*.ini;*.bin;*.mpr;*.pgm");
-            filters.Add(TiberianDawn.Constants.FileFilter);
-            filters.Add(RedAlert.Constants.FileFilter);
-            filters.Add("PGM files (*.pgm)|*.pgm");
-            filters.Add("All files (*.*)|*.*");
+            List<string> filters = new List<string>
+            {
+                "All supported types (*.ini;*.bin;*.mix;*.mpr;*.pgm)|*.ini;*.bin;*.mpr;*.mix;*.pgm",
+                TiberianDawn.Constants.FileFilter,
+                RedAlert.Constants.FileFilter,
+                "PGM files (*.pgm)|*.pgm",
+                "MIX archives (*.mix)|*.mix",
+                "All files (*.*)|*.*"
+            };
             string selectedFileName = null;
             ClearActiveTool();
             using (OpenFileDialog ofd = new OpenFileDialog())
@@ -498,6 +501,7 @@ namespace MobiusEditor
                     selectedFileName = ofd.FileName;
                 }
             }
+            selectedFileName = OpenFileFromMix(selectedFileName);
             if (selectedFileName != null)
             {
                 OpenFile(selectedFileName);
@@ -508,13 +512,22 @@ namespace MobiusEditor
             }
         }
 
-        private void FileOpenFromMixMenuItem_Click(object sender, EventArgs e)
+        private string OpenFileFromMix(string selectedFile)
         {
-            PromptSaveMap(OpenFileFromMix, false);
-        }
-
-        private void OpenFileFromMix()
-        {
+            if (selectedFile == null)
+            {
+                return null;
+            }
+            try
+            {
+                // attempt top open, nothing else.
+                using (MixFile mixfile = new MixFile(selectedFile)) { /* do nothing. */ }
+            }
+            catch
+            {
+                // not a mix file
+                return selectedFile;
+            }
             if (generatedMixIds == null)
             {
                 HashRol1 hasher = new HashRol1();
@@ -529,38 +542,10 @@ namespace MobiusEditor
                     }
                 }
             }
-            string selectedFileName = null;
-            using (OpenFileDialog ofd = new OpenFileDialog())
-            {
-                ofd.AutoUpgradeEnabled = false;
-                ofd.RestoreDirectory = true;
-                ofd.Filter = "MIX archives (*.mix)|*.mix";
-                bool classicLogic = Globals.UseClassicFiles && Globals.ClassicNoRemasterLogic;
-                string lastFolder = mru.Files.Select(f => MRU.GetBaseFileInfo(f).DirectoryName).Where(d => Directory.Exists(d)).FirstOrDefault();
-                if (plugin != null)
-                {
-                    string openFolder = Path.GetDirectoryName(filename);
-                    string defFolder = plugin.GameInfo.DefaultSaveDirectory;
-                    string constFolder = Directory.Exists(defFolder) ? defFolder : Environment.GetFolderPath(Environment.SpecialFolder.Personal);
-                    ofd.InitialDirectory = openFolder ?? lastFolder ?? (classicLogic ? Program.ApplicationPath : constFolder);
-                }
-                else
-                {
-                    ofd.InitialDirectory = lastFolder ?? (classicLogic ? Program.ApplicationPath : Globals.RootSaveDirectory);
-                }
-                if (ofd.ShowDialog() == DialogResult.OK)
-                {
-                    selectedFileName = ofd.FileName;
-                }
-            }
-            if (selectedFileName == null)
-            {
-                return;
-            }
             string toOpen = null;
             try
             {
-                using (MixFile mixfile = new MixFile(selectedFileName))
+                using (MixFile mixfile = new MixFile(selectedFile))
                 using (OpenFromMixDialog mixDialog = new OpenFromMixDialog(mixfile, generatedMixIds))
                 {
                     mixDialog.StartPosition = FormStartPosition.CenterParent;
@@ -572,12 +557,13 @@ namespace MobiusEditor
             }
             catch
             {
-                return;
+                return null;
             }
-            if (!string.IsNullOrEmpty(toOpen))
+            if (string.IsNullOrEmpty(toOpen))
             {
-                OpenFile(toOpen);
+                return null;
             }
+            return toOpen;
         }
 
         private void FileSaveMenuItem_Click(object sender, EventArgs e)

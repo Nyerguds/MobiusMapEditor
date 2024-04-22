@@ -11,8 +11,11 @@ namespace MobiusEditor.Utility
 {
     public static class MixContentAnalysis
     {
-        private static readonly char[] badIniHeaderRange = Enumerable.Range(0, 0x1F).Select(i => (char)i).ToArray();
-        private static readonly HashSet<byte> badTextRange = Enumerable.Range(0, 0x1F).Where(v => v != '\t' && v != '\r' && v != '\n').Select(i => (byte)i).ToHashSet();
+        private static readonly char[] badIniHeaderRange = Enumerable.Range(0, 0x20).Select(i => (char)i).ToArray();
+        private static readonly HashSet<byte> badTextRange = Enumerable.Range(0, 0x20).Where(v => v != '\t' && v != '\r' && v != '\n' && v != ' ').Select(i => (byte)i).ToHashSet();
+        // Old DOS strings have these DOS arrows in them; symbols ► ◄ ▲ ▼. So exclude those from the "invalid" check.
+        private static readonly HashSet<byte> badStringtRange = Enumerable.Range(0, 0x20)
+            .Where(v => v != 16 && v != 17 && v != 30 && v != 31 && v != '\t' && v != '\r' && v != '\n' && v != ' ').Select(i => (byte)i).ToHashSet();
         private const String xccCheck = "XCC by Olaf van der Spek";
         private const uint xccId = 0x54C2D545;
 
@@ -122,7 +125,7 @@ namespace MobiusEditor.Utility
             byte[] fileContents = null;
             int fileLength = 0;
             mixInfo.Type = MixContentType.Unknown;
-            if (fileLengthFull < 500000)
+            if (fileLengthFull < 0x500000)
             {
                 fileLength = (int)fileLengthFull;
                 fileContents = new byte[fileLength];
@@ -335,7 +338,7 @@ namespace MobiusEditor.Utility
                         || s.Keys.Any(k => k.Key.IndexOfAny(badIniHeaderRange) > 0 || k.Value.IndexOfAny(badIniHeaderRange) > 0)))
                     {
                         mixInfo.Type = MixContentType.Ini;
-                        mixInfo.Info = String.Format("INI file (unknown type)");
+                        mixInfo.Info = String.Format("INI file");
                         return true;
                     }
                 }
@@ -350,8 +353,8 @@ namespace MobiusEditor.Utility
             {
                 List<ushort> indices = new List<ushort>();
                 List<byte[]> strings = GameTextManagerClassic.LoadFile(fileContents, indices, true);
-                bool hasBadChars = strings.Any(str => str.Any(b => badTextRange.Contains(b)));
-                if (indices.Count > 0 && !hasBadChars && indices[0] - indices.Count * 2 == 0 && strings.Any(s => s.Length > 0))
+                bool hasBadChars = strings.Any(str => str.Any(b => badStringtRange.Contains(b)));
+                if (indices.Count > 0 && !hasBadChars && (indices[0] - indices.Count * 2) == 0 && strings.Any(s => s.Length > 0))
                 {
                     mixInfo.Type = MixContentType.Strings;
                     mixInfo.Info = String.Format("Strings File; {0} entries", strings.Count);
