@@ -393,6 +393,10 @@ namespace MobiusEditor.RedAlert
                 yield return name + shpExt;
                 yield return name + "make" + shpExt;
                 yield return name + "icon" + shpExt;
+                if (bt.FactoryOverlay != null)
+                {
+                    yield return bt.FactoryOverlay + shpExt;
+                }
                 for (int i = 0; i < theaterExts.Length; ++i)
                 {
                     string thExt = theaterExts[i];

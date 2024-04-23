@@ -1804,7 +1804,7 @@ namespace MobiusEditor
                 }
                 return;
             }
-            bool isMix = loadInfo.FileName.Contains('?');
+            bool isMix = loadInfo.FileName != null && loadInfo.FileName.Contains('?');
             IGamePlugin oldPlugin = this.plugin;
             string[] errors = loadInfo.Errors ?? new string[0];
             string feedbackPath = loadInfo.FileName;
@@ -1839,13 +1839,10 @@ namespace MobiusEditor
             if (loadInfo.Plugin == null || (loadInfo.Plugin != null && !loadInfo.MapLoaded))
             {
                 // Attempted to load file, loading went OK, but map was not loaded.
-#if !DEBUG
-                if (!isMix && loadInfo.FileName != null && loadInfo.Plugin != null && !loadInfo.MapLoaded)
+                if (loadInfo.FileName != null && loadInfo.Plugin != null && !loadInfo.MapLoaded)
                 {
-                    var fileInfo = new FileInfo(loadInfo.FileName);
-                    mru.Remove(fileInfo);
+                    mru.Remove(loadInfo.FileName);
                 }
-#endif
                 // In case of actual error, remove label.
                 SimpleMultiThreading.RemoveBusyLabel(this);
                 MessageBox.Show(string.Format("Error loading {0}: {1}", feedbackPath ?? "new map", String.Join("\n", errors)), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);

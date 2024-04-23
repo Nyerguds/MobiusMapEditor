@@ -74,6 +74,11 @@ namespace MobiusEditor.TiberianDawn
             Types = types.ToArray();
         }
 
+        public static IEnumerable<OverlayType> GetAllTypes()
+        {
+            return Types;
+        }
+
         public static IEnumerable<OverlayType> GetTypes()
         {
             return Globals.DisableSquishMark ? Types.Where(t => !t.IsGross) : Types;

@@ -87,6 +87,8 @@ namespace MobiusEditor.Utility
                     }
                 }
             }
+            // For testing: disable xcc mix info.
+            //xccInfoFilenames = null;
             foreach (uint fileId in filesList)
             {
                 MixEntry[] entries = current.GetFullFileInfo(fileId);
@@ -140,7 +142,12 @@ namespace MobiusEditor.Utility
                 {
                     if (IdentifyIni(fileContents, mixInfo))
                         return;
-                    if (IdentifyMap(fileContents, mixInfo))
+                    if (IdentifyTdMap(fileContents, mixInfo))
+                        return;
+                    // Always needs to happen before sole maps since all palettes will technically match that format.
+                    if (IdentifyPalette(fileContents, mixInfo))
+                        return;
+                    if (IdentifySoleMap(fileContents, mixInfo))
                         return;
                 }
                 if (IdentifyShp(fileContents, mixInfo))
@@ -161,10 +168,16 @@ namespace MobiusEditor.Utility
                     return;
                 if (IdentifyText(fileContents, mixInfo))
                     return;
-                if (IdentifyPalette(fileContents, mixInfo))
-                    return;
-                if (!preferMissions && IdentifyMap(fileContents, mixInfo))
-                    return;
+                if (!preferMissions)
+                {
+                    if (IdentifyTdMap(fileContents, mixInfo))
+                        return;
+                    // Always needs to happen before sole maps since all palettes will technically match that format.
+                    if (IdentifyPalette(fileContents, mixInfo))
+                        return;
+                    if (IdentifySoleMap(fileContents, mixInfo))
+                        return;
+                }
             }
             try
             {
@@ -186,7 +199,12 @@ namespace MobiusEditor.Utility
                 }
             }
             catch (Exception e) { /* ignore */ }
-            // TODO identify as mix file
+            // check on extension
+            if (mixInfo.Name != null && mixInfo.Name.EndsWith(".mrf", StringComparison.OrdinalIgnoreCase))
+            {
+                if (IdentifyMrf(fileStream, mixInfo))
+                    return;
+            }
             mixInfo.Type = MixContentType.Unknown;
             mixInfo.Info = String.Empty;
         }
@@ -276,6 +294,12 @@ namespace MobiusEditor.Utility
                 INI ini = new INI();
                 Encoding encDOS = Encoding.GetEncoding(437);
                 string iniText = encDOS.GetString(fileContents);
+                string iniTextUtf = Encoding.UTF8.GetString(fileContents);
+                // Always exclude anything containing 00 bytes.
+                if (iniText.Contains("\0") && iniTextUtf.Contains('\0'))
+                {
+                    return false;
+                }
                 ini.Parse(iniText);
                 if (ini.Sections.Count > 0 && ini.Sections.Any(s => s.Keys.Count > 0))
                 {
@@ -410,10 +434,11 @@ namespace MobiusEditor.Utility
 
         private static bool IdentifyPalette(byte[] fileContents, MixEntry mixInfo)
         {
-            if (fileContents.Length == 768 && fileContents.All(b => b < 0x3F))
+            if (fileContents.Length == 0x300 && fileContents.All(b => b < 0x40))
             {
                 mixInfo.Type = MixContentType.Palette;
                 mixInfo.Info = "6-bit colour palette";
+                return true;
             }
             return false;
         }
@@ -462,7 +487,7 @@ namespace MobiusEditor.Utility
                 fileStream.Read(chunk, 0, chunk.Length);
                 int chunkLength = ArrayUtils.ReadInt16FromByteArrayLe(chunk, 0);
                 int chunkOutputLength = ArrayUtils.ReadInt16FromByteArrayLe(chunk, 2);
-                int id = ArrayUtils.ReadInt16FromByteArrayLe(chunk, 4);
+                int id = ArrayUtils.ReadInt32FromByteArrayLe(chunk, 4);
                 if (id != 0x0000DEAF)
                 {
                     return false;
@@ -481,55 +506,77 @@ namespace MobiusEditor.Utility
             return true;
         }
 
-        private static bool IdentifyMap(byte[] fileContents, MixEntry mixInfo)
+        private static bool IdentifyTdMap(byte[] fileContents, MixEntry mixInfo)
         {
             int highestTdMapVal = TiberianDawn.TemplateTypes.GetTypes().Max(t => (int)t.ID);
             int fileLength = fileContents.Length;
-            if (fileLength == 8192)
+            if (fileLength != 8192)
             {
-                bool isMap = true;
-                for (int i = 0; i < 8192; i += 2)
+                return false;
+            }
+            for (int i = 0; i < 8192; i += 2)
+            {
+                byte val = fileContents[i];
+                if (val > highestTdMapVal && val != 0xFF)
                 {
-                    byte val = fileContents[i];
-                    if (val > highestTdMapVal && val != 0xFF)
-                    {
-                        isMap = false;
-                        break;
-                    }
-                }
-                if (isMap)
-                {
-                    mixInfo.Type = MixContentType.Bin;
-                    mixInfo.Info = "Tiberian Dawn 64x64 Map";
-                    return true;
+                    return false;
                 }
             }
-            // Probably gonna get mismatches on this, but whatev.
-            if (fileLength % 4 == 0)
+            mixInfo.Type = MixContentType.Bin;
+            mixInfo.Info = "Tiberian Dawn 64x64 Map";
+            return true;
+        }
+
+        private static bool IdentifySoleMap(byte[] fileContents, MixEntry mixInfo)
+        {
+            int highestTdMapVal = TiberianDawn.TemplateTypes.GetTypes().Max(t => (int)t.ID);
+            int fileLength = fileContents.Length;
+            if (fileLength % 4 != 0)
             {
-                bool isMap = true;
-                int maxCell = 128 * 128;
-                for (int i = 0; i < fileLength; i += 4)
+                return false;
+            }
+            int maxCell = 128 * 128;
+            for (int i = 0; i < fileLength; i += 4)
+            {
+                byte cellLow = fileContents[i];
+                byte cellHi = fileContents[i + 1];
+                byte val = fileContents[i + 2];
+                int cell = (cellHi << 8) | cellLow;
+                if (cell >= maxCell || (val > highestTdMapVal && val != 0xFF))
                 {
-                    byte cellLow = fileContents[i];
-                    byte cellHi = fileContents[i + 1];
-                    byte val = fileContents[i + 2];
-                    int cell = (cellHi << 8) | cellLow;
-                    if (cell >= maxCell || (val > highestTdMapVal && val != 0xFF))
-                    {
-                        isMap = false;
-                        break;
-                    }
+                    return false;
                 }
-                if (isMap)
+            }
+            mixInfo.Type = MixContentType.BinSole;
+            mixInfo.Info = "Tiberian Dawn / Sole Survivor 128x128 Map";
+            return true;
+        }
+
+        private static bool IdentifyMrf(Stream fileStream, MixEntry mixInfo)
+        {
+            const int mrfLen = 0x100;
+            int blocks = (int)(mixInfo.Length / mrfLen);
+            if (blocks > 0 && mixInfo.Length % mrfLen == 0)
+            {
+                bool hasIndex = false;
+                byte[] firstBlock = new byte[mrfLen];
+                fileStream.Seek(0, SeekOrigin.Begin);
+                fileStream.Read(firstBlock, 0, mrfLen);
+                List<byte> indices = firstBlock.Where(b => b != 0xFF).ToList();
+                int blocksNoIndex = blocks - 1;
+                if (blocksNoIndex > 0 && indices.Count == blocksNoIndex && Enumerable.Range(0, blocksNoIndex).All(ind => indices.Contains((byte)ind)))
                 {
-                    mixInfo.Type = MixContentType.BinSole;
-                    mixInfo.Info = "Tiberian Dawn / Sole Survivor 128x128 Map";
+                    hasIndex = true;
                 }
+                mixInfo.Type = MixContentType.Remap;
+                int reportBlocks = hasIndex ? blocksNoIndex : blocks;
+                mixInfo.Info = String.Format("Fading table{0} ({1} table{2})", hasIndex ? " with index" : string.Empty, reportBlocks, reportBlocks != 1 ? "s" : string.Empty);
+                return true;
             }
             return false;
         }
     }
+
     public enum MixContentType
     {
         Unknown,
@@ -552,6 +599,7 @@ namespace MobiusEditor.Utility
         Pcx,
         Palette,
         PalTbl,
+        Remap,
         Audio,
         XccNames
     }
