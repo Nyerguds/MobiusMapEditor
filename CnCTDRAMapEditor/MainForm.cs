@@ -57,10 +57,10 @@ namespace MobiusEditor
             get => activeToolType;
             set
             {
-                var firstAvailableTool = value;
+                ToolType firstAvailableTool = value;
                 if ((availableToolTypes & firstAvailableTool) == ToolType.None)
                 {
-                    var otherAvailableToolTypes = toolTypes.Where(t => (availableToolTypes & t) != ToolType.None);
+                    IEnumerable<ToolType> otherAvailableToolTypes = toolTypes.Where(t => (availableToolTypes & t) != ToolType.None);
                     firstAvailableTool = otherAvailableToolTypes.Any() ? otherAvailableToolTypes.First() : ToolType.None;
                 }
                 if (activeToolType != firstAvailableTool || activeTool == null)
@@ -2077,13 +2077,13 @@ namespace MobiusEditor
             {
                 oldMockGame = gameType;
             }
-            foreach (var kvp in toolForms)
+            foreach (KeyValuePair<ToolType, IToolDialog> kvp in toolForms)
             {
                 ITool tool;
                 Object obj;
                 if (oldMockObjects != null && gameType != GameType.None && kvp.Value != null && (tool = kvp.Value.GetTool()) != null && (obj = tool.CurrentObject) != null)
                 {
-                    oldMockObjects.Add((kvp.Key), obj);
+                    oldMockObjects.Add(kvp.Key, obj);
                 }
                 kvp.Value.Dispose();
             }

@@ -930,9 +930,6 @@ namespace MobiusEditor.TiberianDawn
             foreach (string audName in GamePluginTD.Themes)
             {
                 yield return audName.ToLowerInvariant() + audExt;
-            }
-            foreach (string audName in GamePluginTD.Themes)
-            {
                 yield return audName.ToLowerInvariant() + varExt;
             }
             foreach (string wsaName in animationScenes)

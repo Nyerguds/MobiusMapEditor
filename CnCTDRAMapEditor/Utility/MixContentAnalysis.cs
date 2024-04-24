@@ -14,9 +14,6 @@ namespace MobiusEditor.Utility
     {
         private static readonly char[] badIniHeaderRange = Enumerable.Range(0, 0x20).Select(i => (char)i).ToArray();
         private static readonly HashSet<byte> badTextRange = Enumerable.Range(0, 0x20).Where(v => v != '\t' && v != '\r' && v != '\n' && v != ' ').Select(i => (byte)i).ToHashSet();
-        // Old DOS strings have these DOS arrows in them; symbols ► ◄ ▲ ▼. So exclude those from the "invalid" check.
-        private static readonly HashSet<byte> badStringtRange = Enumerable.Range(0, 0x20)
-            .Where(v => v != 16 && v != 17 && v != 30 && v != 31 && v != '\t' && v != '\r' && v != '\n' && v != ' ').Select(i => (byte)i).ToHashSet();
         private const String xccCheck = "XCC by Olaf van der Spek";
         private const uint xccId = 0x54C2D545;
         private const uint maxProcessed = 0x500000;
@@ -127,6 +124,8 @@ namespace MobiusEditor.Utility
         {
             long fileLengthFull = fileStream.Length;
             mixInfo.Type = MixContentType.Unknown;
+            string extension = Path.GetExtension(mixInfo.Name);
+
             // Very strict requirements, and jumps over the majority of file contents while checking, so check this first.
             if (IdentifyAud(fileStream, mixInfo))
                 return;
@@ -147,7 +146,7 @@ namespace MobiusEditor.Utility
                     // Always needs to happen before sole maps since all palettes will technically match that format.
                     if (IdentifyPalette(fileContents, mixInfo))
                         return;
-                    if (IdentifySoleMap(fileContents, mixInfo))
+                    if (".bin".Equals(extension, StringComparison.OrdinalIgnoreCase) && IdentifySoleMap(fileContents, mixInfo))
                         return;
                 }
                 if (IdentifyShp(fileContents, mixInfo))
@@ -175,7 +174,8 @@ namespace MobiusEditor.Utility
                     // Always needs to happen before sole maps since all palettes will technically match that format.
                     if (IdentifyPalette(fileContents, mixInfo))
                         return;
-                    if (IdentifySoleMap(fileContents, mixInfo))
+                    // Only check for sole map if name is known and type is correct.
+                    if (".bin".Equals(extension, StringComparison.OrdinalIgnoreCase) && IdentifySoleMap(fileContents, mixInfo))
                         return;
                 }
             }
@@ -199,8 +199,8 @@ namespace MobiusEditor.Utility
                 }
             }
             catch (Exception e) { /* ignore */ }
-            // check on extension
-            if (mixInfo.Name != null && mixInfo.Name.EndsWith(".mrf", StringComparison.OrdinalIgnoreCase))
+            // Only do this if it passes the check on extension.
+            if (".mrf".Equals(extension, StringComparison.OrdinalIgnoreCase))
             {
                 if (IdentifyMrf(fileStream, mixInfo))
                     return;
@@ -381,7 +381,9 @@ namespace MobiusEditor.Utility
             {
                 List<ushort> indices = new List<ushort>();
                 List<byte[]> strings = GameTextManagerClassic.LoadFile(fileContents, indices, true);
-                bool hasBadChars = strings.Any(str => str.Any(b => badStringtRange.Contains(b)));
+                // Check bad text range, but make exceptions for single-char strings with the DOS ► ◄ ▲ ▼ symbols.
+                bool hasBadChars = strings.Any(str => str.Any(b => badTextRange.Contains(b))
+                                    && !(str.Length == 1 && (str[0] == 16 || str[0] == 17 || str[0] == 30 || str[0] == 31)));
                 if (indices.Count > 0 && !hasBadChars && (indices[0] - indices.Count * 2) == 0 && strings.Any(s => s.Length > 0))
                 {
                     mixInfo.Type = MixContentType.Strings;
