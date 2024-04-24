@@ -37,6 +37,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using static MobiusEditor.Utility.FileNameGenerator;
 
 namespace MobiusEditor
 {
@@ -461,6 +462,41 @@ namespace MobiusEditor
         private void FileOpenMenuItem_Click(object sender, EventArgs e)
         {
             PromptSaveMap(OpenFile, false);
+        }
+
+        private void FileOpenFromMixMenuItem_Click(object sender, EventArgs e)
+        {
+            string[][] theaterInfo = TiberianDawn.TheaterTypes.GetAllTypes().Select(th => new string[] { th.ClassicExtension.Trim('.'), th.ClassicTileset }).ToArray();
+            /*/
+            string defTh = "{0}make.{1}";
+            StringTypeDefinition stdBld = new StringTypeDefinition(defTh);
+            foreach (string name in stdBld.GetNames("fact", theaterInfo))
+            {
+                Debug.WriteLine(name);
+            }
+            /*/
+            /*/
+            string defIt = "{0:1-2}[GBJM]0[12345]EA.[(INI)(BIN)]";
+            StringTypeDefinition stdMis = new StringTypeDefinition(defIt);
+            foreach (string name in stdMis.GetNames("sc", theaterInfo))
+            {
+                Debug.WriteLine(name);
+            }
+            //*/
+            /*/
+            string defFormat = "Name1={2:0-1}{0}.mrf";
+            FileNameGeneratorEntry stdFormat = new FileNameGeneratorEntry(defFormat);
+            foreach (string name in stdFormat.GetNames("green", theaterInfo))
+            {
+                Debug.WriteLine(name);
+            }
+            //*/
+            String mixPath = Path.Combine(Program.ApplicationPath, "mixcontent.ini");
+            FileNameGenerator fng = new FileNameGenerator(mixPath);
+            foreach (KeyValuePair<uint, string> kvp in fng.GetAllNameIds())
+            {
+                Debug.WriteLine(String.Format("{0:X8} : {1}", kvp.Key, kvp.Value));
+            }
         }
 
         private void OpenFile()

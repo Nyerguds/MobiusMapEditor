@@ -620,13 +620,22 @@
     <Compile Include="Tools\WaypointsTool.cs" />
     <Compile Include="Utility\BooleanStringStyle.cs" />
     <Compile Include="Utility\ClassicSpriteLoader.cs" />
+    <Compile Include="Utility\EnhFormatString.cs" />
     <Compile Include="Utility\ExtensionMethods.cs" />
+    <Compile Include="Utility\FileNameGenerator.cs" />
     <Compile Include="Utility\GameTextManager.cs" />
     <Compile Include="Utility\GameTextManagerClassic.cs" />
     <Compile Include="Utility\GeneralUtils.cs" />
     <Compile Include="Utility\GenericBooleanTypeConverter.cs" />
+    <Compile Include="Utility\Hashing\BitFunctions.cs" />
     <Compile Include="Utility\Hashing\CRC.cs" />
-    <Compile Include="Utility\Hashing\Rol.cs" />
+    <Compile Include="Utility\Hashing\HashCrc32.cs" />
+    <Compile Include="Utility\Hashing\HashMethod.cs" />
+    <Compile Include="Utility\Hashing\HashObfuscate.cs" />
+    <Compile Include="Utility\Hashing\HashObscure.cs" />
+    <Compile Include="Utility\Hashing\HashRol.cs" />
+    <Compile Include="Utility\Hashing\HashRor.cs" />
+    <Compile Include="Utility\Hashing\ParallelCRC.cs" />
     <Compile Include="Utility\ImageUtils.cs" />
     <Compile Include="Utility\INI.cs" />
     <Compile Include="Utility\INITools.cs" />
@@ -798,6 +807,9 @@
     <EmbeddedResource Include="Resources\GameIcon00.ico" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Resources\mixcontent.ini">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="Resources\UI_CustomMissionPreviewDefault.png" />
     <Content Include="License.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -843,7 +855,9 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>if not exist bin md bin
-move *.dll bin\</PostBuildEvent>
+move *.dll bin\
+move Resources\*.ini .
+rd /s /q Resources</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
     <PreBuildEvent>rd /s /q bin</PreBuildEvent>
