@@ -37,7 +37,6 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
-using static MobiusEditor.Utility.FileNameGenerator;
 
 namespace MobiusEditor
 {
@@ -466,7 +465,7 @@ namespace MobiusEditor
 
         private void FileOpenFromMixMenuItem_Click(object sender, EventArgs e)
         {
-            string[][] theaterInfo = TiberianDawn.TheaterTypes.GetAllTypes().Select(th => new string[] { th.ClassicExtension.Trim('.'), th.ClassicTileset }).ToArray();
+            // string[][] theaterInfo = TiberianDawn.TheaterTypes.GetAllTypes().Select(th => new string[] { th.ClassicExtension.Trim('.'), th.ClassicTileset }).ToArray();
             /*/
             string defTh = "{0}make.{1}";
             StringTypeDefinition stdBld = new StringTypeDefinition(defTh);
@@ -491,11 +490,11 @@ namespace MobiusEditor
                 Debug.WriteLine(name);
             }
             //*/
-            String mixPath = Path.Combine(Program.ApplicationPath, "mixcontent.ini");
-            FileNameGenerator fng = new FileNameGenerator(mixPath);
-            foreach (KeyValuePair<uint, string> kvp in fng.GetAllNameIds())
+            string mixPath = Path.Combine(Program.ApplicationPath, "mixcontent.ini");
+            MixFileNameGenerator fng = new MixFileNameGenerator(mixPath);
+            foreach (MixEntry entry in fng.GetAllNameIds())
             {
-                Debug.WriteLine(String.Format("{0:X8} : {1}", kvp.Key, kvp.Value));
+                Debug.WriteLine(String.Format("{0:X8} : {1} - {2}", entry.Id, entry.Name, entry.Description ?? String.Empty));
             }
         }
 

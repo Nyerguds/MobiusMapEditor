@@ -27,6 +27,7 @@ namespace MobiusEditor.Model
         #region properties
         public abstract GameType GameType { get; }
         public abstract string Name { get; }
+        public abstract string IniName { get; }
         public abstract string DefaultSaveDirectory { get; }
         public abstract string SaveFilter { get; }
         public abstract string OpenFilter { get; }

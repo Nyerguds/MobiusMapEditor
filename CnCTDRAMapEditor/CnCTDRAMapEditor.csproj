@@ -622,7 +622,7 @@
     <Compile Include="Utility\ClassicSpriteLoader.cs" />
     <Compile Include="Utility\EnhFormatString.cs" />
     <Compile Include="Utility\ExtensionMethods.cs" />
-    <Compile Include="Utility\FileNameGenerator.cs" />
+    <Compile Include="Utility\MixFileNameGenerator.cs" />
     <Compile Include="Utility\GameTextManager.cs" />
     <Compile Include="Utility\GameTextManagerClassic.cs" />
     <Compile Include="Utility\GeneralUtils.cs" />
@@ -808,6 +808,15 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\mixcontent.ini">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Resources\mixcontent_ra1.ini">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Resources\mixcontent_sole.ini">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Resources\mixcontent_td.ini">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="Resources\UI_CustomMissionPreviewDefault.png" />

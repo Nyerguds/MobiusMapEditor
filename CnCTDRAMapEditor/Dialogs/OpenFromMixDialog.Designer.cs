@@ -31,11 +31,12 @@
             this.mixContentsListView = new System.Windows.Forms.ListView();
             this.nameColumnHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.typeColumnHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.SizeColumnHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.infoColumnHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOpen = new System.Windows.Forms.Button();
             this.btnCloseFile = new System.Windows.Forms.Button();
-            this.SizeColumnHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.DescColumnHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.SuspendLayout();
             // 
             // mixContentsListView
@@ -47,7 +48,8 @@
             this.nameColumnHeader,
             this.typeColumnHeader,
             this.SizeColumnHeader,
-            this.infoColumnHeader});
+            this.infoColumnHeader,
+            this.DescColumnHeader});
             this.mixContentsListView.FullRowSelect = true;
             this.mixContentsListView.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
             this.mixContentsListView.HideSelection = false;
@@ -77,6 +79,12 @@
             this.typeColumnHeader.Tag = "-80";
             this.typeColumnHeader.Text = "Type";
             this.typeColumnHeader.Width = 80;
+            // 
+            // SizeColumnHeader
+            // 
+            this.SizeColumnHeader.Tag = "-80";
+            this.SizeColumnHeader.Text = "Size";
+            this.SizeColumnHeader.Width = 80;
             // 
             // infoColumnHeader
             // 
@@ -119,11 +127,11 @@
             this.btnCloseFile.UseVisualStyleBackColor = true;
             this.btnCloseFile.Click += new System.EventHandler(this.BtnCloseFile_Click);
             // 
-            // SizeColumnHeader
+            // DescColumnHeader
             // 
-            this.SizeColumnHeader.Tag = "-80";
-            this.SizeColumnHeader.Text = "Size";
-            this.SizeColumnHeader.Width = 80;
+            this.DescColumnHeader.Tag = "1";
+            this.DescColumnHeader.Text = "Description";
+            this.DescColumnHeader.Width = 100;
             // 
             // OpenFromMixDialog
             // 
@@ -154,5 +162,6 @@
         private System.Windows.Forms.Button btnOpen;
         private System.Windows.Forms.Button btnCloseFile;
         private System.Windows.Forms.ColumnHeader SizeColumnHeader;
+        private System.Windows.Forms.ColumnHeader DescColumnHeader;
     }
 }

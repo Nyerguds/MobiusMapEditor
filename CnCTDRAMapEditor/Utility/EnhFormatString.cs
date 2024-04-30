@@ -24,6 +24,7 @@ namespace MobiusEditor.Utility
     /// </summary>
     public struct EnhFormatString : IFormattable
     {
+        private static readonly Regex FormatDetectRegex = new Regex("{(\\d+)(?::\\d+(?:-\\d+)?)?}", RegexOptions.Compiled);
         private static readonly Regex FormatRegex = new Regex("^(\\d+)(?:-(\\d+))?$", RegexOptions.Compiled);
         public readonly string _string;
         public EnhFormatString(string str)
@@ -77,6 +78,27 @@ namespace MobiusEditor.Utility
            => new EnhFormatString(code);
         public static implicit operator string(EnhFormatString language)
            => language._string;
+
+        /// <summary>
+        /// Finds the highest {#} argument inside the string that matches the EnhFormatString format.
+        /// </summary>
+        /// <param name="formatStr">String to find arguments in.</param>
+        /// <returns>The highest argument number found in <paramref name="formatStr"/>, or -1 if none were found.</returns>
+        public static int GetHighestArg(string formatStr)
+        {
+            int highestArg = -1;
+            if (formatStr != null)
+            {
+                Match formatMatch = FormatDetectRegex.Match(formatStr);
+                while (formatMatch.Success)
+                {
+                    int argNumber = Int32.Parse(formatMatch.Groups[1].Value);
+                    highestArg = Math.Max(highestArg, argNumber);
+                    formatMatch = formatMatch.NextMatch();
+                }
+            }
+            return highestArg;
+        }
     }
 }
 

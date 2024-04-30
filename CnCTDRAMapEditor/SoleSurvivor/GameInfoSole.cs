@@ -27,6 +27,7 @@ namespace MobiusEditor.SoleSurvivor
     {
         public override GameType GameType => GameType.SoleSurvivor;
         public override string Name => "Sole Survivor";
+        public override string IniName => "SoleSurvivor";
         public override string DefaultSaveDirectory => Path.Combine(Globals.RootSaveDirectory, "Tiberian_Dawn");
         public override string OpenFilter => Constants.FileFilter;
         public override string SaveFilter => Constants.FileFilter;

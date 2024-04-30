@@ -27,6 +27,7 @@ namespace MobiusEditor.TiberianDawn
     {
         public override GameType GameType => GameType.TiberianDawn;
         public override string Name => "Tiberian Dawn";
+        public override string IniName => "TiberianDawn";
         public override string DefaultSaveDirectory => Path.Combine(Globals.RootSaveDirectory, "Tiberian_Dawn");
         public override string OpenFilter => Constants.FileFilter;
         public override string SaveFilter => Constants.FileFilter;

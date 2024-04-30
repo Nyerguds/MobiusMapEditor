@@ -2,6 +2,8 @@
 using System;
 using System.ComponentModel;
 using System.Globalization;
+using System.Runtime.Remoting.Contexts;
+using System.Text.RegularExpressions;
 
 namespace MobiusEditor.Utility
 {
@@ -23,6 +25,8 @@ namespace MobiusEditor.Utility
 
     public class YesNoBooleanTypeConverter : TypeConverter
     {
+        private static readonly Regex NumRegex = new Regex("^\\d+$", RegexOptions.Compiled);
+
         public BooleanStringStyle BooleanStringStyle { get; set; } = BooleanStringStyle.YesNo;
 
         public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
@@ -61,8 +65,27 @@ namespace MobiusEditor.Utility
             {
                 return null;
             }
+            return ConvertFrom(str);
+        }
 
-            int first = (str.Length > 0) ? str.ToUpper()[0] : 0;
+        public bool ConvertFrom(string value)
+        {
+            if (value == null)
+            {
+                return false;
+            }
+            value = value.Trim();
+            // If is numeric, any value higher than 0 us true.
+            bool isNumeric = NumRegex.IsMatch(value);
+            if (isNumeric)
+            {
+                value = value.TrimStart('0');
+            }
+            if (value.Length == 0)
+            {
+                return false;
+            }
+            char first = (isNumeric && Int32.Parse(value) != 0) ? '1' : value.ToUpper()[0];
             return (first == 'T') || (first == 'Y') || (first == '1');
         }
     }

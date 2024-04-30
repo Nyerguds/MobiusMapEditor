@@ -13,7 +13,7 @@ namespace MobiusEditor.Dialogs
     {
         private bool resizing = false;
         private List<MixFile> openedMixFiles = new List<MixFile>();
-        private Dictionary<uint, string> encodedFilenames;
+        private Dictionary<uint, MixEntry> encodedFilenames;
         private SimpleMultiThreading analysisMultiThreader;
         List<MixEntry> currentMixInfo;
         private string titleMain;
@@ -23,7 +23,12 @@ namespace MobiusEditor.Dialogs
 
         public Label StatusLabel { get; set; }
 
-        public OpenFromMixDialog(MixFile baseMix, Dictionary<uint, string> encodedFilenames)
+        public OpenFromMixDialog(MixFile baseMix, Dictionary<uint, String> encodedFilenames)
+            :this(baseMix, encodedFilenames == null ? null : encodedFilenames.ToDictionary(kvp => kvp.Key, kvp => new MixEntry(kvp.Key, kvp.Value, null)))
+        {
+
+        }
+        public OpenFromMixDialog(MixFile baseMix, Dictionary<uint, MixEntry> encodedFilenames)
         {
             InitializeComponent();
             titleMain = this.Text;
@@ -244,6 +249,7 @@ namespace MobiusEditor.Dialogs
                 item.SubItems.Add(mixFileInfo.Type.ToString());
                 item.SubItems.Add(mixFileInfo.Length.ToString());
                 item.SubItems.Add(mixFileInfo.Info);
+                item.SubItems.Add(mixFileInfo.Description);
                 mixContentsListView.Items.Add(item).ToolTipText = mixFileInfo.Name ?? mixFileInfo.IdString;
             }
             mixContentsListView.EndUpdate();
@@ -264,7 +270,7 @@ namespace MobiusEditor.Dialogs
                     return;
                 }
                 float totalColumnWidth = 0;
-                int totalAvailablewidth = listView.ClientRectangle.Width - 1;
+                int totalAvailablewidth = listView.ClientRectangle.Width - 2;
                 int availablewidth = totalAvailablewidth;
                 int columns = listView.Columns.Count;
                 int[] tagWidths = new int[columns];

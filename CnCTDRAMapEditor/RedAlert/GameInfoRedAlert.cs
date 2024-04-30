@@ -28,6 +28,7 @@ namespace MobiusEditor.RedAlert
     {
         public override GameType GameType => GameType.RedAlert;
         public override string Name => "Red Alert";
+        public override string IniName => "RedAlert";
         public override string DefaultSaveDirectory => Path.Combine(Globals.RootSaveDirectory, "Red_Alert");
         public override string SaveFilter => Constants.FileFilter;
         public override string OpenFilter => Constants.FileFilter;

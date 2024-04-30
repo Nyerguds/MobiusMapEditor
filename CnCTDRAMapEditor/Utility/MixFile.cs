@@ -455,13 +455,14 @@ namespace MobiusEditor.Utility
 
     public class MixEntry
     {
+        public uint Id;
         public string Name;
         public int Duplicate;
-        public uint Id;
         public uint Offset;
         public uint Length;
         public MixContentType Type = MixContentType.Unknown;
         public string Info;
+        public string Description;
 
         public string DisplayName => (Name ?? IdString) + (Duplicate == 0 ? string.Empty : " (" + Duplicate.ToString() + ")");
         public string SortName => Name ?? ("zzzzzzzzzzzz " + IdString);
@@ -472,13 +473,21 @@ namespace MobiusEditor.Utility
 
         public MixEntry(MixEntry orig)
         {
-            this.Name = orig.Name;
-            this.Duplicate = orig.Duplicate;
-            this.Id = orig.Id;
-            this.Offset = orig.Offset;
-            this.Length = orig.Length;
-            this.Type = orig.Type;
-            this.Info = orig.Info;
+            Id = orig.Id;
+            Name = orig.Name;
+            Duplicate = orig.Duplicate;
+            Offset = orig.Offset;
+            Length = orig.Length;
+            Type = orig.Type;
+            Info = orig.Info;
+            Description = orig.Description;
+        }
+
+        public MixEntry(uint id, string name, string description)
+        {
+            Name = name;
+            Id = id;
+            Description= description;
         }
 
         public MixEntry(string filename)

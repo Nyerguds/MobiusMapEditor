@@ -18,7 +18,7 @@ namespace MobiusEditor.Utility
         private const uint xccId = 0x54C2D545;
         private const uint maxProcessed = 0x500000;
 
-        public static List<MixEntry> AnalyseFiles(MixFile current, Dictionary<uint, string> encodedFilenames, bool preferMissions, Func<bool> checkAbort)
+        public static List<MixEntry> AnalyseFiles(MixFile current, Dictionary<uint, MixEntry> encodedFilenames, bool preferMissions, Func<bool> checkAbort)
         {
             List<uint> filesList = current.GetFileIds();
             List<MixEntry> fileInfo = new List<MixEntry>();
@@ -99,16 +99,23 @@ namespace MobiusEditor.Utility
                     }
                     string name = null;
                     //uint fileIdm1 = fileId == 0 ? 0 : fileId - 1;
-                    if (xccInfoFilenames == null || !xccInfoFilenames.TryGetValue(fileId, out name))
-                    {
-                        if (!encodedFilenames.TryGetValue(fileId, out name))
-                        {
-                            name = null;
-                        }
-                    }
-                    if (name != null)
+                    if (xccInfoFilenames != null && xccInfoFilenames.TryGetValue(fileId, out name))
                     {
                         mixInfo.Name = name;
+                    }
+                    MixEntry mi;
+                    if (encodedFilenames.TryGetValue(fileId, out mi))
+                    {
+                        if (name == null)
+                        {
+                            mixInfo.Name = mi.Name;
+                            mixInfo.Description = mi.Description;
+                        }
+                        else if (name.Equals(mi.Name, StringComparison.OrdinalIgnoreCase))
+                        {
+                            // Don't apply description if xcc info name doesn't match encodedFilenames entry.
+                            mixInfo.Description = mi.Description;
+                        }
                     }
                     fileInfo.Add(mixInfo);
                     using (Stream file = current.OpenFile(fileId))
