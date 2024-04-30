@@ -40,6 +40,8 @@ namespace MobiusEditor.Utility
         public bool IsEmbedded { get; private set; }
         public bool HasEncryption { get; private set; }
         public bool HasChecksum { get; private set; }
+        public IEnumerable<uint> FileIds => this.mixFileContents.Keys.OrderBy(k => k);
+
         private long fileStart;
         private long fileLength;
         private MemoryMappedFile mixFileMap;
@@ -105,11 +107,6 @@ namespace MobiusEditor.Utility
             // Copy reference to parent map. The "CreateViewStream" function takes care of reading the right parts from it.
             this.mixFileMap = container.mixFileMap;
             this.ReadMixHeader(this.mixFileMap, actualEntry.Offset, this.fileLength, handleAdvanced);
-        }
-
-        public List<uint> GetFileIds()
-        {
-            return this.mixFileContents.Keys.OrderBy(k => k).ToList();
         }
 
         public uint GetFileId(string filename)
@@ -208,6 +205,61 @@ namespace MobiusEditor.Utility
                 return null;
             }
             return this.CreateViewStream(this.mixFileMap, this.fileStart, this.fileLength, requestedInfo.Offset, requestedInfo.Length);
+        }
+
+        public int Identify(IEnumerable<MixEntry> info, bool deep, out int total)
+        {
+            int identified = 0;
+            total = 0;
+            HashSet<uint> availableNames = info.Where(i => !String.IsNullOrEmpty(i.Name)).Select(i => i.Id).ToHashSet();
+            foreach (uint id in this.FileIds)
+            {
+                total = 0;
+                if (availableNames.Contains(id))
+                {
+                    identified++;
+                }
+                if (deep)
+                {
+                    // Loop over doubles too? Whatever.
+                    foreach (MixEntry entry in this.mixFileContents[id])
+                    {
+                        try
+                        {
+                            using (MixFile mf = new MixFile(this, entry))
+                            {
+                                foreach (uint intId in mf.FileIds)
+                                {
+                                    // Not going more than one layer deep, so no recursion.
+                                    total++;
+                                    if (availableNames.Contains(id))
+                                    {
+                                        identified++;
+                                    }
+                                }
+                            }
+                        }
+                        catch { /* ignore; is not a mix file */ }
+                    }
+                }
+            }
+            return identified;
+        }
+
+        public void InsertInfo(IEnumerable<MixEntry> info, bool add)
+        {
+            foreach (MixEntry infoItem in info)
+            {
+                if (mixFileContents.TryGetValue(infoItem.Id, out MixEntry[] values))
+                {
+                    foreach (MixEntry entry in values)
+                    {
+                        // todo null checks whe "add" is true, to not clear existing info
+                        entry.Name = infoItem.Name;
+                        entry.Description = infoItem.Description;
+                    }
+                }
+            }
         }
 
         /// <summary>

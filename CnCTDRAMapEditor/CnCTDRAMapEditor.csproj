@@ -865,7 +865,7 @@
   <PropertyGroup>
     <PostBuildEvent>if not exist bin md bin
 move *.dll bin\
-move Resources\*.ini .
+move Resources\*.* .
 rd /s /q Resources</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>

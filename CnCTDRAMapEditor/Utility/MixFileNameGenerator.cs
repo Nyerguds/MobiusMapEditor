@@ -21,6 +21,9 @@ using System.Text.RegularExpressions;
 
 namespace MobiusEditor.Utility
 {
+    /// <summary>
+    /// ROMFIS - The Ridiculously Overengineered Mix Filename Identification System!
+    /// </summary>
     public class MixFileNameGenerator
     {
         [Flags]
@@ -326,6 +329,57 @@ namespace MobiusEditor.Utility
                     yield return nameInfo;
                 }
             }
+        }
+
+        public static string IdentifyMixFile(MixFile mf, Dictionary<string, IEnumerable<MixEntry>> fileInfo, List<string> identifyOrder, bool deep)
+        {
+            List<string> gameNames;
+            if (identifyOrder == null)
+            {
+                gameNames = fileInfo.Keys.ToList();
+            }
+            else
+            {
+                gameNames = new List<string>();
+                // Add all that exist in given list
+                foreach (string game in identifyOrder)
+                {
+                    if (fileInfo.ContainsKey(game))
+                    {
+                        gameNames.Add(game);
+                    }
+                }
+                // add all existing that aren't in the given list.
+                foreach (string game in fileInfo.Keys)
+                {
+                    if (!gameNames.Contains(game))
+                    {
+                        gameNames.Add(game);
+                    }
+                }
+            }
+            int maxAmount = 0;
+            string maxGame = null;
+            foreach (string gameName in gameNames)
+            {
+                int amount = mf.Identify(fileInfo[gameName], deep, out _);
+                if (amount > maxAmount)
+                {
+                    maxAmount = amount;
+                    maxGame = gameName;
+                }
+            }
+            return maxGame;
+        }
+
+        public Dictionary<string, IEnumerable<MixEntry>> GetAllGameInfo()
+        {
+            Dictionary<string, IEnumerable<MixEntry>> returnVal = new Dictionary<string, IEnumerable<MixEntry>>();
+            foreach (string game in games)
+            {
+                returnVal.Add(game, GetNameIds(game).ToList());
+            }
+            return returnVal;
         }
 
         public IEnumerable<MixEntry> GetNameIds(string game)

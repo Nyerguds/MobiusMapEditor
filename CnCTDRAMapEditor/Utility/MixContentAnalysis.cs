@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
-using System.IO.Pipes;
 using System.Linq;
 using System.Text;
 
@@ -20,7 +19,7 @@ namespace MobiusEditor.Utility
 
         public static List<MixEntry> AnalyseFiles(MixFile current, Dictionary<uint, MixEntry> encodedFilenames, bool preferMissions, Func<bool> checkAbort)
         {
-            List<uint> filesList = current.GetFileIds();
+            List<uint> filesList = current.FileIds.ToList();
             List<MixEntry> fileInfo = new List<MixEntry>();
             Dictionary<uint, string> xccInfoFilenames = null;
             // Check if there's an xcc filenames database.
