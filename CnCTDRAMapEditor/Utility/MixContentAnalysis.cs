@@ -119,6 +119,11 @@ namespace MobiusEditor.Utility
             long fileLengthFull = fileStream.Length;
             mixInfo.Type = MixContentType.Unknown;
             string extension = Path.GetExtension(mixInfo.Name);
+            if (fileLengthFull == 0)
+            {
+                mixInfo.Info = "Empty file";
+                return;
+            }
 
             // Very strict requirements, and jumps over the majority of file contents while checking, so check this first.
             if (IdentifyAud(fileStream, mixInfo))

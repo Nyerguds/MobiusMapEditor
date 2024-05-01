@@ -14,6 +14,7 @@
 using MobiusEditor.Utility.Hashing;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -436,6 +437,15 @@ namespace MobiusEditor.Utility
             public void GenerateNameIds()
             {
                 this.FileInfo = GetNameIds().ToList();
+#if DEBUG
+                // For testing
+                /*/
+                foreach (MixEntry entry in this.FileInfo)
+                {
+                    Debug.WriteLine(String.Format("{0:X8} : {1} - {2}", entry.Id, entry.Name, entry.Description ?? String.Empty));
+                }
+                //*/
+#endif
             }
 
             private IEnumerable<MixEntry> GetNameIds()
