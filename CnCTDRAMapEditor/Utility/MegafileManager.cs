@@ -38,11 +38,12 @@ namespace MobiusEditor.Utility
 
         private readonly HashSet<string> filenames = new HashSet<string>();
 
-        public MegafileManager(string loadRoot, string looseFilePath, Dictionary<GameType, string[]> modPaths, Dictionary<GameType, String> classicGameFolders)
+        public MegafileManager(string loadRoot, string looseFilePath, Dictionary<GameType, string[]> modPaths,
+            MixFileNameGenerator romfis, Dictionary<GameType, string> classicGameFolders)
         {
             this.looseFilePath = looseFilePath;
             this.modPathsPerGame = modPaths;
-            mixFm = new MixfileManager(loadRoot, classicGameFolders, modPaths);
+            mixFm = new MixfileManager(loadRoot, romfis, classicGameFolders, modPaths);
             this.LoadRoot = Path.GetFullPath(loadRoot);
         }
 

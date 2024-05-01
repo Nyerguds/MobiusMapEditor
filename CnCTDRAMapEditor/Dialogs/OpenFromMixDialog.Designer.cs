@@ -33,10 +33,10 @@
             this.typeColumnHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.SizeColumnHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.infoColumnHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.DescColumnHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOpen = new System.Windows.Forms.Button();
             this.btnCloseFile = new System.Windows.Forms.Button();
-            this.DescColumnHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.SuspendLayout();
             // 
             // mixContentsListView
@@ -48,8 +48,8 @@
             this.nameColumnHeader,
             this.typeColumnHeader,
             this.SizeColumnHeader,
-            this.infoColumnHeader,
-            this.DescColumnHeader});
+            this.DescColumnHeader,
+            this.infoColumnHeader});
             this.mixContentsListView.FullRowSelect = true;
             this.mixContentsListView.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
             this.mixContentsListView.HideSelection = false;
@@ -59,7 +59,7 @@
             this.mixContentsListView.MultiSelect = false;
             this.mixContentsListView.Name = "mixContentsListView";
             this.mixContentsListView.ShowItemToolTips = true;
-            this.mixContentsListView.Size = new System.Drawing.Size(765, 406);
+            this.mixContentsListView.Size = new System.Drawing.Size(965, 406);
             this.mixContentsListView.TabIndex = 1;
             this.mixContentsListView.UseCompatibleStateImageBehavior = false;
             this.mixContentsListView.View = System.Windows.Forms.View.Details;
@@ -92,11 +92,17 @@
             this.infoColumnHeader.Text = "Info";
             this.infoColumnHeader.Width = 100;
             // 
+            // DescColumnHeader
+            // 
+            this.DescColumnHeader.Tag = "1";
+            this.DescColumnHeader.Text = "Description";
+            this.DescColumnHeader.Width = 100;
+            // 
             // btnCancel
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(697, 426);
+            this.btnCancel.Location = new System.Drawing.Point(897, 426);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 2;
@@ -107,7 +113,7 @@
             // btnOpen
             // 
             this.btnOpen.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOpen.Location = new System.Drawing.Point(616, 426);
+            this.btnOpen.Location = new System.Drawing.Point(816, 426);
             this.btnOpen.Name = "btnOpen";
             this.btnOpen.Size = new System.Drawing.Size(75, 23);
             this.btnOpen.TabIndex = 3;
@@ -127,18 +133,12 @@
             this.btnCloseFile.UseVisualStyleBackColor = true;
             this.btnCloseFile.Click += new System.EventHandler(this.BtnCloseFile_Click);
             // 
-            // DescColumnHeader
-            // 
-            this.DescColumnHeader.Tag = "1";
-            this.DescColumnHeader.Text = "Description";
-            this.DescColumnHeader.Width = 100;
-            // 
             // OpenFromMixDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(784, 461);
+            this.ClientSize = new System.Drawing.Size(984, 461);
             this.Controls.Add(this.btnCloseFile);
             this.Controls.Add(this.btnOpen);
             this.Controls.Add(this.btnCancel);

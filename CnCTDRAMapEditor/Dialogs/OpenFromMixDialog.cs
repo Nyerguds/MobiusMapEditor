@@ -13,26 +13,23 @@ namespace MobiusEditor.Dialogs
     {
         private bool resizing = false;
         private List<MixFile> openedMixFiles = new List<MixFile>();
-        private Dictionary<uint, MixEntry> encodedFilenames;
+        private MixFileNameGenerator romfis;
         private SimpleMultiThreading analysisMultiThreader;
         List<MixEntry> currentMixInfo;
         private string titleMain;
         private readonly object abortLockObj = new object();
         private bool abortRequested = false;
         public string SelectedFile { get; set; }
+        private string identifiedGame;
 
         public Label StatusLabel { get; set; }
 
-        public OpenFromMixDialog(MixFile baseMix, Dictionary<uint, String> encodedFilenames)
-            :this(baseMix, encodedFilenames == null ? null : encodedFilenames.ToDictionary(kvp => kvp.Key, kvp => new MixEntry(kvp.Key, kvp.Value, null)))
-        {
-
-        }
-        public OpenFromMixDialog(MixFile baseMix, Dictionary<uint, MixEntry> encodedFilenames)
+        public OpenFromMixDialog(MixFile baseMix, MixFileNameGenerator romfis)
         {
             InitializeComponent();
             titleMain = this.Text;
-            this.encodedFilenames = encodedFilenames;
+            this.romfis = romfis;
+            identifiedGame = romfis.IdentifyMixFile(baseMix);
             openedMixFiles.Add(baseMix);
             analysisMultiThreader = new SimpleMultiThreading(this);
             analysisMultiThreader.ProcessingLabelBorder = BorderStyle.Fixed3D;
@@ -51,7 +48,7 @@ namespace MobiusEditor.Dialogs
                 FillList(null);
             }
             analysisMultiThreader.ExecuteThreaded(
-                () => MixContentAnalysis.AnalyseFiles(current, this.encodedFilenames, true, () => this.CheckAbort()),
+                () => MixContentAnalysis.AnalyseFiles(current, true, () => this.CheckAbort()),
                 (list) => FillList(list), true,
                 (bl, str) => EnableDisableUi(bl, str, analysisMultiThreader),
                 "Analysis in progress");
@@ -155,6 +152,8 @@ namespace MobiusEditor.Dialogs
                 }
                 if (subMix != null)
                 {
+                    // Game type is already determined by parent mix.
+                    romfis.IdentifyMixFile(subMix, identifiedGame);
                     openedMixFiles.Add(subMix);
                 }
                 LoadMixContents();
@@ -248,8 +247,8 @@ namespace MobiusEditor.Dialogs
                 }
                 item.SubItems.Add(mixFileInfo.Type.ToString());
                 item.SubItems.Add(mixFileInfo.Length.ToString());
-                item.SubItems.Add(mixFileInfo.Info);
                 item.SubItems.Add(mixFileInfo.Description);
+                item.SubItems.Add(mixFileInfo.Info);
                 mixContentsListView.Items.Add(item).ToolTipText = mixFileInfo.Name ?? mixFileInfo.IdString;
             }
             mixContentsListView.EndUpdate();
@@ -261,16 +260,17 @@ namespace MobiusEditor.Dialogs
             {
                 return;
             }
+            resizing = true;
+            ListView listView = sender as ListView;
             try
             {
-                resizing = true;
-                ListView listView = sender as ListView;
                 if (listView == null)
                 {
                     return;
                 }
+                listView.BeginUpdate();
                 float totalColumnWidth = 0;
-                int totalAvailablewidth = listView.ClientRectangle.Width - 2;
+                int totalAvailablewidth = listView.ClientRectangle.Width;
                 int availablewidth = totalAvailablewidth;
                 int columns = listView.Columns.Count;
                 int[] tagWidths = new int[columns];
@@ -297,7 +297,7 @@ namespace MobiusEditor.Dialogs
                 for (int i = 0; i < columns; ++i)
                 {
                     int tagwidth = tagWidths[i];
-                    int actualWidth = tagwidth >= 0 ? (int)(fraction * tagwidth) : -1 * tagwidth;
+                    int actualWidth = tagwidth > 0 ? (int)(fraction * tagwidth) : -1 * tagwidth;
                     colWidths[i] = actualWidth;
                     total += actualWidth;
                 }
@@ -308,7 +308,7 @@ namespace MobiusEditor.Dialogs
                     {
                         for (int i = 0; i < columns; ++i)
                         {
-                            if (colWidths[i] > 0)
+                            if (tagWidths[i] > 0 && colWidths[i] > 0)
                             {
                                 colWidths[i]--;
                                 diff--;
@@ -339,6 +339,7 @@ namespace MobiusEditor.Dialogs
             }
             finally
             {
+                listView.EndUpdate();
                 resizing = false;
             }
         }

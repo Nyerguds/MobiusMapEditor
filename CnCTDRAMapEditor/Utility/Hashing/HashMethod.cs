@@ -28,6 +28,23 @@ namespace MobiusEditor.Utility.Hashing
             };
 
         /// <summary>
+        /// Returns the display name of the hashing method.
+        /// </summary>
+        /// <returns>The display name of the hashing method.</returns>
+        public abstract string DisplayName { get; }
+
+        /// <summary>
+        /// Returns the short name of the hashing method.
+        /// </summary>
+        /// <returns>The short name of the hashing method.</returns>
+        public abstract string SimpleName { get; }
+
+        /// <summary>
+        /// Allows supporting methods that are not case insensitive.
+        /// </summary>
+        public virtual bool NeedsUpperCase { get { return true; } }
+
+        /// <summary>
         /// The hashing method. Assumes that the input is already formatted to the correct case according to NeedsUpperCase.
         /// </summary>
         /// <param name="name">String to hash.</param>
@@ -40,26 +57,6 @@ namespace MobiusEditor.Utility.Hashing
         /// <param name="name">String to hash, as byte array.</param>
         /// <returns>The hashed value.</returns>
         public abstract uint GetNameIdCorrectCase(byte[] data);
-
-        /// <summary>
-        /// Returns the display name of the hashing method.
-        /// </summary>
-        /// <returns>The display name of the hashing method.</returns>
-        public abstract string GetDisplayName();
-
-        /// <summary>
-        /// Returns the short name of the hashing method.
-        /// </summary>
-        /// <returns>The short name of the hashing method.</returns>
-        public abstract string GetSimpleName();
-
-        /// <summary>
-        /// Allows supporting methods that are not case insensitive.
-        /// </summary>
-        public virtual bool NeedsUpperCase
-        {
-            get { return true; }
-        }
 
         public uint GetNameId(string name)
         {
@@ -80,7 +77,7 @@ namespace MobiusEditor.Utility.Hashing
 
         public override string ToString()
         {
-            return GetDisplayName();
+            return DisplayName;
         }
 
         public static HashMethod[] GetRegisteredMethods()

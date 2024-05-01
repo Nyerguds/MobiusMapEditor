@@ -17,7 +17,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -67,7 +66,7 @@ namespace MobiusEditor.Utility
                     case FileType.INI:
                     case FileType.BIN:
                         string iniPath = fileType == FileType.INI ? path : Path.ChangeExtension(path, ".ini");
-                        Byte[] bytes = File.ReadAllBytes(path);
+                        byte[] bytes = File.ReadAllBytes(path);
                         iniContents = encDOS.GetString(bytes);
                         break;
                     case FileType.MEG:
@@ -159,7 +158,7 @@ namespace MobiusEditor.Utility
         /// </param>
         /// <param name="lineEnd">Bytes to use as line ends when writing the data to the writer.</param>
         public static void WriteMultiEncoding(string[] iniText, BinaryWriter writer, Encoding normalEncoding,
-            Encoding altEncoding, (string section, string key)[] toAltEncode, Byte[] lineEnd)
+            Encoding altEncoding, (string section, string key)[] toAltEncode, byte[] lineEnd)
         {
             Dictionary<string, bool> inSection = new Dictionary<string, bool>();
             foreach ((string section, string key) in toAltEncode)
@@ -236,7 +235,7 @@ namespace MobiusEditor.Utility
                     {
                         for (int l = 'a'; l <= 'z'; ++l)
                         {
-                            name = String.Concat((char)i, (char)j, (char)k, (char)l);
+                            name = string.Concat((char)i, (char)j, (char)k, (char)l);
                             if (!currentList.Contains(name, StringComparer.OrdinalIgnoreCase) && !reservedNames.Contains(name, StringComparer.OrdinalIgnoreCase))
                             {
                                 return name;
@@ -257,7 +256,7 @@ namespace MobiusEditor.Utility
         /// <returns></returns>
         public static string TrimRemarks(string value, bool trimResult, params char[] cutFrom)
         {
-            if (String.IsNullOrEmpty(value))
+            if (string.IsNullOrEmpty(value))
                 return value;
             int index = value.IndexOfAny(cutFrom);
             if (index == -1)
@@ -333,7 +332,7 @@ namespace MobiusEditor.Utility
         public static string AddRemarks(string value, string defaultVal, bool trimSource, IEnumerable<string> valuesToDetect, string remarkToAdd, bool negativeCheck, out bool changed)
         {
             changed = false;
-            if (String.IsNullOrEmpty(value))
+            if (string.IsNullOrEmpty(value))
                 return defaultVal;
             string valTrimmed = value;
             if (trimSource)
@@ -359,16 +358,16 @@ namespace MobiusEditor.Utility
             return value;
         }
 
-        public static string FilterToExisting(string value, string defaultVal, Boolean trimSource, IEnumerable<string> existing)
+        public static string FilterToExisting(string value, string defaultVal, bool trimSource, IEnumerable<string> existing)
         {
-            if (String.IsNullOrEmpty(value))
+            if (string.IsNullOrEmpty(value))
                 return defaultVal;
             string valTrimmed = value;
             if (trimSource)
                 valTrimmed = valTrimmed.Trim();
             foreach (string val in existing)
             {
-                if ((val ?? String.Empty).Trim().Equals(value, StringComparison.InvariantCultureIgnoreCase))
+                if ((val ?? string.Empty).Trim().Equals(value, StringComparison.InvariantCultureIgnoreCase))
                 {
                     return value;
                 }
@@ -395,6 +394,112 @@ namespace MobiusEditor.Utility
             if (i < sb.Length - 1)
                 sb.Length = i + 1;
             return sb;
+        }
+
+        /// <summary>
+        /// Returns a string array that contains the substrings in this string that are
+        /// delimited by a specified Unicode character. A parameter specifies whether
+        /// to return empty array elements.
+        /// </summary>
+        /// <param name="str">Source string</param>
+        /// <param name="separator">A Unicode character that delimits the substrings in this string</param>
+        /// <param name="options">Specify System.StringSplitOptions.RemoveEmptyEntries to omit empty array elements from the array returned, or System.StringSplitOptions.None to include empty array elements in the array returned.</param>
+        /// <returns>An array whose elements contain the substrings in this string that are delimited by one or more characters in separator.</returns>
+        /// <exception cref="System.ArgumentException">options is not one of the System.StringSplitOptions values.</exception>
+        public static string[] Split(this string str, char separator, StringSplitOptions options)
+        {
+            return str.Split(new char[] { separator }, options);
+        }
+
+        /// <summary>
+        /// Returns a string array that contains the substrings in this string that are delimited
+        /// by a specified Unicode character. Additional parameters specify whether to return
+        /// empty array elements, and whether to do a simple whitespace trim on all elements.
+        /// If trimming and removing empty elements are both enabled, elements found to be empty
+        /// after the trim are also removed.
+        /// </summary>
+        /// <param name="str">Source string</param>
+        /// <param name="separator">A Unicode character that delimits the substrings in this string</param>
+        /// <param name="options">Specify System.StringSplitOptions.RemoveEmptyEntries to omit empty array elements from the array returned, or System.StringSplitOptions.None to include empty array elements in the array returned.</param>
+        /// <param name="trimContents">True to trim the contents of each split part.</param>
+        /// <returns>An array whose elements contain the substrings in this string that are delimited by one or more characters in separator.</returns>
+        /// <exception cref="System.ArgumentException">options is not one of the System.StringSplitOptions values.</exception>
+        public static string[] Split(this string str, char separator, StringSplitOptions options, bool trimContents)
+        {
+            return str.Split(new char[] { separator }, options, trimContents);
+        }
+
+        /// <summary>
+        /// Returns a string array that contains the substrings in this string that are delimited
+        /// by a specified Unicode character. A simple whitespace trim can be done on all elements.
+        /// </summary>
+        /// <param name="str">Source string</param>
+        /// <param name="separator">A Unicode character that delimits the substrings in this string</param>
+        /// <param name="trimContents">True to trim the contents of each split part.</param>
+        /// <returns>An array whose elements contain the substrings in this string that are delimited by one or more characters in separator.</returns>
+        /// <exception cref="System.ArgumentException">options is not one of the System.StringSplitOptions values.</exception>
+        public static string[] Split(this string str, char separator, bool trimContents)
+        {
+            return str.Split(new char[] { separator }, StringSplitOptions.None, trimContents);
+        }
+
+        /// <summary>
+        /// Returns a string array that contains the substrings in this string that are delimited by
+        /// Unicode characters specified in the given array.  A simple whitespace trim can be done
+        /// on all elements.
+        /// </summary>
+        /// <param name="str">Source string</param>
+        /// <param name="separators">An array of Unicode characters that delimits the substrings in this string</param>
+        /// <param name="trimContents">True to trim the contents of each split part.</param>
+        /// <returns>An array whose elements contain the substrings in this string that are delimited by one or more characters in separator.</returns>
+        /// <exception cref="System.ArgumentException">options is not one of the System.StringSplitOptions values.</exception>
+        public static string[] Split(this string str, char[] separators, bool trimContents)
+        {
+            return str.Split(separators, StringSplitOptions.None, trimContents);
+        }
+
+        /// <summary>
+        ///     Returns a string array that contains the substrings in this string that are delimited by
+        ///     Unicode characters specified in the given array. Additional parameters specify whether to
+        ///     return empty array elements, and whether to do a simple whitespace trim on all elements.
+        ///     If trimming and removing empty elements are both enabled, elements found to be empty
+        ///     after the trim are also removed.
+        /// </summary>
+        /// <param name="str">Source string</param>
+        /// <param name="separators">An array of Unicode characters that delimits the substrings in this string</param>
+        /// <param name="options">Specify System.StringSplitOptions.RemoveEmptyEntries to omit empty array elements from the array returned, or System.StringSplitOptions.None to include empty array elements in the array returned.</param>
+        /// <param name="trimContents">True to trim the contents of each split part. In combination with RemoveEmptyEntries this will also remove any entries that become empty after trimming.</param>
+        /// <returns>An array whose elements contain the substrings in this string that are delimited by one or more characters in separator.</returns>
+        /// <exception cref="System.ArgumentException">options is not one of the System.StringSplitOptions values.</exception>
+        public static string[] Split(this string str, char[] separators, StringSplitOptions options, bool trimContents)
+        {
+            string[] split = str.Split(separators, options);
+            if (!trimContents)
+            {
+                return split;
+            }
+            if (options != StringSplitOptions.RemoveEmptyEntries)
+            {
+                for (int i = 0; i < split.Length; i++)
+                    split[i] = split[i].Trim();
+                return split;
+            }
+            // code to remove additional empty entries after trim.
+            int actualIndex = 0;
+            for (int i = 0; i < split.Length; i++)
+            {
+                split[actualIndex] = split[i].Trim();
+                if (split[actualIndex].Length > 0)
+                    actualIndex++;
+            }
+            if (actualIndex < split.Length)
+            {
+                string[] split2 = new string[actualIndex];
+                if (actualIndex > 0)
+                    Array.Copy(split, split2, actualIndex);
+                split = split2;
+            }
+            return split;
         }
 
         public static Rectangle GetBoundingBoxCenter(int imgWidth, int imgHeight, int maxWidth, int maxHeight)
@@ -463,39 +568,39 @@ namespace MobiusEditor.Utility
         /// <param name="argex">The ArgumentException to retrieve the message from</param>
         /// <param name="fallback">True to construct a fallback message if the error message is empty.</param>
         /// <returns>The actual message given when the ArgumentException was created.</returns>
-        public static string RecoverArgExceptionMessage(ArgumentException argex, Boolean fallback)
+        public static string RecoverArgExceptionMessage(ArgumentException argex, bool fallback)
         {
             if (argex == null)
                 return null;
             SerializationInfo info = new SerializationInfo(typeof(ArgumentException), new FormatterConverter());
             argex.GetObjectData(info, new StreamingContext(StreamingContextStates.Clone));
             string message = info.GetString("Message");
-            if (!String.IsNullOrEmpty(message))
+            if (!string.IsNullOrEmpty(message))
                 return message;
             if (!fallback)
-                return String.Empty;
+                return string.Empty;
             // Fallback: if no message, provide basic info.
-            if (String.IsNullOrEmpty(argex.ParamName))
-                return String.Empty;
+            if (string.IsNullOrEmpty(argex.ParamName))
+                return string.Empty;
             if (argex is ArgumentNullException)
-                return String.Format("\"{0}\" is null.", argex.ParamName);
+                return string.Format("\"{0}\" is null.", argex.ParamName);
             if (argex is ArgumentOutOfRangeException)
-                return String.Format("\"{0}\" out of range.", argex.ParamName);
+                return string.Format("\"{0}\" out of range.", argex.ParamName);
             return argex.ParamName;
         }
 
         public static bool[,] GetMaskFromString(int width, int height, string maskString, char clearChar, params char[] ignoreChars)
         {
             bool[,] mask = new bool[height, width];
-            if (String.IsNullOrWhiteSpace(maskString))
+            if (string.IsNullOrWhiteSpace(maskString))
             {
                 mask.Clear(true);
                 return mask;
             }
             if (ignoreChars.Length > 0)
             {
-                Regex clearIgnore = new Regex("[" + Regex.Escape(new String(ignoreChars)) + "]+", RegexOptions.IgnoreCase);
-                maskString = clearIgnore.Replace(maskString, String.Empty);
+                Regex clearIgnore = new Regex("[" + Regex.Escape(new string(ignoreChars)) + "]+", RegexOptions.IgnoreCase);
+                maskString = clearIgnore.Replace(maskString, string.Empty);
             }
             int charIndex = 0;
             for (int y = 0; y < height; ++y)
@@ -539,11 +644,11 @@ namespace MobiusEditor.Utility
         /// <param name="borderPercentage">Percentage of the width/height of the cell to ignore as outer border.</param>
         /// <param name="minAlpha">Minimum alpha value to consider a pixel to be opaque.</param>
         /// <returns></returns>
-        public static Boolean[,] FindOpaqueCells(Bitmap image, Size size, int minPercentage, int borderPercentage, int minAlpha)
+        public static bool[,] FindOpaqueCells(Bitmap image, Size size, int minPercentage, int borderPercentage, int minAlpha)
         {
             int width = image.Width;
             int height = image.Height;
-            Boolean[,] cellEvaluation = new bool[size.Height, size.Width];
+            bool[,] cellEvaluation = new bool[size.Height, size.Width];
             int fullCellWidth = width / size.Width;
             int fullCellHeight = height / size.Height;
             int cellBorderX = fullCellWidth * borderPercentage / 100;
@@ -560,7 +665,7 @@ namespace MobiusEditor.Utility
                     int cellPixels = cellWidth * cellHeight;
                     int threshold = cellPixels * minPercentage / 100;
                     int stride;
-                    Byte[] data = ImageUtils.GetImageData(image, out stride, ref cellRect, PixelFormat.Format32bppArgb, true);
+                    byte[] data = ImageUtils.GetImageData(image, out stride, ref cellRect, PixelFormat.Format32bppArgb, true);
                     int opaquePixels = 0;
                     int lineAddr = 0;
                     for (int cellY = 0; cellY < cellWidth; ++cellY)
@@ -666,14 +771,14 @@ namespace MobiusEditor.Utility
 
         public static Regex FileMaskToRegex(string fileMask, bool ignoreCase)
         {
-            String convertedMask = "^" + Regex.Escape(fileMask).Replace("\\*", ".*").Replace("\\?", ".") + "$";
+            string convertedMask = "^" + Regex.Escape(fileMask).Replace("\\*", ".*").Replace("\\?", ".") + "$";
             return new Regex(convertedMask, ignoreCase ? RegexOptions.IgnoreCase : RegexOptions.None);
         }
 
         public static void CopyStream(Stream input, Stream output)
         {
-            Byte[] buffer = new Byte[0x8000];
-            Int32 read;
+            byte[] buffer = new byte[0x8000];
+            int read;
             while ((read = input.Read(buffer, 0, buffer.Length)) > 0)
             {
                 output.Write(buffer, 0, read);

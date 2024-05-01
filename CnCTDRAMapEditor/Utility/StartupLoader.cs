@@ -177,7 +177,7 @@ namespace MobiusEditor.Utility
             return File.Exists(Path.Combine(basePath, "DATA", "CONFIG.MEG"));
         }
 
-        public static bool LoadEditorRemastered(String runPath, Dictionary<GameType, string[]> modPaths)
+        public static bool LoadEditorRemastered(String runPath, Dictionary<GameType, string[]> modPaths, MixFileNameGenerator romfis)
         {
             // Initialize megafiles
             Dictionary<GameType, String> gameFolders = new Dictionary<GameType, string>();
@@ -185,7 +185,7 @@ namespace MobiusEditor.Utility
             {
                 gameFolders.Add(gi.GameType, gi.ClassicFolderRemaster);
             }
-            MegafileManager mfm = new MegafileManager(Path.Combine(runPath, Globals.MegafilePath), runPath, modPaths, gameFolders);
+            MegafileManager mfm = new MegafileManager(Path.Combine(runPath, Globals.MegafilePath), runPath, modPaths, romfis, gameFolders);
             var megafilesLoaded = true;
             megafilesLoaded &= mfm.LoadArchive("CONFIG.MEG");
             megafilesLoaded &= mfm.LoadArchive("TEXTURES_COMMON_SRGB.MEG");
@@ -303,7 +303,7 @@ namespace MobiusEditor.Utility
             return DEFAULT_CULTURE;
         }
 
-        public static bool LoadEditorClassic(string applicationPath, Dictionary<GameType, string[]> modpaths)
+        public static bool LoadEditorClassic(string applicationPath, Dictionary<GameType, string[]> modpaths, MixFileNameGenerator romfis)
         {
             // The system should scan all mix archives for known filenames of other mix archives so it can do recursive searches.
             // Mix files should be given in order or depth, so first give ones that are in the folder, then ones that may occur inside others.
@@ -335,7 +335,7 @@ namespace MobiusEditor.Utility
                 gameFolders.Add(gi, path);
             }
             // Check files
-            MixfileManager mfm = new MixfileManager(applicationPath, gameFolders, modpaths);
+            MixfileManager mfm = new MixfileManager(applicationPath, romfis, gameFolders, modpaths);
             List<string> loadErrors = new List<string>();
             List<string> fileLoadErrors = new List<string>();
             foreach (GameType gi in gameTypes)

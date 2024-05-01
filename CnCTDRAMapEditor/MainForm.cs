@@ -45,7 +45,7 @@ namespace MobiusEditor
 
         const string MAP_UNTITLED = "Untitled";
         private Dictionary<string, Bitmap> theaterIcons = new Dictionary<string, Bitmap>();
-        private Dictionary<uint, string> generatedMixIds = null;
+        private MixFileNameGenerator romfis = null;
 
         private static readonly ToolType[] toolTypes;
 
@@ -125,10 +125,10 @@ namespace MobiusEditor
             toolTypes = ((IEnumerable<ToolType>)Enum.GetValues(typeof(ToolType))).Where(t => t != ToolType.None).ToArray();
         }
 
-        public MainForm(String fileToOpen)
+        public MainForm(String fileToOpen, MixFileNameGenerator romfis)
         {
             this.filename = fileToOpen;
-
+            this.romfis = romfis;
             InitializeComponent();
             mapPanel.SmoothScale = Globals.MapSmoothScale;
             // Show on monitor that the mouse is in, since that's where the user is probably looking.
@@ -490,12 +490,6 @@ namespace MobiusEditor
                 Debug.WriteLine(name);
             }
             //*/
-            string mixPath = Path.Combine(Program.ApplicationPath, "mixcontent.ini");
-            MixFileNameGenerator fng = new MixFileNameGenerator(mixPath);
-            foreach (MixEntry entry in fng.GetAllNameIds())
-            {
-                Debug.WriteLine(String.Format("{0:X8} : {1} - {2}", entry.Id, entry.Name, entry.Description ?? String.Empty));
-            }
         }
 
         private void OpenFile()
@@ -553,35 +547,16 @@ namespace MobiusEditor
             {
                 return null;
             }
-            try
-            {
-                // attempt to open, nothing else.
-                using (MixFile mixfile = new MixFile(selectedFile)) { /* do nothing. */ }
-            }
-            catch
+            if (!MixFile.CheckValidMix(selectedFile, true))
             {
                 // not a mix file
                 return selectedFile;
-            }
-            if (generatedMixIds == null)
-            {
-                HashRol1 hasher = new HashRol1();
-                generatedMixIds = new Dictionary<uint, string>();
-                foreach (GameInfo gic in GameTypeFactory.GetGameInfos())
-                {
-                    foreach (string filename in gic.GetGameFiles())
-                    {
-                        uint hash = hasher.GetNameIdCorrectCase(filename.ToUpperInvariant());
-                        if (!generatedMixIds.ContainsKey(hash))
-                            generatedMixIds.Add(hash, filename.ToLowerInvariant());
-                    }
-                }
             }
             string toOpen = null;
             try
             {
                 using (MixFile mixfile = new MixFile(selectedFile))
-                using (OpenFromMixDialog mixDialog = new OpenFromMixDialog(mixfile, generatedMixIds))
+                using (OpenFromMixDialog mixDialog = new OpenFromMixDialog(mixfile, romfis))
                 {
                     mixDialog.StartPosition = FormStartPosition.CenterParent;
                     if (mixDialog.ShowDialog() == DialogResult.OK)

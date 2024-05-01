@@ -30,6 +30,7 @@ namespace MobiusEditor
             EnableDpiAwareness = Properties.Settings.Default.EnableDpiAwareness;
             CheckUpdatesOnStartup = Properties.Settings.Default.CheckUpdatesOnStartup;
             ClassicNoRemasterLogic = Properties.Settings.Default.ClassicNoRemasterLogic;
+            MixContentInfoFile = Properties.Settings.Default.MixContentInfoFile;
             // Defaults
             BoundsObstructFill = Properties.Settings.Default.DefaultBoundsObstructFill;
             TileDragProtect = Properties.Settings.Default.DefaultTileDragProtect;
@@ -77,12 +78,14 @@ namespace MobiusEditor
         public const int PixelWidth = 24;
         public const int PixelHeight = 24;
 
-        public static string EditorLanguage { get; set; }
 
         public static bool UseClassicFiles { get; set; }
-        public static bool ClassicNoRemasterLogic { get; set; }
+        public static string EditorLanguage { get; set; }
         public static bool EnableDpiAwareness { get; set; }
         public static bool CheckUpdatesOnStartup { get; set; }
+        public static bool ClassicNoRemasterLogic { get; set; }
+        public static string MixContentInfoFile { get; set; }
+
         public static bool BoundsObstructFill { get; set; }
         public static bool TileDragProtect { get; set; }
         public static bool TileDragRandomize { get; set; }

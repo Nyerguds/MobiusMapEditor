@@ -22,6 +22,9 @@ namespace MobiusEditor.Utility.Hashing
 {
     public class HashCrc32 : HashMethod
     {
+        public override String DisplayName { get { return "CRC32 (TS/RA2)"; } }
+        public override String SimpleName { get { return "CRC32"; } }
+
         public override UInt32 GetNameIdCorrectCase(String name)
         {
             Byte[] data = Encoding.ASCII.GetBytes(name);
@@ -46,17 +49,6 @@ namespace MobiusEditor.Utility.Hashing
                 data = data2;
             }
             return ParallelCRC.Compute(new ArraySegment<Byte>(data));
-        }
-
-
-        public override String GetDisplayName()
-        {
-            return "CRC32 (TS/RA2)";
-        }
-
-        public override String GetSimpleName()
-        {
-            return "CRC32";
         }
     }
 }

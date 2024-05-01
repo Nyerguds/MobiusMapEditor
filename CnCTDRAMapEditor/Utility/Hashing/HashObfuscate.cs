@@ -18,6 +18,9 @@ namespace MobiusEditor.Utility.Hashing
 {
     public class HashObfuscate : HashRol
     {
+        public override string DisplayName { get { return "Obsfuscate (hidden options)"; } }
+        public override string SimpleName { get { return "Obsfuscate"; } }
+
         private static bool[] isGraph = new bool[256];
 
         static HashObfuscate()
@@ -171,15 +174,6 @@ namespace MobiusEditor.Utility.Hashing
 			**	Return the final code value.
 			*/
             return (uint)code;
-        }
-
-        public override string GetDisplayName()
-        {
-            return "Obsfuscate (hidden options)";
-        }
-        public override string GetSimpleName()
-        {
-            return "Obsfuscate";
         }
     }
 }

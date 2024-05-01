@@ -17,6 +17,8 @@ namespace MobiusEditor.Utility.Hashing
 {
     public class HashRor : HashMethod
     {
+        public override string DisplayName { get { return "ROR (Lands of Lore 3)"; } }
+        public override string SimpleName { get { return "ROR"; } }
 
         public override uint GetNameIdCorrectCase(byte[] data)
         {
@@ -38,16 +40,6 @@ namespace MobiusEditor.Utility.Hashing
                 id = (uint)((name[i] - 48) & 63) + rotatedValue;
             }
             return id;
-        }
-
-        public override string GetDisplayName()
-        {
-            return "ROR (Lands of Lore 3)";
-        }
-
-        public override string GetSimpleName()
-        {
-            return "ROR";
         }
     }
 }

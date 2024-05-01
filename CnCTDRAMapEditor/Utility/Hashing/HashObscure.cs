@@ -18,7 +18,8 @@ namespace MobiusEditor.Utility.Hashing
 {
     public class HashObscure : HashMethod
     {
-        private const UInt32 OBSCURE_MAGIC_NUM = 0x516150;
+        public override String DisplayName { get { return "Poor Man's (SETUP.MIX)"; } }
+        public override String SimpleName { get { return "Obscure"; } }
 
         public override UInt32 GetNameIdCorrectCase(String name)
         {
@@ -41,16 +42,6 @@ namespace MobiusEditor.Utility.Hashing
             Byte v13 = data[6]; // [sp+22h] [bp-FEh]@3
             Int64 v3 = v13 + 0xA * (v12 + 0xA * (v11 + 0xA * (v10 + 0xA * (v9 + 0xA * v8)))) - 0x516150;
             return (UInt32)v3;
-        }
-
-        public override String GetDisplayName()
-        {
-            return "Poor Man's (SETUP.MIX)";
-        }
-
-        public override String GetSimpleName()
-        {
-            return "Obscure";
         }
     }
 }

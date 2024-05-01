@@ -43,6 +43,7 @@ namespace MobiusEditor.Utility
         }
 
         private string applicationPath;
+        private MixFileNameGenerator romfis;
         Dictionary<GameType, string[]> modPathsPerGame;
         private Dictionary<GameType, string> gameFolders;
         private Dictionary<GameType, List<MixInfo>> gameArchives;
@@ -56,9 +57,10 @@ namespace MobiusEditor.Utility
 
         public TheaterType CurrentTheater { get; private set; }
 
-        public MixfileManager(string applicationPath, Dictionary<GameType, string> gameFolders, Dictionary<GameType, string[]> modPaths)
+        public MixfileManager(string applicationPath, MixFileNameGenerator romfis, Dictionary<GameType, string> gameFolders, Dictionary<GameType, string[]> modPaths)
         {
             this.applicationPath = applicationPath ?? Path.GetFullPath(".");
+            this.romfis = romfis;
             this.gameFolders = gameFolders;
             if (gameFolders != null)
             {
@@ -394,7 +396,7 @@ namespace MobiusEditor.Utility
                 {
                     mixFile = new MixFile(localPath, mixToAdd.CanUseNewFormat);
                 }
-                catch (Exception ex)
+                catch (MixParseException)
                 {
                     return false;
                 }
@@ -419,6 +421,10 @@ namespace MobiusEditor.Utility
             }
             if (mixFile != null)
             {
+                if (romfis != null)
+                {
+                    romfis.IdentifyMixFile(mixFile);
+                }
                 readMixFiles.Add(mixName, mixFile);
             }
             return mixFile != null;

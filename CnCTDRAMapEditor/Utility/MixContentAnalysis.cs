@@ -18,7 +18,7 @@ namespace MobiusEditor.Utility
         /// <summary>Maximum file size that gets processed by byte array (5 MiB).</summary>
         private const uint maxProcessed = 0x500000;
 
-        public static List<MixEntry> AnalyseFiles(MixFile current, Dictionary<uint, MixEntry> encodedFilenames, bool preferMissions, Func<bool> checkAbort)
+        public static List<MixEntry> AnalyseFiles(MixFile current, bool preferMissions, Func<bool> checkAbort)
         {
             List<uint> filesList = current.FileIds.ToList();
             List<MixEntry> fileInfo = new List<MixEntry>();
@@ -100,23 +100,9 @@ namespace MobiusEditor.Utility
                     }
                     string name = null;
                     //uint fileIdm1 = fileId == 0 ? 0 : fileId - 1;
-                    if (xccInfoFilenames != null && xccInfoFilenames.TryGetValue(fileId, out name))
+                    if (mixInfo.Name == null && xccInfoFilenames != null && xccInfoFilenames.TryGetValue(fileId, out name))
                     {
                         mixInfo.Name = name;
-                    }
-                    MixEntry mi;
-                    if (encodedFilenames.TryGetValue(fileId, out mi))
-                    {
-                        if (name == null)
-                        {
-                            mixInfo.Name = mi.Name;
-                            mixInfo.Description = mi.Description;
-                        }
-                        else if (name.Equals(mi.Name, StringComparison.OrdinalIgnoreCase))
-                        {
-                            // Don't apply description if xcc info name doesn't match encodedFilenames entry.
-                            mixInfo.Description = mi.Description;
-                        }
                     }
                     fileInfo.Add(mixInfo);
                     using (Stream file = current.OpenFile(fileId))
@@ -193,11 +179,14 @@ namespace MobiusEditor.Utility
                 int mixContents = -1;
                 bool encrypted = false;
                 bool newType = false;
-                using (MixFile mf = new MixFile(source, mixInfo))
+                if (MixFile.CheckValidMix(source, mixInfo, true))
                 {
-                    mixContents = mf.FileCount;
-                    encrypted = mf.HasEncryption;
-                    newType = mf.IsNewFormat;
+                    using (MixFile mf = new MixFile(source, mixInfo))
+                    {
+                        mixContents = mf.FileCount;
+                        encrypted = mf.HasEncryption;
+                        newType = mf.IsNewFormat;
+                    }
                 }
                 if (mixContents > -1)
                 {
@@ -336,16 +325,16 @@ namespace MobiusEditor.Utility
                             case MixContentType.MapTd:
                                 houses = TiberianDawn.HouseTypes.GetTypes();
                                 theaters = TiberianDawn.TheaterTypes.GetTypes();
-                                mixInfo.Info = "TD Map";
+                                mixInfo.Info = "Tiberian Dawn Map";
                                 break;
                             case MixContentType.MapSole:
                                 theaters = SoleSurvivor.TheaterTypes.GetTypes();
-                                mixInfo.Info = "Sole Map";
+                                mixInfo.Info = "Sole Survivor Map";
                                 break;
                             case MixContentType.MapRa:
                                 houses = RedAlert.HouseTypes.GetTypes();
                                 theaters = RedAlert.TheaterTypes.GetTypes();
-                                mixInfo.Info = "RA Map";
+                                mixInfo.Info = "Red Alert Map";
                                 break;
                         }
                         TheaterType theater = theaters.FirstOrDefault(th => th.Name.Equals(mapTheater, StringComparison.OrdinalIgnoreCase));
@@ -460,7 +449,6 @@ namespace MobiusEditor.Utility
             {
                 return false;
             }
-            // File is either above 5 MB, or none of the above types.
             // AUD file:
             // 00  Int16 frequency
             // 02  Int32 Size
@@ -479,13 +467,14 @@ namespace MobiusEditor.Utility
             bool is16Bit = (flags & 2) != 0;
             int compression = header[11];
             int ptr = 12;
-            // Gonna need at least one DEAF sequence to confirm it's AUD.
+            // Gonna need at least one chunk to confirm it's AUD, so don't accept 0 as size.
             if (fileSize == 0 || fileLength != fileSize + ptr || (compression != 01 && compression != 99))
             {
                 return false;
             }
             int chunks = 0;
             int outputLength = 0;
+            // This hops from chunk to chunk and builds up the total uncompressed size to check if the aud is valid.
             while (ptr < fileLength)
             {
                 if (ptr + 8 > fileLength)
@@ -498,6 +487,7 @@ namespace MobiusEditor.Utility
                 int chunkLength = ArrayUtils.ReadInt16FromByteArrayLe(chunk, 0);
                 int chunkOutputLength = ArrayUtils.ReadInt16FromByteArrayLe(chunk, 2);
                 int id = ArrayUtils.ReadInt32FromByteArrayLe(chunk, 4);
+                // "DEAF", for an audio format. Someone had fun with that file design.
                 if (id != 0x0000DEAF)
                 {
                     return false;
@@ -505,6 +495,11 @@ namespace MobiusEditor.Utility
                 chunks++;
                 outputLength += chunkOutputLength;
                 ptr += 8 + chunkLength;
+                if (ptr > fileLength)
+                {
+                    // Current chunk exceeds file bounds; that's an error.
+                    return false;
+                }
             }
             if (uncompressedSize != outputLength)
             {

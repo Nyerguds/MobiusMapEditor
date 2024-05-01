@@ -35,30 +35,14 @@ namespace MobiusEditor.Utility
             SideInis /**/ = 1 << 2,
         }
 
-        private class GameDefinition
-        {
-            public string Name { get; private set; }
-            public Dictionary<string, FileNameGeneratorEntry[]> TypeDefinitions { get; set; }
-            public string[] Files { get; set; }
-            public Dictionary<string, string> FileDescriptions { get; set; }
-            public HashMethod Hasher { get; set; }
-            public string[][] TheaterInfo { get; set; }
-            public string[][] ModTheaterInfo { get; set; }
-            public bool HasMixNesting { get; set; }
-            public bool NewMixFormat { get; set; }
-
-            public GameDefinition(string name)
-            {
-                this.Name = name;
-            }
-        }
-
         private const string parseError = "Error parsing ini: section {0} not found.";
         private const string gamesHeader = "Games";
 
-        private static readonly Dictionary<string, HashMethod> hashMethods = HashMethod.GetRegisteredMethods().ToDictionary(m => m.GetSimpleName(), StringComparer.OrdinalIgnoreCase);
+        private static readonly Dictionary<string, HashMethod> hashMethods = HashMethod.GetRegisteredMethods().ToDictionary(m => m.SimpleName, StringComparer.OrdinalIgnoreCase);
         private static readonly HashMethod defaultHashMethod = HashMethod.GetRegisteredMethods().FirstOrDefault();
 
+
+        /// <summary>input-order version of the keys in <see cref="gameInfo"/>.</summary>
         private List<string> games = new List<string>();
         private Dictionary<string, GameDefinition> gameInfo = new Dictionary<string, GameDefinition>();
 
@@ -154,9 +138,9 @@ namespace MobiusEditor.Utility
                     continue;
                 }
                 // Read game info
-                string[] externalFiles = (gameSection.TryGetValue("ContentIni") ?? String.Empty).Split(',');
-                string[] typesSections = (gameSection.TryGetValue("FileTypes") ?? String.Empty).Split(',');
-                string filesList = gameSection.TryGetValue("FilesSection");
+                string[] externalFiles = (gameSection.TryGetValue("ContentInis") ?? String.Empty).Split(',', true);
+                string[] typesSections = (gameSection.TryGetValue("FileTypes") ?? String.Empty).Split(',', true);
+                string[] filesSections = (gameSection.TryGetValue("FilesSections") ?? String.Empty).Split(',', true);
                 string[][] theaterInfos = GetTheaterInfo(gameSection, "Theaters", true);
                 string[][] modTheaterInfos = GetTheaterInfo(gameSection, "ModTheaters", false);
                 string hasher = gameSection.TryGetValue("Hasher");
@@ -165,7 +149,8 @@ namespace MobiusEditor.Utility
                 bool hasMixNesting = boolConv.ConvertFrom(gameSection.TryGetValue("HasMixNesting"));
                 HashMethod hashMethod;
                 hashMethods.TryGetValue(hasher, out hashMethod);
-                if (String.IsNullOrEmpty(filesList))
+                // no files sections specified
+                if (filesSections.All(fs => String.IsNullOrEmpty(fs)))
                 {
                     continue;
                 }
@@ -177,6 +162,7 @@ namespace MobiusEditor.Utility
                     if (additionalInis != null && additionalInis.TryGetValue(ini, out extraIni))
                     {
                         gameIniFiles.Add(extraIni);
+                        continue;
                     }
                     if (validFolder)
                     {
@@ -201,23 +187,39 @@ namespace MobiusEditor.Utility
                 gameIniFiles.Add(iniFile);
                 // Get type definitions for game
                 Dictionary<string, FileNameGeneratorEntry[]> typeDefsForGame = GetTypeDefinitions(typesSections, gameIniFiles);
-                INISection gameFilesSection = null;
-                foreach (INI ini in gameIniFiles)
+                List<INISection> gameFilesSections = new List<INISection>();
+                Dictionary<string, string> gameDescriptions = new Dictionary<string, string>();
+                List<string> gameFiles = new List<string>();
+                foreach (string filesList in filesSections)
                 {
-                    gameFilesSection = ini.Sections[filesList];
-                    if (gameFilesSection != null)
+                    foreach (INI ini in gameIniFiles)
                     {
+                        INISection gameFilesSection = ini.Sections[filesList];
+                        if (gameFilesSection == null)
+                        {
+                            continue;
+                        }
+                        foreach (KeyValuePair<string, string> iniEntry in gameFilesSection)
+                        {
+                            if (!gameDescriptions.ContainsKey(iniEntry.Key))
+                            {
+                                gameFiles.Add(iniEntry.Key);
+                                gameDescriptions.Add(iniEntry.Key, iniEntry.Value);
+                            }
+                        }
                         break;
                     }
                 }
-                if (gameFilesSection == null || gameFilesSection.Count == 0)
+                // don't add games with zero files.
+                if (gameFiles.Count == 0)
                 {
                     continue;
                 }
+                // Fill data into the GameDefinition object.
                 GameDefinition gd = new GameDefinition(gameString);
                 gd.TypeDefinitions = typeDefsForGame;
-                gd.Files = gameFilesSection.Keys.Select(kvp => kvp.Key).ToArray();
-                gd.FileDescriptions = gameFilesSection.Keys.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+                gd.FileInfoRaw = gameFiles;
+                gd.FileDescriptions = gameDescriptions;
                 gd.Hasher = hashMethod ?? defaultHashMethod;
                 gd.NewMixFormat = newMixFormat;
                 gd.HasMixNesting = hasMixNesting;
@@ -226,6 +228,8 @@ namespace MobiusEditor.Utility
                 {
                     gd.ModTheaterInfo = modTheaterInfos;
                 }
+                // All necessary info is inserted. Tell the GameDefinition object to generate the name ids.
+                gd.GenerateNameIds();
                 gameInfo.Add(gameString, gd);
                 games.Add(gameString);
             }
@@ -253,12 +257,12 @@ namespace MobiusEditor.Utility
                 string typeString;
                 while (!String.IsNullOrEmpty(typeString = typesSection.TryGetValue(index.ToString())))
                 {
+                    index++;
                     // Read first encountered one only.
                     if (typeDefinitions.ContainsKey(typeString))
                     {
                         continue;
                     }
-                    index++;
                     INISection typeSection = null;
                     foreach (INI iniFile in toScan)
                     {
@@ -297,173 +301,210 @@ namespace MobiusEditor.Utility
             {
                 return !generateDummy ? null : new string[][] { new[] { string.Empty } };
             }
-            string[] theatersList = theaters.Split(',');
+            string[] theatersList = theaters.Split(',', StringSplitOptions.RemoveEmptyEntries, true);
             string[][] theaterInfos = new string[theatersList.Length][];
             for (int i = 0; i < theatersList.Length; ++i)
             {
-                theaterInfos[i] = theatersList[i].Split(':');
+                theaterInfos[i] = theatersList[i].Split(':', StringSplitOptions.None, true);
             }
             return theaterInfos;
         }
 
+#if DEBUG
+        /// <summary>
+        /// Debug function. Don't use.
+        /// </summary>
+        /// <returns></returns>
         public IEnumerable<MixEntry> GetAllNameIds()
         {
             foreach (string game in games)
             {
-                foreach (MixEntry nameInfo in this.GetNameIds(game))
+                if (gameInfo.TryGetValue(game, out GameDefinition gd))
                 {
-                    yield return nameInfo;
-                }
-            }
-        }
-
-        public IEnumerable<MixEntry> GetAllNameIds(string preferred)
-        {
-            List<string> gameNames = Games;
-            gameNames.Remove(preferred);
-            gameNames.Insert(0, preferred);
-            foreach (string game in gameNames)
-            {
-                foreach (MixEntry nameInfo in this.GetNameIds(game))
-                {
-                    yield return nameInfo;
-                }
-            }
-        }
-
-        public static string IdentifyMixFile(MixFile mf, Dictionary<string, IEnumerable<MixEntry>> fileInfo, List<string> identifyOrder, bool deep)
-        {
-            List<string> gameNames;
-            if (identifyOrder == null)
-            {
-                gameNames = fileInfo.Keys.ToList();
-            }
-            else
-            {
-                gameNames = new List<string>();
-                // Add all that exist in given list
-                foreach (string game in identifyOrder)
-                {
-                    if (fileInfo.ContainsKey(game))
+                    foreach (MixEntry nameInfo in gd.FileInfo)
                     {
-                        gameNames.Add(game);
-                    }
-                }
-                // add all existing that aren't in the given list.
-                foreach (string game in fileInfo.Keys)
-                {
-                    if (!gameNames.Contains(game))
-                    {
-                        gameNames.Add(game);
+                        yield return nameInfo;
                     }
                 }
             }
-            int maxAmount = 0;
-            string maxGame = null;
-            foreach (string gameName in gameNames)
-            {
-                int amount = mf.Identify(fileInfo[gameName], deep, out _);
-                if (amount > maxAmount)
-                {
-                    maxAmount = amount;
-                    maxGame = gameName;
-                }
-            }
-            return maxGame;
+        }
+#endif
+
+        /// <summary>
+        /// Identify the files inside a mix file, using a specific game.
+        /// Generally used for embedded mix files, using the parent's game type.
+        /// </summary>
+        /// <param name="mixFile">mix file to insert the name info into.</param>
+        public string IdentifyMixFile(MixFile mixFile)
+        {
+            return IdentifyMixFile(mixFile, null);
         }
 
-        public Dictionary<string, IEnumerable<MixEntry>> GetAllGameInfo()
+        /// <summary>
+        /// Identify the files inside a mix file, and return the identifier for the detected game.
+        /// </summary>
+        /// <param name="mixFile">mix file to insert the name info into.</param>
+        /// <param name="forcedGameType">Game type identified on the parent; is always taken as primary type.</param>
+        /// <returns>The game type identified for this mix file.</returns>
+        public string IdentifyMixFile(MixFile mixFile, string forcedGameType)
         {
-            Dictionary<string, IEnumerable<MixEntry>> returnVal = new Dictionary<string, IEnumerable<MixEntry>>();
-            foreach (string game in games)
+            double maxRatio = 0;
+            GameDefinition maxGame = null;
+            GameDefinition forced = null;
+            if (forcedGameType != null)
             {
-                returnVal.Add(game, GetNameIds(game).ToList());
+                gameInfo.TryGetValue(forcedGameType, out forced);
             }
-            return returnVal;
-        }
-
-        public IEnumerable<MixEntry> GetNameIds(string game)
-        {
-            if (!games.Contains(game))
+            Dictionary<string,double> identifiedAmounts = new Dictionary<string,double>();
+            for (int i = 0; i < games.Count; ++i)
             {
-                yield break;
-            }
-            if (!gameInfo.TryGetValue(game, out GameDefinition gameDef)) 
-            {
-                yield break;
-            }
-            string[][] theaterInfo = gameDef.TheaterInfo;
-            if (theaterInfo == null)
-            {
-                theaterInfo = new string[][] { new[] { string.Empty } };
-            }
-            string[][] theaterInfomod = gameDef.ModTheaterInfo;
-            string[] filenames = gameDef.Files;
-            if (filenames == null || filenames.Length == 0)
-            {
-                yield break;
-            }
-            Dictionary<string, string> filenameInfo = gameDef.FileDescriptions;
-            HashMethod hashMethod = gameDef.Hasher ?? defaultHashMethod;
-            Dictionary<string, FileNameGeneratorEntry[]> typeDefs = gameDef.TypeDefinitions;
-            foreach (MixEntry fileInfo in GetHashInfo(filenames, filenameInfo, typeDefs, theaterInfo, hashMethod, false))
-            {
-                yield return fileInfo;
-            }
-            if (theaterInfomod != null && theaterInfomod.Length > 0)
-            {
-                foreach (MixEntry fileInfo in GetHashInfo(filenames, filenameInfo, typeDefs, theaterInfomod, hashMethod, true))
+                string gameName = games[i];
+                if (gameInfo.TryGetValue(gameName, out GameDefinition gd))
                 {
-                    yield return fileInfo;
-                }
-            }
-        }
-
-        private IEnumerable<MixEntry> GetHashInfo(string[] filenames, Dictionary<string, string> filenameInfo, Dictionary<string, FileNameGeneratorEntry[]> typeDefinitions,
-            string[][] theaterInfo, HashMethod hashMethod, bool ignoreNonTheaterFiles)
-        {
-            foreach (string filename in filenames)
-            {
-                string info = filenameInfo == null || !filenameInfo.ContainsKey(filename) ? null : filenameInfo[filename];
-                // Ignore 1-character dummy strings.
-                if (info.Trim().Length <= 1)
-                {
-                    info = null;
-                }
-                string[] fnParts = filename.Split(',');
-                string name = fnParts[0].Trim();
-                string type = fnParts.Length < 2 ? null : fnParts[1].Trim();
-                if (String.IsNullOrEmpty(type))
-                {
-                    if (ignoreNonTheaterFiles)
+                    // ignore games that cam't handle this mix file
+                    if (!gd.NewMixFormat && mixFile.IsNewFormat)
                     {
                         continue;
                     }
-                    yield return new MixEntry(hashMethod.GetNameId(name), name, info);
-                }
-                else
-                {
-                    FileNameGeneratorEntry[] generators = null;
-                    if (!typeDefinitions.TryGetValue(type, out generators))
+                    // get identified amount, including deeper check if needed.
+                    int amount = mixFile.Identify(gd.FileInfo, gd.HasMixNesting, out int fullAmount);
+                    double ratio = amount / (double)fullAmount;
+                    identifiedAmounts.Add(gameName, ratio);
+                    if (ratio > maxRatio)
                     {
-                        throw new Exception("Error in filename data: no definition found for type \"" + type + "\"");
+                        maxRatio = ratio;
+                        maxGame = gd;
                     }
-                    // Generate all normal filenames.
-                    foreach (FileNameGeneratorEntry generator in generators)
+                }
+            }
+            bool replaceGame = forced != null && maxGame != forced;
+            if (replaceGame)
+            {
+                maxGame = forced;
+            }
+            if (maxGame == null)
+            {
+                return null;
+            }
+            // Select all game definition, in order of identification, that have the same hasher algorithm as the top identified one.
+            HashMethod mh = maxGame.Hasher;
+            string mhName = mh.SimpleName;
+            List<GameDefinition> viableGames = identifiedAmounts.Keys
+                .OrderByDescending(gt => identifiedAmounts[gt])
+                .Select(gn => gameInfo[gn])
+                .Where(gd => mhName.Equals(gd.Hasher.SimpleName, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+            if (replaceGame)
+            {
+                // Move forced type to first place.
+                viableGames.Remove(forced);
+                viableGames.Insert(0, forced);
+            }
+            Dictionary<uint, MixEntry> info = new Dictionary<uint, MixEntry>();
+            foreach (GameDefinition gd in viableGames)
+            {
+                foreach (MixEntry entry in gd.FileInfo)
+                {
+                    if (!info.ContainsKey(entry.Id))
                     {
-                        // if only running for addon-theaters, skip files that don't have theater info in them.
-                        if (ignoreNonTheaterFiles && !generator.IsTheaterDependent)
+                        info.Add(entry.Id, entry);
+                    }
+                }
+            }
+            mixFile.InsertInfo(info, mh, true);
+            return maxGame.Name;
+        }
+
+        private class GameDefinition
+        {
+            public string Name { get; private set; }
+            public Dictionary<string, FileNameGeneratorEntry[]> TypeDefinitions { get; set; }
+            public List<MixEntry> FileInfo { get; set; }
+            public List<string> FileInfoRaw { get; set; }
+            public Dictionary<string, string> FileDescriptions { get; set; }
+            public HashMethod Hasher { get; set; }
+            public string[][] TheaterInfo { get; set; }
+            public string[][] ModTheaterInfo { get; set; }
+            public bool HasMixNesting { get; set; }
+            public bool NewMixFormat { get; set; }
+
+            public GameDefinition(string name)
+            {
+                this.Name = name;
+            }
+
+            public void GenerateNameIds()
+            {
+                this.FileInfo = GetNameIds().ToList();
+            }
+
+            private IEnumerable<MixEntry> GetNameIds()
+            {
+                string[][] theaterInfo = this.TheaterInfo ?? new string[][] { new[] { string.Empty } };
+                string[][] theaterInfomod = this.ModTheaterInfo;
+                if (this.FileInfoRaw == null || this.FileInfoRaw.Count == 0)
+                {
+                    yield break;
+                }
+                foreach (MixEntry fileInfo in GetHashInfo(this.FileInfoRaw, this.FileDescriptions, this.TypeDefinitions, theaterInfo, this.Hasher, false))
+                {
+                    yield return fileInfo;
+                }
+                if (theaterInfomod != null && theaterInfomod.Length > 0)
+                {
+                    foreach (MixEntry fileInfo in GetHashInfo(this.FileInfoRaw, this.FileDescriptions, this.TypeDefinitions, theaterInfomod, this.Hasher, true))
+                    {
+                        yield return fileInfo;
+                    }
+                }
+            }
+
+            private IEnumerable<MixEntry> GetHashInfo(IEnumerable<string> filenames, Dictionary<string, string> filenameInfo, Dictionary<string, FileNameGeneratorEntry[]> typeDefinitions,
+                string[][] theaterInfo, HashMethod hashMethod, bool ignoreNonTheaterFiles)
+            {
+                foreach (string filename in filenames)
+                {
+                    string info = filenameInfo == null || !filenameInfo.ContainsKey(filename) ? null : filenameInfo[filename];
+                    // Ignore 1-character dummy strings.
+                    if (info.Trim().Length <= 1)
+                    {
+                        info = null;
+                    }
+                    string[] fnParts = filename.Split(',');
+                    string name = fnParts[0].Trim();
+                    string type = fnParts.Length < 2 ? null : fnParts[1].Trim();
+                    if (String.IsNullOrEmpty(type))
+                    {
+                        if (ignoreNonTheaterFiles)
                         {
                             continue;
                         }
-                        string fileInfo = info;
-                        if (!String.IsNullOrEmpty(generator.ExtraInfo))
+                        yield return new MixEntry(hashMethod.GetNameId(name), name, info);
+                    }
+                    else
+                    {
+                        FileNameGeneratorEntry[] generators = null;
+                        if (!typeDefinitions.TryGetValue(type, out generators))
                         {
-                            fileInfo = (String.IsNullOrEmpty(info) ? string.Empty : (info + " ")) + generator.ExtraInfo;
+                            throw new Exception("Error in filename data: no definition found for type \"" + type + "\"");
                         }
-                        foreach ((string nameStr, string infoStr) in generator.GetNames(name, fileInfo, theaterInfo))
+                        // Generate all normal filenames.
+                        foreach (FileNameGeneratorEntry generator in generators)
                         {
-                            yield return new MixEntry(hashMethod.GetNameId(nameStr), nameStr, infoStr);
+                            // if only running for addon-theaters, skip files that don't have theater info in them.
+                            if (ignoreNonTheaterFiles && !generator.IsTheaterDependent)
+                            {
+                                continue;
+                            }
+                            string fileInfo = info;
+                            if (!String.IsNullOrEmpty(generator.ExtraInfo))
+                            {
+                                fileInfo = (String.IsNullOrEmpty(info) ? string.Empty : (info + " ")) + generator.ExtraInfo;
+                            }
+                            foreach ((string nameStr, string infoStr) in generator.GetNames(name, fileInfo, theaterInfo))
+                            {
+                                yield return new MixEntry(hashMethod.GetNameId(nameStr), nameStr, infoStr);
+                            }
                         }
                     }
                 }

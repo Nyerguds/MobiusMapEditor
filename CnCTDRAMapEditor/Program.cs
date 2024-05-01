@@ -106,13 +106,16 @@ namespace MobiusEditor
                 Environment.CurrentDirectory = runPath;
             }
             bool loadOk = false;
+            string mixPath = Path.Combine(Program.ApplicationPath, Globals.MixContentInfoFile);
+            MixFileNameGenerator romfis = new MixFileNameGenerator(mixPath);
+
             if (!Globals.UseClassicFiles && runPath != null)
             {
-                loadOk = StartupLoader.LoadEditorRemastered(runPath, modPaths);
+                loadOk = StartupLoader.LoadEditorRemastered(runPath, modPaths, romfis);
             }
             else if (Globals.UseClassicFiles)
             {
-                loadOk = StartupLoader.LoadEditorClassic(ApplicationPath, modPaths);
+                loadOk = StartupLoader.LoadEditorClassic(ApplicationPath, modPaths, romfis);
             }
             if (!loadOk)
             {
@@ -145,7 +148,7 @@ namespace MobiusEditor
             {
                 arg = null;
             }
-            using (MainForm mainForm = new MainForm(arg))
+            using (MainForm mainForm = new MainForm(arg, romfis))
             {
                 Application.Run(mainForm);
             }
