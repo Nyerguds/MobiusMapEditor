@@ -98,7 +98,7 @@ namespace MobiusEditor.Utility
                     return dummy.ReadMixHeader(mmf, dummy.fileStart, dummy.fileLength, handleAdvanced, false);
                 }
             }
-            catch (Exception ex)
+            catch
             {
                 return false;
             }
@@ -130,7 +130,7 @@ namespace MobiusEditor.Utility
             {
                 return dummy.ReadMixHeader(dummy.mixFileMap, actualEntry.Offset, dummy.fileLength, handleAdvanced, false);
             }
-            catch (Exception ex)
+            catch
             {
                 return false;
             }

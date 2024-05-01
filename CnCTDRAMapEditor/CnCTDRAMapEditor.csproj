@@ -807,16 +807,16 @@
     <EmbeddedResource Include="Resources\GameIcon00.ico" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\mixcontent.ini">
+    <None Include="Classic\mixcontent.ini">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Resources\mixcontent_ra1.ini">
+    <None Include="Classic\mixcontent_ra1.ini">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Resources\mixcontent_sole.ini">
+    <None Include="Classic\mixcontent_sole.ini">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Resources\mixcontent_td.ini">
+    <None Include="Classic\mixcontent_td.ini">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="Resources\UI_CustomMissionPreviewDefault.png" />
@@ -864,9 +864,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>if not exist bin md bin
-move *.dll bin\
-move Resources\*.* .
-rd /s /q Resources</PostBuildEvent>
+move *.dll bin\</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
     <PreBuildEvent>rd /s /q bin</PreBuildEvent>

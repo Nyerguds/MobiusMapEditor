@@ -200,7 +200,7 @@ namespace MobiusEditor.Utility
                     return;
                 }
             }
-            catch (Exception e) { /* ignore */ }
+            catch { /* ignore */ }
             // Only do this if it passes the check on extension.
             if (".mrf".Equals(extension, StringComparison.OrdinalIgnoreCase))
             {

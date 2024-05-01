@@ -308,7 +308,10 @@ namespace MobiusEditor.Utility
                         heights = Enumerable.Repeat(height, len).ToArray();
                     }
                 }
-                catch (FileTypeLoadException e)
+                catch
+#if DEBUG && WriteFileLoadDebug
+                    (FileTypeLoadException e)
+#endif
                 {
                     /* ignore */
 #if DEBUG && WriteFileLoadDebug
@@ -324,7 +327,10 @@ namespace MobiusEditor.Utility
                     // TD map template tileset
                     shpData = ClassicSpriteLoader.GetCcTmpData(fileContents, out widths, out heights);
                 }
-                catch (FileTypeLoadException e)
+                catch
+#if DEBUG && WriteFileLoadDebug
+                    (FileTypeLoadException e)
+#endif
                 {
                     /* ignore */
 #if DEBUG && WriteFileLoadDebug
@@ -347,7 +353,10 @@ namespace MobiusEditor.Utility
                         }
                     }
                 }
-                catch (FileTypeLoadException e)
+                catch
+#if DEBUG && WriteFileLoadDebug
+                    (FileTypeLoadException e)
+#endif
                 {
                     /* ignore */
 #if DEBUG && WriteFileLoadDebug
@@ -363,7 +372,10 @@ namespace MobiusEditor.Utility
                     // Dune II SHP
                     shpData = ClassicSpriteLoader.GetD2ShpData(fileContents, out widths, out heights);
                 }
-                catch (FileTypeLoadException e)
+                catch
+#if DEBUG && WriteFileLoadDebug
+                    (FileTypeLoadException e)
+#endif
                 {
                     /* ignore */
 #if DEBUG && WriteFileLoadDebug
@@ -382,7 +394,10 @@ namespace MobiusEditor.Utility
                     int len = shpData.Length;
                     heights = Enumerable.Repeat(height, len).ToArray();
                 }
-                catch (FileTypeLoadException e)
+                catch
+#if DEBUG && WriteFileLoadDebug
+                    (FileTypeLoadException e)
+#endif
                 {
                     /* ignore */
 #if DEBUG && WriteFileLoadDebug

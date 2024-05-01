@@ -29,7 +29,10 @@ namespace MobiusEditor.Dialogs
             InitializeComponent();
             titleMain = this.Text;
             this.romfis = romfis;
-            identifiedGame = romfis.IdentifyMixFile(baseMix);
+            if (this.romfis != null)
+            {
+                identifiedGame = this.romfis.IdentifyMixFile(baseMix);
+            }
             openedMixFiles.Add(baseMix);
             analysisMultiThreader = new SimpleMultiThreading(this);
             analysisMultiThreader.ProcessingLabelBorder = BorderStyle.Fixed3D;
@@ -153,7 +156,10 @@ namespace MobiusEditor.Dialogs
                 if (subMix != null)
                 {
                     // Game type is already determined by parent mix.
-                    romfis.IdentifyMixFile(subMix, identifiedGame);
+                    if (this.romfis != null)
+                    {
+                        romfis.IdentifyMixFile(subMix, identifiedGame);
+                    }
                     openedMixFiles.Add(subMix);
                 }
                 LoadMixContents();

@@ -107,7 +107,15 @@ namespace MobiusEditor
             }
             bool loadOk = false;
             string mixPath = Path.Combine(Program.ApplicationPath, Globals.MixContentInfoFile);
-            MixFileNameGenerator romfis = new MixFileNameGenerator(mixPath);
+            MixFileNameGenerator romfis = null;
+            try
+            {
+                romfis = new MixFileNameGenerator(mixPath);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(String.Format("Error parsing mix file identification data: {0}\n\nNo mix contents will be identified.", ex.Message),"Error");
+            }
 
             if (!Globals.UseClassicFiles && runPath != null)
             {
