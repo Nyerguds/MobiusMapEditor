@@ -242,7 +242,7 @@ namespace MobiusEditor.Dialogs
                 {
                     Tag = mixFileInfo,
                 };
-                if (mt == MixContentType.MapTd || mt == MixContentType.Bin || mt == MixContentType.BinSole || mt == MixContentType.MapRa)
+                if (mt == MixContentType.MapTd || mt == MixContentType.MapSole || mt == MixContentType.Bin || mt == MixContentType.BinSole || mt == MixContentType.MapRa)
                 {
                     item.BackColor = Color.FromArgb(0xFF, 0xD0, 0xFF, 0xD0); //Color.LightGreen;
                 }

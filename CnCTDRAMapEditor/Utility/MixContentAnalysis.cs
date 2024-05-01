@@ -15,6 +15,7 @@ namespace MobiusEditor.Utility
         private static readonly HashSet<byte> badTextRange = Enumerable.Range(0, 0x20).Where(v => v != '\t' && v != '\r' && v != '\n' && v != ' ').Select(i => (byte)i).ToHashSet();
         private const String xccCheck = "XCC by Olaf van der Spek";
         private const uint xccId = 0x54C2D545;
+        /// <summary>Maximum file size that gets processed by byte array (5 MiB).</summary>
         private const uint maxProcessed = 0x500000;
 
         public static List<MixEntry> AnalyseFiles(MixFile current, Dictionary<uint, MixEntry> encodedFilenames, bool preferMissions, Func<bool> checkAbort)
@@ -61,6 +62,7 @@ namespace MobiusEditor.Utility
                                     isXccHeader = false;
                                 }
                             }
+                            // not actually used, so I'm gonna leave it.
                             //int files = fileContents[0x30] | (fileContents[0x31] << 8) | (fileContents[0x32] << 16) | (fileContents[0x33] << 24);
                             if (isXccHeader)
                             {
@@ -537,23 +539,31 @@ namespace MobiusEditor.Utility
 
         private static bool IdentifySoleMap(byte[] fileContents, MixEntry mixInfo)
         {
+            const int maxCell = 0x4000; // 128 * 128;
             int highestTdMapVal = TiberianDawn.TemplateTypes.GetTypes().Max(t => (int)t.ID);
             int fileLength = fileContents.Length;
-            if (fileLength % 4 != 0)
+            // 0x400 is chosen because it's larger than a colour palette, and
+            // all official maps are about 0x4000; 10 times larger than that.
+            if (fileLength % 4 != 0 || fileLength <= 0x400)
             {
                 return false;
             }
-            int maxCell = 128 * 128;
+            // This scan assumes all cells get consecutively higher. Even if the format can work
+            // with unordered cells, it should never actually happen, especially inside mix files.
+            int previousCell = -1;
             for (int i = 0; i < fileLength; i += 4)
             {
+                // The cell. Could technically just check "cellHi >= 0x40" I guess.
                 byte cellLow = fileContents[i];
                 byte cellHi = fileContents[i + 1];
-                byte val = fileContents[i + 2];
                 int cell = (cellHi << 8) | cellLow;
-                if (cell >= maxCell || (val > highestTdMapVal && val != 0xFF))
+                // The id of the tile on that cell.
+                byte val = fileContents[i + 2];
+                if (cell <= previousCell || cell >= maxCell || (val > highestTdMapVal && val != 0xFF))
                 {
                     return false;
                 }
+                previousCell = cell;
             }
             mixInfo.Type = MixContentType.BinSole;
             mixInfo.Info = "Tiberian Dawn / Sole Survivor 128x128 Map";
