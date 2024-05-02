@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -356,6 +357,12 @@ namespace MobiusEditor.Utility
             {
                 gameInfo.TryGetValue(forcedGameType, out forced);
             }
+            HashMethod xccHasher = null;
+            Dictionary<uint, MixEntry> xccInfo = GetXccDatabaseInfo(mixFile, out xccHasher);
+            if (forced != null && forced.Hasher.SimpleName != xccHasher.SimpleName)
+            {
+                forced = null;
+            }
             Dictionary<string,double> identifiedAmounts = new Dictionary<string,double>();
             for (int i = 0; i < games.Count; ++i)
             {
@@ -364,6 +371,11 @@ namespace MobiusEditor.Utility
                 {
                     // ignore games that cam't handle this mix file
                     if (!gd.NewMixFormat && mixFile.IsNewFormat)
+                    {
+                        continue;
+                    }
+                    // Follow the lead of xcc detection.
+                    if (xccHasher != null && gd.Hasher.SimpleName != xccHasher.SimpleName)
                     {
                         continue;
                     }
@@ -401,19 +413,122 @@ namespace MobiusEditor.Utility
                 viableGames.Remove(forced);
                 viableGames.Insert(0, forced);
             }
-            Dictionary<uint, MixEntry> info = new Dictionary<uint, MixEntry>();
+            Dictionary<uint, MixEntry> info = xccInfo != null ? new Dictionary<uint, MixEntry>(xccInfo) : new Dictionary<uint, MixEntry>();
             foreach (GameDefinition gd in viableGames)
             {
                 foreach (MixEntry entry in gd.FileInfo)
                 {
-                    if (!info.ContainsKey(entry.Id))
+                    MixEntry existing;
+                    if (!info.TryGetValue(entry.Id, out existing))
                     {
                         info.Add(entry.Id, entry);
                     }
+                    else if (existing.Type == MixContentType.XccTmp && String.Equals(existing.Name, entry.Name, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        // Name matches; fill in description.
+                        existing.Description = entry.Description;
+                        existing.Type = MixContentType.Unknown;
+                    }
                 }
+            }
+            // Clear remaining temp mixcontent identifiers.
+            if (xccInfo != null)
+            {
+                foreach (uint xccKey in xccInfo.Keys)
+                {
+                    if (info.TryGetValue(xccKey, out MixEntry xccEntry) && xccEntry.Type == MixContentType.XccTmp)
+                    {
+                        xccEntry.Type = MixContentType.Unknown;
+                    }
+                }
+
             }
             mixFile.InsertInfo(info, mh, true);
             return maxGame.Name;
+        }
+
+        private Dictionary<uint, MixEntry> GetXccDatabaseInfo(MixFile mixFile, out HashMethod hm)
+        {        
+            const string xccFileName = "local mix database.dat";
+            const uint maxProcessed = 0x500000;
+            List<uint> filesList = mixFile.FileIds.ToList();
+            const string xccCheck = "XCC by Olaf van der Spek";
+            byte[] xccPattern = Encoding.ASCII.GetBytes(xccCheck);
+            // Could make this more robust / overengineered by returning all hashers for which a valid one was found?
+            foreach (HashMethod hasher in HashMethod.GetRegisteredMethods())
+            {
+                uint xccId = hasher.GetNameId(xccFileName);
+                // Check if there's an xcc filenames database.
+                foreach (uint fileId in filesList)
+                {
+                    MixEntry[] entries = mixFile.GetFullFileInfo(fileId);
+                    if (entries == null)
+                    {
+                        continue;
+                    }
+                    MixEntry dbEntry = entries[0];
+                    if (fileId != xccId || dbEntry.Length >= maxProcessed || dbEntry.Length <= 0x34)
+                    {
+                        continue;
+                    }
+                    byte[] fileContents = mixFile.ReadFile(dbEntry);
+                    try
+                    {
+                        bool isXccHeader = true;
+                        for (int i = 0; i < xccPattern.Length; ++i)
+                        {
+                            if (fileContents[i] != xccPattern[i])
+                            {
+                                isXccHeader = false;
+                                break;
+                            }
+                        }
+                        int fileSize = 0;
+                        if (isXccHeader)
+                        {
+                            fileSize = fileContents[0x20] | (fileContents[0x21] << 8) | (fileContents[0x22] << 16) | (fileContents[0x23] << 24);
+                            if (fileSize != dbEntry.Length)
+                            {
+                                isXccHeader = false;
+                            }
+                        }
+                        int files = fileContents[0x30] | (fileContents[0x31] << 8) | (fileContents[0x32] << 16) | (fileContents[0x33] << 24);
+                        if (!isXccHeader)
+                        {
+                            continue;
+                        }
+                        MixEntry xccEntry = new MixEntry(xccId, xccFileName, "XCC filenames database");
+                        xccEntry.Type = MixContentType.XccNames;
+                        xccEntry.Info = "XCC filenames database (" + files + " files)";
+                        // Confirmed to be an xcc names file. Now read it.
+                        Dictionary<uint, MixEntry> xccInfoFilenames = new Dictionary<uint, MixEntry>();
+                        xccInfoFilenames.Add(xccEntry.Id, xccEntry);
+                        int readOffs = 0x34;
+                        while (readOffs < fileSize)
+                        {
+                            int endOffs;
+                            for (endOffs = readOffs; endOffs < fileSize && fileContents[endOffs] != 0; ++endOffs) ;
+                            string filename = Encoding.ASCII.GetString(fileContents, readOffs, endOffs - readOffs);
+                            readOffs = endOffs + 1;
+                            uint hashForCurrent = hasher.GetNameId(filename);
+                            if (!xccInfoFilenames.ContainsKey(hashForCurrent))
+                            {
+                                MixEntry identified = new MixEntry(hashForCurrent, filename, null);
+                                identified.Type = MixContentType.XccTmp;
+                                xccInfoFilenames.Add(hashForCurrent, identified);
+                            }
+                        }
+                        hm = hasher;
+                        return xccInfoFilenames;
+                    }
+                    catch (Exception e)
+                    {
+                        /* ignore */
+                    }
+                }
+            }
+            hm = null;
+            return null;
         }
 
         private class GameDefinition

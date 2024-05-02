@@ -13,8 +13,6 @@ namespace MobiusEditor.Utility
     {
         private static readonly char[] badIniHeaderRange = Enumerable.Range(0, 0x20).Select(i => (char)i).ToArray();
         private static readonly HashSet<byte> badTextRange = Enumerable.Range(0, 0x20).Where(v => v != '\t' && v != '\r' && v != '\n' && v != ' ').Select(i => (byte)i).ToHashSet();
-        private const String xccCheck = "XCC by Olaf van der Spek";
-        private const uint xccId = 0x54C2D545;
         /// <summary>Maximum file size that gets processed by byte array (5 MiB).</summary>
         private const uint maxProcessed = 0x500000;
 
@@ -22,8 +20,6 @@ namespace MobiusEditor.Utility
         {
             List<uint> filesList = current.FileIds.ToList();
             List<MixEntry> fileInfo = new List<MixEntry>();
-            Dictionary<uint, string> xccInfoFilenames = null;
-            // Check if there's an xcc filenames database.
             foreach (uint fileId in filesList)
             {
                 if (checkAbort != null && checkAbort())
@@ -31,83 +27,17 @@ namespace MobiusEditor.Utility
                     return null;
                 }
                 MixEntry[] entries = current.GetFullFileInfo(fileId);
-                if (entries != null)
-                {
-                    MixEntry entry = entries[0];
-                    if (fileId == xccId && entry.Length < maxProcessed && entry.Length > 0x34)
-                    {
-                        entry.Name = "local mix database.dat";
-                        entry.Type = MixContentType.XccNames;
-                        entry.Info = "XCC filenames database";
-                        fileInfo.Add(entry);
-                        byte[] fileContents = current.ReadFile(entry);
-                        byte[] xccPattern = Encoding.ASCII.GetBytes(xccCheck);
-                        try
-                        {
-                            bool isXccHeader = true;
-                            for (int i = 0; i < xccPattern.Length; ++i)
-                            {
-                                if (fileContents[i] != xccPattern[i])
-                                {
-                                    isXccHeader = false;
-                                    break;
-                                }
-                            }
-                            int fileSize = 0;
-                            if (isXccHeader)
-                            {
-                                fileSize = fileContents[0x20] | (fileContents[0x21] << 8) | (fileContents[0x22] << 16) | (fileContents[0x23] << 24);
-                                if (fileSize != entry.Length)
-                                {
-                                    isXccHeader = false;
-                                }
-                            }
-                            // not actually used, so I'm gonna leave it.
-                            //int files = fileContents[0x30] | (fileContents[0x31] << 8) | (fileContents[0x32] << 16) | (fileContents[0x33] << 24);
-                            if (isXccHeader)
-                            {
-                                xccInfoFilenames = new Dictionary<uint, string>();
-                                int readOffs = 0x34;
-                                HashRol1 hasher = new HashRol1();
-                                while (readOffs < fileSize)
-                                {
-                                    int endOffs;
-                                    for (endOffs = readOffs; endOffs < fileSize && fileContents[endOffs] != 0; ++endOffs) ;
-                                    string filename = Encoding.ASCII.GetString(fileContents, readOffs, endOffs - readOffs);
-                                    readOffs = endOffs + 1;
-                                    xccInfoFilenames.Add(hasher.GetNameId(filename), filename);
-                                }
-                            }
-                        }
-                        catch { /* ignore */ }
-
-                        break;
-                    }
-                }
-            }
-            // For testing: disable xcc mix info.
-            //xccInfoFilenames = null;
-            foreach (uint fileId in filesList)
-            {
-                MixEntry[] entries = current.GetFullFileInfo(fileId);
                 for (int i = 0; i < entries.Length; ++i)
                 {
                     MixEntry mixInfo = entries[i];
-                    if (fileId == xccId && xccInfoFilenames != null)
-                    {
-                        // if the xcc info is filled in, this is already added
-                        continue;
-                    }
-                    string name = null;
-                    //uint fileIdm1 = fileId == 0 ? 0 : fileId - 1;
-                    if (mixInfo.Name == null && xccInfoFilenames != null && xccInfoFilenames.TryGetValue(fileId, out name))
-                    {
-                        mixInfo.Name = name;
-                    }
                     fileInfo.Add(mixInfo);
-                    using (Stream file = current.OpenFile(fileId))
+                    // Only do identification if type is set to unknown.
+                    if (mixInfo.Type == MixContentType.Unknown)
                     {
-                        TryIdentifyFile(file, mixInfo, current, preferMissions);
+                        using (Stream file = current.OpenFile(fileId))
+                        {
+                            TryIdentifyFile(file, mixInfo, current, preferMissions);
+                        }
                     }
                 }
             }
@@ -619,7 +549,8 @@ namespace MobiusEditor.Utility
         PalTbl,
         Remap,
         Audio,
-        XccNames
+        XccNames,
+        XccTmp
     }
 
 
