@@ -436,16 +436,24 @@ namespace MobiusEditor.Utility
 
             public void GenerateNameIds()
             {
-                this.FileInfo = GetNameIds().ToList();
-#if DEBUG
-                // For testing
-                /*/
-                foreach (MixEntry entry in this.FileInfo)
+                HashSet<uint> added = new HashSet<uint>();
+                List<MixEntry> finalEntries = new List<MixEntry>();
+                // Skip any duplicates when storing them.
+                foreach (MixEntry entry in GetNameIds())
                 {
-                    Debug.WriteLine(String.Format("{0:X8} : {1} - {2}", entry.Id, entry.Name, entry.Description ?? String.Empty));
-                }
-                //*/
+                    uint id = entry.Id;
+                    if (added.Contains(id))
+                    {
+                        continue;
+                    }
+                    added.Add(id);
+                    finalEntries.Add(entry);
+#if DEBUG
+                    // For testing
+                    // Debug.WriteLine(String.Format("{0:X8} : {1} - {2}", entry.Id, entry.Name, entry.Description ?? String.Empty));
 #endif
+                }
+                this.FileInfo = finalEntries;
             }
 
             private IEnumerable<MixEntry> GetNameIds()
@@ -523,7 +531,15 @@ namespace MobiusEditor.Utility
 
         public class FileNameGeneratorEntry
         {
-            private static readonly Regex IterateRegex = new Regex("\\[((?:[^\\[\\]\\(\\)])|(?:\\([^\\[\\]\\(\\))]+\\)))+\\]", RegexOptions.Compiled);
+            // Regex: \[(((\d+)-(\d+))|(((?:\([^\[\]\(\))]+\))|(?:[^\[\]]))+))\]
+            // Group 1: full capture (not actually used; just for testing)
+            // Group 2: numeric block (needs to be first to have priority over the non-numeric one since it's also valid for that format)
+            // Group 3: first number in numeric part
+            // Group 4: second number in numeric part
+            // Group 5: non-numeric block: group containing all chunks to iterate over (not actually used; just for testing)
+            // Group 6: Repeating group of the chunks to iterate over; each one is either a block surrounded with ( ), or a single character.
+            //                                                         12   3     4     56~
+            private static readonly Regex IterateRegex = new Regex("\\[(((\\d+)-(\\d+))|(((?:\\([^\\[\\]\\(\\))]+\\))|(?:[^\\[\\]]))+))\\]", RegexOptions.Compiled);
             public bool IsTheaterDependent { get; private set; }
             public int HighestArg { get; private set; }
             public string ExtraInfo { get; set; }
@@ -554,15 +570,41 @@ namespace MobiusEditor.Utility
                         iterationBlocks.Add(new[] { format.Substring(currentIndex, iteratorMatch.Index - currentIndex) });
                     }
                     List<string> iterationChunks = new List<string>();
-                    foreach (Capture capture in iteratorMatch.Groups[1].Captures)
+                    bool isNumRange = !string.IsNullOrEmpty(iteratorMatch.Groups[2].Value);
+                    if (isNumRange)
                     {
-                        string val = capture.Value;
-                        if (val.Length > 2)
+                        // Generate numeric range from $3 to $4
+                        string first = iteratorMatch.Groups[3].Value;
+                        string second = iteratorMatch.Groups[4].Value;
+                        // If you loop from 01-999, it should do 01, 02 ... 98, 99, 100, 101 ... 998, 999.
+                        int len = Math.Min(first.Length, second.Length);
+                        int firstNum = Int32.Parse(first);
+                        int secondNum = Int32.Parse(second);
+                        if (firstNum > secondNum)
                         {
-                            // chop off the surrounding brackets
-                            val = val.Substring(1, val.Length - 2);
+                            // Swap values
+                            int tmp = firstNum;
+                            firstNum = secondNum;
+                            secondNum = tmp;
                         }
-                        iterationChunks.Add(val);
+                        string iterateFormat = "D" + len;
+                        foreach (int val in Enumerable.Range(firstNum, secondNum - firstNum + 1))
+                        {
+                            iterationChunks.Add(val.ToString(iterateFormat));
+                        }
+                    }
+                    else
+                    {
+                        foreach (Capture capture in iteratorMatch.Groups[6].Captures)
+                        {
+                            string val = capture.Value;
+                            if (val.Length > 2)
+                            {
+                                // chop off the surrounding brackets
+                                val = val.Substring(1, val.Length - 2);
+                            }
+                            iterationChunks.Add(val);
+                        }
                     }
                     iterationBlocks.Add(iterationChunks.ToArray());
                     currentIndex = iteratorMatch.Index + iteratorMatch.Length;
