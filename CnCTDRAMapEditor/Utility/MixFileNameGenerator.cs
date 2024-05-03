@@ -359,7 +359,8 @@ namespace MobiusEditor.Utility
             }
             HashMethod xccHasher = null;
             Dictionary<uint, MixEntry> xccInfo = GetXccDatabaseInfo(mixFile, out xccHasher);
-            if (forced != null && forced.Hasher.SimpleName != xccHasher.SimpleName)
+            // A successful xcc db file detection that conflicts with the forced game type will override it.
+            if (forced != null && xccHasher != null && forced.Hasher.SimpleName != xccHasher.SimpleName)
             {
                 forced = null;
             }
