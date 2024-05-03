@@ -58,6 +58,8 @@ namespace MobiusEditor.Utility
             // Very strict requirements, and jumps over the majority of file contents while checking, so check this first.
             if (IdentifyAud(fileStream, mixInfo))
                 return;
+            if (IdentifyVqa(fileStream, mixInfo))
+                return;
             // These types analyse the full file from byte array. I'm restricting the buffer for them to 5mb; they shouldn't need more.
             if (fileLengthFull <= maxProcessed)
             {
@@ -393,7 +395,9 @@ namespace MobiusEditor.Utility
             // ----12 bytes
             byte[] header = new byte[12];
             byte[] chunk = new byte[8];
+            fileStream.Position = 0;
             fileStream.Read(header, 0, header.Length);
+            fileStream.Position = 0;
             int frequency = ArrayUtils.ReadUInt16FromByteArrayLe(header, 0);
             int fileSize = ArrayUtils.ReadInt32FromByteArrayLe(header, 2);
             int uncompressedSize = ArrayUtils.ReadInt32FromByteArrayLe(header, 6);
@@ -443,6 +447,69 @@ namespace MobiusEditor.Utility
             mixInfo.Type = MixContentType.Audio;
             mixInfo.Info = String.Format("Audio file; {0} Hz, {1}-bit {2}, compression {3}, {4} chunks.",
                 frequency, is16Bit ? 16 : 8, isStereo ? "stereo" : "mono", compression, chunks);
+            return true;
+        }
+
+        private static bool IdentifyVqa(Stream fileStream, MixEntry mixInfo)
+        {
+            // FORM chunk + VQHD chunk + FINF/LINF chunk name + its size
+            const int vqHdrSize = 12 + 8 + 42;
+            long fileLength = fileStream.Length;
+            if (fileLength <= vqHdrSize)
+            {
+                return false;
+            }
+            byte[] headerInfo = new byte[vqHdrSize];
+            fileStream.Position = 0;
+            fileStream.Read(headerInfo, 0, vqHdrSize);
+            fileStream.Position = 0;
+            string strForm = Encoding.ASCII.GetString(headerInfo, 0, 4);
+            if (!"FORM".Equals(strForm))
+            {
+                return false;
+            }
+            // Always either the header length plus the following 
+            int formLength = ArrayUtils.ReadInt32FromByteArrayBe(headerInfo, 4);
+            if (formLength < vqHdrSize)
+            {
+                return false;
+            }
+            string strWvqa = Encoding.ASCII.GetString(headerInfo, 8, 4);
+            if (!"WVQA".Equals(strWvqa))
+            {
+                return false;
+            }
+            string strVqhd = Encoding.ASCII.GetString(headerInfo, 12, 4);
+            if (!"VQHD".Equals(strVqhd))
+            {
+                return false;
+            }
+            int vqHeaderLength = ArrayUtils.ReadInt32FromByteArrayBe(headerInfo, 16);
+            if (vqHeaderLength != 42)
+            {
+                return false;
+            }
+            // start of hdr
+            int ptr = 20;
+            int version = ArrayUtils.ReadUInt16FromByteArrayLe(headerInfo, ptr + 0);
+            int numFrames = ArrayUtils.ReadUInt16FromByteArrayLe(headerInfo, ptr + 4);
+            int width = ArrayUtils.ReadUInt16FromByteArrayLe(headerInfo, ptr + 6);
+            int height= ArrayUtils.ReadUInt16FromByteArrayLe(headerInfo, ptr + 8);
+            int frameRate = headerInfo[ptr + 12];
+
+            int fullSeconds = numFrames / frameRate;
+            int seconds = fullSeconds % 60;
+            if ((numFrames / (double)frameRate) - fullSeconds >= 0.5 || (fullSeconds == 0 && numFrames > 0))
+                seconds++;
+            int fullMinutes = fullSeconds / 60;
+            int minutes = fullMinutes % 60;
+            int hours = fullMinutes / 60;
+
+            string time = hours > 0 ? String.Format("{0}:{1:D2}:{2:D2}", hours, minutes, seconds) : String.Format("{0}:{1:D2}", minutes, seconds);
+
+            mixInfo.Type = MixContentType.Video;
+            mixInfo.Info = String.Format("Video file; VQA v{0}, {1}x{2}, {3}, {4}fps",
+                version, width, height, time, frameRate);
             return true;
         }
 
@@ -549,6 +616,7 @@ namespace MobiusEditor.Utility
         PalTbl,
         Remap,
         Audio,
+        Video,
         XccNames,
         XccTmp
     }

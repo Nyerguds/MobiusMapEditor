@@ -357,16 +357,18 @@ namespace MobiusEditor.Utility
                 }
                 foreach (MixEntry entry in contentItem.Value)
                 {
-                    // Only overwrite if input is filled in.
-                    if (!String.IsNullOrEmpty(infoEntry.Name) && (overwrite || !String.IsNullOrEmpty(entry.Name)))
+                    bool nameMatches = !String.IsNullOrEmpty(infoEntry.Name) && entry.Id == hasher.GetNameId(infoEntry.Name);
+                    // Only overwrite if input is filled in, and name id for the new name indeed matches on the given hasher.
+                    if (nameMatches && (overwrite || !String.IsNullOrEmpty(entry.Name)))
                     {
                         entry.Name = infoEntry.Name;
                     }
-                    if (!String.IsNullOrEmpty(infoEntry.Description) && (overwrite || !String.IsNullOrEmpty(entry.Description)))
+                    // Description is linked to name; don't allow setting it if the name did not match.
+                    if (nameMatches && !String.IsNullOrEmpty(infoEntry.Description) && (overwrite || !String.IsNullOrEmpty(entry.Description)))
                     {
                         entry.Description = infoEntry.Description;
                     }
-
+                    // Info is analysis info of the actual file content. Set this even if the name didn't match.
                     if (!String.IsNullOrEmpty(infoEntry.Info) && (overwrite || !String.IsNullOrEmpty(entry.Info)))
                     {
                         entry.Info = infoEntry.Info;

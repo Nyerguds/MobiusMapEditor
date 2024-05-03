@@ -14,10 +14,8 @@
 using MobiusEditor.Utility.Hashing;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -149,8 +147,7 @@ namespace MobiusEditor.Utility
                 YesNoBooleanTypeConverter boolConv = new YesNoBooleanTypeConverter();
                 bool newMixFormat = boolConv.ConvertFrom(gameSection.TryGetValue("NewMixFormat"));
                 bool hasMixNesting = boolConv.ConvertFrom(gameSection.TryGetValue("HasMixNesting"));
-                HashMethod hashMethod;
-                hashMethods.TryGetValue(hasher, out hashMethod);
+                hashMethods.TryGetValue(hasher, out HashMethod hashMethod);
                 // no files sections specified
                 if (filesSections.All(fs => String.IsNullOrEmpty(fs)))
                 {
@@ -359,8 +356,9 @@ namespace MobiusEditor.Utility
             }
             HashMethod xccHasher = null;
             Dictionary<uint, MixEntry> xccInfo = GetXccDatabaseInfo(mixFile, out xccHasher);
+            // TODO: add support for older RAMIX name database type? I believe it has a fixed ID like "7FFFFFFF" or something.
             // A successful xcc db file detection that conflicts with the forced game type will override it.
-            if (forced != null && xccHasher != null && forced.Hasher.SimpleName != xccHasher.SimpleName)
+            if (forced != null && xccHasher != null && forced.Hasher.GetType() != xccHasher.GetType())
             {
                 forced = null;
             }
@@ -375,8 +373,14 @@ namespace MobiusEditor.Utility
                     {
                         continue;
                     }
-                    // Follow the lead of xcc detection.
-                    if (xccHasher != null && gd.Hasher.SimpleName != xccHasher.SimpleName)
+                    Type hasherType = gd.Hasher.GetType();
+                    // Follow the lead of xcc detection or forced type.
+                    if (xccHasher != null && hasherType != xccHasher.GetType())
+                    {
+                        continue;
+                    }
+                    // If forced is not null, only detect the games with that one's hasher.
+                    if (forced != null && hasherType != forced.Hasher.GetType())
                     {
                         continue;
                     }
@@ -402,11 +406,11 @@ namespace MobiusEditor.Utility
             }
             // Select all game definition, in order of identification, that have the same hasher algorithm as the top identified one.
             HashMethod mh = maxGame.Hasher;
-            string mhName = mh.SimpleName;
+            Type mhType = mh.GetType();
             List<GameDefinition> viableGames = identifiedAmounts.Keys
                 .OrderByDescending(gt => identifiedAmounts[gt])
                 .Select(gn => gameInfo[gn])
-                .Where(gd => mhName.Equals(gd.Hasher.SimpleName, StringComparison.OrdinalIgnoreCase))
+                .Where(gd => mhType == gd.Hasher.GetType())
                 .ToList();
             if (replaceGame)
             {
