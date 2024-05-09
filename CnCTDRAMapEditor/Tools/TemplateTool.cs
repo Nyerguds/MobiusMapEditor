@@ -1064,7 +1064,7 @@ namespace MobiusEditor.Tools
                     g.DrawImage(selected.Thumbnail, new Rectangle(Point.Empty, selected.Thumbnail.Size), 0, 0, templatePreview.Width, templatePreview.Height, GraphicsUnit.Pixel);
                     if (templates != null)
                     {
-                        MapRenderer.RenderLandTypes(g, plugin, templates, Globals.PreviewTileSize, templateTypeMetrics.Bounds, true);
+                        MapRenderer.RenderLandTypes(g, plugin, templates, Globals.PreviewTileSize, templateTypeMetrics.Bounds, true, null);
                     }
                 }
                 // paint selected.Thumbnail;
@@ -1898,7 +1898,7 @@ namespace MobiusEditor.Tools
             base.PostRenderMap(graphics, visibleCells);
             if ((Layers & MapLayerFlag.LandTypes) == MapLayerFlag.LandTypes)
             {
-                MapRenderer.RenderLandTypes(graphics, plugin, previewMap.Templates, Globals.MapTileSize, visibleCells, false);
+                MapRenderer.RenderLandTypes(graphics, plugin, previewMap.Templates, Globals.MapTileSize, visibleCells, false, Globals.IndicateMapObjects ? previewMap.Technos : null);
             }
             if (boundsMode)
             {

@@ -594,6 +594,7 @@ namespace MobiusEditor.Utility
             bool[,] mask = new bool[height, width];
             if (string.IsNullOrWhiteSpace(maskString))
             {
+                // No mask is considered as fully impassable.
                 mask.Clear(true);
                 return mask;
             }

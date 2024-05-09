@@ -157,7 +157,7 @@ namespace MobiusEditor.Model
                 : idEmpty ? this.GraphicsSource.ToUpperInvariant() : this.nameId;
         }
 
-        public void Init(GameInfo gameInfo, TheaterType theater)
+        public void Init(GameInfo gameInfo)
         {
             InitDisplayName();
             this.ExistsInTheater = Globals.TheTilesetManager.TileExists(this.GraphicsSource);

@@ -13,7 +13,6 @@
 // GNU General Public License along with permitted additional restrictions
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 using MobiusEditor.Interface;
-using MobiusEditor.Utility;
 using System;
 using System.Drawing;
 using System.IO;
@@ -41,6 +40,7 @@ namespace MobiusEditor
             // Fine tuning
             ZoomToBoundsOnLoad = Properties.Settings.Default.ZoomToBoundsOnLoad;
             RememberToolData = Properties.Settings.Default.RememberToolData;
+            IndicateMapObjects = Properties.Settings.Default.TerrainTypesShowObjects;
             MapGridColor = Properties.Settings.Default.MapGridColor;
             MapBackColor = Color.FromArgb(255, Properties.Settings.Default.MapBackColor);
             UndoRedoStackSize = Properties.Settings.Default.UndoRedoStackSize;
@@ -112,6 +112,7 @@ namespace MobiusEditor
 
         public static bool ZoomToBoundsOnLoad { get; private set; }
         public static bool RememberToolData { get; private set; }
+        public static bool IndicateMapObjects { get; private set; }
         public static Color MapGridColor { get; private set; }
         public static Color MapBackColor { get; private set; }
 

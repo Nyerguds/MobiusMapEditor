@@ -614,13 +614,12 @@ namespace MobiusEditor.Model
                 }
                 foreach (OverlayType overlayType in this.OverlayTypes)
                 {
-                    overlayType.Init(gameInfo, this.Theater);
+                    overlayType.Init(gameInfo);
                 }
                 string th = this.Theater.Name;
-                foreach (TerrainType terrainType in this.TerrainTypes.Where(itm => !Globals.FilterTheaterObjects || itm.Theaters == null || itm.Theaters.Contains(th)))
+                foreach (TerrainType terrainType in this.TerrainTypes)
                 {
                     terrainType.Init();
-                    terrainType.InitDisplayName();
                 }
                 // Ignore expansion status for these; they can still be enabled later.
                 DirectionType infDir = this.UnitDirectionTypes.Where(d => d.Facing == FacingType.South).First();

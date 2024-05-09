@@ -761,23 +761,23 @@ namespace MobiusEditor.Model
         {
             { 'X', LandType.Clear }, // Filler tile, or [Clear] terrain on 1x1 sets with multiple tiles.
             { 'C', LandType.Clear }, // [Clear] Normal clear terrain.
-            { 'B', LandType.Beach }, // [Beach] Sandy beach. Can''t be built on.
+            { 'B', LandType.Beach }, // [Beach] Sandy beach. Can't be built on.
             { 'I', LandType.Rock }, // [Rock]  Impassable terrain.
             { 'R', LandType.Road }, // [Road]  Units move faster on this terrain.
             { 'W', LandType.Water }, // [Water] Ships can travel over this.
-            { 'V', LandType.River }, // [River] Ships normally can''t travel over this.
-            { 'H', LandType.Rough }, // [Rough] Rough terrain. Can''t be built on
+            { 'V', LandType.River }, // [River] Ships normally can't travel over this.
+            { 'H', LandType.Rough }, // [Rough] Rough terrain. Can't be built on
         };
 
         public static readonly Dictionary<LandType, char> LandStringsMapping = new Dictionary<LandType, char>
         {
             {LandType.Clear, 'C' }, // [Clear] Normal clear terrain.
-            {LandType.Beach, 'B' }, // [Beach] Sandy beach. Can''t be built on.
+            {LandType.Beach, 'B' }, // [Beach] Sandy beach. Can't be built on.
             {LandType.Rock, 'I' }, // [Rock]  Impassable terrain.
             {LandType.Road, 'R' }, // [Road]  Units move faster on this terrain.
             {LandType.Water, 'W' }, // [Water] Ships can travel over this.
-            {LandType.River, 'V' }, // [River] Ships normally can''t travel over this.
-            {LandType.Rough, 'H' }, // [Rough] Rough terrain. Can''t be built on
+            {LandType.River, 'V' }, // [River] Ships normally can't travel over this.
+            {LandType.Rough, 'H' }, // [Rough] Rough terrain. Can't be built on
         };
 
         public static LandType[] GetLandTypesFromString(string types)

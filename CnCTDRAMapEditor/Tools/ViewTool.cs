@@ -280,7 +280,7 @@ namespace MobiusEditor.Tools
             if ((layersToRender & MapLayerFlag.LandTypes) == MapLayerFlag.LandTypes
                 && (manuallyHandledLayers & MapLayerFlag.LandTypes) == MapLayerFlag.None)
             {
-                MapRenderer.RenderLandTypes(graphics, plugin, map.Templates, tileSize, visibleCells, false);
+                MapRenderer.RenderLandTypes(graphics, plugin, map.Templates, tileSize, visibleCells, false, Globals.IndicateMapObjects ? map.Technos : null);
             }
             if ((Globals.ShowPlacementGrid && inPlacementMode) ||
                 (layersToRender & MapLayerFlag.MapGrid) == MapLayerFlag.MapGrid

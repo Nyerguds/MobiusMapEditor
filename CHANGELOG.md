@@ -622,15 +622,18 @@ Released on 31 Jan 2023 at 20:50 GMT
 * Added an option to control the behaviour of allowing walls as structures, with an owner. Since this is a behavior tweaks option, and those are all enabled by default, it is called "DontAllowWallsAsBuildings".
 
 
-### v1.5.0.4:
+### v1.5.1.0:
 
 Unreleased.
 
+* Added .mix files to the supported formats to open, giving the ability to load official maps straight from the game's internal archives.
+* Removed theater restrictions on Terrain objects; if the object is found in the theater, it will be shown.
 * Fixed bug that prevented the Red Alert civilian "C3" from loading, and that prevented the Einstein colour fix from working.
-* Added tooltips to Triggers editor giving a summary of teamtypes and triggers used as trigger arguments. This includes a tooltip on the trigger action on Tiberian Dawn's "Destroy Trigger" and "DZ at 'Z'" actions, respectively showing info on the corresponding trigger and the flare waypoint.
+* Added tooltips to Triggers editor that give a summary of teamtypes and triggers used as trigger arguments. This includes a tooltip on the trigger action on Tiberian Dawn's "Destroy Trigger" and "DZ at 'Z'" actions, respectively showing info on the corresponding trigger and the flare waypoint.
 * Added checks and warnings on teamtype arguments, and on the limits of units/orders list lengths.
 * Added system to avoid loading the same mod from both the workshop items and from the local mods under the Documents folder. If given by name, local mods are given priority.
 * The \[Enter\] shortcut for the "Jump To" function is now indicated in the status bar in Waypoints and Celltriggers mode.
 * Added a specific "PreviewScaleClassic" setting.
 * Fixed Red Alert map load not giving feedback on the removal of Aircraft.
 * Added an indicator on the Autocreate option on Teams if the Max Allowed setting is set to 0.
+* Added indicators for all terrain types, and green indications of cells occupied by objects on the map.

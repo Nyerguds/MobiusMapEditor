@@ -2282,7 +2282,7 @@ namespace MobiusEditor.RedAlert
                 TerrainType terrainType = Map.TerrainTypes.Where(t => t.Equals(name)).FirstOrDefault();
                 if (terrainType != null)
                 {
-                    if (Globals.FilterTheaterObjects && terrainType.Theaters != null && !terrainType.Theaters.Contains(th))
+                    if (Globals.FilterTheaterObjects && !terrainType.ExistsInTheater)
                     {
                         errors.Add(string.Format("Terrain '{0}' is not available in the set theater; skipping.", terrainType.Name));
                         modified = true;

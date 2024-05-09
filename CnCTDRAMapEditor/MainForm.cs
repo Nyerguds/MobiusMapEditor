@@ -533,7 +533,7 @@ namespace MobiusEditor
             selectedFileName = OpenFileFromMix(selectedFileName);
             if (selectedFileName != null)
             {
-                OpenFile(selectedFileName);
+                OpenFile(selectedFileName, false);
             }
             else
             {
@@ -1203,7 +1203,7 @@ namespace MobiusEditor
         {
             if (MRU.CheckIfExist(name))
             {
-                OpenFileAsk(name);
+                OpenFileAsk(name, false);
             }
             else
             {
@@ -1276,7 +1276,7 @@ namespace MobiusEditor
                 }
             }
             Unload();
-            String loading = "Loading new map";
+            string loading = "Loading new map";
             if (withImage)
                 loading += " from image";
             loadMultiThreader.ExecuteThreaded(
@@ -1286,13 +1286,22 @@ namespace MobiusEditor
                 loading);
         }
 
-        private void OpenFileAsk(String fileName)
+        private void OpenFileAsk(string fileName, bool recheckMix)
         {
-            PromptSaveMap(() => OpenFile(fileName), false);
+            PromptSaveMap(() => OpenFile(fileName, recheckMix), false);
         }
 
-        private void OpenFile(String fileName)
+        private void OpenFile(string fileName, bool recheckMix)
         {
+            if (recheckMix)
+            {
+                fileName = OpenFileFromMix(fileName);
+                if (fileName == null)
+                {
+                    RefreshActiveTool();
+                    return;
+                }
+            }
             ClearActiveTool();
             bool isMix = !String.IsNullOrEmpty(fileName) && fileName.Contains('?');
             string loadName = fileName;
@@ -2020,7 +2029,7 @@ namespace MobiusEditor
                 availableToolTypes |= ToolType.Map; // Should always show clear terrain, no matter what.
                 availableToolTypes |= plugin.Map.SmudgeTypes.Any(t => !Globals.FilterTheaterObjects || t.ExistsInTheater) ? ToolType.Smudge : ToolType.None;
                 availableToolTypes |= plugin.Map.OverlayTypes.Any(t => t.IsOverlay && (!Globals.FilterTheaterObjects || t.ExistsInTheater)) ? ToolType.Overlay : ToolType.None;
-                availableToolTypes |= plugin.Map.TerrainTypes.Any(t => !Globals.FilterTheaterObjects || t.Theaters == null || t.Theaters.Contains(th)) ? ToolType.Terrain : ToolType.None;
+                availableToolTypes |= plugin.Map.TerrainTypes.Any(t => !Globals.FilterTheaterObjects || t.ExistsInTheater) ? ToolType.Terrain : ToolType.None;
                 availableToolTypes |= plugin.Map.InfantryTypes.Any() ? ToolType.Infantry : ToolType.None;
                 availableToolTypes |= plugin.Map.UnitTypes.Any() ? ToolType.Unit : ToolType.None;
                 availableToolTypes |= plugin.Map.BuildingTypes.Any(t => !Globals.FilterTheaterObjects || !t.IsTheaterDependent || t.ExistsInTheater) ? ToolType.Building : ToolType.None;
@@ -2450,7 +2459,7 @@ namespace MobiusEditor
             String[] files = (String[])e.Data.GetData(DataFormats.FileDrop);
             if (files.Length != 1)
                 return;
-            OpenFileAsk(files[0]);
+            OpenFileAsk(files[0], true);
         }
 
         private void ViewMenuItem_CheckedChanged(object sender, EventArgs e)
@@ -2851,7 +2860,7 @@ namespace MobiusEditor
             if (filename != null)
             {
                 this.shouldCheckUpdate = Globals.CheckUpdatesOnStartup;
-                OpenFile(filename);
+                OpenFile(filename, true);
             }
             else if (Globals.CheckUpdatesOnStartup)
             {
@@ -2995,8 +3004,7 @@ namespace MobiusEditor
             OverlayType overlay = plugin.Map.OverlayTypes.Where(ov => (ov.Flag & plugin.GameInfo.OverlayIconType) != OverlayTypeFlag.None && ov.Thumbnail != null
                 && (!Globals.FilterTheaterObjects || ov.ExistsInTheater))
                 .OrderBy(ov => ov.ID).FirstOrDefault();
-            TerrainType terrain = plugin.Map.TerrainTypes.Where(tr => tr.Thumbnail != null &&
-                (!Globals.FilterTheaterObjects || tr.Theaters == null || tr.Theaters.Contains(th)))
+            TerrainType terrain = plugin.Map.TerrainTypes.Where(tr => tr.Thumbnail != null && !Globals.FilterTheaterObjects || tr.ExistsInTheater)
                 .OrderBy(tr => tr.ID).FirstOrDefault();
             InfantryType infantry = plugin.Map.InfantryTypes.FirstOrDefault();
             UnitType unit = plugin.Map.UnitTypes.FirstOrDefault();
