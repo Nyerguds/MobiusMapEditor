@@ -4,10 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Runtime.Remoting.Metadata.W3cXsd2001;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace MobiusEditor.Utility
 {
@@ -152,6 +149,16 @@ namespace MobiusEditor.Utility
                 fullName += " -> " + loadedName;
             }
             return fullName;
+        }
+
+        public static bool IsMixPath(string path)
+        {
+            if (String.IsNullOrEmpty(path) || !path.Contains('?')) {
+                return false;
+            }
+            GetComponents(path, out string[] mixParts, out string[] nameParts);
+            // Not checking on actual file existence; just validity of the format.
+            return mixParts.Length > 0 && mixParts[0].Length > 0 && nameParts.Length > 0 && nameParts[0].Length > 0;
         }
 
         /// <summary>Opens a mix path and checks if the files involved are all present. If the files to open are a pair, this checks them both.</summary>

@@ -310,6 +310,10 @@ namespace MobiusEditor.Tools
                 {
                     MapRenderer.RenderAllVehicleOutlines(graphics, plugin.GameInfo, map, visibleCells, tileSize, true);
                 }
+                if ((layersToRender & MapLayerFlag.Buildings) == MapLayerFlag.Buildings && plugin.GameInfo.SupportsMapLayer(MapLayerFlag.Buildings))
+                {
+                    MapRenderer.RenderAllBuildingOutlines(graphics, plugin.GameInfo, map, visibleCells, tileSize, tileScale, true);
+                }
                 if (renderOverlay && !Globals.OutlineAllCrates && plugin.Map.CrateOverlaysAvailable)
                 {
                     MapRenderer.RenderAllCrateOutlines(graphics, plugin.GameInfo, map, visibleCells, tileSize, tileScale, !Globals.OutlineAllCrates);
@@ -375,13 +379,17 @@ namespace MobiusEditor.Tools
             bool renderOverlay = (layers & MapLayerFlag.Overlay) == MapLayerFlag.Overlay;
             if ((layers & MapLayerFlag.OverlapOutlines) == MapLayerFlag.OverlapOutlines)
             {
-                if ((layers & MapLayerFlag.Infantry) == MapLayerFlag.Infantry)
+                if ((layers & MapLayerFlag.Infantry) == MapLayerFlag.Infantry && plugin.GameInfo.SupportsMapLayer(MapLayerFlag.Units))
                 {
                     MapRenderer.RenderAllInfantryOutlines(graphics, map, visibleCells, tileSize, true);
                 }
-                if ((layers & MapLayerFlag.Units) == MapLayerFlag.Units)
+                if ((layers & MapLayerFlag.Units) == MapLayerFlag.Units && plugin.GameInfo.SupportsMapLayer(MapLayerFlag.Units))
                 {
                     MapRenderer.RenderAllVehicleOutlines(graphics, plugin.GameInfo, map, visibleCells, tileSize, true);
+                }
+                if ((layers & MapLayerFlag.Buildings) == MapLayerFlag.Buildings && plugin.GameInfo.SupportsMapLayer(MapLayerFlag.Buildings))
+                {
+                    MapRenderer.RenderAllBuildingOutlines(graphics, plugin.GameInfo, map, visibleCells, tileSize, tileScale, true);
                 }
                 if (renderOverlay && !renderAllCrateOutlines)
                 {

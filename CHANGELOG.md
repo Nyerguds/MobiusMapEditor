@@ -637,3 +637,4 @@ Unreleased.
 * Fixed Red Alert map load not giving feedback on the removal of Aircraft.
 * Added an indicator on the Autocreate option on Teams if the Max Allowed setting is set to 0.
 * Added indicators for all terrain types, and green indications of cells occupied by objects on the map.
+* Added outlines for overlapped buildings.

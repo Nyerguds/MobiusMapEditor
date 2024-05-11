@@ -63,7 +63,7 @@ namespace MobiusEditor.Tools
         /// Layers that are not painted by the PostRenderMap function on ViewTool level because they are handled
         /// at a specific point in the PostRenderMap override by the implementing tool.
         /// </summary>
-        protected override MapLayerFlag ManuallyHandledLayers => MapLayerFlag.TechnoTriggers | MapLayerFlag.BuildingRebuild | MapLayerFlag.BuildingFakes | MapLayerFlag.EffectRadius;
+        protected override MapLayerFlag ManuallyHandledLayers => MapLayerFlag.TechnoTriggers | MapLayerFlag.BuildingRebuild | MapLayerFlag.BuildingFakes | MapLayerFlag.EffectRadius | MapLayerFlag.OverlapOutlines;
 
         private bool placementMode;
 
@@ -1120,6 +1120,7 @@ namespace MobiusEditor.Tools
             {
                 MapRenderer.RenderBuildingEffectRadius(graphics, boundRenderCells, Globals.MapTileSize, map.GapRadius, selected, loc.Value, selected);
             }
+            this.HandlePaintOutlines(graphics, previewMap, visibleCells, Globals.MapTileSize, Globals.MapTileScale, this.Layers);
             if ((Layers & MapLayerFlag.BuildingFakes) == MapLayerFlag.BuildingFakes)
             {
                 MapRenderer.RenderAllFakeBuildingLabels(graphics, previewMap, visibleCells, Globals.MapTileSize);

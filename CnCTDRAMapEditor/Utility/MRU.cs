@@ -37,7 +37,15 @@ namespace MobiusEditor.Utility
 
         public event EventHandler<string> FileSelected;
 
-        public MRU(string registryPath, int maxFiles, ToolStripMenuItem menu)
+        /// <summary>
+        /// Handles Most Recently Used files.
+        /// </summary>
+        /// <param name="registryPath">Registry path in which the MRU will be stored</param>
+        /// <param name="mruName">Name of the MRU key</param>
+        /// <param name="mruImport">If the MRU key does not exist, an alternate MRU key to import from (compatibility system to migrate files to Mobius from non-mix-capable original.</param>
+        /// <param name="maxFiles">Maximum amount of files</param>
+        /// <param name="menu">=the toolstrip menu to add the objects to.</param>
+        public MRU(string registryPath, string mruName, string mruImport, int maxFiles, ToolStripMenuItem menu)
         {
             RegistryKey subKey = Registry.CurrentUser;
             foreach (var key in registryPath.Split('\\'))
@@ -47,7 +55,6 @@ namespace MobiusEditor.Utility
                 try { oldKey.Dispose(); }
                 catch { /* ignore */ }
             }
-            registryKey = subKey.CreateSubKey("MRU");
             this.maxFiles = maxFiles;
             this.menu = menu;
             this.menu.DropDownItems.Clear();
@@ -58,7 +65,31 @@ namespace MobiusEditor.Utility
                 fileItem.Visible = false;
                 menu.DropDownItems.Add(fileItem);
             }
-            LoadMRU();
+            registryKey = subKey.OpenSubKey(mruName, true);
+            Boolean loaded = false;
+            if (registryKey == null)
+            {
+                if (!string.IsNullOrEmpty(mruImport))
+                {
+                    using (RegistryKey oldKey = subKey.OpenSubKey(mruImport))
+                    {
+                        if (oldKey != null)
+                        {
+                            LoadMRU(oldKey);
+                            loaded = true;
+                        }
+                    }
+                }
+                registryKey = subKey.CreateSubKey(mruName);
+            }
+            if (loaded)
+            {
+                SaveMRU();
+            }
+            else
+            {
+                LoadMRU();
+            }
             ShowMRU();
         }
 
@@ -106,8 +137,7 @@ namespace MobiusEditor.Utility
         /// <returns></returns>
         public static FileInfo GetBaseFileInfo(string path)
         {
-            bool isMix = path.IndexOf('?') != -1;
-            if (isMix)
+            if (MixPath.IsMixPath(path))
             {
                 MixPath.GetComponents(path, out string[] mixParts, out _);
                 path = mixParts[0];
@@ -117,10 +147,15 @@ namespace MobiusEditor.Utility
 
         private void LoadMRU()
         {
+            LoadMRU(registryKey);
+        }
+
+        private void LoadMRU(RegistryKey key)
+        {
             files.Clear();
             for (var i = 0; i < maxFiles; ++i)
             {
-                string fileName = registryKey.GetValue(i.ToString()) as string;
+                string fileName = key.GetValue(i.ToString()) as string;
                 if (!string.IsNullOrEmpty(fileName))
                 {
                     files.Add(fileName);

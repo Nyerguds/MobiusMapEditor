@@ -1332,7 +1332,7 @@ namespace MobiusEditor.Render
                 {
                     continue;
                 }
-                if (!visibleCells.Contains(location) || (onlyIfBehindObjects && !IsOverlapped(map, location, false, false, null)))
+                if (!visibleCells.Contains(location) || (onlyIfBehindObjects && !IsOverlapped(map, location, false, false, null, false)))
                 {
                     continue;
                 }
@@ -1403,7 +1403,7 @@ namespace MobiusEditor.Render
                     }
                     if (onlyIfBehindObjects)
                     {
-                        if (!IsOverlapped(map, location, true, true, ist))
+                        if (!IsOverlapped(map, location, true, true, ist, false))
                         {
                             continue;
                         }
@@ -1447,7 +1447,7 @@ namespace MobiusEditor.Render
 
         public static void RenderAllVehicleOutlines(Graphics g, GameInfo gameInfo, Map map, Rectangle visibleCells, Size tileSize, bool onlyIfBehindObjects)
         {
-            // Optimised to only get the paint area once per crate type.
+            // Optimised to only get the paint area once per object type.
             // Sadly can't easily be cached because everything in this class is static.
             Dictionary<string, RegionData> paintAreas = new Dictionary<string, RegionData>();
             float outlineThickness = 0.05f;
@@ -1461,7 +1461,7 @@ namespace MobiusEditor.Render
                 {
                     continue;
                 }
-                if (onlyIfBehindObjects && !IsOverlapped(map, location, true, true, null))
+                if (onlyIfBehindObjects && !IsOverlapped(map, location, true, true, null, false))
                 {
                     continue;
                 }
@@ -1486,7 +1486,6 @@ namespace MobiusEditor.Render
                         paintAreaRel = ImageUtils.GetOutline(tileSize, bm, outlineThickness, alphaThreshold, Globals.UseClassicFiles);
                         paintAreas[id] = paintAreaRel;
                     }
-
                 }
                 // Rendered in a 3x3 cell frame, so subtract one.
                 int actualTopLeftX = (location.X - 1) * tileSize.Width;
@@ -1503,10 +1502,95 @@ namespace MobiusEditor.Render
             }
         }
 
-        private static bool IsOverlapped(Map map, Point location, bool ignoreUnits, bool ignoreAfterHalfwayPoint, InfantryStoppingType? ist)
+        public static void RenderAllBuildingOutlines(Graphics g, GameInfo gameInfo, Map map, Rectangle visibleCells, Size tileSize, double tileScale, bool onlyIfBehindObjects)
+        {
+            // Optimised to only get the paint area once per object type.
+            // Sadly can't easily be cached because everything in this class is static.
+            Dictionary<string, RegionData> paintAreas = new Dictionary<string, RegionData>();
+            float outlineThickness = 0.05f;
+            byte alphaThreshold = (byte)(Globals.UseClassicFiles ? 0x80 : 0x40);
+            //double lumThreshold = 0.01d;
+            visibleCells.Inflate(1, 1);
+            List<Point> pts = visibleCells.Points().OrderBy(p => p.Y * map.Metrics.Width + p.X).ToList();
+            foreach (var (baseLocation, building) in map.Buildings.OfType<Building>().OrderBy(i => map.Metrics.GetCell(i.Location)))
+            {
+                bool[,] occupyMask = building.Type.BaseOccupyMask;
+                int maskY = occupyMask == null ? 0 : occupyMask.GetLength(0);
+                int maskX = occupyMask == null ? 0 : occupyMask.GetLength(1);
+                bool[] occupyArr = occupyMask.Cast<bool>().ToArray();
+                // If not in currently viewed area, ignore.
+                Point[] allPoints = Enumerable.Range(0, maskY).SelectMany(nrY => Enumerable.Range(0, maskX).Select(nrX => new Point(nrX, nrY)))
+                    .Select(pt => new Point(baseLocation.X + pt.X, baseLocation.Y + pt.Y)).ToArray();
+                bool isVisible = false;
+                foreach (Point point in allPoints)
+                {
+                    int index = pts.IndexOf(point);
+                    if (index != -1)
+                    {
+                        isVisible = true;
+                        break;
+                    }
+                }
+                if (!isVisible)
+                {
+                    continue;
+                }
+                // Select actual map points for all occupied points in occupyMask
+                int occupiedNr = 0;
+                Point[] occupiedPoints = Enumerable.Range(0, maskY).SelectMany(nrY => Enumerable.Range(0, maskX).Select(nrX => new Point(nrX, nrY)))
+                    .Where(pt => occupyMask[pt.Y, pt.X]).Select(pt => new Point(baseLocation.X + pt.X, baseLocation.Y + pt.Y)).ToArray();
+                foreach (Point occupiedPoint in occupiedPoints)
+                {
+                    if (!onlyIfBehindObjects || IsOverlapped(map, occupiedPoint, true, true, null, true))
+                    {
+                        occupiedNr++;
+                    }
+                }
+                if (occupiedNr < occupiedPoints.Length)
+                {
+                    continue;
+                }
+                Size cellSize = new Size(maskX + 2, maskY + 2);
+                Color outlineCol = Color.FromArgb(0xA0, Globals.TheTeamColorManager.GetBaseColor(building.House?.BuildingTeamColor));
+                RegionData paintAreaRel;
+                string id = building.Type.Name + '_' + building.Direction.ID;
+                if (!paintAreas.TryGetValue(id, out paintAreaRel))
+                {
+                    // Clone with full opacity
+                    Building toRender = building;
+                    if (building.Tint.A != 255)
+                    {
+                        toRender = building.Clone();
+                        building.Tint = Color.FromArgb(255, building.Tint);
+                    }
+                    using (Bitmap bm = new Bitmap(tileSize.Width * cellSize.Width, tileSize.Height * cellSize.Width, PixelFormat.Format32bppArgb))
+                    {
+                        using (Graphics ig = Graphics.FromImage(bm))
+                        {
+                            RenderBuilding(gameInfo, null, new Point(1,1), tileSize, tileScale, toRender).RenderAction(ig);
+                        }
+                        paintAreaRel = ImageUtils.GetOutline(tileSize, bm, outlineThickness, alphaThreshold, Globals.UseClassicFiles);
+                        paintAreas[id] = paintAreaRel;
+                    }
+                }
+                int actualTopLeftX = (baseLocation.X - 1) * tileSize.Width;
+                int actualTopLeftY = (baseLocation.Y - 1) * tileSize.Height;
+                if (paintAreaRel != null)
+                {
+                    using (Region paintArea = new Region(paintAreaRel))
+                    using (Brush brush = new SolidBrush(outlineCol))
+                    {
+                        paintArea.Translate(actualTopLeftX, actualTopLeftY);
+                        g.FillRegion(brush, paintArea);
+                    }
+                }
+            }
+        }
+
+        private static bool IsOverlapped(Map map, Point location, bool ignoreUnits, bool ignoreAfterHalfwayPoint, InfantryStoppingType? ist, bool noOccupiedCells)
         {
 #if BetterYRendering
-            return IsObjectOverlapped(map, location, ignoreUnits, ignoreAfterHalfwayPoint, ist);
+            return IsObjectOverlapped(map, location, ignoreUnits, ignoreAfterHalfwayPoint, ist, noOccupiedCells);
 #else
             return IsObjectOverlapped(map, location, ignoreUnits, false, null);
 #endif
@@ -1520,8 +1604,9 @@ namespace MobiusEditor.Render
         /// <param name="ignoreUnits">True to ignore unit placement.</param>
         /// <param name="ignoreBelowRenderY">Only return true if the overlapper's Y-offset is lower than that of the overlapped object.</param>
         /// <param name="ist">When filled in, the overlapper is treated as infantry on that location.</param>
+        /// <param name="noOccupiedCells">Only evaluate overlapping cells of structures and terrain objects, not their occupied cells.</param>
         /// <returns>true if the cell is considered filled enough to overlap things.</returns>
-        private static bool IsObjectOverlapped(Map map, Point location, bool ignoreUnits, bool ignoreBelowRenderY, InfantryStoppingType? ist)
+        private static bool IsObjectOverlapped(Map map, Point location, bool ignoreUnits, bool ignoreBelowRenderY, InfantryStoppingType? ist, bool noOccupiedCells)
         {
             ICellOccupier techno = map.Technos[location];
             // Single-cell occupier. Always pass.
@@ -1559,7 +1644,7 @@ namespace MobiusEditor.Render
                 }
                 ICellOccupier occ = ovl as ICellOccupier;
                 bool[,] opaqueMask = ovl.OpaqueMask;
-                int maskY = opaqueMask == null ? 0 :opaqueMask.GetLength(0);
+                int maskY = opaqueMask == null ? 0 : opaqueMask.GetLength(0);
                 int maskX = opaqueMask == null ? 0 : opaqueMask.GetLength(1);
                 Point? pt = map.Technos[occ];
                 if (!pt.HasValue)
@@ -1597,9 +1682,17 @@ namespace MobiusEditor.Render
                 // Trick to convert 2-dimensional arrays to linear format.
                 bool[] occupyArr = occupyMask.Cast<bool>().ToArray();
                 bool[] opaqueArr = opaqueMask.Cast<bool>().ToArray();
-                // If either part of the occupied cells, or obscured from view by graphics, return true.
-                if (occupyArr[index] || opaqueArr[index])
+                if (noOccupiedCells)
                 {
+                    if (!occupyArr[index] && opaqueArr[index])
+                    {
+                        // If only evaluating non-occupied cells, return if obscured from view by overlap.
+                        return true;
+                    }
+                }
+                else if (occupyArr[index] || opaqueArr[index])
+                {
+                    // If either part of the occupied cells, or obscured from view by graphics, return true.
                     return true;
                 }
             }

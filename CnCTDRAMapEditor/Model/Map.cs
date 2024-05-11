@@ -2316,7 +2316,7 @@ namespace MobiusEditor.Model
         /// <param name="redoList">Redo list, linking objects to their final trigger value</param>
         /// <param name="cellTriggerLocations">Locations for all modified cell triggers</param>
         /// <param name="newTriggers">Triggers list to use to check for trigger links to objects.</param>
-        public void ApplyTriggerChanges(List<(String Name1, String Name2)> renameActions, out Dictionary<object, string> undoList, out Dictionary<object, string> redoList, out Dictionary<CellTrigger, int> cellTriggerLocations, List<Trigger> newTriggers)
+        public void ApplyTriggerNameChanges(List<(String Name1, String Name2)> renameActions, out Dictionary<object, string> undoList, out Dictionary<object, string> redoList, out Dictionary<CellTrigger, int> cellTriggerLocations, List<Trigger> newTriggers)
         {
             undoList = new Dictionary<object, string>();
             redoList = new Dictionary<object, string>();
