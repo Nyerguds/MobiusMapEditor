@@ -1332,7 +1332,7 @@ namespace MobiusEditor.Render
                 {
                     continue;
                 }
-                if (!visibleCells.Contains(location) || (onlyIfBehindObjects && !IsOverlapped(map, location, false, false, null, false)))
+                if (!visibleCells.Contains(location) || (onlyIfBehindObjects && !IsOverlapped(map, location, false, false, null, null)))
                 {
                     continue;
                 }
@@ -1403,7 +1403,7 @@ namespace MobiusEditor.Render
                     }
                     if (onlyIfBehindObjects)
                     {
-                        if (!IsOverlapped(map, location, true, true, ist, false))
+                        if (!IsOverlapped(map, location, true, true, ist, null))
                         {
                             continue;
                         }
@@ -1461,7 +1461,7 @@ namespace MobiusEditor.Render
                 {
                     continue;
                 }
-                if (onlyIfBehindObjects && !IsOverlapped(map, location, true, true, null, false))
+                if (onlyIfBehindObjects && !IsOverlapped(map, location, true, true, null, unit))
                 {
                     continue;
                 }
@@ -1535,20 +1535,23 @@ namespace MobiusEditor.Render
                 {
                     continue;
                 }
-                // Select actual map points for all occupied points in occupyMask
-                int occupiedNr = 0;
-                Point[] occupiedPoints = Enumerable.Range(0, maskY).SelectMany(nrY => Enumerable.Range(0, maskX).Select(nrX => new Point(nrX, nrY)))
-                    .Where(pt => occupyMask[pt.Y, pt.X]).Select(pt => new Point(baseLocation.X + pt.X, baseLocation.Y + pt.Y)).ToArray();
-                foreach (Point occupiedPoint in occupiedPoints)
+                if (onlyIfBehindObjects)
                 {
-                    if (!onlyIfBehindObjects || IsOverlapped(map, occupiedPoint, true, true, null, true))
+                    // Select actual map points for all occupied points in occupyMask
+                    int occupiedNr = 0;
+                    Point[] occupiedPoints = Enumerable.Range(0, maskY).SelectMany(nrY => Enumerable.Range(0, maskX).Select(nrX => new Point(nrX, nrY)))
+                        .Where(pt => occupyMask[pt.Y, pt.X]).Select(pt => new Point(baseLocation.X + pt.X, baseLocation.Y + pt.Y)).ToArray();
+                    foreach (Point occupiedPoint in occupiedPoints)
                     {
-                        occupiedNr++;
+                        if (IsOverlapped(map, occupiedPoint, true, true, null, building))
+                        {
+                            occupiedNr++;
+                        }
                     }
-                }
-                if (occupiedNr < occupiedPoints.Length)
-                {
-                    continue;
+                    if (occupiedNr < occupiedPoints.Length)
+                    {
+                        continue;
+                    }
                 }
                 Size cellSize = new Size(maskX + 2, maskY + 2);
                 Color outlineCol = Color.FromArgb(0xA0, Globals.TheTeamColorManager.GetBaseColor(building.House?.BuildingTeamColor));
@@ -1587,12 +1590,12 @@ namespace MobiusEditor.Render
             }
         }
 
-        private static bool IsOverlapped(Map map, Point location, bool ignoreUnits, bool ignoreAfterHalfwayPoint, InfantryStoppingType? ist, bool noOccupiedCells)
+        private static bool IsOverlapped(Map map, Point location, bool ignoreUnits, bool ignoreBelowRenderY, InfantryStoppingType? ist, ICellOverlapper objectToCheck)
         {
 #if BetterYRendering
-            return IsObjectOverlapped(map, location, ignoreUnits, ignoreAfterHalfwayPoint, ist, noOccupiedCells);
+            return IsObjectOverlapped(map, location, ignoreUnits, ignoreBelowRenderY, ist, objectToCheck);
 #else
-            return IsObjectOverlapped(map, location, ignoreUnits, false, null);
+            return IsObjectOverlapped(map, location, ignoreUnits, false, null, objectToCheck);
 #endif
         }
 
@@ -1604,9 +1607,9 @@ namespace MobiusEditor.Render
         /// <param name="ignoreUnits">True to ignore unit placement.</param>
         /// <param name="ignoreBelowRenderY">Only return true if the overlapper's Y-offset is lower than that of the overlapped object.</param>
         /// <param name="ist">When filled in, the overlapper is treated as infantry on that location.</param>
-        /// <param name="noOccupiedCells">Only evaluate overlapping cells of structures and terrain objects, not their occupied cells.</param>
+        /// <param name="objectToCheck">Object for which overlap is being checked. This object is automatically ignored in the objects it loops over to check for overlaps.</param>
         /// <returns>true if the cell is considered filled enough to overlap things.</returns>
-        private static bool IsObjectOverlapped(Map map, Point location, bool ignoreUnits, bool ignoreBelowRenderY, InfantryStoppingType? ist, bool noOccupiedCells)
+        private static bool IsObjectOverlapped(Map map, Point location, bool ignoreUnits, bool ignoreBelowRenderY, InfantryStoppingType? ist, ICellOverlapper objectToCheck)
         {
             ICellOccupier techno = map.Technos[location];
             // Single-cell occupier. Always pass.
@@ -1638,7 +1641,7 @@ namespace MobiusEditor.Render
             {
                 Building bld = ovl as Building;
                 Terrain ter = ovl as Terrain;
-                if (bld == null && ter == null)
+                if ((bld == null && ter == null) || ovl == objectToCheck)
                 {
                     continue;
                 }
@@ -1682,15 +1685,7 @@ namespace MobiusEditor.Render
                 // Trick to convert 2-dimensional arrays to linear format.
                 bool[] occupyArr = occupyMask.Cast<bool>().ToArray();
                 bool[] opaqueArr = opaqueMask.Cast<bool>().ToArray();
-                if (noOccupiedCells)
-                {
-                    if (!occupyArr[index] && opaqueArr[index])
-                    {
-                        // If only evaluating non-occupied cells, return if obscured from view by overlap.
-                        return true;
-                    }
-                }
-                else if (occupyArr[index] || opaqueArr[index])
+                if (occupyArr[index] || opaqueArr[index])
                 {
                     // If either part of the occupied cells, or obscured from view by graphics, return true.
                     return true;

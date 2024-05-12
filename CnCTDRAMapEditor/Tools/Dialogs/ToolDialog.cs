@@ -27,14 +27,24 @@ namespace MobiusEditor.Tools.Dialogs
             defaultPositionPropertySettingInfo = Properties.Settings.Default.GetType().GetProperty(GetType().Name + "DefaultPosition");
             if (defaultPositionPropertySettingInfo != null)
             {
-                startLocation = (Point)defaultPositionPropertySettingInfo.GetValue(Properties.Settings.Default);
-                if (startLocation.Value.X == 0 && startLocation.Value.Y == 0)
+                Point startLoc = (Point)defaultPositionPropertySettingInfo.GetValue(Properties.Settings.Default);
+                startLocation = startLoc;
+                bool isEmptyOrIllegal = startLoc.X == 0 && startLoc.Y == 0;
+                if (!isEmptyOrIllegal)
+                {
+                    // If point is saved in a location that's not available (e.g. disconnected external monitor), reset it.
+                    Rectangle workingArea = Screen.FromPoint(startLoc).WorkingArea;
+                    if (!workingArea.Contains(startLoc))
+                    {
+                        isEmptyOrIllegal = true;
+                    }
+                }
+                if (isEmptyOrIllegal)
                 {
                     startLocation = null;
                     if (parentForm != null)
                     {
                         Rectangle rec = parentForm.Bounds;
-
                         int parentWidth = rec.Width;
                         int parentHeight = rec.Height;
                         int parentX = Math.Max(0, rec.X);

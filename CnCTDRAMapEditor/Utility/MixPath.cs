@@ -11,7 +11,7 @@ namespace MobiusEditor.Utility
     internal class MixPath
     {
         /// <summary>
-        /// Mattern to identify a filename as file ID. This can be used to analyse the data returned by <see cref="GetComponents"/>.
+        /// Pattern to identify a filename as file ID. This can be used to analyse the data returned by <see cref="GetComponents"/>.
         /// </summary>
         public static readonly Regex FilePathIdPattern = new Regex("^\\*([0-9A-F]{8})\\*$");
 
