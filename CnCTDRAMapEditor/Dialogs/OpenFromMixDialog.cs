@@ -12,6 +12,7 @@ namespace MobiusEditor.Dialogs
     public partial class OpenFromMixDialog : Form, IHasStatusLabel
     {
         private bool resizing = false;
+        private string[] initPaths = null;
         private List<MixFile> openedMixFiles = new List<MixFile>();
         private MixFileNameGenerator romfis;
         private SimpleMultiThreading analysisMultiThreader;
@@ -24,7 +25,7 @@ namespace MobiusEditor.Dialogs
 
         public Label StatusLabel { get; set; }
 
-        public OpenFromMixDialog(MixFile baseMix, MixFileNameGenerator romfis)
+        public OpenFromMixDialog(MixFile baseMix, string[] internalMixParts, MixFileNameGenerator romfis)
         {
             InitializeComponent();
             titleMain = this.Text;
@@ -34,6 +35,7 @@ namespace MobiusEditor.Dialogs
                 identifiedGame = this.romfis.IdentifyMixFile(baseMix);
             }
             openedMixFiles.Add(baseMix);
+            initPaths = internalMixParts;
             analysisMultiThreader = new SimpleMultiThreading(this);
             analysisMultiThreader.ProcessingLabelBorder = BorderStyle.Fixed3D;
         }
@@ -353,6 +355,27 @@ namespace MobiusEditor.Dialogs
         private void OpenFromMixDialog_Load(object sender, EventArgs e)
         {
             MixContentsListView_SizeChanged(mixContentsListView, EventArgs.Empty);
+            if (initPaths != null)
+            {
+                foreach (string mixName in initPaths)
+                {
+                    MixFile currentMix = GetCurrentMix();
+                    MixEntry[] fileInfos = currentMix.GetFullFileInfo(mixName);
+                    foreach (MixEntry fileInfo in fileInfos)
+                    {
+                        if (fileInfo != null && MixFile.CheckValidMix(currentMix, fileInfo, true))
+                        {
+                            MixFile subMix = new MixFile(currentMix, fileInfo, true);
+                            if (this.romfis != null)
+                            {
+                                romfis.IdentifyMixFile(subMix, identifiedGame);
+                            }
+                            openedMixFiles.Add(subMix);
+                            break;
+                        }
+                    }
+                }
+            }
             LoadMixContents();
         }
 

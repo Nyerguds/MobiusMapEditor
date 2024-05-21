@@ -35,7 +35,6 @@ using System.Drawing.Imaging;
 using System.Drawing.Text;
 using System.Linq;
 using System.Text;
-using System.Windows.Forms;
 
 namespace MobiusEditor.Render
 {
@@ -102,7 +101,7 @@ namespace MobiusEditor.Render
         };
 
         /// <summary>
-        /// Cosine table. Technically signed bytes , but stored as 00-FF for simplicity.
+        /// Cosine table. Technically signed bytes, but stored as 00-FF for simplicity.
         /// </summary>
         private static byte[] CosTable = {
             0x00, 0x03, 0x06, 0x09, 0x0c, 0x0f, 0x12, 0x15, 0x18, 0x1b, 0x1e, 0x21, 0x24, 0x27, 0x2a, 0x2d,
@@ -127,7 +126,7 @@ namespace MobiusEditor.Render
         };
 
         /// <summary>
-        /// Sine table. Technically signed bytes , but stored as 00-FF for simplicity.
+        /// Sine table. Technically signed bytes, but stored as 00-FF for simplicity.
         /// </summary>
         private static byte[] SinTable = {
             0x7f, 0x7e, 0x7e, 0x7e, 0x7e, 0x7e, 0x7d, 0x7d, 0x7c, 0x7b, 0x7b, 0x7a, 0x79, 0x78, 0x77, 0x76,
@@ -195,7 +194,7 @@ namespace MobiusEditor.Render
             new Point(1, 2)
         };
 
-        public static void Render(GameInfo gameInfo, Map map, Graphics graphics, ISet<Point> locations, MapLayerFlag layers, double tileScale)
+        public static void Render(GameInfo gameInfo, Map map, Graphics graphics, ISet<Point> locations, MapLayerFlag layers, double tileScale, bool reduceGridArtifacts)
         {
             // tileScale should always be given so it results in an exact integer tile size. Math.Round was added to account for .999 situations in the floats.
             Size tileSize = new Size(Math.Max(1, (int)Math.Round(Globals.OriginalTileWidth * tileScale)), Math.Max(1, (int)Math.Round(Globals.OriginalTileHeight * tileScale)));
@@ -222,49 +221,65 @@ namespace MobiusEditor.Render
                 }
                 renderLocations = allCells;
             }
-            var backupCompositingQuality = graphics.CompositingQuality;
-            var backupInterpolationMode = graphics.InterpolationMode;
-            var backupSmoothingMode = graphics.SmoothingMode;
-            var backupPixelOffsetMode = graphics.PixelOffsetMode;
-
-            // Check if double tile painting is useful.
-            SetRenderSettings(graphics, false);
-            bool isHard = backupCompositingQuality == graphics.CompositingQuality &&
-                          backupInterpolationMode == graphics.InterpolationMode &&
-                          backupSmoothingMode == graphics.SmoothingMode &&
-                          backupPixelOffsetMode == graphics.PixelOffsetMode;
-            graphics.CompositingQuality = backupCompositingQuality;
-            graphics.InterpolationMode = backupInterpolationMode;
-            graphics.SmoothingMode = backupSmoothingMode;
-            graphics.PixelOffsetMode = backupPixelOffsetMode;
+            CompositingQuality backupCompositingQuality = graphics.CompositingQuality;
+            InterpolationMode backupInterpolationMode = graphics.InterpolationMode;
+            SmoothingMode backupSmoothingMode = graphics.SmoothingMode;
+            PixelOffsetMode backupPixelOffsetMode = graphics.PixelOffsetMode;
+            bool isSmooth = false;
+            if (reduceGridArtifacts)
+            {
+                // Check if double tile painting is useful.
+                SetRenderSettings(graphics, false);
+                isSmooth = backupCompositingQuality != graphics.CompositingQuality ||
+                              backupInterpolationMode != graphics.InterpolationMode ||
+                              backupSmoothingMode != graphics.SmoothingMode ||
+                              backupPixelOffsetMode != graphics.PixelOffsetMode;
+                graphics.CompositingQuality = backupCompositingQuality;
+                graphics.InterpolationMode = backupInterpolationMode;
+                graphics.SmoothingMode = backupSmoothingMode;
+                graphics.PixelOffsetMode = backupPixelOffsetMode;
+            }
             if ((layers & MapLayerFlag.Template) != MapLayerFlag.None)
             {
                 TemplateType clear = map.TemplateTypes.Where(t => t.Flag == TemplateTypeFlag.Clear).FirstOrDefault();
-                foreach (Point topLeft in renderLocations())
+                // The paint removes transparency of all tiles. Cache this process to avoid too much processing.
+                Dictionary<string, Bitmap> nonAlphaTiles = new Dictionary<string, Bitmap>();
+                try
                 {
-                    Template template = map.Templates[topLeft];
-                    TemplateType ttype = template?.Type ?? clear;
-                    string name = ttype.Name;
-                    int icon = template?.Icon ?? ((topLeft.X & 0x03) | ((topLeft.Y) & 0x03) << 2);
-                    // This should never happen; group tiles should never be placed down on the map.
-                    /*
-                    if ((ttype.Flag & TemplateTypeFlag.Group) == TemplateTypeFlag.Group)
+                    foreach (Point topLeft in renderLocations())
                     {
-                        name = ttype.GroupTiles[icon];
-                        icon = 0;
-                    }
-                    */
-                    // If something is actually placed on the map, show it, even if it has no graphics.
-                    bool success = Globals.TheTilesetManager.GetTileData(name, icon, out Tile tile, true, false);
-                    if (tile != null)
-                    {
-                        Rectangle renderBounds = new Rectangle(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height, tileSize.Width, tileSize.Height);
-                        if (tile.Image != null)
+                        Template template = map.Templates[topLeft];
+                        TemplateType ttype = template?.Type ?? clear;
+                        string name = ttype.Name;
+                        int icon = template?.Icon ?? ((topLeft.X & 0x03) | ((topLeft.Y) & 0x03) << 2);
+                        // This should never happen; group tiles should never be placed down on the map.
+                        /*
+                        if ((ttype.Flag & TemplateTypeFlag.Group) == TemplateTypeFlag.Group)
                         {
-                            using (Bitmap tileImg = tile.Image.RemoveAlpha())
+                            name = ttype.GroupTiles[icon];
+                            icon = 0;
+                        }
+                        */
+                        // If something is actually placed on the map, show it, even if it has no graphics.
+                        bool success = Globals.TheTilesetManager.GetTileData(name, icon, out Tile tile, true, false);
+                        if (tile != null)
+                        {
+                            string tileName = name + "_" + icon.ToString("D4");
+                            Rectangle renderBounds = new Rectangle(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height, tileSize.Width, tileSize.Height);
+                            Bitmap tileImg = null;
+                            if (!nonAlphaTiles.TryGetValue(tileName, out tileImg) && tile.Image != null)
+                            {
+                                tileImg = tile.Image.RemoveAlpha();
+                                //using (Bitmap noAlphaImg = tile.Image.RemoveAlpha())
+                                //{
+                                //    tileImg = ImageUtils.HighQualityScale(noAlphaImg, tileSize.Width, tileSize.Height);
+                                //}
+                                nonAlphaTiles.Add(tileName, tileImg);
+                            }
+                            if (tileImg != null)
                             {
                                 // Double tile painting drastically reduces edge artifacts when using smooth scaling
-                                if (!isHard)
+                                if (isSmooth)
                                 {
                                     // Hard mode
                                     SetRenderSettings(graphics, false);
@@ -278,11 +293,24 @@ namespace MobiusEditor.Render
                                 graphics.DrawImage(tileImg, renderBounds);
                             }
                         }
+                        else
+                        {
+                            Debug.Print(string.Format("Template {0} ({1}) not found", name, icon));
+                        }
                     }
-                    else
+                }
+                finally
+                {
+                    // Clean up cached non-alpha images
+                    foreach(KeyValuePair<string, Bitmap> kvp in nonAlphaTiles)
                     {
-                        Debug.Print(string.Format("Template {0} ({1}) not found", name, icon));
+                        try
+                        {
+                            kvp.Value.Dispose();
+                        }
+                        catch { /*ignore*/ }
                     }
+                    nonAlphaTiles.Clear();
                 }
             }
             // Attached bibs are counted under Buildings, not Smudge.
@@ -452,7 +480,7 @@ namespace MobiusEditor.Render
 
         public static void Render(GameInfo gameInfo, Map map, Graphics graphics, ISet<Point> locations, MapLayerFlag layers)
         {
-            Render(gameInfo, map, graphics, locations, layers, Globals.MapTileScale);
+            Render(gameInfo, map, graphics, locations, layers, Globals.MapTileScale, false);
         }
 
         public static (Rectangle, Action<Graphics>) RenderSmudge(Point topLeft, Size tileSize, double tileScale, Smudge smudge)

@@ -466,8 +466,13 @@ namespace MobiusEditor
         private void FileOpenFromMixMenuItem_Click(object sender, EventArgs e)
         {
             string lastMix = mru.Files.Where(pth => MixPath.IsMixPath(pth) && MRU.GetBaseFileInfo(pth).Exists).FirstOrDefault();
-            string mixFilePath = MRU.GetBaseFileInfo(lastMix).FullName;
-            PromptSaveMap(() => OpenFile(mixFilePath, true), false);
+            if (lastMix == null)
+            {
+                return;
+            }
+            MixPath.GetComponents(lastMix, out string[] mixParts, out string[] filenameParts);
+            string mixOnly = String.Join(";", mixParts);
+            PromptSaveMap(() => OpenFile(mixOnly, true), false);
         }
 
         private void OpenFile()
@@ -519,11 +524,31 @@ namespace MobiusEditor
             }
         }
 
+        /// <summary>
+        /// Checks if the given path is a mix file path, and if so, opens the dialog to open a mission from it.
+        /// </summary>
+        /// <param name="selectedFile">Selected file to open</param>
+        /// <returns></returns>
         private string OpenFileFromMix(string selectedFile)
         {
             if (String.IsNullOrEmpty(selectedFile))
             {
                 return null;
+            }
+            // Means it contains a mix path and files inside the mix to open
+            if (MixPath.IsMixPath(selectedFile))
+            {
+                return selectedFile;
+            }
+            string[] internalMixPath = null;
+            if (selectedFile.Contains(';'))
+            {
+                string[] nameParts = selectedFile.Split(';');
+                if (nameParts.Length > 1)
+                {
+                    internalMixPath = nameParts.Skip(1).ToArray();
+                }
+                selectedFile = nameParts[0];
             }
             if (!MixFile.CheckValidMix(selectedFile, true))
             {
@@ -534,7 +559,7 @@ namespace MobiusEditor
             try
             {
                 using (MixFile mixfile = new MixFile(selectedFile))
-                using (OpenFromMixDialog mixDialog = new OpenFromMixDialog(mixfile, romfis))
+                using (OpenFromMixDialog mixDialog = new OpenFromMixDialog(mixfile, internalMixPath, romfis))
                 {
                     mixDialog.StartPosition = FormStartPosition.CenterParent;
                     if (mixDialog.ShowDialog() == DialogResult.OK)
@@ -573,7 +598,7 @@ namespace MobiusEditor
                 afterSaveDone?.Invoke();
                 return;
             }
-            if (String.IsNullOrEmpty(filename) || MixPath.IsMixPath(filename) || !Directory.Exists(Path.GetDirectoryName(filename)))
+            if (String.IsNullOrEmpty(filename) || MixPath.IsMixPath(filename) || !Directory.Exists(Path.GetDirectoryName(filename)) || loadedFileType == FileType.MIX)
             {
                 SaveAsAction(afterSaveDone, skipValidation);
                 return;

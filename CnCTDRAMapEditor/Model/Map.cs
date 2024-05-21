@@ -2022,23 +2022,25 @@ namespace MobiusEditor.Model
             HashSet<Point> locations = this.Metrics.Bounds.Points().ToHashSet();
             Rectangle boundsToUse = crop ? this.Bounds : new Rectangle(Point.Empty, this.Metrics.Size);
             Size originalTileSize = Globals.OriginalTileSize;
+            // float tileScale = Math.Min((float)previewSize.Width / boundsToUse.Width / originalTileSize.Width, (float)previewSize.Height / boundsToUse.Height / originalTileSize.Height);
+            // Size renderTileSize = new Size((int)Math.Round(originalTileSize.Width * tileScale), (int)Math.Round(originalTileSize.Height * tileScale));
+            float tileScale = 1;
             Size renderTileSize = originalTileSize;
-            //Size renderTileSize = new Size((int)Math.Round(originalTileSize.Width * tileScale), (int)Math.Round(originalTileSize.Height * tileScale));
             Rectangle mapBounds = new Rectangle(boundsToUse.Left * renderTileSize.Width, boundsToUse.Top * renderTileSize.Height,
                     boundsToUse.Width * renderTileSize.Width, boundsToUse.Height * renderTileSize.Height);
-            Single previewScale = Math.Min(previewSize.Width / (float)mapBounds.Width, previewSize.Height / (float)mapBounds.Height);
+            float previewScale = Math.Min(previewSize.Width / (float)mapBounds.Width, previewSize.Height / (float)mapBounds.Height);
             Size scaledSize = new Size((int)Math.Round(previewSize.Width / previewScale), (int)Math.Round(previewSize.Height / previewScale));
 
-            using (Bitmap fullBitmap = new Bitmap(this.Metrics.Width * originalTileSize.Width, this.Metrics.Height * originalTileSize.Height))
+            using (Bitmap fullBitmap = new Bitmap(this.Metrics.Width * renderTileSize.Width, this.Metrics.Height * renderTileSize.Height))
             using (Bitmap croppedBitmap = new Bitmap(previewSize.Width, previewSize.Height))
             {
                 using (Graphics g = Graphics.FromImage(fullBitmap))
                 {
                     MapRenderer.SetRenderSettings(g, smooth);
-                    MapRenderer.Render(plugin.GameInfo, this, g, locations, toRender, 1);
+                    MapRenderer.Render(plugin.GameInfo, this, g, locations, toRender, tileScale, true);
                     if ((toRender & MapLayerFlag.Indicators) != 0)
                     {
-                        ViewTool.PostRenderMap(g, plugin, this, 1, toRender, MapLayerFlag.None, false, plugin.Map.Metrics.Bounds);
+                        ViewTool.PostRenderMap(g, plugin, this, tileScale, toRender, MapLayerFlag.None, false, plugin.Map.Metrics.Bounds);
                     }
                 }
                 using (Graphics g = Graphics.FromImage(croppedBitmap))
