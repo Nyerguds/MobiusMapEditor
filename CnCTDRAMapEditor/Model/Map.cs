@@ -2022,10 +2022,10 @@ namespace MobiusEditor.Model
             HashSet<Point> locations = this.Metrics.Bounds.Points().ToHashSet();
             Rectangle boundsToUse = crop ? this.Bounds : new Rectangle(Point.Empty, this.Metrics.Size);
             Size originalTileSize = Globals.OriginalTileSize;
-            // float tileScale = Math.Min((float)previewSize.Width / boundsToUse.Width / originalTileSize.Width, (float)previewSize.Height / boundsToUse.Height / originalTileSize.Height);
-            // Size renderTileSize = new Size((int)Math.Round(originalTileSize.Width * tileScale), (int)Math.Round(originalTileSize.Height * tileScale));
-            float tileScale = 1;
-            Size renderTileSize = originalTileSize;
+            float tileScale = Math.Min((float)previewSize.Width / boundsToUse.Width / originalTileSize.Width, (float)previewSize.Height / boundsToUse.Height / originalTileSize.Height);
+            Size renderTileSize = new Size((int)Math.Round(originalTileSize.Width * tileScale), (int)Math.Round(originalTileSize.Height * tileScale));
+            //float tileScale = 1;
+            //Size renderTileSize = originalTileSize;
             Rectangle mapBounds = new Rectangle(boundsToUse.Left * renderTileSize.Width, boundsToUse.Top * renderTileSize.Height,
                     boundsToUse.Width * renderTileSize.Width, boundsToUse.Height * renderTileSize.Height);
             float previewScale = Math.Min(previewSize.Width / (float)mapBounds.Width, previewSize.Height / (float)mapBounds.Height);
@@ -2037,7 +2037,7 @@ namespace MobiusEditor.Model
                 using (Graphics g = Graphics.FromImage(fullBitmap))
                 {
                     MapRenderer.SetRenderSettings(g, smooth);
-                    MapRenderer.Render(plugin.GameInfo, this, g, locations, toRender, tileScale, true);
+                    MapRenderer.Render(plugin.GameInfo, this, g, locations, toRender, tileScale);
                     if ((toRender & MapLayerFlag.Indicators) != 0)
                     {
                         ViewTool.PostRenderMap(g, plugin, this, tileScale, toRender, MapLayerFlag.None, false, plugin.Map.Metrics.Bounds);

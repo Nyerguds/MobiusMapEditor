@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Linq;
 using System.Reflection;
@@ -456,6 +457,123 @@ namespace MobiusEditor.Utility
             // Release image bits.
             sharpenImage.UnlockBits(pbits);
             return sharpenImage;
+        }
+
+        /// <summary>
+        /// Scales an image while avoiding edge artifacts, by first putting it in a larger frame, then scaling,
+        /// and then cropping the result.
+        /// </summary>
+        /// <param name="bitmap">Bitmap to scale</param>
+        /// <param name="width">Target width</param>
+        /// <param name="height">Target height</param>
+        /// <returns>A new bitmap, scaled to the requested size.</returns>
+        public static Bitmap HighQualityScale(this Bitmap bitmap, int width, int height)
+        {
+            return HighQualityScale(bitmap, width, height, CompositingQuality.HighQuality,
+                InterpolationMode.HighQualityBicubic, SmoothingMode.HighQuality, PixelOffsetMode.HighQuality);
+        }
+
+        /// <summary>
+        /// Scales an image while avoiding edge artifacts, by first putting it in a larger frame, then scaling,
+        /// and then cropping the result.
+        /// </summary>
+        /// <param name="bitmap">Bitmap to scale</param>
+        /// <param name="width">Target width</param>
+        /// <param name="height">Target height</param>
+        /// <param name="compositingQuality">Compositing quality for the Graphics object that performs the scaling.</param>
+        /// <param name="interpolationMode">Interpolation mode for the Graphics object that performs the scaling.</param>
+        /// <param name="smoothingMode">Smoothing mode for the Graphics object that performs the scaling.</param>
+        /// <param name="pixelOffsetMode">PixelOffset mode for the Graphics object that performs the scaling.</param>
+        /// <returns>A new bitmap, scaled to the requested size using the given graphics settings.</returns>
+        public static Bitmap HighQualityScale(this Bitmap bitmap, int width, int height, CompositingQuality compositingQuality,
+            InterpolationMode interpolationMode, SmoothingMode smoothingMode, PixelOffsetMode pixelOffsetMode)
+        {
+            int bmWidth = bitmap.Width;
+            int bmHeight = bitmap.Height;
+            int bmHalfWidth = Math.Max(1, bmWidth / 2);
+            int bmHalfHeight = Math.Max(1, bmHeight / 2);
+            Bitmap cutoutImage = null;
+            // The principle: make a frame twice as large as the original, fill the edges with repeats
+            // of the image's outer pixels, scale to desired size, then crop.
+            using (Bitmap expandImage = new Bitmap(bmHalfWidth * 4, bmHalfHeight * 4, PixelFormat.Format32bppArgb))
+            {
+                // TODO: change this to byte operations. I have a feeling it'll be much faster that way.
+                expandImage.SetResolution(bitmap.HorizontalResolution, bitmap.VerticalResolution);
+                // Fill 4 corners, stretch sides, paint original in center.
+                using (Graphics g1 = Graphics.FromImage(expandImage))
+                {
+                    g1.CompositingQuality = CompositingQuality.AssumeLinear;
+                    g1.InterpolationMode = InterpolationMode.NearestNeighbor;
+                    g1.SmoothingMode = SmoothingMode.None;
+                    g1.PixelOffsetMode = PixelOffsetMode.Half;
+                    // Fill corners with corner colours.
+                    Color tl = bitmap.GetPixel(0, 0);
+                    using (Brush brushTl = new SolidBrush(tl))
+                    {
+                        g1.FillRectangle(brushTl, 0, 0, bmHalfWidth, bmHalfHeight);
+                    }
+                    Color tr = bitmap.GetPixel(0, bmWidth - 1);
+                    using (Brush brushTr = new SolidBrush(tr))
+                    {
+                        g1.FillRectangle(brushTr, bmHalfWidth * 3, 0, bmHalfWidth, bmHalfHeight);
+                    }
+                    Color bl = bitmap.GetPixel(bmHeight - 1, 0);
+                    using (Brush brushBl = new SolidBrush(bl))
+                    {
+                        g1.FillRectangle(brushBl, 0, bmHalfHeight * 3, bmHalfWidth, bmHalfHeight);
+                    }
+                    Color br = bitmap.GetPixel(bmWidth - 1, bmHeight - 1);
+                    using (Brush brushBr = new SolidBrush(br))
+                    {
+                        g1.FillRectangle(brushBr, bmHalfWidth * 3, bmHalfHeight * 3, bmHalfWidth, bmHalfHeight);
+                    }
+                    // Fill edges with copies of last pixel row.
+                    Rectangle rectHorTop = new Rectangle(0, 0, bmWidth, 1);
+                    Rectangle rectHorBot = new Rectangle(0, bmHeight - 1, bmWidth, 1);
+                    for (int i = 0; i < bmHalfHeight; ++i)
+                    {
+                        g1.DrawImage(bitmap, new Rectangle(bmHalfWidth, i, bmWidth, 1), rectHorTop, GraphicsUnit.Pixel);
+                        g1.DrawImage(bitmap, new Rectangle(bmHalfWidth, bmHalfHeight * 3 + i, bmWidth, 1), rectHorBot, GraphicsUnit.Pixel);
+                    }
+                    Rectangle rectVerLef = new Rectangle(0, 0, 1, bmHeight);
+                    Rectangle rectVerRig = new Rectangle(bmWidth - 1, 0, 1, bmHeight);
+                    for (int i = 0; i < bmHalfWidth; ++i)
+                    {
+                        g1.DrawImage(bitmap, new Rectangle(i, bmHalfHeight, 1, bmHeight), rectVerLef, GraphicsUnit.Pixel);
+                        g1.DrawImage(bitmap, new Rectangle(bmHalfWidth * 3 + i, bmHalfHeight, 1, bmHeight), rectVerRig, GraphicsUnit.Pixel);
+                    }
+                    // Draw actual image in the center.
+                    g1.DrawImage(bitmap, new Rectangle(bmHalfWidth, bmHalfHeight, bmWidth, bmHeight), new Rectangle(0, 0, bmWidth, bmHeight), GraphicsUnit.Pixel);
+                }
+                using (Bitmap scaledImage = new Bitmap(width * 2, height * 2, PixelFormat.Format32bppArgb))
+                {
+                    scaledImage.SetResolution(bitmap.HorizontalResolution, bitmap.VerticalResolution);
+                    // Scale expanded image to (twice) the intended size
+                    using (Graphics g2 = Graphics.FromImage(scaledImage))
+                    {
+                        g2.CompositingQuality = compositingQuality;
+                        g2.InterpolationMode = interpolationMode;
+                        g2.SmoothingMode = smoothingMode;
+                        g2.PixelOffsetMode = pixelOffsetMode;
+                        g2.DrawImage(expandImage, new Rectangle(0, 0, width * 2, height * 2));
+                    }
+                    // Finally, create actual image at intended size.
+                    cutoutImage = new Bitmap(width, height, PixelFormat.Format32bppArgb);
+                    // Copy center part out of stretched image.
+                    using (Graphics g3 = Graphics.FromImage(cutoutImage))
+                    {
+                        g3.CompositingQuality = CompositingQuality.AssumeLinear;
+                        g3.InterpolationMode = InterpolationMode.NearestNeighbor;
+                        g3.SmoothingMode = SmoothingMode.None;
+                        g3.PixelOffsetMode = PixelOffsetMode.Half;
+                        g3.DrawImage(scaledImage, new Rectangle(0, 0, width, height), new Rectangle(width / 2, height / 2, width, height), GraphicsUnit.Pixel);
+                    }
+                    //expandImage.Save(Path.Combine(Program.ApplicationPath, "test_1_expand.png"), ImageFormat.Png);
+                    //scaledImage.Save(Path.Combine(Program.ApplicationPath, "test_2_scaled.png"), ImageFormat.Png);
+                    //cutoutImage.Save(Path.Combine(Program.ApplicationPath, "test_3_cutout.png"), ImageFormat.Png);
+                }
+            }
+            return cutoutImage;
         }
     }
 }

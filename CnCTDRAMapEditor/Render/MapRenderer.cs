@@ -194,7 +194,7 @@ namespace MobiusEditor.Render
             new Point(1, 2)
         };
 
-        public static void Render(GameInfo gameInfo, Map map, Graphics graphics, ISet<Point> locations, MapLayerFlag layers, double tileScale, bool reduceGridArtifacts)
+        public static void Render(GameInfo gameInfo, Map map, Graphics graphics, ISet<Point> locations, MapLayerFlag layers, double tileScale)
         {
             // tileScale should always be given so it results in an exact integer tile size. Math.Round was added to account for .999 situations in the floats.
             Size tileSize = new Size(Math.Max(1, (int)Math.Round(Globals.OriginalTileWidth * tileScale)), Math.Max(1, (int)Math.Round(Globals.OriginalTileHeight * tileScale)));
@@ -225,25 +225,19 @@ namespace MobiusEditor.Render
             InterpolationMode backupInterpolationMode = graphics.InterpolationMode;
             SmoothingMode backupSmoothingMode = graphics.SmoothingMode;
             PixelOffsetMode backupPixelOffsetMode = graphics.PixelOffsetMode;
-            bool isSmooth = false;
-            if (reduceGridArtifacts)
-            {
-                // Check if double tile painting is useful.
-                SetRenderSettings(graphics, false);
-                isSmooth = backupCompositingQuality != graphics.CompositingQuality ||
-                              backupInterpolationMode != graphics.InterpolationMode ||
-                              backupSmoothingMode != graphics.SmoothingMode ||
-                              backupPixelOffsetMode != graphics.PixelOffsetMode;
-                graphics.CompositingQuality = backupCompositingQuality;
-                graphics.InterpolationMode = backupInterpolationMode;
-                graphics.SmoothingMode = backupSmoothingMode;
-                graphics.PixelOffsetMode = backupPixelOffsetMode;
-            }
+            // Check if high-quality tile resizing is useful.
+            SetRenderSettings(graphics, false);
+            bool isSmooth = backupCompositingQuality != graphics.CompositingQuality ||
+                            backupInterpolationMode != graphics.InterpolationMode ||
+                            backupSmoothingMode != graphics.SmoothingMode ||
+                            backupPixelOffsetMode != graphics.PixelOffsetMode;
+            // No need to restore the settings; the high quality tile resizing makes all tiles the
+            // required size, and if isSmooth is false, the settings were already on pixel resize.
             if ((layers & MapLayerFlag.Template) != MapLayerFlag.None)
             {
                 TemplateType clear = map.TemplateTypes.Where(t => t.Flag == TemplateTypeFlag.Clear).FirstOrDefault();
-                // The paint removes transparency of all tiles. Cache this process to avoid too much processing.
-                Dictionary<string, Bitmap> nonAlphaTiles = new Dictionary<string, Bitmap>();
+                // This process removes the transparency of each painted tile. Cache the results to avoid too much processing.
+                Dictionary<string, Bitmap> processedTiles = new Dictionary<string, Bitmap>();
                 try
                 {
                     foreach (Point topLeft in renderLocations())
@@ -251,45 +245,33 @@ namespace MobiusEditor.Render
                         Template template = map.Templates[topLeft];
                         TemplateType ttype = template?.Type ?? clear;
                         string name = ttype.Name;
+                        // For clear terrain, calculate icon from 0-15 using map position.
                         int icon = template?.Icon ?? ((topLeft.X & 0x03) | ((topLeft.Y) & 0x03) << 2);
-                        // This should never happen; group tiles should never be placed down on the map.
-                        /*
-                        if ((ttype.Flag & TemplateTypeFlag.Group) == TemplateTypeFlag.Group)
-                        {
-                            name = ttype.GroupTiles[icon];
-                            icon = 0;
-                        }
-                        */
                         // If something is actually placed on the map, show it, even if it has no graphics.
                         bool success = Globals.TheTilesetManager.GetTileData(name, icon, out Tile tile, true, false);
                         if (tile != null)
                         {
                             string tileName = name + "_" + icon.ToString("D4");
                             Rectangle renderBounds = new Rectangle(topLeft.X * tileSize.Width, topLeft.Y * tileSize.Height, tileSize.Width, tileSize.Height);
-                            Bitmap tileImg = null;
-                            if (!nonAlphaTiles.TryGetValue(tileName, out tileImg) && tile.Image != null)
+                            if (!processedTiles.TryGetValue(tileName, out Bitmap tileImg) && tile.Image != null)
                             {
-                                tileImg = tile.Image.RemoveAlpha();
-                                //using (Bitmap noAlphaImg = tile.Image.RemoveAlpha())
-                                //{
-                                //    tileImg = ImageUtils.HighQualityScale(noAlphaImg, tileSize.Width, tileSize.Height);
-                                //}
-                                nonAlphaTiles.Add(tileName, tileImg);
+                                Bitmap tileImage = tile.Image;
+                                if (!isSmooth || (tileSize.Width == tileImage.Width && tileSize.Height == tileImage.Height))
+                                {
+                                    tileImg = tileImage.RemoveAlpha();
+                                }
+                                else
+                                {
+                                    // Results in a new image that is scaled to the correct size, without edge artifacts.
+                                    Bitmap scaledImage = tileImage.HighQualityScale(tileSize.Width, tileSize.Height,
+                                            backupCompositingQuality, backupInterpolationMode, backupSmoothingMode, backupPixelOffsetMode);
+                                    scaledImage.RemoveAlphaOnCurrent();
+                                    tileImg = scaledImage;
+                                }
+                                processedTiles.Add(tileName, tileImg);
                             }
                             if (tileImg != null)
                             {
-                                // Double tile painting drastically reduces edge artifacts when using smooth scaling
-                                if (isSmooth)
-                                {
-                                    // Hard mode
-                                    SetRenderSettings(graphics, false);
-                                    graphics.DrawImage(tileImg, renderBounds);
-                                    // Original smooth mode
-                                    graphics.CompositingQuality = backupCompositingQuality;
-                                    graphics.InterpolationMode = backupInterpolationMode;
-                                    graphics.SmoothingMode = backupSmoothingMode;
-                                    graphics.PixelOffsetMode = backupPixelOffsetMode;
-                                }
                                 graphics.DrawImage(tileImg, renderBounds);
                             }
                         }
@@ -302,7 +284,7 @@ namespace MobiusEditor.Render
                 finally
                 {
                     // Clean up cached non-alpha images
-                    foreach(KeyValuePair<string, Bitmap> kvp in nonAlphaTiles)
+                    foreach(KeyValuePair<string, Bitmap> kvp in processedTiles)
                     {
                         try
                         {
@@ -310,9 +292,15 @@ namespace MobiusEditor.Render
                         }
                         catch { /*ignore*/ }
                     }
-                    nonAlphaTiles.Clear();
+                    processedTiles.Clear();
                 }
             }
+            // With the high-quality resizing, all map tile painting is done with pixel interpolation mode because
+            // it is faster and the tiles are correctly sized anyway. So now, restore the actual requested settings.
+            graphics.CompositingQuality = backupCompositingQuality;
+            graphics.InterpolationMode = backupInterpolationMode;
+            graphics.SmoothingMode = backupSmoothingMode;
+            graphics.PixelOffsetMode = backupPixelOffsetMode;
             // Attached bibs are counted under Buildings, not Smudge.
             if ((layers & MapLayerFlag.Buildings) != MapLayerFlag.None)
             {
@@ -480,7 +468,7 @@ namespace MobiusEditor.Render
 
         public static void Render(GameInfo gameInfo, Map map, Graphics graphics, ISet<Point> locations, MapLayerFlag layers)
         {
-            Render(gameInfo, map, graphics, locations, layers, Globals.MapTileScale, false);
+            Render(gameInfo, map, graphics, locations, layers, Globals.MapTileScale);
         }
 
         public static (Rectangle, Action<Graphics>) RenderSmudge(Point topLeft, Size tileSize, double tileScale, Smudge smudge)

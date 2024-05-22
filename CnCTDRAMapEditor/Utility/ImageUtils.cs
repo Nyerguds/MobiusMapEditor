@@ -886,11 +886,5 @@ namespace MobiusEditor.Utility
             }
             return colorMatch;
         }
-
-        internal static Bitmap HighQualityScale(Bitmap noAlphaImg, int width, int height)
-        {
-            // TODO
-            throw new NotImplementedException();
-        }
     }
 }
