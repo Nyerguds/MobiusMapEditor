@@ -488,6 +488,9 @@ namespace MobiusEditor.Utility
         public static Bitmap HighQualityScale(this Bitmap bitmap, int width, int height, CompositingQuality compositingQuality,
             InterpolationMode interpolationMode, SmoothingMode smoothingMode, PixelOffsetMode pixelOffsetMode)
         {
+            // The principle: make a frame that's larger than the original, fill the edges with repeats
+            // of the image's outer pixels, scale to desired size, then crop. The edge size is calculated
+            // to make the border in the resulting image at least 4 pixels wide.
             int bmWidth = bitmap.Width;
             int bmHeight = bitmap.Height;
             int borderFraction = 1;
@@ -500,50 +503,29 @@ namespace MobiusEditor.Utility
             }
             int bmBorderWidth = bmWidth * borderFraction / fractionDivider;
             int bmBorderHeight = bmHeight * borderFraction / fractionDivider;
-            Bitmap cutoutImage = null;
-            // The principle: make a frame twice as large as the original, fill the edges with repeats
-            // of the image's outer pixels, scale to desired size, then crop.
-            byte[] bitmapData = ImageUtils.GetImageData(bitmap, out int stride, PixelFormat.Format32bppArgb, true);
+            // Get original image data.
+            BitmapData sourceData = bitmap.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+            int stride = sourceData.Stride;
+            byte[] bitmapData = new byte[stride * bmHeight];
+            Marshal.Copy(sourceData.Scan0, bitmapData, 0, bitmapData.Length);
+            bitmap.UnlockBits(sourceData);
+            // Create buffer for expanded image.
             int expandWidth = bmWidth + bmBorderWidth * 2;
             int expandHeight = bmHeight + bmBorderHeight * 2;
             int expandStride = expandWidth * 4;
-            // Expanded image buffer
             byte[] expandData = new byte[expandStride * expandHeight];
             // Length of border width in bytes
             int borderWidthLength = bmBorderWidth * 4;
-            // Define some general indices to reuse
+            // Define some general variables to reuse
             int readIndex = 0;
             int writeIndex = 0;
-            // Copy top left colour to fill start of first line
             byte[] colArr = new byte[4];
-            Array.Copy(bitmapData, 0, colArr, 0, 4);
-            for (int x = 0; x < bmBorderWidth; ++x)
-            {
-                Array.Copy(colArr, 0, expandData, writeIndex, 4);
-                writeIndex += 4;
-            }
-            // Copy first image line
-            Array.Copy(bitmapData, 0, expandData, writeIndex, stride);
-            writeIndex += stride;
-            // Copy top right colour to fill end of first line
-            Array.Copy(bitmapData, stride - 4, colArr, 0, 4);
-            for (int x = 0; x < bmBorderWidth; ++x)
-            {
-                Array.Copy(colArr, 0, expandData, writeIndex, 4);
-                writeIndex += 4;
-            }
-            // Copy this constructed line all the way down to the image
-            for (int y = 1; y < bmBorderHeight; ++y)
-            {
-                Array.Copy(expandData, 0, expandData, writeIndex, expandStride);
-                writeIndex += expandStride;
-            }
             // Copy start and end pixels of image to fill whole line, with image line in between
             readIndex = 0;
             writeIndex = expandStride * bmBorderHeight;
             for (int y = 0; y < bmHeight; ++y)
             {
-                // Get start color and write it
+                // Get start color and use it to fill the padded start of the line.
                 Array.Copy(bitmapData, readIndex, colArr, 0, 4);
                 for (int x = 0; x < bmBorderWidth; ++x)
                 {
@@ -553,7 +535,7 @@ namespace MobiusEditor.Utility
                 // Copy original image line.
                 Array.Copy(bitmapData, readIndex, expandData, writeIndex, stride);
                 writeIndex += stride;
-                // Get end color and write it
+                // Get end color and and use it to fill the padded end of the line.
                 Array.Copy(bitmapData, readIndex + stride - 4, colArr, 0, 4);
                 for (int x = 0; x < bmBorderWidth; ++x)
                 {
@@ -562,39 +544,35 @@ namespace MobiusEditor.Utility
                 }
                 readIndex += stride;
             }
-
-            // Copy bottom left colour to fill start of last line
-            readIndex = stride * (bmHeight - 1);
-            Array.Copy(bitmapData, readIndex, colArr, 0, 4);
-            for (int x = 0; x < bmBorderWidth; ++x)
-            {
-                Array.Copy(colArr, 0, expandData, writeIndex, 4);
-                writeIndex += 4;
-            }
-            // Copy last image line
-            Array.Copy(bitmapData, readIndex, expandData, writeIndex, stride);
-            writeIndex += stride;
-            // Copy bottom right colour to fill end of last line
-            Array.Copy(bitmapData, (stride * bmHeight) - 4, colArr, 0, 4);
-            for (int x = 0; x < bmBorderWidth; ++x)
-            {
-                Array.Copy(colArr, 0, expandData, writeIndex, 4);
-                writeIndex += 4;
-            }
-            // Copy this constructed line all the way down to the image
-            readIndex = writeIndex - expandStride;
-            for (int y = 1; y < bmBorderHeight; ++y)
+            // Copy first constructed line over the entire top border part
+            readIndex = expandStride * bmBorderHeight;
+            writeIndex = 0;
+            for (int y = 0; y < bmBorderHeight; ++y)
             {
                 Array.Copy(expandData, readIndex, expandData, writeIndex, expandStride);
                 writeIndex += expandStride;
             }
-            //using (Bitmap expandImage = new Bitmap(bmWidth + bmBorderWidth * 2, bmHeight + bmBorderHeight * 2, PixelFormat.Format32bppArgb))
-            using (Bitmap expandImage = ImageUtils.BuildImage(expandData, expandWidth, expandHeight, expandStride, PixelFormat.Format32bppRgb, null, null))
+            // Copy last constructed line over the entire bottom border part
+            readIndex = (bmBorderHeight + bmHeight - 1) * expandStride;
+            writeIndex = (bmBorderHeight + bmHeight) * expandStride;
+            for (int y = 0; y < bmBorderHeight; ++y)
             {
+                Array.Copy(expandData, readIndex, expandData, writeIndex, expandStride);
+                writeIndex += expandStride;
+            }
+            // Construct image from the data, scale it, crop it, and return the result.
+            using (Bitmap expandImage = new Bitmap(expandWidth, expandHeight, PixelFormat.Format32bppRgb))
+            {
+                BitmapData targetData = expandImage.LockBits(new Rectangle(0, 0, expandWidth, expandHeight), ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb);
+                int targetStride = targetData.Stride;
+                long scan0 = targetData.Scan0.ToInt64();
+                for (int y = 0; y < expandHeight; ++y)
+                    Marshal.Copy(expandData, y * expandStride, new IntPtr(scan0 + y * targetStride), expandStride);
+                expandImage.UnlockBits(targetData);
                 expandImage.SetResolution(bitmap.HorizontalResolution, bitmap.VerticalResolution);
                 int borderWidth = width * borderFraction / fractionDivider;
                 int borderHeight = height * borderFraction / fractionDivider;
-                using (Bitmap scaledImage = new Bitmap(width + borderWidth * 2, height +  borderHeight * 2, PixelFormat.Format32bppArgb))
+                using (Bitmap scaledImage = new Bitmap(width + borderWidth * 2, height + borderHeight * 2, PixelFormat.Format32bppArgb))
                 {
                     scaledImage.SetResolution(bitmap.HorizontalResolution, bitmap.VerticalResolution);
                     // Scale expanded image to (twice) the intended size
@@ -607,7 +585,7 @@ namespace MobiusEditor.Utility
                         g2.DrawImage(expandImage, new Rectangle(0, 0, width + borderWidth * 2, height + borderHeight * 2));
                     }
                     // Finally, create actual image at intended size.
-                    cutoutImage = new Bitmap(width, height, PixelFormat.Format32bppArgb);
+                    Bitmap cutoutImage = new Bitmap(width, height, PixelFormat.Format32bppArgb);
                     // Copy center part out of stretched image.
                     using (Graphics g3 = Graphics.FromImage(cutoutImage))
                     {
@@ -620,9 +598,9 @@ namespace MobiusEditor.Utility
                     //expandImage.Save(System.IO.Path.Combine(Program.ApplicationPath, "test_1_expand.png"), ImageFormat.Png);
                     //scaledImage.Save(System.IO.Path.Combine(Program.ApplicationPath, "test_2_scaled.png"), ImageFormat.Png);
                     //cutoutImage.Save(System.IO.Path.Combine(Program.ApplicationPath, "test_3_cutout.png"), ImageFormat.Png);
+                    return cutoutImage;
                 }
             }
-            return cutoutImage;
         }
     }
 }
