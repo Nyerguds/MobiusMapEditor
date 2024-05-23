@@ -490,62 +490,111 @@ namespace MobiusEditor.Utility
         {
             int bmWidth = bitmap.Width;
             int bmHeight = bitmap.Height;
-            int bmHalfWidth = Math.Max(1, bmWidth / 2);
-            int bmHalfHeight = Math.Max(1, bmHeight / 2);
+            int borderFraction = 1;
+            const int fractionDivider = 16;
+            const int minimumEdge = 4;
+            // Use larger border fraction if result is less than 'minimumEdge' pixels.
+            while (width * borderFraction / fractionDivider < minimumEdge || bmWidth * borderFraction / fractionDivider < minimumEdge)
+            {
+                borderFraction = borderFraction < fractionDivider ? borderFraction * 2 : borderFraction + fractionDivider;
+            }
+            int bmBorderWidth = bmWidth * borderFraction / fractionDivider;
+            int bmBorderHeight = bmHeight * borderFraction / fractionDivider;
             Bitmap cutoutImage = null;
             // The principle: make a frame twice as large as the original, fill the edges with repeats
             // of the image's outer pixels, scale to desired size, then crop.
-            using (Bitmap expandImage = new Bitmap(bmHalfWidth * 4, bmHalfHeight * 4, PixelFormat.Format32bppArgb))
+            byte[] bitmapData = ImageUtils.GetImageData(bitmap, out int stride, PixelFormat.Format32bppArgb, true);
+            int expandWidth = bmWidth + bmBorderWidth * 2;
+            int expandHeight = bmHeight + bmBorderHeight * 2;
+            int expandStride = expandWidth * 4;
+            // Expanded image buffer
+            byte[] expandData = new byte[expandStride * expandHeight];
+            // Length of border width in bytes
+            int borderWidthLength = bmBorderWidth * 4;
+            // Define some general indices to reuse
+            int readIndex = 0;
+            int writeIndex = 0;
+            // Copy top left colour to fill start of first line
+            byte[] colArr = new byte[4];
+            Array.Copy(bitmapData, 0, colArr, 0, 4);
+            for (int x = 0; x < bmBorderWidth; ++x)
             {
-                // TODO: change this to byte operations. I have a feeling it'll be much faster that way.
-                expandImage.SetResolution(bitmap.HorizontalResolution, bitmap.VerticalResolution);
-                // Fill 4 corners, stretch sides, paint original in center.
-                using (Graphics g1 = Graphics.FromImage(expandImage))
+                Array.Copy(colArr, 0, expandData, writeIndex, 4);
+                writeIndex += 4;
+            }
+            // Copy first image line
+            Array.Copy(bitmapData, 0, expandData, writeIndex, stride);
+            writeIndex += stride;
+            // Copy top right colour to fill end of first line
+            Array.Copy(bitmapData, stride - 4, colArr, 0, 4);
+            for (int x = 0; x < bmBorderWidth; ++x)
+            {
+                Array.Copy(colArr, 0, expandData, writeIndex, 4);
+                writeIndex += 4;
+            }
+            // Copy this constructed line all the way down to the image
+            for (int y = 1; y < bmBorderHeight; ++y)
+            {
+                Array.Copy(expandData, 0, expandData, writeIndex, expandStride);
+                writeIndex += expandStride;
+            }
+            // Copy start and end pixels of image to fill whole line, with image line in between
+            readIndex = 0;
+            writeIndex = expandStride * bmBorderHeight;
+            for (int y = 0; y < bmHeight; ++y)
+            {
+                // Get start color and write it
+                Array.Copy(bitmapData, readIndex, colArr, 0, 4);
+                for (int x = 0; x < bmBorderWidth; ++x)
                 {
-                    g1.CompositingQuality = CompositingQuality.AssumeLinear;
-                    g1.InterpolationMode = InterpolationMode.NearestNeighbor;
-                    g1.SmoothingMode = SmoothingMode.None;
-                    g1.PixelOffsetMode = PixelOffsetMode.Half;
-                    // Fill corners with corner colours.
-                    Color tl = bitmap.GetPixel(0, 0);
-                    using (Brush brushTl = new SolidBrush(tl))
-                    {
-                        g1.FillRectangle(brushTl, 0, 0, bmHalfWidth, bmHalfHeight);
-                    }
-                    Color tr = bitmap.GetPixel(0, bmWidth - 1);
-                    using (Brush brushTr = new SolidBrush(tr))
-                    {
-                        g1.FillRectangle(brushTr, bmHalfWidth * 3, 0, bmHalfWidth, bmHalfHeight);
-                    }
-                    Color bl = bitmap.GetPixel(bmHeight - 1, 0);
-                    using (Brush brushBl = new SolidBrush(bl))
-                    {
-                        g1.FillRectangle(brushBl, 0, bmHalfHeight * 3, bmHalfWidth, bmHalfHeight);
-                    }
-                    Color br = bitmap.GetPixel(bmWidth - 1, bmHeight - 1);
-                    using (Brush brushBr = new SolidBrush(br))
-                    {
-                        g1.FillRectangle(brushBr, bmHalfWidth * 3, bmHalfHeight * 3, bmHalfWidth, bmHalfHeight);
-                    }
-                    // Fill edges with copies of last pixel row.
-                    Rectangle rectHorTop = new Rectangle(0, 0, bmWidth, 1);
-                    Rectangle rectHorBot = new Rectangle(0, bmHeight - 1, bmWidth, 1);
-                    for (int i = 0; i < bmHalfHeight; ++i)
-                    {
-                        g1.DrawImage(bitmap, new Rectangle(bmHalfWidth, i, bmWidth, 1), rectHorTop, GraphicsUnit.Pixel);
-                        g1.DrawImage(bitmap, new Rectangle(bmHalfWidth, bmHalfHeight * 3 + i, bmWidth, 1), rectHorBot, GraphicsUnit.Pixel);
-                    }
-                    Rectangle rectVerLef = new Rectangle(0, 0, 1, bmHeight);
-                    Rectangle rectVerRig = new Rectangle(bmWidth - 1, 0, 1, bmHeight);
-                    for (int i = 0; i < bmHalfWidth; ++i)
-                    {
-                        g1.DrawImage(bitmap, new Rectangle(i, bmHalfHeight, 1, bmHeight), rectVerLef, GraphicsUnit.Pixel);
-                        g1.DrawImage(bitmap, new Rectangle(bmHalfWidth * 3 + i, bmHalfHeight, 1, bmHeight), rectVerRig, GraphicsUnit.Pixel);
-                    }
-                    // Draw actual image in the center.
-                    g1.DrawImage(bitmap, new Rectangle(bmHalfWidth, bmHalfHeight, bmWidth, bmHeight), new Rectangle(0, 0, bmWidth, bmHeight), GraphicsUnit.Pixel);
+                    Array.Copy(colArr, 0, expandData, writeIndex, 4);
+                    writeIndex += 4;
                 }
-                using (Bitmap scaledImage = new Bitmap(width * 2, height * 2, PixelFormat.Format32bppArgb))
+                // Copy original image line.
+                Array.Copy(bitmapData, readIndex, expandData, writeIndex, stride);
+                writeIndex += stride;
+                // Get end color and write it
+                Array.Copy(bitmapData, readIndex + stride - 4, colArr, 0, 4);
+                for (int x = 0; x < bmBorderWidth; ++x)
+                {
+                    Array.Copy(colArr, 0, expandData, writeIndex, 4);
+                    writeIndex += 4;
+                }
+                readIndex += stride;
+            }
+
+            // Copy bottom left colour to fill start of last line
+            readIndex = stride * (bmHeight - 1);
+            Array.Copy(bitmapData, readIndex, colArr, 0, 4);
+            for (int x = 0; x < bmBorderWidth; ++x)
+            {
+                Array.Copy(colArr, 0, expandData, writeIndex, 4);
+                writeIndex += 4;
+            }
+            // Copy last image line
+            Array.Copy(bitmapData, readIndex, expandData, writeIndex, stride);
+            writeIndex += stride;
+            // Copy bottom right colour to fill end of last line
+            Array.Copy(bitmapData, (stride * bmHeight) - 4, colArr, 0, 4);
+            for (int x = 0; x < bmBorderWidth; ++x)
+            {
+                Array.Copy(colArr, 0, expandData, writeIndex, 4);
+                writeIndex += 4;
+            }
+            // Copy this constructed line all the way down to the image
+            readIndex = writeIndex - expandStride;
+            for (int y = 1; y < bmBorderHeight; ++y)
+            {
+                Array.Copy(expandData, readIndex, expandData, writeIndex, expandStride);
+                writeIndex += expandStride;
+            }
+            //using (Bitmap expandImage = new Bitmap(bmWidth + bmBorderWidth * 2, bmHeight + bmBorderHeight * 2, PixelFormat.Format32bppArgb))
+            using (Bitmap expandImage = ImageUtils.BuildImage(expandData, expandWidth, expandHeight, expandStride, PixelFormat.Format32bppRgb, null, null))
+            {
+                expandImage.SetResolution(bitmap.HorizontalResolution, bitmap.VerticalResolution);
+                int borderWidth = width * borderFraction / fractionDivider;
+                int borderHeight = height * borderFraction / fractionDivider;
+                using (Bitmap scaledImage = new Bitmap(width + borderWidth * 2, height +  borderHeight * 2, PixelFormat.Format32bppArgb))
                 {
                     scaledImage.SetResolution(bitmap.HorizontalResolution, bitmap.VerticalResolution);
                     // Scale expanded image to (twice) the intended size
@@ -555,7 +604,7 @@ namespace MobiusEditor.Utility
                         g2.InterpolationMode = interpolationMode;
                         g2.SmoothingMode = smoothingMode;
                         g2.PixelOffsetMode = pixelOffsetMode;
-                        g2.DrawImage(expandImage, new Rectangle(0, 0, width * 2, height * 2));
+                        g2.DrawImage(expandImage, new Rectangle(0, 0, width + borderWidth * 2, height + borderHeight * 2));
                     }
                     // Finally, create actual image at intended size.
                     cutoutImage = new Bitmap(width, height, PixelFormat.Format32bppArgb);
@@ -566,11 +615,11 @@ namespace MobiusEditor.Utility
                         g3.InterpolationMode = InterpolationMode.NearestNeighbor;
                         g3.SmoothingMode = SmoothingMode.None;
                         g3.PixelOffsetMode = PixelOffsetMode.Half;
-                        g3.DrawImage(scaledImage, new Rectangle(0, 0, width, height), new Rectangle(width / 2, height / 2, width, height), GraphicsUnit.Pixel);
+                        g3.DrawImage(scaledImage, new Rectangle(0, 0, width, height), new Rectangle(borderWidth, borderHeight, width, height), GraphicsUnit.Pixel);
                     }
-                    //expandImage.Save(Path.Combine(Program.ApplicationPath, "test_1_expand.png"), ImageFormat.Png);
-                    //scaledImage.Save(Path.Combine(Program.ApplicationPath, "test_2_scaled.png"), ImageFormat.Png);
-                    //cutoutImage.Save(Path.Combine(Program.ApplicationPath, "test_3_cutout.png"), ImageFormat.Png);
+                    //expandImage.Save(System.IO.Path.Combine(Program.ApplicationPath, "test_1_expand.png"), ImageFormat.Png);
+                    //scaledImage.Save(System.IO.Path.Combine(Program.ApplicationPath, "test_2_scaled.png"), ImageFormat.Png);
+                    //cutoutImage.Save(System.IO.Path.Combine(Program.ApplicationPath, "test_3_cutout.png"), ImageFormat.Png);
                 }
             }
             return cutoutImage;

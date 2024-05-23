@@ -2023,7 +2023,14 @@ namespace MobiusEditor.Model
             Rectangle boundsToUse = crop ? this.Bounds : new Rectangle(Point.Empty, this.Metrics.Size);
             Size originalTileSize = Globals.OriginalTileSize;
             float tileScale = Math.Min((float)previewSize.Width / boundsToUse.Width / originalTileSize.Width, (float)previewSize.Height / boundsToUse.Height / originalTileSize.Height);
-            Size renderTileSize = new Size((int)Math.Round(originalTileSize.Width * tileScale), (int)Math.Round(originalTileSize.Height * tileScale));
+            float scaledWidth = originalTileSize.Width * tileScale;
+            float scaledHeight = originalTileSize.Height * tileScale;
+            // Adjust to nearest higher int
+            int scaleWidth = scaledWidth == (int)scaledWidth ? (int)scaledWidth : (int)(scaledWidth + 1);
+            int scaleHeight = scaledHeight == (int)scaledHeight ? (int)scaledHeight : (int)(scaledHeight + 1);
+            Size renderTileSize = new Size(scaleWidth, scaleHeight);
+            // Recalculate scale
+            tileScale = scaleWidth / (float)originalTileSize.Width;
             //float tileScale = 1;
             //Size renderTileSize = originalTileSize;
             Rectangle mapBounds = new Rectangle(boundsToUse.Left * renderTileSize.Width, boundsToUse.Top * renderTileSize.Height,
