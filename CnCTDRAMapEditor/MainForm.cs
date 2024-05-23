@@ -52,6 +52,7 @@ namespace MobiusEditor
         private ToolType availableToolTypes = ToolType.None;
 
         private ToolType activeToolType = ToolType.None;
+        /// <summary>WARNING - changing ActiveToolType should always be followed with a call to RefreshActiveTool!</summary>
         private ToolType ActiveToolType
         {
             get => activeToolType;
@@ -66,7 +67,6 @@ namespace MobiusEditor
                 if (activeToolType != firstAvailableTool || activeTool == null)
                 {
                     activeToolType = firstAvailableTool;
-                    RefreshActiveTool(false);
                 }
             }
         }
@@ -859,7 +859,7 @@ namespace MobiusEditor
                 }
             }
             // Only do full repaint if changes happened that might need a repaint (bibs, removed units, flags).
-            RefreshActiveTool(footPrintsChanged || expansionWiped || multiStatusChanged);
+            RefreshActiveTool(!footPrintsChanged && !expansionWiped && !multiStatusChanged);
             if (footPrintsChanged || amStatusChanged)
             {
                 // If Aftermath units were disabled, we can't guarantee none of them are still in
@@ -1990,7 +1990,9 @@ namespace MobiusEditor
                 {
                     oldSelectedTool = ActiveToolType;
                 }
+                activeLayers = MapLayerFlag.None;
                 ActiveToolType = ToolType.None; // Always re-defaults to map anyway, so nicer if nothing is selected during load.
+                RefreshActiveTool(false);
                 this.ActiveControl = null;
                 CleanupTools(plugin?.GameInfo?.GameType ?? GameType.None);
                 // Unlink plugin
@@ -2058,7 +2060,9 @@ namespace MobiusEditor
             {
                 toolStripButton.Enabled = (availableToolTypes & toolStripButton.ToolType) != ToolType.None;
             }
+            bool softRefresh = ActiveToolType == activeToolType;
             ActiveToolType = activeToolType;
+            RefreshActiveTool(softRefresh);
         }
 
         private void EnableDisableMenuItems(bool enable)
@@ -2150,6 +2154,7 @@ namespace MobiusEditor
             }
             if (activeTool == null && !soft)
             {
+                // This triggers a full map repaint from the UpdateVisibleLayers() call.
                 activeLayers = MapLayerFlag.None;
             }
             ClearActiveTool();
@@ -2458,6 +2463,7 @@ namespace MobiusEditor
                 return;
             }
             ActiveToolType = ((ViewToolStripButton)sender).ToolType;
+            RefreshActiveTool(false);
         }
 
         private void MapPanel_DragEnter(object sender, System.Windows.Forms.DragEventArgs e)
