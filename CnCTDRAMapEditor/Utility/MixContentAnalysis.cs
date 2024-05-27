@@ -1,5 +1,4 @@
 ﻿using MobiusEditor.Model;
-using MobiusEditor.Utility.Hashing;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -60,6 +59,10 @@ namespace MobiusEditor.Utility
                 return;
             if (IdentifyVqa(fileStream, mixInfo))
                 return;
+            if (IdentifyVqp(fileStream, mixInfo))
+                return;
+            if (IdentifyPal(fileStream, mixInfo))
+                return;
             // These types analyse the full file from byte array. I'm restricting the buffer for them to 5mb; they shouldn't need more.
             if (fileLengthFull <= maxProcessed)
             {
@@ -80,6 +83,8 @@ namespace MobiusEditor.Utility
                     if (".bin".Equals(extension, StringComparison.OrdinalIgnoreCase) && IdentifySoleMap(fileContents, mixInfo))
                         return;
                 }
+                if (IdentifyXccNames(fileContents, mixInfo))
+                    return;
                 if (IdentifyShp(fileContents, mixInfo))
                     return;
                 if (IdentifyD2Shp(fileContents, mixInfo))
@@ -149,7 +154,7 @@ namespace MobiusEditor.Utility
             {
                 Byte[][] shpData = ClassicSpriteLoader.GetCcShpData(fileContents, out int width, out int height);
                 mixInfo.Type = MixContentType.ShpTd;
-                mixInfo.Info = String.Format("C&C SHP; {0} frame{1}, {2}x{3}", shpData.Length, shpData.Length == 1? string.Empty : "s", width, height);
+                mixInfo.Info = String.Format("C&C SHP; {0} frame{1}, {2}x{3}", shpData.Length, shpData.Length == 1 ? string.Empty : "s", width, height);
                 return true;
             }
             catch (FileTypeLoadException) { /* ignore */ }
@@ -372,7 +377,7 @@ namespace MobiusEditor.Utility
         {
             if (fileContents.Length == 0x300 && fileContents.All(b => b < 0x40))
             {
-                mixInfo.Type = MixContentType.Palette;
+                mixInfo.Type = MixContentType.Pal;
                 mixInfo.Info = "6-bit colour palette";
                 return true;
             }
@@ -381,6 +386,7 @@ namespace MobiusEditor.Utility
 
         private static bool IdentifyAud(Stream fileStream, MixEntry mixInfo)
         {
+            fileStream.Seek(0, SeekOrigin.Begin);
             long fileLength = fileStream.Length;
             if (fileLength <= 12)
             {
@@ -395,9 +401,8 @@ namespace MobiusEditor.Utility
             // ----12 bytes
             byte[] header = new byte[12];
             byte[] chunk = new byte[8];
-            fileStream.Position = 0;
             fileStream.Read(header, 0, header.Length);
-            fileStream.Position = 0;
+            fileStream.Seek(0, SeekOrigin.Begin);
             int frequency = ArrayUtils.ReadUInt16FromByteArrayLe(header, 0);
             int fileSize = ArrayUtils.ReadInt32FromByteArrayLe(header, 2);
             int uncompressedSize = ArrayUtils.ReadInt32FromByteArrayLe(header, 6);
@@ -429,6 +434,7 @@ namespace MobiusEditor.Utility
                 // "DEAF", for an audio format. Someone had fun with that file design.
                 if (id != 0x0000DEAF)
                 {
+                    fileStream.Seek(0, SeekOrigin.Begin);
                     return false;
                 }
                 chunks++;
@@ -437,9 +443,11 @@ namespace MobiusEditor.Utility
                 if (ptr > fileLength)
                 {
                     // Current chunk exceeds file bounds; that's an error.
+                    fileStream.Seek(0, SeekOrigin.Begin);
                     return false;
                 }
             }
+            fileStream.Seek(0, SeekOrigin.Begin);
             if (uncompressedSize != outputLength)
             {
                 return false;
@@ -452,6 +460,7 @@ namespace MobiusEditor.Utility
 
         private static bool IdentifyVqa(Stream fileStream, MixEntry mixInfo)
         {
+            fileStream.Seek(0, SeekOrigin.Begin);
             // FORM chunk + VQHD chunk + FINF/LINF chunk name + its size
             const int vqHdrSize = 12 + 8 + 42;
             long fileLength = fileStream.Length;
@@ -460,9 +469,8 @@ namespace MobiusEditor.Utility
                 return false;
             }
             byte[] headerInfo = new byte[vqHdrSize];
-            fileStream.Position = 0;
             fileStream.Read(headerInfo, 0, vqHdrSize);
-            fileStream.Position = 0;
+            fileStream.Seek(0, SeekOrigin.Begin);
             string strForm = Encoding.ASCII.GetString(headerInfo, 0, 4);
             if (!"FORM".Equals(strForm))
             {
@@ -494,7 +502,7 @@ namespace MobiusEditor.Utility
             int version = ArrayUtils.ReadUInt16FromByteArrayLe(headerInfo, ptr + 0);
             int numFrames = ArrayUtils.ReadUInt16FromByteArrayLe(headerInfo, ptr + 4);
             int width = ArrayUtils.ReadUInt16FromByteArrayLe(headerInfo, ptr + 6);
-            int height= ArrayUtils.ReadUInt16FromByteArrayLe(headerInfo, ptr + 8);
+            int height = ArrayUtils.ReadUInt16FromByteArrayLe(headerInfo, ptr + 8);
             int frameRate = headerInfo[ptr + 12];
 
             int fullSeconds = numFrames / frameRate;
@@ -507,9 +515,101 @@ namespace MobiusEditor.Utility
 
             string time = hours > 0 ? String.Format("{0}:{1:D2}:{2:D2}", hours, minutes, seconds) : String.Format("{0}:{1:D2}", minutes, seconds);
 
-            mixInfo.Type = MixContentType.Video;
+            mixInfo.Type = MixContentType.Vqa;
             mixInfo.Info = String.Format("Video file; VQA v{0}, {1}x{2}, {3}, {4}fps",
                 version, width, height, time, frameRate);
+            return true;
+        }
+
+        private static bool IdentifyVqp(Stream fileStream, MixEntry mixInfo)
+        {
+            fileStream.Seek(0, SeekOrigin.Begin);
+            long fileLength = fileStream.Length;
+            if (fileLength <= 4)
+            {
+                return false;
+            }
+            byte[] headerInfo = new byte[4];
+            fileStream.Read(headerInfo, 0, 4);
+            int blocks = ArrayUtils.ReadInt32FromByteArrayLe(headerInfo, 0);
+
+            if (fileLength != 4 + (32896 * blocks))
+            {
+                fileStream.Seek(0, SeekOrigin.Begin);
+                return false;
+            }
+            for (int i = 0; i < blocks; ++i)
+            {
+                int readAddress = 4 + i * 32896;
+                fileStream.Seek(readAddress, SeekOrigin.Begin);
+                // There is a structure in these tables; first it gives the closest match for [0,0], then for [1,0], [1,1],
+                // then for [2,0], [2,1], [2,2], then for [3,0], [3,1], [3,2], [3,3], etc. This should mean all pairs with
+                // identical index coords should match the index itself, but this is not true when the palette contains
+                // duplicate colours, so a check on that won't actually work. But for the first one, it will always work.
+                int cur = fileStream.ReadByte();
+                if (cur != 0)
+                {
+                    fileStream.Seek(0, SeekOrigin.Begin);
+                    return false;
+                }
+            }
+            fileStream.Seek(0, SeekOrigin.Begin);
+            mixInfo.Type = MixContentType.Vqp;
+            mixInfo.Info = String.Format("Video stretch table; {0} block{1}", blocks, blocks == 1 ? String.Empty : "s");
+            return true;
+        }
+
+        private static bool IdentifyPal(Stream fileStream, MixEntry mixInfo)
+        {
+            const int tblSize = 65536;
+            fileStream.Seek(0, SeekOrigin.Begin);
+            long fileLength = fileStream.Length;
+            if (fileLength != tblSize)
+            {
+                return false;
+            }
+            byte[] table = new byte[tblSize];
+            fileStream.Read(table, 0, tblSize);
+            fileStream.Seek(0, SeekOrigin.Begin);
+            for (int y = 0; y < 256; ++y)
+            {
+                for (int x = 0; x < 256; ++x)
+                {
+                    // The 100% symmetrical structure makes it very easy to identify correctly.
+                    if (table[(x << 8) + y] != table[(y << 8) + x])
+                    {
+                        return false;
+                    }
+                }
+            }
+            mixInfo.Type = MixContentType.PalTbl;
+            mixInfo.Info = String.Format("Palette stretch table");
+            return true;
+        }
+
+        public static bool IdentifyXccNames(byte[] fileContents, MixEntry mixInfo)
+        {
+            const string xccCheck = "XCC by Olaf van der Spek";
+            byte[] xccPattern = Encoding.ASCII.GetBytes(xccCheck);
+            if (fileContents.Length <= 0x34)
+            {
+                return false;
+            }
+            for (int i = 0; i < xccPattern.Length; ++i)
+            {
+                if (fileContents[i] != xccPattern[i])
+                {
+                    return false;
+                }
+            }
+            int fileSize = fileContents[0x20] | (fileContents[0x21] << 8) | (fileContents[0x22] << 16) | (fileContents[0x23] << 24);
+            if (fileSize != mixInfo.Length)
+            {
+                return false;
+            }
+            int files = fileContents[0x30] | (fileContents[0x31] << 8) | (fileContents[0x32] << 16) | (fileContents[0x33] << 24);
+            mixInfo.Type = MixContentType.XccNames;
+            mixInfo.Info = String.Format("XCC filenames database ({0} file{1})", files, files == 1 ? String.Empty : "s");
             return true;
         }
 
@@ -550,7 +650,6 @@ namespace MobiusEditor.Utility
             int previousCell = -1;
             for (int i = 0; i < fileLength; i += 4)
             {
-                // The cell. Could technically just check "cellHi >= 0x40" I guess.
                 byte cellLow = fileContents[i];
                 byte cellHi = fileContents[i + 1];
                 int cell = (cellHi << 8) | cellLow;
@@ -583,7 +682,7 @@ namespace MobiusEditor.Utility
                 {
                     hasIndex = true;
                 }
-                mixInfo.Type = MixContentType.Remap;
+                mixInfo.Type = MixContentType.Mrf;
                 int reportBlocks = hasIndex ? blocksNoIndex : blocks;
                 mixInfo.Info = String.Format("Fading table{0} ({1} table{2})", hasIndex ? " with index" : string.Empty, reportBlocks, reportBlocks != 1 ? "s" : string.Empty);
                 return true;
@@ -612,14 +711,13 @@ namespace MobiusEditor.Utility
         Wsa,
         Font,
         Pcx,
-        Palette,
+        Pal,
         PalTbl,
-        Remap,
+        Mrf,
         Audio,
-        Video,
+        Vqa,
+        Vqp,
         XccNames,
         XccTmp
     }
-
-
 }

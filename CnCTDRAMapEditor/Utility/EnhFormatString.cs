@@ -48,7 +48,7 @@ namespace MobiusEditor.Utility
             Match match = FormatRegex.Match(format);
             if (!match.Success)
             {
-                throw new FormatException(String.Format( "Format string \"{0}\" is not supported.", format));
+                throw new FormatException(String.Format("Format string \"{0}\" is not supported.", format));
             }
             bool singleIndex = match.Groups[2].Value.Length == 0;
             int index1 = Math.Min(_string.Length, Int32.Parse(match.Groups[1].Value));
@@ -98,6 +98,58 @@ namespace MobiusEditor.Utility
                 }
             }
             return highestArg;
+        }
+
+        /// <summary>
+        /// Finds a specific {#} argument inside the string that matches the EnhFormatString format.
+        /// </summary>
+        /// <param name="formatStr">String to find arguments in.</param>
+        /// <param name="argNumber">Argument number to find.</param>
+        /// <returns>True if the requested argument number was found.</returns>
+        public static bool HasArg(string formatStr, int argNumber)
+        {
+            if (formatStr != null)
+            {
+                Match formatMatch = FormatDetectRegex.Match(formatStr);
+                while (formatMatch.Success)
+                {
+                    int argNr = Int32.Parse(formatMatch.Groups[1].Value);
+                    if (argNr == argNumber)
+                    {
+                        return true;
+                    }
+                    formatMatch = formatMatch.NextMatch();
+                }
+            }
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Dummy formatter made to preserve unprocessed arguments when performing String.Format().
+    /// </summary>
+    public struct FormatPreserveArg : IFormattable
+    {
+        public readonly int _val;
+
+        public FormatPreserveArg(int argNr)
+        {
+            _val = argNr;
+        }
+
+        public override string ToString()
+           => this.ToString(String.Empty, CultureInfo.CurrentCulture);
+        public string ToString(string format)
+           => this.ToString(format, CultureInfo.CurrentCulture);
+
+        public string ToString(string format, IFormatProvider provider)
+        {
+            string retVal = _val.ToString();
+            if (!string.IsNullOrEmpty(format))
+            {
+                retVal += ":" + format;
+            }
+            return "{" + retVal + "}";
         }
     }
 }

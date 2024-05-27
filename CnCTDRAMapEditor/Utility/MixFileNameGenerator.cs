@@ -14,7 +14,6 @@
 using MobiusEditor.Utility.Hashing;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -27,6 +26,7 @@ namespace MobiusEditor.Utility
     /// </summary>
     public class MixFileNameGenerator
     {
+        /// <summary>Used to let the main constructor know which overload it was called from, to determine what to throw errors about.</summary>
         [Flags]
         private enum ConstrArgs
         {
@@ -454,7 +454,7 @@ namespace MobiusEditor.Utility
         }
 
         private Dictionary<uint, MixEntry> GetXccDatabaseInfo(MixFile mixFile, out HashMethod hm)
-        {        
+        {
             const string xccFileName = "local mix database.dat";
             const uint maxProcessed = 0x500000;
             List<uint> filesList = mixFile.FileIds.ToList();
@@ -480,36 +480,19 @@ namespace MobiusEditor.Utility
                     byte[] fileContents = mixFile.ReadFile(dbEntry);
                     try
                     {
-                        bool isXccHeader = true;
-                        for (int i = 0; i < xccPattern.Length; ++i)
-                        {
-                            if (fileContents[i] != xccPattern[i])
-                            {
-                                isXccHeader = false;
-                                break;
-                            }
-                        }
-                        int fileSize = 0;
-                        if (isXccHeader)
-                        {
-                            fileSize = fileContents[0x20] | (fileContents[0x21] << 8) | (fileContents[0x22] << 16) | (fileContents[0x23] << 24);
-                            if (fileSize != dbEntry.Length)
-                            {
-                                isXccHeader = false;
-                            }
-                        }
-                        int files = fileContents[0x30] | (fileContents[0x31] << 8) | (fileContents[0x32] << 16) | (fileContents[0x33] << 24);
+                        bool isXccHeader = MixContentAnalysis.IdentifyXccNames(fileContents, dbEntry);
                         if (!isXccHeader)
                         {
                             continue;
                         }
                         MixEntry xccEntry = new MixEntry(xccId, xccFileName, "XCC filenames database");
                         xccEntry.Type = MixContentType.XccNames;
-                        xccEntry.Info = "XCC filenames database (" + files + " files)";
+                        xccEntry.Info = dbEntry.Info;
                         // Confirmed to be an xcc names file. Now read it.
                         Dictionary<uint, MixEntry> xccInfoFilenames = new Dictionary<uint, MixEntry>();
                         xccInfoFilenames.Add(xccEntry.Id, xccEntry);
                         int readOffs = 0x34;
+                        int fileSize = (int)dbEntry.Length;
                         while (readOffs < fileSize)
                         {
                             int endOffs;
@@ -571,7 +554,7 @@ namespace MobiusEditor.Utility
                     finalEntries.Add(entry);
 #if DEBUG
                     // For testing
-                    //Debug.WriteLine(String.Format("{0:X8} : {1} - {2}", entry.Id, entry.Name, entry.Description ?? String.Empty));
+                    //System.Diagnostics.Debug.WriteLine(String.Format("{0:X8} : {1} - {2}", entry.Id, entry.Name, entry.Description ?? String.Empty));
 #endif
                 }
                 this.FileInfo = finalEntries;
@@ -638,7 +621,24 @@ namespace MobiusEditor.Utility
                             string fileInfo = info;
                             if (!String.IsNullOrEmpty(generator.ExtraInfo))
                             {
-                                fileInfo = (String.IsNullOrEmpty(info) ? string.Empty : (info + " ")) + generator.ExtraInfo;
+                                string extraInfo = generator.ExtraInfo;
+                                bool hasArg0 = EnhFormatString.HasArg(extraInfo, 0);
+                                if (hasArg0)
+                                {
+                                    int highestArg = EnhFormatString.GetHighestArg(extraInfo);
+                                    object[] args = new object[highestArg + 1];
+                                    args[0] = new EnhFormatString(String.IsNullOrEmpty(info) ? string.Empty : info);
+                                    // Preserve all args after {0}.
+                                    for (int i = 1; i <= highestArg; ++i)
+                                    {
+                                        args[i] = new FormatPreserveArg(i);
+                                    }
+                                    fileInfo = String.Format(extraInfo, args);
+                                }
+                                else
+                                {
+                                    fileInfo = (String.IsNullOrEmpty(info) ? string.Empty : (info + " ")) + generator.ExtraInfo;
+                                }
                             }
                             foreach ((string nameStr, string infoStr) in generator.GetNames(name, fileInfo, theaterInfo))
                             {

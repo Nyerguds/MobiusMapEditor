@@ -450,7 +450,6 @@ namespace MobiusEditor.Utility
         public void Parse(TextReader reader)
         {
             INISection currentSection = null;
-
             while (true)
             {
                 string line = reader.ReadLine();
@@ -461,7 +460,14 @@ namespace MobiusEditor.Utility
                 Match m = INIHelpers.SectionRegex.Match(line);
                 if (m.Success)
                 {
-                    currentSection = Sections.Add(m.Groups[1].Value);
+                    // Do not collate same-name ini sections inside the same file.
+                    string sectionName = m.Groups[1].Value;
+                    if (Sections.Contains(sectionName))
+                    {
+                        currentSection = null;
+                        continue;
+                    }
+                    currentSection = Sections.Add(sectionName);
                 }
                 if (currentSection != null)
                 {
