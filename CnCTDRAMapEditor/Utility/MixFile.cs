@@ -553,7 +553,7 @@ namespace MobiusEditor.Utility
         /// <param name="mixFileLength">End of the current mix file inside the mixMap</param>
         /// <param name="dataReadOffset">Read position inside the current mix file.</param>
         /// <param name="dataReadLength">Length of the data to read.</param>
-        /// <returns></returns>
+        /// <returns>A Stream containing the contents of the requested section of the MemoryMappedFile, or an empty MemoryStream if <paramref name="dataReadLength"/> is 0.</returns>
         /// <exception cref="IndexOutOfRangeException">The data is not in the bounds of this mix file.</exception>
         private Stream CreateViewStream(MemoryMappedFile mixMap, long mixFileStart, long mixFileLength, long dataReadOffset, uint dataReadLength, bool throwWhenParsing)
         {
@@ -572,7 +572,7 @@ namespace MobiusEditor.Utility
             }
             if (dataReadLength == 0)
             {
-                // if the given size is 0, CreateViewStream creates a stream with the data full length.
+                // If the given size is 0, CreateViewStream creates a stream with the data full length.
                 // We don't want that, so we return an empty memorystream instead.
                 return new MemoryStream(new byte[0]);
             }

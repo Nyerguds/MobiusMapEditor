@@ -54,7 +54,8 @@ namespace MobiusEditor.Utility
             var fileTableSize = 0U;
 
             var readOffset = 0U;
-            using (var magicNumberReader = new BinaryReader(megafileMap.CreateViewStream(readOffset, 4, MemoryMappedFileAccess.Read)))
+            using (Stream stream = CreateReadOnlyStream(megafileMap, 4, stringTableSize))
+            using (var magicNumberReader = new BinaryReader(stream))
             {
                 var magicNumber = magicNumberReader.ReadUInt32();
                 if ((magicNumber == 0xFFFFFFFF) || (magicNumber == 0x8FFFFFFF))
@@ -63,36 +64,37 @@ namespace MobiusEditor.Utility
                     readOffset += 8;
                 }
             }
-
             readOffset += 4U;
-            using (var headerReader = new BinaryReader(megafileMap.CreateViewStream(readOffset, 12, MemoryMappedFileAccess.Read)))
+            using (Stream stream = CreateReadOnlyStream(megafileMap, 12, stringTableSize))
+            using (BinaryReader headerReader = new BinaryReader(stream))
             {
                 numFiles = headerReader.ReadUInt32();
                 numStrings = headerReader.ReadUInt32();
                 stringTableSize = headerReader.ReadUInt32();
                 fileTableSize = numFiles * SubFileData.Size;
             }
-
             readOffset += 12U;
-            using (var stringReader = new BinaryReader(megafileMap.CreateViewStream(readOffset, stringTableSize, MemoryMappedFileAccess.Read)))
+            using (Stream stream = CreateReadOnlyStream(megafileMap, readOffset, stringTableSize))
+            using (BinaryReader stringReader = new BinaryReader(stream))
             {
                 stringTable = new string[numStrings];
-
                 for (var i = 0U; i < numStrings; ++i)
                 {
                     var stringSize = stringReader.ReadUInt16();
                     stringTable[i] = new string(stringReader.ReadChars(stringSize));
                 }
             }
-
             readOffset += stringTableSize;
-            using (var subFileAccessor = megafileMap.CreateViewAccessor(readOffset, fileTableSize, MemoryMappedFileAccess.Read))
+            if (fileTableSize > 0)
             {
-                for (var i = 0U; i < numFiles; ++i)
+                using (var subFileAccessor = megafileMap.CreateViewAccessor(readOffset, fileTableSize, MemoryMappedFileAccess.Read))
                 {
-                    subFileAccessor.Read(i * SubFileData.Size, out SubFileData subFile);
-                    var fullName = stringTable[subFile.SubfileNameIndex];
-                    fileTable[fullName] = subFile;
+                    for (var i = 0U; i < numFiles; ++i)
+                    {
+                        subFileAccessor.Read(i * SubFileData.Size, out SubFileData subFile);
+                        var fullName = stringTable[subFile.SubfileNameIndex];
+                        fileTable[fullName] = subFile;
+                    }
                 }
             }
         }
@@ -107,7 +109,25 @@ namespace MobiusEditor.Utility
             {
                 return null;
             }
-            return megafileMap.CreateViewStream(subFile.SubfileImageDataOffset, subFile.SubfileSize, MemoryMappedFileAccess.Read);
+            return CreateReadOnlyStream(megafileMap, subFile.SubfileImageDataOffset, subFile.SubfileSize);
+        }
+
+        /// <summary>
+        /// Creates a view stream on the current Mega file at the requested read offset, with the requested length.
+        /// </summary>
+        /// <param name="megafileMap">The MemoryMappedFile of the Mega file.</param>
+        /// <param name="dataReadOffset">Read position inside the Mega file.</param>
+        /// <param name="dataReadLength">Length of the data to read.</param>
+        /// <returns>A Stream containing the contents of the requested section of the MemoryMappedFile, or an empty MemoryStream if <paramref name="dataReadLength"/> is 0.</returns>
+        private Stream CreateReadOnlyStream(MemoryMappedFile megafileMap, uint dataReadOffset, uint dataReadLength)
+        {
+            if (dataReadLength == 0)
+            {
+                // If the given size is 0, CreateViewStream creates a stream with the data full length.
+                // We don't want that, so we return an empty memorystream instead.
+                return new MemoryStream(new byte[0]);
+            }
+            return megafileMap.CreateViewStream(dataReadOffset, dataReadLength, MemoryMappedFileAccess.Read);
         }
 
         public IEnumerator<string> GetEnumerator()
