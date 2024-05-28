@@ -357,7 +357,8 @@ namespace MobiusEditor.Utility
                 }
                 foreach (MixEntry entry in contentItem.Value)
                 {
-                    bool nameMatches = !String.IsNullOrEmpty(infoEntry.Name) && entry.Id == hasher.GetNameId(infoEntry.Name);
+                    // In some cases (like the RAMIX info file) there is no name, only an id.
+                    bool nameMatches = String.IsNullOrEmpty(infoEntry.Name) || entry.Id == hasher.GetNameId(infoEntry.Name);
                     // Only overwrite if input is filled in, and name id for the new name indeed matches on the given hasher.
                     if (nameMatches && (overwrite || !String.IsNullOrEmpty(entry.Name)))
                     {
@@ -692,7 +693,8 @@ namespace MobiusEditor.Utility
 
         public string DisplayName => (Name ?? IdString) + (Duplicate == 0 ? string.Empty : " (" + Duplicate.ToString() + ")");
         public string SortName => Name ?? ("zzzzzzzzzzzz " + IdString);
-        public string IdString => '[' + Id.ToString("X4") + ']';
+        public string IdString => '[' + IdStringBare + ']';
+        public string IdStringBare => Id.ToString("X4");
 
         public MixEntry()
         { }

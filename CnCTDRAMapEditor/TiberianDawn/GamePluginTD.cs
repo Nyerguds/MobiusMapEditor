@@ -172,6 +172,9 @@ namespace MobiusEditor.TiberianDawn
             "TRTKIL_D",
         };
 
+
+        protected IEnumerable<string> movieTypesRemarksNew = new string[0];
+
         protected const string themeEmpty = "No Theme";
 
         protected static readonly IEnumerable<string> themeTypes = new string[]
@@ -402,6 +405,8 @@ namespace MobiusEditor.TiberianDawn
                     }
                 }
             }
+            movieTypesRemarksNew = movies.Where(mv => !movieTypesTD.Contains(mv) && !movieTypesRemarksOld.Contains(mv)).ToArray();
+
             // In case this isn't the remaster, just add all known videos.
             if (movies.Count == 0)
             {
@@ -623,7 +628,7 @@ namespace MobiusEditor.TiberianDawn
             String newName = GeneralUtils.AddRemarks(videoName, movieEmpty, true, movieTypesRemarksOld, remarkOld, out bool changed);
             if (!changed)
             {
-                newName = GeneralUtils.AddRemarks(videoName, movieEmpty, true, movieTypesTD, remarkNew, true);
+                newName = GeneralUtils.AddRemarks(videoName, movieEmpty, true, movieTypesRemarksNew, remarkNew, false);
             }
             return newName;
         }

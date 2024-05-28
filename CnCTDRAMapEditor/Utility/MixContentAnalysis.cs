@@ -85,6 +85,8 @@ namespace MobiusEditor.Utility
                 }
                 if (IdentifyXccNames(fileContents, mixInfo))
                     return;
+                if (IdentifyRaMixNames(fileContents, mixInfo))
+                    return;
                 if (IdentifyShp(fileContents, mixInfo))
                     return;
                 if (IdentifyD2Shp(fileContents, mixInfo))
@@ -613,6 +615,41 @@ namespace MobiusEditor.Utility
             return true;
         }
 
+        public static bool IdentifyRaMixNames(byte[] fileContents, MixEntry mixInfo)
+        {
+            const string RaMixCheck = "RA-MIXer 5.1, (C) MoehrchenSoft, moehrchen@bigfoot.com";
+            const int entrySize = 0x44;
+            const int expectedHeaderSize = 0x100;
+            byte[] raMixPattern = Encoding.ASCII.GetBytes(RaMixCheck);
+            if (fileContents.Length < expectedHeaderSize + 8 + entrySize)
+            {
+                return false;
+            }
+            int headerSize = fileContents[0] | (fileContents[1] << 8);
+            if (headerSize != expectedHeaderSize)
+            {
+                return false;
+            }
+            int files = fileContents[2] | (fileContents[3] << 8);
+            int expectedFileSize = 2 + headerSize + 6 + files * entrySize;
+            // check expected file length and pascal string length of header check string.
+            if (fileContents.Length != expectedFileSize || fileContents[4] != raMixPattern.Length)
+            {
+                return false;
+            }
+            // check actual string
+            for (int i = 0; i < raMixPattern.Length; ++i)
+            {
+                if (fileContents[5+i] != raMixPattern[i])
+                {
+                    return false;
+                }
+            }
+            mixInfo.Type = MixContentType.RaMixNames;
+            mixInfo.Info = String.Format("RAMIX filenames database ({0} file{1})", files, files == 1 ? String.Empty : "s");
+            return true;
+        }
+
         private static bool IdentifyTdMap(byte[] fileContents, MixEntry mixInfo)
         {
             int highestTdMapVal = TiberianDawn.TemplateTypes.GetTypes().Max(t => (int)t.ID);
@@ -693,7 +730,9 @@ namespace MobiusEditor.Utility
 
     public enum MixContentType
     {
-        Unknown,
+        /// <summary>Dummy type used to indicate file entries identified through embedded file names database.</summary>
+        DbTmp = -1,
+        Unknown = 0,
         Mix,
         MapTd,
         MapRa,
@@ -718,6 +757,6 @@ namespace MobiusEditor.Utility
         Vqa,
         Vqp,
         XccNames,
-        XccTmp
+        RaMixNames,
     }
 }

@@ -337,7 +337,29 @@ namespace MobiusEditor.Utility
         /// <param name="mixFile">mix file to insert the name info into.</param>
         public string IdentifyMixFile(MixFile mixFile)
         {
-            return IdentifyMixFile(mixFile, null);
+            HashMethod forcedHasher = null;
+            return IdentifyMixFile(mixFile, null, ref forcedHasher);
+        }
+
+        /// <summary>
+        /// Identify the files inside a mix file, using a specific game.
+        /// Generally used for embedded mix files, using the parent's game type.
+        /// </summary>
+        /// <param name="mixFile">mix file to insert the name info into.</param>
+        public string IdentifyMixFile(MixFile mixFile, string forcedGameType)
+        {
+            HashMethod forcedHasher = null;
+            return IdentifyMixFile(mixFile, forcedGameType, ref forcedHasher);
+        }
+
+        /// <summary>
+        /// Identify the files inside a mix file, using a specific game.
+        /// Generally used for embedded mix files, using the parent's game type.
+        /// </summary>
+        /// <param name="mixFile">mix file to insert the name info into.</param>
+        public string IdentifyMixFile(MixFile mixFile, ref HashMethod forcedHasher)
+        {
+            return IdentifyMixFile(mixFile, null, ref forcedHasher);
         }
 
         /// <summary>
@@ -345,8 +367,12 @@ namespace MobiusEditor.Utility
         /// </summary>
         /// <param name="mixFile">mix file to insert the name info into.</param>
         /// <param name="forcedGameType">Game type identified on the parent; is always taken as primary type.</param>
+        /// <param name="forcedHasher">
+        /// If no specific game type was identified, but a hasher was, it can be force through this.
+        /// At the end of this function, this object will always contain the used hasher.
+        /// </param>
         /// <returns>The game type identified for this mix file.</returns>
-        public string IdentifyMixFile(MixFile mixFile, string forcedGameType)
+        public string IdentifyMixFile(MixFile mixFile, string forcedGameType, ref HashMethod forcedHasher)
         {
             double maxRatio = 0;
             GameDefinition maxGame = null;
@@ -354,14 +380,31 @@ namespace MobiusEditor.Utility
             if (forcedGameType != null)
             {
                 gameInfo.TryGetValue(forcedGameType, out forced);
+                if (forced != null)
+                {
+                    forcedHasher = forced.Hasher;
+                }
             }
-            HashMethod xccHasher = null;
-            Dictionary<uint, MixEntry> xccInfo = GetXccDatabaseInfo(mixFile, out xccHasher);
-            // TODO: add support for older RAMIX name database type? I believe it has a fixed ID like "7FFFFFFF" or something.
-            // A successful xcc db file detection that conflicts with the forced game type will override it.
-            if (forced != null && xccHasher != null && forced.Hasher.GetType() != xccHasher.GetType())
+            HashMethod dbFileHasher = null;
+            Dictionary<uint, MixEntry> dbFileInfo = GetRaMixDatabaseInfo(mixFile, out dbFileHasher);
+            if (dbFileInfo == null || (forcedHasher != null && dbFileHasher != forcedHasher))
+            {
+                dbFileInfo = GetXccDatabaseInfo(mixFile, out dbFileHasher);
+                if (forcedHasher != null && dbFileHasher != null && dbFileHasher != forcedHasher)
+                {
+                    dbFileInfo = null;
+                    dbFileHasher = null;
+                }
+            }
+            // A successful db file detection that conflicts with the forced game type will override it.
+            if (forcedHasher != null && dbFileHasher != null && forced.Hasher.GetType() != dbFileHasher.GetType())
             {
                 forced = null;
+                forcedHasher = null;
+            }
+            if (forcedHasher == null)
+            {
+                forcedHasher = dbFileHasher;
             }
             Dictionary<string,double> identifiedAmounts = new Dictionary<string,double>();
             for (int i = 0; i < games.Count; ++i)
@@ -376,7 +419,7 @@ namespace MobiusEditor.Utility
                     }
                     Type hasherType = gd.Hasher.GetType();
                     // Follow the lead of xcc detection or forced type.
-                    if (xccHasher != null && hasherType != xccHasher.GetType())
+                    if (forcedHasher != null && hasherType != forcedHasher.GetType())
                     {
                         continue;
                     }
@@ -401,12 +444,12 @@ namespace MobiusEditor.Utility
             {
                 maxGame = forced;
             }
-            if (maxGame == null)
+            if (maxGame == null && (dbFileInfo == null || forcedHasher == null))
             {
                 return null;
             }
             // Select all game definition, in order of identification, that have the same hasher algorithm as the top identified one.
-            HashMethod mh = maxGame.Hasher;
+            HashMethod mh = maxGame != null ? maxGame.Hasher : forcedHasher;
             Type mhType = mh.GetType();
             List<GameDefinition> viableGames = identifiedAmounts.Keys
                 .OrderByDescending(gt => identifiedAmounts[gt])
@@ -419,7 +462,7 @@ namespace MobiusEditor.Utility
                 viableGames.Remove(forced);
                 viableGames.Insert(0, forced);
             }
-            Dictionary<uint, MixEntry> info = xccInfo != null ? new Dictionary<uint, MixEntry>(xccInfo) : new Dictionary<uint, MixEntry>();
+            Dictionary<uint, MixEntry> info = dbFileInfo != null ? new Dictionary<uint, MixEntry>(dbFileInfo) : new Dictionary<uint, MixEntry>();
             foreach (GameDefinition gd in viableGames)
             {
                 foreach (MixEntry entry in gd.FileInfo)
@@ -429,28 +472,35 @@ namespace MobiusEditor.Utility
                     {
                         info.Add(entry.Id, entry);
                     }
-                    else if (existing.Type == MixContentType.XccTmp && String.Equals(existing.Name, entry.Name, StringComparison.InvariantCultureIgnoreCase))
+                    else if (existing.Type == MixContentType.DbTmp && String.Equals(existing.Name, entry.Name, StringComparison.InvariantCultureIgnoreCase))
                     {
-                        // Name matches; fill in description.
-                        existing.Description = entry.Description;
+                        // Name matches; fill in description if db info didn't give it.
+                        if (String.IsNullOrEmpty(existing.Description))
+                        {
+                            existing.Description = entry.Description;
+                        }
                         existing.Type = MixContentType.Unknown;
                     }
                 }
             }
             // Clear remaining temp mixcontent identifiers.
-            if (xccInfo != null)
+            if (dbFileInfo != null)
             {
-                foreach (uint xccKey in xccInfo.Keys)
+                foreach (uint dbKey in dbFileInfo.Keys)
                 {
-                    if (info.TryGetValue(xccKey, out MixEntry xccEntry) && xccEntry.Type == MixContentType.XccTmp)
+                    if (info.TryGetValue(dbKey, out MixEntry dbEntry) && dbEntry.Type == MixContentType.DbTmp)
                     {
-                        xccEntry.Type = MixContentType.Unknown;
+                        dbEntry.Type = MixContentType.Unknown;
                     }
                 }
 
             }
             mixFile.InsertInfo(info, mh, true);
-            return maxGame.Name;
+            if (forcedHasher == null && maxGame != null)
+            {
+                forcedHasher = maxGame.Hasher;
+            }
+            return maxGame == null ? null : maxGame.Name;
         }
 
         private Dictionary<uint, MixEntry> GetXccDatabaseInfo(MixFile mixFile, out HashMethod hm)
@@ -458,8 +508,6 @@ namespace MobiusEditor.Utility
             const string xccFileName = "local mix database.dat";
             const uint maxProcessed = 0x500000;
             List<uint> filesList = mixFile.FileIds.ToList();
-            const string xccCheck = "XCC by Olaf van der Spek";
-            byte[] xccPattern = Encoding.ASCII.GetBytes(xccCheck);
             // Could make this more robust / overengineered by returning all hashers for which a valid one was found?
             foreach (HashMethod hasher in HashMethod.GetRegisteredMethods())
             {
@@ -503,12 +551,97 @@ namespace MobiusEditor.Utility
                             if (!xccInfoFilenames.ContainsKey(hashForCurrent))
                             {
                                 MixEntry identified = new MixEntry(hashForCurrent, filename, null);
-                                identified.Type = MixContentType.XccTmp;
+                                identified.Type = MixContentType.DbTmp;
                                 xccInfoFilenames.Add(hashForCurrent, identified);
                             }
                         }
                         hm = hasher;
                         return xccInfoFilenames;
+                    }
+                    catch (Exception e)
+                    {
+                        /* ignore */
+                    }
+                }
+            }
+            hm = null;
+            return null;
+        }
+
+        private Dictionary<uint, MixEntry> GetRaMixDatabaseInfo(MixFile mixFile, out HashMethod hm)
+        {
+            const uint maxProcessed = 0x500000;
+            const int entrySize = 0x44;
+            const int fullHeaderSize = 0x108;
+            const int minSize = fullHeaderSize + entrySize;
+            List<uint> filesList = mixFile.FileIds.ToList();
+            uint raMixId = 0x7FFFFFFF;
+            // Could make this more robust / overengineered by returning all hashers for which a valid one was found?
+            bool wrongHasher;
+            foreach (HashMethod hasher in HashMethod.GetRegisteredMethods())
+            {
+                wrongHasher = false;
+                // Check if there's an xcc filenames database.
+                foreach (uint fileId in filesList)
+                {
+                    MixEntry[] entries = mixFile.GetFullFileInfo(fileId);
+                    if (entries == null)
+                    {
+                        continue;
+                    }
+                    MixEntry dbEntry = entries[0];
+                    if (fileId != raMixId || dbEntry.Length >= maxProcessed || dbEntry.Length < minSize)
+                    {
+                        continue;
+                    }
+                    byte[] fileContents = mixFile.ReadFile(dbEntry);
+                    try
+                    {
+                        bool isRaMixHeader = MixContentAnalysis.IdentifyRaMixNames(fileContents, dbEntry);
+                        if (!isRaMixHeader)
+                        {
+                            continue;
+                        }
+                        MixEntry raMixEntry = new MixEntry(raMixId, null, "RAMIX filenames database");
+                        raMixEntry.Type = MixContentType.RaMixNames;
+                        raMixEntry.Info = dbEntry.Info;
+                        // Confirmed to be an RAMIX names file. Now read it.
+                        Dictionary<uint, MixEntry> raMixInfoFilenames = new Dictionary<uint, MixEntry>();
+                        raMixInfoFilenames.Add(raMixEntry.Id, raMixEntry);
+                        int offs = 0x102;
+                        int unkn1 = fileContents[offs + 0x00] | (fileContents[offs + 0x01] << 8);
+                        offs += 2;
+                        int unkn2 = fileContents[offs + 0x00] | (fileContents[offs + 0x01] << 8) | (fileContents[offs + 0x02] << 16) | (fileContents[offs + 0x03] << 24);
+                        offs += 4;
+                        int files = fileContents[2] | (fileContents[3] << 8);
+                        offs = fullHeaderSize;
+                        for (int i = 0; i < files; ++i)
+                        {
+                            uint id = (uint)(fileContents[offs + 0x00] | (fileContents[offs + 0x01] << 8) | (fileContents[offs + 0x02] << 16) | (fileContents[offs + 0x03] << 24));
+                            int descLen = Math.Min(50, (int)fileContents[offs + 0x04]);
+                            string description = Encoding.ASCII.GetString(fileContents, offs + 0x05, descLen).TrimEnd('\0');
+                            int nameLen = Math.Min(12, (int)fileContents[offs + 0x37]);
+                            string filename = Encoding.ASCII.GetString(fileContents, offs + 0x38, nameLen).TrimEnd('\0').ToLowerInvariant();
+                            uint hashForCurrent = hasher.GetNameId(filename);
+                            if (id != hashForCurrent)
+                            {
+                                wrongHasher = true;
+                                break;
+                            }
+                            if (!raMixInfoFilenames.ContainsKey(hashForCurrent) && id == hashForCurrent)
+                            {
+                                MixEntry identified = new MixEntry(hashForCurrent, filename, description);
+                                identified.Type = MixContentType.DbTmp;
+                                raMixInfoFilenames.Add(hashForCurrent, identified);
+                            }
+                            offs += entrySize;
+                        }
+                        if (wrongHasher)
+                        {
+                            break;
+                        }
+                        hm = hasher;
+                        return raMixInfoFilenames;
                     }
                     catch (Exception e)
                     {

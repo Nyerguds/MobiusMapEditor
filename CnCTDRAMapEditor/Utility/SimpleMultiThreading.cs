@@ -107,14 +107,18 @@ namespace MobiusEditor.Utility
             if (arrParams == null || arrParams.Length < 5
                 || ((func = arrParams[0] as Func<U>) == null)
                 || ((resAct = arrParams[1] as Action<U>) == null && arrParams[1] != null)
-                || !(arrParams[2] is bool)
-                || ((enableControls = arrParams[3] as Action<bool, string>) == null))
+                || !(arrParams[2] is bool))
             {
                 return;
             }
+            enableControls = arrParams[3] as Action<bool, string>;
             bool resActIsInvoked = (bool)arrParams[2];
             String operationType = (arrParams[4] as String ?? String.Empty).Trim();
-            this.attachForm.Invoke(new Action(() => enableControls(false, operationType)));
+            if (enableControls != null)
+            {
+                try { this.attachForm.Invoke(new Action(() => enableControls(false, operationType))); }
+                catch (InvalidOperationException) { /* ignore */ }
+            }
             U result = default(U);
             try
             {
@@ -129,16 +133,20 @@ namespace MobiusEditor.Utility
             {
                 String message = operationType + " failed:\n" + ex.Message + "\n" + ex.StackTrace;
                 ShowMessageBoxThreadSafe(attachForm, message, null, MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                try
+                if (enableControls != null)
                 {
-                    this.attachForm.Invoke(new Action(() => enableControls(true, null)));
+                    try { this.attachForm.Invoke(new Action(() => enableControls(true, null))); }
+                    catch (InvalidOperationException) { /* ignore */ }
                 }
-                catch (InvalidOperationException) { /* ignore */ }
                 return;
             }
             try
             {
-                this.attachForm.Invoke(new Action(() => enableControls(true, null)));
+                if (enableControls != null)
+                {
+                    try { this.attachForm.Invoke(new Action(() => enableControls(true, null))); }
+                    catch (InvalidOperationException) { /* ignore */ }
+                }
                 if (resAct != null)
                 {
                     if (resActIsInvoked)

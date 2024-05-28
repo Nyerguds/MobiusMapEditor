@@ -1,10 +1,10 @@
 ﻿using MobiusEditor.Utility;
+using MobiusEditor.Utility.Hashing;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 
 namespace MobiusEditor.Dialogs
@@ -22,6 +22,7 @@ namespace MobiusEditor.Dialogs
         private bool abortRequested = false;
         public string SelectedFile { get; set; }
         private string identifiedGame;
+        private HashMethod identifiedHasher;
 
         public Label StatusLabel { get; set; }
 
@@ -30,9 +31,15 @@ namespace MobiusEditor.Dialogs
             InitializeComponent();
             titleMain = this.Text;
             this.romfis = romfis;
+            identifiedHasher = null;
             if (this.romfis != null)
             {
-                identifiedGame = this.romfis.IdentifyMixFile(baseMix);
+                identifiedGame = this.romfis.IdentifyMixFile(baseMix, null, ref identifiedHasher);
+                // don't specifically save it if we have a game ref.
+                if (identifiedGame != null)
+                {
+                    identifiedHasher = null;
+                }
             }
             openedMixFiles.Add(baseMix);
             initPaths = internalMixParts;
@@ -122,9 +129,15 @@ namespace MobiusEditor.Dialogs
             switch (e.KeyData) {
                 case Keys.Enter:
                     OpenCurrentlySelected();
+                    e.Handled = true;
                     break;
                 case Keys.Back:
                     CloseCurrentMixFile();
+                    e.Handled = true;
+                    break;
+                case Keys.S | Keys.Control:
+                    SaveCurrentlySelected();
+                    e.Handled = true;
                     break;
             }
         }
@@ -132,6 +145,89 @@ namespace MobiusEditor.Dialogs
         private void BtnCloseFile_Click(object sender, EventArgs e)
         {
             CloseCurrentMixFile();
+        }
+
+        private void SaveCurrentlySelected()
+        {
+            if (mixContentsListView.SelectedItems.Count == 0)
+            {
+                return;
+            }
+            MixEntry selected = mixContentsListView.SelectedItems[0].Tag as MixEntry;
+            string savePath = null;
+            using (SaveFileDialog sfd = new SaveFileDialog())
+            {
+                sfd.Filter = "All files (*.*)|*.*";
+                sfd.FileName = selected.Name ?? (selected.IdStringBare + "." + GetExtension(selected.Type));
+                if (sfd.ShowDialog(this) == DialogResult.OK)
+                {
+                    savePath = sfd.FileName;
+                }
+            }
+            if (savePath != null)
+            {
+                MixFile current = GetCurrentMix();
+                using (Stream readStream = current.OpenFile(selected))
+                using (FileStream writeStream = new FileStream(savePath, FileMode.Create))
+                {
+                    readStream.CopyTo(writeStream);
+                }
+            }
+        }
+
+        private string GetExtension(MixContentType type)
+        {
+            switch (type)
+            {
+                case MixContentType.Mix:
+                    return "mix";
+                case MixContentType.MapTd:
+                    return "ini";
+                case MixContentType.MapRa:
+                    return "ini";
+                case MixContentType.MapSole:
+                    return "ini";
+                case MixContentType.Ini:
+                    return "ini";
+                case MixContentType.Strings:
+                    return "eng";
+                case MixContentType.Text:
+                    return "txt";
+                case MixContentType.Bin:
+                    return "bin";
+                case MixContentType.BinSole:
+                    return "bin";
+                case MixContentType.ShpD2:
+                    return "shp";
+                case MixContentType.ShpTd:
+                    return "shp";
+                case MixContentType.TmpTd:
+                    return "tmp";
+                case MixContentType.TmpRa:
+                    return "tmp";
+                case MixContentType.Cps:
+                    return "cps";
+                case MixContentType.Wsa:
+                    return "wsa";
+                case MixContentType.Font:
+                    return "fnt";
+                case MixContentType.Pcx:
+                    return "pcx";
+                case MixContentType.Pal:
+                    return "pal";
+                case MixContentType.PalTbl:
+                    return "pal";
+                case MixContentType.Mrf:
+                    return "mrf";
+                case MixContentType.Audio:
+                    return "aud";
+                case MixContentType.Vqa:
+                    return "vqa";
+                case MixContentType.Vqp:
+                    return "vqp";
+                default:
+                    return "dat";
+            }
         }
 
         private void OpenCurrentlySelected()
@@ -160,7 +256,8 @@ namespace MobiusEditor.Dialogs
                     // Game type is already determined by parent mix.
                     if (this.romfis != null)
                     {
-                        romfis.IdentifyMixFile(subMix, identifiedGame);
+                        HashMethod forcedHasher = identifiedHasher;
+                        romfis.IdentifyMixFile(subMix, identifiedGame, ref forcedHasher);
                     }
                     openedMixFiles.Add(subMix);
                 }
@@ -249,9 +346,18 @@ namespace MobiusEditor.Dialogs
                 {
                     Tag = mixFileInfo,
                 };
-                if (mt == MixContentType.MapTd || mt == MixContentType.MapSole || mt == MixContentType.Bin || mt == MixContentType.BinSole || mt == MixContentType.MapRa)
+                switch (mixFileInfo.Type)
                 {
-                    item.BackColor = Color.FromArgb(0xFF, 0xD0, 0xFF, 0xD0); //Color.LightGreen;
+                    case MixContentType.MapTd:
+                    case MixContentType.MapSole:
+                    case MixContentType.Bin:
+                    case MixContentType.BinSole:
+                    case MixContentType.MapRa:
+                        item.BackColor = Color.FromArgb(0xFF, 0xD0, 0xFF, 0xD0); //Color.LightGreen;
+                        break;
+                    case MixContentType.Mix:
+                        item.BackColor = Color.FromArgb(0xFF, 0xFF, 0xFF, 0x80); // Color.LightYellow
+                        break;
                 }
                 item.SubItems.Add(mixFileInfo.Type.ToString());
                 item.SubItems.Add(mixFileInfo.Length.ToString());

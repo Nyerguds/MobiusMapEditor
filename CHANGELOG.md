@@ -627,6 +627,7 @@ Released on 31 Jan 2023 at 20:50 GMT
 Unreleased.
 
 * Added .mix files to the supported formats to open, giving the ability to load official maps straight from the game's internal archives.
+* Dropping a file into the editor that causes a dialog to be opened (like mix files and images) will no longer freeze the source you dragged the file from while the dialog in the editor is open.
 * Removed theater restrictions on Terrain objects; if the object is found in the theater, it will be shown.
 * Fixed bug that prevented the Red Alert civilian "C3" from loading, and that prevented the Einstein colour fix from working.
 * Added tooltips to Triggers editor that give a summary of teamtypes and triggers used as trigger arguments. This includes a tooltip on the trigger action on Tiberian Dawn's "Destroy Trigger" and "DZ at 'Z'" actions, respectively showing info on the corresponding trigger and the flare waypoint.
@@ -639,3 +640,4 @@ Unreleased.
 * Added indicators for all terrain types, and green indications of cells occupied by objects on the map.
 * Added outlines for overlapped buildings.
 * Implemented a new scaling method that should vastly reduce saving times of multiplayer map thumbnails and image exports.
+* Fixed issue that caused any unknown video names configured on TD missions to be marked as "Remaster only".

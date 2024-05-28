@@ -113,6 +113,7 @@ namespace MobiusEditor
 
         private readonly Timer steamUpdateTimer = new Timer();
 
+        private SimpleMultiThreading openMultiThreader;
         private SimpleMultiThreading loadMultiThreader;
         private SimpleMultiThreading saveMultiThreader;
         public Label StatusLabel { get; set; }
@@ -184,6 +185,8 @@ namespace MobiusEditor
             UpdateUndoRedo();
             steamUpdateTimer.Interval = 500;
             steamUpdateTimer.Tick += SteamUpdateTimer_Tick;
+            openMultiThreader = new SimpleMultiThreading(this);
+            openMultiThreader.ProcessingLabelBorder = BorderStyle.Fixed3D;
             loadMultiThreader = new SimpleMultiThreading(this);
             loadMultiThreader.ProcessingLabelBorder = BorderStyle.Fixed3D;
             saveMultiThreader = new SimpleMultiThreading(this);
@@ -2481,7 +2484,9 @@ namespace MobiusEditor
             string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
             if (files.Length != 1)
                 return;
-            OpenFileAsk(files[0], true);
+            String filename = files[0];
+            openMultiThreader.ExecuteThreaded(() => filename, (str) => OpenFileAsk(str, true), true,
+                null, String.Empty);
         }
 
         private void ViewMenuItem_CheckedChanged(object sender, EventArgs e)

@@ -24,7 +24,6 @@ using System.IO.Compression;
 using System.Runtime.InteropServices;
 using TGASharpLib;
 using MobiusEditor.Interface;
-using MobiusEditor.Model;
 
 namespace MobiusEditor.Utility
 {
@@ -195,11 +194,12 @@ namespace MobiusEditor.Utility
             {
                 return;
             }
-            using (var archive = new ZipArchive(fileStream, ZipArchiveMode.Read))
+            using (ZipArchive archive = new ZipArchive(fileStream, ZipArchiveMode.Read))
             {
-                // For some reason, accessing Entries (which triggers the initial read) throws
-                // ungodly amounts of internal ArgumentException that really slow down debugging.
-                foreach (var entry in archive.Entries)
+                // For some reason, accessing Entries (which triggers the initial read) throws ungodly amounts of internal
+                // ArgumentException that really slow down debugging. Opening a named entry directly has the same issue.
+                // To fix this issue, enable "Just My Code" when debugging.
+                foreach (ZipArchiveEntry entry in archive.Entries)
                 {
                     if (name != Path.GetFileNameWithoutExtension(entry.Name))
                     {
