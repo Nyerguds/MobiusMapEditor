@@ -33,7 +33,7 @@ namespace MobiusEditor.Utility
                     // Only do identification if type is set to unknown.
                     if (mixInfo.Type == MixContentType.Unknown)
                     {
-                        using (Stream file = current.OpenFile(fileId))
+                        using (Stream file = current.OpenFile(mixInfo))
                         {
                             TryIdentifyFile(file, mixInfo, current, preferMissions);
                         }
@@ -50,6 +50,7 @@ namespace MobiusEditor.Utility
             string extension = Path.GetExtension(mixInfo.Name);
             if (fileLengthFull == 0)
             {
+                mixInfo.Type = MixContentType.Empty;
                 mixInfo.Info = "Empty file";
                 return;
             }
@@ -87,11 +88,15 @@ namespace MobiusEditor.Utility
                     return;
                 if (IdentifyRaMixNames(fileContents, mixInfo))
                     return;
+                if (IdentifyPcx(fileContents, mixInfo))
+                    return;
                 if (IdentifyShp(fileContents, mixInfo))
                     return;
                 if (IdentifyD2Shp(fileContents, mixInfo))
                     return;
                 if (IdentifyCps(fileContents, mixInfo))
+                    return;
+                if (IdentifyWsa(fileContents, mixInfo))
                     return;
                 if (IdentifyCcTmp(fileContents, mixInfo))
                     return;
@@ -163,6 +168,73 @@ namespace MobiusEditor.Utility
             return false;
         }
 
+        private static bool IdentifyPcx(byte[] fileContents, MixEntry mixInfo)
+        {
+            try
+            {
+                if (fileContents.Length < 128)
+                {
+                    return false;
+                }
+                if (fileContents[0] != 10) // ID byte
+                {
+                    return false;
+                }
+                byte version = fileContents[1];
+                byte encoding = fileContents[2];
+                if (encoding > 1)
+                {
+                    return false;
+                }
+                bool reservedByteFree = fileContents[64] == 0; // reserved byte
+                for (int i = 74; i < 128; ++i)
+                {
+                    // End of header reserved space
+                    if (fileContents[i] != 0)
+                    {
+                        return false;
+                    }
+                }
+                int bitsPerPlane = fileContents[3]; // Number of bits to represent a pixel (per Plane) - 1, 2, 4, or 8
+                if (bitsPerPlane != 1 && bitsPerPlane != 2 && bitsPerPlane != 4 && bitsPerPlane != 8 && bitsPerPlane != 24 && bitsPerPlane != 32)
+                {
+                    return false;
+                }
+                ushort windowXmin = ArrayUtils.ReadUInt16FromByteArrayLe(fileContents, 4);
+                ushort windowYmin = ArrayUtils.ReadUInt16FromByteArrayLe(fileContents, 6);
+                ushort windowXmax = ArrayUtils.ReadUInt16FromByteArrayLe(fileContents, 8);
+                ushort windowYmax = ArrayUtils.ReadUInt16FromByteArrayLe(fileContents, 10);
+                if (windowXmax < windowXmin || windowYmax < windowYmin)
+                    return false;
+                //UInt16 hDpi = ArrayUtils.ReadUInt16FromByteArrayLe(fileData, 12); // Horizontal Resolution of image in DPI
+                //UInt16 vDpi = ArrayUtils.ReadUInt16FromByteArrayLe(fileData, 14); // Vertical Resolution of image in DPI
+                byte numPlanes = fileContents[65]; // Number of color planes
+                if (numPlanes > 4)
+                {
+                    return false;
+                }
+                ushort bytesPerLine = ArrayUtils.ReadUInt16FromByteArrayLe(fileContents, 66); // Number of bytes to allocate for a scanline plane.  MUST be an EVEN number.  Do NOT calculate from Xmax-Xmin.
+                ushort paletteInfo = ArrayUtils.ReadUInt16FromByteArrayLe(fileContents, 68); // How to interpret palette: 1 = Color/BW, 2 = Grayscale (ignored in PB IV/ IV Plus)
+                //UInt16 hscreenSize = ArrayUtils.ReadUInt16FromByteArrayLe(fileData, 70); // Horizontal screen size in pixels. New field found only in PB IV/IV Plus
+                //UInt16 vscreenSize = ArrayUtils.ReadUInt16FromByteArrayLe(fileData, 72); // Vertical screen size in pixels. New field found only in PB IV/IV Plus
+                int width = windowXmax - windowXmin + 1;
+                int height = windowYmax - windowYmin + 1;
+                int bitsPerPixel = numPlanes * bitsPerPlane;
+
+                if (bitsPerPixel != 1 && bitsPerPixel != 2 && bitsPerPixel != 4 && bitsPerPixel != 8 && bitsPerPixel != 24 && bitsPerPixel != 32)
+                {
+                    return false;
+                }
+                mixInfo.Type = MixContentType.Pcx;
+                mixInfo.Info = String.Format("PCX Image; {0}x{1}, {2} bpp", width, height, bitsPerPixel);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }            
+        }
+
         private static bool IdentifyD2Shp(byte[] fileContents, MixEntry mixInfo)
         {
             try
@@ -182,11 +254,93 @@ namespace MobiusEditor.Utility
             {
                 Byte[] cpsData = ClassicSpriteLoader.GetCpsData(fileContents, out Color[] palette);
                 mixInfo.Type = MixContentType.Cps;
-                mixInfo.Info = "CPS; 320x200";
+                mixInfo.Info = "CPS Image; 320x200";
                 return true;
             }
             catch (FileTypeLoadException) { /* ignore */ }
             return false;
+        }
+
+        private static bool IdentifyWsa(byte[] fileContents, MixEntry mixInfo)
+        {
+            try
+            {
+                int datalen = fileContents.Length;
+                if (datalen < 14)
+                {
+                    return false;
+                }
+                ushort nrOfFrames = ArrayUtils.ReadUInt16FromByteArrayLe(fileContents, 0);
+                if (nrOfFrames == 0)
+                {
+                    return false;
+                }
+                ushort xPos = ArrayUtils.ReadUInt16FromByteArrayLe(fileContents, 2);
+                ushort yPos = ArrayUtils.ReadUInt16FromByteArrayLe(fileContents, 4);
+                ushort xorWidth = ArrayUtils.ReadUInt16FromByteArrayLe(fileContents, 6);
+                ushort xorHeight = ArrayUtils.ReadUInt16FromByteArrayLe(fileContents, 8);
+                int buffSize = 2;
+                uint deltaBufferSize = (uint)ArrayUtils.ReadIntFromByteArray(fileContents, 0x0A, buffSize, true);
+                ushort flags = ArrayUtils.ReadUInt16FromByteArrayLe(fileContents, 0x0A + buffSize);
+                int headerSize = 0x0C + buffSize;
+                if (xorWidth == 0 || xorHeight == 0)
+                {
+                    return false;
+                }
+                int dataIndexOffset = headerSize;
+                int paletteOffset = dataIndexOffset + (nrOfFrames + 2) * 4;
+                bool hasPalette = (flags & 1) != 0;
+                uint[] frameOffsets = new uint[nrOfFrames + 2];
+                for (int i = 0; i < nrOfFrames + 2; ++i)
+                {
+                    if (fileContents.Length <= dataIndexOffset + 4)
+                    {
+                        return false;
+                    }
+                    uint curOffs = ArrayUtils.ReadUInt32FromByteArrayLe(fileContents, dataIndexOffset);
+                    frameOffsets[i] = curOffs;
+                    if (hasPalette)
+                        curOffs += 300;
+                    if (curOffs > fileContents.Length)
+                    {
+                        return false;
+                    }
+                    dataIndexOffset += 4;
+                }
+                bool hasLoopFrame = frameOffsets[nrOfFrames + 1] != 0;
+                uint endOffset = frameOffsets[nrOfFrames + (hasLoopFrame ? 1 : 0)];
+                if (hasPalette)
+                    endOffset += 0x300;
+                if (endOffset != fileContents.Length)
+                {
+                    return false;
+                }
+                if (hasPalette)
+                {
+                    if (fileContents.Length < paletteOffset + 0x300)
+                    {
+                        return false;
+                    }
+                    int paletteEnd = paletteOffset + 0x300;
+                    for (int i = paletteOffset; i < paletteEnd; i++)
+                    {
+                        // verify 6-bit palette
+                        if (fileContents[i] > 0x3F)
+                        {
+                            return false;
+                        }
+                    }
+                }
+                mixInfo.Type = MixContentType.Wsa;
+                string posInfo = xPos != 0 && yPos != 0 ? String.Format(" at position {0}x{1}", xPos, yPos) : String.Empty;
+                mixInfo.Info = string.Format("WSA Animation; {0}x{1}{2}, {3} frame{4}{5}",
+                    xorWidth, xorHeight, posInfo, nrOfFrames, nrOfFrames == 1 ? string.Empty : "s", hasLoopFrame ? " + loop frame" : string.Empty);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
         private static bool IdentifyCcTmp(byte[] fileContents, MixEntry mixInfo)
@@ -733,6 +887,7 @@ namespace MobiusEditor.Utility
         /// <summary>Dummy type used to indicate file entries identified through embedded file names database.</summary>
         DbTmp = -1,
         Unknown = 0,
+        Empty,
         Mix,
         MapTd,
         MapRa,

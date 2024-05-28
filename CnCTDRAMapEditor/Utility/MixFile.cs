@@ -570,6 +570,12 @@ namespace MobiusEditor.Utility
                 // Can normally never happen; it is checked when the header is read.
                 throw new MixParseException("Data exceeds mix file bounds.");
             }
+            if (dataReadLength == 0)
+            {
+                // if the given size is 0, CreateViewStream creates a stream with the data full length.
+                // We don't want that, so we return an empty memorystream instead.
+                return new MemoryStream(new byte[0]);
+            }
             return mixMap.CreateViewStream(mixFileStart + dataReadOffset, dataReadLength, MemoryMappedFileAccess.Read);
         }
 
