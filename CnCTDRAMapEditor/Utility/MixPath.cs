@@ -128,11 +128,29 @@ namespace MobiusEditor.Utility
         /// <returns>The mix path as a UI-viewable string</returns>
         public static string GetFileNameReadable(string path, bool shortPath, out bool nameIsId)
         {
+            return GetFileNameReadable(path, shortPath, null, out nameIsId);
+        }
+
+        /// <summary>
+        /// Returns the mix path as a UI-viewable string, with " -&gt; " arrows indicating the internal hierarchy, and any IDs
+        /// enclosed in square brackets. As final component, it returns the first found filename in the filename parts of the mix path block.
+        /// </summary>
+        /// <param name="path">Mix file path block, in the format "x:\path\mixfile.mix;submix1.mix;submix2.mix?file.ini;file.bin"</param>
+        /// <param name="shortPath">true if the path of the original mix file should not be included.</param>
+        /// <param name="arrowSymbol">String to use as arrow symbol. If null, defaults to "→"</param>
+        /// <param name="nameIsId">returns whether the returned filename is a file ID or a real identified filename.</param>
+        /// <returns>The mix path as a UI-viewable string</returns>
+        public static string GetFileNameReadable(string path, bool shortPath, string arrowSymbol, out bool nameIsId)
+        {
             nameIsId = false;
+            if (arrowSymbol == null)
+            {
+                arrowSymbol = "→";
+            }
             GetComponents(path, out _, out string[] filenamePartsRaw);
             GetComponentsViewable(path, out string[] mixParts, out string[] filenameParts);
             FileInfo fileInfo = new FileInfo(mixParts[0]);
-            string mixString = String.Join(String.Empty, mixParts.Skip(1).Select(mp => " -> " + mp).ToArray());
+            string mixString = String.Join(String.Empty, mixParts.Skip(1).Select(mp => " "+ arrowSymbol + " " + mp).ToArray());
             string mixname = shortPath ? fileInfo.Name : fileInfo.FullName;
             string fullName = mixname + mixString;
             string loadedName = filenameParts[0];
@@ -146,7 +164,7 @@ namespace MobiusEditor.Utility
             if (!String.IsNullOrEmpty(loadedName))
             {
                 nameIsId = MixPath.FilePathIdPattern.IsMatch(loadedNameRaw);
-                fullName += " -> " + loadedName;
+                fullName += " "+ arrowSymbol + " " + loadedName;
             }
             return fullName;
         }
