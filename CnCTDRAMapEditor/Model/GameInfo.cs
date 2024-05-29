@@ -25,41 +25,81 @@ namespace MobiusEditor.Model
         public const string TRIG_ARG_FORMAT = "{0}: {1}";
         public string[] PERSISTENCE_NAMES = { "first triggered", "all triggered", "each triggering" };
         #region properties
+        /// <summary>GqmeType enup for this game.</summary>
         public abstract GameType GameType { get; }
+        /// <summary>Name used for this game.</summary>
         public abstract string Name { get; }
+        /// <summary>Name used for this game in the mixcontent.ini definition.</summary>
         public abstract string IniName { get; }
+        /// <summary>Default remaster folder for saving maps of this type.</summary>
         public abstract string DefaultSaveDirectory { get; }
+        /// <summary>"Save File" filter for maps for this game.</summary>
         public abstract string SaveFilter { get; }
+        /// <summary>"Open File" filter for maps for this game.</summary>
         public abstract string OpenFilter { get; }
+        /// <summary>Default extension used for maps of this game.</summary>
         public abstract string DefaultExtension { get; }
+        /// <summary>Default extension used for maps of this game when they were loaded from inside a .mix file.</summary>
         public abstract string DefaultExtensionFromMix { get; }
+        /// <summary>Location to look for mods for this game in the user's Documents folder.</summary>
         public abstract string ModFolder { get; }
+        /// <summary>Identifier for this game in mod definition json files.</summary>
         public abstract string ModIdentifier { get; }
+        /// <summary>Mods to load for this game.</summary>
         public abstract string ModsToLoad { get; }
+        /// <summary>Name of the setting that configures this game's mods to load.</summary>
         public abstract string ModsToLoadSetting { get; }
+        /// <summary>Workshop identifier for maps for this game. If empty, workshop is not supported for this game.</summary>
         public abstract string WorkshopTypeId { get; }
+        /// <summary>Configured folder for this this game's Classic files</summary>
         public abstract string ClassicFolder { get; }
+        /// <summary>Root folder of this game's Classic files under in the Remastered Collection's "Data" folder.</summary>
         public abstract string ClassicFolderRemaster { get; }
+        /// <summary>Location of this game's Classic files to use under in the Remastered Collection's "Data" folder.</summary>
+        public abstract string ClassicFolderRemasterData { get; }
+        /// <summary>Default for this this game's Classic folder</summary>
         public abstract string ClassicFolderDefault { get; }
+        /// <summary>Name of the setting that configures this game's Classic folder</summary>
         public abstract string ClassicFolderSetting { get; }
+        /// <summary>File name of the classic strings file for this game.</summary>
         public abstract string ClassicStringsFile { get; }
-        public abstract string ClassicFontTriggers { get; }
+        /// <summary>Classic font from this game to use for celltriggers.</summary>
+        public abstract string ClassicFontCellTriggers { get; }
+        /// <summary>Lists all theaters theoretically supported by this type.</summary>
         public abstract TheaterType[] AllTheaters { get; }
+        /// <summary>Lists all theaters supported by this type which are actually found.</summary>
         public abstract TheaterType[] AvailableTheaters { get; }
-        public abstract bool MegamapSupport { get; }
-        public abstract bool MegamapOptional { get; }
-        public abstract bool MegamapDefault { get; }
-        public abstract bool MegamapOfficial { get; }
+        /// <summary>Whether megamaps are supported for this game.</summary>
+        public abstract bool MegamapIsSupported { get; }
+        /// <summary>Whether megamaps are optional for this game.</summary>
+        public abstract bool MegamapIsOptional { get; }
+        /// <summary>Whether maps of this game default to being megamaps.</summary>
+        public abstract bool MegamapIsDefault { get; }
+        /// <summary>Whether megamap support for this game is official, or only supported through mods.</summary>
+        public abstract bool MegamapIsOfficial { get; }
+        /// <summary>Whether single player scenarios exist for this game.</summary>
         public abstract bool HasSinglePlayer { get; }
+        /// <summary>Whether mix files of this game can be in the new mix format</summary>
+        public abstract bool CanUseNewMixFormat { get; }
+        /// <summary>Maximum amount of triggers that can be added into a map of this game.</summary>
         public abstract int MaxTriggers { get; }
+        /// <summary>Maximum amount of teams that can be added into a map of this game.</summary>
         public abstract int MaxTeams { get; }
+        /// <summary>Threshold (1-256) at which the health bar colour changes from yellow to green in this game.</summary>
         public abstract int HitPointsGreenMinimum { get; }
+        /// <summary>Threshold (1-256) at which the health bar colour changes from red to yellow in this game.</summary>
         public abstract int HitPointsYellowMinimum { get; }
         /// <summary>Preferred type of overlay to use as UI icon</summary>
         public abstract OverlayTypeFlag OverlayIconType { get; }
         #endregion
 
         #region functions
+        /// <summary>
+        /// Create game plugin for this game.
+        /// </summary>
+        /// <param name="mapImage">True if a map image should be created.</param>
+        /// <param name="megaMap">True if this plugin will be handling a megamap.</param>
+        /// <returns></returns>
         public abstract IGamePlugin CreatePlugin(bool mapImage, bool megaMap);
         /// <summary>
         /// Initialises the classic files for this game. If <paramref name="forRemaster"/> is false, this should do more detailed checks on which assets are required.
@@ -98,11 +138,7 @@ namespace MobiusEditor.Model
         /// <param name="tsmc">classic tileset manager to look up the colour on.</param>
         /// <param name="textColor">colour for the font text.</param>
         /// <returns>A remap object with a unique name, for the given color index</returns>
-        public abstract TeamRemap GetClassicFontTriggerRemap(TilesetManagerClassic tsmc, Color textColor);
-        /// <summary>Get all possible game files that could be present inside the game's mix archives.</summary>
-        /// <returns>All filenames used by the game.</returns>
-        public abstract IEnumerable<string> GetGameFiles();
-
+        public abstract TeamRemap GetClassicFontCellTriggerRemap(TilesetManagerClassic tsmc, Color textColor);
         #endregion
 
         #region protected functions

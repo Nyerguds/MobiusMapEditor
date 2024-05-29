@@ -15,7 +15,14 @@ namespace MobiusEditor.Utility
         /// <summary>Maximum file size that gets processed by byte array (5 MiB).</summary>
         private const uint maxProcessed = 0x500000;
 
-        public static List<MixEntry> AnalyseFiles(MixFile current, bool preferMissions, Func<bool> checkAbort)
+        /// <summary>
+        /// Analyses the files inside a mix archive to identify the file types.
+        /// </summary>
+        /// <param name="current">mix file to analyse.</param>
+        /// <param name="missionsOnly">If enabled, the procedure will only identify missions and mix files.</param>
+        /// <param name="checkAbort">Abort trigger to check.</param>
+        /// <returns>The result of the analysis.</returns>
+        public static List<MixEntry> AnalyseFiles(MixFile current, bool missionsOnly, Func<bool> checkAbort)
         {
             List<uint> filesList = current.FileIds.ToList();
             List<MixEntry> fileInfo = new List<MixEntry>();
@@ -35,7 +42,7 @@ namespace MobiusEditor.Utility
                     {
                         using (Stream file = current.OpenFile(mixInfo))
                         {
-                            TryIdentifyFile(file, mixInfo, current, preferMissions);
+                            TryIdentifyFile(file, mixInfo, current, missionsOnly);
                         }
                     }
                 }
@@ -43,113 +50,101 @@ namespace MobiusEditor.Utility
             return fileInfo.OrderBy(x => x.SortName).ToList();
         }
 
-        private static void TryIdentifyFile(Stream fileStream, MixEntry mixInfo, MixFile source, bool preferMissions)
+        private static void TryIdentifyFile(Stream fileStream, MixEntry mixInfo, MixFile source, bool missionsAndMixFilesOnly)
         {
-            long fileLengthFull = fileStream.Length;
             mixInfo.Type = MixContentType.Unknown;
             string extension = Path.GetExtension(mixInfo.Name);
-            if (fileLengthFull == 0)
+            if (mixInfo.Length == 0)
             {
                 mixInfo.Type = MixContentType.Empty;
                 mixInfo.Info = "Empty file";
                 return;
             }
-
             // Very strict requirements, and jumps over the majority of file contents while checking, so check this first.
+            // These are ALWAYS identified, even if set to "missions only", because not identifying them slows down the rest of the analysis.
             if (IdentifyAud(fileStream, mixInfo))
                 return;
             if (IdentifyVqa(fileStream, mixInfo))
                 return;
             if (IdentifyVqp(fileStream, mixInfo))
                 return;
-            if (IdentifyPal(fileStream, mixInfo))
+            if (IdentifyPalTable(fileStream, mixInfo))
                 return;
+            
             // These types analyse the full file from byte array. I'm restricting the buffer for them to 5mb; they shouldn't need more.
-            if (fileLengthFull <= maxProcessed)
+            if (mixInfo.Length <= maxProcessed)
             {
-                int fileLength = (int)fileLengthFull;
+                int fileLength = (int)mixInfo.Length;
                 Byte[] fileContents = new byte[fileLength];
                 fileStream.Seek(0, SeekOrigin.Begin);
                 fileStream.Read(fileContents, 0, fileLength);
                 fileStream.Seek(0, SeekOrigin.Begin);
-                if (preferMissions)
+                if (!missionsAndMixFilesOnly)
                 {
-                    if (IdentifyIni(fileContents, mixInfo))
+                    if (IdentifyXccNames(fileContents, mixInfo))
                         return;
-                    if (IdentifyTdMap(fileContents, mixInfo))
+                    if (IdentifyRaMixNames(fileContents, mixInfo))
                         return;
-                    // Always needs to happen before sole maps since all palettes will technically match that format.
-                    if (IdentifyPalette(fileContents, mixInfo))
+                    if (IdentifyPcx(fileContents, mixInfo))
                         return;
-                    if (".bin".Equals(extension, StringComparison.OrdinalIgnoreCase) && IdentifySoleMap(fileContents, mixInfo))
+                    if (IdentifyShp(fileContents, mixInfo))
+                        return;
+                    if (IdentifyD2Shp(fileContents, mixInfo))
+                        return;
+                    if (IdentifyCps(fileContents, mixInfo))
+                        return;
+                    if (IdentifyWsa(fileContents, mixInfo))
+                        return;
+                    if (IdentifyCcTmp(fileContents, mixInfo))
+                        return;
+                    if (IdentifyRaTmp(fileContents, mixInfo))
+                        return;
+                    if (IdentifyCcFont(fileContents, mixInfo))
                         return;
                 }
-                if (IdentifyXccNames(fileContents, mixInfo))
+                if (IdentifyIni(fileContents, mixInfo))
                     return;
-                if (IdentifyRaMixNames(fileContents, mixInfo))
-                    return;
-                if (IdentifyPcx(fileContents, mixInfo))
-                    return;
-                if (IdentifyShp(fileContents, mixInfo))
-                    return;
-                if (IdentifyD2Shp(fileContents, mixInfo))
-                    return;
-                if (IdentifyCps(fileContents, mixInfo))
-                    return;
-                if (IdentifyWsa(fileContents, mixInfo))
-                    return;
-                if (IdentifyCcTmp(fileContents, mixInfo))
-                    return;
-                if (IdentifyRaTmp(fileContents, mixInfo))
-                    return;
-                if (IdentifyCcFont(fileContents, mixInfo))
-                    return;
-                if (!preferMissions && IdentifyIni(fileContents, mixInfo))
-                    return;
-                if (IdentifyStringsFile(fileContents, mixInfo))
-                    return;
-                if (IdentifyText(fileContents, mixInfo))
-                    return;
-                if (!preferMissions)
+                if (!missionsAndMixFilesOnly)
                 {
-                    if (IdentifyTdMap(fileContents, mixInfo))
+                    if (IdentifyStringsFile(fileContents, mixInfo))
                         return;
-                    // Always needs to happen before sole maps since all palettes will technically match that format.
-                    if (IdentifyPalette(fileContents, mixInfo))
-                        return;
-                    // Only check for sole map if name is known and type is correct.
-                    if (".bin".Equals(extension, StringComparison.OrdinalIgnoreCase) && IdentifySoleMap(fileContents, mixInfo))
+                    if (IdentifyText(fileContents, mixInfo))
                         return;
                 }
+                if (IdentifyTdMap(fileContents, mixInfo))
+                    return;
+                // Always needs to happen before sole maps since all palettes will technically match that format.
+                if (IdentifyPalette(fileContents, mixInfo))
+                    return;
+                // Only check for sole map if name is known and type is correct.
+                if (".bin".Equals(extension, StringComparison.OrdinalIgnoreCase) && IdentifySoleMap(fileContents, mixInfo))
+                    return;
             }
             try
             {
                 // Check if it's a mix file
-                int mixContents = -1;
-                bool encrypted = false;
-                bool newType = false;
                 if (MixFile.CheckValidMix(source, mixInfo, true))
                 {
                     using (MixFile mf = new MixFile(source, mixInfo))
                     {
-                        mixContents = mf.FileCount;
-                        encrypted = mf.HasEncryption;
-                        newType = mf.IsNewFormat;
+                        int mixContents = mf.FileCount;
+                        bool encrypted = mf.HasEncryption;
+                        bool newType = mf.IsNewFormat;
+                        if (mixContents > 0)
+                        {
+                            mixInfo.Type = MixContentType.Mix;
+                            string formatInfo = newType ? ("new format; " + (encrypted ? string.Empty : "not ") + "encrypted; ") : string.Empty;
+                            mixInfo.Info = String.Format("Mix file; {0}{1} file{2}", formatInfo, mixContents, mixContents == 1 ? String.Empty : "s");
+                            return;
+                        }
                     }
-                }
-                if (mixContents > -1)
-                {
-                    mixInfo.Type = MixContentType.Mix;
-                    mixInfo.Info = "Mix file; " + (newType ? ("new format; " + (encrypted ? string.Empty : "not ") + "encrypted; ") : string.Empty) + mixContents + " files.";
-                    return;
                 }
             }
             catch { /* ignore */ }
             // Only do this if it passes the check on extension.
-            if (".mrf".Equals(extension, StringComparison.OrdinalIgnoreCase))
+            if (!missionsAndMixFilesOnly && ".mrf".Equals(extension, StringComparison.OrdinalIgnoreCase) && IdentifyMrf(fileStream, mixInfo))
             {
-                if (IdentifyMrf(fileStream, mixInfo))
-                    return;
+                return;
             }
             mixInfo.Type = MixContentType.Unknown;
             mixInfo.Info = String.Empty;
@@ -543,7 +538,7 @@ namespace MobiusEditor.Utility
         private static bool IdentifyAud(Stream fileStream, MixEntry mixInfo)
         {
             fileStream.Seek(0, SeekOrigin.Begin);
-            long fileLength = fileStream.Length;
+            long fileLength = mixInfo.Length;
             if (fileLength <= 12)
             {
                 return false;
@@ -619,7 +614,7 @@ namespace MobiusEditor.Utility
             fileStream.Seek(0, SeekOrigin.Begin);
             // FORM chunk + VQHD chunk + FINF/LINF chunk name + its size
             const int vqHdrSize = 12 + 8 + 42;
-            long fileLength = fileStream.Length;
+            long fileLength = mixInfo.Length;
             if (fileLength <= vqHdrSize)
             {
                 return false;
@@ -680,7 +675,7 @@ namespace MobiusEditor.Utility
         private static bool IdentifyVqp(Stream fileStream, MixEntry mixInfo)
         {
             fileStream.Seek(0, SeekOrigin.Begin);
-            long fileLength = fileStream.Length;
+            long fileLength = mixInfo.Length;
             if (fileLength <= 4)
             {
                 return false;
@@ -715,11 +710,11 @@ namespace MobiusEditor.Utility
             return true;
         }
 
-        private static bool IdentifyPal(Stream fileStream, MixEntry mixInfo)
+        private static bool IdentifyPalTable(Stream fileStream, MixEntry mixInfo)
         {
             const int tblSize = 65536;
             fileStream.Seek(0, SeekOrigin.Begin);
-            long fileLength = fileStream.Length;
+            long fileLength = mixInfo.Length;
             if (fileLength != tblSize)
             {
                 return false;

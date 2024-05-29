@@ -39,23 +39,26 @@ namespace MobiusEditor.SoleSurvivor
         public override string ModsToLoadSetting => "ModsToLoadTD";
         public override string WorkshopTypeId => null;
         public override string ClassicFolder => Properties.Settings.Default.ClassicPathSS;
-        public override string ClassicFolderRemaster => "CNCDATA\\TIBERIAN_DAWN\\CD1";
+        public override string ClassicFolderRemaster => "CNCDATA\\TIBERIAN_DAWN";
+        public override string ClassicFolderRemasterData => ClassicFolderRemaster + "\\CD1";
         public override string ClassicFolderDefault => "Classic\\SS\\";
         public override string ClassicFolderSetting => "ClassicPathSS";
         public override string ClassicStringsFile => "conquer.eng";
-        public override string ClassicFontTriggers => "scorefnt.fnt";
+        public override string ClassicFontCellTriggers => "scorefnt.fnt";
         public override TheaterType[] AllTheaters => TheaterTypes.GetAllTypes().ToArray();
         public override TheaterType[] AvailableTheaters => TheaterTypes.GetTypes().ToArray();
-        public override bool MegamapSupport => true;
-        public override bool MegamapOptional => true;
-        public override bool MegamapDefault => true;
-        public override bool MegamapOfficial => true;
+        public override bool MegamapIsSupported => true;
+        public override bool MegamapIsOptional => true;
+        public override bool MegamapIsDefault => true;
+        public override bool MegamapIsOfficial => true;
         public override bool HasSinglePlayer => false;
+        public override bool CanUseNewMixFormat => false;
         public override int MaxTriggers => Constants.MaxTriggers;
         public override int MaxTeams => Constants.MaxTeams;
         public override int HitPointsGreenMinimum => 127;
         public override int HitPointsYellowMinimum => 63;
         public override OverlayTypeFlag OverlayIconType => OverlayTypeFlag.FlagPlace;
+
         public override IGamePlugin CreatePlugin(bool mapImage, bool megaMap) => new GamePluginSS(mapImage, megaMap);
 
         public override void InitClassicFiles(MixfileManager mfm, List<string> loadErrors, List<string> fileLoadErrors, bool forRemaster)
@@ -131,60 +134,9 @@ namespace MobiusEditor.SoleSurvivor
             return String.IsNullOrEmpty(name) || Constants.EmptyMapName.Equals(name, StringComparison.OrdinalIgnoreCase);
         }
 
-        public override TeamRemap GetClassicFontTriggerRemap(TilesetManagerClassic tsmc, Color textColor)
+        public override TeamRemap GetClassicFontCellTriggerRemap(TilesetManagerClassic tsmc, Color textColor)
         {
-            return GetClassicFontRemapSimple(ClassicFontTriggers, tsmc, textColor);
-        }
-
-        private static readonly string[] additionalFiles = new string[]
-        {
-
-        };
-
-        public override IEnumerable<string> GetGameFiles()
-        {
-            foreach (string name in GetMissionFiles())
-            {
-                yield return name;
-            }
-            foreach (string name in GameInfoTibDawn.GetGraphicsFiles(TheaterTypes.GetAllTypes()))
-            {
-                yield return name;
-            }
-            foreach (string name in additionalFiles)
-            {
-                yield return name;
-            }
-        }
-
-        public static IEnumerable<string> GetMissionFiles()
-        {
-            const string iniExt = ".ini";
-            const string binExt = ".bin";
-            for (int i = 0; i < 1000; ++i)
-            {
-                string missionName = GetMissionName('s', i, "ea");
-                yield return missionName + iniExt;
-                yield return missionName + binExt;
-            }
-        }
-
-        public static IEnumerable<string> GetMediaFiles()
-        {
-            const string vqaExt = ".vqa";
-            const string vqpExt = ".vqp";
-            const string audExt = ".aud";
-            // Videos
-            foreach (string vidName in GamePluginSS.Movies)
-            {
-                yield return vidName.ToLowerInvariant() + vqaExt;
-                yield return vidName.ToLowerInvariant() + vqpExt;
-            }
-            // Music
-            foreach (string audName in GamePluginSS.Themes)
-            {
-                yield return audName.ToLowerInvariant() + audExt;
-            }
+            return GetClassicFontRemapSimple(ClassicFontCellTriggers, tsmc, textColor);
         }
     }
 }

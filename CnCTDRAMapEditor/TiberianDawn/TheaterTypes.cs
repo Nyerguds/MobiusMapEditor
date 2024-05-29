@@ -30,6 +30,7 @@ namespace MobiusEditor.TiberianDawn
         // Winter seems to fall back on Temperate for the Haystack graphics.
         public static readonly TheaterType Winter = new TheaterType(3, "Winter", "winter", "win", "TD_Terrain_Winter", commonTilesets.Concat("TD_Terrain_Temperate".Yield()));
         public static readonly TheaterType Snow = new TheaterType(4, "Snow", "snow", "sno", true, "TD_Terrain_Snow", commonTilesets);
+        // Experimental. Ignore this.
         public static readonly TheaterType Caribbean = new TheaterType(5, "Caribbean", "caribbea", "car", true, "TD_Terrain_Caribbean", commonTilesets);
 
         private static TheaterType[] Types;

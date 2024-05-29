@@ -51,7 +51,7 @@ namespace MobiusEditor.Utility
         public uint FileId { get; private set; }
         public int FileCount { get; private set; }
         public bool IsNewFormat { get; private set; }
-        public bool IsEmbedded { get; private set; }
+        public bool IsEmbedded => parent != null;
         public bool HasEncryption { get; private set; }
         public bool HasChecksum { get; private set; }
         public IEnumerable<uint> FileIds => this.mixFileContents.Keys.OrderBy(k => k);
@@ -73,6 +73,7 @@ namespace MobiusEditor.Utility
         private long fileStart;
         private long fileLength;
         private MemoryMappedFile mixFileMap;
+        private MixFile parent;
 
         /// <summary>
         /// Does the same parsing as a normal mix file constructor, but without throwing exceptions.
@@ -112,7 +113,7 @@ namespace MobiusEditor.Utility
         public static bool CheckValidMix(MixFile container, MixEntry entry, bool handleAdvanced)
         {
             MixFile dummy = new MixFile();
-            dummy.IsEmbedded = true;
+            dummy.parent = container;
             string name = entry.Name ?? entry.IdString;
             MixEntry actualEntry = container.VerifyInternal(entry);
             if (actualEntry == null)
@@ -186,7 +187,7 @@ namespace MobiusEditor.Utility
 
         public MixFile(MixFile container, MixEntry entry, bool handleAdvanced)
         {
-            this.IsEmbedded = true;
+            this.parent = container;
             string name = entry.Name ?? entry.IdString;
             MixEntry actualEntry = container.VerifyInternal(entry);
             if (actualEntry == null)
@@ -557,7 +558,7 @@ namespace MobiusEditor.Utility
         /// <exception cref="IndexOutOfRangeException">The data is not in the bounds of this mix file.</exception>
         private Stream CreateViewStream(MemoryMappedFile mixMap, long mixFileStart, long mixFileLength, long dataReadOffset, uint dataReadLength, bool throwWhenParsing)
         {
-            if (this.disposedValue)
+            if (this.Disposed)
             {
                 throw new ObjectDisposedException("Mixfile");
             }
@@ -662,15 +663,22 @@ namespace MobiusEditor.Utility
         }
 
         #region IDisposable Support
+
         private bool disposedValue = false;
+
+        /// <summary>
+        /// Returns whether the MixFile object is disposed. Note that it will also be considered
+        /// disposed if it is loaded from inside a parent mix file, and the parent is disposed.
+        /// </summary>
+        public bool Disposed => disposedValue || (IsEmbedded && parent.Disposed);
 
         protected virtual void Dispose(bool disposing)
         {
-            if (!this.disposedValue)
+            // Only dispose if not an embedded mix file.
+            // If embedded, the mixFileMap is contained in the parent.
+            if (disposing)
             {
-                // Only dispose if not an embedded mix file.
-                // If embedded, the mixFileMap is contained in the parent.
-                if (disposing && !this.IsEmbedded)
+                if (!this.IsEmbedded && !disposedValue)
                 {
                     this.mixFileMap.Dispose();
                 }

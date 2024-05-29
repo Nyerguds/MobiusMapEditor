@@ -54,7 +54,7 @@ namespace MobiusEditor.Utility
             var fileTableSize = 0U;
 
             var readOffset = 0U;
-            using (Stream stream = CreateReadOnlyStream(megafileMap, 4, stringTableSize))
+            using (Stream stream = CreateReadOnlyStream(megafileMap, readOffset, 4))
             using (var magicNumberReader = new BinaryReader(stream))
             {
                 var magicNumber = magicNumberReader.ReadUInt32();
@@ -65,7 +65,7 @@ namespace MobiusEditor.Utility
                 }
             }
             readOffset += 4U;
-            using (Stream stream = CreateReadOnlyStream(megafileMap, 12, stringTableSize))
+            using (Stream stream = CreateReadOnlyStream(megafileMap, readOffset, 12))
             using (BinaryReader headerReader = new BinaryReader(stream))
             {
                 numFiles = headerReader.ReadUInt32();

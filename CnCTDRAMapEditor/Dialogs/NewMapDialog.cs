@@ -45,7 +45,7 @@ namespace MobiusEditor.Dialogs
             get
             {
                 GameInfo gi = gameInfos[(int)GameType];
-                return gi.MegamapSupport && (!gi.MegamapOptional || chkMegamap.Checked);
+                return gi.MegamapIsSupported && (!gi.MegamapIsOptional || chkMegamap.Checked);
             }
         }
 
@@ -102,17 +102,17 @@ namespace MobiusEditor.Dialogs
                     }
                 }
                 lbTheaters.SelectedIndex = selectIndex != -1 ? selectIndex : 0;
-                if (!gi.MegamapSupport)
+                if (!gi.MegamapIsSupported)
                 {
                     chkMegamap.Checked = false;
                     chkMegamap.Visible = false;
                 }
                 else
                 {
-                    if (gi.MegamapOptional)
+                    if (gi.MegamapIsOptional)
                     {
                         chkMegamap.Visible = true;
-                        chkMegamap.Checked = gi.MegamapDefault || optionalsChecked[(int)gameType];
+                        chkMegamap.Checked = gi.MegamapIsDefault || optionalsChecked[(int)gameType];
                     }
                     else
                     {
@@ -142,7 +142,7 @@ namespace MobiusEditor.Dialogs
         {
             GameType gameType = GameType;
             GameInfo gi = gameInfos[(int)gameType];
-            if (gi.MegamapSupport && gi.MegamapOptional && !gi.MegamapDefault)
+            if (gi.MegamapIsSupported && gi.MegamapIsOptional && !gi.MegamapIsDefault)
             {
                 optionalsChecked[(int)gameType] = chkMegamap.Checked;
             }
@@ -154,9 +154,9 @@ namespace MobiusEditor.Dialogs
             GameType gameType = GameType;
             GameInfo gi = gameInfos[(int)gameType];
             chkSingleplayer.Visible = gi.HasSinglePlayer;
-            bool allowMegamap = gi.MegamapSupport && gi.MegamapOptional;
+            bool allowMegamap = gi.MegamapIsSupported && gi.MegamapIsOptional;
             chkMegamap.Visible = allowMegamap;
-            lblWarnMegamap.Visible = allowMegamap && chkMegamap.Checked && !gi.MegamapOfficial;
+            lblWarnMegamap.Visible = allowMegamap && chkMegamap.Checked && !gi.MegamapIsOfficial;
             TheaterType selected = ListItem.GetValueFromListBox<TheaterType>(lbTheaters);
             lblWarnModTheater.Visible = selected != null && selected.IsModTheater;
         }

@@ -20,7 +20,6 @@ using MobiusEditor.Model;
 using MobiusEditor.Tools;
 using MobiusEditor.Tools.Dialogs;
 using MobiusEditor.Utility;
-using MobiusEditor.Utility.Hashing;
 using Steamworks;
 using System;
 using System.Collections.Generic;
@@ -46,6 +45,9 @@ namespace MobiusEditor
         const string MAP_UNTITLED = "Untitled";
         private Dictionary<string, Bitmap> theaterIcons = new Dictionary<string, Bitmap>();
         private MixFileNameGenerator romfis = null;
+
+        private readonly object abortLockObj = new object();
+        private bool windowCloseRequested = false;
 
         private static readonly ToolType[] toolTypes;
 
@@ -113,6 +115,7 @@ namespace MobiusEditor
 
         private readonly Timer steamUpdateTimer = new Timer();
 
+        private SimpleMultiThreading mixLoadMultiThreader;
         private SimpleMultiThreading openMultiThreader;
         private SimpleMultiThreading loadMultiThreader;
         private SimpleMultiThreading saveMultiThreader;
@@ -185,12 +188,264 @@ namespace MobiusEditor
             UpdateUndoRedo();
             steamUpdateTimer.Interval = 500;
             steamUpdateTimer.Tick += SteamUpdateTimer_Tick;
+            mixLoadMultiThreader = new SimpleMultiThreading(this);
+            mixLoadMultiThreader.ProcessingLabelBorder = BorderStyle.Fixed3D;
             openMultiThreader = new SimpleMultiThreading(this);
             openMultiThreader.ProcessingLabelBorder = BorderStyle.Fixed3D;
             loadMultiThreader = new SimpleMultiThreading(this);
             loadMultiThreader.ProcessingLabelBorder = BorderStyle.Fixed3D;
             saveMultiThreader = new SimpleMultiThreading(this);
             saveMultiThreader.ProcessingLabelBorder = BorderStyle.Fixed3D;
+        }
+
+        private void LoadMixTree()
+        {
+            FileOpenFromMixMenuItem.Enabled = true;
+            ToolStripMenuItem loading = new ToolStripMenuItem("[Scanning mix files, please wait]");
+            loading.Enabled = false;
+            FileOpenFromMixMenuItem.DropDownItems.Add(loading);
+            mixLoadMultiThreader.ExecuteThreaded(() => FindMissionMixFiles(this.romfis), (mix) => BuildMixTrees(mix, loading), true,
+                null, String.Empty);
+        }
+
+        private void SetAbort()
+        {
+            lock (abortLockObj)
+            {
+                windowCloseRequested = true;
+            }
+        }
+
+        private bool CheckAbort()
+        {
+            Boolean abort = false;
+            lock (abortLockObj)
+            {
+                abort = windowCloseRequested;
+            }
+            return abort;
+        }
+
+        private Dictionary<GameType, List<string>>[] FindMissionMixFiles(MixFileNameGenerator romfis)
+        {
+            HashSet<string> classicBaseFolders = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            HashSet<string> remasterBaseFolders = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            Dictionary<GameType, List<string>> classicMixFiles = new Dictionary<GameType, List<string>>();
+            Dictionary<GameType, List<string>> remasterMixFiles = new Dictionary<GameType, List<string>>();
+            GameInfo[] games = GameTypeFactory.GetGameInfos();
+            String remasterPath = StartupLoader.GetRemasterRunPath(Program.SteamGameId, false);
+            if (remasterPath != null)
+            {
+                remasterPath = Path.Combine(remasterPath, Globals.MegafilePath);
+            }
+            foreach (GameInfo gameInfo in games)
+            {
+                if (CheckAbort())
+                {
+                    return null;
+                }
+                string classicRoot = gameInfo.ClassicFolder;
+                if (!classicBaseFolders.Contains(classicRoot))
+                {
+                    classicBaseFolders.Add(classicRoot);
+                    classicRoot = Path.Combine(Program.ApplicationPath, classicRoot);
+                    if (Directory.Exists(classicRoot))
+                    {
+                        string[] allMixFiles = Directory.GetFiles(classicRoot, "*.mix", SearchOption.TopDirectoryOnly);
+                        List<string> validMixFiles = GetMixFilesWithMissions(gameInfo, allMixFiles, romfis);
+                        if (validMixFiles.Count > 0)
+                        {
+                            classicMixFiles.Add(gameInfo.GameType, validMixFiles);
+                        }
+                    }
+                }
+                if (remasterPath == null)
+                {
+                    continue;
+                }
+                string remasterRoot = gameInfo.ClassicFolderRemaster;
+                if (!remasterBaseFolders.Contains(remasterRoot))
+                {
+                    remasterBaseFolders.Add(remasterRoot);
+                    remasterRoot = Path.Combine(remasterPath, remasterRoot);
+                    if (Directory.Exists(remasterRoot))
+                    {
+                        string[] allMixFiles = Directory.GetFiles(remasterRoot, "*.mix", SearchOption.AllDirectories);
+                        List<string> validMixFiles = GetMixFilesWithMissions(gameInfo, allMixFiles, romfis);
+                        if (validMixFiles.Count > 0)
+                        {
+                            remasterMixFiles.Add(gameInfo.GameType, validMixFiles);
+                        }
+                    }
+                }
+            }
+            if (CheckAbort())
+            {
+                return null;
+            }
+            return new[] { classicMixFiles, remasterMixFiles };
+        }
+
+        private void BuildMixTrees(Dictionary<GameType, List<string>>[] mixFiles, ToolStripMenuItem loadingLabel)
+        {
+            if (CheckAbort())
+            {
+                return;
+            }
+            Dictionary<GameType, List<string>> classicMixFiles = mixFiles != null && mixFiles.Length > 0 ? mixFiles[0] : null;
+            Dictionary<GameType, List<string>> remasterMixFiles = mixFiles != null && mixFiles.Length > 1 ? mixFiles[1] : null;
+            if ((classicMixFiles == null || classicMixFiles.Count == 0) && (remasterMixFiles == null || remasterMixFiles.Count == 0))
+            {
+                if (loadingLabel.IsDisposed)
+                {
+                    return;
+                }
+                loadingLabel.Text = "No mix files found.";
+                return;
+            }
+            GameInfo[] games = GameTypeFactory.GetGameInfos();
+            String remasterPath = StartupLoader.GetRemasterRunPath(Program.SteamGameId, false);
+            if (remasterPath != null)
+            {
+                remasterPath = Path.Combine(remasterPath, Globals.MegafilePath);
+            }
+            if (classicMixFiles != null && classicMixFiles.Count > 0)
+            {
+                ToolStripMenuItem menuClassic = loadingLabel == null ? new ToolStripMenuItem() : loadingLabel;
+                menuClassic.Text = "Classic Files";
+                menuClassic.Enabled = true;
+                loadingLabel = null;
+                FileOpenFromMixMenuItem.DropDownItems.Add(menuClassic);
+                foreach (GameInfo gameInfo in games)
+                {
+                    string classicRoot = Path.GetFullPath(Path.Combine(Program.ApplicationPath, gameInfo.ClassicFolder));
+                    if (!classicMixFiles.TryGetValue(gameInfo.GameType, out List<string> mixFilesToAdd))
+                    {
+                        continue;
+                    }
+                    ToolStripMenuItem gameMenuClassic = new ToolStripMenuItem(gameInfo.Name);
+                    menuClassic.DropDownItems.Add(gameMenuClassic);
+                    foreach (string mixFile in mixFilesToAdd)
+                    {
+                        string showName = Path.GetFullPath(mixFile).Substring(classicRoot.Length);
+                        ToolStripMenuItem fileItem = new ToolStripMenuItem();
+                        string fileText = MixPath.GetFileNameReadable(showName, false, out _);
+                        fileItem.Text = fileText.Replace("&", "&&");
+                        fileItem.Tag = mixFile;
+                        fileItem.Click += OpenMixFileItem_Click;
+                        fileItem.Visible = true;
+                        gameMenuClassic.DropDownItems.Add(fileItem);
+                    }
+
+                }
+            }
+            if (remasterMixFiles != null && remasterMixFiles.Count > 0)
+            {
+                ToolStripMenuItem menuRemaster = loadingLabel == null ? new ToolStripMenuItem() : loadingLabel;
+                menuRemaster.Text = "Classic Files";
+                menuRemaster.Enabled = true;
+                loadingLabel = null;
+                FileOpenFromMixMenuItem.DropDownItems.Add(menuRemaster);
+                foreach (GameInfo gameInfo in games)
+                {
+                    string remasterRoot = Path.Combine(remasterPath, gameInfo.ClassicFolderRemaster);
+                    if (!remasterMixFiles.TryGetValue(gameInfo.GameType, out List<string> mixFilesToAdd))
+                    {
+                        continue;
+                    }
+                    ToolStripMenuItem gameMenuRemaster = new ToolStripMenuItem(gameInfo.Name);
+                    menuRemaster.DropDownItems.Add(gameMenuRemaster);
+                    foreach (string mixFile in mixFilesToAdd)
+                    {
+                        string showName = Path.GetFullPath(mixFile).Substring(remasterRoot.Length + 1);
+                        ToolStripMenuItem fileItem = new ToolStripMenuItem();
+                        string fileText = MixPath.GetFileNameReadable(showName, false, out _);
+                        fileItem.Text = fileText.Replace("&", "&&");
+                        fileItem.Tag = mixFile;
+                        fileItem.Click += OpenMixFileItem_Click;
+                        fileItem.Visible = true;
+                        gameMenuRemaster.DropDownItems.Add(fileItem);
+                    }
+                }
+            }
+        }
+
+        private List<string> GetMixFilesWithMissions(GameInfo gameInfo, string[] allMixFiles, MixFileNameGenerator romfis)
+        {
+            List<string> validMixFiles = new List<string>();
+            foreach (string mixFile in allMixFiles)
+            {
+                if (CheckAbort())
+                {
+                    return validMixFiles;
+                }
+                if (!MixFile.CheckValidMix(mixFile, gameInfo.CanUseNewMixFormat))
+                {
+                    continue;
+                }
+                using (MixFile mix = new MixFile(mixFile, gameInfo.CanUseNewMixFormat))
+                {
+                    romfis.IdentifyMixFile(mix, gameInfo.IniName);
+                    List<MixEntry> entries = MixContentAnalysis.AnalyseFiles(mix, true, null);
+                    if (entries.Any(e => e.Type == MixContentType.MapTd || e.Type == MixContentType.MapRa || e.Type == MixContentType.MapSole))
+                    {
+                        validMixFiles.Add(mixFile);
+                    }
+                    foreach (MixEntry entry in entries.Where(entr => entr.Type == MixContentType.Mix))
+                    {
+                        using (MixFile subMix = new MixFile(mix, entry))
+                        {
+                            romfis.IdentifyMixFile(subMix, gameInfo.IniName);
+                            List<MixEntry> subEntries = MixContentAnalysis.AnalyseFiles(subMix, true, null);
+                            if (subEntries.Any(e => e.Type == MixContentType.MapTd || e.Type == MixContentType.MapRa || e.Type == MixContentType.MapSole))
+                            {
+                                validMixFiles.Add(mixFile + ";" + MixPath.GetMixEntryName(entry));
+                            }
+                        }
+                    }
+                }
+            }
+            return validMixFiles;
+        }
+
+        private void OpenMixFileItem_Click(object sender, EventArgs e)
+        {
+            if (!(sender is ToolStripMenuItem fileItem) || !(fileItem.Tag is string mixpath) || mixpath.Length == 0)
+            {
+                return;
+            }
+            string[] mixParts = mixpath.Split(';');
+            string basicMix = mixParts[0];
+            bool mixPathOk = false;
+            if (File.Exists(basicMix) && MixFile.CheckValidMix(basicMix, true))
+            {
+                mixPathOk = true;
+                if (mixParts.Length > 0)
+                {
+                    List<MixFile> tree = new List<MixFile>();
+                    using (MixFile mix = new MixFile(basicMix, true))
+                    {
+                        romfis.IdentifyMixFile(mix);
+                        tree.Add(mix);
+                        for (int i = 1; i < mixParts.Length; ++i)
+                        {
+                            MixEntry[] subMix = tree.Last().GetFullFileInfo(mixParts[i]);
+                            if (subMix == null || subMix.Length == 0 || !MixFile.CheckValidMix(tree.Last(), subMix[0], true))
+                            {
+                                mixPathOk = false;
+                                break;
+                            }
+                            MixFile mf = new MixFile(tree.Last(), subMix[0], true);
+                            romfis.IdentifyMixFile(mf);
+                            tree.Add(mf);
+                        }
+                    }
+                }
+            }
+            if (mixPathOk)
+            {
+                OpenFileAsk(mixpath, true);
+            }
         }
 
         private void SetTitle()
@@ -1589,6 +1844,7 @@ namespace MobiusEditor
             fileNewMenuItem.Enabled = enableUI;
             fileNewFromImageMenuItem.Enabled = enableUI;
             fileOpenMenuItem.Enabled = enableUI;
+            FileOpenFromMixMenuItem.Enabled = enableUI;
             fileRecentFilesMenuItem.Enabled = enableUI;
             viewLayersToolStripMenuItem.Enabled = enableUI;
             viewIndicatorsToolStripMenuItem.Enabled = enableUI;
@@ -2469,7 +2725,7 @@ namespace MobiusEditor
             RefreshActiveTool(false);
         }
 
-        private void MapPanel_DragEnter(object sender, System.Windows.Forms.DragEventArgs e)
+        private void MapPanel_DragEnter(object sender, DragEventArgs e)
         {
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
@@ -2479,12 +2735,13 @@ namespace MobiusEditor
             }
         }
 
-        private void MapPanel_DragDrop(object sender, System.Windows.Forms.DragEventArgs e)
+        private void MapPanel_DragDrop(object sender, DragEventArgs e)
         {
             string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
             if (files.Length != 1)
                 return;
             String filename = files[0];
+            // Opened in a separate thread and then Invoked on this form, to clear the blocking of the drag source.
             openMultiThreader.ExecuteThreaded(() => filename, (str) => OpenFileAsk(str, true), true,
                 null, String.Empty);
         }
@@ -2656,7 +2913,7 @@ namespace MobiusEditor
                     return;
                 }
             }
-            if (plugin.IsMegaMap && !plugin.GameInfo.MegamapOfficial)
+            if (plugin.IsMegaMap && !plugin.GameInfo.MegamapIsOfficial)
             {
                 if (!plugin.Map.BasicSection.SoloMission)
                 {
@@ -2890,6 +3147,7 @@ namespace MobiusEditor
             CleanupTools(GameType.None);
             RefreshUI();
             UpdateUndoRedo();
+            LoadMixTree();
             if (filename != null)
             {
                 this.shouldCheckUpdate = Globals.CheckUpdatesOnStartup;
@@ -2916,10 +3174,16 @@ namespace MobiusEditor
 
         private void CleanupOnClose()
         {
+            // General abort warning that can be checked from all multithreading processes.
+            SetAbort();
             // If loading, abort. Wait for confirmation of abort before continuing the unloading.
-            if (loadMultiThreader != null)
+            if (loadMultiThreader != null && loadMultiThreader.IsExecuting)
             {
                 loadMultiThreader.AbortThreadedOperation(5000);
+            }
+            if (mixLoadMultiThreader != null && mixLoadMultiThreader.IsExecuting)
+            {
+                mixLoadMultiThreader.AbortThreadedOperation(5000);
             }
             // Restore default icons, then dispose custom ones.
             // Form dispose should take care of the default ones.

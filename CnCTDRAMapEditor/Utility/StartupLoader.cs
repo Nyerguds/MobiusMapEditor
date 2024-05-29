@@ -183,7 +183,7 @@ namespace MobiusEditor.Utility
             Dictionary<GameType, String> gameFolders = new Dictionary<GameType, string>();
             foreach (GameInfo gi in GameTypeFactory.GetGameInfos())
             {
-                gameFolders.Add(gi.GameType, gi.ClassicFolderRemaster);
+                gameFolders.Add(gi.GameType, gi.ClassicFolderRemasterData);
             }
             MegafileManager mfm = new MegafileManager(Path.Combine(runPath, Globals.MegafilePath), runPath, modPaths, romfis, gameFolders);
             var megafilesLoaded = true;
@@ -325,10 +325,10 @@ namespace MobiusEditor.Utility
                     if (!Directory.Exists(pathFull))
                     {
                         // As last-ditch effort, try to see if applicationPath is the remastered game folder.
-                        pathFull = Path.GetFullPath(Path.Combine(applicationPath, gic.ClassicFolderRemaster));
+                        pathFull = Path.GetFullPath(Path.Combine(applicationPath, gic.ClassicFolderRemasterData));
                         if (Directory.Exists(pathFull))
                         {
-                            path = gic.ClassicFolderRemaster;
+                            path = gic.ClassicFolderRemasterData;
                         }
                     }
                 }

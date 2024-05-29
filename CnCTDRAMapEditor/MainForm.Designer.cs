@@ -214,11 +214,8 @@ namespace MobiusEditor
             // FileOpenFromMixMenuItem
             // 
             this.FileOpenFromMixMenuItem.Name = "FileOpenFromMixMenuItem";
-            this.FileOpenFromMixMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.X)));
             this.FileOpenFromMixMenuItem.Size = new System.Drawing.Size(214, 22);
-            this.FileOpenFromMixMenuItem.Text = "Open last &Mix...";
-            this.FileOpenFromMixMenuItem.Visible = false;
-            this.FileOpenFromMixMenuItem.Click += new System.EventHandler(this.FileOpenFromMixMenuItem_Click);
+            this.FileOpenFromMixMenuItem.Text = "Open from &Mix";
             // 
             // fileSaveMenuItem
             // 

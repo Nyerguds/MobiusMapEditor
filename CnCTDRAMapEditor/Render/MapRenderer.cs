@@ -2220,8 +2220,8 @@ namespace MobiusEditor.Render
             if (Globals.TheTilesetManager is TilesetManagerClassic tsmc)
             {
                 hiResGraphics = false;
-                classicFont = gameInfo.ClassicFontTriggers;
-                scoreCol = gameInfo.GetClassicFontTriggerRemap(tsmc, textColor);
+                classicFont = gameInfo.ClassicFontCellTriggers;
+                scoreCol = gameInfo.GetClassicFontCellTriggerRemap(tsmc, textColor);
             }
             Rectangle boundRenderCells = visibleCells;
             boundRenderCells.Inflate(1, 1);
