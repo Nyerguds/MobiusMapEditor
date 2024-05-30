@@ -499,6 +499,7 @@ namespace MobiusEditor.Utility
             // Use larger border fraction if result is less than 'minimumEdge' pixels.
             while (width * borderFraction / fractionDivider < minimumEdge || bmWidth * borderFraction / fractionDivider < minimumEdge)
             {
+                // Increase is exponential until the full size (16/16) is reached, then the full size is added each time.
                 borderFraction = borderFraction < fractionDivider ? borderFraction * 2 : borderFraction + fractionDivider;
             }
             int bmBorderWidth = bmWidth * borderFraction / fractionDivider;

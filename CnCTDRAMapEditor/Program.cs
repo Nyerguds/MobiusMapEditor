@@ -61,8 +61,17 @@ namespace MobiusEditor
         public const string ClassicSetting = "UseClassicFiles";
 
         public static readonly string ApplicationPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        public static readonly string ApplicationCompany;
+        public static readonly string AssemblyName = Assembly.GetExecutingAssembly().GetName().Name;
 
         public static readonly string ProgramVersionTitle = ProgramName + " v" + Assembly.GetExecutingAssembly().GetName().Version;
+
+        static Program()
+        {
+            Assembly currentAssem = typeof(Program).Assembly;
+            object[] attribs = currentAssem.GetCustomAttributes(typeof(AssemblyCompanyAttribute), true);
+            ApplicationCompany = attribs.Length > 0 ? ((AssemblyCompanyAttribute)attribs[0]).Company : String.Empty;
+        }
 
         /// <summary>
         /// The main entry point for the application.

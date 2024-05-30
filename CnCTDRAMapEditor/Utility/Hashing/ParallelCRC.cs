@@ -23,6 +23,7 @@
 */
 
 using System;
+using System.IO;
 using System.Threading;
 
 namespace LarchenkoCRC32
@@ -166,6 +167,21 @@ namespace LarchenkoCRC32
         {
             var crc = new ParallelCRC();
             crc.Update(data, offset, count);
+            return crc.Value;
+        }
+
+        static public uint Compute(Stream data)
+        {
+            // Process in 500k blocks
+            const int bufferSize = 0x80000;
+            var crc = new ParallelCRC();
+            byte[] buffer = new byte[bufferSize];
+            int amount;
+            while ((amount = data.Read(buffer, 0, bufferSize)) > 0)
+            {
+                /// I'm assuming this is how this is supposed to be done? Given the fact the function name is "update".
+                crc.Update(buffer, 0, amount);
+            }
             return crc.Value;
         }
 

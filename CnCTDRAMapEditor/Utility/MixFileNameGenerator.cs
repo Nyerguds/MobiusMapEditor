@@ -331,10 +331,10 @@ namespace MobiusEditor.Utility
 #endif
 
         /// <summary>
-        /// Identify the files inside a mix file, using a specific game.
-        /// Generally used for embedded mix files, using the parent's game type.
+        /// Identify the files inside a mix file.
         /// </summary>
         /// <param name="mixFile">mix file to insert the name info into.</param>
+        /// <returns>The detected game type.</returns>
         public string IdentifyMixFile(MixFile mixFile)
         {
             HashMethod forcedHasher = null;
@@ -346,6 +346,8 @@ namespace MobiusEditor.Utility
         /// Generally used for embedded mix files, using the parent's game type.
         /// </summary>
         /// <param name="mixFile">mix file to insert the name info into.</param>
+        /// <param name="forcedGameType">Game type identified on the parent; is always taken as primary type.</param>
+        /// <returns>The detected game type.</returns>
         public string IdentifyMixFile(MixFile mixFile, string forcedGameType)
         {
             HashMethod forcedHasher = null;
@@ -353,10 +355,15 @@ namespace MobiusEditor.Utility
         }
 
         /// <summary>
-        /// Identify the files inside a mix file, using a specific game.
-        /// Generally used for embedded mix files, using the parent's game type.
+        /// Identify the files inside a mix file, using a specific hasher.
+        /// Generally used for embedded mix files, using the parent's detected hasher.
         /// </summary>
         /// <param name="mixFile">mix file to insert the name info into.</param>
+        /// <param name="forcedHasher">
+        ///     If no specific game type was identified, but a hasher was, it can be force through this.
+        ///     At the end of this function, this object will always contain the used hasher.
+        /// </param>
+        /// <returns>The detected game type.</returns>
         public string IdentifyMixFile(MixFile mixFile, ref HashMethod forcedHasher)
         {
             return IdentifyMixFile(mixFile, null, ref forcedHasher);
@@ -368,8 +375,8 @@ namespace MobiusEditor.Utility
         /// <param name="mixFile">mix file to insert the name info into.</param>
         /// <param name="forcedGameType">Game type identified on the parent; is always taken as primary type.</param>
         /// <param name="forcedHasher">
-        /// If no specific game type was identified, but a hasher was, it can be force through this.
-        /// At the end of this function, this object will always contain the used hasher.
+        ///     If no specific game type was identified, but a hasher was, it can be force through this.
+        ///     At the end of this function, this object will always contain the used hasher.
         /// </param>
         /// <returns>The game type identified for this mix file.</returns>
         public string IdentifyMixFile(MixFile mixFile, string forcedGameType, ref HashMethod forcedHasher)

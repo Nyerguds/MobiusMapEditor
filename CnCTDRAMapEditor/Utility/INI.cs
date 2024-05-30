@@ -178,6 +178,16 @@ namespace MobiusEditor.Utility
                 Comments.Remove(key);
             }
         }
+
+        public Dictionary<string, string> ToDictionary()
+        {
+            Dictionary<string, string> retVal = new Dictionary<string, string>();
+            foreach (DictionaryEntry entry in KeyValues)
+            {
+                retVal.Add(entry.Key as string, entry.Value as string);
+            }
+            return retVal;
+        }
     }
 
     public class INISection : IEnumerable<KeyValuePair<string, string>>, IEnumerable
