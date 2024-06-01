@@ -405,6 +405,16 @@ namespace MobiusEditor.Utility
             return requestedInfo;
         }
 
+        /// <summary>
+        /// Read the mix file header and read the file index from it.
+        /// </summary>
+        /// <param name="mixMap">The <see cref="MemoryMappedFile"/> to read from.</param>
+        /// <param name="mixStart">Start of the current mix file's data inside the <paramref name="mixMap"/></param>
+        /// <param name="mixLength">Length of the mix file.</param>
+        /// <param name="handleAdvanced"><see langword="true"/> to handle the advanced mix file type capable of handling encryption and checksums.</param>
+        /// <param name="throwWhenParsing">If false, parse errors will simply return <see langword="false"/> instead of throwing an exception.</param>
+        /// <returns>true if the mix file header was parsed successfully.</returns>
+        /// <exception cref="MixParseException"></exception>
         private bool ReadMixHeader(MemoryMappedFile mixMap, long mixStart, long mixLength, bool handleAdvanced, bool throwWhenParsing)
         {
             this.mixFileContents.Clear();
@@ -554,6 +564,7 @@ namespace MobiusEditor.Utility
         /// <param name="mixFileLength">End of the current mix file inside the mixMap</param>
         /// <param name="dataReadOffset">Read position inside the current mix file.</param>
         /// <param name="dataReadLength">Length of the data to read.</param>
+        /// <param name="throwWhenParsing">If false, parse errors will simply return null instead of throwing an exception.</param>
         /// <returns>A Stream containing the contents of the requested section of the MemoryMappedFile, or an empty MemoryStream if <paramref name="dataReadLength"/> is 0.</returns>
         /// <exception cref="IndexOutOfRangeException">The data is not in the bounds of this mix file.</exception>
         private Stream CreateViewStream(MemoryMappedFile mixMap, long mixFileStart, long mixFileLength, long dataReadOffset, uint dataReadLength, bool throwWhenParsing)
@@ -588,6 +599,7 @@ namespace MobiusEditor.Utility
         /// <param name="mixLength">Length of the mix file data</param>
         /// <param name="readOffset">Contains the start of the encrypted block inside the mix data. At the end of the process,
         /// it contains the end of the whole encrypted header, so it can be used as origin point for the actual data addresses.</param>
+        /// <param name="throwWhenParsing">If false, parse errors will simply return null instead of throwing an exception.</param>
         /// <returns>
         ///     the entire decrypted header, including the 6 bytes with the amount of files and the data length at the start.
         ///     It might contain padding at the end as result of the decryption.

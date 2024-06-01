@@ -89,7 +89,7 @@ namespace MobiusEditor.Utility
             int dataLen = fileData.Length;
             if (dataLen < 10)
                 throw new FileTypeLoadException("File is not long enough to be a valid CPS file.", "CPS file");
-            int fileSize = ArrayUtils.ReadInt16FromByteArrayLe(fileData, 0);
+            int fileSize = ArrayUtils.ReadUInt16FromByteArrayLe(fileData, 0);
             int compression = ArrayUtils.ReadUInt16FromByteArrayLe(fileData, 2);
             if (compression < 0 || compression > 4)
                 throw new FileTypeLoadException("Unknown compression type " + compression, "CPS file");
