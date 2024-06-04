@@ -19,7 +19,6 @@ using MobiusEditor.Interface;
 using MobiusEditor.Model;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -320,7 +319,7 @@ namespace MobiusEditor.Utility
                 {
                     /* ignore */
 #if DEBUG && WriteFileLoadDebug
-                Debug.WriteLine("Failed to load file {0} as {1}: {2}", name, e.AttemptedLoadedType, e.Message);
+                    System.Diagnostics.Debug.WriteLine("Failed to load file {0} as {1}: {2}", name, e.AttemptedLoadedType, e.Message);
 #endif
                 }
             }
@@ -339,7 +338,7 @@ namespace MobiusEditor.Utility
                 {
                     /* ignore */
 #if DEBUG && WriteFileLoadDebug
-                    Debug.WriteLine("Failed to load file {0} as {1}: {2}", name, e.AttemptedLoadedType, e.Message);
+                    System.Diagnostics.Debug.WriteLine("Failed to load file {0} as {1}: {2}", name, e.AttemptedLoadedType, e.Message);
 #endif
                 }
 
@@ -368,7 +367,7 @@ namespace MobiusEditor.Utility
                 {
                     /* ignore */
 #if DEBUG && WriteFileLoadDebug
-                    Debug.WriteLine("Failed to load file {0} as {1}: {2}", name, e.AttemptedLoadedType, e.Message);
+                    System.Diagnostics.Debug.WriteLine("Failed to load file {0} as {1}: {2}", name, e.AttemptedLoadedType, e.Message);
 #endif
                 }
             }
@@ -387,7 +386,7 @@ namespace MobiusEditor.Utility
                 {
                     /* ignore */
 #if DEBUG && WriteFileLoadDebug
-                    Debug.WriteLine("Failed to load file {0} as {1}: {2}", name, e.AttemptedLoadedType, e.Message);
+                    System.Diagnostics.Debug.WriteLine("Failed to load file {0} as {1}: {2}", name, e.AttemptedLoadedType, e.Message);
 #endif
                 }
             }
@@ -412,7 +411,7 @@ namespace MobiusEditor.Utility
                 {
                     /* ignore */
 #if DEBUG && WriteFileLoadDebug
-                    Debug.WriteLine("Failed to load file {0} as {1}: {2}", name, e.AttemptedLoadedType, e.Message);
+                    System.Diagnostics.Debug.WriteLine("Failed to load file {0} as {1}: {2}", name, e.AttemptedLoadedType, e.Message);
 #endif
                 }
             }

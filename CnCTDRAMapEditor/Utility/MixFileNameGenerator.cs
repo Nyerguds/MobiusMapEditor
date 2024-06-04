@@ -513,6 +513,7 @@ namespace MobiusEditor.Utility
         private Dictionary<uint, MixEntry> GetXccDatabaseInfo(MixFile mixFile, out HashMethod hm)
         {
             const string xccFileName = "local mix database.dat";
+            const int xccHeaderLength = 0x34;
             const uint maxProcessed = 0x500000;
             List<uint> filesList = mixFile.FileIds.ToList();
             // Could make this more robust / overengineered by returning all hashers for which a valid one was found?
@@ -528,7 +529,7 @@ namespace MobiusEditor.Utility
                         continue;
                     }
                     MixEntry dbEntry = entries[0];
-                    if (fileId != xccId || dbEntry.Length >= maxProcessed || dbEntry.Length <= 0x34)
+                    if (fileId != xccId || dbEntry.Length >= maxProcessed || dbEntry.Length <= xccHeaderLength)
                     {
                         continue;
                     }

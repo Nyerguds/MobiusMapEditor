@@ -62,6 +62,8 @@ namespace MobiusEditor.Utility
             }
             // Very strict requirements, and jumps over the majority of file contents while checking, so check this first.
             // These are ALWAYS identified, even if set to "missions only", because not identifying them slows down the rest of the analysis.
+            if (identifyMix(source, mixInfo))
+                return;
             if (IdentifyAud(fileStream, mixInfo))
                 return;
             if (IdentifyVqa(fileStream, mixInfo))
@@ -70,7 +72,10 @@ namespace MobiusEditor.Utility
                 return;
             if (IdentifyPalTable(fileStream, mixInfo))
                 return;
-            
+            if (IdentifyShp(fileStream, mixInfo))
+                return;
+            if (IdentifyXccNames(fileStream, mixInfo))
+                return;
             // These types analyse the full file from byte array. I'm restricting the buffer for them to 5mb; they shouldn't need more.
             if (mixInfo.Length <= maxProcessed)
             {
@@ -81,13 +86,9 @@ namespace MobiusEditor.Utility
                 fileStream.Seek(0, SeekOrigin.Begin);
                 if (!missionsAndMixFilesOnly)
                 {
-                    if (IdentifyXccNames(fileContents, mixInfo))
-                        return;
                     if (IdentifyRaMixNames(fileContents, mixInfo))
                         return;
                     if (IdentifyPcx(fileContents, mixInfo))
-                        return;
-                    if (IdentifyShp(fileContents, mixInfo))
                         return;
                     if (IdentifyD2Shp(fileContents, mixInfo))
                         return;
@@ -120,27 +121,6 @@ namespace MobiusEditor.Utility
                 if (".bin".Equals(extension, StringComparison.OrdinalIgnoreCase) && IdentifySoleMap(fileContents, mixInfo))
                     return;
             }
-            try
-            {
-                // Check if it's a mix file
-                if (MixFile.CheckValidMix(source, mixInfo, true))
-                {
-                    using (MixFile mf = new MixFile(source, mixInfo))
-                    {
-                        int mixContents = mf.FileCount;
-                        bool encrypted = mf.HasEncryption;
-                        bool newType = mf.IsNewFormat;
-                        if (mixContents > 0)
-                        {
-                            mixInfo.Type = MixContentType.Mix;
-                            string formatInfo = newType ? ("new format; " + (encrypted ? string.Empty : "not ") + "encrypted; ") : string.Empty;
-                            mixInfo.Info = string.Format("Mix file; {0}{1} file{2}", formatInfo, mixContents, mixContents == 1 ? string.Empty : "s");
-                            return;
-                        }
-                    }
-                }
-            }
-            catch { /* ignore */ }
             // Only do this if it passes the check on extension.
             if (!missionsAndMixFilesOnly && ".mrf".Equals(extension, StringComparison.OrdinalIgnoreCase) && IdentifyMrf(fileStream, mixInfo))
             {
@@ -150,11 +130,11 @@ namespace MobiusEditor.Utility
             mixInfo.Info = string.Empty;
         }
 
-        private static bool IdentifyShp(byte[] fileContents, MixEntry mixInfo)
+        private static bool IdentifyShp(Stream fileStream, MixEntry mixInfo)
         {
             try
             {
-                byte[][] shpData = ClassicSpriteLoader.GetCcShpData(fileContents, out int width, out int height, false);
+                byte[][] shpData = ClassicSpriteLoader.GetCcShpData(fileStream, (int)mixInfo.Length, out int width, out int height, false);
                 if (shpData != null)
                 {
                     mixInfo.Type = MixContentType.ShpTd;
@@ -258,8 +238,8 @@ namespace MobiusEditor.Utility
                 {
                     mixInfo.Type = MixContentType.Cps;
                     mixInfo.Info = "CPS Image; 320x200";
+                    return true;
                 }
-                return true;
             }
             catch (FileTypeLoadException) { /* ignore */ }
             return false;
@@ -554,6 +534,31 @@ namespace MobiusEditor.Utility
             return false;
         }
 
+        private static bool identifyMix(MixFile source, MixEntry mixInfo)
+        {
+            try
+            {
+                // Check if it's a mix file
+                if (MixFile.CheckValidMix(source, mixInfo, true))
+                {
+                    using (MixFile mf = new MixFile(source, mixInfo))
+                    {
+                        int mixContents = mf.FileCount;
+                        bool encrypted = mf.HasEncryption;
+                        bool newType = mf.IsNewFormat;
+                        if (mixContents > 0)
+                        {
+                            mixInfo.Type = MixContentType.Mix;
+                            string formatInfo = newType ? ("new format; " + (encrypted ? string.Empty : "not ") + "encrypted; ") : string.Empty;
+                            mixInfo.Info = string.Format("Mix file; {0}{1} file{2}", formatInfo, mixContents, mixContents == 1 ? string.Empty : "s");
+                            return true;
+                        }
+                    }
+                }
+            }
+            catch { /* ignore */ }
+            return false;
+        }
         private static bool IdentifyAud(Stream fileStream, MixEntry mixInfo)
         {
             fileStream.Seek(0, SeekOrigin.Begin);
@@ -757,14 +762,23 @@ namespace MobiusEditor.Utility
             return true;
         }
 
+        public static bool IdentifyXccNames(Stream fileStream, MixEntry mixInfo)
+        {
+            const int headerLength = 0x34;
+            byte[] fileContents = new byte[headerLength];
+            fileStream.Position = 0;
+            int amountRead = fileStream.Read(fileContents, 0, headerLength);
+            if (amountRead != headerLength)
+            {
+                return false;
+            }
+            return IdentifyXccNames(fileContents, mixInfo);
+        }
+
         public static bool IdentifyXccNames(byte[] fileContents, MixEntry mixInfo)
         {
             const string xccCheck = "XCC by Olaf van der Spek";
             byte[] xccPattern = Encoding.ASCII.GetBytes(xccCheck);
-            if (fileContents.Length <= 0x34)
-            {
-                return false;
-            }
             for (int i = 0; i < xccPattern.Length; ++i)
             {
                 if (fileContents[i] != xccPattern[i])

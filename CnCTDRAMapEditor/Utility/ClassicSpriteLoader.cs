@@ -15,6 +15,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.IO;
 using System.Linq;
 
 namespace MobiusEditor.Utility
@@ -257,6 +258,81 @@ namespace MobiusEditor.Utility
         /// <summary>
         /// Retrieves the C&amp;C1 / RA1 SHP image data.
         /// </summary>
+        /// <param name="fileStream">File data stream</param>
+        /// <param name="length">Data length as given by the mix header.</param>
+        /// <param name="width">The width of all frames</param>
+        /// <param name="height">The height of all frames</param>
+        /// <param name="throwWhenParsing">If false, parse errors will simply return <see langword="false"/> instead of throwing an exception.</param>
+        /// <returns>An array of byte arrays containing the 8-bit image data for each frame.</returns>
+        /// <exception cref="FileTypeLoadException">Thrown when parsing failed, indicating this is not a valid file of this format.</exception>
+        public static byte[][] GetCcShpData(Stream fileStream, int length, out int width, out int height, bool throwWhenParsing)
+        {
+            fileStream.Position = 0;
+            if (length == -1)
+            {
+                length = (int)fileStream.Length;
+            }
+            const int hdrSize = 0x0E;
+            const int offsSize = 8;
+            width = 0;
+            height = 0;
+            byte[] header = new byte[hdrSize];
+            int readAmount = fileStream.Read(header, 0, hdrSize);
+            if (readAmount < hdrSize)
+            {
+                if (!throwWhenParsing)
+                {
+                    return null;
+                }
+                throw new FileTypeLoadException("File is not long enough for header.", "TD/RA SHP file");
+            }
+            ushort hdrFrames = ArrayUtils.ReadUInt16FromByteArrayLe(header, 0);
+            int fileSizeOffs = hdrSize + offsSize * (hdrFrames + 1);
+            fileStream.Position = fileSizeOffs;
+            byte[] sizeBuf = new byte[3];
+            readAmount = fileStream.Read(sizeBuf, 0, 3);
+            if (readAmount != 3)
+            {
+                if (!throwWhenParsing)
+                {
+                    return null;
+                }
+                throw new FileTypeLoadException("File is not long enough to read the entire frames header.", "TD/RA SHP file");
+            }
+            int fileSize = (int)ArrayUtils.ReadIntFromByteArray(sizeBuf, 0, 3, true);
+            if (fileSize == 0)
+            {
+                //hasLoopFrame = false;
+                fileSizeOffs -= offsSize;
+                fileStream.Position = fileSizeOffs;
+                readAmount = fileStream.Read(sizeBuf, 0, 3);
+                fileSize = (int)ArrayUtils.ReadIntFromByteArray(sizeBuf, 0, 3, true);
+            }
+            if (readAmount != 3 || length != fileSize)
+            {
+                if (!throwWhenParsing)
+                {
+                    return null;
+                }
+                throw new FileTypeLoadException("File size does not match size value in header.", "TD/RA SHP file");
+            }
+            byte[] fileData = new byte[fileSize];
+            fileStream.Position = 0;
+            readAmount = fileStream.Read(fileData, 0, fileSize);
+            if (readAmount != fileSize)
+            {
+                if (!throwWhenParsing)
+                {
+                    return null;
+                }
+                throw new FileTypeLoadException("File size does not match size value in header.", "TD/RA SHP file");
+            }
+            return GetCcShpData(fileData, out width, out height, throwWhenParsing);
+        }
+
+        /// <summary>
+        /// Retrieves the C&amp;C1 / RA1 SHP image data.
+        /// </summary>
         /// <param name="fileData">File data</param>
         /// <param name="width">The width of all frames</param>
         /// <param name="height">The height of all frames</param>
@@ -266,7 +342,8 @@ namespace MobiusEditor.Utility
         public static byte[][] GetCcShpData(byte[] fileData, out int width, out int height, bool throwWhenParsing)
         {
             // OffsetInfo / ShapeFileHeader
-            int hdrSize = 0x0E;
+            const int hdrSize = 0x0E;
+            const int offsSize = 8;
             width = 0;
             height = 0;
             if (fileData.Length < hdrSize)
@@ -301,7 +378,6 @@ namespace MobiusEditor.Utility
                 throw new FileTypeLoadException("Illegal values in header.", "TD/RA SHP file");
             }
             Dictionary<int, int> offsetIndices = new Dictionary<int, int>();
-            int offsSize = 8;
             int fileSizeOffs = hdrSize + offsSize * (hdrFrames + 1);
             if (fileData.Length < hdrSize + offsSize * (hdrFrames + 2))
             {
