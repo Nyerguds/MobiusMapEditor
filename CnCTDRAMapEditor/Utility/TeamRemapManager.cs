@@ -141,12 +141,8 @@ namespace MobiusEditor.Utility
                 // found, since the remap manager will also be requested to attempt to read the remaster team colors xml file.
                 return;
             }
-            byte[] cpsData;
-            try
-            {
-                cpsData = ClassicSpriteLoader.GetCpsData(cpsFileBytes, out _);
-            }
-            catch (FileTypeLoadException)
+            byte[] cpsData = ClassicSpriteLoader.GetCpsData(cpsFileBytes, out _, false);
+            if (cpsData == null)
             {
                 // Not a valid CPS file; ignore and do nothing.
                 return;

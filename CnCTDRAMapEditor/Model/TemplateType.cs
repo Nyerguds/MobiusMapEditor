@@ -641,7 +641,11 @@ namespace MobiusEditor.Model
             {
                 return false;
             }
-            ClassicSpriteLoader.GetRaTmpData(fileData, out _, out _, out byte[] landTypeInfo, out bool[] usage, out int width, out int height);
+            byte[][] data = ClassicSpriteLoader.GetRaTmpData(fileData, out _, out _, out byte[] landTypeInfo, out bool[] usage, out int width, out int height, false);
+            if (data == null)
+            {
+                return false;
+            }
             // This actually modifies the global static objects.
             this.IconHeight = Math.Max(1, height);
             this.IconWidth = Math.Max(1, width);

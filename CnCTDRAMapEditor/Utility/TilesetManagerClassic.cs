@@ -290,6 +290,11 @@ namespace MobiusEditor.Utility
             {
                 return null;
             }
+#if DEBUG && WriteFileLoadDebug
+            bool throwWhenParsing = true;
+#else
+            bool throwWhenParsing = false;
+#endif
             int[] widths = null;
             int[] heights = null;
             Byte[][] shpData = null;
@@ -300,7 +305,7 @@ namespace MobiusEditor.Utility
                     // TD/RA SHP file
                     int width;
                     int height;
-                    shpData = ClassicSpriteLoader.GetCcShpData(fileContents, out width, out height);
+                    shpData = ClassicSpriteLoader.GetCcShpData(fileContents, out width, out height, throwWhenParsing);
                     if (shpData != null)
                     {
                         int len = shpData.Length;
@@ -325,7 +330,7 @@ namespace MobiusEditor.Utility
                 try
                 {
                     // TD map template tileset
-                    shpData = ClassicSpriteLoader.GetCcTmpData(fileContents, out widths, out heights);
+                    shpData = ClassicSpriteLoader.GetCcTmpData(fileContents, out widths, out heights, throwWhenParsing);
                 }
                 catch
 #if DEBUG && WriteFileLoadDebug
@@ -344,12 +349,15 @@ namespace MobiusEditor.Utility
                 try
                 {
                     // RA map template tileset
-                    shpData = ClassicSpriteLoader.GetRaTmpData(fileContents, out widths, out heights, out _, out bool[] tilesUseList, out _, out _);
-                    for (int i = 0; i < tilesUseList.Length; ++i)
+                    shpData = ClassicSpriteLoader.GetRaTmpData(fileContents, out widths, out heights, out _, out bool[] tilesUseList, out _, out _, throwWhenParsing);
+                    if (shpData != null)
                     {
-                        if (i >= tilesUseList.Length || !tilesUseList[i])
+                        for (int i = 0; i < tilesUseList.Length; ++i)
                         {
-                            shpData[i] = null;
+                            if (i >= tilesUseList.Length || !tilesUseList[i])
+                            {
+                                shpData[i] = null;
+                            }
                         }
                     }
                 }
@@ -370,7 +378,7 @@ namespace MobiusEditor.Utility
                 try
                 {
                     // Dune II SHP
-                    shpData = ClassicSpriteLoader.GetD2ShpData(fileContents, out widths, out heights);
+                    shpData = ClassicSpriteLoader.GetD2ShpData(fileContents, out widths, out heights, throwWhenParsing);
                 }
                 catch
 #if DEBUG && WriteFileLoadDebug
@@ -390,9 +398,12 @@ namespace MobiusEditor.Utility
                 {
                     // Font file
                     int height;
-                    shpData = ClassicSpriteLoader.GetCCFontData(fileContents, out widths, out height);
-                    int len = shpData.Length;
-                    heights = Enumerable.Repeat(height, len).ToArray();
+                    shpData = ClassicSpriteLoader.GetCCFontData(fileContents, out widths, out height, throwWhenParsing);
+                    if (shpData != null)
+                    {
+                        int len = shpData.Length;
+                        heights = Enumerable.Repeat(height, len).ToArray();
+                    }
                 }
                 catch
 #if DEBUG && WriteFileLoadDebug
