@@ -927,6 +927,7 @@ namespace MobiusEditor.Dialogs
                 {
                     triggerEvent.FillDataFrom(triggerEventData);
                 }
+                long correctedData = triggerEvent.Data;
                 switch (plugin.GameInfo.GameType)
                 {
                     case GameType.TiberianDawn:
@@ -945,7 +946,8 @@ namespace MobiusEditor.Dialogs
                             case TiberianDawn.EventTypes.EVENT_ALL_DESTROYED:
                             case TiberianDawn.EventTypes.EVENT_NOFACTORIES:
                             case TiberianDawn.EventTypes.EVENT_EVAC_CIVILIAN:
-                                triggerEvent.Data = 0;
+                                correctedData = 0;
+                                triggerEvent.Data = correctedData;
                                 //triggerEvent.Team = TeamType.None;
                                 break;
                             case TiberianDawn.EventTypes.EVENT_TIME:
@@ -955,7 +957,9 @@ namespace MobiusEditor.Dialogs
                                 eventNud.Visible = true;
                                 eventNud.Minimum = 0;
                                 eventNud.Maximum = Int32.MaxValue;
-                                eventNud.Value = data.Restrict(0, Int32.MaxValue);
+                                correctedData = data.Restrict(0, Int32.MaxValue);
+                                triggerEvent.Data = correctedData;
+                                eventNud.Value = correctedData;
                                 break;
                             case TiberianDawn.EventTypes.EVENT_BUILD:
                                 eventValueComboBox.Visible = true;
@@ -963,8 +967,10 @@ namespace MobiusEditor.Dialogs
                                 eventValueComboBox.ValueMember = "Value";
                                 var bldData = plugin.Map.BuildingTypes.Select(t => new ListItem<long>(t.ID, t.DisplayNameWithTheaterInfo)).ToArray();
                                 eventValueComboBox.DataSource = bldData;
+                                correctedData = ListItem.CheckInList(data, bldData);
+                                triggerEvent.Data = correctedData;
                                 eventValueComboBox.DataBindings.Add("SelectedValue", triggerEvent, "Data");
-                                eventValueComboBox.SelectedValue = ListItem.CheckInList(data, bldData);
+                                eventValueComboBox.SelectedValue = correctedData;
                                 break;
                             default:
                                 break;
@@ -985,15 +991,20 @@ namespace MobiusEditor.Dialogs
                             case RedAlert.EventTypes.TEVENT_FAKES_DESTROYED:
                             case RedAlert.EventTypes.TEVENT_ALL_BRIDGES_DESTROYED:
                                 // Special case: always blank out the info.
-                                triggerEvent.Data = 0;
+                                correctedData = 0;
+                                triggerEvent.Data = correctedData;
                                 triggerEvent.Team = TeamType.None;
                                 break;
                             case RedAlert.EventTypes.TEVENT_LEAVES_MAP:
                                 eventValueComboBox.Visible = true;
                                 var teamData = TeamType.None.Yield().Concat(plugin.Map.TeamTypes.Select(t => t.Name)).ToArray();
                                 eventValueComboBox.DataSource = teamData;
-                                eventValueComboBox.DataBindings.Add("SelectedItem", triggerEvent, "Team");
-                                eventValueComboBox.SelectedItem = teamData.Contains(team, StringComparer.OrdinalIgnoreCase) ? team : TeamType.None;
+                                eventValueComboBox.DataBindings.Add("SelectedItem", triggerEvent, "Team"); correctedData = 0;
+                                correctedData = 0;
+                                triggerEvent.Data = correctedData;
+                                String correctedTeam = teamData.Contains(team, StringComparer.OrdinalIgnoreCase) ? team : TeamType.None;
+                                triggerEvent.Team = correctedTeam;
+                                eventValueComboBox.SelectedItem = correctedTeam;
                                 break;
                             case RedAlert.EventTypes.TEVENT_PLAYER_ENTERED:
                             case RedAlert.EventTypes.TEVENT_CROSS_HORIZONTAL:
@@ -1011,8 +1022,10 @@ namespace MobiusEditor.Dialogs
                                 var houseData = new ListItem<long>(-1, House.None).Yield()
                                     .Concat(plugin.Map.Houses.Select(t => new ListItem<long>(t.Type.ID, t.Type.Name))).ToArray();
                                 eventValueComboBox.DataSource = houseData;
+                                correctedData = ListItem.CheckInList(data, houseData);
+                                triggerEvent.Data = correctedData;
                                 eventValueComboBox.DataBindings.Add("SelectedValue", triggerEvent, "Data");
-                                eventValueComboBox.SelectedValue = ListItem.CheckInList(data, houseData);
+                                eventValueComboBox.SelectedValue = correctedData;
                                 break;
                             case RedAlert.EventTypes.TEVENT_BUILDING_EXISTS:
                             case RedAlert.EventTypes.TEVENT_BUILD:
@@ -1021,8 +1034,10 @@ namespace MobiusEditor.Dialogs
                                 eventValueComboBox.ValueMember = "Value";
                                 var bldData = plugin.Map.BuildingTypes.Select(t => new ListItem<long>(t.ID, t.DisplayNameWithTheaterInfo)).ToArray();
                                 eventValueComboBox.DataSource = bldData;
+                                correctedData = ListItem.CheckInList(data, bldData);
+                                triggerEvent.Data = correctedData;
                                 eventValueComboBox.DataBindings.Add("SelectedValue", triggerEvent, "Data");
-                                eventValueComboBox.SelectedValue = ListItem.CheckInList(data, bldData);
+                                eventValueComboBox.SelectedValue = correctedData;
                                 break;
                             case RedAlert.EventTypes.TEVENT_BUILD_UNIT:
                                 eventValueComboBox.Visible = true;
@@ -1030,8 +1045,10 @@ namespace MobiusEditor.Dialogs
                                 eventValueComboBox.ValueMember = "Value";
                                 var unitData = plugin.Map.UnitTypes.Where(t => t.IsGroundUnit).Select(t => new ListItem<long>(t.ID, t.DisplayName)).ToArray();
                                 eventValueComboBox.DataSource = unitData;
+                                correctedData = ListItem.CheckInList(data, unitData);
+                                triggerEvent.Data = correctedData;
                                 eventValueComboBox.DataBindings.Add("SelectedValue", triggerEvent, "Data");
-                                eventValueComboBox.SelectedValue = ListItem.CheckInList(data, unitData);
+                                eventValueComboBox.SelectedValue = correctedData;
                                 break;
                             case RedAlert.EventTypes.TEVENT_BUILD_INFANTRY:
                                 eventValueComboBox.Visible = true;
@@ -1039,18 +1056,22 @@ namespace MobiusEditor.Dialogs
                                 eventValueComboBox.ValueMember = "Value";
                                 var infData = plugin.Map.InfantryTypes.Select(t => new ListItem<long>(t.ID, t.DisplayName)).ToArray();
                                 eventValueComboBox.DataSource = infData;
+                                correctedData = ListItem.CheckInList(data, infData);
+                                triggerEvent.Data = correctedData;
                                 eventValueComboBox.DataBindings.Add("SelectedValue", triggerEvent, "Data");
-                                eventValueComboBox.SelectedValue = ListItem.CheckInList(data, infData);
+                                eventValueComboBox.SelectedValue = correctedData;
                                 break;
                             case RedAlert.EventTypes.TEVENT_BUILD_AIRCRAFT:
                                 eventValueComboBox.Visible = true;
                                 eventValueComboBox.DisplayMember = "Label";
                                 eventValueComboBox.ValueMember = "Value";
                                 var airData = plugin.Map.TeamTechnoTypes.Where(t => (t is UnitType) && ((UnitType)t).IsAircraft)
-                                    .Select(t => new ListItem<long>(t.ID, t.DisplayName)).ToArray();
+                                    .Select(t => new ListItem<long>(t.ID & ~UnitTypeIDMask.Aircraft, t.DisplayName)).ToArray();
                                 eventValueComboBox.DataSource = airData;
+                                correctedData = ListItem.CheckInList(data, airData);
+                                triggerEvent.Data = correctedData;
                                 eventValueComboBox.DataBindings.Add("SelectedValue", triggerEvent, "Data");
-                                eventValueComboBox.SelectedValue = ListItem.CheckInList(data, airData);
+                                eventValueComboBox.SelectedValue = correctedData;
                                 break;
                             case RedAlert.EventTypes.TEVENT_NUNITS_DESTROYED:
                             case RedAlert.EventTypes.TEVENT_NBUILDINGS_DESTROYED:
@@ -1059,14 +1080,18 @@ namespace MobiusEditor.Dialogs
                                 eventNud.Visible = true;
                                 eventNud.Minimum = 0;
                                 eventNud.Maximum = Int32.MaxValue;
-                                eventNud.Value = data.Restrict(0, Int32.MaxValue);
+                                correctedData = data.Restrict(0, Int32.MaxValue);
+                                triggerEvent.Data = correctedData;
+                                eventNud.Value = correctedData;
                                 break;
                             case RedAlert.EventTypes.TEVENT_GLOBAL_SET:
                             case RedAlert.EventTypes.TEVENT_GLOBAL_CLEAR:
                                 eventNud.Visible = true;
                                 eventNud.Minimum = 0;
                                 eventNud.Maximum = RedAlert.Constants.HighestGlobal;
-                                eventNud.Value = data.Restrict(0, RedAlert.Constants.HighestGlobal);
+                                correctedData = data.Restrict(0, RedAlert.Constants.HighestGlobal);
+                                triggerEvent.Data = correctedData;
+                                eventNud.Value = correctedData;
                                 break;
                             default:
                                 break;
@@ -1105,6 +1130,7 @@ namespace MobiusEditor.Dialogs
                     triggerAction.FillDataFrom(triggerActionData);
                 }
                 bool tooltipShown = false;
+                long correctedData = triggerAction.Data;
                 switch (plugin.GameInfo.GameType)
                 {
                     case GameType.RedAlert:
@@ -1114,11 +1140,13 @@ namespace MobiusEditor.Dialogs
                             case RedAlert.ActionTypes.TACTION_DESTROY_TEAM:
                             case RedAlert.ActionTypes.TACTION_REINFORCEMENTS:
                                 actionValueComboBox.Visible = true;
-                                var teamData = TeamType.None.Yield().Concat(plugin.Map.TeamTypes.Select(t => t.Name)).ToArray();
+                                string[] teamData = TeamType.None.Yield().Concat(plugin.Map.TeamTypes.Select(t => t.Name)).ToArray();
                                 actionValueComboBox.DataSource = teamData;
+                                string correctedTeam = teamData.Contains(team, StringComparer.OrdinalIgnoreCase) ? team : TeamType.None;
+                                triggerAction.Team = correctedTeam;
                                 actionValueComboBox.DataBindings.Add("SelectedItem", triggerAction, "Team");
-                                actionValueComboBox.SelectedItem = teamData.Contains(team, StringComparer.OrdinalIgnoreCase) ? team : TeamType.None;
-                                String teamTooltip = GetTeamLabel(team);
+                                actionValueComboBox.SelectedItem = correctedTeam;
+                                String teamTooltip = GetTeamLabel(correctedTeam);
                                 actionArgType = ArgType.TeamType;
                                 if (teamTooltip != null && actionValueComboBox.ClientRectangle.Contains(actionValueComboBox.PointToClient(Cursor.Position)))
                                 {
@@ -1138,18 +1166,22 @@ namespace MobiusEditor.Dialogs
                                 var houseData = new ListItem<long>(-1, House.None).Yield().Concat(
                                     plugin.Map.Houses.Select(t => new ListItem<long>(t.Type.ID, t.Type.Name))).ToArray();
                                 actionValueComboBox.DataSource = houseData;
+                                correctedData = ListItem.CheckInList(data, houseData);
+                                triggerAction.Data = correctedData;
                                 actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
-                                actionValueComboBox.SelectedValue = ListItem.CheckInList(data, houseData);
+                                actionValueComboBox.SelectedValue = correctedData;
                                 break;
                             case RedAlert.ActionTypes.TACTION_FORCE_TRIGGER:
                             case RedAlert.ActionTypes.TACTION_DESTROY_TRIGGER:
                                 actionValueComboBox.Visible = true;
                                 var trigsData = Trigger.None.Yield().Concat(triggers.Select(t => t.Name).OrderBy(t => t, new ExplorerComparer())).ToArray();
                                 actionValueComboBox.DataSource = trigsData;
+                                string correctedTrigger = trigsData.Contains(trig, StringComparer.OrdinalIgnoreCase) ? trig : Trigger.None;
+                                triggerAction.Trigger = correctedTrigger;
                                 actionValueComboBox.DataBindings.Add("SelectedItem", triggerAction, "Trigger");
-                                actionValueComboBox.SelectedItem = trigsData.Contains(trig, StringComparer.OrdinalIgnoreCase) ? trig : Trigger.None;
+                                actionValueComboBox.SelectedItem = correctedTrigger;
                                 actionArgType = ArgType.Trigger;
-                                String trigTooltip = RefreshTriggerLabel(trig);
+                                String trigTooltip = RefreshTriggerLabel(correctedTrigger);
                                 if (trigTooltip != null && actionValueComboBox.ClientRectangle.Contains(actionValueComboBox.PointToClient(Cursor.Position)))
                                 {
                                     ShowToolTip(actionValueComboBox, trigTooltip);
@@ -1166,8 +1198,10 @@ namespace MobiusEditor.Dialogs
                                 var wpsData = new ListItem<long>(-1, Waypoint.None).Yield().Concat(
                                     Enumerable.Range(0, wps.Length).Select(wp => new ListItem<long>(wp, wps[wp].ToString()))).ToArray();
                                 actionValueComboBox.DataSource = wpsData;
+                                correctedData = ListItem.CheckInList(data, wpsData);
+                                triggerAction.Data = correctedData;
                                 actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
-                                actionValueComboBox.SelectedValue = ListItem.CheckInList(data, wpsData);
+                                actionValueComboBox.SelectedValue = correctedData;
                                 break;
                             case RedAlert.ActionTypes.TACTION_1_SPECIAL:
                             case RedAlert.ActionTypes.TACTION_FULL_SPECIAL:
@@ -1178,8 +1212,10 @@ namespace MobiusEditor.Dialogs
                                     RedAlert.ActionDataTypes.SuperTypes.Select((t, i) => new ListItem<long>(i, t)))
                                     .OrderBy(t => t.Label).ToArray();
                                 actionValueComboBox.DataSource = superData;
+                                correctedData = ListItem.CheckInList(data, superData);
+                                triggerAction.Data = correctedData;
                                 actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
-                                actionValueComboBox.SelectedValue = ListItem.CheckInList(data, superData);
+                                actionValueComboBox.SelectedValue = correctedData;
                                 break;
                             case RedAlert.ActionTypes.TACTION_PLAY_MUSIC:
                                 actionValueComboBox.Visible = true;
@@ -1193,8 +1229,10 @@ namespace MobiusEditor.Dialogs
                                     musData.Insert(0, musDefItem);
                                 }
                                 actionValueComboBox.DataSource = musData;
+                                correctedData = ListItem.CheckInList(data, musData);
+                                triggerAction.Data = correctedData;
                                 actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
-                                actionValueComboBox.SelectedValue = ListItem.CheckInList(data, musData);
+                                actionValueComboBox.SelectedValue = correctedData;
                                 break;
                             case RedAlert.ActionTypes.TACTION_PLAY_MOVIE:
                                 actionValueComboBox.Visible = true;
@@ -1210,8 +1248,10 @@ namespace MobiusEditor.Dialogs
                                     movData.Insert(0, movDefItem);
                                 }
                                 actionValueComboBox.DataSource = movData;
+                                correctedData = ListItem.CheckInList(data, movData);
+                                triggerAction.Data = correctedData;
                                 actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
-                                actionValueComboBox.SelectedValue = ListItem.CheckInList(data, movData);
+                                actionValueComboBox.SelectedValue = correctedData;
                                 break;
                             case RedAlert.ActionTypes.TACTION_PLAY_SOUND:
                                 actionValueComboBox.Visible = true;
@@ -1221,8 +1261,10 @@ namespace MobiusEditor.Dialogs
                                     RedAlert.ActionDataTypes.VocDesc.Select((t, i) => new ListItem<long>(i, t + " (" + RedAlert.ActionDataTypes.VocNames[i] + ")"))
                                     .Where(t => !String.Equals(RedAlert.ActionDataTypes.VocNames[t.Value], "x", StringComparison.OrdinalIgnoreCase))).ToArray();
                                 actionValueComboBox.DataSource = vocData;
+                                correctedData = ListItem.CheckInList(data, vocData);
+                                triggerAction.Data = correctedData;
                                 actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
-                                actionValueComboBox.SelectedValue = ListItem.CheckInList(data, vocData);
+                                actionValueComboBox.SelectedValue = correctedData;
                                 break;
                             case RedAlert.ActionTypes.TACTION_PLAY_SPEECH:
                                 actionValueComboBox.Visible = true;
@@ -1232,8 +1274,10 @@ namespace MobiusEditor.Dialogs
                                     RedAlert.ActionDataTypes.VoxDesc.Select((t, i) => new ListItem<long>(i, t + " (" + RedAlert.ActionDataTypes.VoxNames[i] + ")"))
                                     .Where(t => !String.Equals(RedAlert.ActionDataTypes.VoxNames[t.Value], "none", StringComparison.OrdinalIgnoreCase))).ToArray();
                                 actionValueComboBox.DataSource = voxData;
+                                correctedData = ListItem.CheckInList(data, voxData);
+                                triggerAction.Data = correctedData;
                                 actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
-                                actionValueComboBox.SelectedValue = ListItem.CheckInList(data, voxData);
+                                actionValueComboBox.SelectedValue = correctedData;
                                 break;
                             case RedAlert.ActionTypes.TACTION_PREFERRED_TARGET:
                                 actionValueComboBox.Visible = true;
@@ -1241,8 +1285,10 @@ namespace MobiusEditor.Dialogs
                                 actionValueComboBox.ValueMember = "Value";
                                 var quarryData = RedAlert.TeamMissionTypes.Attack.DropdownOptions.Select(t => new ListItem<long>(t.Value, t.Label)).ToArray();
                                 actionValueComboBox.DataSource = quarryData;
+                                correctedData = ListItem.CheckInList(data, quarryData);
+                                triggerAction.Data = correctedData;
                                 actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
-                                actionValueComboBox.SelectedValue = ListItem.CheckInList(data, quarryData);
+                                actionValueComboBox.SelectedValue = correctedData;
                                 break;
                             case RedAlert.ActionTypes.TACTION_BASE_BUILDING:
                                 actionValueComboBox.Visible = true;
@@ -1250,8 +1296,10 @@ namespace MobiusEditor.Dialogs
                                 actionValueComboBox.ValueMember = "Value";
                                 var trueFalseData = new long[] { 0, 1 }.Select(b => new ListItem<long>(b, b == 0 ? "Off" : "On")).ToArray();
                                 actionValueComboBox.DataSource = trueFalseData;
+                                correctedData = ListItem.CheckInList(data, trueFalseData);
+                                triggerAction.Data = correctedData;
                                 actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
-                                actionValueComboBox.SelectedValue = ListItem.CheckInList(data, trueFalseData);
+                                actionValueComboBox.SelectedValue = correctedData;
                                 break;
                             case RedAlert.ActionTypes.TACTION_TEXT_TRIGGER:
                                 actionValueComboBox.Visible = true;
@@ -1260,8 +1308,10 @@ namespace MobiusEditor.Dialogs
                                 var txtData = RedAlert.ActionDataTypes.TextDesc
                                     .Select((t, i) => new ListItem<long>(i + 1, (i + 1).ToString("000") + " " + t)).ToArray();
                                 actionValueComboBox.DataSource = txtData;
+                                correctedData = ListItem.CheckInList(data, txtData);
+                                triggerAction.Data = correctedData;
                                 actionValueComboBox.DataBindings.Add("SelectedValue", triggerAction, "Data");
-                                actionValueComboBox.SelectedValue = ListItem.CheckInList(data, txtData);
+                                actionValueComboBox.SelectedValue = correctedData;
                                 break;
                             case RedAlert.ActionTypes.TACTION_ADD_TIMER:
                             case RedAlert.ActionTypes.TACTION_SUB_TIMER:
@@ -1269,14 +1319,18 @@ namespace MobiusEditor.Dialogs
                                 actionNud.Minimum = 0;
                                 actionNud.Maximum = Int32.MaxValue;
                                 actionNud.Visible = true;
-                                actionNud.Value = data.Restrict(0, Int32.MaxValue);
+                                correctedData = data.Restrict(0, Int32.MaxValue);
+                                triggerAction.Data = correctedData;
+                                actionNud.Value = correctedData;
                                 break;
                             case RedAlert.ActionTypes.TACTION_SET_GLOBAL:
                             case RedAlert.ActionTypes.TACTION_CLEAR_GLOBAL:
                                 actionNud.Minimum = 0;
                                 actionNud.Maximum = 29;
                                 actionNud.Visible = true;
-                                actionNud.Value = data.Restrict(0, 29);
+                                correctedData = data.Restrict(0, 29);
+                                triggerAction.Data = correctedData;
+                                actionNud.Value = correctedData;
                                 break;
                             default:
                                 break;

@@ -202,10 +202,8 @@ namespace MobiusEditor.Model
                 Origin = Origin,
                 Trigger = Trigger
             };
-
             teamType.Classes.AddRange(Classes.Select(c => c.Clone()));
             teamType.Missions.AddRange(Missions.Select(m => m.Clone()));
-
             return teamType;
         }
 

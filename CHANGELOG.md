@@ -641,3 +641,10 @@ Unreleased.
 * Added outlines for overlapped buildings.
 * Implemented a new scaling method that should vastly reduce saving times of multiplayer map thumbnails and image exports.
 * Fixed issue that caused any unknown video names configured on TD missions to be marked as "Remaster only".
+* Fixed a bug where the values of teamtype orders, trigger events and trigger actions were saved as value "-1" when a new item's value was not changed from its default.
+* Fixed RA sound effects string: "water impace".
+* Fixed bug in RA trigger reading where it would complain about House "None", fix it back to house none, and show the trigger's Persistence value instead of the House one.
+* Added indication in House settings that the configured house credits value is multiplied by 100 in-game.
+* Removed incorrect indication on RA's "Credits Exceed" trigger event that claimed the value was value was multiplied by 100.
+* Fixed RA "Build Aircraft Type" trigger event to correctly save the unit ID.
+* Added checks on Events in Red Alert triggers that crash the game if no House is set on the trigger itself.

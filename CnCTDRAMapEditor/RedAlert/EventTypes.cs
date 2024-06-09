@@ -32,7 +32,7 @@ namespace MobiusEditor.RedAlert
         public const string TEVENT_UNITS_DESTROYED       /**/ = "All Units Destroyed...";
         public const string TEVENT_BUILDINGS_DESTROYED   /**/ = "All Buildings Destroyed...";
         public const string TEVENT_ALL_DESTROYED         /**/ = "All Destroyed...";
-        public const string TEVENT_CREDITS               /**/ = "Credits Exceed (x100)...";
+        public const string TEVENT_CREDITS               /**/ = "Credits Exceed...";
         public const string TEVENT_TIME                  /**/ = "Elapsed Time (1/10th min)...";
         public const string TEVENT_MISSION_TIMER_EXPIRED /**/ = "Mission Timer Expired";
         public const string TEVENT_NBUILDINGS_DESTROYED  /**/ = "# of Buildings Destroyed...";

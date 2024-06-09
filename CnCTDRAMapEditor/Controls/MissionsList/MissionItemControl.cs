@@ -67,7 +67,9 @@ namespace MobiusEditor.Controls
                 this.m_Loading = false;
             }
             if (info != null)
+            {
                 UpdateInfo(info);
+            }
         }
 
         public void UpdateInfo(TeamTypeMission info)
@@ -79,7 +81,11 @@ namespace MobiusEditor.Controls
                 TeamMission mission = info != null ? info.Mission : defaultMission;
                 int value = info != null ? info.Argument : 0;
                 this.cmbMission.Text = mission.Mission;
-                UpdateValueControl(mission, value);
+                int newVal = UpdateValueControl(mission, value);
+                if (this.Info != null)
+                {
+                    Info.Argument = newVal;
+                }
             }
             finally
             {
@@ -92,7 +98,7 @@ namespace MobiusEditor.Controls
             this.cmbMission.Select();
         }
 
-        private void UpdateValueControl(TeamMission mission, int value)
+        private int UpdateValueControl(TeamMission mission, int value)
         {
             if (tooltip != null)
             {
@@ -100,45 +106,46 @@ namespace MobiusEditor.Controls
                 tooltip.SetToolTip(this.numValue, null);
                 tooltip.SetToolTip(this.cmbValue, null);
             }
+            int newValue = value;
             switch (mission.ArgType)
             {
                 case TeamMissionArgType.None:
                 default:
                     this.numValue.Visible = false;
                     this.cmbValue.Visible = false;
-                    if (this.Info != null)
-                        this.Info.Argument = 0;
+                    newValue = 0;
                     break;
                 case TeamMissionArgType.Number:
-                    SetUpNumValue(0, Int32.MaxValue, 1, value, this.tooltip, "Number");
+                    newValue = SetUpNumValue(0, Int32.MaxValue, 1, value, this.tooltip, "Number");
                     break;
                 case TeamMissionArgType.Time:
-                    SetUpNumValue(0, Int32.MaxValue, 10, value, this.tooltip, "Time in 1/10th min");
+                    newValue = SetUpNumValue(0, Int32.MaxValue, 10, value, this.tooltip, "Time in 1/10th min");
                     break;
                 case TeamMissionArgType.Waypoint:
-                    SetUpCmbValue(waypoints, value, tooltip, "Waypoint");
+                    newValue = SetUpCmbValue(waypoints, value, tooltip, "Waypoint");
                     break;
                 case TeamMissionArgType.OptionsList:
                     ListItem<int>[] items = mission.DropdownOptions.Select(ddo => new ListItem<int>(ddo.Value, ddo.Label)).ToArray();
-                    SetUpCmbValue(items, value, tooltip, null);
+                    newValue = SetUpCmbValue(items, value, tooltip, null);
                     break;
                 case TeamMissionArgType.MapCell:
-                    SetUpNumValue(0, mapSize - 1, 1, value, this.tooltip, "Map cell");
+                    newValue = SetUpNumValue(0, mapSize - 1, 1, value, this.tooltip, "Map cell");
                     break;
                 case TeamMissionArgType.MissionNumber:
-                    SetUpNumValue(0, Int32.MaxValue, 1, value, this.tooltip, "0-based index in this orders list");
+                    newValue = SetUpNumValue(0, Int32.MaxValue, 1, value, this.tooltip, "0-based index in this orders list");
                     break;
                 case TeamMissionArgType.GlobalNumber:
-                    SetUpNumValue(0, 29, 1, value, this.tooltip, "Global to set");
+                    newValue = SetUpNumValue(0, 29, 1, value, this.tooltip, "Global to set");
                     break;
                 case TeamMissionArgType.Tarcom:
-                    SetUpNumValue(0, Int32.MaxValue, 1, value, this.tooltip, "Tarcom");
+                    newValue = SetUpNumValue(0, Int32.MaxValue, 1, value, this.tooltip, "Tarcom");
                     break;
             }
             currentType = mission.ArgType;
+            return newValue;
         }
 
-        private void SetUpNumValue(int min, int max, int mouseWheelIncrement, int curValue, ToolTip tooltip, String tooltipText)
+        private int SetUpNumValue(int min, int max, int mouseWheelIncrement, int curValue, ToolTip tooltip, String tooltipText)
         {
             this.cmbValue.Visible = false;
             this.numValue.Visible = true;
@@ -146,15 +153,17 @@ namespace MobiusEditor.Controls
             this.numValue.Minimum = min;
             this.numValue.Maximum = max;
             this.numValue.MouseWheelIncrement = mouseWheelIncrement;
-            this.numValue.Value = numValue.Constrain(curValue);
+            int constrainedVal = (int)numValue.Constrain(curValue);
+            this.numValue.Value = constrainedVal;
             if (tooltip != null)
             {
                 tooltip.SetToolTip(this.numValue, tooltipText);
                 tooltip.SetToolTip(this.cmbValue, null);
             }
+            return constrainedVal;
         }
 
-        private void SetUpCmbValue(ListItem<int>[] items, int value, ToolTip tooltip, String tooltipText)
+        private int SetUpCmbValue(ListItem<int>[] items, int value, ToolTip tooltip, String tooltipText)
         {
             this.numValue.Visible = false;
             this.cmbValue.Visible = true;
@@ -170,6 +179,7 @@ namespace MobiusEditor.Controls
                 tooltip.SetToolTip(this.cmbValue, tooltipText);
                 tooltip.SetToolTip(this.numValue, null);
             }
+            return selectIndex;
         }
 
         private void CmbMission_SelectedIndexChanged(Object sender, EventArgs e)
@@ -185,9 +195,10 @@ namespace MobiusEditor.Controls
                 int value = -1;
                 if (mission.ArgType == currentType && (currentType == TeamMissionArgType.Time || currentType == TeamMissionArgType.Waypoint))
                 {
-                    value = Info.Argument;
+                    value = this.Info.Argument;
                 }
-                UpdateValueControl(mission, value);
+                int newVal = UpdateValueControl(mission, value);
+                this.Info.Argument = newVal;
             }
         }
 

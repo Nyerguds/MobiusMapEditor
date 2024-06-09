@@ -47,6 +47,7 @@ namespace MobiusEditor.Controls
         {
             return new MissionItemControl(property, controller, missions, waypoints, mapSize, tooltip);
         }
+
         public override void UpdateControl(TeamTypeMission property, ListedControlController<TeamTypeMission> controller, MissionItemControl control)
         {
             control.SetInfo(property, controller, missions, waypoints, mapSize, tooltip);

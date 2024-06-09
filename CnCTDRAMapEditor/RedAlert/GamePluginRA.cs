@@ -780,7 +780,7 @@ namespace MobiusEditor.RedAlert
             this.UpdateBasePlayerHouse();
             triggers.Sort((x, y) => comparer.Compare(x.Name, y.Name));
             this.ClearUnusedTriggerArguments(triggers);
-            this.CheckTriggersGlobals(triggers, teamTypes, errors, ref modified);
+            this.CheckTriggersGlobals(triggers, teamTypes, errors, ref modified, player);
             // Apply triggers in a way that won't trigger the notifications.
             Map.Triggers.Clear();
             Map.Triggers.AddRange(triggers);
@@ -1044,7 +1044,7 @@ namespace MobiusEditor.RedAlert
             {
                 return triggers;
             }
-            void fixEvent(TriggerEvent e)
+            void fixEvent(TriggerEvent e, string triggerName, int evtNr)
             {
                 switch (e.EventType)
                 {
@@ -1062,10 +1062,28 @@ namespace MobiusEditor.RedAlert
                     case EventTypes.TEVENT_BUILD:
                     case EventTypes.TEVENT_BUILD_UNIT:
                     case EventTypes.TEVENT_BUILD_INFANTRY:
+                        if (e.Data != -1)
+                        {
+                            e.Data &= 0xFF;
+                        }
+                        break;
                     case EventTypes.TEVENT_BUILD_AIRCRAFT:
                         if (e.Data != -1)
                         {
                             e.Data &= 0xFF;
+                            if ((e.Data & UnitTypeIDMask.Aircraft) == UnitTypeIDMask.Aircraft)
+                            {
+                                int fixedData = (int)e.Data & ~UnitTypeIDMask.Aircraft;
+                                UnitType heliType = this.Map.AllTeamTechnoTypes.OfType<UnitType>().FirstOrDefault(u => u.ID == e.Data);
+                                if (heliType == null)
+                                {
+                                    heliType = this.Map.AllUnitTypes.Where(u => u.IsAircraft).FirstOrDefault();
+                                    fixedData = heliType.ID & ~UnitTypeIDMask.Aircraft;
+                                }
+                                errors.Add(string.Format("Trigger '{0}', Event {1} (\"{2}\") has bad value '{3}' set for the Aircraft id. This is most likely caused by older versions of this editor. Fixing id to '{4}' ({5}).",
+                                    triggerName, evtNr, e.EventType.TrimEnd('.'), e.Data, fixedData, heliType.Name));
+                                e.Data = fixedData;
+                            }
                         }
                         break;
                 }
@@ -1116,10 +1134,11 @@ namespace MobiusEditor.RedAlert
                         }
                         Trigger trigger = new Trigger { Name = kvp.Key };
                         trigger.PersistentType = (TriggerPersistentType)int.Parse(tokens[0]);
-                        trigger.House = Map.HouseTypes.Where(t => t.Equals(sbyte.Parse(tokens[1]))).FirstOrDefault()?.Name;
+                        int houseId = sbyte.Parse(tokens[1]);
+                        trigger.House = houseId == -1 ? House.None : Map.HouseTypes.Where(t => t.Equals(houseId)).FirstOrDefault()?.Name;
                         if (trigger.House == null)
                         {
-                            errors.Add(string.Format("Trigger '{0}' has unknown house ID '{1}'; clearing to '{2}'.", kvp.Key, tokens[0], House.None));
+                            errors.Add(string.Format("Trigger '{0}' has unknown house ID '{1}'; clearing to '{2}'.", kvp.Key, tokens[1], House.None));
                             modified = true;
                             trigger.House = House.None;
                         }
@@ -1139,8 +1158,8 @@ namespace MobiusEditor.RedAlert
                         trigger.Action2.Trigger = tokens[16];
                         trigger.Action2.Data = long.Parse(tokens[17]);
                         // Fix up data caused by union usage in the legacy game
-                        fixEvent(trigger.Event1);
-                        fixEvent(trigger.Event2);
+                        fixEvent(trigger.Event1, kvp.Key, 1);
+                        fixEvent(trigger.Event2, kvp.Key, 2);
                         fixAction(trigger.Action1);
                         fixAction(trigger.Action2);
                         triggers.Add(trigger);
@@ -2585,14 +2604,14 @@ namespace MobiusEditor.RedAlert
         /// <param name="teamTypes">List of all read team types</param>
         /// <param name="errors">List to add errors to.</param>
         /// <param name="modified">Returns true if any fixes were made.</param>
-        private void CheckTriggersGlobals(List<Trigger> triggers, List<TeamType> teamTypes, List<String> errors, ref Boolean modified)
+        private void CheckTriggersGlobals(List<Trigger> triggers, List<TeamType> teamTypes, List<String> errors, ref Boolean modified, HouseType defaultHouse)
         {
             // Keep track of corrected globals.
             List<int> availableGlobals;
             Dictionary<long, int> fixedGlobals = new Dictionary<long, int>();
             HashSet<int> teamGlobals = GetTeamGlobals(teamTypes);
             bool wasFixed;
-            errors.AddRange(CheckTriggers(triggers, true, true, false, out _, true, out wasFixed, teamGlobals, out availableGlobals, ref fixedGlobals));
+            errors.AddRange(CheckTriggers(triggers, true, true, false, out _, true, out wasFixed, teamGlobals, out availableGlobals, ref fixedGlobals, defaultHouse));
             if (wasFixed)
             {
                 modified = true;
@@ -4250,10 +4269,13 @@ namespace MobiusEditor.RedAlert
         public IEnumerable<string> CheckTriggers(IEnumerable<Trigger> triggers, bool includeExternalData, bool prefixNames, bool fatalOnly, out bool fatal, bool fix, out bool wasFixed)
         {
             Dictionary<long, int> fixedGlobals = new Dictionary<long, int>();
-            return CheckTriggers(triggers, includeExternalData, prefixNames, fatalOnly, out fatal, fix, out wasFixed, null, out _, ref fixedGlobals);
+            string setHouse = this.Map.BasicSection.Player;
+            HouseType house = string.IsNullOrEmpty(setHouse) ? null : Map.HouseTypes.Where(h => h.Equals(setHouse)).FirstOrDefault();
+            return CheckTriggers(triggers, includeExternalData, prefixNames, fatalOnly, out fatal, fix, out wasFixed, null, out _, ref fixedGlobals, house);
         }
 
-        public IEnumerable<string> CheckTriggers(IEnumerable<Trigger> triggers, bool includeExternalData, bool prefixNames, bool fatalOnly, out bool fatal, bool fix, out bool wasFixed, HashSet<int> teamGlobals, out List<int> availableGlobals, ref Dictionary<long, int> fixedGlobals)
+        public IEnumerable<string> CheckTriggers(IEnumerable<Trigger> triggers, bool includeExternalData, bool prefixNames, bool fatalOnly, out bool fatal, bool fix,
+            out bool wasFixed, HashSet<int> teamGlobals, out List<int> availableGlobals, ref Dictionary<long, int> fixedGlobals, HouseType defaultHouse)
         {
             fatal = false;
             wasFixed = false;
@@ -4271,34 +4293,32 @@ namespace MobiusEditor.RedAlert
             {
                 string trigName = trigger.Name;
                 string prefix = prefixNames ? "Trigger \"" + trigName + "\": " : String.Empty;
-                string event1 = trigger.Event1.EventType;
-                string event2 = trigger.Event2.EventType;
-                string action1 = trigger.Action1.ActionType;
-                string action2 = trigger.Action2.ActionType;
+                // House "None" is fatal on a lot of events.
+                CheckTriggerHouse(prefix, trigger, curErrors, ref fatal, fatalOnly, fix, ref wasFixed, defaultHouse);
                 // Not sure which ones are truly fatal.
                 // Events
-                CheckEventHouse(prefix, trigger.Event1, curErrors, 1, ref fatal, fatalOnly, fix, ref wasFixed);
-                CheckEventHouse(prefix, trigger.Event2, curErrors, 2, ref fatal, fatalOnly, fix, ref wasFixed);
+                CheckEventHouse(prefix, false, trigger.Event1, curErrors, 1, ref fatal, fatalOnly, fix, ref wasFixed);
+                CheckEventHouse(prefix, trigger.UsesEvent2, trigger.Event2, curErrors, 2, ref fatal, fatalOnly, fix, ref wasFixed);
                 // globals checks are only for ini read, really.
-                CheckEventGlobals(prefix, trigger.Event1, curErrors, 1, ref fatal, fatalOnly, fix, ref wasFixed, availableGlobals, fixedGlobals);
-                CheckEventGlobals(prefix, trigger.Event2, curErrors, 2, ref fatal, fatalOnly, fix, ref wasFixed, availableGlobals, fixedGlobals);
-                CheckEventTeam(prefix, trigger.Event1, curErrors, 1, ref fatal, fatalOnly);
-                CheckEventTeam(prefix, trigger.Event2, curErrors, 2, ref fatal, fatalOnly);
+                CheckEventGlobals(prefix, false, trigger.Event1, curErrors, 1, ref fatal, fatalOnly, fix, ref wasFixed, availableGlobals, fixedGlobals);
+                CheckEventGlobals(prefix, trigger.UsesEvent2, trigger.Event2, curErrors, 2, ref fatal, fatalOnly, fix, ref wasFixed, availableGlobals, fixedGlobals);
+                CheckEventTeam(prefix, false, trigger.Event1, curErrors, 1, ref fatal, fatalOnly);
+                CheckEventTeam(prefix, trigger.UsesEvent2, trigger.Event2, curErrors, 2, ref fatal, fatalOnly);
                 // Actions
-                CheckActionHouse(prefix, trigger.Action1, curErrors, 1, ref fatal, fatalOnly, fix, ref wasFixed);
-                CheckActionHouse(prefix, trigger.Action2, curErrors, 2, ref fatal, fatalOnly, fix, ref wasFixed);
-                CheckActionText(prefix, trigger.Action1, curErrors, 1, ref fatal, fatalOnly, fix, ref wasFixed);
-                CheckActionText(prefix, trigger.Action2, curErrors, 2, ref fatal, fatalOnly, fix, ref wasFixed);
+                CheckActionHouse(prefix, false, trigger.Action1, curErrors, 1, ref fatal, fatalOnly, fix, ref wasFixed);
+                CheckActionHouse(prefix, trigger.UsesEvent2, trigger.Action2, curErrors, 2, ref fatal, fatalOnly, fix, ref wasFixed);
+                CheckActionText(prefix, false, trigger.Action1, curErrors, 1, ref fatal, fatalOnly, fix, ref wasFixed);
+                CheckActionText(prefix, trigger.UsesEvent2, trigger.Action2, curErrors, 2, ref fatal, fatalOnly, fix, ref wasFixed);
                 // globals checks are only for ini read, really.
-                CheckActionGlobals(prefix, trigger.Action1, curErrors, 1, ref fatal, fatalOnly, fix, ref wasFixed, availableGlobals, fixedGlobals);
-                CheckActionGlobals(prefix, trigger.Action2, curErrors, 2, ref fatal, fatalOnly, fix, ref wasFixed, availableGlobals, fixedGlobals);
-                CheckActionTeam(prefix, trigger.Action1, curErrors, 1, ref fatal, fatalOnly);
-                CheckActionTeam(prefix, trigger.Action2, curErrors, 2, ref fatal, fatalOnly);
-                CheckActionTrigger(prefix, trigger.Action1, curErrors, 1, ref fatal, fatalOnly);
-                CheckActionTrigger(prefix, trigger.Action2, curErrors, 2, ref fatal, fatalOnly);
+                CheckActionGlobals(prefix, false, trigger.Action1, curErrors, 1, ref fatal, fatalOnly, fix, ref wasFixed, availableGlobals, fixedGlobals);
+                CheckActionGlobals(prefix, trigger.UsesEvent2, trigger.Action2, curErrors, 2, ref fatal, fatalOnly, fix, ref wasFixed, availableGlobals, fixedGlobals);
+                CheckActionTeam(prefix, false, trigger.Action1, curErrors, 1, ref fatal, fatalOnly);
+                CheckActionTeam(prefix, trigger.UsesEvent2, trigger.Action2, curErrors, 2, ref fatal, fatalOnly);
+                CheckActionTrigger(prefix, false, trigger.Action1, curErrors, 1, ref fatal, fatalOnly);
+                CheckActionTrigger(prefix, trigger.UsesEvent2, trigger.Action2, curErrors, 2, ref fatal, fatalOnly);
                 // Waypoints: also only relevant on ini read.
-                CheckActionWaypoint(prefix, trigger.Action1, curErrors, 1, ref fatal, fatalOnly, fix, ref wasFixed);
-                CheckActionWaypoint(prefix, trigger.Action2, curErrors, 2, ref fatal, fatalOnly, fix, ref wasFixed);
+                CheckActionWaypoint(prefix, false, trigger.Action1, curErrors, 1, ref fatal, fatalOnly, fix, ref wasFixed);
+                CheckActionWaypoint(prefix, trigger.UsesEvent2, trigger.Action2, curErrors, 2, ref fatal, fatalOnly, fix, ref wasFixed);
                 // Specific checks go here:
                 // -celltrigger "Entered By" somehow cannot trigger fire sale? Investigate.
                 if (curErrors.Count > 0)
@@ -4369,8 +4389,89 @@ namespace MobiusEditor.RedAlert
             return errors;
         }
 
-        private void CheckEventHouse(string prefix, TriggerEvent evnt, List<string> errors, Int32 nr, ref bool fatal, bool fatalOnly, bool fix, ref bool wasFixed)
+        private void CheckTriggerHouse(string prefix, Trigger trigger, List<string> errors, ref bool fatal, bool fatalOnly,
+            bool fix, ref bool wasFixed, HouseType defaultHouse)
         {
+            int house = !string.IsNullOrEmpty(trigger.House) ? (Map.HouseTypes.Where(h => h.Equals(trigger.House)).FirstOrDefault()?.ID ?? -1) : -1;
+            string fixHouse = defaultHouse?.Name ?? House.None;
+            if (house != -1)
+            {
+                return;
+            }
+            string error;
+            TriggerEvent[] events = new TriggerEvent[] { trigger.Event1, trigger.Event2 };
+            List<int> fatalEvts = new List<int>();
+            List<int> warningEvts = new List<int>();
+            for (int i = 0; i < 2; i++)
+            {
+                if (i == 1 && !trigger.UsesEvent2)
+                {
+                    break;
+                }
+                TriggerEvent evnt = events[i];
+                switch (evnt.EventType)
+                {
+                    case EventTypes.TEVENT_LEAVES_MAP:
+                        warningEvts.Add(i);
+                        break;
+                    case EventTypes.TEVENT_THIEVED:
+                    case EventTypes.TEVENT_HOUSE_DISCOVERED:
+                    case EventTypes.TEVENT_ANY:
+                    case EventTypes.TEVENT_UNITS_DESTROYED:
+                    case EventTypes.TEVENT_BUILDINGS_DESTROYED:
+                    case EventTypes.TEVENT_ALL_DESTROYED:
+                    case EventTypes.TEVENT_CREDITS:
+                    case EventTypes.TEVENT_NBUILDINGS_DESTROYED:
+                    case EventTypes.TEVENT_NUNITS_DESTROYED:
+                    case EventTypes.TEVENT_NOFACTORIES:
+                    case EventTypes.TEVENT_EVAC_CIVILIAN:
+                    case EventTypes.TEVENT_BUILD:
+                    case EventTypes.TEVENT_BUILD_UNIT:
+                    case EventTypes.TEVENT_BUILD_INFANTRY:
+                    case EventTypes.TEVENT_BUILD_AIRCRAFT:
+                    case EventTypes.TEVENT_LOW_POWER:
+                    case EventTypes.TEVENT_BUILDING_EXISTS:
+                        fatalEvts.Add(i);
+                        break;
+                }
+            }
+            if (fatalEvts.Count > 0)
+            {
+                fatal = true;
+                string eventInfo = String.Join(" and ", fatalEvts.Select(ev => String.Format("Event {0} is \"{1}\"", ev + 1, events[ev].EventType.TrimEnd('.'))));
+                String eventDesc =
+                error = String.Format("{0}House is set to {1}, but {2}. {3} event{4} require{4} a House to be set, or the trigger will cause a game crash on mission load.",
+                    prefix, House.None, eventInfo, fatalEvts.Count > 1 ? "Both" : "This", fatalEvts.Count > 1 ? "s" : String.Empty, fatalEvts.Count == 1 ? "s" : String.Empty);
+                if (fix && fixHouse != House.None)
+                {
+                    trigger.House = fixHouse;
+                    wasFixed = true;
+                    error += " Fixed to \"" + fixHouse + "\" (Player house).";
+                }
+                errors.Add(error);
+            }
+            if (!fatalOnly && warningEvts.Count > 0)
+            {
+                string eventInfo = String.Join(" and ", warningEvts.Select(ev => String.Format("Event {0} is \"{1}\"", ev + 1, events[ev].EventType.TrimEnd('.'))));
+                String eventDesc =
+                error = String.Format("{0}House is set to {1}, but {2}. {3} event{4} require{5} a House to be set, or the trigger will immediately fire at the start of the mission.",
+                    prefix, House.None, eventInfo, warningEvts.Count > 1 ? "Both" : "This", warningEvts.Count > 1 ? "s" : String.Empty, warningEvts.Count == 1 ? "s" : String.Empty);
+                if (fix && fixHouse != House.None)
+                {
+                    trigger.House = fixHouse;
+                    wasFixed = true;
+                    error += " Fixed to \"" + fixHouse + "\" (Player house).";
+                }
+                errors.Add(error);
+            }
+        }
+
+        private void CheckEventHouse(string prefix, bool skipCheck, TriggerEvent evnt, List<string> errors, Int32 nr, ref bool fatal, bool fatalOnly, bool fix, ref bool wasFixed)
+        {
+            if (skipCheck)
+            {
+                return;
+            }
             int maxId = Map.Houses.Max(h => h.Type.ID);
             long house = evnt.Data;
             if ((house >= 0 && house <= maxId) || fatalOnly)
@@ -4413,9 +4514,9 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        private void CheckEventGlobals(string prefix, TriggerEvent evnt, List<string> errors, Int32 nr, ref bool fatal, bool fatalOnly, bool fix, ref bool wasFixed, List<int> availableGlobals, Dictionary<long,int> fixedGlobals)
+        private void CheckEventGlobals(string prefix, bool skipCheck, TriggerEvent evnt, List<string> errors, Int32 nr, ref bool fatal, bool fatalOnly, bool fix, ref bool wasFixed, List<int> availableGlobals, Dictionary<long,int> fixedGlobals)
         {
-            if (fatalOnly)
+            if (skipCheck || fatalOnly)
             {
                 return;
             }
@@ -4450,9 +4551,9 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        private void CheckEventTeam(string prefix, TriggerEvent evnt, List<string> errors, Int32 nr, ref bool fatal, bool fatalOnly)
+        private void CheckEventTeam(string prefix, bool skipCheck, TriggerEvent evnt, List<string> errors, Int32 nr, ref bool fatal, bool fatalOnly)
         {
-            if (!TeamType.IsEmpty(evnt.Team) || fatalOnly)
+            if (skipCheck || !TeamType.IsEmpty(evnt.Team) || fatalOnly)
             {
                 return;
             }
@@ -4464,9 +4565,9 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        private void CheckActionHouse(string prefix, TriggerAction action, List<string> errors, Int32 nr, ref bool fatal, bool fatalOnly, bool fix, ref bool wasFixed)
+        private void CheckActionHouse(string prefix, bool skipCheck, TriggerAction action, List<string> errors, Int32 nr, ref bool fatal, bool fatalOnly, bool fix, ref bool wasFixed)
         {
-            if (fatalOnly)
+            if (skipCheck || fatalOnly)
             {
                 return;
             }
@@ -4483,10 +4584,12 @@ namespace MobiusEditor.RedAlert
                     switch (actn)
                     {
                         case ActionTypes.TACTION_WIN:
-                            errors.Add(prefix + "Action " + nr + ": \"" + actn.TrimEnd('.') + "\" on a House other than the player will always make you lose.");
+                            errors.Add(String.Format("{0}Action {1}: \"{2}\" on a House other than the player will always make you lose. Use a normal \"{3}\" trigger intead.",
+                                prefix, nr, actn.TrimEnd('.'), ActionTypes.TACTION_LOSE.TrimEnd('.')));
                             break;
                         case ActionTypes.TACTION_LOSE:
-                            errors.Add(prefix + "Action " + nr + ": \"" + actn.TrimEnd('.') + "\" on a House other than the player will always make you win.");
+                            errors.Add(String.Format("{0}Action {1}: \"{2}\" on a House other than the player will always make you win. Use a normal \"{3}\" trigger intead.",
+                                prefix, nr, actn.TrimEnd('.'), ActionTypes.TACTION_WIN.TrimEnd('.')));
                             break;
                     }
                 }
@@ -4498,7 +4601,7 @@ namespace MobiusEditor.RedAlert
                         case ActionTypes.TACTION_FIRE_SALE:
                         case ActionTypes.TACTION_AUTOCREATE:
                         case ActionTypes.TACTION_ALL_HUNT:
-                            errors.Add(prefix + "Action " + nr + ": \"" + actn.TrimEnd('.') + "\" is set to the player's House.");
+                            errors.Add(prefix + "Action " + nr + ": \"" + actn.TrimEnd('.') + "\" is set to the player's House. These are AI actions.");
                             break;
                     }
                 }
@@ -4533,8 +4636,12 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        private void CheckActionText(string prefix, TriggerAction action, List<string> errors, Int32 nr, ref bool fatal, bool fatalOnly, bool fix, ref bool wasFixed)
+        private void CheckActionText(string prefix, bool skipCheck, TriggerAction action, List<string> errors, Int32 nr, ref bool fatal, bool fatalOnly, bool fix, ref bool wasFixed)
         {
+            if (skipCheck)
+            {
+                return;
+            }
             switch (action.ActionType)
             {
                 case ActionTypes.TACTION_TEXT_TRIGGER:
@@ -4554,9 +4661,9 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        private void CheckActionGlobals(string prefix, TriggerAction action, List<string> errors, Int32 nr, ref bool fatal, bool fatalOnly, bool fix, ref bool wasFixed, List<int> availableGlobals, Dictionary<long, int> globalFixes)
+        private void CheckActionGlobals(string prefix, bool skipCheck, TriggerAction action, List<string> errors, Int32 nr, ref bool fatal, bool fatalOnly, bool fix, ref bool wasFixed, List<int> availableGlobals, Dictionary<long, int> globalFixes)
         {
-            if (fatalOnly)
+            if (skipCheck || fatalOnly)
             {
                 return;
             }
@@ -4591,9 +4698,9 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        private void CheckActionTeam(string prefix, TriggerAction action, List<string> errors, int nr, ref bool fatal, bool fatalOnly)
+        private void CheckActionTeam(string prefix, bool skipCheck, TriggerAction action, List<string> errors, int nr, ref bool fatal, bool fatalOnly)
         {
-            if (!TeamType.IsEmpty(action.Team) || fatalOnly)
+            if (skipCheck || !TeamType.IsEmpty(action.Team) || fatalOnly)
             {
                 return;
             }
@@ -4611,9 +4718,9 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        private void CheckActionTrigger(string prefix, TriggerAction action, List<string> errors, Int32 nr, ref bool fatal, bool fatalOnly)
+        private void CheckActionTrigger(string prefix, bool skipCheck, TriggerAction action, List<string> errors, Int32 nr, ref bool fatal, bool fatalOnly)
         {
-            if (!Trigger.IsEmpty(action.Trigger) || fatalOnly)
+            if (skipCheck || !Trigger.IsEmpty(action.Trigger) || fatalOnly)
             {
                 return;
             }
@@ -4628,8 +4735,12 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        private void CheckActionWaypoint(string prefix, TriggerAction act, List<string> errors, Int32 nr, ref bool fatal, bool fatalOnly, bool fix, ref bool wasFixed)
+        private void CheckActionWaypoint(string prefix, bool skipCheck, TriggerAction act, List<string> errors, Int32 nr, ref bool fatal, bool fatalOnly, bool fix, ref bool wasFixed)
         {
+            if (skipCheck)
+            {
+                return;
+            }
             int maxId = Map.Waypoints.Length - 1;
             long wayPoint = act.Data;
             if ((wayPoint >= 0 && wayPoint <= maxId) || fatalOnly)

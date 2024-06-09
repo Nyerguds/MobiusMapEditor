@@ -71,7 +71,7 @@ namespace MobiusEditor.RedAlert
             "KABOOM1",  // VOC_KABOOM1             // Building half-destroyed
             "KABOOM12", // VOC_KABOOM12            // tank shell impact
             "KABOOM15", // VOC_KABOOM15            // Explosion
-            "SPLASH9",  // VOC_SPLASH              // Water impace
+            "SPLASH9",  // VOC_SPLASH              // Water impact
             "KABOOM22", // VOC_KABOOM22            // big explosion
             "AACANON3", // VOC_AACANON3            // AA gun
             "TANDETH1", // VOC_TANYA_DIE           // Tanya screams
@@ -241,7 +241,7 @@ namespace MobiusEditor.RedAlert
             "Building half-destroyed",
             "tank shell impact",
             "Explosion",
-            "Water impace",
+            "Water impact",
             "big explosion",
             "AA gun",
             "Tanya screams",

@@ -77,6 +77,7 @@ namespace MobiusEditor.Utility
             if (IdentifyXccNames(fileStream, mixInfo))
                 return;
             // These types analyse the full file from byte array. I'm restricting the buffer for them to 5mb; they shouldn't need more.
+            // Eventually, all of these (except ini I guess) should ideally be switched to stream to speed up the processing.
             if (mixInfo.Length <= maxProcessed)
             {
                 int fileLength = (int)mixInfo.Length;
@@ -888,9 +889,9 @@ namespace MobiusEditor.Utility
         private static bool IdentifyMrf(Stream fileStream, MixEntry mixInfo)
         {
             const int mrfLen = 0x100;
-            int blocks = (int)(mixInfo.Length / mrfLen);
-            if (blocks > 0 && mixInfo.Length % mrfLen == 0)
+            if (mixInfo.Length >= mrfLen && mixInfo.Length % mrfLen == 0)
             {
+                int blocks = (int)(mixInfo.Length / mrfLen);
                 bool hasIndex = false;
                 byte[] firstBlock = new byte[mrfLen];
                 fileStream.Seek(0, SeekOrigin.Begin);

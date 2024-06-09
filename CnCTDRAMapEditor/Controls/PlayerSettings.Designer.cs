@@ -237,9 +237,9 @@ namespace MobiusEditor.Controls
             this.label2.AutoSize = true;
             this.label2.Location = new System.Drawing.Point(3, 27);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(39, 13);
+            this.label2.Size = new System.Drawing.Size(71, 13);
             this.label2.TabIndex = 11;
-            this.label2.Text = "Credits";
+            this.label2.Text = "Credits (x100)";
             // 
             // creditsNud
             // 
