@@ -130,7 +130,7 @@ namespace MobiusEditor.Tools
 
         private void MapPanel_MouseWheel(Object sender, MouseEventArgs e)
         {
-            if (e.Delta == 0 || (Control.ModifierKeys & Keys.Control) == Keys.None)
+            if (e.Delta == 0 || !Control.ModifierKeys.HasFlag(Keys.Control))
             {
                 return;
             }
@@ -546,7 +546,7 @@ namespace MobiusEditor.Tools
                     List<(Point p, Terrain ter)> terrainList = new List<(Point p, Terrain ter)>();
                     terrainList.Add((new Point(0, 0), mockTerrain));
                     MapRenderer.RenderAllOccupierBounds(g, new Rectangle(Point.Empty, previewSize), Globals.PreviewTileSize, terrainList);
-                    if ((Layers & MapLayerFlag.TechnoTriggers) == MapLayerFlag.TechnoTriggers)
+                    if (Layers.HasFlag(MapLayerFlag.TechnoTriggers))
                     {
                         CellMetrics tm = new CellMetrics(mockTerrain.Type.OverlapBounds.Size);
                         OccupierSet<ICellOccupier> technoSet = new OccupierSet<ICellOccupier>(tm);
@@ -658,7 +658,7 @@ namespace MobiusEditor.Tools
             {
                 MapRenderer.RenderAllBoundsFromPoint(graphics, boundRenderCells, Globals.MapTileSize, highlightPoints, Color.Red);
             }
-            if ((Layers & MapLayerFlag.TechnoTriggers) == MapLayerFlag.TechnoTriggers)
+            if (Layers.HasFlag(MapLayerFlag.TechnoTriggers))
             {
                 MapRenderer.RenderAllTechnoTriggers(graphics, plugin.GameInfo, previewMap, visibleCells, Globals.MapTileSize, Layers);
             }

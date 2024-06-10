@@ -469,10 +469,10 @@ namespace MobiusEditor.Model
         {
             this.ExistsInTheater = false;
             this.Initialised = false;
-            bool isGroup = (Flag & TemplateTypeFlag.Group) == TemplateTypeFlag.Group;
+            bool isGroup = Flag.HasFlag(TemplateTypeFlag.Group);
             bool[,] mask = null;
             LandType[] landTypes = null;
-            bool isRandom = (Flag & TemplateTypeFlag.RandomCell) == TemplateTypeFlag.RandomCell;
+            bool isRandom = Flag.HasFlag(TemplateTypeFlag.RandomCell);
             bool maskInit = false;
             bool fileInit = false;
             Bitmap oldImage = Thumbnail;
@@ -494,7 +494,7 @@ namespace MobiusEditor.Model
             }
             this.extraTilesFoundOn1x1 = false;
             // This allows mods to add 'random' tiles to existing 1x1 tiles. Check excludes 'Clear' terrain and items already defined as random.
-            if (IconWidth == 1 & IconHeight == 1 && (Flag & TemplateTypeFlag.Clear) == TemplateTypeFlag.None && (!isRandom || fileInit) && !isGroup)
+            if (IconWidth == 1 & IconHeight == 1 && !Flag.HasFlag(TemplateTypeFlag.Clear) && (!isRandom || fileInit) && !isGroup)
             {
                 if (Globals.TheTilesetManager.GetTileDataLength(this.Name) > 1)
                 {
@@ -632,7 +632,7 @@ namespace MobiusEditor.Model
         {
             usageMask = null;
             landTypes = null;
-            if ((Flag & TemplateTypeFlag.Group) == TemplateTypeFlag.Group)
+            if (Flag.HasFlag(TemplateTypeFlag.Group))
             {
                 return false;
             }

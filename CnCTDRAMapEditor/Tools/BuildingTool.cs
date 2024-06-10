@@ -967,15 +967,15 @@ namespace MobiusEditor.Tools
                     List<(Point p, Building ter)> buildingList = new List<(Point p, Building ter)>();
                     buildingList.Add((new Point(0, 0), mockBuilding));
                     MapRenderer.RenderAllOccupierBounds(g, new Rectangle(Point.Empty, previewSize), Globals.PreviewTileSize, buildingList);
-                    if ((Layers & MapLayerFlag.BuildingFakes) == MapLayerFlag.BuildingFakes)
+                    if (Layers.HasFlag(MapLayerFlag.BuildingFakes))
                     {
                         MapRenderer.RenderFakeBuildingLabel(g, mockBuilding, new Point(0, 0), Globals.PreviewTileSize, false);
                     }
-                    if ((Layers & MapLayerFlag.BuildingRebuild) == MapLayerFlag.BuildingRebuild)
+                    if (Layers.HasFlag(MapLayerFlag.BuildingRebuild))
                     {
                         MapRenderer.RenderRebuildPriorityLabel(g, mockBuilding, new Point(0, 0), Globals.PreviewTileSize, false);
                     }
-                    if ((Layers & MapLayerFlag.TechnoTriggers) == MapLayerFlag.TechnoTriggers)
+                    if (Layers.HasFlag(MapLayerFlag.TechnoTriggers))
                     {
                         CellMetrics tm = new CellMetrics(mockBuilding.Type.OverlapBounds.Size);
                         OccupierSet<ICellOccupier> technoSet = new OccupierSet<ICellOccupier>(tm);
@@ -1112,7 +1112,7 @@ namespace MobiusEditor.Tools
                     selected = bl;
                 }
             }
-            if ((Layers & MapLayerFlag.EffectRadius) == MapLayerFlag.EffectRadius)
+            if (Layers.HasFlag(MapLayerFlag.EffectRadius))
             {
                 MapRenderer.RenderAllBuildingEffectRadiuses(graphics, previewMap, boundRenderCells, Globals.MapTileSize, map.GapRadius, selected);
             }
@@ -1121,15 +1121,15 @@ namespace MobiusEditor.Tools
                 MapRenderer.RenderBuildingEffectRadius(graphics, boundRenderCells, Globals.MapTileSize, map.GapRadius, selected, loc.Value, selected);
             }
             this.HandlePaintOutlines(graphics, previewMap, visibleCells, Globals.MapTileSize, Globals.MapTileScale, this.Layers);
-            if ((Layers & MapLayerFlag.BuildingFakes) == MapLayerFlag.BuildingFakes)
+            if (Layers.HasFlag(MapLayerFlag.BuildingFakes))
             {
                 MapRenderer.RenderAllFakeBuildingLabels(graphics, previewMap, visibleCells, Globals.MapTileSize);
             }
-            if ((Layers & MapLayerFlag.BuildingRebuild) == MapLayerFlag.BuildingRebuild)
+            if (Layers.HasFlag(MapLayerFlag.BuildingRebuild))
             {
                 MapRenderer.RenderAllRebuildPriorityLabels(graphics, previewMap, visibleCells, Globals.MapTileSize);
             }
-            if ((Layers & MapLayerFlag.TechnoTriggers) == MapLayerFlag.TechnoTriggers)
+            if (Layers.HasFlag(MapLayerFlag.TechnoTriggers))
             {
                 MapRenderer.RenderAllTechnoTriggers(graphics, plugin.GameInfo, previewMap, visibleCells, Globals.MapTileSize, Layers);
             }

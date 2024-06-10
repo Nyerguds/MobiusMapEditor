@@ -42,7 +42,7 @@ namespace MobiusEditor
             Boolean checkPassed = false;
             try
             {
-                if ((new FileInfo(dir).Attributes & FileAttributes.Directory) != 0)
+                if (new FileInfo(dir).Attributes.HasFlag(FileAttributes.Directory))
                     dir = dir.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
                 String fileToCheck = Path.Combine(Path.GetDirectoryName(dir), "DATA", "CONFIG.MEG");
                 checkPassed = File.Exists(fileToCheck);

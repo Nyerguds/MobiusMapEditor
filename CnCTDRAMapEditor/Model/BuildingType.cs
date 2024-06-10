@@ -85,7 +85,7 @@ namespace MobiusEditor.Model
         public Size Size { get; private set; }
         public bool HasBib
         {
-            get { return (this.Flag & BuildingTypeFlag.Bib) == BuildingTypeFlag.Bib; }
+            get { return this.Flag.HasFlag(BuildingTypeFlag.Bib); }
             set
             {
                 // Bibs are only supported for widths 2 to 4
@@ -102,7 +102,7 @@ namespace MobiusEditor.Model
         }
 
         public string OwnerHouse { get; private set; }
-        public bool IsTheaterDependent =>  (this.Flag & BuildingTypeFlag.TheaterDependent) == BuildingTypeFlag.TheaterDependent;
+        public bool IsTheaterDependent => this.Flag.HasFlag(BuildingTypeFlag.TheaterDependent);
         public string FactoryOverlay { get; private set; }
         public Bitmap Thumbnail { get; set; }
         public bool ExistsInTheater { get; set; }
@@ -112,11 +112,11 @@ namespace MobiusEditor.Model
         public bool IsHarvester => false;
         public bool IsExpansionOnly => false;
 
-        public bool IsFake => (this.Flag & BuildingTypeFlag.Fake) == BuildingTypeFlag.Fake;
-        public bool HasTurret => (this.Flag & BuildingTypeFlag.Turret) == BuildingTypeFlag.Turret;
-        public bool IsSingleFrame => (this.Flag & BuildingTypeFlag.SingleFrame) == BuildingTypeFlag.SingleFrame;
-        public bool CanRemap => (this.Flag & BuildingTypeFlag.NoRemap) != BuildingTypeFlag.NoRemap;
-        public bool IsWall => (this.Flag & BuildingTypeFlag.Wall) == BuildingTypeFlag.Wall;
+        public bool IsFake => this.Flag.HasFlag(BuildingTypeFlag.Fake);
+        public bool HasTurret => this.Flag.HasFlag(BuildingTypeFlag.Turret);
+        public bool IsSingleFrame => this.Flag.HasFlag(BuildingTypeFlag.SingleFrame);
+        public bool CanRemap => !this.Flag.HasFlag(BuildingTypeFlag.NoRemap);
+        public bool IsWall => this.Flag.HasFlag(BuildingTypeFlag.Wall);
         /// <summary>
         /// Value for Z-sorting; can be used to make buildings specifically show as "flatter" than others so pieces sticking out at the top don't overlap objects on these cells.
         /// </summary>

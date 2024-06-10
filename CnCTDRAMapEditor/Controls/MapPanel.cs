@@ -404,7 +404,7 @@ namespace MobiusEditor.Controls
 
         protected override void OnMouseWheel(MouseEventArgs e)
         {
-            if (!SuspendMouseZoom && ((Control.ModifierKeys & SuspendMouseZoomKeys) == Keys.None))
+            if (!SuspendMouseZoom && !Control.ModifierKeys.HasAnyFlags(SuspendMouseZoomKeys))
             {
                 Zoom += Zoom * ZoomStep * Math.Sign(e.Delta);
             }

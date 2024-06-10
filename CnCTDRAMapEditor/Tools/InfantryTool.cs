@@ -771,7 +771,7 @@ namespace MobiusEditor.Tools
                     {
                         render.RenderAction(g);
                     }
-                    if ((Layers & MapLayerFlag.TechnoTriggers) == MapLayerFlag.TechnoTriggers)
+                    if (Layers.HasFlag(MapLayerFlag.TechnoTriggers))
                     {
                         CellMetrics tm = new CellMetrics(1,1);
                         OccupierSet<ICellOccupier> technoSet = new OccupierSet<ICellOccupier>(tm);

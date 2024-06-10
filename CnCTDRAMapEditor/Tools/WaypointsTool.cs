@@ -81,7 +81,7 @@ namespace MobiusEditor.Tools
         private void Url_UndoRedoDone(object sender, UndoRedoEventArgs e)
         {
             // Only update this stuff if the undo/redo event was actually a waypoint change.
-            if ((e.Source & ToolType.Waypoint) == ToolType.None)
+            if (!e.Source.HasFlag(ToolType.Waypoint))
             {
                 return;
             }
@@ -531,7 +531,7 @@ namespace MobiusEditor.Tools
             Waypoint selected = waypointCombo.SelectedItem as Waypoint;
             Waypoint dummySelected = null;
             Waypoint[] selectedRange = selected != null ? new [] { selected } : new Waypoint[] { };
-            if ((Layers & MapLayerFlag.FootballArea) == MapLayerFlag.FootballArea && plugin.GameInfo.SupportsMapLayer(MapLayerFlag.FootballArea))
+            if (Layers.HasFlag(MapLayerFlag.FootballArea) && plugin.GameInfo.SupportsMapLayer(MapLayerFlag.FootballArea))
             {
                 MapRenderer.RenderAllFootballAreas(graphics, map, visibleCells, Globals.MapTileSize, Globals.MapTileScale, plugin.GameInfo);
                 MapRenderer.RenderFootballAreaFlags(graphics, plugin.GameInfo, map, visibleCells, Globals.MapTileSize);
@@ -547,7 +547,7 @@ namespace MobiusEditor.Tools
             MapRenderer.RenderAllBoundsFromCell(graphics, boundRenderCells, Globals.MapTileSize,
                 map.Waypoints.Where(wp => wp != selected && wp.Cell.HasValue).Select(wp => wp.Cell.Value), map.Metrics, Color.Orange);
             // If the plugin has a dedicated "flare" waypoint, then it is hardcoded and the only one, and should always be rendered.
-            bool renderAll = plugin.Map.FlareWaypointAvailable || (Layers & MapLayerFlag.WaypointRadius) == MapLayerFlag.WaypointRadius;
+            bool renderAll = plugin.Map.FlareWaypointAvailable || Layers.HasFlag(MapLayerFlag.WaypointRadius);
             MapRenderer.RenderAllWayPointRevealRadiuses(graphics, plugin, map, boundRenderCells, Globals.MapTileSize, selected, !renderAll);
             MapRenderer.RenderWayPointIndicators(graphics, map, visibleCells, Globals.MapTileSize, Color.LightGreen, false, true, selectedRange);
             if (selected != null)
@@ -590,19 +590,19 @@ namespace MobiusEditor.Tools
                 flag |= wps[i].Flag;
             }
             List<String> specialKeys = new List<string>();
-            if ((flag & WaypointFlag.Flare) != WaypointFlag.None)
+            if (flag.HasFlag(WaypointFlag.Flare))
             {
                 specialKeys.Add("F");
             }
-            if ((flag & WaypointFlag.Home) != WaypointFlag.None)
+            if (flag.HasFlag(WaypointFlag.Home))
             {
                 specialKeys.Add("H");
             }
-            if ((flag & WaypointFlag.Reinforce) != WaypointFlag.None)
+            if (flag.HasFlag(WaypointFlag.Reinforce))
             {
                 specialKeys.Add("R");
             }
-            if ((flag & WaypointFlag.Special) != WaypointFlag.None)
+            if (flag.HasFlag(WaypointFlag.Special))
             {
                 specialKeys.Add("S");
             }

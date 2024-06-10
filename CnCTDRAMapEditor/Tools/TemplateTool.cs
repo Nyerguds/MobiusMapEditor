@@ -234,7 +234,7 @@ namespace MobiusEditor.Tools
                 return m.Success ? m.Groups[1].Value : string.Empty;
             }
             TheaterType theater = plugin.Map.Theater;
-            TemplateType clear = plugin.Map.TemplateTypes.Where(t => (t.Flag & TemplateTypeFlag.Clear) == TemplateTypeFlag.Clear).FirstOrDefault();
+            TemplateType clear = plugin.Map.TemplateTypes.Where(t => t.Flag.HasFlag(TemplateTypeFlag.Clear)).FirstOrDefault();
             if (clear.Thumbnail == null || !clear.Initialised)
             {
                 // Clear should ALWAYS be initialised and available, even if missing.
@@ -249,8 +249,8 @@ namespace MobiusEditor.Tools
             }
             var templateTypes = plugin.Map.TemplateTypes
                 .Where(t => t.Thumbnail != null && (!Globals.FilterTheaterObjects || t.ExistsInTheater)
-                    && (t.Flag & TemplateTypeFlag.Clear) == TemplateTypeFlag.None
-                    && (t.Flag & TemplateTypeFlag.IsGrouped) == TemplateTypeFlag.None)
+                    && !t.Flag.HasFlag(TemplateTypeFlag.Clear)
+                    && !t.Flag.HasFlag(TemplateTypeFlag.IsGrouped))
                 .OrderBy(t => t.Name, expl)
                 .GroupBy(t => templateCategory(t)).OrderBy(g => g.Key, expl);
             List<Bitmap> templateTypeImages = new List<Bitmap>();
@@ -277,21 +277,21 @@ namespace MobiusEditor.Tools
             if (this.templateTypeListView.Items.Count > 0)
                 this.templateTypeListView.Items.Clear();
             int imageIndex = 0;
-            ListViewGroup group = new ListViewGroup(clear.DisplayName);
-            this.templateTypeListView.Groups.Add(group);
-            ListViewItem item = new ListViewItem(clear.DisplayName, imageIndex++)
+            ListViewGroup groupClear = new ListViewGroup(clear.DisplayName);
+            this.templateTypeListView.Groups.Add(groupClear);
+            ListViewItem itemClear = new ListViewItem(clear.DisplayName, imageIndex++)
             {
-                Group = group,
+                Group = groupClear,
                 Tag = clear
             };
-            this.templateTypeListView.Items.Add(item);
+            this.templateTypeListView.Items.Add(itemClear);
             foreach (var templateTypeGroup in templateTypes)
             {
-                group = new ListViewGroup(templateTypeGroup.Key);
+                ListViewGroup group = new ListViewGroup(templateTypeGroup.Key);
                 this.templateTypeListView.Groups.Add(group);
                 foreach (TemplateType templateType in templateTypeGroup)
                 {
-                    item = new ListViewItem(templateType.DisplayName, imageIndex++)
+                    ListViewItem item = new ListViewItem(templateType.DisplayName, imageIndex++)
                     {
                         Group = group,
                         Tag = templateType
@@ -316,7 +316,7 @@ namespace MobiusEditor.Tools
         private void Url_UndoRedoDone(object sender, UndoRedoEventArgs e)
         {
             // Only update this stuff if the undo/redo event was actually a map change.
-            if ((e.Source & ToolType.Map) == ToolType.None)
+            if (!e.Source.HasFlag(ToolType.Map))
             {
                 return;
             }
@@ -575,7 +575,7 @@ namespace MobiusEditor.Tools
             TemplateType selected = SelectedTemplateType;
             if (button == MouseButtons.Left)
             {
-                if (selected == null || (selected.Flag & TemplateTypeFlag.Clear) != 0)
+                if (selected == null || selected.Flag.HasFlag(TemplateTypeFlag.Clear))
                 {
                     RemoveTemplate(navigationWidget.ActualMouseCell);
                 }
@@ -613,7 +613,7 @@ namespace MobiusEditor.Tools
             if (place || is1x1)
             {
                 TemplateType toFind = map.Templates[currentCell]?.Type;
-                if (toFind != null && (toFind.Flag & TemplateTypeFlag.IsGrouped) != TemplateTypeFlag.None && toFind.GroupTiles.Length == 1)
+                if (toFind != null && toFind.Flag.HasFlag(TemplateTypeFlag.IsGrouped) && toFind.GroupTiles.Length == 1)
                 {
                     string owningType = toFind.GroupTiles[0];
                     TemplateType group = map.TemplateTypes.Where(t => t.Name.Equals(owningType, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
@@ -642,7 +642,7 @@ namespace MobiusEditor.Tools
                 // Detect any group types inside it and get the full list.
                 foreach (TemplateType tp in typesToFind)
                 {
-                    if (tp != null && (tp.Flag & TemplateTypeFlag.IsGrouped) != TemplateTypeFlag.None && tp.GroupTiles.Length == 1)
+                    if (tp != null && tp.Flag.HasFlag(TemplateTypeFlag.IsGrouped) && tp.GroupTiles.Length == 1)
                     {
                         string owningType = tp.GroupTiles[0];
                         TemplateType group = map.TemplateTypes.Where(t => t.Name.Equals(owningType, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
@@ -719,7 +719,7 @@ namespace MobiusEditor.Tools
             undoTemplates.Clear();
             redoTemplates.Clear();
             // Prevent it from placing down actual clear terrain.
-            bool isClear = clear || (selected.Flag & TemplateTypeFlag.Clear) == TemplateTypeFlag.Clear;
+            bool isClear = clear || selected.Flag.HasFlag(TemplateTypeFlag.Clear);
             if (isClear || icon.HasValue || is1x1)
             {
                 foreach (Point fill in fillPoints)
@@ -823,7 +823,7 @@ namespace MobiusEditor.Tools
 
         private void MapPanel_MouseWheel(Object sender, MouseEventArgs e)
         {
-            if (e.Delta == 0 || (Control.ModifierKeys & Keys.Control) == Keys.None)
+            if (e.Delta == 0 || !Control.ModifierKeys.HasFlag(Keys.Control))
             {
                 return;
             }
@@ -1024,7 +1024,7 @@ namespace MobiusEditor.Tools
             }
             TemplateType selected = SelectedTemplateType;
             Image oldImage = templateTypeMapPanel.MapImage;
-            bool renderGrid = (this.Layers & MapLayerFlag.LandTypes) == MapLayerFlag.LandTypes;
+            bool renderGrid = this.Layers.HasFlag(MapLayerFlag.LandTypes);
             if (selected != null)
             {
                 // Special case: tiles that are not initialised, but are present on the map. Initialise with forced dummy generation.
@@ -1106,7 +1106,7 @@ namespace MobiusEditor.Tools
                 }
                 // Consider placing an alternate if something is already placed, and the selected tile has alternates.
                 if (Globals.TileDragRandomize && redoTemplates.Count > 0
-                    && ((selected.Flag & TemplateTypeFlag.HasEquivalents) == TemplateTypeFlag.HasEquivalents)
+                    && selected.Flag.HasFlag(TemplateTypeFlag.HasEquivalents)
                     && selected.GroupTiles != null && selected.GroupTiles.Length > 0)
                 {
                     // Remove last-placed from possible placed tiles so each new placed one is unique.
@@ -1152,7 +1152,7 @@ namespace MobiusEditor.Tools
             {
                 return;
             }
-            bool isGroup = (selected.Flag & TemplateTypeFlag.Group) == TemplateTypeFlag.Group;
+            bool isGroup = selected.Flag.HasFlag(TemplateTypeFlag.Group);
             if (selectedIcon.HasValue)
             {
                 if (templates.Metrics.GetCell(location, out int cell))
@@ -1218,13 +1218,13 @@ namespace MobiusEditor.Tools
                                 if (diversify && selected.NumIcons > 4)
                                 {
                                     Template adjNorth = templates.Adjacent(location, FacingType.North);
-                                    if (adjNorth != null && (adjNorth.Type.Flag & TemplateTypeFlag.IsGrouped) != TemplateTypeFlag.None
+                                    if (adjNorth != null && adjNorth.Type.Flag.HasFlag(TemplateTypeFlag.IsGrouped)
                                         && adjNorth.Type.GroupTiles[0] == selected.Name)
                                     {
                                         used.Add(adjNorth.Type.ID);
                                     }
                                     Template adjWest = templates.Adjacent(location, FacingType.West);
-                                    if (adjWest != null && (adjWest.Type.Flag & TemplateTypeFlag.IsGrouped) != TemplateTypeFlag.None
+                                    if (adjWest != null && adjWest.Type.Flag.HasFlag(TemplateTypeFlag.IsGrouped)
                                         && adjWest.Type.GroupTiles[0] == selected.Name)
                                     {
                                         used.Add(adjWest.Type.ID);
@@ -1592,7 +1592,7 @@ namespace MobiusEditor.Tools
             bool groupOwned = false;
             if (template != null)
             {
-                if ((template.Type.Flag & TemplateTypeFlag.IsGrouped) != TemplateTypeFlag.None && template.Type.GroupTiles.Length == 1)
+                if (template.Type.Flag.HasFlag(TemplateTypeFlag.IsGrouped) && template.Type.GroupTiles.Length == 1)
                 {
                     groupOwned = true;
                     string owningType = template.Type.GroupTiles[0];
@@ -1896,7 +1896,7 @@ namespace MobiusEditor.Tools
         protected override void PostRenderMap(Graphics graphics, Rectangle visibleCells)
         {
             base.PostRenderMap(graphics, visibleCells);
-            if ((Layers & MapLayerFlag.LandTypes) == MapLayerFlag.LandTypes)
+            if (Layers.HasFlag(MapLayerFlag.LandTypes))
             {
                 MapRenderer.RenderLandTypes(graphics, plugin, previewMap.Templates, Globals.MapTileSize, visibleCells, false, Globals.IndicateMapObjects ? previewMap.Technos : null);
             }
@@ -1907,7 +1907,7 @@ namespace MobiusEditor.Tools
             }
             else
             {
-                if ((Layers & MapLayerFlag.Boundaries) == MapLayerFlag.Boundaries)
+                if (Layers.HasFlag(MapLayerFlag.Boundaries))
                 {
                     MapRenderer.RenderMapBoundaries(graphics, map, visibleCells, Globals.MapTileSize);
                 }

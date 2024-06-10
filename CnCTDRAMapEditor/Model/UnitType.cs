@@ -49,7 +49,7 @@ namespace MobiusEditor.Model
     public enum FrameUsage
     {
         None                /**/ = 0,
-        /// <summary>Specifies that this rotation is the full 32 frames. Generally used for ground units and helicopters, and TD aircraft.</summary>
+        /// <summary>Specifies that this rotation is the full 32 frames. Generally used for ground units, helicopters, turrets, and TD aircraft.</summary>
         Frames32Full        /**/ = 1 << 1,
         /// <summary>Specifies that this rotation is simplified to 16 frames. Generally used for RA boats/aircraft.</summary>
         Frames16Simple      /**/ = 1 << 2,
@@ -95,8 +95,8 @@ namespace MobiusEditor.Model
             : base(id, name, textId, ownerHouse, bodyFrameUsage, FrameUsage.None, null, null, 0, 0, UnitTypeFlag.None)
         { }
 
-        public VehicleType(int id, string name, string textId, string ownerHouse, FrameUsage bodyFrameUsage, FrameUsage turrFrameUsage, int turrOffset, int turrY, UnitTypeFlag flags)
-            : base(id, name, textId, ownerHouse, bodyFrameUsage, turrFrameUsage, null, null, turrOffset, turrY, flags)
+        public VehicleType(int id, string name, string textId, string ownerHouse, FrameUsage bodyFrameUsage, FrameUsage turrFrameUsage, int turrOffset, int turretY, UnitTypeFlag flags)
+            : base(id, name, textId, ownerHouse, bodyFrameUsage, turrFrameUsage, null, null, turrOffset, turretY, flags)
         { }
 
     }
@@ -106,10 +106,10 @@ namespace MobiusEditor.Model
         public override bool IsGroundUnit => false;
         public override bool IsAircraft => true;
         public override bool IsVessel => false;
-        public override bool IsFixedWing => (this.Flag & UnitTypeFlag.IsFixedWing) == UnitTypeFlag.IsFixedWing;
+        public override bool IsFixedWing => this.Flag.HasFlag(UnitTypeFlag.IsFixedWing);
 
-        public AircraftType(int id, string name, string textId, string ownerHouse, FrameUsage bodyFrameUsage, FrameUsage turrFrameUsage, string turret, string turret2, int turrOffset, int turrY, UnitTypeFlag flags)
-            : base(id, name, textId, ownerHouse, bodyFrameUsage, turrFrameUsage, turret, turret2, turrOffset, turrY, flags)
+        public AircraftType(int id, string name, string textId, string ownerHouse, FrameUsage bodyFrameUsage, FrameUsage turrFrameUsage, string turret, string turret2, int turrOffset, int turretY, UnitTypeFlag flags)
+            : base(id, name, textId, ownerHouse, bodyFrameUsage, turrFrameUsage, turret, turret2, turrOffset, turretY, flags)
         { }
 
         public AircraftType(int id, string name, string textId, string ownerHouse, FrameUsage bodyFrameUsage, UnitTypeFlag flags)
@@ -124,8 +124,8 @@ namespace MobiusEditor.Model
         public override bool IsVessel => true;
         public override bool IsFixedWing => false;
 
-        public VesselType(int id, string name, string textId, string ownerHouse, FrameUsage bodyFrameUsage, FrameUsage turrFrameUsage, string turret, string turret2, int turrOffset, int turrY, UnitTypeFlag flags)
-            : base(id, name, textId, ownerHouse, bodyFrameUsage, turrFrameUsage, turret, turret2, turrOffset, turrY, flags)
+        public VesselType(int id, string name, string textId, string ownerHouse, FrameUsage bodyFrameUsage, FrameUsage turrFrameUsage, string turret, string turret2, int turrOffset, int turretY, UnitTypeFlag flags)
+            : base(id, name, textId, ownerHouse, bodyFrameUsage, turrFrameUsage, turret, turret2, turrOffset, turretY, flags)
         { }
 
         public VesselType(int id, string name, string textId, string ownerHouse, FrameUsage bodyFrameUsage, FrameUsage turrFrameUsage, UnitTypeFlag flags)
@@ -165,27 +165,27 @@ namespace MobiusEditor.Model
         public abstract bool IsAircraft { get; }
         public abstract bool IsVessel { get; }
         public abstract bool IsFixedWing { get; }
-        public bool HasTurret => (this.Flag & UnitTypeFlag.HasTurret) == UnitTypeFlag.HasTurret;
-        public bool HasDoubleTurret => (this.Flag & UnitTypeFlag.HasDoubleTurret) == UnitTypeFlag.HasDoubleTurret;
-        public bool IsArmed => (this.Flag & UnitTypeFlag.IsArmed) == UnitTypeFlag.IsArmed;
-        public bool IsHarvester => (this.Flag & UnitTypeFlag.IsHarvester) == UnitTypeFlag.IsHarvester;
-        public bool IsExpansionOnly => (this.Flag & UnitTypeFlag.IsExpansionUnit) == UnitTypeFlag.IsExpansionUnit;
-        public bool CanRemap => (this.Flag & UnitTypeFlag.NoRemap) != UnitTypeFlag.NoRemap;
+        public bool HasTurret => this.Flag.HasFlag(UnitTypeFlag.HasTurret);
+        public bool HasDoubleTurret => this.Flag.HasFlag(UnitTypeFlag.HasDoubleTurret);
+        public bool IsArmed => this.Flag.HasFlag(UnitTypeFlag.IsArmed);
+        public bool IsHarvester => this.Flag.HasFlag(UnitTypeFlag.IsHarvester);
+        public bool IsExpansionOnly => this.Flag.HasFlag(UnitTypeFlag.IsExpansionUnit);
+        public bool CanRemap => !this.Flag.HasFlag(UnitTypeFlag.NoRemap);
         private string nameId;
 
         public Bitmap Thumbnail { get; set; }
 
-        public UnitType(int id, string name, string textId, string ownerHouse, FrameUsage bodyFrameUsage, FrameUsage turrFrameUsage, string turret, string turret2, int turrOffset, int turrY, UnitTypeFlag flags)
+        public UnitType(int id, string name, string textId, string ownerHouse, FrameUsage bodyFrameUsage, FrameUsage turrFrameUsage, string turret, string turret2, int turrOffset, int turretY, UnitTypeFlag flags)
         {
             this.ID = id;
             this.Name = name;
             this.nameId = textId;
             this.OwnerHouse = ownerHouse;
-            bool hasTurret = ((flags & UnitTypeFlag.HasTurret) == UnitTypeFlag.HasTurret);
+            bool hasTurret = flags.HasFlag(UnitTypeFlag.HasTurret);
             this.Turret = hasTurret ? turret : null;
-            this.SecondTurret = hasTurret && ((flags & UnitTypeFlag.HasDoubleTurret) == UnitTypeFlag.HasDoubleTurret) ? turret2 : null;
+            this.SecondTurret = hasTurret && flags.HasFlag(UnitTypeFlag.HasDoubleTurret) ? turret2 : null;
             this.TurretOffset = turrOffset;
-            this.TurretY = turrY;
+            this.TurretY = turretY;
             this.Flag = flags;
             this.BodyFrameUsage = bodyFrameUsage;
             this.TurretFrameUsage = turrFrameUsage;

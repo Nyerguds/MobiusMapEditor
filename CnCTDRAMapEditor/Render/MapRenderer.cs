@@ -836,36 +836,36 @@ namespace MobiusEditor.Render
             int healthyMin = gameInfo.HitPointsGreenMinimum;
             int damagedMin = gameInfo.HitPointsYellowMinimum;
             FrameUsage frameUsage = unit.Type.BodyFrameUsage;
-            if ((frameUsage & FrameUsage.Frames01Single) != FrameUsage.None)
+            if (frameUsage.HasFlag(FrameUsage.Frames01Single))
             {
                 icon = 0;
                 // Not actually determined, but whatever. Single frame units generally have no turret.
                 bodyFrames = 1;
             }
-            else if ((frameUsage & FrameUsage.Frames08Cardinal) != FrameUsage.None)
+            else if (frameUsage.HasFlag(FrameUsage.Frames08Cardinal))
             {
                 icon = ((BodyShape[Facing32[unit.Direction.ID]] + 2) / 4) & 0x07;
                 bodyFrames = 8;
             }
-            else if ((frameUsage & FrameUsage.Frames16Simple) != FrameUsage.None)
+            else if (frameUsage.HasFlag(FrameUsage.Frames16Simple))
             {
                 icon = BodyShape[Facing16[unit.Direction.ID] * 2] / 2;
                 bodyFrames = 16;
             }
-            else if ((frameUsage & FrameUsage.Frames16Symmetrical) != FrameUsage.None)
+            else if (frameUsage.HasFlag(FrameUsage.Frames16Symmetrical))
             {
                 // Special case for 16-frame rotation saved as 8-frame because it is symmetrical and thus the second half of the frames is the same.
-                icon = (BodyShape[Facing32[unit.Direction.ID]] / 2) & 7;
+                icon = (BodyShape[Facing32[unit.Direction.ID]] / 2) & 0x07;
                 bodyFrames = 8;
             }
-            else if ((frameUsage & FrameUsage.Frames32Full) != FrameUsage.None || (frameUsage & FrameUsage.FrameUsages) == FrameUsage.None)
+            else if (frameUsage.HasFlag(FrameUsage.Frames32Full) || !frameUsage.HasAnyFlags(FrameUsage.FrameUsages))
             {
                 icon = BodyShape[Facing32[unit.Direction.ID]];
                 bodyFrames = 32;
             }
             // Special logic for TD gunboat's damaged states.
             // East facing is not actually possible to set in missions. This is just the turret facing.
-            if ((frameUsage & FrameUsage.DamageStates) != FrameUsage.None)
+            if (frameUsage.HasFlag(FrameUsage.DamageStates))
             {
                 if (unit.Strength <= healthyMin)
                     icon += bodyFrames;
@@ -969,19 +969,20 @@ namespace MobiusEditor.Render
                     Globals.TheTilesetManager.GetTeamColorTileData(turretName, turret1Icon, teamColor, out turretTile, false, false);
                 if (turret2Name != null)
                     Globals.TheTilesetManager.GetTeamColorTileData(turret2Name, turret2Icon, teamColor, out turret2Tile, false, false);
-                if ((turrUsage & FrameUsage.OnFlatBed) != FrameUsage.None)
+                // Flatbed is a special case; if it is used, TurretOffset is ignored.
+                if (turrUsage.HasFlag(FrameUsage.OnFlatBed))
                 {
                     // OnFlatBed indicates the turret oFfset is determined by the BackTurretAdjust table.
                     turretAdjust = BackTurretAdjust[Facing32[unit.Direction.ID]];
                     // Never actually used for 2 turrets. Put second turret in the front?
                     turret2Adjust = BackTurretAdjust[Facing32[(byte)((unit.Direction.ID + DirectionTypes.South.ID) & 0xFF)]];
                 }
-                if (unit.Type.TurretOffset != 0)
+                else if (unit.Type.TurretOffset != 0)
                 {
                     // Used by ships and by the transport helicopter.
                     int distance = unit.Type.TurretOffset;
                     int face = (unit.Direction.ID >> 5) & 7;
-                    if (unit.Type.TurretFrameUsage == FrameUsage.Rotor)
+                    if (turrUsage.HasFlag(FrameUsage.Rotor))
                     {
                         // Rotor stretch distance is given by a table.
                         distance *= HeliDistanceAdjust[face];
@@ -1087,7 +1088,7 @@ namespace MobiusEditor.Render
                 //transparencyModifier = 1.0f;
                 gotTile = Globals.TheTilesetManager.GetTeamColorTileData(tileGraphics, icon, teamColor, out tile);
             }
-            else if (gameInfo.GameType == GameType.SoleSurvivor && (waypoint.Flag & WaypointFlag.CrateSpawn) == WaypointFlag.CrateSpawn)
+            else if (gameInfo.GameType == GameType.SoleSurvivor && waypoint.Flag.HasFlag(WaypointFlag.CrateSpawn))
             {
                 isDefaultIcon = false;
                 tileGraphics = "scrate";
@@ -1343,8 +1344,7 @@ namespace MobiusEditor.Render
             {
                 OverlayType ovlt = overlay.Type;
                 Size cellSize = new Size(1, 1);
-                if ((ovlt.Flag & OverlayTypeFlag.Crate) == OverlayTypeFlag.None
-                    || !map.Metrics.GetLocation(cell, out Point location))
+                if (!ovlt.Flag.HasAnyFlag(OverlayTypeFlag.Crate) || !map.Metrics.GetLocation(cell, out Point location))
                 {
                     continue;
                 }
@@ -1868,7 +1868,7 @@ namespace MobiusEditor.Render
                 (string trigger, Rectangle bounds, int alpha)[] triggers = null;
                 if (techno is Terrain terrain && !Trigger.IsEmpty(terrain.Trigger))
                 {
-                    if ((layersToRender & MapLayerFlag.Terrain) == MapLayerFlag.Terrain)
+                    if (layersToRender.HasFlag(MapLayerFlag.Terrain))
                     {
                         if (visibleCells.IntersectsWith(new Rectangle(topLeft, terrain.Type.Size)))
                         {
@@ -1879,7 +1879,7 @@ namespace MobiusEditor.Render
                 }
                 else if (techno is Building building && !Trigger.IsEmpty(building.Trigger))
                 {
-                    if ((layersToRender & MapLayerFlag.Buildings) == MapLayerFlag.Buildings)
+                    if (layersToRender.HasFlag(MapLayerFlag.Buildings))
                     {
                         if (visibleCells.IntersectsWith(new Rectangle(topLeft, building.Type.Size)))
                         {
@@ -1890,7 +1890,7 @@ namespace MobiusEditor.Render
                 }
                 else if (techno is Unit unit && !Trigger.IsEmpty(unit.Trigger))
                 {
-                    if ((layersToRender & MapLayerFlag.Units) == MapLayerFlag.Units)
+                    if (layersToRender.HasFlag(MapLayerFlag.Units))
                     {
                         if (visibleCells.Contains(topLeft))
                         {
@@ -1900,7 +1900,7 @@ namespace MobiusEditor.Render
                 }
                 else if (techno is InfantryGroup infantryGroup)
                 {
-                    if ((layersToRender & MapLayerFlag.Infantry) == MapLayerFlag.Infantry)
+                    if (layersToRender.HasFlag(MapLayerFlag.Infantry))
                     {
                         if (!visibleCells.Contains(topLeft))
                         {
@@ -2056,8 +2056,8 @@ namespace MobiusEditor.Render
 
         public static void RenderUnitEffectRadius(Graphics graphics, Size tileSize, int jamRadius, Unit unit, Point cell, Rectangle visibleCells, Unit selected)
         {
-            bool isJammer = (unit.Type.Flag & UnitTypeFlag.IsJammer) == UnitTypeFlag.IsJammer;
-            bool isGapGen = (unit.Type.Flag & UnitTypeFlag.IsGapGenerator) == UnitTypeFlag.IsGapGenerator;
+            bool isJammer = unit.Type.Flag.HasFlag(UnitTypeFlag.IsJammer);
+            bool isGapGen = unit.Type.Flag.HasFlag(UnitTypeFlag.IsGapGenerator);
             if (!isJammer && !isGapGen)
             {
                 return;
@@ -2529,7 +2529,7 @@ namespace MobiusEditor.Render
             // Fetch the terrain type for clear terrain on this theater.
             if (!ignoreEmpty)
             {
-                TemplateType clear = plugin.Map.TemplateTypes.Where(t => (t.Flag & TemplateTypeFlag.Clear) == TemplateTypeFlag.Clear).FirstOrDefault();
+                TemplateType clear = plugin.Map.TemplateTypes.Where(t => t.Flag.HasFlag(TemplateTypeFlag.Clear)).FirstOrDefault();
                 clearLand = clear.LandTypes.Length > 0 ? clear.LandTypes[0] : LandType.Clear;
             }
             // Caching this in advance for all types.

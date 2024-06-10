@@ -62,7 +62,7 @@ namespace MobiusEditor.Tools
 
         protected override Boolean InPlacementMode
         {
-            get { return placementMode || (Control.ModifierKeys & Keys.Shift) == Keys.Shift; }
+            get { return placementMode || Control.ModifierKeys.HasFlag(Keys.Shift); }
         }
 
         private readonly Dictionary<int, Overlay> undoOverlays = new Dictionary<int, Overlay>();

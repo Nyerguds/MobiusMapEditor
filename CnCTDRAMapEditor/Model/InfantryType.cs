@@ -30,12 +30,12 @@ namespace MobiusEditor.Model
         public string DisplayName { get; private set; }
         public string OwnerHouse { get; private set; }
         public UnitTypeFlag Flag { get; private set; }
-        public bool IsArmed => (this.Flag & UnitTypeFlag.IsArmed) == UnitTypeFlag.IsArmed;
+        public bool IsArmed => this.Flag.HasFlag(UnitTypeFlag.IsArmed);
         public bool IsAircraft => false;
         public bool IsFixedWing => false;
-        public bool IsExpansionOnly => (this.Flag & UnitTypeFlag.IsExpansionUnit) == UnitTypeFlag.IsExpansionUnit;
+        public bool IsExpansionOnly => this.Flag.HasFlag(UnitTypeFlag.IsExpansionUnit);
         public bool IsHarvester => false;
-        public bool CanRemap => (this.Flag & UnitTypeFlag.NoRemap) != UnitTypeFlag.NoRemap;
+        public bool CanRemap => !this.Flag.HasFlag(UnitTypeFlag.NoRemap);
         public string ClassicGraphicsSource { get; set; }
         public Byte[] ClassicGraphicsRemap { get; set; }
 

@@ -61,9 +61,11 @@ namespace MobiusEditor
             set
             {
                 ToolType firstAvailableTool = value;
+                // Can't use HasFlag; then this won't match when value is None.
+                // The goal is to check the new value, not the available tool types.
                 if ((availableToolTypes & firstAvailableTool) == ToolType.None)
                 {
-                    IEnumerable<ToolType> otherAvailableToolTypes = toolTypes.Where(t => (availableToolTypes & t) != ToolType.None);
+                    IEnumerable<ToolType> otherAvailableToolTypes = toolTypes.Where(t => availableToolTypes.HasFlag(t));
                     firstAvailableTool = otherAvailableToolTypes.Any() ? otherAvailableToolTypes.First() : ToolType.None;
                 }
                 if (activeToolType != firstAvailableTool || activeTool == null)
@@ -591,7 +593,7 @@ namespace MobiusEditor
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
-            if ((keyData & (Keys.Shift | Keys.Control | Keys.Alt)) == Keys.None)
+            if (!keyData.HasAnyFlags(Keys.Shift | Keys.Control | Keys.Alt))
             {
                 // Evaluates the scan codes directly, so this will automatically turn into a, z, e, r, t, y, etc on an azerty keyboard.
                 switch (Keyboard.GetScanCode(msg))
@@ -2111,8 +2113,8 @@ namespace MobiusEditor
                 TheaterType theater = plugin.Map.Theater;
                 TemplateType tt = plugin.Map.TemplateTypes.Where(t => t.ExistsInTheater
                     //&& (!Globals.FilterTheaterObjects || t.Theaters == null || t.Theaters.Length == 0 || t.Theaters.Contains(plugin.Map.Theater.Name))
-                    && (t.Flag & TemplateTypeFlag.Clear) == TemplateTypeFlag.DefaultFill
-                    && (t.Flag & TemplateTypeFlag.IsGrouped) == TemplateTypeFlag.None)
+                    && t.Flag.HasFlag(TemplateTypeFlag.DefaultFill)
+                    && !t.Flag.HasFlag(TemplateTypeFlag.IsGrouped))
                 .OrderBy(t => t.Name, expl).FirstOrDefault();
                 if (tt != null)
                 {
@@ -3387,9 +3389,8 @@ namespace MobiusEditor
         {
             TheaterType theater = plugin.Map.Theater;
             string th = theater.Name;
-            TemplateType template = plugin.Map.TemplateTypes.Where(tt => tt.ExistsInTheater && (tt.Flag & TemplateTypeFlag.Clear) != TemplateTypeFlag.Clear
-                && tt.IconWidth == 1 && tt.IconHeight == 1) //&& (tt.Theaters == null || tt.Theaters.Contains(th)))
-                .OrderBy(tt => tt.Name).FirstOrDefault();
+            TemplateType template = plugin.Map.TemplateTypes.Where(tt => tt.ExistsInTheater && !tt.Flag.HasFlag(TemplateTypeFlag.Clear)
+                && tt.IconWidth == 1 && tt.IconHeight == 1).OrderBy(tt => tt.Name).FirstOrDefault();
             Tile templateTile = null;
             if (template != null)
             {
@@ -3408,9 +3409,9 @@ namespace MobiusEditor
             UnitType unit = plugin.Map.UnitTypes.FirstOrDefault();
             BuildingType building = plugin.Map.BuildingTypes.Where(bl => bl.Size.Width == 2 && bl.Size.Height == 2
                                         && (!Globals.FilterTheaterObjects || !bl.IsTheaterDependent || bl.ExistsInTheater)).OrderBy(bl => bl.ID).FirstOrDefault();
-            OverlayType resource = plugin.Map.OverlayTypes.Where(ov => (ov.Flag & OverlayTypeFlag.TiberiumOrGold) == OverlayTypeFlag.TiberiumOrGold
+            OverlayType resource = plugin.Map.OverlayTypes.Where(ov => ov.Flag.HasFlag(OverlayTypeFlag.TiberiumOrGold)
                                         && (!Globals.FilterTheaterObjects || ov.ExistsInTheater)).OrderBy(ov => ov.ID).FirstOrDefault();
-            OverlayType wall = plugin.Map.OverlayTypes.Where(ov => (ov.Flag & OverlayTypeFlag.Wall) == OverlayTypeFlag.Wall
+            OverlayType wall = plugin.Map.OverlayTypes.Where(ov => ov.Flag.HasFlag(OverlayTypeFlag.Wall)
                                         && (!Globals.FilterTheaterObjects || ov.ExistsInTheater)).OrderBy(ov => ov.ID).FirstOrDefault();
             LoadNewIcon(mapToolStripButton, templateTile?.Image, plugin, 0);
             LoadNewIcon(smudgeToolStripButton, smudge?.Thumbnail, plugin, 1);

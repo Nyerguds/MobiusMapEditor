@@ -62,12 +62,12 @@ namespace MobiusEditor.Controls
                 {
                     LineAlignment = StringAlignment.Center
                 };
-                Brush textColor = ((e.State & DrawItemState.Selected) == DrawItemState.Selected) ? SystemBrushes.HighlightText : SystemBrushes.WindowText;
+                Brush textColor = e.State.HasFlag(DrawItemState.Selected) ? SystemBrushes.HighlightText : SystemBrushes.WindowText;
                 SizeF textSize = e.Graphics.MeasureString(typeItem.Name, Font, e.Bounds.Width, stringFormat);
                 // To int, with leniency for rounding errors.
                 int textSizeInt = (int)textSize.Width + (textSize.Width % 1 < 0.01 ? 0 : 1);
                 e.Graphics.DrawString(typeItem.Name, Font, textColor, e.Bounds, stringFormat);
-                if ((e.State & DrawItemState.ComboBoxEdit) == DrawItemState.None)
+                if (!e.State.HasFlag(DrawItemState.ComboBoxEdit))
                 {
                     Image thumbnail = typeItem.Type.Thumbnail ?? MissingThumbnail;
                     int thumbnailWidth = Math.Min(e.Bounds.Width - textSizeInt, thumbnail.Width);

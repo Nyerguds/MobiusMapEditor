@@ -59,27 +59,13 @@ namespace MobiusEditor.Model
             this.OverrideTeamColors = overrideTeamColors.ToDictionary(x => x.type, x => x.teamColor);
         }
 
-        public HouseType(int id, string name, string nameId, string unitTeamColor, string buildingTeamColor, params (string type, string teamColor)[] overrideTeamColors)
-            :this(id, name, nameId, WaypointFlag.None, HouseTypeFlag.ForAlliances, unitTeamColor, buildingTeamColor, overrideTeamColors)
+        public HouseType(int id, string name, string nameId, HouseTypeFlag flags, string unitTeamColor, string buildingTeamColor, params (string type, string teamColor)[] overrideTeamColors)
+            : this(id, name, nameId, WaypointFlag.None, flags, unitTeamColor, buildingTeamColor, overrideTeamColors)
         {
         }
 
         public HouseType(int id, string name, string nameId, HouseTypeFlag flags, string teamColor)
             : this(id, name, nameId, WaypointFlag.None, flags, teamColor, teamColor)
-        {
-        }
-
-        public HouseType(int id, string name, string nameId, string teamColor)
-            : this(id, name, nameId, WaypointFlag.None, HouseTypeFlag.ForAlliances, teamColor, teamColor)
-        {
-        }
-        public HouseType(int id, string name, string nameId)
-            : this(id, name, nameId, WaypointFlag.None, HouseTypeFlag.ForAlliances, null, null)
-        {
-        }
-
-        public HouseType(int id, string name, WaypointFlag multiplayIdentifier, string teamColor)
-            : this(id, name, null, multiplayIdentifier, HouseTypeFlag.ForAlliances, teamColor, teamColor)
         {
         }
 

@@ -483,7 +483,7 @@ namespace MobiusEditor.Model
             this.BasicSection = basicSection;
             this.HouseType = houseType;
             this.HouseTypesIncludingSpecials = houseTypes.ToArray();
-            this.HouseTypes = this.HouseTypesIncludingSpecials.Where(h => (h.Flags & HouseTypeFlag.Special) == HouseTypeFlag.None).ToArray();
+            this.HouseTypes = this.HouseTypesIncludingSpecials.Where(h => !h.Flags.HasFlag(HouseTypeFlag.Special)).ToArray();
             this.FlagColors = flagColors == null ? new ITeamColor[8] : flagColors;
             this.TheaterTypes = new List<TheaterType>(theaterTypes);
             this.TemplateTypes = new List<TemplateType>(templateTypes);
@@ -538,13 +538,13 @@ namespace MobiusEditor.Model
             this.triggers = new List<Trigger>();
             this.TeamTypes = new List<TeamType>();
             this.HousesIncludingSpecials = this.HouseTypesIncludingSpecials.Select(t => { House h = (House)Activator.CreateInstance(this.HouseType, t); h.SetDefault(); return h; }).ToArray();
-            this.Houses = this.HousesIncludingSpecials.Where(h => (h.Type.Flags & (HouseTypeFlag.Special)) == HouseTypeFlag.None).ToArray();
+            this.Houses = this.HousesIncludingSpecials.Where(h => !h.Type.Flags.HasFlag(HouseTypeFlag.Special)).ToArray();
             // Build houses list for allies. Special houses not shown in the normal houses lists (e.g. 'Allies' and 'Soviet') are put first.
-            List<House> housesAlly = this.HousesIncludingSpecials.Where(h => (h.Type.Flags & (HouseTypeFlag.ForAlliances)) == HouseTypeFlag.ForAlliances).ToList();
-            List<House> housesAllySpecial = housesAlly.Where(h => (h.Type.Flags & (HouseTypeFlag.Special)) == HouseTypeFlag.Special).OrderBy(h => h.Type.ID).ToList();
-            List<House> housesAllyNormal = housesAlly.Where(h => (h.Type.Flags & (HouseTypeFlag.Special)) == HouseTypeFlag.None).OrderBy(h => h.Type.ID).ToList();
+            List<House> housesAlly = this.HousesIncludingSpecials.Where(h => !h.Type.Flags.HasFlag(HouseTypeFlag.ForAlliances)).ToList();
+            List<House> housesAllySpecial = housesAlly.Where(h => h.Type.Flags.HasFlag(HouseTypeFlag.Special)).OrderBy(h => h.Type.ID).ToList();
+            List<House> housesAllyNormal = housesAlly.Where(h => !h.Type.Flags.HasFlag(HouseTypeFlag.Special)).OrderBy(h => h.Type.ID).ToList();
             this.HousesForAlliances = housesAllySpecial.Concat(housesAllyNormal).ToArray();
-            this.HouseNone = this.HousesIncludingSpecials.Where(h => (h.Type.Flags & (HouseTypeFlag.BaseHouse)) == HouseTypeFlag.BaseHouse).FirstOrDefault();
+            this.HouseNone = this.HousesIncludingSpecials.Where(h => h.Type.Flags.HasFlag(HouseTypeFlag.BaseHouse)).FirstOrDefault();
             Waypoint[] wp = waypoints.ToArray();
             this.Waypoints = new Waypoint[wp.Length];
             for (int i = 0; i < wp.Length; ++i)
@@ -560,7 +560,7 @@ namespace MobiusEditor.Model
             // Optimisation: checks on what is inside the given data, used to prevent unnecessary logic from executing.
             this.ConcreteOverlaysAvailable = this.OverlayTypes.Any(ovl => ovl.IsConcrete);
             this.CrateOverlaysAvailable = this.OverlayTypes.Any(ovl => ovl.IsCrate);
-            this.FlareWaypointAvailable = this.Waypoints.Any(wpt => (wpt.Flag & WaypointFlag.Flare) != WaypointFlag.None);
+            this.FlareWaypointAvailable = this.Waypoints.Any(wpt => wpt.Flag.HasFlag(WaypointFlag.Flare));
             this.ExpansionUnitsAvailable = BuildingTypes.Any(tt => tt.IsExpansionOnly)
                 || AllInfantryTypes.Any(tt => tt.IsExpansionOnly)
                 || TerrainTypes.Any(tt => tt.IsExpansionOnly)
@@ -814,7 +814,7 @@ namespace MobiusEditor.Model
         {
             if (overlay == null)
                 return true;
-            if (overlay.Type.IsConcrete && (GetConcState(overlay) & ConcFill.Center) == ConcFill.None)
+            if (overlay.Type.IsConcrete && !GetConcState(overlay).HasFlag(ConcFill.Center))
             {
                 // Filler cell. Ignore.
                 return true;
@@ -909,7 +909,7 @@ namespace MobiusEditor.Model
                         cells[i] = adjacent;
                     if (neighbor?.Type == overlay.Type)
                     {
-                        if ((GetConcState(neighbor) & ConcFill.Center) != ConcFill.None)
+                        if (GetConcState(neighbor).HasFlag(ConcFill.Center))
                         {
                             mask |= (ConcAdj)(1 << i);
                         }
@@ -917,11 +917,11 @@ namespace MobiusEditor.Model
                 }
                 // Unified logic so the operation becomes identical for the even and odd cells.
                 // This still isn't a 100% match with the game, but that's because the version in-game is a buggy mess.
-                bool top = (mask & ConcAdj.Top) != ConcAdj.None;
-                bool topSide = (mask & ConcAdj.TopSide) != ConcAdj.None;
-                bool side = (mask & ConcAdj.Side) != ConcAdj.None;
-                bool bottomSide = (mask & ConcAdj.BottomSide) != ConcAdj.None;
-                bool bottom = (mask & ConcAdj.Bottom) != ConcAdj.None;
+                bool top = mask.HasFlag(ConcAdj.Top);
+                bool topSide = mask.HasFlag(ConcAdj.TopSide);
+                bool side = mask.HasFlag(ConcAdj.Side);
+                bool bottomSide = mask.HasFlag(ConcAdj.BottomSide);
+                bool bottom = mask.HasFlag(ConcAdj.Bottom);
 
                 // Logic to fill the main cell. Standard for a placed cell is to fill the center.
                 ConcFill fillState = ConcFill.Center;
@@ -1332,7 +1332,7 @@ namespace MobiusEditor.Model
                 replaceTypes[kvp.Key] = tile;
                 if (tile != null)
                 {
-                    if ((tile.Flag & TemplateTypeFlag.Group) == TemplateTypeFlag.Group)
+                    if (tile.Flag.HasFlag(TemplateTypeFlag.Group))
                     {
                         tile = tileIcon >= tile.GroupTiles.Length ?
                             null : this.TemplateTypes.Where(t => t.Name == tile.GroupTiles[tileIcon]).FirstOrDefault();
@@ -1990,7 +1990,7 @@ namespace MobiusEditor.Model
                 for (int i = 0; i < this.Waypoints.Length; ++i)
                 {
                     // Clear waypoint if not player start.
-                    if (this.Waypoints[i].Cell.HasValue && (this.Waypoints[i].Flag & WaypointFlag.PlayerStart) == 0)
+                    if (this.Waypoints[i].Cell.HasValue && !this.Waypoints[i].Flag.HasFlag(WaypointFlag.PlayerStart))
                     {
                         backupWps[i] = Waypoints[i].Cell;
                         this.Waypoints[i].Cell = null;
@@ -2045,7 +2045,7 @@ namespace MobiusEditor.Model
                 {
                     MapRenderer.SetRenderSettings(g, smooth);
                     MapRenderer.Render(plugin.GameInfo, this, g, locations, toRender, tileScale);
-                    if ((toRender & MapLayerFlag.Indicators) != 0)
+                    if (toRender.HasAnyFlags(MapLayerFlag.Indicators))
                     {
                         ViewTool.PostRenderMap(g, plugin, this, tileScale, toRender, MapLayerFlag.None, false, plugin.Map.Metrics.Bounds);
                     }
@@ -2217,7 +2217,7 @@ namespace MobiusEditor.Model
             for (Int32 i = 0; i < this.Waypoints.Length; ++i)
             {
                 Waypoint waypoint = this.Waypoints[i];
-                if ((waypoint.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart)
+                if (waypoint.Flag.HasFlag(WaypointFlag.PlayerStart))
                 {
                     this.Waypoints[i].Name = isSolo ? i.ToString() : string.Format("P{0}", i);
                     if (waypoint.Point.HasValue)
@@ -2276,7 +2276,7 @@ namespace MobiusEditor.Model
                     Infantry[] inf = infantryGroup.Infantry;
                     for (int i = 0; i < inf.Length; ++i)
                     {
-                        if (inf[i] != null && (inf[i].Type.Flag & UnitTypeFlag.IsExpansionUnit) == UnitTypeFlag.IsExpansionUnit)
+                        if (inf[i] != null && inf[i].Type.Flag.HasFlag(UnitTypeFlag.IsExpansionUnit))
                         {
                             inf[i] = null;
                             changed = true;

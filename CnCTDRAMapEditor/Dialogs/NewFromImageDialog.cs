@@ -235,7 +235,7 @@ namespace MobiusEditor.Dialogs
                 return m.Success ? m.Groups[1].Value : string.Empty;
             }
             TheaterType theater = plugin.Map.Theater;
-            TemplateType clear = plugin.Map.TemplateTypes.Where(t => (t.Flag & TemplateTypeFlag.Clear) == TemplateTypeFlag.Clear).FirstOrDefault();
+            TemplateType clear = plugin.Map.TemplateTypes.Where(t => t.Flag.HasFlag(TemplateTypeFlag.Clear)).FirstOrDefault();
             if (clear.Thumbnail == null || !clear.Initialised)
             {
                 // Clear should ALWAYS be initialised and available, even if missing.
@@ -244,8 +244,8 @@ namespace MobiusEditor.Dialogs
             ExplorerComparer expl = new ExplorerComparer();
             var templateTypes = plugin.Map.TemplateTypes
                 .Where(t => t.ExistsInTheater && t.Thumbnail != null
-                    && (t.Flag & TemplateTypeFlag.Clear) == TemplateTypeFlag.None
-                    && (t.Flag & TemplateTypeFlag.IsGrouped) == TemplateTypeFlag.None)
+                    && !t.Flag.HasFlag(TemplateTypeFlag.Clear)
+                    && !t.Flag.HasFlag(TemplateTypeFlag.IsGrouped))
                 .OrderBy(t => t.Name, expl)
                 .GroupBy(t => templateCategory(t)).OrderBy(g => g.Key, expl);
             lstTemplates.Items.Add(clear.Name);
@@ -301,7 +301,7 @@ namespace MobiusEditor.Dialogs
                 return null;
             }
             TemplateType tmpl = plugin.Map.TemplateTypes.Where(tmp => tile.Equals(tmp.Name, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
-            if (tmpl == null || (tmpl.Flag & TemplateTypeFlag.Clear) != TemplateTypeFlag.None)
+            if (tmpl == null || tmpl.Flag.HasFlag(TemplateTypeFlag.Clear))
             {
                 return null;
             }
@@ -369,7 +369,7 @@ namespace MobiusEditor.Dialogs
             TemplateType selected = SelectedTemplate;
             if (selected == null)
             {
-                selected = plugin.Map.TemplateTypes.FirstOrDefault(t => (t.Flag & TemplateTypeFlag.Clear) == TemplateTypeFlag.Clear);
+                selected = plugin.Map.TemplateTypes.FirstOrDefault(t => t.Flag.HasFlag(TemplateTypeFlag.Clear));
             }
             if (selected != null && selected.Thumbnail != null && SelectedColor.HasValue)
             {
@@ -495,7 +495,7 @@ namespace MobiusEditor.Dialogs
                 if (!currentMap.Equals(selectedItem))
                 {
                     // new mapping was picked
-                    if ((selectedTemplate.Flag & TemplateTypeFlag.Clear) != TemplateTypeFlag.None)
+                    if (selectedTemplate.Flag.HasFlag(TemplateTypeFlag.Clear))
                     {
                         // Clear; remove mapping
                         mappingsTemplate.Remove(colIntVal);
@@ -521,7 +521,7 @@ namespace MobiusEditor.Dialogs
             {
                 // add new mapping
                 mappingsIcons.Remove(colIntVal);
-                if ((selectedTemplate.Flag & TemplateTypeFlag.Clear) != TemplateTypeFlag.None)
+                if (selectedTemplate.Flag.HasFlag(TemplateTypeFlag.Clear))
                 {
                     mappingsTemplate.Remove(colIntVal);
                 }
@@ -539,7 +539,7 @@ namespace MobiusEditor.Dialogs
         private void templateTypeMapPanel_PostRender(Object sender, Event.RenderEventArgs e)
         {
             e.Graphics.Transform = new Matrix();
-            if (!_selectedColor.HasValue || _selectedTemplate == null || (_selectedTemplate.Flag & TemplateTypeFlag.Clear) != TemplateTypeFlag.None)
+            if (!_selectedColor.HasValue || _selectedTemplate == null || _selectedTemplate.Flag.HasFlag(TemplateTypeFlag.Clear))
             {
                 return;
             }

@@ -74,6 +74,39 @@ namespace MobiusEditor.Utility
         }
 
         /// <summary>
+        /// Alternative to <see cref="Enum.HasFlag(Enum)"/> that returns <see langword="true"/> even on a partial match of the bits.
+        /// </summary>
+        /// <typeparam name="T">Type of the enum.</typeparam>
+        /// <param name="source">Source to check the value of.</param>
+        /// <param name="flag">Flag or flags to check.</param>
+        /// <returns><see langword="true"/> if any of the bits in the given <paramref name="flag"/> are enabled in the <paramref name="source"/>.</returns>
+        /// <exception cref="ArgumentNullException">If <paramref name="flag"/> or <paramref name="source"/> are null.</exception>
+        public static bool HasAnyFlags<T>(this T source, T flag) where T: Enum
+        {
+            if (source == null)
+            {
+                throw new ArgumentNullException("source");
+            }
+            if (flag == null)
+            {
+                throw new ArgumentNullException("flag");
+            }
+            // Get the type code of the enumeration
+            TypeCode typeCode = source.GetTypeCode();
+            // If the underlying type of the flag is signed
+            if (typeCode == TypeCode.SByte || typeCode == TypeCode.Int16 || typeCode == TypeCode.Int32 || typeCode == TypeCode.Int64)
+            {
+                return (Convert.ToInt64(source) & Convert.ToInt64(flag)) != 0;
+            }
+            // If the underlying type of the flag is unsigned
+            if (typeCode == TypeCode.Byte || typeCode == TypeCode.UInt16 || typeCode == TypeCode.UInt32 || typeCode == TypeCode.UInt64)
+            {
+                return (Convert.ToUInt64(source) & Convert.ToUInt64(flag)) != 0;
+            }
+            return false;
+        }
+
+        /// <summary>
         /// Copies all public properties of one object into another.
         /// </summary>
         /// <typeparam name="T">Type of the objects.</typeparam>

@@ -307,7 +307,7 @@ namespace MobiusEditor.Dialogs
             int width = inBounds ? gamePlugin.Map.Bounds.Width : fullWidth;
             int height = inBounds ? gamePlugin.Map.Bounds.Height : fullHeight;
             Size size = new Size(width * tileWidth, height * tileHeight);
-            bool clearBg = (layers & MapLayerFlag.Template) == MapLayerFlag.Template;
+            bool clearBg = layers.HasFlag(MapLayerFlag.Template);
             using (Bitmap exportImage = gamePlugin.Map.GeneratePreview(size, gamePlugin, layers, clearBg, smooth, inBounds, false).ToBitmap())
             {
                 exportImage.Save(outputPath, ImageFormat.Png);

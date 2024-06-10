@@ -293,17 +293,17 @@ namespace MobiusEditor.RedAlert
             return extraTextIni.ToString();
         }
 
-        public IEnumerable<string> SetExtraIniText(String extraIniText, out bool footPrintsChanged)
+        public IEnumerable<string> SetExtraIniText(string extraIniText, out bool footPrintsChanged)
         {
             return SetExtraIniText(extraIniText, this.Map.BasicSection.SoloMission, this.Map.BasicSection.ExpansionEnabled, false, out footPrintsChanged);
         }
 
-        public IEnumerable<string> TestSetExtraIniText(String extraIniText, bool isSolo, bool expansionEnabled, out bool footPrintsChanged)
+        public IEnumerable<string> TestSetExtraIniText(string extraIniText, bool isSolo, bool expansionEnabled, out bool footPrintsChanged)
         {
             return SetExtraIniText(extraIniText, isSolo, expansionEnabled, true, out footPrintsChanged);
         }
 
-        public IEnumerable<string> SetExtraIniText(String extraIniText, bool isSolo, bool expansionEnabled, bool forFootprintTest, out bool footPrintsChanged)
+        public IEnumerable<string> SetExtraIniText(string extraIniText, bool isSolo, bool expansionEnabled, bool forFootprintTest, out bool footPrintsChanged)
         {
             INI extraTextIni = new INI();
             try
@@ -529,7 +529,7 @@ namespace MobiusEditor.RedAlert
             BasicSection basicSection = new BasicSection();
             basicSection.SetDefault();
             IEnumerable<HouseType> houseTypes = HouseTypes.GetTypes();
-            basicSection.Player = houseTypes.Where(ht => (ht.Flags & HouseTypeFlag.Special) == HouseTypeFlag.None).First().Name;
+            basicSection.Player = houseTypes.Where(ht => !ht.Flags.HasFlag(HouseTypeFlag.Special)).First().Name;
             basicSection.BasePlayer = HouseTypes.GetClassicOpposingPlayer(basicSection.Player);
             string[] cellEventTypes =
             {
@@ -611,7 +611,7 @@ namespace MobiusEditor.RedAlert
                 isLoading = true;
                 List<string> errors = new List<string>();
                 bool tryCheckSingle = false;
-                Byte[] iniBytes;
+                byte[] iniBytes;
                 INI ini = new INI();
                 switch (fileType)
                 {
@@ -664,7 +664,7 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        private void ParseIniContent(INI ini, Byte[] iniBytes, List<string> errors)
+        private void ParseIniContent(INI ini, byte[] iniBytes, List<string> errors)
         {
             bool fixedSemicolon = false;
             Encoding encDOS = Encoding.GetEncoding(437);
@@ -707,7 +707,7 @@ namespace MobiusEditor.RedAlert
                 if (briefSectionUtf8 != null && briefSectionDos != null && briefSectionUtf8.Keys.Contains("Text"))
                 {
                     string comment = briefSectionUtf8.GetComment("Text");
-                    String briefing = briefSectionUtf8.Keys["Text"];
+                    string briefing = briefSectionUtf8.Keys["Text"];
                     if (comment != null)
                     {
                         briefing += comment;
@@ -850,7 +850,7 @@ namespace MobiusEditor.RedAlert
             Map.BasicSection.ExpansionEnabled = aftermathEnabled;
         }
 
-        private void LoadMapInfo(INI ini, List<String> errors, ref Boolean modified)
+        private void LoadMapInfo(INI ini, List<string> errors, ref bool modified)
         {
             // Map info
             string theaterStr = ini["Map"]?.TryGetValue("Theater") ?? String.Empty;
@@ -879,7 +879,7 @@ namespace MobiusEditor.RedAlert
             return (int.TryParse(index, out int result) && (result >= 0) && (result < list.Count)) ? list[result] : (defnull ? default(T) : list.First());
         }
 
-        private List<TeamType> LoadTeamTypes(INI ini, List<String> errors, ref bool modified)
+        private List<TeamType> LoadTeamTypes(INI ini, List<string> errors, ref bool modified)
         {
             INISection teamTypesSection = ini.Sections.Extract("TeamTypes");
             List<TeamType> teamTypes = new List<TeamType>();
@@ -1036,7 +1036,7 @@ namespace MobiusEditor.RedAlert
             return teamTypes;
         }
 
-        private List<Trigger> LoadTriggers(INI ini, List<String> errors, ref Boolean modified)
+        private List<Trigger> LoadTriggers(INI ini, List<string> errors, ref bool modified)
         {
             INISection triggersSection = ini.Sections.Extract("Trigs");
             List<Trigger> triggers = new List<Trigger>();
@@ -1181,7 +1181,7 @@ namespace MobiusEditor.RedAlert
             return triggers;
         }
 
-        private void LoadMapPack(INI ini, List<String> errors, ref Boolean modified)
+        private void LoadMapPack(INI ini, List<string> errors, ref bool modified)
         {
             INISection mapPackSection = ini.Sections.Extract("MapPack");
             if (mapPackSection == null)
@@ -1220,7 +1220,7 @@ namespace MobiusEditor.RedAlert
                         }
                         else if (templateType != null)
                         {
-                            if ((templateType.Flag & TemplateTypeFlag.Clear) != TemplateTypeFlag.None || (templateType.Flag & TemplateTypeFlag.Group) == TemplateTypeFlag.Group)
+                            if (templateType.Flag.HasFlag(TemplateTypeFlag.Clear) || templateType.Flag.HasFlag(TemplateTypeFlag.Group))
                             {
                                 // No explicitly set Clear terrain allowed. Also no explicitly set versions allowed of the "group" dummy entries.
                                 templateType = null;
@@ -1259,7 +1259,7 @@ namespace MobiusEditor.RedAlert
                 {
                     for (int x = 0; x < width; ++x)
                     {
-                        Byte iconValue = reader.ReadByte();
+                        byte iconValue = reader.ReadByte();
                         Template template = Map.Templates[y, x];
                         // Prevent loading of illegal tiles. Do not give errors on clear terrain if it's going to be cleared anyway.
                         if (template != null && (template.Type.ID != 255 || !Globals.ConvertRaObsoleteClear))
@@ -1307,7 +1307,7 @@ namespace MobiusEditor.RedAlert
             bool tileFFValidForTheater = templateTypes[0xFF]?.ExistsInTheater ?? false;
             if (oldClearCount > 0 && (!tileFFValidForTheater || oldClearOutside > (width * height - Map.Bounds.Width * Map.Bounds.Height) * 8 / 10))
             {
-                TemplateType clear = Map.TemplateTypes.Where(tt => (tt.Flag & TemplateTypeFlag.Clear) == TemplateTypeFlag.Clear).FirstOrDefault();
+                TemplateType clear = Map.TemplateTypes.Where(tt => tt.Flag.HasFlag(TemplateTypeFlag.Clear)).FirstOrDefault();
                 bool clearIsPassable = clear == null || !clear.ExistsInTheater || this.IsFullyLandUnitPassable(clear.LandTypes[0]);
                 // This is an old map. Clear any 255 tile.
                 // If clear terrain is not passable, detect passable areas that touch the outside border, and add spawnable areas there. Remove all the rest.
@@ -1323,7 +1323,7 @@ namespace MobiusEditor.RedAlert
                     mapBorderBounds.Inflate(3, 3);
                     border = mapBorderBounds.Points().Where(p => mapFullBounds.Contains(p) && !mapBounds.Contains(p)).ToHashSet();
                     // Eval function
-                    Boolean isImpassableCell(Template cell)
+                    bool isImpassableCell(Template cell)
                     {
                         return (!clearIsPassable && (cell == null || cell.Type.ID == 255)) || (cell != null && !this.IsFullyLandUnitPassable(cell.Type.LandTypes[cell.Icon]));
                     }
@@ -1390,7 +1390,7 @@ namespace MobiusEditor.RedAlert
                         }
                     }
                 }
-                String obsError = "Use of obsolete version of 'Clear' terrain detected; clearing.";
+                string obsError = "Use of obsolete version of 'Clear' terrain detected; clearing.";
                 if (!clearIsPassable && border != null && border.Count() > 0)
                     obsError += " Generating passable areas for possible scripted reinforcements.";
                 errors.Add(obsError);
@@ -1419,7 +1419,7 @@ namespace MobiusEditor.RedAlert
 #endif
         }
 
-        private void LoadSmudge(INI ini, List<String> errors, ref Boolean modified)
+        private void LoadSmudge(INI ini, List<string> errors, ref bool modified)
         {
             INISection smudgeSection = ini.Sections.Extract("Smudge");
             if (smudgeSection == null)
@@ -1488,7 +1488,7 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        private void LoadUnits(INI ini, Dictionary<string, string> caseTrigs, HashSet<String> checkUnitTrigs, List<String> errors, ref Boolean modified)
+        private void LoadUnits(INI ini, Dictionary<string, string> caseTrigs, HashSet<string> checkUnitTrigs, List<string> errors, ref bool modified)
         {
             INISection unitsSection = ini.Sections.Extract("Units");
             if (unitsSection == null)
@@ -1629,7 +1629,7 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        private void LoadAircraft(INI ini, List<String> errors, ref Boolean modified)
+        private void LoadAircraft(INI ini, List<string> errors, ref bool modified)
         {
             // Classic game does not support this, so I'm leaving this out by default.
             // It is always extracted, so it doesn't end up with the "extra sections"
@@ -1760,7 +1760,7 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        private void LoadShips(INI ini, Dictionary<String, String> caseTrigs, HashSet<String> checkUnitTrigs, List<String> errors, ref Boolean modified)
+        private void LoadShips(INI ini, Dictionary<string, string> caseTrigs, HashSet<string> checkUnitTrigs, List<string> errors, ref bool modified)
         {
             INISection shipsSection = ini.Sections.Extract("Ships");
             if (shipsSection == null)
@@ -1901,7 +1901,7 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        private void LoadInfantry(INI ini, Dictionary<String, String> caseTrigs, HashSet<String> checkUnitTrigs, List<String> errors, ref Boolean modified)
+        private void LoadInfantry(INI ini, Dictionary<string, string> caseTrigs, HashSet<string> checkUnitTrigs, List<string> errors, ref bool modified)
         {
             INISection infantrySection = ini.Sections.Extract("Infantry");
             if (infantrySection == null)
@@ -2068,7 +2068,7 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        private void LoadStructures(INI ini, Dictionary<String, String> caseTrigs, HashSet<String> checkStrcTrigs, List<String> errors, ref Boolean modified)
+        private void LoadStructures(INI ini, Dictionary<string, string> caseTrigs, HashSet<string> checkStrcTrigs, List<string> errors, ref bool modified)
         {
             INISection structuresSection = ini.Sections.Extract("Structures");
             if (structuresSection == null)
@@ -2182,7 +2182,7 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        private void LoadBase(INI ini, List<String> errors, ref Boolean modified)
+        private void LoadBase(INI ini, List<string> errors, ref bool modified)
         {
             INISection baseSection = ini.Sections["Base"];
             string baseCountStr = baseSection != null ? baseSection.TryGetValue("Count") : null;
@@ -2282,7 +2282,7 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        private void LoadTerrain(INI ini, List<String> errors, ref Boolean modified)
+        private void LoadTerrain(INI ini, List<string> errors, ref bool modified)
         {
             string th = Map.Theater.Name;
             INISection terrainSection = ini.Sections.Extract("Terrain");
@@ -2365,7 +2365,7 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        private void LoadOverlay(INI ini, List<String> errors, ref Boolean modified)
+        private void LoadOverlay(INI ini, List<string> errors, ref bool modified)
         {
             INISection overlayPackSection = ini.Sections.Extract("OverlayPack");
             if (overlayPackSection == null)
@@ -2419,7 +2419,8 @@ namespace MobiusEditor.RedAlert
                 }
             }
         }
-        private void LoadWaypoints(INI ini, List<String> errors, ref Boolean modified)
+
+        private void LoadWaypoints(INI ini, List<string> errors, ref bool modified)
         {
             INISection waypointsSection = ini.Sections.Extract("Waypoints");
             if (waypointsSection == null)
@@ -2468,7 +2469,7 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        private void LoadCellTriggers(INI ini, Dictionary<String, String> caseTrigs, HashSet<String> checkCellTrigs, List<String> errors, ref Boolean modified)
+        private void LoadCellTriggers(INI ini, Dictionary<string, string> caseTrigs, HashSet<string> checkCellTrigs, List<string> errors, ref bool modified)
         {
             INISection cellTriggersSection = ini.Sections.Extract("CellTriggers");
             if (cellTriggersSection == null)
@@ -2510,7 +2511,7 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        private void LoadBriefing(INI ini, List<String> errors, ref Boolean modified)
+        private void LoadBriefing(INI ini, List<string> errors, ref bool modified)
         {
             INISection briefingSection = ini.Sections["Briefing"];
             if (briefingSection == null)
@@ -2544,11 +2545,11 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        private void LoadHouses(INI ini, List<String> errors, ref Boolean modified)
+        private void LoadHouses(INI ini, List<string> errors, ref bool modified)
         {
             foreach (Model.House house in Map.Houses)
             {
-                if ((house.Type.Flags & HouseTypeFlag.Special) != HouseTypeFlag.None)
+                if (house.Type.Flags.HasFlag(HouseTypeFlag.Special))
                 {
                     continue;
                 }
@@ -2567,7 +2568,7 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        private void LinkTriggersAndTeams(List<Trigger> triggers, List<TeamType> teamTypes, HashSet<String> checkUnitTrigs, List<String> errors, ref Boolean modified)
+        private void LinkTriggersAndTeams(List<Trigger> triggers, List<TeamType> teamTypes, HashSet<string> checkUnitTrigs, List<string> errors, ref bool modified)
         {
             string indexToName<T>(IList<T> list, string index, string defaultValue) where T : INamedType
             {
@@ -2606,7 +2607,7 @@ namespace MobiusEditor.RedAlert
         /// <param name="teamTypes">List of all read team types</param>
         /// <param name="errors">List to add errors to.</param>
         /// <param name="modified">Returns true if any fixes were made.</param>
-        private void CheckTriggersGlobals(List<Trigger> triggers, List<TeamType> teamTypes, List<String> errors, ref Boolean modified, HouseType defaultHouse)
+        private void CheckTriggersGlobals(List<Trigger> triggers, List<TeamType> teamTypes, List<string> errors, ref bool modified, HouseType defaultHouse)
         {
             // Keep track of corrected globals.
             List<int> availableGlobals;
@@ -2625,7 +2626,7 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        private void CheckSwitchToSolo(Boolean tryCheckSoloMission, HouseType player, List<String> errors)
+        private void CheckSwitchToSolo(bool tryCheckSoloMission, HouseType player, List<string> errors)
         {
             bool switchedToSolo = false;
             if (tryCheckSoloMission && !Map.BasicSection.SoloMission)
@@ -2653,7 +2654,7 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        private INI ReadRulesFile(Byte[] rulesFile)
+        private INI ReadRulesFile(byte[] rulesFile)
         {
             if (rulesFile == null)
             {
@@ -2666,7 +2667,7 @@ namespace MobiusEditor.RedAlert
             return ini;
         }
 
-        private Boolean FixCorruptTiles(Template template, byte iconValue, out byte newIconValue, out string type)
+        private bool FixCorruptTiles(Template template, byte iconValue, out byte newIconValue, out string type)
         {
             TemplateType templateType = template.Type;
             bool isFixed = false;
@@ -3156,7 +3157,7 @@ namespace MobiusEditor.RedAlert
             if (String.IsNullOrWhiteSpace(basic.Name))
             {
                 string[] name = Path.GetFileNameWithoutExtension(fileName).Split(new[] { ' ', '_' }, StringSplitOptions.RemoveEmptyEntries);
-                for (Int32 i = 0; i < name.Length; i++)
+                for (int i = 0; i < name.Length; i++)
                 {
                     string word = name[i];
                     // Very very rough APA title casing :)
@@ -3425,7 +3426,7 @@ namespace MobiusEditor.RedAlert
                     waypointsSection[i.ToString()] = waypoint.Cell.Value.ToString();
                 }
             }
-            foreach (Model.House house in Map.Houses.Where(h => (h.Type.Flags & HouseTypeFlag.Special) == HouseTypeFlag.None).OrderBy(h => h.Type.ID))
+            foreach (Model.House house in Map.Houses.Where(h => !h.Type.Flags.HasFlag(HouseTypeFlag.Special)).OrderBy(h => h.Type.ID))
             {
                 House gameHouse = (House)house;
                 bool enabled = house.Enabled;
@@ -3434,7 +3435,7 @@ namespace MobiusEditor.RedAlert
                 // Current house is not in its own alliances list. Fix that.
                 if (houseSection != null && !gameHouse.Allies.Contains(gameHouse.Type.ID))
                 {
-                    HashSet<String> allies = (houseSection.TryGetValue("Allies") ?? String.Empty)
+                    HashSet<string> allies = (houseSection.TryGetValue("Allies") ?? string.Empty)
                         .Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
                         .Distinct(StringComparer.OrdinalIgnoreCase)
                         .ToHashSet(StringComparer.OrdinalIgnoreCase);
@@ -3563,7 +3564,7 @@ namespace MobiusEditor.RedAlert
                         bool isBreak = false;
                         while (nextLength < Constants.BriefLineCutoffClassic && wordIndex < splitLine.Length)
                         {
-                            String cur = splitLine[wordIndex];
+                            string cur = splitLine[wordIndex];
                             bool wasBreak = isBreak;
                             isBreak = cur == "@";
                             if (cur == " " || cur.Length == 0)
@@ -3596,7 +3597,7 @@ namespace MobiusEditor.RedAlert
             }
             if (oldSection != null)
             {
-                foreach (KeyValuePair<String, String> kvp in oldSection)
+                foreach (KeyValuePair<string, string> kvp in oldSection)
                 {
                     if (!briefingSection.Contains(kvp.Key))
                     {
@@ -3607,7 +3608,7 @@ namespace MobiusEditor.RedAlert
             return briefingSection;
         }
 
-        private void SaveMapPreview(Stream stream, Boolean renderAll)
+        private void SaveMapPreview(Stream stream, bool renderAll)
         {
             Map.GenerateMapPreview(this, renderAll).Save(stream);
         }
@@ -3629,7 +3630,7 @@ namespace MobiusEditor.RedAlert
             writer.WriteStartArray();
             if (!Map.BasicSection.SoloMission)
             {
-                foreach (Waypoint waypoint in Map.Waypoints.Where(w => (w.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart
+                foreach (Waypoint waypoint in Map.Waypoints.Where(w => w.Flag.HasFlag(WaypointFlag.PlayerStart)
                     && w.Cell.HasValue && Map.Metrics.GetLocation(w.Cell.Value, out Point p) && Map.Bounds.Contains(p)))
                 {
                     writer.WriteValue(waypoint.Cell.Value);
@@ -3638,7 +3639,7 @@ namespace MobiusEditor.RedAlert
             else
             {
                 // Probably useless, but better than the player start points.
-                foreach (Waypoint waypoint in Map.Waypoints.Where(w => (w.Flag & WaypointFlag.Home) == WaypointFlag.Home
+                foreach (Waypoint waypoint in Map.Waypoints.Where(w => w.Flag.HasFlag(WaypointFlag.Home)
                     && w.Cell.HasValue && Map.Metrics.GetLocation(w.Cell.Value, out Point p) && Map.Bounds.Contains(p)))
                 {
                     writer.WriteValue(waypoint.Cell.Value);
@@ -3648,7 +3649,7 @@ namespace MobiusEditor.RedAlert
             writer.WriteEndObject();
         }
 
-        public string Validate(Boolean forWarnings)
+        public string Validate(bool forWarnings)
         {
             if (forWarnings)
             {
@@ -3661,9 +3662,9 @@ namespace MobiusEditor.RedAlert
             int numTerrain = Map.Technos.OfType<Terrain>().Count();
             int numUnits = Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsGroundUnit).Count();
             int numVessels = Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsVessel).Count();
-            int numStartPoints = Map.Waypoints.Count(w => (w.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart && w.Cell.HasValue
+            int numStartPoints = Map.Waypoints.Count(w => w.Flag.HasFlag(WaypointFlag.PlayerStart) && w.Cell.HasValue
                 && Map.Metrics.GetLocation(w.Cell.Value, out Point pt) && Map.Bounds.Contains(pt));
-            int numBadPoints = Map.Waypoints.Count(w => (w.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart && w.Cell.HasValue
+            int numBadPoints = Map.Waypoints.Count(w => w.Flag.HasFlag(WaypointFlag.PlayerStart) && w.Cell.HasValue
                 && Map.Metrics.GetLocation(w.Cell.Value, out Point pt) && !Map.Bounds.Contains(pt));
             if (!Globals.DisableAirUnits && numAircraft > Constants.MaxAircraft && Globals.EnforceObjectMaximums)
             {
@@ -3708,7 +3709,7 @@ namespace MobiusEditor.RedAlert
                     sb.Append("\nSkirmish/Multiplayer maps should not have player start waypoints placed outside the map bound.");
                 }
             }
-            Waypoint homeWaypoint = Map.Waypoints.Where(w => (w.Flag & WaypointFlag.Home) == WaypointFlag.Home).FirstOrDefault();
+            Waypoint homeWaypoint = Map.Waypoints.Where(w => w.Flag.HasFlag(WaypointFlag.Home)).FirstOrDefault();
             if (Map.BasicSection.SoloMission && (!homeWaypoint.Cell.HasValue || !Map.Metrics.GetLocation(homeWaypoint.Cell.Value, out Point p) || !Map.Bounds.Contains(p)))
             {
                 sb.Append("\nSingle-player maps need the Home waypoint to be placed, inside the map bounds.");
@@ -3730,7 +3731,7 @@ namespace MobiusEditor.RedAlert
             return null;
         }
 
-        private String ValidateForWarnings()
+        private string ValidateForWarnings()
         {
             StringBuilder sb = new StringBuilder();
             // Check if map has name
@@ -3855,15 +3856,15 @@ namespace MobiusEditor.RedAlert
             if (extraSections != null)
                 checkSections.Add(extraSections);
             // weapon checks.
-            List<String> missingWeapons = CheckMissingWeaponRules(checkWeaponTypes, checkSections);
+            List<string> missingWeapons = CheckMissingWeaponRules(checkWeaponTypes, checkSections);
             // None of the checked items is used on the map, and no used weapons were identified as missing rules.
             if (usedBuildings.Count == 0 && usedUnits.Count == 0 && usedInfantry.Count == 0 && missingWeapons.Count == 0)
             {
                 return;
             }
             // Build final list of missing objects and object types.
-            List<String> missingTypes = new List<string>();
-            List<String> missingObjTypes = new List<string>();
+            List<string> missingTypes = new List<string>();
+            List<string> missingObjTypes = new List<string>();
             const string unitStr = "unit";
             bool unitsMissing = false;
             foreach (UnitType unit in usedUnits)
@@ -3911,20 +3912,20 @@ namespace MobiusEditor.RedAlert
             // sb.Append(null) will abort immediately, so it's more efficient than using 'String.Empty'.
             sb.Append("The following ");
             sb.Append(context != null ? (context + " ") : null);
-            sb.Append(String.Join("/", missingTypes.ToArray()));
+            sb.Append(string.Join("/", missingTypes.ToArray()));
             sb.Append(" type").Append(plural ? "s are" : " is").Append(" used on the map");
             sb.Append(unitsMissing || infantryMissing || buildingsMissing ? " or in the scripting" : null);
             sb.Append(", but ").Append(plural ? "have" : "has").Append(" no ini rules set to properly define ").Append(plural ? "their" : "its").Append(" stats:\n- ");
-            sb.Append(String.Join("\n- ", missingObjTypes.ToArray()));
+            sb.Append(string.Join("\n- ", missingObjTypes.ToArray()));
             sb.Append("\nWithout ini definition").Append(plural ? "s, these objects" : ", this object").Append(" will have no ");
             sb.Append(unitsMissing || infantryMissing ? "strength, weapon or movement speed" : buildingsMissing ? "strength or weapon" : "weapon");
             sb.Append(" stats, and will malfunction in the game. The definitions can be set in Settings → Map Settings → INI Rules & Tweaks.");
         }
 
-        private List<String> CheckMissingWeaponRules(String[] checkWeaponTypes, List<INISectionCollection> checkSections)
+        private List<string> CheckMissingWeaponRules(string[] checkWeaponTypes, List<INISectionCollection> checkSections)
         {
             // weapon checks.
-            List<String> missingWeapons = new List<string>();
+            List<string> missingWeapons = new List<string>();
             const string primaryIniName = "Primary";
             const string secondaryIniName = "Secondary";
             // Make list of all technos
@@ -3950,8 +3951,8 @@ namespace MobiusEditor.RedAlert
                         if (inicoll.Contains(sectionName))
                         {
                             INISection section = inicoll[sectionName];
-                            String primaryWeapon = section.TryGetValue(primaryIniName);
-                            String secondaryWeapon = section.TryGetValue(secondaryIniName);
+                            string primaryWeapon = section.TryGetValue(primaryIniName);
+                            string secondaryWeapon = section.TryGetValue(secondaryIniName);
                             // Check if the weapon under investigation is used in this section.
                             // Since we confirmed it has no rules, it's a problem if it's used.
                             if (weaponType == primaryWeapon || weaponType == secondaryWeapon)
@@ -3999,7 +4000,7 @@ namespace MobiusEditor.RedAlert
             {
                 info.Add(String.Empty);
                 info.Add("Multiplayer info:");
-                int startPoints = Map.Waypoints.Count(w => w.Cell.HasValue && (w.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart);
+                int startPoints = Map.Waypoints.Count(w => w.Cell.HasValue && w.Flag.HasFlag(WaypointFlag.PlayerStart));
                 info.Add(string.Format("Number of set starting points: {0}.", startPoints));
             }
             HashSet<int> usedWaypoints = new HashSet<int>();
@@ -4363,7 +4364,7 @@ namespace MobiusEditor.RedAlert
             wasFixed = false;
             foreach (TeamType team in teamTypes)
             {
-                for (Int32 i = 0; i < team.Missions.Count; i++)
+                for (int i = 0; i < team.Missions.Count; i++)
                 {
                     TeamTypeMission ttm = team.Missions[i];
                     if (ttm.Mission.Mission == TeamMissionTypes.SetGlobal.Mission && (ttm.Argument < 0 || ttm.Argument > Constants.HighestGlobal))
@@ -4441,7 +4442,7 @@ namespace MobiusEditor.RedAlert
             {
                 fatal = true;
                 string eventInfo = String.Join(" and ", fatalEvts.Select(ev => String.Format("Event {0} is \"{1}\"", ev + 1, events[ev].EventType.TrimEnd('.'))));
-                String eventDesc =
+                string eventDesc =
                 error = String.Format("{0}House is set to {1}, but {2}. {3} event{4} require{4} a House to be set, or the trigger will cause a game crash on mission load.",
                     prefix, House.None, eventInfo, fatalEvts.Count > 1 ? "Both" : "This", fatalEvts.Count > 1 ? "s" : String.Empty, fatalEvts.Count == 1 ? "s" : String.Empty);
                 if (fix && fixHouse != House.None)
@@ -4455,7 +4456,7 @@ namespace MobiusEditor.RedAlert
             if (!fatalOnly && warningEvts.Count > 0)
             {
                 string eventInfo = String.Join(" and ", warningEvts.Select(ev => String.Format("Event {0} is \"{1}\"", ev + 1, events[ev].EventType.TrimEnd('.'))));
-                String eventDesc =
+                string eventDesc =
                 error = String.Format("{0}House is set to {1}, but {2}. {3} event{4} require{5} a House to be set, or the trigger will immediately fire at the start of the mission.",
                     prefix, House.None, eventInfo, warningEvts.Count > 1 ? "Both" : "This", warningEvts.Count > 1 ? "s" : String.Empty, warningEvts.Count == 1 ? "s" : String.Empty);
                 if (fix && fixHouse != House.None)
@@ -4468,7 +4469,7 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        private void CheckEventHouse(string prefix, bool skipCheck, TriggerEvent evnt, List<string> errors, Int32 nr, ref bool fatal, bool fatalOnly, bool fix, ref bool wasFixed)
+        private void CheckEventHouse(string prefix, bool skipCheck, TriggerEvent evnt, List<string> errors, int nr, ref bool fatal, bool fatalOnly, bool fix, ref bool wasFixed)
         {
             if (skipCheck)
             {
@@ -4516,7 +4517,7 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        private void CheckEventGlobals(string prefix, bool skipCheck, TriggerEvent evnt, List<string> errors, Int32 nr, ref bool fatal, bool fatalOnly, bool fix, ref bool wasFixed, List<int> availableGlobals, Dictionary<long,int> fixedGlobals)
+        private void CheckEventGlobals(string prefix, bool skipCheck, TriggerEvent evnt, List<string> errors, int nr, ref bool fatal, bool fatalOnly, bool fix, ref bool wasFixed, List<int> availableGlobals, Dictionary<long,int> fixedGlobals)
         {
             if (skipCheck || fatalOnly)
             {
@@ -4553,7 +4554,7 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        private void CheckEventTeam(string prefix, bool skipCheck, TriggerEvent evnt, List<string> errors, Int32 nr, ref bool fatal, bool fatalOnly)
+        private void CheckEventTeam(string prefix, bool skipCheck, TriggerEvent evnt, List<string> errors, int nr, ref bool fatal, bool fatalOnly)
         {
             if (skipCheck || !TeamType.IsEmpty(evnt.Team) || fatalOnly)
             {
@@ -4567,7 +4568,7 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        private void CheckActionHouse(string prefix, bool skipCheck, TriggerAction action, List<string> errors, Int32 nr, ref bool fatal, bool fatalOnly, bool fix, ref bool wasFixed)
+        private void CheckActionHouse(string prefix, bool skipCheck, TriggerAction action, List<string> errors, int nr, ref bool fatal, bool fatalOnly, bool fix, ref bool wasFixed)
         {
             if (skipCheck || fatalOnly)
             {
@@ -4638,7 +4639,7 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        private void CheckActionText(string prefix, bool skipCheck, TriggerAction action, List<string> errors, Int32 nr, ref bool fatal, bool fatalOnly, bool fix, ref bool wasFixed)
+        private void CheckActionText(string prefix, bool skipCheck, TriggerAction action, List<string> errors, int nr, ref bool fatal, bool fatalOnly, bool fix, ref bool wasFixed)
         {
             if (skipCheck)
             {
@@ -4663,7 +4664,7 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        private void CheckActionGlobals(string prefix, bool skipCheck, TriggerAction action, List<string> errors, Int32 nr, ref bool fatal, bool fatalOnly, bool fix, ref bool wasFixed, List<int> availableGlobals, Dictionary<long, int> globalFixes)
+        private void CheckActionGlobals(string prefix, bool skipCheck, TriggerAction action, List<string> errors, int nr, ref bool fatal, bool fatalOnly, bool fix, ref bool wasFixed, List<int> availableGlobals, Dictionary<long, int> globalFixes)
         {
             if (skipCheck || fatalOnly)
             {
@@ -4720,7 +4721,7 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        private void CheckActionTrigger(string prefix, bool skipCheck, TriggerAction action, List<string> errors, Int32 nr, ref bool fatal, bool fatalOnly)
+        private void CheckActionTrigger(string prefix, bool skipCheck, TriggerAction action, List<string> errors, int nr, ref bool fatal, bool fatalOnly)
         {
             if (skipCheck || !Trigger.IsEmpty(action.Trigger) || fatalOnly)
             {
@@ -4737,7 +4738,7 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        private void CheckActionWaypoint(string prefix, bool skipCheck, TriggerAction act, List<string> errors, Int32 nr, ref bool fatal, bool fatalOnly, bool fix, ref bool wasFixed)
+        private void CheckActionWaypoint(string prefix, bool skipCheck, TriggerAction act, List<string> errors, int nr, ref bool fatal, bool fatalOnly, bool fix, ref bool wasFixed)
         {
             if (skipCheck)
             {
@@ -4804,10 +4805,10 @@ namespace MobiusEditor.RedAlert
             return String.Format(trigFormat, trigger.Name, trigger.House, persistence, evtControl);
         }
 
-        private String GetEventString(TriggerEvent evt)
+        private string GetEventString(TriggerEvent evt)
         {
-            String eventStr = (evt.EventType ?? TriggerEvent.None).TrimEnd('.');
-            String eventArg = null;
+            string eventStr = (evt.EventType ?? TriggerEvent.None).TrimEnd('.');
+            string eventArg = null;
             switch (evt.EventType)
             {
                 case EventTypes.TEVENT_LEAVES_MAP:
@@ -4855,10 +4856,10 @@ namespace MobiusEditor.RedAlert
             return eventArg == null ? eventStr : String.Format(GameInfo.TRIG_ARG_FORMAT, eventStr, eventArg);
         }
 
-        private String GetActionString(TriggerAction act)
+        private string GetActionString(TriggerAction act)
         {
-            String actionStr = (act.ActionType ?? TriggerAction.None).TrimEnd('.');
-            String actionArg = null;
+            string actionStr = (act.ActionType ?? TriggerAction.None).TrimEnd('.');
+            string actionArg = null;
             switch (act.ActionType)
             {
                 case ActionTypes.TACTION_CREATE_TEAM:
@@ -4882,7 +4883,7 @@ namespace MobiusEditor.RedAlert
                 case ActionTypes.TACTION_REVEAL_SOME:
                 case ActionTypes.TACTION_REVEAL_ZONE:
                     Waypoint z = act.Data >= 0 && act.Data < Map.Waypoints.Length ? Map.Waypoints[act.Data] : null;
-                    String wpSummary = act.Data.ToString();
+                    string wpSummary = act.Data.ToString();
                     if (z == null)
                         wpSummary += " [Bad value]";
                     else if (!z.Point.HasValue)

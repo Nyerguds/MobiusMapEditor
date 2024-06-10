@@ -442,7 +442,7 @@ namespace MobiusEditor.TiberianDawn
             BasicSection basicSection = new BasicSection();
             basicSection.SetDefault();
             IEnumerable<HouseType> houseTypes = HouseTypes.GetTypes();
-            basicSection.Player = houseTypes.Where(h => (h.Flags & HouseTypeFlag.Special) == HouseTypeFlag.None).First().Name;
+            basicSection.Player = houseTypes.Where(h => !h.Flags.HasFlag(HouseTypeFlag.Special)).First().Name;
             basicSection.BasePlayer = HouseTypes.None.Name;
             string[] cellEventTypes = new[]
             {
@@ -2106,7 +2106,7 @@ namespace MobiusEditor.TiberianDawn
             string defaultEdge = Globals.MapEdges.FirstOrDefault() ?? string.Empty;
             foreach (Model.House house in Map.Houses)
             {
-                if ((house.Type.Flags & HouseTypeFlag.Special) != HouseTypeFlag.None)
+                if (house.Type.Flags.HasFlag(HouseTypeFlag.Special))
                 {
                     continue;
                 }
@@ -2209,13 +2209,14 @@ namespace MobiusEditor.TiberianDawn
             return templateTypes;
         }
 
-        protected TemplateType ChecKTemplateType(TemplateType[] templateTypes, int typeValue, int iconValue, int x, int y, List<string> errors, ref bool modified)
+        protected TemplateType ChecKTemplateType(TemplateType[] templateTypes, byte typeValue, int iconValue, int x, int y, List<string> errors, ref bool modified)
         {
+            // This array is 0x100 long so it never gives errors on byte values.
             TemplateType templateType = templateTypes[typeValue];
             // Prevent loading of illegal tiles.
             if (templateType != null)
             {
-                if ((templateType.Flag & TemplateTypeFlag.Clear) != TemplateTypeFlag.None || (templateType.Flag & TemplateTypeFlag.Group) == TemplateTypeFlag.Group)
+                if (templateType.Flag.HasFlag(TemplateTypeFlag.Clear) || templateType.Flag.HasFlag(TemplateTypeFlag.Group))
                 {
                     // No explicitly set Clear terrain allowed. Also no explicitly set versions allowed of the "group" dummy entries.
                     templateType = null;
@@ -2833,7 +2834,7 @@ namespace MobiusEditor.TiberianDawn
         protected IEnumerable<INISection> SaveIniHouses(INI ini)
         {
             List<INISection> houseSections = new List<INISection>();
-            foreach (Model.House house in Map.Houses.Where(h => (h.Type.Flags & HouseTypeFlag.Special) == HouseTypeFlag.None).OrderBy(h => h.Type.ID))
+            foreach (Model.House house in Map.Houses.Where(h => !h.Type.Flags.HasFlag(HouseTypeFlag.Special)).OrderBy(h => h.Type.ID))
             {
                 House gameHouse = (House)house;
                 bool enabled = house.Enabled;
@@ -2980,7 +2981,7 @@ namespace MobiusEditor.TiberianDawn
             writer.WriteStartArray();
             if (!Map.BasicSection.SoloMission)
             {
-                foreach (Waypoint waypoint in Map.Waypoints.Where(w => (w.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart
+                foreach (Waypoint waypoint in Map.Waypoints.Where(w => w.Flag.HasFlag(WaypointFlag.PlayerStart)
                     && w.Cell.HasValue && Map.Metrics.GetLocation(w.Cell.Value, out Point p) && Map.Bounds.Contains(p)))
                 {
                     writer.WriteValue(waypoint.Cell.Value);
@@ -2989,7 +2990,7 @@ namespace MobiusEditor.TiberianDawn
             else
             {
                 // Probably useless, but better than the player start points.
-                foreach (Waypoint waypoint in Map.Waypoints.Where(w => (w.Flag & WaypointFlag.Home) == WaypointFlag.Home
+                foreach (Waypoint waypoint in Map.Waypoints.Where(w => w.Flag.HasFlag(WaypointFlag.Home)
                     && w.Cell.HasValue && Map.Metrics.GetLocation(w.Cell.Value, out Point p) && Map.Bounds.Contains(p)))
                 {
                     writer.WriteValue(waypoint.Cell.Value);
@@ -3022,9 +3023,9 @@ namespace MobiusEditor.TiberianDawn
             int numInfantry = Map.Technos.OfType<InfantryGroup>().Sum(item => item.Occupier.Infantry.Count(i => i != null));
             int numTerrain = Map.Technos.OfType<Terrain>().Count();
             int numUnits = Map.Technos.OfType<Unit>().Where(u => u.Occupier.Type.IsGroundUnit).Count();
-            int numStartPoints = Map.Waypoints.Count(w => (w.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart && w.Cell.HasValue
+            int numStartPoints = Map.Waypoints.Count(w => w.Flag.HasFlag(WaypointFlag.PlayerStart) && w.Cell.HasValue
                 && Map.Metrics.GetLocation(w.Cell.Value, out Point pt) && Map.Bounds.Contains(pt));
-            int numBadPoints = Map.Waypoints.Count(w => (w.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart && w.Cell.HasValue
+            int numBadPoints = Map.Waypoints.Count(w => w.Flag.HasFlag(WaypointFlag.PlayerStart) && w.Cell.HasValue
                 && Map.Metrics.GetLocation(w.Cell.Value, out Point pt) && !Map.Bounds.Contains(pt));
             bool classicSole = forSole && Globals.RestrictSoleLimits;
             int maxAir = classicSole ? Constants.MaxAircraftClassic : Constants.MaxAircraft;
@@ -3086,7 +3087,7 @@ namespace MobiusEditor.TiberianDawn
                     ok = false;
                 }
             }
-            Waypoint homeWaypoint = Map.Waypoints.Where(w => (w.Flag & WaypointFlag.Home) == WaypointFlag.Home).FirstOrDefault();
+            Waypoint homeWaypoint = Map.Waypoints.Where(w => w.Flag.HasFlag(WaypointFlag.Home)).FirstOrDefault();
             if (Map.BasicSection.SoloMission && (!homeWaypoint.Cell.HasValue || !Map.Metrics.GetLocation(homeWaypoint.Cell.Value, out Point p) || !Map.Bounds.Contains(p)))
             {
                 sb.Append("\nSingle-player maps need the Home waypoint to be placed, inside the map bounds.");
@@ -3130,7 +3131,7 @@ namespace MobiusEditor.TiberianDawn
             {
                 info.Add(String.Empty);
                 info.Add("Multiplayer info:");
-                int startPoints = Map.Waypoints.Count(w => w.Cell.HasValue && (w.Flag & WaypointFlag.PlayerStart) == WaypointFlag.PlayerStart);
+                int startPoints = Map.Waypoints.Count(w => w.Cell.HasValue && w.Flag.HasFlag(WaypointFlag.PlayerStart));
                 info.Add(String.Format("Number of set starting points: {0}.", startPoints));
             }
             const bool assessScripting = true;
@@ -3177,7 +3178,7 @@ namespace MobiusEditor.TiberianDawn
                 foreach (Trigger tr in Map.Triggers)
                 {
                     if (tr.Action1.ActionType == ActionTypes.ACTION_DZ)
-                        usedWaypoints.Add(Enumerable.Range(0, Map.Waypoints.Length).Where(i => (Map.Waypoints[i].Flag & WaypointFlag.Flare) == WaypointFlag.Flare).First());
+                        usedWaypoints.Add(Enumerable.Range(0, Map.Waypoints.Length).Where(i => Map.Waypoints[i].Flag.HasFlag(WaypointFlag.Flare)).First());
                 }
                 WaypointFlag toIgnore = WaypointFlag.Home | WaypointFlag.Reinforce;
                 string unusedWaypointsStr = String.Join(", ", setWaypoints.OrderBy(w => w)
@@ -3269,7 +3270,7 @@ namespace MobiusEditor.TiberianDawn
             // Tiberian Dawn logic: find AIs with construction yard and Production trigger.
             HashSet<string> housesWithCY = new HashSet<string>();
             foreach ((_, Building bld) in Map.Buildings.OfType<Building>().Where(b => b.Occupier.IsPrebuilt &&
-                (b.Occupier.House.Flags & HouseTypeFlag.Special) != HouseTypeFlag.None && (b.Occupier.Type.Flag & BuildingTypeFlag.Factory) == BuildingTypeFlag.Factory))
+                !b.Occupier.House.Flags.HasFlag(HouseTypeFlag.Special) && b.Occupier.Type.Flag.HasFlag(BuildingTypeFlag.Factory)))
             {
                 housesWithCY.Add(bld.House.Name);
             }
@@ -3331,7 +3332,7 @@ namespace MobiusEditor.TiberianDawn
                 for (int i = 0; i < length; i++)
                 {
                     Waypoint waypoint = waypoints[i];
-                    if (waypoint != null && waypoint.Cell.HasValue && (waypoint.Flag & WaypointFlag.Flare) != WaypointFlag.None)
+                    if (waypoint != null && waypoint.Cell.HasValue && waypoint.Flag.HasFlag(WaypointFlag.Flare))
                     {
                         flareRadius[i] = Map.DropZoneRadius;
                     }

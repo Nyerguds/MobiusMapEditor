@@ -289,7 +289,7 @@ namespace MobiusEditor.Tools
 
         private void MapPanel_MouseWheel(Object sender, MouseEventArgs e)
         {
-            if (e.Delta == 0 || (Control.ModifierKeys & Keys.Control) == Keys.None)
+            if (e.Delta == 0 || !Control.ModifierKeys.HasFlag(Keys.Control))
             {
                 return;
             }
@@ -594,7 +594,7 @@ namespace MobiusEditor.Tools
                     {
                         render.RenderAction(g);
                     }
-                    if ((Layers & MapLayerFlag.TechnoTriggers) == MapLayerFlag.TechnoTriggers)
+                    if (Layers.HasFlag(MapLayerFlag.TechnoTriggers))
                     {
                         CellMetrics tm = new CellMetrics(3, 3);
                         OccupierSet<ICellOccupier> technoSet = new OccupierSet<ICellOccupier>(tm);
@@ -659,7 +659,7 @@ namespace MobiusEditor.Tools
         {
             base.PostRenderMap(graphics, visibleCells);
             // Since we manually handle GapRadius painting, need to do the Buildings ones too.
-            if ((Layers & (MapLayerFlag.Buildings | MapLayerFlag.EffectRadius)) == (MapLayerFlag.Buildings | MapLayerFlag.EffectRadius))
+            if (Layers.HasFlag(MapLayerFlag.Buildings | MapLayerFlag.EffectRadius))
             {
                 MapRenderer.RenderAllBuildingEffectRadiuses(graphics, previewMap, visibleCells, Globals.MapTileSize, map.GapRadius, null);
             }
@@ -669,7 +669,7 @@ namespace MobiusEditor.Tools
             boundRenderCells.Inflate(1, 1);
             boundRenderCells.Intersect(map.Metrics.Bounds);
             MapRenderer.RenderAllBoundsFromPoint(graphics, boundRenderCells, Globals.MapTileSize, previewMap.Technos.OfType<Unit>());
-            if ((Layers & MapLayerFlag.TechnoTriggers) == MapLayerFlag.TechnoTriggers)
+            if (Layers.HasFlag(MapLayerFlag.TechnoTriggers))
             {
                 MapRenderer.RenderAllTechnoTriggers(graphics, plugin.GameInfo, previewMap, visibleCells, Globals.MapTileSize, Layers);
             }
@@ -697,7 +697,7 @@ namespace MobiusEditor.Tools
                     selected = un;
                 }
             }
-            if ((Layers & MapLayerFlag.EffectRadius) == MapLayerFlag.EffectRadius)
+            if (Layers.HasFlag(MapLayerFlag.EffectRadius))
             {
                 MapRenderer.RenderAllUnitEffectRadiuses(graphics, previewMap, visibleCells, Globals.MapTileSize, map.RadarJamRadius, selected);
             }
