@@ -1043,7 +1043,7 @@ namespace MobiusEditor.Dialogs
                                 eventValueComboBox.Visible = true;
                                 eventValueComboBox.DisplayMember = "Label";
                                 eventValueComboBox.ValueMember = "Value";
-                                var unitData = plugin.Map.UnitTypes.Where(t => t.IsGroundUnit).Select(t => new ListItem<long>(t.ID, t.DisplayName)).ToArray();
+                                var unitData = plugin.Map.UnitTypes.OfType<VehicleType>().Select(t => new ListItem<long>(t.ID, t.DisplayName)).ToArray();
                                 eventValueComboBox.DataSource = unitData;
                                 correctedData = ListItem.CheckInList(data, unitData);
                                 triggerEvent.Data = correctedData;
@@ -1065,8 +1065,8 @@ namespace MobiusEditor.Dialogs
                                 eventValueComboBox.Visible = true;
                                 eventValueComboBox.DisplayMember = "Label";
                                 eventValueComboBox.ValueMember = "Value";
-                                var airData = plugin.Map.TeamTechnoTypes.Where(t => (t is UnitType) && ((UnitType)t).IsAircraft)
-                                    .Select(t => new ListItem<long>(t.ID & ~UnitTypeIDMask.Aircraft, t.DisplayName)).ToArray();
+                                var airData = plugin.Map.TeamTechnoTypes.OfType<AircraftType>()
+                                    .Select(t => new ListItem<long>(t.ID, t.DisplayName)).ToArray();
                                 eventValueComboBox.DataSource = airData;
                                 correctedData = ListItem.CheckInList(data, airData);
                                 triggerEvent.Data = correctedData;

@@ -877,12 +877,12 @@ namespace MobiusEditor.Render
             // Special logic for APC-types with unload frames.
             if ((frameUsage & FrameUsage.HasUnloadFrames) != FrameUsage.None)
             {
-                if ((unit.Type.ID & UnitTypeIDMask.Aircraft) == UnitTypeIDMask.Aircraft)
+                if (unit.Type.IsAircraft)
                 {
                     // Transport heli unload has 4 frames
                     bodyFrames += 4;
                 }
-                else if ((unit.Type.ID & UnitTypeIDMask.Vessel) == UnitTypeIDMask.Vessel)
+                else if (unit.Type.IsVessel)
                 {
                     // Boat unload has 4 frames
                     bodyFrames += 4;

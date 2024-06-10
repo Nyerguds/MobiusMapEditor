@@ -108,7 +108,8 @@ namespace MobiusEditor.Tools
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
             previewMap = map;
-            List<UnitType> unitTypes = plugin.Map.UnitTypes.OrderBy(t => t.ID).ToList();
+            // order: first all non-aircraft, then inside those, first all non-vessel, then order each group by id.
+            List<UnitType> unitTypes = plugin.Map.UnitTypes.OrderBy(t => t.IsAircraft).ThenBy(t => t.IsVessel).ThenBy(t => t.ID).ToList();
             UnitType unitType = unitTypes.First();
             mockUnit = new Unit()
             {
@@ -136,7 +137,9 @@ namespace MobiusEditor.Tools
             int selectedIndex = unitTypeListBox.SelectedIndex;
             UnitType selected = unitTypeListBox.SelectedValue as UnitType;
             unitTypeListBox.SelectedIndexChanged -= UnitTypeListBox_SelectedIndexChanged;
-            List<UnitType> updatedTypes = plugin.Map.UnitTypes.OrderBy(t => t.ID).ToList();
+            // order: first all non-aircraft, then inside those, first all non-vessel, then order each group by id.
+            // The end result is: first vehicles, then vessels, then air units.
+            List<UnitType> updatedTypes = plugin.Map.UnitTypes.OrderBy(t => t.IsAircraft).ThenBy(t => t.IsVessel).ThenBy(t => t.ID).ToList();
             if (!updatedTypes.Contains(selected))
             {
                 // Find nearest existing.

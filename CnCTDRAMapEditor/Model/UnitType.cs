@@ -72,14 +72,80 @@ namespace MobiusEditor.Model
         FrameModifiers = DamageStates | HasUnloadFrames | Rotor | OnFlatBed
     }
 
-    public static class UnitTypeIDMask
+    public class VehicleType : UnitType
     {
-        public const int Aircraft   = 1 << 5;
-        public const int Vessel = 1 << 6;
+        public override bool IsGroundUnit => true;
+        public override bool IsAircraft => false;
+        public override bool IsVessel => false;
+        public override bool IsFixedWing => false;
+
+        public VehicleType(int id, string name, string textId, string ownerHouse, FrameUsage bodyFrameUsage, FrameUsage turrFrameUsage, string turret, string turret2, int turrOffset, int turrY, UnitTypeFlag flags)
+            : base(id, name, textId, ownerHouse, bodyFrameUsage, turrFrameUsage, turret, turret2, turrOffset, turrY, flags)
+        { }
+
+        public VehicleType(int id, string name, string textId, string ownerHouse, FrameUsage bodyFrameUsage, FrameUsage turrFrameUsage, UnitTypeFlag flags)
+            : base(id, name, textId, ownerHouse, bodyFrameUsage, turrFrameUsage, null, null, 0, 0, flags)
+        { }
+
+        public VehicleType(int id, string name, string textId, string ownerHouse, FrameUsage bodyFrameUsage, UnitTypeFlag flags)
+            : base(id, name, textId, ownerHouse, bodyFrameUsage, FrameUsage.None, null, null, 0, 0, flags)
+        { }
+
+        public VehicleType(int id, string name, string textId, string ownerHouse, FrameUsage bodyFrameUsage)
+            : base(id, name, textId, ownerHouse, bodyFrameUsage, FrameUsage.None, null, null, 0, 0, UnitTypeFlag.None)
+        { }
+
+        public VehicleType(int id, string name, string textId, string ownerHouse, FrameUsage bodyFrameUsage, FrameUsage turrFrameUsage, int turrOffset, int turrY, UnitTypeFlag flags)
+            : base(id, name, textId, ownerHouse, bodyFrameUsage, turrFrameUsage, null, null, turrOffset, turrY, flags)
+        { }
+
+    }
+
+    public class AircraftType : UnitType
+    {
+        public override bool IsGroundUnit => false;
+        public override bool IsAircraft => true;
+        public override bool IsVessel => false;
+        public override bool IsFixedWing => (this.Flag & UnitTypeFlag.IsFixedWing) == UnitTypeFlag.IsFixedWing;
+
+        public AircraftType(int id, string name, string textId, string ownerHouse, FrameUsage bodyFrameUsage, FrameUsage turrFrameUsage, string turret, string turret2, int turrOffset, int turrY, UnitTypeFlag flags)
+            : base(id, name, textId, ownerHouse, bodyFrameUsage, turrFrameUsage, turret, turret2, turrOffset, turrY, flags)
+        { }
+
+        public AircraftType(int id, string name, string textId, string ownerHouse, FrameUsage bodyFrameUsage, UnitTypeFlag flags)
+            : base(id, name, textId, ownerHouse, bodyFrameUsage, FrameUsage.None, null, null, 0, 0, flags)
+        { }
+    }
+
+    public class VesselType : UnitType
+    {
+        public override bool IsGroundUnit => false;
+        public override bool IsAircraft => false;
+        public override bool IsVessel => true;
+        public override bool IsFixedWing => false;
+
+        public VesselType(int id, string name, string textId, string ownerHouse, FrameUsage bodyFrameUsage, FrameUsage turrFrameUsage, string turret, string turret2, int turrOffset, int turrY, UnitTypeFlag flags)
+            : base(id, name, textId, ownerHouse, bodyFrameUsage, turrFrameUsage, turret, turret2, turrOffset, turrY, flags)
+        { }
+
+        public VesselType(int id, string name, string textId, string ownerHouse, FrameUsage bodyFrameUsage, FrameUsage turrFrameUsage, UnitTypeFlag flags)
+         : base(id, name, textId, ownerHouse, bodyFrameUsage, turrFrameUsage, null, null, 0, 0, flags)
+        {
+        }
+
+        public VesselType(int id, string name, string textId, string ownerHouse, FrameUsage bodyFrameUsage)
+            : base(id, name, textId, ownerHouse, bodyFrameUsage, FrameUsage.None, null, null, 0, 0, UnitTypeFlag.None)
+        {
+        }
+
+        public VesselType(int id, string name, string textId, string ownerHouse, FrameUsage bodyFrameUsage, UnitTypeFlag flags)
+         : base(id, name, textId, ownerHouse, bodyFrameUsage, FrameUsage.None, null, null, 0, 0, flags)
+        {
+        }
     }
 
     [DebuggerDisplay("{Name}")]
-    public class UnitType : ICellOverlapper, ICellOccupier, ITechnoType
+    public abstract class UnitType : ICellOverlapper, ICellOccupier, ITechnoType
     {
         public int ID { get; private set; }
         public string Name { get; private set; }
@@ -95,12 +161,12 @@ namespace MobiusEditor.Model
         public bool[,] OpaqueMask => new bool[1, 1] { { true } };
         public bool[,] OccupyMask => new bool[1, 1] { { true } };
         public string OwnerHouse { get; private set; }
-        public bool IsGroundUnit => !this.IsAircraft && !this.IsVessel;
-        public bool IsAircraft => (this.ID & UnitTypeIDMask.Aircraft) != 0;
-        public bool IsVessel => (this.ID & UnitTypeIDMask.Vessel) != 0;
+        public abstract bool IsGroundUnit { get; }
+        public abstract bool IsAircraft { get; }
+        public abstract bool IsVessel { get; }
+        public abstract bool IsFixedWing { get; }
         public bool HasTurret => (this.Flag & UnitTypeFlag.HasTurret) == UnitTypeFlag.HasTurret;
         public bool HasDoubleTurret => (this.Flag & UnitTypeFlag.HasDoubleTurret) == UnitTypeFlag.HasDoubleTurret;
-        public bool IsFixedWing => (this.Flag & UnitTypeFlag.IsFixedWing) == UnitTypeFlag.IsFixedWing;
         public bool IsArmed => (this.Flag & UnitTypeFlag.IsArmed) == UnitTypeFlag.IsArmed;
         public bool IsHarvester => (this.Flag & UnitTypeFlag.IsHarvester) == UnitTypeFlag.IsHarvester;
         public bool IsExpansionOnly => (this.Flag & UnitTypeFlag.IsExpansionUnit) == UnitTypeFlag.IsExpansionUnit;
@@ -125,26 +191,6 @@ namespace MobiusEditor.Model
             this.TurretFrameUsage = turrFrameUsage;
         }
 
-        public UnitType(int id, string name, string textId, string ownerHouse, FrameUsage bodyFrameUsage, FrameUsage turrFrameUsage, int turrOffset, int turrY, UnitTypeFlag flags)
-             : this(id, name, textId, ownerHouse, bodyFrameUsage, turrFrameUsage, null, null, turrOffset, turrY, flags)
-        {
-        }
-
-        public UnitType(int id, string name, string textId, string ownerHouse, FrameUsage bodyFrameUsage, FrameUsage turrFrameUsage, UnitTypeFlag flags)
-         : this(id, name, textId, ownerHouse, bodyFrameUsage, turrFrameUsage, null, null, 0, 0, flags)
-        {
-        }
-
-        public UnitType(int id, string name, string textId, string ownerHouse, FrameUsage bodyFrameUsage, UnitTypeFlag flags)
-         : this(id, name, textId, ownerHouse, bodyFrameUsage, FrameUsage.None, null, null, 0, 0, flags)
-        {
-        }
-
-        public UnitType(int id, string name, string textId, string ownerHouse, FrameUsage bodyFrameUsage)
-            : this(id, name, textId, ownerHouse, bodyFrameUsage, FrameUsage.None, null, null, 0, 0, UnitTypeFlag.None)
-        {
-        }
-
         public override bool Equals(object obj)
         {
             if (obj is UnitType unit)
@@ -159,7 +205,6 @@ namespace MobiusEditor.Model
             {
                 return string.Equals(this.Name, obj as string, StringComparison.OrdinalIgnoreCase);
             }
-
             return base.Equals(obj);
         }
 

@@ -22,44 +22,44 @@ namespace MobiusEditor.RedAlert
 {
     public static class UnitTypes
     {
-        public static readonly UnitType HTank = new UnitType(0, "4tnk", "TEXT_UNIT_RA_4TNK", "USSR", FrameUsage.Frames32Full, FrameUsage.Frames32Full, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
-        public static readonly UnitType MTank = new UnitType(1, "3tnk", "TEXT_UNIT_RA_3TNK", "USSR", FrameUsage.Frames32Full, FrameUsage.Frames32Full, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
-        public static readonly UnitType MTank2 = new UnitType(2, "2tnk", "TEXT_UNIT_RA_2TNK", "Greece", FrameUsage.Frames32Full, FrameUsage.Frames32Full, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
-        public static readonly UnitType LTank = new UnitType(3, "1tnk", "TEXT_UNIT_RA_1TNK", "Greece", FrameUsage.Frames32Full, FrameUsage.Frames32Full, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
-        public static readonly UnitType APC = new UnitType(4, "apc", "TEXT_UNIT_RA_APC", "Greece", FrameUsage.Frames32Full | FrameUsage.HasUnloadFrames, UnitTypeFlag.IsArmed);
-        public static readonly UnitType MineLayer = new UnitType(5, "mnly", "TEXT_UNIT_RA_MNLY", "Greece", FrameUsage.Frames32Full);
-        public static readonly UnitType Jeep = new UnitType(6, "jeep", "TEXT_UNIT_RA_JEEP", "Greece", FrameUsage.Frames32Full, FrameUsage.Frames32Full, 0, -4, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
-        public static readonly UnitType Harvester = new UnitType(7, "harv", "TEXT_UNIT_RA_HARV", "Greece", FrameUsage.Frames32Full, UnitTypeFlag.IsHarvester);
-        public static readonly UnitType Arty = new UnitType(8, "arty", "TEXT_UNIT_RA_ARTY", "Greece", FrameUsage.Frames32Full, UnitTypeFlag.IsArmed);
-        public static readonly UnitType MRJammer = new UnitType(9, "mrj", "TEXT_UNIT_RA_MRJ", "Greece", FrameUsage.Frames32Full, FrameUsage.Frames32Full, 0, -5, UnitTypeFlag.HasTurret | UnitTypeFlag.IsJammer);
-        public static readonly UnitType MGG = new UnitType(10, "mgg", "TEXT_UNIT_RA_MGG", "Greece", FrameUsage.Frames32Full, FrameUsage.Frames16Symmetrical | FrameUsage.OnFlatBed, 0, 0, UnitTypeFlag.HasTurret | UnitTypeFlag.IsGapGenerator);
-        public static readonly UnitType MCV = new UnitType(11, "mcv", "TEXT_UNIT_RA_MCV", "Greece", FrameUsage.Frames32Full);
-        public static readonly UnitType V2Launcher = new UnitType(12, "v2rl", "TEXT_UNIT_RA_V2RL", "USSR", FrameUsage.Frames32Full, UnitTypeFlag.IsArmed);
-        public static readonly UnitType ConvoyTruck = new UnitType(13, "truk", "TEXT_UNIT_RA_TRUK", "Greece", FrameUsage.Frames32Full);
-        public static readonly UnitType Ant1 = new UnitType(14, "ant1", "TEXT_UNIT_RA_ANT1", "USSR", FrameUsage.Frames08Cardinal, UnitTypeFlag.IsArmed);
-        public static readonly UnitType Ant2 = new UnitType(15, "ant2", "TEXT_UNIT_RA_ANT2", "Ukraine", FrameUsage.Frames08Cardinal, UnitTypeFlag.IsArmed);
-        public static readonly UnitType Ant3 = new UnitType(16, "ant3", "TEXT_UNIT_RA_ANT3", "Germany", FrameUsage.Frames08Cardinal, UnitTypeFlag.IsArmed);
-        public static readonly UnitType Chrono = new UnitType(17, "ctnk", "TEXT_UNIT_RA_CTNK", "Greece", FrameUsage.Frames32Full, UnitTypeFlag.IsArmed | UnitTypeFlag.IsExpansionUnit);
-        public static readonly UnitType Tesla = new UnitType(18, "ttnk", "TEXT_UNIT_RA_TTNK", "USSR", FrameUsage.Frames32Full, FrameUsage.Frames01Single, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret | UnitTypeFlag.IsExpansionUnit | UnitTypeFlag.IsJammer);
-        public static readonly UnitType MAD = new UnitType(19, "qtnk", "TEXT_UNIT_RA_QTNK", "USSR", FrameUsage.Frames32Full, UnitTypeFlag.IsArmed | UnitTypeFlag.IsExpansionUnit);
-        public static readonly UnitType DemoTruck = new UnitType(20, "dtrk", "TEXT_UNIT_RA_DTRK", "USSR", FrameUsage.Frames32Full, UnitTypeFlag.IsArmed | UnitTypeFlag.IsExpansionUnit);
-        public static readonly UnitType Phase = new UnitType(21, "stnk", "TEXT_UNIT_RA_STNK", "Greece", FrameUsage.Frames32Full | FrameUsage.HasUnloadFrames, FrameUsage.Frames32Full, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret | UnitTypeFlag.IsExpansionUnit);
+        public static readonly UnitType HTank = new VehicleType(0, "4tnk", "TEXT_UNIT_RA_4TNK", "USSR", FrameUsage.Frames32Full, FrameUsage.Frames32Full, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
+        public static readonly UnitType MTank = new VehicleType(1, "3tnk", "TEXT_UNIT_RA_3TNK", "USSR", FrameUsage.Frames32Full, FrameUsage.Frames32Full, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
+        public static readonly UnitType MTank2 = new VehicleType(2, "2tnk", "TEXT_UNIT_RA_2TNK", "Greece", FrameUsage.Frames32Full, FrameUsage.Frames32Full, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
+        public static readonly UnitType LTank = new VehicleType(3, "1tnk", "TEXT_UNIT_RA_1TNK", "Greece", FrameUsage.Frames32Full, FrameUsage.Frames32Full, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
+        public static readonly UnitType APC = new VehicleType(4, "apc", "TEXT_UNIT_RA_APC", "Greece", FrameUsage.Frames32Full | FrameUsage.HasUnloadFrames, UnitTypeFlag.IsArmed);
+        public static readonly UnitType MineLayer = new VehicleType(5, "mnly", "TEXT_UNIT_RA_MNLY", "Greece", FrameUsage.Frames32Full);
+        public static readonly UnitType Jeep = new VehicleType(6, "jeep", "TEXT_UNIT_RA_JEEP", "Greece", FrameUsage.Frames32Full, FrameUsage.Frames32Full, 0, -4, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
+        public static readonly UnitType Harvester = new VehicleType(7, "harv", "TEXT_UNIT_RA_HARV", "Greece", FrameUsage.Frames32Full, UnitTypeFlag.IsHarvester);
+        public static readonly UnitType Arty = new VehicleType(8, "arty", "TEXT_UNIT_RA_ARTY", "Greece", FrameUsage.Frames32Full, UnitTypeFlag.IsArmed);
+        public static readonly UnitType MRJammer = new VehicleType(9, "mrj", "TEXT_UNIT_RA_MRJ", "Greece", FrameUsage.Frames32Full, FrameUsage.Frames32Full, 0, -5, UnitTypeFlag.HasTurret | UnitTypeFlag.IsJammer);
+        public static readonly UnitType MGG = new VehicleType(10, "mgg", "TEXT_UNIT_RA_MGG", "Greece", FrameUsage.Frames32Full, FrameUsage.Frames16Symmetrical | FrameUsage.OnFlatBed, 0, 0, UnitTypeFlag.HasTurret | UnitTypeFlag.IsGapGenerator);
+        public static readonly UnitType MCV = new VehicleType(11, "mcv", "TEXT_UNIT_RA_MCV", "Greece", FrameUsage.Frames32Full);
+        public static readonly UnitType V2Launcher = new VehicleType(12, "v2rl", "TEXT_UNIT_RA_V2RL", "USSR", FrameUsage.Frames32Full, UnitTypeFlag.IsArmed);
+        public static readonly UnitType ConvoyTruck = new VehicleType(13, "truk", "TEXT_UNIT_RA_TRUK", "Greece", FrameUsage.Frames32Full);
+        public static readonly UnitType Ant1 = new VehicleType(14, "ant1", "TEXT_UNIT_RA_ANT1", "USSR", FrameUsage.Frames08Cardinal, UnitTypeFlag.IsArmed);
+        public static readonly UnitType Ant2 = new VehicleType(15, "ant2", "TEXT_UNIT_RA_ANT2", "Ukraine", FrameUsage.Frames08Cardinal, UnitTypeFlag.IsArmed);
+        public static readonly UnitType Ant3 = new VehicleType(16, "ant3", "TEXT_UNIT_RA_ANT3", "Germany", FrameUsage.Frames08Cardinal, UnitTypeFlag.IsArmed);
+        public static readonly UnitType Chrono = new VehicleType(17, "ctnk", "TEXT_UNIT_RA_CTNK", "Greece", FrameUsage.Frames32Full, UnitTypeFlag.IsArmed | UnitTypeFlag.IsExpansionUnit);
+        public static readonly UnitType Tesla = new VehicleType(18, "ttnk", "TEXT_UNIT_RA_TTNK", "USSR", FrameUsage.Frames32Full, FrameUsage.Frames01Single, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret | UnitTypeFlag.IsExpansionUnit | UnitTypeFlag.IsJammer);
+        public static readonly UnitType MAD = new VehicleType(19, "qtnk", "TEXT_UNIT_RA_QTNK", "USSR", FrameUsage.Frames32Full, UnitTypeFlag.IsArmed | UnitTypeFlag.IsExpansionUnit);
+        public static readonly UnitType DemoTruck = new VehicleType(20, "dtrk", "TEXT_UNIT_RA_DTRK", "USSR", FrameUsage.Frames32Full, UnitTypeFlag.IsArmed | UnitTypeFlag.IsExpansionUnit);
+        public static readonly UnitType Phase = new VehicleType(21, "stnk", "TEXT_UNIT_RA_STNK", "Greece", FrameUsage.Frames32Full | FrameUsage.HasUnloadFrames, FrameUsage.Frames32Full, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret | UnitTypeFlag.IsExpansionUnit);
 
-        public static readonly UnitType Tran = new UnitType(0 | UnitTypeIDMask.Aircraft, "tran", "TEXT_UNIT_RA_TRAN", "USSR", FrameUsage.Frames32Full | FrameUsage.HasUnloadFrames, FrameUsage.Rotor, "lrotor", "rrotor", 1, -2, UnitTypeFlag.HasTurret | UnitTypeFlag.HasDoubleTurret);
-        public static readonly UnitType Badr = new UnitType(1 | UnitTypeIDMask.Aircraft, "badr", "TEXT_UNIT_RA_BADR", "USSR", FrameUsage.Frames16Simple, UnitTypeFlag.IsFixedWing);
-        public static readonly UnitType U2 = new UnitType(2 | UnitTypeIDMask.Aircraft, "u2", "TEXT_UNIT_RA_U2", "USSR", FrameUsage.Frames16Simple, UnitTypeFlag.IsFixedWing);
-        public static readonly UnitType Mig = new UnitType(3 | UnitTypeIDMask.Aircraft, "mig", "TEXT_UNIT_RA_MIG", "USSR", FrameUsage.Frames16Simple, UnitTypeFlag.IsFixedWing | UnitTypeFlag.IsArmed);
-        public static readonly UnitType Yak = new UnitType(4 | UnitTypeIDMask.Aircraft, "yak", "TEXT_UNIT_RA_YAK", "USSR", FrameUsage.Frames16Simple, UnitTypeFlag.IsFixedWing | UnitTypeFlag.IsArmed);
-        public static readonly UnitType Heli = new UnitType(5 | UnitTypeIDMask.Aircraft, "heli", "TEXT_UNIT_RA_HELI", "Greece", FrameUsage.Frames32Full, FrameUsage.Rotor, "lrotor", null, 0, -2, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
-        public static readonly UnitType Hind = new UnitType(6 | UnitTypeIDMask.Aircraft, "hind", "TEXT_UNIT_RA_HIND", "USSR", FrameUsage.Frames32Full, FrameUsage.Rotor, "lrotor", null, 0, -2, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
+        public static readonly UnitType Tran = new AircraftType(0, "tran", "TEXT_UNIT_RA_TRAN", "USSR", FrameUsage.Frames32Full | FrameUsage.HasUnloadFrames, FrameUsage.Rotor, "lrotor", "rrotor", 1, -2, UnitTypeFlag.HasTurret | UnitTypeFlag.HasDoubleTurret);
+        public static readonly UnitType Badr = new AircraftType(1, "badr", "TEXT_UNIT_RA_BADR", "USSR", FrameUsage.Frames16Simple, UnitTypeFlag.IsFixedWing);
+        public static readonly UnitType U2 = new AircraftType(2, "u2", "TEXT_UNIT_RA_U2", "USSR", FrameUsage.Frames16Simple, UnitTypeFlag.IsFixedWing);
+        public static readonly UnitType Mig = new AircraftType(3, "mig", "TEXT_UNIT_RA_MIG", "USSR", FrameUsage.Frames16Simple, UnitTypeFlag.IsFixedWing | UnitTypeFlag.IsArmed);
+        public static readonly UnitType Yak = new AircraftType(4, "yak", "TEXT_UNIT_RA_YAK", "USSR", FrameUsage.Frames16Simple, UnitTypeFlag.IsFixedWing | UnitTypeFlag.IsArmed);
+        public static readonly UnitType Heli = new AircraftType(5, "heli", "TEXT_UNIT_RA_HELI", "Greece", FrameUsage.Frames32Full, FrameUsage.Rotor, "lrotor", null, 0, -2, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
+        public static readonly UnitType Hind = new AircraftType(6, "hind", "TEXT_UNIT_RA_HIND", "USSR", FrameUsage.Frames32Full, FrameUsage.Rotor, "lrotor", null, 0, -2, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
 
-        public static readonly UnitType Submarine = new UnitType(0 | UnitTypeIDMask.Vessel, "ss", "TEXT_UNIT_RA_SS", "USSR", FrameUsage.Frames16Simple, FrameUsage.Frames32Full, UnitTypeFlag.IsArmed);
-        public static readonly UnitType Destroyer = new UnitType(1 | UnitTypeIDMask.Vessel, "dd", "TEXT_UNIT_RA_DD", "Greece", FrameUsage.Frames16Simple, FrameUsage.Frames32Full, "ssam", null, -8, -4, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
-        public static readonly UnitType Cruiser = new UnitType(2 | UnitTypeIDMask.Vessel, "ca", "TEXT_UNIT_RA_CA", "Greece", FrameUsage.Frames16Simple, FrameUsage.Frames32Full, "turr", "turr", 22, -4, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret | UnitTypeFlag.HasDoubleTurret);
-        public static readonly UnitType Transport = new UnitType(3 | UnitTypeIDMask.Vessel, "lst", "TEXT_UNIT_RA_LST", "Greece", FrameUsage.Frames01Single | FrameUsage.HasUnloadFrames);
-        public static readonly UnitType PTBoat = new UnitType(4 | UnitTypeIDMask.Vessel, "pt", "TEXT_UNIT_RA_PT", "Greece", FrameUsage.Frames16Simple, FrameUsage.Frames32Full, "mgun", null, 14, 1, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
-        public static readonly UnitType MissileSubmarine = new UnitType(5 | UnitTypeIDMask.Vessel, "msub", "TEXT_UNIT_RA_MSUB", "USSR", FrameUsage.Frames16Simple, UnitTypeFlag.IsArmed | UnitTypeFlag.IsExpansionUnit);
-        public static readonly UnitType Carrier = new UnitType(6 | UnitTypeIDMask.Vessel, "carr", "TEXT_UNIT_RA_CARR", "Greece", FrameUsage.Frames01Single, UnitTypeFlag.IsExpansionUnit);
+        public static readonly UnitType Submarine = new VesselType(0, "ss", "TEXT_UNIT_RA_SS", "USSR", FrameUsage.Frames16Simple, FrameUsage.Frames32Full, UnitTypeFlag.IsArmed);
+        public static readonly UnitType Destroyer = new VesselType(1, "dd", "TEXT_UNIT_RA_DD", "Greece", FrameUsage.Frames16Simple, FrameUsage.Frames32Full, "ssam", null, -8, -4, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
+        public static readonly UnitType Cruiser = new VesselType(2, "ca", "TEXT_UNIT_RA_CA", "Greece", FrameUsage.Frames16Simple, FrameUsage.Frames32Full, "turr", "turr", 22, -4, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret | UnitTypeFlag.HasDoubleTurret);
+        public static readonly UnitType Transport = new VesselType(3, "lst", "TEXT_UNIT_RA_LST", "Greece", FrameUsage.Frames01Single | FrameUsage.HasUnloadFrames);
+        public static readonly UnitType PTBoat = new VesselType(4, "pt", "TEXT_UNIT_RA_PT", "Greece", FrameUsage.Frames16Simple, FrameUsage.Frames32Full, "mgun", null, 14, 1, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
+        public static readonly UnitType MissileSubmarine = new VesselType(5, "msub", "TEXT_UNIT_RA_MSUB", "USSR", FrameUsage.Frames16Simple, UnitTypeFlag.IsArmed | UnitTypeFlag.IsExpansionUnit);
+        public static readonly UnitType Carrier = new VesselType(6, "carr", "TEXT_UNIT_RA_CARR", "Greece", FrameUsage.Frames01Single, UnitTypeFlag.IsExpansionUnit);
 
         private static readonly UnitType[] Types;
 

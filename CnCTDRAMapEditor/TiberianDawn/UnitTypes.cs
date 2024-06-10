@@ -22,34 +22,34 @@ namespace MobiusEditor.TiberianDawn
 {
     public static class UnitTypes
     {
-        public static readonly UnitType HTank = new UnitType(0, "htnk", "TEXT_UNIT_TITLE_GDI_MAMMOTH_TANK", "Goodguy", FrameUsage.Frames32Full, FrameUsage.Frames32Full, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
-        public static readonly UnitType MTank = new UnitType(1, "mtnk", "TEXT_UNIT_TITLE_GDI_MED_TANK", "Goodguy", FrameUsage.Frames32Full, FrameUsage.Frames32Full, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
-        public static readonly UnitType LTank = new UnitType(2, "ltnk", "TEXT_UNIT_TITLE_NOD_LIGHT_TANK", "Badguy", FrameUsage.Frames32Full, FrameUsage.Frames32Full, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
-        public static readonly UnitType STank = new UnitType(3, "stnk", "TEXT_UNIT_TITLE_NOD_STEALTH_TANK", "Badguy", FrameUsage.Frames32Full, UnitTypeFlag.IsArmed);
-        public static readonly UnitType FTank = new UnitType(4, "ftnk", "TEXT_UNIT_TITLE_NOD_FLAME_TANK", "Badguy", FrameUsage.Frames32Full, UnitTypeFlag.IsArmed);
-        public static readonly UnitType Visceroid = new UnitType(5, "vice", "TEXT_UNIT_TITLE_VICE", "Special", FrameUsage.Frames01Single, UnitTypeFlag.IsArmed);
-        public static readonly UnitType APC = new UnitType(6, "apc", "TEXT_UNIT_TITLE_GDI_APC", "Goodguy", FrameUsage.Frames32Full | FrameUsage.HasUnloadFrames, UnitTypeFlag.IsArmed);
-        public static readonly UnitType MLRS = new UnitType(7, "msam", "TEXT_UNIT_TITLE_GDI_MRLS", "Goodguy", FrameUsage.Frames32Full, FrameUsage.Frames32Full | FrameUsage.OnFlatBed, 0, 0, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
-        public static readonly UnitType Jeep = new UnitType(8, "jeep", "TEXT_UNIT_TITLE_GDI_HUMVEE", "Goodguy", FrameUsage.Frames32Full, FrameUsage.Frames32Full, 0, -4, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
-        public static readonly UnitType Buggy = new UnitType(9, "bggy", "TEXT_UNIT_TITLE_NOD_NOD_BUGGY", "Badguy", FrameUsage.Frames32Full, FrameUsage.Frames32Full, 0, -4, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
-        public static readonly UnitType Harvester = new UnitType(10, "harv", "TEXT_UNIT_TITLE_GDI_HARVESTER", "Goodguy", FrameUsage.Frames32Full, UnitTypeFlag.IsHarvester);
-        public static readonly UnitType Arty = new UnitType(11, "arty", "TEXT_UNIT_TITLE_NOD_ARTILLERY", "Badguy", FrameUsage.Frames32Full, UnitTypeFlag.IsArmed);
-        public static readonly UnitType SSM = new UnitType(12, "mlrs", "TEXT_UNIT_TITLE_GDI_MLRS", "Badguy", FrameUsage.Frames32Full, FrameUsage.Frames32Full | FrameUsage.OnFlatBed, 0, 0, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
-        public static readonly UnitType Hover = new UnitType(13, "lst", "TEXT_UNIT_TITLE_LST", "Goodguy", FrameUsage.Frames01Single);
-        public static readonly UnitType MHQ = new UnitType(14, "mhq", "TEXT_UNIT_TITLE_MHQ", "Goodguy", FrameUsage.Frames32Full, FrameUsage.Frames32Full, 0, -4, UnitTypeFlag.HasTurret);
-        public static readonly UnitType GunBoat = new UnitType(15, "boat", "TEXT_UNIT_TITLE_WAKE", "Goodguy", FrameUsage.Frames32Full | FrameUsage.DamageStates, FrameUsage.Frames32Full, UnitTypeFlag.IsArmed);
-        public static readonly UnitType MCV = new UnitType(16, "mcv", "TEXT_UNIT_TITLE_GDI_MCV", "Goodguy", FrameUsage.Frames32Full);
-        public static readonly UnitType Bike = new UnitType(17, "bike", "TEXT_UNIT_TITLE_NOD_RECON_BIKE", "Badguy", FrameUsage.Frames32Full, UnitTypeFlag.IsArmed);
-        public static readonly UnitType Tric = new UnitType(18, "tric", "TEXT_UNIT_TITLE_TRIC", "Special", FrameUsage.Frames08Cardinal, UnitTypeFlag.IsArmed | UnitTypeFlag.NoRemap);
-        public static readonly UnitType Trex = new UnitType(19, "trex", "TEXT_UNIT_TITLE_TREX", "Special", FrameUsage.Frames08Cardinal, UnitTypeFlag.IsArmed | UnitTypeFlag.NoRemap);
-        public static readonly UnitType Rapt = new UnitType(20, "rapt", "TEXT_UNIT_TITLE_RAPT", "Special", FrameUsage.Frames08Cardinal, UnitTypeFlag.IsArmed | UnitTypeFlag.NoRemap);
-        public static readonly UnitType Steg = new UnitType(21, "steg", "TEXT_UNIT_TITLE_STEG", "Special", FrameUsage.Frames08Cardinal, UnitTypeFlag.IsArmed | UnitTypeFlag.NoRemap);
+        public static readonly UnitType HTank = new VehicleType(0, "htnk", "TEXT_UNIT_TITLE_GDI_MAMMOTH_TANK", "Goodguy", FrameUsage.Frames32Full, FrameUsage.Frames32Full, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
+        public static readonly UnitType MTank = new VehicleType(1, "mtnk", "TEXT_UNIT_TITLE_GDI_MED_TANK", "Goodguy", FrameUsage.Frames32Full, FrameUsage.Frames32Full, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
+        public static readonly UnitType LTank = new VehicleType(2, "ltnk", "TEXT_UNIT_TITLE_NOD_LIGHT_TANK", "Badguy", FrameUsage.Frames32Full, FrameUsage.Frames32Full, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
+        public static readonly UnitType STank = new VehicleType(3, "stnk", "TEXT_UNIT_TITLE_NOD_STEALTH_TANK", "Badguy", FrameUsage.Frames32Full, UnitTypeFlag.IsArmed);
+        public static readonly UnitType FTank = new VehicleType(4, "ftnk", "TEXT_UNIT_TITLE_NOD_FLAME_TANK", "Badguy", FrameUsage.Frames32Full, UnitTypeFlag.IsArmed);
+        public static readonly UnitType Visceroid = new VehicleType(5, "vice", "TEXT_UNIT_TITLE_VICE", "Special", FrameUsage.Frames01Single, UnitTypeFlag.IsArmed);
+        public static readonly UnitType APC = new VehicleType(6, "apc", "TEXT_UNIT_TITLE_GDI_APC", "Goodguy", FrameUsage.Frames32Full | FrameUsage.HasUnloadFrames, UnitTypeFlag.IsArmed);
+        public static readonly UnitType MLRS = new VehicleType(7, "msam", "TEXT_UNIT_TITLE_GDI_MRLS", "Goodguy", FrameUsage.Frames32Full, FrameUsage.Frames32Full | FrameUsage.OnFlatBed, 0, 0, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
+        public static readonly UnitType Jeep = new VehicleType(8, "jeep", "TEXT_UNIT_TITLE_GDI_HUMVEE", "Goodguy", FrameUsage.Frames32Full, FrameUsage.Frames32Full, 0, -4, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
+        public static readonly UnitType Buggy = new VehicleType(9, "bggy", "TEXT_UNIT_TITLE_NOD_NOD_BUGGY", "Badguy", FrameUsage.Frames32Full, FrameUsage.Frames32Full, 0, -4, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
+        public static readonly UnitType Harvester = new VehicleType(10, "harv", "TEXT_UNIT_TITLE_GDI_HARVESTER", "Goodguy", FrameUsage.Frames32Full, UnitTypeFlag.IsHarvester);
+        public static readonly UnitType Arty = new VehicleType(11, "arty", "TEXT_UNIT_TITLE_NOD_ARTILLERY", "Badguy", FrameUsage.Frames32Full, UnitTypeFlag.IsArmed);
+        public static readonly UnitType SSM = new VehicleType(12, "mlrs", "TEXT_UNIT_TITLE_GDI_MLRS", "Badguy", FrameUsage.Frames32Full, FrameUsage.Frames32Full | FrameUsage.OnFlatBed, 0, 0, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
+        public static readonly UnitType Hover = new VehicleType(13, "lst", "TEXT_UNIT_TITLE_LST", "Goodguy", FrameUsage.Frames01Single);
+        public static readonly UnitType MHQ = new VehicleType(14, "mhq", "TEXT_UNIT_TITLE_MHQ", "Goodguy", FrameUsage.Frames32Full, FrameUsage.Frames32Full, 0, -4, UnitTypeFlag.HasTurret);
+        public static readonly UnitType GunBoat = new VehicleType(15, "boat", "TEXT_UNIT_TITLE_WAKE", "Goodguy", FrameUsage.Frames32Full | FrameUsage.DamageStates, FrameUsage.Frames32Full, UnitTypeFlag.IsArmed);
+        public static readonly UnitType MCV = new VehicleType(16, "mcv", "TEXT_UNIT_TITLE_GDI_MCV", "Goodguy", FrameUsage.Frames32Full);
+        public static readonly UnitType Bike = new VehicleType(17, "bike", "TEXT_UNIT_TITLE_NOD_RECON_BIKE", "Badguy", FrameUsage.Frames32Full, UnitTypeFlag.IsArmed);
+        public static readonly UnitType Tric = new VehicleType(18, "tric", "TEXT_UNIT_TITLE_TRIC", "Special", FrameUsage.Frames08Cardinal, UnitTypeFlag.IsArmed | UnitTypeFlag.NoRemap);
+        public static readonly UnitType Trex = new VehicleType(19, "trex", "TEXT_UNIT_TITLE_TREX", "Special", FrameUsage.Frames08Cardinal, UnitTypeFlag.IsArmed | UnitTypeFlag.NoRemap);
+        public static readonly UnitType Rapt = new VehicleType(20, "rapt", "TEXT_UNIT_TITLE_RAPT", "Special", FrameUsage.Frames08Cardinal, UnitTypeFlag.IsArmed | UnitTypeFlag.NoRemap);
+        public static readonly UnitType Steg = new VehicleType(21, "steg", "TEXT_UNIT_TITLE_STEG", "Special", FrameUsage.Frames08Cardinal, UnitTypeFlag.IsArmed | UnitTypeFlag.NoRemap);
 
-        public static readonly UnitType Tran = new UnitType(0 | UnitTypeIDMask.Aircraft, "tran", "TEXT_UNIT_TITLE_GDI_TRANSPORT", "Goodguy", FrameUsage.Frames32Full | FrameUsage.HasUnloadFrames, FrameUsage.Rotor, "LROTOR", "RROTOR", 1, -2, UnitTypeFlag.HasTurret | UnitTypeFlag.HasDoubleTurret);
-        public static readonly UnitType A10 = new UnitType(1 | UnitTypeIDMask.Aircraft, "a10", "TEXT_UNIT_TITLE_A10", "Goodguy", FrameUsage.Frames32Full, UnitTypeFlag.IsArmed | UnitTypeFlag.IsFixedWing);
-        public static readonly UnitType Heli = new UnitType(2 | UnitTypeIDMask.Aircraft, "heli", "TEXT_UNIT_TITLE_NOD_HELICOPTER", "Badguy", FrameUsage.Frames32Full, FrameUsage.Rotor, "LROTOR", null, 0, -2, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
-        public static readonly UnitType C17 = new UnitType(3 | UnitTypeIDMask.Aircraft, "c17", "TEXT_UNIT_TITLE_C17", "Badguy", FrameUsage.Frames32Full, UnitTypeFlag.IsFixedWing);
-        public static readonly UnitType Orca = new UnitType(4 | UnitTypeIDMask.Aircraft, "orca", "TEXT_UNIT_TITLE_GDI_ORCA", "Goodguy", FrameUsage.Frames32Full, UnitTypeFlag.IsArmed);
+        public static readonly UnitType Tran = new AircraftType(0, "tran", "TEXT_UNIT_TITLE_GDI_TRANSPORT", "Goodguy", FrameUsage.Frames32Full | FrameUsage.HasUnloadFrames, FrameUsage.Rotor, "LROTOR", "RROTOR", 1, -2, UnitTypeFlag.HasTurret | UnitTypeFlag.HasDoubleTurret);
+        public static readonly UnitType A10 = new AircraftType(1, "a10", "TEXT_UNIT_TITLE_A10", "Goodguy", FrameUsage.Frames32Full, UnitTypeFlag.IsArmed | UnitTypeFlag.IsFixedWing);
+        public static readonly UnitType Heli = new AircraftType(2, "heli", "TEXT_UNIT_TITLE_NOD_HELICOPTER", "Badguy", FrameUsage.Frames32Full, FrameUsage.Rotor, "LROTOR", null, 0, -2, UnitTypeFlag.IsArmed | UnitTypeFlag.HasTurret);
+        public static readonly UnitType C17 = new AircraftType(3, "c17", "TEXT_UNIT_TITLE_C17", "Badguy", FrameUsage.Frames32Full, UnitTypeFlag.IsFixedWing);
+        public static readonly UnitType Orca = new AircraftType(4, "orca", "TEXT_UNIT_TITLE_GDI_ORCA", "Goodguy", FrameUsage.Frames32Full, UnitTypeFlag.IsArmed);
 
         private static readonly UnitType[] Types;
 

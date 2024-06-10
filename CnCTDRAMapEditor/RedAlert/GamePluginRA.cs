@@ -1071,14 +1071,16 @@ namespace MobiusEditor.RedAlert
                         if (e.Data != -1)
                         {
                             e.Data &= 0xFF;
-                            if ((e.Data & UnitTypeIDMask.Aircraft) == UnitTypeIDMask.Aircraft)
+                            // original editor did this weird thing of upshifting unit IDs instead of defining specific classes for aircraft and vessels.
+                            const int AircraftMask = 1 << 5;
+                            if ((e.Data & AircraftMask) == AircraftMask)
                             {
-                                int fixedData = (int)e.Data & ~UnitTypeIDMask.Aircraft;
-                                UnitType heliType = this.Map.AllTeamTechnoTypes.OfType<UnitType>().FirstOrDefault(u => u.ID == e.Data);
+                                int fixedData = (int)e.Data & ~AircraftMask;
+                                AircraftType heliType = this.Map.AllTeamTechnoTypes.OfType<AircraftType>().FirstOrDefault(u => u.ID == fixedData);
                                 if (heliType == null)
                                 {
-                                    heliType = this.Map.AllUnitTypes.Where(u => u.IsAircraft).FirstOrDefault();
-                                    fixedData = heliType.ID & ~UnitTypeIDMask.Aircraft;
+                                    heliType = this.Map.AllTeamTechnoTypes.OfType<AircraftType>().FirstOrDefault();
+                                    fixedData = heliType.ID;
                                 }
                                 errors.Add(string.Format("Trigger '{0}', Event {1} (\"{2}\") has bad value '{3}' set for the Aircraft id. This is most likely caused by older versions of this editor. Fixing id to '{4}' ({5}).",
                                     triggerName, evtNr, e.EventType.TrimEnd('.'), e.Data, fixedData, heliType.Name));
@@ -4838,7 +4840,7 @@ namespace MobiusEditor.RedAlert
                     eventArg = it?.Name ?? evt.Data.ToString();
                     break;
                 case EventTypes.TEVENT_BUILD_AIRCRAFT:
-                    UnitType at = Map.UnitTypes.FirstOrDefault(a => a.IsAircraft && a.ID == evt.Data);
+                    UnitType at = Map.TeamTechnoTypes.OfType<UnitType>().FirstOrDefault(a => a.IsAircraft && a.ID == evt.Data);
                     eventArg = at?.Name ?? evt.Data.ToString();
                     break;
                 case EventTypes.TEVENT_NUNITS_DESTROYED:
