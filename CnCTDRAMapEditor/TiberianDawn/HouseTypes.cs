@@ -39,7 +39,6 @@ namespace MobiusEditor.TiberianDawn
         public static readonly HouseType Multi5 = new HouseType(8, "Multi5", Waypoint.GetFlagForMpId(4), HouseTypeFlag.ForAlliances, "MULTI1"); // Yellow
         public static readonly HouseType Multi6 = new HouseType(9, "Multi6", Waypoint.GetFlagForMpId(5), HouseTypeFlag.ForAlliances, "MULTI3"); // Red
 
-
         private static readonly HouseType[] Types;
 
         static HouseTypes()

@@ -544,7 +544,7 @@ namespace MobiusEditor.Model
             List<House> housesAllySpecial = housesAlly.Where(h => h.Type.Flags.HasFlag(HouseTypeFlag.Special)).OrderBy(h => h.Type.ID).ToList();
             List<House> housesAllyNormal = housesAlly.Where(h => !h.Type.Flags.HasFlag(HouseTypeFlag.Special)).OrderBy(h => h.Type.ID).ToList();
             this.HousesForAlliances = housesAllySpecial.Concat(housesAllyNormal).ToArray();
-            this.HouseNone = this.HousesIncludingSpecials.Where(h => h.Type.Flags.HasFlag(HouseTypeFlag.BaseHouse)).FirstOrDefault();
+            this.HouseNone = this.HousesIncludingSpecials.Where(h => h.Type.Flags.HasFlag(HouseTypeFlag.Special | HouseTypeFlag.BaseHouse)).FirstOrDefault();
             Waypoint[] wp = waypoints.ToArray();
             this.Waypoints = new Waypoint[wp.Length];
             for (int i = 0; i < wp.Length; ++i)

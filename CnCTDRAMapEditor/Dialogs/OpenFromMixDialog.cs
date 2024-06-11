@@ -26,6 +26,12 @@ namespace MobiusEditor.Dialogs
 
         public Label StatusLabel { get; set; }
 
+        /// <summary>
+        /// Initialises a new OpenFromMixDialog
+        /// </summary>
+        /// <param name="baseMix">Mix file to open</param>
+        /// <param name="internalMixParts">Deeper path of internal mix files to open.</param>
+        /// <param name="romfis"></param>
         public OpenFromMixDialog(MixFile baseMix, string[] internalMixParts, MixFileNameGenerator romfis)
         {
             InitializeComponent();
@@ -467,18 +473,26 @@ namespace MobiusEditor.Dialogs
                 {
                     MixFile currentMix = GetCurrentMix();
                     MixEntry[] fileInfos = currentMix.GetFullFileInfo(mixName);
+                    bool found = false;
                     foreach (MixEntry fileInfo in fileInfos)
                     {
-                        if (fileInfo != null && MixFile.CheckValidMix(currentMix, fileInfo, true))
+                        if (fileInfo == null || !MixFile.CheckValidMix(currentMix, fileInfo, true))
                         {
-                            MixFile subMix = new MixFile(currentMix, fileInfo, true);
-                            if (this.romfis != null)
-                            {
-                                romfis.IdentifyMixFile(subMix, identifiedGame);
-                            }
-                            openedMixFiles.Add(subMix);
-                            break;
+                            continue;
                         }
+                        MixFile subMix = new MixFile(currentMix, fileInfo, true);
+                        if (this.romfis != null)
+                        {
+                            romfis.IdentifyMixFile(subMix, identifiedGame);
+                        }
+                        openedMixFiles.Add(subMix);
+                        found = true;
+                        break;
+                    }
+                    // If any parts of the mix path are not found, stop going deeper.
+                    if (!found)
+                    {
+                        break;
                     }
                 }
             }

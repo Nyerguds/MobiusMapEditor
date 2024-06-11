@@ -49,13 +49,17 @@ namespace MobiusEditor.Utility
 
         public List<string> Games => games.ToList();
 
+        /// <summary>
+        /// Creates a new MixFileNameGenerator from a given ini file path.
+        /// </summary>
+        /// <param name="iniPath">Ini file to open. If additional inis need to be read, they will be looked up relative to the folder this ini is located in.</param>
         public MixFileNameGenerator(string iniPath)
             : this(null, iniPath, null, ConstrArgs.IniPath)
         {
         }
 
         /// <summary>
-        /// 
+        /// Creates a new MixFileNameGenerator from a given ini object.
         /// </summary>
         /// <param name="iniFile">Ini file to open. If additional inis need to be read, they will be looked up in the current working directory.</param>
         public MixFileNameGenerator(INI iniFile)
@@ -64,7 +68,7 @@ namespace MobiusEditor.Utility
         }
 
         /// <summary>
-        /// 
+        /// Creates a new MixFileNameGenerator from a given ini object.
         /// </summary>
         /// <param name="iniFile">Main ini file to open.</param>
         /// <param name="iniPath">Source path of <paramref name="iniFile"/>, Is needed if side inis need to be read.</param>
@@ -74,9 +78,9 @@ namespace MobiusEditor.Utility
         }
 
         /// <summary>
-        /// Make filename generator from ini objects, with possible additional ini objects given
-        /// to read the file lists of specific games. This overload can be used to load the strings
-        /// from embedded resources in the project.
+        /// Creates a new MixFileNameGenerator from a given ini object, with possible additional ini
+        /// objects given to read the information for specific games. This overload can be used to load
+        /// the data purely from embedded resources in the project.
         /// </summary>
         /// <param name="iniFile">Main ini file to open.</param>
         /// <param name="additionalInis">Dictionary of additional ini files that can be used to read the file lists of specific games.</param>
@@ -86,6 +90,7 @@ namespace MobiusEditor.Utility
         }
 
         /// <summary>
+        /// Creates a new MixFileNameGenerator from given ini objects.
         /// Full constructor; not public because all specific cases are handled in the overloads.
         /// </summary>
         /// <param name="iniFile">Main ini file to open. Can be null if <paramref name="iniPath"/> is given.</param>

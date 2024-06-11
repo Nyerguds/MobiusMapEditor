@@ -24,11 +24,11 @@ namespace MobiusEditor.Model
     {
         /// <summary>No flags set.</summary>
         None          /**/ = 0,
-        /// <summary>Is a special House, not used for normal lists.</summary>
+        /// <summary>This is a House for special purposes that doesn't actually exist as playable side in the game, meaning it should not be included in normal lists.</summary>
         Special       /**/ = 1 << 1,
-        /// <summary>Is used for alliances.</summary>
+        /// <summary>This House type can be used in the House alliances lists.</summary>
         ForAlliances  /**/ = 1 << 2,
-        /// <summary>Special empty House, used if the plugin does not assign any House to unbuilt structures.</summary>
+        /// <summary>This is a special empty House, used if the plugin does not assign any House to unbuilt structures. This will typically be marked as Special too.</summary>
         BaseHouse    /**/ = 1 << 3,
     }
 

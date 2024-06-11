@@ -1344,7 +1344,7 @@ namespace MobiusEditor.Render
             {
                 OverlayType ovlt = overlay.Type;
                 Size cellSize = new Size(1, 1);
-                if (!ovlt.Flag.HasAnyFlag(OverlayTypeFlag.Crate) || !map.Metrics.GetLocation(cell, out Point location))
+                if (!ovlt.Flag.HasAnyFlags(OverlayTypeFlag.Crate) || !map.Metrics.GetLocation(cell, out Point location))
                 {
                     continue;
                 }

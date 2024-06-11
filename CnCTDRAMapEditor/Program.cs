@@ -115,11 +115,37 @@ namespace MobiusEditor
                 Environment.CurrentDirectory = runPath;
             }
             bool loadOk = false;
+            string mixContentFile = Globals.MixContentInfoFile;
+            if (!string.IsNullOrEmpty(mixContentFile)) {
+                mixContentFile = mixContentFile.Replace('\\', Path.DirectorySeparatorChar);
+            }
             string mixPath = Path.Combine(Program.ApplicationPath, Globals.MixContentInfoFile);
             MixFileNameGenerator romfis = null;
             try
             {
-                romfis = new MixFileNameGenerator(mixPath);
+                if (File.Exists(mixPath))
+                {
+                    romfis = new MixFileNameGenerator(mixPath);
+                }
+                else
+                {
+                    // Fallback: use embedded resources to initialise romfis.
+                    INI iniMain = new INI();
+                    iniMain.Parse(Properties.Resources.mixcontent);
+                    INI iniTd = new INI();
+                    iniTd.Parse(Properties.Resources.mixcontent_td);
+                    INI iniRa = new INI();
+                    iniRa.Parse(Properties.Resources.mixcontent_ra1);
+                    INI iniSole = new INI();
+                    iniSole.Parse(Properties.Resources.mixcontent_sole);
+                    Dictionary<string, INI> sideInis = new Dictionary<string, INI>(StringComparer.OrdinalIgnoreCase)
+                    {
+                        { "mixcontent_td.ini", iniTd },
+                        { "mixcontent_ra1.ini", iniRa },
+                        { "mixcontent_sole.ini", iniSole },
+                    };
+                    romfis = new MixFileNameGenerator(iniMain, sideInis);
+                }
             }
             catch (Exception ex)
             {

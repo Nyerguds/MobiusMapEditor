@@ -108,8 +108,9 @@ namespace MobiusEditor.Tools
             : base(mapPanel, layers, statusLbl, plugin, url)
         {
             previewMap = map;
-            // order: first all non-aircraft, then inside those, first all non-vessel, then order each group by id.
-            List<UnitType> unitTypes = plugin.Map.UnitTypes.OrderBy(t => t.IsAircraft).ThenBy(t => t.IsVessel).ThenBy(t => t.ID).ToList();
+            // Leaving these in order of definition. Ordering as vehicles, then vessels, then air units, can be done as:
+            // .OrderBy(t => t.IsAircraft).ThenBy(t => t.IsVessel).ThenBy(t => t.ID);
+            List<UnitType> unitTypes = plugin.Map.UnitTypes.ToList();
             UnitType unitType = unitTypes.First();
             mockUnit = new Unit()
             {
@@ -137,9 +138,7 @@ namespace MobiusEditor.Tools
             int selectedIndex = unitTypeListBox.SelectedIndex;
             UnitType selected = unitTypeListBox.SelectedValue as UnitType;
             unitTypeListBox.SelectedIndexChanged -= UnitTypeListBox_SelectedIndexChanged;
-            // order: first all non-aircraft, then inside those, first all non-vessel, then order each group by id.
-            // The end result is: first vehicles, then vessels, then air units.
-            List<UnitType> updatedTypes = plugin.Map.UnitTypes.OrderBy(t => t.IsAircraft).ThenBy(t => t.IsVessel).ThenBy(t => t.ID).ToList();
+            List<UnitType> updatedTypes = plugin.Map.UnitTypes.ToList();
             if (!updatedTypes.Contains(selected))
             {
                 // Find nearest existing.
