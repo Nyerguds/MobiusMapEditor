@@ -32,8 +32,8 @@
             this.nameColumnHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.typeColumnHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.SizeColumnHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.infoColumnHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.DescColumnHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.infoColumnHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOpen = new System.Windows.Forms.Button();
             this.btnCloseFile = new System.Windows.Forms.Button();
@@ -86,17 +86,17 @@
             this.SizeColumnHeader.Text = "Size";
             this.SizeColumnHeader.Width = 80;
             // 
-            // infoColumnHeader
-            // 
-            this.infoColumnHeader.Tag = "1";
-            this.infoColumnHeader.Text = "Info";
-            this.infoColumnHeader.Width = 100;
-            // 
             // DescColumnHeader
             // 
             this.DescColumnHeader.Tag = "1";
             this.DescColumnHeader.Text = "Description";
             this.DescColumnHeader.Width = 100;
+            // 
+            // infoColumnHeader
+            // 
+            this.infoColumnHeader.Tag = "1";
+            this.infoColumnHeader.Text = "Info";
+            this.infoColumnHeader.Width = 100;
             // 
             // btnCancel
             // 
@@ -105,7 +105,7 @@
             this.btnCancel.Location = new System.Drawing.Point(897, 426);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 2;
+            this.btnCancel.TabIndex = 3;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             this.btnCancel.Click += new System.EventHandler(this.BtnCancel_Click);
@@ -116,7 +116,7 @@
             this.btnOpen.Location = new System.Drawing.Point(816, 426);
             this.btnOpen.Name = "btnOpen";
             this.btnOpen.Size = new System.Drawing.Size(75, 23);
-            this.btnOpen.TabIndex = 3;
+            this.btnOpen.TabIndex = 2;
             this.btnOpen.Text = "Open";
             this.btnOpen.UseVisualStyleBackColor = true;
             this.btnOpen.Click += new System.EventHandler(this.BtnOpen_Click);
@@ -128,7 +128,7 @@
             this.btnCloseFile.Location = new System.Drawing.Point(12, 426);
             this.btnCloseFile.Name = "btnCloseFile";
             this.btnCloseFile.Size = new System.Drawing.Size(88, 23);
-            this.btnCloseFile.TabIndex = 3;
+            this.btnCloseFile.TabIndex = 4;
             this.btnCloseFile.Text = "Back to parent";
             this.btnCloseFile.UseVisualStyleBackColor = true;
             this.btnCloseFile.Click += new System.EventHandler(this.BtnCloseFile_Click);

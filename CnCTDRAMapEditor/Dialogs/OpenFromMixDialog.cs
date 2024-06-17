@@ -100,6 +100,7 @@ namespace MobiusEditor.Dialogs
                     mixContentsListView.Select();
                     mixContentsListView.Items[0].Selected = true;
                 }
+                mixContentsListView.Focus();
             }
         }
 
@@ -317,6 +318,10 @@ namespace MobiusEditor.Dialogs
                 }
                 SelectedFile = MixPath.BuildMixPath(openedMixFiles, iniEntry, binEntry);
                 this.DialogResult = DialogResult.OK;
+            }
+            else
+            {
+                MessageBox.Show("This file type cannot be handled by the map editor. Only map files (indicated as green) and mix files (indicated as yellow) can be opened.", titleMain);
             }
         }
 

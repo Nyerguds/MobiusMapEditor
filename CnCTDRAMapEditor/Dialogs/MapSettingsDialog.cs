@@ -262,7 +262,7 @@ namespace MobiusEditor.Dialogs
                 if (!String.IsNullOrEmpty(message))
                 {
                     message += "\n\nPress Cancel to go back and edit the briefing, or OK to ignore the issue and continue.";
-                    DialogResult dres = MessageBox.Show(message, "Warning", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1);
+                    DialogResult dres = MessageBox.Show(this, message, "Warning", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1);
                     if (dres != DialogResult.OK)
                     {
                         e.Cancel = true;

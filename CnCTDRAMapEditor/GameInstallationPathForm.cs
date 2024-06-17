@@ -54,7 +54,7 @@ namespace MobiusEditor
             catch (NotSupportedException) { /* Check not passed */}
             if (!checkPassed)
             {
-                MessageBox.Show("Required data is missing, please enter the valid " +
+                MessageBox.Show(this, "Required data is missing, please enter the valid " +
                     "installation path for the C&C Remastered Collection. The " +
                     "installation directory is where the main executables of the " +
                     "collection (ClientG.exe and ClientLauncherG.exe) reside.", "Invalid directory");

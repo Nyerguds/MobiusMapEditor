@@ -245,7 +245,7 @@ namespace MobiusEditor.Dialogs
         {
             if (String.IsNullOrEmpty(txtPath.Text))
             {
-                //MessageBox.Show("Please select a filename to export to.", "Error");
+                //MessageBox.Show(this, "Please select a filename to export to.", "Error");
                 if (!SelectPath())
                 {
                     return;
@@ -253,7 +253,7 @@ namespace MobiusEditor.Dialogs
             }
             if (!Double.TryParse(txtScale.Text, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out double scale))
             {
-                MessageBox.Show("Could not parse scale factor!", "Error");
+                MessageBox.Show(this, "Could not parse scale factor!", "Error");
                 return;
             }
             MapLayerFlag layers = GetLayers();
@@ -319,7 +319,7 @@ namespace MobiusEditor.Dialogs
         {
             if (path == null)
             {
-                MessageBox.Show("Image saving failed!", "Image Export", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show(this, "Image saving failed!", "Image Export", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
             using (ImageExportedDialog imexd = new ImageExportedDialog(path))
             {

@@ -186,17 +186,17 @@ namespace MobiusEditor.Dialogs
         {
             if (string.IsNullOrEmpty(txtTitle.Text))
             {
-                MessageBox.Show(this, "Steam Title is required.");
+                MessageBox.Show(this, "Steam Title is required.", "Error");
                 return;
             }
             if (string.IsNullOrEmpty(txtDescription.Text))
             {
-                MessageBox.Show("Description is required.");
+                MessageBox.Show(this, "Description is required.", "Error");
                 return;
             }
             if (txtPreview.Tag == null)
             {
-                MessageBox.Show("Preview image is required.");
+                MessageBox.Show(this, "Preview image is required.", "Error");
                 return;
             }
             if (string.IsNullOrEmpty(plugin.Map.BasicSection.Name))
@@ -367,7 +367,7 @@ namespace MobiusEditor.Dialogs
         {
             if (defaultPreview == null)
             {
-                MessageBox.Show("There was an error generating the default previews!");
+                MessageBox.Show(this, "There was an error generating the default previews!", "Error");
                 return;
             }
             lblStatus.Text = "Ready.";
@@ -419,7 +419,7 @@ namespace MobiusEditor.Dialogs
                 return;
             }
             String operation = lblStatus.Text;
-            DialogResult dr = MessageBox.Show("The following operation is currently in progress:\n\n" + operation + "\n\nAre you sure you want to abort?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2);
+            DialogResult dr = MessageBox.Show(this, "The following operation is currently in progress:\n\n" + operation + "\n\nAre you sure you want to abort?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2);
             if (dr == DialogResult.No)
             {
                 this.DialogResult = DialogResult.None;

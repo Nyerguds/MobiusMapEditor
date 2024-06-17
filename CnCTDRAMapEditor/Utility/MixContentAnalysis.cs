@@ -369,7 +369,7 @@ namespace MobiusEditor.Utility
                 if (shpData != null)
                 {
                     mixInfo.Type = MixContentType.Font;
-                    mixInfo.Info = string.Format("Font; {0} symbols, {1}x{2}", shpData.Length, widths.Max(), height);
+                    mixInfo.Info = string.Format("Font; {0} symbol{1}, {2}x{3}", shpData.Length, shpData.Length != 1 ? "s" : String.Empty, widths.Max(), height);
                     return true;
                 }
             }
@@ -477,7 +477,7 @@ namespace MobiusEditor.Utility
                 if (indices.Count > 0 && !hasBadChars && (indices[0] - indices.Count * 2) == 0 && strings.Any(s => s.Length > 0))
                 {
                     mixInfo.Type = MixContentType.Strings;
-                    mixInfo.Info = string.Format("Strings File; {0} entries", strings.Count);
+                    mixInfo.Info = string.Format("Strings File; {0} entr{1}", strings.Count, strings.Count == 1 ? "y" : "ies");
                     return true;
                 }
             }

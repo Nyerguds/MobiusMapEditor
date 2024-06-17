@@ -1128,7 +1128,7 @@ namespace MobiusEditor
         private void EditClearUndoRedoMenuItem_Click(object sender, EventArgs e)
         {
             ClearActiveTool();
-            if (DialogResult.Yes == MessageBox.Show("This will remove all undo/redo information. Are you sure?", Program.ProgramVersionTitle, MessageBoxButtons.YesNo))
+            if (DialogResult.Yes == MessageBox.Show(this, "This will remove all undo/redo information. Are you sure?", Program.ProgramVersionTitle, MessageBoxButtons.YesNo))
             {
                 url.Clear();
             }
@@ -1527,7 +1527,7 @@ namespace MobiusEditor
             {
                 ClearActiveTool();
                 string feedback = TemplateTool.RandomizeTiles(plugin, mapPanel, url);
-                MessageBox.Show(feedback, Program.ProgramVersionTitle);
+                MessageBox.Show(this, feedback, Program.ProgramVersionTitle);
                 RefreshActiveTool(false);
             }
         }
@@ -1581,7 +1581,7 @@ namespace MobiusEditor
             else
             {
                 ClearActiveTool();
-                MessageBox.Show(String.Format("Error loading {0}: the file was not found.", name), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this, String.Format("Error loading {0}: the file was not found.", name), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 mru.Remove(name);
                 RefreshActiveTool(true);
             }
@@ -1717,7 +1717,7 @@ namespace MobiusEditor
                         // Ignore and just fall through.
                     }
                 }
-                MessageBox.Show(String.Format("Error loading {0}: Could not identify map type.", feedbackName), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this, String.Format("Error loading {0}: Could not identify map type.", feedbackName), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 RefreshActiveTool(true);
                 return;
             }
@@ -1726,7 +1726,7 @@ namespace MobiusEditor
             TheaterType theaterObj = theaters == null ? null : theaters.Where(th => th.Name.Equals(theater, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
             if (theaterObj == null)
             {
-                MessageBox.Show(String.Format("Unknown {0} theater \"{1}\"", gType.Name, theater), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this, String.Format("Unknown {0} theater \"{1}\"", gType.Name, theater), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 RefreshActiveTool(true);
                 return;
             }
@@ -1744,7 +1744,7 @@ namespace MobiusEditor
                 {
                     message += "\n\nYou may need to switch to Classic graphics mode by enabling the \"UseClassicFiles\" setting to use this theater.";
                 }
-                MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this, message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 RefreshActiveTool(true);
                 return;
             }
@@ -2238,7 +2238,7 @@ namespace MobiusEditor
                 }
                 // In case of actual error, remove label.
                 SimpleMultiThreading.RemoveBusyLabel(this);
-                MessageBox.Show(String.Format("Error loading {0}: {1}", feedbackPath ?? "new map", String.Join("\n", errors)), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this, String.Format("Error loading {0}: {1}", feedbackPath ?? "new map", String.Join("\n", errors)), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 RefreshActiveTool(false);
             }
             else
@@ -2316,7 +2316,7 @@ namespace MobiusEditor
             {
                 if (fileInfo.Exists && fileInfo.Length > Globals.MaxMapSize)
                 {
-                    MessageBox.Show(String.Format("Map file exceeds the maximum size of {0} bytes.", Globals.MaxMapSize), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(this, String.Format("Map file exceeds the maximum size of {0} bytes.", Globals.MaxMapSize), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
                 plugin.Dirty = false;
                 filename = fileInfo.FullName;
@@ -2333,7 +2333,7 @@ namespace MobiusEditor
             }
             else
             {
-                MessageBox.Show(String.Format("Error saving {0}: {1}", saveInfo.FileName, saveInfo.Error, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error));
+                MessageBox.Show(this, String.Format("Error saving {0}: {1}", saveInfo.FileName, saveInfo.Error, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error));
                 //mru.Remove(fileInfo);
                 RefreshActiveTool(true);
             }
@@ -2983,18 +2983,18 @@ namespace MobiusEditor
             }
             if (!SteamworksUGC.IsInit)
             {
-                MessageBox.Show("Steam interface is not initialized. To enable Workshop publishing, log into Steam and restart the editor.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this, "Steam interface is not initialized. To enable Workshop publishing, log into Steam and restart the editor.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
             if (plugin.GameInfo.WorkshopTypeId == null)
             {
-                MessageBox.Show(plugin.GameInfo.Name + " maps cannot be published to the Steam Workshop; they are not usable by the C&C Remastered Collection.", "Error",
+                MessageBox.Show(this, plugin.GameInfo.Name + " maps cannot be published to the Steam Workshop; they are not usable by the C&C Remastered Collection.", "Error",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
             if (MixPath.IsMixPath(filename))
             {
-                MessageBox.Show("Maps opened from .mix archives need to be resaved to disk before they can be published to the Steam Workshop.", "Error",
+                MessageBox.Show(this, "Maps opened from .mix archives need to be resaved to disk before they can be published to the Steam Workshop.", "Error",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
@@ -3002,7 +3002,7 @@ namespace MobiusEditor
             {
                 if (!plugin.Map.BasicSection.SoloMission)
                 {
-                    MessageBox.Show("Multiplayer maps with nonstandard theaters cannot be published to the Steam Workshop;" +
+                    MessageBox.Show(this, "Multiplayer maps with nonstandard theaters cannot be published to the Steam Workshop;" +
                         " they are not usable by the C&C Remastered Collection without modding, and may cause issues on the official servers.", "Error",
                         MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
@@ -3020,7 +3020,7 @@ namespace MobiusEditor
             {
                 if (!plugin.Map.BasicSection.SoloMission)
                 {
-                    MessageBox.Show(plugin.GameInfo.Name + " multiplayer megamaps cannot be published to the Steam Workshop;" +
+                    MessageBox.Show(this, plugin.GameInfo.Name + " multiplayer megamaps cannot be published to the Steam Workshop;" +
                         " they are not usable by the C&C Remastered Collection without modding, and may cause issues on the official servers.", "Error",
                         MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
@@ -3041,7 +3041,7 @@ namespace MobiusEditor
         {
             if (plugin.Dirty)
             {
-                MessageBox.Show("Map must be saved before publishing.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this, "Map must be saved before publishing.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
             if (new FileInfo(filename).Length > Globals.MaxMapSize)
@@ -3338,7 +3338,7 @@ namespace MobiusEditor
             {
                 ClearActiveTool();
                 var message = String.IsNullOrEmpty(filename) ? "Save new map?" : String.Format("Save map '{0}'?", filename);
-                var result = MessageBox.Show(message, "Save", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
+                var result = MessageBox.Show(this, message, "Save", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
                 switch (result)
                 {
                     case DialogResult.Yes:

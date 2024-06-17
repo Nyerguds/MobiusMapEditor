@@ -471,7 +471,7 @@ namespace MobiusEditor.Dialogs
         {
             if (this.triggerFilter != null && !this.triggerFilter.IsEmpty)
             {
-                MessageBox.Show("New triggers cannot be added while a filter is active. Reset the filter first.");
+                MessageBox.Show(this, "New triggers cannot be added while a filter is active. Reset the filter first.", "Error");
                 return;
             }
             if (triggersListView.Items.Count >= maxTriggers)

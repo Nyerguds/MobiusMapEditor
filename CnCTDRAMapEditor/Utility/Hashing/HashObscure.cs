@@ -16,6 +16,9 @@ using System.Text;
 
 namespace MobiusEditor.Utility.Hashing
 {
+    /// <summary>
+    /// Found inside some WW setup programs. Probably from Lands of Lore.
+    /// </summary>
     public class HashObscure : HashMethod
     {
         public override String DisplayName { get { return "Poor Man's (SETUP.MIX)"; } }
