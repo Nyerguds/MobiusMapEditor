@@ -684,11 +684,11 @@ namespace MobiusEditor.Utility
             // Frames
             int curOffs = 2;
             int readLen = isVersion107 ? 4 : 2;
-            int nextOFfset = (int)ArrayUtils.ReadIntFromByteArray(fileData, curOffs, readLen, true);
+            int nextOffset = (int)ArrayUtils.ReadIntFromByteArray(fileData, curOffs, readLen, true);
             for (int i = 0; i < hdrFrames; ++i)
             {
                 // Set current read address to previously-fetched "next entry" address
-                int readOffset = nextOFfset;
+                int readOffset = nextOffset;
                 // Reached end; process completed.
                 if (endoffset == readOffset)
                 {
@@ -706,7 +706,7 @@ namespace MobiusEditor.Utility
                 // Set header ptr to next address
                 curOffs += readLen;
                 // Read next entry address, to act as end of current entry.
-                nextOFfset = (int)ArrayUtils.ReadIntFromByteArray(fileData, curOffs, readLen, true);
+                nextOffset = (int)ArrayUtils.ReadIntFromByteArray(fileData, curOffs, readLen, true);
                 // Compensate for header size
                 int realReadOffset = readOffset;
                 if (isVersion107)
@@ -1392,9 +1392,9 @@ namespace MobiusEditor.Utility
         private enum Dune2ShpFrameFlags
         {
             Empty           /**/ = 0,
-            HasRemapTable   /**/ = 1 >> 0, // Bit 1: Contains remap table
-            NoLcw           /**/ = 1 >> 1, // Bit 2: Don't decompress with LCW
-            CustomSizeRemap /**/ = 1 >> 2  // Bit 3: Has custom remap table size.
+            HasRemapTable   /**/ = 1 << 0, // Bit 1: Contains remap table
+            NoLcw           /**/ = 1 << 1, // Bit 2: Don't decompress with LCW
+            CustomSizeRemap /**/ = 1 << 2  // Bit 3: Has custom remap table size.
         }
         #endregion
     }
