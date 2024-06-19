@@ -70,6 +70,11 @@ namespace MobiusEditor.Utility
 
         public bool ConvertFrom(string value)
         {
+            return Parse(value);
+        }
+
+        public static bool Parse(string value)
+        {
             if (value == null)
             {
                 return false;

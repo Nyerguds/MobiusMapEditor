@@ -631,20 +631,22 @@ Unreleased.
 * Removed theater restrictions on Terrain objects; if the object is found in the theater, it will be shown.
 * Fixed bug that prevented the Red Alert civilian "C3" from loading, and that prevented the Einstein colour fix from working.
 * Added tooltips to Triggers editor that give a summary of teamtypes and triggers used as trigger arguments. This includes a tooltip on the trigger action on Tiberian Dawn's "Destroy Trigger" and "DZ at 'Z'" actions, respectively showing info on the corresponding trigger and the flare waypoint.
-* Added checks and warnings on teamtype arguments, and on the limits of units/orders list lengths.
+* Added mission load checks and warnings on teamtype arguments, and on the limits of units/orders list lengths.
 * Added system to avoid loading the same mod from both the workshop items and from the local mods under the Documents folder. If given by name, local mods are given priority.
 * The \[Enter\] shortcut for the "Jump To" function is now indicated in the status bar in Waypoints and Celltriggers mode.
 * Added a specific "PreviewScaleClassic" setting.
 * Fixed Red Alert map load not giving feedback on the removal of Aircraft.
 * Added an indicator on the Autocreate option on Teams if the Max Allowed setting is set to 0.
-* Added indicators for all terrain types, and green indications of cells occupied by objects on the map.
+* Enabling map indicators will now show a different colour for each terrain type, and green indications on cells occupied by objects on the map.
 * Added outlines for overlapped buildings.
 * Implemented a new scaling method that should vastly reduce saving times of multiplayer map thumbnails and image exports.
 * Fixed issue that caused any unknown video names configured on TD missions to be marked as "Remaster only".
 * Fixed a bug where the values of teamtype orders, trigger events and trigger actions were saved as value "-1" when a new item's value was not changed from its default.
 * Fixed RA sound effects string: "water impace".
-* Fixed bug in RA trigger reading where it would complain about House "None", fix it back to house none, and show the trigger's Persistence value instead of the House one.
+* Fixed bug in RA trigger reading where it would complain about House "None", fix it back to house None, and show the trigger's Persistence value instead of the House one in the error message.
 * Added indication in House settings that the configured house credits value is multiplied by 100 in-game.
-* Removed incorrect indication on RA's "Credits Exceed" trigger event that claimed the value was value was multiplied by 100.
+* Removed incorrect indication on RA's "Credits Exceed" trigger event that claimed the value was multiplied by 100.
 * Fixed RA "Build Aircraft Type" trigger event to correctly save the unit ID.
 * Added checks on Events in Red Alert triggers that crash the game if no House is set on the trigger itself.
+* Fixed RA checks on buildings overlapping non-buildings.
+* Fixed the fact RA mission rules were only applied after the map was populated, which could make buildings disappear from overlapping with bibs that were actually disabled in the rules.

@@ -324,6 +324,38 @@ namespace MobiusEditor.RedAlert
             return errors;
         }
 
+        private void PresetMissionRules(INI iniText, bool isSolo, List<string> errors, ref bool modified)
+        {
+            bool expansionEnabled = false;
+            INISection amSection = iniText.Sections["Aftermath"];
+            if (amSection != null)
+            {
+                expansionEnabled = YesNoBooleanTypeConverter.Parse(amSection["NewUnitsEnabled"]);
+            }
+            if (this.rulesIni != null)
+            {
+                UpdateRules(rulesIni, this.Map, false);
+            }
+            if (expansionEnabled)
+            {
+                if (this.aftermathRulesIni != null)
+                {
+                    UpdateRules(aftermathRulesIni, this.Map, false);
+                }
+                if (this.aftermathMpRulesIni != null && !isSolo)
+                {
+                    UpdateRules(aftermathMpRulesIni, this.Map, false);
+                }
+            }
+            List<string> newErrors = new List<string>();
+            newErrors.AddRange(UpdateRules(iniText, this.Map, false));
+            if (newErrors.Count > 0)
+            {
+                modified = true;
+                errors.AddRange(newErrors);
+            }                
+        }
+
         /// <summary>
         /// Trims the given extra ini content to just unmanaged information,
         /// resets the plugin's rules to their defaults, and then applies any
@@ -352,47 +384,7 @@ namespace MobiusEditor.RedAlert
         {
             if (extraIniText != null && !forFootprintTest)
             {
-                // Strip "NewUnitsEnabled" from the Aftermath section.
-                INISection amSection = extraIniText.Sections["Aftermath"];
-                if (amSection != null)
-                {
-                    amSection.Remove("NewUnitsEnabled");
-                }
-                // Remove any sections known and handled / disallowed by the editor.
-                extraIniText.Sections.Remove("Digest");
-                INITools.ClearDataFrom(extraIniText, "Basic", (BasicSection)Map.BasicSection);
-                INITools.ClearDataFrom(extraIniText, "Map", Map.MapSection);
-                extraIniText.Sections.Remove("Steam");
-                extraIniText.Sections.Remove("TeamTypes");
-                extraIniText.Sections.Remove("Trigs");
-                extraIniText.Sections.Remove("MapPack");
-                extraIniText.Sections.Remove("Terrain");
-                extraIniText.Sections.Remove("OverlayPack");
-                extraIniText.Sections.Remove("Smudge");
-                extraIniText.Sections.Remove("Units");
-                extraIniText.Sections.Remove("Aircraft");
-                extraIniText.Sections.Remove("Ships");
-                extraIniText.Sections.Remove("Infantry");
-                extraIniText.Sections.Remove("Structures");
-                if (extraIniText.Sections["Base"] is INISection baseSec)
-                {
-                    CleanBaseSection(extraIniText, baseSec);
-                }
-                extraIniText.Sections.Remove("Waypoints");
-                extraIniText.Sections.Remove("CellTriggers");
-                if (extraIniText.Sections["Briefing"] is INISection briefSec)
-                {
-                    briefSec.Remove("Text");
-                    briefSec.RemoveWhere(k => Regex.IsMatch(k, "^\\d+$"));
-                    if (briefSec.Count == 0)
-                    {
-                        extraIniText.Sections.Remove(briefSec.Name);
-                    }
-                }
-                foreach (House house in Map.Houses)
-                {
-                    INITools.ClearDataFrom(extraIniText, house.Type.Name, house);
-                }
+                CleanIniContents(extraIniText);
             }
             Dictionary<string, bool> bibBackups = Map.BuildingTypes.ToDictionary(b => b.Name, b => b.HasBib, StringComparer.OrdinalIgnoreCase);
             if (this.rulesIni != null)
@@ -430,6 +422,51 @@ namespace MobiusEditor.RedAlert
                 }
             }
             return errors;
+        }
+
+        private void CleanIniContents(INI extraIniText)
+        {
+            // Strip "NewUnitsEnabled" from the Aftermath section.
+            INISection amSection = extraIniText.Sections["Aftermath"];
+            if (amSection != null)
+            {
+                amSection.Remove("NewUnitsEnabled");
+            }
+            // Remove any sections known and handled / disallowed by the editor.
+            extraIniText.Sections.Remove("Digest");
+            INITools.ClearDataFrom(extraIniText, "Basic", (BasicSection)Map.BasicSection);
+            INITools.ClearDataFrom(extraIniText, "Map", Map.MapSection);
+            extraIniText.Sections.Remove("Steam");
+            extraIniText.Sections.Remove("TeamTypes");
+            extraIniText.Sections.Remove("Trigs");
+            extraIniText.Sections.Remove("MapPack");
+            extraIniText.Sections.Remove("Terrain");
+            extraIniText.Sections.Remove("OverlayPack");
+            extraIniText.Sections.Remove("Smudge");
+            extraIniText.Sections.Remove("Units");
+            extraIniText.Sections.Remove("Aircraft");
+            extraIniText.Sections.Remove("Ships");
+            extraIniText.Sections.Remove("Infantry");
+            extraIniText.Sections.Remove("Structures");
+            if (extraIniText.Sections["Base"] is INISection baseSec)
+            {
+                CleanBaseSection(extraIniText, baseSec);
+            }
+            extraIniText.Sections.Remove("Waypoints");
+            extraIniText.Sections.Remove("CellTriggers");
+            if (extraIniText.Sections["Briefing"] is INISection briefSec)
+            {
+                briefSec.Remove("Text");
+                briefSec.RemoveWhere(k => Regex.IsMatch(k, "^\\d+$"));
+                if (briefSec.Count == 0)
+                {
+                    extraIniText.Sections.Remove(briefSec.Name);
+                }
+            }
+            foreach (House house in Map.Houses)
+            {
+                INITools.ClearDataFrom(extraIniText, house.Type.Name, house);
+            }
         }
 
         private INI rulesIni;
@@ -616,7 +653,7 @@ namespace MobiusEditor.RedAlert
                             iniBytes = File.ReadAllBytes(path);
                             ParseIniContent(ini, iniBytes, errors);
                             tryCheckSingle = singlePlayRegex.IsMatch(Path.GetFileNameWithoutExtension(path));
-                            errors.AddRange(LoadINI(ini, tryCheckSingle, ref modified));
+                            errors.AddRange(LoadINI(ini, tryCheckSingle, false, ref modified));
                         }
                         break;
                     case FileType.MEG:
@@ -634,7 +671,9 @@ namespace MobiusEditor.RedAlert
                                     iniBytes = iniStream.ReadAllBytes();
                                     ParseIniContent(ini, iniBytes, errors);
                                 }
-                                errors.AddRange(LoadINI(ini, false, ref modified));
+                                // Don't try to check for singleplay mission: if in a meg archive, it should
+                                // be a Remaster file, so SoloMission will be set if it's singleplay.
+                                errors.AddRange(LoadINI(ini, false, false, ref modified));
                             }
                         }
                         break;
@@ -642,7 +681,7 @@ namespace MobiusEditor.RedAlert
                         iniBytes = MixPath.ReadFile(path, FileType.INI, out MixEntry iniFile);
                         ParseIniContent(ini, iniBytes, errors);
                         tryCheckSingle = iniFile.Name == null || singlePlayRegex.IsMatch(Path.GetFileNameWithoutExtension(iniFile.Name));
-                        errors.AddRange(LoadINI(ini, tryCheckSingle, ref modified));
+                        errors.AddRange(LoadINI(ini, tryCheckSingle, true, ref modified));
                         break;
                     default:
                         throw new NotSupportedException("Unsupported filetype.");
@@ -732,7 +771,7 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        private IEnumerable<string> LoadINI(INI ini, bool tryCheckSoloMission, ref bool modified)
+        private IEnumerable<string> LoadINI(INI ini, bool tryCheckSoloMission, bool fromMix, ref bool modified)
         {
             List<string> errors = new List<string>();
             Map.BeginUpdate();
@@ -746,6 +785,9 @@ namespace MobiusEditor.RedAlert
             LoadSteamInfo(ini);
             List<TeamType> teamTypes = this.LoadTeamTypes(ini, errors, ref modified);
             List<Trigger> triggers = this.LoadTriggers(ini, errors, ref modified);
+            // Rules should be applied in advance to correctly set bibs.
+            bool isSolo = CheckSwitchToSolo(tryCheckSoloMission, fromMix, triggers, Map.BasicSection.SoloMission, player, errors, true);
+            PresetMissionRules(ini, isSolo, errors, ref modified);
             Dictionary<string, string> caseTrigs = Trigger.None.Yield().Concat(triggers.Select(t => t.Name)).ToDictionary(t => t, StringComparer.OrdinalIgnoreCase);
             LoadMapPack(ini, errors, ref modified);
             LoadSmudge(ini, errors, ref modified);
@@ -779,11 +821,9 @@ namespace MobiusEditor.RedAlert
             // Apply triggers in a way that won't trigger the notifications.
             Map.Triggers.Clear();
             Map.Triggers.AddRange(triggers);
-            // init rules stuff. This needs to be done after all other inits (or on a clone) since it removes normal handled sections.
-            errors.AddRange(this.ResetMissionRules(ini));
+            CleanIniContents(ini);
             // Store remaining extra sections.
             extraSections = ini.Sections.Count == 0 ? null : ini.Sections;
-            CheckSwitchToSolo(tryCheckSoloMission, player, errors);
             Map.EndUpdate();
             return errors;
         }
@@ -2682,32 +2722,38 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        private void CheckSwitchToSolo(bool tryCheckSoloMission, HouseType player, List<string> errors)
+        private bool CheckSwitchToSolo(bool tryCheckSoloMission, bool dontReportSwitch, List<Trigger> triggers, bool wasSolo, HouseType player, List<string> errors, bool testOnly)
         {
             bool switchedToSolo = false;
-            if (tryCheckSoloMission && !Map.BasicSection.SoloMission)
+            if (tryCheckSoloMission && !wasSolo)
             {
                 int playerId = player.ID;
                 bool hasWinTrigger =
-                    Map.Triggers.Any(t => t.Action1.ActionType == ActionTypes.TACTION_WIN && t.Action1.Data == playerId) ||
-                    Map.Triggers.Any(t => t.Action1.ActionType == ActionTypes.TACTION_LOSE && t.Action1.Data != playerId) ||
-                    Map.Triggers.Any(t => t.Action2.ActionType == ActionTypes.TACTION_WIN && t.Action2.Data == playerId) ||
-                    Map.Triggers.Any(t => t.Action2.ActionType == ActionTypes.TACTION_LOSE && t.Action2.Data != playerId);
+                    triggers.Any(t => t.Action1.ActionType == ActionTypes.TACTION_WIN && t.Action1.Data == playerId) ||
+                    triggers.Any(t => t.Action1.ActionType == ActionTypes.TACTION_LOSE && t.Action1.Data != playerId) ||
+                    triggers.Any(t => t.Action2.ActionType == ActionTypes.TACTION_WIN && t.Action2.Data == playerId) ||
+                    triggers.Any(t => t.Action2.ActionType == ActionTypes.TACTION_LOSE && t.Action2.Data != playerId);
                 bool hasLoseTrigger =
-                    Map.Triggers.Any(t => t.Action1.ActionType == ActionTypes.TACTION_LOSE && t.Action1.Data == playerId) ||
-                    Map.Triggers.Any(t => t.Action1.ActionType == ActionTypes.TACTION_WIN && t.Action1.Data != playerId) ||
-                    Map.Triggers.Any(t => t.Action2.ActionType == ActionTypes.TACTION_LOSE && t.Action2.Data == playerId) ||
-                    Map.Triggers.Any(t => t.Action2.ActionType == ActionTypes.TACTION_WIN && t.Action2.Data != playerId);
+                    triggers.Any(t => t.Action1.ActionType == ActionTypes.TACTION_LOSE && t.Action1.Data == playerId) ||
+                    triggers.Any(t => t.Action1.ActionType == ActionTypes.TACTION_WIN && t.Action1.Data != playerId) ||
+                    triggers.Any(t => t.Action2.ActionType == ActionTypes.TACTION_LOSE && t.Action2.Data == playerId) ||
+                    triggers.Any(t => t.Action2.ActionType == ActionTypes.TACTION_WIN && t.Action2.Data != playerId);
                 switchedToSolo = hasWinTrigger && hasLoseTrigger;
+            }
+            bool isSolo = wasSolo || switchedToSolo;
+            if (testOnly)
+            {
+                return isSolo;
             }
             if (switchedToSolo)
             {
                 Map.BasicSection.SoloMission = true;
-                if (Globals.ReportMissionDetection || errors.Count > 0)
+                if (errors != null && ((!dontReportSwitch && Globals.ReportMissionDetection) || errors.Count > 0))
                 {
                     errors.Insert(0, "Filename detected as classic single player mission format, and win and lose trigger detected. Applying \"SoloMission\" flag.");
                 }
             }
+            return isSolo;
         }
 
         private INI ReadRulesFile(byte[] rulesFile)

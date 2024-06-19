@@ -155,9 +155,9 @@ namespace MobiusEditor.SoleSurvivor
             return Load(path, fileType, true);
         }
 
-        protected override List<string> LoadINI(INI ini, bool forceSoloMission, ref bool modified)
+        protected override List<string> LoadINI(INI ini, bool tryCheckSoloMission, bool fromMix, ref bool modified)
         {
-            List<string> errors = LoadINI(ini, forceSoloMission, true, ref modified);
+            List<string> errors = LoadINI(ini, tryCheckSoloMission, fromMix, true, ref modified);
             // Cleanup of all multi houses in ini. The "overflow houses" are the ones beyond Multi4. They aren't put
             // in the alliances list due to the fact alliances are handled as bit flags and thus can't go beyond 32.
             List<Model.House> overflowHouses = Map.Houses.Where(h => (h.Type.Flags & HouseTypeFlag.ForAlliances) == HouseTypeFlag.None).ToList();

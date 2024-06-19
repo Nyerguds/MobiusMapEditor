@@ -525,7 +525,7 @@ namespace MobiusEditor.TiberianDawn
                     iniBytes = File.ReadAllBytes(iniPath);
                     ParseIniContent(ini, iniBytes, forSole);
                     tryCheckSingle = !forSole && singlePlayRegex.IsMatch(Path.GetFileNameWithoutExtension(path));
-                    errors.AddRange(LoadINI(ini, tryCheckSingle, ref modified));
+                    errors.AddRange(LoadINI(ini, tryCheckSingle, false, ref modified));
                     if (!File.Exists(binPath))
                     {
                         errors.Add(String.Format("No .bin file found for file '{0}'. Using empty map.", Path.GetFileName(path)));
@@ -555,7 +555,7 @@ namespace MobiusEditor.TiberianDawn
                         {
                             iniBytes = iniStream.ReadAllBytes();
                             ParseIniContent(ini, iniBytes, forSole);
-                            errors.AddRange(LoadINI(ini, false, ref modified));
+                            errors.AddRange(LoadINI(ini, false, false, ref modified));
                             ReadBinFromStream(binStream, Path.GetFileName(binFileName), errors, ref modified);
                         }
                     }
@@ -572,7 +572,7 @@ namespace MobiusEditor.TiberianDawn
                     }
                     ParseIniContent(ini, iniBytes, forSole);
                     tryCheckSingle = !forSole && (iniFileEntry.Name == null || singlePlayRegex.IsMatch(Path.GetFileNameWithoutExtension(iniFileEntry.Name)));
-                    errors.AddRange(LoadINI(ini, tryCheckSingle, ref modified));
+                    errors.AddRange(LoadINI(ini, tryCheckSingle, true, ref modified));
                     using (MixFile mainMix = MixPath.OpenMixPath(path, FileType.BIN, out MixFile contentMix, out MixEntry fileEntry))
                     {
                         if (mainMix != null)
@@ -826,12 +826,12 @@ namespace MobiusEditor.TiberianDawn
             return iniText;
         }
 
-        protected virtual List<string> LoadINI(INI ini, bool tryCheckSoloMission, ref bool modified)
+        protected virtual List<string> LoadINI(INI ini, bool tryCheckSoloMission, bool fromMix, ref bool modified)
         {
-            return LoadINI(ini, tryCheckSoloMission, false, ref modified);
+            return LoadINI(ini, tryCheckSoloMission, fromMix, false, ref modified);
         }
 
-        protected List<string> LoadINI(INI ini, bool tryCheckSoloMission, bool forSole, ref bool modified)
+        protected List<string> LoadINI(INI ini, bool tryCheckSoloMission, bool fromMix, bool forSole, ref bool modified)
         {
             List<string> errors = new List<string>();
             Map.BeginUpdate();
@@ -881,16 +881,8 @@ namespace MobiusEditor.TiberianDawn
             Map.Triggers.AddRange(triggers);
             Map.TeamTypes.Sort((x, y) => comparer.Compare(x.Name, y.Name));
             extraSections = ini.Sections.Clone();
-            bool switchedToSolo = !forSole && tryCheckSoloMission && !basic.SoloMission
-                && ((triggers.Any(t => t.Action1.ActionType == ActionTypes.ACTION_WIN) && triggers.Any(t => t.Action1.ActionType == ActionTypes.ACTION_LOSE))
-                    || triggers.Any(t => t.Event1.EventType == EventTypes.EVENT_ANY && t.Action1.ActionType == ActionTypes.ACTION_WINLOSE));
-            if (switchedToSolo)
-            {
-                Map.BasicSection.SoloMission = true;
-                if (Globals.ReportMissionDetection || errors.Count > 0)
-                {
-                    errors.Insert(0, "Filename detected as classic single player mission format, and win and lose trigger detected. Applying \"SoloMission\" flag.");
-                }
+            if (!forSole) {
+                CheckSwitchToSolo(tryCheckSoloMission, fromMix, errors);
             }
             Map.EndUpdate();
             return errors;
@@ -2253,6 +2245,26 @@ namespace MobiusEditor.TiberianDawn
                 house.Edge = correctedEdges[house.Edge];
             }
             house.Enabled = houseSection != null;
+        }
+
+        private void CheckSwitchToSolo(bool tryCheckSoloMission, bool dontReportSwitch, List<string> errors)
+        {
+            bool switchedToSolo = false;
+            if (tryCheckSoloMission && !Map.BasicSection.SoloMission)
+            {
+                List<Trigger> triggers = Map.Triggers;
+                switchedToSolo =
+                    (triggers.Any(t => t.Action1.ActionType == ActionTypes.ACTION_WIN) && triggers.Any(t => t.Action1.ActionType == ActionTypes.ACTION_LOSE))
+                    || triggers.Any(t => t.Event1.EventType == EventTypes.EVENT_ANY && t.Action1.ActionType == ActionTypes.ACTION_WINLOSE);
+            }
+            if (switchedToSolo)
+            {
+                Map.BasicSection.SoloMission = true;
+                if ((!dontReportSwitch && Globals.ReportMissionDetection) || errors.Count > 0)
+                {
+                    errors.Insert(0, "Filename detected as classic single player mission format, and win and lose trigger detected. Applying \"SoloMission\" flag.");
+                }
+            }
         }
 
         protected IEnumerable<string> LoadBinaryClassic(BinaryReader reader, ref bool modified)

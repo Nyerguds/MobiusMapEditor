@@ -150,9 +150,8 @@ namespace MobiusEditor.Utility
                 string[][] theaterInfos = GetTheaterInfo(gameSection, "Theaters", true);
                 string[][] modTheaterInfos = GetTheaterInfo(gameSection, "ModTheaters", false);
                 string hasher = gameSection.TryGetValue("Hasher");
-                YesNoBooleanTypeConverter boolConv = new YesNoBooleanTypeConverter();
-                bool newMixFormat = boolConv.ConvertFrom(gameSection.TryGetValue("NewMixFormat"));
-                bool hasMixNesting = boolConv.ConvertFrom(gameSection.TryGetValue("HasMixNesting"));
+                bool newMixFormat = YesNoBooleanTypeConverter.Parse(gameSection.TryGetValue("NewMixFormat"));
+                bool hasMixNesting = YesNoBooleanTypeConverter.Parse(gameSection.TryGetValue("HasMixNesting"));
                 hashMethods.TryGetValue(hasher, out HashMethod hashMethod);
                 // no files sections specified
                 if (filesSections.All(fs => String.IsNullOrEmpty(fs)))
