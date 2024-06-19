@@ -35,6 +35,7 @@ namespace MobiusEditor.RedAlert
         private bool isLoading = false;
 
         private static readonly Regex singlePlayRegex = new Regex("^SC[A-LN-Z]\\d{2}[EWX][A-EL]$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        protected static readonly Regex baseKeyRegex = new Regex("^\\d{3}$", RegexOptions.Compiled);
         private readonly GameInfoRedAlert gameTypeInfo = new GameInfoRedAlert();
 
         private const string movieEmpty = "<none>";
@@ -375,13 +376,7 @@ namespace MobiusEditor.RedAlert
                 extraIniText.Sections.Remove("Structures");
                 if (extraIniText.Sections["Base"] is INISection baseSec)
                 {
-                    baseSec.Remove("Player");
-                    baseSec.Remove("Count");
-                    baseSec.RemoveWhere(k => Regex.IsMatch(k, "^\\d{3}$"));
-                    if (baseSec.Count == 0)
-                    {
-                        extraIniText.Sections.Remove(baseSec.Name);
-                    }
+                    CleanBaseSection(extraIniText, baseSec);
                 }
                 extraIniText.Sections.Remove("Waypoints");
                 extraIniText.Sections.Remove("CellTriggers");
@@ -746,41 +741,41 @@ namespace MobiusEditor.RedAlert
             // Just gonna remove this; I assume it'll be invalid after a re-save anyway.
             ini.Sections.Extract("Digest");
             HouseType player = this.LoadBasic(ini);
-            this.LoadAftermath(ini);
-            this.LoadMapInfo(ini, errors, ref modified);
-            this.LoadSteamInfo(ini);
+            LoadAftermath(ini);
+            LoadMapInfo(ini, errors, ref modified);
+            LoadSteamInfo(ini);
             List<TeamType> teamTypes = this.LoadTeamTypes(ini, errors, ref modified);
             List<Trigger> triggers = this.LoadTriggers(ini, errors, ref modified);
             Dictionary<string, string> caseTrigs = Trigger.None.Yield().Concat(triggers.Select(t => t.Name)).ToDictionary(t => t, StringComparer.OrdinalIgnoreCase);
-            this.LoadMapPack(ini, errors, ref modified);
-            this.LoadSmudge(ini, errors, ref modified);
+            LoadMapPack(ini, errors, ref modified);
+            LoadSmudge(ini, errors, ref modified);
             HashSet<string> checkUnitTrigs = Trigger.None.Yield().Concat(Map.FilterUnitTriggers(triggers).Select(t => t.Name)).ToHashSet(StringComparer.OrdinalIgnoreCase);
-            this.LoadUnits(ini, caseTrigs, checkUnitTrigs, errors, ref modified);
-            this.LoadAircraft(ini, errors, ref modified);
-            this.LoadShips(ini, caseTrigs, checkUnitTrigs, errors, ref modified);
-            this.LoadInfantry(ini, caseTrigs, checkUnitTrigs, errors, ref modified);
+            LoadUnits(ini, caseTrigs, checkUnitTrigs, errors, ref modified);
+            LoadAircraft(ini, errors, ref modified);
+            LoadShips(ini, caseTrigs, checkUnitTrigs, errors, ref modified);
+            LoadInfantry(ini, caseTrigs, checkUnitTrigs, errors, ref modified);
             HashSet<string> checkStrcTrigs = Trigger.None.Yield().Concat(Map.FilterStructureTriggers(triggers).Select(t => t.Name)).ToHashSet(StringComparer.OrdinalIgnoreCase);
-            this.LoadStructures(ini, caseTrigs, checkStrcTrigs, errors, ref modified);
-            this.LoadBase(ini, errors, ref modified);
+            LoadStructures(ini, caseTrigs, checkStrcTrigs, errors, ref modified);
+            LoadBase(ini, errors, ref modified);
             // Terrain objects in RA have no triggers.
             //HashSet<string> checkTerrTrigs = Trigger.None.Yield().Concat(Map.FilterTerrainTriggers(triggers).Select(t => t.Name)).ToHashSet(StringComparer.OrdinalIgnoreCase);
-            this.LoadTerrain(ini, errors, ref modified);
-            this.LoadOverlay(ini, errors, ref modified);
-            this.LoadWaypoints(ini, errors, ref modified);
+            LoadTerrain(ini, errors, ref modified);
+            LoadOverlay(ini, errors, ref modified);
+            LoadWaypoints(ini, errors, ref modified);
             HashSet<string> checkCellTrigs = Map.FilterCellTriggers(triggers).Select(t => t.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
-            this.LoadCellTriggers(ini, caseTrigs, checkCellTrigs, errors, ref modified);
-            this.LoadBriefing(ini, errors, ref modified);
-            this.LoadHouses(ini, errors, ref modified);
-            this.LinkTriggersAndTeams(triggers, teamTypes, checkUnitTrigs, errors, ref modified);
+            LoadCellTriggers(ini, caseTrigs, checkCellTrigs, errors, ref modified);
+            LoadBriefing(ini, errors, ref modified);
+            LoadHouses(ini, errors, ref modified);
+            LinkTriggersAndTeams(triggers, teamTypes, checkUnitTrigs, errors, ref modified);
             // Now they are linked, triggers and tamtypes can be sorted.
             ExplorerComparer comparer = new ExplorerComparer();
             // Apply teamtypes.
             Map.TeamTypes.Clear();
             Map.TeamTypes.AddRange(teamTypes.OrderBy(t => t.Name, comparer));
-            this.UpdateBasePlayerHouse();
+            UpdateBasePlayerHouse();
             triggers.Sort((x, y) => comparer.Compare(x.Name, y.Name));
-            this.ClearUnusedTriggerArguments(triggers);
-            this.CheckTriggersGlobals(triggers, teamTypes, errors, ref modified, player);
+            ClearUnusedTriggerArguments(triggers);
+            CheckTriggersGlobals(triggers, teamTypes, errors, ref modified, player);
             // Apply triggers in a way that won't trigger the notifications.
             Map.Triggers.Clear();
             Map.Triggers.AddRange(triggers);
@@ -788,7 +783,7 @@ namespace MobiusEditor.RedAlert
             errors.AddRange(this.ResetMissionRules(ini));
             // Store remaining extra sections.
             extraSections = ini.Sections.Count == 0 ? null : ini.Sections;
-            this.CheckSwitchToSolo(tryCheckSoloMission, player, errors);
+            CheckSwitchToSolo(tryCheckSoloMission, player, errors);
             Map.EndUpdate();
             return errors;
         }
@@ -883,7 +878,7 @@ namespace MobiusEditor.RedAlert
         {
             INISection teamTypesSection = ini.Sections.Extract("TeamTypes");
             List<TeamType> teamTypes = new List<TeamType>();
-            if (teamTypesSection == null)
+            if (teamTypesSection == null || teamTypesSection.Count == 0)
             {
                 return teamTypes;
             }
@@ -1189,7 +1184,7 @@ namespace MobiusEditor.RedAlert
                 return;
             }
             Map.Templates.Clear();
-            byte[] data = DecompressLCWSection(mapPackSection, 3, errors);
+            byte[] data = DecompressLCWSection(mapPackSection, 3, errors, ref modified);
             if (data == null)
             {
                 return;
@@ -2078,95 +2073,7 @@ namespace MobiusEditor.RedAlert
             foreach (KeyValuePair<string, string> kvp in structuresSection)
             {
                 string[] tokens = kvp.Value.Split(',');
-                if (tokens.Length > 5)
-                {
-                    BuildingType buildingType = Map.BuildingTypes.Where(t => t.Equals(tokens[1])).FirstOrDefault();
-                    if (buildingType == null)
-                    {
-                        errors.Add(string.Format("Structure '{0}' references unknown structure.", tokens[1]));
-                        modified = true;
-                        continue;
-                    }
-                    if (Globals.FilterTheaterObjects && buildingType.IsTheaterDependent && !buildingType.ExistsInTheater)
-                    {
-                        errors.Add(string.Format("Structure '{0}' is not available in the set theater; skipping.", buildingType.Name));
-                        modified = true;
-                        continue;
-                    }
-                    int strength;
-                    if (!int.TryParse(tokens[2], out strength))
-                    {
-                        errors.Add(string.Format("Strength for structure '{0}' cannot be parsed; value: '{1}'; skipping.", buildingType.Name, tokens[2]));
-                        modified = true;
-                        continue;
-                    }
-                    int cell;
-                    if (!int.TryParse(tokens[3], out cell))
-                    {
-                        errors.Add(string.Format("Cell for structure '{0}' cannot be parsed; value: '{1}'; skipping.", buildingType.Name, tokens[3]));
-                        modified = true;
-                        continue;
-                    }
-                    int dirValue;
-                    if (!int.TryParse(tokens[4], out dirValue))
-                    {
-                        errors.Add(string.Format("Direction for structure '{0}' cannot be parsed; value: '{1}'; skipping.", buildingType.Name, tokens[4]));
-                        modified = true;
-                        continue;
-                    }
-                    bool sellable = (tokens.Length > 6) && int.TryParse(tokens[6], out int sell) && sell != 0;
-                    bool rebuild = (tokens.Length > 7) && int.TryParse(tokens[7], out int rebld) && rebld != 0;
-                    Building newBld = new Building()
-                    {
-                        Type = buildingType,
-                        House = Map.HouseTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault(),
-                        Strength = strength,
-                        Direction = DirectionType.GetDirectionType(dirValue, Map.BuildingDirectionTypes),
-                        Sellable = sellable,
-                        Rebuild = rebuild
-                    };
-                    if (newBld.House == null)
-                    {
-                        HouseType defHouse;
-                        if ("ITALY".Equals(tokens[0], StringComparison.OrdinalIgnoreCase))
-                        {
-                            defHouse = RedAlert.HouseTypes.Ukraine;
-                            errors.Add(string.Format("Structure '{0}' on cell {1} has obsolete house '{2}'; substituting with '{3}'.", buildingType.Name, cell, tokens[0], defHouse.Name));
-                        }
-                        else
-                        {
-                            defHouse = Map.HouseTypes.First();
-                            errors.Add(string.Format("Structure '{0}' on cell {1} references unknown house '{2}'; clearing to '{3}'.", buildingType.Name, cell, tokens[0], defHouse.Name));
-                        }
-                        modified = true;
-                        newBld.House = defHouse;
-                    }
-                    if (Map.Buildings.Add(cell, newBld))
-                    {
-                        if (!caseTrigs.ContainsKey(tokens[5]))
-                        {
-                            errors.Add(string.Format("Structure '{0}' on cell {1} links to unknown trigger '{2}'; clearing trigger.", buildingType.Name, cell, tokens[5]));
-                            modified = true;
-                            newBld.Trigger = Trigger.None;
-                        }
-                        else if (!checkStrcTrigs.Contains(tokens[5]))
-                        {
-                            errors.Add(string.Format("Structure '{0}' on cell {1} links to trigger '{2}' which does not contain an event or action applicable to structures; clearing trigger.", buildingType.Name, cell, tokens[5]));
-                            modified = true;
-                            newBld.Trigger = Trigger.None;
-                        }
-                        else
-                        {
-                            // Adapt to same case
-                            newBld.Trigger = caseTrigs[tokens[5]];
-                        }
-                    }
-                    else
-                    {
-                        Map.CheckBuildingBlockingCell(cell, buildingType, errors, ref modified);
-                    }
-                }
-                else
+                if (tokens.Length <= 5)
                 {
                     if (tokens.Length < 2)
                     {
@@ -2178,6 +2085,91 @@ namespace MobiusEditor.RedAlert
                         errors.Add(string.Format("Structure '{0}' has wrong number of tokens (expecting 6).", tokens[1]));
                         modified = true;
                     }
+                    continue;
+                }
+                BuildingType buildingType = Map.BuildingTypes.Where(t => t.Equals(tokens[1])).FirstOrDefault();
+                if (buildingType == null)
+                {
+                    errors.Add(string.Format("Structure '{0}' references unknown structure.", tokens[1]));
+                    modified = true;
+                    continue;
+                }
+                if (Globals.FilterTheaterObjects && buildingType.IsTheaterDependent && !buildingType.ExistsInTheater)
+                {
+                    errors.Add(string.Format("Structure '{0}' is not available in the set theater; skipping.", buildingType.Name));
+                    modified = true;
+                    continue;
+                }
+                int strength;
+                if (!int.TryParse(tokens[2], out strength))
+                {
+                    errors.Add(string.Format("Strength for structure '{0}' cannot be parsed; value: '{1}'; skipping.", buildingType.Name, tokens[2]));
+                    modified = true;
+                    continue;
+                }
+                int cell;
+                if (!int.TryParse(tokens[3], out cell))
+                {
+                    errors.Add(string.Format("Cell for structure '{0}' cannot be parsed; value: '{1}'; skipping.", buildingType.Name, tokens[3]));
+                    modified = true;
+                    continue;
+                }
+                int dirValue;
+                if (!int.TryParse(tokens[4], out dirValue))
+                {
+                    errors.Add(string.Format("Direction for structure '{0}' cannot be parsed; value: '{1}'; skipping.", buildingType.Name, tokens[4]));
+                    modified = true;
+                    continue;
+                }
+                bool sellable = (tokens.Length > 6) && int.TryParse(tokens[6], out int sell) && sell != 0;
+                bool rebuild = (tokens.Length > 7) && int.TryParse(tokens[7], out int rebld) && rebld != 0;
+                Building newBld = new Building()
+                {
+                    Type = buildingType,
+                    House = Map.HouseTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault(),
+                    Strength = strength,
+                    Direction = DirectionType.GetDirectionType(dirValue, Map.BuildingDirectionTypes),
+                    Sellable = sellable,
+                    Rebuild = rebuild
+                };
+                if (newBld.House == null)
+                {
+                    HouseType defHouse;
+                    if ("ITALY".Equals(tokens[0], StringComparison.OrdinalIgnoreCase))
+                    {
+                        defHouse = RedAlert.HouseTypes.Ukraine;
+                        errors.Add(string.Format("Structure '{0}' on cell {1} has obsolete house '{2}'; substituting with '{3}'.", buildingType.Name, cell, tokens[0], defHouse.Name));
+                    }
+                    else
+                    {
+                        defHouse = Map.HouseTypes.First();
+                        errors.Add(string.Format("Structure '{0}' on cell {1} references unknown house '{2}'; clearing to '{3}'.", buildingType.Name, cell, tokens[0], defHouse.Name));
+                    }
+                    modified = true;
+                    newBld.House = defHouse;
+                }
+                if (!Map.Buildings.CanAdd(cell, newBld) || !Map.Technos.CanAdd(cell, newBld, newBld.Type.BaseOccupyMask))
+                {
+                    Map.CheckBuildingBlockingCell(cell, buildingType, errors, ref modified);
+                    continue;
+                }
+                Map.Buildings.Add(cell, newBld);
+                if (!caseTrigs.ContainsKey(tokens[5]))
+                {
+                    errors.Add(string.Format("Structure '{0}' on cell {1} links to unknown trigger '{2}'; clearing trigger.", buildingType.Name, cell, tokens[5]));
+                    modified = true;
+                    newBld.Trigger = Trigger.None;
+                }
+                else if (!checkStrcTrigs.Contains(tokens[5]))
+                {
+                    errors.Add(string.Format("Structure '{0}' on cell {1} links to trigger '{2}' which does not contain an event or action applicable to structures; clearing trigger.", buildingType.Name, cell, tokens[5]));
+                    modified = true;
+                    newBld.Trigger = Trigger.None;
+                }
+                else
+                {
+                    // Adapt to same case
+                    newBld.Trigger = caseTrigs[tokens[5]];
                 }
             }
         }
@@ -2185,97 +2177,119 @@ namespace MobiusEditor.RedAlert
         private void LoadBase(INI ini, List<string> errors, ref bool modified)
         {
             INISection baseSection = ini.Sections["Base"];
-            string baseCountStr = baseSection != null ? baseSection.TryGetValue("Count") : null;
-            string basePlayerStr = baseSection != null ? baseSection.TryGetValue("Player") : null;
+            string baseCountStr = null;
             HouseType basePlayer = Map.HouseTypes.First();
-            if (basePlayerStr != null)
+            if (baseSection != null)
             {
-                HouseType basePlayerLookup = Map.HouseTypes.Where(t => t.Equals(basePlayerStr)).FirstOrDefault();
-                if (basePlayerLookup != null)
+                baseCountStr = baseSection.TryGetValue("Count");
+                baseSection.Remove("Count");
+                string basePlayerStr = baseSection.TryGetValue("Player");
+                baseSection.Remove("Player");
+                if (basePlayerStr != null)
                 {
-                    basePlayer = basePlayerLookup;
+                    HouseType basePlayerLookup = Map.HouseTypes.Where(t => t.Equals(basePlayerStr)).FirstOrDefault();
+                    if (basePlayerLookup != null)
+                    {
+                        basePlayer = basePlayerLookup;
+                    }
                 }
             }
             Map.BasicSection.BasePlayer = basePlayer.Name;
             // if it's just an empty [Base] header with nothing below, ignore.
-            if (baseSection == null || baseSection.Keys.Count == 0)
+            if (baseSection == null)
             {
+                return;
+            }
+            if (baseSection.Keys.Count == 0)
+            {
+                CleanBaseSection(ini, baseSection);
                 return;
             }
             if (!Int32.TryParse(baseCountStr, out int baseCount))
             {
                 errors.Add(string.Format("Base count '{0}' is not a valid integer.", baseCountStr));
                 modified = true;
+                CleanBaseSection(ini, baseSection);
+                return;
             }
-            else
+            int curPriorityVal = 0;
+            for (int i = 0; i < baseCount; i++)
             {
-                int curPriorityVal = 0;
-                for (int i = 0; i < baseCount; i++)
+                string key = i.ToString("D3");
+                string value = baseSection.TryGetValue(key);
+                if (value == null)
                 {
-                    string key = i.ToString("D3");
-                    string value = baseSection.TryGetValue(key);
-                    if (value == null)
+                    continue;
+                }
+                baseSection.Remove(key);
+                string[] tokens = value.Split(',');
+                if (tokens.Length != 2)
+                {
+                    errors.Add(string.Format("Base rebuild entry {0} has wrong number of tokens (expecting 2).", key));
+                    modified = true;
+                    continue;
+                }
+                BuildingType buildingType = Map.BuildingTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault();
+                if (buildingType == null)
+                {
+                    errors.Add(string.Format("Base rebuild entry {0} references unknown structure '{1}'.", key, tokens[0]));
+                    modified = true;
+                    continue;
+                }
+                if (Globals.FilterTheaterObjects && buildingType.IsTheaterDependent && !buildingType.ExistsInTheater)
+                {
+                    errors.Add(string.Format("Base rebuild entry {0} references structure '{1}' which is not available in the set theater; skipping.", key, buildingType.Name));
+                    modified = true;
+                    continue;
+                }
+                int cell;
+                if (!int.TryParse(tokens[1], out cell))
+                {
+                    errors.Add(string.Format("Cell for base rebuild entry '{0}', structure '{1}' cannot be parsed; value: '{2}'; skipping.", key, buildingType.Name, tokens[1]));
+                    modified = true;
+                    continue;
+                }
+                Map.Metrics.GetLocation(cell, out Point location);
+                if (Map.Buildings.OfType<Building>().Where(x => x.Location == location && x.Occupier.Type.ID == buildingType.ID).FirstOrDefault().Occupier is Building building)
+                {
+                    if (building.BasePriority == -1)
                     {
-                        continue;
-                    }
-                    string[] tokens = value.Split(',');
-                    if (tokens.Length != 2)
-                    {
-                        errors.Add(string.Format("Base rebuild entry {0} has wrong number of tokens (expecting 2).", key));
-                        modified = true;
-                        continue;
-                    }
-                    BuildingType buildingType = Map.BuildingTypes.Where(t => t.Equals(tokens[0])).FirstOrDefault();
-                    if (buildingType == null)
-                    {
-                        errors.Add(string.Format("Base rebuild entry {0} references unknown structure '{1}'.", key, tokens[0]));
-                        modified = true;
-                        continue;
-                    }
-                    if (Globals.FilterTheaterObjects && buildingType.IsTheaterDependent && !buildingType.ExistsInTheater)
-                    {
-                        errors.Add(string.Format("Base rebuild entry {0} references structure '{1}' which is not available in the set theater; skipping.", key, buildingType.Name));
-                        modified = true;
-                        continue;
-                    }
-                    int cell;
-                    if (!int.TryParse(tokens[1], out cell))
-                    {
-                        errors.Add(string.Format("Cell for base rebuild entry '{0}', structure '{1}' cannot be parsed; value: '{2}'; skipping.", key, buildingType.Name, tokens[1]));
-                        modified = true;
-                        continue;
-                    }
-                    Map.Metrics.GetLocation(cell, out Point location);
-                    if (Map.Buildings.OfType<Building>().Where(x => x.Location == location && x.Occupier.Type.ID == buildingType.ID).FirstOrDefault().Occupier is Building building)
-                    {
-                        if (building.BasePriority == -1)
-                        {
-                            building.BasePriority = curPriorityVal;
-                        }
-                        else
-                        {
-                            errors.Add(string.Format("Duplicate base rebuild entry for structure '{0}' on cell '{1}'; skipping.", buildingType.Name, cell));
-                        }
+                        building.BasePriority = curPriorityVal++;
                     }
                     else
                     {
-                        Map.Buildings.Add(cell, new Building()
-                        {
-                            Type = buildingType,
-                            House = basePlayer,
-                            Strength = 256,
-                            Direction = DirectionTypes.North,
-                            BasePriority = curPriorityVal,
-                            IsPrebuilt = false
-                        });
+                        errors.Add(string.Format("Duplicate base rebuild entry for structure '{0}' on cell '{1}'; skipping.", buildingType.Name, cell));
                     }
-                    curPriorityVal++;
+                    continue;
                 }
+                Map.Buildings.Add(cell, new Building()
+                {
+                    Type = buildingType,
+                    House = basePlayer,
+                    Strength = 256,
+                    Direction = DirectionTypes.North,
+                    BasePriority = curPriorityVal++,
+                    IsPrebuilt = false
+                });
             }
+            foreach (KeyValuePair<string, string> kvp in baseSection)
+            {
+                if (baseKeyRegex.IsMatch(kvp.Key))
+                {
+                    errors.Add(string.Format("Base rebuild priority entry with key '{0}' exceeds count; skipping.", kvp.Key));
+                    modified = true;
+                }
+                // non-matches will be ignored as potential modded content.
+            }
+            CleanBaseSection(ini, baseSection);
+        }
+
+        protected void CleanBaseSection(INI ini, INISection baseSection)
+        {
             // Clean out and leave; might contain addon keys.
             baseSection.Remove("Player");
             baseSection.Remove("Count");
-            baseSection.RemoveWhere(k => Regex.IsMatch(k, "^\\d{3}$"));
+            baseSection.RemoveWhere(k => baseKeyRegex.IsMatch(k));
             if (baseSection.Count == 0)
             {
                 ini.Sections.Remove(baseSection.Name);
@@ -2373,98 +2387,100 @@ namespace MobiusEditor.RedAlert
                 return;
             }
             Map.Overlay.Clear();
-            byte[] data = DecompressLCWSection(overlayPackSection, 1, errors);
-            if (data != null)
+            byte[] data = DecompressLCWSection(overlayPackSection, 1, errors, ref modified);
+            if (data == null)
             {
-                int secondRow = Map.Metrics.Width;
-                int lastRow = Map.Metrics.Length - Map.Metrics.Width;
-                for (int i = 0; i < Map.Metrics.Length; ++i)
+                return;
+            }
+            int secondRow = Map.Metrics.Width;
+            int lastRow = Map.Metrics.Length - Map.Metrics.Width;
+            for (int i = 0; i < Map.Metrics.Length; ++i)
+            {
+                byte overlayId = data[i];
+                // Technically signed, so filter out negative values. This makes it skip over empty entries without error, since they should be FF.
+                if ((overlayId & 0x80) != 0)
                 {
-                    byte overlayId = data[i];
-                    // Technically signed, so filter out negative values. This makes it skip over empty entries without error, since they should be FF.
-                    if ((overlayId & 0x80) != 0)
+                    continue;
+                }
+                OverlayType overlayType = Map.OverlayTypes.Where(t => t.Equals(overlayId)).FirstOrDefault();
+                if (overlayType == null)
+                {
+                    if (i < secondRow || i >= lastRow)
                     {
-                        continue;
-                    }
-                    OverlayType overlayType = Map.OverlayTypes.Where(t => t.Equals(overlayId)).FirstOrDefault();
-                    if (overlayType != null)
-                    {
-                        if (i < secondRow || i >= lastRow)
-                        {
-                            errors.Add(string.Format("Overlay can not be placed on the first and last lines of the map. Cell: '{0}', Type: '{1}'; skipping.", i, overlayType.Name));
-                            modified = true;
-                            continue;
-                        }
-                        if (Globals.FilterTheaterObjects && !overlayType.ExistsInTheater)
-                        {
-                            errors.Add(string.Format("Overlay '{0}' is not available in the set theater; skipping.", overlayType.Name));
-                            modified = true;
-                            continue;
-                        }
-                        Map.Overlay[i] = new Overlay { Type = overlayType, Icon = 0 };
+                        errors.Add(string.Format("Overlay can not be placed on the first and last lines of the map. Cell: '{0}', Id: '{1}' (unknown); skipping.", i, overlayId));
+                        modified = true;
                     }
                     else
                     {
-                        if (i < secondRow || i >= lastRow)
-                        {
-                            errors.Add(string.Format("Overlay can not be placed on the first and last lines of the map. Cell: '{0}', Id: '{1}' (unknown); skipping.", i, overlayId));
-                            modified = true;
-                        }
-                        else
-                        {
-                            errors.Add(string.Format("Overlay ID {0} references unknown overlay.", overlayId));
-                            modified = true;
-                        }
+                        errors.Add(string.Format("Overlay ID {0} references unknown overlay.", overlayId));
+                        modified = true;
                     }
+                    continue;
                 }
+                if (i < secondRow || i >= lastRow)
+                {
+                    errors.Add(string.Format("Overlay can not be placed on the first and last lines of the map. Cell: '{0}', Type: '{1}'; skipping.", i, overlayType.Name));
+                    modified = true;
+                    continue;
+                }
+                if (Globals.FilterTheaterObjects && !overlayType.ExistsInTheater)
+                {
+                    errors.Add(string.Format("Overlay '{0}' is not available in the set theater; skipping.", overlayType.Name));
+                    modified = true;
+                    continue;
+                }
+                Map.Overlay[i] = new Overlay { Type = overlayType, Icon = 0 };
             }
         }
 
         private void LoadWaypoints(INI ini, List<string> errors, ref bool modified)
         {
             INISection waypointsSection = ini.Sections.Extract("Waypoints");
-            if (waypointsSection == null)
+            if (waypointsSection == null || waypointsSection.Count == 0)
             {
                 return;
             }
             foreach (KeyValuePair<string, string> kvp in waypointsSection)
             {
-                if (int.TryParse(kvp.Key, out int waypoint))
+                if (!int.TryParse(kvp.Key, out int waypoint))
                 {
-                    if (int.TryParse(kvp.Value, out int cell))
+                    errors.Add(string.Format("Invalid waypoint '{0}' (expecting integer).", kvp.Key));
+                    modified = true;
+                    continue;
+                }
+                if (waypoint != 0 && kvp.Key.StartsWith("0"))
+                {
+                    errors.Add(string.Format("Waypoint '{0}' is zero-padded and will never be read by the game. Skipping.", kvp.Key));
+                    continue;
+                }
+                if (!int.TryParse(kvp.Value, out int cell))
+                {
+                    errors.Add(string.Format("Waypoint {0} has invalid cell '{1}' (expecting integer).", waypoint, kvp.Value));
+                    modified = true;
+                    continue;
+                }
+                if (waypoint < 0 || waypoint >= Map.Waypoints.Length)
+                {
+                    // don't bother reporting illegal-but-empty entries.
+                    if (cell != -1)
                     {
-                        if ((waypoint >= 0) && (waypoint < Map.Waypoints.Length))
-                        {
-                            if (Map.Metrics.Contains(cell))
-                            {
-                                Map.Waypoints[waypoint].Cell = cell;
-                            }
-                            else
-                            {
-                                Map.Waypoints[waypoint].Cell = null;
-                                if (cell != -1)
-                                {
-                                    errors.Add(string.Format("Waypoint {0} cell value {1} out of range (expecting between {2} and {3}).", waypoint, cell, 0, Map.Metrics.Length - 1));
-                                    modified = true;
-                                }
-                            }
-                        }
-                        else if (cell != -1)
-                        {
-                            errors.Add(string.Format("Waypoint {0} out of range (expecting between {1} and {2}).", waypoint, 0, Map.Waypoints.Length - 1));
-                            modified = true;
-                        }
+                        errors.Add(string.Format("Waypoint {0} out of range (expecting between {1} and {2}).", waypoint, 0, Map.Waypoints.Length - 1));
+                        modified = true;
                     }
-                    else
+                }
+                else if (!Map.Metrics.Contains(cell))
+                {
+                    Map.Waypoints[waypoint].Cell = null;
+                    // don't bother reporting illegal-but-empty entries.
+                    if (cell != -1)
                     {
-                        errors.Add(string.Format("Waypoint {0} has invalid cell '{1}' (expecting integer).", waypoint, kvp.Value));
+                        errors.Add(string.Format("Waypoint {0} cell value {1} out of range (expecting between {2} and {3}).", waypoint, cell, 0, Map.Metrics.Length - 1));
                         modified = true;
                     }
                 }
                 else
                 {
-                    errors.Add(string.Format("Invalid waypoint '{0}' (expecting integer).", kvp.Key));
-                    modified = true;
+                    Map.Waypoints[waypoint].Cell = cell;
                 }
             }
         }
@@ -2547,6 +2563,10 @@ namespace MobiusEditor.RedAlert
 
         private void LoadHouses(INI ini, List<string> errors, ref bool modified)
         {
+            Dictionary<string, string> correctedEdges = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (string edge in Globals.MapEdges)
+                correctedEdges.Add(edge, edge);
+            string defaultEdge = Globals.MapEdges.FirstOrDefault() ?? string.Empty;
             foreach (Model.House house in Map.Houses)
             {
                 if (house.Type.Flags.HasFlag(HouseTypeFlag.Special))
@@ -2554,18 +2574,54 @@ namespace MobiusEditor.RedAlert
                     continue;
                 }
                 House gameHouse = (House)house;
-                INISection houseSection = INITools.ParseAndLeaveRemainder(ini, gameHouse.Type.Name, gameHouse, new MapContext(Map, true));
-                house.Enabled = houseSection != null;
+                ParseHouseSection(ini, gameHouse, gameHouse.Type.Name, correctedEdges, defaultEdge, errors, ref modified);
             }
             House ukr = Map.Houses.Where(h => h.Type == HouseTypes.Ukraine).FirstOrDefault() as House;
-            if (ukr != null && !ukr.Enabled && ini.Sections.Contains("ITALY"))
+            const string italySectionName = "ITALY";
+            if (ukr != null && !ukr.Enabled && ini.Sections.Contains(italySectionName))
             {
-                INISection houseSection = INITools.ParseAndLeaveRemainder(ini, "ITALY", ukr, new MapContext(Map, true));
+                List<string> itaErrors = new List<string>();
+                bool itaMod = false;
+                INISection houseSection = ParseHouseSection(ini, ukr, italySectionName, correctedEdges, defaultEdge, itaErrors, ref itaMod);
                 string secName = houseSection.Name;
                 // Will only succeed if anything remained in the house section.
-                ini.Sections.Rename("ITALY", ukr.Type.Name);
+                ini.Sections.Rename(italySectionName, ukr.Type.Name);
                 errors.Add(string.Format("Obsolete house section '{0}' found, and its modern counterpart '{1}' is not present. Interpreting section as '{1}'.", secName, ukr.Type.Name));
+                if (itaErrors.Count > 0)
+                {
+                    // add these after the detection message.
+                    errors.AddRange(itaErrors);
+                    if (itaMod)
+                    {
+                        modified = true;
+                    }
+                }
             }
+        }
+
+        private INISection ParseHouseSection(INI ini, House house, string section, Dictionary<string, string> correctedEdges, string defaultEdge, List<string> errors, ref bool modified)
+        {
+            List<(string, string)> newErrors = new List<(string, string)>();
+            INISection houseSection = INITools.ParseAndLeaveRemainder(ini, section, house, new MapContext(Map, true), newErrors);
+            if (newErrors.Count > 0)
+            {
+                modified = true;
+                foreach ((string key, string err) in newErrors)
+                {
+                    errors.Add(String.Format("Error parsing key {0} of house {1}: {2}", key, house.Type.Name, err));
+                }
+            }
+            if (!correctedEdges.ContainsKey(house.Edge))
+            {
+                errors.Add(String.Format("House {0} has an unknown edge value '{1}'; reverting to {2}", house.Type.Name, house.Edge, defaultEdge));
+                house.Edge = defaultEdge;
+            }
+            else
+            {
+                house.Edge = correctedEdges[house.Edge];
+            }
+            house.Enabled = houseSection != null;
+            return houseSection;
         }
 
         private void LinkTriggersAndTeams(List<Trigger> triggers, List<TeamType> teamTypes, HashSet<string> checkUnitTrigs, List<string> errors, ref bool modified)
@@ -3290,9 +3346,7 @@ namespace MobiusEditor.RedAlert
             INISection baseSectionOld = ini.Sections.Extract("Base");
             if (baseSectionOld != null)
             {
-                baseSectionOld.Remove("Player");
-                baseSectionOld.Remove("Count");
-                baseSectionOld.RemoveWhere(k => Regex.IsMatch(k, "^\\d{3}$"));
+                CleanBaseSection(ini, baseSectionOld);
             }
             INISection baseSection = ini.Sections.Add("Base");
             var baseBuildings = Map.Buildings.OfType<Building>().Where(x => x.Occupier.BasePriority >= 0).OrderBy(x => x.Occupier.BasePriority).ToArray();
@@ -5057,7 +5111,7 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        private byte[] DecompressLCWSection(INISection section, int bytesPerCell, List<string> errors)
+        private byte[] DecompressLCWSection(INISection section, int bytesPerCell, List<string> errors, ref bool modified)
         {
             StringBuilder sb = new StringBuilder();
             foreach (KeyValuePair<string, string> kvp in section)
@@ -5072,6 +5126,7 @@ namespace MobiusEditor.RedAlert
             catch (FormatException)
             {
                 errors.Add("Failed to unpack [" + section.Name + "] from Base64.");
+                modified = true;
                 return null;
             }
             int readPtr = 0;
@@ -5096,11 +5151,13 @@ namespace MobiusEditor.RedAlert
                 catch
                 {
                     errors.Add("Error decompressing ["+ section.Name + "].");
+                    modified = true;
                     return decompressedBytes;
                 }
                 if (writePtr + decompressed > decompressedBytes.Length)
                 {
                     errors.Add("Failed to decompress [" + section.Name + "]: data exceeds map size.");
+                    modified = true;
                     return decompressedBytes;
                 }
                 Array.Copy(dest, 0, decompressedBytes, writePtr, decompressed);

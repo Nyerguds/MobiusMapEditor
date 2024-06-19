@@ -83,7 +83,7 @@ namespace MobiusEditor.Utility
         /// <returns>Null if the section was not found, otherwise the trimmed section.</returns>
         public static INISection ParseAndLeaveRemainder(INI ini, string name, object data, MapContext context)
         {
-            return ParseAndLeaveRemainder(ini, name, data, context, false, out _);
+            return ParseAndLeaveRemainder(ini, name, data, context, null);
         }
 
         /// <summary>
@@ -95,14 +95,44 @@ namespace MobiusEditor.Utility
         /// <param name="name">Name of the section.</param>
         /// <param name="data">Data object.</param>
         /// <param name="context">Map context to read data.</param>
+        /// <param name="modified">True if the parsing failed on some parts and the resulting object does not completely correspond to the given ini data.</param>
+        /// <param name="errors">List of errors that was encountered, as ordered key-value data.</param>
         /// <returns>Null if the section was not found, otherwise the trimmed section.</returns>
-        public static INISection ParseAndLeaveRemainder(INI ini, string name, object data, MapContext context, bool returnErrors, out List<(string, string)> errors)
+        public static INISection ParseAndLeaveRemainder(INI ini, string name, object data, MapContext context, ref bool modified, List<(string, string)> errors)
         {
-            errors = null;
+            bool addErrors = errors != null;
+            List<(string, string)> newErrors = addErrors ? new List<(string, string)>() : null;
+            INISection section = ParseAndLeaveRemainder(ini, name, data, context, newErrors);
+            if (addErrors && newErrors.Count > 0)
+            {
+                errors.AddRange(newErrors);
+                modified = true;
+            }
+            return section;
+        }
+
+        /// <summary>
+        /// Will find a section in the ini information, parse its data into the given data object, remove all
+        /// keys managed by the data object from the ini section, and, if empty, remove the section from the ini.
+        /// </summary>
+        /// <typeparam name="T">Type of the data.</typeparam>
+        /// <param name="ini">Ini object.</param>
+        /// <param name="name">Name of the section.</param>
+        /// <param name="data">Data object.</param>
+        /// <param name="context">Map context to read data.</param>
+        /// <param name="errors">List of errors that was encountered, as ordered key-value data.</param>
+        /// <returns>Null if the section was not found, otherwise the trimmed section.</returns>
+        public static INISection ParseAndLeaveRemainder(INI ini, string name, object data, MapContext context, List<(string, string)> errors)
+        {
             var dataSection = ini.Sections[name];
             if (dataSection == null)
                 return null;
-            errors = INI.ParseSection(context, dataSection, data, returnErrors);
+            bool addErrors = errors != null;
+            List<(string, string)> addedErrors = INI.ParseSection(context, dataSection, data, addErrors);
+            if (addErrors)
+            {
+                errors.AddRange(addedErrors);
+            }
             INI.RemoveHandledKeys(dataSection, data);
             if (dataSection.Keys.Count() == 0)
                 ini.Sections.Remove(name);

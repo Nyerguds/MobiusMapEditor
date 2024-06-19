@@ -81,7 +81,7 @@ namespace MobiusEditor.Utility
         /// <param name="flag">Flag or flags to check.</param>
         /// <returns><see langword="true"/> if any of the bits in the given <paramref name="flag"/> are enabled in the <paramref name="source"/>.</returns>
         /// <exception cref="ArgumentNullException">If <paramref name="flag"/> or <paramref name="source"/> are null.</exception>
-        public static bool HasAnyFlags<T>(this T source, T flag) where T: Enum
+        public static bool HasAnyFlags<T>(this T source, T flag) where T : Enum
         {
             if (source == null)
             {
@@ -170,7 +170,7 @@ namespace MobiusEditor.Utility
         {
             int startYTop = rectangle.Top;
             int endYTop = Math.Min(rectangle.Top + thickness, rectangle.Bottom);
-            int startYBottom = Math.Max(rectangle.Bottom-thickness, endYTop);
+            int startYBottom = Math.Max(rectangle.Bottom - thickness, endYTop);
             int endYBottom = rectangle.Bottom;
 
             int startXLeft = rectangle.Left;
@@ -231,7 +231,7 @@ namespace MobiusEditor.Utility
             {
                 for (int x = 0; x < xMax; ++x)
                 {
-                    array[y,x] = clearElement;
+                    array[y, x] = clearElement;
                 }
             }
         }
@@ -305,6 +305,11 @@ namespace MobiusEditor.Utility
             return ((String.IsNullOrEmpty(str) || String.Equals(str, def, sc)) &&
                   (String.IsNullOrEmpty(other) || String.Equals(other, def, sc)))
                 || String.Equals(str, other, sc);
+        }
+
+        public static T2 TryGetOrDefault<T1, T2>(this Dictionary<T1, T2> dictionary, T1 key, T2 defVal)
+        {
+            return dictionary == null || !dictionary.ContainsKey(key) ? defVal : dictionary[key];
         }
 
         public static Bitmap FitToBoundingBox(this Image image, int maxWidth, int maxHeight)
