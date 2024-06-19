@@ -324,14 +324,8 @@ namespace MobiusEditor.RedAlert
             return errors;
         }
 
-        private void PresetMissionRules(INI iniText, bool isSolo, List<string> errors, ref bool modified)
+        private void PresetMissionRules(INI iniText, bool isSolo, bool expansionEnabled, List<string> errors, ref bool modified)
         {
-            bool expansionEnabled = false;
-            INISection amSection = iniText.Sections["Aftermath"];
-            if (amSection != null)
-            {
-                expansionEnabled = YesNoBooleanTypeConverter.Parse(amSection["NewUnitsEnabled"]);
-            }
             if (this.rulesIni != null)
             {
                 UpdateRules(rulesIni, this.Map, false);
@@ -780,14 +774,14 @@ namespace MobiusEditor.RedAlert
             // Just gonna remove this; I assume it'll be invalid after a re-save anyway.
             ini.Sections.Extract("Digest");
             HouseType player = this.LoadBasic(ini);
-            LoadAftermath(ini);
+            bool expansionEnabled = LoadAftermath(ini);
             LoadMapInfo(ini, errors, ref modified);
             LoadSteamInfo(ini);
             List<TeamType> teamTypes = this.LoadTeamTypes(ini, errors, ref modified);
             List<Trigger> triggers = this.LoadTriggers(ini, errors, ref modified);
             // Rules should be applied in advance to correctly set bibs.
             bool isSolo = CheckSwitchToSolo(tryCheckSoloMission, fromMix, triggers, Map.BasicSection.SoloMission, player, errors, true);
-            PresetMissionRules(ini, isSolo, errors, ref modified);
+            PresetMissionRules(ini, isSolo, expansionEnabled, errors, ref modified);
             Dictionary<string, string> caseTrigs = Trigger.None.Yield().Concat(triggers.Select(t => t.Name)).ToDictionary(t => t, StringComparer.OrdinalIgnoreCase);
             LoadMapPack(ini, errors, ref modified);
             LoadSmudge(ini, errors, ref modified);
@@ -867,7 +861,7 @@ namespace MobiusEditor.RedAlert
             return player;
         }
 
-        private void LoadAftermath(INI ini)
+        private bool LoadAftermath(INI ini)
         {
             bool aftermathEnabled = false;
             // Don't remove from extra sections.
@@ -875,7 +869,7 @@ namespace MobiusEditor.RedAlert
             if (aftermathSection != null)
             {
                 string amEnabled = aftermathSection.TryGetValue("NewUnitsEnabled");
-                aftermathEnabled = amEnabled != null && Int32.TryParse(amEnabled, out int val) && val == 1;
+                aftermathEnabled = YesNoBooleanTypeConverter.Parse(amEnabled);
                 aftermathSection.Remove("NewUnitsEnabled");
                 // Remove if empty.
                 if (aftermathSection.Empty)
@@ -883,6 +877,7 @@ namespace MobiusEditor.RedAlert
             }
             // Needs to be enabled in advance; it determines which units are valid to have placed on the map.
             Map.BasicSection.ExpansionEnabled = aftermathEnabled;
+            return aftermathEnabled;
         }
 
         private void LoadMapInfo(INI ini, List<string> errors, ref bool modified)
