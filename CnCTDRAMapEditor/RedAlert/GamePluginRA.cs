@@ -304,7 +304,7 @@ namespace MobiusEditor.RedAlert
             return SetExtraIniText(extraIniText, isSolo, expansionEnabled, true, out footPrintsChanged);
         }
 
-        public IEnumerable<string> SetExtraIniText(string extraIniText, bool isSolo, bool expansionEnabled, bool forFootprintTest, out bool footPrintsChanged)
+        public List<string> SetExtraIniText(string extraIniText, bool isSolo, bool expansionEnabled, bool forFootprintTest, out bool footPrintsChanged)
         {
             INI extraTextIni = new INI();
             try
@@ -316,7 +316,7 @@ namespace MobiusEditor.RedAlert
                 footPrintsChanged = false;
                 return null;
             }
-            IEnumerable<string> errors = ResetMissionRules(extraTextIni, isSolo, expansionEnabled, forFootprintTest, out footPrintsChanged);
+            List<string> errors = ResetMissionRules(extraTextIni, isSolo, expansionEnabled, forFootprintTest, out footPrintsChanged);
             if (!forFootprintTest)
             {
                 extraSections = extraTextIni.Sections.Count == 0 ? null : extraTextIni.Sections;
@@ -324,7 +324,7 @@ namespace MobiusEditor.RedAlert
             return errors;
         }
 
-        private void PresetMissionRules(INI iniText, bool isSolo, bool expansionEnabled, List<string> errors, ref bool modified)
+        private void SetMissionRules(INI iniText, bool isSolo, bool expansionEnabled, List<string> errors, ref bool modified)
         {
             if (this.rulesIni != null)
             {
@@ -341,13 +341,12 @@ namespace MobiusEditor.RedAlert
                     UpdateRules(aftermathMpRulesIni, this.Map, false);
                 }
             }
-            List<string> newErrors = new List<string>();
-            newErrors.AddRange(UpdateRules(iniText, this.Map, false));
+            List<string> newErrors = UpdateRules(iniText, this.Map, false);
             if (newErrors.Count > 0)
             {
                 modified = true;
                 errors.AddRange(newErrors);
-            }                
+            }
         }
 
         /// <summary>
@@ -358,7 +357,7 @@ namespace MobiusEditor.RedAlert
         /// <param name="extraIniText">Ini content that remains after parsing an ini file. If null, only a rules reset is performed.</param>
         /// <param name="footPrintsChanged">Returns true if any building footprints were changed as a result of the ini rule changes.</param>
         /// <returns>Any errors in parsing the <paramref name="extraIniText"/> contents.</returns>
-        private IEnumerable<string> ResetMissionRules(INI extraIniText)
+        private List<string> ResetMissionRules(INI extraIniText)
         {
             return ResetMissionRules(extraIniText, this.Map.BasicSection.SoloMission, this.Map.BasicSection.ExpansionEnabled, false, out _);
         }
@@ -374,7 +373,7 @@ namespace MobiusEditor.RedAlert
         /// <param name="forFootprintTest">Don't apply changes, just test the result for <paramref name="footPrintsChanged"/></param>
         /// <param name="footPrintsChanged">Returns true if any building footprints were changed as a result of the ini rule changes.</param>
         /// <returns>Any errors in parsing the <paramref name="extraIniText"/> contents.</returns>
-        private IEnumerable<string> ResetMissionRules(INI extraIniText, bool isSolo, bool expansionEnabled, bool forFootprintTest, out bool footPrintsChanged)
+        private List<string> ResetMissionRules(INI extraIniText, bool isSolo, bool expansionEnabled, bool forFootprintTest, out bool footPrintsChanged)
         {
             if (extraIniText != null && !forFootprintTest)
             {
@@ -396,7 +395,7 @@ namespace MobiusEditor.RedAlert
                     UpdateRules(aftermathMpRulesIni, this.Map, forFootprintTest);
                 }
             }
-            IEnumerable<string> errors = null;
+            List<string> errors = null;
             if (extraIniText != null)
             {
                 errors = UpdateRules(extraIniText, this.Map, forFootprintTest);
@@ -781,7 +780,7 @@ namespace MobiusEditor.RedAlert
             List<Trigger> triggers = this.LoadTriggers(ini, errors, ref modified);
             // Rules should be applied in advance to correctly set bibs.
             bool isSolo = CheckSwitchToSolo(tryCheckSoloMission, fromMix, triggers, Map.BasicSection.SoloMission, player, errors, true);
-            PresetMissionRules(ini, isSolo, expansionEnabled, errors, ref modified);
+            SetMissionRules(ini, isSolo, expansionEnabled, errors, ref modified);
             Dictionary<string, string> caseTrigs = Trigger.None.Yield().Concat(triggers.Select(t => t.Name)).ToDictionary(t => t, StringComparer.OrdinalIgnoreCase);
             LoadMapPack(ini, errors, ref modified);
             LoadSmudge(ini, errors, ref modified);
@@ -2866,7 +2865,7 @@ namespace MobiusEditor.RedAlert
         /// <param name="forFootprintTest">Run in test mode, where bibs are changed but nothing is actually updated on the map.</param>
         /// <param name="footPrintsChanged">Returns true of the rule changes modified any building footprint sizes.</param>
         /// <returns>Any errors returned by the parsing process.</returns>
-        private IEnumerable<string> UpdateRules(INI ini, Map map, bool forFootprintTest)
+        private List<string> UpdateRules(INI ini, Map map, bool forFootprintTest)
         {
             List<string> errors = new List<string>();
             if (ini == null)
@@ -2885,7 +2884,7 @@ namespace MobiusEditor.RedAlert
             return errors;
         }
 
-        private IEnumerable<string> UpdateLandTypeRules(INI ini, Map map)
+        private List<string> UpdateLandTypeRules(INI ini, Map map)
         {
             List<string> errors = new List<string>();
             this.ReadLandType(ini, map, "Clear", LandClear, errors);
