@@ -36,6 +36,8 @@ Besides those, \[PageUp\] and \[PageDown\] have been universally implemented to 
 
 Some editing modes will have their own specific shortcuts; in Map mode, holding down the \[Ctrl\] key will allow modifying the map border, and \[Ctrl\]+\[Alt\] allows using the flood fill feature. In Waypoints mode, pressing \[Shift\] plus the starting letter of a special waypoint will act as shortcut for quickly selecting it. In Waypoints and Celltriggers modes, the \[Enter\] key functions as shortcut for the "Jump To" function. All such mode-dependent shortcuts will be indicated in the bottom bar along with the mouse function modifiers.
 
+Additionally, the "Extra indicators" you can find under the "View" menu all have an F-key assigned to them, to quickly toggles them. F1 for the map symmetry lines, F2 for the map grid, F3 for showing the map terrain type of each cell, F4 for indicating maps occupied by placed down objects, F5 to show the reveal radius around any waypoints that are configured to reveal terrain through map scripting, and F6 for showing the radiuses for special abilities, such as the gap generators and radar jammers in Red Alert. A lot of these extra indicators will pop up automatically under certain conditions, such as placing/dragging the affected objects, or simply being in the relevant editing mode. The menu toggles will simply keep them permanently enabled, even outside these contexts.
+
 Note that these hotkeys only work when the main window is selected; if you click on the tool window to select it, all keys will work as expected inside the selected controls. Also note that the tool window will automatically deselect when the mouse is moved over the main editor area, to avoid having to click the main window to activate its normal functioning.
 
 ### Sole Survivor and Megamaps
@@ -52,7 +54,7 @@ The editor contains a function to create a new map starting from an image, also 
 
 The function is meant to allow map makers to plan out the layout of their map in an image editor, with more tools available in terms of symmetry, copy-pasting, drawing straight lines, drawing curves, etc. Each pixel on the image represents one cell, so the image should be the size of a full map; 64x64 for Tiberian Dawn, and 128x128 for Red Alert and Sole Survivor (and Tiberian Dawn megamaps). If the image is smaller, it will be expanded with black. If it is larger, only the upper left corner will be used.
 
-After selecting the map type and the image, a dialog will be shown where colors can be mapped to a specific tileset icon type. This function only handles distinct colors, so avoid using tools that use smooth color transitions; the final image should probably only contain some 3-10 distinct colors. Note that the alpha factor of the colors will be ignored.
+After selecting the map type and the image, a dialog will be shown where colours can be mapped to a specific tileset icon type. This function only handles distinct colours, so avoid using tools that use smooth colour transitions; the final image should probably only contain some 3-10 distinct colours. Note that the alpha factor of the colours will be ignored.
 
 The result of this is obviously not an immediately usable map. It will produce a rough layout which will then need to be overlayed with actual cliffs, rivers and shores to turn it into an actual map. For Red Alert Interior theater, you can probably do a lot more preparation work in the image editor; all corridor sizes can be laid out exactly, and you can even pre-place areas where wall shadows will come, so they can be taken care of with a few quick flood fill commands in the editor.
 
@@ -98,7 +100,7 @@ The editor has two kinds of settings; global settings used on every run, and mod
 
 **\%localappdata\%\\Nyerguds\\**
 
-This should make you end up in the "AppData\\Local\\Nyerguds" folder under your Windows user folder. Removing this folder will clear all of the editor's user settings.
+This should make you end up in the "AppData\\Local\\Nyerguds" folder under your Windows user folder. Removing this folder (or, at least, all folders in there starting with "CnCTDRAMapEditor") will clear all of the editor's user settings.
 
 ## Configuration
 
@@ -123,21 +125,28 @@ Note that for Red Alert, the editor uses the DOS versions of the infantry sprite
 
 ### General editor options
 
-* **EnableDpiAwareness**: On some machines with high dpi monitors, people might have odd issues where the positioning of the indicators on the map doesn't correctly match the map tiles. If this happens, enabling this option might fix the problem.
+* **LazyInitSteam**: Enabled by default. The link between the editor and Steam is normally initialised on startup, but that link prevents Steam from running the game while the editor is open. With this option, the link with Steam is only initialised at the moment the map publish function is opened, allowing map makers to more easily switch between the editor and the game to test their what they're making.
 * **EditorLanguage**: This option can change the language the editor loads for the remastered game text to name the objects in the editor by specifying a culture code in a format such as "EN-US". This only works for languages that are supported by the C&C Remaster as in-game language. When set to "Auto", it will attempt to use the system language, or the nearest supported one that matches it. To force the default English language, you can leave the setting empty, or use "Default" or "None". The supported languages of the game are: EN-US, DE-DE, ES-ES, FR-FR, KO-KR, PL-PL, RU-RU, ZH-CN, ZH-TW.
 * **CheckUpdatesOnStartup**: Enabled by default. Will make the editor notify users if a new version is available.
+* **EnableDpiAwareness**: Disabled by default. On some machines with high dpi monitors, people might have odd issues where the positioning of the indicators on the map doesn't correctly match the map tiles. If this happens, enabling this option might fix the problem.
 
 ### Mods:
 
 * **ModsToLoadTD** / **ModsToLoadRA** / **ModsToLoadSS**: semicolon (or comma) separated list of mod entries for each supported game.
 
-These refer to mods in the format defined by the Command & Conquer Remastered Collection. A mod entry can either be a Steam workshop ID, or a folder name. Steam workshop IDs are looked up in the game's downloaded Workshop items. Folder names will initially be looked up in the mods folder of the respective game in the CnCRemastered\\mods\\ folder under your Documents folder, but if nothing is found there, the loading system will also check the Steam workshop files for a matching mod. Sole Survivor will use Tiberian Dawn mods. Note that mods can only apply graphical changes from the tileset and house color xml files; the editor can't read any data from compiled dll files. This mods system is mostly meant to apply graphical fixes to the editor.
+These refer to mods in the format defined by the Command & Conquer Remastered Collection. A mod entry can either be a Steam workshop ID, or a folder name. Steam workshop IDs are looked up in the game's downloaded Workshop items. Folder names will initially be looked up in the mods folder of the respective game in the CnCRemastered\\mods\\ folder under your Documents folder, but if nothing is found there, the loading system will also check the Steam workshop files for a matching mod. Sole Survivor will use Tiberian Dawn mods. Note that mods can only apply graphical changes from the tileset and house colour xml files; the editor can't read any data from compiled dll files. This mods system is mostly meant to apply graphical fixes to the editor.
 
 The **ModsToLoadTD** and **ModsToLoadSS** settings will have the `GraphicsFixesTD` mod set by default, to complete the incomplete TD Remastered graphics set, meaning the mod will automatically be loaded if found. Similarly, the **ModsToLoadRA** setting will have the `GraphicsFixesRA` mod set. Note that the editor has no way to check whether mods are enabled in the Remastered Collection games, so that makes no difference.
 
 You can find these mods on the Steam workshop ([GraphicsFixesTD](https://steamcommunity.com/sharedfiles/filedetails/?id=2844969675), [GraphicsFixesRA](https://steamcommunity.com/sharedfiles/filedetails/?id=2978875641)) and on ModDB ([GraphicsFixesTD](https://www.moddb.com/games/command-conquer-remastered/addons/graphicsfixestd), [GraphicsFixesRA](https://www.moddb.com/games/cc-red-alert-remastered/addons/graphicsfixesra)).
 
 In classic graphics mode, the editor can still use mods, if they contain classic files in a "ccdata" folder. The 'GraphicsFixesRA' mod has such a classic component, to fix the classic graphics of Einstein and the ant buildings.
+
+### Mix content analysis:
+
+Starting from v1.5.1.0, the editor has the ability to open the original games' .mix archives to open the missions inside it. However, the names of the files inside those archives are only stored as hashed numeric values created with a one-way hashing algorithm. This means that, to identify these files, lists of all the original file names are needed. The system to generate these names and their hash values is controlled by a set of ini files, of which the main definitions file is configured in the settings:
+
+* **MixContentInfoFile**: Contains the definitions of the supported games for which mix file content analysis can be done, and any additional files to be loaded to get all information for each game. By default, this is set to "Classic\mixcontent.ini".
 
 ### Defaults:
 
@@ -153,24 +162,44 @@ In classic graphics mode, the editor can still use mods, if they contain classic
 ### Editor fine tuning:
 
 * **ZoomToBoundsOnLoad**: Defaults to True. When enabled, causes the editor to zoom in to the map bounds when loading an existing map.
-* **RememberToolData**: Defaults to False. When enabled, the item selections and options on the tool windows will be remembered when opening a different or new map for the same game.
-* **MapGridColor**: Color for drawing the map grid, as "A,R,G,B". This includes the alpha value, because the grid is semitransparent by default.
-* **MapBackColor**: Background color for the map screen, as "R,G,B". This defaults to dark grey, so users can see the actual map outline on Red Alert Interior maps.
+* **RememberToolData**: Defaults to False. When enabled, the item selections and options on the tool windows will be remembered when opening a different map for the same game.
 * **MapScale**: Scaling multiplier for the size at which assets are rendered on the map. Scaling down the rendered map size will make the UI more responsive. Negative values will enable smooth scaling, which gives nicer graphics but will make the UI noticeable _less_ responsive. Defaults to 0.5.
 * **MapScaleClassic**: Scaling multiplier when using classic graphics. Defaults to 1.0.
 * **PreviewScale**: Scaling multiplier for the size at which assets are rendered on the preview tools. Negative values will enable smooth scaling, but this usually doesn't look good on the upscaled preview graphics. Defaults to 1.
-* **PreviewScaleClassic** Scaling multiplier for the preview tools when using classic graphics. Defaults to 5.333 (128/24), which upscales the objects to match the size they have in Remastered graphics.
+* **PreviewScaleClassic** Scaling multiplier for the preview tools when using classic graphics. Defaults to 5.333 (128/24), which upscales the objects to match the size they have in the Remastered graphics.
 * **ObjectToolItemSizeMultiplier**: Floating-point multiplication factor for downsizing the item icons on the selection lists on the tool windows.
 * **TemplateToolTextureSizeMultiplier**: Floating-point multiplication factor for the size of tiles shown on the Map tool. This scaling is somehow done relative to the screen size; not sure.
 * **MaxMapTileTextureSize**: Maximum for the size of the tiles shown on the Map tool. Leave on 0 to disable.
 * **UndoRedoStackSize**: The amount of undo/redo actions stored in memory. Defaults to 100.
 * **MinimumClampSize**: Minimum size of the tool window that will automatically be forced to remain in the screen area. If set to 0,0, this will default to the size of the entire tool window.
 
+### Colours:
+
+General:
+
+* **MapBackColor**: Background colour for the map screen, as "R,G,B". This defaults to dark grey, so users can see the actual map outline on Red Alert Interior maps.
+* **MapGridColor**: Colour for drawing the map grid, as "A,R,G,B". This includes the alpha value, because the grid is semitransparent by default.
+
+For the option "Extra indicators" → "Occupied by objects":
+
+* **HashColorTechnoPart**: The colour for cells partially filled with map objects; specifically, infantry.
+* **HashColorTechnoFull**: The colour for cells fully filled with map objects; either cells of buildings, terrain or units, or cells fully filled with five infantry units.
+
+For the option "Extra indicators" → "Map terrain types":
+
+* **HashColorLandClear**: The colour for cells of the 'Clear' land type. This is the default passable terrain. Defaults to transparent white. Note that by default, this one's alpha component is set to 0, to suppress the indicators for this type. However, the actual colour information will be used for placement previews of map templates, to indicate all cells in the shape.
+* **HashColorLandBeach**: The colour for cells of the 'Beach' land type. This is passable, but can't be built on. Defaults to yellow.
+* **HashColorLandRock**: The colour for cells of the 'Rock' land type. This is fully impassable terrain. Defaults to dark red.
+* **HashColorLandRoad**: The colour for cells of the 'Road' land type. Units move faster on roads. This type is only used in Red Alert. Defaults to brown.
+* **HashColorLandWater**: The colour for cells of the 'Water' land type. This is water terrain that is passable for ships. Defaults to pale blue.
+* **HashColorLandRiver**: The colour for cells of the 'River' land type. This is water terrain that is not passable for ships. Defaults to blue.
+* **HashColorLandRough**: The colour for cells of the 'Rough' land type. This is passable, but can't be built on. Defaults to grayish purple.
+
 ### Editor behavior tweaks:
 
 These options are all enabled by default, but can be disabled if you wish. Use these at your own risk. Some of these (air units, craters, harvesting) are related to bugs in the games, so they could be disabled when making maps for a mod in which these issues are fixed.
 
-* **ReportMissionDetection**: When detecting that a file is a classic single player mission file because it matches the classic "SCG01EA"-like name pattern and contains win and lose scripts, a note about it is shown in the mission load analysis. When disabled, this will only be shown if it is not the only remark in the list.
+* **ReportMissionDetection**: When detecting that a file is a classic single player mission file because it matches the classic "SCG01EA"-like name pattern and contains win and lose scripts, a note about it is shown in the mission load analysis. When disabled, this will only be shown if it is not the only remark in the list. Note that missions loaded from .mix archives will always behave as if this option is enabled.
 * **EnforceObjectMaximums**: Don't allow saving a map if any of the object amounts exceed the normal internal maximums of the game. Can be disabled in case a mission is specifically meant to be played on a modded game that increases these limits.
 * **Ignore106Scripting**: Don't support the extended scripting added by the C&C95 v1.06 patch. If this option is disabled, additional triggers named UUUU, VVVV and WWWW can also be destroyed with "Dstry Trig" actions.
 * **ConvertRaObsoleteClear**: Automatically clear tiles with ID 255 on RA Temperate/Snow maps, or on Interior maps if more than 80% of the area outside the map bounds is filled with it, to fix the fact old versions of RA saved that as Clear terrain. This can be disabled to research changes on old maps.
@@ -191,7 +220,7 @@ These don't affect any real behaviour, but change some graphics to look more cor
 
 * **FixClassicEinstein**: While the Win95 and remastered versions of Red Alert have Einstein's in-game sprite coloured to match how he appears in the briefings, the DOS version (which the editor and the game use) looks identical to Dr. Mobius in Tiberian Dawn. This option makes the editor shuffle around some colours in the classic DOS sprite so it matches that same colour scheme. Note that the **GraphicsFixesRA** mod also fixes this.
 * **FixConcretePavement**: The connection logic of the "CONC" pavement in Tiberian Dawn is seriously bugged in-game. The editor contains a fixed logic, showing the concrete how it was intended to be, filling in side gaps with filler cells. However, be advised that this new logic does not match the actual game. For this reason, it is disabled by default.
-* **DrawSoleTeleports**: On Sole Survivor maps, draw a black area with blue border over the loaded ROAD graphics to emulate the look of the in-game teleporters.
+* **DrawSoleTeleports**: On Sole Survivor maps, draw a black area with a blue border over the loaded ROAD graphics to emulate the look of the in-game teleporters.
 
 ## Classic files listing:
 

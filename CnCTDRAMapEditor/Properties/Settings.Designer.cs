@@ -12,7 +12,7 @@ namespace MobiusEditor.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "17.9.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "17.10.0.0")]
     internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
@@ -74,6 +74,15 @@ namespace MobiusEditor.Properties {
         public bool ClassicProducesNoMetaFiles {
             get {
                 return ((bool)(this["ClassicProducesNoMetaFiles"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool LazyInitSteam {
+            get {
+                return ((bool)(this["LazyInitSteam"]));
             }
         }
         
@@ -232,33 +241,6 @@ namespace MobiusEditor.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool TerrainTypesShowObjects {
-            get {
-                return ((bool)(this["TerrainTypesShowObjects"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("40, 0, 0, 255")]
-        public global::System.Drawing.Color MapGridColor {
-            get {
-                return ((global::System.Drawing.Color)(this["MapGridColor"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("32, 32, 32")]
-        public global::System.Drawing.Color MapBackColor {
-            get {
-                return ((global::System.Drawing.Color)(this["MapBackColor"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("0.5")]
         public double MapScale {
             get {
@@ -335,6 +317,105 @@ namespace MobiusEditor.Properties {
         public global::System.Drawing.Size MinimumClampSize {
             get {
                 return ((global::System.Drawing.Size)(this["MinimumClampSize"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("40, 0, 0, 255")]
+        public global::System.Drawing.Color MapGridColor {
+            get {
+                return ((global::System.Drawing.Color)(this["MapGridColor"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("32, 32, 32")]
+        public global::System.Drawing.Color MapBackColor {
+            get {
+                return ((global::System.Drawing.Color)(this["MapBackColor"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0, 170, 0")]
+        public global::System.Drawing.Color HashColorTechnoPart {
+            get {
+                return ((global::System.Drawing.Color)(this["HashColorTechnoPart"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0, 255, 0")]
+        public global::System.Drawing.Color HashColorTechnoFull {
+            get {
+                return ((global::System.Drawing.Color)(this["HashColorTechnoFull"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0, 255, 255, 255")]
+        public global::System.Drawing.Color HashColorLandClear {
+            get {
+                return ((global::System.Drawing.Color)(this["HashColorLandClear"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("255, 255, 85")]
+        public global::System.Drawing.Color HashColorLandBeach {
+            get {
+                return ((global::System.Drawing.Color)(this["HashColorLandBeach"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("170, 0, 0")]
+        public global::System.Drawing.Color HashColorLandRock {
+            get {
+                return ((global::System.Drawing.Color)(this["HashColorLandRock"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("186, 127, 040")]
+        public global::System.Drawing.Color HashColorLandRoad {
+            get {
+                return ((global::System.Drawing.Color)(this["HashColorLandRoad"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("186, 186, 255")]
+        public global::System.Drawing.Color HashColorLandWater {
+            get {
+                return ((global::System.Drawing.Color)(this["HashColorLandWater"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0, 0, 255")]
+        public global::System.Drawing.Color HashColorLandRiver {
+            get {
+                return ((global::System.Drawing.Color)(this["HashColorLandRiver"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("186, 128, 186")]
+        public global::System.Drawing.Color HashColorLandRough {
+            get {
+                return ((global::System.Drawing.Color)(this["HashColorLandRough"]));
             }
         }
         

@@ -20,6 +20,9 @@
     <Setting Name="ClassicProducesNoMetaFiles" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>
+    <Setting Name="LazyInitSteam" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
     <Setting Name="EditorLanguage" Type="System.String" Scope="Application">
       <Value Profile="(Default)">Auto</Value>
     </Setting>
@@ -71,15 +74,6 @@
     <Setting Name="RememberToolData" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="TerrainTypesShowObjects" Type="System.Boolean" Scope="Application">
-      <Value Profile="(Default)">True</Value>
-    </Setting>
-    <Setting Name="MapGridColor" Type="System.Drawing.Color" Scope="Application">
-      <Value Profile="(Default)">40, 0, 0, 255</Value>
-    </Setting>
-    <Setting Name="MapBackColor" Type="System.Drawing.Color" Scope="Application">
-      <Value Profile="(Default)">32, 32, 32</Value>
-    </Setting>
     <Setting Name="MapScale" Type="System.Double" Scope="Application">
       <Value Profile="(Default)">0.5</Value>
     </Setting>
@@ -106,6 +100,39 @@
     </Setting>
     <Setting Name="MinimumClampSize" Type="System.Drawing.Size" Scope="Application">
       <Value Profile="(Default)">30, 30</Value>
+    </Setting>
+    <Setting Name="MapGridColor" Type="System.Drawing.Color" Scope="Application">
+      <Value Profile="(Default)">40, 0, 0, 255</Value>
+    </Setting>
+    <Setting Name="MapBackColor" Type="System.Drawing.Color" Scope="Application">
+      <Value Profile="(Default)">32, 32, 32</Value>
+    </Setting>
+    <Setting Name="HashColorTechnoPart" Type="System.Drawing.Color" Scope="Application">
+      <Value Profile="(Default)">0, 170, 0</Value>
+    </Setting>
+    <Setting Name="HashColorTechnoFull" Type="System.Drawing.Color" Scope="Application">
+      <Value Profile="(Default)">0, 255, 0</Value>
+    </Setting>
+    <Setting Name="HashColorLandClear" Type="System.Drawing.Color" Scope="Application">
+      <Value Profile="(Default)">0, 255, 255, 255</Value>
+    </Setting>
+    <Setting Name="HashColorLandBeach" Type="System.Drawing.Color" Scope="Application">
+      <Value Profile="(Default)">255, 255, 85</Value>
+    </Setting>
+    <Setting Name="HashColorLandRock" Type="System.Drawing.Color" Scope="Application">
+      <Value Profile="(Default)">170, 0, 0</Value>
+    </Setting>
+    <Setting Name="HashColorLandRoad" Type="System.Drawing.Color" Scope="Application">
+      <Value Profile="(Default)">186, 127, 040</Value>
+    </Setting>
+    <Setting Name="HashColorLandWater" Type="System.Drawing.Color" Scope="Application">
+      <Value Profile="(Default)">186, 186, 255</Value>
+    </Setting>
+    <Setting Name="HashColorLandRiver" Type="System.Drawing.Color" Scope="Application">
+      <Value Profile="(Default)">0, 0, 255</Value>
+    </Setting>
+    <Setting Name="HashColorLandRough" Type="System.Drawing.Color" Scope="Application">
+      <Value Profile="(Default)">186, 128, 186</Value>
     </Setting>
     <Setting Name="ReportMissionDetection" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>

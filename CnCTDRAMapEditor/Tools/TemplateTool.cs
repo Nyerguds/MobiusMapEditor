@@ -39,7 +39,7 @@ namespace MobiusEditor.Tools
         {
             get
             {
-                MapLayerFlag handled = MapLayerFlag.Boundaries | MapLayerFlag.LandTypes;
+                MapLayerFlag handled = MapLayerFlag.Boundaries | MapLayerFlag.LandTypes | MapLayerFlag.TechnoOccupancy;
                 if (boundsMode)
                 {
                     handled |= MapLayerFlag.MapSymmetry;
@@ -1035,6 +1035,7 @@ namespace MobiusEditor.Tools
                 }
                 CellMetrics templateTypeMetrics = new CellMetrics(selected.ThumbnailIconWidth, selected.ThumbnailIconHeight);
                 CellGrid<Template> templates = null;
+                HashSet<Point> ignoredPoints = new HashSet<Point>();
                 if (renderGrid)
                 {
                     // Fill "dummy map" to apply land types grid to it.
@@ -1048,6 +1049,10 @@ namespace MobiusEditor.Tools
                             if ((!isRandom && selected.IconMask[y, x]) || (isRandom && cell < selected.NumIcons))
                             {
                                 SetTemplate(map.TemplateTypes, templates, selected, new Point(x, y), new Point(x, y), null, null, this.random, false);
+                            }
+                            else
+                            {
+                                ignoredPoints.Add(new Point(x, y));
                             }
                             cell++;
                         }
@@ -1064,7 +1069,7 @@ namespace MobiusEditor.Tools
                     g.DrawImage(selected.Thumbnail, new Rectangle(Point.Empty, selected.Thumbnail.Size), 0, 0, templatePreview.Width, templatePreview.Height, GraphicsUnit.Pixel);
                     if (templates != null)
                     {
-                        MapRenderer.RenderLandTypes(g, plugin, templates, Globals.PreviewTileSize, templateTypeMetrics.Bounds, true, null);
+                        MapRenderer.RenderHashAreas(g, plugin, templates, null, Globals.PreviewTileSize, templateTypeMetrics.Bounds, ignoredPoints, true, false);
                     }
                 }
                 // paint selected.Thumbnail;
@@ -1896,9 +1901,39 @@ namespace MobiusEditor.Tools
         protected override void PostRenderMap(Graphics graphics, Rectangle visibleCells)
         {
             base.PostRenderMap(graphics, visibleCells);
-            if (Layers.HasFlag(MapLayerFlag.LandTypes))
+            HashSet<Point> placementArea = null;
+            HashSet<Point> placementAreaClear = null;
+            Rectangle placementRect = Rectangle.Empty;
+            if (placementMode || fillMode)
             {
-                MapRenderer.RenderLandTypes(graphics, plugin, previewMap.Templates, Globals.MapTileSize, visibleCells, false, Globals.IndicateMapObjects ? previewMap.Technos : null);
+                placementArea = new HashSet<Point>();
+                placementAreaClear = new HashSet<Point>();
+                Point location = navigationWidget.ActualMouseCell;
+                TemplateType selected = SelectedTemplateType;
+                if (selected == null || SelectedIcon.HasValue)
+                {
+                    placementRect = new Rectangle(location.X, location.Y, 1, 1);
+                    placementArea.Add(location);
+                }
+                else
+                {
+                    placementRect = new Rectangle(location.X, location.Y, selected.IconWidth, selected.IconHeight);
+                    IEnumerable<Point> points = selected.GetIconPoints(location);
+                    placementArea.UnionWith(points);
+                    placementAreaClear.UnionWith(placementRect.Points().Where(p => !placementArea.Contains(p)));
+                }
+            }
+            if (Layers.HasAnyFlags(MapLayerFlag.LandTypes | MapLayerFlag.TechnoOccupancy))
+            {
+                OccupierSet<ICellOccupier> technos = Layers.HasFlag(MapLayerFlag.TechnoOccupancy) ? previewMap.Technos : null;
+                CellGrid<Template> templates = Layers.HasFlag(MapLayerFlag.LandTypes) ? previewMap.Templates : null;
+                MapRenderer.RenderHashAreas(graphics, plugin, templates, technos, Globals.MapTileSize, visibleCells, placementArea, false, false);
+            }
+            if (placementMode || fillMode)
+            {
+                CellGrid<Template> templates = previewMap.Templates;
+                bool isExtra = !Layers.HasFlag(MapLayerFlag.LandTypes);
+                MapRenderer.RenderHashAreas(graphics, plugin, templates, null, Globals.MapTileSize, placementRect, placementAreaClear, true, isExtra);
             }
             if (boundsMode)
             {
@@ -1915,9 +1950,12 @@ namespace MobiusEditor.Tools
                 {
                     Point location = navigationWidget.ActualMouseCell;
                     TemplateType selected = SelectedTemplateType;
-                    if (selected == null)
+                    int selWidth = 1;
+                    int selHeight = 1;
+                    if (selected != null && !SelectedIcon.HasValue)
                     {
-                        return;
+                        selWidth = selected.IconWidth;
+                        selHeight = selected.IconHeight;
                     }
                     Rectangle singleCell = new Rectangle(
                         location.X * Globals.MapTileWidth, location.Y * Globals.MapTileHeight,
@@ -1925,15 +1963,15 @@ namespace MobiusEditor.Tools
                     Rectangle previewBounds = new Rectangle(
                         location.X * Globals.MapTileWidth,
                         location.Y * Globals.MapTileHeight,
-                        (SelectedIcon.HasValue ? 1 : selected.IconWidth) * Globals.MapTileWidth,
-                        (SelectedIcon.HasValue ? 1 : selected.IconHeight) * Globals.MapTileHeight
+                        selWidth * Globals.MapTileWidth,
+                        selHeight * Globals.MapTileHeight
                     );
                     using (Pen previewPen = new Pen(fillMode ? Color.Red : Color.Green, Math.Max(1, Globals.MapTileSize.Width / 16.0f)))
                     {
                         graphics.DrawRectangle(previewPen, previewBounds);
                         // Special indicator to tell the user that the top-left cell has a special purpose:
                         // when pattern-filling, only this cell will serve as fill origin.
-                        if (fillMode && (selected.IconWidth != 1 || selected.IconHeight != 1))
+                        if (fillMode && (selWidth != 1 || selHeight != 1))
                         {
                             graphics.DrawRectangle(previewPen, singleCell);
                         }

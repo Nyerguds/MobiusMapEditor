@@ -40,9 +40,19 @@ namespace MobiusEditor
             // Fine tuning
             ZoomToBoundsOnLoad = Properties.Settings.Default.ZoomToBoundsOnLoad;
             RememberToolData = Properties.Settings.Default.RememberToolData;
-            IndicateMapObjects = Properties.Settings.Default.TerrainTypesShowObjects;
             MapGridColor = Properties.Settings.Default.MapGridColor;
             MapBackColor = Color.FromArgb(255, Properties.Settings.Default.MapBackColor);
+
+            HashColorTechnoPart = Properties.Settings.Default.HashColorTechnoPart;
+            HashColorTechnoFull = Properties.Settings.Default.HashColorTechnoFull;
+            HashColorLandClear = Properties.Settings.Default.HashColorLandClear;
+            HashColorLandBeach = Properties.Settings.Default.HashColorLandBeach;
+            HashColorLandRock = Properties.Settings.Default.HashColorLandRock;
+            HashColorLandRoad = Properties.Settings.Default.HashColorLandRoad;
+            HashColorLandWater = Properties.Settings.Default.HashColorLandWater;
+            HashColorLandRiver = Properties.Settings.Default.HashColorLandRiver;
+            HashColorLandRough = Properties.Settings.Default.HashColorLandRough;
+
             UndoRedoStackSize = Properties.Settings.Default.UndoRedoStackSize;
             MinimumClampSize = Properties.Settings.Default.MinimumClampSize;
             // Behavior tweaks
@@ -112,9 +122,18 @@ namespace MobiusEditor
 
         public static bool ZoomToBoundsOnLoad { get; private set; }
         public static bool RememberToolData { get; private set; }
-        public static bool IndicateMapObjects { get; private set; }
         public static Color MapGridColor { get; private set; }
         public static Color MapBackColor { get; private set; }
+
+        public static Color HashColorTechnoPart { get; private set; }
+        public static Color HashColorTechnoFull { get; private set; }
+        public static Color HashColorLandClear { get; private set; }
+        public static Color HashColorLandBeach { get; private set; }
+        public static Color HashColorLandRock { get; private set; }
+        public static Color HashColorLandRoad { get; private set; }
+        public static Color HashColorLandWater { get; private set; }
+        public static Color HashColorLandRiver { get; private set; }
+        public static Color HashColorLandRough { get; private set; }
 
         private static double GetMinScale(){ return 1.0 / Math.Min(OriginalTileWidth, OriginalTileHeight); }
         public static double MapTileScale => Math.Max(GetMinScale(), Math.Abs(UseClassicFiles ? Properties.Settings.Default.MapScaleClassic : Properties.Settings.Default.MapScale));

@@ -779,7 +779,7 @@ namespace MobiusEditor.RedAlert
             List<TeamType> teamTypes = this.LoadTeamTypes(ini, errors, ref modified);
             List<Trigger> triggers = this.LoadTriggers(ini, errors, ref modified);
             // Rules should be applied in advance to correctly set bibs.
-            bool isSolo = CheckSwitchToSolo(tryCheckSoloMission, fromMix, triggers, Map.BasicSection.SoloMission, player, errors, true);
+            bool isSolo = CheckSwitchToSolo(tryCheckSoloMission, fromMix, triggers, Map.BasicSection.SoloMission, player, errors);
             SetMissionRules(ini, isSolo, expansionEnabled, errors, ref modified);
             Dictionary<string, string> caseTrigs = Trigger.None.Yield().Concat(triggers.Select(t => t.Name)).ToDictionary(t => t, StringComparer.OrdinalIgnoreCase);
             LoadMapPack(ini, errors, ref modified);
@@ -2716,7 +2716,7 @@ namespace MobiusEditor.RedAlert
             }
         }
 
-        private bool CheckSwitchToSolo(bool tryCheckSoloMission, bool dontReportSwitch, List<Trigger> triggers, bool wasSolo, HouseType player, List<string> errors, bool testOnly)
+        private bool CheckSwitchToSolo(bool tryCheckSoloMission, bool dontReportSwitch, List<Trigger> triggers, bool wasSolo, HouseType player, List<string> errors)
         {
             bool switchedToSolo = false;
             if (tryCheckSoloMission && !wasSolo)
@@ -2735,10 +2735,6 @@ namespace MobiusEditor.RedAlert
                 switchedToSolo = hasWinTrigger && hasLoseTrigger;
             }
             bool isSolo = wasSolo || switchedToSolo;
-            if (testOnly)
-            {
-                return isSolo;
-            }
             if (switchedToSolo)
             {
                 Map.BasicSection.SoloMission = true;

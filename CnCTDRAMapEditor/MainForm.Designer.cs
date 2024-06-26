@@ -107,7 +107,8 @@ namespace MobiusEditor
             this.viewExtraIndicatorsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewExtraIndicatorsMapSymmetryMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewExtraIndicatorsMapGridMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.viewExtraIndicatorsMapPassabilityMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.viewExtraIndicatorsTerrainTypesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.viewExtraIndicatorsPlacedObjectsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewExtraIndicatorsWaypointRevealRadiusMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewExtraIndicatorsEffectAreaRadiusMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewZoomToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -132,6 +133,7 @@ namespace MobiusEditor
             this.copyrightStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.mouseToolTip = new System.Windows.Forms.ToolTip(this.components);
             this.mainToolStrip = new System.Windows.Forms.ToolStrip();
+            this.mapPanel = new MobiusEditor.Controls.MapPanel();
             this.mapToolStripButton = new MobiusEditor.Controls.ViewToolStripButton();
             this.smudgeToolStripButton = new MobiusEditor.Controls.ViewToolStripButton();
             this.overlayToolStripButton = new MobiusEditor.Controls.ViewToolStripButton();
@@ -144,7 +146,6 @@ namespace MobiusEditor
             this.waypointsToolStripButton = new MobiusEditor.Controls.ViewToolStripButton();
             this.cellTriggersToolStripButton = new MobiusEditor.Controls.ViewToolStripButton();
             this.selectToolStripButton = new MobiusEditor.Controls.ViewToolStripButton();
-            this.mapPanel = new MobiusEditor.Controls.MapPanel();
             this.mainMenuStrip.SuspendLayout();
             this.mainStatusStrip.SuspendLayout();
             this.mainToolStrip.SuspendLayout();
@@ -498,7 +499,7 @@ namespace MobiusEditor
             this.viewLayersSmudgeMenuItem,
             this.viewLayersWaypointsMenuItem});
             this.viewLayersToolStripMenuItem.Name = "viewLayersToolStripMenuItem";
-            this.viewLayersToolStripMenuItem.Size = new System.Drawing.Size(155, 22);
+            this.viewLayersToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.viewLayersToolStripMenuItem.Text = "&Layers";
             // 
             // viewLayersEnableAllMenuItem
@@ -599,7 +600,7 @@ namespace MobiusEditor
             this.viewIndicatorsBuildingFakeLabelsMenuItem,
             this.viewIndicatorsOutlinesMenuItem});
             this.viewIndicatorsToolStripMenuItem.Name = "viewIndicatorsToolStripMenuItem";
-            this.viewIndicatorsToolStripMenuItem.Size = new System.Drawing.Size(155, 22);
+            this.viewIndicatorsToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.viewIndicatorsToolStripMenuItem.Text = "&Indicators";
             // 
             // viewIndicatorsEnableAllMenuItem
@@ -701,12 +702,13 @@ namespace MobiusEditor
             this.viewExtraIndicatorsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.viewExtraIndicatorsMapSymmetryMenuItem,
             this.viewExtraIndicatorsMapGridMenuItem,
-            this.viewExtraIndicatorsMapPassabilityMenuItem,
+            this.viewExtraIndicatorsTerrainTypesMenuItem,
+            this.viewExtraIndicatorsPlacedObjectsMenuItem,
             this.viewExtraIndicatorsWaypointRevealRadiusMenuItem,
             this.viewExtraIndicatorsEffectAreaRadiusMenuItem});
             this.viewExtraIndicatorsToolStripMenuItem.Name = "viewExtraIndicatorsToolStripMenuItem";
-            this.viewExtraIndicatorsToolStripMenuItem.Size = new System.Drawing.Size(155, 22);
-            this.viewExtraIndicatorsToolStripMenuItem.Text = "&Extra Indicators";
+            this.viewExtraIndicatorsToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.viewExtraIndicatorsToolStripMenuItem.Text = "&Extra indicators";
             // 
             // viewExtraIndicatorsMapSymmetryMenuItem
             // 
@@ -726,31 +728,40 @@ namespace MobiusEditor
             this.viewExtraIndicatorsMapGridMenuItem.Text = "Map &grid";
             this.viewExtraIndicatorsMapGridMenuItem.CheckedChanged += new System.EventHandler(this.ViewMenuItem_CheckedChanged);
             // 
-            // viewExtraIndicatorsMapPassabilityMenuItem
+            // viewExtraIndicatorsTerrainTypesMenuItem
             // 
-            this.viewExtraIndicatorsMapPassabilityMenuItem.CheckOnClick = true;
-            this.viewExtraIndicatorsMapPassabilityMenuItem.Name = "viewExtraIndicatorsMapPassabilityMenuItem";
-            this.viewExtraIndicatorsMapPassabilityMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F3;
-            this.viewExtraIndicatorsMapPassabilityMenuItem.Size = new System.Drawing.Size(224, 22);
-            this.viewExtraIndicatorsMapPassabilityMenuItem.Text = "Map passability";
-            this.viewExtraIndicatorsMapPassabilityMenuItem.CheckedChanged += new System.EventHandler(this.ViewMenuItem_CheckedChanged);
+            this.viewExtraIndicatorsTerrainTypesMenuItem.CheckOnClick = true;
+            this.viewExtraIndicatorsTerrainTypesMenuItem.Name = "viewExtraIndicatorsTerrainTypesMenuItem";
+            this.viewExtraIndicatorsTerrainTypesMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F3;
+            this.viewExtraIndicatorsTerrainTypesMenuItem.Size = new System.Drawing.Size(224, 22);
+            this.viewExtraIndicatorsTerrainTypesMenuItem.Text = "Map terrain &types";
+            this.viewExtraIndicatorsTerrainTypesMenuItem.CheckedChanged += new System.EventHandler(this.ViewMenuItem_CheckedChanged);
+            // 
+            // viewExtraIndicatorsPlacedObjectsMenuItem
+            // 
+            this.viewExtraIndicatorsPlacedObjectsMenuItem.CheckOnClick = true;
+            this.viewExtraIndicatorsPlacedObjectsMenuItem.Name = "viewExtraIndicatorsPlacedObjectsMenuItem";
+            this.viewExtraIndicatorsPlacedObjectsMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F4;
+            this.viewExtraIndicatorsPlacedObjectsMenuItem.Size = new System.Drawing.Size(224, 22);
+            this.viewExtraIndicatorsPlacedObjectsMenuItem.Text = "&Occupied by objects";
+            this.viewExtraIndicatorsPlacedObjectsMenuItem.CheckedChanged += new System.EventHandler(this.ViewMenuItem_CheckedChanged);
             // 
             // viewExtraIndicatorsWaypointRevealRadiusMenuItem
             // 
             this.viewExtraIndicatorsWaypointRevealRadiusMenuItem.CheckOnClick = true;
             this.viewExtraIndicatorsWaypointRevealRadiusMenuItem.Name = "viewExtraIndicatorsWaypointRevealRadiusMenuItem";
-            this.viewExtraIndicatorsWaypointRevealRadiusMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F4;
+            this.viewExtraIndicatorsWaypointRevealRadiusMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F5;
             this.viewExtraIndicatorsWaypointRevealRadiusMenuItem.Size = new System.Drawing.Size(224, 22);
-            this.viewExtraIndicatorsWaypointRevealRadiusMenuItem.Text = "Waypoint reveal radiuses";
+            this.viewExtraIndicatorsWaypointRevealRadiusMenuItem.Text = "&Waypoint reveal radiuses";
             this.viewExtraIndicatorsWaypointRevealRadiusMenuItem.CheckedChanged += new System.EventHandler(this.ViewMenuItem_CheckedChanged);
             // 
             // viewExtraIndicatorsEffectAreaRadiusMenuItem
             // 
             this.viewExtraIndicatorsEffectAreaRadiusMenuItem.CheckOnClick = true;
             this.viewExtraIndicatorsEffectAreaRadiusMenuItem.Name = "viewExtraIndicatorsEffectAreaRadiusMenuItem";
-            this.viewExtraIndicatorsEffectAreaRadiusMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F5;
+            this.viewExtraIndicatorsEffectAreaRadiusMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F6;
             this.viewExtraIndicatorsEffectAreaRadiusMenuItem.Size = new System.Drawing.Size(224, 22);
-            this.viewExtraIndicatorsEffectAreaRadiusMenuItem.Text = "Jam/gap radiuses";
+            this.viewExtraIndicatorsEffectAreaRadiusMenuItem.Text = "Jam/gap &radiuses";
             this.viewExtraIndicatorsEffectAreaRadiusMenuItem.CheckedChanged += new System.EventHandler(this.ViewMenuItem_CheckedChanged);
             // 
             // viewZoomToolStripMenuItem
@@ -761,7 +772,7 @@ namespace MobiusEditor
             this.viewZoomResetMenuItem,
             this.viewZoomToBoundsMenuItem});
             this.viewZoomToolStripMenuItem.Name = "viewZoomToolStripMenuItem";
-            this.viewZoomToolStripMenuItem.Size = new System.Drawing.Size(155, 22);
+            this.viewZoomToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.viewZoomToolStripMenuItem.Text = "&Zoom";
             // 
             // viewZoomInMenuItem
@@ -940,6 +951,28 @@ namespace MobiusEditor
             this.mainToolStrip.Text = "toolStrip1";
             this.mainToolStrip.MouseMove += new System.Windows.Forms.MouseEventHandler(this.MainToolStrip_MouseMove);
             // 
+            // mapPanel
+            // 
+            this.mapPanel.AllowDrop = true;
+            this.mapPanel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(32)))), ((int)(((byte)(32)))), ((int)(((byte)(32)))));
+            this.mapPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.mapPanel.FocusOnMouseEnter = true;
+            this.mapPanel.Location = new System.Drawing.Point(0, 55);
+            this.mapPanel.MapImage = null;
+            this.mapPanel.MaxZoom = 8D;
+            this.mapPanel.MinZoom = 0.8D;
+            this.mapPanel.Name = "mapPanel";
+            this.mapPanel.Size = new System.Drawing.Size(1008, 484);
+            this.mapPanel.SuspendMouseZoom = false;
+            this.mapPanel.SuspendMouseZoomKeys = System.Windows.Forms.Keys.None;
+            this.mapPanel.TabIndex = 4;
+            this.mapPanel.Zoom = 1D;
+            this.mapPanel.ZoomStep = 1D;
+            this.mapPanel.PostRender += new System.EventHandler<MobiusEditor.Event.RenderEventArgs>(this.MapPanel_PostRender);
+            this.mapPanel.DragDrop += new System.Windows.Forms.DragEventHandler(this.MapPanel_DragDrop);
+            this.mapPanel.DragEnter += new System.Windows.Forms.DragEventHandler(this.MapPanel_DragEnter);
+            this.mapPanel.MouseMove += new System.Windows.Forms.MouseEventHandler(this.MapPanel_MouseMove);
+            // 
             // mapToolStripButton
             // 
             this.mapToolStripButton.Image = ((System.Drawing.Image)(resources.GetObject("mapToolStripButton.Image")));
@@ -1061,28 +1094,6 @@ namespace MobiusEditor
             this.selectToolStripButton.Visible = false;
             this.selectToolStripButton.Click += new System.EventHandler(this.mainToolStripButton_Click);
             // 
-            // mapPanel
-            // 
-            this.mapPanel.AllowDrop = true;
-            this.mapPanel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(32)))), ((int)(((byte)(32)))), ((int)(((byte)(32)))));
-            this.mapPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.mapPanel.FocusOnMouseEnter = true;
-            this.mapPanel.Location = new System.Drawing.Point(0, 55);
-            this.mapPanel.MapImage = null;
-            this.mapPanel.MaxZoom = 8D;
-            this.mapPanel.MinZoom = 0.8D;
-            this.mapPanel.Name = "mapPanel";
-            this.mapPanel.Size = new System.Drawing.Size(1008, 484);
-            this.mapPanel.SuspendMouseZoom = false;
-            this.mapPanel.SuspendMouseZoomKeys = System.Windows.Forms.Keys.None;
-            this.mapPanel.TabIndex = 4;
-            this.mapPanel.Zoom = 1D;
-            this.mapPanel.ZoomStep = 1D;
-            this.mapPanel.PostRender += new System.EventHandler<MobiusEditor.Event.RenderEventArgs>(this.MapPanel_PostRender);
-            this.mapPanel.DragDrop += new System.Windows.Forms.DragEventHandler(this.MapPanel_DragDrop);
-            this.mapPanel.DragEnter += new System.Windows.Forms.DragEventHandler(this.MapPanel_DragEnter);
-            this.mapPanel.MouseMove += new System.Windows.Forms.MouseEventHandler(this.MapPanel_MouseMove);
-            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1203,7 +1214,7 @@ namespace MobiusEditor
         private System.Windows.Forms.ToolStripMenuItem viewIndicatorsMapBoundariesMenuItem;
         private System.Windows.Forms.ToolStripMenuItem viewIndicatorsOutlinesMenuItem;
         private System.Windows.Forms.ToolStripMenuItem toolsOptionsOutlineAllCratesMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem viewExtraIndicatorsMapPassabilityMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem viewExtraIndicatorsTerrainTypesMenuItem;
         private System.Windows.Forms.ToolStripMenuItem viewZoomToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem viewZoomInMenuItem;
         private System.Windows.Forms.ToolStripMenuItem viewZoomOutMenuItem;
@@ -1214,6 +1225,7 @@ namespace MobiusEditor
         private System.Windows.Forms.ToolStripMenuItem InfoAboutMenuItem;
         private System.Windows.Forms.ToolStripMenuItem InfoCheckForUpdatesMenuItem;
         private System.Windows.Forms.ToolStripMenuItem InfoWebsiteMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem viewExtraIndicatorsPlacedObjectsMenuItem;
     }
 }
 

@@ -14,7 +14,6 @@
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 
 using MobiusEditor.Dialogs;
-using MobiusEditor.Interface;
 using MobiusEditor.Model;
 using MobiusEditor.Utility;
 using System;
@@ -165,7 +164,7 @@ namespace MobiusEditor
                 return;
             }
             bool steamEnabled = false;
-            if (SteamworksUGC.IsSteamBuild)
+            if (SteamworksUGC.IsSteamBuild && !Properties.Settings.Default.LazyInitSteam)
             {
                 steamEnabled = SteamworksUGC.Init();
             }

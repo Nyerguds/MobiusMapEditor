@@ -627,6 +627,7 @@ Released on 31 Jan 2023 at 20:50 GMT
 Unreleased.
 
 * Added .mix files to the supported formats to open, giving the ability to load official maps straight from the game's internal archives.
+* The editor will now only connect to Steam if the Publish function is opened, making it possible to leave the editor open while testing maps in-game.
 * Dropping a file into the editor that causes a dialog to be opened (like mix files and images) will no longer freeze the source you dragged the file from while the dialog in the editor is open.
 * Removed theater restrictions on Terrain objects; if the object is found in the theater, it will be shown.
 * Fixed bug that prevented the Red Alert civilian "C3" from loading, and that prevented the Einstein colour fix from working.
@@ -637,7 +638,9 @@ Unreleased.
 * Added a specific "PreviewScaleClassic" setting.
 * Fixed Red Alert map load not giving feedback on the removal of Aircraft.
 * Added an indicator on the Autocreate option on Teams if the Max Allowed setting is set to 0.
-* Enabling map indicators will now show a different colour for each terrain type, and green indications on cells occupied by objects on the map.
+* Enabling map terrain type indicators will now show a different colour for each terrain type, editable per type in the settings file.
+* The placement previews for map templates will now always show the terrain types. This indication will be less pronounced when the map terrain type indicators option is disabled.
+* Added extra indicators (shortcut: F4) for cells occupied by objects on the map.
 * Added outlines for overlapped buildings.
 * Implemented a new scaling method that should vastly reduce saving times of multiplayer map thumbnails and image exports.
 * Fixed issue that caused any unknown video names configured on TD missions to be marked as "Remaster only".
@@ -650,3 +653,4 @@ Unreleased.
 * Added checks on Events in Red Alert triggers that crash the game if no House is set on the trigger itself.
 * Fixed RA checks on buildings overlapping non-buildings.
 * Fixed the fact RA mission rules were only applied after the map was populated, which could make buildings disappear from overlapping with bibs that were actually disabled in the rules.
+* Fixed classic mode not using the classic hash pattern tile to draw the terrain type indicators on the map tiles tool window.

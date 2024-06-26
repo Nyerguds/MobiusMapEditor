@@ -2518,19 +2518,32 @@ namespace MobiusEditor.Render
         /// <param name="graphics">Graphics to paint on.</param>
         /// <param name="plugin">Game plugin</param>
         /// <param name="templates">The map data itself</param>
+        /// <param name="technos">If given, draws a green grid on the locations of the technos in the given set.</param>
         /// <param name="tileSize">Tile size</param>
         /// <param name="visibleCells">If given, only cells in the given area are marked.</param>
-        /// <param name="ignoreEmpty">Do not mark cells that have a value of null. This is used by the template tool preview function to not mark unused cells in the template shape.</param>
-        /// <param name="technos">If given, draws a green grid on the locations of the technos in the given set.</param>
-        public static void RenderLandTypes(Graphics graphics, IGamePlugin plugin, CellGrid<Template> templates, Size tileSize, Rectangle visibleCells, bool ignoreEmpty, OccupierSet<ICellOccupier> technos)
+        /// <param name="ignoreCells">Cells to completely ignore during the drawing operation.</param>
+        /// <param name="forPreview">Indicates this is painted for placement preview purposes, meaning colours with their alpha set to 0 are restored and also handled.</param>
+        /// <param name="soft">True to paint the hashing with only 25% alpha instead of the usual 50%.</param>
+        public static void RenderHashAreas(Graphics graphics, IGamePlugin plugin, CellGrid<Template> templates, OccupierSet<ICellOccupier> technos, Size tileSize, Rectangle visibleCells, HashSet<Point> ignoreCells, bool forPreview, bool soft)
         {
             // Check which cells need to be marked.
             LandType clearLand = LandType.Clear;
             // Fetch the terrain type for clear terrain on this theater.
-            if (!ignoreEmpty)
+            IEnumerable<Point> points = visibleCells.Points();
+            TemplateType clear = plugin.Map.TemplateTypes.Where(t => t.Flag.HasFlag(TemplateTypeFlag.Clear)).FirstOrDefault();
+            clearLand = clear.LandTypes.Length > 0 ? clear.LandTypes[0] : LandType.Clear;
+            HashSet<LandType> usedLandTypes = plugin.Map.UsedLandTypes;
+            if (technos != null && technos.Count() == 0)
             {
-                TemplateType clear = plugin.Map.TemplateTypes.Where(t => t.Flag.HasFlag(TemplateTypeFlag.Clear)).FirstOrDefault();
-                clearLand = clear.LandTypes.Length > 0 ? clear.LandTypes[0] : LandType.Clear;
+                technos = null;
+            }
+            if (templates != null && templates.Length == 0)
+            {
+                templates = null;
+            }
+            if (technos == null && templates == null)
+            {
+                return;
             }
             // Caching this in advance for all types.
             LandType[] landTypes = (LandType[])Enum.GetValues(typeof(LandType));
@@ -2539,32 +2552,63 @@ namespace MobiusEditor.Render
             float lineSize = tileWidth / 16.0f;
             int lineOffsetW = tileWidth / 4;
             int lineOffsetH = tileHeight / 4;
+            Dictionary<LandType, Color> landColorsMapping = GetLandColorsMapping();
             // If the classic sprite exist, use that and recolour it. Since it's fetched
             // with extension, this will simply not return anything in Remastered mode.
             Globals.TheTilesetManager.GetTileData("trans.icn", 0, out Tile tile);
-            for (int i = 0; i < landTypes.Length; i++)
+            // -1 and 0 are used for respectively partially-filled infantry cells, and fully filled techno cells.
+            for (int i = -1; i < landTypes.Length; i++)
             {
-                LandType landType = landTypes[i];
+                LandType landType = LandType.None;
                 Color curCol;
                 // Techno indication hijacks LandType.None just because it's in this loop.
-                bool forTechnos = landType == LandType.None && technos != null;
-                if (forTechnos)
+                bool forTechnos = i <= 0 && technos != null;
+                bool forTechnosPart = forTechnos && i < 0;
+                bool forTechnosFull = forTechnos && i == 0;
+                if (forTechnosPart)
                 {
-                    // Green
-                    curCol = Color.FromArgb(0, 170, 0);
+                    curCol = Globals.HashColorTechnoPart;
                 }
-                else if (!LandColorsMapping.TryGetValue(landType, out curCol) || curCol.A == 0)
+                else if (forTechnosFull)
+                {
+                    curCol = Globals.HashColorTechnoFull;
+                }
+                else
+                {
+                    if (i <= 0 || templates == null)
+                    {
+                        continue;
+                    }
+                    landType = landTypes[i];
+                    if (!usedLandTypes.Contains(landType) || !landColorsMapping.TryGetValue(landType, out curCol))
+                    {
+                        continue;
+                    }
+                }
+                // Unless it's for a placement preview, terrain types with a colour that is fully transparent are completely skipped.
+                if (curCol.A == 0 && !forPreview)
                 {
                     continue;
                 }
+                curCol = Color.FromArgb(255, curCol);
                 using (Bitmap curBmp = GenerateLinesBitmap(tile, tileWidth, tileHeight, curCol, lineSize, lineOffsetW, lineOffsetH, graphics))
                 using (ImageAttributes imageAttributes = new ImageAttributes())
                 {
-                    imageAttributes.SetColorMatrix(GetColorMatrix(Color.White, 1.0f, 0.50f));
+                    float brightness = 1.0f;
+                    float alpha = 0.50f;
+                    if (soft)
+                    {
+                        alpha /= 2;
+                    }
+                    imageAttributes.SetColorMatrix(GetColorMatrix(Color.White, brightness, alpha));
                     for (int y = visibleCells.Y; y < visibleCells.Bottom; ++y)
                     {
                         for (int x = visibleCells.X; x < visibleCells.Right; ++x)
                         {
+                            if (ignoreCells != null && ignoreCells.Contains(new Point(x, y)))
+                            {
+                                continue;
+                            }
                             bool renderTerrainType = true;
                             if (technos != null)
                             {
@@ -2578,27 +2622,19 @@ namespace MobiusEditor.Render
                                 if (forTechnos && techno != null)
                                 {
                                     renderTerrainType = false;
-                                    float brightness = 1.0f;
-                                    if (techno is InfantryGroup ifg && ifg.Infantry.Any(inf => inf == null))
+                                    bool incomplete = techno is InfantryGroup ifg && ifg.Infantry.Any(inf => inf == null);
+                                    if (incomplete && forTechnosFull || !incomplete && forTechnosPart)
                                     {
-                                        brightness = 2.0f;
+                                        continue;
                                     }
-                                    imageAttributes.SetColorMatrix(GetColorMatrix(Color.White, brightness, 0.50f));
                                 }
                             }
                             if (renderTerrainType)
                             {
                                 Template template = templates[y, x];
                                 LandType land = LandType.None;
-                                if (template != null)
-                                {
-                                    land = template.Type.GetLandType(template.Icon);
-                                }
-                                else if (!ignoreEmpty)
-                                {
-                                    land = clearLand;
-                                }
-                                // Exclude uninitialised terrain
+                                land = template == null ? clearLand : template.Type.GetLandType(template.Icon);
+                                // Only handle currently looped one
                                 if (land != landType)
                                 {
                                     continue;
@@ -2612,16 +2648,19 @@ namespace MobiusEditor.Render
             }
         }
 
-        public static readonly Dictionary<LandType, Color> LandColorsMapping = new Dictionary<LandType, Color>
+        private static Dictionary<LandType, Color> GetLandColorsMapping()
         {
-            //{LandType.Clear, Color.Transparent }, // [Clear] Normal clear terrain.
-            {LandType.Beach, Color.FromArgb(255, 255, 085) }, // [Beach] Sandy beach. Can't be built on.
-            {LandType.Rock,  Color.FromArgb(170, 000, 000) }, // [Rock]  Impassable terrain.
-            {LandType.Road,  Color.FromArgb(186, 127, 040) }, // [Road]  Units move faster on this terrain.
-            {LandType.Water, Color.FromArgb(255, 255, 255) }, // [Water] Ships can travel over this.
-            {LandType.River, Color.FromArgb(000, 000, 255) }, // [River] Ships normally can't travel over this.
-            {LandType.Rough, Color.FromArgb(170, 170, 170) }, // [Rough] Rough terrain. Can't be built on
-        };
+            return new Dictionary<LandType, Color>
+            {
+                {LandType.Clear, Globals.HashColorLandClear }, // [Clear] Normal clear terrain.
+                {LandType.Beach, Globals.HashColorLandBeach }, // [Beach] Sandy beach. Can't be built on.
+                {LandType.Rock,  Globals.HashColorLandRock }, //  [Rock]  Impassable terrain.
+                {LandType.Road,  Globals.HashColorLandRoad }, //  [Road]  Units move faster on this terrain.
+                {LandType.Water, Globals.HashColorLandWater }, // [Water] Ships can travel over this.
+                {LandType.River, Globals.HashColorLandRiver }, // [River] Ships normally can't travel over this.
+                {LandType.Rough, Globals.HashColorLandRough }, // [Rough] Rough terrain. Can't be built on
+            };
+        }
 
         /// <summary>
         /// Generates a cell filled with diagonal line hashing. If a tile is given, and it matches the requested size,
@@ -2638,7 +2677,7 @@ namespace MobiusEditor.Render
         /// <returns>The image with diagonal lines, in the given color.</returns>
         private static Bitmap GenerateLinesBitmap(Tile tile, int width, int height, Color color, float lineSize, int lineOffsetW, int lineOffsetH, Graphics g)
         {
-            if (tile != null && tile.Image != null && tile.Image.Width == width && tile.Image.Height == height)
+            if (tile != null && tile.Image != null)
             {
                 byte colR = color.R;
                 byte colG = color.G;
@@ -2657,7 +2696,24 @@ namespace MobiusEditor.Render
                     imgData[i + 1] = colG;
                     imgData[i + 2] = colR;
                 }
-                return ImageUtils.BuildImage(imgData, width, height, stride, PixelFormat.Format32bppArgb, null, null);
+                if (tile.Image.Width == width && tile.Image.Height == height)
+                {
+                    return ImageUtils.BuildImage(imgData, width, height, stride, PixelFormat.Format32bppArgb, null, null);
+                }
+                else
+                {
+                    using (Bitmap tmp = ImageUtils.BuildImage(imgData, tile.Image.Width, tile.Image.Height, stride, PixelFormat.Format32bppArgb, null, null))
+                    {
+                        Bitmap bm = new Bitmap(width, height);
+                        using (Graphics bmg = Graphics.FromImage(bm))
+                        {
+                            // Pixel upscale for classic graphics
+                            SetRenderSettings(bmg, false);
+                            bmg.DrawImage(tmp, new Rectangle(0, 0, width, height), 0, 0, tmp.Width, tmp.Height, GraphicsUnit.Pixel);
+                        }
+                        return bm;
+                    }
+                }
             }
             Bitmap bitmap = new Bitmap(width, height);
             int tripleWidth = width * 3;

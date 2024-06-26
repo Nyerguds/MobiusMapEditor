@@ -2805,9 +2805,13 @@ namespace MobiusEditor
             {
                 layers &= ~MapLayerFlag.EffectRadius;
             }
-            if (!viewExtraIndicatorsMapPassabilityMenuItem.Checked)
+            if (!viewExtraIndicatorsTerrainTypesMenuItem.Checked)
             {
                 layers &= ~MapLayerFlag.LandTypes;
+            }
+            if (!viewExtraIndicatorsPlacedObjectsMenuItem.Checked)
+            {
+                layers &= ~MapLayerFlag.TechnoOccupancy;
             }
             if (!viewIndicatorsOutlinesMenuItem.Checked)
             {
@@ -2980,6 +2984,10 @@ namespace MobiusEditor
             if (plugin == null)
             {
                 return;
+            }
+            if (SteamworksUGC.IsSteamBuild && !SteamworksUGC.IsInit && Properties.Settings.Default.LazyInitSteam)
+            {
+                SteamworksUGC.Init();
             }
             if (!SteamworksUGC.IsInit)
             {

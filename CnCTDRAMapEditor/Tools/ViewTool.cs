@@ -278,10 +278,16 @@ namespace MobiusEditor.Tools
             boundRenderCells.Intersect(map.Metrics.Bounds);
             // Only render these if they are not in the priority layers, and not handled manually.
             // The functions themselves will take care of checking whether they are in the active layers to render.
-            if (layersToRender.HasFlag(MapLayerFlag.LandTypes)
-                && !manuallyHandledLayers.HasFlag(MapLayerFlag.LandTypes))
+            if (layersToRender.HasAnyFlags(MapLayerFlag.LandTypes | MapLayerFlag.TechnoOccupancy))
             {
-                MapRenderer.RenderLandTypes(graphics, plugin, map.Templates, tileSize, visibleCells, false, Globals.IndicateMapObjects ? map.Technos : null);
+                CellGrid<Template> templates = layersToRender.HasFlag(MapLayerFlag.LandTypes)
+                    && !manuallyHandledLayers.HasFlag(MapLayerFlag.LandTypes) ? map.Templates : null;
+                OccupierSet<ICellOccupier> technos = layersToRender.HasFlag(MapLayerFlag.TechnoOccupancy)
+                    && !manuallyHandledLayers.HasFlag(MapLayerFlag.TechnoOccupancy) ? map.Technos : null;
+                if (templates != null || technos != null)
+                {
+                    MapRenderer.RenderHashAreas(graphics, plugin, templates, technos, Globals.MapTileSize, visibleCells, null, false, false);
+                }
             }
             if ((Globals.ShowPlacementGrid && inPlacementMode) ||
                 layersToRender.HasFlag(MapLayerFlag.MapGrid)

@@ -698,6 +698,20 @@ namespace MobiusEditor.Model
             return new Point(icon % ThumbnailIconWidth, icon / ThumbnailIconWidth);
         }
 
+        public IEnumerable<Point> GetIconPoints(Point offset)
+        {
+            for (int y = 0; y < IconHeight; y++)
+            {
+                for (int x = 0; x < IconWidth; x++)
+                {
+                    if (IconMask[y, x])
+                    {
+                        yield return new Point(offset.X + x, offset.Y + y);
+                    }
+                }
+            }
+        }
+
         public bool IsValidIcon(Point point)
         {
             if (point.X < 0 || point.Y < 0)

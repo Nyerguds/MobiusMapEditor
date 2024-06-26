@@ -59,6 +59,7 @@ namespace MobiusEditor.Model
         WaypointRadius  /**/ = 1 << 20,
         OverlapOutlines /**/ = 1 << 21,
         LandTypes       /**/ = 1 << 22,
+        TechnoOccupancy /**/ = 1 << 23,
 
         OverlayAll = Resources | Walls | Overlay,
         Technos = Terrain | Infantry | Units | Buildings,
@@ -67,7 +68,7 @@ namespace MobiusEditor.Model
         /// <summary>Listing of layers that don't need a full map repaint.</summary>
         Indicators = Boundaries | MapSymmetry | MapGrid | WaypointsIndic | FootballArea | CellTriggers
             | TechnoTriggers | BuildingRebuild | BuildingFakes | EffectRadius | WaypointRadius
-            | OverlapOutlines | LandTypes,
+            | OverlapOutlines | LandTypes | TechnoOccupancy,
         All = Int32.MaxValue
     }
 
@@ -263,6 +264,8 @@ namespace MobiusEditor.Model
         public readonly List<TheaterType> TheaterTypes;
 
         public readonly List<TemplateType> TemplateTypes;
+
+        public HashSet<LandType> UsedLandTypes = new HashSet<LandType>();
 
         public readonly List<TerrainType> TerrainTypes;
 
@@ -611,6 +614,12 @@ namespace MobiusEditor.Model
                 {
                     templateType.Init(gameInfo, this.Theater, Globals.FilterTheaterObjects);
                 }
+                this.UsedLandTypes = this.TemplateTypes
+                    .Where(tmp => tmp.ExistsInTheater)
+                    .SelectMany(tmp => tmp.LandTypes ?? new LandType[0])
+                    .Distinct()
+                    .Where(lt => lt != LandType.None)
+                    .ToHashSet();
                 foreach (SmudgeType smudgeType in this.SmudgeTypes)
                 {
                     smudgeType.Init(this.Theater);
@@ -1546,6 +1555,7 @@ namespace MobiusEditor.Model
                 this.AllTeamTechnoTypes, wpPreview, this.MovieTypes, this.MovieEmpty, this.ThemeTypes, this.ThemeEmpty,
                 this.DropZoneRadius, this.GapRadius, this.RadarJamRadius, this.TiberiumOrGoldValue, this.GemValue)
             {
+                UsedLandTypes = this.UsedLandTypes,
                 TopLeft = TopLeft,
                 Size = Size,
                 // Allows functions to check whether they are being applied on the real map or the preview map.

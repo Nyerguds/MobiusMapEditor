@@ -20,6 +20,10 @@ Updates are regularly posted on my little corner of [the C&C Tiberian Dawn Remas
 
 Right now, I'm not really looking into making this a joint project. Specific bug reports and suggestions are always welcome though, but post them as issues.
 
+## Download
+
+Github can be a bit tricky to nagivate, but you can find the latest releases in the right-hand sidebar, under **Releases**. Once there, scroll past the changes list, and download the first .zip file in the list. [Click here](https://github.com/Nyerguds/MobiusMapEditor/releases/latest/) to go straight to the latest release.
+
 ## Installation
 
 **DO NOT unpack this in the C&C Remastered Collection's install folder.** It is absolutely unnecessary to overwrite any files of the installed game.
